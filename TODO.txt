@@ -1,0 +1,42 @@
+Avro TODO.txt (in rough priority order)
+
+python
+ - implement rpc
+ - add more tests, examples & docs
+
+generic/specific/reflect
+ - change ctor to GenericDatumReader(expected)
+ - change Map<String,Schema> to OrderedMap<String,Schema>
+ - change GenericRecord to be get/set/contains/clear(int)
+ - add generic table mapping actual -> expected
+ - add versioning tests, where expected schema differs from that written
+ - reflect: use Schema#getNamespace() to permit records in different packages
+
+spec/kernel
+ - change Schema#create(Map<String,Schema>) to use OrderedMap
+ - change record defs to be JSON arrays, not objects, which are unordered
+ - make Schema & Protocol immutable (use unmodifiableMap/List?)
+ - add fixed as primitive, where schema specifies length
+ - add default values?
+ - add enum?
+
+file
+ - add auto-union to writer, to support multiple schemas per file
+
+test
+  - add python-vs-java file interop tests
+  - add python-vs-java rpc interop tests
+
+io
+ - replace ByteBuffer with Bytes?
+   public interface Bytes {
+      void write(WriteableByteChannel);
+      Bytes read(ReadableByteChannel);
+      byte[] get();
+      ByteBuffer getBuffer();
+   }
+
+c, perl impls
+ - implement codec, rpc, etc.
+ - implement pipe protocol for Hadoop?
+

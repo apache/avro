@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+  <header>
+    <title>Avro 1.0 <em>DRAFT</em> Specification</title>
+  </header>
+  <body>
+
+    <section id="preamble">
+      <title>Introduction</title>
+
+      <p>This document defines Avro.  It is intended to be the
+        authoritative specification. Implementations of Avro must
+        adhere to this document.
+      </p>
+
+      <section id="status">
+        <title>Status</title>
+        <p>This is a <em>DRAFT</em> specification, subject to change
+          without notice.  Do <em>not</em> yet use Avro for persistent
+          data in production systems, as the data format may be
+          incompatibly changed.
+        </p>
+      </section>
+
+    </section>
+
+    <section id="schemas">
+      <title>Schema Declaration</title>
+      <p>A Schema is represented in <a href="ext:json">JSON</a> by one of:</p>
+      <ul>
+        <li>A JSON string, naming a defined type.</li>
+        
+        <li>A JSON object, of the form:
+          
+          <source>{"type": "<em>typeName</em>" ...<em>attributes</em>...}</source>
+
+          where <em>typeName</em> is either a primitive or derived
+          type name, as defined below.  Attributes not defined in this
+          document are permitted as metadata, but must not affect
+          the format of serialized data.
+          </li>
+        <li>A JSON array, representing a union of embedded types.</li>
+      </ul>
+
+      <section id="schema_primitive">
+        <title>Primitive Types</title>
+        <p>The set of primitive type names is:</p>
+        <ul>
+          <li><code>string</code>: unicode character sequence</li>
+          <li><code>bytes</code>: sequence of 8-bit bytes</li>
+          <li><code>int</code>: 32-bit unsigned integer</li>
+          <li><code>long</code>: 64-bit unsigned integer</li>
+          <li><code>float</code>: 32-bit IEEE floating-point number</li>
+          <li><code>double</code>: 64-bit IEEE floating-point number</li>
+          <li><code>boolean</code>: a binary value</li>
+          <li><code>null</code>: no value</li>
+        </ul>
+        
+        <p>Primitive types have no specified attributes.</p>
+        
+        <p>Primitive type names are also defined type names.  Thus, for
+          example, the schema "string" is equivalent to:</p>
+        
+        <source>{"type": "string"}</source>
+
+      </section>
+
+      <section id="schema_compound">
+        <title>Compound Types</title>
+        
+        <p>Avro supports three kinds of compound types: records,
+        arrays and unions.</p>
+
+        <section>
+          <title>Records</title>
+          
+	  <p>Records use the type name "record" and support two attributes:</p>
+	  <ul>
+	    <li><code>name</code>: a JSON string providing the name
+	    of the record, </li>
+	    <li><code>fields</code>: a JSON object, listing field
+	    names and schemas.</li>
+	  </ul>
+
+	  <p>The fields of a record are <em>ordered</em>.  Two
+	  otherwise identical records whose fields are ordered
+	  differently represent equivalent data but are not
+	  serialized identically.</p>
+
+	  <p>For example, a linked-list of 64-bit values may be defined with:</p>
+	  <source>
+{
+  "type": "record", 
+  "name" "LongList",
+  "fields" : {
+    "value": "long",               // each element has a long
+    "next": ["LongList", "null"]   // optional next element
+  }
+}
+	  </source>
+	</section>
+        
+        <section>
+          <title>Arrays</title>
+          <p>Arrays use the type name <code>"array"</code> and support
+          a single attribute:</p>
+	  <ul>
+            <li><code>items</code>: the schema of the array's items.</li>
+	  </ul>
+	  <p>For example, an array of strings is declared
+	  with:</p>
+	  <source>{"type": "array", "items": "string"}</source>
+	</section>
+
+        <section>
+          <title>Maps</title>
+          <p>Maps use the type name <code>"map"</code> and support
+          two attributes:</p>
+	  <ul>
+            <li><code>keys</code>: the schema of the map's keys.</li>
+            <li><code>values</code>: the schema of the map's values.</li>
+	  </ul>
+	  <p>For example, a map from string to long is declared
+	  with:</p>
+	  <source>{"type": "map", "keys": "string", "values": "long"}</source>
+	</section>
+
+        <section>
+          <title>Unions</title>
+          <p>Unions, as mentioned above, are represented using JSON
+          arrays.  For example, <code>["string", "null"]</code>
+          declares a schema which may be either a string or null.</p>
+	  <p>Unions may not contain more than one schema with the same
+	  type, except for named records.  For example, unions
+	  containing two array types or two map types are not
+	  permitted, but two record types with different names are
+	  permitted.  (Record names permit efficient resolution when
+	  reading and writing unions.)</p>
+	  <p>Unions may not immediately contain other unions.</p>
+        </section>
+      </section> <!-- end compound types -->
+
+      <section>
+	<title>Identifiers</title>
+        <p>Record and field names must:</p>
+	<ul>
+          <li>start with <code>[A-Za-z_]</code></li>
+          <li>subsequently contain only <code>[A-Za-z0-9_]</code></li>
+	</ul>
+      </section>
+
+    </section> <!-- end schemas -->
+
+    <section>
+      <title>Data Serialization</title>
+
+      <p>Avro data is always serialized with its schema.  Files that
+	store Avro data should always also include the schema for that
+	data in the same file.  Avro-based remote procedure call (RPC)
+	systems must also guarantee that remote recipients of data
+	have a copy of the schema used to write that data.</p>
+
+      <p>Because the schema used to write data is always available
+	when the data is read, Avro data itself is not tagged with
+	type information.  The schema is required to parse data.</p>
+
+      <p>In general, both serialization and deserialization proceed as
+      a depth-first, left-to-right traversal of the schema,
+      serializing primitive types as they are encountered.</p>
+
+      <section id="serialize_primitive">
+        <title>Primitive Type Serialization</title>
+        <p>Primitive types are serialized as follows:</p>
+        <ul>
+          <li>a <code>string</code> is serialized as
+          a <code>long</code> followed by that many bytes of UTF-8
+          encoded character data.
+	    <p>For example, the three-character
+              string "foo" would be serialized as 3 (encoded as
+              hex <code>0C</code>) followed by the UTF-8 encoding of
+              'f', 'o', and 'o' (the hex bytes <code>66 6f 6f</code>):
+	    </p>
+	    <source>0C 66 6f 6f</source>
+	  </li>
+          <li><code>bytes</code> are serialized as
+          a <code>long</code> followed by that many bytes of data.
+	  </li>
+          <li><code>int</code> and <code>long</code> values are written
+            using <a href="ext:vint">variable-length</a>
+	    <a href="ext:zigzag">zig-zag</a> coding.  Some examples:
+	    <table class="right">
+	      <tr><th>value</th><th>hex</th></tr>
+	      <tr><td><code> 0</code></td><td><code>00</code></td></tr>
+	      <tr><td><code>-1</code></td><td><code>01</code></td></tr>
+	      <tr><td><code> 1</code></td><td><code>02</code></td></tr>
+	      <tr><td><code>-2</code></td><td><code>03</code></td></tr>
+	      <tr><td><code> 2</code></td><td><code>04</code></td></tr>
+	      <tr><td colspan="2"><code>...</code></td></tr>
+	      <tr><td><code>-64</code></td><td><code>7f</code></td></tr>
+	      <tr><td><code> 64</code></td><td><code>&nbsp;80 01</code></td></tr>
+	      <tr><td colspan="2"><code>...</code></td></tr>
+	    </table>
+	  </li>
+          <li>a <code>float</code> is written as 4 bytes</li>
+          <li>a <code>double</code> is written as 8 bytes</li>
+          <li>a <code>boolean</code> is written as a single byte whose
+          value is either <code>0</code> (false) or <code>1</code>
+          (true).</li>
+          <li><code>null</code> is written as zero bytes.</li>
+        </ul>
+
+      </section>
+
+
+      <section id="serialize_compound">
+        <title>Compound Type Serialization</title>
+        <p>Compound types are serialized as follows:</p>
+
+        <section>
+          <title>Records</title>
+	  <p>A record is serialized by serializing the values of its
+	  fields in the order that they are declared.  In other words,
+	  a record is serialized as just the concatenation of its
+	  field's serializations.  Field values are serialized per
+	  their schema.</p>
+	  <p>For example, the record schema</p>
+	  <source>
+{
+  "type": "record", 
+  "name" "test",
+  "fields" : {
+    "a": "long",
+    "b": "string"
+  }
+}
+	  </source>
+	  <p>An instance of this record whose <code>a</code> field has
+	  value 27 (encoded as hex <code>36</code>) and
+	  whose <code>b</code> field has value "foo" (encoded as hex
+	  bytes <code>OC 66 6f 6f</code>), would be serialized simply
+	  as the concatenation of these, namely the hex byte
+	  sequence:</p>
+	  <source>36 0C 66 6f 6f</source>
+	</section>
+        
+        <section>
+          <title>Arrays</title>
+          <p>Arrays are serialized as a series of <em>blocks</em>.
+          Each block consists of a <code>long</code> <em>count</em>
+          value, followed by that many array items.  A block with
+          count zero indicates the end of the array.  Each item is
+          serialized per the array's item schema.</p>
+
+	  <p>If a block's count is negative, then the count is
+	  followed immediately by a <code>long</code>
+	  block <em>size</em>, indicating the number of bytes in the
+	  block.  The actual count in this case is the absolute value
+	  of the count written.</p>
+
+	  <p>For example, the array schema</p>
+	  <source>{"type": "array", "items": "long"}</source>
+	  <p>serializing an array containing the items 3 and 27 could be
+	  serialized as 2 (encoded as hex 04) followed by 3 and 27
+	  (encoded as hex <code>06 36</code>) terminated by zero:</p>
+	  <source>04 04 36 00</source>
+
+	  <p>The blocked representation permits one to read and write
+	  arrays larger than can be buffered in memory, since one can
+	  start writing items without knowing the full length of the
+	  array.  The optional block sizes permit fast skipping
+	  through data, e.g., when projecting a record to a subset of
+	  its fields.</p>
+
+	  <p><em>NOTE: Blocking has not yet been fully implemented and
+	   may change.  Arbitrarily large objects must be easily
+	   writable and readable but until we have proven this with an
+	   implementation and tests this part of the specification
+	   should be considered draft.</em></p>
+	</section>
+
+        <section>
+          <title>Maps</title>
+          <p>Maps are serialized as a series of <em>blocks</em>.  Each
+          block consists of a <code>long</code> <em>count</em> value,
+          followed by that many key/value pairs.  A block with count
+          zero indicates the end of the map.  Each item is serialized
+          per the map's key and value schema.</p>
+
+	  <p>If a block's count is negative, then the count is
+	  followed immediately by a <code>long</code>
+	  block <em>size</em>, indicating the number of bytes in the
+	  block.  The actual count in this case is the absolute value
+	  of the count written.</p>
+
+	  <p>The blocked representation permits one to read and write
+	  maps larger than can be buffered in memory, since one can
+	  start writing items without knowing the full length of the
+	  map.  The optional block sizes permit fast skipping through
+	  data, e.g., when projecting a record to a subset of its
+	  fields.</p>
+
+	  <p><em>NOTE: Blocking has not yet been fully implemented and
+	   may change.  Arbitrarily large objects must be easily
+	   writable and readable but until we have proven this with an
+	   implementation and tests this part of the specification
+	   should be considered draft.</em></p>
+	</section>
+
+        <section>
+          <title>Unions</title>
+	  <p>A union is serialized by first writing
+	    a <code>long</code> value indicating the zero-based
+	    position within the union of the schema of its value.  The
+	    value is then serialized per the indicated schema within
+	    the union.</p>
+	  <p>For example, the union
+	  schema <code>["string","null"]</code> would serialize:</p>
+          <ul>
+            <li><code>null</code> as 1 (the index of "null" in the
+            union, encoded as hex <code>02</code>): <source>02</source></li>
+            <li>the string <code>"a"</code> as zero (the index of
+            "string" in the union), followed by the serialized string:
+	      <source>00 02 61</source></li>
+          </ul>
+        </section>
+      </section> <!-- end compound types -->
+
+    </section>
+
+    <section>
+      <title>Object Container Files</title>
+      <p>Avro includes a simple object container file format.  A file
+      has a schema, and all objects stored in the file must be written
+      according to that schema.  Objects are stored in blocks that may
+      be compressed.  Syncronization markers are used between blocks
+      to permit efficient splitting of files for MapReduce
+      processing.</p>
+
+      <p>Files may include arbitrary user-specified metadata.</p>
+
+      <p>A file consists of:</p>
+      <ul>
+	<li>A <em>header, followed by</em></li>
+	<li>one or more <em>blocks</em>.</li>
+      </ul>
+      <p>There are two kinds of blocks, <em>normal</em>
+	and <em>metadata</em>.  All files must contain at least one
+	metadata block.  A file terminates with its last metadata
+	block.  Any data after the last metadata block is ignored.</p>
+
+      <p>A header consists of:</p>
+      <ul>
+	<li>Four bytes, ASCII 'O', 'b', 'j', followed by zero.</li>
+	<li>A 16-byte sync marker.</li>
+      </ul>
+
+      <p>A metadata block consists of:</p>
+      <ul>
+	<li>The file's 16-byte sync marker.</li>
+	<li>A long with value -1, identifying this as a metadata block.</li>
+	<li>A long indicating the size in bytes of this block.</li>
+	<li>A long indicating the number of metadata key/value pairs.</li>
+	<li>For each pair, a string key and bytes value.</li>
+	<li>The size in bytes of this block as a 4-byte big-endian integer.
+	  <p>When a file is closed normally, this terminates the file
+	    and permits one to efficiently seek to the start of the
+	    metadata.  If the sync marker there does not match that at
+	    the start of the file, then one must scan for the last
+	    metadata in the file.</p>
+	</li>
+      </ul>
+
+      <p>The following metadata properties are reserved:</p>
+      <ul>
+	<li><strong>schema</strong> contains the schema of objects
+	stored in the file, as a string.</li>
+	<li><strong>count</strong> contains the number of objects in
+	the file as a decimal ASCII string.</li>
+	<li><strong>codec</strong> the name of the compression codec
+	used to compress blocks.</li>
+      </ul>
+
+      <p>A normal block consists of:</p>
+      <ul>
+	<li>The file's 16-byte sync marker.</li>
+	<li>A long indicating the size in bytes of this block in the file.</li>
+	<li>The serialized objects.  If a codec is specified, this is
+	compressed by that codec.</li>
+      </ul>
+
+      <p>Note that this format supports appends, since multiple
+      metadata blocks are permitted.</p>
+
+      <p>To be robust to application failure, implementations can
+      write metadata periodically to limit the amount of the file that
+      must be scanned to find the last metadata block.</p>
+
+    </section>
+
+    <section>
+      <title>Protocol Declaration</title>
+      <p>Avro protocols describe RPC interfaces.  Like schemas, they are
+      defined with JSON text.</p>
+
+      <p>A protocol is a JSON object with the following attributes:</p>
+      <ul>
+	<li><em>name</em>, string, to distinguish it from other protocols;</li>
+	<li><em>namespace</em>, a string which qualifies the name;</li>
+	<li><em>types</em>, a list of record and error definitions.
+	  An error definition is just like a record definition except it
+	  uses "error" instead of "record".</li>
+	<li><em>messages</em>, a JSON object whose keys are message
+	  names and whose values are objects whose attributes are
+	  described below.  No two messages may have the same name.</li>
+      </ul>
+
+      <section>
+	<title>Messages</title>
+	<p>A message has attributes:</p>
+	<ul>
+	  <li>a <em>request</em>, a list of named,
+	    typed <em>parameter</em> schemas (this has the same form
+	    as the fields of a record declaration);</li>
+	  <li>a <em>response</em> schema; and</li> 
+	  <li>an optional union of <em>error</em> schemas.</li>
+	</ul>
+      </section>
+      <section>
+	<title>Sample Protocol</title>
+	<p>For example, one may define a simple HelloWorld protocol with:</p>
+	<source>
+{
+  "namespace": "com.acme",
+  "protocol": "HelloWorld",
+
+  "types": [
+    {"name": "Greeting", "type": "record", "fields": {"name": "string"}},
+    {"name": "Curse", "type": "error", "fields": {"message": "string"}}
+  ],
+
+  "messages": {
+    "hello": {
+      "request": {"greeting": "Greeting" },
+      "response": "Greeting",
+      "errors": ["Curse"]
+    }
+  }
+}
+	</source>
+      </section>
+    </section>
+
+    <section>
+      <title>Protocol Wire Format</title>
+
+      <section>
+	<title>Message Transport</title>
+	<p>Messages may be transmitted via
+	different <em>transport</em> mechanisms.  For example, one
+	might use the HTTP, raw sockets, or SSL, etc.  This document
+	specifies formats for request and response message data, but
+	it does not yet specify any details of how message data is
+	encapsulated in different transports.</p>
+
+	<p>To the transport, a <em>message</em> is an opaque byte sequence.</p>
+
+	<p>A transport is a system that supports:</p>
+	<ul>
+	  <li><strong>session creation</strong>
+	    <p>A session forms the context under which multiple
+	    messages may be transcieved. A client must establish a
+	    session with a server before any requests may be
+	    processed.</p>
+	  </li>
+	  <li><strong>transmission of request messages</strong>
+	    <p>Once a session has been established, clients may send
+	    servers request messages using that session.</p>
+	  </li>
+	  <li><strong>receipt of corresponding response messages</strong>
+	    <p>Servers will send a response message back to the client
+	    corresponding to each request message.  The mechanism of
+	    that correspondance is transport-specific.  For example,
+	    in HTTP it might be implicit, since HTTP directly supports
+	    requests and responses.  But a transport that multiplexes
+	    many client threads over a single socket would need to tag
+	    messages with unique identifiers.</p>
+	  </li>
+	</ul>
+      </section>
+
+      <section>
+	<title>Message Framing</title>
+	<p>Avro messages are <em>framed</em> as a list of buffers.</p>
+	<p>Framing is a layer between messages and the transport.
+	It exists to optimize certain operations.</p>
+
+	<p>The format of framed message data is:</p>
+	<ul>
+	  <li>a series of <em>buffers</em>, where each buffer consists of:
+	    <ul>
+	      <li>a four-byte, big-endian <em>buffer length</em>, followed by</li>
+	      <li>that many bytes of <em>buffer data</em>.</li>
+	    </ul>
+	  </li>
+	  <li>A message is always terminated by a zero-lenghted buffer.</li>
+	</ul>
+
+	<p>Framing is transparent to request and response message
+	formats (described below).  Any message may be presented as a
+	single or multiple buffers.</p>
+
+	<p>Framing can permit readers to more efficiently get
+	different buffers from different sources and for writers to
+	more efficiently store different buffers to different
+	destinations.  In particular, it can reduce the number of
+	times large binary objects are copied.  For example, if an RPC
+	parameter consists of a megabyte of file data, that data can
+	be copied directly to a socket from a file descriptor, and, on
+	the other end, it could be written directly to a file
+	descriptor, never entering user space.</p>
+
+	<p>A simple, recommended, framing policy is for writers to
+	create a new segment whenever a single binary object is
+	written that is larger than a normal output buffer.  Small
+	objects are then appended in buffers, while larger objects are
+	written as their own buffers.  When a reader then tries to
+	read a large object the runtime can hand it an entire buffer
+	directly, without having to copy it.</p>
+      </section>
+
+      <section>
+	<title>Handshake</title>
+
+	<p>RPC sessions are initiated by a handshake.  No requests may
+	be processed in a session until a successful handshake has
+	completed.  (As with all messages, handshakes are framed as
+	described above.)</p>
+
+	<p>The purpose of the handshake is to exchange protocols, so
+	that the client can deserialize responses, and the
+	server can deserialize requests.</p>
+
+	<p>The handshake is versioned, to permit future enhancements.
+	The handshake documented here is version zero.  All Avro
+	implementations must support version zero.</p>
+
+	<p>The version zero handshake consists of a request and
+	response message.</p>
+
+	<p>The format of a version zero handshake request is:</p>
+	<ul>
+	  <li>a four-byte, big-endian <em>version</em> of zero,
+	  followed by</li>
+	  <li>the JSON <em>client's protocol</em> for the session,
+	  serialized as an Avro string.</li>
+	</ul>
+
+	<p>The format of a version zero handshake response is:</p>
+	<ul>
+	  <li>a one-byte <em>error flag</em> boolean, followed by either:
+	    <ul>
+	      <li>if the error flag is false, the JSON <em>server's
+		protocol</em> for the session, serialized as an Avro
+		string.</li>
+	      <li>if the error flag is true, an error message, as an
+	      Avro string.</li>
+	    </ul>
+	  </li>
+	</ul>
+
+      </section>
+
+      <section>
+	<title>Call Format</title>
+	<p>An <em>call</em> consists of a request message paired with
+	its resulting response or error message.  Both kinds of
+	messages are framed as described above.</p>
+
+	<p>The format of a call request is:</p>
+	<ul>
+	  <li>the <em>message name</em>, an Avro string,
+	  followed by</li>
+	  <li>the message <em>parameters</em>.  Parameters are
+	  serialized according to the message's request
+	  declaration.</li>
+	</ul>
+
+	<p>The format of a call response is:</p>
+	<ul>
+	  <li>a one-byte <em>error flag</em> boolean, followed by either:
+	    <ul>
+	      <li>if the error flag is false, the message <em>response</em>,
+		serialized per the message's response schema.</li>
+	      <li>if the error flag is true, the <em>error</em>,
+	      serialized per the message's error union schema.</li>
+	    </ul>
+	  </li>
+	</ul>
+      </section>
+
+    </section>
+
+    <section>
+      <title>Schema Resolution</title>
+
+      <p>A reader of Avro data, whether from an RPC or a file, can
+	always parse that data because its schema is provided.  But
+	that schema may not be exactly the schema that was expected.
+	For example, if the data was written with a different version
+	of the software than it is read, then records may have had
+	fields added or removed.  This section specifies how such
+	schema differences may be resolved.</p>
+
+      <p>We call the schema used to write the data as
+	the <em>remote</em> schema, and the version that the
+	application expects the <em>local</em> schema.  To resolve
+	differences between these two schemas, the following
+	resolution algorithm is recommended.</p>
+
+      <ul>
+	<li><p>It is an error if the two schemas do not <em>match</em>.</p>
+	  <p>To match, one of the following must hold:</p>
+	  <ul>
+	    <li>both schemas are arrays whose item types match</li>
+	    <li>both schemas are maps whose key and value types match</li>
+	    <li>both schemas are records with the same name</li>
+	    <li>either schema is a union</li>
+	    <li>both schemas have same primitive type</li>
+	    <li>the remote schema may be <em>promoted</em> to the
+	      local as follows:
+	      <ul>
+		<li>int is promotable to long, float, or double</li>
+		<li>long is promotable to float or double</li>
+		<li>float is promotable to double</li>
+		</ul>
+	    </li>
+	  </ul>
+	</li>
+
+	<li><strong>if both are records:</strong>
+
+	  <p>if the remote record contains a field with a name not present in
+	    the local record, that remote value is ignored.</p>
+
+	  <p>schemas for fields with the same name in both records are resolved
+	    recursively.</p>
+
+	  <p>Note that method parameter lists are equivalent to
+	  records.  Note also that, since the ordering of record
+	  fields may vary between local and remote, method parameter
+	  list order may also vary.</p>
+	</li>
+
+	<li><strong>if both are arrays:</strong>
+	  <p>This resolution algorithm is applied recursively to the local and
+	    remote array item schemas.</p>
+	</li>
+
+	<li><strong>if both are maps:</strong>
+	  <p>This resolution algorithm is applied recursively to the local and
+	    remote key and value schemas.</p>
+	</li>
+
+	<li><strong>if both are unions:</strong>
+	  <p>The first schema in the local union that matches the
+	    selected remote union schema is recursively resolved
+	    against it.  if none match, an error is signalled.</p>
+	</li>
+
+	<li><strong>if local is a union, but remote is not</strong>
+	  <p>The first schema in the local union that matches the
+	    remote schema is recursively resolved against it.  If none
+	    match, an error is signalled.</p>
+	</li>
+	  
+	<li><strong>if remote is a union, but local is not</strong>
+	  <p>If the local schema matches the selected remote schema,
+	    it is recursively resolved against it.  If they do not
+	    match, an error is signalled.</p>
+	</li>
+	  
+      </ul>
+    </section>
+  </body>
+</document>
