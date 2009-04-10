@@ -1,0 +1,17 @@
+Avro Change Log
+
+Trunk (unreleased changes)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
+    AVRO-3. Fix ValueReader to throw an exception at EOF.
+    (Pat Hunt via cutting)
+    

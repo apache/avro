@@ -18,14 +18,14 @@
 
 package org.apache.avro.ipc;
 
-import java.io.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.List;
 
 /** Utility to present {@link ByteBuffer} data as an {@link InputStream}.*/
 class ByteBufferInputStream extends InputStream {
-  private static final int BUFFER_SIZE = 8192;
-
   private List<ByteBuffer> buffers;
   private int current;
 
@@ -33,15 +33,16 @@ class ByteBufferInputStream extends InputStream {
     this.buffers = buffers;
   }
 
-  public int read() {
-    ByteBuffer buffer = buffers.get(current);
-    while (!buffer.hasRemaining())                // skip empty
-      buffer = buffers.get(++current);
-    return buffer.get();
+  /** @see InputStream#read()
+   * @throws EOFException if EOF is reached. */
+  public int read() throws IOException {
+    return getBuffer().get() & 0xff;
   }
 
-  public int read(byte b[], int off, int len) {
-    ByteBuffer buffer = buffers.get(current);
+  /** @see InputStream#read(byte[], int, int)
+   * @throws EOFException if EOF is reached before reading all the bytes. */
+  public int read(byte b[], int off, int len) throws IOException {
+    ByteBuffer buffer = getBuffer();
     int remaining = buffer.remaining();
     if (len > remaining) {
       buffer.get(b, off, remaining);
@@ -52,18 +53,32 @@ class ByteBufferInputStream extends InputStream {
     }
   }
 
-  /** Read a buffer from the input without copying, if possible. */
+  /** Read a buffer from the input without copying, if possible.
+   * @throws EOFException if EOF is reached before reading all the bytes. */
   public ByteBuffer readBuffer(int length) throws IOException {
-    ByteBuffer buffer = buffers.get(current);
-    while (!buffer.hasRemaining())                // skip empty
-      buffer = buffers.get(++current);
+    ByteBuffer buffer = getBuffer();
     if (buffer.remaining() == length) {           // can return current as-is?
       current++;
       return buffer;                              // return w/o copying
     }
     // punt: allocate a new buffer & copy into it
     ByteBuffer result = ByteBuffer.allocate(length);
-    read(result.array(), 0, length);
+    int start = 0;
+    while (start < length)
+      start += read(result.array(), start, length-start);
     return result;
+  }
+
+  /** Returns the next non-empty buffer.
+   * @throws EOFException if EOF is reached before reading all the bytes.
+   */
+  private ByteBuffer getBuffer() throws IOException {
+    while (current < buffers.size()) {
+      ByteBuffer buffer = buffers.get(current);
+      if (buffer.hasRemaining())
+        return buffer;
+      current++;
+    }
+    throw new EOFException();
   }
 }
