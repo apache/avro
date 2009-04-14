@@ -36,29 +36,18 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
     super(root);
   }
   
-  protected void writeRecord(Schema schema, Object datum, ValueWriter out)
-    throws IOException {
-    Class recordClass = datum.getClass();
-    for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
-      try {
-        Field field = recordClass.getField(entry.getKey());
-        write(entry.getValue(), field.get(datum), out);
-      } catch (NoSuchFieldException e) {
-        throw new AvroRuntimeException(e);
-      } catch (IllegalAccessException e) {
-        throw new AvroRuntimeException(e);
-      }
+  protected Object getField(Object record, String name, int position) {
+    try {
+      Field field = record.getClass().getField(name);
+      return field.get(record);
+    } catch (Exception e) {
+      throw new AvroRuntimeException(e);
     }
   }
   
   @Override
   protected boolean isRecord(Object datum) {
     return ReflectData.getSchema(datum.getClass()).getType() == Type.RECORD;
-  }
-  
-  @Override
-  protected Object getField(Object record, String field, int position) {
-    throw new AvroRuntimeException("Not implemented");
   }
 
   protected boolean instanceOf(Schema schema, Object datum) {

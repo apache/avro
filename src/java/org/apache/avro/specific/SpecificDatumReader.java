@@ -39,36 +39,19 @@ public class SpecificDatumReader extends ReflectDatumReader {
     super(root, packageName);
   }
 
-  protected Object readRecord(Object old, Schema remote, Schema local,
-                              ValueReader in) throws IOException {
-    /* TODO: Use schema's field numbers instead of creating our own map? */
-    Class c = getClass(remote.getName());
-    SpecificRecord record =
-      (SpecificRecord)(c.isInstance(old) ? old : newInstance(c));
-    local = record.schema();
-    Map<String,Schema.Field> localFields = local.getFields();
-    int[] map = getMap(local, remote);
-    int i = 0, size = 0, j = 0;
-    for (Map.Entry<String, Schema> entry : remote.getFieldSchemas()) {
-      String key = entry.getKey();
-      Schema rField = entry.getValue();
-      Schema lField = local == remote ? rField : localFields.get(key).schema();
-      int fieldNum = map[i++];
-      if (fieldNum == -1) {
-        skip(rField, in);
-        continue;
-      }
-      Object oldDatum = old != null ? record.get(fieldNum) : null;
-      record.set(fieldNum, read(oldDatum, rField, lField, in));
-      size++;
-    }
-    if (local.getFields().size() > size)          // clear unset fields
-      for (Map.Entry<String, Schema> entry : local.getFieldSchemas()) {
-        if (!(remote.getFields().containsKey(entry.getKey())))
-          record.set(j, null);
-        j++;
-      }
-    return record;
+  protected Object newRecord(Object old, Schema schema) {
+    Class c = getClass(schema.getName());
+    return(c.isInstance(old) ? old : newInstance(c));
+  }
+
+  protected void addField(Object record, String name, int position, Object o) {
+    ((SpecificRecord)record).set(position, o);
+  }
+  protected Object getField(Object record, String name, int position) {
+    return ((SpecificRecord)record).get(position);
+  }
+  protected void removeField(Object record, String field, int position) {
+    ((SpecificRecord)record).set(position, null);
   }
 
   private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
@@ -86,62 +69,4 @@ public class SpecificDatumReader extends ReflectDatumReader {
     return c;
   }
 
-  private Map<Schema,Map<Schema,int[]>> mapCache =
-    new IdentityHashMap<Schema,Map<Schema,int[]>>();
-
-  private int[] getMap(Schema local, Schema remote) {
-    synchronized (mapCache) {
-      Map<Schema,int[]> localCache = mapCache.get(local);
-      if (localCache == null) {
-        localCache = new IdentityHashMap<Schema,int[]>();
-        mapCache.put(local, localCache);
-      }
-      int[] result = localCache.get(remote);
-      if (result == null) {
-        result = createMap(remote, local);
-        localCache.put(remote, result);
-      }
-      return result;
-    }
-  }
-
-  private static int[] createMap(Schema remote, Schema local) {
-    int[] map = new int[remote.getFields().size()];
-    int i = 0;
-    for (Map.Entry<String, Schema> f : remote.getFieldSchemas()) {
-      map[i++] = getLocalIndex(f.getKey(), f.getValue().getType(), local);
-    }
-    return map;
-  }
-
-  private static int getLocalIndex(String name, Schema.Type type,
-                                   Schema local) {
-    int i = 0;    
-    for (Map.Entry<String, Schema> f : local.getFieldSchemas()) {
-      if (f.getKey().equals(name) && f.getValue().getType().equals(type))
-        return i;
-      i++;
-    }
-    return -1;
-  }
-
-  @Override
-  protected void addField(Object record, String name, int position, Object o) {
-    throw new AvroRuntimeException("Not implemented");
-  }
-
-  @Override
-  protected Object getField(Object record, String name, int position) {
-    throw new AvroRuntimeException("Not implemented");
-  }
-
-  @Override
-  protected void removeField(Object record, String field, int position) {
-    throw new AvroRuntimeException("Not implemented");
-  }
-
-  @Override
-  protected Object newRecord(Object old, Schema schema) {
-    throw new AvroRuntimeException("Not implemented");
-  }
 }

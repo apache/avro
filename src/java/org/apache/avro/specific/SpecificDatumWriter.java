@@ -33,11 +33,8 @@ public class SpecificDatumWriter extends ReflectDatumWriter {
     super(root);
   }
   
-  protected void writeRecord(Schema schema, Object datum, ValueWriter out)
-    throws IOException {
-    SpecificRecord record = (SpecificRecord)datum;
-    int i = 0;
-    for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
-      write(entry.getValue(), record.get(i++), out);
+  protected Object getField(Object record, String name, int position) {
+    return ((SpecificRecord)record).get(position);
   }
+
 }

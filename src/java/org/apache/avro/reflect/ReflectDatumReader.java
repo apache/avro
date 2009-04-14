@@ -42,32 +42,36 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
     setSchema(root);
   }
 
-  protected Object readRecord(Object old, Schema actual, Schema expected,
-                              ValueReader in) throws IOException {
-    Class recordClass;
+  protected Object newRecord(Object old, Schema schema) {
+    Class c;
     try {
-      recordClass = Class.forName(packageName+expected.getName());
+      c = Class.forName(packageName+schema.getName());
     } catch (ClassNotFoundException e) {
       throw new AvroRuntimeException(e);
     }
-    expected = ReflectData.getSchema(recordClass);
-    Map<String,Schema.Field> expectedFields = expected.getFields();
-    Object record = recordClass.isInstance(old) ? old : newInstance(recordClass);
-    for (Map.Entry<String, Schema> entry : actual.getFieldSchemas()) {
-      try {
-        Field field = recordClass.getField(entry.getKey());
-        field.setAccessible(true);
-        String key = entry.getKey();
-        Schema aField = entry.getValue();
-        Schema eField = field.getType() ==
-          Object.class ? aField : expectedFields.get(key).schema();
-        field.set(record, read(null, aField, eField, in));
-      } catch (NoSuchFieldException e) {        // ignore unmatched field
-      } catch (IllegalAccessException e) {
-        throw new AvroRuntimeException(e);
-      }
+    return(c.isInstance(old) ? old : newInstance(c));
+  }
+
+  protected void addField(Object record, String name, int position, Object o) {
+    try {
+      Field field = record.getClass().getField(name);
+      field.setAccessible(true);
+      field.set(record, o);
+    } catch (Exception e) {
+      throw new AvroRuntimeException(e);
     }
-    return record;
+  }
+  protected Object getField(Object record, String name, int position) {
+    try {
+      Field field = record.getClass().getField(name);
+      field.setAccessible(true);
+      return field.get(record);
+    } catch (Exception e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
+  protected void removeField(Object record, String name, int position) {
+    addField(record, name, position, null);
   }
 
   private static final Class<?>[] EMPTY_ARRAY = new Class[]{};
@@ -90,25 +94,5 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
       throw new RuntimeException(e);
     }
     return result;
-  }
-
-  @Override
-  protected void addField(Object record, String name, int position, Object o) {
-    throw new AvroRuntimeException("Not implemented");
-  }
-
-  @Override
-  protected Object getField(Object record, String name, int position) {
-    throw new AvroRuntimeException("Not implemented");
-  }
-
-  @Override
-  protected void removeField(Object record, String field, int position) {
-    throw new AvroRuntimeException("Not implemented");
-  }
-
-  @Override
-  protected Object newRecord(Object old, Schema schema) {
-    throw new AvroRuntimeException("Not implemented");
   }
 }

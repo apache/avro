@@ -12,6 +12,9 @@ Trunk (unreleased changes)
 
   IMPROVEMENTS
 
+    AVRO-11.  Re-implement specific and reflect datum readers and
+    writers to leverage AVRO-6.  (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
