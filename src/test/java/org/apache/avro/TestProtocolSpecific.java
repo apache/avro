@@ -96,6 +96,13 @@ public class TestProtocolSpecific extends TestCase {
     assertEquals(data, echoed);
   }
 
+  public void testEmptyEchoBytes() throws IOException {
+    ByteBuffer data = ByteBuffer.allocate(0);
+    ByteBuffer echoed = proxy.echoBytes(data);
+    data.flip();
+    assertEquals(data, echoed);
+  }
+
   public void testError() throws IOException {
     TestError error = null;
     try {

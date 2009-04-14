@@ -42,6 +42,7 @@ class ByteBufferInputStream extends InputStream {
   /** @see InputStream#read(byte[], int, int)
    * @throws EOFException if EOF is reached before reading all the bytes. */
   public int read(byte b[], int off, int len) throws IOException {
+    if (len == 0) return 0;
     ByteBuffer buffer = getBuffer();
     int remaining = buffer.remaining();
     if (len > remaining) {
@@ -56,6 +57,7 @@ class ByteBufferInputStream extends InputStream {
   /** Read a buffer from the input without copying, if possible.
    * @throws EOFException if EOF is reached before reading all the bytes. */
   public ByteBuffer readBuffer(int length) throws IOException {
+    if (length == 0) return ByteBuffer.allocate(0);
     ByteBuffer buffer = getBuffer();
     if (buffer.remaining() == length) {           // can return current as-is?
       current++;
