@@ -18,13 +18,21 @@
 
 package org.apache.avro.reflect;
 
-import java.io.*;
-import java.lang.reflect.*;
-import java.util.*;
+import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Map;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.ipc.*;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.ValueReader;
+import org.apache.avro.io.ValueWriter;
+import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.ipc.Requestor;
+import org.apache.avro.ipc.Transceiver;
 
 /** A {@link Requestor} for existing interfaces via Java reflection. */
 public class ReflectRequestor extends Requestor implements InvocationHandler {
@@ -53,7 +61,7 @@ public class ReflectRequestor extends Requestor implements InvocationHandler {
     throws IOException {
     Object[] args = (Object[])request;
     int i = 0;
-    for (Map.Entry<String,Schema> param : schema.getFields().entrySet())
+    for (Map.Entry<String, Schema> param : schema.getFieldSchemas())
       getDatumWriter(param.getValue()).write(args[i++], out);
   }
     

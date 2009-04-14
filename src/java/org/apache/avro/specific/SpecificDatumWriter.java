@@ -17,11 +17,12 @@
  */
 package org.apache.avro.specific;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.Map;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
+import org.apache.avro.Schema;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.ValueWriter;
 import org.apache.avro.reflect.ReflectDatumWriter;
 
 /** {@link DatumWriter} for generated Java classes. */
@@ -36,8 +37,7 @@ public class SpecificDatumWriter extends ReflectDatumWriter {
     throws IOException {
     SpecificRecord record = (SpecificRecord)datum;
     int i = 0;
-    for (Map.Entry<String,Schema> entry : schema.getFields().entrySet())
+    for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
       write(entry.getValue(), record.get(i++), out);
   }
 }
-

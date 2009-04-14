@@ -6,6 +6,10 @@ Trunk (unreleased changes)
 
   NEW FEATURES
 
+    AVRO-6. Permit easier implementation of alternate generic data
+    representations, especially records with integer-indexed fields.
+    (Hong Tang via cutting)
+
   IMPROVEMENTS
 
   OPTIMIZATIONS

@@ -111,7 +111,7 @@ public class TestSchema extends TestCase {
                  GenericData.validate(schema, datum));
 
       checkSerialization(schema, datum,
-                         new GenericDatumWriter(), new GenericDatumReader());
+                         new GenericDatumWriter<Object>(), new GenericDatumReader<Object>());
     }
   }
 

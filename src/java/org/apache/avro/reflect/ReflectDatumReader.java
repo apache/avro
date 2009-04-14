@@ -17,18 +17,20 @@
  */
 package org.apache.avro.reflect;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.lang.reflect.*;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.util.Utf8;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.ValueReader;
 
 /** {@link DatumReader} for existing classes via Java reflection. */
-public class ReflectDatumReader extends GenericDatumReader {
+public class ReflectDatumReader extends GenericDatumReader<Object> {
   protected String packageName;
 
   public ReflectDatumReader(String packageName) {
@@ -49,16 +51,16 @@ public class ReflectDatumReader extends GenericDatumReader {
       throw new AvroRuntimeException(e);
     }
     expected = ReflectData.getSchema(recordClass);
-    Map<String,Schema> expectedFields = expected.getFields();
+    Map<String,Schema.Field> expectedFields = expected.getFields();
     Object record = recordClass.isInstance(old) ? old : newInstance(recordClass);
-    for (Map.Entry<String,Schema> entry : actual.getFields().entrySet()) {
+    for (Map.Entry<String, Schema> entry : actual.getFieldSchemas()) {
       try {
         Field field = recordClass.getField(entry.getKey());
         field.setAccessible(true);
         String key = entry.getKey();
         Schema aField = entry.getValue();
-        Schema eField =
-          field.getType() == Object.class ? aField : expectedFields.get(key);
+        Schema eField = field.getType() ==
+          Object.class ? aField : expectedFields.get(key).schema();
         field.set(record, read(null, aField, eField, in));
       } catch (NoSuchFieldException e) {        // ignore unmatched field
       } catch (IllegalAccessException e) {
@@ -72,6 +74,7 @@ public class ReflectDatumReader extends GenericDatumReader {
   private static final Map<Class,Constructor> CTOR_CACHE =
     new ConcurrentHashMap<Class,Constructor>();
 
+  /** Create a new instance of the named class. */
   @SuppressWarnings("unchecked")
   protected static Object newInstance(Class c) {
     Object result;
@@ -89,4 +92,23 @@ public class ReflectDatumReader extends GenericDatumReader {
     return result;
   }
 
+  @Override
+  protected void addField(Object record, String name, int position, Object o) {
+    throw new AvroRuntimeException("Not implemented");
+  }
+
+  @Override
+  protected Object getField(Object record, String name, int position) {
+    throw new AvroRuntimeException("Not implemented");
+  }
+
+  @Override
+  protected void removeField(Object record, String field, int position) {
+    throw new AvroRuntimeException("Not implemented");
+  }
+
+  @Override
+  protected Object newRecord(Object old, Schema schema) {
+    throw new AvroRuntimeException("Not implemented");
+  }
 }

@@ -17,12 +17,20 @@
  */
 package org.apache.avro;
 
-import java.util.*;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.codehaus.jackson.map.*;
-import org.codehaus.jackson.map.node.*;
-import org.codehaus.jackson.*;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.JsonNode;
 
 /** A set of messages forming an application protocol.
  * <p> A protocol consists of:
@@ -72,7 +80,7 @@ public class Protocol {
       StringBuilder buffer = new StringBuilder();
       buffer.append("{\"request\": {");
       int count = 0;
-      for (Map.Entry<String,Schema> entry : request.getFields().entrySet()) {
+      for (Map.Entry<String, Schema> entry : request.getFieldSchemas()) {
         buffer.append("\"");
         buffer.append(entry.getKey());
         buffer.append("\": ");

@@ -42,16 +42,16 @@ public class GenericRequestor extends Requestor {
 
   public void writeRequest(Schema schema, Object request, ValueWriter out)
     throws IOException {
-    new GenericDatumWriter(schema).write(request, out);
+    new GenericDatumWriter<Object>(schema).write(request, out);
   }
 
   public Object readResponse(Schema schema, ValueReader in) throws IOException {
-    return new GenericDatumReader(schema).read(null, in);
+    return new GenericDatumReader<Object>(schema).read(null, in);
   }
 
   public AvroRemoteException readError(Schema schema, ValueReader in)
     throws IOException {
-    return new AvroRemoteException(new GenericDatumReader(schema).read(null,in));
+    return new AvroRemoteException(new GenericDatumReader<Object>(schema).read(null,in));
   }
 
 }

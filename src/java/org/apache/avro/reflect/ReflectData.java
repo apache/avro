@@ -17,21 +17,30 @@
  */
 package org.apache.avro.reflect;
 
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
-import com.thoughtworks.paranamer.Paranamer;
-import com.thoughtworks.paranamer.CachingParanamer;
-
-import org.apache.avro.*;
-import org.apache.avro.Schema.Type;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.util.Utf8;
-import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
+import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.util.Utf8;
+
+import com.thoughtworks.paranamer.CachingParanamer;
+import com.thoughtworks.paranamer.Paranamer;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData {
@@ -43,7 +52,7 @@ public class ReflectData {
     case RECORD:
       Class recordClass = datum.getClass(); 
       if (!(datum instanceof Object)) return false;
-      for (Map.Entry<String,Schema> entry : schema.getFields().entrySet()) {
+      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
         try {
           if (!validate(entry.getValue(),
                         recordClass.getField(entry.getKey()).get(datum)))
@@ -138,7 +147,7 @@ public class ReflectData {
       Schema schema = names.get(name);
       if (schema == null) {
         Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
-        schema = Schema.create(name, c.getPackage().getName(), fields,
+        schema = Schema.create(name, c.getPackage().getName(),
                                Throwable.class.isAssignableFrom(c));
         if (!names.containsKey(name))
           names.put(name, schema);
@@ -146,6 +155,7 @@ public class ReflectData {
           if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0)
             fields.put(field.getName(),
                        createSchema(field.getGenericType(), names));
+        schema.setFields(fields);
       }
       return schema;
     }

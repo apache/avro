@@ -18,14 +18,17 @@
 
 package org.apache.avro.specific;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
 import java.lang.reflect.Proxy;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.ipc.*;
-import org.apache.avro.reflect.*;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.ipc.Requestor;
+import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.reflect.ReflectRequestor;
 
 /** {@link Requestor} for generated interfaces. */
 public class SpecificRequestor extends ReflectRequestor {

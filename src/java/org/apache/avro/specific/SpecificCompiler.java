@@ -17,14 +17,15 @@
  */
 package org.apache.avro.specific;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
-import org.codehaus.jackson.map.*;
-import org.codehaus.jackson.*;
-
-import org.apache.avro.*;
-import org.apache.avro.Protocol.*;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.Protocol.Message;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.map.JsonTypeMapper;
 
 /** Generate specific Java interfaces and classes for protocols and schemas. */
 public class SpecificCompiler {
@@ -90,7 +91,7 @@ public class SpecificCompiler {
   private String params(Schema request) {
     StringBuilder b = new StringBuilder();
     int count = 0;
-    for (Map.Entry<String,Schema> param : request.getFields().entrySet()) {
+    for (Map.Entry<String, Schema> param : request.getFieldSchemas()) {
       String paramName = param.getKey();
       b.append(type(param.getValue(), paramName));
       b.append(" ");
@@ -123,7 +124,7 @@ public class SpecificCompiler {
       line(d+1, "private static final Schema _SCHEMA = Schema.parse(\""
            +esc(schema)+"\");");
       // field declations
-      for (Map.Entry<String,Schema> field : schema.getFields().entrySet()) {
+      for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
         String fieldName = field.getKey();
         line(d+1, "public "+type(field.getValue(),fieldName)+" "+fieldName+";");
       }
@@ -133,7 +134,7 @@ public class SpecificCompiler {
       line(d+1, "public Object get(int _field) {");
       line(d+2, "switch (_field) {");
       int i = 0;
-      for (Map.Entry<String,Schema> field : schema.getFields().entrySet())
+      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
         line(d+2, "case "+(i++)+": return "+field.getKey()+";");
       line(d+2, "default: throw new AvroRuntimeException(\"Bad index\");");
       line(d+2, "}");
@@ -143,7 +144,7 @@ public class SpecificCompiler {
       line(d+1, "public void set(int _field, Object _value) {");
       line(d+2, "switch (_field) {");
       i = 0;
-      for (Map.Entry<String,Schema> field : schema.getFields().entrySet())
+      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
         line(d+2, "case "+(i++)+": "+field.getKey()+" = ("+
              type(field.getValue(),field.getKey())+")_value; break;");
       line(d+2, "default: throw new AvroRuntimeException(\"Bad index\");");
@@ -153,7 +154,7 @@ public class SpecificCompiler {
 
       // nested classes
       if (d == 0)
-        for (Map.Entry<String,Schema> field : schema.getFields().entrySet())
+        for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
           compile(field.getValue(), null, d+1);
 
       break;

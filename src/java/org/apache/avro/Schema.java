@@ -17,11 +17,22 @@
  */
 package org.apache.avro;
 
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.codehaus.jackson.map.*;
-import org.codehaus.jackson.*;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.JsonNode;
+import org.codehaus.jackson.map.JsonTypeMapper;
 
 /** An abstract data type.
  * <p>A schema may be one of:
@@ -74,13 +85,14 @@ public abstract class Schema {
 
   /** Create an anonymous record schema. */
   public static Schema create(Map<String,Schema> fields) {
-    return create(null, null, fields, false);
+    Schema result = create(null, null, false);
+    result.setFields(fields);
+    return result;
   }
 
   /** Create a named record schema. */
-  public static Schema create(String name, String namespace,
-                              Map<String,Schema> fields, boolean isError) {
-    return new RecordSchema(name, namespace, fields, isError);
+  public static Schema create(String name, String namespace, boolean isError) {
+     return new RecordSchema(name, namespace, isError);
   }
 
   /** Create an array schema. */
@@ -102,7 +114,17 @@ public abstract class Schema {
   public Type getType() { return type; }
 
   /** If this is a record, returns its fields. */
-  public Map<String,Schema> getFields() {
+  public Map<String, Field> getFields() {
+    throw new AvroRuntimeException("Not a record: "+this);
+  }
+
+  /** If this is a record, enumerate its field names and their schemas. */
+  public Iterable<Map.Entry<String,Schema>> getFieldSchemas() {
+    throw new AvroRuntimeException("Not a record: "+this);
+  }
+  
+  /** If this is a record, set its fields. */
+  public void setFields(Map<String,Schema> fields) {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
@@ -153,23 +175,54 @@ public abstract class Schema {
   }
   public int hashCode() { return getType().hashCode(); }
 
+  /** A field within a record. */
+  public static class Field {
+    int position;
+    Schema schema;
+    Field(int pos, Schema schema) {
+      this.position = pos;
+      this.schema = schema;
+    }
+    /** The position of this field within the record. */
+    public int pos() { return position; }
+    /** This field's {@link Schema}. */
+    public Schema schema() { return schema; }
+    public boolean equals(Object other) {
+      if (!(other instanceof Field)) return false;
+      Field that = (Field) other;
+      return (position == that.position) && (schema.equals(that.schema));
+    }
+  }
+
   static class RecordSchema extends Schema {
     private final String name; 
     private final String namespace; 
-    private final Map<String, Schema> fields;
+    private Map<String,Field> fields;
+    private Iterable<Map.Entry<String,Schema>> fieldSchemas;
     private final boolean isError;
-    public RecordSchema(String name, String namespace,
-                        Map<String, Schema> fields, boolean isError) {
+    public RecordSchema(String name, String namespace, boolean isError) {
       super(Type.RECORD);
       this.name = name;
       this.namespace = namespace;
-      this.fields = fields;
       this.isError = isError;
     }
     public String getName() { return name; }
     public String getNamespace() { return namespace; }
     public boolean isError() { return isError; }
-    public Map<String, Schema> getFields() { return fields; }
+    public Map<String, Field> getFields() { return fields; }
+    public Iterable<Map.Entry<String, Schema>> getFieldSchemas() {
+      return fieldSchemas;
+    }
+    public void setFields(Map<String,Schema> fields) {
+      if (this.fields != null)
+        throw new AvroRuntimeException("Fields are already set");
+      this.fields = new LinkedHashMap<String, Field>();
+      int i = 0;
+      this.fieldSchemas = fields.entrySet();
+      for (Map.Entry<String, Schema> field : this.fieldSchemas) {
+        this.fields.put(field.getKey(), new Field(i++, field.getValue()));
+      }
+    }
     public boolean equals(Object o) {
       if (o == this) return true;
       return o instanceof RecordSchema
@@ -184,7 +237,7 @@ public abstract class Schema {
                     +(name==null?"":"\"name\": \""+name+"\", ")
                     +"\"fields\": {");
       int count = 0;
-      for (Map.Entry<String,Schema> entry : fields.entrySet()) {
+      for (Map.Entry<String, Schema> entry : fieldSchemas) {
         buffer.append("\"");
         buffer.append(entry.getKey());
         buffer.append("\": ");
@@ -413,13 +466,14 @@ public abstract class Schema {
         JsonNode spaceNode = schema.getFieldValue("namespace");
         String space = spaceNode != null ? spaceNode.getTextValue() : null;
         RecordSchema result =
-          new RecordSchema(name, space, fields, type.equals("error"));
+          new RecordSchema(name, space, type.equals("error"));
         if (name != null) names.put(name, result);
         JsonNode props = schema.getFieldValue("fields");
         for (Iterator<String> i = props.getFieldNames(); i.hasNext();) {
           String prop = i.next();
           fields.put(prop, parse(props.getFieldValue(prop), names));
         }
+        result.setFields(fields);
         return result;
       } else if (type.equals("array")) {          // array
         return new ArraySchema(parse(schema.getFieldValue("items"), names));

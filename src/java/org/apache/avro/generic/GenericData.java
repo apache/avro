@@ -17,11 +17,14 @@
  */
 package org.apache.avro.generic;
 
-import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import org.apache.avro.*;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.util.Utf8;
 
@@ -99,7 +102,7 @@ public class GenericData {
       if (!(datum instanceof GenericRecord)) return false;
       @SuppressWarnings(value="unchecked")
       GenericRecord fields = (GenericRecord)datum;
-      for (Map.Entry<String,Schema> entry : schema.getFields().entrySet())
+      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
         if (!validate(entry.getValue(), fields.get(entry.getKey())))
           return false;
       return true;

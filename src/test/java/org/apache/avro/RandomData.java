@@ -20,11 +20,18 @@ package org.apache.avro;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
-import org.apache.avro.util.Utf8;
-import org.apache.avro.generic.*;
 import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericArray;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.util.Utf8;
 
 /** Generates schema data as Java objects with random values. */
 public class RandomData implements Iterable<Object> {
@@ -60,7 +67,7 @@ public class RandomData implements Iterable<Object> {
     switch (schema.getType()) {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
-      for (Map.Entry<String,Schema> entry : schema.getFields().entrySet())
+      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
         record.put(entry.getKey(), generate(entry.getValue(), random, d+1));
       return record;
     case ARRAY:
@@ -116,7 +123,7 @@ public class RandomData implements Iterable<Object> {
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(sch, 
           new FileOutputStream(new File(args[1]),false),
-          new GenericDatumWriter());
+          new GenericDatumWriter<Object>());
     try {
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {
         writer.append(datum);

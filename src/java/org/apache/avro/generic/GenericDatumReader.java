@@ -17,16 +17,21 @@
  */
 package org.apache.avro.generic;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.avro.*;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.io.*;
-import org.apache.avro.util.Utf8;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.ValueReader;
 
 /** {@link DatumReader} for generic Java objects. */
-public class GenericDatumReader implements DatumReader<Object> {
+public class GenericDatumReader<D> implements DatumReader<D> {
   private Schema actual;
   private Schema expected;
 
@@ -43,8 +48,9 @@ public class GenericDatumReader implements DatumReader<Object> {
 
   public void setSchema(Schema actual) { this.actual = actual; }
 
-  public Object read(Object reuse, ValueReader in) throws IOException {
-    return read(reuse, actual, expected != null ? expected : actual, in);
+  @SuppressWarnings("unchecked")
+  public D read(D reuse, ValueReader in) throws IOException {
+    return (D) read(reuse, actual, expected != null ? expected : actual, in);
   }
   
   /** Called to read data.*/
@@ -105,41 +111,69 @@ public class GenericDatumReader implements DatumReader<Object> {
     throw new AvroTypeException("Expected "+expected+", found "+actual);
   }
 
-  /** Called to read a record instance.  May be overridden for alternate record
+  /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
   protected Object readRecord(Object old, Schema actual, Schema expected,
                               ValueReader in) throws IOException {
+    /* TODO: We may want to compute the expected and actual mapping and cache
+     * the mapping (keyed by <actual, expected>). */
     String recordName = expected.getName();
     if (recordName != null && !recordName.equals(actual.getName()))
       throw new AvroTypeException("Expected "+expected+", found "+actual);
-    Map<String,Schema> expectedFields = expected.getFields();
-    GenericRecord record = newRecord(old, expected);
+    Map<String, Field> expectedFields = expected.getFields();
+    // all fields not in expected should be removed by newRecord.
+    Object record = newRecord(old, expected);
     int size = 0;
-    for (Map.Entry<String,Schema> entry : actual.getFields().entrySet()) {
-      String name = entry.getKey();
-      Schema aField = entry.getValue();
-      Schema eField = expected == actual ? aField : expectedFields.get(name);
-      if (eField == null) {
-        skip(aField, in);
+    for (Map.Entry<String, Field> entry : actual.getFields().entrySet()) {
+      String fieldName = entry.getKey();
+      Field actualField = entry.getValue();
+      Field expectedField =
+          expected == actual ? actualField : expectedFields.get(entry.getKey());
+      if (expectedField == null) {
+        skip(actualField.schema(), in);
         continue;
       }
-      Object oldDatum = old != null ? record.get(name) : null;
-      record.put(name, read(oldDatum, aField, eField, in));
+      int fieldPosition = expectedField.pos();
+      Object oldDatum =
+          (old != null) ? getField(record, fieldName, fieldPosition) : null;
+      addField(record, fieldName, fieldPosition,
+               read(oldDatum,actualField.schema(),expectedField.schema(), in));
       size++;
     }
-    if (record.size() > size) {                   // clear old fields
-      Iterator<String> i = record.keySet().iterator();
-      while (i.hasNext()) {
-        String f = i.next();
-        if (!(actual.getFields().containsKey(f) &&
-              expected.getFields().containsKey(f)))
-          i.remove();
+    if (expectedFields.size() > size) {
+      // clear old fields (in expected, but not in actual)
+      Set<String> actualFields = actual.getFields().keySet();
+      for (Map.Entry<String, Field> entry : expectedFields.entrySet()) {
+        String f = entry.getKey();
+        if (!actualFields.contains(f))
+          removeField(record, f, entry.getValue().pos());
       }
     }
     return record;
   }
 
-  /** Called to read a array instance.  May be overridden for alternate array
+  /** Called by the default implementation of {@link #readRecord} to add a
+   * record fields value to a record instance.  The default implementation is
+   * for {@link GenericRecord}.*/
+  protected void addField(Object record, String name, int position, Object o) {
+    ((GenericRecord) record).put(name, o);
+  }
+  
+  /** Called by the default implementation of {@link #readRecord} to retrieve a
+   * record field value from a reused instance.  The default implementation is
+   * for {@link GenericRecord}.*/
+  protected Object getField(Object record, String name, int position) {
+    return ((GenericRecord) record).get(name);
+  }
+
+  /** Called by the default implementation of {@link #readRecord} to remove a
+   * record field value from a reused instance.  The default implementation is
+   * for {@link GenericRecord}.*/
+  protected void removeField(Object record, String field, int position) {
+    ((GenericRecord) record).remove(field);
+  }
+  
+  /** Called to read an array instance.  May be overridden for alternate array
    * representations.*/
   @SuppressWarnings(value="unchecked")
   protected Object readArray(Object old, Schema actual, Schema expected,
@@ -147,18 +181,28 @@ public class GenericDatumReader implements DatumReader<Object> {
     Schema actualType = actual.getElementType();
     Schema expectedType = expected.getElementType();
     long firstBlockSize = in.readLong();
-    GenericArray array;
-    if (old instanceof GenericArray) {
-      array = (GenericArray)old;
-      array.clear();
-    } else
-      array = newArray((int)firstBlockSize);
+    Object array = newArray(old, (int) firstBlockSize);
     for (long l = firstBlockSize; l > 0; l = in.readLong())
       for (long i = 0; i < l; i++)
-        array.add(read(array.peek(), actualType, expectedType, in));
+        addToArray(array, read(peekArray(array), actualType, expectedType, in));
     return array;
   }
 
+  /** Called by the default implementation of {@link #readArray} to retrieve a
+   * value from a reused instance.  The default implementation is for {@link
+   * GenericArray}.*/
+  @SuppressWarnings("unchecked")
+  protected Object peekArray(Object array) {
+    return ((GenericArray) array).peek();
+  }
+
+  /** Called by the default implementation of {@link #readArray} to add a value.
+   * The default implementation is for {@link GenericArray}.*/
+  @SuppressWarnings("unchecked")
+  protected void addToArray(Object array, Object e) {
+    ((GenericArray) array).add(e);
+  }
+  
   /** Called to read a map instance.  May be overridden for alternate map
    * representations.*/
   @SuppressWarnings(value="unchecked")
@@ -169,22 +213,30 @@ public class GenericDatumReader implements DatumReader<Object> {
     Schema eKey = expected.getKeyType();
     Schema eValue = expected.getValueType();
     int firstBlockSize = (int)in.readLong();
-    Map map;
-    if (old instanceof Map) {
-      map = (Map)old;
-      map.clear();
-    } else
-      map = newMap(firstBlockSize);
+    Object map = newMap(old, firstBlockSize);
     for (long l = firstBlockSize; l > 0; l = in.readLong())
       for (long i = 0; i < l; i++)
-        map.put(read(null, aKey, eKey, in), read(null, aValue, eValue, in));
+        addToMap(map, read(null, aKey, eKey, in),
+            read(null, aValue, eValue, in));
     return map;
   }
 
-  /** Called to create new record instances.  Subclasses may override to use a
-   * different record implementation.  By default, this returns a {@link
-   * GenericData.Record}.*/
-  protected GenericRecord newRecord(Object old, Schema schema) {
+  /** Called by the default implementation of {@link #readMap} to add a
+   * key/value pair.  The default implementation is for {@link Map}.*/
+  @SuppressWarnings("unchecked")
+  protected void addToMap(Object map, Object key, Object value) {
+    ((Map) map).put(key, value);
+  }
+  
+  /**
+   * Called to create new record instances. Subclasses may override to use a
+   * different record implementation. The returned instance must conform to the
+   * schema provided. If the old object contains fields not present in the
+   * schema, they should either be removed from the old object, or it should
+   * create a new instance that conforms to the schema. By default, this returns
+   * a {@link GenericData.Record}.
+   */
+  protected Object newRecord(Object old, Schema schema) {
     if (old instanceof GenericRecord) {
       GenericRecord record = (GenericRecord)old;
       if (record.getSchema() == schema)
@@ -196,15 +248,21 @@ public class GenericDatumReader implements DatumReader<Object> {
   /** Called to create new array instances.  Subclasses may override to use a
    * different array implementation.  By default, this returns a {@link
    * GenericData.Array}.*/
-  protected GenericArray newArray(int size) {
-    return new GenericData.Array(size);
+  protected Object newArray(Object old, int size) {
+    if (old instanceof GenericArray) {
+      ((GenericArray) old).clear();
+      return old;
+    } else return new GenericData.Array(size);
   }
 
   /** Called to create new array instances.  Subclasses may override to use a
    * different map implementation.  By default, this returns a {@link
    * HashMap}.*/
-  protected Map<Object,Object> newMap(int size) {
-    return new HashMap<Object,Object>(size);
+  protected Object newMap(Object old, int size) {
+    if (old instanceof Map) {
+      ((Map) old).clear();
+      return old;
+    } else return new HashMap<Object, Object>(size);
   }
 
   /** Called to read strings.  Subclasses may override to use a different
@@ -225,7 +283,7 @@ public class GenericDatumReader implements DatumReader<Object> {
   public static void skip(Schema schema, ValueReader in) throws IOException {
     switch (schema.getType()) {
     case RECORD:
-      for (Map.Entry<String,Schema> entry : schema.getFields().entrySet())
+      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
         skip(entry.getValue(), in);
       break;
     case ARRAY:

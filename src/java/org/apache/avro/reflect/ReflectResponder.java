@@ -18,17 +18,24 @@
 
 package org.apache.avro.reflect;
 
-import java.util.*;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
-import java.io.*;
-import java.lang.reflect.*;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.util.*;
-import org.apache.avro.ipc.*;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericArray;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.ValueReader;
+import org.apache.avro.io.ValueWriter;
+import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.ipc.Responder;
+import org.apache.avro.util.Utf8;
 
 /** {@link Responder} for existing interfaces via Java reflection.*/
 public class ReflectResponder extends Responder {
@@ -51,10 +58,9 @@ public class ReflectResponder extends Responder {
 
   /** Reads a request message. */
   public Object readRequest(Schema schema, ValueReader in) throws IOException {
-    Map<String,Schema> params = schema.getFields();
-    Object[] args = new Object[params.size()];
+    Object[] args = new Object[schema.getFields().size()];
     int i = 0;
-    for (Map.Entry<String,Schema> param : params.entrySet())
+    for (Map.Entry<String, Schema> param : schema.getFieldSchemas())
       args[i++] = getDatumReader(param.getValue()).read(null, in);
     return args;
   }
@@ -73,11 +79,10 @@ public class ReflectResponder extends Responder {
 
   public Object respond(Message message, Object request)
     throws AvroRemoteException {
-    Map<String,Schema> params = message.getRequest().getFields();
-    Class[] paramTypes = new Class[params.size()];
+    Class[] paramTypes = new Class[message.getRequest().getFields().size()];
     int i = 0;
     try {
-      for (Map.Entry<String,Schema> param : params.entrySet())
+      for (Map.Entry<String,Schema> param: message.getRequest().getFieldSchemas())
         paramTypes[i++] = paramType(param.getValue());
       Method method = impl.getClass().getMethod(message.getName(), paramTypes);
       return method.invoke(impl, (Object[])request);

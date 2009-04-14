@@ -17,13 +17,16 @@
  */
 package org.apache.avro.specific;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.lang.reflect.*;
+import java.io.IOException;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.ValueReader;
 import org.apache.avro.reflect.ReflectDatumReader;
 
 /** {@link DatumReader} for generated Java classes. */
@@ -38,17 +41,18 @@ public class SpecificDatumReader extends ReflectDatumReader {
 
   protected Object readRecord(Object old, Schema remote, Schema local,
                               ValueReader in) throws IOException {
+    /* TODO: Use schema's field numbers instead of creating our own map? */
     Class c = getClass(remote.getName());
     SpecificRecord record =
       (SpecificRecord)(c.isInstance(old) ? old : newInstance(c));
     local = record.schema();
-    Map<String,Schema> localFields = local.getFields();
+    Map<String,Schema.Field> localFields = local.getFields();
     int[] map = getMap(local, remote);
     int i = 0, size = 0, j = 0;
-    for (Map.Entry<String,Schema> entry : remote.getFields().entrySet()) {
+    for (Map.Entry<String, Schema> entry : remote.getFieldSchemas()) {
       String key = entry.getKey();
       Schema rField = entry.getValue();
-      Schema lField = local == remote ? rField : localFields.get(key);
+      Schema lField = local == remote ? rField : localFields.get(key).schema();
       int fieldNum = map[i++];
       if (fieldNum == -1) {
         skip(rField, in);
@@ -59,9 +63,8 @@ public class SpecificDatumReader extends ReflectDatumReader {
       size++;
     }
     if (local.getFields().size() > size)          // clear unset fields
-      for (Map.Entry<String,Schema> entry : local.getFields().entrySet()) {
-        if (!(remote.getFields().containsKey(entry.getKey()) &&
-              local.getFields().containsKey(entry.getKey())))
+      for (Map.Entry<String, Schema> entry : local.getFieldSchemas()) {
+        if (!(remote.getFields().containsKey(entry.getKey())))
           record.set(j, null);
         j++;
       }
@@ -105,7 +108,7 @@ public class SpecificDatumReader extends ReflectDatumReader {
   private static int[] createMap(Schema remote, Schema local) {
     int[] map = new int[remote.getFields().size()];
     int i = 0;
-    for (Map.Entry<String,Schema> f : remote.getFields().entrySet()) {
+    for (Map.Entry<String, Schema> f : remote.getFieldSchemas()) {
       map[i++] = getLocalIndex(f.getKey(), f.getValue().getType(), local);
     }
     return map;
@@ -114,7 +117,7 @@ public class SpecificDatumReader extends ReflectDatumReader {
   private static int getLocalIndex(String name, Schema.Type type,
                                    Schema local) {
     int i = 0;    
-    for (Map.Entry<String,Schema> f : local.getFields().entrySet()) {
+    for (Map.Entry<String, Schema> f : local.getFieldSchemas()) {
       if (f.getKey().equals(name) && f.getValue().getType().equals(type))
         return i;
       i++;
@@ -122,4 +125,23 @@ public class SpecificDatumReader extends ReflectDatumReader {
     return -1;
   }
 
+  @Override
+  protected void addField(Object record, String name, int position, Object o) {
+    throw new AvroRuntimeException("Not implemented");
+  }
+
+  @Override
+  protected Object getField(Object record, String name, int position) {
+    throw new AvroRuntimeException("Not implemented");
+  }
+
+  @Override
+  protected void removeField(Object record, String field, int position) {
+    throw new AvroRuntimeException("Not implemented");
+  }
+
+  @Override
+  protected Object newRecord(Object old, Schema schema) {
+    throw new AvroRuntimeException("Not implemented");
+  }
 }

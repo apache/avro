@@ -17,16 +17,23 @@
  */
 package org.apache.avro.generic;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.ValueWriter;
 import org.apache.avro.util.Utf8;
 
 /** {@link DatumWriter} for generic Java objects. */
-public class GenericDatumWriter implements DatumWriter<Object> {
+public class GenericDatumWriter<D> implements DatumWriter<D> {
   private Schema root;
 
   public GenericDatumWriter() {}
@@ -37,7 +44,7 @@ public class GenericDatumWriter implements DatumWriter<Object> {
 
   public void setSchema(Schema root) { this.root = root; }
 
-  public void write(Object datum, ValueWriter out) throws IOException {
+  public void write(D datum, ValueWriter out) throws IOException {
     write(root, datum, out);
   }
   
@@ -69,40 +76,58 @@ public class GenericDatumWriter implements DatumWriter<Object> {
    * representations.*/
   protected void writeRecord(Schema schema, Object datum, ValueWriter out)
     throws IOException {
-    if (!(datum instanceof GenericRecord)) error(schema,datum);
-    GenericRecord record = (GenericRecord)datum;
-    for (Map.Entry<String,Schema> entry : schema.getFields().entrySet())
-      write(entry.getValue(), record.get(entry.getKey()), out);
-    
+    for (Entry<String, Field> entry : schema.getFields().entrySet()) {
+      Field field = entry.getValue();
+      write(field.schema(), getField(datum, entry.getKey(), field.pos()), out);
+    }
   }
-
+  
+  /** Called by the default implementation of {@link #writeRecord} to retrieve
+   * a record field value.  The default implementation is for {@link
+   * GenericRecord}.*/
+  protected Object getField(Object record, String field, int position) {
+    return ((GenericRecord) record).get(field);
+  }
+  
   /** Called to write a array.  May be overridden for alternate array
    * representations.*/
   protected void writeArray(Schema schema, Object datum, ValueWriter out)
     throws IOException {
-    if (!(datum instanceof GenericArray)) error(schema,datum);
     Schema element = schema.getElementType();
-    GenericArray array = (GenericArray)datum;
-    if (array.size() > 0) {
-      out.writeLong(array.size());
-      for (Object o : array)
-        write(element, o, out);
+    long size = getArraySize(datum);
+    if (size > 0) {
+      out.writeLong(size);
+      for (Iterator<? extends Object> it = getArrayElements(datum); it.hasNext();)
+        write(element, it.next(), out);
     }
     out.writeLong(0);
   }
 
+  /** Called by the default implementation of {@link #writeArray} to get the
+   * size of an array.  The default implementation is for {@link
+   * GenericArray}.*/
+  @SuppressWarnings("unchecked")
+  protected long getArraySize(Object array) {
+    return ((GenericArray) array).size();
+  }
+
+  /** Called by the default implementation of {@link #writeArray} to enumerate
+   * array elements.  The default implementation is for {@link GenericArray}.*/
+  @SuppressWarnings("unchecked")
+  protected Iterator<? extends Object> getArrayElements(Object array) {
+    return ((GenericArray) array).iterator();
+  }
+  
   /** Called to write a map.  May be overridden for alternate map
    * representations.*/
   protected void writeMap(Schema schema, Object datum, ValueWriter out)
     throws IOException {
-    if (!(datum instanceof Map)) error(schema,datum);
     Schema key = schema.getKeyType();
     Schema value = schema.getValueType();
-    @SuppressWarnings(value="unchecked")
-      Map<Object,Object> map = (Map<Object,Object>)datum;
-    if (map.size() > 0) {
-      out.writeLong(map.size());                // write a single block
-      for (Map.Entry<Object,Object> entry : map.entrySet()) {
+    int size = getMapSize(datum);
+    if (size > 0) {
+      out.writeLong(size);                // write a single block
+      for (Map.Entry<Object,Object> entry : getMapEntries(datum)) {
         write(key, entry.getKey(), out);
         write(value, entry.getValue(), out);
       }
@@ -110,6 +135,20 @@ public class GenericDatumWriter implements DatumWriter<Object> {
     out.writeLong(0);
   }
 
+  /** Called by the default implementation of {@link #writeMap} to get the size
+   * of a map.  The default implementation is for {@link Map}.*/
+  @SuppressWarnings("unchecked")
+  protected int getMapSize(Object map) {
+    return ((Map) map).size();
+  }
+
+  /** Called by the default implementation of {@link #writeMap} to enumerate
+   * map elements.  The default implementation is for {@link Map}.*/
+  @SuppressWarnings("unchecked")
+  protected Iterable<Map.Entry<Object,Object>> getMapEntries(Object map) {
+    return ((Map) map).entrySet();
+  }
+  
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
   protected void writeString(Object datum, ValueWriter out) throws IOException {
@@ -137,15 +176,13 @@ public class GenericDatumWriter implements DatumWriter<Object> {
   protected boolean instanceOf(Schema schema, Object datum) {
     switch (schema.getType()) {
     case RECORD:
-      if (!(datum instanceof GenericRecord)) return false;
+      if (!isRecord(datum)) return false;
       return (schema.getName() == null) ||
         schema.getName().equals(((GenericRecord)datum).getSchema().getName());
-    case ARRAY:
-      return datum instanceof GenericArray;
-    case MAP:
-      return datum instanceof Map && !(datum instanceof GenericRecord);
-    case STRING:  return datum instanceof Utf8;
-    case BYTES:   return datum instanceof ByteBuffer;
+    case ARRAY:   return isArray(datum);
+    case MAP:     return isMap(datum);
+    case STRING:  return isString(datum);
+    case BYTES:   return isBytes(datum);
     case INT:     return datum instanceof Integer;
     case LONG:    return datum instanceof Long;
     case FLOAT:   return datum instanceof Float;
@@ -155,7 +192,32 @@ public class GenericDatumWriter implements DatumWriter<Object> {
     default: throw new AvroRuntimeException("Unexpected type: " +schema);
     }
   }
+  
+  /** Called by the default implementation of {@link #instanceOf}.*/
+  protected boolean isArray(Object datum) {
+    return datum instanceof GenericArray;
+  }
 
+  /** Called by the default implementation of {@link #instanceOf}.*/
+  protected boolean isRecord(Object datum) {
+    return datum instanceof GenericRecord;
+  }
+
+  /** Called by the default implementation of {@link #instanceOf}.*/
+  protected boolean isMap(Object datum) {
+    return (datum instanceof Map) && (!(datum instanceof GenericRecord));
+  }
+
+  /** Called by the default implementation of {@link #instanceOf}.*/
+  protected boolean isString(Object datum) {
+    return datum instanceof Utf8;
+  }
+
+  /** Called by the default implementation of {@link #instanceOf}.*/
+  protected boolean isBytes(Object datum) {
+    return datum instanceof ByteBuffer;
+  }
+  
   private void error(Schema schema, Object datum) {
     throw new AvroTypeException("Not a "+schema+": "+datum);
   }

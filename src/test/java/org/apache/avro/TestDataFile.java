@@ -17,17 +17,20 @@
  */
 package org.apache.avro;
 
-import java.io.*;
-import java.util.*;
-import junit.framework.TestCase;
-import org.codehaus.jackson.map.JsonNode;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
-import org.apache.avro.io.*;
-import org.apache.avro.file.*;
-import org.apache.avro.generic.*;
-import org.apache.avro.specific.*;
-import org.apache.avro.reflect.*;
-import org.apache.avro.util.*;
+import junit.framework.TestCase;
+
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.file.SeekableFileInput;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.reflect.ReflectDatumReader;
+import org.apache.avro.specific.SpecificDatumReader;
 
 public class TestDataFile extends TestCase {
   private static final int COUNT =
@@ -51,7 +54,7 @@ public class TestDataFile extends TestCase {
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(SCHEMA,
                                  new FileOutputStream(FILE),
-                                 new GenericDatumWriter());
+                                 new GenericDatumWriter<Object>());
     try {
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED)) {
         writer.append(datum);
@@ -64,7 +67,7 @@ public class TestDataFile extends TestCase {
   public void testGenericRead() throws IOException {
     DataFileReader<Object> reader =
       new DataFileReader<Object>(new SeekableFileInput(FILE),
-                                 new GenericDatumReader());
+                                 new GenericDatumReader<Object>());
     try {
       Object datum = null;
       if (VALIDATE) {
@@ -83,7 +86,7 @@ public class TestDataFile extends TestCase {
   }
 
   public void testGeneratedGeneric() throws IOException {
-    readFiles(new GenericDatumReader());
+    readFiles(new GenericDatumReader<Object>());
   }
 
   public void testGeneratedSpecific() throws IOException {
@@ -118,10 +121,10 @@ public class TestDataFile extends TestCase {
     if (args.length > 1)
       projection = Schema.parse(new File(args[1]));
     TestDataFile tester = new TestDataFile();
-    tester.readFile(input, new GenericDatumReader(null, projection), false);
+    tester.readFile(input, new GenericDatumReader<Object>(null, projection), false);
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)
-      tester.readFile(input, new GenericDatumReader(null, projection), false);
+      tester.readFile(input, new GenericDatumReader<Object>(null, projection), false);
     System.out.println("Time: "+(System.currentTimeMillis()-start));
   }
 

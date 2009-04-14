@@ -17,19 +17,19 @@
  */
 package org.apache.avro.reflect;
 
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.lang.reflect.*;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Map;
 
-import org.apache.avro.*;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.io.*;
-import org.apache.avro.util.Utf8;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.ValueWriter;
 
 /** {@link DatumWriter} for existing classes via Java reflection. */
-public class ReflectDatumWriter extends GenericDatumWriter {
+public class ReflectDatumWriter extends GenericDatumWriter<Object> {
   public ReflectDatumWriter() {}
 
   public ReflectDatumWriter(Schema root) {
@@ -39,7 +39,7 @@ public class ReflectDatumWriter extends GenericDatumWriter {
   protected void writeRecord(Schema schema, Object datum, ValueWriter out)
     throws IOException {
     Class recordClass = datum.getClass();
-    for (Map.Entry<String,Schema> entry : schema.getFields().entrySet()) {
+    for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
       try {
         Field field = recordClass.getField(entry.getKey());
         write(entry.getValue(), field.get(datum), out);
@@ -49,6 +49,16 @@ public class ReflectDatumWriter extends GenericDatumWriter {
         throw new AvroRuntimeException(e);
       }
     }
+  }
+  
+  @Override
+  protected boolean isRecord(Object datum) {
+    return ReflectData.getSchema(datum.getClass()).getType() == Type.RECORD;
+  }
+  
+  @Override
+  protected Object getField(Object record, String field, int position) {
+    throw new AvroRuntimeException("Not implemented");
   }
 
   protected boolean instanceOf(Schema schema, Object datum) {
