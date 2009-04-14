@@ -19,3 +19,5 @@ Trunk (unreleased changes)
     AVRO-3. Fix ValueReader to throw an exception at EOF.
     (Pat Hunt via cutting)
     
+    AVRO-4. Fix so that specific code generation works under Eclipse.
+    (Pat Hunt via cutting)

@@ -17,12 +17,12 @@
  */
 package org.apache.avro.specific;
 
-import java.io.*;
-import org.apache.tools.ant.*;
+import java.io.File;
+import java.io.IOException;
 
 /** Ant task to generate Java interface and classes for a protocol. */
 public class SchemaTask extends ProtocolTask {
-  protected String doCompile(File file) throws IOException {
+  protected SpecificCompiler doCompile(File file) throws IOException {
     return SpecificCompiler.compileSchema(file);
   }
 }

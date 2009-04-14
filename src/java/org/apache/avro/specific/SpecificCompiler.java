@@ -32,29 +32,38 @@ public class SpecificCompiler {
   private static final JsonTypeMapper MAPPER = new JsonTypeMapper();
   private static final JsonFactory FACTORY = new JsonFactory();
 
+  private String namespace;
   private StringBuilder buffer = new StringBuilder();
 
   private SpecificCompiler() {}                        // no public ctor
 
   /** Returns generated Java interface for a protocol. */
-  public static String compileProtocol(File file) throws IOException {
+  public static SpecificCompiler compileProtocol(File file) throws IOException {
     SpecificCompiler compiler = new SpecificCompiler();
     Protocol protocol = Protocol.parse(file);
-    return compiler.compile(protocol);
+    compiler.compile(protocol);
+    return compiler;
   }
 
   /** Returns generated Java class for a schema. */
-  public static String compileSchema(File file) throws IOException {
+  public static SpecificCompiler compileSchema(File file) throws IOException {
     SpecificCompiler compiler = new SpecificCompiler();
     Schema schema = Schema.parse(file);
     compiler.header(schema.getNamespace());
+    compiler.namespace = schema.getNamespace();
     compiler.compile(schema, schema.getName(), 0);
-    return compiler.buffer.toString();
+    return compiler;
   }
 
-  /** Return generated Java code for a protocol. */
-  public String compile(Protocol protocol) {
-    header(protocol.getNamespace());
+  /** Return namespace for compiled code. */
+  public String getNamespace() { return namespace; }
+
+  /** Return generated code. */
+  public String getCode() { return buffer.toString(); }
+  
+  private void compile(Protocol protocol) {
+    namespace = protocol.getNamespace();
+    header(namespace);
 
     // define an interface
     line(0, "public interface "+protocol.getName()+" {");
@@ -74,7 +83,6 @@ public class SpecificCompiler {
       line(2,"throws AvroRemoteException"+errors(message.getErrors())+";");
     }
     line(0, "}");
-    return buffer.toString();
   }
 
   private void header(String namespace) {
@@ -220,7 +228,7 @@ public class SpecificCompiler {
   }
 
   public static void main(String args[]) throws Exception {
-    System.out.println(compileProtocol(new File(args[0])));
+    System.out.println(compileProtocol(new File(args[0])).getCode());
   }
 
 }

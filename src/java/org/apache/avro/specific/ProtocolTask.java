@@ -17,12 +17,18 @@
  */
 package org.apache.avro.specific;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
-import org.apache.tools.ant.*;
-import org.apache.tools.ant.types.FileSet;
 
-import org.apache.avro.*;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
+import org.apache.tools.ant.types.FileSet;
 
 /** Ant task to generate Java interface and classes for a protocol. */
 public class ProtocolTask extends Task {
@@ -59,17 +65,32 @@ public class ProtocolTask extends Task {
     }
   }
   
-  protected String doCompile(File file) throws IOException {
+  protected SpecificCompiler doCompile(File file) throws IOException {
     return SpecificCompiler.compileProtocol(file);
   }
 
   private void compile(File file) throws BuildException {
     try {
-      String text = doCompile(file);
+      SpecificCompiler compiler = doCompile(file);
+      String namespace = compiler.getNamespace();
+      String text = compiler.getCode();
       String name = file.getName();
       name = name.substring(0, name.indexOf('.'))+".java";
       name = SpecificCompiler.cap(name);
-      Writer out = new FileWriter(new File(dest, name));
+      File outputFile;
+      if (namespace == null || namespace.length() == 0) {
+        outputFile = new File(dest, name);
+      } else {
+        File packageDir =
+            new File(dest, namespace.replace('.', File.separatorChar));
+        if (!packageDir.exists()) {
+            if (!packageDir.mkdirs()) {
+                throw new BuildException("Unable to create " + packageDir);
+            }
+        }
+        outputFile = new File(packageDir, name);
+      }
+      Writer out = new FileWriter(outputFile);
       try {
         out.write(text);
       } finally {
