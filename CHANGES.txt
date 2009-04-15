@@ -15,6 +15,8 @@ Trunk (unreleased changes)
     AVRO-11.  Re-implement specific and reflect datum readers and
     writers to leverage AVRO-6.  (cutting)
 
+    AVRO-13. Use dictionary instead of if-else in validate. (sharad)
+
   OPTIMIZATIONS
 
   BUG FIXES

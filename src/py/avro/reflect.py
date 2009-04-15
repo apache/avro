@@ -24,56 +24,63 @@ import avro.generic as generic
 
 #TODO pkgname should not be passed, instead classes should be constructed 
 #based on schema namespace
+
+def _validatearray(schm, pkgname, object):
+  if not isinstance(object, list):
+    return False
+  for elem in object:
+    if not validate(schm.getelementtype(), pkgname, elem):
+      return False
+  return True
+
+def _validatemap(schm, pkgname, object):
+  if not isinstance(object, dict):
+    return False
+  for k,v in object.items():
+    if not (validate(schm.getkeytype(), pkgname, k) and 
+            validate(schm.getvaluetype(), pkgname, v)):
+      return False
+  return True
+
+def _validaterecord(schm, pkgname, object):
+  if not isinstance(object, gettype(schm.getname(), pkgname)):
+    return False
+  for field,fieldschema in schm.getfields():
+    data = object.__getattribute__(field)
+    if not validate(fieldschema, pkgname, data):
+      return False
+  return True
+
+def _validateunion(schm, pkgname, object):
+  for elemtype in schm.getelementtypes():
+    if validate(elemtype, pkgname, object):
+      return True
+  return False
+
+_validatefn = {
+     schema.NULL : lambda schm, pkgname, object: object is None,
+     schema.BOOLEAN : lambda schm, pkgname, object: isinstance(object, bool),
+     schema.STRING : lambda schm, pkgname, object: isinstance(object, unicode),
+     schema.FLOAT : lambda schm, pkgname, object: isinstance(object, float),
+     schema.DOUBLE : lambda schm, pkgname, object: isinstance(object, float),
+     schema.BYTES : lambda schm, pkgname, object: isinstance(object, str),
+     schema.INT : lambda schm, pkgname, object: ((isinstance(object, long) or 
+                                         isinstance(object, int)) and 
+                              io._INT_MIN_VALUE <= object <= io._INT_MAX_VALUE),
+     schema.LONG : lambda schm, pkgname, object: ((isinstance(object, long) or 
+                                          isinstance(object, int)) and 
+                            io._LONG_MIN_VALUE <= object <= io._LONG_MAX_VALUE),
+     schema.ARRAY : _validatearray,
+     schema.MAP : _validatemap,
+     schema.RECORD : _validaterecord,
+     schema.UNION : _validateunion
+     }
+
 def validate(schm, pkgname, object):
   """Returns True if a python datum matches a schema."""
-  if schm.gettype() == schema.NULL:
-    return object is None
-  elif schm.gettype() == schema.STRING:
-    return isinstance(object, unicode)
-  elif schm.gettype() == schema.INT:
-    if ((isinstance(object, long) or isinstance(object, int))
-         and io._INT_MIN_VALUE <= object <= io._INT_MAX_VALUE):
-      return True
-  elif schm.gettype() == schema.LONG:
-    if ((isinstance(object, long) or isinstance(object, int))
-         and io._LONG_MIN_VALUE <= object <= io._LONG_MAX_VALUE):
-      return True
-  elif schm.gettype() == schema.FLOAT:
-    return isinstance(object, float)
-  elif schm.gettype() == schema.DOUBLE:
-    return isinstance(object, float)
-  elif schm.gettype() == schema.BYTES:
-    return isinstance(object, str)
-  elif schm.gettype() == schema.BOOLEAN:
-    return isinstance(object, bool)
-  elif schm.gettype() == schema.ARRAY:
-    if not isinstance(object, list):
-      return False
-    for elem in object:
-      if not validate(schm.getelementtype(), pkgname, elem):
-        return False
-    return True
-  elif schm.gettype() == schema.MAP:
-    if not isinstance(object, dict):
-      return False
-    for k,v in object.items():
-      if not (validate(schm.getkeytype(), pkgname, k) and 
-              validate(schm.getvaluetype(), pkgname, v)):
-        return False
-    return True
-  elif schm.gettype() == schema.RECORD:
-    if not isinstance(object, gettype(schm.getname(), pkgname)):
-      return False
-    for field,fieldschema in schm.getfields():
-      data = object.__getattribute__(field)
-      if not validate(fieldschema, pkgname, data):
-        return False
-    return True
-  elif schm.gettype() == schema.UNION:
-    for elemtype in schm.getelementtypes():
-      if validate(elemtype, pkgname, object):
-        return True
-    return False
+  fn = _validatefn.get(schm.gettype())
+  if fn is not None:
+    return fn(schm, pkgname, object)
   else:
     return False
 
