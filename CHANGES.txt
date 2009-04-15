@@ -17,6 +17,9 @@ Trunk (unreleased changes)
 
     AVRO-13. Use dictionary instead of if-else in validate. (sharad)
 
+    AVRO-5. Add java versus python RPC interoperability tests. 
+    (sharad)
+
   OPTIMIZATIONS
 
   BUG FIXES

@@ -185,7 +185,8 @@ class ResponderBase(object):
     """Writes an error message."""
     pass
 
-_STRUCT_INT = struct.Struct('i')
+_STRUCT_INT = struct.Struct('!I')
+_BUFFER_SIZE = 8192
 class SocketTransceiver(TransceiverBase):
   """A simple socket-based Transceiver implementation."""
 
@@ -193,20 +194,32 @@ class SocketTransceiver(TransceiverBase):
     self.__sock = sock
 
   def readbuffers(self):
-    size = self.__readlength()
-    if size == 0:
-      return ''
     msg = cStringIO.StringIO()
-    while msg.tell() < size:
-      chunk = self.__sock.recv(size-msg.tell())
-      if chunk == '':
-        raise ConnectionClosedException("socket read 0 bytes")
-      msg.write(chunk)
-    if self.__readlength() != 0:
-      raise ConnectionClosedException("socket read 0 bytes")
-    return msg.getvalue()
+    while True:
+      buffer = cStringIO.StringIO()
+      size = self.__readlength()
+      if size == 0:
+        return msg.getvalue()
+      while buffer.tell() < size:
+        chunk = self.__sock.recv(size-buffer.tell())
+        if chunk == '':
+          raise ConnectionClosedException("socket read 0 bytes")
+        buffer.write(chunk)
+      msg.write(buffer.getvalue())
 
   def writebuffers(self, msg):
+    totalsize = len(msg)
+    totalsent = 0
+    while totalsize-totalsent > 0:
+      if totalsize-totalsent > _BUFFER_SIZE:
+        batchsize = _BUFFER_SIZE
+      else:
+        batchsize = totalsize-totalsent
+      self.__writebuffer(msg[totalsent:(totalsent+batchsize)])
+      totalsent = totalsent + batchsize
+    self.__writelength(0) #null terminate
+
+  def __writebuffer(self, msg):
     size = len(msg)
     self.__writelength(size)
     totalsent = 0
@@ -215,7 +228,6 @@ class SocketTransceiver(TransceiverBase):
       if sent == 0:
         raise ConnectionClosedException("socket sent 0 bytes")
       totalsent = totalsent + sent
-    self.__writelength(0) #null terminate
 
   def __writelength(self, len):
     sent = self.__sock.sendall(_STRUCT_INT.pack(len))

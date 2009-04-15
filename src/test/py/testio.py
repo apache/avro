@@ -182,31 +182,9 @@ class TestSchema(unittest.TestCase):
       if self.__assertdata:
         self.assertEquals(data, dr.next())
 
-class TestGeneratedFiles(unittest.TestCase):
-
-  def __init__(self, methodName, validator=generic.validate, 
-               datumreader=generic.DatumReader):
-    unittest.TestCase.__init__(self, methodName)
-    self.__validator = validator
-    self.__datumreader = datumreader
-
-  def testreadfiles(self):
-    origschm = schema.parse(open("src/test/schemata/interop.js").read())
-    dir = _DIR + "data-files/"
-    for file in os.listdir(dir):
-      print "Validating:", file.__str__()
-      dr = io.DataFileReader(open(dir+file, "rb"), self.__datumreader())
-      count = int(dr.getmeta("count"))
-      decodedSchm = schema.parse(dr.getmeta("schema"))
-      self.assertEquals(schema.stringval(origschm), 
-                        schema.stringval(decodedSchm))
-      for i in range(0,count):
-        datum = dr.next()
-        self.assertTrue(self.__validator(origschm, datum))
-
 if __name__ == '__main__':
   if len(sys.argv) != 4:
-    print "Usage: testavro.py <schemafile> <outputfile> <count>"
+    print "Usage: testio.py <schemafile> <outputfile> <count>"
     exit
   schm = schema.parse(open(sys.argv[1]).read())
   file = sys.argv[2]

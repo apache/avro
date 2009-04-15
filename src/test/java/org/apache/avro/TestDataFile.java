@@ -85,24 +85,8 @@ public class TestDataFile extends TestCase {
     }
   }
 
-  public void testGeneratedGeneric() throws IOException {
-    readFiles(new GenericDatumReader<Object>());
-  }
-
-  public void testGeneratedSpecific() throws IOException {
-    readFiles(new SpecificDatumReader("org.apache.avro."));
-  }
-
-  public void testGeneratedReflect() throws IOException {
-    readFiles(new ReflectDatumReader("org.apache.avro."));
-  }
-
-  private void readFiles(DatumReader<Object> datumReader) throws IOException {
-    for (File f : DATAFILE_DIR.listFiles())
-      readFile(f, datumReader, true);
-  }
-
-  private void readFile(File f, DatumReader<Object> datumReader, boolean reuse)
+  protected void readFile(File f, 
+      DatumReader<Object> datumReader, boolean reuse)
     throws IOException {
     System.out.println("Reading "+ f.getName());
     DataFileReader<Object> reader =
@@ -128,4 +112,24 @@ public class TestDataFile extends TestCase {
     System.out.println("Time: "+(System.currentTimeMillis()-start));
   }
 
+  public static class InteropTest extends TestCase {
+
+    public void testGeneratedGeneric() throws IOException {
+      readFiles(new GenericDatumReader<Object>());
+    }
+
+    public void testGeneratedSpecific() throws IOException {
+      readFiles(new SpecificDatumReader("org.apache.avro."));
+    }
+
+    public void testGeneratedReflect() throws IOException {
+      readFiles(new ReflectDatumReader("org.apache.avro."));
+    }
+
+    private void readFiles(DatumReader<Object> datumReader) throws IOException {
+      TestDataFile test = new TestDataFile();
+      for (File f : DATAFILE_DIR.listFiles())
+        test.readFile(f, datumReader, true);
+    }
+  }
 }

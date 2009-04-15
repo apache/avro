@@ -42,6 +42,9 @@ public class TestProtocolSpecific extends TestCase {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolSpecific.class);
 
+  private static final File SERVER_PORTS_DIR
+  = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
+
   private static final File FILE = new File("src/test/schemata/test.js");
   private static final Protocol PROTOCOL;
   static {
@@ -116,5 +119,40 @@ public class TestProtocolSpecific extends TestCase {
 
   public void testStopServer() {
     server.close();
+  }
+
+  public static class InteropTest extends TestCase{
+
+    public void testClient() throws Exception {
+      for (File f : SERVER_PORTS_DIR.listFiles()) {
+        LineNumberReader reader = new LineNumberReader(new FileReader(f));
+        int port = Integer.parseInt(reader.readLine());
+        System.out.println("Validating java client to "+
+            f.getName()+" - " + port);
+        Transceiver client = new SocketTransceiver(
+            new InetSocketAddress("localhost", port));
+        proxy = (Test)SpecificRequestor.getClient(Test.class, client);
+        TestProtocolSpecific proto = new TestProtocolSpecific();
+        proto.testHello();
+        proto.testEcho();
+        proto.testEchoBytes();
+        proto.testError();
+        System.out.println("Done! Validation java client to "+
+            f.getName()+" - " + port);
+      }
+    }
+
+    /**
+     * Starts the RPC server.
+     */
+    public static void main(String[] args) throws Exception {
+      SocketServer server = new SocketServer(
+          new SpecificResponder(Test.class, new TestImpl()),
+          new InetSocketAddress(0));
+      File portFile = new File(SERVER_PORTS_DIR, "java-port");
+      FileWriter w = new FileWriter(portFile);
+      w.write(Integer.toString(server.getPort()));
+      w.close();
+    }
   }
 }

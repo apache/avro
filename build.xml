@@ -138,7 +138,7 @@
     </javac> 
   </target>
 
-  <target name="test" depends="test-java,test-py"/>
+  <target name="test" depends="test-java,test-py,test-interop"/>
 
   <target name="compile-test-schemata" depends="compile-java">
     <taskdef name="protocol" classname="org.apache.avro.specific.ProtocolTask">
@@ -179,7 +179,7 @@
 	       outputDirectory="${test.java.classes}"/>
   </target>
 
-  <target name="test-java" depends="compile-java-test,generate-test-data"
+  <target name="test-java" depends="compile-java-test"
 	  description="Run java unit tests">
 
     <junit showoutput="yes"
@@ -229,8 +229,7 @@
     </py-run>
   </target>
 
-  <target name="test-py" depends="generate-test-data"
-    description="Run python unit tests">
+  <target name="test-py" depends="init" description="Run python unit tests">
     <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask">
       <classpath refid="java.classpath" />
     </taskdef>
@@ -239,7 +238,103 @@
         <include name="test*.py"/>
       </fileset>
     </py-test>
-  </target>   
+  </target>
+
+  <target name="test-interop" depends="test-interop-java,test-interop-py"
+   description="Run multiple languages interoperability tests">
+  </target>
+
+  <target name="test-interop-java" 
+    depends="test-interop-data-java,test-interop-rpc-java"
+   description="Run java interoperability tests">
+  </target>
+
+  <target name="test-interop-py" 
+    depends="test-interop-data-py,test-interop-rpc-py"
+   description="Run python interoperability tests">
+  </target>
+
+  <target name="test-interop-data-java" depends="generate-test-data" 
+    description="Run java data file interoperability tests">
+    <junit showoutput="yes" 
+      printsummary="withOutAndErr"
+      haltonfailure="no"
+      errorProperty="tests.failed" failureProperty="tests.failed">
+      <sysproperty key="test.count" value="${test.count}"/>
+      <sysproperty key="test.dir" value="${test.java.build.dir}"/>
+      <sysproperty key="test.validate" value="${test.validate}"/>
+      <classpath refid="test.java.classpath"/>
+      <formatter type="plain" />
+      <test name="org.apache.avro.TestDataFile$InteropTest" 
+        todir="${test.java.build.dir}"/>
+    </junit>
+    <fail if="tests.failed">Tests failed!</fail>
+  </target>
+
+  <target name="test-interop-data-py" depends="generate-test-data" 
+    description="Run python data file interoperability tests">
+    <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask">
+      <classpath refid="java.classpath" />
+    </taskdef>
+    <py-test python="python" pythonpathref="test.py.path" >
+      <fileset dir="${basedir}/src/test/py">
+        <include name="interop*.py"/>
+      </fileset>
+    </py-test>
+  </target>
+
+  <target name="start-rpc-daemons" depends="compile-java-test"
+    description="Start the daemons for rpc interoperability tests">
+    <delete dir="${test.java.build.dir}/server-ports"/>
+    <mkdir dir="${test.java.build.dir}/server-ports"/>
+    <taskdef name="py-run" classname="org.pyant.tasks.PythonRunTask">
+      <classpath refid="java.classpath" />
+    </taskdef>
+    <!-- Start the servers. As servers block the ant main thread, these need 
+    to be created in parallel threads--> 
+    <parallel>
+      <daemons>
+        <java classname="org.apache.avro.TestProtocolSpecific$InteropTest">
+          <classpath refid="test.java.classpath"/>
+          <sysproperty key="test.dir" value="${test.java.build.dir}"/>
+        </java>
+        <py-run script="${basedir}/src/test/py/interoptests.py" 
+          python="python" pythonpathref="test.py.path">
+          <arg value="server"/>
+        </py-run>
+      </daemons>
+
+      <!-- Give some time to start -->
+      <sequential>
+        <sleep seconds="2"/>
+      </sequential>
+    </parallel>
+  </target>
+
+  <target name="test-interop-rpc-java" depends="start-rpc-daemons"
+    description="Run java rpc interoperability tests">
+    <junit showoutput="yes" 
+      printsummary="withOutAndErr"
+      haltonfailure="no"
+      errorProperty="tests.failed" failureProperty="tests.failed">
+      <sysproperty key="test.count" value="${test.count}"/>
+      <sysproperty key="test.dir" value="${test.java.build.dir}"/>
+      <sysproperty key="test.validate" value="${test.validate}"/>
+      <classpath refid="test.java.classpath"/>
+      <formatter type="plain" />
+      <test name="org.apache.avro.TestProtocolSpecific$InteropTest" 
+        todir="${test.java.build.dir}"/>
+    </junit>
+    <fail if="tests.failed">Tests failed!</fail>
+  </target>
+
+  <target name="test-interop-rpc-py" depends="start-rpc-daemons"
+    description="Run java rpc interoperability tests">
+        <py-run script="${basedir}/src/test/py/interoptests.py" 
+          python="python" pythonpathref="test.py.path">
+          <arg value="client"/>
+        </py-run>
+  </target>
 
   <target name="pydoc" description="Generate python api docs">
     <taskdef name="py-doc" classname="org.pyant.tasks.PythonDocTask">

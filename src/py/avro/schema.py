@@ -217,7 +217,13 @@ _PRIMITIVES = {'string':_StringSchema(),
 
 class _Names(dict):
   def __init__(self, names=_PRIMITIVES):
-    self.update(names)
+    self.__defaults = names
+
+  def get(self, key):
+    val = dict.get(self, key)
+    if val is None:
+      val = self.__defaults.get(key)
+    return val
 
   def __setitem__(self, key, val):
     if dict.get(self, key) is not None:

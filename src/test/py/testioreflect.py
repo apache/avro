@@ -59,8 +59,3 @@ class TestSchema(testio.TestSchema):
     testio.TestSchema.__init__(self, methodName, dyvalidator, ReflectDWriter,
                                ReflectDReader, DyRandomData, False)
 
-class TestGeneratedFiles(testio.TestGeneratedFiles):
-
-  def __init__(self, methodName):
-    testio.TestGeneratedFiles.__init__(self, methodName, 
-                                       dyvalidator, ReflectDReader)
