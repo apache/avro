@@ -108,7 +108,7 @@
 	  <source>
 {
   "type": "record", 
-  "name" "LongList",
+  "name": "LongList",
   "fields" : {
     "value": "long",               // each element has a long
     "next": ["LongList", "null"]   // optional next element
@@ -244,7 +244,7 @@
 	  <source>
 {
   "type": "record", 
-  "name" "test",
+  "name": "test",
   "fields" : {
     "a": "long",
     "b": "string"
@@ -424,8 +424,10 @@
 	<li><em>name</em>, string, to distinguish it from other protocols;</li>
 	<li><em>namespace</em>, a string which qualifies the name;</li>
 	<li><em>types</em>, a list of record and error definitions.
-	  An error definition is just like a record definition except it
-	  uses "error" instead of "record".</li>
+	  An error definition is just like a record definition except
+	  it uses "error" instead of "record".  Note that forward
+	  references to records and errors are not currently
+	  supported.</li>
 	<li><em>messages</em>, a JSON object whose keys are message
 	  names and whose values are objects whose attributes are
 	  described below.  No two messages may have the same name.</li>
@@ -629,8 +631,8 @@
 	schema differences may be resolved.</p>
 
       <p>We call the schema used to write the data as
-	the <em>remote</em> schema, and the version that the
-	application expects the <em>local</em> schema.  To resolve
+	the <em>writer's</em> schema, and the schema that the
+	application expects the <em>reader's</em> schema.  To resolve
 	differences between these two schemas, the following
 	resolution algorithm is recommended.</p>
 
@@ -643,8 +645,8 @@
 	    <li>both schemas are records with the same name</li>
 	    <li>either schema is a union</li>
 	    <li>both schemas have same primitive type</li>
-	    <li>the remote schema may be <em>promoted</em> to the
-	      local as follows:
+	    <li>the writer's schema may be <em>promoted</em> to the
+	      reader's as follows:
 	      <ul>
 		<li>int is promotable to long, float, or double</li>
 		<li>long is promotable to float or double</li>
@@ -656,42 +658,42 @@
 
 	<li><strong>if both are records:</strong>
 
-	  <p>if the remote record contains a field with a name not present in
-	    the local record, that remote value is ignored.</p>
+	  <p>if the writer's record contains a field with a name not present in
+	    the reader's record, that writer's value is ignored.</p>
 
 	  <p>schemas for fields with the same name in both records are resolved
 	    recursively.</p>
 
 	  <p>Note that method parameter lists are equivalent to
 	  records.  Note also that, since the ordering of record
-	  fields may vary between local and remote, method parameter
+	  fields may vary between reader and writer, method parameter
 	  list order may also vary.</p>
 	</li>
 
 	<li><strong>if both are arrays:</strong>
-	  <p>This resolution algorithm is applied recursively to the local and
-	    remote array item schemas.</p>
+	  <p>This resolution algorithm is applied recursively to the reader's and
+	    writer's array item schemas.</p>
 	</li>
 
 	<li><strong>if both are maps:</strong>
-	  <p>This resolution algorithm is applied recursively to the local and
-	    remote key and value schemas.</p>
+	  <p>This resolution algorithm is applied recursively to the reader's and
+	    writer's key and value schemas.</p>
 	</li>
 
 	<li><strong>if both are unions:</strong>
-	  <p>The first schema in the local union that matches the
-	    selected remote union schema is recursively resolved
+	  <p>The first schema in the reader's union that matches the
+	    selected writer's union schema is recursively resolved
 	    against it.  if none match, an error is signalled.</p>
 	</li>
 
-	<li><strong>if local is a union, but remote is not</strong>
-	  <p>The first schema in the local union that matches the
-	    remote schema is recursively resolved against it.  If none
+	<li><strong>if reader's is a union, but writer's is not</strong>
+	  <p>The first schema in the reader's union that matches the
+	    writer's schema is recursively resolved against it.  If none
 	    match, an error is signalled.</p>
 	</li>
 	  
-	<li><strong>if remote is a union, but local is not</strong>
-	  <p>If the local schema matches the selected remote schema,
+	<li><strong>if writer's is a union, but reader's is not</strong>
+	  <p>If the reader's schema matches the selected writer's schema,
 	    it is recursively resolved against it.  If they do not
 	    match, an error is signalled.</p>
 	</li>

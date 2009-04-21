@@ -20,6 +20,8 @@ Trunk (unreleased changes)
     AVRO-5. Add java versus python RPC interoperability tests. 
     (sharad)
 
+    AVRO-16.  Minor documentation improvements.  (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
