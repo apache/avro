@@ -44,6 +44,14 @@ class Schema(object):
   def gettype(self):
     return self.__type
 
+  def __eq__(self, other, seen=None):
+    if self is other:
+      return True
+    return isinstance(other, Schema) and self.__type == other.__type
+
+  def __hash__(self, seen=None):
+    return self.__type.__hash__()
+
 class _StringSchema(Schema):
   def __init__(self):
     Schema.__init__(self, STRING)
@@ -149,6 +157,30 @@ class _RecordSchema(Schema):
     str.write("}}")
     return str.getvalue()
 
+  def __eq__(self, other, seen={}):
+    if self is other or seen.get(id(self)) is other:
+      return True
+    if isinstance(other, _RecordSchema):
+      size = len(self.__fields)
+      if len(other.__fields) != size:
+        return False
+      seen[id(self)] = other
+      for i in range(0, size):
+        if not self.__fields[i][1].__eq__(other.__fields[i][1], seen):
+          return False
+      return True
+    else:
+      return False
+
+  def __hash__(self, seen=set()):
+    if seen.__contains__(id(self)):
+      return 0
+    seen.add(id(self))
+    hash = self.gettype().__hash__() 
+    for field, fieldschm in self.__fields:
+      hash = hash + fieldschm.__hash__(seen)
+    return hash
+
 class _ArraySchema(Schema):
   def __init__(self, elemtype):
     Schema.__init__(self, ARRAY)
@@ -164,6 +196,19 @@ class _ArraySchema(Schema):
     str.write("}")
     return str.getvalue()
 
+  def __eq__(self, other, seen={}):
+    if self is other or seen.get(id(self)) is other:
+      return True
+    seen[id(self)]= other
+    return (isinstance(other, _ArraySchema) and 
+            self.__elemtype.__eq__(other.__elemtype, seen))
+
+  def __hash__(self, seen=set()):
+    if seen.__contains__(id(self)):
+      return 0
+    seen.add(id(self))
+    return self.gettype().__hash__() + self.__elemtype.__hash__(seen)
+
 class _MapSchema(Schema):
   def __init__(self, keytype, valuetype):
     Schema.__init__(self, MAP)
@@ -176,7 +221,6 @@ class _MapSchema(Schema):
   def getvaluetype(self):
     return self.__vtype
 
-
   def str(self, names):
     str = cStringIO.StringIO()
     str.write("{\"type\": \"map\", \"keys\":  ")
@@ -185,6 +229,22 @@ class _MapSchema(Schema):
     str.write(self.__vtype.str(names));
     str.write("}")
     return str.getvalue()
+
+  def __eq__(self, other, seen={}):
+    if self is other or seen.get(id(self)) is other:
+      return True
+    seen[id(self)]= other
+    return (isinstance(other, _MapSchema) and 
+            self.__ktype.__eq__(other.__ktype, seen) and 
+            self.__vtype.__eq__(other.__vtype), seen)
+
+  def __hash__(self, seen=set()):
+    if seen.__contains__(id(self)):
+      return 0
+    seen.add(id(self))
+    return (self.gettype().__hash__() + 
+            self.__ktype.__hash__(seen) +
+            self.__vtype.__hash__(seen))
 
 class _UnionSchema(Schema):
   def __init__(self, elemtypes):
@@ -205,6 +265,30 @@ class _UnionSchema(Schema):
         str.write(",")
     str.write("]")
     return str.getvalue()
+
+  def __eq__(self, other, seen={}):
+    if self is other or seen.get(id(self)) is other:
+      return True
+    seen[id(self)]= other
+    if isinstance(other, _UnionSchema):
+      size = len(self.__elemtypes)
+      if len(other.__elemtypes) != size:
+        return False
+      for i in range(0, size):
+        if not self.__elemtypes[i].__eq__(other.__elemtypes[i], seen):
+          return False
+      return True
+    else:
+      return False
+
+  def __hash__(self, seen=set()):
+    if seen.__contains__(id(self)):
+      return 0
+    seen.add(id(self))
+    hash = self.gettype().__hash__() 
+    for elem in self.__elemtypes:
+      hash = hash + elem.__hash__(seen)
+    return hash
 
 _PRIMITIVES = {'string':_StringSchema(),
         'bytes':_BytesSchema(),

@@ -41,8 +41,7 @@ class TestGeneratedFiles(unittest.TestCase):
                              self.__datumreader())
       count = int(dr.getmeta("count"))
       decodedSchm = schema.parse(dr.getmeta("schema"))
-      self.assertEquals(schema.stringval(origschm), 
-                        schema.stringval(decodedSchm))
+      self.assertEquals(origschm, decodedSchm)
       for i in range(0,count):
         datum = dr.next()
         self.assertTrue(self.__validator(origschm, datum))

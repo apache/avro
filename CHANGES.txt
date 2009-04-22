@@ -22,6 +22,9 @@ Trunk (unreleased changes)
 
     AVRO-16.  Minor documentation improvements.  (cutting)
 
+    AVRO-15. Override __eq__() and __hash__() in Schema classes.
+    (sharad)
+
   OPTIMIZATIONS
 
   BUG FIXES

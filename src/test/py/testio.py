@@ -150,6 +150,10 @@ class TestSchema(unittest.TestCase):
     schm = schema.parse(string)
     st = schema.stringval(schm)
     self.assertEquals(string.replace(" ",""), st.replace(" ",""))
+    #test __eq__
+    self.assertEquals(schm, schema.parse(string))
+    #test hashcode doesn't generate infinite recursion
+    schm.__hash__()
     randomdata = self.__random(schm)
     for i in range(1,10):
       self.checkser(schm, randomdata)
