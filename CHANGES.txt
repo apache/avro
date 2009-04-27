@@ -4,6 +4,9 @@ Trunk (unreleased changes)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-1. Record fields are now defined with JSON arrays, rather
+    than JSON objects, since fields are ordered.  (cutting)
+
   NEW FEATURES
 
     AVRO-6. Permit easier implementation of alternate generic data
