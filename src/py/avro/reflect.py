@@ -37,8 +37,7 @@ def _validatemap(schm, pkgname, object):
   if not isinstance(object, dict):
     return False
   for k,v in object.items():
-    if not (validate(schm.getkeytype(), pkgname, k) and 
-            validate(schm.getvaluetype(), pkgname, v)):
+    if not validate(schm.getvaluetype(), pkgname, v):
       return False
   return True
 

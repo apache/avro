@@ -135,14 +135,14 @@
         <section>
           <title>Maps</title>
           <p>Maps use the type name <code>"map"</code> and support
-          two attributes:</p>
+          one attribute:</p>
 	  <ul>
-            <li><code>keys</code>: the schema of the map's keys.</li>
             <li><code>values</code>: the schema of the map's values.</li>
 	  </ul>
+	  <p>Map keys are assumed to be strings.</p>
 	  <p>For example, a map from string to long is declared
 	  with:</p>
-	  <source>{"type": "map", "keys": "string", "values": "long"}</source>
+	  <source>{"type": "map", "values": "long"}</source>
 	</section>
 
         <section>
@@ -304,7 +304,7 @@
           block consists of a <code>long</code> <em>count</em> value,
           followed by that many key/value pairs.  A block with count
           zero indicates the end of the map.  Each item is serialized
-          per the map's key and value schema.</p>
+          per the map's value schema.</p>
 
 	  <p>If a block's count is negative, then the count is
 	  followed immediately by a <code>long</code>
@@ -646,7 +646,7 @@
 	  <p>To match, one of the following must hold:</p>
 	  <ul>
 	    <li>both schemas are arrays whose item types match</li>
-	    <li>both schemas are maps whose key and value types match</li>
+	    <li>both schemas are maps whose value types match</li>
 	    <li>both schemas are records with the same name</li>
 	    <li>either schema is a union</li>
 	    <li>both schemas have same primitive type</li>
@@ -682,7 +682,7 @@
 
 	<li><strong>if both are maps:</strong>
 	  <p>This resolution algorithm is applied recursively to the reader's and
-	    writer's key and value schemas.</p>
+	    writer's value schemas.</p>
 	</li>
 
 	<li><strong>if both are unions:</strong>

@@ -39,7 +39,7 @@ import org.codehaus.jackson.map.JsonTypeMapper;
  * <ul>
  * <li>An <i>record</i>, mapping field names to field value data;
  * <li>An <i>array</i> of values, all of the same schema;
- * <li>A <i>map</i> containing key/value pairs, each of a declared schema;
+ * <li>A <i>map</i>, containing string/value pairs, of a declared schema;
  * <li>A <i>union</i> of other schemas;
  * <li>A unicode <i>string</i>;
  * <li>A sequence of <i>bytes</i>;
@@ -84,29 +84,30 @@ public abstract class Schema {
   }
 
   /** Create an anonymous record schema. */
-  public static Schema create(Map<String,Schema> fields) {
-    Schema result = create(null, null, false);
+  public static Schema createRecord(Map<String,Schema> fields) {
+    Schema result = createRecord(null, null, false);
     result.setFields(fields);
     return result;
   }
 
   /** Create a named record schema. */
-  public static Schema create(String name, String namespace, boolean isError) {
+  public static Schema createRecord(String name, String namespace,
+                                    boolean isError) {
      return new RecordSchema(name, namespace, isError);
   }
 
   /** Create an array schema. */
-  public static Schema create(Schema elementType) {
+  public static Schema createArray(Schema elementType) {
     return new ArraySchema(elementType);
   }
 
   /** Create a map schema. */
-  public static Schema create(Schema keyType, Schema valueType) {
-    return new MapSchema(keyType, valueType);
+  public static Schema createMap(Schema valueType) {
+    return new MapSchema(valueType);
   }
 
   /** Create a union schema. */
-  public static Schema create(List<Schema> types) {
+  public static Schema createUnion(List<Schema> types) {
     return new UnionSchema(types);
   }
 
@@ -146,11 +147,6 @@ public abstract class Schema {
   /** If this is an array, returns its element type. */
   public Schema getElementType() {
     throw new AvroRuntimeException("Not an array: "+this);
-  }
-
-  /** If this is a map, returns its key type. */
-  public Schema getKeyType() {
-    throw new AvroRuntimeException("Not a map: "+this);
   }
 
   /** If this is a map, returns its value type. */
@@ -274,29 +270,23 @@ public abstract class Schema {
   }
 
   static class MapSchema extends Schema {
-    private final Schema keyType;
     private final Schema valueType;
-    public MapSchema(Schema keyType, Schema valueType) {
+    public MapSchema(Schema valueType) {
       super(Type.MAP);
-      this.keyType = keyType;
       this.valueType = valueType;
     }
-    public Schema getKeyType() { return keyType; }
     public Schema getValueType() { return valueType; }
     public boolean equals(Object o) {
       if (o == this) return true;
       return o instanceof MapSchema
-        && keyType.equals(((MapSchema)o).keyType)
         && valueType.equals(((MapSchema)o).valueType);
     }
     public int hashCode() {
-      return getType().hashCode()+keyType.hashCode()+valueType.hashCode();
+      return getType().hashCode()+valueType.hashCode();
     }
     public String toString(Map<String,Schema> names) {
       StringBuilder buffer = new StringBuilder();
-      buffer.append("{\"type\": \"map\", \"keys\":  ");
-      buffer.append(keyType.toString(names));
-      buffer.append(", \"values\": ");
+      buffer.append("{\"type\": \"map\", \"values\": ");
       buffer.append(valueType.toString(names));
       buffer.append("}");
       return buffer.toString();
@@ -481,8 +471,7 @@ public abstract class Schema {
       } else if (type.equals("array")) {          // array
         return new ArraySchema(parse(schema.getFieldValue("items"), names));
       } else if (type.equals("map")) {            // map
-        return new MapSchema(parse(schema.getFieldValue("keys"), names),
-                             parse(schema.getFieldValue("values"), names));
+        return new MapSchema(parse(schema.getFieldValue("values"), names));
       } else
         throw new SchemaParseException("Type not yet supported: "+type);
     } else if (schema.isArray()) {                // union

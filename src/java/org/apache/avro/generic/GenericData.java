@@ -117,8 +117,7 @@ public class GenericData {
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet())
-        if (!(validate(schema.getKeyType(), entry.getKey()) &&
-              validate(schema.getValueType(), entry.getValue()))) 
+        if (!validate(schema.getValueType(), entry.getValue()))
           return false;
       return true;
     case UNION:
@@ -204,7 +203,7 @@ public class GenericData {
       Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
       for (Map.Entry<String,Object> entry : record.entrySet())
         fields.put(entry.getKey(), induce(entry.getValue()));
-      return Schema.create(fields);
+      return Schema.createRecord(fields);
     } else if (datum instanceof GenericArray) {
       Schema elementType = null;
       for (Object element : (GenericArray)datum) {
@@ -217,27 +216,23 @@ public class GenericData {
       if (elementType == null) {
         throw new AvroTypeException("Empty array: "+datum);
       }
-      return Schema.create(elementType);
+      return Schema.createArray(elementType);
 
     } else if (datum instanceof Map) {
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
-      Schema key = null;
       Schema value = null;
       for (Map.Entry<Object,Object> entry : map.entrySet()) {
-        if (key == null) {
-          key = induce(entry.getKey());
+        if (value == null) {
           value = induce(entry.getValue());
-        } else if (!key.equals(induce(entry.getKey()))) {
-          throw new AvroTypeException("No mixed type map keys.");
         } else if (!value.equals(induce(entry.getValue()))) {
           throw new AvroTypeException("No mixed type map values.");
         }
       }
-      if (key == null) {
+      if (value == null) {
         throw new AvroTypeException("Empty map: "+datum);
       }
-      return Schema.create(key, value);
+      return Schema.createMap(value);
     }
     else if (datum instanceof Utf8)       return Schema.create(Type.STRING);
     else if (datum instanceof ByteBuffer) return Schema.create(Type.BYTES);

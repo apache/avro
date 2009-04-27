@@ -46,8 +46,7 @@ def _validatemap(schm, object):
   if not isinstance(object, dict):
     return False
   for k,v in object.items():
-    if not (validate(schm.getkeytype(), k) and 
-            validate(schm.getvaluetype(), v)):
+    if not validate(schm.getvaluetype(), v):
       return False
   return True
 
@@ -131,7 +130,7 @@ class DatumReader(io.DatumReaderBase):
     size = valuereader.readlong()
     if size != 0:
       for i in range(0, size):
-        key = self.readdata(schm.getkeytype(), valuereader)
+        key = valuereader.readutf8()
         result[key] = self.readdata(schm.getvaluetype(), valuereader)
       valuereader.readlong()
     return result
@@ -161,20 +160,20 @@ class DatumWriter(io.DatumWriterBase):
   def __init__(self, schm=None):
     self.setschema(schm)
     self.__writefn = {
-     schema.BOOLEAN : lambda schm, datum, valuereader: 
-                  valuereader.writeboolean(datum),
-     schema.STRING : lambda schm, datum, valuereader: 
-                  valuereader.writeutf8(datum),
-     schema.INT : lambda schm, datum, valuereader: 
-                  valuereader.writeint(datum),
-     schema.LONG : lambda schm, datum, valuereader: 
-                  valuereader.writelong(datum),
-     schema.FLOAT : lambda schm, datum, valuereader: 
-                  valuereader.writefloat(datum),
-     schema.DOUBLE : lambda schm, datum, valuereader: 
-                  valuereader.writedouble(datum),
-     schema.BYTES : lambda schm, datum, valuereader: 
-                  valuereader.writebytes(datum),
+     schema.BOOLEAN : lambda schm, datum, valuewriter: 
+                  valuewriter.writeboolean(datum),
+     schema.STRING : lambda schm, datum, valuewriter: 
+                  valuewriter.writeutf8(datum),
+     schema.INT : lambda schm, datum, valuewriter: 
+                  valuewriter.writeint(datum),
+     schema.LONG : lambda schm, datum, valuewriter: 
+                  valuewriter.writelong(datum),
+     schema.FLOAT : lambda schm, datum, valuewriter: 
+                  valuewriter.writefloat(datum),
+     schema.DOUBLE : lambda schm, datum, valuewriter: 
+                  valuewriter.writedouble(datum),
+     schema.BYTES : lambda schm, datum, valuewriter: 
+                  valuewriter.writebytes(datum),
      schema.ARRAY : self.writearray,
      schema.MAP : self.writemap,
      schema.RECORD : self.writerecord,
@@ -204,7 +203,7 @@ class DatumWriter(io.DatumWriterBase):
     if len(datum) > 0:
       valuewriter.writelong(len(datum))
       for k,v in datum.items():
-        self.writedata(schm.getkeytype(), k, valuewriter)
+        valuewriter.writeutf8(k)
         self.writedata(schm.getvaluetype(), v, valuewriter)
     valuewriter.writelong(0)
 

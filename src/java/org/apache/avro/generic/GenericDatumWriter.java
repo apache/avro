@@ -122,13 +122,12 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.*/
   protected void writeMap(Schema schema, Object datum, ValueWriter out)
     throws IOException {
-    Schema key = schema.getKeyType();
     Schema value = schema.getValueType();
     int size = getMapSize(datum);
     if (size > 0) {
       out.writeLong(size);                // write a single block
       for (Map.Entry<Object,Object> entry : getMapEntries(datum)) {
-        write(key, entry.getKey(), out);
+        writeString(entry.getKey(), out);
         write(value, entry.getValue(), out);
       }
     }

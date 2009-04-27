@@ -134,12 +134,13 @@ public class ReflectData {
       if (GenericArray.class.isAssignableFrom(raw)) { // array
         if (params.length != 1)
           throw new AvroTypeException("No array type specified.");
-        return Schema.create(createSchema(params[0], names));
+        return Schema.createArray(createSchema(params[0], names));
       } else if (Map.class.isAssignableFrom(raw)) { // map
         java.lang.reflect.Type key = params[0];
         java.lang.reflect.Type value = params[1];
-        return Schema.create(createSchema(key, names),
-                             createSchema(value, names));
+        if (!(key == Utf8.class))
+          throw new AvroTypeException("Map key class not Utf8: "+key);
+        return Schema.createMap(createSchema(value, names));
       }
     } else if (type instanceof Class) {             // record
       Class c = (Class)type;
@@ -147,8 +148,8 @@ public class ReflectData {
       Schema schema = names.get(name);
       if (schema == null) {
         Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
-        schema = Schema.create(name, c.getPackage().getName(),
-                               Throwable.class.isAssignableFrom(c));
+        schema = Schema.createRecord(name, c.getPackage().getName(),
+                                     Throwable.class.isAssignableFrom(c));
         if (!names.containsKey(name))
           names.put(name, schema);
         for (Field field : c.getDeclaredFields())
@@ -187,7 +188,7 @@ public class ReflectData {
     java.lang.reflect.Type[] paramTypes = method.getGenericParameterTypes();
     for (int i = 0; i < paramTypes.length; i++)
       fields.put(paramNames[i], createSchema(paramTypes[i], names));
-    Schema request = Schema.create(fields);
+    Schema request = Schema.createRecord(fields);
 
     Schema response = createSchema(method.getGenericReturnType(), names);
 
@@ -196,7 +197,7 @@ public class ReflectData {
     for (java.lang.reflect.Type err : method.getGenericExceptionTypes())
       if (err != AvroRemoteException.class) 
         errs.add(createSchema(err, names));
-    Schema errors = Schema.create(errs);
+    Schema errors = Schema.createUnion(errs);
 
     return protocol.createMessage(method.getName(), request, response, errors);
   }

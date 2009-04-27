@@ -170,7 +170,6 @@ public class SpecificCompiler {
       compile(schema.getElementType(), name+"Element", d);
       break;
     case MAP:
-      compile(schema.getKeyType(), name+"Key", d);
       compile(schema.getValueType(), name+"Value", d);
       break;
     case UNION:
@@ -195,9 +194,7 @@ public class SpecificCompiler {
     case ARRAY:
       return "GenericArray<"+type(schema.getElementType(),name+"Element")+">";
     case MAP:
-      return "Map<"
-        +type(schema.getKeyType(),name+"Key")+","
-        +type(schema.getValueType(),name+"Value")+">";
+      return "Map<Utf8,"+type(schema.getValueType(),name+"Value")+">";
     case UNION:   return "Object";
     case STRING:  return "Utf8";
     case BYTES:   return "ByteBuffer";

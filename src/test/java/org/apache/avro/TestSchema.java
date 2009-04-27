@@ -66,7 +66,7 @@ public class TestSchema extends TestCase {
   }
 
   public void testMap() throws Exception {
-    check("{\"type\":\"map\", \"keys\": \"long\", \"values\": \"string\"}");
+    check("{\"type\":\"map\", \"values\": \"string\"}");
   }
 
   public void testRecord() throws Exception {

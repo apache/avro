@@ -70,7 +70,7 @@ class RandomData(object):
       if len < 0:
         len = 0
       for i in range(1, len):
-        map[self.nextdata(schm.getkeytype(), d+1)] = self.nextdata(
+        map[self.nextdata(schema._StringSchema())] = self.nextdata(
                                                     schm.getvaluetype(), d+1)
       return map
     elif schm.gettype() == schema.RECORD:
@@ -123,8 +123,7 @@ class TestSchema(unittest.TestCase):
     self.check("{\"type\":\"array\", \"items\": \"long\"}")
 
   def testMap(self):
-    self.check("{\"type\":\"map\", \"keys\": \"long\", \"values\": "+
-          "\"string\"}")
+    self.check("{\"type\":\"map\", \"values\": \"string\"}")
 
   def testRecord(self):
     self.check("{\"type\":\"record\",\"fields\":[{\"name\":\"f\", \"type\":" +

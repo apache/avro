@@ -18,7 +18,7 @@
 A schema may be one of:
   An record, mapping field names to field value data;
   An array of values, all of the same schema;
-  A map containing key/value pairs, each of a declared schema;
+  A map containing string/value pairs, each of a declared schema;
   A union of other schemas;
   A unicode string;
   A sequence of bytes;
@@ -210,22 +210,16 @@ class _ArraySchema(Schema):
     return self.gettype().__hash__() + self.__elemtype.__hash__(seen)
 
 class _MapSchema(Schema):
-  def __init__(self, keytype, valuetype):
+  def __init__(self, valuetype):
     Schema.__init__(self, MAP)
-    self.__ktype = keytype
     self.__vtype = valuetype
-
-  def getkeytype(self):
-    return self.__ktype
 
   def getvaluetype(self):
     return self.__vtype
 
   def str(self, names):
     str = cStringIO.StringIO()
-    str.write("{\"type\": \"map\", \"keys\":  ")
-    str.write(self.__ktype.str(names))
-    str.write(", \"values\": ");
+    str.write("{\"type\": \"map\", \"values\":  ")
     str.write(self.__vtype.str(names));
     str.write("}")
     return str.getvalue()
@@ -234,16 +228,14 @@ class _MapSchema(Schema):
     if self is other or seen.get(id(self)) is other:
       return True
     seen[id(self)]= other
-    return (isinstance(other, _MapSchema) and 
-            self.__ktype.__eq__(other.__ktype, seen) and 
+    return (isinstance(other, _MapSchema) and
             self.__vtype.__eq__(other.__vtype), seen)
 
   def __hash__(self, seen=set()):
     if seen.__contains__(id(self)):
       return 0
     seen.add(id(self))
-    return (self.gettype().__hash__() + 
-            self.__ktype.__hash__(seen) +
+    return (self.gettype().__hash__() +
             self.__vtype.__hash__(seen))
 
 class _UnionSchema(Schema):
@@ -353,8 +345,7 @@ def _parse(obj, names):
     elif type == "array":
       return _ArraySchema(_parse(obj.get("items"), names))
     elif type == "map":
-      return _MapSchema(_parse(obj.get("keys"), names), 
-                       _parse(obj.get("values"), names))
+      return _MapSchema(_parse(obj.get("values"), names))
     else:
       raise SchemaParseException("Type not yet supported: "+type.__str__())
   elif isinstance(obj, list):

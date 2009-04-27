@@ -93,7 +93,7 @@ public class Protocol {
 
       List<Schema> errTypes = errors.getTypes();  // elide system error
       if (errTypes.size() > 1) {
-        Schema errs = Schema.create(errTypes.subList(1, errTypes.size()));
+        Schema errs = Schema.createUnion(errTypes.subList(1, errTypes.size()));
         buffer.append(", \"errors\": "+errs.toString(types));
       }
 
@@ -132,7 +132,7 @@ public class Protocol {
   static {
     List<Schema> errors = new ArrayList<Schema>();
     errors.add(SYSTEM_ERROR);
-    SYSTEM_ERRORS = Schema.create(errors);
+    SYSTEM_ERRORS = Schema.createUnion(errors);
   }
 
   private Protocol() {}
@@ -276,7 +276,7 @@ public class Protocol {
         throw new SchemaParseException("No param type: "+field);
       fields.put(fieldNameNode.getTextValue(),Schema.parse(fieldTypeNode,types));
     }
-    Schema request = Schema.create(fields);
+    Schema request = Schema.createRecord(fields);
     
     JsonNode responseNode = json.getFieldValue("response");
     if (responseNode == null)
@@ -299,7 +299,8 @@ public class Protocol {
         errs.add(schema);
       }
     }
-    return new Message(messageName, request, response, Schema.create(errs));
+    return new Message(messageName, request, response,
+                       Schema.createUnion(errs));
   }
 
   public static void main(String args[]) throws Exception {

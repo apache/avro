@@ -80,7 +80,7 @@ public class RandomData implements Iterable<Object> {
       length = (random.nextInt(5)+2)-d;
       Map<Object,Object> map = new HashMap<Object,Object>(length<=0?0:length);
       for (int i = 0; i < length; i++) {
-        map.put(generate(schema.getKeyType(), random, d+1),
+        map.put(randomUtf8(random, 40),
                 generate(schema.getValueType(), random, d+1));
       }
       return map;

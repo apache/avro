@@ -208,16 +208,15 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @SuppressWarnings(value="unchecked")
   protected Object readMap(Object old, Schema actual, Schema expected,
                            ValueReader in) throws IOException {
-    Schema aKey = actual.getKeyType();
     Schema aValue = actual.getValueType();
-    Schema eKey = expected.getKeyType();
     Schema eValue = expected.getValueType();
     int firstBlockSize = (int)in.readLong();
     Object map = newMap(old, firstBlockSize);
     for (long l = firstBlockSize; l > 0; l = in.readLong())
       for (long i = 0; i < l; i++)
-        addToMap(map, read(null, aKey, eKey, in),
-            read(null, aValue, eValue, in));
+        addToMap(map,
+                 readString(null, in),
+                 read(null, aValue, eValue, in));
     return map;
   }
 
@@ -279,6 +278,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return in.readBuffer(old);
   }
 
+  private static final Schema STRING_SCHEMA = Schema.create(Type.STRING);
+
   /** Skip an instance of a schema. */
   public static void skip(Schema schema, ValueReader in) throws IOException {
     switch (schema.getType()) {
@@ -293,11 +294,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
           skip(elementType, in);
       break;
     case MAP:
-      Schema key = schema.getKeyType();
       Schema value = schema.getValueType();
       for (int l = (int)in.readLong(); l > 0; l = (int)in.readLong())
         for (int i = 0; i < l; i++) {
-          skip(key, in);
+          skip(STRING_SCHEMA, in);
           skip(value, in);
         }
       break;

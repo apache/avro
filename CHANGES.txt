@@ -5,7 +5,9 @@ Trunk (unreleased changes)
   INCOMPATIBLE CHANGES
 
     AVRO-1. Record fields are now defined with JSON arrays, rather
-    than JSON objects, since fields are ordered.  (cutting)
+    than JSON objects, since fields are ordered.  (cutting & sharad)
+
+    AVRO-9. Restrict map keys to strings.  (cutting & sharad)
 
   NEW FEATURES
 
