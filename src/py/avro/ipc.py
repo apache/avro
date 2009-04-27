@@ -156,6 +156,8 @@ class ResponderBase(object):
         response = self.invoke(m, req)
       except AvroRemoteException, e:
         error = e
+      except Exception, e:
+        error = AvroRemoteException(unicode(e.__str__()))
       vwriter.writeboolean(error is not None)
       if error is None:
         self.writeresponse(m.getresponse(), response, vwriter)

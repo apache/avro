@@ -78,17 +78,18 @@ public class Protocol {
     
     public String toString() {
       StringBuilder buffer = new StringBuilder();
-      buffer.append("{\"request\": {");
+      buffer.append("{\"request\": [");
       int count = 0;
       for (Map.Entry<String, Schema> entry : request.getFieldSchemas()) {
-        buffer.append("\"");
+        buffer.append("{\"name\": \"");
         buffer.append(entry.getKey());
-        buffer.append("\": ");
+        buffer.append("\", \"type\": ");
         buffer.append(entry.getValue().toString(types));
+        buffer.append("}");
         if (++count < request.getFields().size())
           buffer.append(", ");
       }
-      buffer.append("}, \"response\": "+response.toString(types));
+      buffer.append("], \"response\": "+response.toString(types));
 
       List<Schema> errTypes = errors.getTypes();  // elide system error
       if (errTypes.size() > 1) {
@@ -197,31 +198,26 @@ public class Protocol {
 
   /** Read a protocol from a Json file. */
   public static Protocol parse(File file) throws IOException {
-    return parse(new FileInputStream(file));
+    return parse(Schema.FACTORY.createJsonParser(file));
   }
 
   /** Read a protocol from a Json string. */
   public static Protocol parse(String string) {
     try {
-      return parse(new ByteArrayInputStream(string.getBytes("UTF-8")));
+      return parse(Schema.FACTORY.createJsonParser
+                   (new ByteArrayInputStream(string.getBytes("UTF-8"))));
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
   }
 
-  /** Read a protocol from a Json stream. */
-  public static Protocol parse(InputStream in) throws IOException {
+  private static Protocol parse(JsonParser parser) {
     try {
-      JsonParser parser = Schema.FACTORY.createJsonParser(in);
-      try {
-        Protocol protocol = new Protocol();
-        protocol.parse(Schema.MAPPER.read(parser));
-        return protocol;
-      } catch (JsonParseException e) {
-        throw new SchemaParseException(e);
-      }
-    } finally {
-      in.close();
+      Protocol protocol = new Protocol();
+      protocol.parse(Schema.MAPPER.read(parser));
+      return protocol;
+    } catch (IOException e) {
+      throw new SchemaParseException(e);
     }
   }
 
@@ -268,12 +264,17 @@ public class Protocol {
 
   private Message parseMessage(String messageName, JsonNode json) {
     JsonNode requestNode = json.getFieldValue("request");
-    if (requestNode == null)
+    if (requestNode == null || !requestNode.isArray())
       throw new SchemaParseException("No request specified: "+json);
     Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
-    for (Iterator<String> i = requestNode.getFieldNames(); i.hasNext();) {
-      String prop = i.next();
-      fields.put(prop, Schema.parse(requestNode.getFieldValue(prop), types));
+    for (JsonNode field : requestNode) {
+      JsonNode fieldNameNode = field.getFieldValue("name");
+      if (fieldNameNode == null)
+        throw new SchemaParseException("No param name: "+field);
+      JsonNode fieldTypeNode = field.getFieldValue("type");
+      if (fieldTypeNode == null)
+        throw new SchemaParseException("No param type: "+field);
+      fields.put(fieldNameNode.getTextValue(),Schema.parse(fieldTypeNode,types));
     }
     Schema request = Schema.create(fields);
     

@@ -70,21 +70,24 @@ public class TestSchema extends TestCase {
   }
 
   public void testRecord() throws Exception {
-    check("{\"type\":\"record\",\"fields\":{\"f\":\"string\"}}");
+    check("{\"type\":\"record\",\"fields\":["
+          +"{\"name\":\"f\", \"type\":\"string\"}]}");
   }
 
   public void testRecursive() throws Exception {
-    check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": {"
-          +"\"label\": \"string\","
-          +"\"children\": {\"type\": \"array\", \"items\": \"Node\" }}}",
+    check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
+          +"{\"name\":\"label\", \"type\":\"string\"},"
+          +"{\"name\":\"children\", \"type\":"
+          +"{\"type\": \"array\", \"items\": \"Node\" }}]}",
           false);
   }
 
   public void testLisp() throws Exception {
-    check("{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": {"
-          +"\"value\": [\"null\", \"string\","
-          +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": {"
-          +"\"car\": \"Lisp\", \"cdr\": \"Lisp\"}}]}}",
+    check("{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
+          +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
+          +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
+          +"{\"name\":\"car\", \"type\":\"Lisp\"},"
+          +"{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
           false);
   }
 

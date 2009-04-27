@@ -94,25 +94,28 @@
 	  <p>Records use the type name "record" and support two attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
-	    of the record, </li>
-	    <li><code>fields</code>: a JSON object, listing field
-	    names and schemas.</li>
+	    of the record (optional).</li>
+	    <li><code>fields</code>: a JSON array, listing fields (required).
+	    Each field is a JSON object with the following attributes:
+	      <ul>
+		<li><code>name</code>: a JSON string providing the name
+		  of the field (required), and </li>
+		<li><code>type</code>A JSON object defining a schema, or
+		  a JSON string naming a record definition
+		  (required).</li>
+	      </ul>
+	    </li>
 	  </ul>
-
-	  <p>The fields of a record are <em>ordered</em>.  Two
-	  otherwise identical records whose fields are ordered
-	  differently represent equivalent data but are not
-	  serialized identically.</p>
 
 	  <p>For example, a linked-list of 64-bit values may be defined with:</p>
 	  <source>
 {
   "type": "record", 
   "name": "LongList",
-  "fields" : {
-    "value": "long",               // each element has a long
-    "next": ["LongList", "null"]   // optional next element
-  }
+  "fields" : [
+    {"name": "value", "type": "long"},             // each element has a long
+    {"name": "next", "type": ["LongList", "null"]} // optional next element
+  ]
 }
 	  </source>
 	</section>
@@ -245,10 +248,10 @@
 {
   "type": "record", 
   "name": "test",
-  "fields" : {
-    "a": "long",
-    "b": "string"
-  }
+  "fields" : [
+    {"name": "a", "type": "long"},
+    {"name": "b", "type": "string"}
+  ]
 }
 	  </source>
 	  <p>An instance of this record whose <code>a</code> field has
@@ -453,8 +456,10 @@
   "protocol": "HelloWorld",
 
   "types": [
-    {"name": "Greeting", "type": "record", "fields": {"name": "string"}},
-    {"name": "Curse", "type": "error", "fields": {"message": "string"}}
+    {"name": "Greeting", "type": "record", "fields": [
+      {"name": "message", "type": "string"}]}
+    {"name": "Curse", "type": "error", "fields": [
+      {"name": "message", "type": "string"}]}
   ],
 
   "messages": {

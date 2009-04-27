@@ -7,7 +7,11 @@
 
  "messages": {
      "read": {
-         "request": {"block": "string", "start": "long", "length": "long" },
+         "request": [
+             {"name": "block", "type": "string"},
+             {"name": "start", "type": "long"},
+             {"name": "length", "type": "long"}
+         ],
          "response": "bytes"
      }
 

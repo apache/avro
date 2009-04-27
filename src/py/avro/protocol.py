@@ -15,7 +15,7 @@
 #limitations under the License.
 
 import cStringIO
-import jsonparser
+import simplejson
 import avro.schema as schema
 
 #The version implemented.
@@ -67,17 +67,18 @@ class Protocol(object):
 
     def __str__(self):
       str = cStringIO.StringIO()
-      str.write("{\"request\": {")
+      str.write("{\"request\": [")
       count = 0
       for k,v in self.__request.getfields():
-        str.write("\"")
+        str.write("{\"name\": \"")
         str.write(k)
-        str.write("\": ")
+        str.write("\", \"type\": ")
         str.write(v.str(self.__proto.gettypes()))
+        str.write("}")
         count+=1
         if count < len(self.__request.getfields()):
           str.write(", ")
-      str.write("}, \"response\": "+
+      str.write("], \"response\": "+
                 self.__response.str(self.__proto.gettypes()))
       list = self.__errors.getelementtypes()
       if len(list) > 1:
@@ -143,8 +144,14 @@ class Protocol(object):
     if res is None:
       raise SchemaParseException("No response specified: "+obj.__str__())
     fields = dict()
-    for k,v in req.items():
-      fields[k] = schema._parse(v, self.__types)
+    for field in req:
+      fieldname = field.get("name")
+      if fieldname is None:
+        raise SchemaParseException("No param name: "+field.__str__())
+      fieldtype = field.get("type")
+      if fieldtype is None:
+        raise SchemaParseException("No param type: "+field.__str__())
+      fields[fieldname] = schema._parse(fieldtype, self.__types)
     request = schema._RecordSchema(list(fields.iteritems()))
     response = schema._parse(res, self.__types)
 
@@ -169,5 +176,5 @@ class Protocol(object):
 def parse(json_string):
   """Constructs the Protocol from the json text."""
   protocol = Protocol()
-  protocol._parse(jsonparser.parse(json_string))
+  protocol._parse(simplejson.loads(json_string))
   return protocol

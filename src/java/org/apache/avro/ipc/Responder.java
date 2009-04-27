@@ -85,6 +85,9 @@ public abstract class Responder {
         response = respond(m, request);
       } catch (AvroRemoteException e) {
         error = e;
+      } catch (Exception e) {
+        LOG.warn("application error", e);
+        error = new AvroRemoteException(new Utf8(e.toString()));
       }
 
       out.writeBoolean(error != null);
@@ -94,7 +97,7 @@ public abstract class Responder {
         writeError(m.getErrors(), error, out);
 
     } catch (AvroRuntimeException e) {            // system error
-      LOG.warn("unexpected error", e);
+      LOG.warn("system error", e);
       error = new AvroRemoteException(e);
       out = new ByteBufferValueWriter();
       out.writeBoolean(true);

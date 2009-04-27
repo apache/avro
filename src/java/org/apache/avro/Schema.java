@@ -235,17 +235,18 @@ public abstract class Schema {
       StringBuilder buffer = new StringBuilder();
       buffer.append("{\"type\": \""+(isError?"error":"record")+"\", "
                     +(name==null?"":"\"name\": \""+name+"\", ")
-                    +"\"fields\": {");
+                    +"\"fields\": [");
       int count = 0;
       for (Map.Entry<String, Schema> entry : fieldSchemas) {
-        buffer.append("\"");
+        buffer.append("{\"name\": \"");
         buffer.append(entry.getKey());
-        buffer.append("\": ");
+        buffer.append("\", \"type\": ");
         buffer.append(entry.getValue().toString(names));
+        buffer.append("}");
         if (++count < fields.size())
           buffer.append(", ");
       }
-      buffer.append("}}");
+      buffer.append("]}");
       return buffer.toString();
     }
   }
@@ -389,16 +390,11 @@ public abstract class Schema {
   private static final NullSchema    NULL_SCHEMA =    new NullSchema();
 
   public static Schema parse(File file) throws IOException {
-    InputStream in = new FileInputStream(file);
+    JsonParser parser = FACTORY.createJsonParser(file);
     try {
-      JsonParser parser = FACTORY.createJsonParser(in);
-      try {
-        return Schema.parse(MAPPER.read(parser), new Names());
-      } catch (JsonParseException e) {
-        throw new SchemaParseException(e);
-      }
-    } finally {
-      in.close();
+      return Schema.parse(MAPPER.read(parser), new Names());
+    } catch (JsonParseException e) {
+      throw new SchemaParseException(e);
     }
   }
 
@@ -468,10 +464,17 @@ public abstract class Schema {
         RecordSchema result =
           new RecordSchema(name, space, type.equals("error"));
         if (name != null) names.put(name, result);
-        JsonNode props = schema.getFieldValue("fields");
-        for (Iterator<String> i = props.getFieldNames(); i.hasNext();) {
-          String prop = i.next();
-          fields.put(prop, parse(props.getFieldValue(prop), names));
+        JsonNode fieldsNode = schema.getFieldValue("fields");
+        if (fieldsNode == null || !fieldsNode.isArray())
+          throw new SchemaParseException("Record has no fields: "+schema);
+        for (JsonNode field : fieldsNode) {
+          JsonNode fieldNameNode = field.getFieldValue("name");
+          if (fieldNameNode == null)
+            throw new SchemaParseException("No field name: "+field);
+          JsonNode fieldTypeNode = field.getFieldValue("type");
+          if (fieldTypeNode == null)
+            throw new SchemaParseException("No field type: "+field);
+          fields.put(fieldNameNode.getTextValue(), parse(fieldTypeNode, names));
         }
         result.setFields(fields);
         return result;

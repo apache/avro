@@ -3,34 +3,37 @@
 
  "types": [
      {"name": "TestRecord", "type": "record",
-      "fields": {
-          "name": "string"
-      }
+      "fields": [
+          {"name": "name", "type": "string"}
+      ]
      },
-      
-     {"name": "TestError", "type": "error", "fields": {"message": "string"}}
+
+     {"name": "TestError", "type": "error", "fields": [
+         {"name": "message", "type": "string"}
+      ]
+     }
 
  ],
 
  "messages": {
 
      "hello": {
-         "request": {"greeting": "string" },
+         "request": [{"name": "greeting", "type": "string"}],
          "response": "string"
      },
 
      "echo": {
-         "request": {"record": "TestRecord" },
+         "request": [{"name": "record", "type": "TestRecord"}],
          "response": "TestRecord"
      },
 
      "echoBytes": {
-         "request": {"data": "bytes" },
+         "request": [{"name": "data", "type": "bytes"}],
          "response": "bytes"
      },
 
      "error": {
-         "request": {},
+         "request": [],
          "response": "null",
          "errors": ["TestError"]
      }

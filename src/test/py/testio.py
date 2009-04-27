@@ -127,24 +127,27 @@ class TestSchema(unittest.TestCase):
           "\"string\"}")
 
   def testRecord(self):
-    self.check("{\"type\":\"record\",\"fields\":{\"f\":\"string\"," + 
-                "\"fb\":\"bytes\"}}")
+    self.check("{\"type\":\"record\",\"fields\":[{\"name\":\"f\", \"type\":" +
+               "\"string\"}, {\"name\":\"fb\", \"type\":\"bytes\"}]}")
 
   def testRecursive(self):
-    self.check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": {"
-      +"\"label\": \"string\","
-      +"\"children\": {\"type\": \"array\", \"items\": \"Node\" }}}")
+    self.check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
+          +"{\"name\":\"label\", \"type\":\"string\"},"
+          +"{\"name\":\"children\", \"type\":"
+          +"{\"type\": \"array\", \"items\": \"Node\" }}]}")
 
   def testLisp(self):
-    self.check("{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": {"
-      +"\"value\": [\"null\", \"string\","
-      +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": {"
-      +"\"car\": \"Lisp\", \"cdr\": \"Lisp\"}}]}}")
+    self.check("{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
+          +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
+          +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
+          +"{\"name\":\"car\", \"type\":\"Lisp\"},"
+          +"{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}")
 
   def testUnion(self):
     self.check("[\"string\", \"null\", \"long\", "
-      +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": {"
-      +"\"car\": \"string\", \"cdr\": \"string\"}}]")
+      +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
+      +"{\"name\":\"car\", \"type\":\"string\"}," 
+      +"{\"name\":\"cdr\", \"type\":\"string\"}]}]")
 
   def check(self, string):
     schm = schema.parse(string)

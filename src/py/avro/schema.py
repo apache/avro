@@ -29,8 +29,7 @@ A schema may be one of:
   A boolean."""
 
 import cStringIO
-import odict
-import avro.jsonparser as jsonparser
+import simplejson
 
 #The schema types
 STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL, ARRAY, MAP, UNION, RECORD = range(12)
@@ -144,17 +143,18 @@ class _RecordSchema(Schema):
       str.write("\"name\": \""+self.__name+"\", ")
     #if self.__namespace is not None:
       #str.write("\"namespace\": \""+self.__namespace+"\", ")
-    str.write("\"fields\": {")
+    str.write("\"fields\": [")
     count=0
     for k,v in self.__fields:
-      str.write("\"")
+      str.write("{\"name\": \"")
       str.write(k)
-      str.write("\": ")
+      str.write("\", \"type\": ")
       str.write(v.str(names))
+      str.write("}")
       count+=1
       if count < len(self.__fields):
         str.write(",")
-    str.write("}}")
+    str.write("]}")
     return str.getvalue()
 
   def __eq__(self, other, seen={}):
@@ -338,8 +338,17 @@ def _parse(obj, names):
       schema = _RecordSchema(fields, name, namespace, type == "error")
       if name is not None:
         names[name] = schema
-      for k,v in obj.get("fields").items():
-        fields.append((k, _parse(v, names)))
+      fieldsnode = obj.get("fields")
+      if fieldsnode is None:
+        raise SchemaParseException("Record has no fields: "+obj.__str__())
+      for field in fieldsnode:
+        fieldname = field.get("name")
+        if fieldname is None:
+          raise SchemaParseException("No field name: "+field.__str__())
+        fieldtype = field.get("type")
+        if fieldtype is None:
+          raise SchemaParseException("No field type: "+field.__str__())
+        fields.append((fieldname, _parse(fieldtype, names)))
       return schema
     elif type == "array":
       return _ArraySchema(_parse(obj.get("items"), names))
@@ -362,5 +371,5 @@ def stringval(schm):
 
 def parse(json_string):
   """Constructs the Schema from the json text."""
-  dict = jsonparser.parse(json_string)
+  dict = simplejson.loads(json_string)
   return _parse(dict, _Names())

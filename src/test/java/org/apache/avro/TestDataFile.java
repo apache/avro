@@ -45,9 +45,9 @@ public class TestDataFile extends TestCase {
   private static final long SEED = System.currentTimeMillis();
 
   private static final String SCHEMA_JSON =
-    "{\"type\": \"record\", \"fields\":{"
-    +"\"stringField\":\"string\","
-    +"\"longField\": \"long\"}}";
+    "{\"type\": \"record\", \"fields\": ["
+    +"{\"name\":\"stringField\", \"type\":\"string\"},"
+    +"{\"name\":\"longField\", \"type\":\"long\"}]}";
   private static final Schema SCHEMA = Schema.parse(SCHEMA_JSON);
 
   public void testGenericWrite() throws IOException {
