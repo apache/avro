@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.util.Utf8;
 
@@ -200,9 +201,9 @@ public class GenericData {
     if (datum instanceof GenericRecord) {
       @SuppressWarnings(value="unchecked")
       GenericRecord record = (GenericRecord)datum;
-      Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
+      LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
       for (Map.Entry<String,Object> entry : record.entrySet())
-        fields.put(entry.getKey(), induce(entry.getValue()));
+        fields.put(entry.getKey(), new Field(induce(entry.getValue()), null));
       return Schema.createRecord(fields);
     } else if (datum instanceof GenericArray) {
       Schema elementType = null;

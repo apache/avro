@@ -15,6 +15,8 @@ Trunk (unreleased changes)
     representations, especially records with integer-indexed fields.
     (Hong Tang via cutting)
 
+    AVRO-8. Add Java support for default values. (cutting)
+
   IMPROVEMENTS
 
     AVRO-11.  Re-implement specific and reflect datum readers and

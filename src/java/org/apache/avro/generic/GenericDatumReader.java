@@ -19,8 +19,12 @@ package org.apache.avro.generic;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.nio.ByteBuffer;
+
+import org.codehaus.jackson.map.JsonNode;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -29,6 +33,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.ValueReader;
+import org.apache.avro.util.Utf8;
 
 /** {@link DatumReader} for generic Java objects. */
 public class GenericDatumReader<D> implements DatumReader<D> {
@@ -140,13 +145,19 @@ public class GenericDatumReader<D> implements DatumReader<D> {
                read(oldDatum,actualField.schema(),expectedField.schema(), in));
       size++;
     }
-    if (expectedFields.size() > size) {
-      // clear old fields (in expected, but not in actual)
+    if (expectedFields.size() > size) {           // not all fields set
       Set<String> actualFields = actual.getFields().keySet();
       for (Map.Entry<String, Field> entry : expectedFields.entrySet()) {
-        String f = entry.getKey();
-        if (!actualFields.contains(f))
-          removeField(record, f, entry.getValue().pos());
+        String fieldName = entry.getKey();
+        if (!actualFields.contains(fieldName)) {  // an unset field
+          Field f = entry.getValue();
+          JsonNode json = f.defaultValue();
+          if (json != null)                       // has default
+            addField(record, fieldName, f.pos(),  // add default
+                     defaultFieldValue(old, f.schema(), json));
+          else if (old != null)                   // remove stale value
+            removeField(record, fieldName, entry.getValue().pos());
+        }
       }
     }
     return record;
@@ -173,6 +184,53 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     ((GenericRecord) record).remove(field);
   }
   
+  /** Called by the default implementation of {@link #readRecord} to construct
+      a default value for a field. */
+  protected Object defaultFieldValue(Object old, Schema schema, JsonNode json) {
+    switch (schema.getType()) {
+    case RECORD:
+      Object record = newRecord(old, schema);
+      for (Map.Entry<String, Field> entry : schema.getFields().entrySet()) {
+        String name = entry.getKey();
+        Field f = entry.getValue();
+        JsonNode v = json.getFieldValue(name);
+        if (v == null) v = f.defaultValue();
+        if (v != null) {
+          Object o = old != null ? getField(old, name, f.pos()) : null;
+          addField(record, name, f.pos(), defaultFieldValue(o, f.schema(), v));
+        } else if (old != null) {
+          removeField(record, name, f.pos());
+        }
+      }
+      return record;
+    case ARRAY:
+      Object array = newArray(old, json.size());
+      Schema element = schema.getElementType();
+      for (JsonNode node : json)
+        addToArray(array, defaultFieldValue(peekArray(array), element, node));
+      return array;
+    case MAP:
+      Object map = newMap(old, json.size());
+      Schema value = schema.getValueType();
+      for (Iterator<String> i = json.getFieldNames(); i.hasNext();) {
+        String key = i.next();
+        addToMap(map, new Utf8(key),
+                 defaultFieldValue(null, value, json.getFieldValue(key)));
+      }
+      return map;
+    case UNION:   return defaultFieldValue(old, schema.getTypes().get(0), json);
+    case STRING:  return createString(json.getTextValue());
+    case BYTES:   return createBytes(json.getTextValue().getBytes());
+    case INT:     return json.getIntValue();
+    case LONG:    return json.getLongValue();
+    case FLOAT:   return (float)json.getDoubleValue();
+    case DOUBLE:  return json.getDoubleValue();
+    case BOOLEAN: return json.getBooleanValue();
+    case NULL:    return null;
+    default: throw new AvroRuntimeException("Unknown type: "+actual);
+    }
+  }
+
   /** Called to read an array instance.  May be overridden for alternate array
    * representations.*/
   @SuppressWarnings(value="unchecked")
@@ -271,12 +329,22 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return in.readUtf8(old);
   }
 
+  /** Called to create a string from a default value.  Subclasses may override
+   * to use a different string representation.  By default, this calls {@link
+   * Utf8#Utf8(String)}.*/
+  protected Object createString(String value) { return new Utf8(value); }
+
   /** Called to read byte arrays.  Subclasses may override to use a different
    * byte array representation.  By default, this calls {@link
    * ValueReader#readBuffer(Object)}.*/
   protected Object readBytes(Object old, ValueReader in) throws IOException {
     return in.readBuffer(old);
   }
+
+  /** Called to create byte arrays from default values.  Subclasses may
+   * override to use a different byte array representation.  By default, this
+   * calls {@link ByteBuffer#wrap(byte[])}.*/
+  protected Object createBytes(byte[] value) { return ByteBuffer.wrap(value); }
 
   private static final Schema STRING_SCHEMA = Schema.create(Type.STRING);
 

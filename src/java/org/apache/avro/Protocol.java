@@ -32,6 +32,8 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.JsonNode;
 
+import org.apache.avro.Schema.Field;
+
 /** A set of messages forming an application protocol.
  * <p> A protocol consists of:
  * <ul>
@@ -266,7 +268,7 @@ public class Protocol {
     JsonNode requestNode = json.getFieldValue("request");
     if (requestNode == null || !requestNode.isArray())
       throw new SchemaParseException("No request specified: "+json);
-    Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
+    LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
     for (JsonNode field : requestNode) {
       JsonNode fieldNameNode = field.getFieldValue("name");
       if (fieldNameNode == null)
@@ -274,7 +276,9 @@ public class Protocol {
       JsonNode fieldTypeNode = field.getFieldValue("type");
       if (fieldTypeNode == null)
         throw new SchemaParseException("No param type: "+field);
-      fields.put(fieldNameNode.getTextValue(),Schema.parse(fieldTypeNode,types));
+      fields.put(fieldNameNode.getTextValue(),
+                 new Field(Schema.parse(fieldTypeNode,types),
+                           field.getFieldValue("default")));
     }
     Schema request = Schema.createRecord(fields);
     

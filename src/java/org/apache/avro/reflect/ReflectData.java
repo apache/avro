@@ -147,15 +147,17 @@ public class ReflectData {
       String name = c.getSimpleName();            // FIXME: ignoring package
       Schema schema = names.get(name);
       if (schema == null) {
-        Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
+        LinkedHashMap<String,Schema.Field> fields =
+          new LinkedHashMap<String,Schema.Field>();
         schema = Schema.createRecord(name, c.getPackage().getName(),
                                      Throwable.class.isAssignableFrom(c));
         if (!names.containsKey(name))
           names.put(name, schema);
         for (Field field : c.getDeclaredFields())
-          if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0)
-            fields.put(field.getName(),
-                       createSchema(field.getGenericType(), names));
+          if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0) {
+            Schema fieldSchema = createSchema(field.getGenericType(), names);
+            fields.put(field.getName(), new Schema.Field(fieldSchema, null));
+          }
         schema.setFields(fields);
       }
       return schema;
@@ -183,11 +185,13 @@ public class ReflectData {
 
   private static Message getMessage(Method method, Protocol protocol) {
     Map<String,Schema> names = protocol.getTypes();
-    Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
+    LinkedHashMap<String,Schema.Field> fields =
+      new LinkedHashMap<String,Schema.Field>();
     String[] paramNames = PARANAMER.lookupParameterNames(method);
     java.lang.reflect.Type[] paramTypes = method.getGenericParameterTypes();
     for (int i = 0; i < paramTypes.length; i++)
-      fields.put(paramNames[i], createSchema(paramTypes[i], names));
+      fields.put(paramNames[i],
+                 new Schema.Field(createSchema(paramTypes[i], names), null));
     Schema request = Schema.createRecord(fields);
 
     Schema response = createSchema(method.getGenericReturnType(), names);

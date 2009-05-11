@@ -84,7 +84,7 @@ public abstract class Schema {
   }
 
   /** Create an anonymous record schema. */
-  public static Schema createRecord(Map<String,Schema> fields) {
+  public static Schema createRecord(LinkedHashMap<String,Field> fields) {
     Schema result = createRecord(null, null, false);
     result.setFields(fields);
     return result;
@@ -125,7 +125,7 @@ public abstract class Schema {
   }
   
   /** If this is a record, set its fields. */
-  public void setFields(Map<String,Schema> fields) {
+  public void setFields(LinkedHashMap<String,Field> fields) {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
@@ -173,20 +173,26 @@ public abstract class Schema {
 
   /** A field within a record. */
   public static class Field {
-    int position;
-    Schema schema;
-    Field(int pos, Schema schema) {
-      this.position = pos;
+    private int position = -1;
+    private final Schema schema;
+    private final JsonNode defaultValue;
+    public Field(Schema schema, JsonNode defaultValue) {
       this.schema = schema;
+      this.defaultValue = defaultValue;
     }
     /** The position of this field within the record. */
     public int pos() { return position; }
     /** This field's {@link Schema}. */
     public Schema schema() { return schema; }
+    public JsonNode defaultValue() { return defaultValue; }
     public boolean equals(Object other) {
       if (!(other instanceof Field)) return false;
       Field that = (Field) other;
-      return (position == that.position) && (schema.equals(that.schema));
+      return (position == that.position) &&
+        (schema.equals(that.schema)) &&
+        (defaultValue == null
+         ? that.defaultValue == null
+         : (defaultValue.equals(that.defaultValue)));
     }
   }
 
@@ -209,15 +215,20 @@ public abstract class Schema {
     public Iterable<Map.Entry<String, Schema>> getFieldSchemas() {
       return fieldSchemas;
     }
-    public void setFields(Map<String,Schema> fields) {
+    public void setFields(LinkedHashMap<String,Field> fields) {
       if (this.fields != null)
         throw new AvroRuntimeException("Fields are already set");
-      this.fields = new LinkedHashMap<String, Field>();
       int i = 0;
-      this.fieldSchemas = fields.entrySet();
-      for (Map.Entry<String, Schema> field : this.fieldSchemas) {
-        this.fields.put(field.getKey(), new Field(i++, field.getValue()));
+      LinkedHashMap<String,Schema> schemas = new LinkedHashMap<String,Schema>();
+      for (Map.Entry<String, Field> pair : fields.entrySet()) {
+        Field f = pair.getValue();
+        if (f.position != -1)
+          throw new AvroRuntimeException("Field already used: "+f);
+        f.position = i++;
+        schemas.put(pair.getKey(), f.schema());
       }
+      this.fields = fields;
+      this.fieldSchemas = schemas.entrySet();
     }
     public boolean equals(Object o) {
       if (o == this) return true;
@@ -233,11 +244,15 @@ public abstract class Schema {
                     +(name==null?"":"\"name\": \""+name+"\", ")
                     +"\"fields\": [");
       int count = 0;
-      for (Map.Entry<String, Schema> entry : fieldSchemas) {
+      for (Map.Entry<String, Field> entry : fields.entrySet()) {
         buffer.append("{\"name\": \"");
         buffer.append(entry.getKey());
         buffer.append("\", \"type\": ");
-        buffer.append(entry.getValue().toString(names));
+        buffer.append(entry.getValue().schema().toString(names));
+        if (entry.getValue().defaultValue() != null) {
+          buffer.append("\", \"default\": ");
+          buffer.append(entry.getValue().defaultValue());
+        }
         buffer.append("}");
         if (++count < fields.size())
           buffer.append(", ");
@@ -446,7 +461,7 @@ public abstract class Schema {
         throw new SchemaParseException("No type: "+schema);
       String type = typeNode.getTextValue();
       if (type.equals("record") || type.equals("error")) { // record
-        Map<String,Schema> fields = new LinkedHashMap<String,Schema>();
+        LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
         JsonNode nameNode = schema.getFieldValue("name");
         String name = nameNode != null ? nameNode.getTextValue() : null;
         JsonNode spaceNode = schema.getFieldValue("namespace");
@@ -464,7 +479,9 @@ public abstract class Schema {
           JsonNode fieldTypeNode = field.getFieldValue("type");
           if (fieldTypeNode == null)
             throw new SchemaParseException("No field type: "+field);
-          fields.put(fieldNameNode.getTextValue(), parse(fieldTypeNode, names));
+          Schema fieldSchema = parse(fieldTypeNode, names);
+          fields.put(fieldNameNode.getTextValue(),
+                     new Field(fieldSchema, field.getFieldValue("default")));
         }
         result.setFields(fields);
         return result;

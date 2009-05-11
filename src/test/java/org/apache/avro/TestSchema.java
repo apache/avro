@@ -18,11 +18,15 @@
 package org.apache.avro;
 
 import java.io.*;
+import java.util.*;
+import java.nio.ByteBuffer;
 import org.codehaus.jackson.map.JsonNode;
 import junit.framework.TestCase;
 
 import org.apache.avro.io.*;
+import org.apache.avro.util.Utf8;
 import org.apache.avro.generic.*;
+import org.apache.avro.Schema.*;
 
 public class TestSchema extends TestCase {
 
@@ -30,48 +34,56 @@ public class TestSchema extends TestCase {
     Integer.parseInt(System.getProperty("test.count", "10"));
 
   public void testNull() throws Exception {
-    check("\"null\"");
+    check("\"null\"", "null", null);
   }
 
   public void testBoolean() throws Exception {
-    check("\"boolean\"");
+    check("\"boolean\"", "true", Boolean.TRUE);
   }
 
   public void testString() throws Exception {
-    check("\"string\"");
+    check("\"string\"", "\"foo\"", new Utf8("foo"));
   }
 
   public void testBytes() throws Exception {
-    check("\"bytes\"");
+    check("\"bytes\"", "\"\"", ByteBuffer.allocate(0));
   }
 
   public void testInt() throws Exception {
-    check("\"int\"");
+    check("\"int\"", "9", new Integer(9));
   }
 
   public void testLong() throws Exception {
-    check("\"long\"");
+    check("\"long\"", "11", new Long(11));
   }
 
   public void testFloat() throws Exception {
-    check("\"float\"");
+    check("\"float\"", "1.1", new Float(1.1));
   }
 
   public void testDouble() throws Exception {
-    check("\"double\"");
+    check("\"double\"", "1.2", new Double(1.2));
   }
 
   public void testArray() throws Exception {
-    check("{\"type\":\"array\", \"items\": \"long\"}");
+    GenericArray<Long> array = new GenericData.Array<Long>(1);
+    array.add(1L);
+    check("{\"type\":\"array\", \"items\": \"long\"}", "[1]", array);
   }
 
   public void testMap() throws Exception {
-    check("{\"type\":\"map\", \"values\": \"string\"}");
+    HashMap<Utf8,Long> map = new HashMap<Utf8,Long>();
+    map.put(new Utf8("a"), 1L);
+    check("{\"type\":\"map\", \"values\":\"long\"}", "{\"a\":1}", map);
   }
 
   public void testRecord() throws Exception {
-    check("{\"type\":\"record\",\"fields\":["
-          +"{\"name\":\"f\", \"type\":\"string\"}]}");
+    String recordJson = 
+      "{\"type\":\"record\",\"fields\":[{\"name\":\"f\", \"type\":\"long\"}]}";
+    Schema schema = Schema.parse(recordJson);
+    GenericData.Record record = new GenericData.Record(schema);
+    record.put("f", 11L);
+    check(recordJson, "{\"f\":11}", record);
   }
 
   public void testRecursive() throws Exception {
@@ -93,6 +105,13 @@ public class TestSchema extends TestCase {
 
   public void testUnion() throws Exception {
     check("[\"string\", \"long\"]", false);
+    checkDefault("[\"double\", \"long\"]", "1.1", new Double(1.1));
+  }
+
+  private static void check(String schemaJson, String defaultJson,
+                            Object defaultValue) throws Exception {
+    check(schemaJson, true);
+    checkDefault(schemaJson, defaultJson, defaultValue);
   }
 
   private static void check(String jsonSchema) throws Exception {
@@ -138,5 +157,23 @@ public class TestSchema extends TestCase {
     // System.out.println(GenericData.toString(decoded));
     assertEquals("Decoded data does not match.", datum, decoded);
   }
+
+  private static final Schema ACTUAL =            // an empty record schema
+    Schema.createRecord(new LinkedHashMap<String,Field>());
+
+  @SuppressWarnings(value="unchecked")
+  private static void checkDefault(String schemaJson, String defaultJson,
+                                   Object defaultValue) throws Exception {
+    String recordJson = "{\"type\":\"record\",\"fields\":[{\"name\":\"f\", "
+    +"\"type\":"+schemaJson+", "
+    +"\"default\":"+defaultJson+"}]}";
+    Schema expected = Schema.parse(recordJson);
+    DatumReader in = new GenericDatumReader(ACTUAL, expected);
+    GenericData.Record record = (GenericData.Record)
+      in.read(null, new ValueReader(new ByteArrayInputStream(new byte[0])));
+    assertEquals("Wrong default.", defaultValue, record.get("f"));
+  }
+
+
 
 }
