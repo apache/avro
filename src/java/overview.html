@@ -35,12 +35,12 @@
   program reading the data expects a different schema this can be
   easily resolved, since both schemas are present.
 
-  <p>When Avro is used in {@link org.apache.avro.ipc RPC}, a client
-  sends its request schema in the connection handshake.  Similarly, a
-  server delivers its response schema when a connection is
-  established.  Since both client and server both have the other's
-  full schema, correspondence between same named fields, missing
-  fields, extra fields, etc. can all be easily resolved.
+  <p>When Avro is used in {@link org.apache.avro.ipc RPC}, the client
+    and server exchange schemas in the connection handshake.  (This
+    can be optimized so that, for most calls, no schemas are actually
+    transmitted.)  Since both client and server both have the other's
+    full schema, correspondence between same named fields, missing
+    fields, extra fields, etc. can all be easily resolved.
 
   <p>Avro schemas are defined with
   with <a href="http://www.json.org/">JSON</a> .  This facilitates
@@ -59,17 +59,14 @@
     full processing of that data without code generation, static
     datatypes, etc.  This facilitates construction of generic
     data-processing systems and languages.
+    <li><i>Untagged data</i>: Since the schema is present when data is
+    read, considerably less type information need be encoded with
+    data, resulting in smaller serialization size.</li>
     <li><i>No manually-assigned field IDs</i>: When a schema changes,
     both the old and new schema are always present when processing
-    data, so that differences may be easily resolved.
-    <li><i>Tiny core</i>: Adding full support for Avro to a new
-    programming requires little code.
+    data, so differences may be resolved symbolically, using field
+    names.
   </ul>  
-
-  <h2>Performance</h2>
-
-  <p>As an anectdotal benchmark, Avro can read data into generic Java
-  datastructures at over 60MB/s on my laptop.
 
 </body>
 </html>
