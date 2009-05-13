@@ -163,7 +163,7 @@ public abstract class Schema {
   public String toString() { return toString(new Names()); }
 
   /** Render this, resolving names.*/
-  public String toString(Map<String,Schema> names) { return toString(); }
+  String toString(Names names) { return toString(); }
 
   public boolean equals(Object o) {
     if (o == this) return true;
@@ -186,6 +186,7 @@ public abstract class Schema {
     public Schema schema() { return schema; }
     public JsonNode defaultValue() { return defaultValue; }
     public boolean equals(Object other) {
+      if (other == this) return true;
       if (!(other instanceof Field)) return false;
       Field that = (Field) other;
       return (position == that.position) &&
@@ -196,20 +197,40 @@ public abstract class Schema {
     }
   }
 
-  static class RecordSchema extends Schema {
-    private final String name; 
-    private final String namespace; 
+  private static abstract class NamedSchema extends Schema {
+    protected final String name; 
+    protected final String space; 
+    public NamedSchema(Type type, String name, String space) {
+      super(type);
+      this.name = name;
+      this.space = space;
+    }
+    public String getName() { return name; }
+    public String getNamespace() { return space; }
+    public String nameString(Names names) {
+      return (name==null?"":"\"name\": \""+name+"\", ")
+        +((space==null||space.equals(names.space()))
+          ?"":"\"namespace\": \""+space+"\", ");
+    }
+    public boolean equalNames(NamedSchema that) {
+      return (name==null ? that.name==null : name.equals(that.name))
+        && (space==null ? that.space==null : space.equals(that.space));
+    }
+    public int hashCode() {
+      return getType().hashCode()
+        + (name==null ? 0 : name.hashCode())
+        + (space==null ? 0 : space.hashCode());
+    }
+  }
+
+  private static class RecordSchema extends NamedSchema {
     private Map<String,Field> fields;
     private Iterable<Map.Entry<String,Schema>> fieldSchemas;
     private final boolean isError;
-    public RecordSchema(String name, String namespace, boolean isError) {
-      super(Type.RECORD);
-      this.name = name;
-      this.namespace = namespace;
+    public RecordSchema(String name, String space, boolean isError) {
+      super(Type.RECORD, name, space);
       this.isError = isError;
     }
-    public String getName() { return name; }
-    public String getNamespace() { return namespace; }
     public boolean isError() { return isError; }
     public Map<String, Field> getFields() { return fields; }
     public Iterable<Map.Entry<String, Schema>> getFieldSchemas() {
@@ -232,17 +253,17 @@ public abstract class Schema {
     }
     public boolean equals(Object o) {
       if (o == this) return true;
-      return o instanceof RecordSchema
-        && fields.equals(((RecordSchema)o).fields);
+      if (!(o instanceof RecordSchema)) return false;
+      RecordSchema that = (RecordSchema)o;
+      return equalNames(that) && fields.equals(that.fields);
     }
-    public int hashCode() { return getType().hashCode() + fields.hashCode(); }
-    public String toString(Map<String,Schema> names) {
+    public int hashCode() { return super.hashCode() + fields.hashCode(); }
+    public String toString(Names names) {
       if (this.equals(names.get(name))) return "\""+name+"\"";
       else if (name != null) names.put(name, this);
       StringBuilder buffer = new StringBuilder();
       buffer.append("{\"type\": \""+(isError?"error":"record")+"\", "
-                    +(name==null?"":"\"name\": \""+name+"\", ")
-                    +"\"fields\": [");
+                    +nameString(names) +"\"fields\": [");
       int count = 0;
       for (Map.Entry<String, Field> entry : fields.entrySet()) {
         buffer.append("{\"name\": \"");
@@ -262,7 +283,7 @@ public abstract class Schema {
     }
   }
 
-  static class ArraySchema extends Schema {
+  private static class ArraySchema extends Schema {
     private final Schema elementType;
     public ArraySchema(Schema elementType) {
       super(Type.ARRAY);
@@ -275,7 +296,7 @@ public abstract class Schema {
         && elementType.equals(((ArraySchema)o).elementType);
     }
     public int hashCode() {return getType().hashCode()+elementType.hashCode();}
-    public String toString(Map<String,Schema> names) {
+    public String toString(Names names) {
       StringBuilder buffer = new StringBuilder();
       buffer.append("{\"type\": \"array\", \"items\": ");
       buffer.append(elementType.toString(names));
@@ -284,7 +305,7 @@ public abstract class Schema {
     }
   }
 
-  static class MapSchema extends Schema {
+  private static class MapSchema extends Schema {
     private final Schema valueType;
     public MapSchema(Schema valueType) {
       super(Type.MAP);
@@ -299,7 +320,7 @@ public abstract class Schema {
     public int hashCode() {
       return getType().hashCode()+valueType.hashCode();
     }
-    public String toString(Map<String,Schema> names) {
+    public String toString(Names names) {
       StringBuilder buffer = new StringBuilder();
       buffer.append("{\"type\": \"map\", \"values\": ");
       buffer.append(valueType.toString(names));
@@ -308,7 +329,7 @@ public abstract class Schema {
     }
   }
 
-  static class UnionSchema extends Schema {
+  private static class UnionSchema extends Schema {
     private final List<Schema> types;
     public UnionSchema(List<Schema> types) {
       super(Type.UNION);
@@ -331,7 +352,7 @@ public abstract class Schema {
       return o instanceof UnionSchema && types.equals(((UnionSchema)o).types);
     }
     public int hashCode() {return getType().hashCode()+types.hashCode();}
-    public String toString(Map<String,Schema> names) {
+    public String toString(Names names) {
       StringBuilder buffer = new StringBuilder();
       buffer.append("[");
       int count = 0;
@@ -345,42 +366,42 @@ public abstract class Schema {
     }
   }
 
-  static class StringSchema extends Schema {
+  private static class StringSchema extends Schema {
     public StringSchema() { super(Type.STRING); }
     public String toString() { return "\"string\""; }
   }
 
-  static class BytesSchema extends Schema {
+  private static class BytesSchema extends Schema {
     public BytesSchema() { super(Type.BYTES); }
     public String toString() { return "\"bytes\""; }
   }
 
-  static class IntSchema extends Schema {
+  private static class IntSchema extends Schema {
     public IntSchema() { super(Type.INT); }
     public String toString() { return "\"int\""; }
   }
 
-  static class LongSchema extends Schema {
+  private static class LongSchema extends Schema {
     public LongSchema() { super(Type.LONG); }
     public String toString() { return "\"long\""; }
   }
 
-  static class FloatSchema extends Schema {
+  private static class FloatSchema extends Schema {
     public FloatSchema() { super(Type.FLOAT); }
     public String toString() { return "\"float\""; }
   }
 
-  static class DoubleSchema extends Schema {
+  private static class DoubleSchema extends Schema {
     public DoubleSchema() { super(Type.DOUBLE); }
     public String toString() { return "\"double\""; }
   }
 
-  static class BooleanSchema extends Schema {
+  private static class BooleanSchema extends Schema {
     public BooleanSchema() { super(Type.BOOLEAN); }
     public String toString() { return "\"boolean\""; }
   }
   
-  static class NullSchema extends Schema {
+  private static class NullSchema extends Schema {
     public NullSchema() { super(Type.NULL); }
     public String toString() { return "\"null\""; }
   }
@@ -422,6 +443,7 @@ public abstract class Schema {
 
   static class Names extends LinkedHashMap<String, Schema> {
     private Names defaults = PRIMITIVES;
+    private String space;                         // default namespace
 
     public Names(Names defaults) { this.defaults = defaults; }
     public Names() { this(PRIMITIVES); }
@@ -445,6 +467,8 @@ public abstract class Schema {
       result.clear(name);
       return result;
     }
+    public String space() { return space; }
+    public void space(String space) { this.space = space; }
     private void clear(String name) { super.put(name, null); }
   }
 
@@ -465,7 +489,7 @@ public abstract class Schema {
         JsonNode nameNode = schema.getFieldValue("name");
         String name = nameNode != null ? nameNode.getTextValue() : null;
         JsonNode spaceNode = schema.getFieldValue("namespace");
-        String space = spaceNode != null ? spaceNode.getTextValue() : null;
+        String space = spaceNode!=null?spaceNode.getTextValue():names.space();
         RecordSchema result =
           new RecordSchema(name, space, type.equals("error"));
         if (name != null) names.put(name, result);

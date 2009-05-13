@@ -234,6 +234,7 @@ public class Protocol {
     JsonNode nameNode = json.getFieldValue("namespace");
     if (nameNode == null) return;                 // no namespace defined
     this.namespace = nameNode.getTextValue();
+    types.space(this.namespace);
   }
 
   private void parseName(JsonNode json) {

@@ -47,3 +47,5 @@ Trunk (unreleased changes)
 
     AVRO-31. Fix Java package imports in generated specific classes.
     (sharad via cutting)
+
+    AVRO-21. Default Java namespace from containing definition. (cutting)
