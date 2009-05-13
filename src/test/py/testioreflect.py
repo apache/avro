@@ -19,7 +19,7 @@ import avro.reflect as reflect
 import avro.generic as generic
 import testio
 
-_PKGNAME = "org.apache.avro."
+_PKGNAME = "org.apache.avro.test."
 
 def dyvalidator(schm, object):
   return reflect.validate(schm, _PKGNAME, object)

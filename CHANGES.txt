@@ -44,3 +44,6 @@ Trunk (unreleased changes)
 
     AVRO-14. Fix so that EOF is not thrown when one attempts to read
     an empty buffer.  (sharad via cutting)
+
+    AVRO-31. Fix Java package imports in generated specific classes.
+    (sharad via cutting)

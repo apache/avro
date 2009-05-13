@@ -86,9 +86,14 @@ public class SpecificCompiler {
   }
 
   private void header(String namespace) {
-    line(0, "package "+namespace+";\n");
+    if(namespace != null) {
+      line(0, "package "+namespace+";\n");
+    }
     line(0, "import java.nio.ByteBuffer;");
     line(0, "import java.util.Map;");
+    line(0, "import org.apache.avro.Protocol;");
+    line(0, "import org.apache.avro.Schema;");
+    line(0, "import org.apache.avro.AvroRuntimeException;");
     line(0, "import org.apache.avro.Protocol;");
     line(0, "import org.apache.avro.util.Utf8;");
     line(0, "import org.apache.avro.ipc.AvroRemoteException;");

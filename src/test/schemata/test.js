@@ -1,4 +1,4 @@
-{"namespace": "org.apache.avro",
+{"namespace": "org.apache.avro.test",
  "protocol": "Test",
 
  "types": [

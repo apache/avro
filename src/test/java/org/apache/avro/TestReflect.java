@@ -36,7 +36,8 @@ import org.apache.avro.specific.*;
 import org.apache.avro.reflect.*;
 import org.apache.avro.util.*;
 
-import org.apache.avro.Test.TestRecord;
+import org.apache.avro.test.Test.TestRecord;
+import org.apache.avro.test.*;
 
 public class TestReflect extends TestCase {
   private static final Logger LOG

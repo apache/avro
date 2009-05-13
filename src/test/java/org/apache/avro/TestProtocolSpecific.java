@@ -35,8 +35,9 @@ import org.apache.avro.generic.*;
 import org.apache.avro.specific.*;
 import org.apache.avro.util.*;
 
-import org.apache.avro.Test.TestRecord;
-import org.apache.avro.Test.TestError;
+import org.apache.avro.test.Test.TestRecord;
+import org.apache.avro.test.Test.TestError;
+import org.apache.avro.test.*;
 
 public class TestProtocolSpecific extends TestCase {
   private static final Logger LOG
