@@ -1,0 +1,20 @@
+Avro C Bindings (libavro)
+
+The code in this directory is the C bindings for Avro.
+
+Currently, there are only the Avro primitives with their corresponding
+unit tests.  The unit tests currently only check for proper
+encoding/decoding within the C library.  Interoperability tests are
+comming soon.
+
+Only the memory-backed Avro handle is working right now although
+adding file and network io support is easy thank to the Apache
+Portable Runtime which the Avro C bindings depend on.
+
+For API details, view the file avro.h.  The documentation is a work in
+progress.  The test cases (test_avro_*.c) also serve as great examples
+of how to use the API.
+
+libavro compile and passes all tests on Linux.  On MacOS X, 4 out of 5
+unit tests pass.  Portability is a definite design goal but currently
+the development emphasis is on Linux.

@@ -32,13 +32,21 @@
 
   <property name="src.dir" value="${basedir}/src"/>  	
   <property name="java.src.dir" value="${src.dir}/java"/>
+  <property name="c.src.dir" value="${src.dir}/c"/>
   <property name="lib.dir" value="${basedir}/lib"/>
   <property name="build.dir" value="${basedir}/build"/>
+  <property name="build.c" value="${build.dir}/c"/>
   <property name="dist.dir" value="${build.dir}/${fullname}"/>
 
   <property name="build.classes" value="${build.dir}/classes"/>
   <property name="build.doc" value="${build.dir}/doc"/>
   <property name="build.javadoc" value="${build.doc}/api"/>
+
+  <exec executable="sed" inputstring="${os.name}" outputproperty="nonspace.os">
+     <arg value="s/ /_/g"/>
+  </exec>
+  <property name="build.platform" 
+            value="${nonspace.os}-${os.arch}-${sun.arch.data.model}"/>
 
   <property name="test.count" value="100"/>
   <property name="test.java.src.dir" value="${basedir}/src/test/java"/>
@@ -87,7 +95,7 @@
     <mkdir dir="${test.java.classes}"/>
   </target>
 
-  <target name="compile" depends="compile-java"/>
+  <target name="compile" depends="compile-java,compile-c"/>
 
   <target name="compile-java" depends="init">
     <copy todir="${build.classes}">
@@ -138,7 +146,7 @@
     </javac> 
   </target>
 
-  <target name="test" depends="test-java,test-py,test-interop"/>
+  <target name="test" depends="test-java,test-py,test-c,test-interop"/>
 
   <target name="compile-test-schemata" depends="compile-java">
     <taskdef name="protocol" classname="org.apache.avro.specific.ProtocolTask">
@@ -390,7 +398,7 @@
     </javadoc>
   </target>	
 
-  <target name="package" depends="jar, javadoc"
+  <target name="package" depends="jar, javadoc, package-c"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${dist.dir}/lib"/>
@@ -399,6 +407,10 @@
 
     <copy todir="${dist.dir}/lib" includeEmptyDirs="false">
       <fileset dir="lib"/>
+    </copy>
+
+    <copy todir="${dist.dir}/c" includeEmptyDirs="false">
+      <fileset dir="${build.c}"/>
     </copy>
 
     <copy todir="${dist.dir}"> 
@@ -444,11 +456,62 @@
     </macro_tar>
   </target>
 
-  <target name="clean" description="Delete build files, and their directories">
+  <target name="clean" description="Delete build files, and their directories"
+	  depends="clean-c">
     <delete dir="${build.dir}"/>
     <delete>
       <fileset dir="src" includes="**/*.pyc" />
     </delete>
   </target>
+
+  <!-- C Targets -->
+  <target name="autoreconf-c-check">
+    <uptodate targetfile="${c.src.dir}/configure"
+	      srcfile="${c.src.dir}/configure.in"
+	      property="autoreconf-c-not-needed"/>
+  </target>
+
+  <target name="autoreconf-c" depends="autoreconf-c-check"
+	  unless="autoreconf-c-not-needed">
+    <exec dir="${c.src.dir}" executable="autoreconf" failonerror="true">
+      <arg line="-f -i"/>
+    </exec>
+  </target>
+
+  <target name="configure-c-check">
+    <uptodate targetfile="${c.src.dir}/Makefile"
+	      srcfile="${c.src.dir}/configure"
+	      property="configure-c-not-needed"/>
+  </target>
+
+  <target name="configure-c" depends="autoreconf-c, configure-c-check"
+	  unless="configure-c-not-needed">
+    <exec dir="${c.src.dir}" executable="sh" failonerror="true">
+      <arg line="./configure --prefix=${build.c}/${build.platform}"/>
+    </exec>
+  </target>
+
+  <target name="compile-c" depends="init, configure-c">
+    <exec dir="${c.src.dir}" executable="make" failonerror="true"/>
+  </target>
+
+  <target name="test-c" depends="compile-c">
+    <exec dir="${c.src.dir}" executable="make" failonerror="true">
+      <arg value="check"/>
+    </exec>
+  </target>
+
+  <target name="package-c" depends="compile-c">
+    <exec dir="${c.src.dir}" executable="make" failonerror="true">
+      <arg value="install"/>
+    </exec>
+  </target>
+
+  <target name="clean-c">
+    <exec dir="${c.src.dir}" executable="make" failonerror="true">
+      <arg value="clean"/>
+    </exec>
+  </target>
+  <!-- End C Targets -->
 
 </project>
