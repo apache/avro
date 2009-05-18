@@ -17,12 +17,6 @@
  */
 package org.apache.avro;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import junit.framework.TestCase;
-
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.SeekableFileInput;
@@ -31,8 +25,15 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import org.testng.annotations.Test;
 
-public class TestDataFile extends TestCase {
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class TestDataFile {
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
   private static final boolean VALIDATE = 
@@ -50,6 +51,7 @@ public class TestDataFile extends TestCase {
     +"{\"name\":\"longField\", \"type\":\"long\"}]}";
   private static final Schema SCHEMA = Schema.parse(SCHEMA_JSON);
 
+  @Test
   public void testGenericWrite() throws IOException {
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(SCHEMA,
@@ -64,6 +66,7 @@ public class TestDataFile extends TestCase {
     }
   }
 
+  @Test
   public void testGenericRead() throws IOException {
     DataFileReader<Object> reader =
       new DataFileReader<Object>(new SeekableFileInput(FILE),
@@ -112,16 +115,19 @@ public class TestDataFile extends TestCase {
     System.out.println("Time: "+(System.currentTimeMillis()-start));
   }
 
-  public static class InteropTest extends TestCase {
+  public static class InteropTest {
 
+  @Test
     public void testGeneratedGeneric() throws IOException {
       readFiles(new GenericDatumReader<Object>());
     }
 
+  @Test
     public void testGeneratedSpecific() throws IOException {
       readFiles(new SpecificDatumReader("org.apache.avro."));
     }
 
+  @Test
     public void testGeneratedReflect() throws IOException {
       readFiles(new ReflectDatumReader("org.apache.avro."));
     }

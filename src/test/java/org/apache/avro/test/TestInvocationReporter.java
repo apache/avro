@@ -15,25 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro;
 
-import org.apache.avro.ipc.SocketServer;
-import org.apache.avro.ipc.SocketTransceiver;
-import org.apache.avro.reflect.ReflectRequestor;
-import org.apache.avro.reflect.ReflectResponder;
-import org.apache.avro.test.Simple;
-import org.testng.annotations.BeforeMethod;
+package org.apache.avro.test;
 
-import java.net.InetSocketAddress;
+import org.testng.IInvokedMethod;
+import org.testng.IInvokedMethodListener;
+import org.testng.ITestResult;
 
-public class TestProtocolReflect extends TestProtocolSpecific {
+public class TestInvocationReporter implements IInvokedMethodListener {
 
-  @BeforeMethod
-  public void testStartServer() throws Exception {
-    server = new SocketServer(new ReflectResponder(Simple.class, new TestImpl()),
-                              new InetSocketAddress(0));
-    client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (Simple)ReflectRequestor.getClient(Simple.class, client);
+  public void beforeInvocation(IInvokedMethod iInvokedMethod, ITestResult iTestResult) {
+    System.out.println("STARTING " + iInvokedMethod.getTestMethod().getMethodName());
+
   }
 
+  public void afterInvocation(IInvokedMethod iInvokedMethod, ITestResult iTestResult) {
+    System.out.println("FINISHED " + iInvokedMethod.getTestMethod().getMethodName());
+  }
 }

@@ -17,27 +17,33 @@
  */
 package org.apache.avro;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.nio.ByteBuffer;
-import junit.framework.TestCase;
-import org.codehaus.jackson.map.JsonNode;
-
+import org.apache.avro.Protocol.Message;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRequestor;
+import org.apache.avro.generic.GenericResponder;
+import org.apache.avro.ipc.*;
+import org.apache.avro.util.Utf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import org.apache.avro.Protocol.Message;
-import org.apache.avro.io.*;
-import org.apache.avro.ipc.*;
-import org.apache.avro.generic.*;
-import org.apache.avro.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.Random;
 
-public class TestProtocolGeneric extends TestCase {
+public class TestProtocolGeneric {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolGeneric.class);
 
-  private static final File FILE = new File("src/test/schemata/test.js");
+  private static final File FILE = new File("src/test/schemata/simple.js");
   private static final Protocol PROTOCOL;
   static {
     try {
@@ -87,12 +93,14 @@ public class TestProtocolGeneric extends TestCase {
   private static Transceiver client;
   private static Requestor requestor;
 
+  @BeforeMethod
   public void testStartServer() throws Exception {
     server = new SocketServer(new TestResponder(), new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     requestor = new GenericRequestor(PROTOCOL, client);
   }
 
+  @Test
   public void testHello() throws IOException {
     GenericRecord params = 
       new GenericData.Record(PROTOCOL.getMessages().get("hello").getRequest());
@@ -101,6 +109,7 @@ public class TestProtocolGeneric extends TestCase {
     assertEquals(new Utf8("goodbye"), response);
   }
 
+  @Test
   public void testEcho() throws IOException {
     GenericRecord record =
       new GenericData.Record(PROTOCOL.getTypes().get("TestRecord"));
@@ -112,6 +121,7 @@ public class TestProtocolGeneric extends TestCase {
     assertEquals(record, echoed);
   }
 
+  @Test
   public void testEchoBytes() throws IOException {
     Random random = new Random();
     int length = random.nextInt(1024*16);
@@ -125,6 +135,7 @@ public class TestProtocolGeneric extends TestCase {
     assertEquals(data, echoed);
   }
 
+  @Test
   public void testError() throws IOException {
     GenericRecord params =
       new GenericData.Record(PROTOCOL.getMessages().get("error").getRequest());
@@ -138,6 +149,7 @@ public class TestProtocolGeneric extends TestCase {
     assertEquals("an error", ((Map)error.getValue()).get("message").toString());
   }
 
+  @AfterMethod
   public void testStopServer() {
     server.close();
   }

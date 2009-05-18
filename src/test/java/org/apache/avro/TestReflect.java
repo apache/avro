@@ -17,33 +17,22 @@
  */
 package org.apache.avro;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.nio.ByteBuffer;
-import junit.framework.TestCase;
-import org.codehaus.jackson.map.JsonNode;
-
+import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.test.Simple;
+import org.apache.avro.test.Simple.TestRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.Test;
 
-import org.apache.avro.*;
-import org.apache.avro.Protocol.Message;
-import org.apache.avro.io.*;
-import org.apache.avro.ipc.*;
-import org.apache.avro.generic.*;
-import org.apache.avro.specific.*;
-import org.apache.avro.reflect.*;
-import org.apache.avro.util.*;
+import java.io.File;
+import java.io.IOException;
 
-import org.apache.avro.test.Test.TestRecord;
-import org.apache.avro.test.*;
-
-public class TestReflect extends TestCase {
+public class TestReflect {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolSpecific.class);
 
-  private static final File FILE = new File("src/test/schemata/test.js");
+  private static final File FILE = new File("src/test/schemata/simple.js");
   private static final Protocol PROTOCOL;
   static {
     try {
@@ -53,12 +42,14 @@ public class TestReflect extends TestCase {
     }
   }
 
+  @Test
   public void testRecord() throws IOException {
     assertEquals(PROTOCOL.getTypes().get("TestRecord"),
                  ReflectData.getSchema(TestRecord.class));
   }
 
+  @Test
   public void testProtocol() throws IOException {
-    assertEquals(PROTOCOL, ReflectData.getProtocol(Test.class));
+    assertEquals(PROTOCOL, ReflectData.getProtocol(Simple.class));
   }
 }

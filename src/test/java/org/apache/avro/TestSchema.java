@@ -17,66 +17,87 @@
  */
 package org.apache.avro;
 
-import java.io.*;
-import java.util.*;
-import java.nio.ByteBuffer;
-import org.codehaus.jackson.map.JsonNode;
-import junit.framework.TestCase;
-
-import org.apache.avro.io.*;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericArray;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.ValueReader;
+import org.apache.avro.io.ValueWriter;
 import org.apache.avro.util.Utf8;
-import org.apache.avro.generic.*;
-import org.apache.avro.Schema.*;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import org.testng.annotations.Test;
 
-public class TestSchema extends TestCase {
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+
+public class TestSchema {
 
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
 
+  @Test
   public void testNull() throws Exception {
     check("\"null\"", "null", null);
   }
 
+  @Test
   public void testBoolean() throws Exception {
     check("\"boolean\"", "true", Boolean.TRUE);
   }
 
+  @Test
   public void testString() throws Exception {
     check("\"string\"", "\"foo\"", new Utf8("foo"));
   }
 
+  @Test
   public void testBytes() throws Exception {
     check("\"bytes\"", "\"\"", ByteBuffer.allocate(0));
   }
 
+  @Test
   public void testInt() throws Exception {
     check("\"int\"", "9", new Integer(9));
   }
 
+  @Test
   public void testLong() throws Exception {
     check("\"long\"", "11", new Long(11));
   }
 
+  @Test
   public void testFloat() throws Exception {
     check("\"float\"", "1.1", new Float(1.1));
   }
 
+  @Test
   public void testDouble() throws Exception {
     check("\"double\"", "1.2", new Double(1.2));
   }
 
+  @Test
   public void testArray() throws Exception {
     GenericArray<Long> array = new GenericData.Array<Long>(1);
     array.add(1L);
     check("{\"type\":\"array\", \"items\": \"long\"}", "[1]", array);
   }
 
+  @Test
   public void testMap() throws Exception {
     HashMap<Utf8,Long> map = new HashMap<Utf8,Long>();
     map.put(new Utf8("a"), 1L);
     check("{\"type\":\"map\", \"values\":\"long\"}", "{\"a\":1}", map);
   }
 
+  @Test
   public void testRecord() throws Exception {
     String recordJson = 
       "{\"type\":\"record\",\"fields\":[{\"name\":\"f\", \"type\":\"long\"}]}";
@@ -86,6 +107,7 @@ public class TestSchema extends TestCase {
     check(recordJson, "{\"f\":11}", record);
   }
 
+  @Test
   public void testRecursive() throws Exception {
     check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
           +"{\"name\":\"label\", \"type\":\"string\"},"
@@ -94,6 +116,7 @@ public class TestSchema extends TestCase {
           false);
   }
 
+  @Test
   public void testLisp() throws Exception {
     check("{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
           +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
@@ -103,6 +126,7 @@ public class TestSchema extends TestCase {
           false);
   }
 
+  @Test
   public void testUnion() throws Exception {
     check("[\"string\", \"long\"]", false);
     checkDefault("[\"double\", \"long\"]", "1.1", new Double(1.1));

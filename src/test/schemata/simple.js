@@ -1,5 +1,5 @@
 {"namespace": "org.apache.avro.test",
- "protocol": "Test",
+ "protocol": "Simple",
 
  "types": [
      {"name": "TestRecord", "type": "record",

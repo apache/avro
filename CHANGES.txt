@@ -34,6 +34,9 @@ Trunk (unreleased changes)
     AVRO-15. Override __eq__() and __hash__() in Schema classes.
     (sharad)
 
+    AVRO-26. Switch tests from JUnit to TestNG.  (Konstantin Boudnik
+    via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

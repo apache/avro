@@ -17,18 +17,20 @@
  */
 package org.apache.avro.io;
 
+import org.apache.avro.util.Utf8;
+import static org.testng.AssertJUnit.fail;
+import org.testng.annotations.Test;
+
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import junit.framework.TestCase;
 
-import org.apache.avro.util.Utf8;
-
-
-public class TestValueReader extends TestCase {
+public class TestValueReader {
   /** Verify EOFException throw at EOF */
+
+  @Test
   public void testEOFHandling() throws IOException {
     InputStream is = new ByteArrayInputStream(new byte[0]);
     ValueReader vr = new ValueReader(is);

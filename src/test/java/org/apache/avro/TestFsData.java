@@ -17,24 +17,29 @@
  */
 package org.apache.avro;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import junit.framework.TestCase;
-import org.codehaus.jackson.map.JsonNode;
-
+import org.apache.avro.Protocol.Message;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRequestor;
+import org.apache.avro.generic.GenericResponder;
+import org.apache.avro.ipc.*;
+import org.apache.avro.util.Utf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import org.apache.avro.Protocol.Message;
-import org.apache.avro.io.*;
-import org.apache.avro.ipc.*;
-import org.apache.avro.generic.*;
-import org.apache.avro.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.Random;
 
-public class TestFsData extends TestCase {
+public class TestFsData {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolGeneric.class);
 
@@ -90,6 +95,7 @@ public class TestFsData extends TestCase {
   private static Requestor requestor;
   private static FileChannel fileChannel;
 
+  @BeforeMethod
   public void testStartServer() throws Exception {
     // create a file that has COUNT * BUFFER_SIZE bytes of random data
     Random rand = new Random();
@@ -114,6 +120,7 @@ public class TestFsData extends TestCase {
 
   }
 
+  @Test
   public void testFsRead() throws IOException {
     for (int i = 0; i < COUNT; i++) {
       GenericRecord params =
@@ -125,6 +132,7 @@ public class TestFsData extends TestCase {
     }
   }
 
+  @AfterMethod
   public void testStopServer() throws Exception {
     server.close();
     fileChannel.close();

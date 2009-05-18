@@ -17,36 +17,38 @@
  */
 package org.apache.avro;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.nio.ByteBuffer;
-import junit.framework.TestCase;
-import org.codehaus.jackson.map.JsonNode;
-
+import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.ipc.SocketServer;
+import org.apache.avro.ipc.SocketTransceiver;
+import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.specific.SpecificRequestor;
+import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.test.Simple;
+import org.apache.avro.test.Simple.TestError;
+import org.apache.avro.test.Simple.TestRecord;
+import org.apache.avro.util.Utf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import org.apache.avro.*;
-import org.apache.avro.Protocol.Message;
-import org.apache.avro.io.*;
-import org.apache.avro.ipc.*;
-import org.apache.avro.generic.*;
-import org.apache.avro.specific.*;
-import org.apache.avro.util.*;
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.Random;
 
-import org.apache.avro.test.Test.TestRecord;
-import org.apache.avro.test.Test.TestError;
-import org.apache.avro.test.*;
 
-public class TestProtocolSpecific extends TestCase {
+public class TestProtocolSpecific {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolSpecific.class);
 
   private static final File SERVER_PORTS_DIR
   = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
 
-  private static final File FILE = new File("src/test/schemata/test.js");
+  private static final File FILE = new File("src/test/schemata/simple.js");
   private static final Protocol PROTOCOL;
   static {
     try {
@@ -56,7 +58,7 @@ public class TestProtocolSpecific extends TestCase {
     }
   }
 
-  public static class TestImpl implements Test {
+  public static class TestImpl implements Simple {
     public Utf8 hello(Utf8 greeting) { return new Utf8("goodbye"); }
     public TestRecord echo(TestRecord record) { return record; }
     public ByteBuffer echoBytes(ByteBuffer data) { return data; }
@@ -69,20 +71,23 @@ public class TestProtocolSpecific extends TestCase {
 
   protected static SocketServer server;
   protected static Transceiver client;
-  protected static Test proxy;
+  protected static Simple proxy;
 
+  @BeforeMethod
   public void testStartServer() throws Exception {
-    server = new SocketServer(new SpecificResponder(Test.class, new TestImpl()),
+    server = new SocketServer(new SpecificResponder(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (Test)SpecificRequestor.getClient(Test.class, client);
+    proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
   }
 
+  @Test
   public void testHello() throws IOException {
     Utf8 response = proxy.hello(new Utf8("bob"));
     assertEquals(new Utf8("goodbye"), response);
   }
 
+  @Test
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
     record.name = new Utf8("foo");
@@ -90,6 +95,7 @@ public class TestProtocolSpecific extends TestCase {
     assertEquals(record.name, echoed.name);
   }
 
+  @Test
   public void testEchoBytes() throws IOException {
     Random random = new Random();
     int length = random.nextInt(1024*16);
@@ -100,6 +106,7 @@ public class TestProtocolSpecific extends TestCase {
     assertEquals(data, echoed);
   }
 
+  @Test
   public void testEmptyEchoBytes() throws IOException {
     ByteBuffer data = ByteBuffer.allocate(0);
     ByteBuffer echoed = proxy.echoBytes(data);
@@ -107,6 +114,7 @@ public class TestProtocolSpecific extends TestCase {
     assertEquals(data, echoed);
   }
 
+  @Test
   public void testError() throws IOException {
     TestError error = null;
     try {
@@ -118,12 +126,14 @@ public class TestProtocolSpecific extends TestCase {
     assertEquals("an error", error.message.toString());
   }
 
+  @AfterMethod
   public void testStopServer() {
     server.close();
   }
 
-  public static class InteropTest extends TestCase{
+  public static class InteropTest {
 
+  @Test
     public void testClient() throws Exception {
       for (File f : SERVER_PORTS_DIR.listFiles()) {
         LineNumberReader reader = new LineNumberReader(new FileReader(f));
@@ -132,7 +142,7 @@ public class TestProtocolSpecific extends TestCase {
             f.getName()+" - " + port);
         Transceiver client = new SocketTransceiver(
             new InetSocketAddress("localhost", port));
-        proxy = (Test)SpecificRequestor.getClient(Test.class, client);
+        proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
         TestProtocolSpecific proto = new TestProtocolSpecific();
         proto.testHello();
         proto.testEcho();
@@ -148,7 +158,7 @@ public class TestProtocolSpecific extends TestCase {
      */
     public static void main(String[] args) throws Exception {
       SocketServer server = new SocketServer(
-          new SpecificResponder(Test.class, new TestImpl()),
+          new SpecificResponder(Simple.class, new TestImpl()),
           new InetSocketAddress(0));
       File portFile = new File(SERVER_PORTS_DIR, "java-port");
       FileWriter w = new FileWriter(portFile);

@@ -21,7 +21,7 @@ import avro.generic as generic
 import avro.protocol as protocol
 import avro.schema as schema
 
-PROTOCOL = protocol.parse(open("src/test/schemata/test.js").read())
+PROTOCOL = protocol.parse(open("src/test/schemata/simple.js").read())
 
 class TestProtocol(unittest.TestCase):
 
