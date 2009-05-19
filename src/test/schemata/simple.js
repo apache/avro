@@ -2,9 +2,12 @@
  "protocol": "Simple",
 
  "types": [
+     {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
+
      {"name": "TestRecord", "type": "record",
       "fields": [
-          {"name": "name", "type": "string"}
+          {"name": "name", "type": "string"},
+          {"name": "kind", "type": "Kind"}
       ]
      },
 

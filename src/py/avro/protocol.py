@@ -97,7 +97,8 @@ class Protocol(object):
     count = 0
     for type in self.__types.values():
       typesCopy = self.__types
-      if isinstance(type, schema._RecordSchema):
+      if (isinstance(type, schema._RecordSchema) or 
+          isinstance(type, schema._EnumSchema)):
         typesCopy = self.__types.copy()
         typesCopy.pop(type.getname(), None)
       str.write(type.str(typesCopy)+"\n")

@@ -81,6 +81,12 @@ class RandomData(object):
     elif schm.gettype() == schema.UNION:
       datum = self.nextdata(random.choice(schm.getelementtypes()), d)
       return datum
+    elif schm.gettype() == schema.ENUM:
+      symbols = schm.getenumsymbols()
+      len =  symbols.__len__()
+      if len == 0:
+        return None
+      return symbols[random.randint(0,len)-1]
 
 class TestSchema(unittest.TestCase):
 
@@ -128,6 +134,9 @@ class TestSchema(unittest.TestCase):
   def testRecord(self):
     self.check("{\"type\":\"record\",\"fields\":[{\"name\":\"f\", \"type\":" +
                "\"string\"}, {\"name\":\"fb\", \"type\":\"bytes\"}]}")
+
+  def testEnum(self):
+    self.check("{\"type\": \"enum\", \"symbols\": [\"A\", \"B\"]}")
 
   def testRecursive(self):
     self.check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["

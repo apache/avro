@@ -69,6 +69,8 @@ _validatefn = {
      schema.LONG : lambda schm, pkgname, object: ((isinstance(object, long) or 
                                           isinstance(object, int)) and 
                             io._LONG_MIN_VALUE <= object <= io._LONG_MAX_VALUE),
+     schema.ENUM : lambda schm, pkgname, object:
+                                schm.getenumsymbols().__contains__(object),
      schema.ARRAY : _validatearray,
      schema.MAP : _validatemap,
      schema.RECORD : _validaterecord,

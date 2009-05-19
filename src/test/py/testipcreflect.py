@@ -58,6 +58,7 @@ class TestProtocol(testipc.TestProtocol):
   def checkecho(self):
     record = TestRecord()
     record.name = unicode('foo')
+    record.kind = 'BAR'
     echoed = self.proxy.echo(record)
     self.assertEquals(record.name, echoed.name)
 

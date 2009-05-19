@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,8 @@ import org.codehaus.jackson.map.JsonTypeMapper;
 /** An abstract data type.
  * <p>A schema may be one of:
  * <ul>
- * <li>An <i>record</i>, mapping field names to field value data;
+ * <li>A <i>record</i>, mapping field names to field value data;
+ * <li>An <i>enum</i>, containing one of a small set of symbols;
  * <li>An <i>array</i> of values, all of the same schema;
  * <li>A <i>map</i>, containing string/value pairs, of a declared schema;
  * <li>A <i>union</i> of other schemas;
@@ -61,7 +63,7 @@ public abstract class Schema {
 
   /** The type of a schema. */
   public enum Type
-  { RECORD, ARRAY, MAP, UNION, STRING, BYTES,
+  { RECORD, ENUM, ARRAY, MAP, UNION, STRING, BYTES,
       INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL };
 
   private final Type type;
@@ -94,6 +96,12 @@ public abstract class Schema {
   public static Schema createRecord(String name, String namespace,
                                     boolean isError) {
      return new RecordSchema(name, namespace, isError);
+  }
+
+  /** Create an enum schema. */
+  public static Schema createEnum(String name, String namespace,
+                                  List<String> values) {
+    return new EnumSchema(name, namespace, values);
   }
 
   /** Create an array schema. */
@@ -129,14 +137,25 @@ public abstract class Schema {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
-  /** If this is a record, returns its name, if any. */
+  /** If this is an enum, return its symbols. */
+  public List<String> getEnumSymbols() {
+    throw new AvroRuntimeException("Not an enum: "+this);
+  }    
+
+  /** If this is an enum, return a symbol's ordinal value. */
+  public int getEnumOrdinal(String symbol) {
+    throw new AvroRuntimeException("Not an enum: "+this);
+  }    
+
+
+  /** If this is a record or enum, returns its name, if any. */
   public String getName() {
-    throw new AvroRuntimeException("Not a record: "+this);
+    throw new AvroRuntimeException("Not a record or enum: "+this);
   }
 
-  /** If this is a record, returns its namespace, if any. */
+  /** If this is a record or enum, returns its namespace, if any. */
   public String getNamespace() {
-    throw new AvroRuntimeException("Not a record: "+this);
+    throw new AvroRuntimeException("Not a record or enum: "+this);
   }
 
   /** Returns true if this record is an error type. */
@@ -283,6 +302,44 @@ public abstract class Schema {
     }
   }
 
+  private static class EnumSchema extends NamedSchema {
+    private final List<String> symbols;
+    private final Map<String,Integer> ordinals;
+    public EnumSchema(String name, String space, List<String> symbols) {
+      super(Type.ENUM, name, space);
+      this.symbols = symbols;
+      this.ordinals = new HashMap<String,Integer>();
+      int i = 0;
+      for (String symbol : symbols)
+        ordinals.put(symbol, i++);
+    }
+    public List<String> getEnumSymbols() { return symbols; }
+    public int getEnumOrdinal(String symbol) { return ordinals.get(symbol); }
+    public boolean equals(Object o) {
+      if (o == this) return true;
+      if (!(o instanceof EnumSchema)) return false;
+      EnumSchema that = (EnumSchema)o;
+      return equalNames(that) && symbols.equals(that.symbols);
+    }
+    public int hashCode() { return super.hashCode() + symbols.hashCode(); }
+    public String toString(Names names) {
+      if (this.equals(names.get(name))) return "\""+name+"\"";
+      else if (name != null) names.put(name, this);
+      StringBuilder buffer = new StringBuilder();
+      buffer.append("{\"type\": \"enum\", "
+                    +"\"name\": \""+name+"\", "
+                    +"\"symbols\": [");
+      int count = 0;
+      for (String symbol : symbols) {
+        buffer.append("\""+symbol+"\"");
+        if (++count < symbols.size())
+          buffer.append(", ");
+      }
+      buffer.append("]}");
+      return buffer.toString();
+    }
+  }
+
   private static class ArraySchema extends Schema {
     private final Schema elementType;
     public ArraySchema(Schema elementType) {
@@ -336,14 +393,18 @@ public abstract class Schema {
       this.types = types;
       int seen = 0;
       for (Schema type : types) {                 // check legality of union
-        if (type.getType() == Type.UNION)
+        switch (type.getType()) {
+        case UNION: 
           throw new AvroRuntimeException("Nested union: "+this);
-        int mask = 1 << type.getType().ordinal();
-        if (type.getType() == Type.RECORD && type.getName() != null)
-          continue;
-        if ((seen & mask) != 0)
-          throw new AvroRuntimeException("Ambiguous union: "+this);
-        seen |= mask;
+        case RECORD:
+          if (type.getName() != null)
+            continue;
+        default:
+          int mask = 1 << type.getType().ordinal();
+          if ((seen & mask) != 0)
+            throw new AvroRuntimeException("Ambiguous union: "+this);
+          seen |= mask;
+        }
       }
     }
     public List<Schema> getTypes() { return types; }
@@ -508,6 +569,20 @@ public abstract class Schema {
                      new Field(fieldSchema, field.getFieldValue("default")));
         }
         result.setFields(fields);
+        return result;
+      } else if (type.equals("enum")) {           // enum
+        JsonNode nameNode = schema.getFieldValue("name");
+        String name = nameNode != null ? nameNode.getTextValue() : null;
+        JsonNode spaceNode = schema.getFieldValue("namespace");
+        String space = spaceNode!=null?spaceNode.getTextValue():names.space();
+        JsonNode symbolsNode = schema.getFieldValue("symbols");
+        if (symbolsNode == null || !symbolsNode.isArray())
+          throw new SchemaParseException("Enum has no symbols: "+schema);
+        List<String> symbols = new ArrayList<String>();
+        for (JsonNode n : symbolsNode)
+          symbols.add(n.getTextValue());
+        Schema result = new EnumSchema(name, space, symbols);
+        if (name != null) names.put(name, result);
         return result;
       } else if (type.equals("array")) {          // array
         return new ArraySchema(parse(schema.getFieldValue("items"), names));

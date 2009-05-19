@@ -151,7 +151,7 @@ public class Protocol {
   public String getNamespace() { return namespace; }
 
   /** The types of this protocol. */
-  public Map<String,Schema> getTypes() { return types; }
+  public LinkedHashMap<String,Schema> getTypes() { return types; }
 
   /** The messages of this protocol. */
   public Map<String,Message> getMessages() { return messages; }

@@ -107,6 +107,8 @@ public class GenericData {
         if (!validate(entry.getValue(), fields.get(entry.getKey())))
           return false;
       return true;
+    case ENUM:
+      return schema.getEnumSymbols().contains(datum);
     case ARRAY:
       if (!(datum instanceof GenericArray)) return false;
       for (Object element : (GenericArray)datum)

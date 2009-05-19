@@ -77,6 +77,8 @@ _validatefn = {
      schema.LONG : lambda schm, object: ((isinstance(object, long) or 
                                           isinstance(object, int)) and 
                             io._LONG_MIN_VALUE <= object <= io._LONG_MAX_VALUE),
+     schema.ENUM : lambda schm, object:
+                                schm.getenumsymbols().__contains__(object),
      schema.ARRAY : _validatearray,
      schema.MAP : _validatemap,
      schema.RECORD : _validaterecord,
@@ -107,6 +109,7 @@ class DatumReader(io.DatumReaderBase):
      schema.ARRAY : self.readarray,
      schema.MAP : self.readmap,
      schema.RECORD : self.readrecord,
+     schema.ENUM : self.readenum,
      schema.UNION : self.readunion
      }
 
@@ -150,6 +153,10 @@ class DatumReader(io.DatumReaderBase):
       result[field] = self.readdata(fieldschema, valuereader)
     return result
 
+  def readenum(self, schm, valuereader):
+    index = valuereader.readint()
+    return schm.getenumsymbols()[index]
+
   def readunion(self, schm, valuereader):
     index = int(valuereader.readlong())
     return self.readdata(schm.getelementtypes()[index], valuereader)
@@ -177,6 +184,7 @@ class DatumWriter(io.DatumWriterBase):
      schema.ARRAY : self.writearray,
      schema.MAP : self.writemap,
      schema.RECORD : self.writerecord,
+     schema.ENUM : self.writeenum,
      schema.UNION : self.writeunion
      }
 
@@ -226,6 +234,10 @@ class DatumWriter(io.DatumWriterBase):
     index = self.resolveunion(schm, datum)
     valuewriter.writelong(index)
     self.writedata(schm.getelementtypes()[index], datum, valuewriter)
+
+  def writeenum(self, schm, datum, valuewriter):
+    index = schm.getenumordinal(datum)
+    valuewriter.writeint(index)
 
   def resolveunion(self, schm, datum):
     index = 0

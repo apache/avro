@@ -45,6 +45,15 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
     }
   }
   
+  protected void writeEnum(Schema schema, Object datum, ValueWriter out)
+    throws IOException {
+    out.writeInt(((Enum)datum).ordinal());
+  }
+
+  protected boolean isEnum(Object datum) {
+    return datum instanceof Enum;
+  }
+
   @Override
   protected boolean isRecord(Object datum) {
     return ReflectData.getSchema(datum.getClass()).getType() == Type.RECORD;

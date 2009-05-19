@@ -82,11 +82,11 @@
 
       </section>
 
-      <section id="schema_compound">
-        <title>Compound Types</title>
+      <section id="schema_complex">
+        <title>Complex Types</title>
         
-        <p>Avro supports three kinds of compound types: records,
-        arrays and unions.</p>
+        <p>Avro supports five kinds of complex types: records, enums,
+        arrays, maps and unions.</p>
 
         <section>
           <title>Records</title>
@@ -94,7 +94,7 @@
 	  <p>Records use the type name "record" and support two attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
-	    of the record (optional).</li>
+	    of the record (required).</li>
 	    <li><code>fields</code>: a JSON array, listing fields (required).
 	    Each field is a JSON object with the following attributes:
 	      <ul>
@@ -119,6 +119,7 @@
 		    <tr><td>boolean</td><td>boolean</td><td>true</td></tr>
 		    <tr><td>null</td><td>null</td><td>null</td></tr>
 		    <tr><td>record</td><td>object</td><td>{"a": 1}</td></tr>
+		    <tr><td>enum</td><td>string</td><td>"FOO"</td></tr>
 		    <tr><td>array</td><td>array</td><td>[1]</td></tr>
 		    <tr><td>map</td><td>object</td><td>{"a": 1}</td></tr>
 		  </table>
@@ -136,6 +137,26 @@
     {"name": "value", "type": "long"},             // each element has a long
     {"name": "next", "type": ["LongList", "null"]} // optional next element
   ]
+}
+	  </source>
+	</section>
+        
+        <section>
+          <title>Enums</title>
+          
+	  <p>Enums use the type name "enum" and support the following
+	  attributes:</p>
+	  <ul>
+	    <li><code>name</code>: a JSON string providing the name
+	    of the enum (required).</li>
+	    <li><code>symbols</code>: a JSON array, listing symbols,
+	    as JSON strings (required).</li>
+	  </ul>
+	  <p>For example, playing card suits might be defined with:</p>
+	  <source>
+{ "type": "enum",
+  "name": "Suit",
+  "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
 }
 	  </source>
 	</section>
@@ -178,11 +199,11 @@
 	  reading and writing unions.)</p>
 	  <p>Unions may not immediately contain other unions.</p>
         </section>
-      </section> <!-- end compound types -->
+      </section> <!-- end complex types -->
 
       <section>
 	<title>Identifiers</title>
-        <p>Record and field names must:</p>
+        <p>Record, field and enum names must:</p>
 	<ul>
           <li>start with <code>[A-Za-z_]</code></li>
           <li>subsequently contain only <code>[A-Za-z0-9_]</code></li>
@@ -252,9 +273,9 @@
       </section>
 
 
-      <section id="serialize_compound">
-        <title>Compound Type Serialization</title>
-        <p>Compound types are serialized as follows:</p>
+      <section id="serialize_complex">
+        <title>Complex Type Serialization</title>
+        <p>Complex types are serialized as follows:</p>
 
         <section>
           <title>Records</title>
@@ -283,6 +304,20 @@
 	  <source>36 0C 66 6f 6f</source>
 	</section>
         
+        <section>
+          <title>Enums</title>
+          <p>An enum is serialized by a <code>int</code>, representing
+          the zero-based position of the symbol in the schema.</p>
+	  <p>For example, consider the enum:</p>
+	  <source>
+{"type": "enum", "name": "Foo", "symbols": ["A", "B", "C", "D"] }
+	  </source>
+	  <p>This would be serialized by an <code>int</code> between
+	  zero and three, with zero indicating "A", and 3 indicating
+	  "D".</p>
+	</section>
+
+
         <section>
           <title>Arrays</title>
           <p>Arrays are serialized as a series of <em>blocks</em>.
@@ -363,7 +398,7 @@
 	      <source>00 02 61</source></li>
           </ul>
         </section>
-      </section> <!-- end compound types -->
+      </section> <!-- end complex types -->
 
     </section>
 
@@ -446,11 +481,11 @@
       <ul>
 	<li><em>name</em>, string, to distinguish it from other protocols;</li>
 	<li><em>namespace</em>, a string which qualifies the name;</li>
-	<li><em>types</em>, a list of record and error definitions.
-	  An error definition is just like a record definition except
-	  it uses "error" instead of "record".  Note that forward
-	  references to records and errors are not currently
-	  supported.</li>
+	<li><em>types</em>, a list of record, enum and error
+	  definitions.  An error definition is just like a record
+	  definition except it uses "error" instead of "record".  Note
+	  that forward references to records, enums and errors are not
+	  currently supported.</li>
 	<li><em>messages</em>, a JSON object whose keys are message
 	  names and whose values are objects whose attributes are
 	  described below.  No two messages may have the same name.</li>
@@ -667,6 +702,7 @@
 	  <ul>
 	    <li>both schemas are arrays whose item types match</li>
 	    <li>both schemas are maps whose value types match</li>
+	    <li>both schemas are enums whose names match</li>
 	    <li>both schemas are records with the same name</li>
 	    <li>either schema is a union</li>
 	    <li>both schemas have same primitive type</li>
@@ -693,6 +729,11 @@
 	  records.  Note also that, since the ordering of record
 	  fields may vary between reader and writer, method parameter
 	  list order may also vary.</p>
+	</li>
+
+	<li><strong>if both are enums:</strong>
+	  <p>if the writer's symbol is not present in the reader's
+	    enum, then the enum value is unset.</p>
 	</li>
 
 	<li><strong>if both are arrays:</strong>

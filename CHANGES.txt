@@ -19,6 +19,8 @@ Trunk (unreleased changes)
 
     AVRO-33.  C support for primitive types.  (Matt Massie via cutting)
 
+    AVRO-18.  Add support for enum types.  (cutting & sharad)
+
   IMPROVEMENTS
 
     AVRO-11.  Re-implement specific and reflect datum readers and

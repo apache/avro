@@ -171,6 +171,19 @@ public class SpecificCompiler {
           compile(field.getValue(), null, d+1);
 
       break;
+    case ENUM:
+      buffer.append("\n");
+      line(d, ((d==0)?"public ":"")+"enum "+type+" { ");
+      StringBuilder b = new StringBuilder();
+      int count = 0;
+      for (String symbol : schema.getEnumSymbols()) {
+        b.append(symbol);
+        if (++count < schema.getEnumSymbols().size())
+          b.append(", ");
+      }
+      line(d+1, b.toString());
+      line(d, "}");
+      break;
     case ARRAY:
       compile(schema.getElementType(), name+"Element", d);
       break;
@@ -195,6 +208,7 @@ public class SpecificCompiler {
   private String type(Schema schema, String name) {
     switch (schema.getType()) {
     case RECORD:
+    case ENUM:
       return schema.getName() == null ? cap(name) : schema.getName();
     case ARRAY:
       return "GenericArray<"+type(schema.getElementType(),name+"Element")+">";

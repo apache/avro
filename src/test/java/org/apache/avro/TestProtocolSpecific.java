@@ -24,6 +24,7 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.specific.SpecificRequestor;
 import org.apache.avro.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
+import org.apache.avro.test.Simple.Kind;
 import org.apache.avro.test.Simple.TestError;
 import org.apache.avro.test.Simple.TestRecord;
 import org.apache.avro.util.Utf8;
@@ -91,6 +92,7 @@ public class TestProtocolSpecific {
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
     record.name = new Utf8("foo");
+    record.kind = Kind.BAR;
     TestRecord echoed = proxy.echo(record);
     assertEquals(record.name, echoed.name);
   }

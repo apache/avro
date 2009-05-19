@@ -15,6 +15,8 @@
          "fields": [{"name": "label", "type": "string"}]}}},
       {"name": "unionField", "type":
        ["boolean", "double", {"type": "array", "items": "bytes"}]},
+      {"name": "enumField", "type":
+       {"type": "enum", "name": "Kind", "symbols": ["A","B","C"]}},
       {"name": "recordField", "type":
        {"type": "record", "name": "Node",
         "fields": [

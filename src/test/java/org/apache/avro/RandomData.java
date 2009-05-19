@@ -66,6 +66,9 @@ public class RandomData implements Iterable<Object> {
       for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
         record.put(entry.getKey(), generate(entry.getValue(), random, d+1));
       return record;
+    case ENUM:
+      List<String> symbols = schema.getEnumSymbols();
+      return symbols.get(random.nextInt(symbols.size()));
     case ARRAY:
       int length = (random.nextInt(5)+2)-d;
       GenericArray<Object> array = new GenericData.Array(length<=0?0:length);

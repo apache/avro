@@ -76,6 +76,7 @@ class TestProtocol(unittest.TestCase):
   def checkecho(self):
     record = dict()
     record['name'] = unicode('foo')
+    record['kind'] = 'BAR'
     params = dict()
     params['record'] = record
     echoed = self.requestor.call('echo', params)

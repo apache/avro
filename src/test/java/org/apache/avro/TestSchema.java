@@ -108,6 +108,12 @@ public class TestSchema {
   }
 
   @Test
+  public void testEnum() throws Exception {
+    check("{\"type\": \"enum\", \"symbols\": [\"A\", \"B\"]}", "\"B\"", "B",
+          false);
+  }
+
+  @Test
   public void testRecursive() throws Exception {
     check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
           +"{\"name\":\"label\", \"type\":\"string\"},"
@@ -134,7 +140,12 @@ public class TestSchema {
 
   private static void check(String schemaJson, String defaultJson,
                             Object defaultValue) throws Exception {
-    check(schemaJson, true);
+    check(schemaJson, defaultJson, defaultValue, true);
+  }
+  private static void check(String schemaJson, String defaultJson,
+                            Object defaultValue, boolean induce)
+    throws Exception {
+    check(schemaJson, induce);
     checkDefault(schemaJson, defaultJson, defaultValue);
   }
 

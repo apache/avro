@@ -114,6 +114,7 @@ public class TestProtocolGeneric {
     GenericRecord record =
       new GenericData.Record(PROTOCOL.getTypes().get("TestRecord"));
     record.put("name", new Utf8("foo"));
+    record.put("kind", "BAR");
     GenericRecord params =
       new GenericData.Record(PROTOCOL.getMessages().get("echo").getRequest());
     params.put("record", record);

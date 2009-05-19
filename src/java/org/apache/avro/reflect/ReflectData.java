@@ -24,6 +24,7 @@ import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,9 @@ public class ReflectData {
         }
       }
       return true;
+    case ENUM:
+      return datum instanceof Enum
+        && schema.getEnumSymbols().contains(((Enum)datum).name());
     case ARRAY:
       if (!(datum instanceof GenericArray)) return false;
       for (Object element : (GenericArray)datum)
@@ -99,7 +103,7 @@ public class ReflectData {
   public static Schema getSchema(java.lang.reflect.Type type) {
     Schema schema = SCHEMA_CACHE.get(type);
     if (schema == null) {
-      schema = createSchema(type, new HashMap<String,Schema>());
+      schema = createSchema(type, new LinkedHashMap<String,Schema>());
       SCHEMA_CACHE.put(type, schema);
     }
     return schema;
@@ -142,14 +146,27 @@ public class ReflectData {
           throw new AvroTypeException("Map key class not Utf8: "+key);
         return Schema.createMap(createSchema(value, names));
       }
-    } else if (type instanceof Class) {             // record
+    } else if (type instanceof Class) {
       Class c = (Class)type;
-      String name = c.getSimpleName();            // FIXME: ignoring package
+      String name = c.getSimpleName();
+      String space = c.getPackage().getName();
+      
       Schema schema = names.get(name);
       if (schema == null) {
+
+        if (c.isEnum()) {                         // enum
+          List<String> symbols = new ArrayList<String>();
+          Enum[] constants = (Enum[])c.getEnumConstants();
+          for (int i = 0; i < constants.length; i++)
+            symbols.add(constants[i].name());
+          schema = Schema.createEnum(name, space, symbols);
+          names.put(name, schema);
+          return schema;
+        }
+                                                  // record
         LinkedHashMap<String,Schema.Field> fields =
           new LinkedHashMap<String,Schema.Field>();
-        schema = Schema.createRecord(name, c.getPackage().getName(),
+        schema = Schema.createRecord(name, space,
                                      Throwable.class.isAssignableFrom(c));
         if (!names.containsKey(name))
           names.put(name, schema);
@@ -178,6 +195,16 @@ public class ReflectData {
       if ((method.getModifiers() & Modifier.STATIC) == 0)
         protocol.getMessages().put(method.getName(),
                                    getMessage(method, protocol));
+
+    // reverse types, since they were defined in reference order
+    List<Map.Entry<String,Schema>> names =
+      new ArrayList<Map.Entry<String,Schema>>();
+    names.addAll(protocol.getTypes().entrySet());
+    Collections.reverse(names);
+    protocol.getTypes().clear();
+    for (Map.Entry<String,Schema> name : names)
+      protocol.getTypes().put(name.getKey(), name.getValue());
+
     return protocol;
   }
 

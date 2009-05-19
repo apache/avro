@@ -67,6 +67,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       expected = resolveExpected(actual, expected);
     switch (actual.getType()) {
     case RECORD:  return readRecord(old, actual, expected, in);
+    case ENUM:    return readEnum(actual, expected, in);
     case ARRAY:   return readArray(old, actual, expected, in);
     case MAP:     return readMap(old, actual, expected, in);
     case STRING:  return readString(old, in);
@@ -85,12 +86,15 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     // first scan for exact match
     for (Schema branch : expected.getTypes())
       if (branch.getType() == actual.getType())
-        if (branch.getType() == Type.RECORD) {
+        switch (branch.getType()) {
+        case RECORD:
           String name = branch.getName();
           if (name == null || name.equals(actual.getName()))
             return branch;
-        } else
+          break;
+        default:
           return branch;
+        }
     // then scan match via numeric promotion
     for (Schema branch : expected.getTypes())
       switch (actual.getType()) {
@@ -203,6 +207,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         }
       }
       return record;
+    case ENUM:
+      return createEnum(json.getTextValue(), schema);
     case ARRAY:
       Object array = newArray(old, json.size());
       Schema element = schema.getElementType();
@@ -230,6 +236,20 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     default: throw new AvroRuntimeException("Unknown type: "+actual);
     }
   }
+
+  /** Called to read an enum value. May be overridden for alternate enum
+   * representations.  By default, returns the symbol as a String. */
+  protected Object readEnum(Schema actual, Schema expected, ValueReader in)
+    throws IOException {
+    String name = expected.getName();
+    if (name != null && !name.equals(actual.getName()))
+      throw new AvroTypeException("Expected "+expected+", found "+actual);
+    return createEnum(actual.getEnumSymbols().get(in.readInt()), expected);
+  }
+
+  /** Called to create an enum value. May be overridden for alternate enum
+   * representations.  By default, returns the symbol as a String. */
+  protected Object createEnum(String symbol, Schema schema) { return symbol; }
 
   /** Called to read an array instance.  May be overridden for alternate array
    * representations.*/
@@ -354,6 +374,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case RECORD:
       for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
         skip(entry.getValue(), in);
+      break;
+    case ENUM:
+      in.readInt();
       break;
     case ARRAY:
       Schema elementType = schema.getElementType();

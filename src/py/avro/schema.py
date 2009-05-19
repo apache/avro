@@ -17,6 +17,7 @@
 """ Contains the Schema classes.
 A schema may be one of:
   An record, mapping field names to field value data;
+  An enum, containing one of a small set of symbols;
   An array of values, all of the same schema;
   A map containing string/value pairs, each of a declared schema;
   A union of other schemas;
@@ -29,10 +30,10 @@ A schema may be one of:
   A boolean."""
 
 import cStringIO
-import simplejson
+import simplejson, odict
 
 #The schema types
-STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL, ARRAY, MAP, UNION, RECORD = range(12)
+STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL, ARRAY, MAP, UNION, RECORD, ENUM = range(13)
 
 class Schema(object):
   """Base class for all Schema classes."""
@@ -282,6 +283,73 @@ class _UnionSchema(Schema):
       hash = hash + elem.__hash__(seen)
     return hash
 
+class _EnumSchema(Schema):
+  def __init__(self, name, space, symbols):
+    Schema.__init__(self, ENUM)
+    self.__name = name
+    self.__space = space
+    self.__symbols = symbols
+    self.__ordinals = dict()
+    i = 0
+    for symbol in symbols:
+      self.__ordinals[symbol] = i
+      i+=1
+
+  def getname(self):
+    return self.__name
+
+  def getnamespace(self):
+    return self.__namespace
+
+  def getenumsymbols(self):
+    return self.__symbols
+
+  def getenumordinal(self, symbol):
+    return self.__ordinals.get(symbol)
+
+  def str(self, names):
+    if names.get(self.__name) is self:
+      return "\""+self.__name+"\""
+    elif self.__name is not None:
+      names[self.__name] = self
+    str = cStringIO.StringIO()
+    str.write("{\"type\": \"enum\", ")
+    if self.__name is not None:
+      str.write("\"name\": \""+self.__name+"\", ")
+    str.write("\"symbols\": [")
+    count = 0
+    for symbol in self.__symbols:
+      str.write("\""+symbol+"\"")
+      count+=1
+      if count < len(self.__symbols):
+        str.write(",")
+    str.write("]}")
+    return str.getvalue()
+
+  def __eq__(self, other, seen={}):
+    if self is other or seen.get(id(self)) is other:
+      return True
+    if isinstance(other, _EnumSchema):
+      size = len(self.__symbols)
+      if len(other.__symbols) != size:
+        return False
+      seen[id(self)] = other
+      for i in range(0, size):
+        if not self.__symbols[i].__eq__(other.__symbols[i]):
+          return False
+      return True
+    else:
+      return False
+
+  def __hash__(self, seen=set()):
+    if seen.__contains__(id(self)):
+      return 0
+    seen.add(id(self))
+    hash = self.gettype().__hash__()
+    for symbol in self.__symbols:
+      hash += symbol.__hash__()
+    return hash
+
 _PRIMITIVES = {'string':_StringSchema(),
         'bytes':_BytesSchema(),
         'int':_IntSchema(),
@@ -291,20 +359,21 @@ _PRIMITIVES = {'string':_StringSchema(),
         'boolean':_BooleanSchema(),
         'null':_NullSchema()}    
 
-class _Names(dict):
+class _Names(odict.OrderedDict):
   def __init__(self, names=_PRIMITIVES):
+    odict.OrderedDict.__init__(self)
     self.__defaults = names
 
   def get(self, key):
-    val = dict.get(self, key)
+    val = odict.OrderedDict.get(self, key)
     if val is None:
       val = self.__defaults.get(key)
     return val
 
   def __setitem__(self, key, val):
-    if dict.get(self, key) is not None:
+    if odict.OrderedDict.get(self, key) is not None:
       raise SchemaParseException("Can't redefine: "+ key.__str__())
-    dict.__setitem__(self, key, val)
+    odict.OrderedDict.__setitem__(self, key, val)
 
 class AvroException(Exception):
   pass
@@ -341,6 +410,19 @@ def _parse(obj, names):
         if fieldtype is None:
           raise SchemaParseException("No field type: "+field.__str__())
         fields.append((fieldname, _parse(fieldtype, names)))
+      return schema
+    elif type == "enum":
+      name = obj.get("name")
+      namespace = obj.get("namespace")
+      symbolsnode = obj.get("symbols")
+      if symbolsnode == None or not isinstance(symbolsnode, list):
+        raise SchemaParseException("Enum has no symbols: "+obj.__str__())
+      symbols = list()
+      for symbol in symbolsnode:
+        symbols.append(symbol)
+      schema = _EnumSchema(name, namespace, symbols)
+      if name is not None:
+        names[name] = schema
       return schema
     elif type == "array":
       return _ArraySchema(_parse(obj.get("items"), names))
