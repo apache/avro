@@ -39,11 +39,6 @@ public class SpecificDatumReader extends ReflectDatumReader {
     super(root, packageName);
   }
 
-  protected Object newRecord(Object old, Schema schema) {
-    Class c = getClass(schema.getName());
-    return(c.isInstance(old) ? old : newInstance(c));
-  }
-
   protected void addField(Object record, String name, int position, Object o) {
     ((SpecificRecord)record).set(position, o);
   }
@@ -52,21 +47,6 @@ public class SpecificDatumReader extends ReflectDatumReader {
   }
   protected void removeField(Object record, String field, int position) {
     ((SpecificRecord)record).set(position, null);
-  }
-
-  private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
-
-  private Class getClass(String name) {
-    Class c = classCache.get(name);
-    if (c == null) {
-      try {
-        c = Class.forName(packageName + name);
-        classCache.put(name, c);
-      } catch (ClassNotFoundException e) {
-        throw new AvroRuntimeException(e);
-      }
-    }
-    return c;
   }
 
 }
