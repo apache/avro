@@ -60,3 +60,6 @@ Trunk (unreleased changes)
     (sharad via cutting)
 
     AVRO-21. Default Java namespace from containing definition. (cutting)
+
+    AVRO-12. Fix recursive schemas in Java so that equals() and
+    hashCode() do not cause a stack overflow.  (cutting)

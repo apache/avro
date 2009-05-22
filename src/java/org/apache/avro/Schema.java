@@ -25,9 +25,12 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParseException;
@@ -253,6 +256,25 @@ public abstract class Schema {
     }
   }
 
+  private static class SeenPair {
+    private Object s1; private Object s2;
+    private SeenPair(Object s1, Object s2) { this.s1 = s1; this.s2 = s2; }
+    public boolean equals(Object o) {
+      return this.s1 == ((SeenPair)o).s1 && this.s2 == ((SeenPair)o).s2;
+    }
+    public int hashCode() {
+      return System.identityHashCode(s1) + System.identityHashCode(s2);
+    }
+  }
+
+  private static final ThreadLocal<Set> SEEN_EQUALS = new ThreadLocal<Set>() {
+    protected Set initialValue() { return new HashSet(); }
+  };
+  private static final ThreadLocal<Map> SEEN_HASHCODE = new ThreadLocal<Map>() {
+    protected Map initialValue() { return new IdentityHashMap(); }
+  };
+
+  @SuppressWarnings(value="unchecked")
   private static class RecordSchema extends NamedSchema {
     private Map<String,Field> fields;
     private Iterable<Map.Entry<String,Schema>> fieldSchemas;
@@ -285,9 +307,28 @@ public abstract class Schema {
       if (o == this) return true;
       if (!(o instanceof RecordSchema)) return false;
       RecordSchema that = (RecordSchema)o;
-      return equalNames(that) && fields.equals(that.fields);
+      if (!equalNames(that)) return false;
+      if (!(o instanceof RecordSchema)) return false;
+      Set seen = SEEN_EQUALS.get();
+      SeenPair here = new SeenPair(this, o);
+      if (seen.contains(here)) return true;       // prevent stack overflow
+      try {
+        seen.add(here);
+        return fields.equals(((RecordSchema)o).fields);
+      } finally {
+        seen.remove(here);
+      }
     }
-    public int hashCode() { return super.hashCode() + fields.hashCode(); }
+    public int hashCode() {
+      Map seen = SEEN_HASHCODE.get();
+      if (seen.containsKey(this)) return 0;       // prevent stack overflow
+      try {
+        seen.put(this, this);
+        return super.hashCode() + fields.hashCode();
+      } finally {
+        seen.remove(this);
+      }
+    }
     public String toString(Names names) {
       if (this.equals(names.get(name))) return "\""+name+"\"";
       else if (name != null) names.put(name, this);

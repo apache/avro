@@ -129,6 +129,16 @@ public class TestSchema {
   }
 
   @Test
+  public void testRecursiveEquals() throws Exception {
+    String jsonSchema = "{\"type\":\"record\", \"name\":\"List\", \"fields\": ["
+      +"{\"name\":\"next\", \"type\":\"List\"}]}";
+    Schema s1 = Schema.parse(jsonSchema);
+    Schema s2 = Schema.parse(jsonSchema);
+    assertEquals(s1, s2);
+    s1.hashCode();                                // test no stackoverflow
+  }
+
+  @Test
   public void testLisp() throws Exception {
     check("{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
           +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
