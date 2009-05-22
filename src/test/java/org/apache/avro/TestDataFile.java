@@ -46,7 +46,7 @@ public class TestDataFile {
   private static final long SEED = System.currentTimeMillis();
 
   private static final String SCHEMA_JSON =
-    "{\"type\": \"record\", \"fields\": ["
+    "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
     +"{\"name\":\"stringField\", \"type\":\"string\"},"
     +"{\"name\":\"longField\", \"type\":\"long\"}]}";
   private static final Schema SCHEMA = Schema.parse(SCHEMA_JSON);

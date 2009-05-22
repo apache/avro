@@ -626,6 +626,8 @@ public abstract class Schema {
         name = nameNode != null ? nameNode.getTextValue() : null;
         JsonNode spaceNode = schema.get("namespace");
         space = spaceNode!=null?spaceNode.getTextValue():names.space();
+        if (name == null)
+          throw new SchemaParseException("No name in schema: "+schema);
       }
       if (type.equals("record") || type.equals("error")) { // record
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();

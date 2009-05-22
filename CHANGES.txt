@@ -63,3 +63,6 @@ Trunk (unreleased changes)
 
     AVRO-12. Fix recursive schemas in Java so that equals() and
     hashCode() do not cause a stack overflow.  (cutting)
+
+    AVRO-22. When parsing schemas in Java, do not permit anonymous.
+    (cutting)

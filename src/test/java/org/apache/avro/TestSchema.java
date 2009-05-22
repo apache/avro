@@ -99,24 +99,25 @@ public class TestSchema {
 
   @Test
   public void testRecord() throws Exception {
-    String recordJson = 
-      "{\"type\":\"record\",\"fields\":[{\"name\":\"f\", \"type\":\"long\"}]}";
+    String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
+      +"[{\"name\":\"f\", \"type\":\"long\"}]}";
     Schema schema = Schema.parse(recordJson);
     GenericData.Record record = new GenericData.Record(schema);
     record.put("f", 11L);
-    check(recordJson, "{\"f\":11}", record);
+    check(recordJson, "{\"f\":11}", record, false);
   }
 
   @Test
   public void testEnum() throws Exception {
-    check("{\"type\": \"enum\", \"symbols\": [\"A\", \"B\"]}", "\"B\"", "B",
+    check("{\"type\":\"enum\", \"name\":\"Test\","
+          +"\"symbols\": [\"A\", \"B\"]}", "\"B\"", "B",
           false);
   }
 
   @Test
   public void testFixed() throws Exception {
-    check("{\"type\": \"fixed\", \"size\": 1}", "\"a\"",
-          new GenericData.Fixed(new byte[]{(byte)'a'}));
+    check("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}", "\"a\"",
+          new GenericData.Fixed(new byte[]{(byte)'a'}), false);
   }
 
   @Test
@@ -210,12 +211,13 @@ public class TestSchema {
   }
 
   private static final Schema ACTUAL =            // an empty record schema
-    Schema.createRecord(new LinkedHashMap<String,Field>());
+    Schema.parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[]}");
 
   @SuppressWarnings(value="unchecked")
   private static void checkDefault(String schemaJson, String defaultJson,
                                    Object defaultValue) throws Exception {
-    String recordJson = "{\"type\":\"record\",\"fields\":[{\"name\":\"f\", "
+    String recordJson =
+      "{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[{\"name\":\"f\", "
     +"\"type\":"+schemaJson+", "
     +"\"default\":"+defaultJson+"}]}";
     Schema expected = Schema.parse(recordJson);
