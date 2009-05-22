@@ -25,11 +25,11 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.map.JsonTypeMapper;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /** Generate specific Java interfaces and classes for protocols and schemas. */
 public class SpecificCompiler {
-  private static final JsonTypeMapper MAPPER = new JsonTypeMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final JsonFactory FACTORY = new JsonFactory();
 
   private String namespace;

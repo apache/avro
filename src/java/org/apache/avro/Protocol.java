@@ -30,7 +30,7 @@ import java.util.Map;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.JsonNode;
+import org.codehaus.jackson.JsonNode;
 
 import org.apache.avro.Schema.Field;
 
@@ -216,7 +216,7 @@ public class Protocol {
   private static Protocol parse(JsonParser parser) {
     try {
       Protocol protocol = new Protocol();
-      protocol.parse(Schema.MAPPER.read(parser));
+      protocol.parse(Schema.MAPPER.readTree(parser));
       return protocol;
     } catch (IOException e) {
       throw new SchemaParseException(e);
@@ -231,21 +231,21 @@ public class Protocol {
   }
 
   private void parseNamespace(JsonNode json) {
-    JsonNode nameNode = json.getFieldValue("namespace");
+    JsonNode nameNode = json.get("namespace");
     if (nameNode == null) return;                 // no namespace defined
     this.namespace = nameNode.getTextValue();
     types.space(this.namespace);
   }
 
   private void parseName(JsonNode json) {
-    JsonNode nameNode = json.getFieldValue("protocol");
+    JsonNode nameNode = json.get("protocol");
     if (nameNode == null)
       throw new SchemaParseException("No protocol name specified: "+json);
     this.name = nameNode.getTextValue();
   }
 
   private void parseTypes(JsonNode json) {
-    JsonNode defs = json.getFieldValue("types");
+    JsonNode defs = json.get("types");
     if (defs == null) return;                    // no types defined
     if (!defs.isArray())
       throw new SchemaParseException("Types not an array: "+defs);
@@ -257,40 +257,40 @@ public class Protocol {
   }
 
   private void parseMessages(JsonNode json) {
-    JsonNode defs = json.getFieldValue("messages");
+    JsonNode defs = json.get("messages");
     if (defs == null) return;                    // no messages defined
     for (Iterator<String> i = defs.getFieldNames(); i.hasNext();) {
       String prop = i.next();
-      this.messages.put(prop, parseMessage(prop, defs.getFieldValue(prop)));
+      this.messages.put(prop, parseMessage(prop, defs.get(prop)));
     }
   }
 
   private Message parseMessage(String messageName, JsonNode json) {
-    JsonNode requestNode = json.getFieldValue("request");
+    JsonNode requestNode = json.get("request");
     if (requestNode == null || !requestNode.isArray())
       throw new SchemaParseException("No request specified: "+json);
     LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
     for (JsonNode field : requestNode) {
-      JsonNode fieldNameNode = field.getFieldValue("name");
+      JsonNode fieldNameNode = field.get("name");
       if (fieldNameNode == null)
         throw new SchemaParseException("No param name: "+field);
-      JsonNode fieldTypeNode = field.getFieldValue("type");
+      JsonNode fieldTypeNode = field.get("type");
       if (fieldTypeNode == null)
         throw new SchemaParseException("No param type: "+field);
       fields.put(fieldNameNode.getTextValue(),
                  new Field(Schema.parse(fieldTypeNode,types),
-                           field.getFieldValue("default")));
+                           field.get("default")));
     }
     Schema request = Schema.createRecord(fields);
     
-    JsonNode responseNode = json.getFieldValue("response");
+    JsonNode responseNode = json.get("response");
     if (responseNode == null)
       throw new SchemaParseException("No response specified: "+json);
     Schema response = Schema.parse(responseNode, types);
 
     List<Schema> errs = new ArrayList<Schema>();
     errs.add(SYSTEM_ERROR);                       // every method can throw
-    JsonNode decls = json.getFieldValue("errors");
+    JsonNode decls = json.get("errors");
     if (decls != null) {
       if (!decls.isArray())
         throw new SchemaParseException("Errors not an array: "+json);

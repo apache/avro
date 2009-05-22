@@ -41,6 +41,8 @@ Trunk (unreleased changes)
     AVRO-26. Switch tests from JUnit to TestNG.  (Konstantin Boudnik
     via cutting)
 
+    AVRO-34. Upgrade to Jackson version 1.0.0.  (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

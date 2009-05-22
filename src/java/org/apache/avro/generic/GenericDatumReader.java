@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.nio.ByteBuffer;
 
-import org.codehaus.jackson.map.JsonNode;
+import org.codehaus.jackson.JsonNode;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -199,7 +199,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       for (Map.Entry<String, Field> entry : schema.getFields().entrySet()) {
         String name = entry.getKey();
         Field f = entry.getValue();
-        JsonNode v = json.getFieldValue(name);
+        JsonNode v = json.get(name);
         if (v == null) v = f.defaultValue();
         if (v != null) {
           Object o = old != null ? getField(old, name, f.pos()) : null;

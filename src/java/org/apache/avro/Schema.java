@@ -32,8 +32,8 @@ import java.util.Map;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.JsonNode;
-import org.codehaus.jackson.map.JsonTypeMapper;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /** An abstract data type.
  * <p>A schema may be one of:
@@ -55,7 +55,7 @@ import org.codehaus.jackson.map.JsonTypeMapper;
  * </ul>
  */
 public abstract class Schema {
-  static final JsonTypeMapper MAPPER = new JsonTypeMapper();
+  static final ObjectMapper MAPPER = new ObjectMapper();
   static final JsonFactory FACTORY = new JsonFactory();
 
   static {
@@ -512,7 +512,7 @@ public abstract class Schema {
   public static Schema parse(File file) throws IOException {
     JsonParser parser = FACTORY.createJsonParser(file);
     try {
-      return Schema.parse(MAPPER.read(parser), new Names());
+      return Schema.parse(MAPPER.readTree(parser), new Names());
     } catch (JsonParseException e) {
       throw new SchemaParseException(e);
     }
@@ -574,16 +574,16 @@ public abstract class Schema {
         throw new SchemaParseException("Undefined name: "+schema);
       return result;
     } else if (schema.isObject()) {
-      JsonNode typeNode = schema.getFieldValue("type");
+      JsonNode typeNode = schema.get("type");
       if (typeNode == null)
         throw new SchemaParseException("No type: "+schema);
       String type = typeNode.getTextValue();
       String name = null, space = null;
       if (type.equals("record") || type.equals("error")
           || type.equals("enum") || type.equals("fixed")) {
-        JsonNode nameNode = schema.getFieldValue("name");
+        JsonNode nameNode = schema.get("name");
         name = nameNode != null ? nameNode.getTextValue() : null;
-        JsonNode spaceNode = schema.getFieldValue("namespace");
+        JsonNode spaceNode = schema.get("namespace");
         space = spaceNode!=null?spaceNode.getTextValue():names.space();
       }
       if (type.equals("record") || type.equals("error")) { // record
@@ -591,24 +591,24 @@ public abstract class Schema {
         RecordSchema result =
           new RecordSchema(name, space, type.equals("error"));
         if (name != null) names.put(name, result);
-        JsonNode fieldsNode = schema.getFieldValue("fields");
+        JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())
           throw new SchemaParseException("Record has no fields: "+schema);
         for (JsonNode field : fieldsNode) {
-          JsonNode fieldNameNode = field.getFieldValue("name");
+          JsonNode fieldNameNode = field.get("name");
           if (fieldNameNode == null)
             throw new SchemaParseException("No field name: "+field);
-          JsonNode fieldTypeNode = field.getFieldValue("type");
+          JsonNode fieldTypeNode = field.get("type");
           if (fieldTypeNode == null)
             throw new SchemaParseException("No field type: "+field);
           Schema fieldSchema = parse(fieldTypeNode, names);
           fields.put(fieldNameNode.getTextValue(),
-                     new Field(fieldSchema, field.getFieldValue("default")));
+                     new Field(fieldSchema, field.get("default")));
         }
         result.setFields(fields);
         return result;
       } else if (type.equals("enum")) {           // enum
-        JsonNode symbolsNode = schema.getFieldValue("symbols");
+        JsonNode symbolsNode = schema.get("symbols");
         if (symbolsNode == null || !symbolsNode.isArray())
           throw new SchemaParseException("Enum has no symbols: "+schema);
         List<String> symbols = new ArrayList<String>();
@@ -618,12 +618,12 @@ public abstract class Schema {
         if (name != null) names.put(name, result);
         return result;
       } else if (type.equals("array")) {          // array
-        return new ArraySchema(parse(schema.getFieldValue("items"), names));
+        return new ArraySchema(parse(schema.get("items"), names));
       } else if (type.equals("map")) {            // map
-        return new MapSchema(parse(schema.getFieldValue("values"), names));
+        return new MapSchema(parse(schema.get("values"), names));
       } else if (type.equals("fixed")) {          // fixed
-        Schema result = new FixedSchema(name, space, schema
-                                        .getFieldValue("size").getIntValue());
+        Schema result = new FixedSchema(name, space,
+                                        schema.get("size").getIntValue());
         if (name != null) names.put(name, result);
         return result;
       } else
@@ -640,7 +640,7 @@ public abstract class Schema {
 
   static JsonNode parseJson(String s) {
     try {
-      return MAPPER.read(FACTORY.createJsonParser(new StringReader(s)));
+      return MAPPER.readTree(FACTORY.createJsonParser(new StringReader(s)));
     } catch (JsonParseException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {
