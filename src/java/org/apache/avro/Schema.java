@@ -43,6 +43,7 @@ import org.codehaus.jackson.map.JsonTypeMapper;
  * <li>An <i>array</i> of values, all of the same schema;
  * <li>A <i>map</i>, containing string/value pairs, of a declared schema;
  * <li>A <i>union</i> of other schemas;
+ * <li>A <i>fixed</i> sized binary object;
  * <li>A unicode <i>string</i>;
  * <li>A sequence of <i>bytes</i>;
  * <li>A 32-bit signed <i>int</i>;
@@ -63,7 +64,7 @@ public abstract class Schema {
 
   /** The type of a schema. */
   public enum Type
-  { RECORD, ENUM, ARRAY, MAP, UNION, STRING, BYTES,
+  { RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES,
       INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL };
 
   private final Type type;
@@ -119,6 +120,11 @@ public abstract class Schema {
     return new UnionSchema(types);
   }
 
+  /** Create a union schema. */
+  public static Schema createFixed(String name, String space, int size) {
+    return new FixedSchema(name, space, size);
+  }
+
   /** Return the type of this schema. */
   public Type getType() { return type; }
 
@@ -147,13 +153,12 @@ public abstract class Schema {
     throw new AvroRuntimeException("Not an enum: "+this);
   }    
 
-
-  /** If this is a record or enum, returns its name, if any. */
+  /** If this is a record, enum or fixed, returns its name, if any. */
   public String getName() {
     throw new AvroRuntimeException("Not a record or enum: "+this);
   }
 
-  /** If this is a record or enum, returns its namespace, if any. */
+  /** If this is a record, enum or fixed, returns its namespace, if any. */
   public String getNamespace() {
     throw new AvroRuntimeException("Not a record or enum: "+this);
   }
@@ -176,6 +181,11 @@ public abstract class Schema {
   /** If this is a union, returns its types. */
   public List<Schema> getTypes() {
     throw new AvroRuntimeException("Not a union: "+this);
+  }
+
+  /** If this is fixed, returns its size. */
+  public int getFixedSize() {
+    throw new AvroRuntimeException("Not fixed: "+this);
   }
 
   /** Render this as <a href="http://json.org/">JSON</a>.*/
@@ -232,7 +242,8 @@ public abstract class Schema {
           ?"":"\"namespace\": \""+space+"\", ");
     }
     public boolean equalNames(NamedSchema that) {
-      return (name==null ? that.name==null : name.equals(that.name))
+      return that == null ? false
+        : (name==null ? that.name==null : name.equals(that.name))
         && (space==null ? that.space==null : space.equals(that.space));
     }
     public int hashCode() {
@@ -327,7 +338,7 @@ public abstract class Schema {
       else if (name != null) names.put(name, this);
       StringBuilder buffer = new StringBuilder();
       buffer.append("{\"type\": \"enum\", "
-                    +"\"name\": \""+name+"\", "
+                    +(name!=null?"\"name\": \""+name+"\", ":"")
                     +"\"symbols\": [");
       int count = 0;
       for (String symbol : symbols) {
@@ -424,6 +435,28 @@ public abstract class Schema {
       }
       buffer.append("]");
       return buffer.toString();
+    }
+  }
+
+  private static class FixedSchema extends NamedSchema {
+    private final int size;
+    public FixedSchema(String name, String space, int size) {
+      super(Type.FIXED, name, space);
+      this.size = size;
+    }
+    public int getFixedSize() { return size; }
+    public boolean equals(Object o) {
+      if (o == this) return true;
+      FixedSchema that = (FixedSchema)o;
+      return equalNames(that) && size == that.size;
+    }
+    public int hashCode() { return super.hashCode() + size; }
+    public String toString(Names names) {
+      if (this.equals(names.get(name))) return "\""+name+"\"";
+      else if (name != null) names.put(name, this);
+      return "{\"type\": \"fixed\", "
+        +(name!=null?"\"name\": \""+name+"\", ":"")
+        +"\"size\": "+size+"}";
     }
   }
 
@@ -545,12 +578,16 @@ public abstract class Schema {
       if (typeNode == null)
         throw new SchemaParseException("No type: "+schema);
       String type = typeNode.getTextValue();
+      String name = null, space = null;
+      if (type.equals("record") || type.equals("error")
+          || type.equals("enum") || type.equals("fixed")) {
+        JsonNode nameNode = schema.getFieldValue("name");
+        name = nameNode != null ? nameNode.getTextValue() : null;
+        JsonNode spaceNode = schema.getFieldValue("namespace");
+        space = spaceNode!=null?spaceNode.getTextValue():names.space();
+      }
       if (type.equals("record") || type.equals("error")) { // record
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
-        JsonNode nameNode = schema.getFieldValue("name");
-        String name = nameNode != null ? nameNode.getTextValue() : null;
-        JsonNode spaceNode = schema.getFieldValue("namespace");
-        String space = spaceNode!=null?spaceNode.getTextValue():names.space();
         RecordSchema result =
           new RecordSchema(name, space, type.equals("error"));
         if (name != null) names.put(name, result);
@@ -571,10 +608,6 @@ public abstract class Schema {
         result.setFields(fields);
         return result;
       } else if (type.equals("enum")) {           // enum
-        JsonNode nameNode = schema.getFieldValue("name");
-        String name = nameNode != null ? nameNode.getTextValue() : null;
-        JsonNode spaceNode = schema.getFieldValue("namespace");
-        String space = spaceNode!=null?spaceNode.getTextValue():names.space();
         JsonNode symbolsNode = schema.getFieldValue("symbols");
         if (symbolsNode == null || !symbolsNode.isArray())
           throw new SchemaParseException("Enum has no symbols: "+schema);
@@ -588,6 +621,11 @@ public abstract class Schema {
         return new ArraySchema(parse(schema.getFieldValue("items"), names));
       } else if (type.equals("map")) {            // map
         return new MapSchema(parse(schema.getFieldValue("values"), names));
+      } else if (type.equals("fixed")) {          // fixed
+        Schema result = new FixedSchema(name, space, schema
+                                        .getFieldValue("size").getIntValue());
+        if (name != null) names.put(name, result);
+        return result;
       } else
         throw new SchemaParseException("Type not yet supported: "+type);
     } else if (schema.isArray()) {                // union

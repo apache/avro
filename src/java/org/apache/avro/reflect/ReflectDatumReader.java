@@ -44,7 +44,7 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
 
   protected Object newRecord(Object old, Schema schema) {
     Class c = getClass(schema);
-    return(c.isInstance(old) ? old : newInstance(c));
+    return (c.isInstance(old) ? old : newInstance(c));
   }
 
   protected void addField(Object record, String name, int position, Object o) {
@@ -72,6 +72,11 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
   @SuppressWarnings("unchecked")
   protected Object createEnum(String symbol, Schema schema) {
     return Enum.valueOf(getClass(schema), symbol);
+  }
+
+  protected Object createFixed(Object old, Schema schema) {
+    Class c = getClass(schema);
+    return c.isInstance(old) ? old : newInstance(c);
   }
 
   private static final Class<?>[] EMPTY_ARRAY = new Class[]{};
@@ -113,4 +118,3 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
   }
 
 }
-

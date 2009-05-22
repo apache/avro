@@ -25,6 +25,7 @@ import org.apache.avro.specific.SpecificRequestor;
 import org.apache.avro.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
 import org.apache.avro.test.Simple.Kind;
+import org.apache.avro.test.Simple.MD5;
 import org.apache.avro.test.Simple.TestError;
 import org.apache.avro.test.Simple.TestRecord;
 import org.apache.avro.util.Utf8;
@@ -93,6 +94,9 @@ public class TestProtocolSpecific {
     TestRecord record = new TestRecord();
     record.name = new Utf8("foo");
     record.kind = Kind.BAR;
+    record.hash = new MD5();
+    System.arraycopy(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}, 0,
+                     record.hash.bytes(), 0, 16);
     TestRecord echoed = proxy.echo(record);
     assertEquals(record.name, echoed.name);
   }

@@ -86,6 +86,10 @@ public class RandomData implements Iterable<Object> {
     case UNION:
       List<Schema> types = schema.getTypes();
       return generate(types.get(random.nextInt(types.size())), random, d);
+    case FIXED:
+      byte[] bytes = new byte[schema.getFixedSize()];
+      random.nextBytes(bytes);
+      return new GenericData.Fixed(bytes);
     case STRING:  return randomUtf8(random, 40);
     case BYTES:   return randomBytes(random, 40);
     case INT:     return random.nextInt();

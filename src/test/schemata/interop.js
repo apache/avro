@@ -17,6 +17,8 @@
        ["boolean", "double", {"type": "array", "items": "bytes"}]},
       {"name": "enumField", "type":
        {"type": "enum", "name": "Kind", "symbols": ["A","B","C"]}},
+      {"name": "fixedField", "type":
+       {"type": "fixed", "name": "MD5", "size": 16}},
       {"name": "recordField", "type":
        {"type": "record", "name": "Node",
         "fields": [

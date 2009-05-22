@@ -4,10 +4,13 @@
  "types": [
      {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
 
+     {"name": "MD5", "type": "fixed", "size": 16},
+
      {"name": "TestRecord", "type": "record",
       "fields": [
           {"name": "name", "type": "string"},
-          {"name": "kind", "type": "Kind"}
+          {"name": "kind", "type": "Kind"},
+          {"name": "hash", "type": "MD5"}
       ]
      },
 

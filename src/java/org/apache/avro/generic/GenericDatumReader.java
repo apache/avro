@@ -70,6 +70,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case ENUM:    return readEnum(actual, expected, in);
     case ARRAY:   return readArray(old, actual, expected, in);
     case MAP:     return readMap(old, actual, expected, in);
+    case FIXED:   return readFixed(old, actual, expected, in);
     case STRING:  return readString(old, in);
     case BYTES:   return readBytes(old, in);
     case INT:     return in.readInt();
@@ -88,6 +89,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       if (branch.getType() == actual.getType())
         switch (branch.getType()) {
         case RECORD:
+        case FIXED:
           String name = branch.getName();
           if (name == null || name.equals(actual.getName()))
             return branch;
@@ -225,6 +227,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       }
       return map;
     case UNION:   return defaultFieldValue(old, schema.getTypes().get(0), json);
+    case FIXED:   return createFixed(old,json.getTextValue().getBytes(),schema);
     case STRING:  return createString(json.getTextValue());
     case BYTES:   return createBytes(json.getTextValue().getBytes());
     case INT:     return json.getIntValue();
@@ -305,6 +308,34 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     ((Map) map).put(key, value);
   }
   
+  /** Called to read a fixed value. May be overridden for alternate fixed
+   * representations.  By default, returns {@link GenericFixed}. */
+  protected Object readFixed(Object old, Schema actual, Schema expected,
+                             ValueReader in)
+    throws IOException {
+    if (!actual.equals(expected))
+      throw new AvroTypeException("Expected "+expected+", found "+actual);
+    GenericFixed fixed = (GenericFixed)createFixed(old, expected);
+    in.readBytes(fixed.bytes(), 0, actual.getFixedSize());
+    return fixed;
+  }
+
+  /** Called to create an fixed value. May be overridden for alternate fixed
+   * representations.  By default, returns {@link GenericFixed}. */
+  protected Object createFixed(Object old, Schema schema) {
+    if ((old instanceof GenericFixed)
+        && ((GenericFixed)old).bytes().length == schema.getFixedSize())
+      return old;
+    return new GenericData.Fixed(schema);
+  }
+
+  /** Called to create an fixed value. May be overridden for alternate fixed
+   * representations.  By default, returns {@link GenericFixed}. */
+  protected Object createFixed(Object old, byte[] bytes, Schema schema) {
+    GenericFixed fixed = (GenericFixed)createFixed(old, schema);
+    System.arraycopy(bytes, 0, fixed.bytes(), 0, schema.getFixedSize());
+    return fixed;
+  }
   /**
    * Called to create new record instances. Subclasses may override to use a
    * different record implementation. The returned instance must conform to the
@@ -394,6 +425,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       break;
     case UNION:
       skip(schema.getTypes().get((int)in.readLong()), in);
+      break;
+    case FIXED:
+      in.skip(schema.getFixedSize());
       break;
     case STRING:
     case BYTES:

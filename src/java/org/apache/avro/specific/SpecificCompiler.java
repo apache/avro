@@ -98,7 +98,10 @@ public class SpecificCompiler {
     line(0, "import org.apache.avro.util.Utf8;");
     line(0, "import org.apache.avro.ipc.AvroRemoteException;");
     line(0, "import org.apache.avro.generic.GenericArray;");
-    line(0, "import org.apache.avro.specific.SpecificRecord;\n");
+    line(0, "import org.apache.avro.specific.SpecificRecord;");
+    line(0, "import org.apache.avro.specific.SpecificFixed;");
+    line(0, "import org.apache.avro.reflect.FixedSize;");
+    buffer.append("\n");
   }
 
   private String params(Schema request) {
@@ -190,6 +193,13 @@ public class SpecificCompiler {
     case MAP:
       compile(schema.getValueType(), name+"Value", d);
       break;
+    case FIXED:
+      buffer.append("\n");
+      line(d, "@FixedSize("+schema.getFixedSize()+")");
+      line(d, ((d==0)?"public ":"")
+           +((d>1)?"static ":"")+"class "+type
+           +" extends SpecificFixed {}");
+      break;
     case UNION:
       int choice = 0;
       for (Schema t : schema.getTypes())
@@ -209,6 +219,7 @@ public class SpecificCompiler {
     switch (schema.getType()) {
     case RECORD:
     case ENUM:
+    case FIXED:
       return schema.getName() == null ? cap(name) : schema.getName();
     case ARRAY:
       return "GenericArray<"+type(schema.getElementType(),name+"Element")+">";

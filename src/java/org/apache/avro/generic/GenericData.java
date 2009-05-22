@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.avro.AvroTypeException;
@@ -96,6 +97,28 @@ public class GenericData {
     }
   }
 
+  public static class Fixed implements GenericFixed {
+    private byte[] bytes;
+
+    public Fixed(Schema schema) { bytes(new byte[schema.getFixedSize()]); }
+    public Fixed(byte[] bytes) { bytes(bytes); }
+
+    protected Fixed() {}
+    protected void bytes(byte[] bytes) { this.bytes = bytes; }
+
+    public byte[] bytes() { return bytes; }
+
+    public boolean equals(Object o) {
+      if (o == this) return true;
+      return o instanceof GenericFixed
+        && Arrays.equals(bytes, ((GenericFixed)o).bytes());
+    }
+
+    public int hashCode() { return Arrays.hashCode(bytes); }
+
+  }
+
+
   /** Returns true if a Java datum matches a schema. */
   public static boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
@@ -128,6 +151,9 @@ public class GenericData {
         if (validate(type, datum))
           return true;
       return false;
+    case FIXED:
+      return datum instanceof GenericFixed
+        && ((GenericFixed)datum).bytes().length==schema.getFixedSize();
     case STRING:  return datum instanceof Utf8;
     case BYTES:   return datum instanceof ByteBuffer;
     case INT:     return datum instanceof Integer;
@@ -236,6 +262,9 @@ public class GenericData {
         throw new AvroTypeException("Empty map: "+datum);
       }
       return Schema.createMap(value);
+    } else if (datum instanceof GenericFixed) {
+      return Schema.createFixed(null, null,
+                                ((GenericFixed)datum).bytes().length);
     }
     else if (datum instanceof Utf8)       return Schema.create(Type.STRING);
     else if (datum instanceof ByteBuffer) return Schema.create(Type.BYTES);

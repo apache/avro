@@ -102,6 +102,7 @@ public class ReflectResponder extends Responder {
 
   private Class paramType(Schema schema) throws ClassNotFoundException {
     switch (schema.getType()) {
+    case FIXED:
     case RECORD:
     case ENUM:    return Class.forName(packageName+schema.getName());
     case ARRAY:   return GenericArray.class;

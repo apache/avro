@@ -37,6 +37,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
+import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.util.Utf8;
 
@@ -79,6 +80,7 @@ public class ReflectData {
         if (validate(type, datum))
           return true;
       return false;
+    case FIXED:   return datum instanceof GenericFixed;
     case STRING:  return datum instanceof Utf8;
     case BYTES:   return datum instanceof ByteBuffer;
     case INT:     return datum instanceof Integer;
@@ -160,6 +162,13 @@ public class ReflectData {
           for (int i = 0; i < constants.length; i++)
             symbols.add(constants[i].name());
           schema = Schema.createEnum(name, space, symbols);
+          names.put(name, schema);
+          return schema;
+        }
+                                                  // fixed
+        if (GenericFixed.class.isAssignableFrom(c)) {
+          int size = ((FixedSize)c.getAnnotation(FixedSize.class)).value();
+          schema = Schema.createFixed(name, space, size);
           names.put(name, schema);
           return schema;
         }

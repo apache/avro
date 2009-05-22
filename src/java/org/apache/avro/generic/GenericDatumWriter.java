@@ -61,6 +61,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       out.writeLong(index);
       write(schema.getTypes().get(index), datum, out);
       break;
+    case FIXED:   writeFixed(schema, datum, out);   break;
     case STRING:  writeString(datum, out);          break;
     case BYTES:   writeBytes(datum, out);           break;
     case INT:     out.writeInt((Integer)datum);     break;
@@ -189,6 +190,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     case ENUM:    return isEnum(datum);
     case ARRAY:   return isArray(datum);
     case MAP:     return isMap(datum);
+    case FIXED:   return isFixed(datum);
     case STRING:  return isString(datum);
     case BYTES:   return isBytes(datum);
     case INT:     return datum instanceof Integer;
@@ -199,6 +201,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     case NULL:    return datum == null;
     default: throw new AvroRuntimeException("Unexpected type: " +schema);
     }
+  }
+
+  /** Called to write a fixed value.  May be overridden for alternate fixed
+   * representations.*/
+  protected void writeFixed(Schema schema, Object datum, ValueWriter out)
+    throws IOException {
+    out.write(((GenericFixed)datum).bytes(), 0, schema.getFixedSize());
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/
@@ -219,6 +228,11 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isMap(Object datum) {
     return (datum instanceof Map) && (!(datum instanceof GenericRecord));
+  }
+  
+  /** Called by the default implementation of {@link #instanceOf}.*/
+  protected boolean isFixed(Object datum) {
+    return datum instanceof GenericFixed;
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/

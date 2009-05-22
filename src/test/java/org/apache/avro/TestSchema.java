@@ -114,6 +114,12 @@ public class TestSchema {
   }
 
   @Test
+  public void testFixed() throws Exception {
+    check("{\"type\": \"fixed\", \"size\": 1}", "\"a\"",
+          new GenericData.Fixed(new byte[]{(byte)'a'}));
+  }
+
+  @Test
   public void testRecursive() throws Exception {
     check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
           +"{\"name\":\"label\", \"type\":\"string\"},"
@@ -208,7 +214,5 @@ public class TestSchema {
       in.read(null, new ValueReader(new ByteArrayInputStream(new byte[0])));
     assertEquals("Wrong default.", defaultValue, record.get("f"));
   }
-
-
 
 }
