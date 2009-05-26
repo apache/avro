@@ -87,6 +87,11 @@ class RandomData(object):
       if len == 0:
         return None
       return symbols[random.randint(0,len)-1]
+    elif schm.gettype() == schema.FIXED:
+      string = cStringIO.StringIO()
+      for i in range(0, schm.getsize()):
+        string.write(struct.pack('c',random.sample('12345abcd', 1)[0]))
+      return string.getvalue()
 
 class TestSchema(unittest.TestCase):
 
@@ -132,11 +137,13 @@ class TestSchema(unittest.TestCase):
     self.check("{\"type\":\"map\", \"values\": \"string\"}")
 
   def testRecord(self):
-    self.check("{\"type\":\"record\",\"fields\":[{\"name\":\"f\", \"type\":" +
+    self.check("{\"type\":\"record\", \"name\":\"Test\"," +
+               "\"fields\":[{\"name\":\"f\", \"type\":" +
                "\"string\"}, {\"name\":\"fb\", \"type\":\"bytes\"}]}")
 
   def testEnum(self):
-    self.check("{\"type\": \"enum\", \"symbols\": [\"A\", \"B\"]}")
+    self.check("{\"type\": \"enum\", \"name\":\"Test\","+
+               "\"symbols\": [\"A\", \"B\"]}")
 
   def testRecursive(self):
     self.check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
@@ -156,6 +163,9 @@ class TestSchema(unittest.TestCase):
       +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
       +"{\"name\":\"car\", \"type\":\"string\"}," 
       +"{\"name\":\"cdr\", \"type\":\"string\"}]}]")
+
+  def testFixed(self):
+    self.check("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}") 
 
   def check(self, string):
     schm = schema.parse(string)

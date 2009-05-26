@@ -14,7 +14,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-import unittest, socket
+import unittest, socket, struct
 import testio
 import avro.ipc as ipc
 import avro.generic as generic
@@ -77,6 +77,7 @@ class TestProtocol(unittest.TestCase):
     record = dict()
     record['name'] = unicode('foo')
     record['kind'] = 'BAR'
+    record['hash'] = struct.pack('16s','0123456789012345')
     params = dict()
     params['record'] = record
     echoed = self.requestor.call('echo', params)

@@ -21,6 +21,7 @@ A schema may be one of:
   An array of values, all of the same schema;
   A map containing string/value pairs, each of a declared schema;
   A union of other schemas;
+  A fixed sized binary object;
   A unicode string;
   A sequence of bytes;
   A 32-bit signed int;
@@ -33,7 +34,7 @@ import cStringIO
 import simplejson, odict
 
 #The schema types
-STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL, ARRAY, MAP, UNION, RECORD, ENUM = range(13)
+STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL, ARRAY, MAP, UNION, FIXED, RECORD, ENUM = range(14)
 
 class Schema(object):
   """Base class for all Schema classes."""
@@ -108,19 +109,45 @@ class _NullSchema(Schema):
   def str(self, names):
     return "\"null\""
 
-class _RecordSchema(Schema):
-  def __init__(self, fields, name=None, namespace=None, iserror=False):
-    Schema.__init__(self, RECORD)
+class NamedSchema(Schema):
+  def __init__(self, type, name, space):
+    Schema.__init__(self, type)
     self.__name = name
-    self.__namespace = namespace
-    self.__fields = fields
-    self.__iserror = iserror
+    self.__space = space
 
   def getname(self):
     return self.__name
 
-  def getnamespace(self):
-    return self.__namespace
+  def getspace(self):
+    return self.__space
+
+  def equalnames(self, other):
+    if other is None:
+      return False
+    if (self.__name == other.__name and self.__space == other.__space):
+      return True
+    return False
+
+  def namestring(self):
+    str = cStringIO.StringIO()
+    str.write("\"name\": \""+self.__name+"\", ")
+    if self.__space is not None:
+      str.write("\"namespace\": \""+self.__space+"\", ")
+    return str.getvalue()
+
+  def __hash__(self, seen=None):
+    hash = self.gettype().__hash__()
+    hash += self.__name.__hash__()
+    if self.__space is not None:
+      hash += self.__space.__hash__()
+    return hash
+
+
+class _RecordSchema(NamedSchema):
+  def __init__(self, fields, name=None, space=None, iserror=False):
+    NamedSchema.__init__(self, RECORD, name, space)
+    self.__fields = fields
+    self.__iserror = iserror
 
   def getfields(self):
     return self.__fields
@@ -129,10 +156,10 @@ class _RecordSchema(Schema):
     return self.__iserror
 
   def str(self, names):
-    if names.get(self.__name) is self:
-      return "\""+self.__name+"\""
-    elif self.__name is not None:
-      names[self.__name] = self
+    if names.get(self.getname()) is self:
+      return "\""+self.getname()+"\""
+    elif self.getname() is not None:
+      names[self.getname()] = self
     str = cStringIO.StringIO()
     str.write("{\"type\": \"")
     if self.iserror():
@@ -140,10 +167,7 @@ class _RecordSchema(Schema):
     else:
       str.write("record")
     str.write("\", ")
-    if self.__name is not None:
-      str.write("\"name\": \""+self.__name+"\", ")
-    #if self.__namespace is not None:
-      #str.write("\"namespace\": \""+self.__namespace+"\", ")
+    str.write(self.namestring())
     str.write("\"fields\": [")
     count=0
     for k,v in self.__fields:
@@ -161,7 +185,7 @@ class _RecordSchema(Schema):
   def __eq__(self, other, seen={}):
     if self is other or seen.get(id(self)) is other:
       return True
-    if isinstance(other, _RecordSchema):
+    if isinstance(other, _RecordSchema) and self.equalnames(other):
       size = len(self.__fields)
       if len(other.__fields) != size:
         return False
@@ -177,7 +201,7 @@ class _RecordSchema(Schema):
     if seen.__contains__(id(self)):
       return 0
     seen.add(id(self))
-    hash = self.gettype().__hash__() 
+    hash = NamedSchema.__hash__(self, seen)
     for field, fieldschm in self.__fields:
       hash = hash + fieldschm.__hash__(seen)
     return hash
@@ -283,23 +307,15 @@ class _UnionSchema(Schema):
       hash = hash + elem.__hash__(seen)
     return hash
 
-class _EnumSchema(Schema):
+class _EnumSchema(NamedSchema):
   def __init__(self, name, space, symbols):
-    Schema.__init__(self, ENUM)
-    self.__name = name
-    self.__space = space
+    NamedSchema.__init__(self, ENUM, name, space)
     self.__symbols = symbols
     self.__ordinals = dict()
     i = 0
     for symbol in symbols:
       self.__ordinals[symbol] = i
       i+=1
-
-  def getname(self):
-    return self.__name
-
-  def getnamespace(self):
-    return self.__namespace
 
   def getenumsymbols(self):
     return self.__symbols
@@ -308,14 +324,13 @@ class _EnumSchema(Schema):
     return self.__ordinals.get(symbol)
 
   def str(self, names):
-    if names.get(self.__name) is self:
-      return "\""+self.__name+"\""
-    elif self.__name is not None:
-      names[self.__name] = self
+    if names.get(self.getname()) is self:
+      return "\""+self.getname()+"\""
+    elif self.getname() is not None:
+      names[self.getname()] = self
     str = cStringIO.StringIO()
     str.write("{\"type\": \"enum\", ")
-    if self.__name is not None:
-      str.write("\"name\": \""+self.__name+"\", ")
+    str.write(self.namestring())
     str.write("\"symbols\": [")
     count = 0
     for symbol in self.__symbols:
@@ -329,7 +344,7 @@ class _EnumSchema(Schema):
   def __eq__(self, other, seen={}):
     if self is other or seen.get(id(self)) is other:
       return True
-    if isinstance(other, _EnumSchema):
+    if isinstance(other, _EnumSchema) and self.equalnames(other):
       size = len(self.__symbols)
       if len(other.__symbols) != size:
         return False
@@ -345,10 +360,40 @@ class _EnumSchema(Schema):
     if seen.__contains__(id(self)):
       return 0
     seen.add(id(self))
-    hash = self.gettype().__hash__()
+    hash = NamedSchema.__hash__(self, seen)
     for symbol in self.__symbols:
       hash += symbol.__hash__()
     return hash
+
+class _FixedSchema(NamedSchema):
+  def __init__(self, name, space, size):
+    NamedSchema.__init__(self, FIXED, name, space)
+    self.__size = size
+
+  def getsize(self):
+    return self.__size
+
+  def str(self, names):
+    if names.get(self.getname()) is self:
+      return "\""+self.getname()+"\""
+    elif self.getname() is not None:
+      names[self.getname()] = self
+    str = cStringIO.StringIO()
+    str.write("{\"type\": \"fixed\", ")
+    str.write(self.namestring())
+    str.write("\"size\": "+repr(self.__size)+"}")
+    return str.getvalue()
+
+  def __eq__(self, other, seen=None):
+    if self is other:
+      return True
+    if (isinstance(other, _FixedSchema) and self.equalnames(other) 
+        and self.__size == other.__size):
+      return True
+    return False
+
+  def __hash__(self, seen=None):
+    return NamedSchema.__hash__(self, seen) + self.__size.__hash__()
 
 _PRIMITIVES = {'string':_StringSchema(),
         'bytes':_BytesSchema(),
@@ -392,38 +437,42 @@ def _parse(obj, names):
     type = obj.get("type")
     if type is None:
       raise SchemaParseException("No type: "+obj.__str__())
-    if type == "record" or type == "error":
+    if (type == "record" or type == "error" or 
+        type == "enum" or type == "fixed"):
       name = obj.get("name")
-      namespace = obj.get("namespace")
-      fields = list()
-      schema = _RecordSchema(fields, name, namespace, type == "error")
-      if name is not None:
+      space = obj.get("namespace")
+      if name is None:
+        raise SchemaParseException("No name in schema: "+obj.__str__())
+      if type == "record" or type == "error":
+        fields = list()
+        schema = _RecordSchema(fields, name, space, type == "error")
         names[name] = schema
-      fieldsnode = obj.get("fields")
-      if fieldsnode is None:
-        raise SchemaParseException("Record has no fields: "+obj.__str__())
-      for field in fieldsnode:
-        fieldname = field.get("name")
-        if fieldname is None:
-          raise SchemaParseException("No field name: "+field.__str__())
-        fieldtype = field.get("type")
-        if fieldtype is None:
-          raise SchemaParseException("No field type: "+field.__str__())
-        fields.append((fieldname, _parse(fieldtype, names)))
-      return schema
-    elif type == "enum":
-      name = obj.get("name")
-      namespace = obj.get("namespace")
-      symbolsnode = obj.get("symbols")
-      if symbolsnode == None or not isinstance(symbolsnode, list):
-        raise SchemaParseException("Enum has no symbols: "+obj.__str__())
-      symbols = list()
-      for symbol in symbolsnode:
-        symbols.append(symbol)
-      schema = _EnumSchema(name, namespace, symbols)
-      if name is not None:
+        fieldsnode = obj.get("fields")
+        if fieldsnode is None:
+          raise SchemaParseException("Record has no fields: "+obj.__str__())
+        for field in fieldsnode:
+          fieldname = field.get("name")
+          if fieldname is None:
+            raise SchemaParseException("No field name: "+field.__str__())
+          fieldtype = field.get("type")
+          if fieldtype is None:
+            raise SchemaParseException("No field type: "+field.__str__())
+          fields.append((fieldname, _parse(fieldtype, names)))
+        return schema
+      elif type == "enum":
+        symbolsnode = obj.get("symbols")
+        if symbolsnode == None or not isinstance(symbolsnode, list):
+          raise SchemaParseException("Enum has no symbols: "+obj.__str__())
+        symbols = list()
+        for symbol in symbolsnode:
+          symbols.append(symbol)
+        schema = _EnumSchema(name, space, symbols)
         names[name] = schema
-      return schema
+        return schema
+      elif type == "fixed":
+        schema = _FixedSchema(name, space, obj.get("size"))
+        names[name] = schema
+        return schema
     elif type == "array":
       return _ArraySchema(_parse(obj.get("items"), names))
     elif type == "map":

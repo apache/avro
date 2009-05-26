@@ -23,6 +23,8 @@ Trunk (unreleased changes)
 
     AVRO-10.  Add Java support for fixed-sized types. (cutting)
 
+    AVRO-38.  Add Python support for fixed-sized types. (sharad)
+
   IMPROVEMENTS
 
     AVRO-11.  Re-implement specific and reflect datum readers and

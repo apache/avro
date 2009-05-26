@@ -100,11 +100,13 @@ class ValueReader(object):
     return _STRUCT_DOUBLE.unpack(_STRUCT_LONG.pack(bits))[0]
 
   def readbytes(self):
-    len = self.readlong()
-    return struct.unpack(len.__str__()+'s', self.__reader.read(len))[0]
+    return self.read(self.readlong())
 
   def readutf8(self):
     return unicode(self.readbytes(), "utf-8")
+
+  def read(self, len):
+    return struct.unpack(len.__str__()+'s', self.__reader.read(len))[0]
 
 class ValueWriter(object):
   """Write leaf values."""
@@ -167,6 +169,9 @@ class ValueWriter(object):
                               "avro STRING should be python unicode")
     datum = datum.encode("utf-8")
     self.writebytes(datum)
+
+  def write(self, datum):
+    self.__writer.write(datum)
 
 #Data file constants.
 _VERSION = 0

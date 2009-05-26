@@ -14,7 +14,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-import socket
+import socket, struct
 import avro.schema as schema
 import avro.reflect as reflect
 import avro.ipc as ipc
@@ -59,6 +59,7 @@ class TestProtocol(testipc.TestProtocol):
     record = TestRecord()
     record.name = unicode('foo')
     record.kind = 'BAR'
+    record.hash = struct.pack('16s','0123456789012345')
     echoed = self.proxy.echo(record)
     self.assertEquals(record.name, echoed.name)
 

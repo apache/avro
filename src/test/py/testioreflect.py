@@ -49,12 +49,6 @@ class ReflectDWriter(reflect.ReflectDatumWriter):
 
 class TestSchema(testio.TestSchema):
 
-  # the schema MUST have name
-  def testRecord(self):
-    self.check(
-    "{\"type\":\"record\",\"name\":\"TestRec\",\"fields\":[{\"name\":\"f\"," +
-       "\"type\":\"string\"}, {\"name\":\"fb\", \"type\":\"bytes\"}]}")
-
   def __init__(self, methodName):
     testio.TestSchema.__init__(self, methodName, dyvalidator, ReflectDWriter,
                                ReflectDReader, DyRandomData, False)

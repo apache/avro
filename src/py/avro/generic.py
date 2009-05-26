@@ -79,6 +79,9 @@ _validatefn = {
                             io._LONG_MIN_VALUE <= object <= io._LONG_MAX_VALUE),
      schema.ENUM : lambda schm, object:
                                 schm.getenumsymbols().__contains__(object),
+     schema.FIXED : lambda schm, object:
+                                (isinstance(object, str) and 
+                                 len(object) == schm.getsize()),
      schema.ARRAY : _validatearray,
      schema.MAP : _validatemap,
      schema.RECORD : _validaterecord,
@@ -106,6 +109,8 @@ class DatumReader(io.DatumReaderBase):
      schema.FLOAT : lambda schm, valuereader: valuereader.readfloat(),
      schema.DOUBLE : lambda schm, valuereader: valuereader.readdouble(),
      schema.BYTES : lambda schm, valuereader: valuereader.readbytes(),
+     schema.FIXED : lambda schm, valuereader: 
+                            (valuereader.read(schm.getsize())),
      schema.ARRAY : self.readarray,
      schema.MAP : self.readmap,
      schema.RECORD : self.readrecord,
@@ -181,6 +186,8 @@ class DatumWriter(io.DatumWriterBase):
                   valuewriter.writedouble(datum),
      schema.BYTES : lambda schm, datum, valuewriter: 
                   valuewriter.writebytes(datum),
+     schema.FIXED : lambda schm, datum, valuewriter: 
+                  valuewriter.write(datum),
      schema.ARRAY : self.writearray,
      schema.MAP : self.writemap,
      schema.RECORD : self.writerecord,
