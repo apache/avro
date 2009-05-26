@@ -1,4 +1,5 @@
 AM_CFLAGS=$(APR_CFLAGS) $(APR_INCLUDES) $(APU_INCLUDES) -Wall -pedantic
+C_DOCS_OUTPUT ?= "docs/dox"
 
 include_HEADERS = avro.h
 
@@ -28,6 +29,11 @@ test_avro_float_double_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
 TESTS=$(check_PROGRAMS)
 
 pretty:
-	indent *.c *.h
+	indent *.c
+
+docs:
+	@(cat docs/doxygen.conf; echo "OUTPUT_DIRECTORY=$(C_DOCS_OUTPUT)")| doxygen -
+
+.PHONY: docs
 
 CLEANFILES=*~

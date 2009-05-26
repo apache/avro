@@ -42,9 +42,11 @@ See http://forrest.apache.org/docs/linking.html for more info
   <docs label="Documentation"> 
     <overview   label="Overview"          href="index.html" />
     <spec       label="Specification"     href="spec.html" />
-    <api       label="API Docs"           href="ext:api/index" />
-    <wiki      label="Wiki"               href="ext:wiki" />
-    <faq       label="FAQ"                href="ext:faq" />
+    <c-api      label="C API"             href="ext:api/c/index" />
+    <java-api   label="Java API"          href="ext:api/java/index" />
+    <py-api     label="Python API"        href="ext:api/py/index" />
+    <wiki       label="Wiki"              href="ext:wiki" />
+    <faq        label="FAQ"               href="ext:faq" />
   </docs>
   
   <external-refs>
@@ -61,7 +63,15 @@ See http://forrest.apache.org/docs/linking.html for more info
     <vint      href="http://lucene.apache.org/java/2_4_0/fileformats.html#VInt"/>
     <zigzag    href="http://code.google.com/apis/protocolbuffers/docs/encoding.html#types"/>
     <api href="api/">
-      <index href="index.html" />
+      <c href="c/">
+	<index href="html/index.html" />
+      </c>
+      <java href="java/">
+	<index href="index.html" />
+      </java>
+      <py href="py/">
+	<index href="avro.html" />
+      </py>
     </api>
   </external-refs>
  

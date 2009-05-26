@@ -16,3 +16,4 @@ config.h.in
 config.h
 autom4te.cache
 test_avro_*[!.][!c]
+INSTALL

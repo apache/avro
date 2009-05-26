@@ -15,7 +15,7 @@ The following packages must be installed before Avro can be built:
 
  - Java 1.6
  - Python 2.5 or greater
- - gcc, automake, libtool, libapr1-dev, libaprutil1-dev
+ - gcc, automake, libtool, libapr1-dev, libaprutil1-dev, doxygen
  - Apache Ant 1.7
  - Apache Forrest 0.8 (for documentation, requires Java 1.5)
 

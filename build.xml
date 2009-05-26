@@ -40,7 +40,8 @@
 
   <property name="build.classes" value="${build.dir}/classes"/>
   <property name="build.doc" value="${build.dir}/doc"/>
-  <property name="build.javadoc" value="${build.doc}/api"/>
+  <property name="build.javadoc" value="${build.doc}/api/java"/>
+  <property name="build.cdoc" value="${build.doc}/api/c"/>
 
   <exec executable="sed" inputstring="${os.name}" outputproperty="nonspace.os">
      <arg value="s/ /_/g"/>
@@ -363,16 +364,16 @@
     <taskdef name="py-doc" classname="org.pyant.tasks.PythonDocTask">
       <classpath refid="java.classpath" />
     </taskdef>
-    <mkdir dir="${build.doc}/py"/>
+    <mkdir dir="${build.doc}/api/py"/>
     <py-doc python="python" pythonpathref="test.py.path" defaultexcludes="true"
-       destdir="${build.doc}/py">
+       destdir="${build.doc}/api/py">
       <fileset dir="${basedir}/src/py">
         <include name="**/*"/>
       </fileset>
     </py-doc>
   </target>
 
-  <target name="doc" depends="forrest.check,javadoc" description="Generate forrest-based documentation. To use, specify -Dforrest.home=&lt;base of Apache Forrest installation&gt; on the command line." if="forrest.home">
+  <target name="doc" depends="forrest.check,javadoc,pydoc,cdoc" description="Generate forrest-based documentation. To use, specify -Dforrest.home=&lt;base of Apache Forrest installation&gt; on the command line." if="forrest.home">
     <exec executable="${forrest.home}/bin/forrest" failonerror="true">
       <env key="JAVA_HOME" value="${java5.home}"/>
       <arg value="-Dproject.content-dir=src/doc"/>
@@ -418,7 +419,6 @@
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${dist.dir}/lib"/>
     <mkdir dir="${dist.dir}/doc"/>
-    <mkdir dir="${dist.dir}/doc/api"/>
 
     <copy todir="${dist.dir}/lib" includeEmptyDirs="false">
       <fileset dir="lib"/>
@@ -480,6 +480,12 @@
   </target>
 
   <!-- C Targets -->
+  <target name="cdoc">
+  <exec dir="${c.src.dir}" executable="env" failonerror="true">
+     <arg line="C_DOCS_OUTPUT=${build.cdoc} make docs" />
+  </exec>
+  </target>
+
   <target name="autoreconf-c-check">
     <uptodate targetfile="${c.src.dir}/configure"
 	      srcfile="${c.src.dir}/configure.in"

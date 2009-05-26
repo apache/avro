@@ -45,6 +45,8 @@ Trunk (unreleased changes)
 
     AVRO-34. Upgrade to Jackson version 1.0.0.  (cutting)
 
+    AVRO-37. Add C api docs.  Also link to py docs.  (Matt Massie & cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
