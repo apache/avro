@@ -342,7 +342,7 @@ public abstract class Schema {
         buffer.append("\", \"type\": ");
         buffer.append(entry.getValue().schema().toString(names));
         if (entry.getValue().defaultValue() != null) {
-          buffer.append("\", \"default\": ");
+          buffer.append(", \"default\": ");
           buffer.append(entry.getValue().defaultValue());
         }
         buffer.append("}");

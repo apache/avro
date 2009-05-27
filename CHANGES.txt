@@ -70,3 +70,5 @@ Trunk (unreleased changes)
 
     AVRO-22. When parsing schemas in Java, do not permit anonymous.
     (cutting)
+
+    AVRO-39. Fix bug in Java record schema toString().  (sharad)

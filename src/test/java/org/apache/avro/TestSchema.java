@@ -225,6 +225,7 @@ public class TestSchema {
     GenericData.Record record = (GenericData.Record)
       in.read(null, new ValueReader(new ByteArrayInputStream(new byte[0])));
     assertEquals("Wrong default.", defaultValue, record.get("f"));
+    assertEquals("Wrong toString", expected, Schema.parse(expected.toString()));
   }
 
 }
