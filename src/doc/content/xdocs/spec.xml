@@ -65,8 +65,8 @@
         <ul>
           <li><code>string</code>: unicode character sequence</li>
           <li><code>bytes</code>: sequence of 8-bit bytes</li>
-          <li><code>int</code>: 32-bit unsigned integer</li>
-          <li><code>long</code>: 64-bit unsigned integer</li>
+          <li><code>int</code>: 32-bit signed integer</li>
+          <li><code>long</code>: 64-bit signed integer</li>
           <li><code>float</code>: 32-bit IEEE floating-point number</li>
           <li><code>double</code>: 64-bit IEEE floating-point number</li>
           <li><code>boolean</code>: a binary value</li>
