@@ -98,6 +98,8 @@ public class SpecificCompiler {
     line(0, "import org.apache.avro.util.Utf8;");
     line(0, "import org.apache.avro.ipc.AvroRemoteException;");
     line(0, "import org.apache.avro.generic.GenericArray;");
+    line(0, "import org.apache.avro.specific.SpecificExceptionBase;");
+    line(0, "import org.apache.avro.specific.SpecificRecordBase;");
     line(0, "import org.apache.avro.specific.SpecificRecord;");
     line(0, "import org.apache.avro.specific.SpecificFixed;");
     line(0, "import org.apache.avro.reflect.FixedSize;");
@@ -134,7 +136,9 @@ public class SpecificCompiler {
       buffer.append("\n");
       line(d, ((d==0)?"public ":"")
            +((d>1)?"static ":"")+"class "+type
-           +(schema.isError()?" extends AvroRemoteException":"")
+           +(schema.isError()
+             ? " extends SpecificExceptionBase"
+             : " extends SpecificRecordBase")
            +" implements SpecificRecord {");
       // schema definition
       line(d+1, "private static final Schema _SCHEMA = Schema.parse(\""
