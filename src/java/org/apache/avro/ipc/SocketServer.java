@@ -23,7 +23,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.ClosedByInterruptException;
+import java.nio.channels.ClosedChannelException;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -38,38 +38,43 @@ public class SocketServer extends Thread {
 
   private Responder responder;
   private ServerSocketChannel channel;
+  private ThreadGroup group;
 
   public SocketServer(Responder responder, SocketAddress addr)
     throws IOException {
-    this.responder = responder;
+    String name = "SocketServer on "+addr;
 
+    this.responder = responder;
+    this.group = new ThreadGroup(name);
     this.channel = ServerSocketChannel.open();
+
     channel.socket().bind(addr);
 
-    setName("SocketServer on "+addr);
+    setName(name);
     setDaemon(true);
-    LOG.info("starting on "+addr);
     start();
   }
 
   public int getPort() { return channel.socket().getLocalPort(); }
 
   public void run() {
+    LOG.info("starting "+channel.socket().getInetAddress());
     while (true) {
       try {
-        LOG.info("listening on "+channel.socket().getInetAddress());
         new Connection(channel.accept());
-      } catch (ClosedByInterruptException e) {
+      } catch (ClosedChannelException e) {
         return;
       } catch (IOException e) {
         LOG.warn("unexpected error", e);
         throw new RuntimeException(e);
+      } finally {
+        LOG.info("stopping "+channel.socket().getInetAddress());
       }
     }
   }
 
   public void close() {
-    interrupt();
+    group.interrupt();
   }
 
   private class Connection extends SocketTransceiver implements Runnable {
@@ -77,37 +82,28 @@ public class SocketServer extends Thread {
     public Connection(SocketChannel channel) {
       super(channel);
 
-      Thread thread = new Thread(this);
-      LOG.info("connection from "+channel.socket().getRemoteSocketAddress());
-      thread.setName("Connection for "+channel);
+      Thread thread = new Thread(group, this);
+      thread.setName("Connection to "+channel.socket().getRemoteSocketAddress());
       thread.setDaemon(true);
       thread.start();
     }
 
     public void run() {
       try {
-        Protocol remote = responder.handshake(this);
-        while (true) {
-          writeBuffers(responder.respond(remote, readBuffers()));
+        try {
+          while (true) {
+            writeBuffers(responder.respond(this));
+          }
+        } catch (ClosedChannelException e) {
+          return;
+        } finally {
+          close();
         }
-      } catch (ClosedByInterruptException e) {
-        return;
       } catch (IOException e) {
         LOG.warn("unexpected error", e);
-        throw new RuntimeException(e);
-      } finally {
-        try {
-          super.close();
-        } catch (IOException e) {
-          LOG.warn("unexpected error", e);
-          throw new RuntimeException(e);
-        }
       }
     }
 
-    public void close() {
-      interrupt();
-    }
   }
   
   public static void main(String arg[]) throws Exception {

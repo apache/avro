@@ -9,6 +9,8 @@ Trunk (unreleased changes)
 
     AVRO-9. Restrict map keys to strings.  (cutting & sharad)
 
+    AVRO-2. Optimized RPC handshake protocol for Java.  (cutting)
+
   NEW FEATURES
 
     AVRO-6. Permit easier implementation of alternate generic data

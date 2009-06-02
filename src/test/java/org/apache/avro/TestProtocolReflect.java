@@ -22,13 +22,13 @@ import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.reflect.ReflectRequestor;
 import org.apache.avro.reflect.ReflectResponder;
 import org.apache.avro.test.Simple;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeClass;
 
 import java.net.InetSocketAddress;
 
 public class TestProtocolReflect extends TestProtocolSpecific {
 
-  @BeforeMethod
+  @BeforeClass
   public void testStartServer() throws Exception {
     server = new SocketServer(new ReflectResponder(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));

@@ -33,8 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.*;
@@ -49,16 +49,6 @@ public class TestProtocolSpecific {
 
   private static final File SERVER_PORTS_DIR
   = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
-
-  private static final File FILE = new File("src/test/schemata/simple.js");
-  private static final Protocol PROTOCOL;
-  static {
-    try {
-      PROTOCOL = Protocol.parse(FILE);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   public static class TestImpl implements Simple {
     public Utf8 hello(Utf8 greeting) { return new Utf8("goodbye"); }
@@ -75,7 +65,7 @@ public class TestProtocolSpecific {
   protected static Transceiver client;
   protected static Simple proxy;
 
-  @BeforeMethod
+  @BeforeClass
   public void testStartServer() throws Exception {
     server = new SocketServer(new SpecificResponder(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
@@ -133,8 +123,9 @@ public class TestProtocolSpecific {
     assertEquals("an error", error.message.toString());
   }
 
-  @AfterMethod
-  public void testStopServer() {
+  @AfterClass
+  public void testStopServer() throws IOException {
+    client.close();
     server.close();
   }
 

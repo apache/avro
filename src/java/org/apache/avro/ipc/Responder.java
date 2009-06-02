@@ -29,47 +29,42 @@ import org.apache.avro.*;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.util.*;
 import org.apache.avro.io.*;
+import org.apache.avro.specific.*;
 
 /** Base class for the server side of a protocol interaction. */
 public abstract class Responder {
   private static final Logger LOG = LoggerFactory.getLogger(Responder.class);
 
+  private Map<Transceiver,Protocol> remotes
+    = Collections.synchronizedMap(new WeakHashMap<Transceiver,Protocol>());
+  private Map<MD5,Protocol> protocols
+    = Collections.synchronizedMap(new HashMap<MD5,Protocol>());
+
   private Protocol local;
+  private MD5 localHash;
 
   protected Responder(Protocol local) {
     this.local = local;
+    this.localHash = new MD5();
+    localHash.bytes(local.getMD5());
+    protocols.put(localHash, local);
   }
 
   public Protocol getLocal() { return local; }
 
-  /** Returns the remote protocol. */
-  protected Protocol handshake(Transceiver server) throws IOException {
-    ValueReader in = new ByteBufferValueReader(server.readBuffers());
-    ByteBufferValueWriter out = new ByteBufferValueWriter();
-
-    long version = in.readLong();                 // read handshake version
-    if (version != Protocol.VERSION)
-      throw new AvroRuntimeException("Incompatible request version: "+version);
-                                                  // read remote protocol
-    Protocol remote = Protocol.parse(in.readUtf8(null).toString());
-
-    out.writeUtf8(new Utf8(local.toString()));    // write local protocol
-    server.writeBuffers(out.getBufferList());
-
-    return remote;                                // return remote protocol
-  }
-
-  /** Called by a server to deserialize requests, compute and serialize
-   * responses and errors. */
-  public List<ByteBuffer> respond(Protocol remote, List<ByteBuffer> input)
-    throws IOException {
+  /** Called by a server to deserialize a request, compute and serialize
+   * a response or error. */
+  public List<ByteBuffer> respond(Transceiver transceiver) throws IOException {
+    ValueReader in = new ByteBufferValueReader(transceiver.readBuffers());
     ByteBufferValueWriter out = new ByteBufferValueWriter();
     AvroRemoteException error = null;
     try {
-      // read request using remote protocol specification
-      ValueReader in = new ByteBufferValueReader(input);
-      String messageName = in.readUtf8(null).toString();
+      Protocol remote = handshake(transceiver, in, out);
+      if (remote == null)                        // handshake failed
+        return out.getBufferList();
 
+      // read request using remote protocol specification
+      String messageName = in.readUtf8(null).toString();
       Message m = remote.getMessages().get(messageName);
       if (m == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
@@ -107,6 +102,40 @@ public abstract class Responder {
     return out.getBufferList();
   }
 
+  private SpecificDatumWriter handshakeWriter =
+    new SpecificDatumWriter(HandshakeResponse._SCHEMA);
+  private SpecificDatumReader handshakeReader =
+    new SpecificDatumReader(HandshakeRequest._SCHEMA);
+
+  private Protocol handshake(Transceiver transceiver,
+                             ValueReader in, ValueWriter out)
+    throws IOException {
+    Protocol remote = remotes.get(transceiver);
+    if (remote != null) return remote;            // already established
+      
+    HandshakeRequest request = (HandshakeRequest)handshakeReader.read(null, in);
+    remote = protocols.get(request.clientHash);
+    if (remote == null && request.clientProtocol != null) {
+      remote = Protocol.parse(request.clientProtocol.toString());
+      protocols.put(request.clientHash, remote);
+    }
+    if (remote != null)
+      remotes.put(transceiver, remote);
+    HandshakeResponse response = new HandshakeResponse();
+    if (localHash.equals(request.serverHash)) {
+      response.match =
+        remote == null ? HandshakeMatch.NONE : HandshakeMatch.BOTH;
+    } else {
+      response.match =
+        remote == null ? HandshakeMatch.NONE : HandshakeMatch.CLIENT;
+    }
+    if (response.match != HandshakeMatch.BOTH) {
+      response.serverProtocol = new Utf8(local.toString());
+      response.serverHash = localHash;
+    }
+    handshakeWriter.write(response, out);
+    return remote;
+  }
 
   /** Computes the response for a message. */
   public abstract Object respond(Message message, Object request)

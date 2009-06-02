@@ -26,8 +26,8 @@ import org.apache.avro.ipc.*;
 import org.apache.avro.util.Utf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -47,7 +47,7 @@ public class TestFsData {
     Integer.parseInt(System.getProperty("test.count", "10"));
   private static final int BUFFER_SIZE = 64 * 1024;
   private static final File DIR=new File(System.getProperty("test.dir", "/tmp"));
-  private static final File FILE = new File("src/test/schemata/fs-data.js");
+  private static final File FILE = new File("src/test/schemata/FSData.avpr");
   private static final Protocol PROTOCOL;
   static {
     try {
@@ -95,7 +95,7 @@ public class TestFsData {
   private static Requestor requestor;
   private static FileChannel fileChannel;
 
-  @BeforeMethod
+  @BeforeClass
   public void testStartServer() throws Exception {
     // create a file that has COUNT * BUFFER_SIZE bytes of random data
     Random rand = new Random();
@@ -132,7 +132,7 @@ public class TestFsData {
     }
   }
 
-  @AfterMethod
+  @AfterClass
   public void testStopServer() throws Exception {
     server.close();
     fileChannel.close();

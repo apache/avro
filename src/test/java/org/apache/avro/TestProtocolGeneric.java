@@ -18,6 +18,7 @@
 package org.apache.avro;
 
 import org.apache.avro.Protocol.Message;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRequestor;
@@ -28,8 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -38,12 +39,14 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Random;
+import java.util.LinkedHashMap;
+import java.util.ArrayList;
 
 public class TestProtocolGeneric {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolGeneric.class);
 
-  private static final File FILE = new File("src/test/schemata/simple.js");
+  private static final File FILE = new File("src/test/schemata/simple.avpr");
   private static final Protocol PROTOCOL;
   static {
     try {
@@ -93,7 +96,7 @@ public class TestProtocolGeneric {
   private static Transceiver client;
   private static Requestor requestor;
 
-  @BeforeMethod
+  @BeforeClass
   public void testStartServer() throws Exception {
     server = new SocketServer(new TestResponder(), new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
@@ -152,8 +155,39 @@ public class TestProtocolGeneric {
     assertEquals("an error", ((Map)error.getValue()).get("message").toString());
   }
 
-  @AfterMethod
-  public void testStopServer() {
+  @Test
+  /** Construct and use a different protocol whose "hello" method has an extra
+      argument to check that schema is sent to parse request. */
+  public void testHandshake() throws IOException {
+    Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
+    LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
+    fields.put("extra",
+               new Schema.Field(Schema.create(Schema.Type.BOOLEAN), null));
+    fields.put("greeting",
+               new Schema.Field(Schema.create(Schema.Type.STRING), null));
+    Protocol.Message message =
+      protocol.createMessage("hello",
+                             Schema.createRecord(fields),
+                             Schema.create(Schema.Type.STRING),
+                             Schema.createUnion(new ArrayList<Schema>()));
+    protocol.getMessages().put("hello", message);
+    Transceiver t
+      = new SocketTransceiver(new InetSocketAddress(server.getPort()));
+    try {
+      Requestor r = new GenericRequestor(protocol, t);
+      GenericRecord params = new GenericData.Record(message.getRequest());
+      params.put("extra", Boolean.TRUE);
+      params.put("greeting", new Utf8("bob"));
+      Utf8 response = (Utf8)r.request("hello", params);
+      assertEquals(new Utf8("goodbye"), response);
+    } finally {
+      t.close();
+    }
+  }
+
+  @AfterClass
+  public void testStopServer() throws IOException {
+    client.close();
     server.close();
   }
 }

@@ -25,6 +25,8 @@ import java.util.*;
 /** Base class for transmitters and recievers of raw binary messages. */
 public abstract class Transceiver {
 
+  public abstract String getRemoteName();
+
   public synchronized List<ByteBuffer> transceive(List<ByteBuffer> request)
     throws IOException {
     writeBuffers(request);

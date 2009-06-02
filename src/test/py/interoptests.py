@@ -34,7 +34,7 @@ class TestGeneratedFiles(unittest.TestCase):
     self.__datumreader = datumreader
 
   def testreadfiles(self):
-    origschm = schema.parse(open("src/test/schemata/interop.js").read())
+    origschm = schema.parse(open("src/test/schemata/interop.avsc").read())
     for file in os.listdir(_DATAFILE_DIR):
       print "Validating:", file.__str__()
       dr = io.DataFileReader(open(_DATAFILE_DIR+file, "rb"), 

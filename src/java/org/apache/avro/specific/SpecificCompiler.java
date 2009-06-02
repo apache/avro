@@ -20,6 +20,8 @@ package org.apache.avro.specific;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -34,6 +36,7 @@ public class SpecificCompiler {
 
   private String namespace;
   private StringBuilder buffer = new StringBuilder();
+  private Set<String> compiledTypes = new HashSet<String>();
 
   private SpecificCompiler() {}                        // no public ctor
 
@@ -131,6 +134,7 @@ public class SpecificCompiler {
 
   private void compile(Schema schema, String name, int d) {
     String type = type(schema, name);
+    if (compiledTypes.contains(type)) return; else compiledTypes.add(type);
     switch (schema.getType()) {
     case RECORD:
       buffer.append("\n");
@@ -141,7 +145,7 @@ public class SpecificCompiler {
              : " extends SpecificRecordBase")
            +" implements SpecificRecord {");
       // schema definition
-      line(d+1, "private static final Schema _SCHEMA = Schema.parse(\""
+      line(d+1, "public static final Schema _SCHEMA = Schema.parse(\""
            +esc(schema)+"\");");
       // field declations
       for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {

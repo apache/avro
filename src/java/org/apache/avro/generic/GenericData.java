@@ -104,7 +104,7 @@ public class GenericData {
     public Fixed(byte[] bytes) { bytes(bytes); }
 
     protected Fixed() {}
-    protected void bytes(byte[] bytes) { this.bytes = bytes; }
+    public void bytes(byte[] bytes) { this.bytes = bytes; }
 
     public byte[] bytes() { return bytes; }
 
@@ -116,6 +116,7 @@ public class GenericData {
 
     public int hashCode() { return Arrays.hashCode(bytes); }
 
+    public String toString() { return Arrays.toString(bytes); }
   }
 
 

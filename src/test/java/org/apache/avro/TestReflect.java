@@ -32,7 +32,7 @@ public class TestReflect {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolSpecific.class);
 
-  private static final File FILE = new File("src/test/schemata/simple.js");
+  private static final File FILE = new File("src/test/schemata/simple.avpr");
   private static final Protocol PROTOCOL;
   static {
     try {

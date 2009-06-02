@@ -99,24 +99,44 @@
 
   <target name="compile" depends="compile-java,compile-c"/>
 
-  <target name="compile-java" depends="init">
-    <copy todir="${build.classes}">
-      <fileset dir="${java.src.dir}" includes="**/*.js"/>
-    </copy>
+  <target name="compile-java" depends="init,schemata">
+    <java-compiler excludes="**/ipc/** **/*Requestor.java **/*Responder.java"/>
+    <java-avro-compiler/>
+    <java-compiler/>
+  </target>
 
-    <javac 
-     encoding="${javac.encoding}" 
-     srcdir="${java.src.dir}"
-     includes="**/*.java"
-     destdir="${build.classes}"
-     debug="${javac.debug}"
-     optimize="${javac.optimize}"
-     target="${javac.version}"
-     source="${javac.version}"
-     deprecation="${javac.deprecation}">
-      <compilerarg line="${javac.args} ${javac.args.warnings}" />
-      <classpath refid="java.classpath"/>
-    </javac>
+  <macrodef name="java-compiler">
+    <attribute name="src" default="${java.src.dir}"/>
+    <attribute name="dest" default="${build.classes}"/>
+    <attribute name="includes" default="**/*.java"/>
+    <attribute name="excludes" default=""/>
+    <attribute name="classpath" default="java.classpath"/>
+    <sequential>
+      <javac 
+	 srcdir="@{src}"
+	 destdir="@{dest}"
+	 includes="@{includes}"
+	 excludes="@{excludes}"
+	 encoding="${javac.encoding}" 
+	 debug="${javac.debug}"
+	 optimize="${javac.optimize}"
+	 target="${javac.version}"
+	 source="${javac.version}"
+	 deprecation="${javac.deprecation}">
+	<compilerarg line="${javac.args} ${javac.args.warnings}" />
+	<classpath refid="@{classpath}"/>
+      </javac>
+    </sequential>
+  </macrodef>
+
+  <target name="schemata" depends="init">
+    <mkdir dir="${build.dir}/src/org/apache/avro/ipc"/>
+    <mapper id="m4toavsc" type="glob" from="*.m4" to="${build.dir}/src/*.avsc"/>
+    <apply executable="m4" dir="${src.dir}/schemata">
+      <fileset dir="${src.dir}/schemata" includes="**/*.m4"/>
+      <mapper refid="m4toavsc"/>
+      <redirector><outputmapper refid="m4toavsc"/></redirector>
+    </apply>
   </target>
 
   <target name="jar" depends="compile-java" description="Build jar file.">
@@ -132,62 +152,57 @@
     </jar>
   </target>
   
-  <target name="compile-test-java" depends="compile-java,compile-test-schemata">
-    <javac 
-     encoding="${javac.encoding}" 
-     srcdir="${test.java.src.dir}"
-     includes="org/${org}/${name}/**/*.java"
-     destdir="${test.java.classes}"
-     debug="${javac.debug}"
-     optimize="${javac.optimize}"
-     target="${javac.version}"
-     source="${javac.version}"
-     deprecation="${javac.deprecation}">
-      <compilerarg line="${javac.args} ${javac.args.warnings}" />
-      <classpath refid="test.java.classpath"/>
-    </javac> 
+  <target name="compile-test-java" depends="compile-java">
+    <java-avro-compiler src="${test.schemata.dir}"
+			generated="${test.java.generated.dir}"
+			dest="${test.java.classes}"
+			classpath="test.java.classpath"/>
+    <java-compiler src="${test.java.src.dir}"
+		   dest="${test.java.classes}"
+		   classpath="test.java.classpath"/>
   </target>
+
+  <macrodef name="java-avro-compiler">
+    <attribute name="src" default="${build.dir}/src"/>
+    <attribute name="generated" default="${build.dir}/src"/>
+    <attribute name="dest" default="${build.classes}"/>
+    <attribute name="classpath" default="java.classpath"/>
+
+    <sequential>
+      <taskdef name="protocol"
+	       classname="org.apache.avro.specific.ProtocolTask">
+	<classpath refid="java.classpath" />
+      </taskdef>
+      <taskdef name="schema" classname="org.apache.avro.specific.SchemaTask">
+	<classpath refid="java.classpath" />
+      </taskdef>
+      <taskdef
+	 name="paranamer" 
+	 classname="com.thoughtworks.paranamer.ant.ParanamerGeneratorTask">
+	<classpath refid="java.classpath" />
+      </taskdef>
+
+      <mkdir dir="@{generated}"/>
+      
+      <protocol destdir="@{generated}">
+	<fileset dir="@{src}">
+	  <include name="**/*.avpr" />
+	</fileset>
+      </protocol>
+      
+      <schema destdir="@{generated}">
+	<fileset dir="@{src}">
+	  <include name="**/*.avsc" />
+	</fileset>
+      </schema>
+
+      <java-compiler src="@{generated}" dest="@{dest}"
+		     classpath="@{classpath}"/>
+      <paranamer sourceDirectory="@{generated}" outputDirectory="@{dest}"/>
+    </sequential>
+  </macrodef>
 
   <target name="test" depends="test-java,test-py,test-c,test-interop"/>
-
-  <target name="compile-test-schemata" depends="compile-java">
-    <taskdef name="protocol" classname="org.apache.avro.specific.ProtocolTask">
-      <classpath refid="java.classpath" />
-    </taskdef>
-    <taskdef name="schema" classname="org.apache.avro.specific.SchemaTask">
-      <classpath refid="java.classpath" />
-    </taskdef>
-    <taskdef name="paranamer" 
-	     classname="com.thoughtworks.paranamer.ant.ParanamerGeneratorTask">
-      <classpath refid="java.classpath" />
-    </taskdef>
-    <mkdir dir="${test.java.generated.dir}"/>
-    <protocol destdir="${test.java.generated.dir}">
-      <fileset dir="${test.schemata.dir}">
-	<include name="simple.js" />
-      </fileset>
-    </protocol>
-    <schema destdir="${test.java.generated.dir}">
-      <fileset dir="${test.schemata.dir}">
-	<include name="interop.js" />
-      </fileset>
-    </schema>
-    <javac 
-       encoding="${javac.encoding}" 
-       srcdir="${test.java.generated.dir}"
-       includes="**/*.java"
-       destdir="${test.java.classes}"
-       debug="${javac.debug}"
-       optimize="${javac.optimize}"
-       target="${javac.version}"
-       source="${javac.version}"
-       deprecation="${javac.deprecation}">
-      <compilerarg line="${javac.args} ${javac.args.warnings}" />
-      <classpath refid="test.java.classpath"/>
-    </javac>
-    <paranamer sourceDirectory="${test.java.generated.dir}"
-	       outputDirectory="${test.java.classes}"/>
-  </target>
 
   <!-- Define TestNG task for all targets that might need it-->
   <taskdef resource="testngtasks" classpathref="java.classpath"/>
@@ -222,7 +237,7 @@
     <mkdir dir="${test.java.build.dir}/data-files"/>
     <java classname="org.apache.avro.RandomData"
       classpathref="test.java.classpath">
-      <arg value="${basedir}/src/test/schemata/interop.js"/>
+      <arg value="${basedir}/src/test/schemata/interop.avsc"/>
       <arg value="${test.java.build.dir}/data-files/test.java.avro"/>
       <arg value="${test.count}"/>
     </java>
@@ -232,7 +247,7 @@
     </taskdef>
     <py-run script="${basedir}/src/test/py/testio.py" python="python"
       pythonpathref="test.py.path">
-      <arg value="${basedir}/src/test/schemata/interop.js"/>
+      <arg value="${basedir}/src/test/schemata/interop.avsc"/>
       <arg value="${test.java.build.dir}/data-files/test.py.avro"/>
       <arg value="100"/>
     </py-run>

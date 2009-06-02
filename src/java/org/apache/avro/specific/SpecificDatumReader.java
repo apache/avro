@@ -39,6 +39,10 @@ public class SpecificDatumReader extends ReflectDatumReader {
     super(root, packageName);
   }
 
+  public SpecificDatumReader(Schema root) {
+    super(root, root.getNamespace()+".");
+  }
+
   protected void addField(Object record, String name, int position, Object o) {
     ((SpecificRecord)record).set(position, o);
   }

@@ -27,6 +27,7 @@ import org.apache.avro.*;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.util.*;
 import org.apache.avro.io.*;
+import org.apache.avro.specific.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ public abstract class Requestor {
 
   private Protocol local;
   private Protocol remote;
+  private boolean established, sendLocalText;
   private Transceiver transceiver;
 
   public Protocol getLocal() { return local; }
@@ -47,38 +49,34 @@ public abstract class Requestor {
     throws IOException {
     this.local = local;
     this.transceiver = transceiver;
-    this.remote = handshake();
-  }
-
-  private Protocol handshake() throws IOException {
-    ByteBufferValueWriter out = new ByteBufferValueWriter();
-    out.writeLong(Protocol.VERSION);              // send handshake version
-    out.writeUtf8(new Utf8(local.toString()));    // send local protocol
-    List<ByteBuffer> response = transceiver.transceive(out.getBufferList());
-    ValueReader in = new ByteBufferValueReader(response);
-    String remote = in.readUtf8(null).toString(); // read remote protocol
-    return Protocol.parse(remote);                // parse & return it
   }
 
   /** Writes a request message and reads a response or error message. */
   public Object request(String messageName, Object request)
     throws IOException {
+    ValueReader in;
+    Message m;
+    do {
+      ByteBufferValueWriter out = new ByteBufferValueWriter();
 
-    // use local protocol to write request
-    Message m = getLocal().getMessages().get(messageName);
-    if (m == null)
-      throw new AvroRuntimeException("Not a local message: "+messageName);
+      if (!established)                           // if not established
+        writeHandshake(out);                      // prepend handshake
 
-    ByteBufferValueWriter out = new ByteBufferValueWriter();
-
-    out.writeUtf8(new Utf8(m.getName()));         // write message name
-  
-    writeRequest(m.getRequest(), request, out);
-
-    List<ByteBuffer> response =
-      getTransceiver().transceive(out.getBufferList());
-
-    ValueReader in = new ByteBufferValueReader(response);
+      // use local protocol to write request
+      m = getLocal().getMessages().get(messageName);
+      if (m == null)
+        throw new AvroRuntimeException("Not a local message: "+messageName);
+      
+      out.writeUtf8(new Utf8(m.getName()));       // write message name
+      writeRequest(m.getRequest(), request, out); // write request payload
+      
+      List<ByteBuffer> response =                 // transceive
+        getTransceiver().transceive(out.getBufferList());
+      
+      in = new ByteBufferValueReader(response);
+      if (!established)                           // if not established
+        readHandshake(in);                        // process handshake
+    } while (!established);
 
     // use remote protocol to read response
     m = getRemote().getMessages().get(messageName);
@@ -89,6 +87,65 @@ public abstract class Requestor {
     } else {
       throw readError(m.getErrors(), in);
     }
+  }
+
+  private static final Map<String,MD5> REMOTE_HASHES =
+    Collections.synchronizedMap(new HashMap<String,MD5>());
+  private static final Map<MD5,Protocol> REMOTE_PROTOCOLS =
+    Collections.synchronizedMap(new HashMap<MD5,Protocol>());
+
+  private static final SpecificDatumWriter HANDSHAKE_WRITER =
+    new SpecificDatumWriter(HandshakeRequest._SCHEMA);
+
+  private static final SpecificDatumReader HANDSHAKE_READER =
+    new SpecificDatumReader(HandshakeResponse._SCHEMA);
+
+  private void writeHandshake(ValueWriter out) throws IOException {
+    MD5 localHash = new MD5();
+    localHash.bytes(local.getMD5());
+    String remoteName = transceiver.getRemoteName();
+    MD5 remoteHash = REMOTE_HASHES.get(remoteName);
+    remote = REMOTE_PROTOCOLS.get(remoteHash);
+    if (remoteHash == null) {                     // guess remote is local
+      remoteHash = localHash;
+      remote = local;
+    }
+    HandshakeRequest handshake = new HandshakeRequest();
+    handshake.clientHash = localHash;
+    handshake.serverHash = remoteHash;
+    if (sendLocalText)
+      handshake.clientProtocol = new Utf8(local.toString());
+    HANDSHAKE_WRITER.write(handshake, out);
+  }
+
+  private void readHandshake(ValueReader in) throws IOException {
+    HandshakeResponse handshake =
+      (HandshakeResponse)HANDSHAKE_READER.read(null, in);
+    switch (handshake.match) {
+    case BOTH:
+      established = true;
+      break;
+    case CLIENT:
+      LOG.debug("Handshake match = CLIENT");
+      setRemote(handshake);
+      established = true;
+      break;
+    case NONE:
+      LOG.debug("Handshake match = NONE");
+      setRemote(handshake);
+      sendLocalText = true;
+      break;
+    default:
+      throw new AvroRuntimeException("Unexpected match: "+handshake.match);
+    }
+  }
+
+  private void setRemote(HandshakeResponse handshake) {
+    remote = Protocol.parse(handshake.serverProtocol.toString());
+    MD5 remoteHash = (MD5)handshake.serverHash;
+    REMOTE_HASHES.put(transceiver.getRemoteName(), remoteHash);
+    if (!REMOTE_PROTOCOLS.containsKey(remoteHash))
+      REMOTE_PROTOCOLS.put(remoteHash, remote);
   }
 
   /** Writes a request message. */

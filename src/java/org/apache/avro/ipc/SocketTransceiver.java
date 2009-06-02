@@ -35,12 +35,17 @@ public class SocketTransceiver extends Transceiver {
   private SocketChannel channel;
   private ByteBuffer header = ByteBuffer.allocate(4);
   
+  public String getRemoteName() {
+    return channel.socket().getRemoteSocketAddress().toString();
+  }
+
   public SocketTransceiver(SocketAddress address) throws IOException {
     this(SocketChannel.open(address));
   }
 
   public SocketTransceiver(SocketChannel channel) {
     this.channel = channel;
+    LOG.info("open to "+channel.socket().getRemoteSocketAddress());
   }
 
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
@@ -81,6 +86,7 @@ public class SocketTransceiver extends Transceiver {
   }
 
   public void close() throws IOException {
+    LOG.info("closing to "+channel.socket().getRemoteSocketAddress());
     channel.close();
   }
 

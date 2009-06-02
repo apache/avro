@@ -633,42 +633,105 @@
       <section>
 	<title>Handshake</title>
 
-	<p>RPC sessions are initiated by a handshake.  No requests may
-	be processed in a session until a successful handshake has
-	completed.  (As with all messages, handshakes are framed as
-	described above.)</p>
+	<p>RPC sessions are initiated by handshake.  The purpose of
+	the handshake is to ensure that the client and the server have
+	each other's protocol definition, so that the client can
+	correctly deserialize responses, and the server can correctly
+	deserialize requests.  Both clients and servers should
+	maintain a cache of recently seen protocols, so that, in most
+	cases, a handshake will be completed without extra round-trip
+	network exchanges or the transmission of full protocol text.</p>
 
-	<p>The purpose of the handshake is to exchange protocols, so
-	that the client can deserialize responses, and the
-	server can deserialize requests.</p>
+	<p>The handshake process uses the following record schemas:</p>
 
-	<p>The handshake is versioned, to permit future enhancements.
-	The handshake documented here is version zero.  All Avro
-	implementations must support version zero.</p>
+	<source>
+{
+  "type": "record",
+  "name": "HandshakeRequest", "namespace":"org.apache.avro.ipc",
+  "fields": [
+    {"name": "clientHash",
+     "type": {"type": "fixed", "name": "MD5", "size": 16}},
+    {"name": "clientProtocol", "type": ["null", "string"]},
+    {"name": "serverHash", "type": "MD5"},
+    {"name": "meta", "type": ["null", {"type": "map", "values": "bytes"}]}
+  ]
+}
+{
+  "type": "record",
+  "name": "HandshakeResponse", "namespace": "org.apache.avro.ipc",
+  "fields": [
+    {"name": "match",
+     "type": {"type": "enum", "name": "HandshakeMatch",
+	      "symbols": ["BOTH", "CLIENT", "NONE"]}},
+    {"name": "serverProtocol",
+     "type": ["null", "string"]},
+    {"name": "serverHash",
+     "type": ["null", {"type": "fixed", "name": "MD5", "size": 16}]},
+    {"name": "meta",
+     "type": ["null", {"type": "map", "values": "bytes"}]}
+  ]
+}
+	</source>
 
-	<p>The version zero handshake consists of a request and
-	response message.</p>
+        <ul>
+	  <li>In a new session, a client first sends
+	  a <code>HandshakeRequest</code> containing just the hash of
+	  its protocol and of the server's protocol
+	  (<code>clientHash!=null, clientProtocol=null,
+	  serverHash!=null</code>), where the hashes are 128-bit MD5
+	  hashes of the JSON protocol text. If a client has never
+	  connected to a given server, it sends its hash as a guess of
+	  the server's hash, otherwise it sends the hash that it
+	  previously obtained from this server.</li>
 
-	<p>The format of a version zero handshake request is:</p>
-	<ul>
-	  <li>a four-byte, big-endian <em>version</em> of zero,
-	  followed by</li>
-	  <li>the JSON <em>client's protocol</em> for the session,
-	  serialized as an Avro string.</li>
-	</ul>
-
-	<p>The format of a version zero handshake response is:</p>
-	<ul>
-	  <li>a one-byte <em>error flag</em> boolean, followed by either:
+	  <li>The server responds with
+	  a <code>HandshakeResponse</code> containing one of:
 	    <ul>
-	      <li>if the error flag is false, the JSON <em>server's
-		protocol</em> for the session, serialized as an Avro
-		string.</li>
-	      <li>if the error flag is true, an error message, as an
-	      Avro string.</li>
+	      <li><code>match=BOTH, serverProtocol=null,
+	      serverHash=null</code> if the client sent the valid hash
+	      of the server's protocol and the server knows what
+	      protocol corresponds to the client's hash. In this case,
+	      the request is complete and the session is
+	      established.</li>
+
+	      <li><code>match=CLIENT, serverProtocol!=null,
+	      serverHash!=null</code> if the server has previously
+	      seen the client's protocol, but the client sent an
+	      incorrect hash of the server's protocol. The client must
+	      then re-send the request with the correct server
+	      hash.</li>
+
+              <li><code>match=NONE, serverProtocol!=null,
+	      serverHash!=null</code> if the server has not previously
+	      seen the client's protocol and the client sent and
+	      incorrect hash of the server's protocol.
+
+	      <p>In this case The client must then re-submit its
+	      request with its protocol text (<code>clientHash!=null,
+	      clientProtocol!=null, serverHash!=null</code>) and the
+	      server should respond with with a successful match
+	      (<code>match=BOTH, serverProtocol=null,
+	      serverHash=null</code>) as above.</p>
+	      </li>
 	    </ul>
 	  </li>
 	</ul>
+
+	<p>Until a connection is established, call request data sent
+	by the client must be preceded by
+	a <code>HandshakeRequest</code> and call response data
+	returned by the server must be preceded by a
+	<code>HandshakeResponse</code>. A connection is not
+	established until a <code>HandshakeResponse</code> with
+	<code>match=BOTH</code> or <code>match=CLIENT</code> is
+	returned.  In these cases, the call response data immmediately
+	follows
+	the <code>HandShakeResponse</code>. When <code>match=NONE</code>
+	no response call data is sent and the request call data is
+	ignored.</p>
+
+	<p>The <code>meta</code> field is reserved for future
+	handshake enhancements.</p>
 
       </section>
 

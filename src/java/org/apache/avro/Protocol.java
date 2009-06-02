@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.security.MessageDigest;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
@@ -125,6 +126,7 @@ public class Protocol {
 
   private Schema.Names types = new Schema.Names();
   private Map<String,Message> messages = new LinkedHashMap<String,Message>();
+  private byte[] md5;
 
   /** An error that can be thrown by any message. */
   public static final Schema SYSTEM_ERROR = Schema.create(Schema.Type.STRING);
@@ -196,6 +198,18 @@ public class Protocol {
     }
     buffer.append("}\n}");
     return buffer.toString();
+  }
+
+  /** Return the MD5 hash of the text of this protocol. */
+  public byte[] getMD5() {
+    if (md5 == null)
+      try {
+        md5 = MessageDigest.getInstance("MD5")
+          .digest(this.toString().getBytes("UTF-8"));
+      } catch (Exception e) {
+        throw new AvroRuntimeException(e);
+      }
+    return md5;
   }
 
   /** Read a protocol from a Json file. */
