@@ -85,3 +85,6 @@ Trunk (unreleased changes)
 
     AVRO-44. Fix so that 'ant clean' works even if C has not been
     built.  (Matt Massie via cutting)
+
+    AVRO-45. Fix c++ compliation so that python script need not be
+    made executable.  (Scott Banachowski via cutting)

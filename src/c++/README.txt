@@ -27,17 +27,23 @@ What's missing: Defaults are not yet supported. Resolving schema
 conflicts is not yet supported. And the file and rpc containers are
 not yet implemented. Documentation, sparse.
 
+INSTRUCTIONS
+
 To compile requires boost headers, and the boost regex library.
 Additionally, to generate the avro spec compiler requires flex and bison.
 
 As of yet, there is no automatic configuration, so to get started:
 
- edit (or add) the System.XXX.mk file, where XXX is the result of `uname` on
+1. Setup compiler variables in System.*.mk
+
+Edit (or add) the System.XXX.mk file, where XXX is the result of `uname` on
 your machine, to include the paths for:
 
 BOOSTINC (location of boost headers) 
 BOOSTREGEX (location of libboost-regex_*.a for your boost)
 LEX (path to flex)
 YACC (path to bison)
+
+2.  Make
 
 Then type gmake, and it should build everything and run some unit tests.

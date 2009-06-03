@@ -66,7 +66,7 @@ precompile: test/precompile.cc $(OBJDIR)/avrolib.a
 
 test/code.hh: scripts/gen.py precompile
 	./precompile < jsonschemas/bigrecord > obj/bigrecord.flat
-	scripts/gen.py < obj/bigrecord.flat > test/code.hh
+	python scripts/gen.py < obj/bigrecord.flat > test/code.hh
 
 testgen: test/code.hh
 
