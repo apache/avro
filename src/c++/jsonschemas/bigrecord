@@ -1,0 +1,64 @@
+{
+    "type": "record",
+    "name": "RootRecord",
+    "fields": [
+        {
+            "name": "mylong",
+            "type": "long"
+        },
+        {
+            "name": "mymap",
+            "type": {
+                "type": "map",
+                "values": "int"
+            }
+        },
+        {
+            "name": "myarray",
+            "type": {
+                "type": "array",
+                "items": "double"
+            }
+        },
+        {
+            "name": "myenum",
+            "type": {
+                "type": "enum",
+                "name": "ExampleEnum",
+                "symbols": [
+                    "zero",
+                    "one",
+                    "two",
+                    "three"
+                ]
+            }
+        },
+        {
+            "name": "myunion",
+            "type": [
+                "null",
+                {
+                    "type": "map",
+                    "values": "int"
+                },
+                "float"
+            ]
+        },
+        {
+            "name": "mybool",
+            "type": "boolean"
+        },
+        {
+            "name": "myfixed",
+            "type": {
+                "type": "fixed",
+                "size": 16,
+                "name": "md5"
+            }
+        },
+        {
+            "name": "anotherint",
+            "type": "int"
+        }
+    ]
+}
