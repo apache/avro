@@ -27,6 +27,8 @@ Trunk (unreleased changes)
 
     AVRO-38.  Add Python support for fixed-sized types. (sharad)
 
+    AVRO-42.  Add partial C++ implementation. (Scott Banachowski via cutting)
+
   IMPROVEMENTS
 
     AVRO-11.  Re-implement specific and reflect datum readers and
