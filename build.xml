@@ -543,7 +543,11 @@
     </exec>
   </target>
 
-  <target name="clean-c">
+  <target name="c-makefile-check">
+    <available file="${c.src.dir}/Makefile" property="c-makefile-present"/>
+  </target>
+
+  <target name="clean-c" depends="c-makefile-check" if="c-makefile-present">
     <exec dir="${c.src.dir}" executable="make" failonerror="true">
       <arg value="clean"/>
     </exec>

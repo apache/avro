@@ -82,3 +82,6 @@ Trunk (unreleased changes)
 
     AVRO-40. Fix typo in specfication, where 'unsigned' was used where
     'signed' was intended.  (cutting)
+
+    AVRO-44. Fix so that 'ant clean' works even if C has not been
+    built.  (Matt Massie via cutting)
