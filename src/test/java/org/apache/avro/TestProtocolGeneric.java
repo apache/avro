@@ -135,9 +135,9 @@ public class TestProtocolGeneric {
       new GenericData.Record(PROTOCOL.getMessages().get("echoBytes").getRequest());
     ByteBuffer data = ByteBuffer.allocate(length);
     random.nextBytes(data.array());
+    data.flip();
     params.put("data", data);
     Object echoed = requestor.request("echoBytes", params);
-    data.flip();
     assertEquals(data, echoed);
   }
 

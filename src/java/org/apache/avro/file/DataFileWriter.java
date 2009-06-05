@@ -145,12 +145,15 @@ public class DataFileWriter<D> {
   private void writeFooter() throws IOException {
     writeBlock();                               // flush any data
     setMeta("count", count);                    // update count
-    bufOut.writeLong(meta.size());              // write meta entries
+    bufOut.writeMapStart();              // write meta entries
+    bufOut.setItemCount(meta.size());
     for (Map.Entry<String,byte[]> entry : meta.entrySet()) {
-      bufOut.writeUtf8(new Utf8(entry.getKey()));
-      bufOut.writeLong(entry.getValue().length);
-      bufOut.write(entry.getValue());
+      bufOut.startItem();
+      bufOut.writeString(entry.getKey());
+      bufOut.writeBytes(entry.getValue());
     }
+    bufOut.writeMapEnd();
+    
     int size = buffer.size()+4;
     out.write(sync);
     vout.writeLong(FOOTER_BLOCK);                 // tag the block

@@ -57,7 +57,8 @@ public abstract class Requestor {
     ValueReader in;
     Message m;
     do {
-      ByteBufferValueWriter out = new ByteBufferValueWriter();
+      ByteBufferOutputStream bbo = new ByteBufferOutputStream();
+      ValueWriter out = new ValueWriter(bbo);
 
       if (!established)                           // if not established
         writeHandshake(out);                      // prepend handshake
@@ -67,13 +68,14 @@ public abstract class Requestor {
       if (m == null)
         throw new AvroRuntimeException("Not a local message: "+messageName);
       
-      out.writeUtf8(new Utf8(m.getName()));       // write message name
+      out.writeString(m.getName());       // write message name
       writeRequest(m.getRequest(), request, out); // write request payload
       
       List<ByteBuffer> response =                 // transceive
-        getTransceiver().transceive(out.getBufferList());
+        getTransceiver().transceive(bbo.getBufferList());
       
-      in = new ByteBufferValueReader(response);
+      ByteBufferInputStream bbi = new ByteBufferInputStream(response);
+      in = new ValueReader(bbi);
       if (!established)                           // if not established
         readHandshake(in);                        // process handshake
     } while (!established);

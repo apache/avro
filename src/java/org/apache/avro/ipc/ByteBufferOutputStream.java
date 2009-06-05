@@ -24,7 +24,7 @@ import java.util.*;
 
 /** Utility to collect data written to an {@link OutputStream} in {@link
  * ByteBuffer}s.*/
-class ByteBufferOutputStream extends OutputStream {
+public class ByteBufferOutputStream extends OutputStream {
   public static final int BUFFER_SIZE = 8192;
 
   private List<ByteBuffer> buffers;

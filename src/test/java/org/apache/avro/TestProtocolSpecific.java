@@ -98,8 +98,8 @@ public class TestProtocolSpecific {
     int length = random.nextInt(1024*16);
     ByteBuffer data = ByteBuffer.allocate(length);
     random.nextBytes(data.array());
-    ByteBuffer echoed = proxy.echoBytes(data);
     data.flip();
+    ByteBuffer echoed = proxy.echoBytes(data);
     assertEquals(data, echoed);
   }
 

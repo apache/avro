@@ -30,46 +30,51 @@ import java.io.InputStream;
 public class TestValueReader {
   /** Verify EOFException throw at EOF */
 
-  @Test
-  public void testEOFHandling() throws IOException {
-    InputStream is = new ByteArrayInputStream(new byte[0]);
-    ValueReader vr = new ValueReader(is);
-
-    try {
-      vr.readBoolean();
-      fail();
-    } catch (EOFException e) { /* this is good */ }
-    try {
-      vr.readBuffer(null);
-      fail();
-    } catch (EOFException e) { /* this is good */ }
-    try {
-      vr.readBytes(new byte[1]);
-      fail();
-    } catch (EOFException e) { /* this is good */ }
-    try {
-      vr.readBytes(new byte[1], 0, 1);
-      fail();
-    } catch (EOFException e) { /* this is good */ }
-    try {
-      vr.readDouble();
-      fail();
-    } catch (EOFException e) { /* this is good */ }
-    try {
-      vr.readFloat();
-      fail();
-    } catch (EOFException e) { /* this is good */ }
-    try {
-      vr.readInt();
-      fail();
-    } catch (EOFException e) { /* this is good */ }
-    try {
-      vr.readLong();
-      fail();
-    } catch (EOFException e) { /* this is good */ }
-    try {
-      vr.readUtf8(new Utf8("a"));
-      fail();
-    } catch (EOFException e) { /* this is good */ }
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_boolean() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).readBoolean();
   }
+  
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_int() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).readInt();
+  }
+  
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_long() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).readLong();
+  }
+  
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_float() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).readFloat();
+  }
+  
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_double() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).readDouble();
+  }
+  
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_bytes() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).readBytes(null);
+  }
+  
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_string() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).
+      readString(new Utf8("a"));
+  }
+  
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_fixed() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).
+      readFixed(new byte[1]);
+  }
+
+  @Test(expectedExceptions=EOFException.class)
+  public void testEOF_enum() throws IOException {
+    new ValueReader(new ByteArrayInputStream(new byte[0])).readEnum();
+  }
+  
 }

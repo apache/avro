@@ -19,6 +19,7 @@ package org.apache.avro.file;
 
 import java.io.*;
 import java.util.*;
+import java.nio.ByteBuffer;
 import java.rmi.server.UID;
 import java.security.MessageDigest;
 
@@ -47,10 +48,9 @@ public class DataFileReader<D> {
   public DataFileReader(SeekableInput sin, DatumReader<D> reader)
     throws IOException {
     this.in = new SeekableBufferedInput(sin);
-    this.vin = new ValueReader(in);
 
     byte[] magic = new byte[4];
-    vin.readBytes(magic);
+    in.read(magic);
     if (!Arrays.equals(DataFileWriter.MAGIC, magic))
       throw new IOException("Not a data file.");
 
@@ -58,12 +58,18 @@ public class DataFileReader<D> {
     in.seek(length-4);
     int footerSize=(in.read()<<24)+(in.read()<<16)+(in.read()<<8)+in.read();
     in.seek(length-footerSize);
-    int metaLength = (int)vin.readLong();
-    for (int i = 0; i < metaLength; i++) {        // read meta
-      String key = vin.readUtf8(null).toString();
-      byte[] value = new byte[(int)vin.readLong()];
-      vin.readBytes(value);
-      meta.put(key, value);
+    this.vin = new ValueReader(in);
+    long l = vin.readMapStart();
+    if (l > 0) {
+      do {
+        for (long i = 0; i < l; i++) {
+          String key = vin.readString(null).toString();
+          ByteBuffer value = vin.readBytes(null);
+          byte[] bb = new byte[value.remaining()];
+          value.get(bb);
+          meta.put(key, bb);
+        }
+      } while ((l = vin.mapNext()) != 0);
     }
 
     this.sync = getMeta("sync");
@@ -114,7 +120,7 @@ public class DataFileReader<D> {
   }
 
   private void skipSync() throws IOException {
-    vin.readBytes(syncBuffer);
+    vin.readFixed(syncBuffer);
     if (!Arrays.equals(syncBuffer, sync))
       throw new IOException("Invalid sync!");
   }
@@ -133,7 +139,7 @@ public class DataFileReader<D> {
       return;
     }
     in.seek(position);
-    vin.readBytes(syncBuffer);
+    vin.readFixed(syncBuffer);
     for (int i = 0; in.tell() < in.length(); i++) {
       int j = 0;
       for (; j < sync.length; j++) {

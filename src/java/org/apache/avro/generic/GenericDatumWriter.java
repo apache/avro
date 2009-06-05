@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 
 import org.apache.avro.AvroRuntimeException;
@@ -58,7 +57,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     case MAP:    writeMap(schema, datum, out);    break;
     case UNION:
       int index = resolveUnion(schema, datum);
-      out.writeLong(index);
+      out.writeIndex(index);
       write(schema.getTypes().get(index), datum, out);
       break;
     case FIXED:   writeFixed(schema, datum, out);   break;
@@ -95,7 +94,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.*/
   protected void writeEnum(Schema schema, Object datum, ValueWriter out)
     throws IOException {
-    out.writeInt(schema.getEnumOrdinal((String)datum));
+    out.writeEnum(schema.getEnumOrdinal((String)datum));
   }
   
   /** Called to write a array.  May be overridden for alternate array
@@ -104,12 +103,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     throws IOException {
     Schema element = schema.getElementType();
     long size = getArraySize(datum);
-    if (size > 0) {
-      out.writeLong(size);
-      for (Iterator<? extends Object> it = getArrayElements(datum); it.hasNext();)
-        write(element, it.next(), out);
+    out.writeArrayStart();
+    out.setItemCount(size);
+    for (Iterator<? extends Object> it = getArrayElements(datum); it.hasNext();) {
+      out.startItem();
+      write(element, it.next(), out);
     }
-    out.writeLong(0);
+    out.writeArrayEnd();
   }
 
   /** Called by the default implementation of {@link #writeArray} to get the
@@ -133,14 +133,14 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     throws IOException {
     Schema value = schema.getValueType();
     int size = getMapSize(datum);
-    if (size > 0) {
-      out.writeLong(size);                // write a single block
-      for (Map.Entry<Object,Object> entry : getMapEntries(datum)) {
-        writeString(entry.getKey(), out);
-        write(value, entry.getValue(), out);
-      }
+    out.writeMapStart();
+    out.setItemCount(size);
+    for (Map.Entry<Object,Object> entry : getMapEntries(datum)) {
+      out.startItem();
+      out.writeString((Utf8) entry.getKey());
+      write(value, entry.getValue(), out);
     }
-    out.writeLong(0);
+    out.writeMapEnd();
   }
 
   /** Called by the default implementation of {@link #writeMap} to get the size
@@ -160,13 +160,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
   protected void writeString(Object datum, ValueWriter out) throws IOException {
-    out.writeUtf8((Utf8)datum);
+    out.writeString((Utf8)datum);
   }
 
   /** Called to write a bytes.  May be overridden for alternate bytes
    * representations.*/
   protected void writeBytes(Object datum, ValueWriter out) throws IOException {
-    out.writeBuffer((ByteBuffer)datum);
+    out.writeBytes((ByteBuffer)datum);
   }
 
   private int resolveUnion(Schema union, Object datum) {
@@ -207,7 +207,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.*/
   protected void writeFixed(Schema schema, Object datum, ValueWriter out)
     throws IOException {
-    out.write(((GenericFixed)datum).bytes(), 0, schema.getFixedSize());
+    out.writeFixed(((GenericFixed)datum).bytes(), 0, schema.getFixedSize());
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/

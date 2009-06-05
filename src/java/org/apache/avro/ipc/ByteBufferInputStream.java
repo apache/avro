@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /** Utility to present {@link ByteBuffer} data as an {@link InputStream}.*/
-class ByteBufferInputStream extends InputStream {
+public class ByteBufferInputStream extends InputStream {
   private List<ByteBuffer> buffers;
   private int current;
 

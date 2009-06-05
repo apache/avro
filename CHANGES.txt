@@ -29,6 +29,10 @@ Trunk (unreleased changes)
 
     AVRO-42.  Add partial C++ implementation. (Scott Banachowski via cutting)
 
+    AVRO-25.  Add blocking value writer that permits arbitrarily long
+    arrays and maps to be efficiently written as sequences of blocks.
+    (Thiruvalluvan M. G. via cutting)
+
   IMPROVEMENTS
 
     AVRO-11.  Re-implement specific and reflect datum readers and

@@ -62,7 +62,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected Object read(Object old, Schema actual,
                         Schema expected, ValueReader in) throws IOException {
     if (actual.getType() == Type.UNION)           // resolve unions
-      actual = actual.getTypes().get((int)in.readLong());
+      actual = actual.getTypes().get((int)in.readIndex());
     if (expected.getType() == Type.UNION)
       expected = resolveExpected(actual, expected);
     switch (actual.getType()) {
@@ -223,7 +223,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       for (Iterator<String> i = json.getFieldNames(); i.hasNext();) {
         String key = i.next();
         addToMap(map, new Utf8(key),
-                 defaultFieldValue(null, value, json.getFieldValue(key)));
+                 defaultFieldValue(null, value, json.get(key)));
       }
       return map;
     case UNION:   return defaultFieldValue(old, schema.getTypes().get(0), json);
@@ -247,7 +247,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     String name = expected.getName();
     if (name != null && !name.equals(actual.getName()))
       throw new AvroTypeException("Expected "+expected+", found "+actual);
-    return createEnum(actual.getEnumSymbols().get(in.readInt()), expected);
+    return createEnum(actual.getEnumSymbols().get(in.readEnum()), expected);
   }
 
   /** Called to create an enum value. May be overridden for alternate enum
@@ -256,17 +256,23 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Called to read an array instance.  May be overridden for alternate array
    * representations.*/
-  @SuppressWarnings(value="unchecked")
   protected Object readArray(Object old, Schema actual, Schema expected,
                              ValueReader in) throws IOException {
     Schema actualType = actual.getElementType();
     Schema expectedType = expected.getElementType();
-    long firstBlockSize = in.readLong();
-    Object array = newArray(old, (int) firstBlockSize);
-    for (long l = firstBlockSize; l > 0; l = in.readLong())
-      for (long i = 0; i < l; i++)
-        addToArray(array, read(peekArray(array), actualType, expectedType, in));
-    return array;
+    long l = in.readArrayStart();
+    if (l > 0) {
+      Object array = newArray(old, (int) l);
+      do {
+        for (long i = 0; i < l; i++) {
+          addToArray(array, read(peekArray(array), actualType, expectedType, in));  
+        }
+      } while ((l = in.arrayNext()) > 0);
+      
+      return array;
+    } else {
+      return newArray(old, 0);
+    }
   }
 
   /** Called by the default implementation of {@link #readArray} to retrieve a
@@ -286,18 +292,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   
   /** Called to read a map instance.  May be overridden for alternate map
    * representations.*/
-  @SuppressWarnings(value="unchecked")
   protected Object readMap(Object old, Schema actual, Schema expected,
                            ValueReader in) throws IOException {
     Schema aValue = actual.getValueType();
     Schema eValue = expected.getValueType();
-    int firstBlockSize = (int)in.readLong();
-    Object map = newMap(old, firstBlockSize);
-    for (long l = firstBlockSize; l > 0; l = in.readLong())
-      for (long i = 0; i < l; i++)
-        addToMap(map,
-                 readString(null, in),
-                 read(null, aValue, eValue, in));
+    long l = in.readMapStart();
+    Object map = newMap(old, (int) l);
+    if (l > 0) {
+      do {
+        for (int i = 0; i < l; i++) {
+          addToMap(map,
+              readString(null, in),
+              read(null, aValue, eValue, in));
+        }
+      } while ((l = in.mapNext()) > 0);
+    }
     return map;
   }
 
@@ -316,7 +325,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (!actual.equals(expected))
       throw new AvroTypeException("Expected "+expected+", found "+actual);
     GenericFixed fixed = (GenericFixed)createFixed(old, expected);
-    in.readBytes(fixed.bytes(), 0, actual.getFixedSize());
+    in.readFixed(fixed.bytes(), 0, actual.getFixedSize());
     return fixed;
   }
 
@@ -356,6 +365,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to create new array instances.  Subclasses may override to use a
    * different array implementation.  By default, this returns a {@link
    * GenericData.Array}.*/
+  @SuppressWarnings("unchecked")
   protected Object newArray(Object old, int size) {
     if (old instanceof GenericArray) {
       ((GenericArray) old).clear();
@@ -366,6 +376,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to create new array instances.  Subclasses may override to use a
    * different map implementation.  By default, this returns a {@link
    * HashMap}.*/
+  @SuppressWarnings("unchecked")
   protected Object newMap(Object old, int size) {
     if (old instanceof Map) {
       ((Map) old).clear();
@@ -375,9 +386,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Called to read strings.  Subclasses may override to use a different
    * string representation.  By default, this calls {@link
-   * ValueReader#readUtf8(Object)}.*/
+   * ValueReader#readString(Utf8)}.*/
   protected Object readString(Object old, ValueReader in) throws IOException {
-    return in.readUtf8(old);
+    return in.readString((Utf8)old);
   }
 
   /** Called to create a string from a default value.  Subclasses may override
@@ -387,9 +398,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Called to read byte arrays.  Subclasses may override to use a different
    * byte array representation.  By default, this calls {@link
-   * ValueReader#readBuffer(Object)}.*/
+   * ValueReader#readBytes(ByteBuffer)}.*/
   protected Object readBytes(Object old, ValueReader in) throws IOException {
-    return in.readBuffer(old);
+    return in.readBytes((ByteBuffer)old);
   }
 
   /** Called to create byte arrays from default values.  Subclasses may
@@ -411,29 +422,30 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       break;
     case ARRAY:
       Schema elementType = schema.getElementType();
-      for (int l = (int)in.readLong(); l > 0; l = (int)in.readLong())
-        for (int i = 0; i < l; i++)
+      for (long l = in.skipArray(); l > 0; l = in.skipArray()) {
+        for (long i = 0; i < l; i++) {
           skip(elementType, in);
+        }
+      }
       break;
     case MAP:
       Schema value = schema.getValueType();
-      for (int l = (int)in.readLong(); l > 0; l = (int)in.readLong())
-        for (int i = 0; i < l; i++) {
+      for (long l = in.skipMap(); l > 0; l = in.skipMap()) {
+        for (long i = 0; i < l; i++) {
           skip(STRING_SCHEMA, in);
           skip(value, in);
         }
+      }
       break;
     case UNION:
-      skip(schema.getTypes().get((int)in.readLong()), in);
+      skip(schema.getTypes().get((int)in.readIndex()), in);
       break;
     case FIXED:
-      in.skip(schema.getFixedSize());
+      in.skipFixed(schema.getFixedSize());
       break;
     case STRING:
     case BYTES:
-      long length = in.readLong();
-      while (length > 0)
-        length -= in.skip(length);
+      in.skipBytes();
       break;
     case INT:     in.readInt();           break;
     case LONG:    in.readLong();          break;

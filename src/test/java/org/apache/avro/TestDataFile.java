@@ -66,7 +66,7 @@ public class TestDataFile {
     }
   }
 
-  @Test
+  @Test(dependsOnMethods="testGenericWrite")
   public void testGenericRead() throws IOException {
     DataFileReader<Object> reader =
       new DataFileReader<Object>(new SeekableFileInput(FILE),

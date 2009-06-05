@@ -55,16 +55,21 @@ public abstract class Responder {
   /** Called by a server to deserialize a request, compute and serialize
    * a response or error. */
   public List<ByteBuffer> respond(Transceiver transceiver) throws IOException {
-    ValueReader in = new ByteBufferValueReader(transceiver.readBuffers());
-    ByteBufferValueWriter out = new ByteBufferValueWriter();
+    ByteBufferInputStream bbi =
+      new ByteBufferInputStream(transceiver.readBuffers());
+    
+    ValueReader in = new ValueReader(bbi);
+    ByteBufferOutputStream bbo =
+      new ByteBufferOutputStream();
+    ValueWriter out = new ValueWriter(bbo);
     AvroRemoteException error = null;
     try {
       Protocol remote = handshake(transceiver, in, out);
       if (remote == null)                        // handshake failed
-        return out.getBufferList();
+        return bbo.getBufferList();
 
       // read request using remote protocol specification
-      String messageName = in.readUtf8(null).toString();
+      String messageName = in.readString(null).toString();
       Message m = remote.getMessages().get(messageName);
       if (m == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
@@ -94,12 +99,13 @@ public abstract class Responder {
     } catch (AvroRuntimeException e) {            // system error
       LOG.warn("system error", e);
       error = new AvroRemoteException(e);
-      out = new ByteBufferValueWriter();
+      bbo = new ByteBufferOutputStream();
+      out = new ValueWriter(bbo);
       out.writeBoolean(true);
       writeError(Protocol.SYSTEM_ERRORS, error, out);
     }
       
-    return out.getBufferList();
+    return bbo.getBufferList();
   }
 
   private SpecificDatumWriter handshakeWriter =
