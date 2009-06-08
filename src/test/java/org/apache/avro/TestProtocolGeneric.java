@@ -60,7 +60,6 @@ public class TestProtocolGeneric {
     public TestResponder() { super(PROTOCOL); }
     public Object respond(Message message, Object request)
       throws AvroRemoteException {
-      @SuppressWarnings(value="unchecked")
       GenericRecord params = (GenericRecord)request;
 
       if ("hello".equals(message.getName())) {

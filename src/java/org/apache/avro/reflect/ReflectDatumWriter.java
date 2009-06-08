@@ -19,7 +19,6 @@ package org.apache.avro.reflect;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;

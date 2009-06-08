@@ -18,16 +18,12 @@
 
 package org.apache.avro.ipc;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.nio.channels.SocketChannel;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.ClosedChannelException;
-import java.nio.ByteBuffer;
-import java.util.*;
-
-import org.apache.avro.*;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -18,16 +18,11 @@
 
 package org.apache.avro.specific;
 
-import java.util.*;
-import java.nio.ByteBuffer;
-import java.io.*;
-
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.util.*;
-import org.apache.avro.ipc.*;
+import org.apache.avro.Schema;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.ipc.Responder;
 import org.apache.avro.reflect.ReflectResponder;
-import org.apache.avro.Protocol.Message;
 
 /** {@link Responder} for generated interfaces.*/
 public class SpecificResponder extends ReflectResponder {

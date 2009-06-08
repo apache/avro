@@ -17,10 +17,9 @@
  */
 package org.apache.avro.io;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
 
-import org.apache.avro.*;
+import org.apache.avro.Schema;
 
 /** Read data of a schema.
  * <p>Determines the in-memory data representation.

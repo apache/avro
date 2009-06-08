@@ -17,7 +17,15 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.Schema.Field;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -27,16 +35,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.ValueReader;
 import org.apache.avro.io.ValueWriter;
 import org.apache.avro.util.Utf8;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
 import org.testng.annotations.Test;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 public class TestSchema {
 

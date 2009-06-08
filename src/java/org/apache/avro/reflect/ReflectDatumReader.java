@@ -17,7 +17,6 @@
  */
 package org.apache.avro.reflect;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -27,7 +26,6 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.ValueReader;
 
 /** {@link DatumReader} for existing classes via Java reflection. */
 public class ReflectDatumReader extends GenericDatumReader<Object> {

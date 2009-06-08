@@ -17,14 +17,20 @@
  */
 package org.apache.avro.file;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.rmi.server.UID;
 import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.util.Utf8;
+import org.apache.avro.Schema;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.ValueWriter;
 
 /** Stores in a file a sequence of data conforming to a schema.  The schema is
  * stored in the file with the data.  Each datum in a file is of the same

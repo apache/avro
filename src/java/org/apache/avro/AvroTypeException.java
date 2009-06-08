@@ -18,9 +18,6 @@
 
 package org.apache.avro;
 
-import java.io.IOException;
-
-import org.apache.avro.*;
 
 /** Thrown when an illegal type is used. */
 public class AvroTypeException extends AvroRuntimeException {

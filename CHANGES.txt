@@ -58,6 +58,9 @@ Trunk (unreleased changes)
     AVRO-32. Java specific generated record classes now implement
     equals() and hashCode().  (cutting)
 
+    AVRO-48. Remove unused imports and annotations.
+    (Thiruvalluvan M. G. via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

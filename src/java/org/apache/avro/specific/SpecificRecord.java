@@ -17,8 +17,6 @@
  */
 package org.apache.avro.specific;
 
-import java.util.*;
-
 import org.apache.avro.Schema;
 
 /** Implemented by generated record classes. Permits efficient access to

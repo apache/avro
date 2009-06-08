@@ -23,7 +23,6 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;

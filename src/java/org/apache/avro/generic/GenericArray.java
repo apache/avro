@@ -17,7 +17,6 @@
  */
 package org.apache.avro.generic;
 
-import java.util.*;
 
 /** An array of objects. */
 public interface GenericArray<T> extends Iterable<T> {

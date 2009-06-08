@@ -17,12 +17,8 @@
  */
 package org.apache.avro.specific;
 
-import java.io.IOException;
-import java.util.Map;
-
 import org.apache.avro.Schema;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.ValueWriter;
 import org.apache.avro.reflect.ReflectDatumWriter;
 
 /** {@link DatumWriter} for generated Java classes. */

@@ -20,10 +20,6 @@ package org.apache.avro.ipc;
 
 import java.io.IOException;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.util.*;
-
 /** Base class for exceptions thrown to client by server. */
 public class AvroRemoteException extends IOException {
   private Object value;

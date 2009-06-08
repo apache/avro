@@ -17,14 +17,12 @@
  */
 package org.apache.avro.io;
 
-import org.apache.avro.util.Utf8;
-import static org.testng.AssertJUnit.fail;
-import org.testng.annotations.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
+
+import org.apache.avro.util.Utf8;
+import org.testng.annotations.Test;
 
 
 public class TestValueReader {

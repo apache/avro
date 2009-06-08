@@ -18,17 +18,22 @@
 
 package org.apache.avro.ipc;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
-import java.security.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.avro.*;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.util.*;
-import org.apache.avro.io.*;
-import org.apache.avro.specific.*;
-
+import org.apache.avro.io.ValueReader;
+import org.apache.avro.io.ValueWriter;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.util.Utf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

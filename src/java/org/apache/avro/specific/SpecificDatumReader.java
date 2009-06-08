@@ -17,16 +17,8 @@
  */
 package org.apache.avro.specific;
 
-import java.io.IOException;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.ValueReader;
 import org.apache.avro.reflect.ReflectDatumReader;
 
 /** {@link DatumReader} for generated Java classes. */

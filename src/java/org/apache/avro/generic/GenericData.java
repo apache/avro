@@ -125,7 +125,6 @@ public class GenericData {
     switch (schema.getType()) {
     case RECORD:
       if (!(datum instanceof GenericRecord)) return false;
-      @SuppressWarnings(value="unchecked")
       GenericRecord fields = (GenericRecord)datum;
       for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
         if (!validate(entry.getValue(), fields.get(entry.getKey())))
@@ -228,7 +227,6 @@ public class GenericData {
   /** Create a schema given an example datum. */
   public static Schema induce(Object datum) {
     if (datum instanceof GenericRecord) {
-      @SuppressWarnings(value="unchecked")
       GenericRecord record = (GenericRecord)datum;
       LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
       for (Map.Entry<String,Object> entry : record.entrySet())

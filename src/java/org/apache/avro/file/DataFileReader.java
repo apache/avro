@@ -17,15 +17,18 @@
  */
 package org.apache.avro.file;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.rmi.server.UID;
-import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.util.Utf8;
+import org.apache.avro.Schema;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.ValueReader;
 
 /** Read files written by {@link DataFileWriter}.
  * @see DataFileWriter

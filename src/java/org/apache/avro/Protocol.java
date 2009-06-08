@@ -19,21 +19,17 @@ package org.apache.avro;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.security.MessageDigest;
-
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonNode;
 
 import org.apache.avro.Schema.Field;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.JsonParser;
 
 /** A set of messages forming an application protocol.
  * <p> A protocol consists of:

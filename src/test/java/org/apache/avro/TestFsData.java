@@ -61,7 +61,6 @@ public class TestFsData {
     public TestResponder() { super(PROTOCOL); }
     public Object respond(Message message, Object request)
       throws AvroRemoteException {
-      @SuppressWarnings(value="unchecked")
       GenericRecord params = (GenericRecord)request;
 
       if ("read".equals(message.getName())) {

@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;

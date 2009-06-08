@@ -18,17 +18,17 @@
 
 package org.apache.avro.generic;
 
-import java.util.*;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.io.ValueReader;
+import org.apache.avro.io.ValueWriter;
+import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.ipc.Requestor;
+import org.apache.avro.ipc.Transceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.avro.*;
-import org.apache.avro.io.*;
-import org.apache.avro.util.*;
-import org.apache.avro.ipc.*;
 
 /** {@link Requestor} implementation for generic Java data. */
 public class GenericRequestor extends Requestor {
