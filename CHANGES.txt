@@ -95,3 +95,6 @@ Trunk (unreleased changes)
 
     AVRO-45. Fix c++ compliation so that python script need not be
     made executable.  (Scott Banachowski via cutting)
+
+    AVRO-51. Fix testio.py to exit correctly. (Philip Zeyliger 
+    via sharad)

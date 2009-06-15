@@ -210,7 +210,7 @@ class TestSchema(unittest.TestCase):
 if __name__ == '__main__':
   if len(sys.argv) != 4:
     print "Usage: testio.py <schemafile> <outputfile> <count>"
-    exit
+    sys.exit(1)
   schm = schema.parse(open(sys.argv[1]).read())
   file = sys.argv[2]
   count = int(sys.argv[3])
