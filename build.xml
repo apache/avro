@@ -17,7 +17,8 @@
    limitations under the License.
 -->
 
-<project name="Avro" default="compile">
+<project name="Avro" default="compile"
+	 xmlns:ivy="antlib:org.apache.ivy.ant">
  
   <!-- Load user's default properties. -->
   <property file="${user.home}/build.properties" />
@@ -72,6 +73,12 @@
   <property name="javac.args" value=""/>
   <property name="javac.args.warnings" value="-Xlint:unchecked"/>
 
+  <property name="ivy.version" value="2.1.0-rc1"/>
+  <property name="ivy.url"
+	    value="http://repo2.maven.org/maven2/org/apache/ivy/ivy" />
+  <property name="ivy.home" value="${user.home}/.ant" />
+  <property name="ivy.lib" value="${build.dir}/lib"/>
+
   <!-- the normal classpath -->
   <path id="java.classpath">
     <pathelement location="${build.classes}"/>
@@ -81,6 +88,9 @@
     </fileset>
     <fileset dir="${ant.home}/lib">
       <include name="ant.jar" />
+    </fileset>
+    <fileset dir="${ivy.lib}">
+      <include name="**/*.jar" />
     </fileset>
   </path>
 
@@ -95,14 +105,35 @@
  
     <mkdir dir="${test.java.build.dir}"/>
     <mkdir dir="${test.java.classes}"/>
+
+    <mkdir dir="${ivy.lib}"/>
+    <condition property="ivy.jar.exists">
+      <available file="${lib.dir}/ivy-${ivy.version}.jar"/>
+    </condition>
   </target>
 
   <target name="compile" depends="compile-java,compile-c"/>
 
-  <target name="compile-java" depends="init,schemata">
+  <target name="compile-java" depends="init,schemata,ivy-retrieve">
     <java-compiler excludes="**/ipc/** **/*Requestor.java **/*Responder.java"/>
     <java-avro-compiler/>
     <java-compiler/>
+  </target>
+
+  <target name="ivy-download" unless="ivy.jar.exists" depends="init">
+    <delete dir="${lib.dir}"
+	    includes="ivy-*.jar" excludes="ivy-${ivy.version}.jar"/>
+    <get src="${ivy.url}/${ivy.version}/ivy-${ivy.version}.jar"
+         dest="${lib.dir}/ivy-${ivy.version}.jar" usetimestamp="true"/>
+  </target>
+
+  <target name="ivy-init" depends="ivy-download">
+    <taskdef resource="org/apache/ivy/ant/antlib.xml"
+             uri="antlib:org.apache.ivy.ant" classpathref="java.classpath"/>
+  </target>
+
+  <target name="ivy-retrieve" depends="ivy-init">
+    <ivy:retrieve type="jar" pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
   </target>
 
   <macrodef name="java-compiler">
@@ -140,7 +171,7 @@
   </target>
 
   <target name="jar" depends="compile-java" description="Build jar file.">
-    <jar jarfile="${build.dir}/${fullname}-java.jar"
+    <jar jarfile="${build.dir}/${fullname}.jar"
          basedir="${build.classes}">
       <manifest>
         <section name="org/${org}/${name}">
@@ -159,7 +190,9 @@
 			classpath="test.java.classpath"/>
     <java-compiler src="${test.java.src.dir}"
 		   dest="${test.java.classes}"
-		   classpath="test.java.classpath"/>
+		   classpath="test.java.classpath"
+		   excludes="org/apache/avro/test/**.java"/>
+    <taskdef resource="testngtasks" classpathref="java.classpath"/>
   </target>
 
   <macrodef name="java-avro-compiler">
@@ -204,9 +237,6 @@
 
   <target name="test" depends="test-java,test-py,test-c,test-interop"/>
 
-  <!-- Define TestNG task for all targets that might need it-->
-  <taskdef resource="testngtasks" classpathref="java.classpath"/>
-
   <target name="test-java" depends="compile-test-java"
           description="Run java unit tests with TestNG">
 
@@ -214,8 +244,8 @@
             sourcedir="${test.java.src.dir}"
             outputdir="${build.dir}/test-output"
             suitename="AvroTestNG"
-            listeners="org.apache.avro.test.TestOutputInterceptor, org.apache.avro.test.TestSuiteInterceptor"
             haltOnfailure="true">
+            <!-- listeners="org.apache.avro.test.TestOutputInterceptor, org.apache.avro.test.TestSuiteInterceptor" -->
       <sysproperty key="test.count" value="${test.count}"/>
       <sysproperty key="test.dir" value="${test.java.build.dir}"/>
       <sysproperty key="test.validate" value="${test.validate}"/>
@@ -437,6 +467,7 @@
 
     <copy todir="${dist.dir}/lib" includeEmptyDirs="false">
       <fileset dir="lib"/>
+      <fileset dir="${ivy.lib}"/>
     </copy>
 
     <copy todir="${dist.dir}/c" includeEmptyDirs="false">
@@ -444,8 +475,16 @@
     </copy>
 
     <copy todir="${dist.dir}"> 
-      <fileset file="${build.dir}/${fullname}-*.jar"/>
+      <fileset file="${build.dir}/${fullname}.jar"/>
     </copy>
+
+    <checksum file="${dist.dir}/${fullname}.jar" algorithm="md5"/>
+    <checksum file="${dist.dir}/${fullname}.jar" algorithm="sha1"/>
+
+    <ivy:makepom ivyfile="${basedir}/ivy.xml"
+		 pomfile="${dist.dir}/${fullname}.pom">
+      <mapping conf="default" scope="compile"/>
+    </ivy:makepom>
 
     <copy todir="${dist.dir}/doc">
       <fileset dir="${build.doc}"/>

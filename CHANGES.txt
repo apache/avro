@@ -61,6 +61,8 @@ Trunk (unreleased changes)
     AVRO-48. Remove unused imports and annotations.
     (Thiruvalluvan M. G. via cutting)
 
+    AVRO-53. Use Ivy to retrieve Java dependencies.  (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

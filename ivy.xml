@@ -1,0 +1,25 @@
+<ivy-module version="2.0"
+            xmlns:e="http://ant.apache.org/ivy/extra">
+
+  <info organisation="org.apache.hadoop"
+	module="${name}" revision="${version}">
+    <license name="Apache 2.0"/>
+    <ivyauthor name="Apache Hadoop" url="http://hadoop.apache.org"/>
+    <description>Avro</description>
+  </info>
+
+  <dependencies>
+    <dependency org="org.codehaus.jackson" name="jackson-mapper-asl"
+		rev="1.0.1"/>
+    <dependency org="org.slf4j" name="slf4j-simple"
+		rev="1.5.8"/>
+    <dependency org="com.thoughtworks.paranamer" name="paranamer"
+		rev="1.5"/>
+    <dependency org="com.thoughtworks.paranamer" name="paranamer-ant"
+		rev="1.5"/>
+    <dependency org="org.testng" name="testng" rev="5.8" transitive="false">
+      <artifact name="testng" type="jar" ext="jar" e:classifier="jdk15"/>
+    </dependency>
+  </dependencies>
+
+</ivy-module>
