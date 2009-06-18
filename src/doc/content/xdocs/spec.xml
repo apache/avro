@@ -122,7 +122,6 @@
 		    <tr><td>enum</td><td>string</td><td>"FOO"</td></tr>
 		    <tr><td>array</td><td>array</td><td>[1]</td></tr>
 		    <tr><td>map</td><td>object</td><td>{"a": 1}</td></tr>
-		    <tr><td>bytes</td><td>base64</td><td>"YQo="</td></tr>
 		  </table>
 		</li>
 	      </ul>
@@ -193,7 +192,7 @@
           arrays.  For example, <code>["string", "null"]</code>
           declares a schema which may be either a string or null.</p>
 	  <p>Unions may not contain more than one schema with the same
-	  type, except for the named types record and fixed.  For
+	  type, except for the named types record, fixed and enum.  For
 	  example, unions containing two array types or two map types
 	  are not permitted, but two types with different names are
 	  permitted.  (Names permit efficient resolution when reading
