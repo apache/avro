@@ -19,6 +19,7 @@ package org.apache.avro;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.StringWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.Map;
 import org.apache.avro.Schema.Field;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonGenerator;
 
 /** A set of messages forming an application protocol.
  * <p> A protocol consists of:
@@ -76,28 +78,33 @@ public class Protocol {
     public Schema getErrors() { return errors; }
     
     public String toString() {
-      StringBuilder buffer = new StringBuilder();
-      buffer.append("{\"request\": [");
-      int count = 0;
-      for (Map.Entry<String, Schema> entry : request.getFieldSchemas()) {
-        buffer.append("{\"name\": \"");
-        buffer.append(entry.getKey());
-        buffer.append("\", \"type\": ");
-        buffer.append(entry.getValue().toString(types));
-        buffer.append("}");
-        if (++count < request.getFields().size())
-          buffer.append(", ");
+      try {
+        StringWriter writer = new StringWriter();
+        JsonGenerator gen = Schema.FACTORY.createJsonGenerator(writer);
+        toJson(gen);
+        gen.flush();
+        return writer.toString();
+      } catch (IOException e) {
+        throw new AvroRuntimeException(e);
       }
-      buffer.append("], \"response\": "+response.toString(types));
+    }
+    void toJson(JsonGenerator gen) throws IOException {
+      gen.writeStartObject();
+
+      gen.writeFieldName("request");
+      request.fieldsToJson(types, gen);
+
+      gen.writeFieldName("response");
+      response.toJson(types, gen);
 
       List<Schema> errTypes = errors.getTypes();  // elide system error
       if (errTypes.size() > 1) {
         Schema errs = Schema.createUnion(errTypes.subList(1, errTypes.size()));
-        buffer.append(", \"errors\": "+errs.toString(types));
+        gen.writeFieldName("errors");
+        errs.toJson(types, gen);
       }
 
-      buffer.append("}");
-      return buffer.toString();
+      gen.writeEndObject();
     }
 
     public boolean equals(Object o) {
@@ -174,26 +181,33 @@ public class Protocol {
   }
 
   public String toString() {
-    StringBuilder buffer = new StringBuilder();
-    buffer.append("{\n");
-    buffer.append("\"protocol\": \""+name+"\", \n");
-    buffer.append("\"namespace\": \""+namespace+"\", \n");
-    buffer.append("\"types\": [\n");
-    int count = 0;
-    int size = types.size();
-    for (Schema type : types.values()) {
-      buffer.append(type.toString(types.except(type.getName()))+"\n");
-      if (++count < size) buffer.append(",\n");
+    try {
+      StringWriter writer = new StringWriter();
+      JsonGenerator gen = Schema.FACTORY.createJsonGenerator(writer);
+      toJson(gen);
+      gen.flush();
+      return writer.toString();
+    } catch (IOException e) {
+      throw new AvroRuntimeException(e);
     }
-    buffer.append("], \"messages\": {\n");
-    count = 0;
+  }
+  void toJson(JsonGenerator gen) throws IOException {
+    gen.writeStartObject();
+    gen.writeStringField("protocol", name);
+    gen.writeStringField("namespace", namespace);
+    
+    gen.writeArrayFieldStart("types");
+    for (Schema type : types.values())
+      type.toJson(types.except(type.getName()), gen);
+    gen.writeEndArray();
+    
+    gen.writeObjectFieldStart("messages");
     for (Map.Entry<String,Message> e : messages.entrySet()) {
-      buffer.append("\""+e.getKey()+"\": "+e.getValue());
-      if (++count < messages.size())
-        buffer.append(",\n");
+      gen.writeFieldName(e.getKey());
+      e.getValue().toJson(gen);
     }
-    buffer.append("}\n}");
-    return buffer.toString();
+    gen.writeEndObject();
+    gen.writeEndObject();
   }
 
   /** Return the MD5 hash of the text of this protocol. */

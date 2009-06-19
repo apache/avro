@@ -63,6 +63,8 @@ Trunk (unreleased changes)
 
     AVRO-53. Use Ivy to retrieve Java dependencies.  (cutting)
 
+    AVRO-56. Use Jackson to generate JSON from Java.  (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

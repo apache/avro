@@ -20,6 +20,7 @@ package org.apache.avro;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /** An abstract data type.
@@ -55,11 +57,12 @@ import org.codehaus.jackson.map.ObjectMapper;
  * </ul>
  */
 public abstract class Schema {
-  static final ObjectMapper MAPPER = new ObjectMapper();
   static final JsonFactory FACTORY = new JsonFactory();
+  static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
   static {
     FACTORY.enableParserFeature(JsonParser.Feature.ALLOW_COMMENTS);
+    FACTORY.setCodec(MAPPER);
   }
 
   /** The type of a schema. */
@@ -155,12 +158,12 @@ public abstract class Schema {
 
   /** If this is a record, enum or fixed, returns its name, if any. */
   public String getName() {
-    throw new AvroRuntimeException("Not a record or enum: "+this);
+    throw new AvroRuntimeException("Not a named type: "+this);
   }
 
   /** If this is a record, enum or fixed, returns its namespace, if any. */
   public String getNamespace() {
-    throw new AvroRuntimeException("Not a record or enum: "+this);
+    throw new AvroRuntimeException("Not a named type: "+this);
   }
 
   /** Returns true if this record is an error type. */
@@ -189,10 +192,24 @@ public abstract class Schema {
   }
 
   /** Render this as <a href="http://json.org/">JSON</a>.*/
-  public String toString() { return toString(new Names()); }
+  public String toString() {
+    try {
+      StringWriter writer = new StringWriter();
+      JsonGenerator gen = FACTORY.createJsonGenerator(writer);
+      toJson(new Names(), gen);
+      gen.flush();
+      return writer.toString();
+    } catch (IOException e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
 
-  /** Render this, resolving names.*/
-  String toString(Names names) { return toString(); }
+  abstract void toJson(Names names, JsonGenerator gen) throws IOException;
+
+  void fieldsToJson(Names names, JsonGenerator gen) throws IOException {
+    throw new AvroRuntimeException("Not a record: "+this);
+  }
+
 
   public boolean equals(Object o) {
     if (o == this) return true;
@@ -236,10 +253,19 @@ public abstract class Schema {
     }
     public String getName() { return name; }
     public String getNamespace() { return space; }
-    public String nameString(Names names) {
-      return (name==null?"":"\"name\": \""+name+"\", ")
-        +((space==null||space.equals(names.space()))
-          ?"":"\"namespace\": \""+space+"\", ");
+    public boolean writeNameRef(Names names, JsonGenerator gen)
+      throws IOException {
+      if (this.equals(names.get(name))) {
+        gen.writeString(name);
+        return true;
+      } else if (name != null) {
+        names.put(name, this);
+      }
+      return false;
+    }
+    public void writeName(Names names, JsonGenerator gen) throws IOException {
+      if (name != null)  gen.writeStringField("name", name);
+      if (space != null) gen.writeStringField("namespace", space);
     }
     public boolean equalNames(NamedSchema that) {
       return that == null ? false
@@ -326,28 +352,30 @@ public abstract class Schema {
         seen.remove(this);
       }
     }
-    public String toString(Names names) {
-      if (this.equals(names.get(name))) return "\""+name+"\"";
-      else if (name != null) names.put(name, this);
-      StringBuilder buffer = new StringBuilder();
-      buffer.append("{\"type\": \""+(isError?"error":"record")+"\", "
-                    +nameString(names) +"\"fields\": [");
-      int count = 0;
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      if (writeNameRef(names, gen)) return;
+      gen.writeStartObject();
+      gen.writeStringField("type", isError?"error":"record");
+      writeName(names, gen);
+      gen.writeFieldName("fields");
+      fieldsToJson(names, gen);
+      gen.writeEndObject();
+    }
+
+    void fieldsToJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeStartArray();
       for (Map.Entry<String, Field> entry : fields.entrySet()) {
-        buffer.append("{\"name\": \"");
-        buffer.append(entry.getKey());
-        buffer.append("\", \"type\": ");
-        buffer.append(entry.getValue().schema().toString(names));
+        gen.writeStartObject();
+        gen.writeStringField("name", entry.getKey());
+        gen.writeFieldName("type");
+        entry.getValue().schema().toJson(names, gen);
         if (entry.getValue().defaultValue() != null) {
-          buffer.append(", \"default\": ");
-          buffer.append(entry.getValue().defaultValue());
+          gen.writeFieldName("default");
+          gen.writeTree(entry.getValue().defaultValue());
         }
-        buffer.append("}");
-        if (++count < fields.size())
-          buffer.append(", ");
+        gen.writeEndObject();
       }
-      buffer.append("]}");
-      return buffer.toString();
+      gen.writeEndArray();
     }
   }
 
@@ -371,21 +399,16 @@ public abstract class Schema {
       return equalNames(that) && symbols.equals(that.symbols);
     }
     public int hashCode() { return super.hashCode() + symbols.hashCode(); }
-    public String toString(Names names) {
-      if (this.equals(names.get(name))) return "\""+name+"\"";
-      else if (name != null) names.put(name, this);
-      StringBuilder buffer = new StringBuilder();
-      buffer.append("{\"type\": \"enum\", "
-                    +(name!=null?"\"name\": \""+name+"\", ":"")
-                    +"\"symbols\": [");
-      int count = 0;
-      for (String symbol : symbols) {
-        buffer.append("\""+symbol+"\"");
-        if (++count < symbols.size())
-          buffer.append(", ");
-      }
-      buffer.append("]}");
-      return buffer.toString();
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      if (writeNameRef(names, gen)) return;
+      gen.writeStartObject();
+      gen.writeStringField("type", "enum");
+      writeName(names, gen);
+      gen.writeArrayFieldStart("symbols");
+      for (String symbol : symbols)
+        gen.writeString(symbol);
+      gen.writeEndArray();
+      gen.writeEndObject();
     }
   }
 
@@ -402,12 +425,12 @@ public abstract class Schema {
         && elementType.equals(((ArraySchema)o).elementType);
     }
     public int hashCode() {return getType().hashCode()+elementType.hashCode();}
-    public String toString(Names names) {
-      StringBuilder buffer = new StringBuilder();
-      buffer.append("{\"type\": \"array\", \"items\": ");
-      buffer.append(elementType.toString(names));
-      buffer.append("}");
-      return buffer.toString();
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeStartObject();
+      gen.writeStringField("type", "array");
+      gen.writeFieldName("items");
+      elementType.toJson(names, gen);
+      gen.writeEndObject();
     }
   }
 
@@ -426,12 +449,12 @@ public abstract class Schema {
     public int hashCode() {
       return getType().hashCode()+valueType.hashCode();
     }
-    public String toString(Names names) {
-      StringBuilder buffer = new StringBuilder();
-      buffer.append("{\"type\": \"map\", \"values\": ");
-      buffer.append(valueType.toString(names));
-      buffer.append("}");
-      return buffer.toString();
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeStartObject();
+      gen.writeStringField("type", "map");
+      gen.writeFieldName("values");
+      valueType.toJson(names, gen);
+      gen.writeEndObject();
     }
   }
 
@@ -462,17 +485,11 @@ public abstract class Schema {
       return o instanceof UnionSchema && types.equals(((UnionSchema)o).types);
     }
     public int hashCode() {return getType().hashCode()+types.hashCode();}
-    public String toString(Names names) {
-      StringBuilder buffer = new StringBuilder();
-      buffer.append("[");
-      int count = 0;
-      for (Schema type : types) {
-        buffer.append(type.toString(names));
-        if (++count < types.size())
-          buffer.append(", ");
-      }
-      buffer.append("]");
-      return buffer.toString();
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeStartArray();
+      for (Schema type : types)
+        type.toJson(names, gen);
+      gen.writeEndArray();
     }
   }
 
@@ -489,53 +506,70 @@ public abstract class Schema {
       return equalNames(that) && size == that.size;
     }
     public int hashCode() { return super.hashCode() + size; }
-    public String toString(Names names) {
-      if (this.equals(names.get(name))) return "\""+name+"\"";
-      else if (name != null) names.put(name, this);
-      return "{\"type\": \"fixed\", "
-        +(name!=null?"\"name\": \""+name+"\", ":"")
-        +"\"size\": "+size+"}";
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      if (writeNameRef(names, gen)) return;
+      gen.writeStartObject();
+      gen.writeStringField("type", "fixed");
+      writeName(names, gen);
+      gen.writeNumberField("size", size);
+      gen.writeEndObject();
     }
   }
 
   private static class StringSchema extends Schema {
     public StringSchema() { super(Type.STRING); }
-    public String toString() { return "\"string\""; }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeString("string");
+    }
   }
 
   private static class BytesSchema extends Schema {
     public BytesSchema() { super(Type.BYTES); }
-    public String toString() { return "\"bytes\""; }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeString("bytes");
+    }
   }
 
   private static class IntSchema extends Schema {
     public IntSchema() { super(Type.INT); }
-    public String toString() { return "\"int\""; }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeString("int");
+    }
   }
 
   private static class LongSchema extends Schema {
     public LongSchema() { super(Type.LONG); }
-    public String toString() { return "\"long\""; }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeString("long");
+    }
   }
 
   private static class FloatSchema extends Schema {
     public FloatSchema() { super(Type.FLOAT); }
-    public String toString() { return "\"float\""; }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeString("float");
+    }
   }
 
   private static class DoubleSchema extends Schema {
     public DoubleSchema() { super(Type.DOUBLE); }
-    public String toString() { return "\"double\""; }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeString("double");
+    }
   }
 
   private static class BooleanSchema extends Schema {
     public BooleanSchema() { super(Type.BOOLEAN); }
-    public String toString() { return "\"boolean\""; }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeString("boolean");
+    }
   }
   
   private static class NullSchema extends Schema {
     public NullSchema() { super(Type.NULL); }
-    public String toString() { return "\"null\""; }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeString("null");
+    }
   }
   
   private static final StringSchema  STRING_SCHEMA =  new StringSchema();
