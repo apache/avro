@@ -59,7 +59,8 @@ public class TestSchema {
 
   @Test
   public void testBytes() throws Exception {
-    check("\"bytes\"", "\"\"", ByteBuffer.allocate(0));
+    check("\"bytes\"", "\"\\u0000ABC\\u00FF\"",
+          ByteBuffer.wrap(new byte[]{0,65,66,67,-1}));
   }
 
   @Test

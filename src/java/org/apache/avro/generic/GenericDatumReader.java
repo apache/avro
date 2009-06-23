@@ -192,7 +192,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   
   /** Called by the default implementation of {@link #readRecord} to construct
       a default value for a field. */
-  protected Object defaultFieldValue(Object old, Schema schema, JsonNode json) {
+  protected Object defaultFieldValue(Object old, Schema schema, JsonNode json)
+    throws IOException {
     switch (schema.getType()) {
     case RECORD:
       Object record = newRecord(old, schema);
@@ -229,7 +230,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case UNION:   return defaultFieldValue(old, schema.getTypes().get(0), json);
     case FIXED:   return createFixed(old,json.getTextValue().getBytes(),schema);
     case STRING:  return createString(json.getTextValue());
-    case BYTES:   return createBytes(json.getTextValue().getBytes());
+    case BYTES:  return createBytes(json.getTextValue().getBytes("ISO-8859-1"));
     case INT:     return json.getIntValue();
     case LONG:    return json.getLongValue();
     case FLOAT:   return (float)json.getDoubleValue();

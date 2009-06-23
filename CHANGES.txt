@@ -67,6 +67,9 @@ Trunk (unreleased changes)
 
     AVRO-56. Use Jackson to generate JSON from Java.  (cutting)
 
+    AVRO-36. Correctly encode and decode binary default values.
+    (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
