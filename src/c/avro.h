@@ -74,6 +74,7 @@ struct AVRO
 				 const int64_t len);
   } *a_ops;
   apr_pool_t *pool; /**< Pool used for allocating memory for dynamic data structures */
+  unsigned char *schema; /**< Current AVRO schema for processing data */
 
   apr_file_t *file; /**< Used by the file-backed handle */
   apr_socket_t *socket;	/**< Used by the socket-backed handle */
@@ -121,7 +122,7 @@ avro_status_t avro_create_socket (AVRO * avro, apr_pool_t * pool,
 				  apr_socket_t * socket, avro_op op);
 /** @} */
 
-typedef avro_status_t (*avroproc_t) (AVRO, void *, ...);
+typedef avro_status_t (*avroproc_t) (AVRO *, void *, ...);
 typedef int bool_t;
 
 /**

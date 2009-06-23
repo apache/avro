@@ -1,0 +1,7 @@
+This directory is used by test_json_parser 
+
+The "pass" directory contains schema definitions that
+should parse without error.
+
+The "fail" directory contains shema definitions that
+should *not* parse but instead throw an error.

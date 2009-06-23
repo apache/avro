@@ -33,6 +33,8 @@ Trunk (unreleased changes)
     arrays and maps to be efficiently written as sequences of blocks.
     (Thiruvalluvan M. G. via cutting)
 
+    AVRO-48.  Add JSON parser for C.  (Matt Massie via cutting)
+
   IMPROVEMENTS
 
     AVRO-11.  Re-implement specific and reflect datum readers and

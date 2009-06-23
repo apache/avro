@@ -61,7 +61,7 @@ main (void)
 	  err_quit ("Unable to decode AVRO float");
 	}
 
-      avro_status = avro_getint64_raw (&avro_out, (int64_t*)&d_out);
+      avro_status = avro_getint64_raw (&avro_out, (int64_t *) & d_out);
       if (avro_status != AVRO_OK)
 	{
 	  err_quit ("Unable to decode AVRO double");

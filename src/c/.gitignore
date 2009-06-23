@@ -16,4 +16,14 @@ config.h.in
 config.h
 autom4te.cache
 test_avro_*[!.][!c]
+test_json_*[!.][!c]
 INSTALL
+lemon
+avro_schema.c
+avro_schema.h
+avro_schema.out
+json_schema.c
+json_schema.h
+json_schema.out
+trace.txt
+*.swp
