@@ -19,7 +19,7 @@ public class TestBlockingIO {
   
   private static class Tests {
     private final JsonParser parser;
-    private final ValueReader input;
+    private final Decoder input;
     private final int depth;
     public Tests(int bufferSize, int depth, String input)
       throws JsonParseException, IOException {
@@ -31,13 +31,13 @@ public class TestBlockingIO {
           new ByteArrayInputStream(input.getBytes("UTF-8")));
       
       ByteArrayOutputStream os = new ByteArrayOutputStream();
-      ValueWriter cos = new BlockingValueWriter(os, bufferSize);
+      Encoder cos = new BlockingBinaryEncoder(os, bufferSize);
       serialize(cos, p, os);
       cos.flush();
       
       byte[] bb = os.toByteArray();
       // dump(bb);
-      this.input = new ValueReader(new ByteArrayInputStream(bb));
+      this.input = new BinaryDecoder(new ByteArrayInputStream(bb));
       this.parser =  f.createJsonParser(new ByteArrayInputStream(in));
     }
     
@@ -216,7 +216,7 @@ public class TestBlockingIO {
     t.skip(skipLevel);
   }
 
-  private static void skipMap(JsonParser parser, ValueReader input, int depth)
+  private static void skipMap(JsonParser parser, Decoder input, int depth)
     throws IOException, JsonParseException {
     for (long l = input.skipMap(); l != 0; l = input.skipMap()) {
       for (long i = 0; i < l; i++) {
@@ -230,7 +230,7 @@ public class TestBlockingIO {
     parser.skipChildren();
   }
 
-  private static void skipArray(JsonParser parser, ValueReader input, int depth)
+  private static void skipArray(JsonParser parser, Decoder input, int depth)
     throws IOException, JsonParseException {
     for (long l = input.skipArray(); l != 0; l = input.skipArray()) {
       for (long i = 0; i < l; i++) {
@@ -244,7 +244,7 @@ public class TestBlockingIO {
     parser.skipChildren();
   }
  
-  private static void checkString(String s, ValueReader input, int n)
+  private static void checkString(String s, Decoder input, int n)
     throws IOException, UnsupportedEncodingException {
     ByteBuffer buf = input.readBytes(null);
     Assert.assertEquals(n, buf.remaining());
@@ -253,7 +253,7 @@ public class TestBlockingIO {
     Assert.assertEquals(s, s2);
   }
   
-  private static void serialize(ValueWriter cos, JsonParser p,
+  private static void serialize(Encoder cos, JsonParser p,
       ByteArrayOutputStream os)
     throws JsonParseException, IOException {
     boolean[] isArray = new boolean[100];

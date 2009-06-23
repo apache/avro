@@ -27,14 +27,14 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 
-/** A {@link ValueWriter} that writes large arrays and maps as a sequence of
+/** A {@link Encoder} that writes large arrays and maps as a sequence of
  * blocks.  So long as individual primitive values fit in memory, arbitrarily
  * long arrays and maps may be written and subsequently read without exhausting
  * memory.  Values are buffered until the specified block size would be
  * exceeded, minimizing block overhead.
- * @see ValueWriter
+ * @see Encoder
  */
-public class BlockingValueWriter extends ValueWriter {
+public class BlockingBinaryEncoder extends BinaryEncoder {
 
  /* Implementation note:
   *
@@ -213,11 +213,11 @@ public class BlockingValueWriter extends ValueWriter {
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
   private static final int MIN_BUFFER_SIZE = 64;
 
-  public BlockingValueWriter(OutputStream out) {
+  public BlockingBinaryEncoder(OutputStream out) {
     this(out, DEFAULT_BUFFER_SIZE);
   }
 
-  public BlockingValueWriter(OutputStream out, int bufferSize) {
+  public BlockingBinaryEncoder(OutputStream out, int bufferSize) {
     super(out);
     if (bufferSize < MIN_BUFFER_SIZE) {
       throw new IllegalArgumentException("Buffer size too smll.");

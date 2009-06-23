@@ -31,5 +31,5 @@ public interface DatumWriter<D> {
 
   /** Write a datum.  Traverse the schema, depth first, writing each leaf value
    * in the schema from the datum to the output. */
-  void write(D datum, ValueWriter out) throws IOException;
+  void write(D datum, Encoder out) throws IOException;
 }

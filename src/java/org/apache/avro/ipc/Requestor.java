@@ -29,8 +29,10 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.io.ValueReader;
-import org.apache.avro.io.ValueWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
@@ -59,11 +61,11 @@ public abstract class Requestor {
   /** Writes a request message and reads a response or error message. */
   public Object request(String messageName, Object request)
     throws IOException {
-    ValueReader in;
+    Decoder in;
     Message m;
     do {
       ByteBufferOutputStream bbo = new ByteBufferOutputStream();
-      ValueWriter out = new ValueWriter(bbo);
+      Encoder out = new BinaryEncoder(bbo);
 
       if (!established)                           // if not established
         writeHandshake(out);                      // prepend handshake
@@ -80,7 +82,7 @@ public abstract class Requestor {
         getTransceiver().transceive(bbo.getBufferList());
       
       ByteBufferInputStream bbi = new ByteBufferInputStream(response);
-      in = new ValueReader(bbi);
+      in = new BinaryDecoder(bbi);
       if (!established)                           // if not established
         readHandshake(in);                        // process handshake
     } while (!established);
@@ -107,7 +109,7 @@ public abstract class Requestor {
   private static final SpecificDatumReader HANDSHAKE_READER =
     new SpecificDatumReader(HandshakeResponse._SCHEMA);
 
-  private void writeHandshake(ValueWriter out) throws IOException {
+  private void writeHandshake(Encoder out) throws IOException {
     MD5 localHash = new MD5();
     localHash.bytes(local.getMD5());
     String remoteName = transceiver.getRemoteName();
@@ -125,7 +127,7 @@ public abstract class Requestor {
     HANDSHAKE_WRITER.write(handshake, out);
   }
 
-  private void readHandshake(ValueReader in) throws IOException {
+  private void readHandshake(Decoder in) throws IOException {
     HandshakeResponse handshake =
       (HandshakeResponse)HANDSHAKE_READER.read(null, in);
     switch (handshake.match) {
@@ -157,13 +159,13 @@ public abstract class Requestor {
 
   /** Writes a request message. */
   public abstract void writeRequest(Schema schema, Object request,
-                                    ValueWriter out) throws IOException;
+                                    Encoder out) throws IOException;
 
   /** Reads a response message. */
-  public abstract Object readResponse(Schema schema, ValueReader in)
+  public abstract Object readResponse(Schema schema, Decoder in)
     throws IOException;
 
   /** Reads an error message. */
-  public abstract AvroRemoteException readError(Schema schema, ValueReader in)
+  public abstract AvroRemoteException readError(Schema schema, Decoder in)
     throws IOException;
 }

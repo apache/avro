@@ -32,7 +32,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.ValueReader;
+import org.apache.avro.io.Decoder;
 import org.apache.avro.util.Utf8;
 
 /** {@link DatumReader} for generic Java objects. */
@@ -54,13 +54,13 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   public void setSchema(Schema actual) { this.actual = actual; }
 
   @SuppressWarnings("unchecked")
-  public D read(D reuse, ValueReader in) throws IOException {
+  public D read(D reuse, Decoder in) throws IOException {
     return (D) read(reuse, actual, expected != null ? expected : actual, in);
   }
   
   /** Called to read data.*/
   protected Object read(Object old, Schema actual,
-                        Schema expected, ValueReader in) throws IOException {
+                        Schema expected, Decoder in) throws IOException {
     if (actual.getType() == Type.UNION)           // resolve unions
       actual = actual.getTypes().get((int)in.readIndex());
     if (expected.getType() == Type.UNION)
@@ -125,7 +125,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
   protected Object readRecord(Object old, Schema actual, Schema expected,
-                              ValueReader in) throws IOException {
+                              Decoder in) throws IOException {
     /* TODO: We may want to compute the expected and actual mapping and cache
      * the mapping (keyed by <actual, expected>). */
     String recordName = expected.getName();
@@ -243,7 +243,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Called to read an enum value. May be overridden for alternate enum
    * representations.  By default, returns the symbol as a String. */
-  protected Object readEnum(Schema actual, Schema expected, ValueReader in)
+  protected Object readEnum(Schema actual, Schema expected, Decoder in)
     throws IOException {
     String name = expected.getName();
     if (name != null && !name.equals(actual.getName()))
@@ -258,7 +258,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read an array instance.  May be overridden for alternate array
    * representations.*/
   protected Object readArray(Object old, Schema actual, Schema expected,
-                             ValueReader in) throws IOException {
+                             Decoder in) throws IOException {
     Schema actualType = actual.getElementType();
     Schema expectedType = expected.getElementType();
     long l = in.readArrayStart();
@@ -294,7 +294,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read a map instance.  May be overridden for alternate map
    * representations.*/
   protected Object readMap(Object old, Schema actual, Schema expected,
-                           ValueReader in) throws IOException {
+                           Decoder in) throws IOException {
     Schema aValue = actual.getValueType();
     Schema eValue = expected.getValueType();
     long l = in.readMapStart();
@@ -321,7 +321,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read a fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   protected Object readFixed(Object old, Schema actual, Schema expected,
-                             ValueReader in)
+                             Decoder in)
     throws IOException {
     if (!actual.equals(expected))
       throw new AvroTypeException("Expected "+expected+", found "+actual);
@@ -387,8 +387,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Called to read strings.  Subclasses may override to use a different
    * string representation.  By default, this calls {@link
-   * ValueReader#readString(Utf8)}.*/
-  protected Object readString(Object old, ValueReader in) throws IOException {
+   * Decoder#readString(Utf8)}.*/
+  protected Object readString(Object old, Decoder in) throws IOException {
     return in.readString((Utf8)old);
   }
 
@@ -399,8 +399,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Called to read byte arrays.  Subclasses may override to use a different
    * byte array representation.  By default, this calls {@link
-   * ValueReader#readBytes(ByteBuffer)}.*/
-  protected Object readBytes(Object old, ValueReader in) throws IOException {
+   * Decoder#readBytes(ByteBuffer)}.*/
+  protected Object readBytes(Object old, Decoder in) throws IOException {
     return in.readBytes((ByteBuffer)old);
   }
 
@@ -412,7 +412,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private static final Schema STRING_SCHEMA = Schema.create(Type.STRING);
 
   /** Skip an instance of a schema. */
-  public static void skip(Schema schema, ValueReader in) throws IOException {
+  public static void skip(Schema schema, Decoder in) throws IOException {
     switch (schema.getType()) {
     case RECORD:
       for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())

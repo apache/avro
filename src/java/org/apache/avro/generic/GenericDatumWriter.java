@@ -28,7 +28,7 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.ValueWriter;
+import org.apache.avro.io.Encoder;
 import org.apache.avro.util.Utf8;
 
 /** {@link DatumWriter} for generic Java objects. */
@@ -43,12 +43,12 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   public void setSchema(Schema root) { this.root = root; }
 
-  public void write(D datum, ValueWriter out) throws IOException {
+  public void write(D datum, Encoder out) throws IOException {
     write(root, datum, out);
   }
   
   /** Called to write data.*/
-  protected void write(Schema schema, Object datum, ValueWriter out)
+  protected void write(Schema schema, Object datum, Encoder out)
     throws IOException {
     switch (schema.getType()) {
     case RECORD: writeRecord(schema, datum, out); break;
@@ -75,7 +75,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   /** Called to write a record.  May be overridden for alternate record
    * representations.*/
-  protected void writeRecord(Schema schema, Object datum, ValueWriter out)
+  protected void writeRecord(Schema schema, Object datum, Encoder out)
     throws IOException {
     for (Entry<String, Field> entry : schema.getFields().entrySet()) {
       Field field = entry.getValue();
@@ -92,14 +92,14 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   
   /** Called to write an enum value.  May be overridden for alternate enum
    * representations.*/
-  protected void writeEnum(Schema schema, Object datum, ValueWriter out)
+  protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
     out.writeEnum(schema.getEnumOrdinal((String)datum));
   }
   
   /** Called to write a array.  May be overridden for alternate array
    * representations.*/
-  protected void writeArray(Schema schema, Object datum, ValueWriter out)
+  protected void writeArray(Schema schema, Object datum, Encoder out)
     throws IOException {
     Schema element = schema.getElementType();
     long size = getArraySize(datum);
@@ -129,7 +129,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   
   /** Called to write a map.  May be overridden for alternate map
    * representations.*/
-  protected void writeMap(Schema schema, Object datum, ValueWriter out)
+  protected void writeMap(Schema schema, Object datum, Encoder out)
     throws IOException {
     Schema value = schema.getValueType();
     int size = getMapSize(datum);
@@ -159,13 +159,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
-  protected void writeString(Object datum, ValueWriter out) throws IOException {
+  protected void writeString(Object datum, Encoder out) throws IOException {
     out.writeString((Utf8)datum);
   }
 
   /** Called to write a bytes.  May be overridden for alternate bytes
    * representations.*/
-  protected void writeBytes(Object datum, ValueWriter out) throws IOException {
+  protected void writeBytes(Object datum, Encoder out) throws IOException {
     out.writeBytes((ByteBuffer)datum);
   }
 
@@ -205,7 +205,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   /** Called to write a fixed value.  May be overridden for alternate fixed
    * representations.*/
-  protected void writeFixed(Schema schema, Object datum, ValueWriter out)
+  protected void writeFixed(Schema schema, Object datum, Encoder out)
     throws IOException {
     out.writeFixed(((GenericFixed)datum).bytes(), 0, schema.getFixedSize());
   }

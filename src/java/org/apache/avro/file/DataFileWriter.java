@@ -30,7 +30,8 @@ import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.ValueWriter;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.BinaryEncoder;
 
 /** Stores in a file a sequence of data conforming to a schema.  The schema is
  * stored in the file with the data.  Each datum in a file is of the same
@@ -53,7 +54,7 @@ public class DataFileWriter<D> {
   private DatumWriter<D> dout;
 
   private BufferedFileOutputStream out;
-  private ValueWriter vout;
+  private Encoder vout;
 
   private Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
@@ -62,7 +63,7 @@ public class DataFileWriter<D> {
 
   private ByteArrayOutputStream buffer =
     new ByteArrayOutputStream(SYNC_INTERVAL*2);
-  private ValueWriter bufOut = new ValueWriter(buffer);
+  private Encoder bufOut = new BinaryEncoder(buffer);
 
   private byte[] sync;                          // 16 random bytes
   {
@@ -81,7 +82,7 @@ public class DataFileWriter<D> {
                         DatumWriter<D> dout) throws IOException {
     this.schema = schema;
     this.out = new BufferedFileOutputStream(outs);
-    this.vout = new ValueWriter(out);
+    this.vout = new BinaryEncoder(out);
     this.dout = dout;
     
     dout.setSchema(schema);

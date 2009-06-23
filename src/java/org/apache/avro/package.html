@@ -35,9 +35,9 @@
 <p>Data of a given schema is always serialized identically, regardless
   of its in-memory representation, by traversing the schema and
   writing leaf values from the data structure with a {@link
-  org.apache.avro.io.ValueWriter}.  Deserializing similarly proceeds by
+  org.apache.avro.io.Encoder}.  Deserializing similarly proceeds by
   traversing the schema, reading leaf values with a {@link
-  org.apache.avro.io.ValueReader} and storing them in an in-memory data
+  org.apache.avro.io.Decoder} and storing them in an in-memory data
   structure.
 
 </body>

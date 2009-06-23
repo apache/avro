@@ -11,6 +11,10 @@ Trunk (unreleased changes)
 
     AVRO-2. Optimized RPC handshake protocol for Java.  (cutting)
 
+    AVRO-57. Make ValueWriter an abstract class named Encoder and make
+    ValueReader an abstract class named Decoder, and add concrete
+    implementations named BinaryEncoder and BinaryDecoder. (cutting)
+
   NEW FEATURES
 
     AVRO-6. Permit easier implementation of alternate generic data

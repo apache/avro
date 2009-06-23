@@ -25,7 +25,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.ValueWriter;
+import org.apache.avro.io.Encoder;
 
 /** {@link DatumWriter} for existing classes via Java reflection. */
 public class ReflectDatumWriter extends GenericDatumWriter<Object> {
@@ -44,7 +44,7 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
     }
   }
   
-  protected void writeEnum(Schema schema, Object datum, ValueWriter out)
+  protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
     out.writeInt(((Enum)datum).ordinal());
   }

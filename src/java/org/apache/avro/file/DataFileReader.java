@@ -28,7 +28,8 @@ import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.ValueReader;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.BinaryDecoder;
 
 /** Read files written by {@link DataFileWriter}.
  * @see DataFileWriter
@@ -38,7 +39,7 @@ public class DataFileReader<D> {
   private Schema schema;
   private DatumReader<D> reader;
   private SeekableBufferedInput in;
-  private ValueReader vin;
+  private Decoder vin;
 
   private Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
@@ -61,7 +62,7 @@ public class DataFileReader<D> {
     in.seek(length-4);
     int footerSize=(in.read()<<24)+(in.read()<<16)+(in.read()<<8)+in.read();
     in.seek(length-footerSize);
-    this.vin = new ValueReader(in);
+    this.vin = new BinaryDecoder(in);
     long l = vin.readMapStart();
     if (l > 0) {
       do {

@@ -58,10 +58,10 @@ public abstract class Responder {
     ByteBufferInputStream bbi =
       new ByteBufferInputStream(transceiver.readBuffers());
     
-    ValueReader in = new ValueReader(bbi);
+    Decoder in = new BinaryDecoder(bbi);
     ByteBufferOutputStream bbo =
       new ByteBufferOutputStream();
-    ValueWriter out = new ValueWriter(bbo);
+    Encoder out = new BinaryEncoder(bbo);
     AvroRemoteException error = null;
     try {
       Protocol remote = handshake(transceiver, in, out);
@@ -100,7 +100,7 @@ public abstract class Responder {
       LOG.warn("system error", e);
       error = new AvroRemoteException(e);
       bbo = new ByteBufferOutputStream();
-      out = new ValueWriter(bbo);
+      out = new BinaryEncoder(bbo);
       out.writeBoolean(true);
       writeError(Protocol.SYSTEM_ERRORS, error, out);
     }
@@ -114,7 +114,7 @@ public abstract class Responder {
     new SpecificDatumReader(HandshakeRequest._SCHEMA);
 
   private Protocol handshake(Transceiver transceiver,
-                             ValueReader in, ValueWriter out)
+                             Decoder in, Encoder out)
     throws IOException {
     Protocol remote = remotes.get(transceiver);
     if (remote != null) return remote;            // already established
@@ -148,15 +148,15 @@ public abstract class Responder {
     throws AvroRemoteException;
 
   /** Reads a request message. */
-  public abstract Object readRequest(Schema schema, ValueReader in)
+  public abstract Object readRequest(Schema schema, Decoder in)
     throws IOException;
 
   /** Writes a response message. */
   public abstract void writeResponse(Schema schema, Object response,
-                                     ValueWriter out) throws IOException;
+                                     Encoder out) throws IOException;
 
   /** Writes an error message. */
   public abstract void writeError(Schema schema, AvroRemoteException error,
-                                  ValueWriter out) throws IOException;
+                                  Encoder out) throws IOException;
 
 }

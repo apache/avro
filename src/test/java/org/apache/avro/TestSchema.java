@@ -32,8 +32,10 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.ValueReader;
-import org.apache.avro.io.ValueWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.util.Utf8;
 import org.testng.annotations.Test;
 
@@ -195,7 +197,7 @@ public class TestSchema {
     throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);
-    writer.write(datum, new ValueWriter(out));
+    writer.write(datum, new BinaryEncoder(out));
       
     byte[] data = out.toByteArray();
     // System.out.println("length = "+data.length);
@@ -203,7 +205,7 @@ public class TestSchema {
     reader.setSchema(schema);
         
     Object decoded =
-      reader.read(null, new ValueReader(new ByteArrayInputStream(data)));
+      reader.read(null, new BinaryDecoder(new ByteArrayInputStream(data)));
       
     // System.out.println(GenericData.toString(datum));
     // System.out.println(GenericData.toString(decoded));
@@ -223,7 +225,7 @@ public class TestSchema {
     Schema expected = Schema.parse(recordJson);
     DatumReader in = new GenericDatumReader(ACTUAL, expected);
     GenericData.Record record = (GenericData.Record)
-      in.read(null, new ValueReader(new ByteArrayInputStream(new byte[0])));
+      in.read(null, new BinaryDecoder(new ByteArrayInputStream(new byte[0])));
     assertEquals("Wrong default.", defaultValue, record.get("f"));
     assertEquals("Wrong toString", expected, Schema.parse(expected.toString()));
   }
