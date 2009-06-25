@@ -32,7 +32,6 @@ Uses the following mapping:
 
 import avro.schema as schema
 import avro.io as io
-import avro.ipc as ipc
 
 def _validatearray(schm, object):
   if not isinstance(object, list):
@@ -102,15 +101,15 @@ class DatumReader(io.DatumReaderBase):
   def __init__(self, schm=None):
     self.setschema(schm)
     self.__readfn = {
-     schema.BOOLEAN : lambda schm, valuereader: valuereader.readboolean(),
-     schema.STRING : lambda schm, valuereader: valuereader.readutf8(),
-     schema.INT : lambda schm, valuereader: valuereader.readint(),
-     schema.LONG : lambda schm, valuereader: valuereader.readlong(),
-     schema.FLOAT : lambda schm, valuereader: valuereader.readfloat(),
-     schema.DOUBLE : lambda schm, valuereader: valuereader.readdouble(),
-     schema.BYTES : lambda schm, valuereader: valuereader.readbytes(),
-     schema.FIXED : lambda schm, valuereader: 
-                            (valuereader.read(schm.getsize())),
+     schema.BOOLEAN : lambda schm, decoder: decoder.readboolean(),
+     schema.STRING : lambda schm, decoder: decoder.readutf8(),
+     schema.INT : lambda schm, decoder: decoder.readint(),
+     schema.LONG : lambda schm, decoder: decoder.readlong(),
+     schema.FLOAT : lambda schm, decoder: decoder.readfloat(),
+     schema.DOUBLE : lambda schm, decoder: decoder.readdouble(),
+     schema.BYTES : lambda schm, decoder: decoder.readbytes(),
+     schema.FIXED : lambda schm, decoder: 
+                            (decoder.read(schm.getsize())),
      schema.ARRAY : self.readarray,
      schema.MAP : self.readmap,
      schema.RECORD : self.readrecord,
@@ -121,50 +120,50 @@ class DatumReader(io.DatumReaderBase):
   def setschema(self, schm):
     self.__schm = schm
 
-  def read(self, valuereader):
-    return self.readdata(self.__schm, valuereader)
+  def read(self, decoder):
+    return self.readdata(self.__schm, decoder)
     
-  def readdata(self, schm, valuereader):
+  def readdata(self, schm, decoder):
     if schm.gettype() == schema.NULL:
       return None
     fn = self.__readfn.get(schm.gettype())
     if fn is not None:
-      return fn(schm, valuereader)
+      return fn(schm, decoder)
     else:
       raise AvroException("Unknown type: "+schema.stringval(schm));
 
-  def readmap(self, schm, valuereader):
+  def readmap(self, schm, decoder):
     result = dict()
-    size = valuereader.readlong()
+    size = decoder.readlong()
     if size != 0:
       for i in range(0, size):
-        key = valuereader.readutf8()
-        result[key] = self.readdata(schm.getvaluetype(), valuereader)
-      valuereader.readlong()
+        key = decoder.readutf8()
+        result[key] = self.readdata(schm.getvaluetype(), decoder)
+      decoder.readlong()
     return result
 
-  def readarray(self, schm, valuereader):
+  def readarray(self, schm, decoder):
     result = list()
-    size = valuereader.readlong()
+    size = decoder.readlong()
     if size != 0:
       for i in range(0, size):
-        result.append(self.readdata(schm.getelementtype(), valuereader))
-      valuereader.readlong()
+        result.append(self.readdata(schm.getelementtype(), decoder))
+      decoder.readlong()
     return result
 
-  def readrecord(self, schm, valuereader):
+  def readrecord(self, schm, decoder):
     result = dict() 
     for field,fieldschema in schm.getfields():
-      result[field] = self.readdata(fieldschema, valuereader)
+      result[field] = self.readdata(fieldschema, decoder)
     return result
 
-  def readenum(self, schm, valuereader):
-    index = valuereader.readint()
+  def readenum(self, schm, decoder):
+    index = decoder.readint()
     return schm.getenumsymbols()[index]
 
-  def readunion(self, schm, valuereader):
-    index = int(valuereader.readlong())
-    return self.readdata(schm.getelementtypes()[index], valuereader)
+  def readunion(self, schm, decoder):
+    index = int(decoder.readlong())
+    return self.readdata(schm.getelementtypes()[index], decoder)
 
 class DatumWriter(io.DatumWriterBase):
   """DatumWriter for generic python objects."""
@@ -172,22 +171,22 @@ class DatumWriter(io.DatumWriterBase):
   def __init__(self, schm=None):
     self.setschema(schm)
     self.__writefn = {
-     schema.BOOLEAN : lambda schm, datum, valuewriter: 
-                  valuewriter.writeboolean(datum),
-     schema.STRING : lambda schm, datum, valuewriter: 
-                  valuewriter.writeutf8(datum),
-     schema.INT : lambda schm, datum, valuewriter: 
-                  valuewriter.writeint(datum),
-     schema.LONG : lambda schm, datum, valuewriter: 
-                  valuewriter.writelong(datum),
-     schema.FLOAT : lambda schm, datum, valuewriter: 
-                  valuewriter.writefloat(datum),
-     schema.DOUBLE : lambda schm, datum, valuewriter: 
-                  valuewriter.writedouble(datum),
-     schema.BYTES : lambda schm, datum, valuewriter: 
-                  valuewriter.writebytes(datum),
-     schema.FIXED : lambda schm, datum, valuewriter: 
-                  valuewriter.write(datum),
+     schema.BOOLEAN : lambda schm, datum, encoder: 
+                  encoder.writeboolean(datum),
+     schema.STRING : lambda schm, datum, encoder: 
+                  encoder.writeutf8(datum),
+     schema.INT : lambda schm, datum, encoder: 
+                  encoder.writeint(datum),
+     schema.LONG : lambda schm, datum, encoder: 
+                  encoder.writelong(datum),
+     schema.FLOAT : lambda schm, datum, encoder: 
+                  encoder.writefloat(datum),
+     schema.DOUBLE : lambda schm, datum, encoder: 
+                  encoder.writedouble(datum),
+     schema.BYTES : lambda schm, datum, encoder: 
+                  encoder.writebytes(datum),
+     schema.FIXED : lambda schm, datum, encoder: 
+                  encoder.write(datum),
      schema.ARRAY : self.writearray,
      schema.MAP : self.writemap,
      schema.RECORD : self.writerecord,
@@ -198,53 +197,53 @@ class DatumWriter(io.DatumWriterBase):
   def setschema(self, schm):
     self.__schm = schm
 
-  def write(self, datum, valuewriter):
-    self.writedata(self.__schm, datum, valuewriter)
+  def write(self, datum, encoder):
+    self.writedata(self.__schm, datum, encoder)
 
-  def writedata(self, schm, datum, valuewriter):
+  def writedata(self, schm, datum, encoder):
     if schm.gettype() == schema.NULL:
       if datum is None:
         return
       raise io.AvroTypeException(schm, datum)
     fn = self.__writefn.get(schm.gettype())
     if fn is not None:
-      fn(schm, datum, valuewriter)
+      fn(schm, datum, encoder)
     else:
       raise io.AvroTypeException(schm, datum)
 
-  def writemap(self, schm, datum, valuewriter):
+  def writemap(self, schm, datum, encoder):
     if not isinstance(datum, dict):
       raise io.AvroTypeException(schm, datum)
     if len(datum) > 0:
-      valuewriter.writelong(len(datum))
+      encoder.writelong(len(datum))
       for k,v in datum.items():
-        valuewriter.writeutf8(k)
-        self.writedata(schm.getvaluetype(), v, valuewriter)
-    valuewriter.writelong(0)
+        encoder.writeutf8(k)
+        self.writedata(schm.getvaluetype(), v, encoder)
+    encoder.writelong(0)
 
-  def writearray(self, schm, datum, valuewriter):
+  def writearray(self, schm, datum, encoder):
     if not isinstance(datum, list):
       raise io.AvroTypeException(schm, datum)
     if len(datum) > 0:
-      valuewriter.writelong(len(datum))
+      encoder.writelong(len(datum))
       for item in datum:
-        self.writedata(schm.getelementtype(), item, valuewriter)
-    valuewriter.writelong(0)
+        self.writedata(schm.getelementtype(), item, encoder)
+    encoder.writelong(0)
 
-  def writerecord(self, schm, datum, valuewriter):
+  def writerecord(self, schm, datum, encoder):
     if not isinstance(datum, dict):
       raise io.AvroTypeException(schm, datum)
     for field,fieldschema in schm.getfields():
-      self.writedata(fieldschema, datum.get(field), valuewriter)
+      self.writedata(fieldschema, datum.get(field), encoder)
 
-  def writeunion(self, schm, datum, valuewriter):
+  def writeunion(self, schm, datum, encoder):
     index = self.resolveunion(schm, datum)
-    valuewriter.writelong(index)
-    self.writedata(schm.getelementtypes()[index], datum, valuewriter)
+    encoder.writelong(index)
+    self.writedata(schm.getelementtypes()[index], datum, encoder)
 
-  def writeenum(self, schm, datum, valuewriter):
+  def writeenum(self, schm, datum, encoder):
     index = schm.getenumordinal(datum)
-    valuewriter.writeint(index)
+    encoder.writeint(index)
 
   def resolveunion(self, schm, datum):
     index = 0
@@ -253,39 +252,3 @@ class DatumWriter(io.DatumWriterBase):
         return index
       index+=1
     raise io.AvroTypeException(schm, datum)
-
-class Requestor(ipc.RequestorBase):
-  """Requestor implementation for generic python data."""
-
-  def getdatumwriter(self, schm):
-    return DatumWriter(schm)
-
-  def getdatumreader(self, schm):
-    return DatumReader(schm)
-
-  def writerequest(self, schm, req, vwriter):
-    self.getdatumwriter(schm).write(req, vwriter)
-
-  def readresponse(self, schm, vreader):
-    return self.getdatumreader(schm).read(vreader)
-
-  def readerror(self, schm, vreader):
-    return ipc.AvroRemoteException(self.getdatumreader(schm).read(vreader))
-
-class Responder(ipc.ResponderBase):
-  """Responder implementation for generic python data."""
-
-  def getdatumwriter(self, schm):
-    return DatumWriter(schm)
-
-  def getdatumreader(self, schm):
-    return DatumReader(schm)
-
-  def readrequest(self, schm, vreader):
-    return self.getdatumreader(schm).read(vreader)
-
-  def writeresponse(self, schm, response, vwriter):
-    self.getdatumwriter(schm).write(response, vwriter)
-
-  def writeerror(self, schm, error, vwriter):
-    self.getdatumwriter(schm).write(error.getvalue(), vwriter)

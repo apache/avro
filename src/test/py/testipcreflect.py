@@ -16,13 +16,15 @@
 
 import socket, struct
 import avro.schema as schema
-import avro.reflect as reflect
+import avro.reflectio as reflectio
+import avro.reflectipc as reflectipc
 import avro.ipc as ipc
 import testipc, testio, testioreflect
 
-TestRecord = reflect.gettype("TestRecord", testioreflect._PKGNAME)
-TestError = reflect.gettype("TestError", testioreflect._PKGNAME, 
-                            ipc.AvroRemoteException)
+TestRecord = reflectio.gettype(testipc.PROTOCOL.gettypes().get("TestRecord"), 
+                               testioreflect._PKGNAME)
+TestError = reflectio.gettype(testipc.PROTOCOL.gettypes().get("TestError"), 
+                              testioreflect._PKGNAME, ipc.AvroRemoteException)
 
 class TestImpl(object):
 
@@ -44,12 +46,12 @@ class TestProtocol(testipc.TestProtocol):
 
   def checkstartserver(self):
     addr = ('localhost', 0)
-    responder = reflect.ReflectResponder(testipc.PROTOCOL, TestImpl())
+    responder = reflectipc.ReflectResponder(testipc.PROTOCOL, TestImpl())
     self.server = ipc.SocketServer(responder, addr)
     sock = socket.socket()
     sock.connect(self.server.getaddress())
     client = ipc.SocketTransceiver(sock)
-    self.proxy = reflect.getclient(testipc.PROTOCOL, client)
+    self.proxy = reflectipc.getclient(testipc.PROTOCOL, client)
 
   def checkhello(self):
     resp = self.proxy.hello(unicode("bob"))
@@ -77,6 +79,3 @@ class TestProtocol(testipc.TestProtocol):
       error = e
     self.assertNotEquals(error, None)
     self.assertEquals("an error", error.message)
-
-  def checkshutdown(self):
-    self.server.close()

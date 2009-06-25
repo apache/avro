@@ -17,7 +17,7 @@
 import unittest, socket, struct
 import testio
 import avro.ipc as ipc
-import avro.generic as generic
+import avro.genericipc as genericipc
 import avro.protocol as protocol
 import avro.schema as schema
 
@@ -25,7 +25,7 @@ PROTOCOL = protocol.parse(open("src/test/schemata/simple.avpr").read())
 
 class TestProtocol(unittest.TestCase):
 
-  class TestResponder(generic.Responder):
+  class TestResponder(genericipc.Responder):
 
     def __init__(self):
       ipc.ResponderBase.__init__(self, PROTOCOL)
@@ -50,6 +50,8 @@ class TestProtocol(unittest.TestCase):
         raise schema.AvroException("unexpected message:",msg.getname());
 
   def testipc(self):
+    self.server = None
+    self.requestor = None
     try:
       self.checkstartserver()
       self.checkhello()
@@ -65,12 +67,12 @@ class TestProtocol(unittest.TestCase):
     sock = socket.socket()
     sock.connect(self.server.getaddress())
     client = ipc.SocketTransceiver(sock)
-    self.requestor = generic.Requestor(PROTOCOL, client)
+    self.requestor = genericipc.Requestor(PROTOCOL, client)
 
   def checkhello(self):
     params = dict()
     params['greeting'] = unicode('bob')
-    resp = self.requestor.call('hello', params)
+    resp = self.requestor.request('hello', params)
     self.assertEquals('goodbye',resp)
 
   def checkecho(self):
@@ -80,7 +82,7 @@ class TestProtocol(unittest.TestCase):
     record['hash'] = struct.pack('16s','0123456789012345')
     params = dict()
     params['record'] = record
-    echoed = self.requestor.call('echo', params)
+    echoed = self.requestor.request('echo', params)
     self.assertEquals(record,echoed)
 
   def checkechobytes(self):
@@ -88,17 +90,18 @@ class TestProtocol(unittest.TestCase):
     rand = testio.RandomData(schema._BytesSchema())
     data = rand.next()
     params['data'] = data
-    echoed = self.requestor.call('echoBytes', params)
+    echoed = self.requestor.request('echoBytes', params)
     self.assertEquals(data,echoed)
 
   def checkerror(self):
     error = None
     try:
-      self.requestor.call("error", dict())
+      self.requestor.request("error", dict())
     except ipc.AvroRemoteException, e:
       error = e
     self.assertNotEquals(error, None)
     self.assertEquals("an error", error.getvalue().get("message"))
 
   def checkshutdown(self):
-    self.server.close()
+    if self.server is not None:
+      self.server.close()

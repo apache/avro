@@ -17,7 +17,7 @@
 import unittest, random, cStringIO, time, sys, os, struct
 import avro.schema as schema
 import avro.io as io
-import avro.generic as generic
+import avro.genericio as genericio
 
 _DIR = "build/test/"
 _FILE = _DIR +"test.py.avro"
@@ -95,9 +95,9 @@ class RandomData(object):
 
 class TestSchema(unittest.TestCase):
 
-  def __init__(self, methodName, validator=generic.validate,
-                               dwriter=generic.DatumWriter, 
-                               dreader=generic.DatumReader, random=RandomData,
+  def __init__(self, methodName, validator=genericio.validate,
+                               dwriter=genericio.DatumWriter, 
+                               dreader=genericio.DatumReader, random=RandomData,
                                assertdata=True):
     unittest.TestCase.__init__(self, methodName)
     self.__validator = validator
@@ -185,10 +185,10 @@ class TestSchema(unittest.TestCase):
     self.assertTrue(self.__validator(schm, datum))
     w = self.__datumwriter(schm)
     writer = cStringIO.StringIO()
-    w.write(datum, io.ValueWriter(writer))
+    w.write(datum, io.Encoder(writer))
     r = self.__datumreader(schm)
     reader = cStringIO.StringIO(writer.getvalue())
-    ob = r.read(io.ValueReader(reader))
+    ob = r.read(io.Decoder(reader))
     if self.__assertdata:
       self.assertEquals(datum, ob)
 
@@ -215,7 +215,7 @@ if __name__ == '__main__':
   file = sys.argv[2]
   count = int(sys.argv[3])
   randomData = RandomData(schm)
-  dw = io.DataFileWriter(schm, open(file, 'wb'), generic.DatumWriter())
+  dw = io.DataFileWriter(schm, open(file, 'wb'), genericio.DatumWriter())
   for i in range(0,count):
     dw.append(randomData.next())
   dw.close()

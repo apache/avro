@@ -14,7 +14,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-import cStringIO
+import cStringIO, md5
 import simplejson
 import avro.schema as schema
 
@@ -31,6 +31,7 @@ class Protocol(object):
     self.__messages = dict()
     self.__name = name
     self.__namespace = namespace
+    self.__md5 = None
 
   def getname(self):
     return self.__name
@@ -43,6 +44,12 @@ class Protocol(object):
 
   def getmessages(self):
     return self.__messages
+
+  def getMD5(self):
+    """Return the MD5 hash of the text of this protocol."""
+    if self.__md5 is None:
+      self.__md5 = md5.new(self.__str__()).digest()
+    return self.__md5
 
   class Message(object):
     """ A Protocol message."""

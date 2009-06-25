@@ -19,8 +19,7 @@ to invoke the methods on Protocol proxy directly."""
 
 import avro.schema as schema
 import avro.io as io
-import avro.ipc as ipc
-import avro.generic as generic
+import avro.genericio as genericio
 
 #TODO pkgname should not be passed, instead classes should be constructed 
 #based on schema namespace
@@ -42,7 +41,7 @@ def _validatemap(schm, pkgname, object):
   return True
 
 def _validaterecord(schm, pkgname, object):
-  if not isinstance(object, gettype(schm.getname(), pkgname)):
+  if not isinstance(object, gettype(schm, pkgname)):
     return False
   for field,fieldschema in schm.getfields():
     data = object.__getattribute__(field)
@@ -88,40 +87,42 @@ def validate(schm, pkgname, object):
   else:
     return False
 
-def gettype(name, pkgname, base=object):
-  """Returns the type with classname as name and pkg name as pkgname. 
+def gettype(recordschm, pkgname, base=object):
+  """Returns the type with classname as recordschm name and pkg name as pkgname. 
   If type does not exist creates a new type."""
-  clazzname = pkgname + name
+  clazzname = pkgname + recordschm.getname()
   clazz = globals().get(clazzname)
   if clazz is None:
     clazz = type(str(clazzname),(base,),{})
+    for field,fieldschema in recordschm.getfields():
+      setattr(clazz, field, None)
     globals()[clazzname] = clazz
   return clazz
 
-class ReflectDatumReader(generic.DatumReader):
+class ReflectDatumReader(genericio.DatumReader):
   """DatumReader for arbitrary python classes."""
 
   def __init__(self, pkgname, schm=None):
-    generic.DatumReader.__init__(self, schm)
+    genericio.DatumReader.__init__(self, schm)
     self.__pkgname = pkgname
 
-  def readrecord(self, schm, valuereader):
-    type = gettype(schm.getname(), self.__pkgname)
+  def readrecord(self, schm, decoder):
+    type = gettype(schm, self.__pkgname)
     result = type()
     for field,fieldschema in schm.getfields():
-      setattr(result, field, self.readdata(fieldschema, valuereader))
+      setattr(result, field, self.readdata(fieldschema, decoder))
     return result
 
-class ReflectDatumWriter(generic.DatumWriter):
+class ReflectDatumWriter(genericio.DatumWriter):
   """DatumWriter for arbitrary python classes."""
 
   def __init__(self, pkgname, schm=None):
-    generic.DatumWriter.__init__(self, schm)
+    genericio.DatumWriter.__init__(self, schm)
     self.__pkgname = pkgname
 
-  def writerecord(self, schm, datum, valuewriter):
+  def writerecord(self, schm, datum, encoder):
     for field,fieldschema in schm.getfields():
-      self.writedata(fieldschema, getattr(datum, field), valuewriter)
+      self.writedata(fieldschema, getattr(datum, field), encoder)
 
   def resolveunion(self, schm, datum):
     index = 0
@@ -130,84 +131,3 @@ class ReflectDatumWriter(generic.DatumWriter):
         return index
       index+=1
     raise io.AvroTypeException(schm, datum)
-
-class _Proxy(object):
-
-  class _MethodInvoker(object):
-
-    def __init__(self, requestor, methodname):
-      self.requestor = requestor
-      self.methodname = methodname
-
-    def __call__(self, *args):
-      return self.requestor.call(self.methodname, args)
-
-  def __init__(self, requestor):
-    self.requestor = requestor
-    self.invokers = dict()
-    msgs = self.requestor.getlocal().getmessages()
-    for methodname, method in msgs.items():
-      self.invokers[methodname] = self._MethodInvoker(
-                                                self.requestor, methodname)
-
-  def __getattribute__(self, attr):
-    attrhandle = object.__getattribute__(self, "invokers").get(attr)
-    if attrhandle is None:
-      attrhandle = object.__getattribute__(self, attr)
-    return attrhandle
-
-def getclient(protocol, transceiver):
-  """Create a proxy instance whose methods invoke RPCs."""
-  requestor = ReflectRequestor(protocol, transceiver)
-  return _Proxy(requestor)
-
-class ReflectRequestor(generic.Requestor):
-
-  def __init__(self, localproto, transceiver):
-    ipc.RequestorBase.__init__(self, localproto, transceiver)
-    self.__pkgname = localproto.getnamespace() + "."
-
-  def getdatumwriter(self, schm):
-    return ReflectDatumWriter(self.__pkgname, schm)
-
-  def getdatumreader(self, schm):
-    return ReflectDatumReader(self.__pkgname, schm)
-
-  def writerequest(self, schm, req, vwriter):
-    index = 0
-    for arg in req:
-      argschm = schm.getfields()[index][1]
-      generic.Requestor.writerequest(self, argschm, arg, vwriter)
-
-  def readerror(self, schm, vreader):
-    return self.getdatumreader(schm).read(vreader)
-
-class ReflectResponder(generic.Responder):
-
-  def __init__(self, localproto, impl):
-    generic.Responder.__init__(self, localproto)
-    self.__pkgname = localproto.getnamespace() + "."
-    self.__impl = impl
-
-  def getdatumwriter(self, schm):
-    return ReflectDatumWriter(self.__pkgname, schm)
-
-  def getdatumreader(self, schm):
-    return ReflectDatumReader(self.__pkgname, schm)
-
-  def readrequest(self, schm, vreader):
-    req = list()
-    for field, fieldschm in schm.getfields():
-      req.append(generic.Responder.readrequest(self, fieldschm, vreader))
-    return req
-
-  def writeerror(self, schm, error, vwriter):
-    self.getdatumwriter(schm).write(error, vwriter)
-
-  def invoke(self, msg, req):
-    method = self.__impl.__getattribute__(msg.getname())
-    if method is None:
-      raise AttributeError("No method with name "+ method)
-    resp = method(*req)
-    return resp
-

@@ -15,21 +15,19 @@
 #limitations under the License.
 
 import avro.schema as schema
-import avro.reflect as reflect
-import avro.generic as generic
+import avro.reflectio as reflectio
 import testio
 
 _PKGNAME = "org.apache.avro.test."
 
 def dyvalidator(schm, object):
-  return reflect.validate(schm, _PKGNAME, object)
+  return reflectio.validate(schm, _PKGNAME, object)
 
 class DyRandomData(testio.RandomData):
 
   def nextdata(self, schm, d=0):
     if schm.gettype() == schema.RECORD:
-      name = schm.getname()
-      clazz = reflect.gettype(name, _PKGNAME)
+      clazz = reflectio.gettype(schm, _PKGNAME)
       result = clazz()
       for field,fieldschema in schm.getfields():
         result.__setattr__(field, self.nextdata(fieldschema,d))
@@ -37,15 +35,15 @@ class DyRandomData(testio.RandomData):
     else:
       return testio.RandomData.nextdata(self, schm, d)
 
-class ReflectDReader(reflect.ReflectDatumReader):
+class ReflectDReader(reflectio.ReflectDatumReader):
   
   def __init__(self, schm=None):
-    reflect.ReflectDatumReader.__init__(self, _PKGNAME, schm)
+    reflectio.ReflectDatumReader.__init__(self, _PKGNAME, schm)
 
-class ReflectDWriter(reflect.ReflectDatumWriter):
+class ReflectDWriter(reflectio.ReflectDatumWriter):
   
   def __init__(self, schm=None):
-    reflect.ReflectDatumWriter.__init__(self, _PKGNAME, schm)
+    reflectio.ReflectDatumWriter.__init__(self, _PKGNAME, schm)
 
 class TestSchema(testio.TestSchema):
 

@@ -42,7 +42,7 @@ class DatumReaderBase(object):
   def setschema(self, schema):
     pass
 
-  def read(self, valuereader):
+  def read(self, decoder):
     """Read a datum. Traverse the schema, depth-first, reading all leaf values
     in the schema into a datum that is returned"""
     pass
@@ -52,13 +52,13 @@ class DatumWriterBase(object):
   def setschema(self, schema):
     pass
 
-  def write(self, data, valuewriter):
+  def write(self, data, encoder):
     """Write a datum. Traverse the schema, depth first, writing each leaf value
     in the schema from the datum to the output."""
     pass
 
 
-class ValueReader(object):
+class Decoder(object):
   """Read leaf values."""
 
   def __init__(self, reader):
@@ -108,7 +108,7 @@ class ValueReader(object):
   def read(self, len):
     return struct.unpack(len.__str__()+'s', self.__reader.read(len))[0]
 
-class ValueWriter(object):
+class Encoder(object):
   """Write leaf values."""
 
   def __init__(self, writer):
@@ -189,13 +189,13 @@ class DataFileWriter(object):
 
   def __init__(self, schm, writer, dwriter):
     self.__writer = writer
-    self.__vwriter = ValueWriter(writer)
+    self.__encoder = Encoder(writer)
     self.__dwriter = dwriter
     self.__dwriter.setschema(schm)
     self.__count = 0  #entries in file
     self.__blockcount = 0  #entries in current block
     self.__buffer = cStringIO.StringIO()
-    self.__bufwriter = ValueWriter(self.__buffer)
+    self.__bufwriter = Encoder(self.__buffer)
     self.__meta = dict()
     self.__sync = uuid.uuid4().bytes
     self.__meta["sync"] = self.__sync
@@ -218,7 +218,7 @@ class DataFileWriter(object):
   def __writeblock(self):
     if self.__blockcount > 0:
       self.__writer.write(self.__sync)
-      self.__vwriter.writelong(self.__blockcount)
+      self.__encoder.writelong(self.__blockcount)
       self.__writer.write(self.__buffer.getvalue())
       self.__buffer.truncate(0) #reset
       self.__blockcount = 0
@@ -250,8 +250,8 @@ class DataFileWriter(object):
       self.__bufwriter.writebytes(str(v))
     size = self.__buffer.tell() + 4
     self.__writer.write(self.__sync)
-    self.__vwriter.writelong(_FOOTER_BLOCK)
-    self.__vwriter.writelong(size)
+    self.__encoder.writelong(_FOOTER_BLOCK)
+    self.__encoder.writelong(size)
     self.__buffer.flush()
     self.__writer.write(self.__buffer.getvalue())
     self.__buffer.truncate(0) #reset
@@ -265,7 +265,7 @@ class DataFileReader(object):
 
   def __init__(self, reader, dreader):
     self.__reader = reader
-    self.__vreader = ValueReader(reader)
+    self.__decoder = Decoder(reader)
     mag = struct.unpack(len(_MAGIC).__str__()+'s', 
                  self.__reader.read(len(_MAGIC)))[0]
     if mag != _MAGIC:
@@ -279,11 +279,11 @@ class DataFileReader(object):
             int(ord(self.__reader.read(1)) << 8) +
             int(ord(self.__reader.read(1))))
     seekpos = self.__reader.seek(self.__length-footersize)
-    metalength = self.__vreader.readlong()
+    metalength = self.__decoder.readlong()
     self.__meta = dict()
     for i in range(0, metalength):
-      key = self.__vreader.readutf8()
-      self.__meta[key] = self.__vreader.readbytes()
+      key = self.__decoder.readutf8()
+      self.__meta[key] = self.__decoder.readbytes()
     self.__sync = self.__meta.get("sync")
     self.__count = int(self.__meta.get("count"))
     self.__schema = schema.parse(self.__meta.get("schema").encode("utf-8"))
@@ -302,12 +302,12 @@ class DataFileReader(object):
       if self.__reader.tell() == self.__length:
         return None
       self.__skipsync()
-      self.__blockcount = self.__vreader.readlong()
+      self.__blockcount = self.__decoder.readlong()
       if self.__blockcount == _FOOTER_BLOCK:
-        self.__reader.seek(self.__vreader.readlong()+self.__reader.tell())
+        self.__reader.seek(self.__decoder.readlong()+self.__reader.tell())
         self.__blockcount = 0
     self.__blockcount-=1
-    datum = self.__dreader.read(self.__vreader)
+    datum = self.__dreader.read(self.__decoder)
     return datum
 
   def __skipsync(self):

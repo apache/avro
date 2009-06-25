@@ -263,7 +263,15 @@
     <pathelement location="${basedir}/lib/py"/>
   </path>
 
-  <target name="generate-test-data" depends="compile-test-java">
+  <target name="init-py" depends="init, schemata">
+    <copy todir="${basedir}/src/py/avro">
+      <fileset dir="${build.dir}/src/org/apache/avro/ipc">
+      	<include name="**/*.avsc"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="generate-test-data" depends="compile-test-java, init-py">
     <mkdir dir="${test.java.build.dir}/data-files"/>
     <java classname="org.apache.avro.RandomData"
       classpathref="test.java.classpath">
@@ -283,7 +291,7 @@
     </py-run>
   </target>
 
-  <target name="test-py" depends="init" description="Run python unit tests">
+  <target name="test-py" depends="init-py" description="Run python unit tests">
     <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask">
       <classpath refid="java.classpath" />
     </taskdef>
@@ -339,7 +347,7 @@
     </py-test>
   </target>
 
-  <target name="start-rpc-daemons" depends="compile-test-java"
+  <target name="start-rpc-daemons" depends="compile-test-java, init-py"
     description="Start the daemons for rpc interoperability tests">
     <delete dir="${test.java.build.dir}/server-ports"/>
     <mkdir dir="${test.java.build.dir}/server-ports"/>
@@ -530,6 +538,7 @@
     <delete dir="${build.dir}"/>
     <delete>
       <fileset dir="src" includes="**/*.pyc" />
+      <fileset dir="${basedir}/src/py/avro" includes="**/*.avsc"/>
     </delete>
   </target>
 

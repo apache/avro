@@ -18,8 +18,9 @@ import unittest, os, sys, socket
 import avro.schema as schema
 import avro.io as io
 import avro.ipc as ipc
-import avro.generic as generic
-import avro.reflect as reflect
+import avro.genericio as genericio
+import avro.reflectio as reflectio
+import avro.reflectipc as reflectipc
 import testio, testipc, testioreflect, testipcreflect
 
 _DATAFILE_DIR = "build/test/data-files/"
@@ -27,8 +28,8 @@ _SERVER_PORTS_DIR = testio._DIR + "server-ports/"
 
 class TestGeneratedFiles(unittest.TestCase):
 
-  def __init__(self, methodName, validator=generic.validate, 
-               datumreader=generic.DatumReader):
+  def __init__(self, methodName, validator=genericio.validate, 
+               datumreader=genericio.DatumReader):
     unittest.TestCase.__init__(self, methodName)
     self.__validator = validator
     self.__datumreader = datumreader
@@ -61,7 +62,7 @@ def _interopclient():
     sock.connect(("localhost", int(port)))
     client = ipc.SocketTransceiver(sock)
     testproto = testipcreflect.TestProtocol("testipc")
-    testproto.proxy = reflect.getclient(testipc.PROTOCOL, client)
+    testproto.proxy = reflectipc.getclient(testipc.PROTOCOL, client)
     testproto.checkhello()
     testproto.checkecho()
     testproto.checkechobytes()
@@ -70,7 +71,7 @@ def _interopclient():
 
 def _interopserver():
   addr = ('localhost', 0)
-  responder = reflect.ReflectResponder(testipc.PROTOCOL, 
+  responder = reflectipc.ReflectResponder(testipc.PROTOCOL, 
                                        testipcreflect.TestImpl())
   server = ipc.SocketServer(responder, addr)
   file = open(_SERVER_PORTS_DIR+"py-port", "w")
