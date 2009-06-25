@@ -3,105 +3,97 @@
 
 #include <boost/noncopyable.hpp>
 
-#include "OutputStreamer.hh"
-#include "Zigzag.hh"
+#include "Writer.hh"
+#include "ValidatingWriter.hh"
 
 namespace avro {
 
-/// Class for writing avro data to a stream.
+/// Class that wraps a Writer or ValidatingWriter with an interface that uses
+/// explicit put* names instead of putValue
 
+template<class Writer>
 class Serializer : private boost::noncopyable
 {
 
   public:
 
+    /// Constructor only works with Writer
     explicit Serializer(OutputStreamer &out) :
-        out_(out)
+        writer_(out)
     {}
 
-    void putNull() {}
+    /// Constructor only works with ValidatingWriter
+    Serializer(const ValidSchema &schema, OutputStreamer &out) :
+        writer_(schema, out)
+    {}
+
+    void putNull() {
+        writer_.putValue(Null());
+    }
 
     void putBool(bool val) {
-        int8_t byte = (val != 0);
-        out_.putByte(byte);
+        writer_.putValue(val);
     }
 
     void putInt(int32_t val) {
-        boost::array<uint8_t, 5> bytes;
-        size_t size = encodeInt32(val, bytes);
-        out_.putBytes(bytes.data(), size);
+        writer_.putValue(val);
     }
 
     void putLong(int64_t val) {
-        boost::array<uint8_t, 9> bytes;
-        size_t size = encodeInt64(val, bytes);
-        out_.putBytes(bytes.data(), size);
+        writer_.putValue(val);
     }
 
     void putFloat(float val) {
-        union {
-            float f;
-            int32_t i;
-        } v;
-    
-        v.f = val;
-        out_.putWord(v.i);
+        writer_.putValue(val);
     }
 
     void putDouble(double val) {
-        union {
-            double d;
-            int64_t i;
-        } v;
-        
-        v.d = val;
-        out_.putLongWord(v.i);
+        writer_.putValue(val);
     }
 
-    void putBytes(const uint8_t *val, size_t size) {
-        this->putLong(size);
-        out_.putBytes(val, size);
+    void putBytes(const void *val, size_t size) {
+        writer_.putBytes(val);
     }
 
     void putFixed(const uint8_t *val, size_t size) {
-        out_.putBytes(val, size);
+        writer_.putFixed(val, size);
     }
 
     void putString(const std::string &val) {
-        putBytes(reinterpret_cast<const uint8_t *>(val.c_str()), val.size());
+        writer_.putValue(val);
     }
 
-    /* here for compatibility with ValidatingSerializer in templates: */
-
-    void beginRecord() {}
+    void beginRecord() {
+        writer_.beginRecord();
+    }
 
     void beginArrayBlock(int64_t size) {
-        putLong(size);
+        writer_.beginArrayBlock(size);
     }
 
     void endArray() {
-        putLong(0);
+        writer_.endArray();
     }
 
     void beginMapBlock(int64_t size) {
-        putLong(size);
+        writer_.beginMapBlock(size);
     }
 
     void endMap() {
-        putLong(0);
+        writer_.endMap();
     }
 
     void beginUnion(int64_t choice) {
-        putLong(choice);
+        writer_.beginUnion(choice);
     }
 
     void beginEnum(int64_t choice) {
-        putLong(choice);
+        writer_.beginEnum(choice);
     }
 
   private:
 
-    OutputStreamer &out_;
+    Writer writer_;
 
 };
 

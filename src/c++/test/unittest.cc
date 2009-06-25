@@ -10,7 +10,6 @@
 #include "OutputStreamer.hh"
 #include "Serializer.hh"
 #include "Parser.hh"
-#include "ValidatingSerializer.hh"
 #include "ValidatingParser.hh"
 #include "SymbolMap.hh"
 
@@ -131,7 +130,7 @@ struct TestSchema
     void printEncoding() {
         std::cout << "Encoding\n";
         ScreenStreamer os;
-        Serializer s(os);
+        Serializer<Writer> s(os);
         writeEncoding(s, 0);
     }
 
@@ -139,7 +138,7 @@ struct TestSchema
     {
         std::cout << "Validating Encoding " << path << "\n";
         ScreenStreamer os;
-        ValidatingSerializer s(schema_, os);
+        Serializer<ValidatingWriter> s(schema_, os);
         writeEncoding(s, path);
     }
 
@@ -147,7 +146,7 @@ struct TestSchema
     {
         std::ofstream out("test.avro");
         OStreamer os(out);
-        ValidatingSerializer s(schema_, os);
+        Serializer<ValidatingWriter> s(schema_, os);
         writeEncoding(s, path);
     }
 
@@ -388,7 +387,7 @@ struct TestNested
     void serializeNoRecurse(OutputStreamer &os)
     {
         std::cout << "No recurse\n";
-        ValidatingSerializer s(schema_, os);
+        Serializer<ValidatingWriter> s(schema_, os);
         s.beginRecord();
         s.putLong(1);
         s.beginUnion(0);
@@ -399,7 +398,7 @@ struct TestNested
     void serializeRecurse(OutputStreamer &os)
     {
         std::cout << "Recurse\n";
-        ValidatingSerializer s(schema_, os);
+        Serializer<ValidatingWriter> s(schema_, os);
         s.beginRecord();
         s.putLong(1);
         s.beginUnion(1);
@@ -489,13 +488,12 @@ struct TestGenerated
         float   f   = 200.0;
 
         ScreenStreamer os;
-        Serializer s(os);
+        Writer writer(os);
 
-        serialize(s, val);
-        serialize(s, Null());
-        serialize(s, f);
+        serialize(writer, val);
+        serialize(writer, Null());
+        serialize(writer, f);
         
-
     }
 };
 

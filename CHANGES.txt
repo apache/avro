@@ -79,6 +79,9 @@ Trunk (unreleased changes)
     AVRO-36. Correctly encode and decode binary default values.
     (cutting)
 
+    AVRO-59.  C++: make serializer more generic.  (Scott Banachowski
+    via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

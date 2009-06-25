@@ -2,7 +2,7 @@
 #define avro_AvroParse_hh__
 
 #include <boost/static_assert.hpp>
-#include "AvroTypes.hh"
+#include "AvroTraits.hh"
 
 /// \file
 ///

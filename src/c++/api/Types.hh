@@ -42,6 +42,9 @@ inline bool isAvroType(Type t) {
 
 std::ostream &operator<< (std::ostream &os, const avro::Type type);
 
+/// define a type to identify Null in template functions
+struct Null {};
+
 } // namespace avro
 
 

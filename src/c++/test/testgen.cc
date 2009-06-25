@@ -7,7 +7,6 @@
 #include "OutputStreamer.hh"
 #include "InputStreamer.hh"
 #include "Serializer.hh"
-#include "ValidatingSerializer.hh"
 #include "Parser.hh"
 #include "ValidatingParser.hh"
 #include "ValidSchema.hh"
@@ -16,17 +15,17 @@
 void serialize(const avrouser::RootRecord &rec) 
 {
     avro::ScreenStreamer os;
-    avro::Serializer s (os);
+    avro::Writer writer(os);
 
-    avro::serialize(s, rec);
+    avro::serialize(writer, rec);
 }
 
 void serializeValid(const avro::ValidSchema &valid, const avrouser::RootRecord &rec) 
 {
     avro::ScreenStreamer os;
-    avro::ValidatingSerializer s (valid, os);
+    avro::ValidatingWriter writer(valid, os);
 
-    avro::serialize(s, rec);
+    avro::serialize(writer, rec);
 }
 
 void checkArray(const avrouser::Array_of_double &a1, const avrouser::Array_of_double &a2) 
@@ -79,7 +78,7 @@ void testParser(const avrouser::RootRecord &myRecord)
 {
     std::ostringstream ostring;
     avro::OStreamer os(ostring);
-    avro::Serializer s (os);
+    avro::Writer s (os);
 
     avro::serialize(s, myRecord); 
 
@@ -96,7 +95,7 @@ void testParserValid(avro::ValidSchema &valid, const avrouser::RootRecord &myRec
 {
     std::ostringstream ostring;
     avro::OStreamer os(ostring);
-    avro::ValidatingSerializer s (valid, os);
+    avro::ValidatingWriter s (valid, os);
 
     avro::serialize(s, myRecord);
 

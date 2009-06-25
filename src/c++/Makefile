@@ -55,9 +55,6 @@ $(OBJDIR)/avro.tab.o : parser/avro.tab.c parser/avro.tab.h
 $(OBJDIR)/lex.yy.o : parser/lex.yy.cc
 	$(CXX) $(CXXFLAGS)  -Wno-unused $(INCFLAGS) -c -o $@ $< 
 
-#$(OBJDIR)/parserlib.a : $(OBJDIR)/avro.tab.o $(OBJDIR)/lex.yy.o 
-	#ar ruc $@ $^ 
-
 testparser: test/testparser.cc $(OBJDIR)/avrolib.a 
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
 
