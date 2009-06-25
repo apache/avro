@@ -189,11 +189,6 @@ public class BinaryDecoder extends Decoder {
   }
 
   @Override
-  public void readFixed(byte[] bytes) throws IOException {
-    readFixed(bytes, 0, bytes.length);
-  }
-  
-  @Override
   public void skipFixed(int length) throws IOException {
     doSkipBytes(length);
   }

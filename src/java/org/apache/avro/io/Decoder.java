@@ -17,7 +17,6 @@
  */
 package org.apache.avro.io;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -143,7 +142,9 @@ public abstract class Decoder {
    *          value to be read or the length is incorrect.
    * @throws IOException
    */
-  public abstract void readFixed(byte[] bytes) throws IOException;
+  public void readFixed(byte[] bytes) throws IOException {
+    readFixed(bytes, 0, bytes.length);
+  }
   
   /**
    * Discards fixed sized binary object.
@@ -276,4 +277,11 @@ public abstract class Decoder {
    */
   public abstract int readIndex() throws IOException;
 
+  /**
+   * After reading a complete object that conforms to the schema or after an
+   * error, if you want to start reading another object, call this method.
+   */
+
+  public void reset() throws IOException {
+  }
 }

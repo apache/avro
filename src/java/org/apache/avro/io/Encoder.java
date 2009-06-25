@@ -107,7 +107,9 @@ public abstract class Encoder {
    * @throws AvroTypeException If this is a stateful writer and a
    * char-string is not expected
    */
-  public abstract void writeString(String str) throws IOException;
+  public void writeString(String str) throws IOException {
+    writeString(new Utf8(str));
+  }
 
   /**
    * Write a byte string.
@@ -130,7 +132,9 @@ public abstract class Encoder {
    * @throws AvroTypeException If this is a stateful writer and a
    * byte-string is not expected
    */
-  public abstract void writeBytes(byte[] bytes) throws IOException;
+  public void writeBytes(byte[] bytes) throws IOException {
+    writeBytes(bytes, 0, bytes.length);
+  }
 
   /**
    * Writes a fixed size binary object.
@@ -148,7 +152,9 @@ public abstract class Encoder {
    * A shorthand for <tt>writeFixed(bytes, 0, bytes.length)</tt>
    * @param bytes
    */
-  public abstract void writeFixed(byte[] bytes) throws IOException;
+  public void writeFixed(byte[] bytes) throws IOException {
+    writeFixed(bytes, 0, bytes.length);
+  }
   
   /**
    * Writes an enumeration.

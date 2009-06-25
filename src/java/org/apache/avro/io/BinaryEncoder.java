@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.avro.AvroTypeException;
 import org.apache.avro.ipc.ByteBufferOutputStream;
 import org.apache.avro.util.Utf8;
 
@@ -134,11 +133,6 @@ public class BinaryEncoder extends Encoder {
   }
 
   @Override
-  public void writeString(String str) throws IOException {
-    writeString(new Utf8(str));
-  }
-
-  @Override
   public void writeBytes(ByteBuffer bytes) throws IOException {
     byteWriter.write(bytes);
   }
@@ -150,20 +144,10 @@ public class BinaryEncoder extends Encoder {
   }
   
   @Override
-  public void writeBytes(byte[] bytes) throws IOException {
-    writeBytes(bytes, 0, bytes.length);
-  }
-
-  @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
 	  out.write(bytes, start, len);
   }
 
-  @Override
-  public void writeFixed(byte[] bytes) throws IOException {
-    writeFixed(bytes, 0, bytes.length);
-  }
-  
   @Override
   public void writeEnum(int e) throws IOException {
     encodeLong(e, out);
