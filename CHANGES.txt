@@ -44,6 +44,8 @@ Trunk (unreleased changes)
     AVRO-29.  Add to Java a validating encoder & decoder, and a
     resolving decoder.  (Thiruvalluvan M. G. & Raymie Stata)
 
+    AVRO-67.  Add per-call RPC metadata to spec. (George Porter via cutting)
+
   IMPROVEMENTS
 
     AVRO-11.  Re-implement specific and reflect datum readers and

@@ -736,12 +736,15 @@
 
       <section>
 	<title>Call Format</title>
-	<p>An <em>call</em> consists of a request message paired with
-	its resulting response or error message.  Both kinds of
+	<p>A <em>call</em> consists of a request message paired with
+	its resulting response or error message.  Requests and
+	responses contain extensible metadata, and both kinds of
 	messages are framed as described above.</p>
 
 	<p>The format of a call request is:</p>
 	<ul>
+	  <li><em>request metadata</em>, a map with values of
+	  type <code>bytes</code></li>
 	  <li>the <em>message name</em>, an Avro string,
 	  followed by</li>
 	  <li>the message <em>parameters</em>.  Parameters are
@@ -751,6 +754,8 @@
 
 	<p>The format of a call response is:</p>
 	<ul>
+	  <li><em>response metadata</em>, a map with values of
+	  type <code>bytes</code></li>
 	  <li>a one-byte <em>error flag</em> boolean, followed by either:
 	    <ul>
 	      <li>if the error flag is false, the message <em>response</em>,
