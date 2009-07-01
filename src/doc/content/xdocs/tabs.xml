@@ -29,7 +29,7 @@
   -->
 
   <tab label="Project" href="http://hadoop.apache.org/avro/" />
-  <tab label="Wiki" href="http://wiki.apache.org/hadoop/avro/" />
-  <tab label="Avro 0.1 Documentation" dir="" />  
+  <tab label="Wiki" href="http://wiki.apache.org/hadoop/Avro/" />
+  <tab label="Avro 1.0.0 Documentation" dir="" />  
   
 </tabs>

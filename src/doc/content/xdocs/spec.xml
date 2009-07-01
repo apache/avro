@@ -18,7 +18,7 @@
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
 <document>
   <header>
-    <title>Avro 1.0 <em>DRAFT</em> Specification</title>
+    <title>Avro 1.0 Specification</title>
   </header>
   <body>
 
@@ -29,15 +29,6 @@
         authoritative specification. Implementations of Avro must
         adhere to this document.
       </p>
-
-      <section id="status">
-        <title>Status</title>
-        <p>This is a <em>DRAFT</em> specification, subject to change
-          without notice.  Do <em>not</em> yet use Avro for persistent
-          data in production systems, as the data format may be
-          incompatibly changed.
-        </p>
-      </section>
 
     </section>
 

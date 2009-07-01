@@ -27,7 +27,7 @@
   <property name="org" value="apache"/>
   <property name="Name" value="Avro"/>
   <property name="name" value="avro"/>
-  <property name="version" value="0.1-dev"/>
+  <property name="version" value="1.0.1-dev"/>
   <property name="fullname" value="${name}-${version}"/>
   <property name="year" value="2009"/>
 
@@ -467,7 +467,7 @@
     </javadoc>
   </target>	
 
-  <target name="package" depends="jar, javadoc, package-c"
+  <target name="package" depends="jar, doc, package-c"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${dist.dir}/lib"/>
@@ -494,6 +494,9 @@
       <mapping conf="default" scope="compile"/>
     </ivy:makepom>
 
+    <checksum file="${dist.dir}/${fullname}.pom" algorithm="md5"/>
+    <checksum file="${dist.dir}/${fullname}.pom" algorithm="sha1"/>
+
     <copy todir="${dist.dir}/doc">
       <fileset dir="${build.doc}"/>
     </copy>
@@ -508,7 +511,10 @@
       <fileset dir="src"/>
     </copy>
 
-    <copy todir="${dist.dir}/" file="build.xml"/>
+    <copy todir="${dist.dir}/">
+      <fileset file="build.xml"/>
+      <fileset file="ivy.xml"/>
+    </copy>
 
   </target>
 
@@ -531,6 +537,8 @@
         </tarfileset>
       </param.listofitems>
     </macro_tar>
+    <checksum file="${build.dir}/${fullname}.tar.gz" algorithm="md5"/>
+    <checksum file="${build.dir}/${fullname}.tar.gz" algorithm="sha1"/>
   </target>
 
   <target name="clean" description="Delete build files, and their directories"

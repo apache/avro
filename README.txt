@@ -4,11 +4,6 @@ Avro is a data serialization system.
 
 Please build and read the documentation for more details.
 
-WARNING: Avro is a work-in-progress, not yet a finished product.  Its
-current intended audience is developers interested in collaborating to
-make it more useful.  Do *not* yet use Avro for persistent data in
-production systems, as the data format may be incompatibly changed.
-
 REQUIREMENTS
 
 The following packages must be installed before Avro can be built:
