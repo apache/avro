@@ -142,6 +142,25 @@ class NamedSchema(Schema):
       hash += self.__space.__hash__()
     return hash
 
+class Field(object):
+  def __init__(self, name, schema, defaultvalue=None):
+    self.__name = name
+    self.__schema = schema
+    self.__defaultvalue = defaultvalue
+
+  def getname(self):
+    return self.__name
+
+  def getschema(self):
+    return self.__schema
+
+  def getdefaultvalue(self):
+    return self.__defaultvalue
+
+  def __eq__(self, other, seen={}):
+    return (self.__name == other.__name and
+            self.__schema.__eq__(other.__schema, seen) and 
+            self.__defaultvalue == other.__defaultvalue)
 
 class _RecordSchema(NamedSchema):
   def __init__(self, fields, name=None, space=None, iserror=False):
@@ -170,11 +189,14 @@ class _RecordSchema(NamedSchema):
     str.write(self.namestring())
     str.write("\"fields\": [")
     count=0
-    for k,v in self.__fields:
+    for field in self.__fields.values():
       str.write("{\"name\": \"")
-      str.write(k)
+      str.write(field.getname())
       str.write("\", \"type\": ")
-      str.write(v.str(names))
+      str.write(field.getschema().str(names))
+      if field.getdefaultvalue() is not None:
+        str.write(", \"default\": ")
+        str.write(repr(field.getdefaultvalue()))
       str.write("}")
       count+=1
       if count < len(self.__fields):
@@ -190,8 +212,8 @@ class _RecordSchema(NamedSchema):
       if len(other.__fields) != size:
         return False
       seen[id(self)] = other
-      for i in range(0, size):
-        if not self.__fields[i][1].__eq__(other.__fields[i][1], seen):
+      for field in self.__fields.values():
+        if not field.__eq__(other.__fields.get(field.getname()), seen):
           return False
       return True
     else:
@@ -202,8 +224,8 @@ class _RecordSchema(NamedSchema):
       return 0
     seen.add(id(self))
     hash = NamedSchema.__hash__(self, seen)
-    for field, fieldschm in self.__fields:
-      hash = hash + fieldschm.__hash__(seen)
+    for field in self.__fields.values():
+      hash = hash + field.getschema().__hash__(seen)
     return hash
 
 class _ArraySchema(Schema):
@@ -444,7 +466,7 @@ def _parse(obj, names):
       if name is None:
         raise SchemaParseException("No name in schema: "+obj.__str__())
       if type == "record" or type == "error":
-        fields = list()
+        fields = odict.OrderedDict()
         schema = _RecordSchema(fields, name, space, type == "error")
         names[name] = schema
         fieldsnode = obj.get("fields")
@@ -457,7 +479,9 @@ def _parse(obj, names):
           fieldtype = field.get("type")
           if fieldtype is None:
             raise SchemaParseException("No field type: "+field.__str__())
-          fields.append((fieldname, _parse(fieldtype, names)))
+          defaultval = field.get("default")
+          fields[fieldname] = Field(fieldname, _parse(fieldtype, names), 
+                                    defaultval)
         return schema
       elif type == "enum":
         symbolsnode = obj.get("symbols")

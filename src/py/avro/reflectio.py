@@ -43,9 +43,9 @@ def _validatemap(schm, pkgname, object):
 def _validaterecord(schm, pkgname, object):
   if not isinstance(object, gettype(schm, pkgname)):
     return False
-  for field,fieldschema in schm.getfields():
-    data = object.__getattribute__(field)
-    if not validate(fieldschema, pkgname, data):
+  for field in schm.getfields().values():
+    data = object.__getattribute__(field.getname())
+    if not validate(field.getschema(), pkgname, data):
       return False
   return True
 
@@ -94,8 +94,8 @@ def gettype(recordschm, pkgname, base=object):
   clazz = globals().get(clazzname)
   if clazz is None:
     clazz = type(str(clazzname),(base,),{})
-    for field,fieldschema in recordschm.getfields():
-      setattr(clazz, field, None)
+    for field in recordschm.getfields().values():
+      setattr(clazz, field.getname(), None)
     globals()[clazzname] = clazz
   return clazz
 
@@ -106,12 +106,12 @@ class ReflectDatumReader(genericio.DatumReader):
     genericio.DatumReader.__init__(self, schm)
     self.__pkgname = pkgname
 
-  def readrecord(self, schm, decoder):
+  def addfield(self, record, name, value):
+    setattr(record, name, value)
+
+  def createrecord(self, schm):
     type = gettype(schm, self.__pkgname)
-    result = type()
-    for field,fieldschema in schm.getfields():
-      setattr(result, field, self.readdata(fieldschema, decoder))
-    return result
+    return type()
 
 class ReflectDatumWriter(genericio.DatumWriter):
   """DatumWriter for arbitrary python classes."""
@@ -121,8 +121,9 @@ class ReflectDatumWriter(genericio.DatumWriter):
     self.__pkgname = pkgname
 
   def writerecord(self, schm, datum, encoder):
-    for field,fieldschema in schm.getfields():
-      self.writedata(fieldschema, getattr(datum, field), encoder)
+    for field in schm.getfields().values():
+      self.writedata(field.getschema(), getattr(datum, field.getname()),
+                      encoder)
 
   def resolveunion(self, schm, datum):
     index = 0

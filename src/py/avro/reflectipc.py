@@ -68,9 +68,8 @@ class ReflectRequestor(genericipc.Requestor):
     return reflectio.ReflectDatumReader(self.__pkgname, schm)
 
   def writerequest(self, schm, req, encoder):
-    index = 0
     for arg in req:
-      argschm = schm.getfields()[index][1]
+      argschm = schm.getfields().values()[0].getschema()
       genericipc.Requestor.writerequest(self, argschm, arg, encoder)
 
   def readerror(self, schm, decoder):
@@ -91,8 +90,9 @@ class ReflectResponder(genericipc.Responder):
 
   def readrequest(self, schm, decoder):
     req = list()
-    for field, fieldschm in schm.getfields():
-      req.append(genericipc.Responder.readrequest(self, fieldschm, decoder))
+    for field in schm.getfields().values():
+      req.append(genericipc.Responder.readrequest(self, field.getschema(), 
+                                               decoder))
     return req
 
   def writeerror(self, schm, error, encoder):

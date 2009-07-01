@@ -75,8 +75,8 @@ class RandomData(object):
       return map
     elif schm.gettype() == schema.RECORD:
       m = dict()
-      for field, fieldschm in schm.getfields():
-        m[field] = self.nextdata(fieldschm, d+1)
+      for field in schm.getfields().values():
+        m[field.getname()] = self.nextdata(field.getschema(), d+1)
       return m
     elif schm.gettype() == schema.UNION:
       datum = self.nextdata(random.choice(schm.getelementtypes()), d)
@@ -107,43 +107,45 @@ class TestSchema(unittest.TestCase):
     self.__assertdata = assertdata
 
   def testNull(self):
-    self.check("\"null\"")
+    self.checkdefault("\"null\"", "null", None)
 
   def testBoolean(self):
-    self.check("\"boolean\"")
+    self.checkdefault("\"boolean\"", "true", True)
 
   def testString(self):
-    self.check("\"string\"")
+    self.checkdefault("\"string\"", "\"foo\"", "foo")
 
   def testBytes(self):
-    self.check("\"bytes\"")
+    self.checkdefault("\"bytes\"", "\"foo\"", "foo")
 
   def testInt(self):
-    self.check("\"int\"")
+    self.checkdefault("\"int\"", "5", 5)
 
   def testLong(self):
-    self.check("\"long\"")
+    self.checkdefault("\"long\"", "9", 9)
 
   def testFloat(self):
-    self.check("\"float\"")
+    self.checkdefault("\"float\"", "1.2", float(1.2))
 
   def testDouble(self):
-    self.check("\"double\"")
+    self.checkdefault("\"double\"", "1.2", float(1.2))
 
   def testArray(self):
-    self.check("{\"type\":\"array\", \"items\": \"long\"}")
+    self.checkdefault("{\"type\":\"array\", \"items\": \"long\"}",
+                       "[1]", [1])
 
   def testMap(self):
-    self.check("{\"type\":\"map\", \"values\": \"string\"}")
+    self.checkdefault("{\"type\":\"map\", \"values\": \"long\"}",
+                      "{\"a\":1}", {unicode("a"):1})
 
   def testRecord(self):
-    self.check("{\"type\":\"record\", \"name\":\"Test\"," +
+    self.checkdefault("{\"type\":\"record\", \"name\":\"Test\"," +
                "\"fields\":[{\"name\":\"f\", \"type\":" +
-               "\"string\"}, {\"name\":\"fb\", \"type\":\"bytes\"}]}")
+               "\"long\"}]}", "{\"f\":11}", {"f" : 11})
 
   def testEnum(self):
-    self.check("{\"type\": \"enum\", \"name\":\"Test\","+
-               "\"symbols\": [\"A\", \"B\"]}")
+    self.checkdefault("{\"type\": \"enum\", \"name\":\"Test\","+
+               "\"symbols\": [\"A\", \"B\"]}", "\"B\"", "B")
 
   def testRecursive(self):
     self.check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
@@ -163,9 +165,11 @@ class TestSchema(unittest.TestCase):
       +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
       +"{\"name\":\"car\", \"type\":\"string\"}," 
       +"{\"name\":\"cdr\", \"type\":\"string\"}]}]")
+    self.checkdefault("[\"double\", \"long\"]", "1.1", 1.1)
 
   def testFixed(self):
-    self.check("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}") 
+    self.checkdefault("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}", 
+                      "\"a\"", "a") 
 
   def check(self, string):
     schm = schema.parse(string)
@@ -179,6 +183,20 @@ class TestSchema(unittest.TestCase):
     for i in range(1,10):
       self.checkser(schm, randomdata)
     self.checkdatafile(schm)
+
+  def checkdefault(self, schemajson, defaultjson, defaultvalue):
+    self.check(schemajson)
+    actual = schema.parse("{\"type\":\"record\", \"name\":\"Foo\","
+                          + "\"fields\":[]}")
+    expected = schema.parse("{\"type\":\"record\", \"name\":\"Foo\"," 
+                             +"\"fields\":[{\"name\":\"f\", "
+                             +"\"type\":"+schemajson+", "
+                             +"\"default\":"+defaultjson+"}]}")
+    reader = genericio.DatumReader(actual, expected)
+    record = reader.read(io.Decoder(cStringIO.StringIO()))
+    self.assertEquals(defaultvalue, record.get("f"))
+    #FIXME fix to string for default values
+    #self.assertEquals(expected, schema.parse(schema.stringval(expected)))
 
   def checkser(self, schm, randomdata):
     datum = randomdata.next()

@@ -89,6 +89,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       if (branch.getType() == actual.getType())
         switch (branch.getType()) {
         case RECORD:
+        case ENUM:
         case FIXED:
           String name = branch.getName();
           if (name == null || name.equals(actual.getName()))
@@ -101,21 +102,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     for (Schema branch : expected.getTypes())
       switch (actual.getType()) {
       case INT:
-        switch (expected.getType()) {
+        switch (branch.getType()) {
         case LONG: case FLOAT: case DOUBLE:
-          return expected;
+          return branch;
         }
         break;
       case LONG:
-        switch (expected.getType()) {
+        switch (branch.getType()) {
         case FLOAT: case DOUBLE:
-          return expected;
+          return branch;
         }
         break;
       case FLOAT:
-        switch (expected.getType()) {
+        switch (branch.getType()) {
         case DOUBLE:
-          return expected;
+          return branch;
         }
         break;
       }

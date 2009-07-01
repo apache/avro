@@ -108,6 +108,30 @@ class Decoder(object):
   def read(self, len):
     return struct.unpack(len.__str__()+'s', self.__reader.read(len))[0]
 
+  def skipboolean(self):
+    self.skip(1)
+
+  def skipint(self):
+    self.skip(4)
+
+  def skiplong(self):
+    self.skip(8)
+
+  def skipfloat(self):
+    self.skip(4)
+
+  def skipdouble(self):
+    self.skip(8)
+
+  def skipbytes(self):
+    self.skip(self.readlong())
+
+  def skiputf8(self):
+    self.skipbytes()
+
+  def skip(self, len):
+    self.__reader.seek(self.__reader.tell()+len)
+
 class Encoder(object):
   """Write leaf values."""
 

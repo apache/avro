@@ -29,8 +29,8 @@ class DyRandomData(testio.RandomData):
     if schm.gettype() == schema.RECORD:
       clazz = reflectio.gettype(schm, _PKGNAME)
       result = clazz()
-      for field,fieldschema in schm.getfields():
-        result.__setattr__(field, self.nextdata(fieldschema,d))
+      for field in schm.getfields().values():
+        result.__setattr__(field.getname(), self.nextdata(field.getschema(),d))
       return result
     else:
       return testio.RandomData.nextdata(self, schm, d)

@@ -76,11 +76,11 @@ class Protocol(object):
       str = cStringIO.StringIO()
       str.write("{\"request\": [")
       count = 0
-      for k,v in self.__request.getfields():
+      for field in self.__request.getfields().values():
         str.write("{\"name\": \"")
-        str.write(k)
+        str.write(field.getname())
         str.write("\", \"type\": ")
-        str.write(v.str(self.__proto.gettypes()))
+        str.write(field.getschema().str(self.__proto.gettypes()))
         str.write("}")
         count+=1
         if count < len(self.__request.getfields()):
@@ -158,8 +158,9 @@ class Protocol(object):
       fieldtype = field.get("type")
       if fieldtype is None:
         raise SchemaParseException("No param type: "+field.__str__())
-      fields[fieldname] = schema._parse(fieldtype, self.__types)
-    request = schema._RecordSchema(list(fields.iteritems()))
+      fields[fieldname] = schema.Field(fieldname, 
+                                       schema._parse(fieldtype, self.__types))
+    request = schema._RecordSchema(fields)
     response = schema._parse(res, self.__types)
 
     erorrs = list()
