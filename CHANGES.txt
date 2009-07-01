@@ -17,6 +17,9 @@ Trunk (unreleased changes)
 
     AVRO-46. Optimized RPC handshake protocol for Python.  (sharad)
 
+    AVRO-66.  Add per-call RPC metadata to Java and Python. (George
+    Porter & cutting)
+
   NEW FEATURES
 
     AVRO-6. Permit easier implementation of alternate generic data

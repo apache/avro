@@ -28,12 +28,21 @@ import org.slf4j.LoggerFactory;
 import org.apache.avro.*;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.util.*;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.*;
 import org.apache.avro.specific.*;
 
 /** Base class for the server side of a protocol interaction. */
 public abstract class Responder {
   private static final Logger LOG = LoggerFactory.getLogger(Responder.class);
+
+  private static final Schema META =
+    Schema.createMap(Schema.create(Schema.Type.BYTES));
+  private static final GenericDatumReader<Map<Utf8,ByteBuffer>> META_READER =
+    new GenericDatumReader<Map<Utf8,ByteBuffer>>(META);
+  private static final GenericDatumWriter<Map<Utf8,ByteBuffer>> META_WRITER =
+    new GenericDatumWriter<Map<Utf8,ByteBuffer>>(META);
 
   private Map<Transceiver,Protocol> remotes
     = Collections.synchronizedMap(new WeakHashMap<Transceiver,Protocol>());
@@ -69,6 +78,7 @@ public abstract class Responder {
         return bbo.getBufferList();
 
       // read request using remote protocol specification
+      Map<Utf8,ByteBuffer> requestMeta = META_READER.read(null, in);
       String messageName = in.readString(null).toString();
       Message m = remote.getMessages().get(messageName);
       if (m == null)
@@ -90,6 +100,8 @@ public abstract class Responder {
         error = new AvroRemoteException(new Utf8(e.toString()));
       }
 
+      Map<Utf8,ByteBuffer> responseMeta = new HashMap<Utf8,ByteBuffer>();
+      META_WRITER.write(responseMeta, out);
       out.writeBoolean(error != null);
       if (error == null)
         writeResponse(m.getResponse(), response, out);

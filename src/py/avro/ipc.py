@@ -20,6 +20,7 @@ import socket, struct, errno, struct, cStringIO, threading, weakref, os
 import avro.schema as schema
 import avro.protocol as protocol
 import avro.io as io
+import avro.genericio as genericio
 import avro.reflectio as reflectio
 
 class TransceiverBase(object):
@@ -79,6 +80,10 @@ _HANDSHAKE_MATCH_NONE = "NONE"
 _REMOTE_HASHES = dict()
 _REMOTE_PROTOCOLS = dict()
 
+_META_SCHEMA = schema.parse("{\"type\": \"map\", \"values\": \"bytes\"}")
+_META_WRITER = genericio.DatumWriter(_META_SCHEMA)
+_META_READER = genericio.DatumReader(_META_SCHEMA)
+
 class RequestorBase(object):
   """Base class for the client side of a protocol interaction."""
 
@@ -107,6 +112,8 @@ class RequestorBase(object):
       encoder = io.Encoder(buf)
       if not self.__established:
         self.__writehandshake(encoder)
+      requestmeta = dict()
+      _META_WRITER.write(requestmeta, encoder)
       m = self.__localproto.getmessages().get(msgname)
       if m is None:
         raise schema.AvroException("Not a local message: "+msgname.__str__())
@@ -116,6 +123,7 @@ class RequestorBase(object):
       decoder = io.Decoder(cStringIO.StringIO(response))
       if not self.__established:
         self.__readhandshake(decoder)
+    responsemeta = _META_READER.read(decoder)
     m = self.getremote().getmessages().get(msgname)
     if m is None:
       raise schema.AvroException("Not a remote message: "+msgname.__str__())
@@ -197,6 +205,7 @@ class ResponderBase(object):
     buf = cStringIO.StringIO()
     encoder = io.Encoder(buf)
     error = None
+    responsemeta = dict()
     
     try:
       remoteproto = self.__handshake(transceiver, decoder, encoder)
@@ -204,6 +213,7 @@ class ResponderBase(object):
         return buf.getvalue()
       
       #read request using remote protocol specification
+      requestmeta = _META_READER.read(decoder)
       msgname = decoder.readutf8()
       m = remoteproto.getmessages().get(msgname)
       if m is None:
@@ -220,6 +230,7 @@ class ResponderBase(object):
         error = e
       except Exception, e:
         error = AvroRemoteException(unicode(e.__str__()))
+      _META_WRITER.write(responsemeta, encoder)
       encoder.writeboolean(error is not None)
       if error is None:
         self.writeresponse(m.getresponse(), response, encoder)
@@ -229,6 +240,7 @@ class ResponderBase(object):
       error = AvroRemoteException(unicode(e.__str__()))
       buf = cStringIO.StringIO()
       encoder = io.Encoder(buf)
+      _META_WRITER.write(responsemeta, encoder)
       encoder.writeboolean(True)
       self.writeerror(protocol._SYSTEM_ERRORS, error, encoder)
       

@@ -29,6 +29,8 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryEncoder;
@@ -42,6 +44,13 @@ import org.slf4j.LoggerFactory;
 /** Base class for the client side of a protocol interaction. */
 public abstract class Requestor {
   private static final Logger LOG = LoggerFactory.getLogger(Requestor.class);
+
+  private static final Schema META =
+    Schema.createMap(Schema.create(Schema.Type.BYTES));
+  private static final GenericDatumReader<Map<Utf8,ByteBuffer>> META_READER =
+    new GenericDatumReader<Map<Utf8,ByteBuffer>>(META);
+  private static final GenericDatumWriter<Map<Utf8,ByteBuffer>> META_WRITER =
+    new GenericDatumWriter<Map<Utf8,ByteBuffer>>(META);
 
   private Protocol local;
   private Protocol remote;
@@ -63,6 +72,7 @@ public abstract class Requestor {
     throws IOException {
     Decoder in;
     Message m;
+    Map<Utf8,ByteBuffer> requestMeta = new HashMap<Utf8,ByteBuffer>();
     do {
       ByteBufferOutputStream bbo = new ByteBufferOutputStream();
       Encoder out = new BinaryEncoder(bbo);
@@ -75,6 +85,7 @@ public abstract class Requestor {
       if (m == null)
         throw new AvroRuntimeException("Not a local message: "+messageName);
       
+      META_WRITER.write(requestMeta, out);
       out.writeString(m.getName());       // write message name
       writeRequest(m.getRequest(), request, out); // write request payload
       
@@ -91,6 +102,7 @@ public abstract class Requestor {
     m = getRemote().getMessages().get(messageName);
     if (m == null)
       throw new AvroRuntimeException("Not a remote message: "+messageName);
+    Map<Utf8,ByteBuffer> responseMeta = META_READER.read(null, in);
     if (!in.readBoolean()) {                      // no error
       return readResponse(m.getResponse(), in);
     } else {
