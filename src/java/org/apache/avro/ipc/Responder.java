@@ -72,6 +72,7 @@ public abstract class Responder {
       new ByteBufferOutputStream();
     Encoder out = new BinaryEncoder(bbo);
     AvroRemoteException error = null;
+    Map<Utf8,ByteBuffer> responseMeta = new HashMap<Utf8,ByteBuffer>();
     try {
       Protocol remote = handshake(transceiver, in, out);
       if (remote == null)                        // handshake failed
@@ -99,8 +100,6 @@ public abstract class Responder {
         LOG.warn("application error", e);
         error = new AvroRemoteException(new Utf8(e.toString()));
       }
-
-      Map<Utf8,ByteBuffer> responseMeta = new HashMap<Utf8,ByteBuffer>();
       META_WRITER.write(responseMeta, out);
       out.writeBoolean(error != null);
       if (error == null)
@@ -113,6 +112,7 @@ public abstract class Responder {
       error = new AvroRemoteException(e);
       bbo = new ByteBufferOutputStream();
       out = new BinaryEncoder(bbo);
+      META_WRITER.write(responseMeta, out);
       out.writeBoolean(true);
       writeError(Protocol.SYSTEM_ERRORS, error, out);
     }
