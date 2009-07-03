@@ -89,6 +89,9 @@ Avro 1.0.0 -- 1 July 2009
     AVRO-59.  C++: make serializer more generic.  (Scott Banachowski
     via cutting)
 
+    AVRO-68. Add license headers to C sources and improve C packaging.
+    (Matt Massie via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

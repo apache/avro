@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([avro-c], [0.1.0], [matt@cloudera.com])
+AC_INIT([avro-c], [1], [matt@cloudera.com])
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([avro.h])

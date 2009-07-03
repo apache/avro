@@ -32,11 +32,12 @@
   <property name="year" value="2009"/>
 
   <property name="src.dir" value="${basedir}/src"/>  	
+  <property name="build.dir" value="${basedir}/build"/>
   <property name="java.src.dir" value="${src.dir}/java"/>
   <property name="c.src.dir" value="${src.dir}/c"/>
+  <property name="c.build.dir" value="${build.dir}/c/obj"/>
   <property name="lib.dir" value="${basedir}/lib"/>
-  <property name="build.dir" value="${basedir}/build"/>
-  <property name="build.c" value="${build.dir}/c"/>
+  <property name="install.c" value="${build.dir}/c/install"/>
   <property name="dist.dir" value="${build.dir}/${fullname}"/>
 
   <property name="build.classes" value="${build.dir}/classes"/>
@@ -479,7 +480,7 @@
     </copy>
 
     <copy todir="${dist.dir}/c" includeEmptyDirs="false">
-      <fileset dir="${build.c}"/>
+      <fileset dir="${install.c}"/>
     </copy>
 
     <copy todir="${dist.dir}"> 
@@ -541,8 +542,7 @@
     <checksum file="${build.dir}/${fullname}.tar.gz" algorithm="sha1"/>
   </target>
 
-  <target name="clean" description="Delete build files, and their directories"
-	  depends="clean-c">
+  <target name="clean" description="Delete build files, and their directories">
     <delete dir="${build.dir}"/>
     <delete>
       <fileset dir="src" includes="**/*.pyc" />
@@ -571,42 +571,37 @@
   </target>
 
   <target name="configure-c-check">
-    <uptodate targetfile="${c.src.dir}/Makefile"
+    <uptodate targetfile="${c.build.dir}/Makefile"
 	      srcfile="${c.src.dir}/configure"
 	      property="configure-c-not-needed"/>
   </target>
 
   <target name="configure-c" depends="autoreconf-c, configure-c-check"
 	  unless="configure-c-not-needed">
-    <exec dir="${c.src.dir}" executable="sh" failonerror="true">
-      <arg line="./configure --prefix=${build.c}/${build.platform}"/>
+    <mkdir dir="${c.build.dir}" />
+    <exec dir="${c.build.dir}" executable="sh" failonerror="true">
+      <arg line="${c.src.dir}/configure --prefix=${install.c}/${build.platform}"/>
     </exec>
   </target>
 
   <target name="compile-c" depends="init, configure-c">
-    <exec dir="${c.src.dir}" executable="make" failonerror="true"/>
+    <exec dir="${c.build.dir}" executable="make" failonerror="true"/>
   </target>
 
   <target name="test-c" depends="compile-c">
-    <exec dir="${c.src.dir}" executable="make" failonerror="true">
+    <exec dir="${c.build.dir}" executable="make" failonerror="true">
       <arg value="check"/>
     </exec>
   </target>
 
   <target name="package-c" depends="compile-c">
-    <exec dir="${c.src.dir}" executable="make" failonerror="true">
+    <exec dir="${c.build.dir}" executable="make" failonerror="true">
       <arg value="install"/>
     </exec>
   </target>
 
   <target name="c-makefile-check">
-    <available file="${c.src.dir}/Makefile" property="c-makefile-present"/>
-  </target>
-
-  <target name="clean-c" depends="c-makefile-check" if="c-makefile-present">
-    <exec dir="${c.src.dir}" executable="make" failonerror="true">
-      <arg value="clean"/>
-    </exec>
+    <available file="${c.build.dir}/Makefile" property="c-makefile-present"/>
   </target>
   <!-- End C Targets -->
 
