@@ -595,6 +595,7 @@
   </target>
 
   <target name="package-c" depends="compile-c">
+    <chmod file="${c.src.dir}/config/install-sh" perm="ugo+x"/>
     <exec dir="${c.build.dir}" executable="make" failonerror="true">
       <arg value="install"/>
     </exec>
