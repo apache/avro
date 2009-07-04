@@ -133,3 +133,5 @@ Avro 1.0.0 -- 1 July 2009
     AVRO-55. Fix two spec document typos.  (cutting)
 
     AVRO-69. Make C's install-sh script executable.  (Matt Massie via cutting)
+
+    AVRO-70. Add license header to json_schema.y.  (Matt Massie via cutting)
