@@ -137,3 +137,5 @@ Avro 1.0.0 -- 1 July 2009
     AVRO-70. Add license header to json_schema.y.  (Matt Massie via cutting)
 
     AVRO-74. Add missing license headers in C++.  (cutting)
+
+    AVRO-73. Workaround in python to fix simplejson bug on Mac OS. (sharad)

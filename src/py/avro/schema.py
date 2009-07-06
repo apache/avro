@@ -449,7 +449,7 @@ class SchemaParseException(AvroException):
   pass
 
 def _parse(obj, names):
-  if isinstance(obj, unicode):
+  if isinstance(obj, basestring):
     schema = names.get(obj)
     if schema is not None:
       return schema
