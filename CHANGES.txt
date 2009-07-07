@@ -139,3 +139,5 @@ Avro 1.0.0 -- 1 July 2009
     AVRO-74. Add missing license headers in C++.  (cutting)
 
     AVRO-73. Workaround in python to fix simplejson bug on Mac OS. (sharad)
+
+    AVRO-64. Fix socket and parser issue on Mac OS. (sharad)

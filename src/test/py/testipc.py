@@ -104,4 +104,7 @@ class TestProtocol(unittest.TestCase):
 
   def checkshutdown(self):
     if self.server is not None:
-      self.server.close()
+      try:
+        self.server.close()
+      except Exception, e:
+        print "Exception while closing socket", e

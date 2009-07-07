@@ -66,7 +66,7 @@ def _validateunion(schm, object):
 _validatefn = {
      schema.NULL : lambda schm, object: object is None,
      schema.BOOLEAN : lambda schm, object: isinstance(object, bool),
-     schema.STRING : lambda schm, object: isinstance(object, unicode),
+     schema.STRING : lambda schm, object: isinstance(object, basestring),
      schema.FLOAT : lambda schm, object: isinstance(object, float),
      schema.DOUBLE : lambda schm, object: isinstance(object, float),
      schema.BYTES : lambda schm, object: isinstance(object, str),

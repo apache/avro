@@ -188,7 +188,7 @@ class Encoder(object):
     self.__writer.write(struct.pack(len(datum).__str__()+'s',datum))
 
   def writeutf8(self, datum):
-    if not isinstance(datum, unicode):
+    if not isinstance(datum, basestring):
       raise AvroTypeException(schema.STRING, datum, 
                               "avro STRING should be python unicode")
     datum = datum.encode("utf-8")
