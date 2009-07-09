@@ -33,9 +33,10 @@ main (void)
   AVRO avro_in, avro_out;
   avro_status_t avro_status;
   char buf[1024];
-  long long_in, long_out;
-  char *bytes_in, *bytes_out;
-  int i;
+  char in[10];
+  char *input = &in;
+  char *output;
+  int i, j;
   int64_t len_in, len_out;
 
   apr_initialize ();
@@ -43,9 +44,11 @@ main (void)
 
   srand (time (NULL));
 
+  apr_pool_create (&pool, NULL);
+
   for (i = 0; i < 10; i++)
     {
-      apr_pool_create (&pool, NULL);
+
       avro_status =
 	avro_create_memory (&avro_in, pool, buf, sizeof (buf), AVRO_ENCODE);
       if (avro_status != AVRO_OK)
@@ -53,13 +56,16 @@ main (void)
 	  err_quit ("Unable to create AVRO encoder");
 	}
 
-      long_in = rand ();
-      bytes_in = (char *) &long_in;
-      len_in = sizeof (bytes_in);
-      avro_status = avro_bytes (&avro_in, &bytes_in, &len_in, -1);
+      for (j = 0; j < sizeof (input); j++)
+	{
+	  input[j] = (char) rand ();
+	}
+
+      len_in = sizeof (in);
+      avro_status = avro_bytes (&avro_in, &input, &len_in, -1);
       if (avro_status != AVRO_OK)
 	{
-	  err_quit ("Unable to encode bytes value=%s", long_in);
+	  err_quit ("Unable to encode bytes");
 	}
 
       avro_status =
@@ -69,10 +75,10 @@ main (void)
 	  err_quit ("Unable to create AVRO decoder");
 	}
 
-      avro_status = avro_bytes (&avro_out, &bytes_out, &len_out, -1);
+      avro_status = avro_bytes (&avro_out, &output, &len_out, -1);
       if (avro_status != AVRO_OK)
 	{
-	  err_quit ("Unable to decode AVRO long");
+	  err_quit ("Unable to decode bytes");
 	}
 
       if (len_out != len_in)
@@ -80,16 +86,17 @@ main (void)
 	  err_quit ("Error decoding bytes out len=%d != in len=%d", len_out,
 		    len_in);
 	}
-      long_out = *((long *) bytes_out);
-      if (long_out != long_in)
+
+      if (memcmp (input, output, sizeof (input)))
 	{
+	  err_quit ("Output bytes do not equal input bytes");
 	  avro_dump_memory (&avro_in, stderr);
 	  avro_dump_memory (&avro_out, stderr);
-	  err_quit ("Error decoding bytes long_in=%d != long_out = %d",
-		    long_in, long_out);
 	}
-      apr_pool_destroy (pool);
+
+      apr_pool_clear (pool);
     }
+  apr_pool_destroy (pool);
 
   return EXIT_SUCCESS;
 }

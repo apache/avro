@@ -1,6 +1,6 @@
 Avro Change Log
 
-Avro 1.0.0 -- 8 July 2009
+Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES
 
@@ -141,3 +141,5 @@ Avro 1.0.0 -- 8 July 2009
     AVRO-73. Workaround in python to fix simplejson bug on Mac OS. (sharad)
 
     AVRO-64. Fix socket and parser issue on Mac OS. (sharad)
+
+    AVRO-77. Fix C unit tests on Mac OS.  (Matt Massie via cutting)

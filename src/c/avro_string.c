@@ -76,13 +76,17 @@ avro_string (AVRO * avro, char **str, int64_t maxlen)
 avro_status_t
 avro_bytes (AVRO * avro, char **bytes, int64_t * len, int64_t maxlen)
 {
-  if (!avro || !bytes || !len || *len < 0)
+  if (!avro || !bytes || !len)
     {
       return AVRO_FAILURE;
     }
   switch (avro->a_op)
     {
     case AVRO_ENCODE:
+      if (*len < 0)
+	{
+	  return AVRO_FAILURE;
+	}
       return avro_string_bytes_encode (avro, bytes, len, maxlen);
     case AVRO_DECODE:
       return avro_string_bytes_decode (avro, bytes, len, 0, maxlen);
