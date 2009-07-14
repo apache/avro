@@ -24,8 +24,10 @@
 #include "OutputStreamer.hh"
 #include "InputStreamer.hh"
 #include "Serializer.hh"
-#include "Parser.hh"
-#include "ValidatingParser.hh"
+#include "Writer.hh"
+#include "ValidatingWriter.hh"
+#include "Reader.hh"
+#include "ValidatingReader.hh"
 #include "ValidSchema.hh"
 #include "Compiler.hh"
 
@@ -102,7 +104,7 @@ void testParser(const avrouser::RootRecord &myRecord)
     avrouser::RootRecord inRecord;
     std::istringstream istring(ostring.str());
     avro::IStreamer is(istring);
-    avro::Parser p(is);
+    avro::Reader p(is);
     avro::parse(p, inRecord);
 
     checkOk(myRecord, inRecord);
@@ -119,7 +121,7 @@ void testParserValid(avro::ValidSchema &valid, const avrouser::RootRecord &myRec
     avrouser::RootRecord inRecord;
     std::istringstream istring(ostring.str());
     avro::IStreamer is(istring);
-    avro::ValidatingParser p(valid, is);
+    avro::ValidatingReader p(valid, is);
     avro::parse(p, inRecord);
 
     checkOk(myRecord, inRecord);

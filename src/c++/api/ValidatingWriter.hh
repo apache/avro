@@ -91,7 +91,7 @@ class ValidatingWriter : private boost::noncopyable
         }
     }
 
-    Validator  validator_;
+    Validator validator_;
     Writer writer_;
 
 };

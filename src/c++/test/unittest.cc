@@ -28,7 +28,6 @@
 #include "OutputStreamer.hh"
 #include "Serializer.hh"
 #include "Parser.hh"
-#include "ValidatingParser.hh"
 #include "SymbolMap.hh"
 
 #include "AvroSerialize.hh"
@@ -106,8 +105,8 @@ struct TestSchema
         }
     }
 
-    template<typename Serial>
-    void writeEncoding(Serial &s, int path)
+    template<typename Serializer>
+    void writeEncoding(Serializer &s, int path)
     {
 
         std::cout << "Record\n";
@@ -168,18 +167,18 @@ struct TestSchema
         writeEncoding(s, path);
     }
 
-    void printNext(Parser &p) {
+    void printNext(Parser<Reader> &p) {
     }
 
-    void printNext(ValidatingParser &p)
+    void printNext(Parser<ValidatingReader> &p)
     {
-        std::cout << "Next: \"" << p.nextType();
+        std::cout << "Next: \"" << nextType(p);
         std::string recordName;
         std::string fieldName;
-        if( p.getCurrentRecordName(recordName) ) {
+        if( getCurrentRecordName(p, recordName) ) {
             std::cout << "\" record: \"" << recordName;
         }
-        if( p.getNextFieldName(fieldName) ) {
+        if( getNextFieldName(p, fieldName) ) {
             std::cout << "\" field: \"" << fieldName;
         }
         std::cout << "\"\n";
@@ -270,7 +269,7 @@ struct TestSchema
     void readRawData() {
         std::ifstream in("test.avro");
         IStreamer ins(in);
-        Parser p(ins);
+        Parser<Reader> p(ins);
         readData(p);
     }
 
@@ -278,7 +277,7 @@ struct TestSchema
     {
         std::ifstream in("test.avro");
         IStreamer ins(in);
-        ValidatingParser p(schema_, ins);
+        Parser<ValidatingReader> p(schema_, ins);
         readData(p);
     }
 
@@ -436,7 +435,7 @@ struct TestNested
 
     void validatingParser(InputStreamer &is) 
     {
-        ValidatingParser p(schema_, is);
+        Parser<ValidatingReader> p(schema_, is);
         int64_t val = 0;
         int64_t path = 0;
     
@@ -518,6 +517,7 @@ struct TestGenerated
 
 int main()
 {
+    bool pass = true;
     try {
         TestEncoding test1;
         test1.test();
@@ -536,7 +536,8 @@ int main()
     }
     catch (std::exception &e) {
         std::cout << "Failed unit test due to exception: " << e.what() << std::endl;
+        pass = false;
     }
 
-    return 0;
+    return pass ? 0 : 1;
 }

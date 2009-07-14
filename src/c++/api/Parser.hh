@@ -19,147 +19,124 @@
 #ifndef avro_Parser_hh__
 #define avro_Parser_hh__
 
-#include <stdint.h>
-#include <vector>
-#include <boost/noncopyable.hpp>
-
-#include "InputStreamer.hh"
-#include "Zigzag.hh"
+#include "Reader.hh"
+#include "ValidatingReader.hh"
 
 namespace avro {
 
 ///
-/// Parses from an avro encoding to the requested type.  Assumes the next item
-/// in the avro binary data is the expected type.
+/// Class that wraps a reader or ValidatingReade with an interface that uses
+/// explicit get* names instead of getValue
 ///
 
+template<class Reader>
 class Parser : private boost::noncopyable
 {
 
   public:
 
+    // Constructor only works with Writer
     explicit Parser(InputStreamer &in) :
-        in_(in)
+        reader_(in)
     {}
 
-    void getNull() {}
+    /// Constructor only works with ValidatingWriter
+    Parser(const ValidSchema &schema, InputStreamer &in) :
+        reader_(schema, in)
+    {}
+
+    void getNull() {
+        Null null;
+        reader_.getValue(null);
+    }
 
     bool getBool() {
-        uint8_t ival = 0;
-        in_.getByte(ival);
-        return(ival != 0);
+        bool val;
+        reader_.getValue(val);
+        return val;
     }
 
     int32_t getInt() {
-        uint32_t encoded = getVarInt();
-        return decodeZigzag32(encoded);
+        int32_t val;
+        reader_.getValue(val);
+        return val;
     }
 
     int64_t getLong() {
-        uint64_t encoded = getVarInt();
-        return decodeZigzag64(encoded);
+        int64_t val;
+        reader_.getValue(val);
+        return val;
     }
 
     float getFloat() {
-        union { 
-            float f;
-            uint32_t i;
-        } v;
-        in_.getWord(v.i);
-        return v.f;
+        float val;
+        reader_.getValue(val);
+        return val;
     }
 
     double getDouble() {
-        union { 
-            double d;
-            uint64_t i;
-        } v;
-        in_.getLongWord(v.i);
-        return v.d;
-    }
-
-    void getBytes(std::vector<uint8_t> &val) {
-        int64_t size = getLong();
-        
-        val.reserve(size);
-        size_t bytes = 0;
-        uint8_t bval = 0;
-        while(bytes++ < static_cast<size_t>(size)) {
-            in_.getByte(bval);
-            val.push_back(bval);
-        }
+        double val;
+        reader_.getValue(val);
+        return val;
     }
 
     void getString(std::string &val) {
-        int64_t size = getLong();
-        
-        val.reserve(size);
-        size_t bytes = 0;
-        uint8_t bval = 0;
-        while(bytes++ < static_cast<size_t>(size)) {
-            in_.getByte(bval);
-            val.push_back(bval);
-        }
+        reader_.getValue(val);
+    }
+
+    void getBytes(std::vector<uint8_t> &val) {
+        reader_.getBytes(val);
     }
 
     void getFixed(std::vector<uint8_t> &val, size_t size) {
-        
-        val.reserve(size);
-        size_t bytes = 0;
-        uint8_t bval = 0;
-        while(bytes++ < size) {
-            in_.getByte(bval);
-            val.push_back(bval);
-        }
+        reader_.getFixed(val, size);
     }
 
     void getFixed(uint8_t *val, size_t size) {
-        
-        size_t bytes = 0;
-        uint8_t bval = 0;
-        while(bytes++ < size) {
-            in_.getByte(bval);
-            *val++ = bval;
-        }
+        reader_.getFixed(val, size);
     }
 
-    void getRecord() { }
+    void getRecord() { 
+        reader_.getRecord();
+    }
 
     int64_t getArrayBlockSize() {
-        return getLong();
+        return reader_.getArrayBlockSize();
     }
 
     int64_t getUnion() { 
-        return getLong();
+        return reader_.getUnion();
     }
 
     int64_t getEnum() {
-        return getLong();
+        return reader_.getEnum();
     }
 
     int64_t getMapBlockSize() {
-        return getLong();
+        return reader_.getMapBlockSize();
     }
 
   private:
 
-    uint64_t getVarInt() {
-        uint64_t encoded = 0;
-        uint8_t val = 0;
-        do {
-            encoded <<= 8;
-            in_.getByte(val);
-            encoded |= (val & 0x7F);
+    friend Type nextType(Parser<ValidatingReader> &p);
+    friend bool getCurrentRecordName(Parser<ValidatingReader> &p, std::string &name);
+    friend bool getNextFieldName(Parser<ValidatingReader> &p, std::string &name);
 
-        } while (val & 0x80);
-
-        return encoded;
-    }
-
-    InputStreamer &in_;
+    Reader reader_;
 
 };
 
+inline Type nextType(Parser<ValidatingReader> &p) {
+    return p.reader_.nextType();
+}
+
+inline bool getCurrentRecordName(Parser<ValidatingReader> &p, std::string &name) {
+    return p.reader_.getCurrentRecordName(name);
+}
+
+inline bool getNextFieldName(Parser<ValidatingReader> &p, std::string &name) {
+    return p.reader_.getNextFieldName(name);
+}
 
 } // namespace avro
 

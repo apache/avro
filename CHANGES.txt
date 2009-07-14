@@ -8,6 +8,9 @@ Trunk (unreleased changes)
 
   IMPROVEMENTS
 
+    AVRO-71.  C++: make deserializer more generic.  (Scott Banachowski
+    via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

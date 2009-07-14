@@ -18,101 +18,36 @@
 
 #include <boost/static_assert.hpp>
 
-#include "ValidatingParser.hh"
+#include "ValidatingReader.hh"
 #include "ValidSchema.hh"
 #include "OutputStreamer.hh"
 
 namespace avro {
 
-ValidatingParser::ValidatingParser(const ValidSchema &schema, InputStreamer &in) :
+ValidatingReader::ValidatingReader(const ValidSchema &schema, InputStreamer &in) :
     validator_(schema),
-    parser_(in)
+    reader_(in)
 { }
 
-void
-ValidatingParser::getNull()
-{ 
-    checkSafeToGet(AVRO_NULL);
-    validator_.advance();
-    parser_.getNull();
-}
-
-int32_t
-ValidatingParser::getInt()
-{
-    checkSafeToGet(AVRO_INT);
-    int32_t val = parser_.getInt();
-    validator_.advance();
-    return val;
-}
-
 int64_t
-ValidatingParser::getLong()
+ValidatingReader::getCount()
 {
     checkSafeToGet(AVRO_LONG);
-    int64_t val = parser_.getLong();
-    validator_.advance();
-    return val;
-}
-
-float
-ValidatingParser::getFloat()
-{
-    checkSafeToGet(AVRO_FLOAT);
-    validator_.advance();
-    return parser_.getFloat();
-}
-
-double
-ValidatingParser::getDouble()
-{
-    checkSafeToGet(AVRO_DOUBLE);
-    validator_.advance();
-    return parser_.getDouble();
-}
-
-bool
-ValidatingParser::getBool()
-{
-    checkSafeToGet(AVRO_BOOL);
-    validator_.advance();
-    return parser_.getBool();
-}
-
-void
-ValidatingParser::getString(std::string &val)
-{
-    checkSafeToGet(AVRO_STRING);
-    validator_.advance();
-    parser_.getString(val);
-}
-
-void
-ValidatingParser::getBytes(std::vector<uint8_t> &val)
-{
-    checkSafeToGet(AVRO_BYTES);
-    validator_.advance();
-    parser_.getBytes(val);
-}
-
-int64_t
-ValidatingParser::getCount()
-{
-    checkSafeToGet(AVRO_LONG);
-    int64_t val = parser_.getLong();
+    int64_t val;
+    reader_.getValue(val);
     validator_.advanceWithCount(val);
     return val;
 }
 
 void 
-ValidatingParser::getRecord()
+ValidatingReader::getRecord()
 {
     checkSafeToGet(AVRO_RECORD);
     validator_.advance();
 }
 
 int64_t 
-ValidatingParser::getUnion()
+ValidatingReader::getUnion()
 {
     checkSafeToGet(AVRO_UNION);
     validator_.advance();
@@ -120,7 +55,7 @@ ValidatingParser::getUnion()
 }
 
 int64_t 
-ValidatingParser::getEnum()
+ValidatingReader::getEnum()
 {
     checkSafeToGet(AVRO_ENUM);
     validator_.advance();
@@ -128,7 +63,7 @@ ValidatingParser::getEnum()
 }
 
 int64_t 
-ValidatingParser::getMapBlockSize()
+ValidatingReader::getMapBlockSize()
 {
     checkSafeToGet(AVRO_MAP);
     validator_.advance();
@@ -136,7 +71,7 @@ ValidatingParser::getMapBlockSize()
 }
 
 int64_t 
-ValidatingParser::getArrayBlockSize()
+ValidatingReader::getArrayBlockSize()
 {
     checkSafeToGet(AVRO_ARRAY);
     validator_.advance();

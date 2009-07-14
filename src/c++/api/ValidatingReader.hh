@@ -16,15 +16,16 @@
  * limitations under the License.
  */
 
-#ifndef avro_ValidatingParser_hh__
-#define avro_ValidatingParser_hh__
+#ifndef avro_ValidatingReader_hh__
+#define avro_ValidatingReader_hh__
 
 #include <stdint.h>
 #include <vector>
 #include <boost/noncopyable.hpp>
 
-#include "Parser.hh"
+#include "Reader.hh"
 #include "Validator.hh"
+#include "AvroTraits.hh"
 
 namespace avro {
 
@@ -36,47 +37,45 @@ class InputStreamer;
 /// correct type is being asked for.  If the user attempts to parse a type that
 /// does not match what the schema says, an exception will be thrown.  
 ///
-/// The ValidatingParser object can also be used to tell what the next type is,
+/// The ValidatingReader object can also be used to tell what the next type is,
 /// so that callers can dynamically discover the contents.  It also tells
 /// the attribute names of the objects or their fields, if they exist.
 ///
 
-class ValidatingParser : private boost::noncopyable
+class ValidatingReader : private boost::noncopyable
 {
 
   public:
 
-    explicit ValidatingParser(const ValidSchema &schema, InputStreamer &in);
+    explicit ValidatingReader(const ValidSchema &schema, InputStreamer &in);
 
-    void getNull();
+    template<typename T>
+    void getValue(T &val) {
+        checkSafeToGet(type_to_avro<T>::type);
+        reader_.getValue(val);
+        validator_.advance();
+    }
 
-    bool getBool();
-
-    int32_t getInt();
-
-    int64_t getLong();
-
-    float getFloat();
-
-    double getDouble();
-
-    void getBytes(std::vector<uint8_t> &val);
+    void getBytes(std::vector<uint8_t> &val) {
+        checkSafeToGet(AVRO_BYTES);
+        validator_.advance();
+        reader_.getBytes(val);
+    }
 
     void getFixed(uint8_t *val, size_t size) {
         checkSafeToGet(AVRO_FIXED);
         checkSizeExpected(size);
         validator_.advance();
-        parser_.getFixed(val, size);
+        reader_.getFixed(val, size);
     }
 
     void getFixed(std::vector<uint8_t> &val, size_t size) {
         checkSafeToGet(AVRO_FIXED);
         checkSizeExpected(size);
         validator_.advance();
-        parser_.getFixed(val, size);
+        reader_.getFixed(val, size);
     }
 
-    void getString(std::string &val);
 
     void getRecord();
 
@@ -117,9 +116,8 @@ class ValidatingParser : private boost::noncopyable
     }
 
     Validator validator_;
-    Parser parser_;
+    Reader reader_;
 };
-
 
 } // namespace avro
 

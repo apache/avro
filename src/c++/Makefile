@@ -26,7 +26,7 @@ EXECS = unittest testparser precompile testgen
 
 all : $(OBJDIR)/avrolib.a $(EXECS)
 
-CXXFLAGS = -Wall -g 
+CXXFLAGS = -Wall -Werror -g 
 
 $(OBJDIR)/avrolib.a : $(OBJS) $(GENERATEDOBJS)
 	ar ruc $@ $^ 
