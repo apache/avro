@@ -1,7 +1,7 @@
 AM_CFLAGS=$(APR_CFLAGS) $(APR_INCLUDES) $(APU_INCLUDES) -Wall -pedantic
 C_DOCS_OUTPUT ?= "docs/dox"
 
-EXTRA_DIST=json_schema.y
+EXTRA_DIST=json_schema.y lemon.c lempar.c
 
 include_HEADERS = avro.h
 
@@ -49,17 +49,19 @@ TESTS=$(check_PROGRAMS)
 # Run indent on all files. 
 # NOTE: Don't indent avro.h (messes up docs) or lemon.c,lempar.c (messes up parser)
 pretty:
+	pushd $(top_srcdir); \
 	for file in *.[c,h]; \
 	do \
 	if [ $$file = "avro.h" -o $$file = "lemon.c" -o $$file = "lempar.c" ]; then \
 		continue;\
 	fi;\
 	indent $$file; \
-	done
+	done;\
+	popd;
 
 docs:
 	@(cat docs/doxygen.conf; echo "OUTPUT_DIRECTORY=$(C_DOCS_OUTPUT)")| doxygen -
 
 .PHONY: docs 
 
-CLEANFILES=*~ trace.txt json_schema.out
+CLEANFILES=$(top_srcdir)/*~ trace.txt json_schema.out lemon

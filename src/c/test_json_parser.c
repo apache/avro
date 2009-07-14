@@ -26,6 +26,7 @@ under the License.
 #include <apr.h>
 #include <apr_pools.h>
 
+#include "avro.h"
 #include "json.h"
 
 #define TRACING 1
@@ -52,8 +53,8 @@ main (int argc, char *argv[], char *envp[])
   FILE *file;
   DIR *dir;
   struct dirent *dent;
-  int i, fd, processed;
-  char buf[1024];
+  int i, processed;
+  char buf[4096];
   apr_pool_t *pool;
   JSON_value *value;
   char path[256];
@@ -63,8 +64,7 @@ main (int argc, char *argv[], char *envp[])
       srcdir = ".";
     }
 
-  apr_initialize ();
-  atexit (apr_terminate);
+  avro_initialize ();
 
   apr_pool_create (&pool, NULL);
 
@@ -101,6 +101,7 @@ main (int argc, char *argv[], char *envp[])
 		  fprintf (stderr, "Can't open file");
 		  return EXIT_FAILURE;
 		}
+
 	      processed = 0;
 	      while (!feof (file))
 		{
@@ -113,11 +114,21 @@ main (int argc, char *argv[], char *envp[])
 	      fclose (file);
 
 	      value = JSON_parse (pool, buf, processed);
-	      JSONParserTrace (trace, buf);
-	      if (!value && !td->shouldFail)
+	      if (!value)
 		{
-		  return EXIT_FAILURE;
+		  if (!td->shouldFail)
+		    {
+		      return EXIT_FAILURE;
+		    }
 		}
+	      else
+		{
+		  if (td->shouldFail)
+		    {
+		      return EXIT_FAILURE;
+		    }
+		}
+	      /* JSONParserTrace (trace, buf); */
 	      /* JSON_print (stderr, value); */
 	    }
 	  dent = readdir (dir);

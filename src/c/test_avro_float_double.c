@@ -37,8 +37,7 @@ main (void)
   double d_in, d_out;
   int i;
 
-  apr_initialize ();
-  atexit (apr_terminate);
+  avro_initialize ();
 
   srand (time (NULL));
 

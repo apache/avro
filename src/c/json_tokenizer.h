@@ -20,12 +20,14 @@ under the License.
 #ifndef JSON_TOKENIZER_H
 #define JSON_TOKENIZER_H
 
+#include <wchar.h>
 #include "json_schema.h"
 
 /* Tokens which are not part of the schema */
 enum json_tokens
 {
-  TK_SPACE = 42424242
+  TK_SPACE = 42424242,
+  TK_ILLEGAL
 };
 
 struct Token
@@ -36,7 +38,7 @@ struct Token
 };
 typedef struct Token Token;
 
-int json_get_token (const char *z, const unsigned len, int *tokenType,
+int json_get_token (const wchar_t * z, const size_t len, int *tokenType,
 		    double *number);
 
 #endif

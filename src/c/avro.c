@@ -17,6 +17,8 @@ specific language governing permissions and limitations
 under the License.
 */
 
+#include <stdlib.h>
+#include <locale.h>
 #include "avro.h"
 
 avro_status_t
@@ -51,5 +53,20 @@ avro_bool (AVRO * avro, bool_t * bp)
     default:
       return AVRO_FAILURE;
     }
+  return AVRO_OK;
+}
+
+avro_status_t
+avro_initialize (void)
+{
+  apr_initialize ();
+  atexit (apr_terminate);
+
+  /* Set the locale to UTF-8 */
+  if (!setlocale (LC_CTYPE, "en_US.UTF-8"))
+    {
+      return AVRO_FAILURE;
+    }
+
   return AVRO_OK;
 }

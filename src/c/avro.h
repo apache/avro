@@ -109,6 +109,11 @@ typedef struct AVRO AVRO;
 #define AVRO_PUTBYTES(avro, addr, len)     \
 (*(avro)->a_ops->a_putbytes)(avro, addr, len)
 
+/** Initialize the AVRO library 
+@return The Avro status
+*/
+avro_status_t avro_initialize(void);
+
 /** Create a memory-backed Avro handle 
 @param avro Pointer to handle that will be initialized
 @param pool Pool used for allocating dynamic data structures.

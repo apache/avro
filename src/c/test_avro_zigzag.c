@@ -55,8 +55,7 @@ main (void)
   int64_t value_in, value_out;
   int i, j;
 
-  apr_initialize ();
-  atexit (apr_terminate);
+  avro_initialize ();
 
   apr_pool_create (&pool, NULL);
 

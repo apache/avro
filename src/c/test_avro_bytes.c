@@ -39,8 +39,7 @@ main (void)
   int i, j;
   int64_t len_in, len_out;
 
-  apr_initialize ();
-  atexit (apr_terminate);
+  avro_initialize ();
 
   srand (time (NULL));
 

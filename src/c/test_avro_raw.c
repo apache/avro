@@ -37,8 +37,7 @@ main (void)
   int64_t i64_in, i64_out;
   int i;
 
-  apr_initialize ();
-  atexit (apr_terminate);
+  avro_initialize ();
 
   srand (time (NULL));
 

@@ -26,6 +26,7 @@ under the License.
 %include {
 #include <stdio.h>
 #include <assert.h>
+#include <wchar.h>
 #include "json.h"
 #include "json_tokenizer.h"
 
@@ -107,7 +108,7 @@ member_list(A) ::= .
 members(A) ::= member_list(B) STRING(C) COLON value(D).
 {
      A = B;
-     apr_hash_set(B, C->string_value, APR_HASH_KEY_STRING, D);
+     apr_hash_set(B, C->string_value, wcslen(C->string_value) * sizeof(wchar_t), D);
 }
 members(A) ::= member_list(B).
 {

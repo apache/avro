@@ -11,6 +11,9 @@ Trunk (unreleased changes)
     AVRO-71.  C++: make deserializer more generic.  (Scott Banachowski
     via cutting)
 
+    AVRO-60. Fix C JSON parser to correctly handle escapes and
+    multi-byte characters.  Add tests.  (Matt Massie via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

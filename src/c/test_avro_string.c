@@ -41,8 +41,7 @@ main (void)
     "Test"
   };
 
-  apr_initialize ();
-  atexit (apr_terminate);
+  avro_initialize ();
 
   for (i = 0; i < sizeof (test_strings) / sizeof (test_strings[0]); i++)
     {

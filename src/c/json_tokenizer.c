@@ -20,41 +20,44 @@ under the License.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <wchar.h>
+#include <wctype.h>
 
 #include "json_tokenizer.h"
 
 static struct keyword
 {
-  char *z;
+  wchar_t *z;
   int len;
   int tokenType;
 } keywords[] =
 {
   {
-  "true", 4, TK_TRUE},
+  L"true", 4, TK_TRUE},
   {
-  "false", 5, TK_FALSE},
+  L"false", 5, TK_FALSE},
   {
-  "null", 4, TK_NULL}
+  L"null", 4, TK_NULL}
 };
 
 #define NUM_KEYWORDS (sizeof(keywords)/sizeof(keywords[0]))
 
 int
-json_get_token (const char *z, const unsigned len, int *tokenType,
+json_get_token (const wchar_t * z, const size_t len, int *tokenType,
 		double *number)
 {
-  char *p;
+  wchar_t *p;
   int i;
   if (!z || !tokenType || len == 0 || !number)
     {
       return -1;
     }
 
-  if (isspace (z[0]))
+  *tokenType = TK_ILLEGAL;
+
+  if (iswspace (z[0]))
     {
-      for (i = 1; isspace (z[i]); i++)
+      for (i = 1; iswspace (z[i]); i++)
 	{
 	}
       *tokenType = TK_SPACE;
@@ -65,17 +68,73 @@ json_get_token (const char *z, const unsigned len, int *tokenType,
     {
     case '"':
       {
-	/* Find the end quote */
+	/* NOTE: See RFC 4627 Section 2.5 */
 	for (i = 1; i < len; i++)
 	  {
-	    /* TODO: escape characters? */
-	    if (z[i] == '"' && z[i - 1] != '\\')
+	    /* Check if we're at the end of the string */
+	    if (z[i] == '"')
 	      {
 		*tokenType = TK_STRING;
 		return i + 1;
 	      }
+	    /* Check for characters that are allowed unescaped */
+	    else if (z[i] == 0x20 || z[i] == 0x21 ||
+		     (z[i] >= 0x23 && z[i] <= 0x5B) ||
+		     (z[i] >= 0x5D && z[i] <= 0x10FFFF))
+	      {
+		continue;
+	      }
+	    /* Check for allowed escaped characters */
+	    else if (z[i] == '\\')
+	      {
+		if (++i >= len)
+		  {
+		    return -1;
+		  }
+
+		switch (z[i])
+		  {
+		  case '"':
+		  case '\\':
+		  case '/':
+		  case 'b':
+		  case 'f':
+		  case 'n':
+		  case 'r':
+		  case 't':
+		    break;
+		  case 'u':
+		    {
+		      int offset;
+		      i += 4;
+		      if (i >= len)
+			{
+			  return -1;
+			}
+
+		      /* Check the four characters following \u are valid hex */
+		      for (offset = 3; offset >= 0; offset--)
+			{
+			  if (!iswxdigit (z[i - offset]))
+			    {
+			      /* Illegal non-hex character after \u */
+			      return -1;
+			    }
+			}
+		      break;
+		    }
+
+		  default:
+		    /* Illegal escape value */
+		    return -1;
+		  }
+	      }
+	    else
+	      {
+		/* Illegal code */
+		return -1;
+	      }
 	  }
-	/* TODO: think about this... */
 	break;
       }
     case ':':
@@ -109,18 +168,20 @@ json_get_token (const char *z, const unsigned len, int *tokenType,
 	return 1;
       }
     }
-  /* check for keywords */
+
+  /* Check for keywords */
   for (i = 0; i < NUM_KEYWORDS; i++)
     {
       struct keyword *kw = keywords + i;
-      if (strncmp ((char *) z, kw->z, kw->len) == 0)
+      if (wcsncmp (z, kw->z, kw->len) == 0)
 	{
 	  *tokenType = kw->tokenType;
 	  return kw->len;
 	}
     }
+
   /* Check for number */
-  *number = strtod (z, &p);
+  *number = wcstod (z, &p);
   if (p != z)
     {
       *tokenType = TK_NUMBER;
@@ -128,6 +189,6 @@ json_get_token (const char *z, const unsigned len, int *tokenType,
     }
 
   /* ???? */
-  *tokenType = 0;
-  return 1;
+  *tokenType = TK_ILLEGAL;
+  return -1;
 }

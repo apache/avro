@@ -43,7 +43,7 @@ JSON_print_private (FILE * file, JSON_value * value, int *depth)
       fprintf (file, "???");
       return;
     case JSON_STRING:
-      fprintf (file, "\"%s\"", value->string_value);
+      fprintf (file, "\"%ls\"", value->string_value);
       return;
     case JSON_NUMBER:
       fprintf (file, "%E", value->number_value);
@@ -76,7 +76,7 @@ JSON_print_private (FILE * file, JSON_value * value, int *depth)
     case JSON_OBJECT:
       {
 	apr_hash_index_t *hi;
-	char *key;
+	wchar_t *key;
 	apr_ssize_t len;
 	JSON_value *member_value;
 
@@ -91,7 +91,7 @@ JSON_print_private (FILE * file, JSON_value * value, int *depth)
 	      }
 	    apr_hash_this (hi, (void *) &key, &len, (void *) &member_value);
 	    ws_depth (file, *depth);
-	    fprintf (file, "\"%s\" :", key);
+	    fprintf (file, "\"%ls\" :", key);
 	    JSON_print_private (file, member_value, depth);
 	  }
 	fprintf (file, "\n");
@@ -131,10 +131,11 @@ JSON_value_new (apr_pool_t * pool, int type)
 }
 
 static JSON_value *
-JSON_parse_inner (void *jsonp, apr_pool_t * pool, char *text, int text_len)
+JSON_parse_inner (void *jsonp, apr_pool_t * pool, wchar_t * mb_text,
+		  size_t mb_len)
 {
-  int len;
-  char *cur, *text_end;
+  int i, len;
+  wchar_t *cur, *text_end;
   JSON_value *value = NULL;
   JSON_ctx ctx;
 
@@ -144,7 +145,7 @@ JSON_parse_inner (void *jsonp, apr_pool_t * pool, char *text, int text_len)
   ctx.result = NULL;
 
   /* Loop through the input */
-  for (cur = text, text_end = text + text_len; cur < text_end; cur += len)
+  for (cur = mb_text, text_end = mb_text + mb_len; cur < text_end; cur += len)
     {
       int tokenType;
       double number;
@@ -170,12 +171,60 @@ JSON_parse_inner (void *jsonp, apr_pool_t * pool, char *text, int text_len)
 	  break;
 
 	case TK_STRING:
-	  value = JSON_value_new (pool, JSON_STRING);
-	  value->string_value = apr_palloc (pool, len + 1);
-	  /* Take off the quotes */
-	  memcpy (value->string_value, cur + 1, len - 1);
-	  /* TODO: e.g. substitute \" for " */
-	  value->string_value[len - 2] = '\0';
+	  {
+	    wchar_t *p, *q;
+
+	    value = JSON_value_new (pool, JSON_STRING);
+	    /* This allocates the maximum we need */
+	    value->string_value =
+	      (wchar_t *) apr_palloc (pool, (len + 1) * sizeof (wchar_t));
+
+	    for (p = cur + 1, q = value->string_value; p < cur + len - 1; p++)
+	      {
+		if (*p == '\\')
+		  {
+		    p++;
+		    switch (*p)
+		      {
+		      case '"':
+		      case '\\':
+		      case '/':
+			*(q++) = *p;
+			break;
+		      case 'b':
+			*(q++) = '\b';
+			break;
+		      case 'f':
+			*(q++) = '\f';
+			break;
+		      case 'n':
+			*(q++) = '\n';
+			break;
+		      case 'r':
+			*(q++) = '\r';
+			break;
+		      case 't':
+			*(q++) = '\t';
+			break;
+		      case 'u':
+			{
+			  wchar_t hex[] = { 0, 0, 0, 0, 0 };
+			  for (i = 0; i < 4; i++)
+			    {
+			      hex[i] = *(++p);
+			    }
+			  *(q++) = wcstol (hex, NULL, 16);
+			}
+			break;
+		      }
+		  }
+		else
+		  {
+		    *(q++) = *p;
+		  }
+	      }
+	    *(q++) = '\0';
+	  }
 	  break;
 
 	case TK_NUMBER:
@@ -208,14 +257,37 @@ JSON_parse_inner (void *jsonp, apr_pool_t * pool, char *text, int text_len)
 JSON_value *
 JSON_parse (apr_pool_t * pool, char *text, int text_len)
 {
-  JSON_value *value;
+  JSON_value *value = NULL;
+  size_t mb_len;
+
   /* Too bad I can't use the pool here... */
   void *jsonp = JSONParserAlloc (malloc);
   if (jsonp == NULL)
     {
       return NULL;
     }
-  value = JSON_parse_inner (jsonp, pool, text, text_len);
+
+  mb_len = mbstowcs (NULL, text, 0);
+  if (mb_len > 0)
+    {
+      apr_status_t status;
+      apr_pool_t *subpool;
+      status = apr_pool_create (&subpool, pool);
+      if (status == APR_SUCCESS)
+	{
+	  wchar_t *mb_text =
+	    (wchar_t *) apr_palloc (subpool, sizeof (wchar_t) * mb_len);
+	  if (mb_text)
+	    {
+	      if (mbstowcs (mb_text, text, mb_len) == mb_len)
+		{
+		  value = JSON_parse_inner (jsonp, pool, mb_text, mb_len);
+		}
+	    }
+	  apr_pool_destroy (subpool);
+	}
+    }
+
   JSONParserFree (jsonp, free);
   return value;
 }

@@ -19,6 +19,7 @@ under the License.
 #ifndef JSON_H
 #define JSON_H
 
+#include <wchar.h>
 #include <apr.h>
 #include <apr_pools.h>
 #include <apr_tables.h>
@@ -43,7 +44,7 @@ struct JSON_value
   {
     apr_hash_t *object;
     apr_array_header_t *array;
-    char *z;
+    wchar_t *z;
     double number;
     int boolean;
   } value_u;
