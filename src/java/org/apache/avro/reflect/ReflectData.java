@@ -51,14 +51,12 @@ public class ReflectData {
   public static boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
     case RECORD:
-      Class recordClass = datum.getClass(); 
+      Class c = datum.getClass(); 
       if (!(datum instanceof Object)) return false;
       for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
         try {
           if (!validate(entry.getValue(),
-                        recordClass.getField(entry.getKey()).get(datum)))
-          return false;
-        } catch (NoSuchFieldException e) {
+                        ReflectData.getField(c, entry.getKey()).get(datum)))
           return false;
         } catch (IllegalAccessException e) {
           throw new AvroRuntimeException(e);
@@ -89,6 +87,16 @@ public class ReflectData {
     case BOOLEAN: return datum instanceof Boolean;
     case NULL:    return datum == null;
     default: return false;
+    }
+  }
+
+  static Field getField(Class c, String name) {
+    try {
+      Field f = c.getDeclaredField(name);
+      f.setAccessible(true);
+      return f;
+    } catch (NoSuchFieldException e) {
+      throw new AvroRuntimeException(e);
     }
   }
 

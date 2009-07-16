@@ -47,22 +47,20 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
 
   protected void addField(Object record, String name, int position, Object o) {
     try {
-      Field field = record.getClass().getField(name);
-      field.setAccessible(true);
-      field.set(record, o);
-    } catch (Exception e) {
+      ReflectData.getField(record.getClass(), name).set(record, o);
+    } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }
   }
+
   protected Object getField(Object record, String name, int position) {
     try {
-      Field field = record.getClass().getField(name);
-      field.setAccessible(true);
-      return field.get(record);
-    } catch (Exception e) {
+      return ReflectData.getField(record.getClass(), name).get(record);
+    } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }
   }
+
   protected void removeField(Object record, String name, int position) {
     addField(record, name, position, null);
   }

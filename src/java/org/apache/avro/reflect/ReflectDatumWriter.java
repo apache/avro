@@ -37,9 +37,8 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
   
   protected Object getField(Object record, String name, int position) {
     try {
-      Field field = record.getClass().getField(name);
-      return field.get(record);
-    } catch (Exception e) {
+      return ReflectData.getField(record.getClass(), name).get(record);
+    } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }
   }
