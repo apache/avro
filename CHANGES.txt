@@ -14,6 +14,8 @@ Trunk (unreleased changes)
     AVRO-60. Fix C JSON parser to correctly handle escapes and
     multi-byte characters.  Add tests.  (Matt Massie via cutting)
 
+    AVRO-54. Re-upgrade to testng 5.9 and re-enable listeners. (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

@@ -191,8 +191,7 @@
 			classpath="test.java.classpath"/>
     <java-compiler src="${test.java.src.dir}"
 		   dest="${test.java.classes}"
-		   classpath="test.java.classpath"
-		   excludes="org/apache/avro/test/**.java"/>
+		   classpath="test.java.classpath"/>
     <taskdef resource="testngtasks" classpathref="java.classpath"/>
   </target>
 
@@ -245,8 +244,8 @@
             sourcedir="${test.java.src.dir}"
             outputdir="${build.dir}/test-output"
             suitename="AvroTestNG"
+            listeners="org.apache.avro.test.TestOutputInterceptor, org.apache.avro.test.TestSuiteInterceptor"
             haltOnfailure="true">
-            <!-- listeners="org.apache.avro.test.TestOutputInterceptor, org.apache.avro.test.TestSuiteInterceptor" -->
       <sysproperty key="test.count" value="${test.count}"/>
       <sysproperty key="test.dir" value="${test.java.build.dir}"/>
       <sysproperty key="test.validate" value="${test.validate}"/>
