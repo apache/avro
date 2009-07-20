@@ -229,7 +229,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       }
       return map;
     case UNION:   return defaultFieldValue(old, schema.getTypes().get(0), json);
-    case FIXED:   return createFixed(old,json.getTextValue().getBytes(),schema);
+    case FIXED:   return createFixed(old,json.getTextValue().getBytes("ISO-8859-1"),schema);
     case STRING:  return createString(json.getTextValue());
     case BYTES:  return createBytes(json.getTextValue().getBytes("ISO-8859-1"));
     case INT:     return json.getIntValue();

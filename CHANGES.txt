@@ -22,6 +22,9 @@ Trunk (unreleased changes)
 
     AVRO-78. Fix Java reflect to work on non-public fields. (cutting)
 
+    AVRO-79. Specify format for default fixed values, and implement
+    correctly in Java.  (Thiruvalluvan M. G. via cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES

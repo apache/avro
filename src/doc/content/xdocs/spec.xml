@@ -113,6 +113,7 @@
 		    <tr><td>enum</td><td>string</td><td>"FOO"</td></tr>
 		    <tr><td>array</td><td>array</td><td>[1]</td></tr>
 		    <tr><td>map</td><td>object</td><td>{"a": 1}</td></tr>
+		    <tr><td>fixed</td><td>string</td><td>"\u00ff"</td></tr>
 		  </table>
 		</li>
 	      </ul>
