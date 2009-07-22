@@ -20,7 +20,9 @@ package org.apache.avro.io;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.Vector;
 
@@ -32,146 +34,139 @@ import org.testng.annotations.Test;
 
 
 public class TestValidatingIO {
-  @Test(dataProvider="data")
-  public void testRead(String jsonSchema, String calls) throws IOException {
-    test(jsonSchema, calls, -1, false);
-  }
-
-  @Test(dataProvider="data")
-  public void testSkip_0(String jsonSchema, String calls) throws IOException {
-    test(jsonSchema, calls, 0, false);
-  }
+  enum Encoding {
+    BINARY,
+    BLOCKING_BINARY,
+    JSON,
+  };
+  
+  private static int COUNT = 1;
   
   @Test(dataProvider="data")
-  public void testSkip_1(String jsonSchema, String calls) throws IOException {
-    test(jsonSchema, calls, 1, false);
-  }
-  
-  @Test(dataProvider="data")
-  public void testSkip_2(String jsonSchema, String calls) throws IOException {
-    test(jsonSchema, calls, 2, false);
-  }
-  
-  @Test(dataProvider="data")
-  public void testRead_blocking(String jsonSchema, String calls)
-    throws IOException {
-    test(jsonSchema, calls, -1, true);
-  }
-
-  @Test(dataProvider="data")
-  public void testSkip_0_blocking(String jsonSchema, String calls)
-    throws IOException {
-    test(jsonSchema, calls, 0, true);
-  }
-  
-  @Test(dataProvider="data")
-  public void testSkip_1_blocking(String jsonSchema, String calls)
-    throws IOException {
-    test(jsonSchema, calls, 1, true);
-  }
-  
-  @Test(dataProvider="data")
-  public void testSkip_2_blocking(String jsonSchema, String calls)
-    throws IOException {
-    test(jsonSchema, calls, 2, true);
-  }
-  
-  private void test(String jsonSchema, String calls, int skipLevel,
-      boolean useBlocking)
-    throws IOException {
-    for (int i = 0; i < 10; i++) {
-      testOnce(Schema.parse(jsonSchema), calls, skipLevel, useBlocking);
+  public void test(Encoding encoding, int skipLevel,
+      String jsonSchema, String calls) throws IOException {
+    for (int i = 0; i < COUNT; i++) {
+      testOnce(Schema.parse(jsonSchema), calls, skipLevel, encoding);
     }
   }
-  
-  private void testOnce(Schema schema, String calls, int skipLevel,
-      boolean useBlocking)
+
+  private void testOnce(Schema schema, String calls,
+      int skipLevel,
+      Encoding encoding)
     throws IOException {
-    Vector<Object> values = new Vector<Object>();
-    byte[] bytes = make(schema, calls, values, useBlocking);
-    check(schema, bytes, calls, values.toArray(), skipLevel);
+    Object[] values = randomValues(calls);
+    byte[] bytes = make(schema, calls, values, encoding);
+    check(schema, bytes, calls, values, skipLevel, encoding);
   }
 
   public static byte[] make(Schema sc, String calls,
-      Vector<Object> values, boolean useBlocking) throws IOException {
+      Object[] values, Encoding encoding) throws IOException {
     ByteArrayOutputStream ba = new ByteArrayOutputStream();
-    Encoder bvo = useBlocking ? new BlockingBinaryEncoder(ba) :
-        new BinaryEncoder(ba);
+    Encoder bvo = null;
+    switch (encoding) {
+    case BINARY:
+      bvo = new BinaryEncoder(ba);
+      break;
+    case BLOCKING_BINARY:
+      bvo = new BlockingBinaryEncoder(ba);
+      break;
+    case JSON:
+      bvo = new JsonEncoder(sc, ba);
+      break;
+    }
+        
     Encoder vo = new ValidatingEncoder(sc, bvo);
     generate(vo, calls, values);
     vo.flush();
     return ba.toByteArray();
   }
 
+  public static class InputScanner {
+    private final char[] chars;
+    private int cpos = 0;
+    
+    public InputScanner(char[] chars) {
+      this.chars = chars;
+    }
+    
+    public boolean next() {
+      if (cpos < chars.length) {
+        cpos++;
+      }
+      return cpos != chars.length;
+    }
+    
+    public char cur() {
+      return chars[cpos];
+    }
+    
+    public boolean isDone() {
+      return cpos == chars.length;
+    }
+  }
   public static void generate(Encoder vw, String calls,
-      Vector<Object> values) throws IOException {
-    char[] cc = calls.toCharArray();
-    Random r = new Random();
-    for (int i = 0; i < cc.length; i++) {
-      char c = cc[i];
+      Object[] values) throws IOException {
+    InputScanner cs = new InputScanner(calls.toCharArray());
+    int p = 0;
+    while (! cs.isDone()) {
+      char c = cs.cur();
+      cs.next();
       switch (c) {
       case 'N':
         vw.writeNull();
         break;
       case 'B':
-        boolean b = r.nextBoolean();
-        values.add(b);
+        boolean b = (Boolean) values[p++];
         vw.writeBoolean(b);
         break;
       case 'I':
-        int ii = r.nextInt();
-        values.add(ii);
+        int ii = (Integer) values[p++];
         vw.writeInt(ii);
         break;
       case 'L':
-        long l = r.nextLong();
-        values.add(l);
+        long l = (Long) values[p++];
         vw.writeLong(l);
         break;
       case 'F':
-        float f = r.nextFloat();
-        values.add(f);
+        float f = (Float) values[p++];
         vw.writeFloat(f);
         break;
       case 'D':
-        double d = r.nextDouble();
-        values.add(d);
+        double d = (Double) values[p++];
         vw.writeDouble(d);
         break;
       case 'S':
         {
-          IntPair ip = extractInt(cc, i);
-          String s = nextString(r, ip.first);
-          values.add(s);
+          extractInt(cs);
+          String s = (String) values[p++];
           vw.writeString(new Utf8(s));
-          i = ip.second;
           break;
         }
+      case 'K':
+      {
+        extractInt(cs);
+        String s = (String) values[p++];
+        vw.writeString(s);
+        break;
+      }
       case 'b':
         {
-          IntPair ip = extractInt(cc, i);
-          byte[] bb = nextBytes(r, ip.first);
-          values.add(bb);
+          extractInt(cs);
+          byte[] bb = (byte[]) values[p++];
           vw.writeBytes(bb);
-          i = ip.second;
           break;
         }
       case 'f':
         {
-          IntPair ip = extractInt(cc, i);
-          byte[] bb = nextBytes(r, ip.first);
-          values.add(bb);
+          extractInt(cs);
+          byte[] bb = (byte[]) values[p++];
           vw.writeFixed(bb);
-          i = ip.second;
           break;
         }
       case 'e':
         {
-          IntPair ip = extractInt(cc, i);
-          int e = r.nextInt(ip.first);
-          values.add(e);
+          int e = extractInt(cs);
           vw.writeEnum(e);
-          i = ip.second;
           break;
         }
       case '[':
@@ -187,20 +182,14 @@ public class TestValidatingIO {
         vw.writeMapEnd();
         break;
       case 'c':
-        {
-          IntPair ip = extractInt(cc, i);
-          vw.setItemCount(ip.first);
-          i = ip.second;
-        }
+        vw.setItemCount(extractInt(cs));
         break;
       case 's':
         vw.startItem();
         break;
-      case 'u':
+      case 'U':
         {
-          IntPair ip = extractInt(cc, i);
-          vw.writeIndex(ip.first);
-          i = ip.second;
+          vw.writeIndex(extractInt(cs));
           break;
         }
       default:
@@ -210,25 +199,70 @@ public class TestValidatingIO {
     }
   }
 
-  private static IntPair extractInt(char[] cc, int i) {
-    int r = 0;
-    i++;
-    while (i < cc.length && Character.isDigit(cc[i])) {
-      r = r * 10 + cc[i] - '0';
-      i++;
+  public static Object[] randomValues(String calls) {
+    Random r = new Random();
+    InputScanner cs = new InputScanner(calls.toCharArray());
+    Vector<Object> result = new Vector<Object>();
+    while (! cs.isDone()) {
+      char c = cs.cur();
+      cs.next();
+      switch (c) {
+      case 'N':
+        break;
+      case 'B':
+        result.add(r.nextBoolean());
+        break;
+      case 'I':
+        result.add(r.nextInt());
+        break;
+      case 'L':
+        result.add(r.nextLong());
+        break;
+      case 'F':
+        result.add(r.nextFloat());
+        break;
+      case 'D':
+        result.add(r.nextDouble());
+        break;
+      case 'S':
+      case 'K':
+        result.add(nextString(r, extractInt(cs)));
+        break;
+      case 'b':
+      case 'f':
+        result.add(nextBytes(r, extractInt(cs)));
+        break;
+      case 'e':
+      case 'c':
+      case 'U':
+        extractInt(cs);
+      case '[':
+      case ']':
+      case '{':
+      case '}':
+      case 's':
+        break;
+      default:
+        Assert.fail();
+        break;
+      }
     }
-    return new IntPair(r, i - 1);
+    return result.toArray();
   }
 
-  private static class IntPair {
-    public final int first;
-    public final int second;
-    
-    public IntPair(int first, int second) {
-      this.first = first;
-      this.second = second;
+  private static int extractInt(InputScanner sc) {
+    int r = 0;
+    while (! sc.isDone()) {
+      if (Character.isDigit(sc.cur())) {
+        r = r * 10 + sc.cur() - '0';
+        sc.next();
+      } else {
+        break;
+      }
     }
+    return r;
   }
+
   private static byte[] nextBytes(Random r, int length) {
     byte[] bb = new byte[length];
     r.nextBytes(bb);
@@ -243,24 +277,36 @@ public class TestValidatingIO {
     return new String(cc);
   }
 
-  private static void check(Schema sc, byte[] bytes,
-      String calls, Object[] values, final int skipLevel) throws IOException {
+  private static void check(Schema sc, byte[] bytes, String calls,
+      Object[] values, final int skipLevel, Encoding encoding)
+    throws IOException {
     // dump(bytes);
-    Decoder bvi= new BinaryDecoder(new ByteArrayInputStream(bytes));
+    // System.out.println(new String(bytes, "UTF-8"));
+    InputStream in = new ByteArrayInputStream(bytes);
+    Decoder bvi = null;
+    switch (encoding) {
+    case BINARY:
+    case BLOCKING_BINARY:
+      bvi = new BinaryDecoder(in);
+      break;
+    case JSON:
+      bvi = new JsonDecoder(sc, in);
+    }
     Decoder vi = new ValidatingDecoder(sc, bvi);
     check(vi, calls, values, skipLevel);
   }
   
-  public static void check(Decoder vi, String calls, Object[] values,
-      final int skipLevel) throws IOException {
-    char[] cc = calls.toCharArray();
+  public static void check(Decoder vi, String calls,
+      Object[] values, final int skipLevel) throws IOException {
+    InputScanner cs = new InputScanner(calls.toCharArray());
     int p = 0;
     int level = 0;
     long[] counts = new long[100];
     boolean[] isArray = new boolean[100];
     boolean[] isEmpty = new boolean[100];
-    for (int i = 0; i < cc.length; i++) {
-      final char c = cc[i];
+    while (! cs.isDone()) {
+      final char c = cs.cur();
+      cs.next();
       switch (c) {
       case 'N':
         vi.readNull();
@@ -278,7 +324,7 @@ public class TestValidatingIO {
         Assert.assertEquals(vi.readLong(), l);
         break;
       case 'F':
-        float f = ((Float) values[p++]).floatValue(); 
+        float f = floatValue(values[p++]); 
         Assert.assertEquals(vi.readFloat(), f, Math.abs(f / 1000));
         break;
       case 'D':
@@ -286,7 +332,17 @@ public class TestValidatingIO {
         Assert.assertEquals(vi.readDouble(), d, Math.abs(d / 1000));
         break;
       case 'S':
-        i = extractInt(cc, i).second;
+        extractInt(cs);
+        if (level == skipLevel) {
+          vi.skipString();
+          p++;
+        } else {
+          String s = (String) values[p++]; 
+          Assert.assertEquals(vi.readString(null), new Utf8(s));
+        }
+        break;
+      case 'K':
+        extractInt(cs);
         if (level == skipLevel) {
           vi.skipString();
           p++;
@@ -296,7 +352,7 @@ public class TestValidatingIO {
         }
         break;
       case 'b':
-        i = extractInt(cc, i).second;
+        extractInt(cs);
         if (level == skipLevel) {
           vi.skipBytes();
           p++;
@@ -311,14 +367,13 @@ public class TestValidatingIO {
         break;
       case 'f':
         {
-          IntPair ip = extractInt(cc, i);
-          i = ip.second;
+          int len = extractInt(cs);
           if (level == skipLevel) {
-            vi.skipFixed(ip.first);
+            vi.skipFixed(len);
             p++;
           } else {
             byte[] bb = (byte[]) values[p++];
-            byte[] actBytes = new byte[ip.first];
+            byte[] actBytes = new byte[len];
             vi.readFixed(actBytes);
             Assert.assertEquals(actBytes, bb);
           }
@@ -326,22 +381,17 @@ public class TestValidatingIO {
         break;
       case 'e':
       {
-        IntPair ip = extractInt(cc, i);
-        i = ip.second;
+        int e = extractInt(cs);
         if (level == skipLevel) {
           vi.readEnum();
-          p++;
         } else {
-          int e = ((Integer)(values[p++])).intValue();
           Assert.assertEquals(vi.readEnum(), e);
         }
       }
       break;
       case '[':
         if (level == skipLevel) {
-          IntPair ip = skip(cc, i, vi);
-          i = ip.second;
-          p += ip.first;
+          p += skip(cs, vi, true);
           break;
         } else {
           level++;
@@ -352,9 +402,7 @@ public class TestValidatingIO {
         }
       case '{':
         if (level == skipLevel) {
-          IntPair ip = skip(cc, i, vi);
-          i = ip.second;
-          p += ip.first;
+          p += skip(cs, vi, false);
           break;
         } else {
           level++;
@@ -388,13 +436,12 @@ public class TestValidatingIO {
         counts[level]--;
         continue;
       case 'c':
-        i = extractInt(cc, i).second;
+        extractInt(cs);
         continue;
-      case 'u':
+      case 'U':
         {
-          IntPair ip = extractInt(cc, i);
-          Assert.assertEquals(ip.first, vi.readIndex());
-          i = ip.second;
+          int idx = extractInt(cs);
+          Assert.assertEquals(idx, vi.readIndex());
           continue;
         }
       default:
@@ -404,6 +451,12 @@ public class TestValidatingIO {
     Assert.assertEquals(p, values.length);
   }
   
+  private static float floatValue(Object object) {
+    return (object instanceof Integer) ? ((Integer) object).floatValue() :
+      (object instanceof Long) ? ((Long) object).floatValue() :
+      ((Float) object).floatValue();
+  }
+
   private static double doubleValue(Object object) {
     return (object instanceof Double) ? ((Double) object).doubleValue() :
       (object instanceof Float) ? ((Float) object).doubleValue() :
@@ -417,26 +470,28 @@ public class TestValidatingIO {
       ((Integer) object).longValue();
   }
 
-  private static IntPair skip(char[] cc, int i, Decoder vi)
+  private static int skip(InputScanner cs, Decoder vi, boolean isArray)
     throws IOException {
-    char end = cc[i] == '[' ? ']' : '}';
-    if (end == ']') {
+    final char end = isArray ? ']' : '}';
+    if (isArray) {
       Assert.assertEquals(vi.skipArray(), 0);
-    } else {
+    } else if (end == '}'){
       Assert.assertEquals(vi.skipMap(), 0);
     }
     int level = 0;
     int p = 0;
-    while (++i < cc.length) {
-      switch (cc[i]) {
+    while (! cs.isDone()) {
+      char c = cs.cur();
+      cs.next();
+      switch (c) {
       case '[':
       case '{':
         ++level;
         break;
       case ']':
       case '}':
-        if (cc[i] == end && level == 0) {
-          return new IntPair(p, i);
+        if (c == end && level == 0) {
+          return p;
         }
         level--;
         break;
@@ -446,6 +501,7 @@ public class TestValidatingIO {
       case 'F':
       case 'D':
       case 'S':
+      case 'K':
       case 'b':
       case 'f':
       case 'e':
@@ -453,11 +509,93 @@ public class TestValidatingIO {
         break;
       }
     }
-    return null;
+    throw new RuntimeException("Don't know how to skip");
   }
 
   @DataProvider
-  public static Object[][] data() {
+  public static Iterator<Object[]> data() {
+    return cartesian(encodings, skipLevels, testSchemas());
+  }
+  
+  private static Object[][] encodings = new Object[][] {
+      { Encoding.BINARY }, { Encoding.BLOCKING_BINARY },
+      { Encoding.JSON }
+    }; 
+
+  private static Object[][] skipLevels = new Object[][] {
+      { -1 }, { 0 }, { 1 }, { 2 },
+  };
+  
+  /**
+   * Returns the Cartesian product of input sequences.
+   */
+  public static Iterator<Object[]> cartesian(final Object[][]... values) {
+    return new Iterator<Object[]>() {
+      private int[] pos = new int[values.length];
+      @Override
+      public boolean hasNext() {
+        return pos[0] < values[0].length;
+      }
+
+      @Override
+      public Object[] next() {
+        Object[][] v = new Object[values.length][];
+        for (int i = 0; i < v.length; i++) {
+          v[i] = values[i][pos[i]];
+        }
+        for (int i = v.length - 1; i >= 0; i--) {
+          if (++pos[i] == values[i].length) {
+            if (i != 0) {
+              pos[i] = 0;
+            }
+          } else {
+            break;
+          }
+        }
+        return concat(v);
+      }
+
+      @Override
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
+  }
+  
+  /**
+   * Concatenates the input sequences in order and forms a longer sequence.
+   */
+  public static Object[] concat(Object[]... oo) {
+    int l = 0;
+    for (Object[] o : oo) {
+      l += o.length;
+    }
+    Object[] result = new Object[l];
+    l = 0;
+    for (Object[] o : oo) {
+      System.arraycopy(o, 0, result, l, o.length);
+      l += o.length;
+    }
+    return result;
+  }
+
+  /**
+   * Pastes incoming tables to form a wider table. All incoming tables
+   * should be of same height.
+   */
+  static Object[][] paste(Object[][]... in) {
+    Object[][] result = new Object[in[0].length][];
+    Object[][] cc = new Object[in.length][]; 
+    for (int i = 0; i < result.length; i++) {
+      for (int j = 0; j < cc.length; j++) {
+        cc[j] = in[j][i];
+      }
+      result[i] = concat(cc);
+    }
+    return result;
+  }
+
+  public static Object[][] testSchemas() {
     /**
      * The first argument is a schema.
      * The second one is a sequence of (single character) mnemonics:
@@ -467,10 +605,13 @@ public class TestValidatingIO {
      * L  long
      * F  float
      * D  double
-     * S followed by integer - string and its size
-     * b followed by integer - bytes and size
-     * u followed by integer - union and the index to choose
+     * K followed by integer - key-name (and its length) in a map
+     * S followed by integer - string and its length
+     * b followed by integer - bytes and length
+     * f followed by integer - fixed and length
      * c  Number of items to follow in an array/map.
+     * U followed by integer - Union and its branch
+     * e followed by integer - Enum and its value
      * [  Start array
      * ]  End array
      * {  Start map
@@ -491,15 +632,15 @@ public class TestValidatingIO {
         { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 0}", "f0" },
         { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 10}", "f10" },
         { "{\"type\":\"enum\", \"name\":\"en\", \"symbols\":[\"v1\", \"v2\"]}",
-            "e2" },
+            "e1" },
 
-        { "{\"type\":\"array\", \"items\": \"boolean\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"int\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"long\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"float\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"double\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"string\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"bytes\"}", "[]" },
+        { "{\"type\":\"array\", \"items\": \"boolean\"}", "[]", },
+        { "{\"type\":\"array\", \"items\": \"int\"}", "[]", },
+        { "{\"type\":\"array\", \"items\": \"long\"}", "[]", },
+        { "{\"type\":\"array\", \"items\": \"float\"}", "[]", },
+        { "{\"type\":\"array\", \"items\": \"double\"}", "[]", },
+        { "{\"type\":\"array\", \"items\": \"string\"}", "[]", },
+        { "{\"type\":\"array\", \"items\": \"bytes\"}", "[]", },
         { "{\"type\":\"array\", \"items\":{\"type\":\"fixed\", "
           + "\"name\":\"fi\", \"size\": 10}}", "[]" },
 
@@ -525,18 +666,18 @@ public class TestValidatingIO {
         { "{\"type\":\"map\", \"values\": "
           + "{\"type\":\"array\", \"items\":\"int\"}}", "{}" },
 
-        { "{\"type\":\"map\", \"values\": \"boolean\"}", "{c1sSB}" },
-        { "{\"type\":\"map\", \"values\": \"int\"}", "{c1sS5I}" },
-        { "{\"type\":\"map\", \"values\": \"long\"}", "{c1sS5L}" },
-        { "{\"type\":\"map\", \"values\": \"float\"}", "{c1sS5F}" },
-        { "{\"type\":\"map\", \"values\": \"double\"}", "{c1sS5D}" },
-        { "{\"type\":\"map\", \"values\": \"string\"}", "{c1sS5S10}" },
-        { "{\"type\":\"map\", \"values\": \"bytes\"}", "{c1sS5b10}" },
+        { "{\"type\":\"map\", \"values\": \"boolean\"}", "{c1sK5B}" },
+        { "{\"type\":\"map\", \"values\": \"int\"}", "{c1sK5I}" },
+        { "{\"type\":\"map\", \"values\": \"long\"}", "{c1sK5L}" },
+        { "{\"type\":\"map\", \"values\": \"float\"}", "{c1sK5F}" },
+        { "{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}" },
+        { "{\"type\":\"map\", \"values\": \"string\"}", "{c1sK5S10}" },
+        { "{\"type\":\"map\", \"values\": \"bytes\"}", "{c1sK5b10}" },
         { "{\"type\":\"map\", \"values\": "
-          + "{\"type\":\"array\", \"items\":\"int\"}}", "{c1sS[c3sIsIsI]}" },
+          + "{\"type\":\"array\", \"items\":\"int\"}}", "{c1sK5[c3sIsIsI]}" },
 
         { "{\"type\":\"map\", \"values\": \"boolean\"}",
-            "{c1sSBc2sSBsSB}" },
+            "{c1sK5Bc2sK5BsK5B}" },
 
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f\", \"type\":\"boolean\"}]}", "B" },
@@ -568,7 +709,7 @@ public class TestValidatingIO {
           + "{\"name\":\"f6\", \"type\":\"string\"},"
           + "{\"name\":\"f7\", \"type\":\"bytes\"}]}",
             "NBILFDS10b25" },
-
+        
         // record of records
         { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":{\"type\":\"record\", "
@@ -582,20 +723,23 @@ public class TestValidatingIO {
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":\"long\"},"
           + "{\"name\":\"f2\", "
-          + "\"type\":{\"type\":\"array\", \"items\":\"int\"}}]}", "L[c1sI]" },
+          + "\"type\":{\"type\":\"array\", \"items\":\"int\"}}]}",
+          "L[c1sI]" },
 
         // record with map
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":\"long\"},"
           + "{\"name\":\"f2\", "
-          + "\"type\":{\"type\":\"map\", \"values\":\"int\"}}]}", "L{c1sS5I}" },
-          
+          + "\"type\":{\"type\":\"map\", \"values\":\"int\"}}]}",
+          "L{c1sK5I}" },
+
         // array of records
         { "{\"type\":\"array\", \"items\":"
             + "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":\"long\"},"
           + "{\"name\":\"f2\", \"type\":\"null\"}]}}",
             "[c2sLNsLN]" },
+
         { "{\"type\":\"array\", \"items\":"
             + "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":\"long\"},"
@@ -607,32 +751,60 @@ public class TestValidatingIO {
           + "{\"name\":\"f1\", \"type\":\"long\"},"
           + "{\"name\":\"f2\", "
           + "\"type\":{\"type\":\"map\", \"values\":\"int\"}}]}}",
-            "[c2sL{c1sS5I}sL{c2sS5IsS5I}]" },
+            "[c2sL{c1sK5I}sL{c2sK5IsK5I}]" },
         { "{\"type\":\"array\", \"items\":"
             + "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":\"long\"},"
           + "{\"name\":\"f2\", "
           + "\"type\":[\"null\", \"int\"]}]}}",
-            "[c2sLu0NsLu1I]" },
+            "[c2sLU0NsLU1I]" },
 
-        { "[\"boolean\"]", "u0B" },
-        { "[\"int\"]", "u0I" },
-        { "[\"long\"]", "u0L" },
-        { "[\"float\"]", "u0F" },
-        { "[\"double\"]", "u0D" },
-        { "[\"string\"]", "u0S10" },
-        { "[\"bytes\"]", "u0b10" },
+        { "[\"boolean\"]", "U0B" },
+        { "[\"int\"]", "U0I" },
+        { "[\"long\"]", "U0L" },
+        { "[\"float\"]", "U0F" },
+        { "[\"double\"]", "U0D" },
+        { "[\"string\"]", "U0S10" },
+        { "[\"bytes\"]", "U0b10" },
 
-        { "[\"null\", \"int\"]", "u0N" },
-        { "[\"boolean\", \"int\"]", "u0B" },
-        { "[\"boolean\", \"int\"]", "u1I" },
-        { "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]", "u0B" },
+        { "[\"null\", \"int\"]", "U0N" },
+        { "[\"boolean\", \"int\"]", "U0B" },
+        { "[\"boolean\", \"int\"]", "U1I" },
         { "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]",
-            "u1[c1sI]" },
+          "U0B" },
+
+        { "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]",
+            "U1[c1sI]" },
+          
+        // Recursion
+        { "{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
+          + "{\"name\":\"label\", \"type\":\"string\"},"
+          + "{\"name\":\"children\", \"type\":"
+          + "{\"type\": \"array\", \"items\": \"Node\" }}]}",
+          "S10[c1sS10[]]" },
+          
+        { "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
+          + "{\"name\":\"value\", \"type\":[\"null\", \"string\","
+          + "{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
+          + "{\"name\":\"car\", \"type\":\"Lisp\"},"
+          + "{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
+          "U0N"},
+        { "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
+          + "{\"name\":\"value\", \"type\":[\"null\", \"string\","
+          + "{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
+          + "{\"name\":\"car\", \"type\":\"Lisp\"},"
+          + "{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
+          "U1S10"},
+        { "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
+          + "{\"name\":\"value\", \"type\":[\"null\", \"string\","
+          + "{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
+          + "{\"name\":\"car\", \"type\":\"Lisp\"},"
+          + "{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
+          "U2U1S10U0N"},
     };
   }
   
-  protected static void dump(byte[] bb) {
+  static void dump(byte[] bb) {
     int col = 0;
     for (byte b : bb) {
       if (col % 16 == 0) {

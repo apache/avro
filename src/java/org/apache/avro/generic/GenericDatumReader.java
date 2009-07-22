@@ -78,7 +78,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case FLOAT:   return in.readFloat();
     case DOUBLE:  return in.readDouble();
     case BOOLEAN: return in.readBoolean();
-    case NULL:    return null;
+    case NULL:    in.readNull(); return null;
     default: throw new AvroRuntimeException("Unknown type: "+actual);
     }
   }
@@ -410,8 +410,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * calls {@link ByteBuffer#wrap(byte[])}.*/
   protected Object createBytes(byte[] value) { return ByteBuffer.wrap(value); }
 
-  private static final Schema STRING_SCHEMA = Schema.create(Type.STRING);
-
   /** Skip an instance of a schema. */
   public static void skip(Schema schema, Decoder in) throws IOException {
     switch (schema.getType()) {
@@ -434,7 +432,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       Schema value = schema.getValueType();
       for (long l = in.skipMap(); l > 0; l = in.skipMap()) {
         for (long i = 0; i < l; i++) {
-          skip(STRING_SCHEMA, in);
+          in.skipString();
           skip(value, in);
         }
       }
@@ -446,6 +444,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       in.skipFixed(schema.getFixedSize());
       break;
     case STRING:
+      in.skipString();
+      break;
     case BYTES:
       in.skipBytes();
       break;

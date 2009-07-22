@@ -68,7 +68,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     case FLOAT:   out.writeFloat((Float)datum);     break;
     case DOUBLE:  out.writeDouble((Double)datum);   break;
     case BOOLEAN: out.writeBoolean((Boolean)datum); break;
-    case NULL:                                      break;
+    case NULL:    out.writeNull();                  break;
     default: error(schema,datum);
     }
   }

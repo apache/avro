@@ -45,7 +45,7 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
   
   protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
-    out.writeInt(((Enum)datum).ordinal());
+    out.writeEnum(((Enum)datum).ordinal());
   }
 
   protected boolean isEnum(Object datum) {

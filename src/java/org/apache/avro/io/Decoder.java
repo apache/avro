@@ -42,8 +42,9 @@ import org.apache.avro.util.Utf8;
 public abstract class Decoder {
   
   /** Start reading against a different input stream.  Stateful
-    * subclasses will reset their states to their initial state. */
-  public abstract void init(InputStream in);
+    * subclasses will reset their states to their initial state. 
+   * @throws IOException */
+  public abstract void init(InputStream in) throws IOException;
 
   /**
    * "Reads" a null value.  (Doesn't actually read anything, but
@@ -276,12 +277,4 @@ public abstract class Decoder {
    *         union is not the type of the next value to be read
    */
   public abstract int readIndex() throws IOException;
-
-  /**
-   * After reading a complete object that conforms to the schema or after an
-   * error, if you want to start reading another object, call this method.
-   */
-
-  public void reset() throws IOException {
-  }
 }

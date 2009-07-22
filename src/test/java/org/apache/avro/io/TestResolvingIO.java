@@ -19,268 +19,176 @@ package org.apache.avro.io;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Vector;
+import java.io.InputStream;
+import java.util.Iterator;
 
 import org.apache.avro.Schema;
+import org.apache.avro.io.TestValidatingIO.Encoding;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class TestResolvingIO {
-  @Test(dataProvider="data")
-  public void testRead(String jsonWriterSchema,
+  @Test(dataProvider="data1")
+  public void test_identical(Encoding encoding,
+      int skipLevel, String jsonWriterSchema,
       String writerCalls, 
-      String jsonReaderSchema,
-      String readerCalls) throws IOException {
-    test(jsonWriterSchema, writerCalls, jsonReaderSchema, readerCalls, -1);
+      String jsonReaderSchema, String readerCalls)
+  throws IOException {
+    performTest(encoding, skipLevel, jsonWriterSchema, writerCalls,
+        jsonReaderSchema, readerCalls);
+  }
+  
+  private static final int COUNT = 10;
+  
+  @Test(dataProvider="data2")
+  public void test_compatible(Encoding encoding,
+      int skipLevel, String jsonWriterSchema,
+      String writerCalls, 
+      String jsonReaderSchema, String readerCalls)
+  throws IOException {
+    performTest(encoding, skipLevel, jsonWriterSchema, writerCalls,
+        jsonReaderSchema, readerCalls);
   }
 
-  @Test(dataProvider="data")
-  public void testSkip_0(String jsonWriterSchema,
-      String writerCalls, 
-      String jsonReaderSchema,
-      String readerCalls) throws IOException {
-    test(jsonWriterSchema, writerCalls, jsonReaderSchema, readerCalls, 0);
+  @Test(dataProvider="data3")
+  public void test_resolving(Encoding encoding, int skipLevel,
+      String jsonWriterSchema, String writerCalls,
+      Object[] writerValues,
+      String jsonReaderSchema, String readerCalls, Object[] readerValues)
+    throws IOException {
+    Schema writerSchema = Schema.parse(jsonWriterSchema);
+    byte[] bytes = TestValidatingIO.make(writerSchema, writerCalls,
+        writerValues, Encoding.BINARY);
+    Schema readerSchema = Schema.parse(jsonReaderSchema);
+    check(writerSchema, readerSchema, bytes, readerCalls,
+        readerValues,
+        Encoding.BINARY, skipLevel);
   }
 
-  @Test(dataProvider="data")
-  public void testSkip_1(String jsonWriterSchema,
+  private void performTest(Encoding encoding,
+      int skipLevel, String jsonWriterSchema,
       String writerCalls, 
-      String jsonReaderSchema,
-      String readerCalls) throws IOException {
-    test(jsonWriterSchema, writerCalls, jsonReaderSchema, readerCalls, 1);
-  }
-
-  @Test(dataProvider="data")
-  public void testSkip_2(String jsonWriterSchema,
-      String writerCalls, 
-      String jsonReaderSchema,
-      String readerCalls) throws IOException {
-    test(jsonWriterSchema, writerCalls, jsonReaderSchema, readerCalls, 2);
-  }
-
-  private void test(String jsonWriterSchema, String writerCalls,
-      String jsonReaderSchema, String readerCalls, int skipLevel)
-      throws IOException {
-    for (int i = 0; i < 10; i++) {
-      testOnce(jsonWriterSchema, writerCalls, jsonReaderSchema,
-          readerCalls, skipLevel);
+      String jsonReaderSchema, String readerCalls)
+  throws IOException {
+    for (int i = 0; i < COUNT; i++) {
+      testOnce(jsonWriterSchema, writerCalls,
+          jsonReaderSchema, readerCalls, encoding, skipLevel);
     }
   }
   
   private void testOnce(String jsonWriterSchema,
-      String writerCalls, 
+      String writerCalls,
       String jsonReaderSchema,
       String readerCalls,
+      Encoding encoding,
       int skipLevel) throws IOException {
-    Vector<Object> values = new Vector<Object>();
+    Object[] values = TestValidatingIO.randomValues(writerCalls);
     Schema writerSchema = Schema.parse(jsonWriterSchema);
     byte[] bytes = TestValidatingIO.make(writerSchema, writerCalls,
-        values, false);
+        values, encoding);
     Schema readerSchema = Schema.parse(jsonReaderSchema);
-    // dump(bytes);
-    check(writerSchema, readerSchema, bytes, readerCalls, values.toArray(),
-        skipLevel);
+    check(writerSchema, readerSchema, bytes, readerCalls,
+        values,
+        encoding, skipLevel);
   }
 
   private static void check(Schema wsc, Schema rsc, byte[] bytes,
-      String calls, Object[] values, int skipLevel) throws IOException {
-    // dump(bytes);
-    Decoder bvi= new BinaryDecoder(new ByteArrayInputStream(bytes));
+      String calls, Object[] values, Encoding encoding,
+      int skipLevel)
+      throws IOException {
+    // TestValidatingIO.dump(bytes);
+    // System.out.println(new String(bytes, "UTF-8"));
+    InputStream in = new ByteArrayInputStream(bytes);
+    Decoder bvi = null;
+    switch (encoding) {
+    case BINARY:
+    case BLOCKING_BINARY:
+      bvi = new BinaryDecoder(in);
+      break;
+    case JSON:
+      bvi = new JsonDecoder(wsc, in);
+      break;
+    }
     Decoder vi = new ResolvingDecoder(wsc, rsc, bvi);
     TestValidatingIO.check(vi, calls, values, skipLevel);
   }
   
   @DataProvider
-  public static Object[][] data() {
-    /**
-     * The first argument is a schema.
-     * The second one is a sequence of (single character) mnemonics:
-     * N  null
-     * B  boolean
-     * I  int
-     * L  long
-     * F  float
-     * D  double
-     * S  string
-     * b  bytes
-     * [  Start array
-     * ]  End array
-     * {  Start map
-     * }  End map
-     * s  start item
-     * 0-9  branch id for union
-     */
+  public static Iterator<Object[]> data1() {
+    return TestValidatingIO.cartesian(encodings, skipLevels,
+        TestValidatingIO.paste(TestValidatingIO.testSchemas(),
+            TestValidatingIO.testSchemas()));
+  }
+  
+  @DataProvider
+  public static Iterator<Object[]> data2() {
+    return TestValidatingIO.cartesian(encodings, skipLevels, testSchemas());
+  }
+  
+  @DataProvider
+  public static Iterator<Object[]> data3() {
+    return TestValidatingIO.cartesian(encodings, skipLevels,
+        dataForResolvingTests());
+  }
+
+  private static Object[][] encodings = new Object[][] { { Encoding.BINARY } };
+  private static Object[][] skipLevels =
+    new Object[][] { { -1 }, { 0 }, { 1 }, { 2 }  };
+  private static Object[][] testSchemas() {
+    // The mnemonics are the same as {@link TestValidatingIO#testSchemas}
     return new Object[][] {
-        { "\"null\"", "N", "\"null\"", "N" },
-        { "\"boolean\"", "B", "\"boolean\"", "B" },
-        { "\"int\"", "I", "\"int\"", "I" },
-        { "\"int\"", "I", "\"long\"", "L" },
-        // { "\"int\"", "I", "\"float\"", "F" },  // These promotions make sense?
+        // { "\"int\"", "I", "\"float\"", "F" }, // makes sense?
         { "\"int\"", "I", "\"double\"", "D" },
-        { "\"long\"", "L", "\"long\"", "L" },
         // { "\"long\"", "L", "\"float\"", "F" }, // And this?
         { "\"long\"", "L", "\"double\"", "D" },
-        { "\"float\"", "F", "\"float\"", "F" },
         { "\"float\"", "F", "\"double\"", "D" },
-        { "\"double\"", "D", "\"double\"", "D" },
         { "\"double\"", "D", "\"long\"", "L" },
-        { "\"string\"", "S", "\"string\"", "S" },
-        { "\"bytes\"", "b", "\"bytes\"", "b" },
-        { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 0}", "f0",
-          "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 0}", "f0" },
-        { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 10}", "f10",
-          "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 10}", "f10" },
-        { "{\"type\":\"enum\", \"name\":\"en\", \"symbols\":[\"v1\", \"v2\"]}",
-            "e2",
-          "{\"type\":\"enum\", \"name\":\"en\", \"symbols\":[\"v1\", \"v2\"]}",
-            "e2"},
 
-        { "{\"type\":\"array\", \"items\": \"boolean\"}", "[]",
-          "{\"type\":\"array\", \"items\": \"boolean\"}", "[]" },
         { "{\"type\":\"array\", \"items\": \"int\"}", "[]",
-          "{\"type\":\"array\", \"items\": \"int\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"int\"}", "[]",
-          "{\"type\":\"array\", \"items\": \"long\"}", "[]" },
+          "{\"type\":\"array\", \"items\": \"long\"}", "[]", },
         { "{\"type\":\"array\", \"items\": \"int\"}", "[]",
           "{\"type\":\"array\", \"items\": \"double\"}", "[]" },
         { "{\"type\":\"array\", \"items\": \"long\"}", "[]",
-          "{\"type\":\"array\", \"items\": \"long\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"long\"}", "[]",
           "{\"type\":\"array\", \"items\": \"double\"}", "[]" },
         { "{\"type\":\"array\", \"items\": \"float\"}", "[]",
-          "{\"type\":\"array\", \"items\": \"float\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"float\"}", "[]",
           "{\"type\":\"array\", \"items\": \"double\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"double\"}", "[]",
-          "{\"type\":\"array\", \"items\": \"double\"}", "[]", },
-        { "{\"type\":\"array\", \"items\": \"string\"}", "[]",
-          "{\"type\":\"array\", \"items\": \"string\"}", "[]" },
-        { "{\"type\":\"array\", \"items\": \"bytes\"}", "[]",
-          "{\"type\":\"array\", \"items\": \"bytes\"}", "[]" },
 
-        { "{\"type\":\"array\", \"items\": \"boolean\"}", "[c1sB]",
-            "{\"type\":\"array\", \"items\": \"boolean\"}", "[c1sB]" },
-        { "{\"type\":\"array\", \"items\": \"int\"}", "[c1sI]",
-          "{\"type\":\"array\", \"items\": \"int\"}", "[c1sI]" },
         { "{\"type\":\"array\", \"items\": \"int\"}", "[c1sI]",
           "{\"type\":\"array\", \"items\": \"long\"}", "[c1sL]" },
         { "{\"type\":\"array\", \"items\": \"int\"}", "[c1sI]",
           "{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]" },
         { "{\"type\":\"array\", \"items\": \"long\"}", "[c1sL]",
-            "{\"type\":\"array\", \"items\": \"long\"}", "[c1sL]" },
-        { "{\"type\":\"array\", \"items\": \"long\"}", "[c1sL]",
           "{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]" },
         { "{\"type\":\"array\", \"items\": \"float\"}", "[c1sF]",
-            "{\"type\":\"array\", \"items\": \"float\"}", "[c1sF]" },
-        { "{\"type\":\"array\", \"items\": \"float\"}", "[c1sF]",
           "{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]" },
-        { "{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]",
-            "{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]" },
-        { "{\"type\":\"array\", \"items\": \"string\"}", "[c1sS]",
-            "{\"type\":\"array\", \"items\": \"string\"}", "[c1sS]" },
-        { "{\"type\":\"array\", \"items\": \"bytes\"}", "[c1sb]",
-            "{\"type\":\"array\", \"items\": \"bytes\"}", "[c1sb]" },
 
-        { "{\"type\":\"map\", \"values\": \"boolean\"}", "{}",
-          "{\"type\":\"map\", \"values\": \"boolean\"}", "{}" },
-        { "{\"type\":\"map\", \"values\": \"int\"}", "{}",
-          "{\"type\":\"map\", \"values\": \"int\"}", "{}" },
         { "{\"type\":\"map\", \"values\": \"int\"}", "{}",
           "{\"type\":\"map\", \"values\": \"long\"}", "{}" },
         { "{\"type\":\"map\", \"values\": \"int\"}", "{}",
           "{\"type\":\"map\", \"values\": \"double\"}", "{}" },
         { "{\"type\":\"map\", \"values\": \"long\"}", "{}",
-          "{\"type\":\"map\", \"values\": \"long\"}", "{}" },
-        { "{\"type\":\"map\", \"values\": \"long\"}", "{}",
           "{\"type\":\"map\", \"values\": \"double\"}", "{}" },
         { "{\"type\":\"map\", \"values\": \"float\"}", "{}",
-          "{\"type\":\"map\", \"values\": \"float\"}", "{}" },
-        { "{\"type\":\"map\", \"values\": \"float\"}", "{}",
           "{\"type\":\"map\", \"values\": \"double\"}", "{}" },
-        { "{\"type\":\"map\", \"values\": \"double\"}", "{}",
-          "{\"type\":\"map\", \"values\": \"double\"}", "{}" },
-        { "{\"type\":\"map\", \"values\": \"string\"}", "{}",
-          "{\"type\":\"map\", \"values\": \"string\"}", "{}" },
-        { "{\"type\":\"map\", \"values\": \"bytes\"}", "{}",
-          "{\"type\":\"map\", \"values\": \"bytes\"}", "{}" },
-        { "{\"type\":\"map\", \"values\": "
-          + "{\"type\":\"array\", \"items\":\"int\"}}", "{}",
-          "{\"type\":\"map\", \"values\": "
-            + "{\"type\":\"array\", \"items\":\"int\"}}", "{}" },
 
-        { "{\"type\":\"map\", \"values\": \"boolean\"}", "{c1sSB}",
-          "{\"type\":\"map\", \"values\": \"boolean\"}", "{c1sSB}" },
-        { "{\"type\":\"map\", \"values\": \"int\"}", "{c1sSI}",
-          "{\"type\":\"map\", \"values\": \"int\"}", "{c1sSI}" },
-        { "{\"type\":\"map\", \"values\": \"int\"}", "{c1sSI}",
-          "{\"type\":\"map\", \"values\": \"long\"}", "{c1sSL}" },
-        { "{\"type\":\"map\", \"values\": \"int\"}", "{c1sSI}",
-          "{\"type\":\"map\", \"values\": \"double\"}", "{c1sSD}" },
-        { "{\"type\":\"map\", \"values\": \"long\"}", "{c1sSL}",
-          "{\"type\":\"map\", \"values\": \"long\"}", "{c1sSL}" },
-        { "{\"type\":\"map\", \"values\": \"long\"}", "{c1sSL}",
-          "{\"type\":\"map\", \"values\": \"double\"}", "{c1sSD}" },
-        { "{\"type\":\"map\", \"values\": \"float\"}", "{c1sSF}",
-          "{\"type\":\"map\", \"values\": \"float\"}", "{c1sSF}" },
-        { "{\"type\":\"map\", \"values\": \"float\"}", "{c1sSF}",
-          "{\"type\":\"map\", \"values\": \"double\"}", "{c1sSD}" },
-        { "{\"type\":\"map\", \"values\": \"double\"}", "{c1sSD}",
-          "{\"type\":\"map\", \"values\": \"double\"}", "{c1sSD}" },
-        { "{\"type\":\"map\", \"values\": \"string\"}", "{c1sSS}",
-          "{\"type\":\"map\", \"values\": \"string\"}", "{c1sSS}" },
-        { "{\"type\":\"map\", \"values\": \"bytes\"}", "{c1sSb}",
-          "{\"type\":\"map\", \"values\": \"bytes\"}", "{c1sSb}" },
-        { "{\"type\":\"map\", \"values\": "
-          + "{\"type\":\"array\", \"items\":\"int\"}}", "{c1sS[c3sIsIsI]}",
-          "{\"type\":\"map\", \"values\": "
-          + "{\"type\":\"array\", \"items\":\"int\"}}", "{c1sS[c3sIsIsI]}" },
+        { "{\"type\":\"map\", \"values\": \"int\"}", "{c1sK5I}",
+          "{\"type\":\"map\", \"values\": \"long\"}", "{c1sK5L}" },
+        { "{\"type\":\"map\", \"values\": \"int\"}", "{c1sK5I}",
+          "{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}" },
+        { "{\"type\":\"map\", \"values\": \"long\"}", "{c1sK5L}",
+          "{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}" },
+        { "{\"type\":\"map\", \"values\": \"float\"}", "{c1sK5F}",
+          "{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}" },
 
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"boolean\"}]}", "B",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"boolean\"}]}", "B" },
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f\", \"type\":\"int\"}]}", "I",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"int\"}]}", "I"},
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"int\"}]}", "I",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"long\"}]}", "L"},
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"int\"}]}", "I",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"double\"}]}", "D"},
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"long\"}]}", "L",
           "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f\", \"type\":\"long\"}]}", "L" },
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"float\"}]}", "F",
+          + "{\"name\":\"f\", \"type\":\"int\"}]}", "I",
           "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"float\"}]}", "F"},
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"double\"}]}", "D",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"double\"}]}", "D"},
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"string\"}]}", "S",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"string\"}]}", "S"},
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"bytes\"}]}", "b",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"bytes\"}]}", "b"},
+          + "{\"name\":\"f\", \"type\":\"double\"}]}", "D" },
 
-        // multi-field record
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f1\", \"type\":\"int\"},"
-          + "{\"name\":\"f2\", \"type\":\"double\"},"
-          + "{\"name\":\"f3\", \"type\":\"string\"}]}", "IDS",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f1\", \"type\":\"int\"},"
-          + "{\"name\":\"f2\", \"type\":\"double\"},"
-          + "{\"name\":\"f3\", \"type\":\"string\"}]}", "IDS" },
         // multi-field record with promotions
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f0\", \"type\":\"boolean\"},"
@@ -293,68 +201,66 @@ public class TestResolvingIO {
           + "{\"name\":\"f2\", \"type\":\"double\"},"
           + "{\"name\":\"f3\", \"type\":\"string\"}]}", "BLDS" },
 
-        // record with array
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f1\", \"type\":\"long\"},"
-          + "{\"name\":\"f2\", "
-          + "\"type\":{\"type\":\"array\", \"items\":\"int\"}}]}", "L[c1sI]",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f1\", \"type\":\"long\"},"
-          + "{\"name\":\"f2\", "
-          + "\"type\":{\"type\":\"array\", \"items\":\"int\"}}]}", "L[c1sI]" },
+        { "[\"int\"]", "U0I",
+              "[\"long\"]", "U0L" },
+        { "[\"int\"]", "U0I",
+              "[\"double\"]", "U0D" },
+        { "[\"long\"]", "U0L",
+              "[\"double\"]", "U0D" },
+        { "[\"float\"]", "U0F",
+              "[\"double\"]", "U0D" },
 
-        // record with map
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f1\", \"type\":\"long\"},"
-          + "{\"name\":\"f2\", "
-          + "\"type\":{\"type\":\"map\", \"values\":\"int\"}}]}", "L{c1sSI}",
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f1\", \"type\":\"long\"},"
-          + "{\"name\":\"f2\", "
-          + "\"type\":{\"type\":\"map\", \"values\":\"int\"}}]}", "L{c1sSI}" },
+        { "\"int\"", "I", "[\"int\"]", "U0I" },
 
-        { "[\"boolean\"]", "u0B", "[\"boolean\"]", "u0B" },
-        { "[\"int\"]", "u0I", "[\"int\"]", "u0I" },
-        { "[\"int\"]", "u0I", "[\"long\"]", "u0L" },
-        { "[\"int\"]", "u0I", "[\"double\"]", "u0D" },
-        { "[\"long\"]", "u0L", "[\"long\"]", "u0L" },
-        { "[\"long\"]", "u0L", "[\"double\"]", "u0D" },
-        { "[\"float\"]", "u0F", "[\"float\"]", "u0F" },
-        { "[\"float\"]", "u0F", "[\"double\"]", "u0D" },
-        { "[\"double\"]", "u0D", "[\"double\"]", "u0D" },
-        { "[\"string\"]", "u0S", "[\"string\"]", "u0S" },
-        { "[\"bytes\"]", "u0b", "[\"bytes\"]", "u0b" },
+        { "[\"int\"]", "U0I", "\"int\"", "I" },
+        { "[\"int\"]", "U0I", "\"long\"", "L" },
 
-        { "\"int\"", "I", "[\"int\"]", "u0I" },
-
-        { "[\"int\"]", "u0I", "\"int\"", "I" },
-        { "[\"int\"]", "u0I", "\"long\"", "I" },
-
-        { "[\"null\", \"int\"]", "u0N", "[\"null\", \"int\"]", "u0N" },
-        { "[\"boolean\", \"int\"]", "u0B", "[\"boolean\", \"int\"]", "u0B" },
-        { "[\"boolean\", \"int\"]", "u1I", "[\"boolean\", \"int\"]", "u1I" },
-        { "[\"boolean\", \"int\"]", "u1I", "[\"int\", \"boolean\"]", "u0I" },
-        { "[\"boolean\", \"int\"]", "u1I", "[\"boolean\", \"long\"]", "u1L" },
-        { "[\"boolean\", \"int\"]", "u1I", "[\"long\", \"boolean\"]", "u0L" },
-        { "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]", "u0B",
-          "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]", "u0B" },
-        { "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]", "u1[c1sI]",
-          "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]", "u1[c1sI]" },
-
-          // TODO: test more complicated types such as arrays of records
+        { "[\"boolean\", \"int\"]", "U1I",
+              "[\"boolean\", \"long\"]", "U1L" },
+        { "[\"boolean\", \"int\"]", "U1I",
+              "[\"long\", \"boolean\"]", "U0L" },
     };
   }
-  
-  protected static void dump(byte[] bb) {
-    int col = 0;
-    for (byte b : bb) {
-      if (col % 16 == 0) {
-        System.out.println();
-      }
-      col++;
-      System.out.print(Integer.toHexString(b & 0xff) + " ");
-    }
-    System.out.println();
-  }
 
+  private static Object[][] dataForResolvingTests() {
+    // The mnemonics are the same as {@link TestValidatingIO#testSchemas}
+    return new Object[][] {
+        // Reordered fields
+        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f1\", \"type\":\"int\"},"
+          + "{\"name\":\"f2\", \"type\":\"string\"}]}", "IS10",
+          new Object[] { 10, "hello" },
+          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f2\", \"type\":\"string\" },"
+          + "{\"name\":\"f1\", \"type\":\"long\"}]}", "LS10",
+          new Object[] { 10L, "hello" } },
+        
+        // Default values
+        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
+          new Object[] { },
+          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}", "I",
+          new Object[] { 100 } },
+        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+            + "{\"name\":\"f2\", \"type\":\"int\"}]}", "I",
+          new Object[] { 10 },
+          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
+          + "{\"name\":\"f2\", \"type\":\"int\"}]}", "II",
+          new Object[] { 10, 101 } },
+        { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+            + "{\"name\": \"g1\", " +
+            		"\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
+                + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
+            + "{\"name\": \"g2\", \"type\": \"long\"}]}", "IL",
+          new Object[] { 10, 11L },
+          "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+            + "{\"name\": \"g1\", " +
+            		"\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
+                + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
+                + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
+          + "{\"name\": \"g2\", \"type\": \"long\"}]}}", "IIL",
+          new Object[] { 10, 101, 11L } },
+    };
+  }
 }

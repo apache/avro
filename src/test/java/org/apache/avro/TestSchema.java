@@ -36,6 +36,8 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.JsonDecoder;
+import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.util.Utf8;
 import org.testng.annotations.Test;
 
@@ -186,29 +188,47 @@ public class TestSchema {
       assertTrue("Datum does not validate against schema "+datum,
                  GenericData.validate(schema, datum));
 
-      checkSerialization(schema, datum,
-                         new GenericDatumWriter<Object>(), new GenericDatumReader<Object>());
+      checkBinary(schema, datum,
+                  new GenericDatumWriter<Object>(),
+                  new GenericDatumReader<Object>());
+      checkJson(schema, datum,
+                  new GenericDatumWriter<Object>(),
+                  new GenericDatumReader<Object>());
     }
   }
 
-  private static void checkSerialization(Schema schema, Object datum,
-                                         DatumWriter<Object> writer,
-                                         DatumReader<Object> reader)
+  private static void checkBinary(Schema schema, Object datum,
+                                  DatumWriter<Object> writer,
+                                  DatumReader<Object> reader)
     throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);
     writer.write(datum, new BinaryEncoder(out));
-      
     byte[] data = out.toByteArray();
-    // System.out.println("length = "+data.length);
 
     reader.setSchema(schema);
         
     Object decoded =
       reader.read(null, new BinaryDecoder(new ByteArrayInputStream(data)));
       
-    // System.out.println(GenericData.toString(datum));
-    // System.out.println(GenericData.toString(decoded));
+    assertEquals("Decoded data does not match.", datum, decoded);
+  }
+
+  private static void checkJson(Schema schema, Object datum,
+                                DatumWriter<Object> writer,
+                                DatumReader<Object> reader)
+    throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Encoder encoder = new JsonEncoder(schema, out);
+    writer.setSchema(schema);
+    writer.write(datum, encoder);
+    encoder.flush();
+    byte[] data = out.toByteArray();
+
+    reader.setSchema(schema);
+    Object decoded =
+      reader.read(null, new JsonDecoder(schema, new ByteArrayInputStream(data)));
+      
     assertEquals("Decoded data does not match.", datum, decoded);
   }
 

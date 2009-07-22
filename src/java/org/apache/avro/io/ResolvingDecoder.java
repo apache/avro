@@ -17,10 +17,13 @@
  */
 package org.apache.avro.io;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
+import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
+import org.apache.avro.io.parsing.Symbol;
 
 /**
  * {@link Decoder} that peforms type-resolution between the reader's and
@@ -38,12 +41,12 @@ import org.apache.avro.Schema;
  * <p>See the <a href="doc-files/parsing.html">parser documentation</a> for
  *  information on how this works.*/
 public class ResolvingDecoder extends ValidatingDecoder {
-  private ResolvingTable rtable;
 
+  private Decoder backup;
+  
   public ResolvingDecoder(Schema writer, Schema reader, Decoder in)
     throws IOException {
-    super(new ResolvingTable(writer, reader), in);
-    rtable = (ResolvingTable) table;
+    super(new ResolvingGrammarGenerator().generate(writer, reader), in);
   }
 
   /** Returns the name of the next field of the record we're reading.
@@ -53,8 +56,8 @@ public class ResolvingDecoder extends ValidatingDecoder {
     * @throws IllegalStateExcpetion If we're not about to read a record-field
     */
   public String readFieldName() throws IOException {
-    int actual = advance(ResolvingTable.FIELDACTION);
-    return rtable.getFieldName(actual);
+    return ((Symbol.FieldAdjustAction) parser.advance(Symbol.FIELD_ACTION)).
+      fname;
   }
 
   /** Returns the (zero-based) index of the next field of the record
@@ -98,126 +101,103 @@ public class ResolvingDecoder extends ValidatingDecoder {
     *                               
     */
   public int readFieldIndex() throws IOException {
-    int actual = advance(ResolvingTable.FIELDACTION);
-    return rtable.getFieldIndex(actual);
+    return ((Symbol.FieldAdjustAction) parser.advance(Symbol.FIELD_ACTION)).
+      rindex;
   }
 
   @Override
   public long readLong() throws IOException {
-    int actual = advance(ResolvingTable.LONG);
-    if (actual == ResolvingTable.INT) {
+    Symbol actual = parser.advance(Symbol.LONG);
+    if (actual == Symbol.INT) {
       return in.readInt();
-    } else if (actual == ResolvingTable.DOUBLE) {
+    } else if (actual == Symbol.DOUBLE) {
       return (long) in.readDouble();
     } else {
-      assert actual == ResolvingTable.LONG;
+      assert actual == Symbol.LONG;
       return in.readLong();
     }
   }
-    
+
   @Override
   public double readDouble() throws IOException {
-    int actual = advance(ResolvingTable.DOUBLE);
-    if (actual == ResolvingTable.INT) {
+    Symbol actual = parser.advance(Symbol.DOUBLE);
+    if (actual == Symbol.INT) {
       return (double) in.readInt();
-    } else if (actual == ResolvingTable.LONG) {
+    } else if (actual == Symbol.LONG) {
       return (double) in.readLong();
-    } else if (actual == ResolvingTable.FLOAT) {
+    } else if (actual == Symbol.FLOAT) {
       return (double) in.readFloat();
     } else {
-      assert actual == ResolvingTable.DOUBLE;
+      assert actual == Symbol.DOUBLE;
       return in.readDouble();
     }
   }
   
   @Override
   public int readEnum() throws IOException {
-    advance(ResolvingTable.ENUM);
-    int top = stack[--pos];
+    parser.advance(Symbol.ENUM);
+    Symbol.EnumAdjustAction top = (Symbol.EnumAdjustAction) parser.popSymbol();
     int n = in.readEnum();
-    if (n >= 0 && n < rtable.size(top)) {
-      n = rtable.getEnumAction(top, n);
-      if (rtable.isEnumAction(n)) {
-        return rtable.getEnumValue(n);
-      } else {
-        assert rtable.isErrorAction(n);
-        throw new AvroTypeException(rtable.getMessage(n));
-      }
+    Object o = top.adjustments[n];
+    if (o instanceof Integer) {
+      return ((Integer) o).intValue();
     } else {
-      throw new AvroTypeException("Enumeration out of range: " + n
-          + " max: " + rtable.size(top));
+      throw new AvroTypeException((String) o);
     }
   }
     
   @Override
   public int readIndex() throws IOException {
-    advance(ParsingTable.UNION);
-    int actual = stack[--pos];
-    if (rtable.isUnion(actual)) {
-      actual = rtable.getBranch(actual, in.readInt());
-    }
-    if (rtable.isReaderUnionAction(actual)) {
-      // Both reader and writer where a union.  Based on
-      // the writer's actual branch, go get the appropriate
-      // readerUnionAction
-      stack[pos++] = rtable.getReaderUnionSym(actual);
-      return rtable.getReaderUnionIndex(actual);
-    } else {
-      throw new AvroTypeException("Unexpected index read");
-    }
+    parser.advance(Symbol.UNION);
+    Symbol.UnionAdjustAction top = (Symbol.UnionAdjustAction) parser.popSymbol();
+    parser.pushSymbol(top.symToParse);
+    return top.rindex;
   }
 
   @Override
-  protected int skipSymbol(int sym, int p) throws IOException {
-    if (rtable.isResolverAction(sym)) {
-      return skipSymbol(rtable.getResolverActual(sym), -1);
-    } else {
-      return super.skipSymbol(sym, p);
-    }
-  }
-
-  @Override
-  protected int advance(int input) throws IOException {
-    int top = stack[--pos];
-    while (! rtable.isTerminal(top)) {
-      if (rtable.isAction(top)) {
-        if (rtable.isFieldAction(top)) {
-          if (input == ResolvingTable.FIELDACTION) return top;
-        } else if (rtable.isResolverAction(top)) {
-          return rtable.getResolverActual(top);
-        } else if (rtable.isSkipAction(top)) {
-          skipSymbol(rtable.getProductionToSkip(top), -1);
-        } else if (rtable.isWriterUnionAction(top)) {
-          stack[pos++] = rtable.getBranch(top, in.readIndex());
-        } else if (rtable.isErrorAction(top)) {
-          throw new AvroTypeException(rtable.getMessage(top));
-        }
-      } else if (! rtable.isRepeater(top)
-                 || (input != ParsingTable.ARRAYEND
-                     && input != ParsingTable.MAPEND)) {
-        int plen = rtable.size(top);
-        if (stack.length < pos + plen) {
-          stack = expand(stack, pos + plen);
-        }
-        System.arraycopy(rtable.prods, top, stack, pos, plen);
-        pos += plen;
-      }
-      top = stack[--pos];
-    }
-    if (top == input) {
-      return top;
-    }
-    throw new AvroTypeException("Attempt to read " + input
-                                + " when a " + top + " was expected.");
-  }
-  public void reset() throws IOException {
-    while (pos > 0) {
-      if (rtable.isSkipAction(stack[pos - 1])) {
-        skipProduction(rtable.getProductionToSkip(stack[--pos]));
+  public Symbol doAction(Symbol input, Symbol top) throws IOException {
+    if (top instanceof Symbol.FieldAdjustAction) {
+      return input == Symbol.FIELD_ACTION ? top : Symbol.CONTINUE;
+    } if (top instanceof Symbol.ResolvingAction) {
+      Symbol.ResolvingAction t = (Symbol.ResolvingAction) top;
+      if (t.reader != input) {
+        throw new AvroTypeException("Found " + t.reader + " while looking for "
+                                    + input);
       } else {
-        throw new AvroTypeException("Data not fully drained.");
+        return t.writer;
       }
+    } else if (top instanceof Symbol.SkipAction) {
+      Symbol symToSkip = ((Symbol.SkipAction) top).symToSkip;
+      parser.skipSymbol(symToSkip);
+    } else if (top instanceof Symbol.WriterUnionAction) {
+      Symbol.Alternative branches = (Symbol.Alternative) parser.popSymbol();
+      parser.pushSymbol(branches.getSymbol(in.readIndex()));
+    } else if (top instanceof Symbol.ErrorAction) {
+      throw new AvroTypeException(((Symbol.ErrorAction) top).msg);
+    } else if (top instanceof Symbol.DefaultStartAction) {
+      Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
+      backup = in;
+      in = (new JsonDecoder(dsa.root, new ByteArrayInputStream(dsa.contents)));
+    } else if (top == Symbol.DEFAULT_END_ACTION) {
+      in = backup;
+    } else {
+      throw new AvroTypeException("Unknown action: " + top);
     }
-    stack[pos++] = table.root;
+    return Symbol.CONTINUE;
+  }
+
+  @Override
+  public void skipAction() throws IOException {
+    Symbol top = parser.popSymbol();
+    if (top instanceof Symbol.ResolvingAction) {
+      parser.pushSymbol(((Symbol.ResolvingAction) top).writer);
+    } else if (top instanceof Symbol.SkipAction) {
+      parser.pushSymbol(((Symbol.SkipAction) top).symToSkip);
+    } else if (top instanceof Symbol.WriterUnionAction) {
+      Symbol.Alternative branches = (Symbol.Alternative) parser.popSymbol();
+      parser.pushSymbol(branches.getSymbol(in.readIndex()));
+    } else if (top instanceof Symbol.ErrorAction) {
+      throw new AvroTypeException(((Symbol.ErrorAction) top).msg);
+    }
   }
 }

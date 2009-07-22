@@ -15,53 +15,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
-import org.apache.avro.io.parsing.ValidatingGrammarGenerator;
+import org.apache.avro.io.parsing.JsonGrammarGenerator;
 import org.apache.avro.io.parsing.Parser;
 import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
+import org.codehaus.jackson.JsonEncoding;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.JsonGenerator;
 
-/**
- * An implementation of {@link Encoder} that ensures that the sequence
- * of operations conforms to a schema.
- */
-public class ValidatingEncoder extends ParsingEncoder 
-  implements Parser.ActionHandler {
-  protected Encoder out;
-  protected final Parser parser;
+/** An {@link Encoder} for Avro's JSON data encoding. */
+public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler {
+  final Parser parser;
+  private JsonGenerator out;
   /**
    * Has anything been written into the collections?
    */
   protected BitSet isEmpty = new BitSet();
 
-  ValidatingEncoder(Symbol root, Encoder out) throws IOException {
-    this.out = out;
-    this.parser = new Parser(root, this);
+  public JsonEncoder(Schema sc, OutputStream out) throws IOException {
+    this(sc, new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8));
   }
 
-  public ValidatingEncoder(Schema schema, Encoder in) throws IOException {
-    this(new ValidatingGrammarGenerator().generate(schema), in);
+  public JsonEncoder(Schema sc, JsonGenerator out) throws IOException {
+    this.out = out;
+    this.parser =
+      new Parser(new JsonGrammarGenerator().generate(sc), this);
   }
 
   @Override
   public void flush() throws IOException {
+    if (parser.depth() > 1) {
+      parser.advance(Symbol.END);
+    }
     out.flush();
   }
 
   @Override
   public void init(OutputStream out) throws IOException {
-    flush();
-    parser.reset();
-    this.out.init(out);
+    if (this.out != null) {
+      flush();
+    }
+    this.out = new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
   }
 
   @Override
@@ -79,43 +84,61 @@ public class ValidatingEncoder extends ParsingEncoder
   @Override
   public void writeInt(int n) throws IOException {
     parser.advance(Symbol.INT);
-    out.writeInt(n);
+    out.writeNumber(n);
   }
 
   @Override
   public void writeLong(long n) throws IOException {
     parser.advance(Symbol.LONG);
-    out.writeLong(n);
+    out.writeNumber(n);
   }
 
   @Override
   public void writeFloat(float f) throws IOException {
     parser.advance(Symbol.FLOAT);
-    out.writeFloat(f);
+    out.writeNumber(f);
   }
 
   @Override
   public void writeDouble(double d) throws IOException {
     parser.advance(Symbol.DOUBLE);
-    out.writeDouble(d);
+    out.writeNumber(d);
   }
 
   @Override
   public void writeString(Utf8 utf8) throws IOException {
     parser.advance(Symbol.STRING);
-    out.writeString(utf8);
+    if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {
+      parser.advance(Symbol.MAP_KEY_MARKER);
+      out.writeFieldName(utf8.toString());
+    } else {
+      out.writeString(utf8.toString());
+    }
   }
 
   @Override
   public void writeBytes(ByteBuffer bytes) throws IOException {
-    parser.advance(Symbol.BYTES);
-    out.writeBytes(bytes);
+    if (bytes.hasArray()) {
+      writeBytes(bytes.array(), bytes.position(), bytes.remaining());
+    } else {
+      byte[] b = new byte[bytes.remaining()];
+      for (int i = 0; i < b.length; i++) {
+        b[i] = bytes.get();
+      }
+      writeBytes(b);
+    }
   }
 
   @Override
   public void writeBytes(byte[] bytes, int start, int len) throws IOException {
     parser.advance(Symbol.BYTES);
-    out.writeBytes(bytes, start, len);
+    writeByteArray(bytes, start, len);
+  }
+
+  private void writeByteArray(byte[] bytes, int start, int len)
+      throws IOException, JsonGenerationException, UnsupportedEncodingException {
+    out.writeString(
+        new String(bytes, start, len, JsonDecoder.CHARSET));
   }
 
   @Override
@@ -127,76 +150,90 @@ public class ValidatingEncoder extends ParsingEncoder
         "Incorrect length for fixed binary: expected " +
         top.size + " but received " + len + " bytes.");
     }
-    out.writeFixed(bytes, start, len);
+    writeByteArray(bytes, start, len);
   }
 
   @Override
   public void writeEnum(int e) throws IOException {
     parser.advance(Symbol.ENUM);
-    Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
+    Symbol.EnumLabelsAction top = (Symbol.EnumLabelsAction) parser.popSymbol();
     if (e < 0 || e >= top.size) {
       throw new AvroTypeException(
           "Enumeration out of range: max is " +
           top.size + " but received " + e);
     }
-    out.writeEnum(e);
+    out.writeString(top.getLabel(e));
   }
 
   @Override
   public void writeArrayStart() throws IOException {
-    push();
     parser.advance(Symbol.ARRAY_START);
-    out.writeArrayStart();
+    out.writeStartArray();
+    push();
+    isEmpty.set(depth());
   }
 
   @Override
   public void writeArrayEnd() throws IOException {
-    parser.advance(Symbol.ARRAY_END);
-    out.writeArrayEnd();
+    if (! isEmpty.get(pos)) {
+      parser.advance(Symbol.ITEM_END);
+    }
     pop();
+    parser.advance(Symbol.ARRAY_END);
+    out.writeEndArray();
   }
 
   @Override
   public void writeMapStart() throws IOException {
     push();
+    isEmpty.set(depth());
+
     parser.advance(Symbol.MAP_START);
-    out.writeMapStart();
+    out.writeStartObject();
   }
 
   @Override
   public void writeMapEnd() throws IOException {
-    parser.advance(Symbol.MAP_END);
-    out.writeMapEnd();
+    if (! isEmpty.get(pos)) {
+      parser.advance(Symbol.ITEM_END);
+    }
     pop();
-  }
 
-  @Override
-  public void setItemCount(long itemCount) throws IOException {
-    super.setItemCount(itemCount);
-    out.setItemCount(itemCount);
+    parser.advance(Symbol.MAP_END);
+    out.writeEndObject();
   }
 
   @Override
   public void startItem() throws IOException {
+    if (! isEmpty.get(pos)) {
+      parser.advance(Symbol.ITEM_END);
+    }
     super.startItem();
-    out.startItem();
+    isEmpty.clear(depth());
   }
 
   @Override
   public void writeIndex(int unionIndex) throws IOException {
     parser.advance(Symbol.UNION);
     Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
+    out.writeStartObject();
+    out.writeFieldName(top.getLabel(unionIndex));
+    parser.pushSymbol(Symbol.UNION_END);
     parser.pushSymbol(top.getSymbol(unionIndex));
-    out.writeIndex(unionIndex);
   }
 
   @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
+    if (top instanceof Symbol.FieldAdjustAction) {
+      Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
+      out.writeFieldName(fa.fname);
+    } else if (top == Symbol.RECORD_START) {
+      out.writeStartObject();
+    } else if (top == Symbol.RECORD_END || top == Symbol.UNION_END) {
+      out.writeEndObject();
+    } else {
+      throw new AvroTypeException("Unknown action symbol " + top);
+    }
     return Symbol.CONTINUE;
-  }
-
-  /** Have we written at least one item into the current collection? */
-  protected final boolean isTopEmpty() {
-    return isEmpty.get(pos);
   }
 }
