@@ -17,8 +17,9 @@
  */
 package org.apache.avro;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,7 +40,6 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.util.Utf8;
-import org.testng.annotations.Test;
 
 public class TestSchema {
 

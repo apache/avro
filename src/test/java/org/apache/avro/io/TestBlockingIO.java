@@ -23,16 +23,32 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Stack;
+import java.util.Collection;
+import java.util.Arrays;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
+@RunWith(Parameterized.class)
 public class TestBlockingIO {
   private static final String UTF_8 = "UTF-8";
+
+  private final int iSize;
+  private final int iDepth;
+  private final String sInput;
+
+  public TestBlockingIO (int sz, int dp, String inp) {
+    this.iSize = sz;
+    this.iDepth = dp;
+    this.sInput = inp;
+  }
   
   private static class Tests {
     private final JsonParser parser;
@@ -65,13 +81,13 @@ public class TestBlockingIO {
       while (parser.nextToken() != null) {
         switch (parser.getCurrentToken()) {
         case END_ARRAY:
-          Assert.assertEquals(0, count);
-          Assert.assertTrue(countStack.peek().isArray);
+          assertEquals(0, count);
+          assertTrue(countStack.peek().isArray);
           count = countStack.pop().count;
           break;
         case END_OBJECT:
-          Assert.assertEquals(0, count);
-          Assert.assertFalse(countStack.peek().isArray);
+          assertEquals(0, count);
+          assertFalse(countStack.peek().isArray);
           count = countStack.pop().count;
           break;
         case START_ARRAY:
@@ -119,12 +135,12 @@ public class TestBlockingIO {
         switch (parser.getCurrentToken()) {
         case END_ARRAY:
           // assertEquals(0, count);
-          Assert.assertTrue(countStack.peek().isArray);
+          assertTrue(countStack.peek().isArray);
           count = countStack.pop().count;
           break;
         case END_OBJECT:
           // assertEquals(0, count);
-          Assert.assertFalse(countStack.peek().isArray);
+          assertFalse(countStack.peek().isArray);
           count = countStack.pop().count;
           break;
         case START_ARRAY:
@@ -201,29 +217,29 @@ public class TestBlockingIO {
     }
   }
 
-  @Test(dataProvider="data")
-  public void testScan(int bufferSize, int depth, String input)
+  @Test
+  public void testScan()
     throws JsonParseException, IOException {
-    Tests t = new Tests(bufferSize, depth, input);
+    Tests t = new Tests(iSize, iDepth, sInput);
     t.scan();
   }
 
-  @Test(dataProvider="data")
-  public void testSkip_1(int bufferSize, int depth, String input)
+  @Test
+  public void testSkip_1()
     throws JsonParseException, IOException {
-    testSkip(bufferSize, depth, input, 0);
+    testSkip(iSize, iDepth, sInput, 0);
   }
 
-  @Test(dataProvider="data")
-  public void testSkip_2(int bufferSize, int depth, String input)
+  @Test
+  public void testSkip_2()
     throws JsonParseException, IOException {
-    testSkip(bufferSize, depth, input, 1);
+    testSkip(iSize, iDepth, sInput, 1);
   }
 
-  @Test(dataProvider="data")
-  public void testSkip_3(int bufferSize, int depth, String input)
+  @Test
+  public void testSkip_3()
     throws JsonParseException, IOException {
-    testSkip(bufferSize, depth, input, 2);
+    testSkip(iSize, iDepth, sInput, 2);
   }
 
   private void testSkip(int bufferSize, int depth, String input,
@@ -264,10 +280,10 @@ public class TestBlockingIO {
   private static void checkString(String s, Decoder input, int n)
     throws IOException, UnsupportedEncodingException {
     ByteBuffer buf = input.readBytes(null);
-    Assert.assertEquals(n, buf.remaining());
+    assertEquals(n, buf.remaining());
     String s2 = new String(buf.array(), buf.position(),
         buf.remaining(), UTF_8);
-    Assert.assertEquals(s, s2);
+    assertEquals(s, s2);
   }
   
   private static void serialize(Encoder cos, JsonParser p,
@@ -280,12 +296,12 @@ public class TestBlockingIO {
     while (p.nextToken() != null) {
       switch (p.getCurrentToken()) {
       case END_ARRAY:
-        Assert.assertTrue(isArray[stackTop]);
+        assertTrue(isArray[stackTop]);
         cos.writeArrayEnd();
         stackTop--;
         break;
       case END_OBJECT:
-        Assert.assertFalse(isArray[stackTop]);
+        assertFalse(isArray[stackTop]);
         cos.writeMapEnd();
         stackTop--;
         break;
@@ -330,9 +346,9 @@ public class TestBlockingIO {
     }
   }
 
-  @DataProvider
-  public static Object[][] data() {
-    return new Object[][] {
+  @Parameterized.Parameters
+  public static Collection<Object[]> data() {
+    return Arrays.asList (new Object[][] {
         { 64, 0, "" },
         { 64, 0, jss(0, 'a') },
         { 64, 0, jss(3, 'a') },
@@ -440,7 +456,7 @@ public class TestBlockingIO {
         { 64, 1, "{\"n1\": \"v\", \"n2\": []}" },
         { 100, 1, "{\"n1\": \"v\", \"n2\": []}" },
         { 100, 1, "{\"n1\": \"v\", \"n2\": [\"abc\"]}" },
-    };
+    });
   }
 
   /**

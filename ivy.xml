@@ -39,10 +39,7 @@
 		rev="1.5"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer-ant"
 		rev="1.5"/>
-    <dependency org="org.testng" name="testng" rev="5.9"
-		transitive="false" conf="test->default">
-      <artifact name="testng" type="jar" ext="jar" e:classifier="jdk15"/>
-    </dependency>
+    <dependency org="junit" name="junit" rev="4.5" conf="test->default"/>
     <dependency org="checkstyle" name="checkstyle" rev="5.0"
 		conf="test->default"/>
   </dependencies>

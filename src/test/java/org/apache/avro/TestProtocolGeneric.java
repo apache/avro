@@ -25,22 +25,22 @@ import org.apache.avro.generic.GenericRequestor;
 import org.apache.avro.generic.GenericResponder;
 import org.apache.avro.ipc.*;
 import org.apache.avro.util.Utf8;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.LinkedHashMap;
-import java.util.ArrayList;
 
 public class TestProtocolGeneric {
   private static final Logger LOG
@@ -95,7 +95,7 @@ public class TestProtocolGeneric {
   private static Transceiver client;
   private static Requestor requestor;
 
-  @BeforeClass
+  @Before
   public void testStartServer() throws Exception {
     server = new SocketServer(new TestResponder(), new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
@@ -184,7 +184,7 @@ public class TestProtocolGeneric {
     }
   }
 
-  @AfterClass
+  @After
   public void testStopServer() throws IOException {
     client.close();
     server.close();

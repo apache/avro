@@ -20,49 +20,50 @@ package org.apache.avro.io;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.Collection;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.TestValidatingIO.Encoding;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.junit.Test;
+import org.junit.runners.Parameterized;
+import org.junit.runner.RunWith;
 
+@RunWith(Parameterized.class)
 public class TestResolvingIO {
-  @Test(dataProvider="data1")
-  public void test_identical(Encoding encoding,
+
+  protected final Encoding eEnc;
+  protected final int iSkipL;
+  protected final String sJsWrtSchm;
+  protected final String sWrtCls;
+  protected final String sJsRdrSchm;
+  protected final String sRdrCls;
+
+  public TestResolvingIO (Encoding encoding,
       int skipLevel, String jsonWriterSchema,
-      String writerCalls, 
-      String jsonReaderSchema, String readerCalls)
-  throws IOException {
-    performTest(encoding, skipLevel, jsonWriterSchema, writerCalls,
-        jsonReaderSchema, readerCalls);
+      String writerCalls,
+      String jsonReaderSchema, String readerCalls
+  ) {
+    this.eEnc = encoding;
+    this.iSkipL = skipLevel;
+    this.sJsWrtSchm = jsonWriterSchema;
+    this.sWrtCls = writerCalls;
+    this.sJsRdrSchm = jsonReaderSchema;
+    this.sRdrCls = readerCalls;
   }
   
-  private static final int COUNT = 10;
-  
-  @Test(dataProvider="data2")
-  public void test_compatible(Encoding encoding,
-      int skipLevel, String jsonWriterSchema,
-      String writerCalls, 
-      String jsonReaderSchema, String readerCalls)
+  @Test
+  public void test_identical()
   throws IOException {
-    performTest(encoding, skipLevel, jsonWriterSchema, writerCalls,
-        jsonReaderSchema, readerCalls);
+    performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsRdrSchm, sRdrCls);
   }
 
-  @Test(dataProvider="data3")
-  public void test_resolving(Encoding encoding, int skipLevel,
-      String jsonWriterSchema, String writerCalls,
-      Object[] writerValues,
-      String jsonReaderSchema, String readerCalls, Object[] readerValues)
-    throws IOException {
-    Schema writerSchema = Schema.parse(jsonWriterSchema);
-    byte[] bytes = TestValidatingIO.make(writerSchema, writerCalls,
-        writerValues, Encoding.BINARY);
-    Schema readerSchema = Schema.parse(jsonReaderSchema);
-    check(writerSchema, readerSchema, bytes, readerCalls,
-        readerValues,
-        Encoding.BINARY, skipLevel);
+  private static final int COUNT = 10;
+
+  @Test
+  public void test_compatible()
+  throws IOException {
+    performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsRdrSchm, sRdrCls);
   }
 
   private void performTest(Encoding encoding,
@@ -92,7 +93,7 @@ public class TestResolvingIO {
         encoding, skipLevel);
   }
 
-  private static void check(Schema wsc, Schema rsc, byte[] bytes,
+  static void check(Schema wsc, Schema rsc, byte[] bytes,
       String calls, Object[] values, Encoding encoding,
       int skipLevel)
       throws IOException {
@@ -113,26 +114,14 @@ public class TestResolvingIO {
     TestValidatingIO.check(vi, calls, values, skipLevel);
   }
   
-  @DataProvider
-  public static Iterator<Object[]> data1() {
-    return TestValidatingIO.cartesian(encodings, skipLevels,
-        TestValidatingIO.paste(TestValidatingIO.testSchemas(),
-            TestValidatingIO.testSchemas()));
-  }
-  
-  @DataProvider
-  public static Iterator<Object[]> data2() {
-    return TestValidatingIO.cartesian(encodings, skipLevels, testSchemas());
-  }
-  
-  @DataProvider
-  public static Iterator<Object[]> data3() {
-    return TestValidatingIO.cartesian(encodings, skipLevels,
-        dataForResolvingTests());
+  @Parameterized.Parameters
+  public static Collection<Object[]> data2() {
+    return Arrays.asList(TestValidatingIO.convertTo2dArray(encodings, skipLevels, testSchemas()));
   }
 
-  private static Object[][] encodings = new Object[][] { { Encoding.BINARY } };
-  private static Object[][] skipLevels =
+  static Object[][] encodings = new Object[][] { { Encoding.BINARY },
+	  { Encoding.BLOCKING_BINARY }, { Encoding.JSON } };
+  static Object[][] skipLevels =
     new Object[][] { { -1 }, { 0 }, { 1 }, { 2 }  };
   private static Object[][] testSchemas() {
     // The mnemonics are the same as {@link TestValidatingIO#testSchemas}
@@ -219,48 +208,6 @@ public class TestResolvingIO {
               "[\"boolean\", \"long\"]", "U1L" },
         { "[\"boolean\", \"int\"]", "U1I",
               "[\"long\", \"boolean\"]", "U0L" },
-    };
-  }
-
-  private static Object[][] dataForResolvingTests() {
-    // The mnemonics are the same as {@link TestValidatingIO#testSchemas}
-    return new Object[][] {
-        // Reordered fields
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f1\", \"type\":\"int\"},"
-          + "{\"name\":\"f2\", \"type\":\"string\"}]}", "IS10",
-          new Object[] { 10, "hello" },
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f2\", \"type\":\"string\" },"
-          + "{\"name\":\"f1\", \"type\":\"long\"}]}", "LS10",
-          new Object[] { 10L, "hello" } },
-        
-        // Default values
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
-          new Object[] { },
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}", "I",
-          new Object[] { 100 } },
-        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-            + "{\"name\":\"f2\", \"type\":\"int\"}]}", "I",
-          new Object[] { 10 },
-          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
-          + "{\"name\":\"f2\", \"type\":\"int\"}]}", "II",
-          new Object[] { 10, 101 } },
-        { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-            + "{\"name\": \"g1\", " +
-            		"\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
-                + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
-            + "{\"name\": \"g2\", \"type\": \"long\"}]}", "IL",
-          new Object[] { 10, 11L },
-          "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-            + "{\"name\": \"g1\", " +
-            		"\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
-                + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
-                + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
-          + "{\"name\": \"g2\", \"type\": \"long\"}]}}", "IIL",
-          new Object[] { 10, 101, 11L } },
     };
   }
 }

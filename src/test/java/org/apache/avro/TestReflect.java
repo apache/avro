@@ -23,8 +23,8 @@ import org.apache.avro.test.Simple;
 import org.apache.avro.test.Simple.TestRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.testng.AssertJUnit.assertEquals;
-import org.testng.annotations.Test;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.*;
 

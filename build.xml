@@ -52,7 +52,6 @@
             value="${nonspace.os}-${os.arch}-${sun.arch.data.model}"/>
 
   <property name="test.count" value="100"/>
-  <property name="testcase" value="Test*"/>
   <property name="test.java.src.dir" value="${basedir}/src/test/java"/>
   <property name="test.schemata.dir" value="${basedir}/src/test/schemata"/>
   <property name="test.java.build.dir" value="${build.dir}/test"/>
@@ -215,7 +214,6 @@
     <java-compiler src="${test.java.src.dir}"
 		   dest="${test.java.classes}"
 		   classpath="test.java.classpath"/>
-    <taskdef resource="testngtasks" classpathref="test.java.classpath"/>
   </target>
 
   <macrodef name="java-avro-compiler">
@@ -260,24 +258,35 @@
 
   <target name="test" depends="test-java,test-py,test-c,test-interop"/>
 
-  <target name="test-java" depends="compile-test-java,checkstyle-java"
-          description="Run java unit tests with TestNG">
+  <macrodef name="test-runner">
+    <attribute name="files.location" />
+    <attribute name="tests.pattern" />
+    <sequential>
+      <junit showoutput="yes"
+             printsummary="withOutAndErr"
+             haltonfailure="no"
+             errorProperty="tests.failed" failureProperty="tests.failed">
+        <sysproperty key="test.count" value="${test.count}"/>
+        <sysproperty key="test.dir" value="${test.java.build.dir}"/>
+        <sysproperty key="test.validate" value="${test.validate}"/>
+        <classpath refid="test.java.classpath"/>
+        <formatter type="plain" />
+        <batchtest todir="${test.java.build.dir}" unless="testcase">
+          <fileset dir="@{files.location}"
+		   includes="@{tests.pattern}"
+		   excludes="**/${test.java.exclude}.java" />
+        </batchtest>
+        <batchtest todir="${test.java.build.dir}" if="testcase">
+          <fileset dir="@{files.location}" includes="**/${testcase}.java"/>
+        </batchtest>
+      </junit>
+      <antcall target="checkfailure" />
+    </sequential>
+  </macrodef>
 
-    <testng classpathref="test.java.classpath"
-            sourcedir="${test.java.src.dir}"
-            outputdir="${build.dir}/test-output"
-            suitename="AvroTestNG"
-            listeners="org.apache.avro.test.TestOutputInterceptor, org.apache.avro.test.TestSuiteInterceptor"
-            haltOnfailure="true">
-      <sysproperty key="test.count" value="${test.count}"/>
-      <sysproperty key="test.dir" value="${test.java.build.dir}"/>
-      <sysproperty key="test.validate" value="${test.validate}"/>
-      <sysproperty key="testcase" value="${testcase}"/>
-
-      <classpath refid="test.java.classpath"/>
-
-      <classfileset dir="${test.java.classes}" includes="**/${testcase}.class" excludes="**/*$*.class"/>
-    </testng>
+  <target name="test-java" depends="compile-test-java"
+ 	  description="Run java unit tests">
+    <test-runner files.location="${test.java.src.dir}" tests.pattern="**/${test.java.include}.java"/>
   </target>
 
   <path id="test.py.path">
@@ -341,21 +350,12 @@
 
   <target name="test-interop-data-java" depends="generate-test-data"
     description="Run java data file interoperability tests">
+    <test-runner files.location="${test.java.classes}" tests.pattern="**/TestDataFile$InteropTest.class" />
+  </target>
 
-    <testng classpathref="test.java.classpath"
-            sourcedir="${test.java.src.dir}"
-            outputdir="${build.dir}/test-output"
-            suitename="AvroTest"
-            testname="InteropDataTest"
-            haltOnfailure="true">
-      <sysproperty key="test.count" value="${test.count}"/>
-      <sysproperty key="test.dir" value="${test.java.build.dir}"/>
-      <sysproperty key="test.validate" value="${test.validate}"/>
-
-      <classpath refid="test.java.classpath"/>
-
-      <classfileset dir="${test.java.classes}" includes="**/TestDataFile$InteropTest.class"/>
-    </testng>
+  <target name="checkfailure" if="tests.failed">
+    <touch file="${test.build.dir}/testsfailed"/>
+    <fail unless="continueOnFailure">Tests failed!</fail>
   </target>
 
   <target name="test-interop-data-py" depends="generate-test-data" 
@@ -400,32 +400,7 @@
 
   <target name="test-interop-rpc-java" depends="start-rpc-daemons"
     description="Run java rpc interoperability tests">
-
-    <testng classpathref="test.java.classpath"
-            sourcedir="${test.java.src.dir}"
-            outputdir="${build.dir}/test-output"
-            suitename="AvroTestNG"
-            testname="InteropRPCTest"
-            haltOnfailure="true">
-      <sysproperty key="test.count" value="${test.count}"/>
-      <sysproperty key="test.dir" value="${test.java.build.dir}"/>
-      <sysproperty key="test.validate" value="${test.validate}"/>
-
-      <classpath refid="test.java.classpath"/>
-
-      <classfileset dir="${test.java.classes}" includes="**/TestProtocolSpecific$InteropTest.class"/>
-    </testng>
-  </target>
-
-  <target name="test-reports" depends="test-java" description="This target produce reports in JUnit format">
-    <mkdir  dir="${build.dir}/test-report"/>
-    <junitreport todir="${build.dir}/test-report">
-      <fileset dir="${build.dir}/test-output">
-        <include name="**/*.xml"/>
-      </fileset>
-
-      <report format="noframes" todir="${build.dir}/test-report"/>
-    </junitreport>
+    <test-runner files.location="${test.java.classes}" tests.pattern="**/TestProtocolSpecific$InteropTest.class" />
   </target>
 
   <target name="test-interop-rpc-py" depends="start-rpc-daemons"

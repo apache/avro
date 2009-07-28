@@ -25,9 +25,9 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import org.testng.annotations.Test;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -66,7 +66,7 @@ public class TestDataFile {
     }
   }
 
-  @Test(dependsOnMethods="testGenericWrite")
+  @Test
   public void testGenericRead() throws IOException {
     DataFileReader<Object> reader =
       new DataFileReader<Object>(new SeekableFileInput(FILE),

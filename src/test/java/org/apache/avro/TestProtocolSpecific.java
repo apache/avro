@@ -29,13 +29,13 @@ import org.apache.avro.test.Simple.MD5;
 import org.apache.avro.test.Simple.TestError;
 import org.apache.avro.test.Simple.TestRecord;
 import org.apache.avro.util.Utf8;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -65,7 +65,7 @@ public class TestProtocolSpecific {
   protected static Transceiver client;
   protected static Simple proxy;
 
-  @BeforeClass
+  @Before
   public void testStartServer() throws Exception {
     server = new SocketServer(new SpecificResponder(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
@@ -123,7 +123,7 @@ public class TestProtocolSpecific {
     assertEquals("an error", error.message.toString());
   }
 
-  @AfterClass
+  @After
   public void testStopServer() throws IOException {
     client.close();
     server.close();

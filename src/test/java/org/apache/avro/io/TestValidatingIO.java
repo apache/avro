@@ -17,36 +17,47 @@
  */
 package org.apache.avro.io;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.fail;
+import org.apache.avro.Schema;
+import org.apache.avro.util.Utf8;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 
-import org.apache.avro.Schema;
-import org.apache.avro.util.Utf8;
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-
+@RunWith(Parameterized.class)
 public class TestValidatingIO {
   enum Encoding {
     BINARY,
     BLOCKING_BINARY,
     JSON,
-  };
-  
+  }
+
+  private Encoding eEnc;
+  private int iSkipL;
+  private String sJsSch;
+  private String sCl;
+
+  public TestValidatingIO (Encoding _enc, int _skip, String _js, String _cls) {
+    this.eEnc = _enc;
+    this.iSkipL = _skip;
+    this.sJsSch = _js;
+    this.sCl = _cls;
+  }
   private static int COUNT = 1;
   
-  @Test(dataProvider="data")
-  public void test(Encoding encoding, int skipLevel,
-      String jsonSchema, String calls) throws IOException {
+  @Test
+  public void testMain() throws IOException {
     for (int i = 0; i < COUNT; i++) {
-      testOnce(Schema.parse(jsonSchema), calls, skipLevel, encoding);
+      testOnce(Schema.parse(sJsSch), sCl, iSkipL, eEnc);
     }
   }
 
@@ -193,7 +204,7 @@ public class TestValidatingIO {
           break;
         }
       default:
-        Assert.fail();
+        fail();
         break;
       }
     }
@@ -243,7 +254,7 @@ public class TestValidatingIO {
       case 's':
         break;
       default:
-        Assert.fail();
+        fail();
         break;
       }
     }
@@ -270,7 +281,7 @@ public class TestValidatingIO {
   }
 
   private static String nextString(Random r, int length) {
-    char[] cc = new char[length]; 
+    char[] cc = new char[length];
     for (int i = 0; i < length; i++) {
       cc[i] = (char) ('A' + r.nextInt(26));
     }
@@ -312,24 +323,24 @@ public class TestValidatingIO {
         vi.readNull();
         break;
       case 'B':
-        boolean b = ((Boolean) values[p++]).booleanValue(); 
-        Assert.assertEquals(vi.readBoolean(), b);
+        boolean b = ((Boolean) values[p++]).booleanValue();
+        assertEquals(b, vi.readBoolean());
         break;
       case 'I':
-        int ii = ((Integer) values[p++]).intValue(); 
-        Assert.assertEquals(vi.readInt(), ii);
+        int ii = ((Integer) values[p++]).intValue();
+        assertEquals(ii, vi.readInt());
         break;
       case 'L':
-        long l = longValue(values[p++]); 
-        Assert.assertEquals(vi.readLong(), l);
+        long l = longValue(values[p++]);
+        assertEquals(l, vi.readLong());
         break;
       case 'F':
-        float f = floatValue(values[p++]); 
-        Assert.assertEquals(vi.readFloat(), f, Math.abs(f / 1000));
+        float f = floatValue(values[p++]);
+        assertEquals(f, vi.readFloat(), Math.abs(f / 1000));
         break;
       case 'D':
-        double d = doubleValue(values[p++]); 
-        Assert.assertEquals(vi.readDouble(), d, Math.abs(d / 1000));
+        double d = doubleValue(values[p++]);
+        assertEquals(d, vi.readDouble(), Math.abs(d / 1000));
         break;
       case 'S':
         extractInt(cs);
@@ -337,8 +348,8 @@ public class TestValidatingIO {
           vi.skipString();
           p++;
         } else {
-          String s = (String) values[p++]; 
-          Assert.assertEquals(vi.readString(null), new Utf8(s));
+          String s = (String) values[p++];
+          assertEquals(new Utf8(s), vi.readString(null));
         }
         break;
       case 'K':
@@ -347,8 +358,8 @@ public class TestValidatingIO {
           vi.skipString();
           p++;
         } else {
-          String s = (String) values[p++]; 
-          Assert.assertEquals(vi.readString(null), new Utf8(s));
+          String s = (String) values[p++];
+          assertEquals(new Utf8(s), vi.readString(null));
         }
         break;
       case 'b':
@@ -362,7 +373,7 @@ public class TestValidatingIO {
           byte[] actBytes = new byte[bb2.remaining()];
           System.arraycopy(bb2.array(), bb2.position(), actBytes,
               0, bb2.remaining());
-          Assert.assertEquals(actBytes, bb);
+          assertArrayEquals(bb, actBytes);
         }
         break;
       case 'f':
@@ -375,7 +386,7 @@ public class TestValidatingIO {
             byte[] bb = (byte[]) values[p++];
             byte[] actBytes = new byte[len];
             vi.readFixed(actBytes);
-            Assert.assertEquals(actBytes, bb);
+            assertArrayEquals(bb, actBytes);
           }
         }
         break;
@@ -385,7 +396,7 @@ public class TestValidatingIO {
         if (level == skipLevel) {
           vi.readEnum();
         } else {
-          Assert.assertEquals(vi.readEnum(), e);
+          assertEquals(e, vi.readEnum());
         }
       }
       break;
@@ -412,16 +423,16 @@ public class TestValidatingIO {
           continue;
         }
       case ']':
-        Assert.assertEquals(counts[level], 0);
+        assertEquals(0, counts[level]);
         if (! isEmpty[level]) {
-          Assert.assertEquals(vi.arrayNext(), 0);
+          assertEquals(0, vi.arrayNext());
         }
         level--;
         break;
       case '}':
-        Assert.assertEquals(counts[level], 0);
+        assertEquals(0, counts[level]);
         if (! isEmpty[level]) {
-          Assert.assertEquals(vi.mapNext(), 0);
+          assertEquals(0, vi.mapNext());
         }
         level--;
         break;
@@ -441,14 +452,14 @@ public class TestValidatingIO {
       case 'U':
         {
           int idx = extractInt(cs);
-          Assert.assertEquals(idx, vi.readIndex());
+          assertEquals(idx, vi.readIndex());
           continue;
         }
       default:
-        Assert.fail();
+        fail();
       }
     }
-    Assert.assertEquals(p, values.length);
+    assertEquals(values.length, p);
   }
   
   private static float floatValue(Object object) {
@@ -474,9 +485,9 @@ public class TestValidatingIO {
     throws IOException {
     final char end = isArray ? ']' : '}';
     if (isArray) {
-      Assert.assertEquals(vi.skipArray(), 0);
+      assertEquals(0, vi.skipArray());
     } else if (end == '}'){
-      Assert.assertEquals(vi.skipMap(), 0);
+      assertEquals(0, vi.skipMap());
     }
     int level = 0;
     int p = 0;
@@ -512,9 +523,9 @@ public class TestValidatingIO {
     throw new RuntimeException("Don't know how to skip");
   }
 
-  @DataProvider
-  public static Iterator<Object[]> data() {
-    return cartesian(encodings, skipLevels, testSchemas());
+  @Parameterized.Parameters
+  public static Collection<Object[]> data() {
+    return Arrays.asList(convertTo2dArray(encodings, skipLevels, testSchemas()));
   }
   
   private static Object[][] encodings = new Object[][] {
@@ -526,6 +537,20 @@ public class TestValidatingIO {
       { -1 }, { 0 }, { 1 }, { 2 },
   };
   
+  public static Object[][] convertTo2dArray(final Object[][]... values) {
+    ArrayList<Object[]> ret = new ArrayList<Object[]>();
+
+    Iterator<Object[]> iter = cartesian(values);
+    while (iter.hasNext()) {
+      Object[] objects = iter.next();
+      ret.add(objects);
+    }
+    Object[][] retArrays = new Object[ret.size()][];
+    for (int i = 0; i < ret.size(); i++) {
+      retArrays[i] = ret.get(i);
+    }
+    return retArrays;
+  }
   /**
    * Returns the Cartesian product of input sequences.
    */
@@ -585,7 +610,7 @@ public class TestValidatingIO {
    */
   static Object[][] paste(Object[][]... in) {
     Object[][] result = new Object[in[0].length][];
-    Object[][] cc = new Object[in.length][]; 
+    Object[][] cc = new Object[in.length][];
     for (int i = 0; i < result.length; i++) {
       for (int j = 0; j < cc.length; j++) {
         cc[j] = in[j][i];

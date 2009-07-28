@@ -26,9 +26,7 @@ import org.apache.avro.ipc.*;
 import org.apache.avro.util.Utf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -94,7 +92,7 @@ public class TestFsData {
   private static Requestor requestor;
   private static FileChannel fileChannel;
 
-  @BeforeClass
+  @Before
   public void testStartServer() throws Exception {
     // create a file that has COUNT * BUFFER_SIZE bytes of random data
     Random rand = new Random();
@@ -131,7 +129,7 @@ public class TestFsData {
     }
   }
 
-  @AfterClass
+  @After
   public void testStopServer() throws Exception {
     server.close();
     fileChannel.close();

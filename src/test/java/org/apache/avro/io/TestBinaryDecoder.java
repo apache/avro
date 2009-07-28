@@ -22,55 +22,55 @@ import java.io.EOFException;
 import java.io.IOException;
 
 import org.apache.avro.util.Utf8;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 
 public class TestBinaryDecoder {
   /** Verify EOFException throw at EOF */
 
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_boolean() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readBoolean();
   }
   
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_int() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readInt();
   }
   
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_long() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readLong();
   }
   
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_float() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readFloat();
   }
   
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_double() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readDouble();
   }
   
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_bytes() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readBytes(null);
   }
   
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_string() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).
       readString(new Utf8("a"));
   }
   
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_fixed() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).
       readFixed(new byte[1]);
   }
 
-  @Test(expectedExceptions=EOFException.class)
+  @Test(expected=EOFException.class)
   public void testEOF_enum() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readEnum();
   }

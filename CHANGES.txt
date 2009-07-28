@@ -22,6 +22,9 @@ Trunk (unreleased changes)
     AVRO-82. Add checkstyle to java compilation.  (Thiruvalluvan
     M. G. via cutting)
 
+    AVRO-81. Switch back from TestNG to JUnit. (Konstantin Boudnik via
+    cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
