@@ -515,6 +515,7 @@
     <ivy:makepom ivyfile="${basedir}/ivy.xml"
 		 pomfile="${dist.dir}/${fullname}.pom">
       <mapping conf="default" scope="compile"/>
+      <mapping conf="test" scope="test"/>
     </ivy:makepom>
 
     <checksum file="${dist.dir}/${fullname}.pom" algorithm="md5"/>

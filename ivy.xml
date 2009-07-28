@@ -26,12 +26,8 @@
   </info>
 
   <configurations defaultconfmapping="default">
-    <conf name="default" extends="master,runtime"/>
-    <conf name="master" description="artifact but no dependencies"/>
-    <conf name="runtime" description="runtime but not artifact"
-	  extends="mandatory"/>
-    <conf name="mandatory" description="contains the critical dependencies"/>
-    <conf name="test" description="the classpath needed to run tests"/>
+    <conf name="default"/>
+    <conf name="test"/>
   </configurations>
 
   <dependencies>
