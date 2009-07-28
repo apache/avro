@@ -173,7 +173,7 @@ public class DataFileReader<D> {
         this.in = in;
       }
       public int read() { throw new UnsupportedOperationException(); }
-      public int read(byte b[], int off, int len) throws IOException {
+      public int read(byte[] b, int off, int len) throws IOException {
         int value = in.read(b, off, len);
         if (value > 0) position += value;         // update on read
         return value;
@@ -216,3 +216,4 @@ public class DataFileReader<D> {
   }
 
 }
+

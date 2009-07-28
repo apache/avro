@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.avro.AvroTypeException;
 import org.apache.avro.util.Utf8;
 
 /**
@@ -278,3 +277,4 @@ public abstract class Decoder {
    */
   public abstract int readIndex() throws IOException;
 }
+

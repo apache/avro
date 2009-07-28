@@ -79,6 +79,7 @@
 	    value="http://repo2.maven.org/maven2/org/apache/ivy/ivy" />
   <property name="ivy.home" value="${user.home}/.ant" />
   <property name="ivy.lib" value="${build.dir}/lib"/>
+  <property name="ivy.test.lib" value="${build.dir}/test/lib"/>
 
   <!-- the normal classpath -->
   <path id="java.classpath">
@@ -97,6 +98,9 @@
 
   <path id="test.java.classpath">
     <pathelement location="${test.java.classes}" />
+    <fileset dir="${ivy.test.lib}">
+      <include name="**/*.jar" />
+    </fileset>
     <path refid="java.classpath"/>
   </path>
 
@@ -108,6 +112,7 @@
     <mkdir dir="${test.java.classes}"/>
 
     <mkdir dir="${ivy.lib}"/>
+    <mkdir dir="${ivy.test.lib}"/>
     <condition property="ivy.jar.exists">
       <available file="${lib.dir}/ivy-${ivy.version}.jar"/>
     </condition>
@@ -115,7 +120,7 @@
 
   <target name="compile" depends="compile-java,compile-c"/>
 
-  <target name="compile-java" depends="init,schemata,ivy-retrieve">
+  <target name="compile-java" depends="schemata,ivy-retrieve">
     <java-compiler excludes="**/ipc/** **/*Requestor.java **/*Responder.java"/>
     <java-avro-compiler/>
     <java-compiler/>
@@ -133,8 +138,14 @@
              uri="antlib:org.apache.ivy.ant" classpathref="java.classpath"/>
   </target>
 
-  <target name="ivy-retrieve" depends="ivy-init">
-    <ivy:retrieve type="jar" pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
+  <target name="ivy-retrieve" depends="init,ivy-init">
+    <ivy:retrieve type="jar" conf="default"
+		  pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
+  </target>
+
+  <target name="ivy-retrieve-test" depends="init,ivy-init">
+    <ivy:retrieve type="jar" conf="test"
+		  pattern="${ivy.test.lib}/[artifact]-[revision].[ext]"/>
   </target>
 
   <macrodef name="java-compiler">
@@ -184,7 +195,19 @@
     </jar>
   </target>
   
-  <target name="compile-test-java" depends="compile-java">
+  <target name="checkstyle-java" depends="compile-java">
+    <taskdef resource="checkstyletask.properties">
+      <classpath refid="test.java.classpath" />
+    </taskdef>
+    <checkstyle config="${java.src.dir}/checkstyle.xml"
+		classpathref="test.java.classpath">
+	<fileset dir="${java.src.dir}">
+        <include name="**/*.java"/>
+    </fileset>
+    </checkstyle>
+  </target>
+
+  <target name="compile-test-java" depends="ivy-retrieve-test,compile-java">
     <java-avro-compiler src="${test.schemata.dir}"
 			generated="${test.java.generated.dir}"
 			dest="${test.java.classes}"
@@ -192,7 +215,7 @@
     <java-compiler src="${test.java.src.dir}"
 		   dest="${test.java.classes}"
 		   classpath="test.java.classpath"/>
-    <taskdef resource="testngtasks" classpathref="java.classpath"/>
+    <taskdef resource="testngtasks" classpathref="test.java.classpath"/>
   </target>
 
   <macrodef name="java-avro-compiler">
@@ -237,7 +260,7 @@
 
   <target name="test" depends="test-java,test-py,test-c,test-interop"/>
 
-  <target name="test-java" depends="compile-test-java"
+  <target name="test-java" depends="compile-test-java,checkstyle-java"
           description="Run java unit tests with TestNG">
 
     <testng classpathref="test.java.classpath"

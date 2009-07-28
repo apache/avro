@@ -62,3 +62,4 @@ public abstract class SpecificRecordBase implements SpecificRecord {
   }
 
 }
+

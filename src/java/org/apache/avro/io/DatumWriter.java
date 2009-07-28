@@ -33,3 +33,4 @@ public interface DatumWriter<D> {
    * in the schema from the datum to the output. */
   void write(D datum, Encoder out) throws IOException;
 }
+

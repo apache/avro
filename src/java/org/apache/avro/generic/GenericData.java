@@ -277,3 +277,4 @@ public class GenericData {
     else throw new AvroTypeException("Can't create schema for: "+datum);
   }
 }
+

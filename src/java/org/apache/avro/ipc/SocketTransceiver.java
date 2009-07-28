@@ -18,11 +18,12 @@
 
 package org.apache.avro.ipc;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,3 +92,4 @@ public class SocketTransceiver extends Transceiver {
   }
 
 }
+

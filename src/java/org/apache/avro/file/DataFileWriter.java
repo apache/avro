@@ -176,7 +176,7 @@ public class DataFileWriter<D> {
 
     private class PositionFilter extends FilterOutputStream {
       public PositionFilter(OutputStream out) throws IOException { super(out); }
-      public void write(byte b[], int off, int len) throws IOException {
+      public void write(byte[] b, int off, int len) throws IOException {
         out.write(b, off, len);
         position += len;                           // update on write
       }
@@ -191,3 +191,4 @@ public class DataFileWriter<D> {
   }
 
 }
+

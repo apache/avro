@@ -18,9 +18,12 @@
 
 package org.apache.avro.ipc;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** Utility to collect data written to an {@link OutputStream} in {@link
  * ByteBuffer}s.*/
@@ -59,7 +62,7 @@ public class ByteBufferOutputStream extends OutputStream {
     buffer.put((byte)b);
   }
 
-  public void write(byte b[], int off, int len) {
+  public void write(byte[] b, int off, int len) {
     ByteBuffer buffer = buffers.get(buffers.size()-1);
     int remaining = buffer.remaining();
     while (len > remaining) {
@@ -85,3 +88,4 @@ public class ByteBufferOutputStream extends OutputStream {
     buffer.position(buffer.limit());              // mark data as consumed
   }
 }
+

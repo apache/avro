@@ -50,3 +50,4 @@ public abstract class ParsingEncoder extends Encoder {
     return pos;
   }
 }
+

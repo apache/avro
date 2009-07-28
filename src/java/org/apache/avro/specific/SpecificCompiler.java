@@ -262,8 +262,9 @@ public class SpecificCompiler {
     return o.toString().replace("\"", "\\\"");
   }
 
-  public static void main(String args[]) throws Exception {
+  public static void main(String[] args) throws Exception {
     System.out.println(compileProtocol(new File(args[0])).getCode());
   }
 
 }
+

@@ -26,3 +26,4 @@ public class SchemaTask extends ProtocolTask {
     return SpecificCompiler.compileSchema(file);
   }
 }
+

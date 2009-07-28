@@ -17,8 +17,11 @@
  */
 package org.apache.avro.reflect;
 
-import org.apache.avro.generic.GenericFixed;
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /** Declares the size of implementations of {@link GenericFixed}. */
 @Retention(RetentionPolicy.RUNTIME)
@@ -28,3 +31,4 @@ public @interface FixedSize {
   /** The declared size of instances of classes with this annotation. */
   int value();
 }
+

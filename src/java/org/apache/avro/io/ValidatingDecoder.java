@@ -227,3 +227,4 @@ public class ValidatingDecoder extends ParsingDecoder
     return Symbol.CONTINUE;
   }
 }
+

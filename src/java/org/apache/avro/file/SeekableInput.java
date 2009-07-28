@@ -17,7 +17,7 @@
  */
 package org.apache.avro.file;
 
-import java.io.*;
+import java.io.IOException;
 
 /** An InputStream that supports seek and tell. */
 public interface SeekableInput {
@@ -32,5 +32,6 @@ public interface SeekableInput {
   long length() throws IOException;
 
   /** Equivalent to {@link InputStream#read(byte[],int,int)}. */
-  int read(byte b[], int off, int len) throws IOException;
+  int read(byte[] b, int off, int len) throws IOException;
 }
+

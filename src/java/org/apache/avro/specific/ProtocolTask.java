@@ -46,7 +46,7 @@ public class ProtocolTask extends Task {
   public void addFileset(FileSet set) { filesets.add(set); }
   
   /** Run the compiler. */
-  public void execute() throws BuildException {
+  public void execute() {
     if (src == null && filesets.size()==0)
       throw new BuildException("No file or fileset specified.");
 
@@ -69,7 +69,7 @@ public class ProtocolTask extends Task {
     return SpecificCompiler.compileProtocol(file);
   }
 
-  private void compile(File file) throws BuildException {
+  private void compile(File file) {
     try {
       SpecificCompiler compiler = doCompile(file);
       String namespace = compiler.getNamespace();
@@ -103,3 +103,4 @@ public class ProtocolTask extends Task {
     }
   }
 }
+

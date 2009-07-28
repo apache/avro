@@ -179,7 +179,7 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
    */
   private BlockedValue[] blockStack;
   private int stackTop = -1;
-  private static int STACK_STEP = 10;
+  private static final int STACK_STEP = 10;
 
   private static final class EncoderBuffer extends ByteArrayOutputStream {
     public byte[] buffer() {
@@ -538,7 +538,7 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
     assert check();
   }
 
-  private void write(byte b[], int off, int len) throws IOException {
+  private void write(byte[] b, int off, int len) throws IOException {
     if (blockStack[stackTop].state == BlockedValue.State.ROOT) {
       out.write(b, off, len);
     } else {
@@ -620,3 +620,4 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
     assert check();
   }
 }
+

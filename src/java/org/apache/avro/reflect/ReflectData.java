@@ -224,7 +224,7 @@ public class ReflectData {
     return protocol;
   }
 
-  private static Paranamer PARANAMER = new CachingParanamer();
+  private static final Paranamer PARANAMER = new CachingParanamer();
 
   private static Message getMessage(Method method, Protocol protocol) {
     Map<String,Schema> names = protocol.getTypes();
@@ -250,3 +250,4 @@ public class ReflectData {
   }
 
 }
+

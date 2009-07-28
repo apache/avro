@@ -200,3 +200,4 @@ public class ValidatingEncoder extends ParsingEncoder
     return isEmpty.get(pos);
   }
 }
+

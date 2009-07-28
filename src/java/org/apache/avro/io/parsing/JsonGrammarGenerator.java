@@ -100,3 +100,4 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
     }
   }
 }
+

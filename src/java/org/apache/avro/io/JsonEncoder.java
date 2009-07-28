@@ -19,7 +19,6 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 
@@ -31,7 +30,6 @@ import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 
 /** An {@link Encoder} for Avro's JSON data encoding. */
@@ -136,7 +134,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   }
 
   private void writeByteArray(byte[] bytes, int start, int len)
-      throws IOException, JsonGenerationException, UnsupportedEncodingException {
+    throws IOException {
     out.writeString(
         new String(bytes, start, len, JsonDecoder.CHARSET));
   }
@@ -237,3 +235,4 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     return Symbol.CONTINUE;
   }
 }
+

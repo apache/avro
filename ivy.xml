@@ -25,6 +25,15 @@
     <description>Avro</description>
   </info>
 
+  <configurations defaultconfmapping="default">
+    <conf name="default" extends="master,runtime"/>
+    <conf name="master" description="artifact but no dependencies"/>
+    <conf name="runtime" description="runtime but not artifact"
+	  extends="mandatory"/>
+    <conf name="mandatory" description="contains the critical dependencies"/>
+    <conf name="test" description="the classpath needed to run tests"/>
+  </configurations>
+
   <dependencies>
     <dependency org="org.codehaus.jackson" name="jackson-mapper-asl"
 		rev="1.0.1"/>
@@ -34,9 +43,12 @@
 		rev="1.5"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer-ant"
 		rev="1.5"/>
-    <dependency org="org.testng" name="testng" rev="5.9" transitive="false">
+    <dependency org="org.testng" name="testng" rev="5.9"
+		transitive="false" conf="test->default">
       <artifact name="testng" type="jar" ext="jar" e:classifier="jdk15"/>
     </dependency>
+    <dependency org="checkstyle" name="checkstyle" rev="5.0"
+		conf="test->default"/>
   </dependencies>
 
 </ivy-module>

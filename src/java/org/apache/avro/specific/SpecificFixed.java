@@ -26,3 +26,4 @@ public abstract class SpecificFixed extends GenericData.Fixed {
     bytes(new byte[getClass().getAnnotation(FixedSize.class).value()]);
   }
 }
+

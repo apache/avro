@@ -38,3 +38,4 @@ public class AvroRemoteException extends IOException {
   
   public Object getValue() { return value; }
 }
+

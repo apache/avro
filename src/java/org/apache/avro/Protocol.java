@@ -332,8 +332,9 @@ public class Protocol {
                        Schema.createUnion(errs));
   }
 
-  public static void main(String args[]) throws Exception {
+  public static void main(String[] args) throws Exception {
     System.out.println(Protocol.parse(new File(args[0])));
   }
 
 }
+

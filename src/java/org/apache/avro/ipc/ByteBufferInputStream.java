@@ -41,7 +41,7 @@ public class ByteBufferInputStream extends InputStream {
 
   /** @see InputStream#read(byte[], int, int)
    * @throws EOFException if EOF is reached before reading all the bytes. */
-  public int read(byte b[], int off, int len) throws IOException {
+  public int read(byte[] b, int off, int len) throws IOException {
     if (len == 0) return 0;
     ByteBuffer buffer = getBuffer();
     int remaining = buffer.remaining();
@@ -84,3 +84,4 @@ public class ByteBufferInputStream extends InputStream {
     throw new EOFException();
   }
 }
+

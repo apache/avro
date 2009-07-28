@@ -18,14 +18,12 @@
 package org.apache.avro.reflect;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.DatumReader;
 
 /** {@link DatumReader} for existing classes via Java reflection. */
 public class ReflectDatumReader extends GenericDatumReader<Object> {
@@ -114,3 +112,4 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
   }
 
 }
+

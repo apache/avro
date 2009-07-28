@@ -46,7 +46,7 @@ public class BinaryEncoder extends Encoder {
   protected OutputStream out;
   
   private interface ByteWriter {
-    public void write(ByteBuffer bytes) throws IOException;
+    void write(ByteBuffer bytes) throws IOException;
   }
   
   private static final class SimpleByteWriter implements ByteWriter {
@@ -145,7 +145,7 @@ public class BinaryEncoder extends Encoder {
   
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
-	  out.write(bytes, start, len);
+    out.write(bytes, start, len);
   }
 
   @Override
@@ -248,3 +248,4 @@ public class BinaryEncoder extends Encoder {
     return pos;
   }
 }
+

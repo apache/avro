@@ -17,7 +17,9 @@
  */
 package org.apache.avro.file;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 /** A {@link FileInputStream} that implements {@link SeekableInput}. */
 public class SeekableFileInput
@@ -30,3 +32,4 @@ public class SeekableFileInput
   public long length() throws IOException { return getChannel().size(); }
 
 }
+

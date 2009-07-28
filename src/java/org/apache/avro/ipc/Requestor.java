@@ -181,3 +181,4 @@ public abstract class Requestor {
   public abstract AvroRemoteException readError(Schema schema, Decoder in)
     throws IOException;
 }
+

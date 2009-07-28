@@ -102,9 +102,10 @@ public class SocketServer extends Thread {
 
   }
   
-  public static void main(String arg[]) throws Exception {
+  public static void main(String[] arg) throws Exception {
     SocketServer server = new SocketServer(null, new InetSocketAddress(0));
     System.out.println("started");
     server.join();
   }
 }
+

@@ -198,7 +198,7 @@ public class BinaryDecoder extends Decoder {
     return readInt();
   }
   
-  private void doSkipBytes(long length) throws IOException, EOFException {
+  private void doSkipBytes(long length) throws IOException {
     while (length > 0) {
       long n = in.skip(length);
       if (n <= 0) {
@@ -298,3 +298,4 @@ public class BinaryDecoder extends Decoder {
     return readInt();
   }
 }
+

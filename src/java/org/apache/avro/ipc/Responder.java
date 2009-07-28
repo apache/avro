@@ -18,20 +18,31 @@
 
 package org.apache.avro.ipc;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.avro.*;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.util.*;
+import org.apache.avro.util.Utf8;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.*;
-import org.apache.avro.specific.*;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 
 /** Base class for the server side of a protocol interaction. */
 public abstract class Responder {
@@ -172,3 +183,4 @@ public abstract class Responder {
                                   Encoder out) throws IOException;
 
 }
+

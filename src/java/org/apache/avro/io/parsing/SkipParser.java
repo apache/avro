@@ -32,12 +32,12 @@ public class SkipParser extends Parser {
     /**
      * Skips the action at the top of the stack.
      */
-    public void skipAction() throws IOException;
+    void skipAction() throws IOException;
 
     /**
      * Skips the symbol at the top of the stack.
      */
-    public void skipTopSymbol() throws IOException;
+    void skipTopSymbol() throws IOException;
   }
   
   private final SkipHandler skipHandler;
@@ -92,3 +92,4 @@ public class SkipParser extends Parser {
     skipTo(target);
   }
 }
+

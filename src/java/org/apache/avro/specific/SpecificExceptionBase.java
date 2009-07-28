@@ -38,3 +38,4 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
   }
 
 }
+

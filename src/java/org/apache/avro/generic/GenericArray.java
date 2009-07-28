@@ -34,3 +34,4 @@ public interface GenericArray<T> extends Iterable<T> {
    * without allocating new objects. */
   T peek();
 }
+

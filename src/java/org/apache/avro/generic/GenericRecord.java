@@ -17,7 +17,7 @@
  */
 package org.apache.avro.generic;
 
-import java.util.*;
+import java.util.Map;
 
 import org.apache.avro.Schema;
 
@@ -26,3 +26,4 @@ public interface GenericRecord extends Map<String,Object> {
   /** The schema of this instance. */
   Schema getSchema();
 }
+

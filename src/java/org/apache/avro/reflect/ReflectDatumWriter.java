@@ -18,13 +18,11 @@
 package org.apache.avro.reflect;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
 /** {@link DatumWriter} for existing classes via Java reflection. */

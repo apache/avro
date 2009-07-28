@@ -26,3 +26,4 @@ public interface SpecificRecord {
   Object get(int field);
   void set(int field, Object value);
 }
+

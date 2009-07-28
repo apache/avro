@@ -19,6 +19,9 @@ Trunk (unreleased changes)
 
     AVRO-54. Re-upgrade to testng 5.9 and re-enable listeners. (cutting)
 
+    AVRO-82. Add checkstyle to java compilation.  (Thiruvalluvan
+    M. G. via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

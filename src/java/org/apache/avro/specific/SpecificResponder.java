@@ -21,7 +21,6 @@ package org.apache.avro.specific;
 import org.apache.avro.Schema;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.ipc.Responder;
 import org.apache.avro.reflect.ReflectResponder;
 
 /** {@link Responder} for generated interfaces.*/
@@ -39,3 +38,4 @@ public class SpecificResponder extends ReflectResponder {
   }
 
 }
+

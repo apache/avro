@@ -19,7 +19,6 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroTypeException;
@@ -29,15 +28,15 @@ import org.apache.avro.io.parsing.Parser;
 import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
+
 /** A {@link Decoder} for Avro's JSON data encoding. */
 public class JsonDecoder extends ParsingDecoder
   implements Parser.ActionHandler {
   private JsonParser in;
   
-  static String CHARSET = "ISO-8859-1";
+  static final String CHARSET = "ISO-8859-1";
 
   JsonDecoder(Symbol root, InputStream in) throws IOException {
     super(root);
@@ -171,8 +170,7 @@ public class JsonDecoder extends ParsingDecoder
     }
   }
 
-  private byte[] readByteArray() throws UnsupportedEncodingException,
-      IOException, JsonParseException {
+  private byte[] readByteArray() throws IOException {
     byte[] result = in.getText().getBytes(CHARSET);
     return result;
   }
@@ -219,7 +217,7 @@ public class JsonDecoder extends ParsingDecoder
     doSkipFixed(length);
   }
 
-  private void doSkipFixed(int length) throws IOException, JsonParseException {
+  private void doSkipFixed(int length) throws IOException {
     if (in.getCurrentToken() == JsonToken.VALUE_STRING) {
       byte[] result = readByteArray();
       in.nextToken();
@@ -273,7 +271,7 @@ public class JsonDecoder extends ParsingDecoder
     return doArrayNext();
   }
 
-  private long doArrayNext() throws IOException, JsonParseException {
+  private long doArrayNext() throws IOException {
     if (in.getCurrentToken() == JsonToken.END_ARRAY) {
       parser.advance(Symbol.ARRAY_END);
       in.nextToken();
@@ -313,7 +311,7 @@ public class JsonDecoder extends ParsingDecoder
     return doMapNext();
   }
 
-  private long doMapNext() throws IOException, JsonParseException {
+  private long doMapNext() throws IOException {
     if (in.getCurrentToken() == JsonToken.END_OBJECT) {
       in.nextToken();
       parser.advance(Symbol.MAP_END);
@@ -395,3 +393,4 @@ public class JsonDecoder extends ParsingDecoder
   public void setItemCount(long itemCount) throws IOException {
   }
 }
+

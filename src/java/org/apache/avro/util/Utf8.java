@@ -17,11 +17,11 @@
  */
 package org.apache.avro.util;
 
-import java.io.*;
+import java.io.UnsupportedEncodingException;
 
 /** A Utf8 string. */
 public class Utf8 {
-  private static byte[] EMPTY = new byte[0];
+  private static final byte[] EMPTY = new byte[0];
 
   byte[] bytes = EMPTY;
   int length;
@@ -78,3 +78,5 @@ public class Utf8 {
   }
 
 }
+
+

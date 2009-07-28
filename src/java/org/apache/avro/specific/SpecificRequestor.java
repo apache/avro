@@ -25,7 +25,6 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.ipc.Requestor;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectRequestor;
@@ -54,3 +53,4 @@ public class SpecificRequestor extends ReflectRequestor {
                                   new SpecificRequestor(protocol, transciever));
   }
 }
+

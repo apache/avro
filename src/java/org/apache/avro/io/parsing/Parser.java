@@ -34,7 +34,7 @@ public class Parser {
    * provide this help.
    */
   public interface ActionHandler {
-    public Symbol doAction(Symbol input, Symbol top) throws IOException;
+    Symbol doAction(Symbol input, Symbol top) throws IOException;
   }
 
   protected final ActionHandler symbolHandler;
@@ -52,7 +52,7 @@ public class Parser {
   /**
    * If there is no sufficient room in the stack, use this expand it.
    */
-  private final void expandStack() {
+  private void expandStack() {
     stack = Arrays.copyOf(stack, stack.length+Math.max(stack.length,1024));
   }
 
@@ -142,3 +142,4 @@ public class Parser {
     pos = 1;
   }
 }
+

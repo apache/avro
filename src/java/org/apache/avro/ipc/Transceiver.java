@@ -18,9 +18,9 @@
 
 package org.apache.avro.ipc;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.List;
 
 /** Base class for transmitters and recievers of raw binary messages. */
 public abstract class Transceiver {
@@ -40,3 +40,4 @@ public abstract class Transceiver {
 
   public void close() throws IOException {}
 }
+

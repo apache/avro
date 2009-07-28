@@ -18,7 +18,6 @@
 package org.apache.avro.specific;
 
 import org.apache.avro.Schema;
-import org.apache.avro.io.DatumWriter;
 import org.apache.avro.reflect.ReflectDatumWriter;
 
 /** {@link DatumWriter} for generated Java classes. */
@@ -34,3 +33,4 @@ public class SpecificDatumWriter extends ReflectDatumWriter {
   }
 
 }
+
