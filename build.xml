@@ -284,7 +284,7 @@
     </sequential>
   </macrodef>
 
-  <target name="test-java" depends="compile-test-java"
+  <target name="test-java" depends="compile-test-java,checkstyle-java"
  	  description="Run java unit tests">
     <test-runner files.location="${test.java.src.dir}" tests.pattern="**/${test.java.include}.java"/>
   </target>
