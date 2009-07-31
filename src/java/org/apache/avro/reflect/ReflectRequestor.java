@@ -37,6 +37,11 @@ import org.apache.avro.ipc.Transceiver;
 /** A {@link Requestor} for existing interfaces via Java reflection. */
 public class ReflectRequestor extends Requestor implements InvocationHandler {
   protected String packageName;
+  
+  public ReflectRequestor(Class<?> iface, Transceiver transceiver)
+    throws IOException {
+    this(ReflectData.getProtocol(iface), transceiver);
+  }
 
   protected ReflectRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
@@ -81,6 +86,13 @@ public class ReflectRequestor extends Requestor implements InvocationHandler {
     return Proxy.newProxyInstance(iface.getClassLoader(),
                                   new Class[] { iface },
                                   new ReflectRequestor(protocol, transciever));
+  }
+  
+  /** Create a proxy instance whose methods invoke RPCs. */
+  public static Object getClient(Class<?> iface, ReflectRequestor rreq)
+    throws IOException {
+    return Proxy.newProxyInstance(iface.getClassLoader(),
+                                  new Class[] { iface }, rreq);
   }
 }
 

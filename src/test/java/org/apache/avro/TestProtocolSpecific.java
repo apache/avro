@@ -47,7 +47,7 @@ public class TestProtocolSpecific {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolSpecific.class);
 
-  private static final File SERVER_PORTS_DIR
+  protected static final File SERVER_PORTS_DIR
   = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
 
   public static class TestImpl implements Simple {

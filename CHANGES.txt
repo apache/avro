@@ -9,6 +9,8 @@ Trunk (unreleased changes)
     AVRO-50. Implmenent JSON data codec in Java. (Thiruvalluvan
     M. G. & cutting)
 
+    AVRO-76. Add Java RPC plugin framework.  (George Porter)
+
   IMPROVEMENTS
 
     AVRO-71.  C++: make deserializer more generic.  (Scott Banachowski

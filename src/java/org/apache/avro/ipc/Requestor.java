@@ -20,6 +20,7 @@ package org.apache.avro.ipc;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,8 @@ public abstract class Requestor {
   private Protocol remote;
   private boolean established, sendLocalText;
   private Transceiver transceiver;
+  
+  protected List<RPCPlugin> rpcMetaPlugins;
 
   public Protocol getLocal() { return local; }
   public Protocol getRemote() { return remote; }
@@ -65,6 +68,17 @@ public abstract class Requestor {
     throws IOException {
     this.local = local;
     this.transceiver = transceiver;
+    this.rpcMetaPlugins =
+      Collections.synchronizedList(new ArrayList<RPCPlugin>());
+  }
+  
+  /**
+   * Adds a new plugin to manipulate RPC metadata.  Plugins
+   * are executed in the order that they are added.
+   * @param plugin a plugin that will manipulate RPC metadata
+   */
+  public void addRPCPlugin(RPCPlugin plugin) {
+    rpcMetaPlugins.add(plugin);
   }
 
   /** Writes a request message and reads a response or error message. */
@@ -72,7 +86,7 @@ public abstract class Requestor {
     throws IOException {
     Decoder in;
     Message m;
-    Map<Utf8,ByteBuffer> requestMeta = new HashMap<Utf8,ByteBuffer>();
+    RPCContext context = new RPCContext();
     do {
       ByteBufferOutputStream bbo = new ByteBufferOutputStream();
       Encoder out = new BinaryEncoder(bbo);
@@ -85,7 +99,11 @@ public abstract class Requestor {
       if (m == null)
         throw new AvroRuntimeException("Not a local message: "+messageName);
       
-      META_WRITER.write(requestMeta, out);
+      for (RPCPlugin plugin : rpcMetaPlugins) {
+        plugin.clientSendRequest(context);
+      }
+      
+      META_WRITER.write(context.requestCallMeta(), out);
       out.writeString(m.getName());       // write message name
       writeRequest(m.getRequest(), request, out); // write request payload
       
@@ -102,12 +120,25 @@ public abstract class Requestor {
     m = getRemote().getMessages().get(messageName);
     if (m == null)
       throw new AvroRuntimeException("Not a remote message: "+messageName);
-    Map<Utf8,ByteBuffer> responseMeta = META_READER.read(null, in);
+    context.setRequestCallMeta(META_READER.read(null, in));
+    
     if (!in.readBoolean()) {                      // no error
-      return readResponse(m.getResponse(), in);
+      Object response = readResponse(m.getResponse(), in);
+      context.setResponse(response);
+      for (RPCPlugin plugin : rpcMetaPlugins) {
+        plugin.clientReceiveResponse(context);
+      }
+      return response;
+      
     } else {
-      throw readError(m.getErrors(), in);
+      AvroRemoteException error = readError(m.getErrors(), in);
+      context.setError(error);
+      for (RPCPlugin plugin : rpcMetaPlugins) {
+        plugin.clientReceiveResponse(context);
+      }
+      throw error;
     }
+    
   }
 
   private static final Map<String,MD5> REMOTE_HASHES =
@@ -136,9 +167,17 @@ public abstract class Requestor {
     handshake.serverHash = remoteHash;
     if (sendLocalText)
       handshake.clientProtocol = new Utf8(local.toString());
+    
+    RPCContext context = new RPCContext();
+    for (RPCPlugin plugin : rpcMetaPlugins) {
+      plugin.clientStartConnect(context);
+    }
+    handshake.meta = context.requestSessionMeta();
+    
     HANDSHAKE_WRITER.write(handshake, out);
   }
 
+  @SuppressWarnings("unchecked")
   private void readHandshake(Decoder in) throws IOException {
     HandshakeResponse handshake =
       (HandshakeResponse)HANDSHAKE_READER.read(null, in);
@@ -158,6 +197,15 @@ public abstract class Requestor {
       break;
     default:
       throw new AvroRuntimeException("Unexpected match: "+handshake.match);
+    }
+    
+    RPCContext context = new RPCContext();
+    if (handshake.meta != null) {
+      context.setResponseSessionMeta((Map<Utf8, ByteBuffer>) handshake.meta);
+    }
+      
+    for (RPCPlugin plugin : rpcMetaPlugins) {
+      plugin.clientFinishConnect(context);
     }
   }
 

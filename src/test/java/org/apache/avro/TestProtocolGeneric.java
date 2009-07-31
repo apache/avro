@@ -46,8 +46,8 @@ public class TestProtocolGeneric {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolGeneric.class);
 
-  private static final File FILE = new File("src/test/schemata/simple.avpr");
-  private static final Protocol PROTOCOL;
+  protected static final File FILE = new File("src/test/schemata/simple.avpr");
+  protected static final Protocol PROTOCOL;
   static {
     try {
       PROTOCOL = Protocol.parse(FILE);
@@ -56,7 +56,7 @@ public class TestProtocolGeneric {
     }
   }
 
-  private static class TestResponder extends GenericResponder {
+  protected static class TestResponder extends GenericResponder {
     public TestResponder() { super(PROTOCOL); }
     public Object respond(Message message, Object request)
       throws AvroRemoteException {
@@ -91,9 +91,9 @@ public class TestProtocolGeneric {
 
   }
 
-  private static SocketServer server;
-  private static Transceiver client;
-  private static Requestor requestor;
+  protected static SocketServer server;
+  protected static Transceiver client;
+  protected static Requestor requestor;
 
   @Before
   public void testStartServer() throws Exception {

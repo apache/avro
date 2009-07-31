@@ -31,6 +31,12 @@ import org.apache.avro.reflect.ReflectRequestor;
 
 /** {@link Requestor} for generated interfaces. */
 public class SpecificRequestor extends ReflectRequestor {
+  
+  public SpecificRequestor(Class<?> iface, Transceiver transceiver)
+    throws IOException {
+    this(ReflectData.getProtocol(iface), transceiver);
+  }
+  
   private SpecificRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
     super(protocol, transceiver);
@@ -51,6 +57,13 @@ public class SpecificRequestor extends ReflectRequestor {
     return Proxy.newProxyInstance(iface.getClassLoader(),
                                   new Class[] { iface },
                                   new SpecificRequestor(protocol, transciever));
+  }
+  
+  /** Create a proxy instance whose methods invoke RPCs. */
+  public static Object getClient(Class<?> iface, SpecificRequestor requestor)
+    throws IOException {
+    return Proxy.newProxyInstance(iface.getClassLoader(),
+                                  new Class[] { iface }, requestor);
   }
 }
 

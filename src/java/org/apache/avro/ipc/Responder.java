@@ -21,6 +21,7 @@ package org.apache.avro.ipc;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -62,15 +63,27 @@ public abstract class Responder {
 
   private Protocol local;
   private MD5 localHash;
+  protected List<RPCPlugin> rpcMetaPlugins;
 
   protected Responder(Protocol local) {
     this.local = local;
     this.localHash = new MD5();
     localHash.bytes(local.getMD5());
     protocols.put(localHash, local);
+    this.rpcMetaPlugins =
+      Collections.synchronizedList(new ArrayList<RPCPlugin>());
   }
 
   public Protocol getLocal() { return local; }
+  
+  /**
+   * Adds a new plugin to manipulate per-call metadata.  Plugins
+   * are executed in the order that they are added.
+   * @param plugin a plugin that will manipulate RPC metadata
+   */
+  public void addRPCPlugin(RPCPlugin plugin) {
+    rpcMetaPlugins.add(plugin);
+  }
 
   /** Called by a server to deserialize a request, compute and serialize
    * a response or error. */
@@ -83,20 +96,24 @@ public abstract class Responder {
       new ByteBufferOutputStream();
     Encoder out = new BinaryEncoder(bbo);
     AvroRemoteException error = null;
-    Map<Utf8,ByteBuffer> responseMeta = new HashMap<Utf8,ByteBuffer>();
+    RPCContext context = new RPCContext();
     try {
       Protocol remote = handshake(transceiver, in, out);
       if (remote == null)                        // handshake failed
         return bbo.getBufferList();
 
       // read request using remote protocol specification
-      Map<Utf8,ByteBuffer> requestMeta = META_READER.read(null, in);
+      context.setRequestCallMeta(META_READER.read(null, in));
       String messageName = in.readString(null).toString();
       Message m = remote.getMessages().get(messageName);
       if (m == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
       
       Object request = readRequest(m.getRequest(), in);
+      
+      for (RPCPlugin plugin : rpcMetaPlugins) {
+        plugin.serverReceiveRequest(context);
+      }
 
       // create response using local protocol specification
       m = getLocal().getMessages().get(messageName);
@@ -105,13 +122,21 @@ public abstract class Responder {
       Object response = null;
       try {
         response = respond(m, request);
+        context.setResponse(response);
       } catch (AvroRemoteException e) {
         error = e;
+        context.setError(error);
       } catch (Exception e) {
         LOG.warn("application error", e);
         error = new AvroRemoteException(new Utf8(e.toString()));
+        context.setError(error);
       }
-      META_WRITER.write(responseMeta, out);
+      
+      for (RPCPlugin plugin : rpcMetaPlugins) {
+        plugin.serverSendResponse(context);
+      }
+      
+      META_WRITER.write(context.responseCallMeta(), out);
       out.writeBoolean(error != null);
       if (error == null)
         writeResponse(m.getResponse(), response, out);
@@ -121,9 +146,10 @@ public abstract class Responder {
     } catch (AvroRuntimeException e) {            // system error
       LOG.warn("system error", e);
       error = new AvroRemoteException(e);
+      context.setError(error);
       bbo = new ByteBufferOutputStream();
       out = new BinaryEncoder(bbo);
-      META_WRITER.write(responseMeta, out);
+      META_WRITER.write(context.responseCallMeta(), out);
       out.writeBoolean(true);
       writeError(Protocol.SYSTEM_ERRORS, error, out);
     }
@@ -136,6 +162,7 @@ public abstract class Responder {
   private SpecificDatumReader handshakeReader =
     new SpecificDatumReader(HandshakeRequest._SCHEMA);
 
+  @SuppressWarnings("unchecked")
   private Protocol handshake(Transceiver transceiver,
                              Decoder in, Encoder out)
     throws IOException {
@@ -162,6 +189,15 @@ public abstract class Responder {
       response.serverProtocol = new Utf8(local.toString());
       response.serverHash = localHash;
     }
+    
+    RPCContext context = new RPCContext();
+    context.setRequestSessionMeta((Map<Utf8, ByteBuffer>) request.meta);
+    
+    for (RPCPlugin plugin : rpcMetaPlugins) {
+      plugin.serverConnecting(context);
+    }
+    response.meta = context.responseSessionMeta();
+    
     handshakeWriter.write(response, out);
     return remote;
   }
