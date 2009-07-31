@@ -58,8 +58,8 @@
           <li><code>bytes</code>: sequence of 8-bit bytes</li>
           <li><code>int</code>: 32-bit signed integer</li>
           <li><code>long</code>: 64-bit signed integer</li>
-          <li><code>float</code>: 32-bit IEEE floating-point number</li>
-          <li><code>double</code>: 64-bit IEEE floating-point number</li>
+          <li><code>float</code>: single precision (32-bit) IEEE 754 floating-point number</li>
+          <li><code>double</code>: double precision (64-bit) IEEE 754 floating-point number</li>
           <li><code>boolean</code>: a binary value</li>
           <li><code>null</code>: no value</li>
         </ul>
@@ -245,10 +245,10 @@
           encoded character data.
 	    <p>For example, the three-character
               string "foo" would be serialized as 3 (encoded as
-              hex <code>0C</code>) followed by the UTF-8 encoding of
+              hex <code>06</code>) followed by the UTF-8 encoding of
               'f', 'o', and 'o' (the hex bytes <code>66 6f 6f</code>):
 	    </p>
-	    <source>0C 66 6f 6f</source>
+	    <source>06 66 6f 6f</source>
 	  </li>
           <li><code>bytes</code> are serialized as
           a <code>long</code> followed by that many bytes of data.
@@ -269,8 +269,15 @@
 	      <tr><td colspan="2"><code>...</code></td></tr>
 	    </table>
 	  </li>
-          <li>a <code>float</code> is written as 4 bytes</li>
-          <li>a <code>double</code> is written as 8 bytes</li>
+          <li>a <code>float</code> is written as 4 bytes. The float is
+          converted into a 32-bit integer using a method equivalent
+          to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Float.html#floatToIntBits%28float%29">Java's floatToIntBits</a> and then encoded
+          in little-endian format.</li>
+          <li>a <code>double</code> is written as 8 bytes. The double
+          is converted into a 64-bit integer using a method equivalent
+          to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Double.html#doubleToLongBits%28double%29">Java's
+          doubleToLongBits</a> and then encoded in little-endian
+          format.</li>
           <li>a <code>boolean</code> is written as a single byte whose
           value is either <code>0</code> (false) or <code>1</code>
           (true).</li>
@@ -515,6 +522,11 @@
 	  <li>a <em>response</em> schema; and</li> 
 	  <li>an optional union of <em>error</em> schemas.</li>
 	</ul>
+	<p>A request parameter list is processed equivalently to an
+	  anonymous record.  Since record field lists may vary between
+	  reader and writer, request parameters may also differ
+	  between the caller and responder, and such differences are
+	  resolved in the same manner as record field differences.</p>
       </section>
       <section>
 	<title>Sample Protocol</title>
@@ -770,13 +782,12 @@
 	For example, if the data was written with a different version
 	of the software than it is read, then records may have had
 	fields added or removed.  This section specifies how such
-	schema differences may be resolved.</p>
+	schema differences should be resolved.</p>
 
       <p>We call the schema used to write the data as
 	the <em>writer's</em> schema, and the schema that the
-	application expects the <em>reader's</em> schema.  To resolve
-	differences between these two schemas, the following
-	resolution algorithm is recommended.</p>
+	application expects the <em>reader's</em> schema.  Differences
+	between these should be resolved as follows:</p>
 
       <ul>
 	<li><p>It is an error if the two schemas do not <em>match</em>.</p>
@@ -801,22 +812,32 @@
 	</li>
 
 	<li><strong>if both are records:</strong>
+	  <ul>
+	    <li>the ordering of fields may be different: fields are
+              matched by name.</li>
+	    
+	    <li>schemas for fields with the same name in both records
+	      are resolved recursively.</li>
+	    
+	    <li>if the writer's record contains a field with a name
+	      not present in the reader's record, the writer's value
+	      for that field is ignored.</li>
+	    
+	    <li>if the reader's record schema has a field that
+              contains a default value, and writer's schema does not
+              have a field with the same name, then the reader should
+              use the default value from its field.</li>
 
-	  <p>if the writer's record contains a field with a name not present in
-	    the reader's record, that writer's value is ignored.</p>
-
-	  <p>schemas for fields with the same name in both records are resolved
-	    recursively.</p>
-
-	  <p>Note that method parameter lists are equivalent to
-	  records.  Note also that, since the ordering of record
-	  fields may vary between reader and writer, method parameter
-	  list order may also vary.</p>
+	    <li>if the reader's record schema has a field with no
+              default value, and writer's schema does not have a field
+              with the same name, then the field's value is
+              unset.</li>
+	  </ul>
 	</li>
 
 	<li><strong>if both are enums:</strong>
 	  <p>if the writer's symbol is not present in the reader's
-	    enum, then the enum value is unset.</p>
+	    enum, then the enum's value is unset.</p>
 	</li>
 
 	<li><strong>if both are arrays:</strong>
