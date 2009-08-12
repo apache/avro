@@ -150,7 +150,7 @@ public class SpecificCompiler {
       // field declations
       for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
         String fieldName = field.getKey();
-        line(d+1, "public "+type(field.getValue(),fieldName)+" "+fieldName+";");
+        line(d+1,"public "+unbox(field.getValue(),fieldName)+" "+fieldName+";");
       }
       // schema method
       line(d+1, "public Schema schema() { return _SCHEMA; }");
@@ -243,6 +243,17 @@ public class SpecificCompiler {
     case BOOLEAN: return "Boolean";
     case NULL:    return "Void";
     default: throw new RuntimeException("Unknown type: "+schema);
+    }
+  }
+
+  private String unbox(Schema schema, String name) {
+    switch (schema.getType()) {
+    case INT:     return "int";
+    case LONG:    return "long";
+    case FLOAT:   return "float";
+    case DOUBLE:  return "double";
+    case BOOLEAN: return "boolean";
+    default:      return type(schema, name);
     }
   }
 

@@ -30,6 +30,9 @@ Trunk (unreleased changes)
     AVRO-84, AVRO-85.  Clarify a few things in the specification
     document.  (Thiruvalluvan M. G. and cutting)
 
+    AVRO-89. In fields of Java generated classes, use unboxed numeric
+    types.  (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
