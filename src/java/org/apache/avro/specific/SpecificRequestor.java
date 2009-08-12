@@ -29,7 +29,7 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectRequestor;
 
-/** {@link Requestor} for generated interfaces. */
+/** {@link org.apache.avro.ipc.Requestor Requestor} for generated interfaces. */
 public class SpecificRequestor extends ReflectRequestor {
   
   public SpecificRequestor(Class<?> iface, Transceiver transceiver)

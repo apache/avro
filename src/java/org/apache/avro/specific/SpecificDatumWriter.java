@@ -20,7 +20,7 @@ package org.apache.avro.specific;
 import org.apache.avro.Schema;
 import org.apache.avro.reflect.ReflectDatumWriter;
 
-/** {@link DatumWriter} for generated Java classes. */
+/** {@link org.apache.avro.io.DatumWriter DatumWriter} for generated Java classes. */
 public class SpecificDatumWriter extends ReflectDatumWriter {
   public SpecificDatumWriter() {}
 

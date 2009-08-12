@@ -39,6 +39,10 @@ Trunk (unreleased changes)
     AVRO-79. Specify format for default fixed values, and implement
     correctly in Java.  (Thiruvalluvan M. G. via cutting)
 
+    AVRO-87. Fix broken links in javadoc introduced by AVRO-82.  Also
+    change test-java build target to fail on javadoc warnings.
+    (Thiruvalluvan M. G. and cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES

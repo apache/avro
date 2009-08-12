@@ -25,7 +25,10 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 
-/** {@link DatumReader} for existing classes via Java reflection. */
+/**
+ * {@link org.apache.avro.io.DatumReader DatumReader} for existing classes via
+ * Java reflection.
+ */
 public class ReflectDatumReader extends GenericDatumReader<Object> {
   protected String packageName;
 

@@ -23,7 +23,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Declares the size of implementations of {@link GenericFixed}. */
+/**
+ * Declares the size of implementations of
+ * {@link org.apache.avro.generic.GenericFixed GenericFixed}.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 @Documented

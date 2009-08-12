@@ -25,7 +25,10 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
 
-/** {@link DatumWriter} for existing classes via Java reflection. */
+/**
+ * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
+ * via Java reflection.
+ */
 public class ReflectDatumWriter extends GenericDatumWriter<Object> {
   public ReflectDatumWriter() {}
 

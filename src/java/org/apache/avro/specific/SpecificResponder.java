@@ -23,7 +23,7 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.reflect.ReflectResponder;
 
-/** {@link Responder} for generated interfaces.*/
+/** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
 public class SpecificResponder extends ReflectResponder {
   public SpecificResponder(Class iface, Object impl) {
     super(iface, impl);
