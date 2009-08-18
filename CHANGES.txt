@@ -48,6 +48,10 @@ Trunk (unreleased changes)
 
     AVRO-90. Fix Java's JSON codec to correctly encode unions. (cutting)
 
+    AVRO-95. Fix writing of Java reflect-based unions.  Also extend
+    DataFileWriter to permit adding branches to a union schema while
+    writing.
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES

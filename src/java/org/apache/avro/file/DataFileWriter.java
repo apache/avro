@@ -27,8 +27,10 @@ import java.rmi.server.UID;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryEncoder;
@@ -109,6 +111,17 @@ public class DataFileWriter<D> {
   public synchronized void setMeta(String key, long value) {
       setMeta(key, Long.toString(value));
     }
+
+  /** If the schema for this file is a union, add a branch to it. */
+  public synchronized void addSchema(Schema branch) {
+    if (schema.getType() != Schema.Type.UNION)
+      throw new AvroRuntimeException("Not a union schema: "+schema);
+    List<Schema> types = schema.getTypes();
+    types.add(branch);
+    this.schema = Schema.createUnion(types);
+    this.dout.setSchema(schema);
+    setMeta("schema", schema.toString());
+  }
 
   /** Append a datum to the file. */
   public synchronized void append(D datum) throws IOException {

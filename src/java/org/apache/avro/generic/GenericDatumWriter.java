@@ -186,7 +186,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     case RECORD:
       if (!isRecord(datum)) return false;
       return (schema.getName() == null) ||
-        schema.getName().equals(((GenericRecord)datum).getSchema().getName());
+        schema.getName().equals(getRecordSchema(datum).getName());
     case ENUM:    return isEnum(datum);
     case ARRAY:   return isArray(datum);
     case MAP:     return isMap(datum);
@@ -201,6 +201,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     case NULL:    return datum == null;
     default: throw new AvroRuntimeException("Unexpected type: " +schema);
     }
+  }
+
+  /** Called to obtain the schema of a record.  By default calls
+   * {GenericRecord#getSchema().  May be overridden for alternate record
+   * representations. */
+  protected Schema getRecordSchema(Object record) {
+    return ((GenericRecord)record).getSchema();
   }
 
   /** Called to write a fixed value.  May be overridden for alternate fixed

@@ -58,10 +58,9 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
     return ReflectData.getSchema(datum.getClass()).getType() == Type.RECORD;
   }
 
-  protected boolean instanceOf(Schema schema, Object datum) {
-    return (schema.getType() == Type.RECORD)
-      ? ReflectData.getSchema(datum.getClass()).getType() == Type.RECORD
-      : super.instanceOf(schema, datum);
+  @Override
+  protected Schema getRecordSchema(Object record) {
+    return ReflectData.getSchema(record.getClass());
   }
 
 }
