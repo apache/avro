@@ -46,6 +46,8 @@ Trunk (unreleased changes)
     change test-java build target to fail on javadoc warnings.
     (Thiruvalluvan M. G. and cutting)
 
+    AVRO-90. Fix Java's JSON codec to correctly encode unions. (cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES

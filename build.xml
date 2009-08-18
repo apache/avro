@@ -281,7 +281,7 @@
           <fileset dir="@{files.location}" includes="**/${testcase}.java"/>
         </batchtest>
       </junit>
-      <antcall target="checkfailure" />
+      <fail if="tests.failed">Tests Failed!</fail>
     </sequential>
   </macrodef>
 
@@ -352,11 +352,6 @@
   <target name="test-interop-data-java" depends="generate-test-data"
     description="Run java data file interoperability tests">
     <test-runner files.location="${test.java.classes}" tests.pattern="**/TestDataFile$InteropTest.class" />
-  </target>
-
-  <target name="checkfailure" if="tests.failed">
-    <touch file="${test.build.dir}/testsfailed"/>
-    <fail unless="continueOnFailure">Tests failed!</fail>
   </target>
 
   <target name="test-interop-data-py" depends="generate-test-data" 

@@ -157,6 +157,22 @@ public class TestSchema {
   public void testUnion() throws Exception {
     check("[\"string\", \"long\"]", false);
     checkDefault("[\"double\", \"long\"]", "1.1", new Double(1.1));
+
+    // check union json
+    String record = "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[]}";
+    String fixed = "{\"type\":\"fixed\",\"name\":\"Bar\",\"size\": 1}";
+    String enu = "{\"type\":\"enum\",\"name\":\"Baz\",\"symbols\": [\"X\"]}";
+    Schema union = Schema.parse("[\"null\",\"string\","
+                                +record+","+ enu+","+fixed+"]");
+    checkJson(union, null, "null");
+    checkJson(union, new Utf8("foo"), "{\"string\":\"foo\"}");
+    checkJson(union,
+              new GenericData.Record(Schema.parse(record)),
+              "{\"Foo\":{}}");
+    checkJson(union,
+              new GenericData.Fixed(new byte[]{(byte)'a'}),
+              "{\"Bar\":\"a\"}");
+    checkJson(union, "X", "{\"Baz\":\"X\"}");
   }
 
   private static void check(String schemaJson, String defaultJson,
@@ -228,6 +244,27 @@ public class TestSchema {
     reader.setSchema(schema);
     Object decoded =
       reader.read(null, new JsonDecoder(schema, new ByteArrayInputStream(data)));
+      
+    assertEquals("Decoded data does not match.", datum, decoded);
+  }
+
+  private static void checkJson(Schema schema, Object datum,
+                                String json) throws Exception {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Encoder encoder = new JsonEncoder(schema, out);
+    DatumWriter<Object> writer = new GenericDatumWriter<Object>();
+    writer.setSchema(schema);
+    writer.write(datum, encoder);
+    encoder.flush();
+    byte[] data = out.toByteArray();
+
+    String encoded = new String(data, "UTF-8");
+    assertEquals("Encoded data does not match.", json, encoded);
+
+    DatumReader<Object> reader = new GenericDatumReader<Object>();
+    reader.setSchema(schema);
+    Object decoded =
+      reader.read(null, new JsonDecoder(schema,new ByteArrayInputStream(data)));
       
     assertEquals("Decoded data does not match.", datum, decoded);
   }

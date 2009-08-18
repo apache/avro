@@ -338,20 +338,23 @@ public class JsonDecoder extends ParsingDecoder
   public int readIndex() throws IOException {
     parser.advance(Symbol.UNION);
     Symbol.Alternative a = (Symbol.Alternative) parser.popSymbol();
-    if (in.getCurrentToken() == JsonToken.START_OBJECT &&
-      in.nextToken() == JsonToken.FIELD_NAME) {
-      String label = in.getText();
+    
+    String label;
+    if (in.getCurrentToken() == JsonToken.VALUE_NULL) {
+      label = "null";
+    } else if (in.getCurrentToken() == JsonToken.START_OBJECT &&
+               in.nextToken() == JsonToken.FIELD_NAME) {
+      label = in.getText();
       in.nextToken();
-      int n = a.findLabel(label);
-      if (n < 0) {
-        throw new AvroTypeException("Unknown union branch " + label);
-      }
       parser.pushSymbol(Symbol.UNION_END);
-      parser.pushSymbol(a.getSymbol(n));
-      return n;
     } else {
       throw error("start-union");
     }
+    int n = a.findLabel(label);
+    if (n < 0)
+      throw new AvroTypeException("Unknown union branch " + label);
+    parser.pushSymbol(a.getSymbol(n));
+    return n;
   }
 
   public Symbol doAction(Symbol input, Symbol top) throws IOException {

@@ -180,7 +180,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     int i = 0;
     for (Schema w : alts) {
       symbols[i] = generate(w, reader, seen);
-      labels[i] = w.getType().name();
+      labels[i] = w.getName();
       i++;
     }
     return Symbol.seq(Symbol.alt(symbols, labels),

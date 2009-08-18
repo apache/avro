@@ -214,10 +214,13 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   public void writeIndex(int unionIndex) throws IOException {
     parser.advance(Symbol.UNION);
     Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
-    out.writeStartObject();
-    out.writeFieldName(top.getLabel(unionIndex));
-    parser.pushSymbol(Symbol.UNION_END);
-    parser.pushSymbol(top.getSymbol(unionIndex));
+    Symbol symbol = top.getSymbol(unionIndex);
+    if (symbol != Symbol.NULL) {
+      out.writeStartObject();
+      out.writeFieldName(top.getLabel(unionIndex));
+      parser.pushSymbol(Symbol.UNION_END);
+    }
+    parser.pushSymbol(symbol);
   }
 
   @Override

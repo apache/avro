@@ -66,9 +66,12 @@ public abstract class Schema {
   }
 
   /** The type of a schema. */
-  public enum Type
-  { RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES,
-      INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL };
+  public enum Type {
+    RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES,
+      INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
+    private String name;
+    private Type() { this.name = this.name().toLowerCase(); }
+  };
 
   private final Type type;
 
@@ -156,10 +159,9 @@ public abstract class Schema {
     throw new AvroRuntimeException("Not an enum: "+this);
   }    
 
-  /** If this is a record, enum or fixed, returns its name, if any. */
-  public String getName() {
-    throw new AvroRuntimeException("Not a named type: "+this);
-  }
+  /** If this is a record, enum or fixed, returns its name, otherwise the name
+   * of the primitive type. */
+  public String getName() { return type.name; }
 
   /** If this is a record, enum or fixed, returns its namespace, if any. */
   public String getNamespace() {
@@ -204,7 +206,9 @@ public abstract class Schema {
     }
   }
 
-  abstract void toJson(Names names, JsonGenerator gen) throws IOException;
+  void toJson(Names names, JsonGenerator gen) throws IOException {
+    gen.writeString(getName());
+  }
 
   void fieldsToJson(Names names, JsonGenerator gen) throws IOException {
     throw new AvroRuntimeException("Not a record: "+this);
@@ -518,58 +522,34 @@ public abstract class Schema {
 
   private static class StringSchema extends Schema {
     public StringSchema() { super(Type.STRING); }
-    void toJson(Names names, JsonGenerator gen) throws IOException {
-      gen.writeString("string");
-    }
   }
 
   private static class BytesSchema extends Schema {
     public BytesSchema() { super(Type.BYTES); }
-    void toJson(Names names, JsonGenerator gen) throws IOException {
-      gen.writeString("bytes");
-    }
   }
 
   private static class IntSchema extends Schema {
     public IntSchema() { super(Type.INT); }
-    void toJson(Names names, JsonGenerator gen) throws IOException {
-      gen.writeString("int");
-    }
   }
 
   private static class LongSchema extends Schema {
     public LongSchema() { super(Type.LONG); }
-    void toJson(Names names, JsonGenerator gen) throws IOException {
-      gen.writeString("long");
-    }
   }
 
   private static class FloatSchema extends Schema {
     public FloatSchema() { super(Type.FLOAT); }
-    void toJson(Names names, JsonGenerator gen) throws IOException {
-      gen.writeString("float");
-    }
   }
 
   private static class DoubleSchema extends Schema {
     public DoubleSchema() { super(Type.DOUBLE); }
-    void toJson(Names names, JsonGenerator gen) throws IOException {
-      gen.writeString("double");
-    }
   }
 
   private static class BooleanSchema extends Schema {
     public BooleanSchema() { super(Type.BOOLEAN); }
-    void toJson(Names names, JsonGenerator gen) throws IOException {
-      gen.writeString("boolean");
-    }
   }
   
   private static class NullSchema extends Schema {
     public NullSchema() { super(Type.NULL); }
-    void toJson(Names names, JsonGenerator gen) throws IOException {
-      gen.writeString("null");
-    }
   }
   
   private static final StringSchema  STRING_SCHEMA =  new StringSchema();
