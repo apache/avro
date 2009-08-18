@@ -340,6 +340,11 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
   }
   
   @Override
+  public void writeEnum(int e) throws IOException {
+    writeInt(e);
+  }
+
+  @Override
   public void writeBytes(byte[] bytes, int start, int len) throws IOException {
     if (pos + 5 > buf.length) {
       ensure(5);

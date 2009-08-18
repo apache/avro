@@ -52,6 +52,9 @@ Trunk (unreleased changes)
     DataFileWriter to permit adding branches to a union schema while
     writing.
 
+    AVRO-88. Fix Java's BlockingBinaryEncoder to correctly override
+    writeEnum().  (Ravi Gummadi via cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES
