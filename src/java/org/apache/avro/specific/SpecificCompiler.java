@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 import java.util.HashSet;
 
 import org.apache.avro.Protocol;
@@ -223,6 +224,8 @@ public class SpecificCompiler {
     }
   }
 
+  private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
+
   private String type(Schema schema, String name) {
     switch (schema.getType()) {
     case RECORD:
@@ -233,7 +236,11 @@ public class SpecificCompiler {
       return "GenericArray<"+type(schema.getElementType(),name+"Element")+">";
     case MAP:
       return "Map<Utf8,"+type(schema.getValueType(),name+"Value")+">";
-    case UNION:   return "Object";
+    case UNION:
+      List<Schema> types = schema.getTypes();     // elide unions with null
+      if ((types.size() == 2) && types.contains(NULL_SCHEMA))
+        return type(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0), name);
+      return "Object";
     case STRING:  return "Utf8";
     case BYTES:   return "ByteBuffer";
     case INT:     return "Integer";

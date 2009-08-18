@@ -33,6 +33,8 @@ Trunk (unreleased changes)
     AVRO-89. In fields of Java generated classes, use unboxed numeric
     types.  (cutting)
 
+    AVRO-83. In generated Java code, elide unions with null. (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
