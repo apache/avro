@@ -45,6 +45,13 @@
             ]
         },
         {
+            "name": "anotherunion",
+            "type": [
+                "bytes",
+                "null"
+            ]
+        },
+        {
             "name": "mybool",
             "type": "boolean"
         },
@@ -59,6 +66,10 @@
         {
             "name": "anotherint",
             "type": "int"
+        },
+        {
+            "name": "bytes",
+            "type": "bytes"
         }
     ]
 }

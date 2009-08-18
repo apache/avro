@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#include <boost/format.hpp>
+
 #include "ValidSchema.hh"
 #include "Schema.hh"
 #include "Node.hh"
@@ -53,7 +55,7 @@ ValidSchema::validate(const NodePtr &node)
     if(node->hasName()) {
         if(node->type() == AVRO_SYMBOLIC) {
             if(!symbolMap_.hasSymbol(node->name())) {
-                throw Exception("Symbolic name not found");
+                throw Exception( boost::format("Symbolic name \"%1%\" is unknown") % node->name());
             }
             return true;
         }

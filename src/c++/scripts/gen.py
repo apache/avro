@@ -30,7 +30,7 @@ headers = '''
 '''
 
 typeToC= { 'int' : 'int32_t', 'long' :'int64_t', 'float' : 'float', 'double' : 'double', 
-'boolean' : 'bool', 'null': 'avro::Null', 'string' : 'std::string', 'bytes' : 'std::vector<int8_t>'} 
+'boolean' : 'bool', 'null': 'avro::Null', 'string' : 'std::string', 'bytes' : 'std::vector<uint8_t>'} 
 
 structList = []
 structNames = {} 
@@ -133,7 +133,7 @@ $switchparse$
 }
 '''
 
-unionser = '    case $choice$:\n      serialize(s, val.getValue<$type$>());\n      break;\n'
+unionser = '    case $choice$:\n      serialize(s, val.getValue< $type$ >());\n      break;\n'
 unionpar = '    case $choice$:\n      { $type$ chosenVal; parse(p, chosenVal); val.value = chosenVal; }\n      break;\n'
 
 setfunc =  '''    void set_$name$(const $type$ &val) {

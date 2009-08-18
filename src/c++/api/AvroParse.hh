@@ -56,7 +56,7 @@ void parse(Reader &p, T &val, const boost::true_type &) {
 
 template <typename Reader>
 void parse(Reader &p, std::vector<uint8_t> &val, const boost::true_type &) {
-    p.getBytes(&val);
+    p.getBytes(val);
 }
 
 // @}

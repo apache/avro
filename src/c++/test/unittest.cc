@@ -108,10 +108,9 @@ struct TestSchema
     template<typename Serializer>
     void writeEncoding(Serializer &s, int path)
     {
-
         std::cout << "Record\n";
         s.beginRecord();
-        s.putInt(212);
+        s.putInt(1000);
 
         std::cout << "Map\n";
         s.beginMapBlock(2);
@@ -141,7 +140,7 @@ struct TestSchema
         s.putFixed(fixeddata, 16);
 
         std::cout << "Int\n";
-        s.putInt(-1);
+        s.putInt(-3456);
     }
 
     void printEncoding() {
@@ -168,6 +167,7 @@ struct TestSchema
     }
 
     void printNext(Parser<Reader> &p) {
+        // no-op printer
     }
 
     void printNext(Parser<ValidatingReader> &p)
@@ -208,16 +208,18 @@ struct TestSchema
     void readArray(Parser &p)
     {
         int64_t size = 0;
+        double d = 0.0;
         do {
             printNext(p);
             size = p.getArrayBlockSize();
             std::cout << "Size " << size << '\n';
             for(int32_t i=0; i < size; ++i) {
                 printNext(p);
-                double d = p.getDouble();
+                d = p.getDouble();
                 std::cout << i << ":" << d << '\n';
             }
         } while(size != 0);
+        assert(d = 1000.0);
     }
 
     template <typename Parser>
@@ -241,6 +243,7 @@ struct TestSchema
         printNext(p);
         int64_t longval = p.getLong();
         std::cout << longval << '\n';
+        assert(longval == 1000);
 
         readMap(p);
         readArray(p);
@@ -257,6 +260,7 @@ struct TestSchema
         printNext(p);
         bool boolval = p.getBool();
         std::cout << boolval << '\n';
+        assert(boolval == true);
 
         printNext(p);
         readFixed(p);
@@ -264,6 +268,7 @@ struct TestSchema
         printNext(p);
         int32_t intval = p.getInt();
         std::cout << intval << '\n';
+        assert(intval == -3456);
     }
 
     void readRawData() {

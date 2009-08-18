@@ -148,7 +148,7 @@ class Reader : private boost::noncopyable
         uint64_t encoded = 0;
         uint8_t val = 0;
         do {
-            encoded <<= 8;
+            encoded <<= 7;
             in_.getByte(val);
             encoded |= (val & 0x7F);
 

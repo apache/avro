@@ -61,7 +61,7 @@ testparser: test/testparser.cc $(OBJDIR)/avrolib.a
 precompile: test/precompile.cc $(OBJDIR)/avrolib.a 
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
 
-test/code.hh: scripts/gen.py precompile
+test/code.hh: scripts/gen.py precompile jsonschemas/bigrecord
 	./precompile < jsonschemas/bigrecord > obj/bigrecord.flat
 	python scripts/gen.py < obj/bigrecord.flat > test/code.hh
 

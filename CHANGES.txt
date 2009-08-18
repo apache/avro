@@ -58,6 +58,8 @@ Trunk (unreleased changes)
     AVRO-61. Add Python support for reading blocked data.
     (Ravi Gummadi via cutting)
 
+    AVRO-97.  Fix various C++ bugs.  (Scott Banachowski via cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES

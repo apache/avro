@@ -49,7 +49,7 @@ void serializeValid(const avro::ValidSchema &valid, const avrouser::RootRecord &
 
 void checkArray(const avrouser::Array_of_double &a1, const avrouser::Array_of_double &a2) 
 {
-    assert(a1.value.size() == a2.value.size());
+    assert((a1.value.size() == a2.value.size()) && (a1.value.size() == 3));
     for(size_t i = 0; i < a1.value.size(); ++i) {
         assert(a1.value[i] == a2.value[i]);
     }
@@ -70,6 +70,14 @@ void checkMap(const avrouser::Map_of_int &map1, const avrouser::Map_of_int &map2
     }
 }
 
+void checkBytes(const std::vector<uint8_t> &v1, const std::vector<uint8_t> &v2)
+{
+    assert((v1.size() == v2.size()) && (v1.size() == 2));
+    for(size_t i = 0; i < v1.size(); ++i) {
+        assert(v1[i] == v2[i]);
+    }
+}
+
 void checkOk(const avrouser::RootRecord &rec1, const avrouser::RootRecord &rec2)
 {
     assert(rec1.mylong == rec1.mylong);
@@ -83,6 +91,14 @@ void checkOk(const avrouser::RootRecord &rec1, const avrouser::RootRecord &rec2)
     {
         assert(rec1.myunion.choice == 1);
         checkMap(rec1.myunion.getValue<avrouser::Map_of_int>(), rec2.myunion.getValue<avrouser::Map_of_int>());
+    }
+
+    assert(rec1.anotherunion.choice == rec2.anotherunion.choice);
+    // in this test I know choice was 0
+    {
+        assert(rec1.anotherunion.choice == 0);
+        typedef std::vector<uint8_t> mytype;
+        checkBytes(rec1.anotherunion.getValue<mytype>(), rec2.anotherunion.getValue<avrouser::Union_of_bytes_null::T0>());
     }
 
     assert(rec1.mybool == rec2.mybool);
@@ -154,14 +170,21 @@ int main()
     myRecord.mymap.value.clear();
     myRecord.myarray.addValue(3434.9);
     myRecord.myarray.addValue(7343.9);
+    myRecord.myarray.addValue(-63445.9);
     myRecord.myenum.value = avrouser::ExampleEnum::one;
     avrouser::Map_of_int map;
     map.addValue("one", 1);
     map.addValue("two", 2);
     myRecord.myunion.set_Map_of_int(map);
+    std::vector<uint8_t> vec;
+    vec.push_back(1);
+    vec.push_back(2);
+    myRecord.anotherunion.set_bytes(vec);
     myRecord.mybool = true;
     memcpy(myRecord.myfixed.value, fixed, avrouser::md5::fixedSize);
     myRecord.anotherint = 4534;
+    myRecord.bytes.push_back(10);
+    myRecord.bytes.push_back(20);
 
     runTests(myRecord);
 

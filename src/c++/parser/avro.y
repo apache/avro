@@ -18,14 +18,16 @@
 */
 
 #include <stdio.h>
+#include <boost/format.hpp>
 #include "Compiler.hh"
+#include "Exception.hh"
+
 #define YYLEX_PARAM ctx
 #define YYPARSE_PARAM ctx
 
 void yyerror(const char *str)
 {
-    // fixme, do something better than this
-    fprintf(stderr,"error: %s\n",str);
+    throw avro::Exception(boost::format("Parser error: %1%") % str);
 }
  
 extern void *lexer; 
@@ -38,6 +40,7 @@ avro::CompilerContext &context(void *ctx) {
 %}
 
 %pure-parser
+%error-verbose
 
 %token AVRO_LEX_INT AVRO_LEX_LONG AVRO_LEX_FLOAT AVRO_LEX_DOUBLE
 %token AVRO_LEX_BOOL AVRO_LEX_NULL AVRO_LEX_BYTES AVRO_LEX_STRING
