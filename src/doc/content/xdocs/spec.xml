@@ -360,11 +360,6 @@
 	  through data, e.g., when projecting a record to a subset of
 	  its fields.</p>
 
-	  <p><em>NOTE: Blocking has not yet been fully implemented and
-	   may change.  Arbitrarily large objects must be easily
-	   writable and readable but until we have proven this with an
-	   implementation and tests this part of the specification
-	   should be considered draft.</em></p>
 	</section>
 
         <section>

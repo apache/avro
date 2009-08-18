@@ -60,6 +60,8 @@ Trunk (unreleased changes)
 
     AVRO-97.  Fix various C++ bugs.  (Scott Banachowski via cutting)
 
+    AVRO-100.  In spec, remove warning about blocking being draft. (cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES
