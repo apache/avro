@@ -33,7 +33,7 @@ import org.apache.avro.util.Utf8;
  *  the reading of leaf values (for example, {@link #readLong} and
  *  {@link #readString}).
  *
- *  The other type of methods support the writing of maps and arrays.
+ *  The other type of methods support the reading of maps and arrays.
  *  These methods are {@link #readArrayStart}, {@link #arrayNext},
  *  and similar methods for maps).  See {@link #readArrayStart} for
  *  details on these methods.)

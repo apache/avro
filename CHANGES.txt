@@ -55,6 +55,9 @@ Trunk (unreleased changes)
     AVRO-88. Fix Java's BlockingBinaryEncoder to correctly override
     writeEnum().  (Ravi Gummadi via cutting)
 
+    AVRO-61. Add Python support for reading blocked data.
+    (Ravi Gummadi via cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES

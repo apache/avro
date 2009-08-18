@@ -306,12 +306,19 @@
 
   <target name="generate-test-data" depends="compile-test-java, init-py">
     <mkdir dir="${test.java.build.dir}/data-files"/>
+  	 <mkdir dir="${test.java.build.dir}/blocking-data-files"/>
     <java classname="org.apache.avro.RandomData"
       classpathref="test.java.classpath">
       <arg value="${basedir}/src/test/schemata/interop.avsc"/>
       <arg value="${test.java.build.dir}/data-files/test.java.avro"/>
       <arg value="${test.count}"/>
     </java>
+  	 <java classname="org.apache.avro.GenerateBlockingData"
+  	      classpathref="test.java.classpath">
+  	      <arg value="${basedir}/src/test/schemata/interop.avsc"/>
+  	      <arg value="${test.java.build.dir}/blocking-data-files/test.java.blocking.avro"/>
+  	      <arg value="${test.count}"/>
+  	 </java>
 
     <taskdef name="py-run" classname="org.pyant.tasks.PythonRunTask">
       <classpath refid="java.classpath" />

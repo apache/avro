@@ -304,6 +304,9 @@ class DataFileReader(object):
             int(ord(self.__reader.read(1))))
     seekpos = self.__reader.seek(self.__length-footersize)
     metalength = self.__decoder.readlong()
+    if metalength < 0:
+      metalength = -metalength
+      self.__decoder.readlong() #ignore byteCount if this is a blocking map
     self.__meta = dict()
     for i in range(0, metalength):
       key = self.__decoder.readutf8()

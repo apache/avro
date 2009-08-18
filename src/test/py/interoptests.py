@@ -23,6 +23,7 @@ import avro.reflectio as reflectio
 import avro.reflectipc as reflectipc
 import testio, testipc, testioreflect, testipcreflect
 
+_BLOCKINGFILE_DIR = "build/test/blocking-data-files/"
 _DATAFILE_DIR = "build/test/data-files/"
 _SERVER_PORTS_DIR = testio._DIR + "server-ports/"
 
@@ -45,6 +46,21 @@ class TestGeneratedFiles(unittest.TestCase):
       self.assertEquals(origschm, decodedSchm)
       for i in range(0,count):
         datum = dr.next()
+        self.assertTrue(self.__validator(origschm, datum))
+    # validate reading of blocking arrays, blocking maps
+    for file in os.listdir(_BLOCKINGFILE_DIR):
+      print "Validating:", file.__str__()
+      reader = open(_BLOCKINGFILE_DIR+file, "rb")
+      decoder = io.Decoder(reader)
+      dreader = self.__datumreader()
+      dreader.setschema(origschm)
+      count = int(decoder.readlong()) #metadata:the count of objects in the file
+      blockcount = decoder.readlong()
+      for i in range(0,count):
+        while blockcount == 0:
+          blockcount = decoder.readlong()
+        blockcount -= 1
+        datum = dreader.read(decoder)
         self.assertTrue(self.__validator(origschm, datum))
 
 class TestReflectGeneratedFiles(TestGeneratedFiles):

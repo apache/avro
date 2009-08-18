@@ -174,21 +174,28 @@ class DatumReader(io.DatumReaderBase):
       self.__raisematchException(actual, expected)
     result = dict()
     size = decoder.readlong()
-    if size != 0:
+    while size != 0:
+      if size < 0:
+        size = -size
+        decoder.readlong() #ignore bytecount if this is a blocking map
       for i in range(0, size):
         key = decoder.readutf8()
         result[key] = self.readdata(actual.getvaluetype(), 
                                     expected.getvaluetype(), decoder)
-      decoder.readlong()
+      size = decoder.readlong()
     return result
 
   def skipmap(self, schm, decoder):
     size = decoder.readlong()
-    if size != 0:
-      for i in range(0, size):
-        decoder.skiputf8()
-        self.skipdata(schm.getvaluetype(), decoder)
-      decoder.skiplong()
+    while size != 0:
+      if size < 0:
+        decoder.readlong() #bytecount of block if this is a blocking map
+        decoder.skip(bytecount)
+      else:
+        for i in range(0, size):
+          decoder.skiputf8()
+          self.skipdata(schm.getvaluetype(), decoder)
+      size = decoder.readlong()
 
   def readarray(self, actual, expected, decoder):
     if (actual.getelementtype().gettype() != 
@@ -196,19 +203,26 @@ class DatumReader(io.DatumReaderBase):
       self.__raisematchException(actual, expected)
     result = list()
     size = decoder.readlong()
-    if size != 0:
+    while size != 0:
+      if size < 0:
+        size = -size
+        bytecount = decoder.readlong() #ignore bytecount if this is a blocking array
       for i in range(0, size):
         result.append(self.readdata(actual.getelementtype(), 
                                     expected.getelementtype(), decoder))
-      decoder.readlong()
+      size = decoder.readlong()
     return result
 
   def skiparray(self, schm, decoder):
     size = decoder.readlong()
-    if size != 0:
-      for i in range(0, size):
-        self.skipdata(schm.getelementtype(), decoder)
-      decoder.skiplong()
+    while size != 0:
+      if size < 0:
+        decoder.readlong() #bytecount of block if this is a blocking array
+        decoder.skip(bytecount)
+      else:
+        for i in range(0, size):
+          self.skipdata(schm.getelementtype(), decoder)
+      size = decoder.readlong()
 
   def createrecord(self, schm):
     return dict()
