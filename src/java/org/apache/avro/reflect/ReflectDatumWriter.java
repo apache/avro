@@ -30,10 +30,23 @@ import org.apache.avro.io.Encoder;
  * via Java reflection.
  */
 public class ReflectDatumWriter extends GenericDatumWriter<Object> {
-  public ReflectDatumWriter() {}
+  private final ReflectData reflectData;
+  
+  public ReflectDatumWriter() {
+    this(new ReflectData());
+  }
 
   public ReflectDatumWriter(Schema root) {
+    this(root, new ReflectData());
+  }
+
+  public ReflectDatumWriter(Schema root, ReflectData reflectData) {
     super(root);
+    this.reflectData = reflectData;
+  }
+  
+  public ReflectDatumWriter(ReflectData reflectData) {
+    this.reflectData = reflectData;
   }
   
   protected Object getField(Object record, String name, int position) {
@@ -55,12 +68,12 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
 
   @Override
   protected boolean isRecord(Object datum) {
-    return ReflectData.getSchema(datum.getClass()).getType() == Type.RECORD;
+    return reflectData.getSchema(datum.getClass()).getType() == Type.RECORD;
   }
 
   @Override
   protected Schema getRecordSchema(Object record) {
-    return ReflectData.getSchema(record.getClass());
+    return reflectData.getSchema(record.getClass());
   }
 
 }

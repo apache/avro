@@ -11,6 +11,9 @@ Trunk (unreleased changes)
 
     AVRO-76. Add Java RPC plugin framework.  (George Porter)
 
+    AVRO-104. Permit null fields in Java reflection.
+    (Eelco Hillenius via cutting)
+
   IMPROVEMENTS
 
     AVRO-71.  C++: make deserializer more generic.  (Scott Banachowski

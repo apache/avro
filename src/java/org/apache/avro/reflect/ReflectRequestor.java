@@ -40,10 +40,20 @@ public class ReflectRequestor extends Requestor implements InvocationHandler {
   
   public ReflectRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
-    this(ReflectData.getProtocol(iface), transceiver);
+    this(iface, transceiver, new ReflectData());
   }
 
   protected ReflectRequestor(Protocol protocol, Transceiver transceiver)
+    throws IOException {
+    this(protocol, transceiver, new ReflectData());
+  }
+
+  public ReflectRequestor(Class<?> iface, Transceiver transceiver, ReflectData reflectData)
+    throws IOException {
+    this(reflectData.getProtocol(iface), transceiver, reflectData);
+  }
+
+  protected ReflectRequestor(Protocol protocol, Transceiver transceiver, ReflectData reflectData)
     throws IOException {
     super(protocol, transceiver);
     this.packageName = protocol.getNamespace()+"."+protocol.getName()+"$";
@@ -82,7 +92,13 @@ public class ReflectRequestor extends Requestor implements InvocationHandler {
   /** Create a proxy instance whose methods invoke RPCs. */
   public static Object getClient(Class<?> iface, Transceiver transciever)
     throws IOException {
-    Protocol protocol = ReflectData.getProtocol(iface);
+    return getClient(iface, transciever, new ReflectData());
+  }
+
+  /** Create a proxy instance whose methods invoke RPCs. */
+  public static Object getClient(Class<?> iface, Transceiver transciever, ReflectData reflectData)
+    throws IOException {
+    Protocol protocol = reflectData.getProtocol(iface);
     return Proxy.newProxyInstance(iface.getClassLoader(),
                                   new Class[] { iface },
                                   new ReflectRequestor(protocol, transciever));

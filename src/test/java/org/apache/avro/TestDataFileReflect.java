@@ -47,9 +47,10 @@ public class TestDataFileReflect {
   public void testMultiReflectWithUnionBeforeWriting() throws IOException {
     FileOutputStream fos = new FileOutputStream(FILE);
 
+    ReflectData reflectData = new ReflectData();
     List<Schema> schemas = Arrays.asList(new Schema[] {
-        ReflectData.getSchema(FooRecord.class),
-        ReflectData.getSchema(BarRecord.class) });
+        reflectData.getSchema(FooRecord.class),
+        reflectData.getSchema(BarRecord.class) });
     Schema union = Schema.createUnion(schemas);
     DataFileWriter<Object> writer = new DataFileWriter<Object>(union, fos,
         new ReflectDatumWriter(union));
@@ -82,8 +83,9 @@ public class TestDataFileReflect {
   public void testMultiReflectWithUntionAfterWriting() throws IOException {
     FileOutputStream fos = new FileOutputStream(FILE);
 
+    ReflectData reflectData = new ReflectData();
     List<Schema> schemas = new ArrayList<Schema>();
-    schemas.add(ReflectData.getSchema(FooRecord.class));
+    schemas.add(reflectData.getSchema(FooRecord.class));
     Schema union = Schema.createUnion(schemas);
     DataFileWriter<Object> writer = new DataFileWriter<Object>(union, fos,
         new ReflectDatumWriter(union));
@@ -94,7 +96,7 @@ public class TestDataFileReflect {
     write(writer, new FooRecord(15), check);
 
     // we have a new type, add it to the file
-    writer.addSchema(ReflectData.getSchema(BarRecord.class));
+    writer.addSchema(reflectData.getSchema(BarRecord.class));
 
     // test writing those new types to a file
     write(writer, new BarRecord("One beer please"), check);
@@ -106,6 +108,38 @@ public class TestDataFileReflect {
     // get one more bar in, just for laughs
     write(writer, new BarRecord("Many beers please"), check);
 
+    writer.close();
+
+    ReflectDatumReader din = new ReflectDatumReader("org.apache.avro.");
+    SeekableFileInput sin = new SeekableFileInput(FILE);
+    DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
+    Object datum = null;
+    long count = reader.getMetaLong("count");
+    for (int i = 0; i < count; i++) {
+      datum = reader.next(datum);
+      check.assertEquals(datum, i);
+    }
+    reader.close();
+  }
+
+  /*
+   * Test that writing a record with a field that is null.
+   */
+  @Test
+  public void testNull() throws IOException {
+    FileOutputStream fos = new FileOutputStream(FILE);
+
+    ReflectData reflectData = ReflectData.newNullAllowingInstance();
+    Schema schema = reflectData.getSchema(BarRecord.class);
+    DataFileWriter<Object> writer = new DataFileWriter<Object>(schema, fos,
+        new ReflectDatumWriter(schema, reflectData));
+
+    // test writing to a file
+    CheckList check = new CheckList();
+    write(writer, new BarRecord("One beer please"), check);
+    // null record here, fails when using the default reflectData instance
+    write(writer, new BarRecord(), check);
+    write(writer, new BarRecord("Two beers please"), check);
     writer.close();
 
     ReflectDatumReader din = new ReflectDatumReader("org.apache.avro.");
