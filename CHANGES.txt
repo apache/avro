@@ -67,6 +67,11 @@ Trunk (unreleased changes)
 
     AVRO-100.  In spec, remove warning about blocking being draft. (cutting)
 
+    AVRO-107.  Fix Protocol#equals() and Protocol#hashCode() to
+    consider the protocol's types, and also fix Schema#equals() to not
+    throw ClassCastException when a fixed schema is compared to
+    non-fixed. (cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES

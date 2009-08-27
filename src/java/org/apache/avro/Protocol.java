@@ -173,11 +173,13 @@ public class Protocol {
     Protocol that = (Protocol)o;
     return this.name.equals(that.name)
       && this.namespace.equals(that.namespace)
+      && this.types.equals(that.types)
       && this.messages.equals(that.messages);
   }
   
   public int hashCode() {
-    return name.hashCode() + namespace.hashCode() + messages.hashCode();
+    return name.hashCode() + namespace.hashCode()
+      + types.hashCode() + messages.hashCode();
   }
 
   public String toString() {

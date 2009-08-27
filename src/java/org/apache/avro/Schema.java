@@ -506,6 +506,7 @@ public abstract class Schema {
     public int getFixedSize() { return size; }
     public boolean equals(Object o) {
       if (o == this) return true;
+      if (!(o instanceof FixedSchema)) return false;
       FixedSchema that = (FixedSchema)o;
       return equalNames(that) && size == that.size;
     }
