@@ -79,7 +79,7 @@
         <p>Avro supports six kinds of complex types: records, enums,
         arrays, maps, unions and fixed.</p>
 
-        <section>
+        <section id="schema_record">
           <title>Records</title>
           
 	  <p>Records use the type name "record" and support two attributes:</p>
@@ -236,185 +236,241 @@
       a depth-first, left-to-right traversal of the schema,
       serializing primitive types as they are encountered.</p>
 
-      <section id="serialize_primitive">
-        <title>Primitive Type Serialization</title>
-        <p>Primitive types are serialized as follows:</p>
-        <ul>
-          <li>a <code>string</code> is serialized as
-          a <code>long</code> followed by that many bytes of UTF-8
-          encoded character data.
-	    <p>For example, the three-character
-              string "foo" would be serialized as 3 (encoded as
-              hex <code>06</code>) followed by the UTF-8 encoding of
-              'f', 'o', and 'o' (the hex bytes <code>66 6f 6f</code>):
-	    </p>
-	    <source>06 66 6f 6f</source>
-	  </li>
-          <li><code>bytes</code> are serialized as
-          a <code>long</code> followed by that many bytes of data.
-	  </li>
-          <li><code>int</code> and <code>long</code> values are written
-            using <a href="ext:vint">variable-length</a>
-	    <a href="ext:zigzag">zig-zag</a> coding.  Some examples:
-	    <table class="right">
-	      <tr><th>value</th><th>hex</th></tr>
-	      <tr><td><code> 0</code></td><td><code>00</code></td></tr>
-	      <tr><td><code>-1</code></td><td><code>01</code></td></tr>
-	      <tr><td><code> 1</code></td><td><code>02</code></td></tr>
-	      <tr><td><code>-2</code></td><td><code>03</code></td></tr>
-	      <tr><td><code> 2</code></td><td><code>04</code></td></tr>
-	      <tr><td colspan="2"><code>...</code></td></tr>
-	      <tr><td><code>-64</code></td><td><code>7f</code></td></tr>
-	      <tr><td><code> 64</code></td><td><code>&nbsp;80 01</code></td></tr>
-	      <tr><td colspan="2"><code>...</code></td></tr>
-	    </table>
-	  </li>
-          <li>a <code>float</code> is written as 4 bytes. The float is
-          converted into a 32-bit integer using a method equivalent
-          to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Float.html#floatToIntBits%28float%29">Java's floatToIntBits</a> and then encoded
-          in little-endian format.</li>
-          <li>a <code>double</code> is written as 8 bytes. The double
-          is converted into a 64-bit integer using a method equivalent
-          to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Double.html#doubleToLongBits%28double%29">Java's
-          doubleToLongBits</a> and then encoded in little-endian
-          format.</li>
-          <li>a <code>boolean</code> is written as a single byte whose
-          value is either <code>0</code> (false) or <code>1</code>
-          (true).</li>
-          <li><code>null</code> is written as zero bytes.</li>
-        </ul>
+      <section>
+	<title>Encodings</title>
+	<p>Avro specifies two serialization encodings: binary and
+	  JSON.  Most applications will use the binary encoding, as it
+	  is smaller and faster.  But, for debugging and web-based
+	  applications, the JSON encoding may sometimes be
+	  appropriate.</p>
+      </section>
+
+      <section id="binary_encoding">
+        <title>Binary Encoding</title>
+
+	<section id="binary_encode_primitive">
+          <title>Primitive Types</title>
+          <p>Primitive types are encoded in binary as follows:</p>
+          <ul>
+            <li>a <code>string</code> is encoded as
+              a <code>long</code> followed by that many bytes of UTF-8
+              encoded character data.
+	      <p>For example, the three-character string "foo" would
+		be encoded as the long value 3 (encoded as
+		hex <code>06</code>) followed by the UTF-8 encoding of
+		'f', 'o', and 'o' (the hex bytes <code>66 6f
+		6f</code>):
+	      </p>
+	      <source>06 66 6f 6f</source>
+	    </li>
+            <li><code>bytes</code> are encoded as
+              a <code>long</code> followed by that many bytes of data.
+	    </li>
+            <li><code>int</code> and <code>long</code> values are written
+              using <a href="ext:vint">variable-length</a>
+	      <a href="ext:zigzag">zig-zag</a> coding.  Some examples:
+	      <table class="right">
+		<tr><th>value</th><th>hex</th></tr>
+		<tr><td><code> 0</code></td><td><code>00</code></td></tr>
+		<tr><td><code>-1</code></td><td><code>01</code></td></tr>
+		<tr><td><code> 1</code></td><td><code>02</code></td></tr>
+		<tr><td><code>-2</code></td><td><code>03</code></td></tr>
+		<tr><td><code> 2</code></td><td><code>04</code></td></tr>
+		<tr><td colspan="2"><code>...</code></td></tr>
+		<tr><td><code>-64</code></td><td><code>7f</code></td></tr>
+		<tr><td><code> 64</code></td><td><code>&nbsp;80 01</code></td></tr>
+		<tr><td colspan="2"><code>...</code></td></tr>
+	      </table>
+	    </li>
+            <li>a <code>float</code> is written as 4 bytes. The float is
+              converted into a 32-bit integer using a method equivalent
+              to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Float.html#floatToIntBits%28float%29">Java's floatToIntBits</a> and then encoded
+              in little-endian format.</li>
+            <li>a <code>double</code> is written as 8 bytes. The double
+              is converted into a 64-bit integer using a method equivalent
+              to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Double.html#doubleToLongBits%28double%29">Java's
+		doubleToLongBits</a> and then encoded in little-endian
+              format.</li>
+            <li>a <code>boolean</code> is written as a single byte whose
+              value is either <code>0</code> (false) or <code>1</code>
+              (true).</li>
+            <li><code>null</code> is written as zero bytes.</li>
+          </ul>
+
+	</section>
+
+
+	<section id="binary_encode_complex">
+          <title>Complex Types</title>
+          <p>Complex types are encoded in binary as follows:</p>
+
+          <section>
+            <title>Records</title>
+	    <p>A record is encoded by encoding the values of its
+	      fields in the order that they are declared.  In other
+	      words, a record is encode as just the concatenation of
+	      its field's encodings.  Field values are encoded per
+	      their schema.</p>
+	    <p>For example, the record schema</p>
+	    <source>
+	      {
+	      "type": "record", 
+	      "name": "test",
+	      "fields" : [
+	      {"name": "a", "type": "long"},
+	      {"name": "b", "type": "string"}
+	      ]
+	      }
+	    </source>
+	    <p>An instance of this record whose <code>a</code> field has
+	      value 27 (encoded as hex <code>36</code>) and
+	      whose <code>b</code> field has value "foo" (encoded as hex
+	      bytes <code>OC 66 6f 6f</code>), would be encoded simply
+	      as the concatenation of these, namely the hex byte
+	      sequence:</p>
+	    <source>36 0C 66 6f 6f</source>
+	  </section>
+          
+          <section>
+            <title>Enums</title>
+            <p>An enum is encoded by a <code>int</code>, representing
+              the zero-based position of the symbol in the schema.</p>
+	    <p>For example, consider the enum:</p>
+	    <source>
+	      {"type": "enum", "name": "Foo", "symbols": ["A", "B", "C", "D"] }
+	    </source>
+	    <p>This would be encoded by an <code>int</code> between
+	      zero and three, with zero indicating "A", and 3 indicating
+	      "D".</p>
+	  </section>
+
+
+          <section>
+            <title>Arrays</title>
+            <p>Arrays are encoded as a series of <em>blocks</em>.
+              Each block consists of a <code>long</code> <em>count</em>
+              value, followed by that many array items.  A block with
+              count zero indicates the end of the array.  Each item is
+              encoded per the array's item schema.</p>
+
+	    <p>If a block's count is negative, then the count is
+	      followed immediately by a <code>long</code>
+	      block <em>size</em>, indicating the number of bytes in the
+	      block.  The actual count in this case is the absolute value
+	      of the count written.</p>
+
+	    <p>For example, the array schema</p>
+	    <source>{"type": "array", "items": "long"}</source>
+	    <p>an array containing the items 3 and 27 could be encoded
+	      as the long value 2 (encoded as hex 04) followed by long
+	      values 3 and 27 (encoded as hex <code>06 36</code>)
+	      terminated by zero:</p>
+	    <source>04 06 36 00</source>
+
+	    <p>The blocked representation permits one to read and write
+	      arrays larger than can be buffered in memory, since one can
+	      start writing items without knowing the full length of the
+	      array.  The optional block sizes permit fast skipping
+	      through data, e.g., when projecting a record to a subset of
+	      its fields.</p>
+
+	  </section>
+
+          <section>
+            <title>Maps</title>
+            <p>Maps are encoded as a series of <em>blocks</em>.  Each
+              block consists of a <code>long</code> <em>count</em>
+              value, followed by that many key/value pairs.  A block
+              with count zero indicates the end of the map.  Each item
+              is encoded per the map's value schema.</p>
+
+	    <p>If a block's count is negative, then the count is
+	      followed immediately by a <code>long</code>
+	      block <em>size</em>, indicating the number of bytes in the
+	      block.  The actual count in this case is the absolute value
+	      of the count written.</p>
+
+	    <p>The blocked representation permits one to read and write
+	      maps larger than can be buffered in memory, since one can
+	      start writing items without knowing the full length of the
+	      map.  The optional block sizes permit fast skipping through
+	      data, e.g., when projecting a record to a subset of its
+	      fields.</p>
+
+	    <p><em>NOTE: Blocking has not yet been fully implemented and
+		may change.  Arbitrarily large objects must be easily
+		writable and readable but until we have proven this with an
+		implementation and tests this part of the specification
+		should be considered draft.</em></p>
+	  </section>
+
+          <section>
+            <title>Unions</title>
+	    <p>A union is encoded by first writing a <code>long</code>
+	      value indicating the zero-based position within the
+	      union of the schema of its value.  The value is then
+	      encoded per the indicated schema within the union.</p>
+	    <p>For example, the union
+	      schema <code>["string","null"]</code> would encode:</p>
+            <ul>
+              <li><code>null</code> as the integer 1 (the index of
+		"null" in the union, encoded as
+		hex <code>02</code>): <source>02</source></li>
+              <li>the string <code>"a"</code> as zero (the index of
+		"string" in the union), followed by the serialized string:
+		<source>00 02 61</source></li>
+            </ul>
+          </section>
+
+          <section>
+            <title>Fixed</title>
+	    <p>Fixed instances are encoded using the number of bytes
+	      declared in the schema.</p>
+          </section>
+
+	</section> <!-- end complex types -->
 
       </section>
 
+      <section id="json_encoding">
+        <title>JSON Encoding</title>
+	
+	<p>Except for unions, the JSON encoding is the same as is used
+	to encode <a href="#schema_record">field default
+	values</a>.</p>
 
-      <section id="serialize_complex">
-        <title>Complex Type Serialization</title>
-        <p>Complex types are serialized as follows:</p>
+	<p>The value of a union is encoded in JSON as follows:</p>
 
-        <section>
-          <title>Records</title>
-	  <p>A record is serialized by serializing the values of its
-	  fields in the order that they are declared.  In other words,
-	  a record is serialized as just the concatenation of its
-	  field's serializations.  Field values are serialized per
-	  their schema.</p>
-	  <p>For example, the record schema</p>
-	  <source>
-{
-  "type": "record", 
-  "name": "test",
-  "fields" : [
-    {"name": "a", "type": "long"},
-    {"name": "b", "type": "string"}
-  ]
-}
-	  </source>
-	  <p>An instance of this record whose <code>a</code> field has
-	  value 27 (encoded as hex <code>36</code>) and
-	  whose <code>b</code> field has value "foo" (encoded as hex
-	  bytes <code>OC 66 6f 6f</code>), would be serialized simply
-	  as the concatenation of these, namely the hex byte
-	  sequence:</p>
-	  <source>36 0C 66 6f 6f</source>
-	</section>
-        
-        <section>
-          <title>Enums</title>
-          <p>An enum is serialized by a <code>int</code>, representing
-          the zero-based position of the symbol in the schema.</p>
-	  <p>For example, consider the enum:</p>
-	  <source>
-{"type": "enum", "name": "Foo", "symbols": ["A", "B", "C", "D"] }
-	  </source>
-	  <p>This would be serialized by an <code>int</code> between
-	  zero and three, with zero indicating "A", and 3 indicating
-	  "D".</p>
-	</section>
+	<ul>
+	  <li>if its type is <code>null</code>, then it is encoded as
+	  a JSON null;</li>
+	  <li>otherwise it is encoded as a JSON object with one
+	  name/value pair whose name is the type's name and whose
+	  value is the recursively encoded value.  For Avro's named
+	  types (record, fixed or enum) the user-specified name is
+	  used, for other types the type name is used.</li>
+	</ul>
+	  
+	<p>For example, the union
+	  schema <code>["null","string","Foo"]</code>, where Foo is a
+	  record name, would encode:</p>
+        <ul>
+          <li><code>null</code> as <code>null</code>;</li>
+          <li>the string <code>"a"</code> as
+	    <code>{"string": "a"}</code>; and</li>
+          <li>a Foo instance as <code>{"Foo": {...}}</code>,
+          where <code>{...}</code> indicates the JSON encoding of a
+          Foo instance.</li>
+        </ul>
 
+	<p>Note that a schema is still required to correctly process
+	JSON-encoded data.  For example, the JSON encoding does not
+	distinguish between <code>int</code>
+	and <code>long</code>, <code>float</code>
+	and <code>double</code>, records and maps, enums and strings,
+	etc.</p>
 
-        <section>
-          <title>Arrays</title>
-          <p>Arrays are serialized as a series of <em>blocks</em>.
-          Each block consists of a <code>long</code> <em>count</em>
-          value, followed by that many array items.  A block with
-          count zero indicates the end of the array.  Each item is
-          serialized per the array's item schema.</p>
-
-	  <p>If a block's count is negative, then the count is
-	  followed immediately by a <code>long</code>
-	  block <em>size</em>, indicating the number of bytes in the
-	  block.  The actual count in this case is the absolute value
-	  of the count written.</p>
-
-	  <p>For example, the array schema</p>
-	  <source>{"type": "array", "items": "long"}</source>
-	  <p>serializing an array containing the items 3 and 27 could be
-	  serialized as 2 (encoded as hex 04) followed by 3 and 27
-	  (encoded as hex <code>06 36</code>) terminated by zero:</p>
-	  <source>04 06 36 00</source>
-
-	  <p>The blocked representation permits one to read and write
-	  arrays larger than can be buffered in memory, since one can
-	  start writing items without knowing the full length of the
-	  array.  The optional block sizes permit fast skipping
-	  through data, e.g., when projecting a record to a subset of
-	  its fields.</p>
-
-	</section>
-
-        <section>
-          <title>Maps</title>
-          <p>Maps are serialized as a series of <em>blocks</em>.  Each
-          block consists of a <code>long</code> <em>count</em> value,
-          followed by that many key/value pairs.  A block with count
-          zero indicates the end of the map.  Each item is serialized
-          per the map's value schema.</p>
-
-	  <p>If a block's count is negative, then the count is
-	  followed immediately by a <code>long</code>
-	  block <em>size</em>, indicating the number of bytes in the
-	  block.  The actual count in this case is the absolute value
-	  of the count written.</p>
-
-	  <p>The blocked representation permits one to read and write
-	  maps larger than can be buffered in memory, since one can
-	  start writing items without knowing the full length of the
-	  map.  The optional block sizes permit fast skipping through
-	  data, e.g., when projecting a record to a subset of its
-	  fields.</p>
-
-	  <p><em>NOTE: Blocking has not yet been fully implemented and
-	   may change.  Arbitrarily large objects must be easily
-	   writable and readable but until we have proven this with an
-	   implementation and tests this part of the specification
-	   should be considered draft.</em></p>
-	</section>
-
-        <section>
-          <title>Unions</title>
-	  <p>A union is serialized by first writing
-	    a <code>long</code> value indicating the zero-based
-	    position within the union of the schema of its value.  The
-	    value is then serialized per the indicated schema within
-	    the union.</p>
-	  <p>For example, the union
-	  schema <code>["string","null"]</code> would serialize:</p>
-          <ul>
-            <li><code>null</code> as 1 (the index of "null" in the
-            union, encoded as hex <code>02</code>): <source>02</source></li>
-            <li>the string <code>"a"</code> as zero (the index of
-            "string" in the union), followed by the serialized string:
-	      <source>00 02 61</source></li>
-          </ul>
-        </section>
-
-        <section>
-          <title>Fixed</title>
-	  <p>Fixed instances are serialized using the number of bytes
-	  declared in the schema.</p>
-        </section>
-
-      </section> <!-- end complex types -->
+      </section>
 
     </section>
 

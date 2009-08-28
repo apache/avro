@@ -14,6 +14,9 @@ Trunk (unreleased changes)
     AVRO-104. Permit null fields in Java reflection.
     (Eelco Hillenius via cutting)
 
+    AVRO-92. Describe JSON data encoding in specification
+    document. (cutting)
+
   IMPROVEMENTS
 
     AVRO-71.  C++: make deserializer more generic.  (Scott Banachowski
