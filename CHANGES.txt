@@ -17,6 +17,9 @@ Trunk (unreleased changes)
     AVRO-92. Describe JSON data encoding in specification
     document. (cutting)
 
+    AVRO-108.  Add Java implementation of binary comparator.
+    (cutting)
+
   IMPROVEMENTS
 
     AVRO-71.  C++: make deserializer more generic.  (Scott Banachowski
