@@ -31,7 +31,8 @@ public class BinaryData {
   private static final int LT = -2;
 
   /** Compare binary encoded data.  If equal, return zero.  If greater-than,
-   * return 1, if less than return -1. */
+   * return 1, if less than return -1. Order is consistent with that of {@link
+   * org.apache.avro.generic.GenericData#compare(Object, Object, Schema)}.*/
   public static int compare(byte[] b1, int s1,
                             byte[] b2, int s2,
                             Schema schema) {

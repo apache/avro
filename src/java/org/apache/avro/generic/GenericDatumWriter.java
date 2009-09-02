@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -33,11 +32,20 @@ import org.apache.avro.util.Utf8;
 
 /** {@link DatumWriter} for generic Java objects. */
 public class GenericDatumWriter<D> implements DatumWriter<D> {
+  private final GenericData data;
   private Schema root;
 
-  public GenericDatumWriter() {}
+  public GenericDatumWriter() { this(GenericData.get()); }
+
+  protected GenericDatumWriter(GenericData data) { this.data = data; }
 
   public GenericDatumWriter(Schema root) {
+    this();
+    setSchema(root);
+  }
+
+  protected GenericDatumWriter(Schema root, GenericData data) {
+    this(data);
     setSchema(root);
   }
 
@@ -56,7 +64,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     case ARRAY:  writeArray(schema, datum, out);  break;
     case MAP:    writeMap(schema, datum, out);    break;
     case UNION:
-      int index = resolveUnion(schema, datum);
+      int index = data.resolveUnion(schema, datum);
       out.writeIndex(index);
       write(schema.getTypes().get(index), datum, out);
       break;
@@ -169,87 +177,11 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     out.writeBytes((ByteBuffer)datum);
   }
 
-  private int resolveUnion(Schema union, Object datum) {
-    int i = 0;
-    for (Schema type : union.getTypes()) {
-      if (instanceOf(type, datum))
-        return i;
-      i++;
-    }
-    throw new AvroRuntimeException("Not in union "+union+": "+datum);
-  }
-
-  /** Called to resolve unions.  May be overridden for alternate data
-      representations.*/
-  protected boolean instanceOf(Schema schema, Object datum) {
-    switch (schema.getType()) {
-    case RECORD:
-      if (!isRecord(datum)) return false;
-      return (schema.getName() == null) ||
-        schema.getName().equals(getRecordSchema(datum).getName());
-    case ENUM:    return isEnum(datum);
-    case ARRAY:   return isArray(datum);
-    case MAP:     return isMap(datum);
-    case FIXED:   return isFixed(datum);
-    case STRING:  return isString(datum);
-    case BYTES:   return isBytes(datum);
-    case INT:     return datum instanceof Integer;
-    case LONG:    return datum instanceof Long;
-    case FLOAT:   return datum instanceof Float;
-    case DOUBLE:  return datum instanceof Double;
-    case BOOLEAN: return datum instanceof Boolean;
-    case NULL:    return datum == null;
-    default: throw new AvroRuntimeException("Unexpected type: " +schema);
-    }
-  }
-
-  /** Called to obtain the schema of a record.  By default calls
-   * {GenericRecord#getSchema().  May be overridden for alternate record
-   * representations. */
-  protected Schema getRecordSchema(Object record) {
-    return ((GenericRecord)record).getSchema();
-  }
-
   /** Called to write a fixed value.  May be overridden for alternate fixed
    * representations.*/
   protected void writeFixed(Schema schema, Object datum, Encoder out)
     throws IOException {
     out.writeFixed(((GenericFixed)datum).bytes(), 0, schema.getFixedSize());
-  }
-
-  /** Called by the default implementation of {@link #instanceOf}.*/
-  protected boolean isArray(Object datum) {
-    return datum instanceof GenericArray;
-  }
-
-  /** Called by the default implementation of {@link #instanceOf}.*/
-  protected boolean isRecord(Object datum) {
-    return datum instanceof GenericRecord;
-  }
-
-  /** Called by the default implementation of {@link #instanceOf}.*/
-  protected boolean isEnum(Object datum) {
-    return datum instanceof String;
-  }
-  
-  /** Called by the default implementation of {@link #instanceOf}.*/
-  protected boolean isMap(Object datum) {
-    return (datum instanceof Map) && (!(datum instanceof GenericRecord));
-  }
-  
-  /** Called by the default implementation of {@link #instanceOf}.*/
-  protected boolean isFixed(Object datum) {
-    return datum instanceof GenericFixed;
-  }
-
-  /** Called by the default implementation of {@link #instanceOf}.*/
-  protected boolean isString(Object datum) {
-    return datum instanceof Utf8;
-  }
-
-  /** Called by the default implementation of {@link #instanceOf}.*/
-  protected boolean isBytes(Object datum) {
-    return datum instanceof ByteBuffer;
   }
   
   private void error(Schema schema, Object datum) {

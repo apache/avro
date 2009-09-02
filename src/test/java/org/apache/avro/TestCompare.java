@@ -30,18 +30,22 @@ import java.util.HashMap;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.util.Utf8;
 
+import org.apache.avro.test.Simple;
+
 public class TestCompare {
 
   @Test
   public void testNull() throws Exception {
     Schema schema = Schema.parse("\"null\"");
-    byte[] b = render(null, schema);
+    byte[] b = render(null, schema, new GenericDatumWriter<Object>());
     assertEquals(0, BinaryData.compare(b, 0, b, 0, schema));
   }
 
@@ -95,14 +99,15 @@ public class TestCompare {
 
   @Test
   public void testArray() throws Exception {
-    GenericArray<Long> a1 = new GenericData.Array<Long>(1);
+    String json = "{\"type\":\"array\", \"items\": \"long\"}";
+    Schema schema = Schema.parse(json);
+    GenericArray<Long> a1 = new GenericData.Array<Long>(1, schema);
     a1.add(1L);
-    GenericArray<Long> a2 = new GenericData.Array<Long>(1);
+    GenericArray<Long> a2 = new GenericData.Array<Long>(1, schema);
     a2.add(1L);
     a2.add(0L);
-    check("{\"type\":\"array\", \"items\": \"long\"}", a1, a2);
+    check(json, a1, a2);
   }
-
 
   @Test
   public void testRecord() throws Exception {
@@ -133,25 +138,70 @@ public class TestCompare {
 
   @Test
   public void testUnion() throws Exception {
-    check("[\"string\", \"long\"]", new Utf8("a"), new Utf8("b"));
-    check("[\"string\", \"long\"]", new Long(1), new Long(2));
-    check("[\"string\", \"long\"]", new Utf8("a"), new Long(1));
+    check("[\"string\", \"long\"]", new Utf8("a"), new Utf8("b"), false);
+    check("[\"string\", \"long\"]", new Long(1), new Long(2), false);
+    check("[\"string\", \"long\"]", new Utf8("a"), new Long(1), false);
   }
+
+  @Test
+  public void testSpecificRecord() throws Exception {
+    Simple.TestRecord s1 = new Simple.TestRecord();
+    Simple.TestRecord s2 = new Simple.TestRecord();
+    s1.name = new Utf8("foo");
+    s2.name = new Utf8("foo");
+    s1.kind = Simple.Kind.BAR;
+    s2.kind = Simple.Kind.BAR;
+    s1.hash = new Simple.MD5();
+    s1.hash.bytes(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5});
+    s2.hash = new Simple.MD5();
+    s2.hash.bytes(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,6});
+    check(Simple.TestRecord._SCHEMA, s1, s2, true,
+          new SpecificDatumWriter(Simple.TestRecord._SCHEMA),
+          SpecificData.get());
+  }  
 
   private static void check(String schemaJson, Object o1, Object o2)
     throws Exception {
-    Schema schema = Schema.parse(schemaJson);
-    byte[] b1 = render(o1, schema);
-    byte[] b2 = render(o2, schema);
+    check(schemaJson, o1, o2, true);
+  }
+
+  private static void check(String schemaJson, Object o1, Object o2,
+                            boolean comparable)
+    throws Exception {
+    check(Schema.parse(schemaJson), o1, o2, comparable,
+          new GenericDatumWriter<Object>(), GenericData.get());
+  }
+
+  private static void check(Schema schema, Object o1, Object o2,
+                            boolean comparable,
+                            DatumWriter<Object> writer,
+                            GenericData comparator)
+    throws Exception {
+
+    byte[] b1 = render(o1, schema, writer);
+    byte[] b2 = render(o2, schema, writer);
     assertEquals(-1, BinaryData.compare(b1, 0, b2, 0, schema));
     assertEquals(1, BinaryData.compare(b2, 0, b1, 0, schema));
     assertEquals(0, BinaryData.compare(b1, 0, b1, 0, schema));
     assertEquals(0, BinaryData.compare(b2, 0, b2, 0, schema));
+
+    assertEquals(-1, compare(o1, o2, schema, comparable, comparator));
+    assertEquals(1, compare(o2, o1, schema, comparable, comparator));
+    assertEquals(0, compare(o1, o1, schema, comparable, comparator));
+    assertEquals(0, compare(o2, o2, schema, comparable, comparator));
   }
 
-  private static byte[] render(Object datum, Schema schema)
+  @SuppressWarnings(value="unchecked")
+  private static int compare(Object o1, Object o2, Schema schema,
+                             boolean comparable, GenericData comparator) {
+    return comparable
+      ? ((Comparable)o1).compareTo(o2)
+      : comparator.compare(o1, o2, schema);
+  }
+
+  private static byte[] render(Object datum, Schema schema,
+                               DatumWriter<Object> writer)
     throws IOException {
-    DatumWriter<Object> writer = new GenericDatumWriter<Object>();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);
     writer.write(datum, new BinaryEncoder(out));

@@ -214,7 +214,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case ENUM:
       return createEnum(json.getTextValue(), schema);
     case ARRAY:
-      Object array = newArray(old, json.size());
+      Object array = newArray(old, json.size(), schema);
       Schema element = schema.getElementType();
       for (JsonNode node : json)
         addToArray(array, defaultFieldValue(peekArray(array), element, node));
@@ -264,7 +264,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     Schema expectedType = expected.getElementType();
     long l = in.readArrayStart();
     if (l > 0) {
-      Object array = newArray(old, (int) l);
+      Object array = newArray(old, (int) l, expected);
       do {
         for (long i = 0; i < l; i++) {
           addToArray(array, read(peekArray(array), actualType, expectedType, in));  
@@ -273,7 +273,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       
       return array;
     } else {
-      return newArray(old, 0);
+      return newArray(old, 0, expected);
     }
   }
 
@@ -368,11 +368,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * different array implementation.  By default, this returns a {@link
    * GenericData.Array}.*/
   @SuppressWarnings("unchecked")
-  protected Object newArray(Object old, int size) {
+  protected Object newArray(Object old, int size, Schema schema) {
     if (old instanceof GenericArray) {
       ((GenericArray) old).clear();
       return old;
-    } else return new GenericData.Array(size);
+    } else return new GenericData.Array(size, schema);
   }
 
   /** Called to create new array instances.  Subclasses may override to use a

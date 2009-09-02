@@ -19,8 +19,10 @@ package org.apache.avro.util;
 
 import java.io.UnsupportedEncodingException;
 
+import org.apache.avro.io.BinaryData;
+
 /** A Utf8 string. */
-public class Utf8 {
+public class Utf8 implements Comparable<Utf8> {
   private static final byte[] EMPTY = new byte[0];
 
   byte[] bytes = EMPTY;
@@ -77,6 +79,9 @@ public class Utf8 {
     return hash;
   }
 
+  public int compareTo(Utf8 that) {
+    return BinaryData.compareBytes(this.bytes, 0, this.length,
+                                   that.bytes, 0, that.length);
+  }
+
 }
-
-

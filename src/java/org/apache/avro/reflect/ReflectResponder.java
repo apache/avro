@@ -42,7 +42,7 @@ public class ReflectResponder extends Responder {
   protected String packageName;
 
   public ReflectResponder(Class iface, Object impl) {
-    this(iface, impl, new ReflectData());
+    this(iface, impl, ReflectData.get());
   }
   
   public ReflectResponder(Class iface, Object impl, ReflectData reflectData) {

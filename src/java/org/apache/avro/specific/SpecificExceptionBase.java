@@ -25,7 +25,7 @@ import org.apache.avro.ipc.AvroRemoteException;
 public abstract class SpecificExceptionBase extends AvroRemoteException
   implements SpecificRecord {
 
-  public abstract Schema schema();
+  public abstract Schema getSchema();
   public abstract Object get(int field);
   public abstract void set(int field, Object value);
 

@@ -36,6 +36,7 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.ipc.AvroRemoteException;
@@ -45,26 +46,50 @@ import com.thoughtworks.paranamer.CachingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
-public class ReflectData {
+public class ReflectData extends GenericData {
   
-  /** Create a {@link ReflectData} instance that permits record fields to be
-   * null.  The schema generated for each field is a union of its declared type
-   * and null. */
-  public static ReflectData newNullAllowingInstance() {
-    return new ReflectData() {
-      @Override
-        protected Schema createFieldSchema(Field field,
-                                           Map<String, Schema> names) {
-        Schema schema = super.createFieldSchema(field, names);
-        return Schema.createUnion(Arrays.asList(new Schema[] { schema,
+  /** {@link ReflectData} implementation that permits null field values.  The
+   * schema generated for each field is a union of its declared type and
+   * null. */
+  public static class AllowNull extends ReflectData {
+
+    private static final AllowNull INSTANCE = new AllowNull();
+
+    /** Return the singleton instance. */
+    public static AllowNull get() { return INSTANCE; }
+
+    protected Schema createFieldSchema(Field field, Map<String, Schema> names) {
+      Schema schema = super.createFieldSchema(field, names);
+      return Schema.createUnion(Arrays.asList(new Schema[] {
+            schema,
             Schema.create(Schema.Type.NULL) }));
-      }
-    };
+    }
   }
   
-  public ReflectData() {}
+  private static final ReflectData INSTANCE = new ReflectData();
+
+  protected ReflectData() {}
   
+  /** Return the singleton instance. */
+  public static ReflectData get() { return INSTANCE; }
+
+  @Override
+  protected boolean isRecord(Object datum) {
+    return getSchema(datum.getClass()).getType() == Type.RECORD;
+  }
+
+  @Override
+  protected Schema getRecordSchema(Object record) {
+    return getSchema(record.getClass());
+  }
+
+  @Override
+  protected boolean isEnum(Object datum) {
+    return datum instanceof Enum;
+  }
+
   /** Returns true if an object matches a schema. */
+  @Override
   public boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
     case RECORD:

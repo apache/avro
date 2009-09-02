@@ -71,7 +71,8 @@ public class RandomData implements Iterable<Object> {
       return symbols.get(random.nextInt(symbols.size()));
     case ARRAY:
       int length = (random.nextInt(5)+2)-d;
-      GenericArray<Object> array = new GenericData.Array(length<=0?0:length);
+      GenericArray<Object> array =
+        new GenericData.Array(length<=0?0:length, schema);
       for (int i = 0; i < length; i++)
         array.add(generate(schema.getElementType(), random, d+1));
       return array;

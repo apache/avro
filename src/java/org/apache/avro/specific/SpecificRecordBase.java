@@ -20,8 +20,10 @@ package org.apache.avro.specific;
 import org.apache.avro.Schema;
 
 /** Base class for generated record classes. */
-public abstract class SpecificRecordBase implements SpecificRecord {
-  public abstract Schema schema();
+public abstract class SpecificRecordBase
+  implements SpecificRecord, Comparable<SpecificRecord> {
+
+  public abstract Schema getSchema();
   public abstract Object get(int field);
   public abstract void set(int field, Object value);
 
@@ -34,9 +36,9 @@ public abstract class SpecificRecordBase implements SpecificRecord {
     if (!(o instanceof SpecificRecord)) return false;
 
     SpecificRecord r2 = (SpecificRecord)o;
-    if (!r1.schema().equals(r2.schema())) return false;
+    if (!r1.getSchema().equals(r2.getSchema())) return false;
 
-    int end = r1.schema().getFields().size();
+    int end = r1.getSchema().getFields().size();
     for (int i = 0; i < end; i++) {
       Object v1 = r1.get(i);
       Object v2 = r2.get(i);
@@ -55,10 +57,15 @@ public abstract class SpecificRecordBase implements SpecificRecord {
 
   static int hashCode(SpecificRecord r) {
     int result = 0;
-    int end = r.schema().getFields().size();
+    int end = r.getSchema().getFields().size();
     for (int i = 0; i < end; i++)
       result += r.get(i).hashCode();
     return result;
+  }
+
+  @SuppressWarnings(value="unchecked")
+  public int compareTo(SpecificRecord that) {
+    return SpecificData.get().compare(this, that, this.getSchema());
   }
 
 }

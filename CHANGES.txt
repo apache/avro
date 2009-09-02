@@ -4,6 +4,24 @@ Trunk (unreleased changes)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-110. GenericData and ReflectData have been converted to use a
+    singleton pattern.  Calls to static methods on these classes must
+    be replaced with calls on the singleton instance. (cutting)
+
+    AVRO-41. GenericArray's constructor now requires a Schema, so that
+    it may implement Comparable consistently with AVRO-108. (cutting)
+
+    AVRO-41. Several GenericDatumWriter methods (instanceOf(),
+    isRecord(), etc.) have been moved to GenericData, where they can
+    better be shared with comparators.  Applications which subclassed
+    GenericDatumWriter overriding these methods must now instead
+    subclass GenericData and pass their subclass to
+    GenericDatumWriter. (cutting)
+
+    AVRO-41. SpecificRecord's schema() method has been renamed
+    getSchema(), since it now implements the new GenericContainer
+    interface shared with GenericRecord. (cutting)
+
   NEW FEATURES
 
     AVRO-50. Implmenent JSON data codec in Java. (Thiruvalluvan
@@ -19,6 +37,10 @@ Trunk (unreleased changes)
 
     AVRO-108.  Add Java implementation of binary comparator.
     (cutting)
+
+    AVRO-41. Java generic and specific data instances now implement
+    Comparable.  The implementation is consistent with the binary
+    comparator added in AVRO-108. (cutting)
 
   IMPROVEMENTS
 

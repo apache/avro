@@ -154,7 +154,7 @@ public class SpecificCompiler {
         line(d+1,"public "+unbox(field.getValue(),fieldName)+" "+fieldName+";");
       }
       // schema method
-      line(d+1, "public Schema schema() { return _SCHEMA; }");
+      line(d+1, "public Schema getSchema() { return _SCHEMA; }");
       // get method
       line(d+1, "public Object get(int _field) {");
       line(d+2, "switch (_field) {");

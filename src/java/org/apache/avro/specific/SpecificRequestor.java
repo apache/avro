@@ -26,7 +26,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectRequestor;
 
 /** {@link org.apache.avro.ipc.Requestor Requestor} for generated interfaces. */
@@ -34,12 +33,13 @@ public class SpecificRequestor extends ReflectRequestor {
   
   public SpecificRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
-    this(iface, transceiver, new ReflectData());
+    this(iface, transceiver, SpecificData.get());
   }
 
-  public SpecificRequestor(Class<?> iface, Transceiver transceiver, ReflectData reflectData)
+  public SpecificRequestor(Class<?> iface, Transceiver transceiver,
+                           SpecificData specificData)
     throws IOException {
-    this(reflectData.getProtocol(iface), transceiver);
+    this(specificData.getProtocol(iface), transceiver);
   }
   
   private SpecificRequestor(Protocol protocol, Transceiver transceiver)
@@ -58,13 +58,14 @@ public class SpecificRequestor extends ReflectRequestor {
   /** Create a proxy instance whose methods invoke RPCs. */
   public static Object getClient(Class<?> iface, Transceiver transciever)
     throws IOException {
-    return getClient(iface, transciever, new ReflectData());
+    return getClient(iface, transciever, SpecificData.get());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, Transceiver transciever, ReflectData reflectData)
+  public static Object getClient(Class<?> iface, Transceiver transciever,
+                                 SpecificData specificData)
     throws IOException {
-    Protocol protocol = reflectData.getProtocol(iface);
+    Protocol protocol = specificData.getProtocol(iface);
     return Proxy.newProxyInstance(iface.getClassLoader(),
                                   new Class[] { iface },
                                   new SpecificRequestor(protocol, transciever));

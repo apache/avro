@@ -40,12 +40,12 @@ public class ReflectRequestor extends Requestor implements InvocationHandler {
   
   public ReflectRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
-    this(iface, transceiver, new ReflectData());
+    this(iface, transceiver, ReflectData.get());
   }
 
   protected ReflectRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
-    this(protocol, transceiver, new ReflectData());
+    this(protocol, transceiver, ReflectData.get());
   }
 
   public ReflectRequestor(Class<?> iface, Transceiver transceiver, ReflectData reflectData)
@@ -92,7 +92,7 @@ public class ReflectRequestor extends Requestor implements InvocationHandler {
   /** Create a proxy instance whose methods invoke RPCs. */
   public static Object getClient(Class<?> iface, Transceiver transciever)
     throws IOException {
-    return getClient(iface, transciever, new ReflectData());
+    return getClient(iface, transciever, ReflectData.get());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

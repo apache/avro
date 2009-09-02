@@ -53,17 +53,17 @@ public class TestReflect {
   @Test
   public void testSchema() throws IOException {
     assertEquals(PROTOCOL.getTypes().get("TestRecord"),
-                 new ReflectData().getSchema(TestRecord.class));
+                 ReflectData.get().getSchema(TestRecord.class));
   }
 
   @Test
   public void testProtocol() throws IOException {
-    assertEquals(PROTOCOL, new ReflectData().getProtocol(Simple.class));
+    assertEquals(PROTOCOL, ReflectData.get().getProtocol(Simple.class));
   }
 
   @Test
   public void testRecord() throws IOException {
-    Schema schm = new ReflectData().getSchema(SampleRecord.class);
+    Schema schm = ReflectData.get().getSchema(SampleRecord.class);
     String prefix = getPrefix(SampleRecord.class);
     ReflectDatumWriter writer = new ReflectDatumWriter(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -80,7 +80,7 @@ public class TestReflect {
 
   @Test
   public void testRecordWithNull() throws IOException {
-    ReflectData reflectData = ReflectData.newNullAllowingInstance();
+    ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schm = reflectData.getSchema(AnotherSampleRecord.class);
     String prefix = getPrefix(AnotherSampleRecord.class);
     ReflectDatumWriter writer = new ReflectDatumWriter(schm);

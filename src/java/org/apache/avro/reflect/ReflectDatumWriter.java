@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -30,23 +29,20 @@ import org.apache.avro.io.Encoder;
  * via Java reflection.
  */
 public class ReflectDatumWriter extends GenericDatumWriter<Object> {
-  private final ReflectData reflectData;
-  
   public ReflectDatumWriter() {
-    this(new ReflectData());
+    this(ReflectData.get());
   }
 
   public ReflectDatumWriter(Schema root) {
-    this(root, new ReflectData());
+    this(root, ReflectData.get());
   }
 
   public ReflectDatumWriter(Schema root, ReflectData reflectData) {
-    super(root);
-    this.reflectData = reflectData;
+    super(root, reflectData);
   }
   
   public ReflectDatumWriter(ReflectData reflectData) {
-    this.reflectData = reflectData;
+    super(reflectData);
   }
   
   protected Object getField(Object record, String name, int position) {
@@ -64,16 +60,6 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
 
   protected boolean isEnum(Object datum) {
     return datum instanceof Enum;
-  }
-
-  @Override
-  protected boolean isRecord(Object datum) {
-    return reflectData.getSchema(datum.getClass()).getType() == Type.RECORD;
-  }
-
-  @Override
-  protected Schema getRecordSchema(Object record) {
-    return reflectData.getSchema(record.getClass());
   }
 
 }

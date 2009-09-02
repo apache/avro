@@ -89,9 +89,11 @@ public class TestSchema {
 
   @Test
   public void testArray() throws Exception {
-    GenericArray<Long> array = new GenericData.Array<Long>(1);
+    String json = "{\"type\":\"array\", \"items\": \"long\"}";
+    Schema schema = Schema.parse(json);
+    GenericArray<Long> array = new GenericData.Array<Long>(1, schema);
     array.add(1L);
-    check("{\"type\":\"array\", \"items\": \"long\"}", "[1]", array);
+    check(json, "[1]", array);
   }
 
   @Test
@@ -194,15 +196,15 @@ public class TestSchema {
     Schema schema = Schema.parse(jsonSchema);
     //System.out.println(schema);
     for (Object datum : new RandomData(schema, COUNT)) {
-      //System.out.println(GenericData.toString(datum));
+      //System.out.println(GenericData.get().toString(datum));
 
       if (induce) {
-        Schema induced = GenericData.induce(datum);
+        Schema induced = GenericData.get().induce(datum);
         assertEquals("Induced schema does not match.", schema, induced);
       }
         
       assertTrue("Datum does not validate against schema "+datum,
-                 GenericData.validate(schema, datum));
+                 GenericData.get().validate(schema, datum));
 
       checkBinary(schema, datum,
                   new GenericDatumWriter<Object>(),

@@ -47,7 +47,7 @@ public class TestDataFileReflect {
   public void testMultiReflectWithUnionBeforeWriting() throws IOException {
     FileOutputStream fos = new FileOutputStream(FILE);
 
-    ReflectData reflectData = new ReflectData();
+    ReflectData reflectData = ReflectData.get();
     List<Schema> schemas = Arrays.asList(new Schema[] {
         reflectData.getSchema(FooRecord.class),
         reflectData.getSchema(BarRecord.class) });
@@ -83,7 +83,7 @@ public class TestDataFileReflect {
   public void testMultiReflectWithUntionAfterWriting() throws IOException {
     FileOutputStream fos = new FileOutputStream(FILE);
 
-    ReflectData reflectData = new ReflectData();
+    ReflectData reflectData = ReflectData.get();
     List<Schema> schemas = new ArrayList<Schema>();
     schemas.add(reflectData.getSchema(FooRecord.class));
     Schema union = Schema.createUnion(schemas);
@@ -129,7 +129,7 @@ public class TestDataFileReflect {
   public void testNull() throws IOException {
     FileOutputStream fos = new FileOutputStream(FILE);
 
-    ReflectData reflectData = ReflectData.newNullAllowingInstance();
+    ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schema = reflectData.getSchema(BarRecord.class);
     DataFileWriter<Object> writer = new DataFileWriter<Object>(schema, fos,
         new ReflectDatumWriter(schema, reflectData));
