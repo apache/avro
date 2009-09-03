@@ -111,15 +111,23 @@ public class TestCompare {
 
   @Test
   public void testRecord() throws Exception {
-    String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
-      +"[{\"name\":\"f\",\"type\":\"int\"},{\"name\":\"g\",\"type\":\"int\"}]}";
+    String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":["
+      +"{\"name\":\"f\",\"type\":\"int\",\"order\":\"ignore\"},"
+      +"{\"name\":\"g\",\"type\":\"int\",\"order\":\"descending\"},"
+      +"{\"name\":\"h\",\"type\":\"int\"}]}";
     Schema schema = Schema.parse(recordJson);
     GenericData.Record r1 = new GenericData.Record(schema);
-    r1.put("f", 11);
-    r1.put("g", 12);
+    r1.put("f", 1);
+    r1.put("g", 13);
+    r1.put("h", 41);
     GenericData.Record r2 = new GenericData.Record(schema);
-    r2.put("f", 11);
+    r2.put("f", 0);
+    r2.put("g", 12);
+    r2.put("h", 41);
+    check(recordJson, r1, r2);
+    r2.put("f", 0);
     r2.put("g", 13);
+    r2.put("h", 42);
     check(recordJson, r1, r2);
   }
 
@@ -148,13 +156,17 @@ public class TestCompare {
     Simple.TestRecord s1 = new Simple.TestRecord();
     Simple.TestRecord s2 = new Simple.TestRecord();
     s1.name = new Utf8("foo");
-    s2.name = new Utf8("foo");
-    s1.kind = Simple.Kind.BAR;
-    s2.kind = Simple.Kind.BAR;
+    s1.kind = Simple.Kind.BAZ;
     s1.hash = new Simple.MD5();
     s1.hash.bytes(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5});
+    s2.name = new Utf8("bar");
+    s2.kind = Simple.Kind.BAR;
     s2.hash = new Simple.MD5();
     s2.hash.bytes(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,6});
+    check(Simple.TestRecord._SCHEMA, s1, s2, true,
+          new SpecificDatumWriter(Simple.TestRecord._SCHEMA),
+          SpecificData.get());
+    s2.kind = Simple.Kind.BAZ;
     check(Simple.TestRecord._SCHEMA, s1, s2, true,
           new SpecificDatumWriter(Simple.TestRecord._SCHEMA),
           SpecificData.get());

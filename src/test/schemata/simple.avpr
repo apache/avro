@@ -8,8 +8,8 @@
 
      {"name": "TestRecord", "type": "record",
       "fields": [
-          {"name": "name", "type": "string"},
-          {"name": "kind", "type": "Kind"},
+          {"name": "name", "type": "string", "order": "ignore"},
+          {"name": "kind", "type": "Kind", "order": "descending"},
           {"name": "hash", "type": "MD5"}
       ]
      },

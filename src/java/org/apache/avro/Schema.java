@@ -223,18 +223,33 @@ public abstract class Schema {
 
   /** A field within a record. */
   public static class Field {
+
+    /** How values of this field should be ordered when sorting records. */
+    public enum Order {
+      ASCENDING, DESCENDING, IGNORE;
+      private String name;
+      private Order() { this.name = this.name().toLowerCase(); }
+    };
+
     private int position = -1;
     private final Schema schema;
     private final JsonNode defaultValue;
+    private final Order order;
+
     public Field(Schema schema, JsonNode defaultValue) {
+      this(schema, defaultValue, Order.ASCENDING);
+    }
+    public Field(Schema schema, JsonNode defaultValue, Order order) {
       this.schema = schema;
       this.defaultValue = defaultValue;
+      this.order = order;
     }
     /** The position of this field within the record. */
     public int pos() { return position; }
     /** This field's {@link Schema}. */
     public Schema schema() { return schema; }
     public JsonNode defaultValue() { return defaultValue; }
+    public Order order() { return order; }
     public boolean equals(Object other) {
       if (other == this) return true;
       if (!(other instanceof Field)) return false;
@@ -245,6 +260,7 @@ public abstract class Schema {
          ? that.defaultValue == null
          : (defaultValue.equals(that.defaultValue)));
     }
+    public int hashCode() { return schema.hashCode(); }
   }
 
   private static abstract class NamedSchema extends Schema {
@@ -377,6 +393,8 @@ public abstract class Schema {
           gen.writeFieldName("default");
           gen.writeTree(entry.getValue().defaultValue());
         }
+        if (entry.getValue().order() != Field.Order.ASCENDING)
+          gen.writeStringField("order", entry.getValue().order().name);
         gen.writeEndObject();
       }
       gen.writeEndArray();
@@ -657,8 +675,12 @@ public abstract class Schema {
           if (fieldTypeNode == null)
             throw new SchemaParseException("No field type: "+field);
           Schema fieldSchema = parse(fieldTypeNode, names);
+          Field.Order order = Field.Order.ASCENDING;
+          JsonNode orderNode = field.get("order");
+          if (orderNode != null)
+            order = Field.Order.valueOf(orderNode.getTextValue().toUpperCase());
           fields.put(fieldNameNode.getTextValue(),
-                     new Field(fieldSchema, field.get("default")));
+                     new Field(fieldSchema, field.get("default"), order));
         }
         result.setFields(fields);
         return result;

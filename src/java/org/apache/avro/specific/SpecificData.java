@@ -17,9 +17,10 @@
  */
 package org.apache.avro.specific;
 
-import java.util.Map;
+import java.util.Iterator;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.reflect.ReflectData;
 
 /** Utilities for generated Java classes and interfaces. */
@@ -48,11 +49,14 @@ public class SpecificData extends ReflectData {
     case RECORD:
       SpecificRecord r1 = (SpecificRecord)o1;
       SpecificRecord r2 = (SpecificRecord)o2;
-      int i = 0;
-      for (Map.Entry<String, Schema> e : s.getFieldSchemas()) {
-        int compare = compare(r1.get(i), r2.get(i), e.getValue());
-        if (compare != 0) return compare;
-        i++;
+      Iterator<Field> fields = s.getFields().values().iterator();
+      for (int i = 0; fields.hasNext(); i++) {
+        Field f = fields.next();
+        if (f.order() == Field.Order.IGNORE)
+          continue;                               // ignore this field
+        int compare = compare(r1.get(i), r2.get(i), f.schema());
+        if (compare != 0)                         // not equal
+          return f.order() == Field.Order.DESCENDING ? -compare : compare;
       }
       return 0;
     case ENUM:

@@ -389,10 +389,14 @@ public class GenericData {
     case RECORD:
       GenericRecord r1 = (GenericRecord)o1;
       GenericRecord r2 = (GenericRecord)o2;
-      for (Map.Entry<String, Schema> e : s.getFieldSchemas()) {
-        String field = e.getKey();
-        int compare = compare(r1.get(field), r2.get(field), e.getValue());
-        if (compare != 0) return compare;
+      for (Map.Entry<String, Field> e : s.getFields().entrySet()) {
+        Field f = e.getValue();
+        if (f.order() == Field.Order.IGNORE)
+          continue;                               // ignore this field
+        String name = e.getKey();
+        int compare = compare(r1.get(name), r2.get(name), f.schema());
+        if (compare != 0)                         // not equal
+          return f.order() == Field.Order.DESCENDING ? -compare : compare;
       }
       return 0;
     case ENUM:

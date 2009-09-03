@@ -18,17 +18,46 @@
 package org.apache.avro.io;
 
 import java.util.Map;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.generic.GenericDatumReader;
 
 /** Utilities for binary-encoded data. */
 public class BinaryData {
 
   private BinaryData() {}                      // no public ctor
 
-  private static final int GT = -1;
-  private static final int LT = -2;
+  private static class Buffer extends ByteArrayInputStream {
+    public Buffer() { super(new byte[0]); }
+    public byte[] buf() { return buf; }
+    public int pos() { return pos; }
+    public void skip(int i) { this.pos += i; }
+    public void set(byte[] buf, int pos) {
+      this.buf = buf;
+      this.pos = pos;
+      this.count = buf.length;
+    }
+  }
+
+  private static class Decoders {
+    private final Buffer b1, b2;
+    private final Decoder d1, d2;
+    public Decoders() {
+      this.b1 = new Buffer();
+      this.b2 = new Buffer();
+      this.d1 = new BinaryDecoder(b1);
+      this.d2 = new BinaryDecoder(b2);
+    }
+  }
+
+  private static final ThreadLocal<Decoders> DECODERS
+    = new ThreadLocal<Decoders>() {
+    @Override protected Decoders initialValue() { return new Decoders(); }
+  };
 
   /** Compare binary encoded data.  If equal, return zero.  If greater-than,
    * return 1, if less than return -1. Order is consistent with that of {@link
@@ -36,103 +65,107 @@ public class BinaryData {
   public static int compare(byte[] b1, int s1,
                             byte[] b2, int s2,
                             Schema schema) {
-    int comp = comp(b1, s1, b2, s2, schema);          // compare
-    return (comp >= 0) ? 0 : ((comp == GT) ? 1 : -1); // decode comparison
+    Decoders decoders = DECODERS.get();
+    decoders.b1.set(b1, s1);
+    decoders.b2.set(b2, s2);
+    try {
+      return compare(decoders, schema);
+    } catch (IOException e) {
+      throw new AvroRuntimeException(e);
+    }
   }
-   
+
   /** If equal, return the number of bytes consumed.  If greater than, return
    * GT, if less than, return LT. */
-  private static int comp(byte[] b1, int s1, byte[] b2, int s2, Schema schema) {
+  private static int compare(Decoders d, Schema schema) throws IOException {
+    Decoder d1 = d.d1; Decoder d2 = d.d2;
     switch (schema.getType()) {
     case RECORD: {
-      int size = 0;
-      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
-        int comp = comp(b1, s1+size, b2, s2+size, entry.getValue());
-        if (comp < 0) return comp;
-        size += comp;
+      for (Map.Entry<String, Field> entry : schema.getFields().entrySet()) {
+        Field field = entry.getValue();
+        if (field.order() == Field.Order.IGNORE) {
+          GenericDatumReader.skip(field.schema(), d1);
+          GenericDatumReader.skip(field.schema(), d2);
+          continue;
+        }
+        int c = compare(d, field.schema());
+        if (c != 0)
+          return (field.order() != Field.Order.DESCENDING) ? c : -c;
       }
-      return size;
+      return 0;
     }
     case ENUM: case INT: case LONG: {
-      long l1 = readLong(b1, s1);
-      long l2 = readLong(b2, s2);
-      return (l1 == l2) ? longSize(l1) : ((l1 > l2) ? GT : LT);
+      long l1 = d1.readLong();
+      long l2 = d2.readLong();
+      return l1 == l2 ? 0 : (l1 > l2 ? 1 : -1);
     }
     case ARRAY: {
       long i = 0;                                 // position in array
       long r1 = 0, r2 = 0;                        // remaining in current block
       long l1 = 0, l2 = 0;                        // total array length
-      int size1 = 0, size2 = 0;                   // total array size
       while (true) {
         if (r1 == 0) {                            // refill blocks(s)
-          r1 = readLong(b1, s1+size1);
-          size1 += longSize(r1);
+          r1 = d1.readLong();
+          if (r1 < 0) { r1 = -r1; d1.readLong(); }
           l1 += r1;
         }
         if (r2 == 0) {
-          r2 = readLong(b2, s2+size2);
-          size2 += longSize(r2);
+          r2 = d2.readLong();
+          if (r2 < 0) { r2 = -r2; d2.readLong(); }
           l2 += r2;
         }
         if (r1 == 0 || r2 == 0)                   // empty block: done
-          return (l1 == l2) ? size1 : ((l1 > l2) ? GT : LT);
+          return (l1 == l2) ? 0 : ((l1 > l2) ? 1 : -1);
         long l = Math.min(l1, l2);
         while (i < l) {                           // compare to end of block
-          int comp = comp(b1, s1+size1, b2, s2+size2, schema.getElementType());
-          if (comp < 0) return comp;
-          size1 += comp;
-          size2 += comp;
+          int c = compare(d, schema.getElementType());
+          if (c != 0) return c;
           i++; r1--; r2--;
         }
       }
-      }
+    }
     case MAP:
       throw new AvroRuntimeException("Can't compare maps!");
     case UNION: {
-      int i1 = readInt(b1, s1);
-      int i2 = readInt(b2, s2);
+      int i1 = d1.readInt();
+      int i2 = d2.readInt();
       if (i1 == i2) {
-        int size = intSize(i1);
-        return comp(b1, s1+size, b2, s2+size, schema.getTypes().get(i1));
+        return compare(d, schema.getTypes().get(i1));
       } else {
-        return (i1 > i2) ? GT : LT;
+        return i1 - i2;
       }
     }
     case FIXED: {
       int size = schema.getFixedSize();
-      int c = compareBytes(b1, s1, size, b2, s2, size);
-      return (c == 0) ? size : ((c > 0) ? GT : LT);
+      int c = compareBytes(d.b1.buf(), d.b1.pos(), size,
+                           d.b2.buf(), d.b2.pos(), size);
+      d.b1.skip(size);
+      d.b2.skip(size);
+      return c;
     }
     case STRING: case BYTES: {
-      int l1 = readInt(b1, s1);
-      int l2 = readInt(b2, s2);
-      int size1 = intSize(l1);
-      int size2 = intSize(l2);
-      int c = compareBytes(b1, s1+size1, l1, b2, s2+size2, l2);
-      return (c == 0) ? size1+l1 : ((c > 0) ? GT : LT);
+      int l1 = d1.readInt();
+      int l2 = d2.readInt();
+      int c = compareBytes(d.b1.buf(), d.b1.pos(), l1,
+                           d.b2.buf(), d.b2.pos(), l2);
+      d.b1.skip(l1);
+      d.b2.skip(l2);
+      return c;
     }
     case FLOAT: {
-      int n1 = 0, n2 = 0;
-      for (int i = 0, shift = 0; i < 4; i++, shift += 8) {
-        n1 |= (b1[s1+i] & 0xff) << shift;
-        n2 |= (b2[s2+i] & 0xff) << shift;
-      }
-      float f1 = Float.intBitsToFloat(n1);
-      float f2 = Float.intBitsToFloat(n2);
-      return (f1 == f2) ? 4 : ((f1 > f2) ? GT : LT);
+      float f1 = d1.readFloat();
+      float f2 = d2.readFloat();
+      return (f1 == f2) ? 0 : ((f1 > f2) ? 1 : -1);
     }
     case DOUBLE: {
-      long n1 = 0, n2 = 0;
-      for (int i = 0, shift = 0; i < 8; i++, shift += 8) {
-        n1 |= (b1[s1+i] & 0xffL) << shift;
-        n2 |= (b2[s2+i] & 0xffL) << shift;
-      }
-      double d1 = Double.longBitsToDouble(n1);
-      double d2 = Double.longBitsToDouble(n2);
-      return (d1 == d2) ? 8 : ((d1 > d2) ? GT : LT);
+      double f1 = d1.readDouble();
+      double f2 = d2.readDouble();
+      return (f1 == f2) ? 0 : ((f1 > f2) ? 1 : -1);
     }
     case BOOLEAN:
-      return b1[s1] == b2[s2] ? 1 : ((b1[s1] > b2[s2]) ? GT : LT);
+      boolean b1 = d1.readBoolean();
+      boolean b2 = d2.readBoolean();
+      return (b1 == b2) ? 0 : (b1 ? 1 : -1);
     case NULL:
       return 0;
     default:
@@ -154,38 +187,6 @@ public class BinaryData {
       }
     }
     return l1 - l2;
-  }
-
-  private static int readInt(byte[] b, int s) {
-    long l = readLong(b, s);
-    if (l < Integer.MIN_VALUE || Integer.MAX_VALUE < l)
-      throw new AvroRuntimeException("Integer overflow.");
-    return (int)l;
-  }
-
-
-  private static long readLong(byte[] buffer, int s) {
-    long n = 0;
-    for (int shift = 0; ; shift += 7) {
-      long b = buffer[s++];
-      n |= (b & 0x7F) << shift;
-      if ((b & 0x80) == 0) {
-        break;
-      }
-    }
-    return (n >>> 1) ^ -(n & 1);                  // back to two's-complement
-  }
-
-  private static int intSize(int i) { return longSize(i); }
-
-  private static int longSize(long n) {
-    int size = 1;
-    n = (n << 1) ^ (n >> 63);                     // move sign to low-order bit
-    while ((n & ~0x7F) != 0) {
-      size++;
-      n >>>= 7;
-    }
-    return size;
   }
 
 }

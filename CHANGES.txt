@@ -42,6 +42,11 @@ Trunk (unreleased changes)
     Comparable.  The implementation is consistent with the binary
     comparator added in AVRO-108. (cutting)
 
+    AVRO-109.  Add Java support for controlling sort order via schema
+    annotations.  Record fields now support an "order" attribute whose
+    possible values are "increasing" (the default), "decreasing", and
+    "ignore".  (cutting)
+
   IMPROVEMENTS
 
     AVRO-71.  C++: make deserializer more generic.  (Scott Banachowski
