@@ -42,125 +42,160 @@ avro::CompilerContext &context(void *ctx) {
 %pure-parser
 %error-verbose
 
-%token AVRO_LEX_INT AVRO_LEX_LONG AVRO_LEX_FLOAT AVRO_LEX_DOUBLE
-%token AVRO_LEX_BOOL AVRO_LEX_NULL AVRO_LEX_BYTES AVRO_LEX_STRING
+%token AVRO_LEX_INT AVRO_LEX_LONG 
+%token AVRO_LEX_FLOAT AVRO_LEX_DOUBLE
+%token AVRO_LEX_BOOL AVRO_LEX_NULL 
+%token AVRO_LEX_BYTES AVRO_LEX_STRING 
 %token AVRO_LEX_RECORD AVRO_LEX_ENUM AVRO_LEX_ARRAY AVRO_LEX_MAP AVRO_LEX_UNION AVRO_LEX_FIXED
-%token AVRO_LEX_SYMBOL AVRO_LEX_SIZE
-%token AVRO_LEX_TYPE AVRO_LEX_ITEMS AVRO_LEX_NAME AVRO_LEX_VALUES AVRO_LEX_FIELDS 
+
+%token AVRO_LEX_METADATA
+
+%token AVRO_LEX_SYMBOLS AVRO_LEX_SYMBOLS_END
+%token AVRO_LEX_FIELDS AVRO_LEX_FIELDS_END AVRO_LEX_FIELD AVRO_LEX_FIELD_END
+
+%token AVRO_LEX_TYPE AVRO_LEX_ITEMS AVRO_LEX_VALUES 
+
+// Tokens that output text:
+%token AVRO_LEX_OUTPUT_TEXT_BEGIN
+%token AVRO_LEX_NAME
+%token AVRO_LEX_NAMED_TYPE
+%token AVRO_LEX_FIELD_NAME
+%token AVRO_LEX_SYMBOL
+%token AVRO_LEX_SIZE
+%token AVRO_LEX_OUTPUT_TEXT_END
+
+%token AVRO_LEX_SIMPLE_TYPE
 
 %%
 
 avroschema: 
-        primitive | avroobject | union_t
+        simpleprimitive | object | union_t
         ;
-
-avroobject:
-        primitiveobject | record_t | array_t | map_t | enum_t | fixed_t
-        ;
-
-primitiveobject:
-        '{' AVRO_LEX_TYPE primitive '}'
-        ;
-
+ 
 primitive:
-        AVRO_LEX_INT    { context(ctx).addPrimitive(avro::AVRO_INT); }
+        AVRO_LEX_INT    { context(ctx).addType(avro::AVRO_INT); }
         |
-        AVRO_LEX_LONG   { context(ctx).addPrimitive(avro::AVRO_LONG); }
+        AVRO_LEX_LONG   { context(ctx).addType(avro::AVRO_LONG); }
         |
-        AVRO_LEX_FLOAT  { context(ctx).addPrimitive(avro::AVRO_FLOAT); }
+        AVRO_LEX_FLOAT  { context(ctx).addType(avro::AVRO_FLOAT); }
         |
-        AVRO_LEX_DOUBLE { context(ctx).addPrimitive(avro::AVRO_DOUBLE); }
+        AVRO_LEX_DOUBLE { context(ctx).addType(avro::AVRO_DOUBLE); }
         |
-        AVRO_LEX_BOOL   { context(ctx).addPrimitive(avro::AVRO_BOOL); }
+        AVRO_LEX_BOOL   { context(ctx).addType(avro::AVRO_BOOL); }
         |
-        AVRO_LEX_NULL   { context(ctx).addPrimitive(avro::AVRO_NULL); }
+        AVRO_LEX_NULL   { context(ctx).addType(avro::AVRO_NULL); }
         |
-        AVRO_LEX_BYTES  { context(ctx).addPrimitive(avro::AVRO_BYTES); }
+        AVRO_LEX_BYTES  { context(ctx).addType(avro::AVRO_BYTES); }
         |
-        AVRO_LEX_STRING { context(ctx).addPrimitive(avro::AVRO_STRING); }
+        AVRO_LEX_STRING { context(ctx).addType(avro::AVRO_STRING); }
         |
-        AVRO_LEX_SYMBOL { context(ctx).addSymbol(); }
+        AVRO_LEX_NAMED_TYPE { context(ctx).addNamedType(); }
         ;
 
-recordtag: 
-        AVRO_LEX_TYPE AVRO_LEX_RECORD 
+simpleprimitive:
+        AVRO_LEX_SIMPLE_TYPE { context(ctx).startType(); } primitive { context(ctx).stopType(); }
         ;
 
-enumtag: 
-        AVRO_LEX_TYPE AVRO_LEX_ENUM 
+primitive_t:
+        AVRO_LEX_TYPE primitive
         ;
 
-arraytag:
-        AVRO_LEX_TYPE AVRO_LEX_ARRAY
-        { context(ctx).addArray(); }
+array_t:
+        AVRO_LEX_TYPE AVRO_LEX_ARRAY { context(ctx).addType(avro::AVRO_ARRAY); }
         ;
 
-maptag:
-        AVRO_LEX_TYPE AVRO_LEX_MAP
-        { context(ctx).addMap(); }
-        ;
-
-fixedtag:
-        AVRO_LEX_TYPE AVRO_LEX_FIXED
-        ;
-
-record_t:
-        '{' recordtag ',' name { context(ctx).addRecord() } ',' AVRO_LEX_FIELDS fieldlist '}'
-        { context(ctx).endCompound(avro::AVRO_RECORD); }
-        ;
-
-enum_t:
-       '{'  enumtag ',' name { context(ctx).addEnum() } ',' namelist '}'
-        { context(ctx).endCompound(avro::AVRO_ENUM); }
-        ;
-
-array_t: 
-       '{'  arraytag ',' AVRO_LEX_ITEMS avroschema '}'
-        { context(ctx).endCompound(avro::AVRO_ARRAY); }
-        ;
-
-map_t: 
-        '{' maptag ',' AVRO_LEX_VALUES avroschema '}'
-        { context(ctx).endCompound(avro::AVRO_MAP); }
-        ;
-
-union_t:
-        '[' { context(ctx).addUnion(); } unionlist ']'
-        { context(ctx).endCompound(avro::AVRO_UNION); }
+enum_t: 
+        AVRO_LEX_TYPE AVRO_LEX_ENUM { context(ctx).addType(avro::AVRO_ENUM); }
         ;
 
 fixed_t:
-        '{' fixedtag ',' size ',' name '}'
-        { context(ctx).addFixed(); }
+        AVRO_LEX_TYPE AVRO_LEX_FIXED { context(ctx).addType(avro::AVRO_FIXED); }
         ;
 
-name:
-        AVRO_LEX_NAME 
-        { context(ctx).addName(); }
+map_t: 
+        AVRO_LEX_TYPE AVRO_LEX_MAP { context(ctx).addType(avro::AVRO_MAP); }
         ;
 
-size:
-        AVRO_LEX_SIZE 
-        { context(ctx).addSize(); }
+record_t: 
+        AVRO_LEX_TYPE AVRO_LEX_RECORD { context(ctx).addType(avro::AVRO_RECORD); }
         ;
 
-namelist:
-        name | namelist ',' name
+type_attribute:
+        array_t | enum_t | fixed_t | map_t | record_t | primitive_t
         ;
 
-field:
-        '{' fieldname ',' avroschema '}'
+union_t:
+        '[' { context(ctx).startType(); context(ctx).addType(avro::AVRO_UNION); context(ctx).setTypesAttribute(); } 
+        unionlist
+        ']' { context(ctx).stopType(); }
+        ;
+
+object: 
+        '{' { context(ctx).startType(); } 
+         attributelist
+        '}' { context(ctx).stopType(); }
+        ;
+        
+name_attribute:
+        AVRO_LEX_NAME { context(ctx).setNameAttribute(); }
+        ;
+
+size_attribute:
+        AVRO_LEX_SIZE { context(ctx).setSizeAttribute(); }
+        ;
+
+values_attribute:
+        AVRO_LEX_VALUES { context(ctx).setValuesAttribute(); } avroschema 
+        ;
+
+fields_attribute:
+        AVRO_LEX_FIELDS { context(ctx).setFieldsAttribute(); } fieldslist AVRO_LEX_FIELDS_END
+        ;
+
+items_attribute:
+        AVRO_LEX_ITEMS { context(ctx).setItemsAttribute(); } avroschema
+        ;
+
+symbols_attribute:
+        AVRO_LEX_SYMBOLS symbollist AVRO_LEX_SYMBOLS_END
+        ;
+
+attribute:
+        type_attribute | name_attribute | fields_attribute | items_attribute | size_attribute | values_attribute | symbols_attribute | AVRO_LEX_METADATA
+        ;
+
+attributelist: 
+        attribute | attributelist ',' attribute
+        ;
+
+symbol:
+        AVRO_LEX_SYMBOL { context(ctx).setSymbolsAttribute(); }
+        ;
+
+symbollist:
+        symbol | symbollist ',' symbol
+        ;
+
+fieldsetting:
+        fieldname | avroschema | AVRO_LEX_METADATA
+        ;
+
+fieldsettinglist:
+        fieldsetting | fieldsettinglist ',' fieldsetting 
+        ;
+
+fields:
+        AVRO_LEX_FIELD fieldsettinglist AVRO_LEX_FIELD_END
         ;   
 
 fieldname:
-        AVRO_LEX_NAME 
-        { context(ctx).addFieldName(); }
+        AVRO_LEX_FIELD_NAME { context(ctx).textContainsFieldName(); }
         ;
 
-fieldlist:
-        field | fieldlist ',' field
+fieldslist:
+        fields | fieldslist ',' fields
         ;
 
 unionlist: 
         avroschema | unionlist ',' avroschema
-
+        ;

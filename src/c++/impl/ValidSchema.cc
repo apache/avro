@@ -50,7 +50,7 @@ ValidSchema::validate(const NodePtr &node)
     }
 
     if(!node->isValid()) {
-        throw Exception("Schema is invalid");
+        throw Exception( boost::format("Schema is invalid, due to bad node of type %1%") % node->type());
     }
     if(node->hasName()) {
         if(node->type() == AVRO_SYMBOLIC) {

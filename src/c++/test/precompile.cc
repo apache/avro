@@ -24,7 +24,7 @@
 
 int main()
 {
-
+    int ret = 0;
     try {
         avro::ValidSchema schema;
         avro::compileJsonSchema(std::cin, schema);
@@ -32,8 +32,9 @@ int main()
         schema.toFlatList(std::cout);
     }
     catch (std::exception &e) {
-        std::cout << "Failed to parse or compile schema: " << e.what() << std::endl;
+        std::cerr << "Failed to parse or compile schema: " << e.what() << std::endl;
+        ret = 1;
     }
 
-    return 0;
+    return ret;
 }

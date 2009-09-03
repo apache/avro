@@ -48,98 +48,125 @@ struct NoAttribute
 {
     static const bool hasAttribute = false;
 
-    const Attribute &get() const {
-        static Attribute empty;
-        throw Exception("This type does not have attribute");
-        return empty;
-    }
+    NoAttribute()
+    {}
 
-    void set(const Attribute &value) {
-        throw Exception("This type does not have attribute");
-    }
-};
-
-template <typename Attribute>
-struct HasAttribute
-{
-    static const bool hasAttribute = true;
-
-    const Attribute &get() const {
-        return val_;
-    }
-
-    void set(const Attribute &val) {
-        val_ = val;
-    }
-
-  private:
-    Attribute val_;
-};
-
-
-template<typename LeafType>
-struct NoLeafAttributes
-{
-    static const bool hasAttribute = false;
-
-    NoLeafAttributes(size_t min, size_t max) 
+    // copy constructing from any attribute type is a no-op
+    // template<typename T>
+    NoAttribute(const NoAttribute<Attribute> &rhs)
     {}
 
     size_t size() const {
         return 0;
     }
 
-    void add( const LeafType &newLeaf) {
-        throw Exception("This type does not have leaf types");
+    void add( const Attribute &attr) {
+        throw Exception("This type does not have attribute");
     }
 
-    const LeafType &at(size_t index) const {
-        static LeafType null;
-        throw Exception("This type does not have leaf types");
-        return null;
+    const Attribute &get(size_t index = 0) const {
+        static const Attribute empty = Attribute();
+        throw Exception("This type does not have attribute");
+        return empty;
     }
 
-    bool inRange() const {
-        return true;
-    }
 };
 
-template<typename LeafType>
-struct HasLeafAttributes
+template<typename Attribute>
+struct SingleAttribute
 {
     static const bool hasAttribute = true;
 
-    HasLeafAttributes(size_t min, size_t max) :
-        minSize_(min), maxSize_(max)
-    {
-        attrs_.reserve(minSize_);
+    SingleAttribute() : attr_(), size_(0)
+    { }
+
+    // copy constructing from another single attribute is allowed
+    SingleAttribute(const SingleAttribute<Attribute> &rhs) : 
+        attr_(rhs.attr_), size_(rhs.size_)
+    { }
+
+    SingleAttribute(const NoAttribute<Attribute> &rhs) : 
+        attr_(), size_(0)
+    { }
+
+    // copy constructing from any other type is a no-op
+    //template<typename T>
+    //SingleAttribute(T&) : attr_(), size_(0)
+    //{}
+
+    size_t size() const {
+        return size_;
     }
+
+    void add(const Attribute &attr) {
+        if(size_ == 0) {
+            size_ = 1;
+        }
+        else {
+            throw Exception("SingleAttribute can only be set once");
+        }
+        attr_ = attr;
+    }
+
+    const Attribute &get(size_t index = 0) const {
+        if(index != 0) {
+            throw Exception("SingleAttribute has only 1 value");
+        }
+        return attr_;
+    }
+
+  private:
+
+    template<typename T> friend class MultiAttribute;
+
+    Attribute attr_;
+    int       size_;
+};
+
+template<typename Attribute>
+struct MultiAttribute
+{
+    static const bool hasAttribute = true;
+
+    MultiAttribute() 
+    { }
+
+    // copy constructing from another single attribute is allowed, it
+    // pushes the attribute
+    MultiAttribute(const SingleAttribute<Attribute> &rhs) 
+    { 
+        // since map is the only type that does this we know it's
+        // final size will be two, so reserve 
+        attrs_.reserve(2);
+        attrs_.push_back(rhs.attr_);
+    }
+
+    MultiAttribute(const MultiAttribute<Attribute> &rhs)  :
+        attrs_(rhs.attrs_)
+    { }
+
+    MultiAttribute(const NoAttribute<Attribute> &rhs)
+    {}
 
     size_t size() const {
         return attrs_.size();
     }
 
-    void add(const LeafType &attr) {
-        if(attrs_.size() == maxSize_) {
-            throw Exception("Too many attributes");
-        }
+    void add(const Attribute &attr) {
         attrs_.push_back(attr); 
     }
 
-    const LeafType &at(size_t index) const {
+    const Attribute &get(size_t index = 0) const {
         return attrs_.at(index);
     }
 
-    bool inRange() const {
-        size_t size = attrs_.size();
-        return size >= minSize_ && size <= maxSize_;
+    Attribute &at(size_t index) {
+        return attrs_.at(index);
     }
 
   private:
 
-    std::vector<LeafType> attrs_;
-    const size_t minSize_;
-    const size_t maxSize_;
+    std::vector<Attribute> attrs_;
 };
 
 

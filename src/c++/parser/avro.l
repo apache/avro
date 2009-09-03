@@ -40,7 +40,7 @@ int yylex(int *val, void *ctx)
 {
     avro::CompilerContext *c = static_cast<avro::CompilerContext *>(ctx);
     int ret = c->lexer().yylex();
-    if(ret == AVRO_LEX_NAME || ret == AVRO_LEX_SYMBOL || ret == AVRO_LEX_SIZE) {
+    if( ret > AVRO_LEX_OUTPUT_TEXT_BEGIN && ret < AVRO_LEX_OUTPUT_TEXT_END ) { 
         c->setText( c->lexer().YYText()) ;
     }
     return ret;
@@ -50,79 +50,124 @@ int yylex(int *val, void *ctx)
 
 %x READTYPE
 %x STARTTYPE
+%x STARTSCHEMA
 %x READNAME
+%x READFIELD
 %x READFIELDS
+%x READFIELDNAME
 %x READSYMBOLS
-%s READSIZE
+%x READSYMBOL
+%x READSIZE
 %x INUNION
 %x INOBJECT
+%x READMETADATA
+%x SKIPJSONSTRING
+%x SKIPJSONARRAY
+%x SKIPJSONOBJECT
 
-ws [ \t\n]
+ws [ \t\r\n]
+nonws [^ \t\r\n]
 delim {ws}*:{ws}*
 avrotext [a-zA-Z_][a-zA-Z0-9_]*
 startunion \[
 startobject \{
 integer [0-9]+
+anytext .*
 
 %%
-<READTYPE>int                  return AVRO_LEX_INT;
-<READTYPE>long                 return AVRO_LEX_LONG;
-<READTYPE>null                 return AVRO_LEX_NULL;
-<READTYPE>boolean              return AVRO_LEX_BOOL;
-<READTYPE>float                return AVRO_LEX_FLOAT;
-<READTYPE>double               return AVRO_LEX_DOUBLE;
-<READTYPE>string               return AVRO_LEX_STRING;
-<READTYPE>bytes                return AVRO_LEX_BYTES;
-<READTYPE>record               return AVRO_LEX_RECORD;
-<READTYPE>enum                 return AVRO_LEX_ENUM;
-<READTYPE>map                  return AVRO_LEX_MAP;
-<READTYPE>array                return AVRO_LEX_ARRAY;
-<READTYPE>fixed                return AVRO_LEX_FIXED;
-<READTYPE>{avrotext}           return AVRO_LEX_SYMBOL;
-<READTYPE>\"                   yy_pop_state(); 
+<READTYPE>int                   return AVRO_LEX_INT;
+<READTYPE>long                  return AVRO_LEX_LONG;
+<READTYPE>null                  return AVRO_LEX_NULL;
+<READTYPE>boolean               return AVRO_LEX_BOOL;
+<READTYPE>float                 return AVRO_LEX_FLOAT;
+<READTYPE>double                return AVRO_LEX_DOUBLE;
+<READTYPE>string                return AVRO_LEX_STRING;
+<READTYPE>bytes                 return AVRO_LEX_BYTES;
+<READTYPE>record                return AVRO_LEX_RECORD;
+<READTYPE>enum                  return AVRO_LEX_ENUM;
+<READTYPE>map                   return AVRO_LEX_MAP;
+<READTYPE>array                 return AVRO_LEX_ARRAY;
+<READTYPE>fixed                 return AVRO_LEX_FIXED;
+<READTYPE>{avrotext}            return AVRO_LEX_NAMED_TYPE;
+<READTYPE>\"                    yy_pop_state(); 
 
+<READNAME>{avrotext}            return AVRO_LEX_NAME;
+<READNAME>\"                    yy_pop_state();
 
-<READNAME>{avrotext}           return AVRO_LEX_NAME;
-<READNAME>\"                   yy_pop_state();
+<READSYMBOL>{avrotext}          return AVRO_LEX_SYMBOL;
+<READSYMBOL>\"                  yy_pop_state();
 
-<READFIELDS>\"type\"{delim}    yy_push_state(STARTTYPE); 
-<READFIELDS>\"name\"{delim}\"  yy_push_state( READNAME); 
-<READFIELDS>\]                 yy_pop_state(); 
-<READFIELDS>[,\{\}]            return yytext[0];
-<READFIELDS>{ws}               ;
+<READFIELDNAME>{avrotext}       return AVRO_LEX_FIELD_NAME;
+<READFIELDNAME>\"               yy_pop_state();
 
-<READSYMBOLS>\"                 yy_push_state(READNAME); 
+<READFIELD>\"type\"{delim}      yy_push_state(STARTSCHEMA); 
+<READFIELD>\"name\"{delim}\"    yy_push_state(READFIELDNAME); 
+<READFIELD>\}                   yy_pop_state(); return AVRO_LEX_FIELD_END;
+<READFIELD>,                    return yytext[0];
+<READFIELD>{nonws}+{delim}      yy_push_state(READMETADATA); return AVRO_LEX_METADATA;
+<READFIELD>{ws}                 ;
+
+<READFIELDS>\{                  yy_push_state(READFIELD); return AVRO_LEX_FIELD;
+<READFIELDS>\]                  yy_pop_state(); return AVRO_LEX_FIELDS_END;
+<READFIELDS>,                   return yytext[0];
+<READFIELDS>{ws}                ;
+
+<READSYMBOLS>\"                 yy_push_state(READSYMBOL); 
 <READSYMBOLS>,                  return yytext[0];
-<READSYMBOLS>\]                 yy_pop_state();
+<READSYMBOLS>\]                 yy_pop_state(); return AVRO_LEX_SYMBOLS_END;
 <READSYMBOLS>{ws}               ;
 
 <READSIZE>{integer}             yy_pop_state(); return AVRO_LEX_SIZE;
 
-<INUNION>\"                 yy_push_state(READTYPE); 
-<INUNION>{startobject}      yy_push_state( INOBJECT); return yytext[0];
-<INUNION>\]                 yy_pop_state(); return yytext[0];
-<INUNION>,                  return yytext[0];
-<INUNION>{ws}               ;
+<INUNION>\"                     yy_push_state(READTYPE); return AVRO_LEX_SIMPLE_TYPE;
+<INUNION>{startobject}          yy_push_state(INOBJECT); return yytext[0];
+<INUNION>\]                     yy_pop_state(); return yytext[0];
+<INUNION>,                      return yytext[0];
+<INUNION>{ws}                   ;
 
-<INOBJECT>\"type\"{delim}      yy_push_state(STARTTYPE); return AVRO_LEX_TYPE;
-<INOBJECT>\"name\"{delim}\"    yy_push_state(READNAME); 
-<INOBJECT>\"size\"{delim}      yy_push_state(READSIZE);
-<INOBJECT>\"items\"{delim}     yy_push_state(STARTTYPE); return AVRO_LEX_ITEMS;
-<INOBJECT>\"values\"{delim}    yy_push_state(STARTTYPE); return AVRO_LEX_VALUES;
-<INOBJECT>\"fields\"{delim}\[  yy_push_state( READFIELDS); return AVRO_LEX_FIELDS; 
-<INOBJECT>\"symbols\"{delim}\[ yy_push_state( READSYMBOLS); 
-<INOBJECT>,                    return yytext[0];
-<INOBJECT>\}                   yy_pop_state(); return yytext[0];
-<INOBJECT>{ws}                 ;
+<SKIPJSONSTRING>\"              yy_pop_state();
+<SKIPJSONSTRING>\\.             ;
+<SKIPJSONSTRING>[^\"\\]+        ;
 
-<STARTTYPE>\"                  yy_pop_state(); yy_push_state(READTYPE); 
-<STARTTYPE>{startunion}        yy_pop_state(); yy_push_state(INUNION); return yytext[0];
-<STARTTYPE>{startobject}       yy_pop_state(); yy_push_state(INOBJECT); return yytext[0];
+<SKIPJSONOBJECT>\}              yy_pop_state();
+<SKIPJSONOBJECT>\{              yy_push_state(SKIPJSONOBJECT);
+<SKIPJSONOBJECT>\"              yy_push_state(SKIPJSONSTRING);
+<SKIPJSONOBJECT>[^\{\}\"]+      ;
 
-{startobject}                  yy_push_state( INOBJECT); return yytext[0];
-{startunion}                   yy_push_state( INUNION); return yytext[0];
-\"                             yy_push_state( READTYPE);
-{ws}                           ;
+<SKIPJSONARRAY>\]               yy_pop_state();
+<SKIPJSONARRAY>\[               yy_push_state(SKIPJSONARRAY);
+<SKIPJSONARRAY>\"               yy_push_state(SKIPJSONSTRING);
+<SKIPJSONARRAY>[^\[\]\"]+       ;  
+
+<READMETADATA>\"                yy_pop_state(); yy_push_state(SKIPJSONSTRING);
+<READMETADATA>\{                yy_pop_state(); yy_push_state(SKIPJSONOBJECT);
+<READMETADATA>\[                yy_pop_state(); yy_push_state(SKIPJSONARRAY);
+<READMETADATA>[^\"\{\[,\}]+     yy_pop_state();
+
+<INOBJECT>\"type\"{delim}       yy_push_state(STARTTYPE); return AVRO_LEX_TYPE;
+<INOBJECT>\"name\"{delim}\"     yy_push_state(READNAME); 
+<INOBJECT>\"size\"{delim}       yy_push_state(READSIZE);
+<INOBJECT>\"items\"{delim}      yy_push_state(STARTSCHEMA); return AVRO_LEX_ITEMS;
+<INOBJECT>\"values\"{delim}     yy_push_state(STARTSCHEMA); return AVRO_LEX_VALUES;
+<INOBJECT>\"fields\"{delim}\[   yy_push_state(READFIELDS); return AVRO_LEX_FIELDS; 
+<INOBJECT>\"symbols\"{delim}\[  yy_push_state(READSYMBOLS); return AVRO_LEX_SYMBOLS;
+<INOBJECT>,                     return yytext[0];
+<INOBJECT>\}                    yy_pop_state(); return yytext[0];
+<INOBJECT>{nonws}+{delim}       yy_push_state(READMETADATA); return AVRO_LEX_METADATA;
+<INOBJECT>{ws}                  ;
+
+<STARTTYPE>\"                   yy_pop_state(); yy_push_state(READTYPE); 
+<STARTTYPE>{startunion}         yy_pop_state(); yy_push_state(INUNION); return yytext[0];
+<STARTTYPE>{startobject}        yy_pop_state(); yy_push_state(INOBJECT); return yytext[0];
+
+<STARTSCHEMA>\"                 yy_pop_state(); yy_push_state(READTYPE); return AVRO_LEX_SIMPLE_TYPE;
+<STARTSCHEMA>{startunion}       yy_pop_state(); yy_push_state(INUNION); return yytext[0];
+<STARTSCHEMA>{startobject}      yy_pop_state(); yy_push_state(INOBJECT); return yytext[0];
+
+{startobject}                   yy_push_state(INOBJECT); return yytext[0];
+{startunion}                    yy_push_state(INUNION); return yytext[0];
+\"                              yy_push_state(READTYPE); return AVRO_LEX_SIMPLE_TYPE;
+{ws}                            ;
 
 %%
 

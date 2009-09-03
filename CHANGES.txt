@@ -66,6 +66,9 @@ Trunk (unreleased changes)
 
     AVRO-83. In generated Java code, elide unions with null. (cutting)
 
+    AVRO-98. Fix C++ schema parser to permit JSON attributes in any
+    order and to ignore extra attributes. (Scott Banachowski via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

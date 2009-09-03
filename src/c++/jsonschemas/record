@@ -3,7 +3,7 @@
   "name": "LongList",
   "fields" : [
     {"name": "value", "type": "long"},           
-    {"name": "next", "type": "int" }
+    {"type": "int", "name": "next", "metadata" : "two"}
   ]
 }
 

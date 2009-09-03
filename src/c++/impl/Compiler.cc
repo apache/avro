@@ -26,7 +26,7 @@ extern void yyparse(void *ctx);
 
 namespace avro {
 
-//#define DEBUG_VERBOSE
+ #define DEBUG_VERBOSE
 
 int
 compileJsonSchema(std::istream &is, ValidSchema &schema)
@@ -48,147 +48,122 @@ CompilerContext::add(const NodePtr &node)
         root_ = node;
     }
     else {
-
-        NodePtr &owner = stack_.back();
-
-        owner->addLeaf(node);
-        if(owner->type() == AVRO_RECORD) {
-            owner->addName(fieldName_);
-        }   
+        stack_.back().addNode(node);
     }   
 }
 
-void 
-CompilerContext::addCompound(const NodePtr &node)
+void
+CompilerContext::startType()
 {
-    add(node);
-    stack_.push_back(node);
+#ifdef DEBUG_VERBOSE
+    std::cerr << "Start type definition\n";
+#endif
+    stack_.push_back(new CompilerNode());
 }
 
 void
-CompilerContext::endCompound(Type type)
+CompilerContext::stopType()
 {
 #ifdef DEBUG_VERBOSE
-    std::cout << "Got end of " << type << '\n';
+    std::cerr << "Stop type " << stack_.back().type() << '\n';
 #endif
+
     assert(!stack_.empty());
+    NodePtr nodePtr(nodeFromCompilerNode(stack_.back()));
     stack_.pop_back();
-    inEnum_ = false;
+    add(nodePtr);
 }
 
 void 
-CompilerContext::addRecord()
-{
-#ifdef DEBUG_VERBOSE
-    std::cout << "Adding record " << text_ << '\n';
-#endif
-    NodePtr node(new NodeRecord());
-    node->setName(text_);
-    addCompound(node);
-}
-
-void 
-CompilerContext::addEnum()
-{
-#ifdef DEBUG_VERBOSE
-    std::cout << "Adding enum " << text_ << '\n';
-#endif
-    NodePtr node(new NodeEnum());
-    node->setName(text_);
-    addCompound(node);
-    inEnum_ = true;
-}
-
-void 
-CompilerContext::addUnion()
-{
-#ifdef DEBUG_VERBOSE
-    std::cout << "Adding union\n";
-#endif
-    NodePtr node(new NodeUnion());
-    addCompound(node);
-}
-
-void 
-CompilerContext::addMap()
-{
-#ifdef DEBUG_VERBOSE
-    std::cout << "Adding map\n";
-#endif
-    NodePtr node(new NodeMap());
-    addCompound(node);
-}
-
-void 
-CompilerContext::addArray()
-{
-#ifdef DEBUG_VERBOSE
-    std::cout << "Adding array\n";
-#endif
-    NodePtr node(new NodeArray());
-    addCompound(node);
-}
-
-void 
-CompilerContext::addFixed()
-{
-#ifdef DEBUG_VERBOSE
-    std::cout << "Adding fixed " << text_ << '\n';
-#endif
-    NodePtr node(new NodeFixed());
-    node->setName(text_);
-    node->setFixedSize(size_);
-    add(node);
-} 
-
-void 
-CompilerContext::addPrimitive(Type type)
+CompilerContext::addType(Type type)
 {    
 #ifdef DEBUG_VERBOSE
-    std::cout << "Adding " << type << '\n';
+    std::cerr << "Setting type to " << type << '\n';
 #endif
-    NodePtr node(new NodePrimitive(type));
-    add(node);
+    stack_.back().setType(type);
 }
 
 void 
-CompilerContext::addSize()
+CompilerContext::setSizeAttribute()
 {
-    size_ = atol(text_.c_str()); 
+    int size = atol(text_.c_str()); 
 #ifdef DEBUG_VERBOSE
-    std::cout << "Got size " << size_ << '\n';
+    std::cerr << "Setting size to " << size << '\n';
 #endif
+    stack_.back().sizeAttribute_.add(size);
 }
 
 void 
-CompilerContext::addSymbol()
+CompilerContext::addNamedType()
 {
 #ifdef DEBUG_VERBOSE
-    std::cout << "Adding symbol " << text_ << '\n';
+    std::cerr << "Adding named type " << text_ << '\n';
 #endif
-    NodePtr node(new NodeSymbolic());
-    node->setName(text_);
-    add(node);
+    stack_.back().setType(AVRO_SYMBOLIC);
+    stack_.back().nameAttribute_.add(text_);
 }
 
 void 
-CompilerContext::addName()
+CompilerContext::setNameAttribute()
 {
-    if(inEnum_) {
 #ifdef DEBUG_VERBOSE
-        std::cout << "Got enum symbol " << text_ << '\n';
+    std::cerr << "Setting name to " << text_ << '\n';
 #endif
-        stack_.back()->addName(text_);
-    }
+    stack_.back().nameAttribute_.add(text_);
 }
 
 void 
-CompilerContext::addFieldName()
+CompilerContext::setSymbolsAttribute()
 {
 #ifdef DEBUG_VERBOSE
-    std::cout << "Got field name " << text_ << '\n';
+    std::cerr << "Adding enum symbol " << text_ << '\n';
 #endif
-    fieldName_ = text_;
+    stack_.back().symbolsAttribute_.add(text_);
+}
+
+void 
+CompilerContext::setValuesAttribute()
+{
+#ifdef DEBUG_VERBOSE
+    std::cerr << "Ready for map type\n";
+#endif
+    stack_.back().setAttributeType(CompilerNode::VALUES);
+}
+
+void 
+CompilerContext::setTypesAttribute()
+{
+#ifdef DEBUG_VERBOSE
+    std::cerr << "Ready for union types\n";
+#endif
+    stack_.back().setAttributeType(CompilerNode::TYPES);
+}
+
+void 
+CompilerContext::setItemsAttribute()
+{
+#ifdef DEBUG_VERBOSE
+    std::cerr << "Ready for array type\n";
+#endif
+    stack_.back().setAttributeType(CompilerNode::ITEMS);
+}
+
+void 
+CompilerContext::setFieldsAttribute()
+{
+#ifdef DEBUG_VERBOSE
+    std::cerr << "Ready for record fields\n";
+#endif
+    stack_.back().setAttributeType(CompilerNode::FIELDS);
+}
+
+void 
+CompilerContext::textContainsFieldName()
+{
+#ifdef DEBUG_VERBOSE
+    std::cerr << "Setting field name to " << text_ << '\n';
+#endif
+    stack_.back().fieldsNamesAttribute_.add(text_);
 }
 
 } // namespace avro

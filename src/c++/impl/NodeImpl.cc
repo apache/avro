@@ -42,18 +42,7 @@ std::ostream& operator <<(std::ostream &os, indent x)
 void 
 NodePrimitive::printJson(std::ostream &os, int depth) const
 {
-    // printing long form is optional
-    /*
-    if(depth == 0) {
-        os << "{\n";
-        os << indent(depth+1) << "\"type\": " << '"' << type() << '"';
-        os << indent(depth) << "\n}";
-    }
-    else {
-        os << type();
-    }
-    */
-    os << '"' << type() << '"';
+    os << '\"' << type() << '\"';
 }
 
 void 
@@ -79,9 +68,9 @@ NodeRecord::printJson(std::ostream &os, int depth) const
             os << indent(depth) << "},\n";
         }
         os << indent(depth) << "{\n";
-        os << indent(++depth) << "\"name\": \"" << leafNamesAttributes_.at(i) << "\",\n";
+        os << indent(++depth) << "\"name\": \"" << leafNameAttributes_.get(i) << "\",\n";
         os << indent(depth) << "\"type\": ";
-        leafAttributes_.at(i)->printJson(os, depth);
+        leafAttributes_.get(i)->printJson(os, depth);
         os << '\n';
         --depth;
     }
@@ -100,13 +89,13 @@ NodeEnum::printJson(std::ostream &os, int depth) const
     }
     os << indent(depth) << "\"symbols\": [\n";
 
-    int names = leafNamesAttributes_.size();
+    int names = leafNameAttributes_.size();
     ++depth;
     for(int i = 0; i < names; ++i) {
         if(i > 0) {
             os << ",\n";
         }
-        os << indent(depth) << '\"' << leafNamesAttributes_.at(i) << '\"';
+        os << indent(depth) << '\"' << leafNameAttributes_.get(i) << '\"';
     }
     os << '\n';
     os << indent(--depth) << "]\n";
@@ -119,7 +108,7 @@ NodeArray::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(depth+1) << "\"type\": \"array\",\n";
     os << indent(depth+1) <<  "\"items\": ";
-    leafAttributes_.at(0)->printJson(os, depth);
+    leafAttributes_.get()->printJson(os, depth);
     os << '\n';
     os << indent(depth) << '}';
 }
@@ -130,7 +119,7 @@ NodeMap::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(depth+1) <<"\"type\": \"map\",\n";
     os << indent(depth+1) << "\"values\": ";
-    leafAttributes_.at(1)->printJson(os, depth);
+    leafAttributes_.get(1)->printJson(os, depth);
     os << '\n';
     os << indent(depth) << '}';
 }
@@ -146,7 +135,7 @@ NodeUnion::printJson(std::ostream &os, int depth) const
             os << ",\n";
         }
         os << indent(depth);
-        leafAttributes_.at(i)->printJson(os, depth);
+        leafAttributes_.get(i)->printJson(os, depth);
     }
     os << '\n';
     os << indent(--depth) << ']';
@@ -160,6 +149,54 @@ NodeFixed::printJson(std::ostream &os, int depth) const
     os << indent(depth) << "\"size\": " << sizeAttribute_.get() << ",\n";
     os << indent(depth) << "\"name\": " << nameAttribute_.get() << "\"\n";
     os << indent(--depth) << '}';
+}
+
+NodePtr
+nodeFromCompilerNode(CompilerNode &node)
+{
+    NodePtr ptr;
+
+    switch(node.type()) {
+
+      case AVRO_ARRAY:
+        ptr = ( new NodeArray(node));
+        break;
+    
+      case AVRO_ENUM:
+        ptr = ( new NodeEnum(node));
+        break;
+
+      case AVRO_FIXED:
+        ptr = ( new NodeFixed(node));
+        break;
+    
+      case AVRO_MAP:
+        ptr = ( new NodeMap(node));
+        break;
+
+      case AVRO_RECORD:
+        ptr = ( new NodeRecord(node));
+        break;
+    
+      case AVRO_UNION:
+        ptr = ( new NodeUnion(node));
+        break;
+    
+      case AVRO_SYMBOLIC:
+        ptr = ( new NodeSymbolic(node));
+        break;
+    
+      default:
+        if(isPrimitive(node.type())) {
+            ptr = ( new NodePrimitive(node.type()));        
+        }
+        else {
+            throw Exception("Unknown type in nodeFromCompilerNode");
+        }
+        break;
+    }
+
+    return ptr;
 }
 
 } // namespace avro

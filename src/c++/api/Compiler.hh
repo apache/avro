@@ -19,12 +19,12 @@
 #ifndef avro_Compiler_hh__
 #define avro_Compiler_hh__
 
-#include <vector>
+#include <boost/ptr_container/ptr_vector.hpp>
 
 #include <FlexLexer.h>
 #include "Types.hh"
 #include "Node.hh"
-#include "SymbolMap.hh"
+#include "CompilerNode.hh"
 
 namespace avro {
 
@@ -35,12 +35,11 @@ namespace avro {
     
 class CompilerContext {
 
+
   public:
 
     CompilerContext(std::istream &is) :
-        lexer_(&is),
-        size_(0),
-        inEnum_(false)
+        lexer_(&is)
     {}
 
     /// Called by the lexer whenever it encounters text that is not a symbol it recognizes
@@ -49,21 +48,23 @@ class CompilerContext {
         text_ = text;
     }
 
-    void addRecord();
-    void addEnum();
-    void addArray();
-    void addMap();
-    void addUnion();
-    void addFixed();
+    void addNamedType();
 
-    void endCompound(avro::Type type);
+    void startType();
+    void stopType();
 
-    void addPrimitive(avro::Type type);
-    void addSymbol();
-    void addSize();
+    void addType(avro::Type type);
 
-    void addName();
-    void addFieldName();
+    void setSizeAttribute();
+    void setNameAttribute();
+    void setSymbolsAttribute();
+
+    void setFieldsAttribute();
+    void setItemsAttribute();
+    void setValuesAttribute();
+    void setTypesAttribute();
+
+    void textContainsFieldName();
 
     const FlexLexer &lexer() const {
         return lexer_;
@@ -78,18 +79,15 @@ class CompilerContext {
 
   private:
 
+    typedef boost::ptr_vector<CompilerNode> Stack;
+
     void add(const NodePtr &node);
-    void addCompound(const NodePtr &node);
 
     yyFlexLexer lexer_;
     std::string text_;
-    std::string fieldName_;
-    int64_t     size_;
-    bool        inEnum_;
-    SymbolMap   map_;
     
     NodePtr root_;
-    std::vector<NodePtr> stack_;
+    Stack   stack_;
 };
 
 class ValidSchema;
