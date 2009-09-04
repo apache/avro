@@ -1,6 +1,6 @@
 Avro Change Log
 
-Trunk (unreleased changes)
+Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES
 
