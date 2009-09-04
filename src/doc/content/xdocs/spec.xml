@@ -116,6 +116,12 @@
 		    <tr><td>fixed</td><td>string</td><td>"\u00ff"</td></tr>
 		  </table>
 		</li>
+		<li><code>order:</code> specifies how this field
+		  impacts sort ordering of this record (optional).
+		  Valid values are "ascending" (the default),
+		  "descending", or "ignore".  For more details on how
+		  this is used, see the the <a href="#order">sort
+		  order</a> section below.</li>
 	      </ul>
 	    </li>
 	  </ul>
@@ -472,6 +478,65 @@
 
       </section>
 
+    </section>
+
+    <section id="order">
+      <title>Sort Order</title>
+
+      <p>Avro defines a standard sort order for data.  This permits
+	data written by one system to be efficiently sorted by another
+	system.  This can be an important optimization, as sort order
+	comparisons are sometimes the most frequent per-object
+	operation.  Note also that Avro binary-encoded data can be
+	efficiently ordered without deserializing it to objects.</p>
+
+      <p>Data items may only be compared if they have identical
+	schemas.  Pairwise comparisons are implemented recursively
+	with a depth-first, left-to-right traversal of the schema.
+	The first mismatch encountered determines the order of the
+	items.</p>
+
+      <p>Two items with the same schema are compared according to the
+	following rules.</p>
+      <ul>
+	<li><code>int</code>, <code>long</code>, <code>float</code>
+	  and <code>double</code> data is ordered by ascending numeric
+	  value.</li>
+	<li><code>boolean</code> data is ordered with false before true.</li>
+	<li><code>null</code> data is always equal.</li>
+	<li><code>string</code> data is compared lexicographically.
+	  Note that since UTF-8 is used as the binary encoding of
+	  strings, sorting by bytes and characters is equivalent.</li>
+	<li><code>bytes</code> and <code>fixed</code> data are
+	  compared lexicographically by byte.</li>
+	<li><code>array</code> data is compared lexicographically by
+	  element.</li>
+	<li><code>enum</code> data is ordered by the symbol's position
+	  in the enum schema.  For example, an enum whose symbols are
+	  <code>["z", "a"]</code> would sort <code>"z"</code> values
+	  before <code>"a"</code> values.</li>
+	<li><code>union</code> data is first ordered by the branch
+	  within the union, and, within that, by the type of the
+	  branch.  For example, an <code>["int", "string"]</code>
+	  union would order all int values before all string values,
+	  with the ints and strings themselves ordered as defined
+	  above.</li>
+	<li><code>record</code> data is ordered lexicographically by
+	  field.  If a field specifies that its order is:
+	  <ul>
+	    <li><code>"ascending"</code>, then the order of its values
+	      is unaltered.</li>
+	    <li><code>"ascending"</code>, then the order of its values
+	      is reversed.</li>
+	    <li><code>"ignore"</code>, then its values are ignored
+	      when sorting.</li>
+	  </ul>
+	</li>
+	<li><code>map</code> data may not be compared.  It is an error
+	  to attempt to compare data containing maps unless those maps
+	  are in an <code>"order":"ignore"</code> record field.
+	</li>
+      </ul>
     </section>
 
     <section>

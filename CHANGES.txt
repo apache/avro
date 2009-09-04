@@ -47,6 +47,8 @@ Trunk (unreleased changes)
     possible values are "increasing" (the default), "decreasing", and
     "ignore".  (cutting)
 
+    AVRO-111.  Document sort ordering in the specification. (cutting)
+
   IMPROVEMENTS
 
     AVRO-71.  C++: make deserializer more generic.  (Scott Banachowski
