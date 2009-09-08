@@ -110,6 +110,8 @@ Avro 1.1.0 (8 September 2009)
     throw ClassCastException when a fixed schema is compared to
     non-fixed. (cutting)
 
+    AVRO-112.  Turn off C++ debug output.  (Scott Banachowski via cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES
