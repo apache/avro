@@ -112,6 +112,9 @@ Avro 1.1.0 (8 September 2009)
 
     AVRO-112.  Turn off C++ debug output.  (Scott Banachowski via cutting)
 
+    AVRO-114.  Fix "cdoc" Ant target to correctly run doxygen.
+    (Matt Massie via cutting)
+
 Avro 1.0.0 -- 9 July 2009
 
   INCOMPATIBLE CHANGES

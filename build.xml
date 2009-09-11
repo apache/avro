@@ -560,10 +560,12 @@
   </target>
 
   <!-- C Targets -->
-  <target name="cdoc">
-  <exec dir="${c.src.dir}" executable="env" failonerror="true">
-     <arg line="C_DOCS_OUTPUT=${build.cdoc} make docs" />
-  </exec>
+  <target name="cdoc" depends="configure-c">
+    <mkdir dir="${build.cdoc}"/>
+    <exec dir="${c.build.dir}" executable="make" failonerror="true">
+      <env key="C_DOCS_OUTPUT" value="${build.cdoc}" />
+      <arg line="docs" />
+    </exec>
   </target>
 
   <target name="autoreconf-c-check">

@@ -60,7 +60,10 @@ pretty:
 	popd;
 
 docs:
-	@(cat docs/doxygen.conf; echo "OUTPUT_DIRECTORY=$(C_DOCS_OUTPUT)")| doxygen -
+	pushd $(top_srcdir); \
+	(cat docs/doxygen.conf; echo "OUTPUT_DIRECTORY=$(C_DOCS_OUTPUT)")| doxygen - ;\
+	popd;
+
 
 .PHONY: docs 
 
