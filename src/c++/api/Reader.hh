@@ -147,11 +147,12 @@ class Reader : private boost::noncopyable
     uint64_t getVarInt() {
         uint64_t encoded = 0;
         uint8_t val = 0;
+        int shift = 0;
         do {
-            encoded <<= 7;
             in_.getByte(val);
-            encoded |= (val & 0x7F);
-
+            uint64_t newbits = (val & 0x7f) << shift;
+            encoded |= newbits;
+            shift += 7;
         } while (val & 0x80);
 
         return encoded;

@@ -56,14 +56,8 @@ encodeInt64(int64_t input, boost::array<uint8_t, 9> &output)
     output[0] = val & mask;
     size_t bytesOut = 1;
     while( val >>=7 ) {
-        output[bytesOut++] = (val & mask) | 0x80;
-    }
-
-    // arrange array so msb is first
-    int head = 0;
-    int tail = bytesOut - 1;
-    while(head < tail) {
-        std::swap(output[head++], output[tail--]);
+        output[bytesOut-1] |= 0x80;
+        output[bytesOut++] = (val & mask);
     }
 
     return bytesOut;
@@ -80,14 +74,8 @@ encodeInt32(int32_t input, boost::array<uint8_t, 5> &output)
     output[0] = val & mask;
     size_t bytesOut = 1;
     while( val >>=7 ) {
-        output[bytesOut++] = (val & mask) | 0x80;
-    }
-
-    // arrange array so msb is first
-    int head = 0;
-    int tail = bytesOut - 1;
-    while(head < tail) {
-        std::swap(output[head++], output[tail--]);
+        output[bytesOut-1] |= 0x80;
+        output[bytesOut++] = (val & mask);
     }
 
     return bytesOut;
