@@ -19,6 +19,7 @@
 #include <string.h>
 #include <fstream>
 #include <sstream>
+#include <boost/test/included/unit_test_framework.hpp>
 
 #include "code.hh"
 #include "OutputStreamer.hh"
@@ -49,22 +50,23 @@ void serializeValid(const avro::ValidSchema &valid, const avrouser::RootRecord &
 
 void checkArray(const avrouser::Array_of_double &a1, const avrouser::Array_of_double &a2) 
 {
-    assert((a1.value.size() == a2.value.size()) && (a1.value.size() == 3));
+    BOOST_CHECK_EQUAL(a1.value.size(), 3U);
+    BOOST_CHECK_EQUAL(a1.value.size(), a2.value.size());
     for(size_t i = 0; i < a1.value.size(); ++i) {
-        assert(a1.value[i] == a2.value[i]);
+        BOOST_CHECK_EQUAL(a1.value[i], a2.value[i]);
     }
 }
 
 void checkMap(const avrouser::Map_of_int &map1, const avrouser::Map_of_int &map2) 
 {
-    assert(map1.value.size() == map2.value.size());
+    BOOST_CHECK_EQUAL(map1.value.size(), map2.value.size());
     avrouser::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
     avrouser::Map_of_int::MapType::const_iterator end   = map1.value.end();
     avrouser::Map_of_int::MapType::const_iterator iter2 = map2.value.begin();
 
     while(iter1 != end) {
-        assert(iter1->first == iter2->first);
-        assert(iter1->second == iter2->second);
+        BOOST_CHECK_EQUAL(iter1->first, iter2->first);
+        BOOST_CHECK_EQUAL(iter1->second, iter2->second);
         ++iter1;
         ++iter2;
     }
@@ -72,40 +74,41 @@ void checkMap(const avrouser::Map_of_int &map1, const avrouser::Map_of_int &map2
 
 void checkBytes(const std::vector<uint8_t> &v1, const std::vector<uint8_t> &v2)
 {
-    assert((v1.size() == v2.size()) && (v1.size() == 2));
+    BOOST_CHECK_EQUAL(v1.size(), 2U);
+    BOOST_CHECK_EQUAL(v1.size(), v2.size());
     for(size_t i = 0; i < v1.size(); ++i) {
-        assert(v1[i] == v2[i]);
+        BOOST_CHECK_EQUAL(v1[i], v2[i]);
     }
 }
 
 void checkOk(const avrouser::RootRecord &rec1, const avrouser::RootRecord &rec2)
 {
-    assert(rec1.mylong == rec1.mylong);
+    BOOST_CHECK_EQUAL(rec1.mylong, rec1.mylong);
     checkMap(rec1.mymap, rec2.mymap);
     checkArray(rec1.myarray, rec2.myarray);
 
-    assert(rec1.myenum.value == rec2.myenum.value);
+    BOOST_CHECK_EQUAL(rec1.myenum.value, rec2.myenum.value);
 
-    assert(rec1.myunion.choice == rec2.myunion.choice);
+    BOOST_CHECK_EQUAL(rec1.myunion.choice, rec2.myunion.choice);
     // in this test I know choice was 1
     {
-        assert(rec1.myunion.choice == 1);
+        BOOST_CHECK_EQUAL(rec1.myunion.choice, 1);
         checkMap(rec1.myunion.getValue<avrouser::Map_of_int>(), rec2.myunion.getValue<avrouser::Map_of_int>());
     }
 
-    assert(rec1.anotherunion.choice == rec2.anotherunion.choice);
+    BOOST_CHECK_EQUAL(rec1.anotherunion.choice, rec2.anotherunion.choice);
     // in this test I know choice was 0
     {
-        assert(rec1.anotherunion.choice == 0);
+        BOOST_CHECK_EQUAL(rec1.anotherunion.choice, 0);
         typedef std::vector<uint8_t> mytype;
         checkBytes(rec1.anotherunion.getValue<mytype>(), rec2.anotherunion.getValue<avrouser::Union_of_bytes_null::T0>());
     }
 
-    assert(rec1.mybool == rec2.mybool);
+    BOOST_CHECK_EQUAL(rec1.mybool, rec2.mybool);
     for(int i = 0; i < static_cast<int>(avrouser::md5::fixedSize); ++i) {
-        assert(rec1.myfixed.value[i] == rec2.myfixed.value[i]);
+        BOOST_CHECK_EQUAL(rec1.myfixed.value[i], rec2.myfixed.value[i]);
     }
-    assert(rec1.anotherint == rec1.anotherint);
+    BOOST_CHECK_EQUAL(rec1.anotherint, rec1.anotherint);
 
 }
 
@@ -161,7 +164,7 @@ void runTests(const avrouser::RootRecord myRecord)
     testParserValid(schema, myRecord);
 }
 
-int main() 
+void testGen() 
 {
     uint8_t fixed[] =  {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
@@ -187,6 +190,15 @@ int main()
     myRecord.bytes.push_back(20);
 
     runTests(myRecord);
+}
 
+boost::unit_test::test_suite*
+init_unit_test_suite( int argc, char* argv[] ) 
+{
+    using namespace boost::unit_test;
 
+    test_suite* test= BOOST_TEST_SUITE( "Avro C++ generated code test suite" );
+    test->add( BOOST_TEST_CASE( &testGen ) );
+
+    return test;
 }

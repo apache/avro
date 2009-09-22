@@ -1,5 +1,20 @@
 Avro Change Log
 
+Trunk (unreleased changes)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+    AVRO-99.  Use Boost framework for C++ unit tests.
+    (Scott Banachowski via cutting)
+
+  OPTIMIZATIONS
+
+  BUG FIXES
+
 Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES

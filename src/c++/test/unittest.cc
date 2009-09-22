@@ -18,8 +18,8 @@
 
 #include <iostream>
 #include <fstream>
-#include <cassert>
 #include <sstream>
+#include <boost/test/included/unit_test_framework.hpp>
 
 #include "Zigzag.hh"
 #include "Node.hh"
@@ -219,7 +219,7 @@ struct TestSchema
                 std::cout << i << ":" << d << '\n';
             }
         } while(size != 0);
-        assert(d = 1000.0);
+        BOOST_CHECK_EQUAL(d, 1000.0);
     }
 
     template <typename Parser>
@@ -243,7 +243,7 @@ struct TestSchema
         printNext(p);
         int64_t longval = p.getLong();
         std::cout << longval << '\n';
-        assert(longval == 1000);
+        BOOST_CHECK_EQUAL(longval, 1000);
 
         readMap(p);
         readArray(p);
@@ -260,7 +260,7 @@ struct TestSchema
         printNext(p);
         bool boolval = p.getBool();
         std::cout << boolval << '\n';
-        assert(boolval == true);
+        BOOST_CHECK_EQUAL(boolval, true);
 
         printNext(p);
         readFixed(p);
@@ -268,7 +268,7 @@ struct TestSchema
         printNext(p);
         int32_t intval = p.getInt();
         std::cout << intval << '\n';
-        assert(intval == -3456);
+        BOOST_CHECK_EQUAL(intval, -3456);
     }
 
     void readRawData() {
@@ -314,22 +314,12 @@ struct TestEncoding {
 
     void compare(int32_t val) {
         uint32_t encoded = encodeZigzag32(val);
-        if (decodeZigzag32(encoded) != val) {
-            std::cout << val << '\n';
-            std::cout << encoded << '\n';
-            std::cout << decodeZigzag32(encoded) << '\n';
-            assert(0);
-        }
+        BOOST_CHECK_EQUAL(decodeZigzag32(encoded), val);
     }
 
     void compare(int64_t val) {
         uint64_t encoded = encodeZigzag64(val);
-        if (decodeZigzag64(encoded) != val) {
-            std::cout << val << '\n';
-            std::cout << encoded << '\n';
-            std::cout << decodeZigzag64(encoded) << '\n';
-            assert(0);
-        }
+        BOOST_CHECK_EQUAL(decodeZigzag64(encoded), val);
     }
 
     template<typename IntType>
@@ -372,13 +362,13 @@ struct TestSymbolMap
         RecordSchema rec(name);
 
         NodePtr node = map_.locateSymbol(name);
-        assert(node == 0);
+        BOOST_CHECK(node == 0);
 
         map_.registerSymbol(rec.root());
 
         node = map_.locateSymbol(name);
-        assert(node);
-        assert(node->name() == name);
+        BOOST_CHECK(node);
+        BOOST_CHECK_EQUAL(node->name(), name);
         std::cout << "Found " << name << " registered\n";
     }
 
@@ -520,29 +510,28 @@ struct TestGenerated
 };
 
 
-int main()
+boost::unit_test::test_suite*
+init_unit_test_suite( int argc, char* argv[] ) 
 {
-    bool pass = true;
-    try {
-        TestEncoding test1;
-        test1.test();
+    using namespace boost::unit_test;
 
-        TestSchema test2;
-        test2.test();
+    test_suite* test= BOOST_TEST_SUITE( "Avro C++ unit test suite" );
 
-        TestSymbolMap test3;
-        test3.test();
+    boost::shared_ptr<TestEncoding> encodingTester( new TestEncoding );
+    test->add( BOOST_CLASS_TEST_CASE( &TestEncoding::test, encodingTester ));
 
-        TestNested test4;
-        test4.test();
+    boost::shared_ptr<TestSchema> schemaTester( new TestSchema );
+    test->add( BOOST_CLASS_TEST_CASE( &TestSchema::test, schemaTester ));
 
-        TestGenerated test5;
-        test5.test();
-    }
-    catch (std::exception &e) {
-        std::cout << "Failed unit test due to exception: " << e.what() << std::endl;
-        pass = false;
-    }
+    boost::shared_ptr<TestSymbolMap> symbolMapTester( new TestSymbolMap );
+    test->add( BOOST_CLASS_TEST_CASE( &TestSymbolMap::test, symbolMapTester ));
 
-    return pass ? 0 : 1;
+    boost::shared_ptr<TestNested> nestedTester( new TestNested );
+    test->add( BOOST_CLASS_TEST_CASE( &TestNested::test, nestedTester ));
+
+    boost::shared_ptr<TestGenerated> generatedTester( new TestGenerated );
+    test->add( BOOST_CLASS_TEST_CASE( &TestGenerated::test, generatedTester ));
+
+    return test;
 }
+
