@@ -11,6 +11,9 @@ Trunk (unreleased changes)
     AVRO-99.  Use Boost framework for C++ unit tests.
     (Scott Banachowski via cutting)
 
+    AVRO-116.  Make C++ compatible with Boost 1.32.
+    (Scott Banachowski via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

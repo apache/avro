@@ -19,7 +19,7 @@
 #ifndef avro_Compiler_hh__
 #define avro_Compiler_hh__
 
-#include <boost/ptr_container/ptr_vector.hpp>
+#include "Boost.hh"
 
 #include <FlexLexer.h>
 #include "Types.hh"

@@ -23,7 +23,7 @@ headers = '''
 #include <string>
 #include <vector>
 #include <map>
-#include <boost/any.hpp>
+#include "Boost.hh"
 #include "Exception.hh"
 #include "AvroSerialize.hh"
 #include "AvroParse.hh"
@@ -103,10 +103,17 @@ $typedeflist$
     $name$() : choice(0), value(T0()) {}
 
 $setfuncs$
+#ifdef AVRO_BOOST_NO_ANYREF
+    template<typename T>
+    T getValue() const {
+        return boost::any_cast<T>(value);
+    }
+#else
     template<typename T>
     const T &getValue() const {
         return boost::any_cast<const T&>(value);
     }
+#endif
 
     int64_t choice; 
     boost::any value;
