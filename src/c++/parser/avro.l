@@ -168,6 +168,31 @@ anytext .*
 {startunion}                    yy_push_state(INUNION); return yytext[0];
 \"                              yy_push_state(READTYPE); return AVRO_LEX_SIMPLE_TYPE;
 {ws}                            ;
+<<EOF>>                         {
+#if !YY_FLEX_SUBMINOR_VERSION || YY_FLEX_SUBMINOR_VERSION < 27
+// The versions of flex before 3.5.27 do not free their stack when done, so explcitly free it.
+// Note that versions before did not actually define a subminor macro.
+                                    if (yy_start_stack) {
+                                        yy_flex_free(yy_start_stack);
+                                        yy_start_stack = 0;
+                                    }
+#endif
+#if YY_FLEX_SUBMINOR_VERSION > 35
+// At this time, 3.5.35 is the latest version.
+#warning "Warning:  untested version of flex"
+#endif
+#if YY_FLEX_SUBMINOR_VERSION >= 31 && YY_FLEX_SUBMINOR_VERSION < 34
+// The versions of flex starting 3.5.31 do not free yy_buffer_stack, so do so 
+// explicitly (first yy_delete_buffer must be called to free pointers stored on the stack, then it is
+// safe to remove the stack).  This was fixed in 3.4.34.
+                                    if(yy_buffer_stack) {
+                                        yy_delete_buffer(YY_CURRENT_BUFFER);
+                                        yyfree(yy_buffer_stack);
+                                        yy_buffer_stack = 0;
+                                    }
+#endif
+                                    yyterminate();
+                                }
 
 %%
 

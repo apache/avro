@@ -28,6 +28,9 @@ Trunk (unreleased changes)
     AVRO-113.  Fix endian bug with C++ integer/long varint codec.
     (Scott Banachowski via cutting)
 
+    AVRO-117.  Fix memory leak in C++ JSON parser.
+    (Scott Banachowski via cutting)
+
 Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES

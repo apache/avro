@@ -4,6 +4,8 @@ include System.$(system).mk
 
 INCFLAGS = -I./api -I./parser -I.
 INCFLAGS += -isystem$(BOOSTINC)
+# include any flags defined in System.X.mk
+INCFLAGS += $(SYSTEM_INCFLAGS)
 
 LIBS = $(BOOSTREGEX)
 
