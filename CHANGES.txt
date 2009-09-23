@@ -18,6 +18,9 @@ Trunk (unreleased changes)
     AVRO-116.  Make C++ compatible with Boost 1.32.
     (Scott Banachowski via cutting)
 
+    AVRO-119.  Add Java GenericData.Array#toString() implementation,
+    to facillitate debugging. (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

@@ -115,6 +115,18 @@ public class GenericData {
     public int compareTo(Array<T> that) {
       return GenericData.get().compare(this, that, this.getSchema());
     }
+    public String toString() {
+      StringBuffer buffer = new StringBuffer();
+      buffer.append("[");
+      int count = 0;
+      for (T e : this) {
+        buffer.append(e==null ? "null" : e.toString());
+        if (++count < size())
+          buffer.append(", ");
+      }
+      buffer.append("]");
+      return buffer.toString();
+    }
   }
 
   public static class Fixed implements GenericFixed, Comparable<Fixed> {
