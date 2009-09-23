@@ -90,7 +90,6 @@ class RequestorBase(object):
   def __init__(self, localproto, transceiver):
     self.__localproto = localproto
     self.__transceiver = transceiver
-    self.__established = False
     self.__sendlocaltext = False
     self.__remoteproto = None
 
@@ -106,12 +105,10 @@ class RequestorBase(object):
   def request(self, msgname, req):
     """Writes a request message and reads a response or error message."""
     processed = False
-    while not self.__established or not processed:
-      processed = True
+    while not processed:
       buf = cStringIO.StringIO()
       encoder = io.Encoder(buf)
-      if not self.__established:
-        self.__writehandshake(encoder)
+      self.__writehandshake(encoder)
       requestmeta = dict()
       _META_WRITER.write(requestmeta, encoder)
       m = self.__localproto.getmessages().get(msgname)
@@ -121,8 +118,7 @@ class RequestorBase(object):
       self.writerequest(m.getrequest(), req, encoder)
       response = self.__transceiver.transceive(buf.getvalue())
       decoder = io.Decoder(cStringIO.StringIO(response))
-      if not self.__established:
-        self.__readhandshake(decoder)
+      processed = self.__readhandshake(decoder)
     responsemeta = _META_READER.read(decoder)
     m = self.getremote().getmessages().get(msgname)
     if m is None:
@@ -154,13 +150,14 @@ class RequestorBase(object):
            self.__transceiver.getremotename().__str__() + " is " +
            handshake.match.__str__())
     if handshake.match == _HANDSHAKE_MATCH_BOTH:
-      self.__established = True
+      return True
     elif handshake.match == _HANDSHAKE_MATCH_CLIENT:
       self.__setremote(handshake)
-      self.__established = True
+      return True
     elif handshake.match == _HANDSHAKE_MATCH_NONE:
       self.__setremote(handshake)
       self.__sendlocaltext = True
+      return False
     else:
       raise schema.AvroException("Unexpected match: "+handshake.match.__str__())
 
@@ -188,7 +185,6 @@ class ResponderBase(object):
 
   def __init__(self, localproto):
     self.__localproto = localproto
-    self.__remotes = weakref.WeakKeyDictionary()
     self.__protocols = dict()
     self.__localhash = self.__localproto.getMD5()
     self.__protocols[self.__localhash] = self.__localproto
@@ -248,16 +244,11 @@ class ResponderBase(object):
 
 
   def __handshake(self, transceiver, decoder, encoder):
-    remoteproto = self.__remotes.get(transceiver)
-    if remoteproto != None:
-      return remoteproto #already established
     request = _HANDSHAKE_RESPONDER_READER.read(decoder)
     remoteproto = self.__protocols.get(request.clientHash)
     if remoteproto is None and request.clientProtocol is not None:
       remoteproto = protocol.parse(request.clientProtocol)
       self.__protocols[request.clientHash] = remoteproto
-    if remoteproto is not None:
-      self.__remotes[transceiver] = remoteproto
     response = _HandshakeResponse()
     
     if self.__localhash == request.serverHash:

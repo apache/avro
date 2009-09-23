@@ -55,7 +55,7 @@ public abstract class Requestor {
 
   private Protocol local;
   private Protocol remote;
-  private boolean established, sendLocalText;
+  private boolean sendLocalText;
   private Transceiver transceiver;
   
   protected List<RPCPlugin> rpcMetaPlugins;
@@ -91,8 +91,7 @@ public abstract class Requestor {
       ByteBufferOutputStream bbo = new ByteBufferOutputStream();
       Encoder out = new BinaryEncoder(bbo);
 
-      if (!established)                           // if not established
-        writeHandshake(out);                      // prepend handshake
+      writeHandshake(out);                      // prepend handshake
 
       // use local protocol to write request
       m = getLocal().getMessages().get(messageName);
@@ -112,9 +111,7 @@ public abstract class Requestor {
       
       ByteBufferInputStream bbi = new ByteBufferInputStream(response);
       in = new BinaryDecoder(bbi);
-      if (!established)                           // if not established
-        readHandshake(in);                        // process handshake
-    } while (!established);
+    } while (!readHandshake(in));
 
     // use remote protocol to read response
     m = getRemote().getMessages().get(messageName);
@@ -172,13 +169,14 @@ public abstract class Requestor {
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.clientStartConnect(context);
     }
-    handshake.meta = context.requestSessionMeta();
+    handshake.meta = context.requestHandshakeMeta();
     
     HANDSHAKE_WRITER.write(handshake, out);
   }
 
   @SuppressWarnings("unchecked")
-  private void readHandshake(Decoder in) throws IOException {
+  private boolean readHandshake(Decoder in) throws IOException {
+    boolean established = false;
     HandshakeResponse handshake =
       (HandshakeResponse)HANDSHAKE_READER.read(null, in);
     switch (handshake.match) {
@@ -201,12 +199,13 @@ public abstract class Requestor {
     
     RPCContext context = new RPCContext();
     if (handshake.meta != null) {
-      context.setResponseSessionMeta((Map<Utf8, ByteBuffer>) handshake.meta);
+      context.setResponseHandshakeMeta((Map<Utf8, ByteBuffer>) handshake.meta);
     }
       
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.clientFinishConnect(context);
     }
+    return established;
   }
 
   private void setRemote(HandshakeResponse handshake) {

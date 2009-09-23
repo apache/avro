@@ -687,15 +687,7 @@
 
 	<p>A transport is a system that supports:</p>
 	<ul>
-	  <li><strong>session creation</strong>
-	    <p>A session forms the context under which multiple
-	    messages may be transcieved. A client must establish a
-	    session with a server before any requests may be
-	    processed.</p>
-	  </li>
 	  <li><strong>transmission of request messages</strong>
-	    <p>Once a session has been established, clients may send
-	    servers request messages using that session.</p>
 	  </li>
 	  <li><strong>receipt of corresponding response messages</strong>
 	    <p>Servers will send a response message back to the client
@@ -752,14 +744,15 @@
       <section>
 	<title>Handshake</title>
 
-	<p>RPC sessions are initiated by handshake.  The purpose of
-	the handshake is to ensure that the client and the server have
-	each other's protocol definition, so that the client can
-	correctly deserialize responses, and the server can correctly
-	deserialize requests.  Both clients and servers should
-	maintain a cache of recently seen protocols, so that, in most
-	cases, a handshake will be completed without extra round-trip
-	network exchanges or the transmission of full protocol text.</p>
+	<p>RPC requests and responses are prefixed by handshakes.  The
+	purpose of the handshake is to ensure that the client and the
+	server have each other's protocol definition, so that the
+	client can correctly deserialize responses, and the server can
+	correctly deserialize requests.  Both clients and servers
+	should maintain a cache of recently seen protocols, so that,
+	in most cases, a handshake will be completed without extra
+	round-trip network exchanges or the transmission of full
+	protocol text.</p>
 
 	<p>The handshake process uses the following record schemas:</p>
 
@@ -793,7 +786,7 @@
 	</source>
 
         <ul>
-	  <li>In a new session, a client first sends
+	  <li>A client first prefixes each request with
 	  a <code>HandshakeRequest</code> containing just the hash of
 	  its protocol and of the server's protocol
 	  (<code>clientHash!=null, clientProtocol=null,
@@ -810,19 +803,22 @@
 	      serverHash=null</code> if the client sent the valid hash
 	      of the server's protocol and the server knows what
 	      protocol corresponds to the client's hash. In this case,
-	      the request is complete and the session is
-	      established.</li>
+	      the request is complete and the response data
+	      immediately follows the HandshakeResponse.</li>
 
 	      <li><code>match=CLIENT, serverProtocol!=null,
 	      serverHash!=null</code> if the server has previously
 	      seen the client's protocol, but the client sent an
-	      incorrect hash of the server's protocol. The client must
-	      then re-send the request with the correct server
-	      hash.</li>
+	      incorrect hash of the server's protocol. The request is
+	      complete and the response data immediately follows the
+	      HandshakeResponse. The client must use the returned
+	      protocol to process the response and should also cache
+	      that protocol and its hash for future interactions with
+	      this server.</li>
 
               <li><code>match=NONE, serverProtocol!=null,
 	      serverHash!=null</code> if the server has not previously
-	      seen the client's protocol and the client sent and
+	      seen the client's protocol and the client sent an
 	      incorrect hash of the server's protocol.
 
 	      <p>In this case The client must then re-submit its
@@ -835,19 +831,6 @@
 	    </ul>
 	  </li>
 	</ul>
-
-	<p>Until a connection is established, call request data sent
-	by the client must be preceded by
-	a <code>HandshakeRequest</code> and call response data
-	returned by the server must be preceded by a
-	<code>HandshakeResponse</code>. A connection is not
-	established until a <code>HandshakeResponse</code> with
-	<code>match=BOTH</code> or <code>match=CLIENT</code> is
-	returned.  In these cases, the call response data immmediately
-	follows
-	the <code>HandShakeResponse</code>. When <code>match=NONE</code>
-	no response call data is sent and the request call data is
-	ignored.</p>
 
 	<p>The <code>meta</code> field is reserved for future
 	handshake enhancements.</p>

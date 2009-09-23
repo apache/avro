@@ -4,6 +4,10 @@ Trunk (unreleased changes)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-115. Remove RPC's session notion to facilliate the use of
+    stateless transports like UDP and HTTP.  Add a UDP transport.
+    (cutting)
+
   NEW FEATURES
 
   IMPROVEMENTS

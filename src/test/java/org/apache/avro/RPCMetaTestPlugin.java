@@ -27,13 +27,11 @@ import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.util.Utf8;
 
 /**
- * An implementation of an RPC metadata plugin API
- * designed for unit testing.  This plugin tests
- * both session and per-call state by passing
- * a string as per-call metadata, slowly building it
- * up at each instrumentation point, testing it as
- * it goes.  Finally, after the call or handshake is
- * complete, the constructed string is tested.
+ * An implementation of an RPC metadata plugin API designed for unit testing.
+ * This plugin tests handshake and call state by passing a string as metadata,
+ * slowly building it up at each instrumentation point, testing it as it goes.
+ * Finally, after the call or handshake is complete, the constructed string is
+ * tested.
  */
 public final class RPCMetaTestPlugin extends RPCPlugin {
   
@@ -46,18 +44,18 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   @Override
   public void clientStartConnect(RPCContext context) {
     ByteBuffer buf = ByteBuffer.wrap("ap".getBytes());
-    context.requestSessionMeta().put(key, buf);
+    context.requestHandshakeMeta().put(key, buf);
   }
   
   @Override
   public void serverConnecting(RPCContext context) {
     
-    Assert.assertNotNull(context.requestSessionMeta());
-    Assert.assertNotNull(context.responseSessionMeta());
+    Assert.assertNotNull(context.requestHandshakeMeta());
+    Assert.assertNotNull(context.responseHandshakeMeta());
     
-    if (!context.requestSessionMeta().containsKey(key)) return;
+    if (!context.requestHandshakeMeta().containsKey(key)) return;
     
-    ByteBuffer buf = context.requestSessionMeta().get(key);
+    ByteBuffer buf = context.requestHandshakeMeta().get(key);
     Assert.assertNotNull(buf);
     Assert.assertNotNull(buf.array());
     
@@ -67,18 +65,18 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     
     buf = ByteBuffer.wrap((partialstr + "ac").getBytes());
     Assert.assertTrue(buf.remaining() > 0);
-    context.responseSessionMeta().put(key, buf);
+    context.responseHandshakeMeta().put(key, buf);
   }
   
   @Override
   public void clientFinishConnect(RPCContext context) {
-    Map<Utf8,ByteBuffer> sessionMeta = context.responseSessionMeta();
+    Map<Utf8,ByteBuffer> handshakeMeta = context.responseHandshakeMeta();
     
-    Assert.assertNotNull(sessionMeta);
+    Assert.assertNotNull(handshakeMeta);
     
-    if (!sessionMeta.containsKey(key)) return;
+    if (!handshakeMeta.containsKey(key)) return;
     
-    ByteBuffer buf = sessionMeta.get(key);
+    ByteBuffer buf = handshakeMeta.get(key);
     Assert.assertNotNull(buf);
     Assert.assertNotNull(buf.array());
     
@@ -88,9 +86,9 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     
     buf = ByteBuffer.wrap((partialstr + "he").getBytes());
     Assert.assertTrue(buf.remaining() > 0);
-    sessionMeta.put(key, buf);
+    handshakeMeta.put(key, buf);
     
-    checkRPCMetaMap(sessionMeta);
+    checkRPCMetaMap(handshakeMeta);
   }
   
   @Override

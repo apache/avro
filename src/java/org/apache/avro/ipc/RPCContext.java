@@ -27,49 +27,49 @@ import org.apache.avro.util.Utf8;
  * This class represents the context of an RPC call or RPC handshake.
  * Designed to provide information to RPC plugin writers,
  * this class encapsulates information about the rpc exchange,
- * including per-session and per-call metadata.
+ * including handshake and call metadata.
  *
  */
 public class RPCContext {
   
-  protected Map<Utf8,ByteBuffer> requestSessionMeta, responseSessionMeta;
+  protected Map<Utf8,ByteBuffer> requestHandshakeMeta, responseHandshakeMeta;
   protected Map<Utf8,ByteBuffer> requestCallMeta, responseCallMeta;
   
   protected Object response;
   protected AvroRemoteException error;
   
   /**
-   * This is an access method for the session state
+   * This is an access method for the handshake state
    * provided by the client to the server.
-   * @return a map representing session state from
+   * @return a map representing handshake state from
    * the client to the server
    */
-  public Map<Utf8,ByteBuffer> requestSessionMeta() {
-    if (requestSessionMeta == null) {
-      requestSessionMeta = new HashMap<Utf8,ByteBuffer>();
+  public Map<Utf8,ByteBuffer> requestHandshakeMeta() {
+    if (requestHandshakeMeta == null) {
+      requestHandshakeMeta = new HashMap<Utf8,ByteBuffer>();
     }
-    return requestSessionMeta;
+    return requestHandshakeMeta;
   }
   
-  void setRequestSessionMeta(Map<Utf8,ByteBuffer> newmeta) {
-    requestSessionMeta = newmeta;
+  void setRequestHandshakeMeta(Map<Utf8,ByteBuffer> newmeta) {
+    requestHandshakeMeta = newmeta;
   }
   
   /**
-   * This is an access method for the session state
+   * This is an access method for the handshake state
    * provided by the server back to the client
-   * @return a map representing session state from
+   * @return a map representing handshake state from
    * the server to the client
    */
-  public Map<Utf8,ByteBuffer> responseSessionMeta() {
-    if (responseSessionMeta == null) {
-      responseSessionMeta = new HashMap<Utf8,ByteBuffer>();
+  public Map<Utf8,ByteBuffer> responseHandshakeMeta() {
+    if (responseHandshakeMeta == null) {
+      responseHandshakeMeta = new HashMap<Utf8,ByteBuffer>();
     }
-    return responseSessionMeta;
+    return responseHandshakeMeta;
   }
   
-  void setResponseSessionMeta(Map<Utf8,ByteBuffer> newmeta) {
-    responseSessionMeta = newmeta;
+  void setResponseHandshakeMeta(Map<Utf8,ByteBuffer> newmeta) {
+    responseHandshakeMeta = newmeta;
   }
   
   /**

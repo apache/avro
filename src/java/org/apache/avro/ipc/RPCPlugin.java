@@ -27,20 +27,20 @@ public class RPCPlugin {
   
   /**
    * Called on the client before the initial RPC handshake to
-   * setup any per-session metadata for this plugin
-   * @param context the per-sesion rpc context
+   * setup any handshake metadata for this plugin
+   * @param context the handshake rpc context
    */
   public void clientStartConnect(RPCContext context) { }
   
   /**
    * Called on the server during the RPC handshake
-   * @param context the per-sesion rpc context
+   * @param context the handshake rpc context
    */
   public void serverConnecting(RPCContext context) { }
   
   /**
    * Called on the client after the initial RPC handshake
-   * @param context the per-sesion rpc context
+   * @param context the handshake rpc context
    */
   public void clientFinishConnect(RPCContext context) { }
   

@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +55,6 @@ public abstract class Responder {
   private static final GenericDatumWriter<Map<Utf8,ByteBuffer>> META_WRITER =
     new GenericDatumWriter<Map<Utf8,ByteBuffer>>(META);
 
-  private Map<Transceiver,Protocol> remotes
-    = Collections.synchronizedMap(new WeakHashMap<Transceiver,Protocol>());
   private Map<MD5,Protocol> protocols
     = Collections.synchronizedMap(new HashMap<MD5,Protocol>());
 
@@ -87,18 +84,14 @@ public abstract class Responder {
 
   /** Called by a server to deserialize a request, compute and serialize
    * a response or error. */
-  public List<ByteBuffer> respond(Transceiver transceiver) throws IOException {
-    ByteBufferInputStream bbi =
-      new ByteBufferInputStream(transceiver.readBuffers());
-    
-    Decoder in = new BinaryDecoder(bbi);
-    ByteBufferOutputStream bbo =
-      new ByteBufferOutputStream();
+  public List<ByteBuffer> respond(List<ByteBuffer> buffers) throws IOException {
+    Decoder in = new BinaryDecoder(new ByteBufferInputStream(buffers));
+    ByteBufferOutputStream bbo = new ByteBufferOutputStream();
     Encoder out = new BinaryEncoder(bbo);
     AvroRemoteException error = null;
     RPCContext context = new RPCContext();
     try {
-      Protocol remote = handshake(transceiver, in, out);
+      Protocol remote = handshake(in, out);
       if (remote == null)                        // handshake failed
         return bbo.getBufferList();
 
@@ -163,20 +156,14 @@ public abstract class Responder {
     new SpecificDatumReader(HandshakeRequest._SCHEMA);
 
   @SuppressWarnings("unchecked")
-  private Protocol handshake(Transceiver transceiver,
-                             Decoder in, Encoder out)
+  private Protocol handshake(Decoder in, Encoder out)
     throws IOException {
-    Protocol remote = remotes.get(transceiver);
-    if (remote != null) return remote;            // already established
-      
     HandshakeRequest request = (HandshakeRequest)handshakeReader.read(null, in);
-    remote = protocols.get(request.clientHash);
+    Protocol remote = protocols.get(request.clientHash);
     if (remote == null && request.clientProtocol != null) {
       remote = Protocol.parse(request.clientProtocol.toString());
       protocols.put(request.clientHash, remote);
     }
-    if (remote != null)
-      remotes.put(transceiver, remote);
     HandshakeResponse response = new HandshakeResponse();
     if (localHash.equals(request.serverHash)) {
       response.match =
@@ -191,12 +178,12 @@ public abstract class Responder {
     }
     
     RPCContext context = new RPCContext();
-    context.setRequestSessionMeta((Map<Utf8, ByteBuffer>) request.meta);
+    context.setRequestHandshakeMeta((Map<Utf8, ByteBuffer>) request.meta);
     
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.serverConnecting(context);
     }
-    response.meta = context.responseSessionMeta();
+    response.meta = context.responseHandshakeMeta();
     
     handshakeWriter.write(response, out);
     return remote;

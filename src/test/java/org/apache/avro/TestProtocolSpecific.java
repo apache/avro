@@ -18,6 +18,7 @@
 package org.apache.avro;
 
 import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
@@ -61,7 +62,7 @@ public class TestProtocolSpecific {
     }
   }
 
-  protected static SocketServer server;
+  protected static Server server;
   protected static Transceiver client;
   protected static Simple proxy;
 

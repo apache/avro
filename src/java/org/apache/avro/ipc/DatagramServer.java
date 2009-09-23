@@ -22,29 +22,30 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.DatagramChannel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A simple socket-based server implementation. */
-public class SocketServer extends Thread implements Server {
-  private static final Logger LOG = LoggerFactory.getLogger(SocketServer.class);
+/** A simple datagram-based server implementation. */
+public class DatagramServer extends Thread implements Server {
+  private static final Logger LOG =
+    LoggerFactory.getLogger(DatagramServer.class);
 
-  private Responder responder;
-  private ServerSocketChannel channel;
-  private ThreadGroup group;
+  private final Responder responder;
+  private final DatagramChannel channel;
+  private final Transceiver transceiver;
 
-  public SocketServer(Responder responder, SocketAddress addr)
+  public DatagramServer(Responder responder, SocketAddress addr)
     throws IOException {
-    String name = "SocketServer on "+addr;
+    String name = "DatagramServer on "+addr;
 
     this.responder = responder;
-    this.group = new ThreadGroup(name);
-    this.channel = ServerSocketChannel.open();
 
+    this.channel = DatagramChannel.open();
     channel.socket().bind(addr);
+
+    this.transceiver = new DatagramTransceiver(channel);
 
     setName(name);
     setDaemon(true);
@@ -54,58 +55,25 @@ public class SocketServer extends Thread implements Server {
   public int getPort() { return channel.socket().getLocalPort(); }
 
   public void run() {
-    LOG.info("starting "+channel.socket().getInetAddress());
     while (true) {
       try {
-        new Connection(channel.accept());
+        transceiver.writeBuffers(responder.respond(transceiver.readBuffers()));
       } catch (ClosedChannelException e) {
         return;
       } catch (IOException e) {
         LOG.warn("unexpected error", e);
         throw new RuntimeException(e);
-      } finally {
-        LOG.info("stopping "+channel.socket().getInetAddress());
       }
     }
-  }
-
-  public void close() {
-    group.interrupt();
-  }
-
-  private class Connection extends SocketTransceiver implements Runnable {
-
-    public Connection(SocketChannel channel) {
-      super(channel);
-
-      Thread thread = new Thread(group, this);
-      thread.setName("Connection to "+channel.socket().getRemoteSocketAddress());
-      thread.setDaemon(true);
-      thread.start();
-    }
-
-    public void run() {
-      try {
-        try {
-          while (true) {
-            writeBuffers(responder.respond(readBuffers()));
-          }
-        } catch (ClosedChannelException e) {
-          return;
-        } finally {
-          close();
-        }
-      } catch (IOException e) {
-        LOG.warn("unexpected error", e);
-      }
-    }
-
   }
   
+  public void close() { this.interrupt(); }
+
   public static void main(String[] arg) throws Exception {
-    SocketServer server = new SocketServer(null, new InetSocketAddress(0));
+    DatagramServer server = new DatagramServer(null, new InetSocketAddress(0));
     System.out.println("started");
     server.join();
   }
+
 }
 
