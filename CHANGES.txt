@@ -39,6 +39,10 @@ Trunk (unreleased changes)
     AVRO-117.  Fix memory leak in C++ JSON parser.
     (Scott Banachowski via cutting)
 
+    AVRO-122.  Fix so that, when multiple Ant targets are specified on
+    the command line that depend on ivy, ivy does not fail.  (phunt
+    via cutting)
+
 Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES
