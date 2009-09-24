@@ -10,6 +10,10 @@ Trunk (unreleased changes)
 
   NEW FEATURES
 
+    AVRO-121.  Permit reflect and specific datum readers to read data
+    written with a different version of the schema than is current.
+    (cutting)
+
   IMPROVEMENTS
 
     AVRO-99.  Use Boost framework for C++ unit tests.

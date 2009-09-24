@@ -44,14 +44,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   public GenericDatumReader(Schema actual) {
     setSchema(actual);
+    setExpected(actual);
   }
 
   public GenericDatumReader(Schema actual, Schema expected) {
-    this(actual);
-    this.expected = expected;
+    setSchema(actual);
+    setExpected(expected);
   }
 
   public void setSchema(Schema actual) { this.actual = actual; }
+
+  public void setExpected(Schema expected) { this.expected = expected; }
 
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
