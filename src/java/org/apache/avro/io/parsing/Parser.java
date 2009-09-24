@@ -87,6 +87,27 @@ public class Parser {
       }
     }
   }
+  
+  /**
+   * Performs any implicit actions at the top the stack, expanding any
+   * production (other than the root) that may be encountered.
+   * This method will fail if there are any repeaters on the stack.
+   * @throws IOException
+   */
+  public final void processImplicitActions() throws IOException {
+     while (pos > 1) {
+      Symbol top = stack[pos - 1];
+      if (top.kind == Symbol.Kind.IMPLICIT_ACTION) {
+        pos--;
+        symbolHandler.doAction(null, top);
+      } else if (top.kind != Symbol.Kind.TERMINAL) {
+        pos--;
+        pushProduction(null, top);
+      } else {
+        break;
+      }
+    }
+  }
 
   /**
    * Pushes the production for the given symbol <tt>sym</tt>.

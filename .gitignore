@@ -1,2 +1,4 @@
 build
 *.pyc
+.svn
+test-output

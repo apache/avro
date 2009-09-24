@@ -53,9 +53,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
 
   @Override
   public void flush() throws IOException {
-    if (parser.depth() > 1) {
-      parser.advance(Symbol.END);
-    }
+    parser.processImplicitActions();
     out.flush();
   }
 

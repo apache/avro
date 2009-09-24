@@ -25,6 +25,10 @@ Trunk (unreleased changes)
     AVRO-119.  Add Java GenericData.Array#toString() implementation,
     to facillitate debugging. (cutting)
 
+    AVRO-118.  JSON encoder and decoder now permit one to write
+    multiple instances without flushing or explicitly resetting the
+    codec between each instance.  (Thiruvalluvan M. G. via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

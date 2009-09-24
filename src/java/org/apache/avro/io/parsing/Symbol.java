@@ -364,7 +364,6 @@ public abstract class Symbol {
   public static final Symbol ARRAY_END = new Symbol.Terminal("array-end");
   public static final Symbol MAP_START = new Symbol.Terminal("map-start");
   public static final Symbol MAP_END = new Symbol.Terminal("map-end");
-  public static final Symbol END = new Symbol.Terminal("end");
   public static final Symbol ITEM_END = new Symbol.Terminal("item-end");
 
   /* a pseudo terminal used by parsers */

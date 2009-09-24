@@ -240,13 +240,16 @@ public class TestSchema {
     Encoder encoder = new JsonEncoder(schema, out);
     writer.setSchema(schema);
     writer.write(datum, encoder);
+    writer.write(datum, encoder);
     encoder.flush();
     byte[] data = out.toByteArray();
 
     reader.setSchema(schema);
-    Object decoded =
-      reader.read(null, new JsonDecoder(schema, new ByteArrayInputStream(data)));
-      
+    Decoder decoder = new JsonDecoder(schema, new ByteArrayInputStream(data));
+    Object decoded = reader.read(null, decoder);
+    assertEquals("Decoded data does not match.", datum, decoded);
+
+    decoded = reader.read(decoded, decoder);
     assertEquals("Decoded data does not match.", datum, decoded);
   }
 

@@ -34,8 +34,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
    * for the grammar for the grammar for the given schema <tt>sc</tt>.
    */
   public Symbol generate(Schema schema) {
-    return Symbol.root(Symbol.END,
-        generate(schema, new HashMap<LitS, Symbol>()));
+    return Symbol.root(generate(schema, new HashMap<LitS, Symbol>()));
   }
 
   /**
