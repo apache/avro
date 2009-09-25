@@ -53,6 +53,7 @@ public class TestProtocolSpecific {
 
   public static class TestImpl implements Simple {
     public Utf8 hello(Utf8 greeting) { return new Utf8("goodbye"); }
+    public int add(int arg1, int arg2) { return arg1 + arg2; }
     public TestRecord echo(TestRecord record) { return record; }
     public ByteBuffer echoBytes(ByteBuffer data) { return data; }
     public Void error() throws AvroRemoteException {
@@ -91,6 +92,12 @@ public class TestProtocolSpecific {
     TestRecord echoed = proxy.echo(record);
     assertEquals(record, echoed);
     assertEquals(record.hashCode(), echoed.hashCode());
+  }
+
+  @Test
+  public void testAdd() throws IOException {
+    int result = proxy.add(1, 2);
+    assertEquals(3, result);
   }
 
   @Test

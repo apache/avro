@@ -33,6 +33,11 @@
          "response": "TestRecord"
      },
 
+     "add": {
+         "request": [{"name": "arg1", "type": "int"}, {"name": "arg2", "type": "int"}],
+         "response": "int"
+     },
+
      "echoBytes": {
          "request": [{"name": "data", "type": "bytes"}],
          "response": "bytes"

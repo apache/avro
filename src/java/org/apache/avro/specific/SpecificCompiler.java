@@ -110,7 +110,7 @@ public class SpecificCompiler {
         Message message = e.getValue();
         Schema request = message.getRequest();
         Schema response = message.getResponse();
-        line(1, type(response)+" "+name+"("+params(request)+")");
+        line(1, unbox(response)+" "+name+"("+params(request)+")");
         line(2,"throws AvroRemoteException"+errors(message.getErrors())+";");
       }
       line(0, "}");
@@ -160,7 +160,7 @@ public class SpecificCompiler {
     int count = 0;
     for (Map.Entry<String, Schema> param : request.getFieldSchemas()) {
       String paramName = param.getKey();
-      b.append(type(param.getValue()));
+      b.append(unbox(param.getValue()));
       b.append(" ");
       b.append(paramName);
       if (++count < request.getFields().size())

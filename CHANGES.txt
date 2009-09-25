@@ -62,6 +62,9 @@ Trunk (unreleased changes)
     the command line that depend on ivy, ivy does not fail.  (phunt
     via cutting)
 
+    AVRO-123.  Fix Java's specific protocol compiler so that
+    parameters and return types are unboxed. (cutting)
+
 Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES
