@@ -68,6 +68,9 @@ Trunk (unreleased changes)
     AVRO-125.  Fix sample protocol in specification document to use
     the correct syntax.  (cutting)
 
+    AVRO-101.  Add Java reflect API test case using nested classes.
+    (Eelco Hillenius via cutting)
+
 Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES

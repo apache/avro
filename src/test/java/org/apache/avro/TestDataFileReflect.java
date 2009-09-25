@@ -154,6 +154,35 @@ public class TestDataFileReflect {
     reader.close();
   }
 
+  /*
+   * Test that writing out and reading in a nested class works
+   */
+  @Test
+  public void testNestedClass() throws IOException {
+    FileOutputStream fos = new FileOutputStream(FILE);
+
+    Schema schema = ReflectData.get().getSchema(BazRecord.class);
+    DataFileWriter<Object> writer = new DataFileWriter<Object>(schema, fos,
+        new ReflectDatumWriter(schema));
+
+    // test writing to a file
+    CheckList check = new CheckList();
+    write(writer, new BazRecord(10), check);
+    write(writer, new BazRecord(20), check);
+    writer.close();
+
+    ReflectDatumReader din = new ReflectDatumReader();
+    SeekableFileInput sin = new SeekableFileInput(FILE);
+    DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
+    Object datum = null;
+    long count = reader.getMetaLong("count");
+    for (int i = 0; i < count; i++) {
+      datum = reader.next(datum);
+      check.assertEquals(datum, i);
+    }
+    reader.close();
+  }
+
   private void write(DataFileWriter<Object> writer, Object o, CheckList l)
       throws IOException {
     writer.append(l.addAndReturn(o));
@@ -171,6 +200,35 @@ public class TestDataFileReflect {
       Object o = get(i);
       Assert.assertNotNull(o);
       Assert.assertEquals(toCheck, o);
+    }
+  }
+
+  private static class BazRecord {
+    private int nbr;
+
+    public BazRecord() {
+    }
+
+    public BazRecord(int nbr) {
+      this.nbr = nbr;
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that instanceof BazRecord) {
+        return this.nbr == ((BazRecord) that).nbr;
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return nbr;
+    }
+
+    @Override
+    public String toString() {
+      return BazRecord.class.getSimpleName() + "{cnt=" + nbr + "}";
     }
   }
 }
