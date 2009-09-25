@@ -65,6 +65,9 @@ Trunk (unreleased changes)
     AVRO-123.  Fix Java's specific protocol compiler so that
     parameters and return types are unboxed. (cutting)
 
+    AVRO-125.  Fix sample protocol in specification document to use
+    the correct syntax.  (cutting)
+
 Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES
