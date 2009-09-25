@@ -8,6 +8,25 @@ Trunk (unreleased changes)
     stateless transports like UDP and HTTP.  Add a UDP transport.
     (cutting)
 
+    AVRO-120. Improved package and namespace handling, including:
+
+     * Removed explicit package-name specification from specific and
+       reflect public APIs.  Package names are now determined either
+       by namespace declarations or by a Java classes, as appropriate.
+
+     * Changed the specific compiler to generate separate java files
+       per class, rather than nested classes.  This permits generated
+       classes to be in packages declared in their schema namespaces.
+
+     * Fix namespace defaulting.  The default namespace is declared in
+       the outermost schema or protocol.  Nested schemas can now
+       declare different namespaces than the default.
+
+     * Names may now be specified with a dotted notation, e.g.,
+       "foo.bar.Baz", to indicate the name "Baz" in namespace
+       "foo.bar".  This permits one to refer to schemas in a namespace
+       other than the default.
+
   NEW FEATURES
 
     AVRO-121.  Permit reflect and specific datum readers to read data

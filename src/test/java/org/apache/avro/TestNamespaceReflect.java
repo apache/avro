@@ -15,26 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.specific;
+package org.apache.avro;
 
-import org.apache.avro.Schema;
-import org.apache.avro.reflect.ReflectDatumWriter;
+import org.apache.avro.ipc.SocketServer;
+import org.apache.avro.ipc.SocketTransceiver;
+import org.apache.avro.reflect.ReflectRequestor;
+import org.apache.avro.reflect.ReflectResponder;
+import org.apache.avro.test.namespace.TestNamespace;
+import org.junit.Before;
 
-/** {@link org.apache.avro.io.DatumWriter DatumWriter} for generated Java classes. */
-public class SpecificDatumWriter extends ReflectDatumWriter {
-  public SpecificDatumWriter() {}
+import java.net.InetSocketAddress;
 
-  public SpecificDatumWriter(Class c) {
-    super(SpecificData.get().getSchema(c), SpecificData.get());
-  }
-  
-  public SpecificDatumWriter(Schema schema) {
-    super(schema, SpecificData.get());
-  }
-  
-  protected Object getField(Object record, String name, int position) {
-    return ((SpecificRecord)record).get(position);
+public class TestNamespaceReflect extends TestNamespaceSpecific {
+
+  @Before
+  public void testStartServer() throws Exception {
+    server = new SocketServer(new ReflectResponder(TestNamespace.class, new TestImpl()),
+                              new InetSocketAddress(0));
+    client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
+    proxy = (TestNamespace)ReflectRequestor.getClient(TestNamespace.class, client);
   }
 
 }
-

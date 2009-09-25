@@ -52,7 +52,7 @@ public class SpecificRequestor extends ReflectRequestor {
   }
 
   protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new SpecificDatumReader(schema, packageName);
+    return new SpecificDatumReader(schema);
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

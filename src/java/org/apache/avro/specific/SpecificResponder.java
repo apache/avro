@@ -34,7 +34,7 @@ public class SpecificResponder extends ReflectResponder {
   }
 
   protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new SpecificDatumReader(schema, packageName);
+    return new SpecificDatumReader(schema);
   }
 
 }

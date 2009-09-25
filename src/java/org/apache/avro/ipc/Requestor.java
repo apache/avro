@@ -144,10 +144,10 @@ public abstract class Requestor {
     Collections.synchronizedMap(new HashMap<MD5,Protocol>());
 
   private static final SpecificDatumWriter HANDSHAKE_WRITER =
-    new SpecificDatumWriter(HandshakeRequest._SCHEMA);
+    new SpecificDatumWriter(HandshakeRequest.class);
 
   private static final SpecificDatumReader HANDSHAKE_READER =
-    new SpecificDatumReader(HandshakeResponse._SCHEMA);
+    new SpecificDatumReader(HandshakeResponse.class);
 
   private void writeHandshake(Encoder out) throws IOException {
     MD5 localHash = new MD5();

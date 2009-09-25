@@ -36,7 +36,6 @@ import org.apache.avro.ipc.Transceiver;
 
 /** A {@link Requestor} for existing interfaces via Java reflection. */
 public class ReflectRequestor extends Requestor implements InvocationHandler {
-  protected String packageName;
   
   public ReflectRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
@@ -56,7 +55,6 @@ public class ReflectRequestor extends Requestor implements InvocationHandler {
   protected ReflectRequestor(Protocol protocol, Transceiver transceiver, ReflectData reflectData)
     throws IOException {
     super(protocol, transceiver);
-    this.packageName = protocol.getNamespace()+"."+protocol.getName()+"$";
   }
 
   public Object invoke(Object proxy, Method method, Object[] args)
@@ -69,7 +67,7 @@ public class ReflectRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new ReflectDatumReader(schema, packageName);
+    return new ReflectDatumReader(schema);
   }
 
   public void writeRequest(Schema schema, Object request, Encoder out)

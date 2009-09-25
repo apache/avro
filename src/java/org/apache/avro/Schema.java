@@ -263,40 +263,74 @@ public abstract class Schema {
     public int hashCode() { return schema.hashCode(); }
   }
 
-  private static abstract class NamedSchema extends Schema {
-    protected final String name; 
-    protected final String space; 
-    public NamedSchema(Type type, String name, String space) {
-      super(type);
-      this.name = name;
-      this.space = space;
-    }
-    public String getName() { return name; }
-    public String getNamespace() { return space; }
-    public boolean writeNameRef(Names names, JsonGenerator gen)
-      throws IOException {
-      if (this.equals(names.get(name))) {
-        gen.writeString(name);
-        return true;
-      } else if (name != null) {
-        names.put(name, this);
+  private static class Name {
+    private String name;
+    private String space;
+    public Name(Schema s) { this(s.getName(), s.getNamespace()); }
+    public Name(String name, String space) {
+      if (name == null) return;                   // anonymous
+      int lastDot = name.lastIndexOf('.');
+      if (lastDot < 0) {                          // unqualified name
+        this.space = space;                       // use default space
+        this.name = name;
+      } else {                                    // qualified name
+        this.space = name.substring(0, lastDot);  // get space from name
+        this.name = name.substring(lastDot+1, name.length());
       }
-      return false;
     }
-    public void writeName(Names names, JsonGenerator gen) throws IOException {
-      if (name != null)  gen.writeStringField("name", name);
-      if (space != null) gen.writeStringField("namespace", space);
-    }
-    public boolean equalNames(NamedSchema that) {
+    public boolean equals(Object o) {
+      if (o == this) return true;
+      if (!(o instanceof Name)) return false;
+      Name that = (Name)o;
       return that == null ? false
         : (name==null ? that.name==null : name.equals(that.name))
         && (space==null ? that.space==null : space.equals(that.space));
     }
     public int hashCode() {
-      return getType().hashCode()
-        + (name==null ? 0 : name.hashCode())
+      return (name==null ? 0 : name.hashCode())
         + (space==null ? 0 : space.hashCode());
     }
+    public String toString() { return "name="+name + " namespace="+space; }
+    public void writeName(Names names, JsonGenerator gen) throws IOException {
+      if (name != null) gen.writeStringField("name", name);
+      if (space != null) {
+        if (!space.equals(names.space()))
+          gen.writeStringField("namespace", space);
+        if (names.space() == null)                // default namespace
+          names.space(space);
+      }
+    }
+  }
+
+  private static abstract class NamedSchema extends Schema {
+    private final Name name;
+    public NamedSchema(Type type, String name, String space) {
+      super(type);
+      this.name = new Name(name, space);
+    }
+    public String getName() { return name.name; }
+    public String getNamespace() { return name.space; }
+    public boolean writeNameRef(Names names, JsonGenerator gen)
+      throws IOException {
+      if (this.equals(names.get(name))) {
+        if (name.space == null || name.space.equals(names.space()))
+          gen.writeString(name.name);
+        else {
+          gen.writeString(name.space+"."+name.name);
+        }
+        return true;
+      } else if (name.name != null) {
+        names.put(name, this);
+      }
+      return false;
+    }
+    public void writeName(Names names, JsonGenerator gen) throws IOException {
+      name.writeName(names, gen);
+    }
+    public boolean equalNames(NamedSchema that) {
+      return this.name.equals(that.name);
+    }
+    public int hashCode() { return getType().hashCode() + name.hashCode(); }
   }
 
   private static class SeenPair {
@@ -594,7 +628,7 @@ public abstract class Schema {
     return parse(parseJson(jsonSchema), new Names());
   }
 
-  static final Names PRIMITIVES = new Names(null);
+  static final Map<String,Schema> PRIMITIVES = new HashMap<String,Schema>();
   static {
     PRIMITIVES.put("string",  STRING_SCHEMA);
     PRIMITIVES.put("bytes",   BYTES_SCHEMA);
@@ -606,35 +640,46 @@ public abstract class Schema {
     PRIMITIVES.put("null",    NULL_SCHEMA);
   }
 
-  static class Names extends LinkedHashMap<String, Schema> {
-    private Names defaults = PRIMITIVES;
+  static class Names extends LinkedHashMap<Name, Schema> {
     private String space;                         // default namespace
 
-    public Names(Names defaults) { this.defaults = defaults; }
-    public Names() { this(PRIMITIVES); }
+    public Names() {}
+    public Names(String space) { this.space = space; }
+
+    public String space() { return space; }
+    public void space(String space) { this.space = space; }
 
     @Override
-    public Schema get(Object name) {
-      if (containsKey(name))
-        return super.get(name);
-      if (defaults != null)
-        return defaults.get(name);
-      return null;
+    public Schema get(Object o) {
+      Name name;
+      if (o instanceof String) {
+        Schema primitive = PRIMITIVES.get((String)o);
+        if (primitive != null) return primitive;
+        name = new Name((String)o, space);
+      } else {
+        name = (Name)o;
+      }
+      return super.get(name);
+    }
+    public void add(Schema schema) {
+      put(((NamedSchema)schema).name, schema);
     }
     @Override
-    public Schema put(String name, Schema schema) {
-      if (get(name) != null)
+    public Schema put(Name name, Schema schema) {
+      if (containsKey(name))
         throw new SchemaParseException("Can't redefine: "+name);
       return super.put(name, schema);
     }
-    public Names except(String name) {
-      Names result = new Names(this);
-      result.clear(name);
-      return result;
+    public Names except(final Schema schema) {
+      final Names parent = this;
+      return new Names(space) {
+        public Schema get(Object o) {
+          if (this.containsKey(o)) return this.get(o);
+          if (((NamedSchema)schema).name.equals(o)) return null;
+          return parent.get(o);
+        }
+      };
     }
-    public String space() { return space; }
-    public void space(String space) { this.space = space; }
-    private void clear(String name) { super.put(name, null); }
   }
 
   /** @see #parse(String) */
@@ -656,6 +701,8 @@ public abstract class Schema {
         name = nameNode != null ? nameNode.getTextValue() : null;
         JsonNode spaceNode = schema.get("namespace");
         space = spaceNode!=null?spaceNode.getTextValue():names.space();
+        if (names.space() == null && space != null)
+          names.space(space);                     // set default namespace
         if (name == null)
           throw new SchemaParseException("No name in schema: "+schema);
       }
@@ -663,7 +710,7 @@ public abstract class Schema {
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
         RecordSchema result =
           new RecordSchema(name, space, type.equals("error"));
-        if (name != null) names.put(name, result);
+        if (name != null) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())
           throw new SchemaParseException("Record has no fields: "+schema);
@@ -692,7 +739,7 @@ public abstract class Schema {
         for (JsonNode n : symbolsNode)
           symbols.add(n.getTextValue());
         Schema result = new EnumSchema(name, space, symbols);
-        if (name != null) names.put(name, result);
+        if (name != null) names.add(result);
         return result;
       } else if (type.equals("array")) {          // array
         return new ArraySchema(parse(schema.get("items"), names));
@@ -701,7 +748,7 @@ public abstract class Schema {
       } else if (type.equals("fixed")) {          // fixed
         Schema result = new FixedSchema(name, space,
                                         schema.get("size").getIntValue());
-        if (name != null) names.put(name, result);
+        if (name != null) names.add(result);
         return result;
       } else
         throw new SchemaParseException("Type not yet supported: "+type);
@@ -726,4 +773,3 @@ public abstract class Schema {
   }
 
 }
-

@@ -18,6 +18,9 @@
 package org.apache.avro.specific;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.Writer;
+import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -27,69 +30,106 @@ import java.util.HashSet;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /** Generate specific Java interfaces and classes for protocols and schemas. */
 public class SpecificCompiler {
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final JsonFactory FACTORY = new JsonFactory();
+  private File dest;
+  private Writer out;
+  private Set<Schema> queue = new HashSet<Schema>();
 
-  private String namespace;
-  private StringBuilder buffer = new StringBuilder();
-  private Set<String> compiledTypes = new HashSet<String>();
-
-  private SpecificCompiler() {}                        // no public ctor
-
-  /** Returns generated Java interface for a protocol. */
-  public static SpecificCompiler compileProtocol(File file) throws IOException {
-    SpecificCompiler compiler = new SpecificCompiler();
-    Protocol protocol = Protocol.parse(file);
-    compiler.compile(protocol);
-    return compiler;
+  private SpecificCompiler(File dest) {
+    this.dest = dest;                             // root directory for output
   }
 
-  /** Returns generated Java class for a schema. */
-  public static SpecificCompiler compileSchema(File file) throws IOException {
-    SpecificCompiler compiler = new SpecificCompiler();
-    Schema schema = Schema.parse(file);
-    compiler.header(schema.getNamespace());
-    compiler.namespace = schema.getNamespace();
-    compiler.compile(schema, schema.getName(), 0);
-    return compiler;
+  /** Generates Java interface and classes for a protocol.
+   * @param src the source Avro protocol file
+   * @param dest the directory to place generated files in
+   */
+  public static void compileProtocol(File src, File dest) throws IOException {
+    SpecificCompiler compiler = new SpecificCompiler(dest);
+    Protocol protocol = Protocol.parse(src);
+    for (Schema s : protocol.getTypes())          // enqueue types
+      compiler.enqueue(s);
+    compiler.compileInterface(protocol);          // generate interface
+    compiler.compile();                           // generate classes for types
   }
 
-  /** Return namespace for compiled code. */
-  public String getNamespace() { return namespace; }
+  /** Generates Java classes for a schema. */
+  public static void compileSchema(File src, File dest) throws IOException {
+    SpecificCompiler compiler = new SpecificCompiler(dest);
+    compiler.enqueue(Schema.parse(src));          // enqueue types
+    compiler.compile();                           // generate classes for types
+  }
 
-  /** Return generated code. */
-  public String getCode() { return buffer.toString(); }
-  
-  private void compile(Protocol protocol) {
-    namespace = protocol.getNamespace();
-    header(namespace);
-
-    // define an interface
-    line(0, "public interface "+protocol.getName()+" {");
-
-    // nest type classes
-    for (Schema schema : protocol.getTypes().values())
-      compile(schema, schema.getName(), 1);
-
-    // define methods
-    buffer.append("\n");
-    for (Map.Entry<String,Message> entry : protocol.getMessages().entrySet()) {
-      String name = entry.getKey();
-      Message message = entry.getValue();
-      Schema request = message.getRequest();
-      Schema response = message.getResponse();
-      line(1, type(response, name+"Return")+" "+name+"("+params(request)+")");
-      line(2,"throws AvroRemoteException"+errors(message.getErrors())+";");
+  /** Recursively enqueue schemas that need a class generated. */
+  private void enqueue(Schema schema) throws IOException {
+    if (queue.contains(schema)) return;
+    switch (schema.getType()) {
+    case RECORD:
+      queue.add(schema);
+      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
+        enqueue(field.getValue());
+      break;
+    case MAP:
+      enqueue(schema.getValueType());
+      break;
+    case ARRAY:
+      enqueue(schema.getElementType());
+      break;
+    case UNION:
+      for (Schema s : schema.getTypes())
+        enqueue(s);
+      break;
+    case ENUM:
+    case FIXED:
+      queue.add(schema);
+      break;
+    case STRING: case BYTES:
+    case INT: case LONG:
+    case FLOAT: case DOUBLE:
+    case BOOLEAN: case NULL:
+      break;
+    default: throw new RuntimeException("Unknown type: "+schema);
     }
-    line(0, "}");
   }
 
-  private void header(String namespace) {
+  /** Generate java classes for enqueued schemas. */
+  private void compile() throws IOException {
+    for (Schema schema : queue)
+      compile(schema);
+  }
+
+  private void compileInterface(Protocol protocol) throws IOException {
+    startFile(protocol.getName(), protocol.getNamespace());
+    try {
+      line(0, "public interface "+protocol.getName()+" {");
+
+      out.append("\n");
+      for (Map.Entry<String,Message> e : protocol.getMessages().entrySet()) {
+        String name = e.getKey();
+        Message message = e.getValue();
+        Schema request = message.getRequest();
+        Schema response = message.getResponse();
+        line(1, type(response)+" "+name+"("+params(request)+")");
+        line(2,"throws AvroRemoteException"+errors(message.getErrors())+";");
+      }
+      line(0, "}");
+    } finally {
+      out.close();
+    }
+  }
+
+  private void startFile(String name, String space) throws IOException {
+    File dir = new File(dest, space.replace('.', File.separatorChar));
+    if (!dir.exists())
+      if (!dir.mkdirs())
+        throw new IOException("Unable to create " + dir);
+    name = cap(name) + ".java";
+    out = new OutputStreamWriter(new FileOutputStream(new File(dir, name)));
+    header(space);
+  }
+
+  private void header(String namespace) throws IOException {
     if(namespace != null) {
       line(0, "package "+namespace+";\n");
     }
@@ -107,15 +147,20 @@ public class SpecificCompiler {
     line(0, "import org.apache.avro.specific.SpecificRecord;");
     line(0, "import org.apache.avro.specific.SpecificFixed;");
     line(0, "import org.apache.avro.reflect.FixedSize;");
-    buffer.append("\n");
+    for (Schema s : queue)
+      if (namespace == null
+          ? (s.getNamespace() != null)
+          : !namespace.equals(s.getNamespace()))
+        line(0, "import "+SpecificData.get().getClassName(s)+";");
+    line(0, "");
   }
 
-  private String params(Schema request) {
+  private String params(Schema request) throws IOException {
     StringBuilder b = new StringBuilder();
     int count = 0;
     for (Map.Entry<String, Schema> param : request.getFieldSchemas()) {
       String paramName = param.getKey();
-      b.append(type(param.getValue(), paramName));
+      b.append(type(param.getValue()));
       b.append(" ");
       b.append(paramName);
       if (++count < request.getFields().size())
@@ -124,7 +169,7 @@ public class SpecificCompiler {
     return b.toString();
   }
 
-  private String errors(Schema errs) {
+  private String errors(Schema errs) throws IOException {
     StringBuilder b = new StringBuilder();
     for (Schema error : errs.getTypes().subList(1, errs.getTypes().size())) {
       b.append(", ");
@@ -133,113 +178,88 @@ public class SpecificCompiler {
     return b.toString();
   }
 
-  private void compile(Schema schema, String name, int d) {
-    String type = type(schema, name);
-    if (compiledTypes.contains(type)) return; else compiledTypes.add(type);
-    switch (schema.getType()) {
-    case RECORD:
-      buffer.append("\n");
-      line(d, ((d==0)?"public ":"")
-           +((d>1)?"static ":"")+"class "+type
-           +(schema.isError()
-             ? " extends SpecificExceptionBase"
-             : " extends SpecificRecordBase")
-           +" implements SpecificRecord {");
-      // schema definition
-      line(d+1, "public static final Schema _SCHEMA = Schema.parse(\""
-           +esc(schema)+"\");");
-      // field declations
-      for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-        String fieldName = field.getKey();
-        line(d+1,"public "+unbox(field.getValue(),fieldName)+" "+fieldName+";");
-      }
-      // schema method
-      line(d+1, "public Schema getSchema() { return _SCHEMA; }");
-      // get method
-      line(d+1, "public Object get(int _field) {");
-      line(d+2, "switch (_field) {");
-      int i = 0;
-      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-        line(d+2, "case "+(i++)+": return "+field.getKey()+";");
-      line(d+2, "default: throw new AvroRuntimeException(\"Bad index\");");
-      line(d+2, "}");
-      line(d+1, "}");
-      // set method
-      line(d+1, "@SuppressWarnings(value=\"unchecked\")");
-      line(d+1, "public void set(int _field, Object _value) {");
-      line(d+2, "switch (_field) {");
-      i = 0;
-      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-        line(d+2, "case "+(i++)+": "+field.getKey()+" = ("+
-             type(field.getValue(),field.getKey())+")_value; break;");
-      line(d+2, "default: throw new AvroRuntimeException(\"Bad index\");");
-      line(d+2, "}");
-      line(d+1, "}");
-      line(d, "}");
-
-      // nested classes
-      if (d == 0)
+  private void compile(Schema schema) throws IOException {
+    startFile(schema.getName(), schema.getNamespace());
+    try {
+      switch (schema.getType()) {
+      case RECORD:
+        line(0, "public class "+type(schema)+
+             (schema.isError()
+              ? " extends SpecificExceptionBase"
+               : " extends SpecificRecordBase")
+             +" implements SpecificRecord {");
+        // schema definition
+        line(1, "public static final Schema _SCHEMA = Schema.parse(\""
+             +esc(schema)+"\");");
+        // field declations
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-          compile(field.getValue(), null, d+1);
-
-      break;
-    case ENUM:
-      buffer.append("\n");
-      line(d, ((d==0)?"public ":"")+"enum "+type+" { ");
-      StringBuilder b = new StringBuilder();
-      int count = 0;
-      for (String symbol : schema.getEnumSymbols()) {
-        b.append(symbol);
-        if (++count < schema.getEnumSymbols().size())
-          b.append(", ");
+          line(1,"public "+unbox(field.getValue())+" "+field.getKey()+";");
+        // schema method
+        line(1, "public Schema getSchema() { return _SCHEMA; }");
+        // get method
+        line(1, "public Object get(int _field) {");
+        line(2, "switch (_field) {");
+        int i = 0;
+        for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
+          line(2, "case "+(i++)+": return "+field.getKey()+";");
+        line(2, "default: throw new AvroRuntimeException(\"Bad index\");");
+        line(2, "}");
+        line(1, "}");
+        // set method
+        line(1, "@SuppressWarnings(value=\"unchecked\")");
+        line(1, "public void set(int _field, Object _value) {");
+        line(2, "switch (_field) {");
+        i = 0;
+        for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
+          line(2, "case "+(i++)+": "+field.getKey()+" = ("+
+               type(field.getValue())+")_value; break;");
+        line(2, "default: throw new AvroRuntimeException(\"Bad index\");");
+        line(2, "}");
+        line(1, "}");
+        line(0, "}");
+        break;
+      case ENUM:
+        line(0, "public enum "+type(schema)+" { ");
+        StringBuilder b = new StringBuilder();
+        int count = 0;
+        for (String symbol : schema.getEnumSymbols()) {
+          b.append(symbol);
+          if (++count < schema.getEnumSymbols().size())
+            b.append(", ");
+        }
+        line(1, b.toString());
+        line(0, "}");
+        break;
+      case FIXED:
+        line(0, "@FixedSize("+schema.getFixedSize()+")");
+        line(0, "public class "+type(schema)+" extends SpecificFixed {}");
+        break;
+      case MAP: case ARRAY: case UNION: case STRING: case BYTES:
+      case INT: case LONG: case FLOAT: case DOUBLE: case BOOLEAN: case NULL:
+        break;
+      default: throw new RuntimeException("Unknown type: "+schema);
       }
-      line(d+1, b.toString());
-      line(d, "}");
-      break;
-    case ARRAY:
-      compile(schema.getElementType(), name+"Element", d);
-      break;
-    case MAP:
-      compile(schema.getValueType(), name+"Value", d);
-      break;
-    case FIXED:
-      buffer.append("\n");
-      line(d, "@FixedSize("+schema.getFixedSize()+")");
-      line(d, ((d==0)?"public ":"")
-           +((d>1)?"static ":"")+"class "+type
-           +" extends SpecificFixed {}");
-      break;
-    case UNION:
-      int choice = 0;
-      for (Schema t : schema.getTypes())
-        compile(t, name+"Choice"+choice++, d);
-      break;
-
-    case STRING: case BYTES:
-    case INT: case LONG:
-    case FLOAT: case DOUBLE:
-    case BOOLEAN: case NULL:
-      break;
-    default: throw new RuntimeException("Unknown type: "+schema);
+    } finally {
+      out.close();
     }
   }
 
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
-  private String type(Schema schema, String name) {
+  private String type(Schema schema) {
     switch (schema.getType()) {
     case RECORD:
     case ENUM:
     case FIXED:
-      return schema.getName() == null ? cap(name) : schema.getName();
+      return schema.getName();
     case ARRAY:
-      return "GenericArray<"+type(schema.getElementType(),name+"Element")+">";
+      return "GenericArray<"+type(schema.getElementType())+">";
     case MAP:
-      return "Map<Utf8,"+type(schema.getValueType(),name+"Value")+">";
+      return "Map<Utf8,"+type(schema.getValueType())+">";
     case UNION:
       List<Schema> types = schema.getTypes();     // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
-        return type(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0), name);
+        return type(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "Object";
     case STRING:  return "Utf8";
     case BYTES:   return "ByteBuffer";
@@ -253,23 +273,23 @@ public class SpecificCompiler {
     }
   }
 
-  private String unbox(Schema schema, String name) {
+  private String unbox(Schema schema) {
     switch (schema.getType()) {
     case INT:     return "int";
     case LONG:    return "long";
     case FLOAT:   return "float";
     case DOUBLE:  return "double";
     case BOOLEAN: return "boolean";
-    default:      return type(schema, name);
+    default:      return type(schema);
     }
   }
 
-  private void line(int indent, String text) {
+  private void line(int indent, String text) throws IOException {
     for (int i = 0; i < indent; i ++) {
-      buffer.append("  ");
+      out.append("  ");
     }
-    buffer.append(text);
-    buffer.append("\n");
+    out.append(text);
+    out.append("\n");
   }
 
   static String cap(String name) {
@@ -281,7 +301,8 @@ public class SpecificCompiler {
   }
 
   public static void main(String[] args) throws Exception {
-    System.out.println(compileProtocol(new File(args[0])).getCode());
+    //compileSchema(new File(args[0]), new File(args[1]));
+    compileProtocol(new File(args[0]), new File(args[1]));
   }
 
 }

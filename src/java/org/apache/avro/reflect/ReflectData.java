@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -98,7 +99,7 @@ public class ReflectData extends GenericData {
       for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
         try {
           if (!validate(entry.getValue(),
-                        ReflectData.getField(c, entry.getKey()).get(datum)))
+                        getField(c, entry.getKey()).get(datum)))
           return false;
         } catch (IllegalAccessException e) {
           throw new AvroRuntimeException(e);
@@ -140,6 +141,58 @@ public class ReflectData extends GenericData {
     } catch (NoSuchFieldException e) {
       throw new AvroRuntimeException(e);
     }
+  }
+
+  private Map<String,Map<String,Class>> classCache =
+    new ConcurrentHashMap<String,Map<String,Class>>();
+
+  /** Return the class that implements this schema. */
+  public Class getClass(Schema schema) {
+    switch (schema.getType()) {
+    case FIXED:
+    case RECORD:
+    case ENUM:
+      String namespace = schema.getNamespace();
+      Map<String,Class> spaceCache = classCache.get(namespace);
+      if (spaceCache == null) {
+        spaceCache = new ConcurrentHashMap<String,Class>();
+        classCache.put(namespace, spaceCache);
+      }
+      String name = schema.getName();
+      Class c = spaceCache.get(name);
+      if (c == null) {
+        try {
+          c = Class.forName(getClassName(schema));
+          spaceCache.put(name, c);
+        } catch (ClassNotFoundException e) {
+          throw new AvroRuntimeException(e);
+        }
+      }
+      return c;
+    case ARRAY:   return GenericArray.class;
+    case MAP:     return Map.class;
+    case UNION:   return Object.class;
+    case STRING:  return Utf8.class;
+    case BYTES:   return ByteBuffer.class;
+    case INT:     return Integer.TYPE;
+    case LONG:    return Long.TYPE;
+    case FLOAT:   return Float.TYPE;
+    case DOUBLE:  return Double.TYPE;
+    case BOOLEAN: return Boolean.TYPE;
+    case NULL:    return Void.TYPE;
+    default: throw new AvroRuntimeException("Unknown type: "+schema);
+    }
+
+  }
+
+  /** Returns the Java class name indicated by a schema's name and namespace. */
+  public String getClassName(Schema schema) {
+    String namespace = schema.getNamespace();
+    String name = schema.getName();
+    if (namespace == null)
+      return name;
+    String dot = namespace.endsWith("$") ? "" : ".";
+    return namespace + dot + name;
   }
 
   private final WeakHashMap<java.lang.reflect.Type,Schema> schemaCache =
@@ -187,10 +240,8 @@ public class ReflectData extends GenericData {
     else if (type instanceof ParameterizedType) {
       ParameterizedType ptype = (ParameterizedType)type;
       Class raw = (Class)ptype.getRawType();
-      System.out.println("ptype = "+ptype+" raw = "+raw);
       java.lang.reflect.Type[] params = ptype.getActualTypeArguments();
       for (int i = 0; i < params.length; i++)
-        System.out.println("param ="+params[i]);
       if (GenericArray.class.isAssignableFrom(raw)) { // array
         if (params.length != 1)
           throw new AvroTypeException("No array type specified.");
@@ -206,8 +257,10 @@ public class ReflectData extends GenericData {
       Class c = (Class)type;
       String name = c.getSimpleName();
       String space = c.getPackage().getName();
-      
-      Schema schema = names.get(name);
+      if (c.getEnclosingClass() != null)          // nested class
+        space = c.getEnclosingClass().getName() + "$";
+      String fullName = c.getName();
+      Schema schema = names.get(fullName);
       if (schema == null) {
 
         if (c.isEnum()) {                         // enum
@@ -216,14 +269,14 @@ public class ReflectData extends GenericData {
           for (int i = 0; i < constants.length; i++)
             symbols.add(constants[i].name());
           schema = Schema.createEnum(name, space, symbols);
-          names.put(name, schema);
+          names.put(fullName, schema);
           return schema;
         }
                                                   // fixed
         if (GenericFixed.class.isAssignableFrom(c)) {
           int size = ((FixedSize)c.getAnnotation(FixedSize.class)).value();
           schema = Schema.createFixed(name, space, size);
-          names.put(name, schema);
+          names.put(fullName, schema);
           return schema;
         }
                                                   // record
@@ -231,8 +284,8 @@ public class ReflectData extends GenericData {
           new LinkedHashMap<String,Schema.Field>();
         schema = Schema.createRecord(name, space,
                                      Throwable.class.isAssignableFrom(c));
-        if (!names.containsKey(name))
-          names.put(name, schema);
+        if (!names.containsKey(fullName))
+          names.put(fullName, schema);
         for (Field field : c.getDeclaredFields())
           if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0) {
             Schema fieldSchema = createFieldSchema(field, names);
@@ -259,27 +312,25 @@ public class ReflectData extends GenericData {
   public Protocol getProtocol(Class iface) {
     Protocol protocol =
       new Protocol(iface.getSimpleName(), iface.getPackage().getName()); 
+    Map<String,Schema> names = new LinkedHashMap<String,Schema>();
     for (Method method : iface.getDeclaredMethods())
       if ((method.getModifiers() & Modifier.STATIC) == 0)
         protocol.getMessages().put(method.getName(),
-                                   getMessage(method, protocol));
+                                   getMessage(method, protocol, names));
 
     // reverse types, since they were defined in reference order
-    List<Map.Entry<String,Schema>> names =
-      new ArrayList<Map.Entry<String,Schema>>();
-    names.addAll(protocol.getTypes().entrySet());
-    Collections.reverse(names);
-    protocol.getTypes().clear();
-    for (Map.Entry<String,Schema> name : names)
-      protocol.getTypes().put(name.getKey(), name.getValue());
+    List<Schema> types = new ArrayList<Schema>();
+    types.addAll(names.values());
+    Collections.reverse(types);
+    protocol.setTypes(types);
 
     return protocol;
   }
 
   private final Paranamer paranamer = new CachingParanamer();
 
-  private Message getMessage(Method method, Protocol protocol) {
-    Map<String,Schema> names = protocol.getTypes();
+  private Message getMessage(Method method, Protocol protocol,
+                             Map<String,Schema> names) {
     LinkedHashMap<String,Schema.Field> fields =
       new LinkedHashMap<String,Schema.Field>();
     String[] paramNames = paranamer.lookupParameterNames(method);
@@ -302,4 +353,3 @@ public class ReflectData extends GenericData {
   }
 
 }
-

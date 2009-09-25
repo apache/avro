@@ -33,6 +33,14 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
     this(ReflectData.get());
   }
 
+  public ReflectDatumWriter(Class c) {
+    this(c, ReflectData.get());
+  }
+
+  public ReflectDatumWriter(Class c, ReflectData data) {
+    this(data.getSchema(c), data);
+  }
+
   public ReflectDatumWriter(Schema root) {
     this(root, ReflectData.get());
   }

@@ -31,7 +31,7 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.test.Simple;
-import org.apache.avro.test.Simple.TestRecord;
+import org.apache.avro.test.TestRecord;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class TestReflect {
 
   @Test
   public void testSchema() throws IOException {
-    assertEquals(PROTOCOL.getTypes().get("TestRecord"),
+    assertEquals(PROTOCOL.getType("TestRecord"),
                  ReflectData.get().getSchema(TestRecord.class));
   }
 
@@ -64,14 +64,13 @@ public class TestReflect {
   @Test
   public void testRecord() throws IOException {
     Schema schm = ReflectData.get().getSchema(SampleRecord.class);
-    String prefix = getPrefix(SampleRecord.class);
     ReflectDatumWriter writer = new ReflectDatumWriter(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     SampleRecord record = new SampleRecord();
     record.x = 5;
     record.y = 10;
     writer.write(record, new BinaryEncoder(out));
-    ReflectDatumReader reader = new ReflectDatumReader(schm, prefix);
+    ReflectDatumReader reader = new ReflectDatumReader(schm);
     Object decoded =
       reader.read(null, new BinaryDecoder
                   (new ByteArrayInputStream(out.toByteArray())));
@@ -82,7 +81,6 @@ public class TestReflect {
   public void testRecordWithNull() throws IOException {
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schm = reflectData.getSchema(AnotherSampleRecord.class);
-    String prefix = getPrefix(AnotherSampleRecord.class);
     ReflectDatumWriter writer = new ReflectDatumWriter(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     // keep record.a null and see if that works
@@ -90,21 +88,12 @@ public class TestReflect {
     writer.write(a, new BinaryEncoder(out));
     AnotherSampleRecord b = new AnotherSampleRecord(10);
     writer.write(b, new BinaryEncoder(out));
-    ReflectDatumReader reader = new ReflectDatumReader(schm, prefix);
+    ReflectDatumReader reader = new ReflectDatumReader(schm);
     ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
     Object decoded = reader.read(null, new BinaryDecoder(in));
     assertEquals(a, decoded);
     decoded = reader.read(null, new BinaryDecoder(in));
     assertEquals(b, decoded);
-  }
-
-  private String getPrefix(Class<?> c) {
-    String prefix =  
-      ((c.getEnclosingClass() == null 
-        || "null".equals(c.getEnclosingClass())) ? 
-       c.getPackage().getName() + "." 
-       : (c.getEnclosingClass().getName() + "$"));
-    return prefix;
   }
 
   public static class SampleRecord {

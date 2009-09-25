@@ -124,12 +124,12 @@ public class TestDataFile {
 
   @Test
     public void testGeneratedSpecific() throws IOException {
-      readFiles(new SpecificDatumReader("org.apache.avro."));
+      readFiles(new SpecificDatumReader());
     }
 
   @Test
     public void testGeneratedReflect() throws IOException {
-      readFiles(new ReflectDatumReader("org.apache.avro."));
+      readFiles(new ReflectDatumReader());
     }
 
     private void readFiles(DatumReader<Object> datumReader) throws IOException {

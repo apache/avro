@@ -18,8 +18,10 @@
 package org.apache.avro.specific;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.reflect.ReflectData;
 
@@ -32,6 +34,29 @@ public class SpecificData extends ReflectData {
   
   /** Return the singleton instance. */
   public static SpecificData get() { return INSTANCE; }
+
+  @Override
+  protected Schema createSchema(java.lang.reflect.Type type,
+                             Map<String,Schema> names) {
+    if (type instanceof Class) {
+      Class c = (Class)type;
+      String name = c.getSimpleName();
+      Schema schema = names.get(name);
+      if (schema != null) return schema;
+      if (SpecificRecord.class.isAssignableFrom(c)) {
+        try {
+          schema = (Schema)((Class)type).getDeclaredField("_SCHEMA").get(null);
+        } catch (NoSuchFieldException e) {
+          throw new AvroRuntimeException(e);
+        } catch (IllegalAccessException e) {
+          throw new AvroRuntimeException(e);
+        }
+        names.put(name, schema);
+        return schema;
+      }
+    }
+    return super.createSchema(type, names);
+  }
 
   @Override
   protected boolean isRecord(Object datum) {
@@ -66,6 +91,8 @@ public class SpecificData extends ReflectData {
     }
   }
 
-
 }
+
+
+
 

@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 
 import org.apache.avro.Schema.Field;
 import org.codehaus.jackson.JsonNode;
@@ -156,7 +157,17 @@ public class Protocol {
   public String getNamespace() { return namespace; }
 
   /** The types of this protocol. */
-  public LinkedHashMap<String,Schema> getTypes() { return types; }
+  public Collection<Schema> getTypes() { return types.values(); }
+
+  /** Returns the named type. */
+  public Schema getType(String name) { return types.get(name); }
+
+  /** Set the types of this protocol. */
+  public void setTypes(Collection<Schema> newTypes) {
+    types = new Schema.Names();
+    for (Schema s : newTypes)
+      types.add(s);
+  }
 
   /** The messages of this protocol. */
   public Map<String,Message> getMessages() { return messages; }
@@ -194,13 +205,15 @@ public class Protocol {
     }
   }
   void toJson(JsonGenerator gen) throws IOException {
+    types.space(namespace);
+
     gen.writeStartObject();
     gen.writeStringField("protocol", name);
     gen.writeStringField("namespace", namespace);
     
     gen.writeArrayFieldStart("types");
     for (Schema type : types.values())
-      type.toJson(types.except(type.getName()), gen);
+      type.toJson(types.except(type), gen);
     gen.writeEndArray();
     
     gen.writeObjectFieldStart("messages");

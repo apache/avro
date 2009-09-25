@@ -22,16 +22,14 @@ import org.apache.avro.reflect.ReflectDatumReader;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Java classes. */
 public class SpecificDatumReader extends ReflectDatumReader {
-  public SpecificDatumReader(String packageName) {
-    super(packageName);
+  public SpecificDatumReader() {}
+
+  public SpecificDatumReader(Class c) {
+    this(SpecificData.get().getSchema(c));
   }
 
-  public SpecificDatumReader(Schema root, String packageName) {
-    super(root, packageName);
-  }
-
-  public SpecificDatumReader(Schema root) {
-    super(root, root.getNamespace()+".");
+  public SpecificDatumReader(Schema schema) {
+    super(schema);
   }
 
   protected void addField(Object record, String name, int position, Object o) {

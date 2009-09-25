@@ -81,7 +81,7 @@ public class TestProtocolGeneric {
 
       if ("error".equals(message.getName())) {
         GenericRecord error =
-          new GenericData.Record(PROTOCOL.getTypes().get("TestError"));
+          new GenericData.Record(PROTOCOL.getType("TestError"));
         error.put("message", new Utf8("an error"));
         throw new AvroRemoteException(error);
       }
@@ -114,7 +114,7 @@ public class TestProtocolGeneric {
   @Test
   public void testEcho() throws IOException {
     GenericRecord record =
-      new GenericData.Record(PROTOCOL.getTypes().get("TestRecord"));
+      new GenericData.Record(PROTOCOL.getType("TestRecord"));
     record.put("name", new Utf8("foo"));
     record.put("kind", "BAR");
     record.put("hash", new GenericData.Fixed

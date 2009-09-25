@@ -63,7 +63,7 @@ public class TestDataFileReflect {
     write(writer, new FooRecord(20), check);
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader("org.apache.avro.");
+    ReflectDatumReader din = new ReflectDatumReader();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
     Object datum = null;
@@ -110,7 +110,7 @@ public class TestDataFileReflect {
 
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader("org.apache.avro.");
+    ReflectDatumReader din = new ReflectDatumReader();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
     Object datum = null;
@@ -142,7 +142,7 @@ public class TestDataFileReflect {
     write(writer, new BarRecord("Two beers please"), check);
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader("org.apache.avro.");
+    ReflectDatumReader din = new ReflectDatumReader();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
     Object datum = null;

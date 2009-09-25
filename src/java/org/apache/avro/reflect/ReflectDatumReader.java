@@ -30,19 +30,18 @@ import org.apache.avro.generic.GenericDatumReader;
  * Java reflection.
  */
 public class ReflectDatumReader extends GenericDatumReader<Object> {
-  protected String packageName;
+  public ReflectDatumReader() {}
 
-  public ReflectDatumReader(String packageName) {
-    this.packageName = packageName;
+  public ReflectDatumReader(Class c) {
+    this(ReflectData.get().getSchema(c));
   }
 
-  public ReflectDatumReader(Schema root, String packageName) {
-    this(packageName);
+  public ReflectDatumReader(Schema root) {
     setSchema(root);
   }
 
   protected Object newRecord(Object old, Schema schema) {
-    Class c = getClass(schema);
+    Class c = ReflectData.get().getClass(schema);
     return (c.isInstance(old) ? old : newInstance(c));
   }
 
@@ -68,33 +67,17 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
 
   @SuppressWarnings("unchecked")
   protected Object createEnum(String symbol, Schema schema) {
-    return Enum.valueOf(getClass(schema), symbol);
+    return Enum.valueOf(ReflectData.get().getClass(schema), symbol);
   }
 
   protected Object createFixed(Object old, Schema schema) {
-    Class c = getClass(schema);
+    Class c = ReflectData.get().getClass(schema);
     return c.isInstance(old) ? old : newInstance(c);
   }
 
   private static final Class<?>[] EMPTY_ARRAY = new Class[]{};
   private static final Map<Class,Constructor> CTOR_CACHE =
     new ConcurrentHashMap<Class,Constructor>();
-
-  private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
-
-  private Class getClass(Schema schema) {
-    String name = schema.getName();
-    Class c = classCache.get(name);
-    if (c == null) {
-      try {
-        c = Class.forName(packageName + name);
-        classCache.put(name, c);
-      } catch (ClassNotFoundException e) {
-        throw new AvroRuntimeException(e);
-      }
-    }
-    return c;
-  }
 
   /** Create a new instance of the named class. */
   @SuppressWarnings("unchecked")

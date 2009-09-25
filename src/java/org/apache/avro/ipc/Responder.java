@@ -151,9 +151,9 @@ public abstract class Responder {
   }
 
   private SpecificDatumWriter handshakeWriter =
-    new SpecificDatumWriter(HandshakeResponse._SCHEMA);
+    new SpecificDatumWriter(HandshakeResponse.class);
   private SpecificDatumReader handshakeReader =
-    new SpecificDatumReader(HandshakeRequest._SCHEMA);
+    new SpecificDatumReader(HandshakeRequest.class);
 
   @SuppressWarnings("unchecked")
   private Protocol handshake(Decoder in, Encoder out)
