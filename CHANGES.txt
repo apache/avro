@@ -71,6 +71,8 @@ Trunk (unreleased changes)
     AVRO-101.  Add Java reflect API test case using nested classes.
     (Eelco Hillenius via cutting)
 
+    AVRO-124.  Remove Ivy's jar from distributions.  (cutting)
+
 Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES

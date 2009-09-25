@@ -485,7 +485,7 @@
     <mkdir dir="${dist.dir}/doc"/>
 
     <copy todir="${dist.dir}/lib" includeEmptyDirs="false">
-      <fileset dir="lib"/>
+      <fileset dir="lib" excludes="ivy-*.jar"/>
       <fileset dir="${ivy.lib}"/>
     </copy>
 
