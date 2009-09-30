@@ -33,6 +33,8 @@ Trunk (unreleased changes)
     written with a different version of the schema than is current.
     (cutting)
 
+    AVRO-129.  Add HTTP-based RPC client and server.  (cutting)
+
   IMPROVEMENTS
 
     AVRO-99.  Use Boost framework for C++ unit tests.
