@@ -51,7 +51,7 @@ public class HttpTransceiver extends Transceiver {
     connection.setRequestProperty("Content-Length",
                                   Integer.toString(getLength(request)));
     connection.setDoOutput(true);
-    LOG.info("Connecting to: "+url);
+    //LOG.info("Connecting to: "+url);
     return super.transceive(request);
   }
 

@@ -35,6 +35,8 @@ Trunk (unreleased changes)
 
     AVRO-129.  Add HTTP-based RPC client and server.  (cutting)
 
+    AVRO-24.  Add a simple bulk-data benchmark.  (cutting)
+
   IMPROVEMENTS
 
     AVRO-99.  Use Boost framework for C++ unit tests.
