@@ -53,6 +53,7 @@
             value="${nonspace.os}-${os.arch}-${sun.arch.data.model}"/>
 
   <property name="test.count" value="100"/>
+  <property name="test.junit.output.format" value="plain"/>
   <property name="test.java.src.dir" value="${basedir}/src/test/java"/>
   <property name="test.schemata.dir" value="${basedir}/src/test/schemata"/>
   <property name="test.java.build.dir" value="${build.dir}/test"/>
@@ -273,7 +274,7 @@
         <sysproperty key="test.dir" value="${test.java.build.dir}"/>
         <sysproperty key="test.validate" value="${test.validate}"/>
         <classpath refid="test.java.classpath"/>
-        <formatter type="plain" />
+        <formatter type="${test.junit.output.format}"/>
         <batchtest todir="${test.java.build.dir}" unless="testcase">
           <fileset dir="@{files.location}"
 		   includes="@{tests.pattern}"

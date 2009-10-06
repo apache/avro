@@ -55,6 +55,9 @@ Trunk (unreleased changes)
     AVRO-133.  Update version number in specification document and
     documentation tab automatically from build version. (cutting)
 
+    AVRO-131.  Permit specification of JUnit test output format.
+    (Giridharan Kesavan via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
