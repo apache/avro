@@ -15,10 +15,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd" [
+  <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
+	   "../../../../build/avro.ent">
+  %avro-entities;
+]>
 <document>
   <header>
-    <title>Avro 1.0 Specification</title>
+    <title>Avro &AvroVersion; Specification</title>
   </header>
   <body>
 

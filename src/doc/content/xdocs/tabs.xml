@@ -15,7 +15,11 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE tabs PUBLIC "-//APACHE//DTD Cocoon Documentation Tab V1.1//EN" "http://forrest.apache.org/dtd/tab-cocoon-v11.dtd">
+<!DOCTYPE tabs PUBLIC "-//APACHE//DTD Cocoon Documentation Tab V1.1//EN" "http://forrest.apache.org/dtd/tab-cocoon-v11.dtd" [
+  <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
+	   "../../../../build/avro.ent">
+  %avro-entities;
+]>
 
 <tabs software="Avro"
       title="Avro"
@@ -30,6 +34,6 @@
 
   <tab label="Project" href="http://hadoop.apache.org/avro/" />
   <tab label="Wiki" href="http://wiki.apache.org/hadoop/Avro/" />
-  <tab label="Avro 1.1.0 Documentation" dir="" />  
+  <tab label="Avro &AvroVersion; Documentation" dir="" />  
   
 </tabs>

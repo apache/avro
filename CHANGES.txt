@@ -52,6 +52,9 @@ Trunk (unreleased changes)
     multiple instances without flushing or explicitly resetting the
     codec between each instance.  (Thiruvalluvan M. G. via cutting)
 
+    AVRO-133.  Update version number in specification document and
+    documentation tab automatically from build version. (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
