@@ -62,6 +62,10 @@ Trunk (unreleased changes)
     reserved metadata keys "codec" and "sync".  The only codec
     currently defined is "null".  (Thiruvalluvan M. G. via cutting)
 
+    AVRO-138.  Add a "unit-test-java" Ant target that runs tests
+    without running checkstyle or javadoc.  (Thiruvalluvan M. G. via
+    cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
