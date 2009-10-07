@@ -223,6 +223,7 @@ class DataFileWriter(object):
     self.__meta = dict()
     self.__sync = uuid.uuid4().bytes
     self.__meta["sync"] = self.__sync
+    self.__meta["codec"] = "null"
     self.__meta["schema"] = schema.stringval(schm)
     self.__writer.write(struct.pack(len(_MAGIC).__str__()+'s',
                                     _MAGIC))
@@ -313,6 +314,9 @@ class DataFileReader(object):
       self.__meta[key] = self.__decoder.readbytes()
     self.__sync = self.__meta.get("sync")
     self.__count = int(self.__meta.get("count"))
+    self.__codec = self.__meta.get("codec")
+    if (self.__codec != None) and (self.__codec != "null"):
+      raise schema.AvroException("Unknown codec: " + self.__codec)
     self.__schema = schema.parse(self.__meta.get("schema").encode("utf-8"))
     self.__blockcount = 0
     self.__dreader = dreader

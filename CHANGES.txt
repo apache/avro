@@ -58,6 +58,10 @@ Trunk (unreleased changes)
     AVRO-131.  Permit specification of JUnit test output format.
     (Giridharan Kesavan via cutting)
 
+    AVRO-134.  Update data file format specification to include
+    reserved metadata keys "codec" and "sync".  The only codec
+    currently defined is "null".  (Thiruvalluvan M. G. via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

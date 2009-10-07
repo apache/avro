@@ -44,14 +44,6 @@ import org.apache.avro.io.BinaryEncoder;
  * @see DataFileReader
  */
 public class DataFileWriter<D> {
-  static final byte VERSION = 0;
-  static final byte[] MAGIC = new byte[] {
-    (byte)'O', (byte)'b', (byte)'j', VERSION
-  };
-  static final long FOOTER_BLOCK = -1;
-  static final int SYNC_SIZE = 16;
-  static final int SYNC_INTERVAL = 1000*SYNC_SIZE; 
-
   private Schema schema;
   private DatumWriter<D> dout;
 
@@ -64,7 +56,7 @@ public class DataFileWriter<D> {
   private int blockCount;                       // # entries in current block
 
   private ByteArrayOutputStream buffer =
-    new ByteArrayOutputStream(SYNC_INTERVAL*2);
+    new ByteArrayOutputStream(DataFileConstants.SYNC_INTERVAL*2);
   private Encoder bufOut = new BinaryEncoder(buffer);
 
   private byte[] sync;                          // 16 random bytes
@@ -89,10 +81,11 @@ public class DataFileWriter<D> {
     
     dout.setSchema(schema);
 
-    setMeta("sync", sync);
-    setMeta("schema", schema.toString());
+    setMeta(DataFileConstants.SYNC, sync);
+    setMeta(DataFileConstants.SCHEMA, schema.toString());
+    setMeta(DataFileConstants.CODEC, DataFileConstants.NULL_CODEC);
     
-    out.write(MAGIC);
+    out.write(DataFileConstants.MAGIC);
   }
   
   /** Set a metadata property. */
@@ -120,7 +113,7 @@ public class DataFileWriter<D> {
     types.add(branch);
     this.schema = Schema.createUnion(types);
     this.dout.setSchema(schema);
-    setMeta("schema", schema.toString());
+    setMeta(DataFileConstants.SCHEMA, schema.toString());
   }
 
   /** Append a datum to the file. */
@@ -128,7 +121,7 @@ public class DataFileWriter<D> {
       dout.write(datum, bufOut);
       blockCount++;
       count++;
-      if (buffer.size() >= SYNC_INTERVAL)
+      if (buffer.size() >= DataFileConstants.SYNC_INTERVAL)
         writeBlock();
     }
 
@@ -164,7 +157,7 @@ public class DataFileWriter<D> {
 
   private void writeFooter() throws IOException {
     writeBlock();                               // flush any data
-    setMeta("count", count);                    // update count
+    setMeta(DataFileConstants.COUNT, count);    // update count
     bufOut.writeMapStart();              // write meta entries
     bufOut.setItemCount(meta.size());
     for (Map.Entry<String,byte[]> entry : meta.entrySet()) {
@@ -176,7 +169,7 @@ public class DataFileWriter<D> {
     
     int size = buffer.size()+4;
     out.write(sync);
-    vout.writeLong(FOOTER_BLOCK);                 // tag the block
+    vout.writeLong(DataFileConstants.FOOTER_BLOCK);                 // tag the block
     vout.writeLong(size);
     buffer.writeTo(out);
     buffer.reset();

@@ -45,8 +45,8 @@ public class DataFileReader<D> {
 
   private long count;                           // # entries in file
   private long blockCount;                      // # entries in block
-  private byte[] sync = new byte[DataFileWriter.SYNC_SIZE];
-  private byte[] syncBuffer = new byte[DataFileWriter.SYNC_SIZE];
+  private byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
+  private byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
 
   /** Construct a reader for a file. */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader)
@@ -55,7 +55,7 @@ public class DataFileReader<D> {
 
     byte[] magic = new byte[4];
     in.read(magic);
-    if (!Arrays.equals(DataFileWriter.MAGIC, magic))
+    if (!Arrays.equals(DataFileConstants.MAGIC, magic))
       throw new IOException("Not a data file.");
 
     long length = in.length();
@@ -76,14 +76,18 @@ public class DataFileReader<D> {
       } while ((l = vin.mapNext()) != 0);
     }
 
-    this.sync = getMeta("sync");
-    this.count = getMetaLong("count");
-    this.schema = Schema.parse(getMetaString("schema"));
+    this.sync = getMeta(DataFileConstants.SYNC);
+    this.count = getMetaLong(DataFileConstants.COUNT);
+    String codec = getMetaString(DataFileConstants.CODEC);
+    if (codec != null && ! codec.equals(DataFileConstants.NULL_CODEC)) {
+      throw new IOException("Unknown codec: " + codec);
+    }
+    this.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA));
     this.reader = reader;
 
     reader.setSchema(schema);
 
-    in.seek(DataFileWriter.MAGIC.length);         // seek to start
+    in.seek(DataFileConstants.MAGIC.length);         // seek to start
   }
 
   /** Return the value of a metadata property. */
@@ -92,8 +96,12 @@ public class DataFileReader<D> {
   }
   /** Return the value of a metadata property. */
   public synchronized String getMetaString(String key) {
+    byte[] value = getMeta(key);
+    if (value == null) {
+      return null;
+    }
     try {
-      return new String(getMeta(key), "UTF-8");
+      return new String(value, "UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
@@ -114,7 +122,7 @@ public class DataFileReader<D> {
 
       blockCount = vin.readLong();                // read blockCount
          
-      if (blockCount == DataFileWriter.FOOTER_BLOCK) { 
+      if (blockCount == DataFileConstants.FOOTER_BLOCK) { 
         in.seek(vin.readLong()+in.tell());        // skip a footer
         blockCount = 0;
       }
@@ -138,7 +146,7 @@ public class DataFileReader<D> {
 
   /** Move to the next synchronization point after a position. */
   public synchronized void sync(long position) throws IOException {
-    if (in.tell()+DataFileWriter.SYNC_SIZE >= in.length()) {
+    if (in.tell()+DataFileConstants.SYNC_SIZE >= in.length()) {
       in.seek(in.length());
       return;
     }
@@ -151,7 +159,7 @@ public class DataFileReader<D> {
           break;
       }
       if (j == sync.length) {                     // position before sync
-        in.seek(in.tell() - DataFileWriter.SYNC_SIZE);
+        in.seek(in.tell() - DataFileConstants.SYNC_SIZE);
         return;
       }
       syncBuffer[i%sync.length] = (byte)in.read();

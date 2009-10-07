@@ -593,7 +593,12 @@
 	<li><strong>count</strong> contains the number of objects in
 	the file as a decimal ASCII string.</li>
 	<li><strong>codec</strong> the name of the compression codec
-	used to compress blocks.</li>
+	used to compress blocks, as a string. The only value for codec
+	currently supported is "null" (meaning no compression is
+	performed).  If codec is absent, it is assumed to be
+	"null".</li>
+	<li><strong>sync</strong> the 16-byte sync marker used in this file,
+        as a byte sequence.</li>
       </ul>
 
       <p>A normal block consists of:</p>
