@@ -295,4 +295,4 @@ Validator::getNextFieldName(std::string &name) const
     return found;
 }
 
-} // namepspace avro
+} // namespace avro

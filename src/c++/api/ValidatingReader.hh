@@ -47,7 +47,7 @@ class ValidatingReader : private boost::noncopyable
 
   public:
 
-    explicit ValidatingReader(const ValidSchema &schema, InputStreamer &in);
+    ValidatingReader(const ValidSchema &schema, InputStreamer &in);
 
     template<typename T>
     void getValue(T &val) {

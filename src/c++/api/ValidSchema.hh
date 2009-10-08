@@ -52,9 +52,9 @@ class ValidSchema : private boost::noncopyable
         return node_;
     }
 
-    void toJson(std::ostream &os);
+    void toJson(std::ostream &os) const;
 
-    void toFlatList(std::ostream &os);
+    void toFlatList(std::ostream &os) const;
 
     NodePtr followSymbol(const std::string &name) const {
         return symbolMap_.locateSymbol(name);

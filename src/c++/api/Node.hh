@@ -21,7 +21,7 @@
 
 #include <cassert>
 #include <boost/noncopyable.hpp>
-#include <boost/intrusive_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "Exception.hh"
 #include "Types.hh"
@@ -30,7 +30,7 @@ namespace avro {
 
 class Node;
 
-typedef boost::intrusive_ptr<Node> NodePtr;
+typedef boost::shared_ptr<Node> NodePtr;
 
 
 /// Node is the building block for parse trees.  Each node represents an avro
@@ -40,10 +40,9 @@ typedef boost::intrusive_ptr<Node> NodePtr;
 /// The user does not use the Node object directly, they interface with Schema
 /// objects.
 ///
-/// The Node object has an embedded reference count for use in the
-/// boost::intrusive_ptr smart pointer.  This is so that schemas may be reused
-/// in other other schemas, without needing to worry about memory deallocation
-/// for nodes that are added to multiple schema parse trees.
+/// The Node object uses reference-counted pointers.  This is so that schemas 
+/// may be reused in other other schemas, without needing to worry about memory
+/// deallocation for nodes that are added to multiple schema parse trees.
 ///
 /// Node has minimal implementation, serving as an abstract base class for
 /// different node types.
@@ -130,26 +129,10 @@ class Node : private boost::noncopyable
 
   private:
 
-    friend void intrusive_ptr_add_ref(Node *node);
-    friend void intrusive_ptr_release(Node *node);
-
     const Type type_;
     int refCount_;
     bool locked_;
 };
-
-inline void 
-intrusive_ptr_add_ref(Node *node) {
-    ++(node->refCount_);
-}
-
-inline void 
-intrusive_ptr_release(Node *node) {
-    --(node->refCount_);
-    if(node->refCount_ == 0) { 
-        delete node;
-    }
-}
 
 } // namespace avro
 

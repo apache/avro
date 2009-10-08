@@ -55,7 +55,7 @@ namespace boost {
 
     typedef integral_constant<bool, true>  true_type;
     typedef integral_constant<bool, false> false_type;
-}
+} // namespace boost
 #else 
 #include <boost/type_traits.hpp>
 #endif // AVRO_BOOST_NO_TRAIT
@@ -93,7 +93,7 @@ namespace boost {
       private:
         std::vector<T *> ptrs_;
     };
-}
+} // namespace boost
 #else 
 #include <boost/ptr_container/ptr_vector.hpp>
 #endif // AVRO_BOOST_NO_PTRVECTOR

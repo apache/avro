@@ -46,7 +46,7 @@ bool
 ValidSchema::validate(const NodePtr &node) 
 {
     if(!node) {
-        node_ = new NodePrimitive(AVRO_NULL);
+        node_.reset(new NodePrimitive(AVRO_NULL));
     }
 
     if(!node->isValid()) {
@@ -78,14 +78,14 @@ ValidSchema::validate(const NodePtr &node)
 }
 
 void 
-ValidSchema::toJson(std::ostream &os)
+ValidSchema::toJson(std::ostream &os) const
 { 
     node_->printJson(os, 0);
     os << '\n';
 }
 
 void 
-ValidSchema::toFlatList(std::ostream &os)
+ValidSchema::toFlatList(std::ostream &os) const
 { 
     node_->printBasicInfo(os);
 }

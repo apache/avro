@@ -98,4 +98,4 @@ ValidatingWriter::beginEnum(int64_t choice)
 }
 
 
-} // namepspace avro
+} // namespace avro

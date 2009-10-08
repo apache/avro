@@ -78,4 +78,4 @@ ValidatingReader::getArrayBlockSize()
     return getCount();
 }
 
-} // namepspace avro
+} // namespace avro

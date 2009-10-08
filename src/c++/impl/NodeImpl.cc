@@ -159,36 +159,36 @@ nodeFromCompilerNode(CompilerNode &node)
     switch(node.type()) {
 
       case AVRO_ARRAY:
-        ptr = ( new NodeArray(node));
+        ptr.reset ( new NodeArray(node));
         break;
     
       case AVRO_ENUM:
-        ptr = ( new NodeEnum(node));
+        ptr.reset ( new NodeEnum(node));
         break;
 
       case AVRO_FIXED:
-        ptr = ( new NodeFixed(node));
+        ptr.reset ( new NodeFixed(node));
         break;
     
       case AVRO_MAP:
-        ptr = ( new NodeMap(node));
+        ptr.reset ( new NodeMap(node));
         break;
 
       case AVRO_RECORD:
-        ptr = ( new NodeRecord(node));
+        ptr.reset ( new NodeRecord(node));
         break;
     
       case AVRO_UNION:
-        ptr = ( new NodeUnion(node));
+        ptr.reset ( new NodeUnion(node));
         break;
     
       case AVRO_SYMBOLIC:
-        ptr = ( new NodeSymbolic(node));
+        ptr.reset ( new NodeSymbolic(node));
         break;
     
       default:
         if(isPrimitive(node.type())) {
-            ptr = ( new NodePrimitive(node.type()));        
+            ptr.reset ( new NodePrimitive(node.type()));        
         }
         else {
             throw Exception("Unknown type in nodeFromCompilerNode");

@@ -70,6 +70,9 @@ Trunk (unreleased changes)
 
   BUG FIXES
 
+    AVRO-132.  Fix multi-threading race condition when threads share schema objects.
+    (sbanacho)
+
     AVRO-113.  Fix endian bug with C++ integer/long varint codec.
     (Scott Banachowski via cutting)
 

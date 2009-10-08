@@ -42,7 +42,7 @@ class Validator : private boost::noncopyable
 
   public:
 
-    Validator(const ValidSchema &schema);
+    explicit Validator(const ValidSchema &schema);
 
     void advance();
     void advanceWithCount(int64_t val);
@@ -80,7 +80,12 @@ class Validator : private boost::noncopyable
     void setupFlag(Type type);
 
     const ValidSchema &schema_;
-    NodePtr parseTree_;
+
+    // since this only keeps a reference to the schema, to ensure its parse
+    // tree is not deleted, keep a copy of a shared pointer to the root of the
+    // tree
+
+    const NodePtr parseTree_;
 
     Type nextType_; 
     flag_t expectedTypesFlag_;
