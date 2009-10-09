@@ -153,6 +153,7 @@ public class SpecificCompiler {
           : !namespace.equals(s.getNamespace()))
         line(0, "import "+SpecificData.get().getClassName(s)+";");
     line(0, "");
+    line(0, "@SuppressWarnings(\"all\")");
   }
 
   private String params(Schema request) throws IOException {

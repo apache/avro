@@ -94,6 +94,8 @@ Trunk (unreleased changes)
 
     AVRO-124.  Remove Ivy's jar from distributions.  (cutting)
 
+    AVRO-137. Suppress warnings in generated java code. (cutting via sharad)
+
 Avro 1.1.0 (8 September 2009)
 
   INCOMPATIBLE CHANGES
