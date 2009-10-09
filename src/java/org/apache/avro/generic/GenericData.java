@@ -129,6 +129,7 @@ public class GenericData {
     }
   }
 
+  /** Default implementation of {@link GenericFixed}. */
   public static class Fixed implements GenericFixed, Comparable<Fixed> {
     private byte[] bytes;
 

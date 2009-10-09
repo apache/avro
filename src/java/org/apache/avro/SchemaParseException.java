@@ -18,6 +18,7 @@
 
 package org.apache.avro;
 
+/** Thrown for errors parsing schemas and protocols. */
 public class SchemaParseException extends AvroRuntimeException {
   public SchemaParseException(Throwable cause) { super(cause); }
   public SchemaParseException(String message) { super(message); }

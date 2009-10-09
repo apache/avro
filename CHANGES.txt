@@ -68,6 +68,8 @@ Trunk (unreleased changes)
     without running checkstyle or javadoc.  (Thiruvalluvan M. G. via
     cutting)
 
+    AVRO-140.  Add javadoc to public classes with none.  (cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
