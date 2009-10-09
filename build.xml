@@ -27,7 +27,7 @@
   <property name="org" value="apache"/>
   <property name="Name" value="Avro"/>
   <property name="name" value="avro"/>
-  <property name="version" value="1.1.0-dev"/>
+  <property name="version" value="1.2.0-dev"/>
   <property name="fullname" value="${name}-${version}"/>
   <property name="year" value="2009"/>
 
