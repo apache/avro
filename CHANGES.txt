@@ -37,6 +37,8 @@ Trunk (unreleased changes)
 
     AVRO-24.  Add a simple bulk-data benchmark.  (cutting)
 
+    AVRO-139. Refactor HTTP servlet to separate, public class. (cutting)
+
   IMPROVEMENTS
 
     AVRO-99.  Use Boost framework for C++ unit tests.

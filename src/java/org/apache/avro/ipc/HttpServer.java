@@ -19,27 +19,25 @@
 package org.apache.avro.ipc;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.List;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.avro.AvroRuntimeException;
 
 import org.mortbay.jetty.servlet.Context;
 import org.mortbay.jetty.servlet.ServletHolder;
 
-public class HttpServer extends HttpServlet implements Server {
-  private Responder responder;
+/** An HTTP-based RPC {@link Server}. */
+public class HttpServer implements Server {
   private org.mortbay.jetty.Server server;
 
+  /** Starts a server on the named port. */
   public HttpServer(Responder responder, int port) throws IOException {
-    this.responder = responder;
+    this(new ResponderServlet(responder), port);
+  }
+
+  /** Starts a server on the named port. */
+  public HttpServer(ResponderServlet servlet, int port) throws IOException {
     this.server = new org.mortbay.jetty.Server(port);
-    new Context(server,"/").addServlet(new ServletHolder(this), "/*");
+    new Context(server,"/").addServlet(new ServletHolder(servlet), "/*");
     try {
       server.start();
     } catch (Exception e) {
@@ -56,21 +54,6 @@ public class HttpServer extends HttpServlet implements Server {
       server.stop();
     } catch (Exception e) {
       throw new AvroRuntimeException(e);
-    }
-  }
-
-  public void doPost(HttpServletRequest request, HttpServletResponse response)
-        throws IOException, ServletException {
-    response.setContentType("avro/binary");
-    List<ByteBuffer> requestBuffers =
-      HttpTransceiver.readBuffers(request.getInputStream());
-    try {
-      List<ByteBuffer> responseBuffers =
-        responder.respond(requestBuffers);
-      response.setContentLength(HttpTransceiver.getLength(responseBuffers));
-      HttpTransceiver.writeBuffers(responseBuffers, response.getOutputStream());
-    } catch (AvroRuntimeException e) {
-      throw new ServletException(e);
     }
   }
 }
