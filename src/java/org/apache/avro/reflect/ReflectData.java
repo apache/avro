@@ -76,6 +76,7 @@ public class ReflectData extends GenericData {
 
   @Override
   protected boolean isRecord(Object datum) {
+    if (datum == null) return false;
     return getSchema(datum.getClass()).getType() == Type.RECORD;
   }
 

@@ -121,23 +121,32 @@ public class TestReflect {
     
     public static class AnotherSampleRecord {
       private Integer a = null;
-      
+      private SampleRecord s = null;
+
       public AnotherSampleRecord() {
       }
-      
+
       AnotherSampleRecord(Integer a) {
         this.a = a;
+        this.s = new SampleRecord();
       }
 
       public int hashCode() {
-        return (a != null ? a.hashCode() : 0);
+        int hash = (a != null ? a.hashCode() : 0);
+        hash += (s != null ? s.hashCode() : 0);
+        return hash;
       }
 
       public boolean equals(Object other) {
         if (other instanceof AnotherSampleRecord) {
-          return this.a == ((AnotherSampleRecord)other).a;
+          AnotherSampleRecord o = (AnotherSampleRecord) other;
+          boolean equals = this.a == o.a;
+          if (this.s == null && o.s != null)
+            equals = false;
+          if (this.s != null && this.s.equals(o.s))
+            equals = true;
         }
-        return false;
+        return true;
       }
     }
   }
