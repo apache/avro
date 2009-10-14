@@ -28,14 +28,8 @@ import java.util.List;
 import java.net.URL;
 import java.net.URLConnection;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /** An HTTP-based {@link Transceiver} implementation. */
 public class HttpTransceiver extends Transceiver {
-  private static final Logger LOG
-    = LoggerFactory.getLogger(HttpTransceiver.class);
-
   static final String CONTENT_TYPE = "avro/binary"; 
 
   private URL url;

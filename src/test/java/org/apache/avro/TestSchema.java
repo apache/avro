@@ -188,9 +188,6 @@ public class TestSchema {
     checkDefault(schemaJson, defaultJson, defaultValue);
   }
 
-  private static void check(String jsonSchema) throws Exception {
-    check(jsonSchema, true);
-  }
   private static void check(String jsonSchema, boolean induce)
     throws Exception {
     Schema schema = Schema.parse(jsonSchema);

@@ -17,7 +17,6 @@
  */
 package org.apache.avro;
 
-import java.util.Random;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.specific.SpecificRequestor;

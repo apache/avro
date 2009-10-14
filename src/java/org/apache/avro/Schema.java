@@ -266,7 +266,6 @@ public abstract class Schema {
   private static class Name {
     private String name;
     private String space;
-    public Name(Schema s) { this(s.getName(), s.getNamespace()); }
     public Name(String name, String space) {
       if (name == null) return;                   // anonymous
       int lastDot = name.lastIndexOf('.');

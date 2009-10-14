@@ -33,12 +33,8 @@ import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.test.Simple;
 import org.apache.avro.test.TestRecord;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestReflect {
-  private static final Logger LOG
-    = LoggerFactory.getLogger(TestProtocolSpecific.class);
 
   private static final File FILE = new File("src/test/schemata/simple.avpr");
   private static final Protocol PROTOCOL;

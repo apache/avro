@@ -31,7 +31,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 
 @RunWith(Parameterized.class)
 public class TestValidatingIO {
@@ -46,13 +51,13 @@ public class TestValidatingIO {
   private String sJsSch;
   private String sCl;
 
-  public TestValidatingIO (Encoding _enc, int _skip, String _js, String _cls) {
-    this.eEnc = _enc;
-    this.iSkipL = _skip;
-    this.sJsSch = _js;
-    this.sCl = _cls;
+  public TestValidatingIO (Encoding enc, int skip, String js, String cls) {
+    this.eEnc = enc;
+    this.iSkipL = skip;
+    this.sJsSch = js;
+    this.sCl = cls;
   }
-  private static int COUNT = 1;
+  private static final int COUNT = 1;
   
   @Test
   public void testMain() throws IOException {
@@ -213,7 +218,7 @@ public class TestValidatingIO {
   public static Object[] randomValues(String calls) {
     Random r = new Random();
     InputScanner cs = new InputScanner(calls.toCharArray());
-    Vector<Object> result = new Vector<Object>();
+    List<Object> result = new ArrayList<Object>();
     while (! cs.isDone()) {
       char c = cs.cur();
       cs.next();

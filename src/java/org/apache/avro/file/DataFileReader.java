@@ -89,7 +89,16 @@ public class DataFileReader<D> {
 
     in.seek(DataFileConstants.MAGIC.length);         // seek to start
   }
+  
 
+  /**
+   * Return the number of records in the file, according
+   * to its metadata.
+   */
+  public long getCount() {
+    return count;
+  }
+  
   /** Return the value of a metadata property. */
   public synchronized byte[] getMeta(String key) {
     return meta.get(key);

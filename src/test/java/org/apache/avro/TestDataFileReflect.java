@@ -206,6 +206,7 @@ public class TestDataFileReflect {
   private static class BazRecord {
     private int nbr;
 
+    @SuppressWarnings("unused")
     public BazRecord() {
     }
 

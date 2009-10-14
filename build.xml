@@ -207,8 +207,11 @@
     <checkstyle config="${java.src.dir}/checkstyle.xml"
 		classpathref="test.java.classpath">
 	<fileset dir="${java.src.dir}">
-        <include name="**/*.java"/>
-    </fileset>
+          <include name="**/*.java"/>
+        </fileset>
+	<fileset dir="${test.java.src.dir}">
+          <include name="**/*.java"/>
+        </fileset>
     </checkstyle>
   </target>
 

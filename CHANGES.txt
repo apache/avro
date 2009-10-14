@@ -8,6 +8,9 @@ Trunk (unreleased changes)
 
   IMPROVEMENTS
 
+    AVRO-142. Remove some Java unused fields and imports.  Start
+    running checkstyle on Java test code.  (Philip Zeyliger via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES

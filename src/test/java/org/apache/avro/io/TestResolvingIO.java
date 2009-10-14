@@ -53,16 +53,14 @@ public class TestResolvingIO {
   }
   
   @Test
-  public void test_identical()
-  throws IOException {
+  public void testIdentical() throws IOException {
     performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsRdrSchm, sRdrCls);
   }
 
   private static final int COUNT = 10;
 
   @Test
-  public void test_compatible()
-  throws IOException {
+  public void testCompatible() throws IOException {
     performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsRdrSchm, sRdrCls);
   }
 
@@ -120,7 +118,7 @@ public class TestResolvingIO {
   }
 
   static Object[][] encodings = new Object[][] { { Encoding.BINARY },
-	  { Encoding.BLOCKING_BINARY }, { Encoding.JSON } };
+          { Encoding.BLOCKING_BINARY }, { Encoding.JSON } };
   static Object[][] skipLevels =
     new Object[][] { { -1 }, { 0 }, { 1 }, { 2 }  };
   private static Object[][] testSchemas() {

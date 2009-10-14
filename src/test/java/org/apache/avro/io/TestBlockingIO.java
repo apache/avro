@@ -20,14 +20,12 @@ package org.apache.avro.io;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Stack;
 import java.util.Collection;
 import java.util.Arrays;
 
 import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +53,7 @@ public class TestBlockingIO {
     private final Decoder input;
     private final int depth;
     public Tests(int bufferSize, int depth, String input)
-      throws JsonParseException, IOException {
+      throws IOException {
   
       this.depth = depth;
       byte[] in = input.getBytes("UTF-8");
@@ -74,8 +72,7 @@ public class TestBlockingIO {
       this.parser =  f.createJsonParser(new ByteArrayInputStream(in));
     }
     
-    public void scan()
-      throws JsonParseException, UnsupportedEncodingException, IOException {
+    public void scan() throws IOException {
       Stack<S> countStack = new Stack<S>();
       long count = 0;
       while (parser.nextToken() != null) {
@@ -127,8 +124,7 @@ public class TestBlockingIO {
       }
     }
 
-    public void skip(int skipLevel) throws
-      JsonParseException, UnsupportedEncodingException, IOException {
+    public void skip(int skipLevel) throws IOException {
       Stack<S> countStack = new Stack<S>();
       long count = 0;
       while (parser.nextToken() != null) {
@@ -218,39 +214,35 @@ public class TestBlockingIO {
   }
 
   @Test
-  public void testScan()
-    throws JsonParseException, IOException {
+  public void testScan() throws IOException {
     Tests t = new Tests(iSize, iDepth, sInput);
     t.scan();
   }
 
   @Test
-  public void testSkip_1()
-    throws JsonParseException, IOException {
+  public void testSkip1() throws IOException {
     testSkip(iSize, iDepth, sInput, 0);
   }
 
   @Test
-  public void testSkip_2()
-    throws JsonParseException, IOException {
+  public void testSkip2() throws IOException {
     testSkip(iSize, iDepth, sInput, 1);
   }
 
   @Test
-  public void testSkip_3()
-    throws JsonParseException, IOException {
+  public void testSkip3() throws IOException {
     testSkip(iSize, iDepth, sInput, 2);
   }
 
   private void testSkip(int bufferSize, int depth, String input,
       int skipLevel)
-    throws JsonParseException, IOException {
+    throws IOException {
     Tests t = new Tests(bufferSize, depth, input);
     t.skip(skipLevel);
   }
 
   private static void skipMap(JsonParser parser, Decoder input, int depth)
-    throws IOException, JsonParseException {
+    throws IOException {
     for (long l = input.skipMap(); l != 0; l = input.skipMap()) {
       for (long i = 0; i < l; i++) {
         if (depth == 0) {
@@ -264,7 +256,7 @@ public class TestBlockingIO {
   }
 
   private static void skipArray(JsonParser parser, Decoder input, int depth)
-    throws IOException, JsonParseException {
+    throws IOException {
     for (long l = input.skipArray(); l != 0; l = input.skipArray()) {
       for (long i = 0; i < l; i++) {
         if (depth == 1) {
@@ -278,7 +270,7 @@ public class TestBlockingIO {
   }
  
   private static void checkString(String s, Decoder input, int n)
-    throws IOException, UnsupportedEncodingException {
+    throws IOException {
     ByteBuffer buf = input.readBytes(null);
     assertEquals(n, buf.remaining());
     String s2 = new String(buf.array(), buf.position(),
@@ -288,7 +280,7 @@ public class TestBlockingIO {
   
   private static void serialize(Encoder cos, JsonParser p,
       ByteArrayOutputStream os)
-    throws JsonParseException, IOException {
+    throws IOException {
     boolean[] isArray = new boolean[100];
     int[] counts = new int[100];
     int stackTop = -1;

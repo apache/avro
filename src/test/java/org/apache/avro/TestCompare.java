@@ -19,13 +19,10 @@ package org.apache.avro;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
@@ -34,12 +31,10 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.util.Utf8;
 
 import org.apache.avro.test.TestRecord;
-import org.apache.avro.test.Simple;
 import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 

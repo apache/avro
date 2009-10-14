@@ -19,9 +19,15 @@ package org.apache.avro;
 
 import org.apache.avro.specific.SpecificRequestor;
 import org.apache.avro.specific.SpecificResponder;
-import org.apache.avro.ipc.*;
-import org.apache.avro.util.Utf8;
-import org.junit.*;
+import org.apache.avro.ipc.HttpServer;
+import org.apache.avro.ipc.HttpTransceiver;
+import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.Transceiver;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URL;
@@ -54,7 +60,6 @@ public class TestBulkData {
 
   private static Server server;
   private static Transceiver client;
-  private static Requestor requestor;
   private static BulkData proxy;
 
   @Before

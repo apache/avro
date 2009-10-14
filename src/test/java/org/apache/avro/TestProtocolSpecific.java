@@ -35,18 +35,18 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
 
 public class TestProtocolSpecific {
-  private static final Logger LOG
-    = LoggerFactory.getLogger(TestProtocolSpecific.class);
 
   protected static final File SERVER_PORTS_DIR
   = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");

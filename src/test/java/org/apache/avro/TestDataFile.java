@@ -72,6 +72,7 @@ public class TestDataFile {
       new DataFileReader<Object>(new SeekableFileInput(FILE),
                                  new GenericDatumReader<Object>());
     try {
+      assertEquals(COUNT, reader.getCount());
       Object datum = null;
       if (VALIDATE) {
         for (Object expected : new RandomData(SCHEMA, COUNT, SEED)) {

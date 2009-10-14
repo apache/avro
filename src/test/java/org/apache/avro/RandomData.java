@@ -17,17 +17,21 @@
  */
 package org.apache.avro;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.ByteBuffer;
-import java.util.*;
 
 /** Generates schema data as Java objects with random values. */
 public class RandomData implements Iterable<Object> {

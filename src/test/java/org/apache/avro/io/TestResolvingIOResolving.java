@@ -27,7 +27,7 @@ import java.util.Collection;
 import java.util.Arrays;
 
 @RunWith(Parameterized.class)
-public class TestResolvingIO_resolving {
+public class TestResolvingIOResolving {
   protected TestValidatingIO.Encoding eEnc;
   protected final int iSkipL;
   protected final String sJsWrtSchm;
@@ -38,7 +38,7 @@ public class TestResolvingIO_resolving {
   protected final Object[] oaWrtVals;
   protected final Object[] oaRdrVals;
 
-  public TestResolvingIO_resolving(TestValidatingIO.Encoding encoding,
+  public TestResolvingIOResolving(TestValidatingIO.Encoding encoding,
       int skipLevel, String jsonWriterSchema,
       String writerCalls,
       Object[] writerValues,
@@ -56,7 +56,7 @@ public class TestResolvingIO_resolving {
   }
 
   @Test
-  public void test_resolving()
+  public void testResolving()
     throws IOException {
     Schema writerSchema = Schema.parse(sJsWrtSchm);
     byte[] bytes = TestValidatingIO.make(writerSchema, sWrtCls,
@@ -70,8 +70,8 @@ public class TestResolvingIO_resolving {
   @Parameterized.Parameters
   public static Collection<Object[]> data3() {
     Collection<Object[]> ret = Arrays.asList(
-    		TestValidatingIO.convertTo2dArray(TestResolvingIO.encodings,
-    				TestResolvingIO.skipLevels,
+                TestValidatingIO.convertTo2dArray(TestResolvingIO.encodings,
+                                TestResolvingIO.skipLevels,
         dataForResolvingTests()));
     return ret;
   }
@@ -104,13 +104,13 @@ public class TestResolvingIO_resolving {
           new Object[] { 10, 101 } },
         { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
             + "{\"name\": \"g1\", " +
-            		"\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
+                        "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
                 + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
             + "{\"name\": \"g2\", \"type\": \"long\"}]}", "IL",
           new Object[] { 10, 11L },
           "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
             + "{\"name\": \"g1\", " +
-            		"\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
+                        "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
                 + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
                 + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
           + "{\"name\": \"g2\", \"type\": \"long\"}]}}", "IIL",

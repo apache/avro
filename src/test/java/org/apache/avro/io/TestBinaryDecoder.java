@@ -29,49 +29,49 @@ public class TestBinaryDecoder {
   /** Verify EOFException throw at EOF */
 
   @Test(expected=EOFException.class)
-  public void testEOF_boolean() throws IOException {
+  public void testEOFBoolean() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readBoolean();
   }
   
   @Test(expected=EOFException.class)
-  public void testEOF_int() throws IOException {
+  public void testEOFInt() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readInt();
   }
   
   @Test(expected=EOFException.class)
-  public void testEOF_long() throws IOException {
+  public void testEOFLong() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readLong();
   }
   
   @Test(expected=EOFException.class)
-  public void testEOF_float() throws IOException {
+  public void testEOFFloat() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readFloat();
   }
   
   @Test(expected=EOFException.class)
-  public void testEOF_double() throws IOException {
+  public void testEOFDouble() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readDouble();
   }
   
   @Test(expected=EOFException.class)
-  public void testEOF_bytes() throws IOException {
+  public void testEOFBytes() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readBytes(null);
   }
   
   @Test(expected=EOFException.class)
-  public void testEOF_string() throws IOException {
+  public void testEOFString() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).
       readString(new Utf8("a"));
   }
   
   @Test(expected=EOFException.class)
-  public void testEOF_fixed() throws IOException {
+  public void testEOFFixed() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).
       readFixed(new byte[1]);
   }
 
   @Test(expected=EOFException.class)
-  public void testEOF_enum() throws IOException {
+  public void testEOFEnum() throws IOException {
     new BinaryDecoder(new ByteArrayInputStream(new byte[0])).readEnum();
   }
   

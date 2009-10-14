@@ -60,10 +60,10 @@ public class GenerateBlockingData {
     }
     
     Schema sch = Schema.parse(new File(args[0]));
-    File FILE = new File(args[1]);
+    File outputFile = new File(args[1]);
     int numObjects = Integer.parseInt(args[2]);
     
-    FileOutputStream out = new FileOutputStream(FILE, false);
+    FileOutputStream out = new FileOutputStream(outputFile, false);
     DatumWriter<Object> dout = new GenericDatumWriter<Object>();
     dout.setSchema(sch);
     Encoder vout = new BinaryEncoder(out);
