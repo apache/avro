@@ -11,6 +11,8 @@ Trunk (unreleased changes)
     AVRO-142. Remove some Java unused fields and imports.  Start
     running checkstyle on Java test code.  (Philip Zeyliger via cutting)
 
+    AVRO-147. Use configure to create makefile for C++ builds. (sbanacho)
+
   OPTIMIZATIONS
 
   BUG FIXES

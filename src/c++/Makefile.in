@@ -1,0 +1,116 @@
+
+
+SHELL = /bin/sh
+VPATH = @srcdir@
+
+subdirs = @subdirs@
+top_srcdir = @top_srcdir@
+srcdir = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = $(exec_prefix)/bin
+infodir = $(prefix)/info
+libdir = $(prefix)/lib/gnudl
+mandir = $(prefix)/man/man1
+
+CXX = @CXX@
+CPPFLAGS = @CPPFLAGS@
+CFLAGS = $(CPPFLAGS) @CFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+INSTALL = @INSTALL@
+LEX = @LEX@
+YACC = @YACC@
+DOXYGEN = @DOXYGEN@
+BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
+BOOST_LDFLAGS = @BOOST_LDFLAGS@
+BOOST_REGEX_LIB = @BOOST_REGEX_LIB@
+
+AVROINCLUDES = $(srcdir)/api
+AVROSOURCES = $(srcdir)/impl
+AVROPARSER = $(srcdir)/parser
+AVROSCHEMAS = $(srcdir)/jsonschemas
+AVROTEST = $(srcdir)/test
+AVROSCRIPTS = $(srcdir)/scripts
+
+EXECS = unittest testparser precompile testgen
+EXECSDIR = obj
+AVROEXECS = $(EXECS:%=$(EXECSDIR)/%)
+
+INCFLAGS = -I$(AVROINCLUDES) -I$(AVROPARSER) 
+INCFLAGS += $(BOOST_CPPFLAGS)
+
+LIBS += $(BOOST_LDFLAGS) $(BOOST_REGEX_LIB)
+
+OBJDIR = obj
+
+HEADERS    := $(wildcard $(AVROINCLUDES)/*.hh)
+SOURCES := $(wildcard $(AVROSOURCES)/*.cc)
+files := $(SOURCES:$(AVROSOURCES)/%.cc=%)
+OBJS := $(files:%=$(OBJDIR)/%.o)
+DEPENDS := $(files:%=$(OBJDIR)/%.d)
+
+OJBS += $(OBJDIR)/parserlib.o
+
+GENERATED = avro.tab.h avro.tab.c lex.yy.cc
+GENERATEDSRCS = $(GENERATED:%=$(OBJDIR)/%)
+GENERATEDobjs = $(addsuffix .o, $(sort $(basename $(GENERATED))) )
+GENERATEDOBJS = $(GENERATEDobjs:%=$(OBJDIR)/%)
+
+all : $(OBJDIR)/avrolib.a 
+
+check: $(AVROEXECS)
+	$(EXECSDIR)/unittest
+	$(EXECSDIR)/testgen $(AVROSCHEMAS)/bigrecord
+
+CXXFLAGS = -Wall -g $(CPPFLAGS)
+
+$(OBJDIR)/avrolib.a : $(OBJS) $(GENERATEDOBJS)
+	ar ruc $@ $^ 
+	ranlib $@
+
+$(EXECSDIR)/unittest : $(AVROTEST)/unittest.cc $(OBJDIR)/avrolib.a $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $< $(OBJDIR)/avrolib.a $(LIBS)
+
+$(OBJDIR)/%.o : $(AVROSOURCES)/%.cc
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c -o $@ $<
+
+$(OBJDIR)/%.d : $(AVROSOURCES)/%.cc 
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -MM -MP -MT $(OBJDIR)/$*.o -MT $@ -MF $@ $< 
+
+$(OBJDIR)/lex.yy.cc : $(AVROPARSER)/avro.l $(OBJDIR)/avro.tab.h
+	$(LEX) -o$(OBJDIR)/lex.yy.cc $(AVROPARSER)/avro.l
+
+$(OBJDIR)/avro.tab.h $(OBJDIR)/avro.tab.c : $(AVROPARSER)/avro.y
+	$(YACC) -d --file-prefix=$(OBJDIR)/avro $(AVROPARSER)/avro.y
+
+$(OBJDIR)/avro.tab.o : $(OBJDIR)/avro.tab.c $(OBJDIR)/avro.tab.h
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c -o $@ $< 
+
+$(OBJDIR)/lex.yy.o : $(OBJDIR)/lex.yy.cc
+	$(CXX) $(CXXFLAGS)  -Wno-unused $(INCFLAGS) -c -o $@ $< 
+
+$(EXECSDIR)/testparser: $(AVROTEST)/testparser.cc $(OBJDIR)/avrolib.a 
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
+
+$(EXECSDIR)/precompile: $(AVROTEST)/precompile.cc $(OBJDIR)/avrolib.a 
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
+
+$(AVROTEST)/code.hh: $(AVROSCRIPTS)/gen.py $(EXECSDIR)/precompile $(AVROSCHEMAS)/bigrecord
+	$(EXECSDIR)/precompile < $(AVROSCHEMAS)/bigrecord > obj/bigrecord.flat
+	python $(AVROSCRIPTS)/gen.py < obj/bigrecord.flat > $(AVROTEST)/code.hh
+
+$(EXECSDIR)/testgen: $(AVROTEST)/code.hh $(AVROTEST)/testgen.cc $(OBJDIR)/avrolib.a 
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
+
+doc/html/index.html: $(SOURCES) $(HEADERS) ./Doxyfile
+	$(DOXYGEN) ./Doxyfile
+
+.PHONY: doc
+doc: doc/html/index.html
+
+-include $(DEPENDS)
+
+clean :
+	rm -rf $(AVROEXECS) $(OBJS) $(OBJDIR)/avrolib.a $(GENERATEDSRCS) $(GENERATEDOBJS) core

@@ -32,6 +32,8 @@
 #include "ValidSchema.hh"
 #include "Compiler.hh"
 
+std::string gInputSchema ("jsonschemas/bigrecord");
+
 void serialize(const avrouser::RootRecord &rec) 
 {
     avro::ScreenStreamer os;
@@ -153,7 +155,7 @@ void runTests(const avrouser::RootRecord myRecord)
     std::cout << "end Serialize\n";
 
     avro::ValidSchema schema;
-    std::ifstream in("jsonschemas/bigrecord");
+    std::ifstream in(gInputSchema.c_str());
     avro::compileJsonSchema(in, schema);
     std::cout << "Serialize validated:\n";
     serializeValid(schema, myRecord);
@@ -196,6 +198,13 @@ boost::unit_test::test_suite*
 init_unit_test_suite( int argc, char* argv[] ) 
 {
     using namespace boost::unit_test;
+
+
+    if(argc > 1) {
+        gInputSchema = argv[1];
+    }
+
+    std::cout << "Using schema " << gInputSchema << std::endl;
 
     test_suite* test= BOOST_TEST_SUITE( "Avro C++ generated code test suite" );
     test->add( BOOST_TEST_CASE( &testGen ) );
