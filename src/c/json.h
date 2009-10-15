@@ -51,11 +51,11 @@ struct JSON_value
   apr_pool_t *pool;
 };
 typedef struct JSON_value JSON_value;
-#define object_value value_u.object
-#define array_value value_u.array
-#define string_value value_u.z
-#define number_value value_u.number
-#define boolean_value value_u.boolean
+#define json_object value_u.object
+#define json_array  value_u.array
+#define json_string value_u.z
+#define json_number value_u.number
+#define json_boolean value_u.boolean
 
 JSON_value *JSON_parse (apr_pool_t * pool, char *text, int text_len);
 
@@ -71,7 +71,7 @@ struct JSON_ctx
 };
 typedef struct JSON_ctx JSON_ctx;
 
-/* in json_schema.c */
+/* in json_parser.c */
 void *JSONParserAlloc (void *(*mallocProc) (size_t));
 void JSONParser (void *yyp, int yymajor, JSON_value * value, JSON_ctx * ctx);
 void JSONParserFree (void *p, void (*freeProc) (void *));

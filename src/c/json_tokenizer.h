@@ -21,7 +21,7 @@ under the License.
 #define JSON_TOKENIZER_H
 
 #include <wchar.h>
-#include "json_schema.h"
+#include "json_parser.h"
 
 /* Tokens which are not part of the schema */
 enum json_tokens

@@ -1,0 +1,19 @@
+%{
+#include "avro.h"
+%}
+enum AVRO_node_type;
+%%
+string,AVRO_STRING
+bytes,AVRO_BYTES
+int,AVRO_INT
+long,AVRO_LONG
+float,AVRO_FLOAT
+double,AVRO_DOUBLE
+boolean,AVRO_BOOLEAN
+null,AVRO_NULL
+record,AVRO_RECORD
+enum,AVRO_ENUM
+fixed,AVRO_FIZED
+map,AVRO_MAP
+array,AVRO_ARRAY
+union,AVRO_UNION

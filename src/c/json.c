@@ -43,13 +43,13 @@ JSON_print_private (FILE * file, JSON_value * value, int *depth)
       fprintf (file, "???");
       return;
     case JSON_STRING:
-      fprintf (file, "\"%ls\"", value->string_value);
+      fprintf (file, "\"%ls\"", value->json_string);
       return;
     case JSON_NUMBER:
-      fprintf (file, "%E", value->number_value);
+      fprintf (file, "%E", value->json_number);
       return;
     case JSON_BOOLEAN:
-      fprintf (file, "%s", value->boolean_value ? "true" : "false");
+      fprintf (file, "%s", value->json_boolean ? "true" : "false");
       return;
     case JSON_NULL:
       fprintf (file, "null");
@@ -57,7 +57,7 @@ JSON_print_private (FILE * file, JSON_value * value, int *depth)
     case JSON_ARRAY:
       (*depth)++;
       fprintf (file, "[\n");
-      for (i = 0; i < value->array_value->nelts; i++)
+      for (i = 0; i < value->json_array->nelts; i++)
 	{
 	  if (i)
 	    {
@@ -65,7 +65,7 @@ JSON_print_private (FILE * file, JSON_value * value, int *depth)
 	    }
 	  ws_depth (file, *depth);
 	  JSON_print_private (file,
-			      ((JSON_value **) value->array_value->elts)[i],
+			      ((JSON_value **) value->json_array->elts)[i],
 			      depth);
 	}
       fprintf (file, "\n");
@@ -82,7 +82,7 @@ JSON_print_private (FILE * file, JSON_value * value, int *depth)
 
 	(*depth)++;
 	fprintf (file, "{\n");
-	for (i = 0, hi = apr_hash_first (value->pool, value->object_value);
+	for (i = 0, hi = apr_hash_first (value->pool, value->json_object);
 	     hi; hi = apr_hash_next (hi), i++)
 	  {
 	    if (i)
@@ -176,10 +176,10 @@ JSON_parse_inner (void *jsonp, apr_pool_t * pool, wchar_t * mb_text,
 
 	    value = JSON_value_new (pool, JSON_STRING);
 	    /* This allocates the maximum we need */
-	    value->string_value =
+	    value->json_string =
 	      (wchar_t *) apr_palloc (pool, (len + 1) * sizeof (wchar_t));
 
-	    for (p = cur + 1, q = value->string_value; p < cur + len - 1; p++)
+	    for (p = cur + 1, q = value->json_string; p < cur + len - 1; p++)
 	      {
 		if (*p == '\\')
 		  {
@@ -229,13 +229,13 @@ JSON_parse_inner (void *jsonp, apr_pool_t * pool, wchar_t * mb_text,
 
 	case TK_NUMBER:
 	  value = JSON_value_new (pool, JSON_NUMBER);
-	  value->number_value = number;
+	  value->json_number = number;
 	  break;
 
 	case TK_TRUE:
 	case TK_FALSE:
 	  value = JSON_value_new (pool, JSON_BOOLEAN);
-	  value->boolean_value = tokenType == TK_FALSE ? 0 : 1;
+	  value->json_boolean = tokenType == TK_FALSE ? 0 : 1;
 	  break;
 
 	case TK_NULL:

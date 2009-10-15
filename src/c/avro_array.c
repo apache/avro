@@ -16,13 +16,132 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
-#include "avro.h"
+#include "avro_private.h"
 
-avro_status_t
-avro_array (AVRO * avro, caddr_t * addrp, uint32_t * sizep,
-	    uint32_t maxsize, uint32_t elsize, avroproc_t elproc)
+struct avro_array_value
 {
+  apr_array_header_t *values;
 
+  struct avro_value *items;
 
+  apr_pool_t *pool;
+
+  int value_set;
+
+  /* Need the ctx to dupe value */
+  struct avro_value_ctx *ctx;
+
+  struct avro_value base_value;
+};
+
+static void
+avro_array_print (struct avro_value *value, FILE * fp)
+{
+  struct avro_array_value *self =
+    container_of (value, struct avro_array_value, base_value);
+
+  avro_value_indent (value, fp);
+  fprintf (fp, "array value items\n");
+  self->items->print_info (self->items, fp);
+}
+
+static avro_status_t
+avro_array_read_skip (struct avro_value *value, struct avro_channel *channel,
+		      int skip)
+{
+  avro_status_t status;
+  avro_long_t i, count;
+  struct avro_array_value *self =
+    container_of (value, struct avro_array_value, base_value);
+  struct avro_io *io;
+
+  apr_pool_clear (self->pool);
+
+  if (!channel)
+    {
+      return AVRO_FAILURE;
+    }
+  io = channel->io;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+
+  status = avro_getlong (io, &count);
+  if (status != AVRO_OK)
+    {
+      return status;
+    }
+
+  if (count < 0)
+    {
+      /* TODO */
+    }
+
+  /* TODO */
   return AVRO_OK;
+}
+
+static avro_status_t
+avro_array_read (struct avro_value *value, struct avro_channel *channel)
+{
+  return avro_array_read_skip (value, channel, 0);
+}
+
+static avro_status_t
+avro_array_skip (struct avro_value *value, struct avro_channel *channel)
+{
+  return avro_array_read_skip (value, channel, 1);
+}
+
+static avro_status_t
+avro_array_write (struct avro_value *value, struct avro_channel *channel)
+{
+/* TODO
+  struct avro_array_value *self =
+    container_of (value, struct avro_array_value, base_value);
+*/
+  return AVRO_OK;
+}
+
+struct avro_value *
+avro_array_create (struct avro_value_ctx *ctx, struct avro_value *parent,
+		   apr_pool_t * pool, const JSON_value * json)
+{
+  struct avro_array_value *self;
+  const JSON_value *items;
+
+  self = apr_palloc (pool, sizeof (struct avro_array_value));
+  if (!self)
+    {
+      return NULL;
+    }
+  self->base_value.type = AVRO_ARRAY;
+  self->base_value.pool = pool;
+  self->base_value.parent = parent;
+  self->base_value.schema = json;
+  self->base_value.read_data = avro_array_read;
+  self->base_value.skip_data = avro_array_skip;
+  self->base_value.write_data = avro_array_write;
+  self->base_value.print_info = avro_array_print;
+
+  /* collect and save required items */
+  items = json_attr_get (json, L"items");
+  if (!items)
+    {
+      return NULL;
+    }
+  self->items = avro_value_from_json (ctx, parent, items);
+  if (!self->items)
+    {
+      return NULL;
+    }
+  /* Create a pool for the value processing */
+  if (apr_pool_create (&self->pool, pool) != APR_SUCCESS)
+    {
+      return NULL;
+    }
+  self->value_set = 0;
+  self->ctx = ctx;
+  return &self->base_value;
 }

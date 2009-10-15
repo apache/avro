@@ -17,35 +17,39 @@ specific language governing permissions and limitations
 under the License.
 */
 #include "avro_private.h"
+#include "dump.h"
 
-struct avro_string_value
+struct avro_bytes_value
 {
-  apr_pool_t *pool;
-  avro_string_t value;
+  char *value;
   int value_set;
-  struct avro_value base_value;
+  avro_long_t size;
+  avro_value base_value;
+  apr_pool_t *pool;
 };
 
 static void
-avro_string_print (struct avro_value *value, FILE * fp)
+avro_bytes_print (struct avro_value *value, FILE * fp)
 {
-  struct avro_string_value *self =
-    container_of (value, struct avro_string_value, base_value);
+  struct avro_bytes_value *self =
+    container_of (value, struct avro_bytes_value, base_value);
+
   avro_value_indent (value, fp);
-  fprintf (fp, "string");
+  fprintf (fp, "bytes");
   if (self->value_set)
     {
-      fprintf (fp, " value=%ls", self->value);
+      fprintf (fp, " size=%ld ", self->size);
+      dump (fp, self->value, self->size);
     }
   fprintf (fp, "\n");
 }
 
 static avro_status_t
-avro_string_read (struct avro_value *value, struct avro_channel *channel)
+avro_bytes_read (struct avro_value *value, struct avro_channel *channel)
 {
   struct avro_io *io;
-  struct avro_string_value *self =
-    container_of (value, struct avro_string_value, base_value);
+  struct avro_bytes_value *self =
+    container_of (value, struct avro_bytes_value, base_value);
   if (!channel)
     {
       return AVRO_FAILURE;
@@ -55,19 +59,20 @@ avro_string_read (struct avro_value *value, struct avro_channel *channel)
     {
       return AVRO_FAILURE;
     }
-  apr_pool_clear (self->pool);
+  /* Flush old data to make room for new */
   self->value_set = 1;
-  return avro_getstring (io, self->pool, &self->value);
+  apr_pool_clear (self->pool);
+  return avro_getbytes (io, self->pool, &self->value, &self->size);
 }
 
 static avro_status_t
-avro_string_skip (struct avro_value *value, struct avro_channel *channel)
+avro_bytes_skip (struct avro_value *value, struct avro_channel *channel)
 {
   avro_status_t status;
-  avro_long_t len;
   struct avro_io *io;
-  struct avro_string_value *self =
-    container_of (value, struct avro_string_value, base_value);
+  avro_long_t len;
+  struct avro_bytes_value *self =
+    container_of (value, struct avro_bytes_value, base_value);
 
   self->value_set = 0;
   if (!channel)
@@ -82,52 +87,38 @@ avro_string_skip (struct avro_value *value, struct avro_channel *channel)
   status = avro_getlong (io, &len);
   if (status != AVRO_OK)
     {
-      return status;
-    }
-  if (len < 0)
-    {
       return AVRO_FAILURE;
     }
   return io->skip (io, len);
 }
 
 static avro_status_t
-avro_string_write (struct avro_value *value, struct avro_channel *channel)
+avro_bytes_write (struct avro_value *value, struct avro_channel *channel)
 {
-  struct avro_io *io;
-  struct avro_string_value *self =
-    container_of (value, struct avro_string_value, base_value);
-  if (!channel)
-    {
-      return AVRO_FAILURE;
-    }
-  io = channel->io;
-  if (!io)
-    {
-      return AVRO_FAILURE;
-    }
-  return avro_putstring (io, self->pool, self->value);
+  struct avro_bytes_value *self =
+    container_of (value, struct avro_bytes_value, base_value);
+  return AVRO_OK;
 }
 
 struct avro_value *
-avro_string_create (struct avro_value_ctx *ctx, struct avro_value *parent,
-		    apr_pool_t * pool, const JSON_value * json)
+avro_bytes_create (struct avro_value_ctx *ctx, struct avro_value *parent,
+		   apr_pool_t * pool, const JSON_value * json)
 {
-  struct avro_string_value *self =
-    apr_palloc (pool, sizeof (struct avro_string_value));
-  DEBUG (fprintf (stderr, "Creating a string\n"));
+  struct avro_bytes_value *self =
+    apr_palloc (pool, sizeof (struct avro_bytes_value));
+  DEBUG (fprintf (stderr, "Creating bytes\n"));
   if (!self)
     {
       return NULL;
     }
-  self->base_value.type = AVRO_STRING;
+  self->base_value.type = AVRO_BYTES;
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = avro_string_read;
-  self->base_value.skip_data = avro_string_skip;
-  self->base_value.write_data = avro_string_write;
-  self->base_value.print_info = avro_string_print;
+  self->base_value.read_data = avro_bytes_read;
+  self->base_value.skip_data = avro_bytes_skip;
+  self->base_value.write_data = avro_bytes_write;
+  self->base_value.print_info = avro_bytes_print;
   self->value_set = 0;
   if (apr_pool_create (&self->pool, pool) != APR_SUCCESS)
     {

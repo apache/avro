@@ -18,20 +18,20 @@ under the License.
 */
 #include "avro_private.h"
 
-struct avro_double_value
+struct avro_float_value
 {
-  double value;
+  float value;
   int value_set;
   struct avro_value base_value;
 };
 
 static void
-avro_double_print (struct avro_value *value, FILE * fp)
+avro_float_print (struct avro_value *value, FILE * fp)
 {
-  struct avro_double_value *self =
-    container_of (value, struct avro_double_value, base_value);
+  struct avro_float_value *self =
+    container_of (value, struct avro_float_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "double");
+  fprintf (fp, "float");
   if (self->value_set)
     {
       fprintf (fp, " value=%f", self->value);
@@ -40,66 +40,66 @@ avro_double_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_double_read (struct avro_value *value, struct avro_channel *channel)
+avro_float_read (struct avro_value *value, struct avro_channel *channel)
 {
-  double *dp;
-  struct avro_double_value *self =
-    container_of (value, struct avro_double_value, base_value);
+  float *fp;
+  struct avro_float_value *self =
+    container_of (value, struct avro_float_value, base_value);
   if (!channel)
     {
       return AVRO_FAILURE;
     }
+  fp = &self->value;
   self->value_set = 1;
-  dp = &self->value;
-  return avro_getint64_le (channel->io, (int64_t *) dp);
+  return avro_getint32_le (channel->io, (int32_t *) fp);
 }
 
 static avro_status_t
-avro_double_skip (struct avro_value *value, struct avro_channel *channel)
+avro_float_skip (struct avro_value *value, struct avro_channel *channel)
 {
-  double d;
-  double *dp = &d;
-  struct avro_double_value *self =
-    container_of (value, struct avro_double_value, base_value);
+  float f;
+  float *fp = &f;
+  struct avro_float_value *self =
+    container_of (value, struct avro_float_value, base_value);
   if (!channel)
     {
       return AVRO_FAILURE;
     }
   self->value_set = 0;
-  return avro_getint64_le (channel->io, (int64_t *) dp);
+  return avro_getint32_le (channel->io, (int32_t *) fp);
 }
 
 static avro_status_t
-avro_double_write (struct avro_value *value, struct avro_channel *channel)
+avro_float_write (struct avro_value *value, struct avro_channel *channel)
 {
-  struct avro_double_value *self =
-    container_of (value, struct avro_double_value, base_value);
+  struct avro_float_value *self =
+    container_of (value, struct avro_float_value, base_value);
   if (!channel)
     {
       return AVRO_FAILURE;
     }
-  return avro_putint64_le (channel->io, (int64_t) self->value);;
+  return avro_putint32_le (channel->io, (int32_t) self->value);
 }
 
 struct avro_value *
-avro_double_create (struct avro_value_ctx *ctx, struct avro_value *parent,
-		    apr_pool_t * pool, const JSON_value * json)
+avro_float_create (struct avro_value_ctx *ctx, struct avro_value *parent,
+		   apr_pool_t * pool, const JSON_value * json)
 {
-  struct avro_double_value *self =
-    apr_palloc (pool, sizeof (struct avro_double_value));
-  DEBUG (fprintf (stderr, "Creating double\n"));
+  struct avro_float_value *self =
+    apr_palloc (pool, sizeof (struct avro_float_value));
+  DEBUG (fprintf (stderr, "Creating float\n"));
   if (!self)
     {
       return NULL;
     }
-  self->base_value.type = AVRO_DOUBLE;
+  self->base_value.type = AVRO_FLOAT;
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = avro_double_read;
-  self->base_value.skip_data = avro_double_skip;
-  self->base_value.write_data = avro_double_write;
-  self->base_value.print_info = avro_double_print;
+  self->base_value.read_data = avro_float_read;
+  self->base_value.skip_data = avro_float_skip;
+  self->base_value.write_data = avro_float_write;
+  self->base_value.print_info = avro_float_print;
   self->value_set = 0;
   return &self->base_value;
 }

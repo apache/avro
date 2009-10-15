@@ -1,48 +1,44 @@
-AM_CFLAGS=$(APR_CFLAGS) $(APR_INCLUDES) $(APU_INCLUDES) -Wall -pedantic
+# -pedantic
+AM_CFLAGS=$(APR_CFLAGS) $(APR_INCLUDES) $(APU_INCLUDES) -Wall 
 C_DOCS_OUTPUT ?= "docs/dox"
 
-EXTRA_DIST=json_schema.y lemon.c lempar.c
+EXTRA_DIST=json_parser.y lemon.c lempar.c json_tests
 
 include_HEADERS = avro.h
 
 lib_LTLIBRARIES = libavro.la
-libavro_la_SOURCES = avro_memory.c avro_socket.c avro_file.c \
-dump.c dump.h avro.c avro_string.c avro_zigzag.c error.c error.h avro_raw.c \
-avro_double.c json_schema.c json_schema.h json_tokenizer.c json.c json.h \
-json_tokenizer.h
+libavro_la_SOURCES = avro.h avro_private.h avro.c \
+json_parser.c json_parser.h json_tokenizer.c json.c json.h json_tokenizer.h  \
+dump.c dump.h error.c error.h avro_value.c \
+avro_array.c avro_boolean.c avro_bytes.c avro_double.c avro_enum.c avro_fixed.c  \
+avro_float.c avro_int.c avro_long.c avro_map.c avro_null.c \
+avro_record.c avro_string.c avro_union.c container_of.h \
+avro_io_file.c avro_io_socket.c avro_io_memory.c \
+avro_file_container.c avro_endian.c avro_primitives.c
 
-check_PROGRAMS=test_avro_zigzag test_avro_string test_avro_bytes test_avro_raw \
-test_avro_float_double test_json_parser
+check_PROGRAMS=test_json_parser test_avro_schema 
 
 lemon: $(top_srcdir)/lemon.c $(top_srcdir)/lempar.c
 	$(CC) -o $@ $(top_srcdir)/lemon.c
 	-cp $(top_srcdir)/lempar.c .
 
-json_schema.c json_shema.h: $(top_srcdir)/json_schema.y lemon
-	-cp $(top_srcdir)/json_schema.y .
-	./lemon json_schema.y
+json_parser.c json_shema.h: $(top_srcdir)/json_parser.y lemon
+	-cp $(top_srcdir)/json_parser.y .
+	./lemon json_parser.y
 
-# Make sure to generate the json_schema in the source directory before distribution
-dist-hook: json_schema.h json_schema.c
-	cp -r $(srcdir)/json $(distdir)
+# Make sure to generate the json_parser in the source directory before distribution
+dist-hook: json_parser.h json_parser.c
 
-test_avro_zigzag_SOURCE=test_avro_zigzag.c
-test_avro_zigzag_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
-
-test_avro_string_SOURCE=test_avro_string.c
-test_avro_string_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
-
-test_avro_bytes_SOURCE=test_avro_bytes.c
-test_avro_bytes_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
-
-test_avro_raw_SOURCE=test_avro_raw.c
-test_avro_raw_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
-
-test_avro_float_double_SOURCE=test_avro_float_double.c
-test_avro_float_double_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
+test_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
 
 test_json_parser=test_json_parser.c
-test_json_parser_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
+test_json_parser_LDADD=$(test_LDADD)
+
+test_avro_schema=test_avro_schema.c
+test_avro_schema_LDADD=$(test_LDADD)
+
+#test_avro_interop=test_avro_interop.c
+#test_avro_interop_LDADD=$(test_LDADD)
 
 TESTS=$(check_PROGRAMS)
 
@@ -67,4 +63,4 @@ docs:
 
 .PHONY: docs 
 
-CLEANFILES=$(top_srcdir)/*~ trace.txt json_schema.out lemon
+CLEANFILES=$(top_srcdir)/*~ trace.txt json_parser.out lemon

@@ -91,7 +91,7 @@ elements(A) ::= element_list(B) .
 array(A)  ::= LBRACKET elements(B) RBRACKET.
 {
       A = JSON_value_new(ctx->pool, JSON_ARRAY);
-      A->array_value = B;
+      A->json_array = B;
 }
 
 /* Objects */
@@ -108,7 +108,7 @@ member_list(A) ::= .
 members(A) ::= member_list(B) STRING(C) COLON value(D).
 {
      A = B;
-     apr_hash_set(B, C->string_value, wcslen(C->string_value) * sizeof(wchar_t), D);
+     apr_hash_set(B, C->json_string, wcslen(C->json_string) * sizeof(wchar_t), D);
 }
 members(A) ::= member_list(B).
 {
@@ -117,5 +117,5 @@ members(A) ::= member_list(B).
 object(A) ::= LCURLY members(B) RCURLY.
 {
       A = JSON_value_new(ctx->pool, JSON_OBJECT);
-      A->object_value = B;
+      A->json_object = B;
 }
