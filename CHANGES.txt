@@ -6,6 +6,8 @@ Trunk (unreleased changes)
 
   NEW FEATURES
 
+    AVRO-151. Validating Avro schema parser for C (massie)
+
   IMPROVEMENTS
 
     AVRO-142. Remove some Java unused fields and imports.  Start
