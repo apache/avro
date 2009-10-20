@@ -25,6 +25,9 @@ Trunk (unreleased changes)
     AVRO-141.  Fix a NullPointerException in ReflectData#isRecord().
     (Isabel Drost via cutting)
 
+    AVRO-156.  Fix broken links to Wiki in documentation.
+    (Jeff Hammerbacher via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

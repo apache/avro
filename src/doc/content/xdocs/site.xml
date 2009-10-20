@@ -57,8 +57,8 @@ See http://forrest.apache.org/docs/linking.html for more info
       <download href="#Download" />
     </releases>
     <jira      href="http://hadoop.apache.org/avro/issue_tracking.html"/>
-    <wiki      href="http://wiki.apache.org/hadoop/avro/" />
-    <faq       href="http://wiki.apache.org/hadoop/avro/FAQ" />
+    <wiki      href="http://wiki.apache.org/hadoop/Avro/" />
+    <faq       href="http://wiki.apache.org/hadoop/Avro/FAQ" />
     <json      href="http://www.json.org/" />
     <vint      href="http://lucene.apache.org/java/2_4_0/fileformats.html#VInt"/>
     <zigzag    href="http://code.google.com/apis/protocolbuffers/docs/encoding.html#types"/>
