@@ -5,7 +5,6 @@ AC_PREREQ(2.61)
 AC_INIT([avro], [1.0], [avro-devel@apache.org])
 AC_CONFIG_SRCDIR([api/AvroParse.hh])
 AC_CONFIG_MACRO_DIR([m4])
-# AC_CONFIG_HEADER([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -15,6 +14,7 @@ AC_PROG_LEX
 AC_PROG_YACC
 
 AC_CHECK_PROG(DOXYGEN, doxygen, doxygen)
+AC_CHECK_PROG(PYTHON, python, python)
 
 # Checks for libraries.
 AX_BOOST_BASE([1.32.0])

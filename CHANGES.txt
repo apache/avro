@@ -18,6 +18,8 @@ Trunk (unreleased changes)
     AVRO-155. Make python avro.io.DataFileReader iterable.
     (Jeff Hammerbacher via sharad)
 
+    AVRO-148. Add ant target to build c++ project.  (sbanacho)
+
   OPTIMIZATIONS
 
   BUG FIXES

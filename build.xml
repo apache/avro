@@ -36,8 +36,11 @@
   <property name="java.src.dir" value="${src.dir}/java"/>
   <property name="c.src.dir" value="${src.dir}/c"/>
   <property name="c.build.dir" value="${build.dir}/c/obj"/>
+  <property name="cpp.src.dir" value="${src.dir}/c++"/>
+  <property name="cpp.build.dir" value="${build.dir}/c++"/>
   <property name="lib.dir" value="${basedir}/lib"/>
   <property name="install.c" value="${build.dir}/c/install"/>
+  <property name="install.cpp" value="${build.dir}/c++/install"/>
   <property name="dist.dir" value="${build.dir}/${fullname}"/>
 
   <property name="build.classes" value="${build.dir}/classes"/>
@@ -45,6 +48,7 @@
   <property name="build.javadoc" value="${build.doc}/api/java"/>
   <property name="build.javadoc.log" value="${build.dir}/javadoc.log"/>
   <property name="build.cdoc" value="${build.doc}/api/c"/>
+  <property name="build.cppdoc" value="${build.doc}/api/cpp"/>
 
   <exec executable="sed" inputstring="${os.name}" outputproperty="nonspace.os">
      <arg value="s/ /_/g"/>
@@ -121,7 +125,7 @@
     </condition>
   </target>
 
-  <target name="compile" depends="compile-java,compile-c"/>
+  <target name="compile" depends="compile-java,compile-c,compile-cpp"/>
 
   <target name="compile-java" depends="schemata,ivy-retrieve">
     <java-compiler excludes="**/ipc/** **/*Requestor.java **/*Responder.java"/>
@@ -265,7 +269,7 @@
     </sequential>
   </macrodef>
 
-  <target name="test" depends="test-java,test-py,test-c,test-interop"/>
+  <target name="test" depends="test-java,test-py,test-c,test-cpp,test-interop"/>
 
   <macrodef name="test-runner">
     <attribute name="files.location" />
@@ -438,7 +442,7 @@
     </py-doc>
   </target>
 
-  <target name="doc" depends="forrest.check,javadoc,pydoc,cdoc" description="Generate forrest-based documentation. To use, specify -Dforrest.home=&lt;base of Apache Forrest installation&gt; on the command line." if="forrest.home">
+  <target name="doc" depends="forrest.check,javadoc,pydoc,cdoc,cppdoc" description="Generate forrest-based documentation. To use, specify -Dforrest.home=&lt;base of Apache Forrest installation&gt; on the command line." if="forrest.home">
     <echo  file="${build.dir}/avro.ent" append="false">
       &lt;!ENTITY AvroVersion "${version}"&gt;
     </echo>
@@ -491,7 +495,7 @@
     <fail if="javadoc.warnings">Javadoc warnings!</fail>
   </target>
 
-  <target name="package" depends="jar, doc, package-c"
+  <target name="package" depends="jar, doc, package-c, package-cpp"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${dist.dir}/lib"/>
@@ -504,6 +508,10 @@
 
     <copy todir="${dist.dir}/c" includeEmptyDirs="false">
       <fileset dir="${install.c}"/>
+    </copy>
+
+    <copy todir="${dist.dir}/c++" includeEmptyDirs="false">
+      <fileset dir="${install.cpp}"/>
     </copy>
 
     <copy todir="${dist.dir}"> 
@@ -631,5 +639,49 @@
     <available file="${c.build.dir}/Makefile" property="c-makefile-present"/>
   </target>
   <!-- End C Targets -->
+
+  <!-- C++ Targets -->
+  <target name="cppdoc" depends="configure-cpp">
+    <mkdir dir="${build.cppdoc}"/>
+    <exec dir="${cpp.build.dir}" executable="make" failonerror="true">
+      <env key="CPP_DOC_DIR" value="${build.cppdoc}" />
+      <arg line="doc" />
+    </exec>
+  </target>
+
+  <target name="configure-cpp-check">
+    <uptodate targetfile="${cpp.build.dir}/Makefile"
+	      srcfile="${cpp.src.dir}/configure"
+	      property="configure-cpp-not-needed"/>
+  </target>
+
+  <target name="configure-cpp" depends="configure-cpp-check"
+	  unless="configure-cpp-not-needed">
+    <mkdir dir="${cpp.build.dir}" />
+    <exec dir="${cpp.build.dir}" executable="sh" failonerror="true">
+      <arg line="${cpp.src.dir}/configure --prefix=${install.cpp}/${build.platform}"/>
+    </exec>
+  </target>
+
+  <target name="compile-cpp" depends="configure-cpp">
+    <exec dir="${cpp.build.dir}" executable="make" failonerror="true"/>
+  </target>
+
+  <target name="test-cpp" depends="compile-cpp">
+    <exec dir="${cpp.build.dir}" executable="make" failonerror="true">
+      <arg value="check"/>
+    </exec>
+  </target>
+
+  <target name="package-cpp" depends="compile-cpp">
+    <exec dir="${cpp.build.dir}" executable="make" failonerror="true">
+      <arg value="install"/>
+    </exec>
+  </target>
+
+  <target name="cpp-makefile-check">
+    <available file="${cpp.build.dir}/Makefile" property="cpp-makefile-present"/>
+  </target>
+  <!-- End C++ Targets -->
 
 </project>

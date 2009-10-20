@@ -12,6 +12,8 @@ bindir = $(exec_prefix)/bin
 infodir = $(prefix)/info
 libdir = $(prefix)/lib/gnudl
 mandir = $(prefix)/man/man1
+datarootdir = @datarootdir@
+docdir = @docdir@
 
 CXX = @CXX@
 CPPFLAGS = @CPPFLAGS@
@@ -22,6 +24,7 @@ INSTALL = @INSTALL@
 LEX = @LEX@
 YACC = @YACC@
 DOXYGEN = @DOXYGEN@
+PYTHON = @PYTHON@
 BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
 BOOST_LDFLAGS = @BOOST_LDFLAGS@
 BOOST_REGEX_LIB = @BOOST_REGEX_LIB@
@@ -32,6 +35,8 @@ AVROPARSER = $(srcdir)/parser
 AVROSCHEMAS = $(srcdir)/jsonschemas
 AVROTEST = $(srcdir)/test
 AVROSCRIPTS = $(srcdir)/scripts
+
+AVRO_STATIC= $(OBJDIR)/libavrocpp.a
 
 EXECS = unittest testparser precompile testgen
 EXECSDIR = obj
@@ -57,20 +62,21 @@ GENERATEDSRCS = $(GENERATED:%=$(OBJDIR)/%)
 GENERATEDobjs = $(addsuffix .o, $(sort $(basename $(GENERATED))) )
 GENERATEDOBJS = $(GENERATEDobjs:%=$(OBJDIR)/%)
 
-all : $(OBJDIR)/avrolib.a 
+all : $(AVRO_STATIC) $(AVRO_DYNAMIC) $(AVROEXECS)
 
 check: $(AVROEXECS)
+	$(EXECSDIR)/testparser < $(AVROSCHEMAS)/bigrecord
 	$(EXECSDIR)/unittest
 	$(EXECSDIR)/testgen $(AVROSCHEMAS)/bigrecord
 
-CXXFLAGS = -Wall -g $(CPPFLAGS)
+CXXFLAGS = -Wall -g -fPIC $(CPPFLAGS)
 
-$(OBJDIR)/avrolib.a : $(OBJS) $(GENERATEDOBJS)
+$(AVRO_STATIC) : $(OBJS) $(GENERATEDOBJS)
 	ar ruc $@ $^ 
 	ranlib $@
 
-$(EXECSDIR)/unittest : $(AVROTEST)/unittest.cc $(OBJDIR)/avrolib.a $(HEADERS)
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $< $(OBJDIR)/avrolib.a $(LIBS)
+$(EXECSDIR)/unittest : $(AVROTEST)/unittest.cc $(AVRO_STATIC) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $< $(AVRO_STATIC) $(LIBS)
 
 $(OBJDIR)/%.o : $(AVROSOURCES)/%.cc
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c -o $@ $<
@@ -91,26 +97,33 @@ $(OBJDIR)/avro.tab.o : $(OBJDIR)/avro.tab.c $(OBJDIR)/avro.tab.h
 $(OBJDIR)/lex.yy.o : $(OBJDIR)/lex.yy.cc
 	$(CXX) $(CXXFLAGS)  -Wno-unused $(INCFLAGS) -c -o $@ $< 
 
-$(EXECSDIR)/testparser: $(AVROTEST)/testparser.cc $(OBJDIR)/avrolib.a 
+$(EXECSDIR)/testparser: $(AVROTEST)/testparser.cc $(AVRO_STATIC)
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS) 
+
+$(EXECSDIR)/precompile: $(AVROTEST)/precompile.cc $(AVRO_STATIC)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
 
-$(EXECSDIR)/precompile: $(AVROTEST)/precompile.cc $(OBJDIR)/avrolib.a 
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
-
-$(AVROTEST)/code.hh: $(AVROSCRIPTS)/gen.py $(EXECSDIR)/precompile $(AVROSCHEMAS)/bigrecord
+$(AVROTEST)/code.hh: $(AVROSCRIPTS)/gen-cppcode.py $(EXECSDIR)/precompile $(AVROSCHEMAS)/bigrecord
 	$(EXECSDIR)/precompile < $(AVROSCHEMAS)/bigrecord > obj/bigrecord.flat
-	python $(AVROSCRIPTS)/gen.py < obj/bigrecord.flat > $(AVROTEST)/code.hh
+	$(PYTHON) $(AVROSCRIPTS)/gen-cppcode.py < obj/bigrecord.flat > $(AVROTEST)/code.hh
 
-$(EXECSDIR)/testgen: $(AVROTEST)/code.hh $(AVROTEST)/testgen.cc $(OBJDIR)/avrolib.a 
+$(EXECSDIR)/testgen: $(AVROTEST)/code.hh $(AVROTEST)/testgen.cc $(AVRO_STATIC)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
 
-doc/html/index.html: $(SOURCES) $(HEADERS) ./Doxyfile
-	$(DOXYGEN) ./Doxyfile
+CPP_DOC_DIR ?= "./doc"
 
-.PHONY: doc
-doc: doc/html/index.html
+$(CPP_DOC_DIR)/html/index.html: $(SOURCES) $(HEADERS) $(srcdir)/Doxyfile
+	(cat $(srcdir)/Doxyfile; echo "OUTPUT_DIRECTORY=$(CPP_DOC_DIR)";  echo "INPUT=$(HEADERS)") | $(DOXYGEN) - ;
+
+doc: $(CPP_DOC_DIR)/html/index.html
 
 -include $(DEPENDS)
 
+install: $(AVRO_STATIC) 
+	mkdir -p $(prefix)/lib
+	mkdir -p $(prefix)/include/avro
+	cp $(AVRO_STATIC) $(prefix)/lib
+	cp $(HEADERS) $(prefix)/include/avro
+
 clean :
-	rm -rf $(AVROEXECS) $(OBJS) $(OBJDIR)/avrolib.a $(GENERATEDSRCS) $(GENERATEDOBJS) core
+	rm -rf $(AVROEXECS) $(OBJS) $(AVRO_STATIC) $(GENERATEDSRCS) $(GENERATEDOBJS) core

@@ -43,6 +43,7 @@ See http://forrest.apache.org/docs/linking.html for more info
     <overview   label="Overview"          href="index.html" />
     <spec       label="Specification"     href="spec.html" />
     <c-api      label="C API"             href="ext:api/c/index" />
+    <cpp-api    label="C++ API"           href="ext:api/cpp/index" />
     <java-api   label="Java API"          href="ext:api/java/index" />
     <py-api     label="Python API"        href="ext:api/py/index" />
     <wiki       label="Wiki"              href="ext:wiki" />
@@ -66,6 +67,9 @@ See http://forrest.apache.org/docs/linking.html for more info
       <c href="c/">
 	<index href="html/index.html" />
       </c>
+      <cpp href="cpp/">
+	    <index href="html/index.html" />
+      </cpp>
       <java href="java/">
 	<index href="index.html" />
       </java>
