@@ -323,6 +323,9 @@ class DataFileReader(object):
     self.__dreader.setschema(self.__schema)
     self.__reader.seek(len(_MAGIC))
 
+  def __iter__(self):
+    return self
+
   def getmeta(self, key):
     """Return the value of a metadata property."""
     return self.__meta.get(key)
@@ -331,7 +334,7 @@ class DataFileReader(object):
     """Return the next datum in the file."""
     while self.__blockcount == 0:
       if self.__reader.tell() == self.__length:
-        return None
+        raise StopIteration
       self.__skipsync()
       self.__blockcount = self.__decoder.readlong()
       if self.__blockcount == _FOOTER_BLOCK:

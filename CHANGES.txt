@@ -15,6 +15,9 @@ Trunk (unreleased changes)
 
     AVRO-147. Use configure to create makefile for C++ builds. (sbanacho)
 
+    AVRO-155. Make python avro.io.DataFileReader iterable.
+    (Jeff Hammerbacher via sharad)
+
   OPTIMIZATIONS
 
   BUG FIXES

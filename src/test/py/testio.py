@@ -220,10 +220,12 @@ class TestSchema(unittest.TestCase):
     dw.close()
     randomData = self.__random(schm, seed)
     dr = io.DataFileReader(open(_FILE, "rb"), self.__datumreader())
-    for i in range(0,count):
-      data = randomData.next()
+    count_read = 0
+    for data in dr:
+      count_read = count_read + 1
       if self.__assertdata:
-        self.assertEquals(data, dr.next())
+        self.assertEquals(randomData.next(), data)
+    self.assertEquals(count, count_read)
 
 if __name__ == '__main__':
   if len(sys.argv) != 4:
