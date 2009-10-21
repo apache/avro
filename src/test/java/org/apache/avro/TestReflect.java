@@ -136,13 +136,16 @@ public class TestReflect {
       public boolean equals(Object other) {
         if (other instanceof AnotherSampleRecord) {
           AnotherSampleRecord o = (AnotherSampleRecord) other;
-          boolean equals = this.a == o.a;
-          if (this.s == null && o.s != null)
-            equals = false;
-          if (this.s != null && this.s.equals(o.s))
-            equals = true;
+          if ( (this.a == null && o.a != null) ||
+               (this.a != null && !this.a.equals(o.a)) ||
+               (this.s == null && o.s != null) ||
+               (this.s != null && !this.s.equals(o.s)) ) {
+            return false;
+          }
+          return true;
+        } else {
+          return false;
         }
-        return true;
       }
     }
   }

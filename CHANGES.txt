@@ -30,6 +30,9 @@ Trunk (unreleased changes)
     AVRO-156.  Fix broken links to Wiki in documentation.
     (Jeff Hammerbacher via cutting)
 
+    AVRO-165.  Fix an equals implementation in TestReflect.
+    (Philip Zeyliger via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
