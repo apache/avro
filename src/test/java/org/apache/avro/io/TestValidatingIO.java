@@ -659,7 +659,7 @@ public class TestValidatingIO {
         { "\"string\"", "S10" },
         { "\"bytes\"", "b0" },
         { "\"bytes\"", "b10" },
-        { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 0}", "f0" },
+        { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 1}", "f1" },
         { "{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 10}", "f10" },
         { "{\"type\":\"enum\", \"name\":\"en\", \"symbols\":[\"v1\", \"v2\"]}",
             "e1" },

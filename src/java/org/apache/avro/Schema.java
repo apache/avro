@@ -552,6 +552,8 @@ public abstract class Schema {
     private final int size;
     public FixedSchema(String name, String space, int size) {
       super(Type.FIXED, name, space);
+      if (size < 0)
+        throw new IllegalArgumentException("Invalid fixed size: "+size);
       this.size = size;
     }
     public int getFixedSize() { return size; }
@@ -689,21 +691,16 @@ public abstract class Schema {
         throw new SchemaParseException("Undefined name: "+schema);
       return result;
     } else if (schema.isObject()) {
-      JsonNode typeNode = schema.get("type");
-      if (typeNode == null)
-        throw new SchemaParseException("No type: "+schema);
-      String type = typeNode.getTextValue();
+      String type = getRequiredText(schema, "type", "No type");
       String name = null, space = null;
       if (type.equals("record") || type.equals("error")
           || type.equals("enum") || type.equals("fixed")) {
-        JsonNode nameNode = schema.get("name");
-        name = nameNode != null ? nameNode.getTextValue() : null;
-        JsonNode spaceNode = schema.get("namespace");
-        space = spaceNode!=null?spaceNode.getTextValue():names.space();
+        name = getRequiredText(schema, "name", "No name in schema");
+        space = getOptionalText(schema, "namespace");
+        if (space == null)
+          space = names.space();
         if (names.space() == null && space != null)
           names.space(space);                     // set default namespace
-        if (name == null)
-          throw new SchemaParseException("No name in schema: "+schema);
       }
       if (type.equals("record") || type.equals("error")) { // record
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
@@ -745,8 +742,10 @@ public abstract class Schema {
       } else if (type.equals("map")) {            // map
         return new MapSchema(parse(schema.get("values"), names));
       } else if (type.equals("fixed")) {          // fixed
-        Schema result = new FixedSchema(name, space,
-                                        schema.get("size").getIntValue());
+        JsonNode sizeNode = schema.get("size");
+        if (sizeNode == null || !sizeNode.isInt())
+          throw new SchemaParseException("Invalid or no size: "+schema);
+        Schema result = new FixedSchema(name, space, sizeNode.getIntValue());
         if (name != null) names.add(result);
         return result;
       } else
@@ -759,6 +758,29 @@ public abstract class Schema {
     } else {
       throw new SchemaParseException("Schema not yet supported: "+schema);
     }
+  }
+
+  /** Extracts text value associated to key from the container JsonNode,
+   * and throws {@link SchemaParseException} if it doesn't exist.
+   *
+   * @param container Container where to find key.
+   * @param key Key to look for in container.
+   * @param error String to prepend to the SchemaParseException.
+   * @return
+   */
+  private static String getRequiredText(JsonNode container, String key,
+      String error) {
+    String out = getOptionalText(container, key);
+    if (null == out) {
+      throw new SchemaParseException(error + ": " + container);
+    }
+    return out;
+  }
+
+  /** Extracts text value associated to key from the container JsonNode. */
+  private static String getOptionalText(JsonNode container, String key) {
+    JsonNode jsonNode = container.get(key);
+    return jsonNode != null ? jsonNode.getTextValue() : null;
   }
 
   static JsonNode parseJson(String s) {

@@ -20,6 +20,9 @@ Trunk (unreleased changes)
 
     AVRO-148. Add ant target to build c++ project.  (sbanacho)
 
+    AVRO-166. Improve error checking in Java schema parser.
+    (Philip Zeyliger via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
