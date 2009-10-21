@@ -39,9 +39,13 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.specific.TestSpecificCompiler;
 import org.apache.avro.util.Utf8;
 
 public class TestSchema {
+
+  public static final String BASIC_ENUM_SCHEMA = "{\"type\":\"enum\", \"name\":\"Test\","
+            +"\"symbols\": [\"A\", \"B\"]}";
 
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
@@ -115,9 +119,7 @@ public class TestSchema {
 
   @Test
   public void testEnum() throws Exception {
-    check("{\"type\":\"enum\", \"name\":\"Test\","
-          +"\"symbols\": [\"A\", \"B\"]}", "\"B\"", "B",
-          false);
+    check(BASIC_ENUM_SCHEMA, "\"B\"", "B", false);
   }
 
   @Test
@@ -209,6 +211,10 @@ public class TestSchema {
       checkJson(schema, datum,
                   new GenericDatumWriter<Object>(),
                   new GenericDatumReader<Object>());
+
+      // Check that we can generate the code for every
+      // schema we see.
+      assertTrue(null != TestSpecificCompiler.compileWithSpecificCompiler(schema));
     }
   }
 

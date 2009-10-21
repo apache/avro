@@ -23,6 +23,9 @@ Trunk (unreleased changes)
     AVRO-166. Improve error checking in Java schema parser.
     (Philip Zeyliger via cutting)
 
+    AVRO-167. Refactor Java SpecificCompiler to simplify testing, and
+    add some tests. (Philip Zeyliger via cutting)
+
   OPTIMIZATIONS
 
   BUG FIXES
