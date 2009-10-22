@@ -25,3 +25,15 @@ One the requirements are installed, Ant can be used as follows:
  'ant jar' creates a jar in build/avro-X.X.jar
  'ant tar' makes a "release" with docs, jar, src, etc. in build/avro-X.X.tar.gz
  'ant clean' removes all generated artifacts
+
+USING ECLIPSE
+
+To use Eclipse, use the "ant eclipse" target to trigger the generation
+of an Eclipse project.  This project is automatically created by 
+the ant-eclipse tool (see http://ant-eclipse.sourceforge.net/).
+Note that to build completely, you still have to use "ant", because
+the Eclipse project depends on some generated code.
+
+You should be able to run all the java tests in Eclipse, except
+for the InteropTest.  There is a launcher in .eclipse_launchers,
+that should work if your checkout directory is "avro".
