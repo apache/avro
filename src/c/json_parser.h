@@ -1,0 +1,11 @@
+#define TK_STRING                          1
+#define TK_NUMBER                          2
+#define TK_TRUE                            3
+#define TK_FALSE                           4
+#define TK_NULL                            5
+#define TK_COMMA                           6
+#define TK_LBRACKET                        7
+#define TK_RBRACKET                        8
+#define TK_COLON                           9
+#define TK_LCURLY                         10
+#define TK_RCURLY                         11

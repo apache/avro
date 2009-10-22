@@ -1,8 +1,10 @@
+AUTOMAKE_OPTIONS=dist-bzip2 
+
 # -pedantic
 AM_CFLAGS=$(APR_CFLAGS) $(APR_INCLUDES) $(APU_INCLUDES) -Wall 
 C_DOCS_OUTPUT ?= "docs/dox"
 
-EXTRA_DIST=json_parser.y lemon.c lempar.c json_tests
+EXTRA_DIST=json_parser.y lemon.c lempar.c json_tests avro_schema_tests docs
 
 include_HEADERS = avro.h
 
@@ -18,16 +20,23 @@ avro_file_container.c avro_endian.c avro_primitives.c
 
 check_PROGRAMS=test_json_parser test_avro_schema 
 
-lemon: $(top_srcdir)/lemon.c $(top_srcdir)/lempar.c
-	$(CC) -o $@ $(top_srcdir)/lemon.c
-	-cp $(top_srcdir)/lempar.c .
-
-json_parser.c json_shema.h: $(top_srcdir)/json_parser.y lemon
-	-cp $(top_srcdir)/json_parser.y .
-	./lemon json_parser.y
-
+# We don't need to auto-generate the json parser code each time.  It makes
+# the build overly complicated and isn't required since the json parser
+# doesn't require frequent updates
+# 
+#lemon: $(top_srcdir)/lemon.c $(top_srcdir)/lempar.c
+#	$(CC) -o $@ $(top_srcdir)/lemon.c
+#	-cp $(top_srcdir)/lempar.c .
+#
+#json_parser.c json_parser.h: $(top_srcdir)/json_parser.y lemon
+#	-cp $(top_srcdir)/json_parser.y .
+#	./lemon json_parser.y
+#
 # Make sure to generate the json_parser in the source directory before distribution
-dist-hook: json_parser.h json_parser.c
+#dist-hook: json_parser.h json_parser.c
+#	@[ $(top_srcdir) = $(top_builddir) ] || rm -f json_parser.y lempar.c json_parser.c json_parser.h
+
+dist-hook: docs
 
 test_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
 
@@ -48,7 +57,7 @@ pretty:
 	pushd $(top_srcdir); \
 	for file in *.[c,h]; \
 	do \
-	if [ $$file = "avro.h" -o $$file = "lemon.c" -o $$file = "lempar.c" ]; then \
+	if [ $$file = "avro.h" -o $$file = "lemon.c" -o $$file = "lempar.c" -o $$file = "json_parser.c" ]; then \
 		continue;\
 	fi;\
 	indent $$file; \
