@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS=dist-bzip2
 AM_CFLAGS=$(APR_CFLAGS) $(APR_INCLUDES) $(APU_INCLUDES) -Wall 
 C_DOCS_OUTPUT ?= "docs/dox"
 
-EXTRA_DIST=json_parser.y lemon.c lempar.c json_tests avro_schema_tests docs
+EXTRA_DIST=json_parser.y lemon.c lempar.c json_tests avro_schema_tests docs version.sh
 
 include_HEADERS = avro.h
 
@@ -17,6 +17,11 @@ avro_float.c avro_int.c avro_long.c avro_map.c avro_null.c \
 avro_record.c avro_string.c avro_union.c container_of.h \
 avro_io_file.c avro_io_socket.c avro_io_memory.c \
 avro_file_container.c avro_endian.c avro_primitives.c
+libavro_la_LDFLAGS = \
+        -version-info $(LIBAVRO_VERSION) \
+        -release $(VERSION) \
+        -export-dynamic
+
 
 check_PROGRAMS=test_json_parser test_avro_schema 
 

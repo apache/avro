@@ -10,6 +10,8 @@ Trunk (unreleased changes)
 
   IMPROVEMENTS
 
+    AVRO-168. Correct shared library versioning for C implementation (massie)
+
     AVRO-142. Remove some Java unused fields and imports.  Start
     running checkstyle on Java test code.  (Philip Zeyliger via cutting)
 

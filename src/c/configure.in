@@ -2,11 +2,15 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([avro-c], [1], [http://issues.apache.org/jira/browse/AVRO])
+AC_INIT([avro-c], m4_esyscmd([./version.sh project]), [http://issues.apache.org/jira/browse/AVRO])
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([avro.h])
 AC_CONFIG_HEADER([config.h])
+
+LIBAVRO_VERSION=m4_esyscmd([./version.sh libtool])
+AC_SUBST(LIBAVRO_VERSION)
+AC_DEFINE_UNQUOTED(LIBAVRO_VERSION, $LIBAVRO_VERSION, [Libtool version info for libavro])
 
 # Checks for programs.
 AC_PROG_CC
@@ -79,5 +83,6 @@ echo "  / _ \ \ / / '__/ _ \ "
 echo " / ___ \ V /| | | (_) |"
 echo "/_/   \_\_/ |_|  \___/ "
 echo
-echo "         Version: $VERSION"
+echo "Version: $VERSION"
+echo "Library: $LIBAVRO_VERSION" 	       
 echo
