@@ -54,7 +54,9 @@ typedef struct avro_io avro_io;
 enum avro_format
 {
   AVRO_BINARY_FORMAT,
-  AVRO_JSON_IMPORT_EXPORT_FORMAT
+  AVRO_JSON_IMPORT_EXPORT_FORMAT,
+  /* NOTE: the following must always be last */
+  AVRO_NUM_DATA_FORMATS
 };
 typedef enum avro_format avro_format;
 
@@ -66,23 +68,25 @@ struct avro_channel
 };
 typedef struct avro_channel avro_channel;
 
-/* General struct that all values implement */
+/* information that all values have */
 struct avro_value
 {
   avro_type_t type;
   apr_pool_t *pool;
   const JSON_value *schema;
   struct avro_value *parent;
-
-    avro_status_t (*read_data) (struct avro_value * value,
-				struct avro_channel * channel);
-    avro_status_t (*skip_data) (struct avro_value * value,
-				struct avro_channel * channel);
-    avro_status_t (*write_data) (struct avro_value * value,
-				 struct avro_channel * channel);
-  void (*print_info) (struct avro_value * value, FILE * fp);
 };
 typedef struct avro_value avro_value;
+
+struct avro_value_methods
+{
+  avro_status_t (*read_data) (struct avro_value * value,
+			      struct avro_channel * channel);
+  avro_status_t (*skip_data) (struct avro_value * value,
+			      struct avro_channel * channel);
+  avro_status_t (*write_data) (struct avro_value * value,
+			       struct avro_channel * channel);
+};
 
 /* Globals used during schema creation */
 struct avro_value_ctx
@@ -90,72 +94,35 @@ struct avro_value_ctx
   apr_hash_t *named_objects;
 };
 
+struct avro_value_info
+{
+  avro_string_t name;
+  avro_type_t type;
+  int private;
+  struct avro_value *(*create) (struct avro_value_ctx * ctx,
+				struct avro_value * parent, apr_pool_t * pool,
+				const JSON_value * json);
+  void (*print_info) (struct avro_value * value, FILE * fp);
+  struct avro_value_methods formats[AVRO_NUM_DATA_FORMATS];
+};
+
+extern const struct avro_value_info *avro_value_registry[];
+
+avro_status_t avro_value_read_data (struct avro_value *value,
+				    struct avro_channel *channel);
+avro_status_t avro_value_skip_data (struct avro_value *value,
+				    struct avro_channel *channel);
+avro_status_t avro_value_write_data (struct avro_value *value,
+				     struct avro_channel *channel);
+void avro_value_print_info (struct avro_value *value, FILE * fp);
+
+
 /* Create a new avro value from json */
 struct avro_value *avro_value_create (apr_pool_t * pool, char *jsontext,
 				      apr_size_t textlen);
 struct avro_value *avro_value_from_json (struct avro_value_ctx *ctx,
 					 struct avro_value *parent,
 					 const JSON_value * json);
-
-struct avro_value *avro_record_create (struct avro_value_ctx *ctx,
-				       struct avro_value *parent,
-				       apr_pool_t * pool,
-				       const JSON_value * schema);
-struct avro_value *avro_string_create (struct avro_value_ctx *ctx,
-				       struct avro_value *parent,
-				       apr_pool_t * pool,
-				       const JSON_value * schema);
-struct avro_value *avro_boolean_create (struct avro_value_ctx *ctx,
-					struct avro_value *parent,
-					apr_pool_t * pool,
-					const JSON_value * schema);
-struct avro_value *avro_bytes_create (struct avro_value_ctx *ctx,
-				      struct avro_value *parent,
-				      apr_pool_t * pool,
-				      const JSON_value * schema);
-struct avro_value *avro_int_create (struct avro_value_ctx *ctx,
-				    struct avro_value *parent,
-				    apr_pool_t * pool,
-				    const JSON_value * schema);
-struct avro_value *avro_long_create (struct avro_value_ctx *ctx,
-				     struct avro_value *parent,
-				     apr_pool_t * pool,
-				     const JSON_value * schema);
-struct avro_value *avro_float_create (struct avro_value_ctx *ctx,
-				      struct avro_value *parent,
-				      apr_pool_t * pool,
-				      const JSON_value * schema);
-struct avro_value *avro_double_create (struct avro_value_ctx *ctx,
-				       struct avro_value *parent,
-				       apr_pool_t * pool,
-				       const JSON_value * schema);
-struct avro_value *avro_null_create (struct avro_value_ctx *ctx,
-				     struct avro_value *parent,
-				     apr_pool_t * pool,
-				     const JSON_value * schema);
-struct avro_value *avro_enum_create (struct avro_value_ctx *ctx,
-				     struct avro_value *parent,
-				     apr_pool_t * pool,
-				     const JSON_value * schema);
-struct avro_value *avro_fixed_create (struct avro_value_ctx *ctx,
-				      struct avro_value *parent,
-				      apr_pool_t * pool,
-				      const JSON_value * schema);
-struct avro_value *avro_map_create (struct avro_value_ctx *ctx,
-				    struct avro_value *parent,
-				    apr_pool_t * pool,
-				    const JSON_value * schema);
-struct avro_value *avro_array_create (struct avro_value_ctx *ctx,
-				      struct avro_value *parent,
-				      apr_pool_t * pool,
-				      const JSON_value * schema);
-struct avro_value *avro_union_create (struct avro_value_ctx *ctx,
-				      struct avro_value *parent,
-				      apr_pool_t * pool,
-				      const JSON_value * schema);
-
-const avro_type_t *avro_type_lookup (const avro_string_t name);
-const avro_type_t *avro_type_from_json (const JSON_value * json);
 
 /* Helper utility for reading an attribute from a JSON object */
 const JSON_value *json_attr_get (const JSON_value * obj, const wchar_t * key);

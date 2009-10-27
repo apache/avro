@@ -37,17 +37,17 @@ struct avro_record_value
 };
 
 static void
-field_print (struct avro_value *value, FILE * fp)
+avro_field_print (struct avro_value *value, FILE * fp)
 {
   struct avro_field_value *self =
     container_of (value, struct avro_field_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "field name=%ls\n", self->name);
-  self->value->print_info (self->value, fp);
+  fprintf (fp, "field(%p) name=%ls\n", self, self->name);
+  avro_value_print_info (self->value, fp);
 }
 
 static void
-record_print (struct avro_value *value, FILE * fp)
+avro_record_print (struct avro_value *value, FILE * fp)
 {
   int i;
   struct avro_record_value *self =
@@ -58,36 +58,44 @@ record_print (struct avro_value *value, FILE * fp)
     {
       struct avro_value *field =
 	((struct avro_value **) self->fields->elts)[i];
-      field->print_info (field, fp);
+      avro_value_print_info (field, fp);
     }
 }
 
 /* FIELDS */
 static avro_status_t
-field_read (struct avro_value *value, struct avro_channel *channel)
+avro_field_read (struct avro_value *value, struct avro_channel *channel)
 {
   struct avro_field_value *self =
     container_of (value, struct avro_field_value, base_value);
-  return self->value->read_data (self->value, channel);
+  return avro_value_read_data (self->value, channel);
 }
 
 static avro_status_t
-field_skip (struct avro_value *value, struct avro_channel *channel)
+avro_field_skip (struct avro_value *value, struct avro_channel *channel)
 {
   struct avro_field_value *self =
     container_of (value, struct avro_field_value, base_value);
-  return self->value->skip_data (self->value, channel);
+  return avro_value_skip_data (self->value, channel);
 }
 
 static avro_status_t
-field_write (struct avro_value *value, struct avro_channel *channel)
+avro_field_write (struct avro_value *value, struct avro_channel *channel)
 {
   struct avro_field_value *self =
     container_of (value, struct avro_field_value, base_value);
-  return self->value->write_data (self->value, channel);
+  return avro_value_write_data (self->value, channel);
 }
 
-/* Private */
+/* The field constructor is private so we register a noop */
+static struct avro_value *
+avro_field_create_noop (struct avro_value_ctx *ctx, struct avro_value *parent,
+			apr_pool_t * pool, const JSON_value * json)
+{
+  return NULL;
+}
+
+/* Should only be called by record functions */
 static struct avro_value *
 avro_field_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		   apr_pool_t * pool, const JSON_value * json)
@@ -105,10 +113,6 @@ avro_field_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = field_read;
-  self->base_value.skip_data = field_skip;
-  self->base_value.write_data = field_write;
-  self->base_value.print_info = field_print;
 
   /* collect and save required name */
   name = json_attr_get_check_type (json, L"name", JSON_STRING);
@@ -139,8 +143,8 @@ avro_field_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 }
 
 static avro_status_t
-record_read_skip (struct avro_value *value, struct avro_channel *channel,
-		  int skip)
+avro_record_read_skip (struct avro_value *value, struct avro_channel *channel,
+		       int skip)
 {
   int i;
   struct avro_record_value *self =
@@ -152,11 +156,11 @@ record_read_skip (struct avro_value *value, struct avro_channel *channel,
 	((struct avro_value **) self->fields->elts)[i];
       if (skip)
 	{
-	  field->skip_data (field, channel);
+	  avro_value_skip_data (field, channel);
 	}
       else
 	{
-	  field->read_data (field, channel);
+	  avro_value_read_data (field, channel);
 	}
     }
   return AVRO_OK;
@@ -164,19 +168,19 @@ record_read_skip (struct avro_value *value, struct avro_channel *channel,
 
 /* RECORD */
 static avro_status_t
-record_read (struct avro_value *value, struct avro_channel *channel)
+avro_record_read (struct avro_value *value, struct avro_channel *channel)
 {
-  return record_read_skip (value, channel, 0);
+  return avro_record_read_skip (value, channel, 0);
 }
 
 static avro_status_t
-record_skip (struct avro_value *value, struct avro_channel *channel)
+avro_record_skip (struct avro_value *value, struct avro_channel *channel)
 {
-  return record_read_skip (value, channel, 1);
+  return avro_record_read_skip (value, channel, 1);
 }
 
 static avro_status_t
-record_write (struct avro_value *value, struct avro_channel *channel)
+avro_record_write (struct avro_value *value, struct avro_channel *channel)
 {
 /* TODO:
   struct avro_record_value *record =
@@ -185,7 +189,7 @@ record_write (struct avro_value *value, struct avro_channel *channel)
   return AVRO_OK;
 }
 
-struct avro_value *
+static struct avro_value *
 avro_record_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		    apr_pool_t * pool, const JSON_value * json)
 {
@@ -208,10 +212,6 @@ avro_record_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = record_read;
-  self->base_value.skip_data = record_skip;
-  self->base_value.write_data = record_write;
-  self->base_value.print_info = record_print;
 
   /* collect and save required name */
   name = json_attr_get_check_type (json, L"name", JSON_STRING);
@@ -270,3 +270,37 @@ avro_record_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 
   return &self->base_value;
 }
+
+const struct avro_value_info avro_field_info = {
+  .name = L"field",
+  .type = AVRO_FIELD,
+  .private = 1,
+  .create = avro_field_create_noop,
+  .formats = {{
+	       .read_data = avro_field_read,
+	       .skip_data = avro_field_skip,
+	       .write_data = avro_field_write},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_field_read,
+	       .skip_data = avro_field_skip,
+	       .write_data = avro_field_write}},
+  .print_info = avro_field_print
+};
+
+const struct avro_value_info avro_record_info = {
+  .name = L"record",
+  .type = AVRO_RECORD,
+  .private = 0,
+  .create = avro_record_create,
+  .formats = {{
+	       .read_data = avro_record_read,
+	       .skip_data = avro_record_skip,
+	       .write_data = avro_record_write},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_record_read,
+	       .skip_data = avro_record_skip,
+	       .write_data = avro_record_write}},
+  .print_info = avro_record_print
+};

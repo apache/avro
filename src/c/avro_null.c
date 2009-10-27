@@ -31,7 +31,7 @@ avro_null_print (struct avro_value *value, FILE * fp)
   fprintf (fp, "null\n");
 }
 
-struct avro_value *
+static struct avro_value *
 avro_null_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		  apr_pool_t * pool, const JSON_value * json)
 {
@@ -45,9 +45,22 @@ avro_null_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->pool = pool;
   self->parent = parent;
   self->schema = json;
-  self->read_data = avro_null_noop;
-  self->skip_data = avro_null_noop;
-  self->write_data = avro_null_noop;
-  self->print_info = avro_null_print;
   return self;
 }
+
+const struct avro_value_info avro_null_info = {
+  .name = L"null",
+  .type = AVRO_NULL,
+  .private = 0,
+  .create = avro_null_create,
+  .formats = {{
+	       .read_data = avro_null_noop,
+	       .skip_data = avro_null_noop,
+	       .write_data = avro_null_noop},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_null_noop,
+	       .skip_data = avro_null_noop,
+	       .write_data = avro_null_noop}},
+  .print_info = avro_null_print
+};

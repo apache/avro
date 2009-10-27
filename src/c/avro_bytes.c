@@ -100,7 +100,7 @@ avro_bytes_write (struct avro_value *value, struct avro_channel *channel)
   return AVRO_OK;
 }
 
-struct avro_value *
+static struct avro_value *
 avro_bytes_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		   apr_pool_t * pool, const JSON_value * json)
 {
@@ -115,10 +115,6 @@ avro_bytes_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = avro_bytes_read;
-  self->base_value.skip_data = avro_bytes_skip;
-  self->base_value.write_data = avro_bytes_write;
-  self->base_value.print_info = avro_bytes_print;
   self->value_set = 0;
   if (apr_pool_create (&self->pool, pool) != APR_SUCCESS)
     {
@@ -126,3 +122,20 @@ avro_bytes_create (struct avro_value_ctx *ctx, struct avro_value *parent,
     }
   return &self->base_value;
 }
+
+const struct avro_value_info avro_bytes_info = {
+  .name = L"bytes",
+  .type = AVRO_BYTES,
+  .private = 0,
+  .create = avro_bytes_create,
+  .formats = {{
+	       .read_data = avro_bytes_read,
+	       .skip_data = avro_bytes_skip,
+	       .write_data = avro_bytes_write},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_bytes_read,
+	       .skip_data = avro_bytes_skip,
+	       .write_data = avro_bytes_write}},
+  .print_info = avro_bytes_print
+};

@@ -60,7 +60,7 @@ run_tests (char *dirpath, int should_pass)
 	  value = avro_value_create (pool, jsontext, jsonlen);
 	  if (value && should_pass)
 	    {
-	      /*value->print_info (value, stderr); */
+	      avro_value_print_info (value, stderr);
 	    }
 	  else if (!value && !should_pass)
 	    {

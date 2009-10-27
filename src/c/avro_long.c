@@ -89,7 +89,7 @@ avro_long_write (struct avro_value *value, struct avro_channel *channel)
   return avro_putlong (io, &self->value);
 }
 
-struct avro_value *
+static struct avro_value *
 avro_long_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		  apr_pool_t * pool, const JSON_value * json)
 {
@@ -104,10 +104,23 @@ avro_long_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = avro_long_read;
-  self->base_value.skip_data = avro_long_skip;
-  self->base_value.write_data = avro_long_write;
-  self->base_value.print_info = avro_long_print;
   self->value_set = 0;
   return &self->base_value;
 }
+
+const struct avro_value_info avro_long_info = {
+  .name = L"long",
+  .type = AVRO_LONG,
+  .private = 0,
+  .create = avro_long_create,
+  .formats = {{
+	       .read_data = avro_long_read,
+	       .skip_data = avro_long_skip,
+	       .write_data = avro_long_write},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_long_read,
+	       .skip_data = avro_long_skip,
+	       .write_data = avro_long_write}},
+  .print_info = avro_long_print
+};

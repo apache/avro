@@ -32,9 +32,9 @@ avro_map_print (struct avro_value *value, FILE * fp)
   struct avro_map_value *self =
     container_of (value, struct avro_map_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "map key/value\n");
-  self->keys->print_info (self->keys, fp);
-  self->values->print_info (self->values, fp);
+  fprintf (fp, "map(%p) key/value\n", self);
+  avro_value_print_info (self->keys, fp);
+  avro_value_print_info (self->values, fp);
 }
 
 static avro_status_t
@@ -61,7 +61,7 @@ avro_map_write (struct avro_value *value, struct avro_channel *channel)
   return AVRO_OK;
 }
 
-struct avro_value *
+static struct avro_value *
 avro_map_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		 apr_pool_t * pool, const JSON_value * json)
 {
@@ -79,10 +79,6 @@ avro_map_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = avro_map_read;
-  self->base_value.skip_data = avro_map_skip;
-  self->base_value.write_data = avro_map_write;
-  self->base_value.print_info = avro_map_print;
 
   /* collect and save required keys */
   keys = json_attr_get (json, L"keys");
@@ -97,7 +93,9 @@ avro_map_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   else
     {
       /* TODO: should keys default to string? */
-      self->keys = avro_string_create (ctx, &self->base_value, pool, NULL);
+      self->keys =
+	avro_value_registry[AVRO_STRING]->create (ctx, &self->base_value,
+						  pool, NULL);
     }
 
   /* collect and save required values */
@@ -113,3 +111,20 @@ avro_map_create (struct avro_value_ctx *ctx, struct avro_value *parent,
     }
   return &self->base_value;
 }
+
+const struct avro_value_info avro_map_info = {
+  .name = L"map",
+  .type = AVRO_MAP,
+  .private = 0,
+  .create = avro_map_create,
+  .formats = {{
+	       .read_data = avro_map_read,
+	       .skip_data = avro_map_skip,
+	       .write_data = avro_map_write},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_map_read,
+	       .skip_data = avro_map_skip,
+	       .write_data = avro_map_write}},
+  .print_info = avro_map_print
+};

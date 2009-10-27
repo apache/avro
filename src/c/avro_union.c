@@ -24,14 +24,13 @@ struct avro_union_value
   struct avro_value base_value;
 };
 
-static avro_status_t
+void
 avro_union_print (struct avro_value *value, FILE * fp)
 {
   struct avro_union_value *self =
     container_of (value, struct avro_union_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "union\n");
-  return AVRO_OK;
+  fprintf (fp, "union(%p)\n", self);
 }
 
 static avro_status_t
@@ -58,7 +57,7 @@ avro_union_write (struct avro_value *value, struct avro_channel *channel)
   return AVRO_OK;
 }
 
-struct avro_value *
+static struct avro_value *
 avro_union_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		   apr_pool_t * pool, const JSON_value * json)
 {
@@ -78,11 +77,23 @@ avro_union_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = avro_union_read;
-  self->base_value.skip_data = avro_union_skip;
-  self->base_value.write_data = avro_union_write;
-  self->base_value.print_info = avro_union_print;
-
   /* TODO: check the schemas ... and save them */
   return &self->base_value;
 }
+
+const struct avro_value_info avro_union_info = {
+  .name = L"union",
+  .type = AVRO_UNION,
+  .private = 0,
+  .create = avro_union_create,
+  .formats = {{
+	       .read_data = avro_union_read,
+	       .skip_data = avro_union_skip,
+	       .write_data = avro_union_write},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_union_read,
+	       .skip_data = avro_union_skip,
+	       .write_data = avro_union_write}},
+  .print_info = avro_union_print
+};

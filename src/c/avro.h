@@ -84,12 +84,17 @@ enum avro_type
    AVRO_BOOLEAN,/**< boolean primitive */
    AVRO_NULL,   /**< null primitive */
    AVRO_RECORD, /**< complex record */
-   AVRO_FIELD,  /**< complex record field */
    AVRO_ENUM,   /**< complex enum */
    AVRO_FIXED,  /**< complex fixed value */
    AVRO_MAP,    /**< complex map */
    AVRO_ARRAY,  /**< complex array */
-   AVRO_UNION   /**< complex union */
+   AVRO_UNION,  /**< complex union */
+
+   AVRO_FIELD,  /**< complex record field */
+   AVRO_DECORATOR, /**< resursive schema decorator */
+
+   /* NOTE: AVRO_NUM_TYPES must always be last */
+   AVRO_NUM_TYPES /**< number of avro types */
 };
 typedef enum avro_type avro_type_t;
 

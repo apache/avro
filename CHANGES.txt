@@ -33,6 +33,8 @@ Trunk (unreleased changes)
 
   OPTIMIZATIONS
 
+    AVRO-172. More efficient schema processing (massie)
+
   BUG FIXES
  
     AVRO-141.  Fix a NullPointerException in ReflectData#isRecord().

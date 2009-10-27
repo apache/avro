@@ -41,8 +41,8 @@ avro_array_print (struct avro_value *value, FILE * fp)
     container_of (value, struct avro_array_value, base_value);
 
   avro_value_indent (value, fp);
-  fprintf (fp, "array value items\n");
-  self->items->print_info (self->items, fp);
+  fprintf (fp, "array(%p) value items\n", self);
+  avro_value_print_info (self->items, fp);
 }
 
 static avro_status_t
@@ -104,7 +104,7 @@ avro_array_write (struct avro_value *value, struct avro_channel *channel)
   return AVRO_OK;
 }
 
-struct avro_value *
+static struct avro_value *
 avro_array_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		   apr_pool_t * pool, const JSON_value * json)
 {
@@ -120,10 +120,6 @@ avro_array_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = avro_array_read;
-  self->base_value.skip_data = avro_array_skip;
-  self->base_value.write_data = avro_array_write;
-  self->base_value.print_info = avro_array_print;
 
   /* collect and save required items */
   items = json_attr_get (json, L"items");
@@ -145,3 +141,20 @@ avro_array_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->ctx = ctx;
   return &self->base_value;
 }
+
+const struct avro_value_info avro_array_info = {
+  .name = L"array",
+  .type = AVRO_ARRAY,
+  .private = 0,
+  .create = avro_array_create,
+  .formats = {{
+	       .read_data = avro_array_read,
+	       .skip_data = avro_array_skip,
+	       .write_data = avro_array_write},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_array_read,
+	       .skip_data = avro_array_skip,
+	       .write_data = avro_array_write}},
+  .print_info = avro_array_print
+};

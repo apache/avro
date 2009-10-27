@@ -28,7 +28,7 @@ struct avro_fixed_value
 };
 
 static void
-fixed_print (struct avro_value *value, FILE * fp)
+avro_fixed_print (struct avro_value *value, FILE * fp)
 {
   struct avro_fixed_value *self =
     container_of (value, struct avro_fixed_value, base_value);
@@ -37,7 +37,7 @@ fixed_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-fixed_read (struct avro_value *value, struct avro_channel *channel)
+avro_fixed_read (struct avro_value *value, struct avro_channel *channel)
 {
   struct avro_fixed_value *self =
     container_of (value, struct avro_fixed_value, base_value);
@@ -45,7 +45,7 @@ fixed_read (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-fixed_skip (struct avro_value *value, struct avro_channel *channel)
+avro_fixed_skip (struct avro_value *value, struct avro_channel *channel)
 {
   struct avro_fixed_value *self =
     container_of (value, struct avro_fixed_value, base_value);
@@ -53,14 +53,14 @@ fixed_skip (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-fixed_write (struct avro_value *value, struct avro_channel *channel)
+avro_fixed_write (struct avro_value *value, struct avro_channel *channel)
 {
   struct avro_fixed_value *self =
     container_of (value, struct avro_fixed_value, base_value);
   return AVRO_OK;
 }
 
-struct avro_value *
+static struct avro_value *
 avro_fixed_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		   apr_pool_t * pool, const JSON_value * json)
 {
@@ -78,10 +78,6 @@ avro_fixed_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.pool = pool;
   self->base_value.parent = parent;
   self->base_value.schema = json;
-  self->base_value.read_data = fixed_read;
-  self->base_value.skip_data = fixed_skip;
-  self->base_value.write_data = fixed_write;
-  self->base_value.print_info = fixed_print;
 
   /* collect and save required size */
   size = json_attr_get_check_type (json, L"size", JSON_NUMBER);
@@ -111,3 +107,20 @@ avro_fixed_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 
   return &self->base_value;
 }
+
+const struct avro_value_info avro_fixed_info = {
+  .name = L"fixed",
+  .type = AVRO_FIXED,
+  .private = 0,
+  .create = avro_fixed_create,
+  .formats = {{
+	       .read_data = avro_fixed_read,
+	       .skip_data = avro_fixed_skip,
+	       .write_data = avro_fixed_write},
+	      {
+	       /* TODO: import/export */
+	       .read_data = avro_fixed_read,
+	       .skip_data = avro_fixed_skip,
+	       .write_data = avro_fixed_write}},
+  .print_info = avro_fixed_print
+};
