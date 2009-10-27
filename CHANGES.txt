@@ -31,6 +31,9 @@ Trunk (unreleased changes)
     AVRO-146. Add support for using Eclipse to develop Avro's Java.
     (Philip Zeyliger via cutting)
 
+    AVRO-149. Add Java command-line executable, "avroj".
+    (Philip Zeyliger via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

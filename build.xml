@@ -279,7 +279,7 @@
     </sequential>
   </macrodef>
 
-  <target name="test" depends="test-java,test-py,test-c,test-cpp,test-interop"/>
+  <target name="test" depends="test-java,test-py,test-c,test-cpp,test-interop,test-avroj"/>
 
   <macrodef name="test-runner">
     <attribute name="files.location" />
@@ -439,6 +439,26 @@
         </py-run>
   </target>
 
+  <target name="avroj" depends="compile-java" description="Build standalone avroj jar file">
+    <jar jarfile="${build.dir}/avroj-${version}.jar">
+      <manifest>
+        <attribute name="Main-Class" value="org.apache.avro.tool.Main"/>
+        <attribute name="Implementation-Title" value="${Name}"/>
+        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Implementation-Vendor" value="${Org}"/>
+      </manifest>
+      <fileset dir="${build.classes}" />
+      <zipgroupfileset dir="${ivy.lib}" includes="*.jar"/>
+    </jar>
+    <chmod file="${build.dir}/avroj-${version}.jar" perm="ugo+x"/>
+  </target>
+
+  <target name="test-avroj" depends="avroj"
+   description="Tests avroj commands">
+    <exec executable="${basedir}/src/test/bin/test_avroj.sh"
+        failonerror="true" />
+  </target>
+
   <target name="pydoc" description="Generate python api docs">
     <taskdef name="py-doc" classname="org.pyant.tasks.PythonDocTask">
       <classpath refid="java.classpath" />
@@ -505,7 +525,7 @@
     <fail if="javadoc.warnings">Javadoc warnings!</fail>
   </target>
 
-  <target name="package" depends="jar, doc, package-c, package-cpp"
+  <target name="package" depends="jar, avroj, doc, package-c, package-cpp"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${dist.dir}/lib"/>
@@ -558,7 +578,6 @@
       <fileset file="build.xml"/>
       <fileset file="ivy.xml"/>
     </copy>
-
   </target>
 
   <macrodef name="macro_tar" description="Worker Macro for tar">
