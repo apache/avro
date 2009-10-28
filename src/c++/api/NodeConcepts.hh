@@ -20,6 +20,7 @@
 #define avro_NodeConcepts_hh__
 
 #include <vector>
+#include "Exception.hh"
 
 namespace avro {
 
@@ -48,25 +49,24 @@ struct NoAttribute
 {
     static const bool hasAttribute = false;
 
-    NoAttribute()
-    {}
-
-    // copy constructing from any attribute type is a no-op
-    // template<typename T>
-    NoAttribute(const NoAttribute<Attribute> &rhs)
-    {}
-
     size_t size() const {
         return 0;
     }
 
     void add( const Attribute &attr) {
+        // There must be an add function for the generic NodeImpl, but the
+        // Node APIs ensure that it is never called, the throw here is
+        // just in case
         throw Exception("This type does not have attribute");
     }
 
     const Attribute &get(size_t index = 0) const {
-        static const Attribute empty = Attribute();
+        // There must be an get function for the generic NodeImpl, but the
+        // Node APIs ensure that it is never called, the throw here is
+        // just in case
         throw Exception("This type does not have attribute");
+        // even though this code is unreachable the compiler requires it
+        static const Attribute empty = Attribute();
         return empty;
     }
 
@@ -85,14 +85,10 @@ struct SingleAttribute
         attr_(rhs.attr_), size_(rhs.size_)
     { }
 
+    // copy constructing from a no attribute is allowed
     SingleAttribute(const NoAttribute<Attribute> &rhs) : 
         attr_(), size_(0)
     { }
-
-    // copy constructing from any other type is a no-op
-    //template<typename T>
-    //SingleAttribute(T&) : attr_(), size_(0)
-    //{}
 
     size_t size() const {
         return size_;
@@ -160,7 +156,7 @@ struct MultiAttribute
         return attrs_.at(index);
     }
 
-    Attribute &at(size_t index) {
+    Attribute &get(size_t index) {
         return attrs_.at(index);
     }
 

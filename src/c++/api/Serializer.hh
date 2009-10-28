@@ -27,7 +27,7 @@
 namespace avro {
 
 /// Class that wraps a Writer or ValidatingWriter with an interface that uses
-/// explicit put* names instead of putValue
+/// explicit write* names instead of writeValue
 
 template<class Writer>
 class Serializer : private boost::noncopyable
@@ -45,68 +45,68 @@ class Serializer : private boost::noncopyable
         writer_(schema, out)
     {}
 
-    void putNull() {
-        writer_.putValue(Null());
+    void writeNull() {
+        writer_.writeValue(Null());
     }
 
-    void putBool(bool val) {
-        writer_.putValue(val);
+    void writeBool(bool val) {
+        writer_.writeValue(val);
     }
 
-    void putInt(int32_t val) {
-        writer_.putValue(val);
+    void writeInt(int32_t val) {
+        writer_.writeValue(val);
     }
 
-    void putLong(int64_t val) {
-        writer_.putValue(val);
+    void writeLong(int64_t val) {
+        writer_.writeValue(val);
     }
 
-    void putFloat(float val) {
-        writer_.putValue(val);
+    void writeFloat(float val) {
+        writer_.writeValue(val);
     }
 
-    void putDouble(double val) {
-        writer_.putValue(val);
+    void writeDouble(double val) {
+        writer_.writeValue(val);
     }
 
-    void putBytes(const void *val, size_t size) {
-        writer_.putBytes(val);
+    void writeBytes(const uint8_t *val, size_t size) {
+        writer_.writeBytes(val);
     }
 
-    void putFixed(const uint8_t *val, size_t size) {
-        writer_.putFixed(val, size);
+    void writeFixed(const uint8_t *val, size_t size) {
+        writer_.writeFixed(val, size);
     }
 
-    void putString(const std::string &val) {
-        writer_.putValue(val);
+    void writeString(const std::string &val) {
+        writer_.writeValue(val);
     }
 
-    void beginRecord() {
-        writer_.beginRecord();
+    void writeRecord() {
+        writer_.writeRecord();
     }
 
-    void beginArrayBlock(int64_t size) {
-        writer_.beginArrayBlock(size);
+    void writeArrayBlock(int64_t size) {
+        writer_.writeArrayBlock(size);
     }
 
-    void endArray() {
-        writer_.endArray();
+    void writeArrayEnd() {
+        writer_.writeArrayEnd();
     }
 
-    void beginMapBlock(int64_t size) {
-        writer_.beginMapBlock(size);
+    void writeMapBlock(int64_t size) {
+        writer_.writeMapBlock(size);
     }
 
-    void endMap() {
-        writer_.endMap();
+    void writeMapEnd() {
+        writer_.writeMapEnd();
     }
 
-    void beginUnion(int64_t choice) {
-        writer_.beginUnion(choice);
+    void writeUnion(int64_t choice) {
+        writer_.writeUnion(choice);
     }
 
-    void beginEnum(int64_t choice) {
-        writer_.beginEnum(choice);
+    void writeEnum(int64_t choice) {
+        writer_.writeEnum(choice);
     }
 
   private:

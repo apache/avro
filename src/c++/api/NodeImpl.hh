@@ -22,7 +22,7 @@
 #include <limits>
 
 #include "Node.hh"
-#include "CompilerNode.hh"
+#include "NodeConcepts.hh"
 
 namespace avro {
 
@@ -43,8 +43,10 @@ class NodeImpl : public Node
 
     NodeImpl(Type type) :
         Node(type),
+        nameAttribute_(),
         leafAttributes_(),
-        leafNameAttributes_()
+        leafNameAttributes_(),
+        sizeAttribute_()
     { }
 
     NodeImpl(Type type, 
@@ -60,7 +62,7 @@ class NodeImpl : public Node
     { }
 
     bool hasName() const {
-        return nameAttribute_.hasAttribute;
+        return NameConcept::hasAttribute;
     }
 
     void doSetName(const std::string &name) {
@@ -142,18 +144,8 @@ class NodePrimitive : public NodeImplPrimitive
 {
   public:
 
-    NodePrimitive(Type type) :
+    explicit NodePrimitive(Type type) :
         NodeImplPrimitive(type)
-    { }
-
-    NodePrimitive(const CompilerNode &compilerNode) :
-        NodeImplPrimitive(
-            compilerNode.type(), 
-            NoName(),
-            NoLeaves(), 
-            NoLeafNames(),
-            NoSize()
-        )
     { }
 
     void printJson(std::ostream &os, int depth) const;
@@ -171,14 +163,8 @@ class NodeSymbolic : public NodeImplSymbolic
         NodeImplSymbolic(AVRO_SYMBOLIC)
     { }
 
-    NodeSymbolic(const CompilerNode &compilerNode) :
-        NodeImplSymbolic(
-            AVRO_SYMBOLIC, 
-            compilerNode.nameAttribute_,
-            NoLeaves(), 
-            NoLeafNames(),
-            NoSize()
-        )
+    explicit NodeSymbolic(const HasName &name) :
+        NodeImplSymbolic(AVRO_SYMBOLIC, name, NoLeaves(), NoLeafNames(), NoSize())
     { }
 
     void printJson(std::ostream &os, int depth) const;
@@ -197,14 +183,8 @@ class NodeRecord : public NodeImplRecord
         NodeImplRecord(AVRO_RECORD) 
     { }
 
-    NodeRecord(const CompilerNode &compilerNode) :
-        NodeImplRecord(
-            AVRO_RECORD, 
-            compilerNode.nameAttribute_,
-            compilerNode.fieldsAttribute_, 
-            compilerNode.fieldsNamesAttribute_,
-            NoSize()
-        )
+    NodeRecord(const HasName &name, const MultiLeaves &fields, const LeafNames &fieldsNames) :
+        NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize())
     { }
 
     void printJson(std::ostream &os, int depth) const;
@@ -226,16 +206,9 @@ class NodeEnum : public NodeImplEnum
         NodeImplEnum(AVRO_ENUM) 
     { }
 
-    NodeEnum(const CompilerNode &compilerNode) :
-        NodeImplEnum(
-            AVRO_ENUM, 
-            compilerNode.nameAttribute_,
-            NoLeaves(), 
-            compilerNode.symbolsAttribute_,
-            NoSize()
-        )
+    NodeEnum(const HasName &name, const LeafNames &symbols) :
+        NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize())
     { }
-
 
     void printJson(std::ostream &os, int depth) const;
 
@@ -255,16 +228,9 @@ class NodeArray : public NodeImplArray
         NodeImplArray(AVRO_ARRAY)
     { }
 
-    NodeArray(const CompilerNode &compilerNode) :
-        NodeImplArray(
-            AVRO_ARRAY, 
-            NoName(),
-            compilerNode.itemsAttribute_,
-            NoLeafNames(),
-            NoSize()
-        )
+    explicit NodeArray(const SingleLeaf &items) :
+        NodeImplArray(AVRO_ARRAY, NoName(), items, NoLeafNames(), NoSize())
     { }
-
 
     void printJson(std::ostream &os, int depth) const;
 
@@ -284,21 +250,15 @@ class NodeMap : public NodeImplMap
          doAddLeaf(key);
     }
 
-    NodeMap(const CompilerNode &compilerNode) :
-        NodeImplMap(
-            AVRO_MAP, 
-            NoName(),
-            compilerNode.valuesAttribute_, 
-            NoLeafNames(),
-            NoSize()
-        )
+    explicit NodeMap(const SingleLeaf &values) :
+        NodeImplMap(AVRO_MAP, NoName(), values, NoLeafNames(), NoSize())
     { 
         // need to add the key for the map too
         NodePtr key(new NodePrimitive(AVRO_STRING));
         doAddLeaf(key);
 
         // key goes before value
-        std::swap(leafAttributes_.at(0), leafAttributes_.at(1));
+        std::swap(leafAttributes_.get(0), leafAttributes_.get(1));
     }
 
     void printJson(std::ostream &os, int depth) const;
@@ -316,16 +276,9 @@ class NodeUnion : public NodeImplUnion
         NodeImplUnion(AVRO_UNION)
     { }
 
-    NodeUnion(const CompilerNode &compilerNode) :
-        NodeImplUnion(
-            AVRO_UNION, 
-            NoName(),
-            compilerNode.typesAttribute_,
-            NoLeafNames(),
-            NoSize()
-        )
+    explicit NodeUnion(const MultiLeaves &types) :
+        NodeImplUnion(AVRO_UNION, NoName(), types, NoLeafNames(), NoSize())
     { }
-
 
     void printJson(std::ostream &os, int depth) const;
 
@@ -342,16 +295,9 @@ class NodeFixed : public NodeImplFixed
         NodeImplFixed(AVRO_FIXED)
     { }
 
-    NodeFixed(const CompilerNode &compilerNode) :
-        NodeImplFixed(
-            AVRO_FIXED, 
-            compilerNode.nameAttribute_,
-            NoLeaves(), 
-            NoLeafNames(),
-            compilerNode.sizeAttribute_
-        )
+    NodeFixed(const HasName &name, const HasSize &size) :
+        NodeImplFixed(AVRO_FIXED, name, NoLeaves(), NoLeafNames(), size)
     { }
-
 
     void printJson(std::ostream &os, int depth) const;
 
@@ -367,7 +313,7 @@ template < class A, class B, class C, class D >
 inline void 
 NodeImpl<A,B,C,D>::setLeafToSymbolic(int index)
 {
-    if(!leafAttributes_.hasAttribute) {
+    if(!B::hasAttribute) {
         throw Exception("Cannot change leaf node for nonexistent leaf");
     } 
     NodePtr symbol(new NodeSymbolic);
@@ -385,14 +331,14 @@ NodeImpl<A,B,C,D>::printBasicInfo(std::ostream &os) const
     if(hasName()) {
         os << " " << nameAttribute_.get();
     }
-    if(sizeAttribute_.hasAttribute) {
+    if(D::hasAttribute) {
         os << " " << sizeAttribute_.get();
     }
     os << '\n';
     int count = leaves();
     count = count ? count : names();
     for(int i= 0; i < count; ++i) {
-        if( leafNameAttributes_.hasAttribute ) {
+        if( C::hasAttribute ) {
             os << "name " << nameAt(i) << '\n';
         }
         if( leafAttributes_.hasAttribute) {
@@ -403,8 +349,6 @@ NodeImpl<A,B,C,D>::printBasicInfo(std::ostream &os) const
         os << "end " << type() << '\n';
     }
 }
-
-NodePtr nodeFromCompilerNode(CompilerNode &compilerNode);
 
 } // namespace avro
 

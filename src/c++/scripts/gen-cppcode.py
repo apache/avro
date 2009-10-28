@@ -60,13 +60,13 @@ $recordfields$};
 
 template <typename Serializer>
 void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
-    s.beginRecord();
+    s.writeRecord();
 $serializefields$
 }
 
 template <typename Parser>
 void parse(Parser &p, $name$ &val, const boost::true_type &) {
-    p.getRecord();
+    p.readRecord();
 $parsefields$
 }
 '''
@@ -121,7 +121,7 @@ $setfuncs$
 
 template <typename Serializer>
 void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
-    s.beginUnion(val.choice);
+    s.writeUnion(val.choice);
     switch(val.choice) {
 $switchserialize$
     default :
@@ -131,7 +131,7 @@ $switchserialize$
 
 template <typename Parser>
 void parse(Parser &p, $name$ &val, const boost::true_type &) {
-    val.choice = p.getUnion();
+    val.choice = p.readUnion();
     switch(val.choice) {
 $switchparse$
     default :
@@ -196,12 +196,12 @@ enumTemplate = '''struct $name$ {
 
 template <typename Serializer>
 void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
-    s.beginEnum(val.value);
+    s.writeEnum(val.value);
 }
 
 template <typename Parser>
 void parse(Parser &p, $name$ &val, const boost::true_type &) {
-    val.value = static_cast<$name$::EnumSymbols>(p.getEnum());
+    val.value = static_cast<$name$::EnumSymbols>(p.readEnum());
 }
 '''
 
@@ -237,19 +237,19 @@ template <typename Serializer>
 void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     const size_t size = val.value.size();
     if(size) {
-        s.beginArrayBlock(size);
+        s.writeArrayBlock(size);
         for(size_t i = 0; i < size; ++i) {
             serialize(s, val.value[i]);
         }
     }
-    s.endArray();
+    s.writeArrayEnd();
 }
 
 template <typename Parser>
 void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.value.clear();
     while(1) {
-        int size = p.getArrayBlockSize();
+        int size = p.readArrayBlockSize();
         if(size > 0) {
             val.value.reserve(val.value.size() + size);
             while (size-- > 0) { 
@@ -293,7 +293,7 @@ mapTemplate = '''struct $name$ {
 template <typename Serializer>
 void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     if(val.value.size()) {
-        s.beginMapBlock(val.value.size());
+        s.writeMapBlock(val.value.size());
         $name$::MapType::const_iterator iter = val.value.begin();
         $name$::MapType::const_iterator end  = val.value.end();
         while(iter!=end) {
@@ -302,14 +302,14 @@ void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
             ++iter;
         }
     }
-    s.endMap();
+    s.writeMapEnd();
 }
 
 template <typename Parser>
 void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.value.clear();
     while(1) {
-        int size = p.getMapBlockSize();
+        int size = p.readMapBlockSize();
         if(size > 0) {
             while (size-- > 0) { 
                 std::string key;
@@ -350,12 +350,12 @@ fixedTemplate = '''struct $name$ {
 
 template <typename Serializer>
 void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
-    s.putFixed(val.value, $name$::fixedSize);
+    s.writeFixed(val.value, $name$::fixedSize);
 }
 
 template <typename Parser>
 void parse(Parser &p, $name$ &val, const boost::true_type &) {
-    p.getFixed(val.value, $name$::fixedSize);
+    p.readFixed(val.value, $name$::fixedSize);
 }
 '''
 

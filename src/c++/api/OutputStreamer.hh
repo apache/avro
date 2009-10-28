@@ -40,10 +40,10 @@ class OutputStreamer {
     virtual ~OutputStreamer()
     { }
 
-    virtual size_t putByte(uint8_t byte) = 0;
-    virtual size_t putWord(uint32_t word) = 0;
-    virtual size_t putLongWord(uint64_t word) = 0;
-    virtual size_t putBytes(const uint8_t *bytes, size_t size) = 0;
+    virtual size_t writeByte(uint8_t byte) = 0;
+    virtual size_t writeWord(uint32_t word) = 0;
+    virtual size_t writeLongWord(uint64_t word) = 0;
+    virtual size_t writeBytes(const uint8_t *bytes, size_t size) = 0;
 };
 
 
@@ -54,24 +54,24 @@ class OutputStreamer {
     
 class ScreenStreamer : public OutputStreamer {
 
-    size_t putByte(uint8_t byte) {
+    size_t writeByte(uint8_t byte) {
         std::cout << "0x" << std::hex << static_cast<int32_t>(byte) << std::dec << " ";
         return 1;
     }
 
-    size_t putWord(uint32_t word) {
-        ScreenStreamer::putBytes(reinterpret_cast<uint8_t *>(&word), sizeof(word));
+    size_t writeWord(uint32_t word) {
+        ScreenStreamer::writeBytes(reinterpret_cast<uint8_t *>(&word), sizeof(word));
         return sizeof(uint32_t);
     }
 
-    size_t putLongWord(uint64_t word) {
-        ScreenStreamer::putBytes(reinterpret_cast<uint8_t *>(&word), sizeof(word));
+    size_t writeLongWord(uint64_t word) {
+        ScreenStreamer::writeBytes(reinterpret_cast<uint8_t *>(&word), sizeof(word));
         return sizeof(uint64_t);
     }
 
-    size_t putBytes(const uint8_t *bytes, size_t size) {
+    size_t writeBytes(const uint8_t *bytes, size_t size) {
         for (size_t i= 0; i < size; ++i) {
-            ScreenStreamer::putByte(*bytes++);
+            ScreenStreamer::writeByte(*bytes++);
         }
         std::cout << std::endl;
         return size;
@@ -95,22 +95,22 @@ class OStreamer : public OutputStreamer {
         os_(os)
     {}
 
-    size_t putByte(uint8_t byte) {
+    size_t writeByte(uint8_t byte) {
         os_.put(byte);
         return 1;
     }
 
-    size_t putWord(uint32_t word) {
+    size_t writeWord(uint32_t word) {
         os_.write(reinterpret_cast<char *>(&word), sizeof(word));
         return sizeof(uint32_t);
     }
 
-    size_t putLongWord(uint64_t word) {
+    size_t writeLongWord(uint64_t word) {
         os_.write(reinterpret_cast<char *>(&word), sizeof(word));
         return sizeof(uint64_t);
     }
 
-    size_t putBytes(const uint8_t *bytes, size_t size) {
+    size_t writeBytes(const uint8_t *bytes, size_t size) {
         os_.write(reinterpret_cast<const char *>(bytes), size);
         return size;
     }

@@ -45,82 +45,82 @@ class Parser : private boost::noncopyable
         reader_(schema, in)
     {}
 
-    void getNull() {
+    void readNull() {
         Null null;
-        reader_.getValue(null);
+        reader_.readValue(null);
     }
 
-    bool getBool() {
+    bool readBool() {
         bool val;
-        reader_.getValue(val);
+        reader_.readValue(val);
         return val;
     }
 
-    int32_t getInt() {
+    int32_t readInt() {
         int32_t val;
-        reader_.getValue(val);
+        reader_.readValue(val);
         return val;
     }
 
-    int64_t getLong() {
+    int64_t readLong() {
         int64_t val;
-        reader_.getValue(val);
+        reader_.readValue(val);
         return val;
     }
 
-    float getFloat() {
+    float readFloat() {
         float val;
-        reader_.getValue(val);
+        reader_.readValue(val);
         return val;
     }
 
-    double getDouble() {
+    double readDouble() {
         double val;
-        reader_.getValue(val);
+        reader_.readValue(val);
         return val;
     }
 
-    void getString(std::string &val) {
-        reader_.getValue(val);
+    void readString(std::string &val) {
+        reader_.readValue(val);
     }
 
-    void getBytes(std::vector<uint8_t> &val) {
-        reader_.getBytes(val);
+    void readBytes(std::vector<uint8_t> &val) {
+        reader_.readBytes(val);
     }
 
-    void getFixed(std::vector<uint8_t> &val, size_t size) {
-        reader_.getFixed(val, size);
+    void readFixed(std::vector<uint8_t> &val, size_t size) {
+        reader_.readFixed(val, size);
     }
 
-    void getFixed(uint8_t *val, size_t size) {
-        reader_.getFixed(val, size);
+    void readFixed(uint8_t *val, size_t size) {
+        reader_.readFixed(val, size);
     }
 
-    void getRecord() { 
-        reader_.getRecord();
+    void readRecord() { 
+        reader_.readRecord();
     }
 
-    int64_t getArrayBlockSize() {
-        return reader_.getArrayBlockSize();
+    int64_t readArrayBlockSize() {
+        return reader_.readArrayBlockSize();
     }
 
-    int64_t getUnion() { 
-        return reader_.getUnion();
+    int64_t readUnion() { 
+        return reader_.readUnion();
     }
 
-    int64_t getEnum() {
-        return reader_.getEnum();
+    int64_t readEnum() {
+        return reader_.readEnum();
     }
 
-    int64_t getMapBlockSize() {
-        return reader_.getMapBlockSize();
+    int64_t readMapBlockSize() {
+        return reader_.readMapBlockSize();
     }
 
   private:
 
     friend Type nextType(Parser<ValidatingReader> &p);
-    friend bool getCurrentRecordName(Parser<ValidatingReader> &p, std::string &name);
-    friend bool getNextFieldName(Parser<ValidatingReader> &p, std::string &name);
+    friend bool currentRecordName(Parser<ValidatingReader> &p, std::string &name);
+    friend bool nextFieldName(Parser<ValidatingReader> &p, std::string &name);
 
     Reader reader_;
 
@@ -130,12 +130,12 @@ inline Type nextType(Parser<ValidatingReader> &p) {
     return p.reader_.nextType();
 }
 
-inline bool getCurrentRecordName(Parser<ValidatingReader> &p, std::string &name) {
-    return p.reader_.getCurrentRecordName(name);
+inline bool currentRecordName(Parser<ValidatingReader> &p, std::string &name) {
+    return p.reader_.currentRecordName(name);
 }
 
-inline bool getNextFieldName(Parser<ValidatingReader> &p, std::string &name) {
-    return p.reader_.getNextFieldName(name);
+inline bool nextFieldName(Parser<ValidatingReader> &p, std::string &name) {
+    return p.reader_.nextFieldName(name);
 }
 
 } // namespace avro

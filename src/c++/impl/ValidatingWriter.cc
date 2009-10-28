@@ -31,70 +31,70 @@ ValidatingWriter::ValidatingWriter(const ValidSchema &schema, OutputStreamer &ou
 { }
 
 void
-ValidatingWriter::putBytes(const void *val, size_t size)
+ValidatingWriter::writeBytes(const uint8_t *val, size_t size)
 {
     checkSafeToPut(AVRO_BYTES);
-    writer_.putBytes(val, size);
+    writer_.writeBytes(val, size);
     validator_.advance();
 }
 
 void 
-ValidatingWriter::putCount(int64_t count)
+ValidatingWriter::writeCount(int64_t count)
 {
     checkSafeToPut(AVRO_LONG);
-    writer_.putValue(count);
+    writer_.writeValue(count);
     validator_.advanceWithCount(count);
 }
 
 void 
-ValidatingWriter::beginRecord()
+ValidatingWriter::writeRecord()
 {
     checkSafeToPut(AVRO_RECORD);
     validator_.advance();
 }
 
 void 
-ValidatingWriter::beginArrayBlock(int64_t size)
+ValidatingWriter::writeArrayBlock(int64_t size)
 {
     checkSafeToPut(AVRO_ARRAY);
     validator_.advance();
-    putCount(size);
+    writeCount(size);
 }
 
 void 
-ValidatingWriter::endArray()
+ValidatingWriter::writeArrayEnd()
 {
-    beginArrayBlock(0);
+    writeArrayBlock(0);
 }
 
 void 
-ValidatingWriter::beginMapBlock(int64_t size)
+ValidatingWriter::writeMapBlock(int64_t size)
 {
     checkSafeToPut(AVRO_MAP);
     validator_.advance();
-    putCount(size);
+    writeCount(size);
 }
 
 void 
-ValidatingWriter::endMap()
+ValidatingWriter::writeMapEnd()
 {
-    beginMapBlock(0);
+    writeMapBlock(0);
 }
 
 void 
-ValidatingWriter::beginUnion(int64_t choice)
+ValidatingWriter::writeUnion(int64_t choice)
 {
     checkSafeToPut(AVRO_UNION);
     validator_.advance();
-    putCount(choice);
+    writeCount(choice);
 }
 
 void 
-ValidatingWriter::beginEnum(int64_t choice)
+ValidatingWriter::writeEnum(int64_t choice)
 {
     checkSafeToPut(AVRO_ENUM);
     validator_.advance();
-    putCount(choice);
+    writeCount(choice);
 }
 
 

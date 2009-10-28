@@ -39,10 +39,10 @@ class InputStreamer {
     virtual ~InputStreamer()
     { }
 
-    virtual size_t getByte(uint8_t &byte) = 0;
-    virtual size_t getWord(uint32_t &word) = 0;
-    virtual size_t getLongWord(uint64_t &word) = 0;
-    virtual size_t getBytes(uint8_t *bytes, size_t size) = 0;
+    virtual size_t readByte(uint8_t &byte) = 0;
+    virtual size_t readWord(uint32_t &word) = 0;
+    virtual size_t readLongWord(uint64_t &word) = 0;
+    virtual size_t readBytes(uint8_t *bytes, size_t size) = 0;
 };
 
 
@@ -61,24 +61,24 @@ class IStreamer : public InputStreamer {
         is_(is)
     {}
 
-    size_t getByte(uint8_t &byte) {
+    size_t readByte(uint8_t &byte) {
         char val;
         is_.get(val);
         byte = val;
         return 1;
     }
 
-    size_t getWord(uint32_t &word) {
+    size_t readWord(uint32_t &word) {
         is_.read(reinterpret_cast<char *>(&word), sizeof(word));
         return is_.gcount();
     }
 
-    size_t getLongWord(uint64_t &word) {
+    size_t readLongWord(uint64_t &word) {
         is_.read(reinterpret_cast<char *>(&word), sizeof(word));
         return is_.gcount();
     }
 
-    size_t getBytes(uint8_t *bytes, size_t size) {
+    size_t readBytes(uint8_t *bytes, size_t size) {
         is_.read(reinterpret_cast<char *>(bytes), size);
         return is_.gcount();
     }

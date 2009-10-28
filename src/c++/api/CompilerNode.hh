@@ -20,6 +20,7 @@
 #define avro_CompilerNode_hh__
 
 #include "NodeConcepts.hh"
+#include "Node.hh"
 
 namespace avro {
 
@@ -99,7 +100,6 @@ class CompilerNode
     // attribute used by fixed:
     concepts::SingleAttribute<int> sizeAttribute_;
 
-  //private:
     // attributes used by records:
     concepts::MultiAttribute<NodePtr>     fieldsAttribute_;
     concepts::MultiAttribute<std::string> fieldsNamesAttribute_;
@@ -120,6 +120,8 @@ class CompilerNode
     AttributeType attributeType_;
 
 };
+
+NodePtr nodeFromCompilerNode(CompilerNode &compilerNode);
 
 } // namespace avro
 

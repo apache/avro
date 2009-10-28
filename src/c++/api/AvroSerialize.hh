@@ -51,12 +51,12 @@ void serialize(Writer &s, const T& val, const boost::false_type &)
 
 template <typename Writer, typename T>
 void serialize(Writer &s, T val, const boost::true_type &) {
-    s.putValue(val);
+    s.writeValue(val);
 }
 
 template <typename Writer>
 void serialize(Writer &s, const std::vector<uint8_t> &val, const boost::true_type &) {
-    s.putBytes(&val[0], val.size());
+    s.writeBytes(&val[0], val.size());
 }
 
 // @}

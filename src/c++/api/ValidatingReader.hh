@@ -50,58 +50,58 @@ class ValidatingReader : private boost::noncopyable
     ValidatingReader(const ValidSchema &schema, InputStreamer &in);
 
     template<typename T>
-    void getValue(T &val) {
+    void readValue(T &val) {
         checkSafeToGet(type_to_avro<T>::type);
-        reader_.getValue(val);
+        reader_.readValue(val);
         validator_.advance();
     }
 
-    void getBytes(std::vector<uint8_t> &val) {
+    void readBytes(std::vector<uint8_t> &val) {
         checkSafeToGet(AVRO_BYTES);
         validator_.advance();
-        reader_.getBytes(val);
+        reader_.readBytes(val);
     }
 
-    void getFixed(uint8_t *val, size_t size) {
+    void readFixed(uint8_t *val, size_t size) {
         checkSafeToGet(AVRO_FIXED);
         checkSizeExpected(size);
         validator_.advance();
-        reader_.getFixed(val, size);
+        reader_.readFixed(val, size);
     }
 
-    void getFixed(std::vector<uint8_t> &val, size_t size) {
+    void readFixed(std::vector<uint8_t> &val, size_t size) {
         checkSafeToGet(AVRO_FIXED);
         checkSizeExpected(size);
         validator_.advance();
-        reader_.getFixed(val, size);
+        reader_.readFixed(val, size);
     }
 
 
-    void getRecord();
+    void readRecord();
 
-    int64_t getArrayBlockSize();
+    int64_t readArrayBlockSize();
 
-    int64_t getUnion();
+    int64_t readUnion();
 
-    int64_t getEnum();
+    int64_t readEnum();
 
-    int64_t getMapBlockSize();
+    int64_t readMapBlockSize();
 
     Type nextType() const{
         return validator_.nextTypeExpected();
     }
 
-    bool getCurrentRecordName(std::string &name) const {
+    bool currentRecordName(std::string &name) const {
         return validator_.getCurrentRecordName(name);
     }
 
-    bool getNextFieldName(std::string &name) const {
+    bool nextFieldName(std::string &name) const {
         return validator_.getNextFieldName(name);
     }
 
   private:
 
-    int64_t getCount();
+    int64_t readCount();
 
     void checkSafeToGet(Type type) const {
         if(validator_.nextTypeExpected() != type) {

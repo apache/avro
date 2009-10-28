@@ -82,26 +82,26 @@ struct TestSchema
     template<typename Serializer>
     void printUnion(Serializer &s, int path)
     {
-        s.beginUnion(path);
+        s.writeUnion(path);
         if(path == 0) {
             std::cout << "Null in union\n";
-            s.putNull();
+            s.writeNull();
         }
         else if(path == 1) {
             std::cout << "Map in union\n";
-            s.beginMapBlock(2);
-            s.putString("Foo");
-            s.putInt(16);
-            s.putString("Bar");
-            s.putInt(17);
-            s.beginMapBlock(1);
-            s.putString("FooBar");
-            s.putInt(18);
-            s.endMap();
+            s.writeMapBlock(2);
+            s.writeString("Foo");
+            s.writeInt(16);
+            s.writeString("Bar");
+            s.writeInt(17);
+            s.writeMapBlock(1);
+            s.writeString("FooBar");
+            s.writeInt(18);
+            s.writeMapEnd();
         }
         else {
             std::cout << "Float in union\n";
-            s.putFloat(200.);
+            s.writeFloat(200.);
         }
     }
 
@@ -109,38 +109,38 @@ struct TestSchema
     void writeEncoding(Serializer &s, int path)
     {
         std::cout << "Record\n";
-        s.beginRecord();
-        s.putInt(1000);
+        s.writeRecord();
+        s.writeInt(1000);
 
         std::cout << "Map\n";
-        s.beginMapBlock(2);
-        s.putString(std::string("Foo"));
-        s.putInt(16);
-        s.putString(std::string("Bar"));
-        s.putInt(17);
-        s.endMap();
+        s.writeMapBlock(2);
+        s.writeString(std::string("Foo"));
+        s.writeInt(16);
+        s.writeString(std::string("Bar"));
+        s.writeInt(17);
+        s.writeMapEnd();
 
         std::cout << "Array\n";
-        s.beginArrayBlock(2);
-        s.putDouble(100.0);
-        s.putDouble(1000.0);
-        s.endArray();
+        s.writeArrayBlock(2);
+        s.writeDouble(100.0);
+        s.writeDouble(1000.0);
+        s.writeArrayEnd();
 
         std::cout << "Enum\n";
-        s.beginEnum(3);
+        s.writeEnum(3);
 
         std::cout << "Union\n";
         printUnion(s, path);
 
         std::cout << "Bool\n";
-        s.putBool(true);
+        s.writeBool(true);
 
         std::cout << "Fixed16\n";
         
-        s.putFixed(fixeddata, 16);
+        s.writeFixed(fixeddata, 16);
 
         std::cout << "Int\n";
-        s.putInt(-3456);
+        s.writeInt(-3456);
     }
 
     void printEncoding() {
@@ -175,10 +175,10 @@ struct TestSchema
         std::cout << "Next: \"" << nextType(p);
         std::string recordName;
         std::string fieldName;
-        if( getCurrentRecordName(p, recordName) ) {
+        if( currentRecordName(p, recordName) ) {
             std::cout << "\" record: \"" << recordName;
         }
-        if( getNextFieldName(p, fieldName) ) {
+        if( nextFieldName(p, fieldName) ) {
             std::cout << "\" field: \"" << fieldName;
         }
         std::cout << "\"\n";
@@ -191,14 +191,14 @@ struct TestSchema
         int64_t size = 0;
         do { 
             printNext(p);
-            size = p.getMapBlockSize();
+            size = p.readMapBlockSize();
             std::cout << "Size " << size << '\n';
             for(int32_t i=0; i < size; ++i) {
                 std::string key;
                 printNext(p);
-                p.getString(key);
+                p.readString(key);
                 printNext(p);
-                int32_t intval = p.getInt();
+                int32_t intval = p.readInt();
                 std::cout << key << ":" << intval << '\n';
             }
         } while (size != 0);
@@ -211,11 +211,11 @@ struct TestSchema
         double d = 0.0;
         do {
             printNext(p);
-            size = p.getArrayBlockSize();
+            size = p.readArrayBlockSize();
             std::cout << "Size " << size << '\n';
             for(int32_t i=0; i < size; ++i) {
                 printNext(p);
-                d = p.getDouble();
+                d = p.readDouble();
                 std::cout << i << ":" << d << '\n';
             }
         } while(size != 0);
@@ -226,7 +226,7 @@ struct TestSchema
     void readFixed(Parser &p) {
 
         std::vector<uint8_t> input;
-        p.getFixed(input, 16);
+        p.readFixed(input, 16);
 
         for(int i=0; i< 16; ++i) {
             std::cout << static_cast<int>(input[i]) << ' ';
@@ -238,10 +238,10 @@ struct TestSchema
     void readData(Parser &p)
     {
         printNext(p);
-        p.getRecord();
+        p.readRecord();
 
         printNext(p);
-        int64_t longval = p.getLong();
+        int64_t longval = p.readLong();
         std::cout << longval << '\n';
         BOOST_CHECK_EQUAL(longval, 1000);
 
@@ -249,16 +249,16 @@ struct TestSchema
         readArray(p);
 
         printNext(p);
-        longval = p.getEnum();
+        longval = p.readEnum();
         std::cout << "Enum choice " << longval << '\n';
 
         printNext(p);
-        longval = p.getUnion();
+        longval = p.readUnion();
         std::cout << "Union path " << longval << '\n';
         readMap(p);
 
         printNext(p);
-        bool boolval = p.getBool();
+        bool boolval = p.readBool();
         std::cout << boolval << '\n';
         BOOST_CHECK_EQUAL(boolval, true);
 
@@ -266,7 +266,7 @@ struct TestSchema
         readFixed(p);
 
         printNext(p);
-        int32_t intval = p.getInt();
+        int32_t intval = p.readInt();
         std::cout << intval << '\n';
         BOOST_CHECK_EQUAL(intval, -3456);
     }
@@ -400,32 +400,32 @@ struct TestNested
     {
         std::cout << "No recurse\n";
         Serializer<ValidatingWriter> s(schema_, os);
-        s.beginRecord();
-        s.putLong(1);
-        s.beginUnion(0);
-        s.putNull();
-        s.putBool(true);
+        s.writeRecord();
+        s.writeLong(1);
+        s.writeUnion(0);
+        s.writeNull();
+        s.writeBool(true);
     }
 
     void serializeRecurse(OutputStreamer &os)
     {
         std::cout << "Recurse\n";
         Serializer<ValidatingWriter> s(schema_, os);
-        s.beginRecord();
-        s.putLong(1);
-        s.beginUnion(1);
+        s.writeRecord();
+        s.writeLong(1);
+        s.writeUnion(1);
         {
-            s.beginRecord();
-            s.putLong(2);
-            s.beginUnion(1);
+            s.writeRecord();
+            s.writeLong(2);
+            s.writeUnion(1);
             {
-                s.beginRecord();
-                s.putLong(3);
-                s.beginUnion(0);
+                s.writeRecord();
+                s.writeLong(3);
+                s.writeUnion(0);
             }
-            s.putNull();
+            s.writeNull();
         }
-        s.putBool(true);
+        s.writeBool(true);
     }
 
     void validatingParser(InputStreamer &is) 
@@ -435,14 +435,14 @@ struct TestNested
         int64_t path = 0;
     
         do {
-            p.getRecord();
-            val = p.getLong();
+            p.readRecord();
+            val = p.readLong();
             std::cout << "longval = " << val << '\n';
-            path = p.getUnion();
+            path = p.readUnion();
         } while(path == 1);
 
-        p.getNull();
-        bool b = p.getBool();
+        p.readNull();
+        bool b = p.readBool();
         std::cout << "bval = " << b << '\n';
     }
 

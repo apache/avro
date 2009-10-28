@@ -43,113 +43,113 @@ class Reader : private boost::noncopyable
         in_(in)
     {}
 
-    void getValue(Null &) {}
+    void readValue(Null &) {}
 
-    void getValue(bool &val) {
+    void readValue(bool &val) {
         uint8_t ival;
-        in_.getByte(ival);
+        in_.readByte(ival);
         val = (ival != 0);
     }
 
-    void getValue(int32_t &val) {
-        uint32_t encoded = getVarInt();
+    void readValue(int32_t &val) {
+        uint32_t encoded = readVarInt();
         val = decodeZigzag32(encoded);
     }
 
-    void getValue(int64_t &val) {
-        uint64_t encoded = getVarInt();
+    void readValue(int64_t &val) {
+        uint64_t encoded = readVarInt();
         val = decodeZigzag64(encoded);
     }
 
-    void getValue(float &val) {
+    void readValue(float &val) {
         union { 
             float f;
             uint32_t i;
         } v;
-        in_.getWord(v.i);
+        in_.readWord(v.i);
         val = v.f;
     }
 
-    void getValue(double &val) {
+    void readValue(double &val) {
         union { 
             double d;
             uint64_t i;
         } v;
-        in_.getLongWord(v.i);
+        in_.readLongWord(v.i);
         val = v.d;
     }
 
-    void getValue(std::string &val) {
-        int64_t size = getSize();
+    void readValue(std::string &val) {
+        int64_t size = readSize();
         val.reserve(size);
         uint8_t bval;
         for(size_t bytes = 0; bytes < static_cast<size_t>(size); bytes++) {
-            in_.getByte(bval);
+            in_.readByte(bval);
             val.push_back(bval);
         }
     }
 
-    void getBytes(std::vector<uint8_t> &val) {
-        int64_t size = getSize();
+    void readBytes(std::vector<uint8_t> &val) {
+        int64_t size = readSize();
         
         val.reserve(size);
         uint8_t bval;
         for(size_t bytes = 0; bytes < static_cast<size_t>(size); bytes++) {
-            in_.getByte(bval);
+            in_.readByte(bval);
             val.push_back(bval);
         }
     }
 
 
-    void getFixed(std::vector<uint8_t> &val, size_t size) {
+    void readFixed(std::vector<uint8_t> &val, size_t size) {
         val.reserve(size);
         uint8_t bval;
         for(size_t bytes = 0; bytes < size; bytes++) {
-            in_.getByte(bval);
+            in_.readByte(bval);
             val.push_back(bval);
         }
     }
 
-    void getFixed(uint8_t *val, size_t size) {
+    void readFixed(uint8_t *val, size_t size) {
         uint8_t bval;
         for(size_t bytes = 0; bytes < size; bytes++) {
-            in_.getByte(bval);
+            in_.readByte(bval);
             *val++ = bval;
         }
     }
 
-    void getRecord() { }
+    void readRecord() { }
 
-    int64_t getArrayBlockSize() {
-        return getSize();
+    int64_t readArrayBlockSize() {
+        return readSize();
     }
 
-    int64_t getUnion() { 
-        return getSize();
+    int64_t readUnion() { 
+        return readSize();
     }
 
-    int64_t getEnum() {
-        return getSize();
+    int64_t readEnum() {
+        return readSize();
     }
 
-    int64_t getMapBlockSize() {
-        return getSize();
+    int64_t readMapBlockSize() {
+        return readSize();
     }
 
   private:
 
-    int64_t getSize() {
+    int64_t readSize() {
         int64_t size(0);
-        getValue(size);
+        readValue(size);
         return size;
     }
 
-    uint64_t getVarInt() {
+    uint64_t readVarInt() {
         uint64_t encoded = 0;
         uint8_t val = 0;
         int shift = 0;
         do {
-            in_.getByte(val);
+            in_.readByte(val);
             uint64_t newbits = (val & 0x7f) << shift;
             encoded |= newbits;
             shift += 7;

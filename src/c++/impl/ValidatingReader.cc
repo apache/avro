@@ -30,52 +30,52 @@ ValidatingReader::ValidatingReader(const ValidSchema &schema, InputStreamer &in)
 { }
 
 int64_t
-ValidatingReader::getCount()
+ValidatingReader::readCount()
 {
     checkSafeToGet(AVRO_LONG);
     int64_t val;
-    reader_.getValue(val);
+    reader_.readValue(val);
     validator_.advanceWithCount(val);
     return val;
 }
 
 void 
-ValidatingReader::getRecord()
+ValidatingReader::readRecord()
 {
     checkSafeToGet(AVRO_RECORD);
     validator_.advance();
 }
 
 int64_t 
-ValidatingReader::getUnion()
+ValidatingReader::readUnion()
 {
     checkSafeToGet(AVRO_UNION);
     validator_.advance();
-    return getCount();
+    return readCount();
 }
 
 int64_t 
-ValidatingReader::getEnum()
+ValidatingReader::readEnum()
 {
     checkSafeToGet(AVRO_ENUM);
     validator_.advance();
-    return getCount();
+    return readCount();
 }
 
 int64_t 
-ValidatingReader::getMapBlockSize()
+ValidatingReader::readMapBlockSize()
 {
     checkSafeToGet(AVRO_MAP);
     validator_.advance();
-    return getCount();
+    return readCount();
 }
 
 int64_t 
-ValidatingReader::getArrayBlockSize()
+ValidatingReader::readArrayBlockSize()
 {
     checkSafeToGet(AVRO_ARRAY);
     validator_.advance();
-    return getCount();
+    return readCount();
 }
 
 } // namespace avro
