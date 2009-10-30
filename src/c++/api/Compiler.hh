@@ -92,7 +92,18 @@ class CompilerContext {
 
 class ValidSchema;
 
-int compileJsonSchema(std::istream &is, ValidSchema &schema);
+/// Given a stream comtaining a JSON schema, compiles the schema to a
+/// ValidSchema object.  Throws if the schema cannot be compiled to a valid
+/// schema
+
+void compileJsonSchema(std::istream &is, ValidSchema &schema);
+
+/// Non-throwing version of compileJsonSchema.  
+///
+/// /return True if no error, false if error (with the error string set)
+///
+
+bool compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error);
 
 } // namespace avro
 

@@ -54,7 +54,7 @@ class Schema
 
   protected:
 
-    friend int compileJsonSchema(std::istream &is, ValidSchema &schema);
+    friend void compileJsonSchema(std::istream &is, ValidSchema &schema);
 
     Schema();
     explicit Schema(const NodePtr &node);

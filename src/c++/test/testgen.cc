@@ -111,7 +111,6 @@ void checkOk(const avrouser::RootRecord &rec1, const avrouser::RootRecord &rec2)
         BOOST_CHECK_EQUAL(rec1.myfixed.value[i], rec2.myfixed.value[i]);
     }
     BOOST_CHECK_EQUAL(rec1.anotherint, rec1.anotherint);
-
 }
 
 void testParser(const avrouser::RootRecord &myRecord)
@@ -192,6 +191,8 @@ void testGen()
     myRecord.bytes.push_back(20);
 
     runTests(myRecord);
+
+    std::cout << "Finished code generation tests\n";
 }
 
 boost::unit_test::test_suite*

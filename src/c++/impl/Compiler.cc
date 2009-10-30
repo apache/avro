@@ -28,17 +28,38 @@ namespace avro {
 
 // #define DEBUG_VERBOSE
 
-int
+void
 compileJsonSchema(std::istream &is, ValidSchema &schema)
 {
-     CompilerContext myctx(is);
-     yyparse(&myctx);
+    if(!is.good()) {
+        throw Exception("Input stream is not good");
+    }
 
-     Schema s(myctx.getRoot());
+    CompilerContext myctx(is);
+    yyparse(&myctx);
 
-     schema.setSchema(s);
+    Schema s(myctx.getRoot());
+    schema.setSchema(s);
+}
 
-     return 1;
+bool
+compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error)
+{
+    bool success = false;
+    if(!is.good()) {
+        error = "Input stream is not good";
+        return false;
+    }
+
+    try {
+        compileJsonSchema(is, schema);
+        success = true;
+    }
+    catch (Exception &e) {
+        error = e.what();
+    }
+
+    return success;
 }
 
 void 

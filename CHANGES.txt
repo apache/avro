@@ -10,7 +10,7 @@ Trunk (unreleased changes)
 
   IMPROVEMENTS
 
-    AVRO-157. Changes from code review comments for C++.  (sbanacho)
+    AVRO-157. Changes from code review comments for C++. (sbanacho)
 
     AVRO-168. Correct shared library versioning for C implementation (massie)
 
@@ -42,6 +42,8 @@ Trunk (unreleased changes)
 
   BUG FIXES
  
+    AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
+
     AVRO-141.  Fix a NullPointerException in ReflectData#isRecord().
     (Isabel Drost via cutting)
 

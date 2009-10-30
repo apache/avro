@@ -29,6 +29,7 @@
 #include "Serializer.hh"
 #include "Parser.hh"
 #include "SymbolMap.hh"
+#include "Compiler.hh"
 
 #include "AvroSerialize.hh"
 
@@ -509,6 +510,49 @@ struct TestGenerated
     }
 };
 
+struct TestBadStuff
+{
+    void testBadFile() 
+    {
+        std::cout << "TestBadStuff\n";
+
+        avro::ValidSchema schema;
+        std::ifstream in("agjoewejefkjs");
+        std::string error;
+        bool result = avro::compileJsonSchema(in, schema, error);
+        BOOST_CHECK_EQUAL(result, false);
+        std::cout << "(intentional) error: " << error << '\n';
+    }
+
+    void testBadSchema()
+    {
+        std::cout << "TestBadSchema\n";
+
+        std::string str ("{ \"type\" : \"wrong\" }");
+        std::istringstream in(str);
+
+        avro::ValidSchema schema;
+        std::string error;
+        bool result = avro::compileJsonSchema(in, schema, error);
+        BOOST_CHECK_EQUAL(result, false);
+        std::cout << "(intentional) error: " << error << '\n';
+    }
+
+    void test() 
+    {
+        std::cout << "TestBadStuff\n";
+        testBadFile();
+        testBadSchema();
+    }
+};
+
+
+template<typename T>
+void addTestCase(boost::unit_test::test_suite &test) 
+{
+    boost::shared_ptr<T> newtest( new T );
+    test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
+}
 
 boost::unit_test::test_suite*
 init_unit_test_suite( int argc, char* argv[] ) 
@@ -517,20 +561,12 @@ init_unit_test_suite( int argc, char* argv[] )
 
     test_suite* test= BOOST_TEST_SUITE( "Avro C++ unit test suite" );
 
-    boost::shared_ptr<TestEncoding> encodingTester( new TestEncoding );
-    test->add( BOOST_CLASS_TEST_CASE( &TestEncoding::test, encodingTester ));
-
-    boost::shared_ptr<TestSchema> schemaTester( new TestSchema );
-    test->add( BOOST_CLASS_TEST_CASE( &TestSchema::test, schemaTester ));
-
-    boost::shared_ptr<TestSymbolMap> symbolMapTester( new TestSymbolMap );
-    test->add( BOOST_CLASS_TEST_CASE( &TestSymbolMap::test, symbolMapTester ));
-
-    boost::shared_ptr<TestNested> nestedTester( new TestNested );
-    test->add( BOOST_CLASS_TEST_CASE( &TestNested::test, nestedTester ));
-
-    boost::shared_ptr<TestGenerated> generatedTester( new TestGenerated );
-    test->add( BOOST_CLASS_TEST_CASE( &TestGenerated::test, generatedTester ));
+    addTestCase<TestEncoding>(*test);
+    addTestCase<TestSchema>(*test);
+    addTestCase<TestSymbolMap>(*test);
+    addTestCase<TestNested>(*test);
+    addTestCase<TestGenerated>(*test);
+    addTestCase<TestBadStuff>(*test);
 
     return test;
 }
