@@ -34,7 +34,7 @@ avro_union_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_union_read (struct avro_value *value, struct avro_channel *channel)
+avro_union_read (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_union_value *self =
     container_of (value, struct avro_union_value, base_value);
@@ -42,7 +42,7 @@ avro_union_read (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-avro_union_skip (struct avro_value *value, struct avro_channel *channel)
+avro_union_skip (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_union_value *self =
     container_of (value, struct avro_union_value, base_value);
@@ -50,7 +50,7 @@ avro_union_skip (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-avro_union_write (struct avro_value *value, struct avro_channel *channel)
+avro_union_write (struct avro_value *value, struct avro_writer *writer)
 {
   struct avro_union_value *self =
     container_of (value, struct avro_union_value, base_value);

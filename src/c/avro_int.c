@@ -40,53 +40,53 @@ avro_int_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_int_read_skip (struct avro_value *value, struct avro_channel *channel,
+avro_int_read_skip (struct avro_value *value, struct avro_reader *reader,
 		    int skip)
 {
   struct avro_int_value *self =
     container_of (value, struct avro_int_value, base_value);
-  struct avro_io *io;
-  if (!channel)
+  struct avro_io_reader *io;
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = reader->io;
   if (!io)
     {
       return AVRO_FAILURE;
     }
   self->value_set = !skip;
-  return avro_getint (io, &self->value);
+  return avro_read_int (io, &self->value);
 }
 
 static avro_status_t
-avro_int_read (struct avro_value *value, struct avro_channel *channel)
+avro_int_read (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_int_read_skip (value, channel, 0);
+  return avro_int_read_skip (value, reader, 0);
 }
 
 static avro_status_t
-avro_int_skip (struct avro_value *value, struct avro_channel *channel)
+avro_int_skip (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_int_read_skip (value, channel, 1);
+  return avro_int_read_skip (value, reader, 1);
 }
 
 static avro_status_t
-avro_int_write (struct avro_value *value, struct avro_channel *channel)
+avro_int_write (struct avro_value *value, struct avro_writer *writer)
 {
   struct avro_int_value *self =
     container_of (value, struct avro_int_value, base_value);
-  struct avro_io *io;
-  if (!value || !channel)
+  struct avro_io_writer *io;
+  if (!value || !writer)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = writer->io;
   if (!io)
     {
       return AVRO_FAILURE;
     }
-  return avro_putint (io, &self->value);
+  return avro_write_int (io, &self->value);
 }
 
 static struct avro_value *

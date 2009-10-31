@@ -37,7 +37,7 @@ avro_fixed_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_fixed_read (struct avro_value *value, struct avro_channel *channel)
+avro_fixed_read (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_fixed_value *self =
     container_of (value, struct avro_fixed_value, base_value);
@@ -45,7 +45,7 @@ avro_fixed_read (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-avro_fixed_skip (struct avro_value *value, struct avro_channel *channel)
+avro_fixed_skip (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_fixed_value *self =
     container_of (value, struct avro_fixed_value, base_value);
@@ -53,7 +53,7 @@ avro_fixed_skip (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-avro_fixed_write (struct avro_value *value, struct avro_channel *channel)
+avro_fixed_write (struct avro_value *value, struct avro_writer *writer)
 {
   struct avro_fixed_value *self =
     container_of (value, struct avro_fixed_value, base_value);

@@ -6,7 +6,7 @@
 struct avro_metadata
 {
   avro_string_t key;
-  char *value;
+  void *value;
   avro_long_t len;
 };
 
@@ -16,20 +16,19 @@ struct avro_file_container
   apr_hash_t *meta;
   JSON_value *schema;
   avro_long_t size;
-  struct avro_channel channel;
+  struct avro_reader reader;
 };
 
-struct avro_channel *
-avro_file_container_create_from_file (apr_file_t * file)
+struct avro_reader *
+avro_reader_file_container_from_file (apr_file_t * file)
 {
   apr_status_t apr_status;
   avro_status_t status;
   struct avro_file_container *container;
   struct apr_pool_t *pool;
-  struct avro_io *io;
+  struct avro_io_reader *io;
   char buf[4];
   int i;
-  int64_t type;
   apr_off_t offset, len;
   int32_t footersize;
   avro_long_t metalength;
@@ -47,14 +46,14 @@ avro_file_container_create_from_file (apr_file_t * file)
     }
 
   container = apr_pcalloc (pool, sizeof (struct avro_file_container));
-  container->channel.format = AVRO_BINARY_FORMAT;
-  container->channel.io = io = avro_io_file_create (file);
+  container->reader.format = AVRO_BINARY_FORMAT;
+  container->reader.io = io = avro_io_reader_from_file (file);
   if (!io)
     {
       return NULL;
     }
 
-  status = io->read (io, buf, 4);
+  status = io->read (io, (void *) buf, 4);
   if (status != AVRO_OK)
     {
       return NULL;
@@ -88,7 +87,7 @@ avro_file_container_create_from_file (apr_file_t * file)
       return NULL;
     }
   /* Read in the footersize */
-  status = avro_getint32_be (io, &footersize);
+  status = avro_read_int32_be (io, &footersize);
   if (status != AVRO_OK)
     {
       return NULL;
@@ -103,7 +102,7 @@ avro_file_container_create_from_file (apr_file_t * file)
     }
 
   /* Read the metadata length */
-  status = avro_getlong (io, &metalength);
+  status = avro_read_long (io, &metalength);
   if (status != AVRO_OK)
     {
       return NULL;
@@ -112,7 +111,7 @@ avro_file_container_create_from_file (apr_file_t * file)
   if (metalength < 0)
     {
       avro_long_t ignore;
-      avro_getlong (io, &ignore);
+      avro_read_long (io, &ignore);
     }
 
   /* Create a hash table for the meta data */
@@ -126,8 +125,8 @@ avro_file_container_create_from_file (apr_file_t * file)
 	{
 	  return NULL;
 	}
-      avro_getstring (io, pool, &key);
-      avro_getbytes (io, pool, &metadata->value, &metadata->len);
+      avro_read_string (io, pool, &key);
+      avro_read_bytes (io, pool, &metadata->value, &metadata->len);
       apr_hash_set (container->meta, key, wcslen (key) * sizeof (wchar_t),
 		    metadata);
       DEBUG (fprintf (stderr, "%ls = ", key));
@@ -168,17 +167,17 @@ avro_file_container_create_from_file (apr_file_t * file)
     }
 
   /* Read the size of the block */
-  status = avro_getlong (io, &container->size);
+  status = avro_read_long (io, &container->size);
   if (status != AVRO_OK)
     {
       return NULL;
     }
-  return &container->channel;
+  return &container->reader;
 }
 
-struct avro_channel *
-avro_file_container_create (apr_pool_t * pool, const char *fname,
-			    apr_int32_t flag, apr_fileperms_t perm)
+struct avro_reader *
+avro_reader_file_container_create (apr_pool_t * pool, const char *fname,
+				   apr_int32_t flag, apr_fileperms_t perm)
 {
   apr_status_t status;
   apr_file_t *file;
@@ -194,5 +193,5 @@ avro_file_container_create (apr_pool_t * pool, const char *fname,
       return NULL;
     }
 
-  return avro_file_container_create_from_file (file);
+  return avro_reader_file_container_from_file (file);
 }

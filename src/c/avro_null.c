@@ -19,7 +19,13 @@ under the License.
 #include "avro_private.h"
 
 static avro_status_t
-avro_null_noop (struct avro_value *value, struct avro_channel *channel)
+avro_null_noop_reader (struct avro_value *value, struct avro_reader *reader)
+{
+  return AVRO_OK;
+}
+
+static avro_status_t
+avro_null_noop_writer (struct avro_value *value, struct avro_writer *writer)
 {
   return AVRO_OK;
 }
@@ -54,13 +60,13 @@ const struct avro_value_info avro_null_info = {
   .private = 0,
   .create = avro_null_create,
   .formats = {{
-	       .read_data = avro_null_noop,
-	       .skip_data = avro_null_noop,
-	       .write_data = avro_null_noop},
+	       .read_data = avro_null_noop_reader,
+	       .skip_data = avro_null_noop_reader,
+	       .write_data = avro_null_noop_writer},
 	      {
 	       /* TODO: import/export */
-	       .read_data = avro_null_noop,
-	       .skip_data = avro_null_noop,
-	       .write_data = avro_null_noop}},
+	       .read_data = avro_null_noop_reader,
+	       .skip_data = avro_null_noop_reader,
+	       .write_data = avro_null_noop_writer}},
   .print_info = avro_null_print
 };

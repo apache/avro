@@ -21,7 +21,8 @@ under the License.
 #include <stdlib.h>
 
 avro_status_t
-avro_putstring (struct avro_io *io, apr_pool_t * pool, avro_string_t string)
+avro_write_string (struct avro_io_writer *io, apr_pool_t * pool,
+		   avro_string_t string)
 {
   avro_status_t status;
   size_t wc_len, converted;
@@ -47,7 +48,7 @@ avro_putstring (struct avro_io *io, apr_pool_t * pool, avro_string_t string)
       return AVRO_FAILURE;
     }
   len = converted;
-  status = avro_putlong (io, &len);
+  status = avro_write_long (io, &len);
   if (status != AVRO_OK)
     {
       return status;
@@ -56,8 +57,8 @@ avro_putstring (struct avro_io *io, apr_pool_t * pool, avro_string_t string)
 }
 
 avro_status_t
-avro_getstring (struct avro_io * io, apr_pool_t * pool,
-		avro_string_t * string)
+avro_read_string (struct avro_io_reader * io, apr_pool_t * pool,
+		  avro_string_t * string)
 {
   avro_status_t status;
   avro_long_t len;
@@ -68,7 +69,7 @@ avro_getstring (struct avro_io * io, apr_pool_t * pool,
     {
       return AVRO_FAILURE;
     }
-  status = avro_getlong (io, &len);
+  status = avro_read_long (io, &len);
   if (status != AVRO_OK)
     {
       return status;
@@ -82,7 +83,7 @@ avro_getstring (struct avro_io * io, apr_pool_t * pool,
     {
       return AVRO_FAILURE;
     }
-  status = io->read (io, s, len);
+  status = io->read (io, (void *) s, len);
   if (status != AVRO_OK)
     {
       return status;
@@ -105,14 +106,14 @@ avro_getstring (struct avro_io * io, apr_pool_t * pool,
 }
 
 avro_status_t
-avro_putbytes (struct avro_io * io, char *data, avro_long_t len)
+avro_write_bytes (struct avro_io_writer * io, void *data, avro_long_t len)
 {
   avro_status_t status;
   if (!io || !data || len < 0)
     {
       return AVRO_FAILURE;
     }
-  status = avro_putlong (io, &len);
+  status = avro_write_long (io, &len);
   if (status != AVRO_OK)
     {
       return status;
@@ -121,20 +122,20 @@ avro_putbytes (struct avro_io * io, char *data, avro_long_t len)
 }
 
 avro_status_t
-avro_getbytes (struct avro_io * io, apr_pool_t * pool, char **data,
-	       avro_long_t * len)
+avro_read_bytes (struct avro_io_reader * io, apr_pool_t * pool, void **data,
+		 avro_long_t * len)
 {
   avro_status_t status;
   if (!io || !pool || !data || !len)
     {
       return AVRO_FAILURE;
     }
-  status = avro_getlong (io, len);
+  status = avro_read_long (io, len);
   if (status != AVRO_OK)
     {
       return status;
     }
-  *data = (char *) apr_pcalloc (pool, *len);
+  *data = apr_pcalloc (pool, *len);
   if (!*data)
     {
       return AVRO_FAILURE;
@@ -143,7 +144,7 @@ avro_getbytes (struct avro_io * io, apr_pool_t * pool, char **data,
 }
 
 avro_status_t
-avro_putbool (struct avro_io * io, int boolean)
+avro_write_bool (struct avro_io_writer * io, int boolean)
 {
   char b;
   if (!io)
@@ -155,7 +156,7 @@ avro_putbool (struct avro_io * io, int boolean)
 }
 
 avro_status_t
-avro_getbool (struct avro_io * io, int *boolean)
+avro_read_bool (struct avro_io_reader * io, int *boolean)
 {
   avro_status_t status;
   char b;
@@ -173,7 +174,7 @@ avro_getbool (struct avro_io * io, int *boolean)
 }
 
 avro_status_t
-avro_putint (struct avro_io * io, avro_int_t * ip)
+avro_write_int (struct avro_io_writer * io, avro_int_t * ip)
 {
   avro_status_t status;
   int32_t n = *ip;
@@ -201,7 +202,7 @@ avro_putint (struct avro_io * io, avro_int_t * ip)
 }
 
 avro_status_t
-avro_putlong (struct avro_io *io, avro_long_t * lp)
+avro_write_long (struct avro_io_writer *io, avro_long_t * lp)
 {
   avro_status_t status;
   int64_t n = *lp;
@@ -229,7 +230,7 @@ avro_putlong (struct avro_io *io, avro_long_t * lp)
 }
 
 avro_status_t
-avro_getint (struct avro_io *io, avro_int_t * ip)
+avro_read_int (struct avro_io_reader *io, avro_int_t * ip)
 {
   avro_status_t status;
   int64_t value = 0;
@@ -263,7 +264,7 @@ avro_getint (struct avro_io *io, avro_int_t * ip)
 }
 
 avro_status_t
-avro_getlong (struct avro_io * io, avro_long_t * lp)
+avro_read_long (struct avro_io_reader * io, avro_long_t * lp)
 {
   avro_status_t status;
   int64_t value = 0;

@@ -36,6 +36,8 @@ Trunk (unreleased changes)
     AVRO-149. Add Java command-line executable, "avroj".
     (Philip Zeyliger via cutting)
 
+    AVRO-175. Split the avro_io interface into two interfaces: avro_reader and avro_writer
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

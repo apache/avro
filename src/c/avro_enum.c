@@ -43,25 +43,25 @@ avro_enum_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_enum_read_skip (struct avro_value *value, struct avro_channel *channel,
+avro_enum_read_skip (struct avro_value *value, struct avro_reader *reader,
 		     int skip)
 {
   avro_status_t status;
-  struct avro_io *io;
+  struct avro_io_reader *io;
   struct avro_avro_enum *self =
     container_of (value, struct avro_avro_enum, base_value);
 
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = reader->io;
   if (!io)
     {
       return AVRO_FAILURE;
     }
   /* Read the offset */
-  status = avro_getlong (io, &self->offset);
+  status = avro_read_long (io, &self->offset);
   if (status != AVRO_OK)
     {
       return status;
@@ -76,19 +76,19 @@ avro_enum_read_skip (struct avro_value *value, struct avro_channel *channel,
 }
 
 static avro_status_t
-avro_enum_read (struct avro_value *value, struct avro_channel *channel)
+avro_enum_read (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_enum_read_skip (value, channel, 0);
+  return avro_enum_read_skip (value, reader, 0);
 }
 
 static avro_status_t
-avro_enum_skip (struct avro_value *value, struct avro_channel *channel)
+avro_enum_skip (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_enum_read_skip (value, channel, 1);
+  return avro_enum_read_skip (value, reader, 1);
 }
 
 static avro_status_t
-avro_enum_write (struct avro_value *value, struct avro_channel *channel)
+avro_enum_write (struct avro_value *value, struct avro_writer *writer)
 {
 /* TODO
   struct avro_avro_enum *self =

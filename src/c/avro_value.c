@@ -120,27 +120,27 @@ avro_decorator_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_decorator_read (struct avro_value *value, struct avro_channel *channel)
+avro_decorator_read (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_decorator_value *self =
     container_of (value, struct avro_decorator_value, base_value);
-  return avro_value_read_data (self->decoratee, channel);
+  return avro_value_read_data (self->decoratee, reader);
 }
 
 static avro_status_t
-avro_decorator_skip (struct avro_value *value, struct avro_channel *channel)
+avro_decorator_skip (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_decorator_value *self =
     container_of (value, struct avro_decorator_value, base_value);
-  return avro_value_skip_data (self->decoratee, channel);
+  return avro_value_skip_data (self->decoratee, reader);
 }
 
 static avro_status_t
-avro_decorator_write (struct avro_value *value, struct avro_channel *channel)
+avro_decorator_write (struct avro_value *value, struct avro_writer *writer)
 {
   struct avro_decorator_value *self =
     container_of (value, struct avro_decorator_value, base_value);
-  return avro_value_write_data (self->decoratee, channel);
+  return avro_value_write_data (self->decoratee, writer);
 }
 
 /* Used for recursive schemas */
@@ -222,7 +222,7 @@ avro_value_from_json (struct avro_value_ctx *ctx,
       return NULL;
     }
 
-  return avro_value_registry[avro_type]->private ? NULL:
+  return avro_value_registry[avro_type]->private ? NULL :
     avro_value_registry[avro_type]->create (ctx, parent, subpool, json);
 }
 
@@ -255,39 +255,36 @@ avro_value_create (apr_pool_t * pool, char *jsontext, apr_size_t textlen)
 }
 
 avro_status_t
-avro_value_read_data (struct avro_value * value,
-		      struct avro_channel * channel)
+avro_value_read_data (struct avro_value * value, struct avro_reader * reader)
 {
-  if (!value || !channel)
+  if (!value || !reader)
     {
       return AVRO_FAILURE;
     }
-  return avro_value_registry[value->type]->formats[channel->format].
-    read_data (value, channel);
+  return avro_value_registry[value->type]->formats[reader->format].
+    read_data (value, reader);
 }
 
 avro_status_t
-avro_value_skip_data (struct avro_value * value,
-		      struct avro_channel * channel)
+avro_value_skip_data (struct avro_value * value, struct avro_reader * reader)
 {
-  if (!value || !channel)
+  if (!value || !reader)
     {
       return AVRO_FAILURE;
     }
-  return avro_value_registry[value->type]->formats[channel->format].
-    skip_data (value, channel);
+  return avro_value_registry[value->type]->formats[reader->format].
+    skip_data (value, reader);
 }
 
 avro_status_t
-avro_value_write_data (struct avro_value * value,
-		       struct avro_channel * channel)
+avro_value_write_data (struct avro_value * value, struct avro_writer * writer)
 {
-  if (!value || !channel)
+  if (!value || !writer)
     {
       return AVRO_FAILURE;
     }
-  return avro_value_registry[value->type]->formats[channel->format].
-    write_data (value, channel);
+  return avro_value_registry[value->type]->formats[writer->format].
+    write_data (value, writer);
 }
 
 void

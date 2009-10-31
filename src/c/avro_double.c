@@ -40,45 +40,45 @@ avro_double_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_double_read (struct avro_value *value, struct avro_channel *channel)
+avro_double_read (struct avro_value *value, struct avro_reader *reader)
 {
   double *dp;
   struct avro_double_value *self =
     container_of (value, struct avro_double_value, base_value);
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
   self->value_set = 1;
   dp = &self->value;
-  return avro_getint64_le (channel->io, (int64_t *) dp);
+  return avro_read_int64_le (reader->io, (int64_t *) dp);
 }
 
 static avro_status_t
-avro_double_skip (struct avro_value *value, struct avro_channel *channel)
+avro_double_skip (struct avro_value *value, struct avro_reader *reader)
 {
   double d;
   double *dp = &d;
   struct avro_double_value *self =
     container_of (value, struct avro_double_value, base_value);
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
   self->value_set = 0;
-  return avro_getint64_le (channel->io, (int64_t *) dp);
+  return avro_read_int64_le (reader->io, (int64_t *) dp);
 }
 
 static avro_status_t
-avro_double_write (struct avro_value *value, struct avro_channel *channel)
+avro_double_write (struct avro_value *value, struct avro_writer *writer)
 {
   struct avro_double_value *self =
     container_of (value, struct avro_double_value, base_value);
-  if (!channel)
+  if (!writer)
     {
       return AVRO_FAILURE;
     }
-  return avro_putint64_le (channel->io, (int64_t) self->value);;
+  return avro_write_int64_le (writer->io, (int64_t) self->value);;
 }
 
 static struct avro_value *

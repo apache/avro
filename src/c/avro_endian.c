@@ -19,7 +19,7 @@ under the License.
 #include "avro_private.h"
 
 avro_status_t
-avro_getint32_le (struct avro_io *io, int32_t * value)
+avro_read_int32_le (struct avro_io_reader *io, int32_t * value)
 {
   avro_status_t status;
   uint8_t buf[4];
@@ -39,7 +39,7 @@ avro_getint32_le (struct avro_io *io, int32_t * value)
 }
 
 avro_status_t
-avro_putint32_le (struct avro_io * io, const int32_t value)
+avro_write_int32_le (struct avro_io_writer * io, const int32_t value)
 {
   uint8_t buf[4];
   buf[0] = (uint8_t) (value >> 0);
@@ -50,11 +50,11 @@ avro_putint32_le (struct avro_io * io, const int32_t value)
     {
       return AVRO_FAILURE;
     }
-  return io->write (io, (char *) buf, sizeof (buf));
+  return io->write (io, (void *) buf, sizeof (buf));
 }
 
 avro_status_t
-avro_getint32_be (struct avro_io *io, int32_t * value)
+avro_read_int32_be (struct avro_io_reader *io, int32_t * value)
 {
   avro_status_t status;
   uint8_t buf[4];
@@ -74,7 +74,7 @@ avro_getint32_be (struct avro_io *io, int32_t * value)
 }
 
 avro_status_t
-avro_putint32_be (struct avro_io * io, const int32_t value)
+avro_write_int32_be (struct avro_io_writer * io, const int32_t value)
 {
   uint8_t buf[4];
   buf[0] = (uint8_t) (value >> 24);
@@ -85,12 +85,12 @@ avro_putint32_be (struct avro_io * io, const int32_t value)
     {
       return AVRO_FAILURE;
     }
-  return io->write (io, (char *) buf, sizeof (buf));
+  return io->write (io, (void *) buf, sizeof (buf));
 }
 
 
 avro_status_t
-avro_getint64_le (struct avro_io *io, int64_t * value)
+avro_read_int64_le (struct avro_io_reader *io, int64_t * value)
 {
   avro_status_t status;
   uint8_t buf[8];
@@ -114,7 +114,7 @@ avro_getint64_le (struct avro_io *io, int64_t * value)
 }
 
 avro_status_t
-avro_putint64_le (struct avro_io * io, const int64_t value)
+avro_write_int64_le (struct avro_io_writer * io, const int64_t value)
 {
   uint8_t buf[8];
   buf[0] = (uint8_t) (value >> 0);
@@ -129,11 +129,11 @@ avro_putint64_le (struct avro_io * io, const int64_t value)
     {
       return AVRO_FAILURE;
     }
-  return io->write (io, (char *) buf, sizeof (buf));
+  return io->write (io, (void *) buf, sizeof (buf));
 }
 
 avro_status_t
-avro_getint64_be (struct avro_io *io, int64_t * value)
+avro_read_int64_be (struct avro_io_reader *io, int64_t * value)
 {
   avro_status_t status;
   uint8_t buf[8];
@@ -157,7 +157,7 @@ avro_getint64_be (struct avro_io *io, int64_t * value)
 }
 
 avro_status_t
-avro_putint64_be (struct avro_io * io, const int64_t value)
+avro_write_int64_be (struct avro_io_writer * io, const int64_t value)
 {
   uint8_t buf[8];
   buf[0] = (uint8_t) (value >> 56);
@@ -172,5 +172,5 @@ avro_putint64_be (struct avro_io * io, const int64_t value)
     {
       return AVRO_FAILURE;
     }
-  return io->write (io, (char *) buf, sizeof (buf));
+  return io->write (io, (void *) buf, sizeof (buf));
 }

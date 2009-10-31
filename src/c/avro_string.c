@@ -41,45 +41,45 @@ avro_string_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_string_read (struct avro_value *value, struct avro_channel *channel)
+avro_string_read (struct avro_value *value, struct avro_reader *reader)
 {
-  struct avro_io *io;
+  struct avro_io_reader *io;
   struct avro_string_value *self =
     container_of (value, struct avro_string_value, base_value);
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = reader->io;
   if (!io)
     {
       return AVRO_FAILURE;
     }
   apr_pool_clear (self->pool);
   self->value_set = 1;
-  return avro_getstring (io, self->pool, &self->value);
+  return avro_read_string (io, self->pool, &self->value);
 }
 
 static avro_status_t
-avro_string_skip (struct avro_value *value, struct avro_channel *channel)
+avro_string_skip (struct avro_value *value, struct avro_reader *reader)
 {
   avro_status_t status;
   avro_long_t len;
-  struct avro_io *io;
+  struct avro_io_reader *io;
   struct avro_string_value *self =
     container_of (value, struct avro_string_value, base_value);
 
   self->value_set = 0;
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = reader->io;
   if (!io)
     {
       return AVRO_FAILURE;
     }
-  status = avro_getlong (io, &len);
+  status = avro_read_long (io, &len);
   if (status != AVRO_OK)
     {
       return status;
@@ -92,21 +92,21 @@ avro_string_skip (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-avro_string_write (struct avro_value *value, struct avro_channel *channel)
+avro_string_write (struct avro_value *value, struct avro_writer *writer)
 {
-  struct avro_io *io;
+  struct avro_io_writer *io;
   struct avro_string_value *self =
     container_of (value, struct avro_string_value, base_value);
-  if (!channel)
+  if (!writer)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = writer->io;
   if (!io)
     {
       return AVRO_FAILURE;
     }
-  return avro_putstring (io, self->pool, self->value);
+  return avro_write_string (io, self->pool, self->value);
 }
 
 static struct avro_value *

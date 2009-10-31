@@ -41,18 +41,18 @@ avro_boolean_print (struct avro_value *value, FILE * fp)
 
 static avro_status_t
 avro_boolean_read_skip (struct avro_value *value,
-			struct avro_channel *channel, int skip)
+			struct avro_reader *reader, int skip)
 {
   char b;
   avro_status_t status;
-  struct avro_io *io;
+  struct avro_io_reader *io;
   struct avro_boolean_value *self =
     container_of (value, struct avro_boolean_value, base_value);
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = reader->io;
   if (!io)
     {
       return AVRO_FAILURE;
@@ -79,29 +79,29 @@ avro_boolean_read_skip (struct avro_value *value,
 }
 
 static avro_status_t
-avro_boolean_read (struct avro_value *value, struct avro_channel *channel)
+avro_boolean_read (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_boolean_read_skip (value, channel, 0);
+  return avro_boolean_read_skip (value, reader, 0);
 }
 
 static avro_status_t
-avro_boolean_skip (struct avro_value *value, struct avro_channel *channel)
+avro_boolean_skip (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_boolean_read_skip (value, channel, 1);
+  return avro_boolean_read_skip (value, reader, 1);
 }
 
 static avro_status_t
-avro_boolean_write (struct avro_value *value, struct avro_channel *channel)
+avro_boolean_write (struct avro_value *value, struct avro_writer *writer)
 {
   char b;
   struct avro_boolean_value *self =
     container_of (value, struct avro_boolean_value, base_value);
-  struct avro_io *io;
-  if (!channel)
+  struct avro_io_writer *io;
+  if (!writer)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = writer->io;
   if (!io)
     {
       return AVRO_FAILURE;

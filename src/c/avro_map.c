@@ -38,7 +38,7 @@ avro_map_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_map_read (struct avro_value *value, struct avro_channel *channel)
+avro_map_read (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_map_value *self =
     container_of (value, struct avro_map_value, base_value);
@@ -46,7 +46,7 @@ avro_map_read (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-avro_map_skip (struct avro_value *value, struct avro_channel *channel)
+avro_map_skip (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_map_value *self =
     container_of (value, struct avro_map_value, base_value);
@@ -54,7 +54,7 @@ avro_map_skip (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-avro_map_write (struct avro_value *value, struct avro_channel *channel)
+avro_map_write (struct avro_value *value, struct avro_writer *writer)
 {
   struct avro_map_value *self =
     container_of (value, struct avro_map_value, base_value);

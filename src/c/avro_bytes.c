@@ -21,7 +21,7 @@ under the License.
 
 struct avro_bytes_value
 {
-  char *value;
+  void *value;
   int value_set;
   avro_long_t size;
   avro_value base_value;
@@ -39,22 +39,22 @@ avro_bytes_print (struct avro_value *value, FILE * fp)
   if (self->value_set)
     {
       fprintf (fp, " size=%ld ", self->size);
-      dump (fp, self->value, self->size);
+      dump (fp, (char *) self->value, self->size);
     }
   fprintf (fp, "\n");
 }
 
 static avro_status_t
-avro_bytes_read (struct avro_value *value, struct avro_channel *channel)
+avro_bytes_read (struct avro_value *value, struct avro_reader *reader)
 {
-  struct avro_io *io;
+  struct avro_io_reader *io;
   struct avro_bytes_value *self =
     container_of (value, struct avro_bytes_value, base_value);
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = reader->io;
   if (!io)
     {
       return AVRO_FAILURE;
@@ -62,29 +62,29 @@ avro_bytes_read (struct avro_value *value, struct avro_channel *channel)
   /* Flush old data to make room for new */
   self->value_set = 1;
   apr_pool_clear (self->pool);
-  return avro_getbytes (io, self->pool, &self->value, &self->size);
+  return avro_read_bytes (io, self->pool, &self->value, &self->size);
 }
 
 static avro_status_t
-avro_bytes_skip (struct avro_value *value, struct avro_channel *channel)
+avro_bytes_skip (struct avro_value *value, struct avro_reader *reader)
 {
   avro_status_t status;
-  struct avro_io *io;
+  struct avro_io_reader *io;
   avro_long_t len;
   struct avro_bytes_value *self =
     container_of (value, struct avro_bytes_value, base_value);
 
   self->value_set = 0;
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = reader->io;
   if (!io)
     {
       return AVRO_FAILURE;
     }
-  status = avro_getlong (io, &len);
+  status = avro_read_long (io, &len);
   if (status != AVRO_OK)
     {
       return AVRO_FAILURE;
@@ -93,7 +93,7 @@ avro_bytes_skip (struct avro_value *value, struct avro_channel *channel)
 }
 
 static avro_status_t
-avro_bytes_write (struct avro_value *value, struct avro_channel *channel)
+avro_bytes_write (struct avro_value *value, struct avro_writer *writer)
 {
   struct avro_bytes_value *self =
     container_of (value, struct avro_bytes_value, base_value);

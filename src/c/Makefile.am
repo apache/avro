@@ -1,5 +1,3 @@
-AUTOMAKE_OPTIONS=dist-bzip2 
-
 # -pedantic
 AM_CFLAGS=$(APR_CFLAGS) $(APR_INCLUDES) $(APU_INCLUDES) -Wall 
 C_DOCS_OUTPUT ?= "docs/dox"
@@ -16,30 +14,14 @@ avro_array.c avro_boolean.c avro_bytes.c avro_double.c avro_enum.c avro_fixed.c 
 avro_float.c avro_int.c avro_long.c avro_map.c avro_null.c \
 avro_record.c avro_string.c avro_union.c container_of.h \
 avro_io_file.c avro_io_socket.c avro_io_memory.c \
-avro_file_container.c avro_endian.c avro_primitives.c
+avro_endian.c avro_primitives.c avro_file_container.c
 libavro_la_LDFLAGS = \
         -version-info $(LIBAVRO_VERSION) \
         -release $(VERSION) \
         -export-dynamic
 
 
-check_PROGRAMS=test_json_parser test_avro_schema 
-
-# We don't need to auto-generate the json parser code each time.  It makes
-# the build overly complicated and isn't required since the json parser
-# doesn't require frequent updates
-# 
-#lemon: $(top_srcdir)/lemon.c $(top_srcdir)/lempar.c
-#	$(CC) -o $@ $(top_srcdir)/lemon.c
-#	-cp $(top_srcdir)/lempar.c .
-#
-#json_parser.c json_parser.h: $(top_srcdir)/json_parser.y lemon
-#	-cp $(top_srcdir)/json_parser.y .
-#	./lemon json_parser.y
-#
-# Make sure to generate the json_parser in the source directory before distribution
-#dist-hook: json_parser.h json_parser.c
-#	@[ $(top_srcdir) = $(top_builddir) ] || rm -f json_parser.y lempar.c json_parser.c json_parser.h
+check_PROGRAMS=test_json_parser test_avro_schema
 
 dist-hook: docs
 
@@ -78,3 +60,20 @@ docs:
 .PHONY: docs 
 
 CLEANFILES=$(top_srcdir)/*~ trace.txt json_parser.out lemon
+
+
+# We don't need to auto-generate the json parser code each time.  It makes
+# the build overly complicated and isn't required since the json parser
+# doesn't require frequent updates
+# 
+#lemon: $(top_srcdir)/lemon.c $(top_srcdir)/lempar.c
+#	$(CC) -o $@ $(top_srcdir)/lemon.c
+#	-cp $(top_srcdir)/lempar.c .
+#
+#json_parser.c json_parser.h: $(top_srcdir)/json_parser.y lemon
+#	-cp $(top_srcdir)/json_parser.y .
+#	./lemon json_parser.y
+#
+# Make sure to generate the json_parser in the source directory before distribution
+#dist-hook: json_parser.h json_parser.c
+#	@[ $(top_srcdir) = $(top_builddir) ] || rm -f json_parser.y lempar.c json_parser.c json_parser.h

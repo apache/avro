@@ -24,7 +24,7 @@ main (void)
   char *jsontext;
   apr_size_t jsonlen;
   struct avro_value *value;
-  struct avro_channel *channel;
+  struct avro_reader *reader;
 
   if (!srcdir)
     {
@@ -60,16 +60,16 @@ main (void)
     {
       return EXIT_FAILURE;
     }
-  channel = avro_file_container_create (pool, path, APR_READ, APR_OS_DEFAULT);
-  if (!channel)
+  reader =
+    avro_reader_file_container_create (pool, path, APR_READ, APR_OS_DEFAULT);
+  if (!reader)
     {
       fprintf (stderr, "Failed to open data file %s\n", path);
       return EXIT_FAILURE;
     }
 
-  value->read_data (value, channel);
-  value->print_info (value, stderr);
-
+  avro_value_read_data (value, reader);
+  avro_value_print_info (value, stderr);
   apr_pool_destroy (pool);
   return EXIT_SUCCESS;
 }

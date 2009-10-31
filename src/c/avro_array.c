@@ -46,28 +46,28 @@ avro_array_print (struct avro_value *value, FILE * fp)
 }
 
 static avro_status_t
-avro_array_read_skip (struct avro_value *value, struct avro_channel *channel,
+avro_array_read_skip (struct avro_value *value, struct avro_reader *reader,
 		      int skip)
 {
   avro_status_t status;
   avro_long_t i, count;
   struct avro_array_value *self =
     container_of (value, struct avro_array_value, base_value);
-  struct avro_io *io;
+  struct avro_io_reader *io;
 
   apr_pool_clear (self->pool);
 
-  if (!channel)
+  if (!reader)
     {
       return AVRO_FAILURE;
     }
-  io = channel->io;
+  io = reader->io;
   if (!io)
     {
       return AVRO_FAILURE;
     }
 
-  status = avro_getlong (io, &count);
+  status = avro_read_long (io, &count);
   if (status != AVRO_OK)
     {
       return status;
@@ -83,19 +83,19 @@ avro_array_read_skip (struct avro_value *value, struct avro_channel *channel,
 }
 
 static avro_status_t
-avro_array_read (struct avro_value *value, struct avro_channel *channel)
+avro_array_read (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_array_read_skip (value, channel, 0);
+  return avro_array_read_skip (value, reader, 0);
 }
 
 static avro_status_t
-avro_array_skip (struct avro_value *value, struct avro_channel *channel)
+avro_array_skip (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_array_read_skip (value, channel, 1);
+  return avro_array_read_skip (value, reader, 1);
 }
 
 static avro_status_t
-avro_array_write (struct avro_value *value, struct avro_channel *channel)
+avro_array_write (struct avro_value *value, struct avro_writer *writer)
 {
 /* TODO
   struct avro_array_value *self =

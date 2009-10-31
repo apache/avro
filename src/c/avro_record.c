@@ -64,27 +64,27 @@ avro_record_print (struct avro_value *value, FILE * fp)
 
 /* FIELDS */
 static avro_status_t
-avro_field_read (struct avro_value *value, struct avro_channel *channel)
+avro_field_read (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_field_value *self =
     container_of (value, struct avro_field_value, base_value);
-  return avro_value_read_data (self->value, channel);
+  return avro_value_read_data (self->value, reader);
 }
 
 static avro_status_t
-avro_field_skip (struct avro_value *value, struct avro_channel *channel)
+avro_field_skip (struct avro_value *value, struct avro_reader *reader)
 {
   struct avro_field_value *self =
     container_of (value, struct avro_field_value, base_value);
-  return avro_value_skip_data (self->value, channel);
+  return avro_value_skip_data (self->value, reader);
 }
 
 static avro_status_t
-avro_field_write (struct avro_value *value, struct avro_channel *channel)
+avro_field_write (struct avro_value *value, struct avro_writer *writer)
 {
   struct avro_field_value *self =
     container_of (value, struct avro_field_value, base_value);
-  return avro_value_write_data (self->value, channel);
+  return avro_value_write_data (self->value, writer);
 }
 
 /* The field constructor is private so we register a noop */
@@ -143,7 +143,7 @@ avro_field_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 }
 
 static avro_status_t
-avro_record_read_skip (struct avro_value *value, struct avro_channel *channel,
+avro_record_read_skip (struct avro_value *value, struct avro_reader *reader,
 		       int skip)
 {
   int i;
@@ -156,11 +156,11 @@ avro_record_read_skip (struct avro_value *value, struct avro_channel *channel,
 	((struct avro_value **) self->fields->elts)[i];
       if (skip)
 	{
-	  avro_value_skip_data (field, channel);
+	  avro_value_skip_data (field, reader);
 	}
       else
 	{
-	  avro_value_read_data (field, channel);
+	  avro_value_read_data (field, reader);
 	}
     }
   return AVRO_OK;
@@ -168,19 +168,19 @@ avro_record_read_skip (struct avro_value *value, struct avro_channel *channel,
 
 /* RECORD */
 static avro_status_t
-avro_record_read (struct avro_value *value, struct avro_channel *channel)
+avro_record_read (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_record_read_skip (value, channel, 0);
+  return avro_record_read_skip (value, reader, 0);
 }
 
 static avro_status_t
-avro_record_skip (struct avro_value *value, struct avro_channel *channel)
+avro_record_skip (struct avro_value *value, struct avro_reader *reader)
 {
-  return avro_record_read_skip (value, channel, 1);
+  return avro_record_read_skip (value, reader, 1);
 }
 
 static avro_status_t
-avro_record_write (struct avro_value *value, struct avro_channel *channel)
+avro_record_write (struct avro_value *value, struct avro_writer *writer)
 {
 /* TODO:
   struct avro_record_value *record =
