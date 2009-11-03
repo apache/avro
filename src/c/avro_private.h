@@ -202,8 +202,15 @@ avro_status_t avro_write_long (struct avro_io_writer *writer,
 avro_status_t avro_read_int (struct avro_io_reader *reader, avro_int_t * ip);
 avro_status_t avro_read_long (struct avro_io_reader *reader,
 			      avro_long_t * lp);
+avro_status_t avro_write_float (struct avro_io_writer *io, float value);
+avro_status_t avro_read_float (struct avro_io_reader *io, float *fp);
+avro_status_t avro_write_double (struct avro_io_writer *io, double value);
+avro_status_t avro_read_double (struct avro_io_reader *io, double *fp);
 
+
+#ifndef DEBUGGING
 #define DEBUGGING 0
+#endif
 
 #if DEBUGGING
 #define DEBUG(__cmd) __cmd

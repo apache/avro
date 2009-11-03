@@ -1,8 +1,10 @@
 # -pedantic
 AM_CFLAGS=$(APR_CFLAGS) $(APR_INCLUDES) $(APU_INCLUDES) -Wall 
+ACLOCAL_AMFLAGS=-I m4
+
 C_DOCS_OUTPUT ?= "docs/dox"
 
-EXTRA_DIST=json_parser.y lemon.c lempar.c json_tests avro_schema_tests docs version.sh
+EXTRA_DIST=json_parser.y lemon.c lempar.c json_tests avro_schema_tests docs version.sh m4
 
 include_HEADERS = avro.h
 
@@ -21,7 +23,7 @@ libavro_la_LDFLAGS = \
         -export-dynamic
 
 
-check_PROGRAMS=test_json_parser test_avro_schema
+check_PROGRAMS=test_json_parser test_avro_schema test_avro_primitives
 
 dist-hook: docs
 
@@ -32,6 +34,11 @@ test_json_parser_LDADD=$(test_LDADD)
 
 test_avro_schema=test_avro_schema.c
 test_avro_schema_LDADD=$(test_LDADD)
+
+test_avro_primitives=test_avro_primitives.c
+test_avro_primitives_LDADD=$(test_LDADD)
+# use -std=c99 to avoid warings about universal character names
+test_avro_primitives_CFLAGS=$(AM_CFLAGS) -std=c99
 
 #test_avro_interop=test_avro_interop.c
 #test_avro_interop_LDADD=$(test_LDADD)

@@ -51,7 +51,7 @@ avro_double_read (struct avro_value *value, struct avro_reader *reader)
     }
   self->value_set = 1;
   dp = &self->value;
-  return avro_read_int64_le (reader->io, (int64_t *) dp);
+  return avro_read_double (reader->io, dp);
 }
 
 static avro_status_t
@@ -66,7 +66,7 @@ avro_double_skip (struct avro_value *value, struct avro_reader *reader)
       return AVRO_FAILURE;
     }
   self->value_set = 0;
-  return avro_read_int64_le (reader->io, (int64_t *) dp);
+  return avro_read_double (reader->io, dp);
 }
 
 static avro_status_t
@@ -78,7 +78,7 @@ avro_double_write (struct avro_value *value, struct avro_writer *writer)
     {
       return AVRO_FAILURE;
     }
-  return avro_write_int64_le (writer->io, (int64_t) self->value);;
+  return avro_write_double (writer->io, self->value);
 }
 
 static struct avro_value *

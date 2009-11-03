@@ -38,7 +38,10 @@ Trunk (unreleased changes)
     AVRO-149. Add Java command-line executable, "avroj".
     (Philip Zeyliger via cutting)
 
-    AVRO-175. Split the avro_io interface into two interfaces: avro_reader and avro_writer
+    AVRO-175. Split the avro_io interface into two interfaces: avro_reader 
+    and avro_writer (massie)
+
+    AVRO-179. Add units tests for all Avro C primitives (massie)
 
   OPTIMIZATIONS
 

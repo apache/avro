@@ -27,7 +27,7 @@ avro_read_int32_le (struct avro_io_reader *io, int32_t * value)
     {
       return AVRO_FAILURE;
     }
-  status = io->read (io, (char *) buf, sizeof (buf));
+  status = io->read (io, (void *) buf, sizeof (buf));
   if (status != AVRO_OK)
     {
       return status;
@@ -62,7 +62,7 @@ avro_read_int32_be (struct avro_io_reader *io, int32_t * value)
     {
       return AVRO_FAILURE;
     }
-  status = io->read (io, (char *) buf, sizeof (buf));
+  status = io->read (io, (void *) buf, sizeof (buf));
   if (status != AVRO_OK)
     {
       return status;
@@ -98,7 +98,7 @@ avro_read_int64_le (struct avro_io_reader *io, int64_t * value)
     {
       return AVRO_FAILURE;
     }
-  status = io->read (io, (char *) buf, sizeof (buf));
+  status = io->read (io, (void *) buf, sizeof (buf));
   if (status != AVRO_OK)
     {
       return status;
@@ -141,7 +141,7 @@ avro_read_int64_be (struct avro_io_reader *io, int64_t * value)
     {
       return AVRO_FAILURE;
     }
-  status = io->read (io, (char *) buf, sizeof (buf));
+  status = io->read (io, (void *) buf, sizeof (buf));
   if (status != AVRO_OK)
     {
       return status;

@@ -16,22 +16,21 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
-
 #include "avro_private.h"
 
 struct avro_io_memory_reader
 {
   void *addr;
-  uint64_t used;
-  uint64_t len;
+  avro_long_t used;
+  avro_long_t len;
   struct avro_io_reader io;
 };
 
 struct avro_io_memory_writer
 {
   void *addr;
-  uint64_t used;
-  uint64_t len;
+  avro_long_t used;
+  avro_long_t len;
   struct avro_io_writer io;
 };
 
@@ -46,6 +45,9 @@ avro_io_memory_read (struct avro_io_reader *io, void *addr, avro_long_t len)
     }
   memcpy (addr, self->addr + self->used, len);
   self->used += len;
+  DEBUG (fprintf
+	 (stderr, "avro_io_memory_read %ld bytes, %ld/%ld used\n", len,
+	  self->used, self->len));
   return AVRO_OK;
 }
 
@@ -59,6 +61,9 @@ avro_io_memory_skip (struct avro_io_reader *io, avro_long_t len)
       return AVRO_FAILURE;
     }
   self->used += len;
+  DEBUG (fprintf
+	 (stderr, "avro_io_memory_skip %ld bytes, %ld/%ld used\n", len,
+	  self->used, self->len));
   return AVRO_OK;
 }
 
@@ -67,12 +72,15 @@ avro_io_memory_write (struct avro_io_writer *io, void *addr, avro_long_t len)
 {
   struct avro_io_memory_writer *self =
     container_of (io, struct avro_io_memory_writer, io);
-  if ((self->len - self->used) < len)
+  if (len < 0 || (self->len - self->used) < len)
     {
       return AVRO_FAILURE;
     }
   memcpy (self->addr + self->used, addr, len);
   self->used += len;
+  DEBUG (fprintf
+	 (stderr, "avro_io_memory_write %d bytes, %d/%d used\n", len,
+	  self->used, self->len); dump (stderr, addr, len));
   return AVRO_OK;
 }
 

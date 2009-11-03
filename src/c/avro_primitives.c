@@ -177,7 +177,7 @@ avro_status_t
 avro_write_int (struct avro_io_writer * io, avro_int_t * ip)
 {
   avro_status_t status;
-  int32_t n = *ip;
+  uint32_t n;
   uint8_t b;
 
   if (!io || !ip)
@@ -185,27 +185,27 @@ avro_write_int (struct avro_io_writer * io, avro_int_t * ip)
       return AVRO_FAILURE;
     }
 
-  /* move sign to low-order bit */
-  n = (n << 1) ^ (n >> 31);
+  n = (*ip << 1) ^ (*ip >> 31);
   while ((n & ~0x7F) != 0)
     {
       b = ((((uint8_t) n) & 0x7F) | 0x80);
-      status = io->write (io, (char *) &b, 1);
+      status = io->write (io, (void *) &b, 1);
       if (status != AVRO_OK)
 	{
 	  return status;
 	}
       n >>= 7;
     }
+
   b = (uint8_t) n;
-  return io->write (io, (char *) &b, 1);
+  return io->write (io, (void *) &b, 1);
 }
 
 avro_status_t
 avro_write_long (struct avro_io_writer *io, avro_long_t * lp)
 {
   avro_status_t status;
-  int64_t n = *lp;
+  uint64_t n;
   uint8_t b;
 
   if (!io || !lp)
@@ -213,12 +213,11 @@ avro_write_long (struct avro_io_writer *io, avro_long_t * lp)
       return AVRO_FAILURE;
     }
 
-  /* move sign to low-order bit */
-  n = (n << 1) ^ (n >> 63);
+  n = (*lp << 1) ^ (*lp >> 63);
   while ((n & ~0x7F) != 0)
     {
       b = ((((uint8_t) n) & 0x7F) | 0x80);
-      status = io->write (io, (char *) &b, 1);
+      status = io->write (io, (void *) &b, 1);
       if (status != AVRO_OK)
 	{
 	  return status;
@@ -226,14 +225,14 @@ avro_write_long (struct avro_io_writer *io, avro_long_t * lp)
       n >>= 7;
     }
   b = (uint8_t) n;
-  return io->write (io, (char *) &b, 1);
+  return io->write (io, (void *) &b, 1);
 }
 
 avro_status_t
 avro_read_int (struct avro_io_reader *io, avro_int_t * ip)
 {
   avro_status_t status;
-  int64_t value = 0;
+  uint32_t value = 0;
   int offset = 0;
   uint8_t b;
   const int MAX_VARINT_BUF_SIZE = 5;
@@ -258,7 +257,6 @@ avro_read_int (struct avro_io_reader *io, avro_int_t * ip)
       ++offset;
     }
   while (b & 0x80);
-  /* back to two's-complement value; */
   *ip = (value >> 1) ^ -(value & 1);
   return AVRO_OK;
 }
@@ -267,7 +265,7 @@ avro_status_t
 avro_read_long (struct avro_io_reader * io, avro_long_t * lp)
 {
   avro_status_t status;
-  int64_t value = 0;
+  uint64_t value = 0;
   int offset = 0;
   uint8_t b;
   const int MAX_VARINT_BUF_SIZE = 10;
@@ -292,7 +290,82 @@ avro_read_long (struct avro_io_reader * io, avro_long_t * lp)
       ++offset;
     }
   while (b & 0x80);
-  /* back to two's-complement value; */
   *lp = (value >> 1) ^ -(value & 1);
+  return AVRO_OK;
+}
+
+avro_status_t
+avro_write_float (struct avro_io_writer * io, float value)
+{
+  union
+  {
+    float f;
+    int32_t i;
+  } v;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+  v.f = value;
+  return avro_write_int32_le (io, (const int32_t) v.i);
+}
+
+avro_status_t
+avro_read_float (struct avro_io_reader *io, float *fp)
+{
+  avro_status_t status;
+  union
+  {
+    float f;
+    int32_t i;
+  } v;
+  if (!io || !fp)
+    {
+      return AVRO_FAILURE;
+    }
+  status = avro_read_int32_le (io, &v.i);
+  if (status != AVRO_OK)
+    {
+      return status;
+    }
+  *fp = v.f;
+  return AVRO_OK;
+}
+
+avro_status_t
+avro_write_double (struct avro_io_writer * io, double value)
+{
+  union
+  {
+    double d;
+    int64_t i;
+  } v;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+  v.d = value;
+  return avro_write_int64_le (io, v.i);
+}
+
+avro_status_t
+avro_read_double (struct avro_io_reader * io, double *dp)
+{
+  avro_status_t status;
+  union
+  {
+    double d;
+    int64_t i;
+  } v;
+  if (!io || !dp)
+    {
+      return AVRO_FAILURE;
+    }
+  status = avro_read_int64_le (io, &v.i);
+  if (status != AVRO_OK)
+    {
+      return AVRO_FAILURE;
+    }
+  *dp = v.d;
   return AVRO_OK;
 }

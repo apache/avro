@@ -51,7 +51,7 @@ avro_float_read (struct avro_value *value, struct avro_reader *reader)
     }
   fp = &self->value;
   self->value_set = 1;
-  return avro_read_int32_le (reader->io, (int32_t *) fp);
+  return avro_read_float (reader->io, fp);
 }
 
 static avro_status_t
@@ -66,7 +66,7 @@ avro_float_skip (struct avro_value *value, struct avro_reader *reader)
       return AVRO_FAILURE;
     }
   self->value_set = 0;
-  return avro_read_int32_le (reader->io, (int32_t *) fp);
+  return avro_read_float (reader->io, fp);
 }
 
 static avro_status_t
@@ -78,7 +78,7 @@ avro_float_write (struct avro_value *value, struct avro_writer *writer)
     {
       return AVRO_FAILURE;
     }
-  return avro_write_int32_le (writer->io, (int32_t) self->value);
+  return avro_write_float (writer->io, self->value);
 }
 
 static struct avro_value *
