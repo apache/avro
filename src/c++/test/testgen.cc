@@ -34,7 +34,7 @@
 
 std::string gInputSchema ("jsonschemas/bigrecord");
 
-void serialize(const avrouser::RootRecord &rec) 
+void serializeToScreen(const testgen::RootRecord &rec) 
 {
     avro::ScreenStreamer os;
     avro::Writer writer(os);
@@ -42,7 +42,7 @@ void serialize(const avrouser::RootRecord &rec)
     avro::serialize(writer, rec);
 }
 
-void serializeValid(const avro::ValidSchema &valid, const avrouser::RootRecord &rec) 
+void serializeToScreenValid(const avro::ValidSchema &valid, const testgen::RootRecord &rec) 
 {
     avro::ScreenStreamer os;
     avro::ValidatingWriter writer(valid, os);
@@ -50,7 +50,7 @@ void serializeValid(const avro::ValidSchema &valid, const avrouser::RootRecord &
     avro::serialize(writer, rec);
 }
 
-void checkArray(const avrouser::Array_of_double &a1, const avrouser::Array_of_double &a2) 
+void checkArray(const testgen::Array_of_double &a1, const testgen::Array_of_double &a2) 
 {
     BOOST_CHECK_EQUAL(a1.value.size(), 3U);
     BOOST_CHECK_EQUAL(a1.value.size(), a2.value.size());
@@ -59,12 +59,12 @@ void checkArray(const avrouser::Array_of_double &a1, const avrouser::Array_of_do
     }
 }
 
-void checkMap(const avrouser::Map_of_int &map1, const avrouser::Map_of_int &map2) 
+void checkMap(const testgen::Map_of_int &map1, const testgen::Map_of_int &map2) 
 {
     BOOST_CHECK_EQUAL(map1.value.size(), map2.value.size());
-    avrouser::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
-    avrouser::Map_of_int::MapType::const_iterator end   = map1.value.end();
-    avrouser::Map_of_int::MapType::const_iterator iter2 = map2.value.begin();
+    testgen::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
+    testgen::Map_of_int::MapType::const_iterator end   = map1.value.end();
+    testgen::Map_of_int::MapType::const_iterator iter2 = map2.value.begin();
 
     while(iter1 != end) {
         BOOST_CHECK_EQUAL(iter1->first, iter2->first);
@@ -83,9 +83,18 @@ void checkBytes(const std::vector<uint8_t> &v1, const std::vector<uint8_t> &v2)
     }
 }
 
-void checkOk(const avrouser::RootRecord &rec1, const avrouser::RootRecord &rec2)
+void checkNested(const testgen::Nested &rec1, const testgen::Nested &rec2)
+{
+    BOOST_CHECK_EQUAL(rec1.inval1, rec2.inval1);
+    BOOST_CHECK_EQUAL(rec1.inval2, rec2.inval2);
+    BOOST_CHECK_EQUAL(rec1.inval3, rec2.inval3);
+}
+
+void checkOk(const testgen::RootRecord &rec1, const testgen::RootRecord &rec2)
 {
     BOOST_CHECK_EQUAL(rec1.mylong, rec1.mylong);
+
+    checkNested(rec1.nestedrecord, rec2.nestedrecord);
     checkMap(rec1.mymap, rec2.mymap);
     checkArray(rec1.myarray, rec2.myarray);
 
@@ -95,7 +104,7 @@ void checkOk(const avrouser::RootRecord &rec1, const avrouser::RootRecord &rec2)
     // in this test I know choice was 1
     {
         BOOST_CHECK_EQUAL(rec1.myunion.choice, 1);
-        checkMap(rec1.myunion.getValue<avrouser::Map_of_int>(), rec2.myunion.getValue<avrouser::Map_of_int>());
+        checkMap(rec1.myunion.getValue<testgen::Map_of_int>(), rec2.myunion.getValue<testgen::Map_of_int>());
     }
 
     BOOST_CHECK_EQUAL(rec1.anotherunion.choice, rec2.anotherunion.choice);
@@ -103,17 +112,20 @@ void checkOk(const avrouser::RootRecord &rec1, const avrouser::RootRecord &rec2)
     {
         BOOST_CHECK_EQUAL(rec1.anotherunion.choice, 0);
         typedef std::vector<uint8_t> mytype;
-        checkBytes(rec1.anotherunion.getValue<mytype>(), rec2.anotherunion.getValue<avrouser::Union_of_bytes_null::T0>());
+        checkBytes(rec1.anotherunion.getValue<mytype>(), rec2.anotherunion.getValue<testgen::Union_of_bytes_null::T0>());
     }
 
+    checkNested(rec1.anothernested, rec2.anothernested);
+
     BOOST_CHECK_EQUAL(rec1.mybool, rec2.mybool);
-    for(int i = 0; i < static_cast<int>(avrouser::md5::fixedSize); ++i) {
+
+    for(int i = 0; i < static_cast<int>(testgen::md5::fixedSize); ++i) {
         BOOST_CHECK_EQUAL(rec1.myfixed.value[i], rec2.myfixed.value[i]);
     }
     BOOST_CHECK_EQUAL(rec1.anotherint, rec1.anotherint);
 }
 
-void testParser(const avrouser::RootRecord &myRecord)
+void testParser(const testgen::RootRecord &myRecord)
 {
     std::ostringstream ostring;
     avro::OStreamer os(ostring);
@@ -121,7 +133,7 @@ void testParser(const avrouser::RootRecord &myRecord)
 
     avro::serialize(s, myRecord); 
 
-    avrouser::RootRecord inRecord;
+    testgen::RootRecord inRecord;
     std::istringstream istring(ostring.str());
     avro::IStreamer is(istring);
     avro::Reader p(is);
@@ -130,7 +142,7 @@ void testParser(const avrouser::RootRecord &myRecord)
     checkOk(myRecord, inRecord);
 }
 
-void testParserValid(avro::ValidSchema &valid, const avrouser::RootRecord &myRecord)
+void testParserValid(avro::ValidSchema &valid, const testgen::RootRecord &myRecord)
 {
     std::ostringstream ostring;
     avro::OStreamer os(ostring);
@@ -138,7 +150,7 @@ void testParserValid(avro::ValidSchema &valid, const avrouser::RootRecord &myRec
 
     avro::serialize(s, myRecord);
 
-    avrouser::RootRecord inRecord;
+    testgen::RootRecord inRecord;
     std::istringstream istring(ostring.str());
     avro::IStreamer is(istring);
     avro::ValidatingReader p(valid, is);
@@ -147,17 +159,17 @@ void testParserValid(avro::ValidSchema &valid, const avrouser::RootRecord &myRec
     checkOk(myRecord, inRecord);
 }
 
-void runTests(const avrouser::RootRecord myRecord) 
+void runTests(const testgen::RootRecord myRecord) 
 {
     std::cout << "Serialize:\n";
-    serialize(myRecord);
+    serializeToScreen(myRecord);
     std::cout << "end Serialize\n";
 
     avro::ValidSchema schema;
     std::ifstream in(gInputSchema.c_str());
     avro::compileJsonSchema(in, schema);
     std::cout << "Serialize validated:\n";
-    serializeValid(schema, myRecord);
+    serializeToScreenValid(schema, myRecord);
     std::cout << "end Serialize validated\n";
 
     testParser(myRecord);
@@ -169,14 +181,17 @@ void testGen()
 {
     uint8_t fixed[] =  {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
-    avrouser::RootRecord myRecord;
+    testgen::RootRecord myRecord;
     myRecord.mylong = 212;
+    myRecord.nestedrecord.inval1 = std::numeric_limits<double>::min();
+    myRecord.nestedrecord.inval2 = "hello world";
+    myRecord.nestedrecord.inval3 = std::numeric_limits<int32_t>::max();
     myRecord.mymap.value.clear();
     myRecord.myarray.addValue(3434.9);
     myRecord.myarray.addValue(7343.9);
     myRecord.myarray.addValue(-63445.9);
-    myRecord.myenum.value = avrouser::ExampleEnum::one;
-    avrouser::Map_of_int map;
+    myRecord.myenum.value = testgen::ExampleEnum::one;
+    testgen::Map_of_int map;
     map.addValue("one", 1);
     map.addValue("two", 2);
     myRecord.myunion.set_Map_of_int(map);
@@ -185,7 +200,10 @@ void testGen()
     vec.push_back(2);
     myRecord.anotherunion.set_bytes(vec);
     myRecord.mybool = true;
-    memcpy(myRecord.myfixed.value, fixed, avrouser::md5::fixedSize);
+    myRecord.anothernested.inval1 = std::numeric_limits<double>::max();
+    myRecord.anothernested.inval2 = "goodbye world";
+    myRecord.anothernested.inval3 = std::numeric_limits<int32_t>::min();
+    memcpy(myRecord.myfixed.value, fixed, testgen::md5::fixedSize);
     myRecord.anotherint = 4534;
     myRecord.bytes.push_back(10);
     myRecord.bytes.push_back(20);

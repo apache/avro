@@ -72,6 +72,11 @@ struct TestSchema
        
         record.addField("myunion", onion); 
 
+        RecordSchema nestedRecord("NestedRecord");
+        nestedRecord.addField("floatInNested", FloatSchema());
+
+        record.addField("nested", nestedRecord);
+
         record.addField("mybool", BoolSchema());
         FixedSchema fixed(16, "fixed16");
         record.addField("myfixed", fixed);
@@ -132,6 +137,10 @@ struct TestSchema
 
         std::cout << "Union\n";
         printUnion(s, path);
+
+        std::cout << "Record\n";
+        s.writeRecord();
+        s.writeFloat(-101.101f);
 
         std::cout << "Bool\n";
         s.writeBool(true);
@@ -224,10 +233,22 @@ struct TestSchema
     }
 
     template <typename Parser>
+    void readNestedRecord(Parser &p)
+    {
+        printNext(p);
+        p.readRecord();
+        printNext(p);
+        float f = p.readFloat();
+        std::cout << f << '\n';
+        BOOST_CHECK_EQUAL(f, -101.101f);
+    }
+
+    template <typename Parser>
     void readFixed(Parser &p) {
 
         std::vector<uint8_t> input;
         p.readFixed(input, 16);
+        BOOST_CHECK_EQUAL(input.size(), 16U);
 
         for(int i=0; i< 16; ++i) {
             std::cout << static_cast<int>(input[i]) << ' ';
@@ -257,6 +278,8 @@ struct TestSchema
         longval = p.readUnion();
         std::cout << "Union path " << longval << '\n';
         readMap(p);
+
+        readNestedRecord(p);
 
         printNext(p);
         bool boolval = p.readBool();

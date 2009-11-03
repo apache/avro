@@ -52,6 +52,10 @@ class ValidSchema : private boost::noncopyable
         return node_;
     }
 
+    const Type rootType() const {
+        return node_->type();
+    }
+
     void toJson(std::ostream &os) const;
 
     void toFlatList(std::ostream &os) const;

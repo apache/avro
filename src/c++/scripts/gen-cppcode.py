@@ -59,13 +59,13 @@ recordTemplate = '''struct $name$ {
 $recordfields$};
 
 template <typename Serializer>
-void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
+inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     s.writeRecord();
 $serializefields$
 }
 
 template <typename Parser>
-void parse(Parser &p, $name$ &val, const boost::true_type &) {
+inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     p.readRecord();
 $parsefields$
 }
@@ -85,7 +85,7 @@ def doRecord(args):
         elif line[0] == 'name':
             fieldname = line[1]
             fieldline = getNextLine()
-            fieldtypename, fieldtype = genCode(fieldline)
+            fieldtypename, fieldtype = processType(fieldline)
             fields += '    ' +  fieldtypename + ' ' + fieldname + ';\n'
             serializefields += '    serialize(s, val.' + fieldname + ');\n'
             parsefields += '    parse(p, val.' + fieldname + ');\n'
@@ -120,7 +120,7 @@ $setfuncs$
 };
 
 template <typename Serializer>
-void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
+inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     s.writeUnion(val.choice);
     switch(val.choice) {
 $switchserialize$
@@ -130,7 +130,7 @@ $switchserialize$
 }
 
 template <typename Parser>
-void parse(Parser &p, $name$ &val, const boost::true_type &) {
+inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.choice = p.readUnion();
     switch(val.choice) {
 $switchparse$
@@ -162,7 +162,7 @@ def doUnion(args):
         line = getNextLine()
         if line[0] == 'end': end = True
         else :
-            uniontype, name = genCode(line)
+            uniontype, name = processType(line)
             typename += '_' + name
             uniontypes += '    ' + 'typedef ' + uniontype + ' T' + str(i) + ';\n'
             switch = unionser
@@ -195,12 +195,12 @@ enumTemplate = '''struct $name$ {
 };
 
 template <typename Serializer>
-void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
+inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     s.writeEnum(val.value);
 }
 
 template <typename Parser>
-void parse(Parser &p, $name$ &val, const boost::true_type &) {
+inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.value = static_cast<$name$::EnumSymbols>(p.readEnum());
 }
 '''
@@ -234,7 +234,7 @@ arrayTemplate = '''struct $name$ {
 };
 
 template <typename Serializer>
-void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
+inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     const size_t size = val.value.size();
     if(size) {
         s.writeArrayBlock(size);
@@ -246,7 +246,7 @@ void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
 }
 
 template <typename Parser>
-void parse(Parser &p, $name$ &val, const boost::true_type &) {
+inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.value.clear();
     while(1) {
         int size = p.readArrayBlockSize();
@@ -267,7 +267,7 @@ void parse(Parser &p, $name$ &val, const boost::true_type &) {
 def doArray(args):
     structDef = arrayTemplate
     line = getNextLine()
-    arraytype, typename = genCode(line);
+    arraytype, typename = processType(line);
     typename = 'Array_of_' + typename
 
     structDef = structDef.replace('$name$', typename)
@@ -291,7 +291,7 @@ mapTemplate = '''struct $name$ {
 };
 
 template <typename Serializer>
-void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
+inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     if(val.value.size()) {
         s.writeMapBlock(val.value.size());
         $name$::MapType::const_iterator iter = val.value.begin();
@@ -306,7 +306,7 @@ void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
 }
 
 template <typename Parser>
-void parse(Parser &p, $name$ &val, const boost::true_type &) {
+inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.value.clear();
     while(1) {
         int size = p.readMapBlockSize();
@@ -330,7 +330,7 @@ def doMap(args):
     structDef = mapTemplate
     line = getNextLine() # must be string
     line = getNextLine()
-    maptype, typename = genCode(line);
+    maptype, typename = processType(line);
     typename = 'Map_of_' + typename
 
     structDef = structDef.replace('$name$', typename);
@@ -349,12 +349,12 @@ fixedTemplate = '''struct $name$ {
 };
 
 template <typename Serializer>
-void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
+inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     s.writeFixed(val.value, $name$::fixedSize);
 }
 
 template <typename Parser>
-void parse(Parser &p, $name$ &val, const boost::true_type &) {
+inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     p.readFixed(val.value, $name$::fixedSize);
 }
 '''
@@ -372,10 +372,32 @@ def doFixed(args):
     addStruct(typename, structDef)
     return (typename,typename)
 
+primitiveTemplate = '''struct $name$ {
+    $type$ value;
+};
+
+template <typename Serializer>
+inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
+    s.writeValue(val.value);
+}
+
+template <typename Parser>
+inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
+    p.readValue(val.value);
+}
+'''
+
+def doPrimitiveStruct(type):
+    structDef = primitiveTemplate
+    name =  type.capitalize()
+    structDef = structDef.replace('$name$', name);
+    structDef = structDef.replace('$type$', typeToC[type]);
+    addStruct(name, structDef)
+
 compoundBuilder= { 'record' : doRecord, 'union' : doUnion, 'enum' : doEnum, 
 'map' : doMap, 'array' : doArray, 'fixed' : doFixed, 'symbolic' : doSymbolic } 
 
-def genCode(inputs) :
+def processType(inputs) :
     type = inputs[0]
     if typeToC.has_key(type) : 
         result = doPrimitive(type)
@@ -383,6 +405,15 @@ def genCode(inputs) :
         func = compoundBuilder[type]
         result = func(inputs)
     return result
+
+def generateCode() :
+    inputs = getNextLine()
+    type = inputs[0]
+    if typeToC.has_key(type) : 
+        doPrimitiveStruct(type)
+    else :
+        func = compoundBuilder[type]
+        func(inputs)
 
 def getNextLine():
     try:
@@ -395,16 +426,7 @@ def getNextLine():
         globals()["done"] = True
     return line.split(' ')
     
-if __name__ == "__main__":
-    from sys import argv
-    if(len(argv) > 1): 
-        namespace = argv[1]
-    else:
-        namespace = 'avrouser'
-
-    inputs = getNextLine()
-    genCode(inputs)
-
+def writeHeader():
     print "#ifndef %s_AvroGenerated_hh__" % namespace
     print "#define %s_AvroGenerated_hh__" % namespace
     print headers
@@ -425,4 +447,64 @@ if __name__ == "__main__":
     print "\n} // namespace avro\n"
 
     print "#endif // %s_AvroGenerated_hh__" % namespace
+
+
+def usage():
+    print "-h, --help            print this helpful message"
+    print "-i, --input=FILE      input file to read (default is stdin)"
+    print "-o, --output=PATH     output file to generate (default is stdout)"
+    print "-n, --namespace=LABEL namespace for schema (default is avrouser)"
+
+if __name__ == "__main__":
+    from sys import argv
+    import getopt,sys
+
+    try:
+        opts, args = getopt.getopt(argv[1:], "hi:o:n:", ["help", "input=", "output=", "namespace="])
+
+    except getopt.GetoptError, err:
+        print str(err) 
+        usage()
+        sys.exit(2)
+
+    namespace = 'avrouser'
+
+    savein = sys.stdin              
+    saveout = sys.stdout              
+    inputFile = False
+    outputFile = False
+
+    for o, a in opts:
+        if o in ("-i", "--input"):
+            try:
+                inputFile = open(a, 'r')
+                sys.stdin = inputFile
+            except:
+                print "Could not open file " + a
+                sys.exit() 
+        elif o in ("-o", "--output"):
+            try:
+                outputFile = open(a, 'w')
+                sys.stdout = outputFile
+            except:
+                print "Could not open file " + a
+        elif o in ("-n", "--namespace"):
+            namespace = a
+        elif o in ("-h", "--help"):
+            usage()
+            sys.exit()
+        else:
+            print "Unhandled option: " + o
+            usage()
+            sys.exit()
+
+    generateCode()
+    writeHeader()
+
+    sys.stdin = savein
+    sys.stdout = saveout
+    if inputFile:
+        inputFile.close()
+    if outputFile:
+        outputFile.close()
 

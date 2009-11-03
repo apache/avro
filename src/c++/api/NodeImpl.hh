@@ -215,7 +215,7 @@ class NodeEnum : public NodeImplEnum
     bool isValid() const {
         return (
                 (nameAttribute_.size() == 1) && 
-                (leafNameAttributes_.size() > 1) 
+                (leafNameAttributes_.size() > 0) 
                );
     }
 };

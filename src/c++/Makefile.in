@@ -40,10 +40,11 @@ AVRO_STATIC= $(OBJDIR)/libavrocpp.a
 
 EXECS = unittest testparser precompile testgen
 EXECSDIR = obj
-AVROEXECS = $(EXECS:%=$(EXECSDIR)/%)
+AVRO_EXECS = $(EXECS:%=$(EXECSDIR)/%)
 
 INCFLAGS = -I$(AVROINCLUDES) -I$(AVROPARSER) 
 INCFLAGS += $(BOOST_CPPFLAGS)
+TEST_INCFLAGS = $(INCFLAGS) -I$(OBJDIR)
 
 LIBS += $(BOOST_LDFLAGS) $(BOOST_REGEX_LIB)
 
@@ -62,9 +63,9 @@ GENERATEDSRCS = $(GENERATED:%=$(OBJDIR)/%)
 GENERATEDobjs = $(addsuffix .o, $(sort $(basename $(GENERATED))) )
 GENERATEDOBJS = $(GENERATEDobjs:%=$(OBJDIR)/%)
 
-all : $(AVRO_STATIC) $(AVRO_DYNAMIC) $(AVROEXECS)
+all : $(AVRO_STATIC) $(AVRO_DYNAMIC) $(AVRO_EXECS)
 
-check: $(AVROEXECS)
+check: $(AVRO_EXECS)
 	$(EXECSDIR)/testparser < $(AVROSCHEMAS)/bigrecord
 	$(EXECSDIR)/unittest
 	$(EXECSDIR)/testgen $(AVROSCHEMAS)/bigrecord
@@ -103,12 +104,12 @@ $(EXECSDIR)/testparser: $(AVROTEST)/testparser.cc $(AVRO_STATIC)
 $(EXECSDIR)/precompile: $(AVROTEST)/precompile.cc $(AVRO_STATIC)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
 
-$(AVROTEST)/code.hh: $(AVROSCRIPTS)/gen-cppcode.py $(EXECSDIR)/precompile $(AVROSCHEMAS)/bigrecord
+$(OBJDIR)/code.hh: $(AVROSCRIPTS)/gen-cppcode.py $(EXECSDIR)/precompile $(AVROSCHEMAS)/bigrecord
 	$(EXECSDIR)/precompile < $(AVROSCHEMAS)/bigrecord > obj/bigrecord.flat
-	$(PYTHON) $(AVROSCRIPTS)/gen-cppcode.py < obj/bigrecord.flat > $(AVROTEST)/code.hh
+	$(PYTHON) $(AVROSCRIPTS)/gen-cppcode.py -n testgen -i obj/bigrecord.flat -o $(OBJDIR)/code.hh
 
-$(EXECSDIR)/testgen: $(AVROTEST)/code.hh $(AVROTEST)/testgen.cc $(AVRO_STATIC)
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
+$(EXECSDIR)/testgen: $(AVROTEST)/testgen.cc $(OBJDIR)/code.hh $(AVRO_STATIC)
+	$(CXX) $(CXXFLAGS) $(TEST_INCFLAGS) -o $@ $(LIBS) $< $(AVRO_STATIC) 
 
 CPP_DOC_DIR ?= "./doc"
 
@@ -126,4 +127,4 @@ install: $(AVRO_STATIC)
 	cp $(HEADERS) $(prefix)/include/avro
 
 clean :
-	rm -rf $(AVROEXECS) $(OBJS) $(AVRO_STATIC) $(GENERATEDSRCS) $(GENERATEDOBJS) core
+	rm -rf $(AVRO_EXECS) $(OBJS) $(AVRO_STATIC) $(GENERATEDSRCS) $(GENERATEDOBJS) core

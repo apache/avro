@@ -7,6 +7,27 @@
             "type": "long"
         },
         {
+            "name": "nestedrecord",
+            "type": {
+                "type": "record",
+                "name": "Nested",
+                "fields": [
+                    {
+                        "name": "inval1",
+                        "type": "double"
+                    },
+                    {
+                        "name": "inval2",
+                        "type": "string"
+                    },
+                    {
+                        "name": "inval3",
+                        "type": "int"
+                    }
+                ]
+            }
+        },
+        {
             "name": "mymap",
             "type": {
                 "type": "map",
@@ -54,6 +75,10 @@
         {
             "name": "mybool",
             "type": "boolean"
+        },
+        {
+            "name": "anothernested",
+            "type": "Nested"
         },
         {
             "name": "myfixed",

@@ -192,6 +192,10 @@ Validator::advance()
 
         ((this)->*(func))();
     }
+
+    if(compoundStack_.empty()) {
+        nextType_ = AVRO_NULL;
+    }
 }
 
 void
@@ -243,7 +247,8 @@ Validator::setupOperation(const NodePtr &node)
     if(nextType_ == AVRO_SYMBOLIC) {
         NodePtr symNode ( schema_.followSymbol(node->name()) );
         assert(symNode);
-        return setupOperation(symNode);
+        setupOperation(symNode);
+        return;
     }
 
     assert(nextType_ < AVRO_NUM_TYPES);
