@@ -62,6 +62,8 @@ Trunk (unreleased changes)
     AVRO-165.  Fix an equals implementation in TestReflect.
     (Philip Zeyliger via cutting)
 
+    AVRO-169.  Fix a typo in the spec. (Jeff Hammerbacher via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

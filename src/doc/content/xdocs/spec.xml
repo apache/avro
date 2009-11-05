@@ -102,8 +102,8 @@
 		  field, used when reading instances that lack this
 		  field (optional).  Permitted values depend on the
 		  field's schema type, according to the table below.
-		  Default values for union fields correspond the first
-		  schema in the union.
+		  Default values for union fields correspond to the
+		  first schema in the union.
 		  <table class="right">
 		    <caption>field default values</caption>
 		    <tr><th>avro type</th><th>json type</th><th>example</th></tr>
