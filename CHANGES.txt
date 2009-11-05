@@ -43,6 +43,8 @@ Trunk (unreleased changes)
 
     AVRO-179. Add units tests for all Avro C primitives (massie)
 
+    AVRO-177. Upgrade Java dependencies to recent versions. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
