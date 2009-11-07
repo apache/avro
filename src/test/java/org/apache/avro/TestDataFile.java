@@ -30,7 +30,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class TestDataFile {
@@ -54,8 +53,7 @@ public class TestDataFile {
   @Test
   public void testGenericWrite() throws IOException {
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(SCHEMA,
-                                 new FileOutputStream(FILE),
+      new DataFileWriter<Object>(SCHEMA, FILE,
                                  new GenericDatumWriter<Object>());
     try {
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED)) {
@@ -69,8 +67,7 @@ public class TestDataFile {
   @Test
   public void testGenericRead() throws IOException {
     DataFileReader<Object> reader =
-      new DataFileReader<Object>(new SeekableFileInput(FILE),
-                                 new GenericDatumReader<Object>());
+      new DataFileReader<Object>(FILE, new GenericDatumReader<Object>());
     try {
       assertEquals(COUNT, reader.getCount());
       Object datum = null;
@@ -88,6 +85,41 @@ public class TestDataFile {
       reader.close();
     }
   }
+
+  @Test
+  public void testGenericAppend() throws IOException {
+    long start = FILE.length();
+    DataFileWriter<Object> writer =
+      new DataFileWriter<Object>(FILE, new GenericDatumWriter<Object>());
+    try {
+      for (Object datum : new RandomData(SCHEMA, COUNT, SEED+1)) {
+        writer.append(datum);
+      }
+    } finally {
+      writer.close();
+    }
+    DataFileReader<Object> reader =
+      new DataFileReader<Object>(FILE, new GenericDatumReader<Object>());
+    try {
+      assertEquals(COUNT*2, reader.getCount());
+      reader.seek(start);
+      Object datum = null;
+      if (VALIDATE) {
+        for (Object expected : new RandomData(SCHEMA, COUNT, SEED+1)) {
+          datum = reader.next(datum);
+          assertEquals(expected, datum);
+        }
+      } else {
+        for (int i = 0; i < COUNT; i++) {
+          datum = reader.next(datum);
+        }
+      }
+    } finally {
+      reader.close();
+    }
+  }
+
+
 
   protected void readFile(File f, 
       DatumReader<Object> datumReader, boolean reuse)

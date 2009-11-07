@@ -21,6 +21,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,12 +42,17 @@ public class DataFileReader<D> {
   private SeekableBufferedInput in;
   private Decoder vin;
 
-  private Map<String,byte[]> meta = new HashMap<String,byte[]>();
+  Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
   private long count;                           // # entries in file
   private long blockCount;                      // # entries in block
-  private byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
+  byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
   private byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
+
+  /** Construct a reader for a file. */
+  public DataFileReader(File file, DatumReader<D> reader) throws IOException {
+    this(new SeekableFileInput(file), reader);
+  }
 
   /** Construct a reader for a file. */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader)
@@ -90,14 +96,11 @@ public class DataFileReader<D> {
     in.seek(DataFileConstants.MAGIC.length);         // seek to start
   }
   
-
-  /**
-   * Return the number of records in the file, according
-   * to its metadata.
-   */
-  public long getCount() {
-    return count;
-  }
+  /** Return the schema used in this file. */
+  public Schema getSchema() { return schema; }
+  
+  /** Return the number of records in the file. */
+  public long getCount() { return count; }
   
   /** Return the value of a metadata property. */
   public synchronized byte[] getMeta(String key) {

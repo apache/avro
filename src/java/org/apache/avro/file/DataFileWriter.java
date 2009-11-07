@@ -23,8 +23,15 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
 import java.rmi.server.UID;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -34,6 +41,7 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.generic.GenericDatumReader;
 
 /** Stores in a file a sequence of data conforming to a schema.  The schema is
  * stored in the file with the data.  Each datum in a file is of the same
@@ -60,34 +68,67 @@ public class DataFileWriter<D> {
   private Encoder bufOut = new BinaryEncoder(buffer);
 
   private byte[] sync;                          // 16 random bytes
-  {
-    try {                                       // initialize sync
-      MessageDigest digester = MessageDigest.getInstance("MD5");
-      long time = System.currentTimeMillis();
-      digester.update((new UID()+"@"+time).getBytes());
-      sync = digester.digest();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
 
-  /** Construct a writer to a file for data matching a schema. */
+  /** Construct a writer to a new file for data matching a schema. */
+  public DataFileWriter(Schema schema, File file,
+                        DatumWriter<D> dout) throws IOException {
+    this(schema, new FileOutputStream(file), dout);
+  }
+  /** Construct a writer to a new file for data matching a schema. */
   public DataFileWriter(Schema schema, OutputStream outs,
                         DatumWriter<D> dout) throws IOException {
     this.schema = schema;
-    this.out = new BufferedFileOutputStream(outs);
-    this.vout = new BinaryEncoder(out);
-    this.dout = dout;
-    
-    dout.setSchema(schema);
+    this.sync = generateSync();
 
     setMeta(DataFileConstants.SYNC, sync);
     setMeta(DataFileConstants.SCHEMA, schema.toString());
     setMeta(DataFileConstants.CODEC, DataFileConstants.NULL_CODEC);
-    
+
+    init(outs, dout);
+
     out.write(DataFileConstants.MAGIC);
   }
   
+  /** Construct a writer appending to an existing file. */
+  public DataFileWriter(File file, DatumWriter<D> dout)
+    throws IOException {
+    if (!file.exists())
+      throw new FileNotFoundException("Not found: "+file);
+    RandomAccessFile raf = new RandomAccessFile(file, "rw");
+    FileDescriptor fd = raf.getFD();
+    DataFileReader<D> reader =
+      new DataFileReader<D>(new SeekableFileInput(fd),
+                            new GenericDatumReader<D>());
+    this.schema = reader.getSchema();
+    this.sync = reader.sync;
+    this.count = reader.getCount();
+    this.meta.putAll(reader.meta);
+
+    FileChannel channel = raf.getChannel();       // seek to end
+    channel.position(channel.size());
+
+    init(new FileOutputStream(fd), dout);
+  }
+  
+  private void init(OutputStream outs, DatumWriter<D> dout)
+    throws IOException {
+    this.out = new BufferedFileOutputStream(outs);
+    this.vout = new BinaryEncoder(out);
+    this.dout = dout;
+    dout.setSchema(schema);
+  }
+
+  private static byte[] generateSync() {
+    try {
+      MessageDigest digester = MessageDigest.getInstance("MD5");
+      long time = System.currentTimeMillis();
+      digester.update((new UID()+"@"+time).getBytes());
+      return digester.digest();
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   /** Set a metadata property. */
   public synchronized void setMeta(String key, byte[] value) {
       meta.put(key, value);

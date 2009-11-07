@@ -8,6 +8,8 @@ Trunk (unreleased changes)
 
     AVRO-151. Validating Avro schema parser for C (massie)
 
+    AVRO-158. Permit appending to a data file from Java.  (cutting)
+
   IMPROVEMENTS
 
     AVRO-180. Enhance code generator script and unit tests. (sbanacho)
