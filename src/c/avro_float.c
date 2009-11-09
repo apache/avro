@@ -31,7 +31,7 @@ avro_float_print (struct avro_value *value, FILE * fp)
   struct avro_float_value *self =
     container_of (value, struct avro_float_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "float");
+  fprintf (fp, "float(%p)", self);
   if (self->value_set)
     {
       fprintf (fp, " value=%f", self->value);

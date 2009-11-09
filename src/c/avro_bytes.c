@@ -35,7 +35,7 @@ avro_bytes_print (struct avro_value *value, FILE * fp)
     container_of (value, struct avro_bytes_value, base_value);
 
   avro_value_indent (value, fp);
-  fprintf (fp, "bytes");
+  fprintf (fp, "bytes(%p)", self);
   if (self->value_set)
     {
       fprintf (fp, " size=%ld ", self->size);
@@ -95,9 +95,8 @@ avro_bytes_skip (struct avro_value *value, struct avro_reader *reader)
 static avro_status_t
 avro_bytes_write (struct avro_value *value, struct avro_writer *writer)
 {
-  struct avro_bytes_value *self =
-    container_of (value, struct avro_bytes_value, base_value);
-  return AVRO_OK;
+  /* TODO */
+  return AVRO_FAILURE;
 }
 
 static struct avro_value *

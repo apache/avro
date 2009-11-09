@@ -21,12 +21,9 @@ under the License.
 struct avro_array_value
 {
   apr_array_header_t *values;
-
-  struct avro_value *items;
+  const JSON_value *item_schema;
 
   apr_pool_t *pool;
-
-  int value_set;
 
   /* Need the ctx to dupe value */
   struct avro_value_ctx *ctx;
@@ -37,12 +34,21 @@ struct avro_array_value
 static void
 avro_array_print (struct avro_value *value, FILE * fp)
 {
+  int i;
   struct avro_array_value *self =
     container_of (value, struct avro_array_value, base_value);
 
   avro_value_indent (value, fp);
-  fprintf (fp, "array(%p) value items\n", self);
-  avro_value_print_info (self->items, fp);
+  fprintf (fp, "array(%p) with %d items\n", self,
+	   self->values ? self->values->nelts : 0);
+  if (self->values)
+    {
+      for (i = 0; i < self->values->nelts; i++)
+	{
+	  avro_value *item = ((avro_value **) self->values->elts)[i];
+	  avro_value_print_info (item, fp);
+	}
+    }
 }
 
 static avro_status_t
@@ -54,8 +60,6 @@ avro_array_read_skip (struct avro_value *value, struct avro_reader *reader,
   struct avro_array_value *self =
     container_of (value, struct avro_array_value, base_value);
   struct avro_io_reader *io;
-
-  apr_pool_clear (self->pool);
 
   if (!reader)
     {
@@ -76,9 +80,59 @@ avro_array_read_skip (struct avro_value *value, struct avro_reader *reader,
   if (count < 0)
     {
       /* TODO */
+      return AVRO_FAILURE;
     }
 
-  /* TODO */
+  /* Clear the pool to of any previous state */
+  apr_pool_clear (self->pool);
+
+  self->values =
+    skip ? NULL : apr_array_make (self->pool, count, sizeof (avro_value *));
+
+  while (count > 0)
+    {
+      /* Read in the count number of items */
+      if (skip)
+	{
+	  avro_value *item =
+	    avro_value_from_json (self->ctx, self->base_value.parent,
+				  self->item_schema);
+	  for (i = 0; i < count; i++)
+	    {
+	      status = avro_value_skip_data (item, reader);
+	      if (status != AVRO_OK)
+		{
+		  return status;
+		}
+	    }
+	}
+      else
+	{
+	  for (i = 0; i < count; i++)
+	    {
+	      avro_value *item =
+		avro_value_from_json (self->ctx, self->base_value.parent,
+				      self->item_schema);
+	      if (!item)
+		{
+		  return AVRO_FAILURE;
+		}
+	      status = avro_value_read_data (item, reader);
+	      if (status != AVRO_OK)
+		{
+		  return status;
+		}
+	      /* Save the item */
+	      *(avro_value **) apr_array_push (self->values) = item;
+	    }
+	}
+
+      status = avro_read_long (io, &count);
+      if (status != AVRO_OK)
+	{
+	  return status;
+	}
+    }
   return AVRO_OK;
 }
 
@@ -108,13 +162,15 @@ static struct avro_value *
 avro_array_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		   apr_pool_t * pool, const JSON_value * json)
 {
+  avro_value *value;
   struct avro_array_value *self;
-  const JSON_value *items;
+  apr_pool_t *tmp_pool;
 
   self = apr_palloc (pool, sizeof (struct avro_array_value));
   if (!self)
     {
       return NULL;
+      self->values = NULL;
     }
   self->base_value.type = AVRO_ARRAY;
   self->base_value.pool = pool;
@@ -122,22 +178,31 @@ avro_array_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.schema = json;
 
   /* collect and save required items */
-  items = json_attr_get (json, L"items");
-  if (!items)
+  self->item_schema = json_attr_get (json, L"items");
+  if (!self->item_schema)
     {
       return NULL;
     }
-  self->items = avro_value_from_json (ctx, parent, items);
-  if (!self->items)
+
+  /* Validate the item schema */
+  if (apr_pool_create (&tmp_pool, pool) != APR_SUCCESS)
     {
       return NULL;
     }
+  value = avro_value_from_json (ctx, parent, self->item_schema);
+  apr_pool_clear (tmp_pool);
+  if (!value)
+    {
+      /* Invalid item schema */
+      return NULL;
+    }
+
   /* Create a pool for the value processing */
   if (apr_pool_create (&self->pool, pool) != APR_SUCCESS)
     {
       return NULL;
     }
-  self->value_set = 0;
+  self->values = NULL;
   self->ctx = ctx;
   return &self->base_value;
 }

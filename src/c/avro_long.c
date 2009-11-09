@@ -31,7 +31,7 @@ avro_long_print (struct avro_value *value, FILE * fp)
   struct avro_long_value *self =
     container_of (value, struct avro_long_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "long");
+  fprintf (fp, "long(%p)", self);
   if (self->value_set)
     {
       fprintf (fp, " value=%ld", self->value);

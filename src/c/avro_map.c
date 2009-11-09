@@ -21,8 +21,13 @@ under the License.
 struct avro_map_value
 {
   apr_hash_t *map;
-  struct avro_value *keys;
-  struct avro_value *values;
+  apr_pool_t *pool;
+  const JSON_value *key_schema;
+  const JSON_value *value_schema;
+
+  /* Need the ctx to dupe value */
+  struct avro_value_ctx *ctx;
+
   struct avro_value base_value;
 };
 
@@ -31,34 +36,115 @@ avro_map_print (struct avro_value *value, FILE * fp)
 {
   struct avro_map_value *self =
     container_of (value, struct avro_map_value, base_value);
+
   avro_value_indent (value, fp);
-  fprintf (fp, "map(%p) key/value\n", self);
-  avro_value_print_info (self->keys, fp);
-  avro_value_print_info (self->values, fp);
+  fprintf (fp, "map(%p)", self);
+  if (self->map)
+    {
+      int i;
+      apr_pool_t *subpool;
+      apr_hash_index_t *hi;
+      apr_ssize_t len;
+
+      fprintf (fp, " start\n");
+      apr_pool_create (&subpool, self->pool);
+      for (i = 0, hi = apr_hash_first (subpool, self->map); hi;
+	   hi = apr_hash_next (hi), i++)
+	{
+	  avro_value *key;
+	  avro_value *value;
+	  apr_hash_this (hi, (void *) &key, &len, (void *) &value);
+	  avro_value_print_info (key, fp);
+	  avro_value_print_info (value, fp);
+	}
+      apr_pool_clear (subpool);
+      avro_value_indent (value, fp);
+      fprintf (fp, "map(%p) end", self);
+    }
+  fprintf (fp, "\n");
+}
+
+static avro_status_t
+avro_map_read_skip (struct avro_value *value, struct avro_reader *reader,
+		    int skip)
+{
+  struct avro_map_value *self =
+    container_of (value, struct avro_map_value, base_value);
+  avro_status_t status;
+  avro_long_t i, count;
+  struct avro_io_reader *io;
+
+  if (!reader)
+    {
+      return AVRO_FAILURE;
+    }
+  io = reader->io;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+  status = avro_read_long (io, &count);
+  if (status != AVRO_OK)
+    {
+      return status;
+    }
+  apr_pool_clear (self->pool);
+  self->map = skip ? NULL : apr_hash_make (self->pool);
+
+  while (count > 0)
+    {
+      for (i = 0; i < count; i++)
+	{
+	  avro_value *key =
+	    avro_value_from_json (self->ctx, self->base_value.parent,
+				  self->key_schema);
+	  avro_value *value =
+	    avro_value_from_json (self->ctx, self->base_value.parent,
+				  self->value_schema);
+	  if (!key || !value)
+	    {
+	      return AVRO_FAILURE;
+	    }
+	  status = avro_value_read_data (key, reader);
+	  if (status != AVRO_OK)
+	    {
+	      return status;
+	    }
+	  status = avro_value_read_data (value, reader);
+	  if (status != AVRO_OK)
+	    {
+	      return status;
+	    }
+	  apr_hash_set (self->map, key, sizeof (struct avro_value), value);
+	}
+
+      status = avro_read_long (io, &count);
+      if (status != AVRO_OK)
+	{
+	  return status;
+	}
+    }
+
+  return AVRO_OK;
 }
 
 static avro_status_t
 avro_map_read (struct avro_value *value, struct avro_reader *reader)
 {
-  struct avro_map_value *self =
-    container_of (value, struct avro_map_value, base_value);
-  return AVRO_OK;
+  return avro_map_read_skip (value, reader, 0);
 }
 
 static avro_status_t
 avro_map_skip (struct avro_value *value, struct avro_reader *reader)
 {
-  struct avro_map_value *self =
-    container_of (value, struct avro_map_value, base_value);
-  return AVRO_OK;
+  return avro_map_read_skip (value, reader, 1);
 }
 
 static avro_status_t
 avro_map_write (struct avro_value *value, struct avro_writer *writer)
 {
-  struct avro_map_value *self =
-    container_of (value, struct avro_map_value, base_value);
-  return AVRO_OK;
+  /* TODO */
+  return AVRO_FAILURE;
 }
 
 static struct avro_value *
@@ -66,8 +152,8 @@ avro_map_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		 apr_pool_t * pool, const JSON_value * json)
 {
   struct avro_map_value *self;
-  const JSON_value *keys;
-  const JSON_value *values;
+  avro_value *value;
+  apr_pool_t *tmp_pool;
 
   DEBUG (fprintf (stderr, "Creating map\n"));
   self = apr_palloc (pool, sizeof (struct avro_map_value));
@@ -80,35 +166,36 @@ avro_map_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.parent = parent;
   self->base_value.schema = json;
 
-  /* collect and save required keys */
-  keys = json_attr_get (json, L"keys");
-  if (keys)
+  /* map keys are always assumed to be strings */
+  char *default_key = "{\"type\":\"string\"}";
+  self->key_schema = JSON_parse (pool, default_key, strlen (default_key));
+  if (!self->key_schema)
     {
-      self->keys = avro_value_from_json (ctx, &self->base_value, keys);
-      if (!self->keys)
-	{
-	  return NULL;
-	}
-    }
-  else
-    {
-      /* TODO: should keys default to string? */
-      self->keys =
-	avro_value_registry[AVRO_STRING]->create (ctx, &self->base_value,
-						  pool, NULL);
+      return NULL;
     }
 
   /* collect and save required values */
-  values = json_attr_get (json, L"values");
-  if (!values)
+  self->value_schema = json_attr_get (json, L"values");
+  if (!self->value_schema)
     {
       return NULL;
     }
-  self->values = avro_value_from_json (ctx, &self->base_value, values);
-  if (!self->values)
+  /* verify that the value schema is valid */
+  apr_pool_create (&tmp_pool, pool);
+  value = avro_value_from_json (ctx, parent, self->value_schema);
+  apr_pool_clear (tmp_pool);
+  if (!value)
     {
       return NULL;
     }
+
+  /* Create a value pool */
+  if (apr_pool_create (&self->pool, pool) != APR_SUCCESS)
+    {
+      return NULL;
+    }
+  self->map = NULL;
+  self->ctx = ctx;
   return &self->base_value;
 }
 

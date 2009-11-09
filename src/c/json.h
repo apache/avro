@@ -61,7 +61,7 @@ JSON_value *JSON_parse (apr_pool_t * pool, char *text, int text_len);
 
 JSON_value *JSON_value_new (apr_pool_t * pool, int type);
 
-void JSON_print (FILE * file, JSON_value * value);
+void JSON_print (FILE * file, const JSON_value * value);
 
 struct JSON_ctx
 {

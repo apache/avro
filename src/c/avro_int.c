@@ -31,7 +31,7 @@ avro_int_print (struct avro_value *value, FILE * fp)
   struct avro_int_value *self =
     container_of (value, struct avro_int_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "int");
+  fprintf (fp, "int(%p)", self);
   if (self->value_set)
     {
       fprintf (fp, " value=%d", self->value);

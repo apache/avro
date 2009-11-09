@@ -47,6 +47,8 @@ Trunk (unreleased changes)
 
     AVRO-177. Upgrade Java dependencies to recent versions. (cutting)
 
+    AVRO-186. Full read-path interoperability test (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

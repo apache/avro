@@ -23,7 +23,7 @@ libavro_la_LDFLAGS = \
         -export-dynamic
 
 
-check_PROGRAMS=test_json_parser test_avro_schema test_avro_primitives
+check_PROGRAMS=test_json_parser test_avro_schema test_avro_data test_avro_interop
 
 dist-hook: docs
 
@@ -35,13 +35,13 @@ test_json_parser_LDADD=$(test_LDADD)
 test_avro_schema=test_avro_schema.c
 test_avro_schema_LDADD=$(test_LDADD)
 
-test_avro_primitives=test_avro_primitives.c
-test_avro_primitives_LDADD=$(test_LDADD)
-# use -std=c99 to avoid warings about universal character names
-test_avro_primitives_CFLAGS=$(AM_CFLAGS) -std=c99
+test_avro_data=test_avro_data.c
+test_avro_data_LDADD=$(test_LDADD)
+# use -std=c99 to avoid warnings about universal character names
+test_avro_data_CFLAGS=$(AM_CFLAGS) -std=c99
 
-#test_avro_interop=test_avro_interop.c
-#test_avro_interop_LDADD=$(test_LDADD)
+test_avro_interop=test_avro_interop.c
+test_avro_interop_LDADD=$(test_LDADD)
 
 TESTS=$(check_PROGRAMS)
 

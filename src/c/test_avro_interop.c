@@ -5,11 +5,6 @@
 apr_pool_t *pool;
 
 /*
-TODO:
-
-We still need to create a File Object container to finish this test.
-For now, we're only validating that we can parse the schema.
-
 $ ant generate-test-data
 needs to be called to make sure that test data is created.
 
@@ -25,6 +20,9 @@ main (void)
   apr_size_t jsonlen;
   struct avro_value *value;
   struct avro_reader *reader;
+  char *suffixes[] = { "py", "java" };
+  char *suffix;
+  int i;
 
   if (!srcdir)
     {
@@ -43,8 +41,10 @@ main (void)
   jsontext = avro_util_file_read_full (pool, path, &jsonlen);
   if (!jsontext)
     {
-      fprintf (stderr, "Failed to parse the JSON in file %s\n", path);
-      return EXIT_FAILURE;
+      fprintf (stderr,
+	       "Couldn't find file: %s. Can't run interop test out of tree\n",
+	       path);
+      return EXIT_SUCCESS;
     }
   value = avro_value_create (pool, jsontext, jsonlen);
   if (!value)
@@ -53,23 +53,29 @@ main (void)
       return EXIT_FAILURE;
     }
 
-  path =
-    apr_pstrcat (pool, srcdir, "/../../build/test/data-files/test.py.avro",
-		 NULL);
-  if (!path)
+  for (i = 0; i < sizeof (suffixes) / sizeof (suffixes[0]); i++)
     {
-      return EXIT_FAILURE;
-    }
-  reader =
-    avro_reader_file_container_create (pool, path, APR_READ, APR_OS_DEFAULT);
-  if (!reader)
-    {
-      fprintf (stderr, "Failed to open data file %s\n", path);
-      return EXIT_FAILURE;
-    }
+      suffix = suffixes[i];
 
-  avro_value_read_data (value, reader);
-  avro_value_print_info (value, stderr);
+      path =
+	apr_pstrcat (pool, srcdir, "/../../build/test/data-files/test.",
+		     suffix, ".avro", NULL);
+      if (!path)
+	{
+	  return EXIT_FAILURE;
+	}
+      fprintf (stderr, "Running test on %s...\n", path);
+      reader =
+	avro_reader_file_container_create (pool, path, APR_READ,
+					   APR_OS_DEFAULT);
+      if (!reader)
+	{
+	  fprintf (stderr, "Failed to open data file %s\n", path);
+	  return EXIT_FAILURE;
+	}
+      avro_value_read_data (value, reader);
+      avro_value_print_info (value, stderr);
+    }
   apr_pool_destroy (pool);
   return EXIT_SUCCESS;
 }

@@ -34,7 +34,7 @@ ws_depth (FILE * file, int depth)
 }
 
 static void
-JSON_print_private (FILE * file, JSON_value * value, int *depth)
+JSON_print_private (FILE * file, const JSON_value * value, int *depth)
 {
   int i;
   switch (value->type)
@@ -105,7 +105,7 @@ JSON_print_private (FILE * file, JSON_value * value, int *depth)
 }
 
 void
-JSON_print (FILE * file, JSON_value * value)
+JSON_print (FILE * file, const JSON_value * value)
 {
   int depth = 0;
   if (!file || !value)

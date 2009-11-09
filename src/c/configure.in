@@ -78,12 +78,13 @@ AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 
 echo
-echo "C bindings for"
-echo "    _                  "
-echo "   / \__   ___ __ ___  "
-echo "  / _ \ \ / / '__/ _ \ "
-echo " / ___ \ V /| | | (_) |"
-echo "/_/   \_\_/ |_|  \___/ "
+echo
+# figlet -f slant "Avro C"
+echo "    ___                      ______"
+echo "   /   |_   ___________     / ____/"
+echo "  / /| | | / / ___/ __ \   / /     "
+echo " / ___ | |/ / /  / /_/ /  / /___   "
+echo "/_/  |_|___/_/   \____/   \____/   "
 echo
 echo "Version: $VERSION"
 echo "Library: $LIBAVRO_VERSION" 	       

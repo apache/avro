@@ -10,7 +10,7 @@
       {"name": "nullField", "type": "null"},
       {"name": "arrayField", "type": {"type": "array", "items": "double"}},
       {"name": "mapField", "type":
-       {"type": "map", "keys": "long", "values":
+       {"type": "map", "values":
         {"type": "record", "name": "Foo",
          "fields": [{"name": "label", "type": "string"}]}}},
       {"name": "unionField", "type":

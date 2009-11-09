@@ -53,7 +53,7 @@ avro_record_print (struct avro_value *value, FILE * fp)
   struct avro_record_value *self =
     container_of (value, struct avro_record_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "record name=%ls\n", self->name);
+  fprintf (fp, "record(%p) name=%ls\n", self, self->name);
   for (i = 0; i < self->fields->nelts; i++)
     {
       struct avro_value *field =
@@ -182,10 +182,16 @@ avro_record_skip (struct avro_value *value, struct avro_reader *reader)
 static avro_status_t
 avro_record_write (struct avro_value *value, struct avro_writer *writer)
 {
-/* TODO:
-  struct avro_record_value *record =
+  int i;
+  struct avro_record_value *self =
     container_of (value, struct avro_record_value, base_value);
-*/
+
+  for (i = 0; i < self->fields->nelts; i++)
+    {
+      struct avro_value *field =
+	((struct avro_value **) self->fields->elts)[i];
+      avro_value_write_data (field, writer);
+    }
   return AVRO_OK;
 }
 
@@ -223,7 +229,7 @@ avro_record_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 
   /* register self with named objects */
   apr_hash_set (ctx->named_objects, self->name,
-		wcslen (self->name) * sizeof (wchar_t), &self->base_value);
+		wcslen (self->name) * sizeof (wchar_t), json);
 
   /* collect and save optional namespace */
   self->space = NULL;

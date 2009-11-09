@@ -33,7 +33,7 @@ avro_enum_print (struct avro_value *value, FILE * fp)
   struct avro_avro_enum *self =
     container_of (value, struct avro_avro_enum, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "enum name=%ls", self->name);
+  fprintf (fp, "enum(%p) name=%ls", self, self->name);
   if (self->value_set)
     {
       fprintf (fp, " value=%ls",
@@ -127,7 +127,7 @@ avro_enum_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 
   /* register self with named objects */
   apr_hash_set (ctx->named_objects, self->name,
-		wcslen (self->name) * sizeof (wchar_t), &self->base_value);
+		wcslen (self->name) * sizeof (wchar_t), json);
 
   /* collect and save required symbols */
   symbols = json_attr_get_check_type (json, L"symbols", JSON_ARRAY);

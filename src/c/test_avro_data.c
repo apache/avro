@@ -174,13 +174,14 @@ test_int_long (apr_pool_t * pool, avro_io_reader * reader,
   for (i = 0; i < num_rand_tests; i++)
     {
       avro_long_t long_in, long_out;
-      avro_int_t int_in, int_out, *intp;
+      avro_int_t int_in, int_out;
       rand_val = random ();
       if (is_long)
 	{
-	  intp = (avro_int_t *) & long_in;
-	  intp[0] = random ();
-	  intp[1] = random ();
+	  avro_long_t a, b;
+	  a = random ();
+	  b = random ();
+	  long_in = (a << 32) | b;
 	}
       else
 	{
@@ -349,6 +350,48 @@ test_null (apr_pool_t * pool, avro_io_reader * reader,
   return AVRO_OK;
 }
 
+avro_status_t
+test_record (apr_pool_t * pool, avro_io_reader * reader,
+	     avro_io_writer * writer)
+{
+  return AVRO_OK;
+}
+
+avro_status_t
+test_enum (apr_pool_t * pool, avro_io_reader * reader,
+	   avro_io_writer * writer)
+{
+  return AVRO_OK;
+}
+
+avro_status_t
+test_array (apr_pool_t * pool, avro_io_reader * reader,
+	    avro_io_writer * writer)
+{
+  return AVRO_OK;
+}
+
+avro_status_t
+test_map (apr_pool_t * pool, avro_io_reader * reader, avro_io_writer * writer)
+{
+  return AVRO_OK;
+}
+
+avro_status_t
+test_union (apr_pool_t * pool, avro_io_reader * reader,
+	    avro_io_writer * writer)
+{
+  return AVRO_OK;
+}
+
+avro_status_t
+test_fixed (apr_pool_t * pool, avro_io_reader * reader,
+	    avro_io_writer * writer)
+{
+  return AVRO_OK;
+}
+
+
 int
 main (void)
 {
@@ -378,7 +421,17 @@ main (void)
     {
     "boolean", test_boolean},
     {
-    "null", test_null}
+    "null", test_null},
+    {
+    "record", test_record},
+    {
+    "enum", test_enum},
+    {
+    "array", test_array},
+    {
+    "map", test_map},
+    {
+    "fixed", test_fixed}
   };
 
   srandom (time (NULL));

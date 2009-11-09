@@ -34,7 +34,7 @@ static void
 avro_null_print (struct avro_value *value, FILE * fp)
 {
   avro_value_indent (value, fp);
-  fprintf (fp, "null\n");
+  fprintf (fp, "null(%p)\n", value);
 }
 
 static struct avro_value *

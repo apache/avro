@@ -32,7 +32,7 @@ avro_string_print (struct avro_value *value, FILE * fp)
   struct avro_string_value *self =
     container_of (value, struct avro_string_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "string");
+  fprintf (fp, "string(%p)", self);
   if (self->value_set)
     {
       fprintf (fp, " value=%ls", self->value);

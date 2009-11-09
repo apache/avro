@@ -106,6 +106,7 @@ avro_type_from_json (const JSON_value * json, avro_type_t * type)
 
 struct avro_decorator_value
 {
+  struct avro_value_ctx *ctx;
   struct avro_value *decoratee;
   struct avro_value base_value;
 };
@@ -116,37 +117,51 @@ avro_decorator_print (struct avro_value *value, FILE * fp)
   struct avro_decorator_value *self =
     container_of (value, struct avro_decorator_value, base_value);
   avro_value_indent (value, fp);
-  fprintf (fp, "avro decorator\n");
+  fprintf (fp, "decorator(%p)\n", self);
+  avro_value_print_info (self->decoratee, fp);
+}
+
+static avro_status_t
+avro_decorator_read_skip (struct avro_value *value,
+			  struct avro_reader *reader, int skip)
+{
+  struct avro_decorator_value *self =
+    container_of (value, struct avro_decorator_value, base_value);
+  /* Create a new decoratee */
+  self->decoratee = avro_value_from_json (self->ctx, value, value->schema);
+  if (!self->decoratee)
+    {
+      return AVRO_FAILURE;
+    }
+  if (skip)
+    {
+      return avro_value_skip_data (self->decoratee, reader);
+    }
+  return avro_value_read_data (self->decoratee, reader);
 }
 
 static avro_status_t
 avro_decorator_read (struct avro_value *value, struct avro_reader *reader)
 {
-  struct avro_decorator_value *self =
-    container_of (value, struct avro_decorator_value, base_value);
-  return avro_value_read_data (self->decoratee, reader);
+  return avro_decorator_read_skip (value, reader, 0);
 }
 
 static avro_status_t
 avro_decorator_skip (struct avro_value *value, struct avro_reader *reader)
 {
-  struct avro_decorator_value *self =
-    container_of (value, struct avro_decorator_value, base_value);
-  return avro_value_skip_data (self->decoratee, reader);
+  return avro_decorator_read_skip (value, reader, 1);
 }
 
 static avro_status_t
 avro_decorator_write (struct avro_value *value, struct avro_writer *writer)
 {
-  struct avro_decorator_value *self =
-    container_of (value, struct avro_decorator_value, base_value);
-  return avro_value_write_data (self->decoratee, writer);
+  return AVRO_FAILURE;
 }
 
 /* Used for recursive schemas */
 struct avro_value *
 avro_decorator_create (struct avro_value_ctx *ctx, struct avro_value *parent,
-		       apr_pool_t * pool, struct avro_value *decoratee)
+		       apr_pool_t * pool, const JSON_value * json)
 {
   struct avro_decorator_value *self =
     apr_palloc (pool, sizeof (struct avro_decorator_value));
@@ -155,28 +170,20 @@ avro_decorator_create (struct avro_value_ctx *ctx, struct avro_value *parent,
     {
       return NULL;
     }
+  /* Save away the context */
+  self->ctx = ctx;
   self->base_value.type = AVRO_DECORATOR;
   self->base_value.pool = pool;
   self->base_value.parent = parent;
-  self->base_value.schema = decoratee->schema;
-  /* object we're decorating */
-  self->decoratee = decoratee;
+  self->base_value.schema = json;
   return &self->base_value;
-}
-
-static struct avro_value *
-avro_decorator_create_noop (struct avro_value_ctx *ctx,
-			    struct avro_value *parent, apr_pool_t * pool,
-			    const JSON_value * json)
-{
-  return NULL;
 }
 
 const struct avro_value_info avro_decorator_info = {
   .name = L"decorator",
   .type = AVRO_DECORATOR,
   .private = 1,
-  .create = avro_decorator_create_noop,
+  .create = avro_decorator_create,
   .formats = {{
 	       .read_data = avro_decorator_read,
 	       .skip_data = avro_decorator_skip,
@@ -198,6 +205,7 @@ avro_value_from_json (struct avro_value_ctx *ctx,
   apr_status_t status;
   avro_type_t avro_type;
   apr_pool_t *subpool;
+  const JSON_value *schema = json;
 
   status = apr_pool_create (&subpool, parent ? parent->pool : NULL);
   if (status != APR_SUCCESS)
@@ -205,25 +213,25 @@ avro_value_from_json (struct avro_value_ctx *ctx,
       return NULL;
     }
 
-  avro_status = avro_type_from_json (json, &avro_type);
+  avro_status = avro_type_from_json (schema, &avro_type);
   if (avro_status != AVRO_OK)
     {
-      if (json->type == JSON_STRING)
+      if (!ctx || json->type != JSON_STRING)
 	{
-	  avro_value *named_object =
-	    apr_hash_get (ctx->named_objects, json->json_string,
-			  wcslen (json->json_string) * sizeof (wchar_t));
-	  if (named_object)
-	    {
-	      return avro_decorator_create (ctx, parent, subpool,
-					    named_object);
-	    }
+	  return NULL;
 	}
-      return NULL;
+      schema =
+	apr_hash_get (ctx->named_objects, json->json_string,
+		      wcslen (json->json_string) * sizeof (wchar_t));
+      if (!schema)
+	{
+	  return NULL;
+	}
+      avro_type = AVRO_DECORATOR;
     }
 
-  return avro_value_registry[avro_type]->private ? NULL :
-    avro_value_registry[avro_type]->create (ctx, parent, subpool, json);
+  return avro_value_registry[avro_type]->create (ctx, parent, subpool,
+						 schema);
 }
 
 struct avro_value *
