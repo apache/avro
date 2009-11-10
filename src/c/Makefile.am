@@ -24,8 +24,8 @@ libavro_la_LDFLAGS = \
         -release $(VERSION) \
         -export-dynamic
 
-
-check_PROGRAMS=test_json_parser test_avro_schema test_avro_data test_avro_interop
+noinst_PROGRAMS=test_avro_interop
+check_PROGRAMS=test_json_parser test_avro_schema test_avro_data
 
 dist-hook: docs
 

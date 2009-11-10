@@ -367,7 +367,7 @@
     </py-test>
   </target>
 
-  <target name="test-interop" depends="test-interop-java,test-interop-py"
+  <target name="test-interop" depends="test-interop-java,test-interop-py,test-interop-c"
    description="Run multiple languages interoperability tests">
   </target>
 
@@ -379,6 +379,11 @@
   <target name="test-interop-py" 
     depends="test-interop-data-py,test-interop-rpc-py"
    description="Run python interoperability tests">
+  </target>
+
+  <target name="test-interop-c"
+    depends="test-interop-data-c"
+   description="Run C interoperability tests">
   </target>
 
   <target name="test-interop-data-java" depends="generate-test-data"
@@ -654,6 +659,16 @@
   <target name="test-c" depends="compile-c">
     <exec dir="${c.build.dir}" executable="make" failonerror="true">
       <arg value="check"/>
+    </exec>
+  </target>
+
+  <target name="test-interop-data-c" depends="generate-test-data,configure-c"
+    description="Run C data file interoperability tests">
+    <exec dir="${c.build.dir}" executable="make" failonerror="true">
+       <arg value="test_avro_interop"/>
+    </exec>
+    <exec dir="${c.build.dir}" executable="./test_avro_interop" failonerror="true">
+       <env key="srcdir" value="${c.src.dir}" />
     </exec>
   </target>
 
