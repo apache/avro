@@ -52,6 +52,8 @@ Trunk (unreleased changes)
     AVRO-187. Move top-level source files into separate directories 
     for easier maintenance (massie)
 
+    AVRO-188. Need to update svn ignores (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
