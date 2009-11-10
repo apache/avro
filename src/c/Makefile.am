@@ -4,19 +4,21 @@ ACLOCAL_AMFLAGS=-I m4
 
 C_DOCS_OUTPUT ?= "docs/dox"
 
-EXTRA_DIST=json_parser.y lemon.c lempar.c json_tests avro_schema_tests docs version.sh m4
+EXTRA_DIST=json/json_parser.y json/lemon.c json/lempar.c \
+tests/json_tests tests/schema_tests docs version.sh m4
 
 include_HEADERS = avro.h
 
 lib_LTLIBRARIES = libavro.la
-libavro_la_SOURCES = avro.h avro_private.h avro.c \
-json_parser.c json_parser.h json_tokenizer.c json.c json.h json_tokenizer.h  \
-dump.c dump.h error.c error.h avro_value.c \
-avro_array.c avro_boolean.c avro_bytes.c avro_double.c avro_enum.c avro_fixed.c  \
-avro_float.c avro_int.c avro_long.c avro_map.c avro_null.c \
-avro_record.c avro_string.c avro_union.c container_of.h \
-avro_io_file.c avro_io_socket.c avro_io_memory.c \
-avro_endian.c avro_primitives.c avro_file_container.c
+libavro_la_SOURCES = avro.h avro_private.h avro.c avro_value.c avro_primitives.c \
+json/json_parser.c json/json_parser.h json/json_tokenizer.c \
+json/json.c json/json.h json/json_tokenizer.h \
+util/dump.c util/dump.h util/error.c util/error.h \
+util/container_of.h util/endian.c \
+datatypes/array.c datatypes/boolean.c datatypes/bytes.c datatypes/double.c \
+datatypes/enum.c datatypes/fixed.c datatypes/float.c datatypes/int.c datatypes/long.c \
+datatypes/map.c datatypes/null.c datatypes/record.c datatypes/string.c datatypes/union.c \
+io/file.c io/socket.c io/memory.c io/file_container.c 
 libavro_la_LDFLAGS = \
         -version-info $(LIBAVRO_VERSION) \
         -release $(VERSION) \
@@ -29,18 +31,18 @@ dist-hook: docs
 
 test_LDADD=$(APR_LIBS) $(APU_LIBS) $(top_builddir)/libavro.la
 
-test_json_parser=test_json_parser.c
+test_json_parser_SOURCES=tests/test_json_parser.c
 test_json_parser_LDADD=$(test_LDADD)
 
-test_avro_schema=test_avro_schema.c
+test_avro_schema_SOURCES=tests/test_avro_schema.c
 test_avro_schema_LDADD=$(test_LDADD)
 
-test_avro_data=test_avro_data.c
+test_avro_data_SOURCES=tests/test_avro_data.c
 test_avro_data_LDADD=$(test_LDADD)
 # use -std=c99 to avoid warnings about universal character names
 test_avro_data_CFLAGS=$(AM_CFLAGS) -std=c99
 
-test_avro_interop=test_avro_interop.c
+test_avro_interop_SOURCES=tests/test_avro_interop.c
 test_avro_interop_LDADD=$(test_LDADD)
 
 TESTS=$(check_PROGRAMS)
@@ -49,12 +51,13 @@ TESTS=$(check_PROGRAMS)
 # NOTE: Don't indent avro.h (messes up docs) or lemon.c,lempar.c (messes up parser)
 pretty:
 	pushd $(top_srcdir); \
-	for file in *.[c,h]; \
+	for path in $$(find . -name "*.[c,h]"); \
 	do \
+	file=$$(basename $$path); \
 	if [ $$file = "avro.h" -o $$file = "lemon.c" -o $$file = "lempar.c" -o $$file = "json_parser.c" ]; then \
 		continue;\
 	fi;\
-	indent $$file; \
+	indent $$path; \
 	done;\
 	popd;
 
@@ -66,7 +69,7 @@ docs:
 
 .PHONY: docs 
 
-CLEANFILES=$(top_srcdir)/*~ trace.txt json_parser.out lemon
+CLEANFILES=$(top_srcdir)/*~ $(top_srcdir)/**/*~ trace.txt json_parser.out lemon
 
 
 # We don't need to auto-generate the json parser code each time.  It makes

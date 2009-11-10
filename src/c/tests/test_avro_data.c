@@ -20,7 +20,7 @@ under the License.
 #include <time.h>
 #include <string.h>
 #include "avro_private.h"
-#include "dump.h"
+#include "util/dump.h"
 
 char buf[1024];
 

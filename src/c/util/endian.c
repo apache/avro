@@ -17,6 +17,10 @@ specific language governing permissions and limitations
 under the License.
 */
 #include "avro_private.h"
+#include "config.h"
+
+/* TODO: use the WORDS_BIG_ENDIAN define in config.h
+to optimize the endian functions here */
 
 avro_status_t
 avro_read_int32_le (struct avro_io_reader *io, int32_t * value)

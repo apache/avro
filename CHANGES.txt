@@ -49,6 +49,9 @@ Trunk (unreleased changes)
 
     AVRO-186. Full read-path interoperability test (massie)
 
+    AVRO-187. Move top-level source files into separate directories 
+    for easier maintenance (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

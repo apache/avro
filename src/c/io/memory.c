@@ -80,8 +80,7 @@ avro_io_memory_write (struct avro_io_writer *io, void *addr, avro_long_t len)
   self->used += len;
   DEBUG (fprintf
 	 (stderr, "avro_io_memory_write %d bytes, %d/%d used\n", len,
-	  self->used, self->len);
-	 dump (stderr, addr, len));
+	  self->used, self->len));
   return AVRO_OK;
 }
 

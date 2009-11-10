@@ -16,33 +16,26 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <dirent.h>
 
-#include <apr.h>
-#include <apr_pools.h>
-#include <apr_strings.h>
-
 #include "avro.h"
 #include "avro_private.h"
-#include "json.h"
+#include "apr_strings.h"
 
 apr_pool_t *pool;
 
-void
+static void
 run_tests (char *dirpath, int should_pass)
 {
-  FILE *file;
+  char *jsontext;
+  apr_size_t jsonlen;
+  struct avro_value *value;
   DIR *dir;
   struct dirent *dent;
-  JSON_value *value;
   char *filepath;
-  char *text;
-  apr_size_t len;
 
   dir = opendir (dirpath);
   if (dir == NULL)
@@ -56,70 +49,55 @@ run_tests (char *dirpath, int should_pass)
       if (dent && dent->d_name[0] != '.')
 	{
 	  filepath = apr_pstrcat (pool, dirpath, "/", dent->d_name, NULL);
-	  file = fopen (filepath, "r");
-	  if (file == NULL)
+	  fprintf (stderr, "TEST %s...", filepath);
+	  jsontext = avro_util_file_read_full (pool, filepath, &jsonlen);
+	  if (!jsontext)
 	    {
-	      fprintf (stderr, "Can't open file %s", filepath);
+	      fprintf (stderr, "Can't read the file\n");
 	      exit (EXIT_FAILURE);
 	    }
 
-	  text = avro_util_file_read_full (pool, filepath, &len);
-	  if (!text)
+	  value = avro_value_create (pool, jsontext, jsonlen);
+	  if (value && should_pass)
 	    {
-	      fprintf (stderr, "Can't read the file %s\n", filepath);
-	      exit (EXIT_FAILURE);
+	      avro_value_print_info (value, stderr);
 	    }
-
-	  value = JSON_parse (pool, text, len);
-	  if (!value && should_pass)
+	  else if (!value && !should_pass)
 	    {
-	      exit (EXIT_FAILURE);
+	      /* failure expected */
 	    }
-	  else if (value && !should_pass)
+	  else
 	    {
 	      exit (EXIT_FAILURE);
 	    }
-	  else if (value)
-	    {
-#if TRACING
-	      JSONParserTrace (trace, buf);
-#endif
-/*
-	      JSON_print (stderr, value);
-*/
-	    }
+	  fprintf (stderr, "ok!\n");
 	}
     }
   while (dent != NULL);
-  closedir (dir);
 }
 
 int
-main (int argc, char *argv[], char *envp[])
+main (int argc, char *argv[])
 {
-  char *dirpath;
   char *srcdir = getenv ("srcdir");
+  char *path;
+
   if (!srcdir)
     {
       srcdir = ".";
     }
 
-#if TRACING
-  trace = fopen ("trace.txt", "w");
-  if (trace == NULL)
-    {
-      return EXIT_FAILURE;
-    }
-#endif
-
   avro_initialize ();
-
   apr_pool_create (&pool, NULL);
 
-  dirpath = apr_pstrcat (pool, srcdir, "/json_tests/pass", NULL);
-  run_tests (dirpath, 1);
-  dirpath = apr_pstrcat (pool, srcdir, "/json_tests/fail", NULL);
-  run_tests (dirpath, 0);
+  /* Run the tests that should pass */
+  path = apr_pstrcat (pool, srcdir, "/tests/schema_tests/pass", NULL);
+  fprintf (stderr, "RUNNING %s\n", path);
+  run_tests (path, 1);
+  path = apr_pstrcat (pool, srcdir, "/tests/schema_tests/fail", NULL);
+  fprintf (stderr, "RUNNING %s\n", path);
+  run_tests (path, 0);
 
+  apr_pool_destroy (pool);
   return EXIT_SUCCESS;
 }

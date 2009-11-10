@@ -1,7 +1,6 @@
 #include "avro_private.h"
 #include <apr_file_io.h>
-#include "dump.h"
-#include "json.h"
+#include "util/dump.h"
 
 struct avro_metadata
 {

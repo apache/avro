@@ -23,7 +23,7 @@ under the License.
 #include <stdio.h>
 #include <stdarg.h>
 #include "avro.h"
-#include "json.h"
+#include "json/json.h"
 #include "apr_hash.h"
 #include "apr_tables.h"
 #include "apr_pools.h"
@@ -218,7 +218,6 @@ avro_status_t avro_read_double (struct avro_io_reader *io, double *fp);
 #define DEBUG(__cmd)
 #endif
 
-#include "container_of.h"
-#include "json.h"
+#include "util/container_of.h"
 
 #endif

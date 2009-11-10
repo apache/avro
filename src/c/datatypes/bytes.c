@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 #include "avro_private.h"
-#include "dump.h"
+#include "util/dump.h"
 
 struct avro_bytes_value
 {

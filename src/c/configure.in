@@ -67,6 +67,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([libintl.h limits.h netinet/in.h stdint.h stdlib.h string.h sys/param.h sys/time.h unistd.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN
 AC_C_CONST
 AC_TYPE_SIZE_T
 
