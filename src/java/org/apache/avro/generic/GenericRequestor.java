@@ -35,15 +35,18 @@ public class GenericRequestor extends Requestor {
     super(protocol, transceiver);
   }
 
+  @Override
   public void writeRequest(Schema schema, Object request, Encoder out)
     throws IOException {
     new GenericDatumWriter<Object>(schema).write(request, out);
   }
 
+  @Override
   public Object readResponse(Schema schema, Decoder in) throws IOException {
     return new GenericDatumReader<Object>(schema).read(null, in);
   }
 
+  @Override
   public AvroRemoteException readError(Schema schema, Decoder in)
     throws IOException {
     return new AvroRemoteException(new GenericDatumReader<Object>(schema).read(null,in));

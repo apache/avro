@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.reflect;
+package org.apache.avro.specific;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

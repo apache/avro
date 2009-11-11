@@ -17,18 +17,15 @@
  */
 package org.apache.avro.reflect;
 
-import java.io.IOException;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.Encoder;
+import org.apache.avro.specific.SpecificDatumWriter;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
  * via Java reflection.
  */
-public class ReflectDatumWriter extends GenericDatumWriter<Object> {
+public class ReflectDatumWriter extends SpecificDatumWriter {
   public ReflectDatumWriter() {
     this(ReflectData.get());
   }
@@ -45,14 +42,15 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
     this(root, ReflectData.get());
   }
 
-  public ReflectDatumWriter(Schema root, ReflectData reflectData) {
+  protected ReflectDatumWriter(Schema root, ReflectData reflectData) {
     super(root, reflectData);
   }
   
-  public ReflectDatumWriter(ReflectData reflectData) {
+  protected ReflectDatumWriter(ReflectData reflectData) {
     super(reflectData);
   }
   
+  @Override
   protected Object getField(Object record, String name, int position) {
     try {
       return ReflectData.getField(record.getClass(), name).get(record);
@@ -61,14 +59,5 @@ public class ReflectDatumWriter extends GenericDatumWriter<Object> {
     }
   }
   
-  protected void writeEnum(Schema schema, Object datum, Encoder out)
-    throws IOException {
-    out.writeEnum(((Enum)datum).ordinal());
-  }
-
-  protected boolean isEnum(Object datum) {
-    return datum instanceof Enum;
-  }
-
 }
 

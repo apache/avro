@@ -4,6 +4,10 @@ Trunk (unreleased changes)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-185. Java's specific API no longer depends on reflection.
+    This reverses the inheritance of most classes in the specific and
+    reflect packages. (cutting)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

@@ -151,8 +151,8 @@ public class SpecificCompiler {
     StringBuilder out = new StringBuilder();
     header(out, protocol.getNamespace());
     line(out, 0, "public interface "+protocol.getName()+" {");
-
-    out.append("\n");
+    line(out, 1, "public static final Protocol _PROTOCOL = Protocol.parse(\""
+           +esc(protocol)+"\");");
     for (Map.Entry<String,Message> e : protocol.getMessages().entrySet()) {
       String name = e.getKey();
       Message message = e.getValue();
@@ -193,7 +193,7 @@ public class SpecificCompiler {
     line(out, 0, "import org.apache.avro.specific.SpecificRecordBase;");
     line(out, 0, "import org.apache.avro.specific.SpecificRecord;");
     line(out, 0, "import org.apache.avro.specific.SpecificFixed;");
-    line(out, 0, "import org.apache.avro.reflect.FixedSize;");
+    line(out, 0, "import org.apache.avro.specific.FixedSize;");
     for (Schema s : queue)
       if (namespace == null
           ? (s.getNamespace() != null)

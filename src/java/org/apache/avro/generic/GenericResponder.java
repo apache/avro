@@ -34,18 +34,18 @@ public abstract class GenericResponder extends Responder {
     super(local);
   }
 
-  /** Reads a request message. */
+  @Override
   public Object readRequest(Schema schema, Decoder in) throws IOException {
     return new GenericDatumReader<Object>(schema).read(null, in);
   }
 
-  /** Writes a response message. */
+  @Override
   public void writeResponse(Schema schema, Object response, Encoder out)
     throws IOException {
     new GenericDatumWriter<Object>(schema).write(response, out);
   }
 
-  /** Writes an error message. */
+  @Override
   public void writeError(Schema schema, AvroRemoteException error,
                          Encoder out) throws IOException {
     new GenericDatumWriter<Object>(schema).write(error.getValue(), out);

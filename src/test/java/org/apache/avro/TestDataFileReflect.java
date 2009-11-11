@@ -132,7 +132,7 @@ public class TestDataFileReflect {
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schema = reflectData.getSchema(BarRecord.class);
     DataFileWriter<Object> writer = new DataFileWriter<Object>(schema, fos,
-        new ReflectDatumWriter(schema, reflectData));
+        new ReflectDatumWriter(BarRecord.class, reflectData));
 
     // test writing to a file
     CheckList check = new CheckList();

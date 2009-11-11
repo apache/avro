@@ -17,19 +17,15 @@
  */
 package org.apache.avro.reflect;
 
-import java.lang.reflect.Constructor;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.specific.SpecificDatumReader;
 
 /**
  * {@link org.apache.avro.io.DatumReader DatumReader} for existing classes via
  * Java reflection.
  */
-public class ReflectDatumReader extends GenericDatumReader<Object> {
+public class ReflectDatumReader extends SpecificDatumReader {
   public ReflectDatumReader() {}
 
   public ReflectDatumReader(Class c) {
@@ -37,14 +33,10 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
   }
 
   public ReflectDatumReader(Schema root) {
-    setSchema(root);
+    super(root);
   }
 
-  protected Object newRecord(Object old, Schema schema) {
-    Class c = ReflectData.get().getClass(schema);
-    return (c.isInstance(old) ? old : newInstance(c));
-  }
-
+  @Override
   protected void addField(Object record, String name, int position, Object o) {
     try {
       ReflectData.getField(record.getClass(), name).set(record, o);
@@ -53,6 +45,7 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
     }
   }
 
+  @Override
   protected Object getField(Object record, String name, int position) {
     try {
       return ReflectData.getField(record.getClass(), name).get(record);
@@ -61,40 +54,9 @@ public class ReflectDatumReader extends GenericDatumReader<Object> {
     }
   }
 
+  @Override
   protected void removeField(Object record, String name, int position) {
     addField(record, name, position, null);
-  }
-
-  @SuppressWarnings("unchecked")
-  protected Object createEnum(String symbol, Schema schema) {
-    return Enum.valueOf(ReflectData.get().getClass(schema), symbol);
-  }
-
-  protected Object createFixed(Object old, Schema schema) {
-    Class c = ReflectData.get().getClass(schema);
-    return c.isInstance(old) ? old : newInstance(c);
-  }
-
-  private static final Class<?>[] EMPTY_ARRAY = new Class[]{};
-  private static final Map<Class,Constructor> CTOR_CACHE =
-    new ConcurrentHashMap<Class,Constructor>();
-
-  /** Create a new instance of the named class. */
-  @SuppressWarnings("unchecked")
-  protected static Object newInstance(Class c) {
-    Object result;
-    try {
-      Constructor meth = (Constructor)CTOR_CACHE.get(c);
-      if (meth == null) {
-        meth = c.getDeclaredConstructor(EMPTY_ARRAY);
-        meth.setAccessible(true);
-        CTOR_CACHE.put(c, meth);
-      }
-      result = meth.newInstance();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-    return result;
   }
 
 }

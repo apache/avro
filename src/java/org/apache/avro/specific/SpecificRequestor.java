@@ -19,40 +19,66 @@
 package org.apache.avro.specific;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.InvocationHandler;
+import java.util.Map;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.reflect.ReflectRequestor;
+import org.apache.avro.ipc.Requestor;
 
 /** {@link org.apache.avro.ipc.Requestor Requestor} for generated interfaces. */
-public class SpecificRequestor extends ReflectRequestor {
+public class SpecificRequestor extends Requestor implements InvocationHandler {
   
   public SpecificRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
-    this(iface, transceiver, SpecificData.get());
+    this(SpecificData.get().getProtocol(iface), transceiver);
   }
 
-  public SpecificRequestor(Class<?> iface, Transceiver transceiver,
-                           SpecificData specificData)
-    throws IOException {
-    this(specificData.getProtocol(iface), transceiver);
-  }
-  
-  private SpecificRequestor(Protocol protocol, Transceiver transceiver)
+  protected SpecificRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
     super(protocol, transceiver);
   }
-    
+
+  @Override
+  public Object invoke(Object proxy, Method method, Object[] args)
+    throws Throwable {
+    return request(method.getName(), args);
+  }
+
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
     return new SpecificDatumWriter(schema);
   }
 
   protected DatumReader<Object> getDatumReader(Schema schema) {
     return new SpecificDatumReader(schema);
+  }
+
+  @Override
+  public void writeRequest(Schema schema, Object request, Encoder out)
+    throws IOException {
+    Object[] args = (Object[])request;
+    int i = 0;
+    for (Map.Entry<String, Schema> param : schema.getFieldSchemas())
+      getDatumWriter(param.getValue()).write(args[i++], out);
+  }
+    
+  @Override
+  public Object readResponse(Schema schema, Decoder in) throws IOException {
+    return getDatumReader(schema).read(null, in);
+  }
+
+  @Override
+  public AvroRemoteException readError(Schema schema, Decoder in)
+    throws IOException {
+    return (AvroRemoteException)getDatumReader(schema).read(null, in);
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

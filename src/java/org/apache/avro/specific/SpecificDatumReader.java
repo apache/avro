@@ -17,11 +17,15 @@
  */
 package org.apache.avro.specific;
 
+import java.lang.reflect.Constructor;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.avro.Schema;
-import org.apache.avro.reflect.ReflectDatumReader;
+import org.apache.avro.generic.GenericDatumReader;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Java classes. */
-public class SpecificDatumReader extends ReflectDatumReader {
+public class SpecificDatumReader extends GenericDatumReader<Object> {
   public SpecificDatumReader() {}
 
   public SpecificDatumReader(Class c) {
@@ -32,14 +36,56 @@ public class SpecificDatumReader extends ReflectDatumReader {
     super(schema);
   }
 
+  @Override
+  protected Object newRecord(Object old, Schema schema) {
+    Class c = SpecificData.get().getClass(schema);
+    return (c.isInstance(old) ? old : newInstance(c));
+  }
+
+  @Override
   protected void addField(Object record, String name, int position, Object o) {
     ((SpecificRecord)record).set(position, o);
   }
+  @Override
   protected Object getField(Object record, String name, int position) {
     return ((SpecificRecord)record).get(position);
   }
+  @Override
   protected void removeField(Object record, String field, int position) {
     ((SpecificRecord)record).set(position, null);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  protected Object createEnum(String symbol, Schema schema) {
+    return Enum.valueOf(SpecificData.get().getClass(schema), symbol);
+  }
+
+  @Override
+  protected Object createFixed(Object old, Schema schema) {
+    Class c = SpecificData.get().getClass(schema);
+    return c.isInstance(old) ? old : newInstance(c);
+  }
+
+  private static final Class<?>[] EMPTY_ARRAY = new Class[]{};
+  private static final Map<Class,Constructor> CTOR_CACHE =
+    new ConcurrentHashMap<Class,Constructor>();
+
+  @SuppressWarnings("unchecked")
+  private static Object newInstance(Class c) {
+    Object result;
+    try {
+      Constructor meth = (Constructor)CTOR_CACHE.get(c);
+      if (meth == null) {
+        meth = c.getDeclaredConstructor(EMPTY_ARRAY);
+        meth.setAccessible(true);
+        CTOR_CACHE.put(c, meth);
+      }
+      result = meth.newInstance();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return result;
   }
 
 }
