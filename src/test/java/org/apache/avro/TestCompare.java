@@ -109,10 +109,11 @@ public class TestCompare {
 
   @Test
   public void testRecord() throws Exception {
-    String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":["
+    String fields = " \"fields\":["
       +"{\"name\":\"f\",\"type\":\"int\",\"order\":\"ignore\"},"
       +"{\"name\":\"g\",\"type\":\"int\",\"order\":\"descending\"},"
       +"{\"name\":\"h\",\"type\":\"int\"}]}";
+    String recordJson = "{\"type\":\"record\", \"name\":\"Test\","+fields;
     Schema schema = Schema.parse(recordJson);
     GenericData.Record r1 = new GenericData.Record(schema);
     r1.put("f", 1);
@@ -127,6 +128,14 @@ public class TestCompare {
     r2.put("g", 13);
     r2.put("h", 42);
     check(recordJson, r1, r2);
+
+    String record2Json = "{\"type\":\"record\", \"name\":\"Test2\","+fields;
+    Schema schema2 = Schema.parse(record2Json);
+    GenericData.Record r3= new GenericData.Record(schema2);
+    r3.put("f", 1);
+    r3.put("g", 13);
+    r3.put("h", 41);
+    assert(!r1.equals(r3));                       // same fields, diff name
   }
 
   @Test
@@ -199,6 +208,17 @@ public class TestCompare {
     assertEquals(1, compare(o2, o1, schema, comparable, comparator));
     assertEquals(0, compare(o1, o1, schema, comparable, comparator));
     assertEquals(0, compare(o2, o2, schema, comparable, comparator));
+
+    assert(o1.equals(o1));
+    assert(o2.equals(o2));
+    assert(!o1.equals(o2));
+    assert(!o2.equals(o1));
+    assert(!o1.equals(new Object()));
+    assert(!o2.equals(new Object()));
+    assert(!o1.equals(null));
+    assert(!o2.equals(null));
+
+    assert(o1.hashCode() != o2.hashCode());
   }
 
   @SuppressWarnings(value="unchecked")

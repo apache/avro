@@ -29,12 +29,15 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
   public abstract Object get(int field);
   public abstract void set(int field, Object value);
 
-  public boolean equals(Object o) {
-    return SpecificRecordBase.equals(this, o);
+  public boolean equals(Object that) {
+    if (that == this) return true;                        // identical object
+    if (!(that instanceof SpecificExceptionBase)) return false; // not a record
+    if (this.getClass() != that.getClass()) return false; // not same schema
+    return SpecificData.get().compare(this, that, this.getSchema()) == 0;
   }
 
   public int hashCode() {
-    return SpecificRecordBase.hashCode(this);
+    return SpecificData.get().hashCode(this, this.getSchema());
   }
 
 }

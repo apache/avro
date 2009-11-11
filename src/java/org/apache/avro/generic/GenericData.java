@@ -53,8 +53,19 @@ public class GenericData {
       this.schema = schema;
     }
     public Schema getSchema() { return schema; }
+    public boolean equals(Object o) {
+      if (o == this) return true;                 // identical object
+      if (!(o instanceof Record)) return false;   // not a record
+      Record that = (Record)o;
+      if (!schema.getFullName().equals(that.schema.getFullName()))
+        return false;                             // not the same schema
+      return this.compareTo(that) == 0;
+    }
+    public int hashCode() {
+      return GenericData.get().hashCode(this, schema);
+    }
     public int compareTo(Record that) {
-      return GenericData.get().compare(this, that, this.getSchema());
+      return GenericData.get().compare(this, that, schema);
     }
   }
 
@@ -94,23 +105,15 @@ public class GenericData {
       return (size < elements.length) ? (T)elements[size] : null;
     }
     public int hashCode() {
-      int hashCode = 1;
-      for (T e : this)
-        hashCode = 31*hashCode + (e==null ? 0 : e.hashCode());
-      return hashCode;
+      return GenericData.get().hashCode(this, schema);
     }
     public boolean equals(Object o) {
-      if (o == this) return true;
-      if (!(o instanceof GenericArray)) return false;
-      Iterator e1 = iterator();
-      Iterator e2 = ((GenericArray)o).iterator();
-      while(e1.hasNext() && e2.hasNext()) {
-        Object o1 = e1.next();
-        Object o2 = e2.next();
-        if (!(o1==null ? o2==null : o1.equals(o2)))
-          return false;
-      }
-      return !(e1.hasNext() || e2.hasNext());
+      if (o == this) return true;                 // identical object
+      if (!(o instanceof Array)) return false;    // not an array
+      Array that = (Array)o;
+      if (!schema.equals(that.schema))
+        return false;                             // not the same schema
+      return this.compareTo((Array)that) == 0;
     }
     public int compareTo(Array<T> that) {
       return GenericData.get().compare(this, that, this.getSchema());
@@ -392,12 +395,49 @@ public class GenericData {
     return datum instanceof ByteBuffer;
   }
 
+  /** Compute a hash code according to a schema, consistent with {@link
+   * #compare(Object,Object,Schema)}. */
+  @SuppressWarnings(value="unchecked")
+  public int hashCode(Object o, Schema s) {
+    int hashCode = 1;
+    switch (s.getType()) {
+    case RECORD:
+      GenericRecord r = (GenericRecord)o;
+      for (Map.Entry<String, Field> e : s.getFields().entrySet()) {
+        Field f = e.getValue();
+        if (f.order() == Field.Order.IGNORE)
+          continue;
+        String name = e.getKey();
+        hashCode = hashCodeAdd(hashCode, r.get(name), f.schema());
+      }
+      return hashCode;
+    case ARRAY:
+      GenericArray a = (GenericArray)o;
+      Schema elementType = a.getSchema().getElementType();
+      for (Object e : a)
+        hashCode = hashCodeAdd(hashCode, e, elementType);
+      return hashCode;
+    case UNION:
+      return hashCode(o, s.getTypes().get(resolveUnion(s, o)));
+    case NULL:
+      return 0;
+    default:
+      return o.hashCode();
+    }
+  }
+
+  /** Add the hash code for an object into an accumulated hash code. */
+  protected int hashCodeAdd(int hashCode, Object o, Schema s) {
+    return 31*hashCode + hashCode(o, s);
+  }
+
   /** Compare objects according to their schema.  If equal, return zero.  If
    * greater-than, return 1, if less than return -1.  Order is consistent with
    * that of {@link BinaryData#compare(byte[], int, byte[], int, Schema)}.
    */
   @SuppressWarnings(value="unchecked")
   public int compare(Object o1, Object o2, Schema s) {
+    if (o1 == o2) return 0;
     switch (s.getType()) {
     case RECORD:
       GenericRecord r1 = (GenericRecord)o1;
@@ -433,10 +473,11 @@ public class GenericData {
       return (i1 == i2)
         ? compare(o1, o2, s.getTypes().get(i1))
         : i1 - i2;
+    case NULL:
+      return 0;
     default:
       return ((Comparable)o1).compareTo(o2);
     }
   }
 
 }
-

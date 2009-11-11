@@ -69,6 +69,25 @@ public class SpecificData extends ReflectData {
   }
 
   @Override
+  public int hashCode(Object o, Schema s) {
+    switch (s.getType()) {
+    case RECORD:
+      int hashCode = 1;
+      SpecificRecord r = (SpecificRecord)o;
+      Iterator<Field> fields = s.getFields().values().iterator();
+      for (int i = 0; fields.hasNext(); i++) {
+        Field f = fields.next();
+        if (f.order() == Field.Order.IGNORE)
+          continue;
+        hashCode = hashCodeAdd(hashCode, r.get(i), f.schema());
+      }
+      return hashCode;
+    default:
+      return super.hashCode(o, s);
+    }
+  }
+
+  @Override
   public int compare(Object o1, Object o2, Schema s) {
     switch (s.getType()) {
     case RECORD:

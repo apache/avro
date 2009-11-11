@@ -144,8 +144,7 @@ public class ReflectData extends GenericData {
     }
   }
 
-  private Map<String,Map<String,Class>> classCache =
-    new ConcurrentHashMap<String,Map<String,Class>>();
+  private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
 
   /** Return the class that implements this schema. */
   public Class getClass(Schema schema) {
@@ -153,18 +152,12 @@ public class ReflectData extends GenericData {
     case FIXED:
     case RECORD:
     case ENUM:
-      String namespace = schema.getNamespace();
-      Map<String,Class> spaceCache = classCache.get(namespace);
-      if (spaceCache == null) {
-        spaceCache = new ConcurrentHashMap<String,Class>();
-        classCache.put(namespace, spaceCache);
-      }
-      String name = schema.getName();
-      Class c = spaceCache.get(name);
+      String full = schema.getFullName();
+      Class c = classCache.get(full);
       if (c == null) {
         try {
           c = Class.forName(getClassName(schema));
-          spaceCache.put(name, c);
+          classCache.put(full, c);
         } catch (ClassNotFoundException e) {
           throw new AvroRuntimeException(e);
         }

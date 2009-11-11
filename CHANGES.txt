@@ -75,6 +75,10 @@ Trunk (unreleased changes)
 
     AVRO-189. test-c target fails (massie)
 
+    AVRO-182. Fix Java's generic and specific implementations of
+    equals() and hashCode() to be consistent with compareTo().
+    (cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

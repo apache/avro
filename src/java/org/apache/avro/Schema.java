@@ -168,6 +168,12 @@ public abstract class Schema {
     throw new AvroRuntimeException("Not a named type: "+this);
   }
 
+  /** If this is a record, enum or fixed, returns its namespace-qualified name,
+   * if any. */
+  public String getFullName() {
+    throw new AvroRuntimeException("Not a named type: "+this);
+  }
+
   /** Returns true if this record is an error type. */
   public boolean isError() {
     throw new AvroRuntimeException("Not a record: "+this);
@@ -264,10 +270,14 @@ public abstract class Schema {
   }
 
   private static class Name {
-    private String name;
-    private String space;
+    private final String name;
+    private final String space;
+    private final String full;
     public Name(String name, String space) {
-      if (name == null) return;                   // anonymous
+      if (name == null) {                         // anonymous
+        this.name = this.space = this.full = null;
+        return;
+      }
       int lastDot = name.lastIndexOf('.');
       if (lastDot < 0) {                          // unqualified name
         this.space = space;                       // use default space
@@ -276,20 +286,18 @@ public abstract class Schema {
         this.space = name.substring(0, lastDot);  // get space from name
         this.name = name.substring(lastDot+1, name.length());
       }
+      this.full = (this.space == null) ? this.name : this.space+"."+this.name;
     }
     public boolean equals(Object o) {
       if (o == this) return true;
       if (!(o instanceof Name)) return false;
       Name that = (Name)o;
-      return that == null ? false
-        : (name==null ? that.name==null : name.equals(that.name))
-        && (space==null ? that.space==null : space.equals(that.space));
+      return full==null ? that.full==null : full.equals(that.full);
     }
     public int hashCode() {
-      return (name==null ? 0 : name.hashCode())
-        + (space==null ? 0 : space.hashCode());
+      return full==null ? 0 : full.hashCode();
     }
-    public String toString() { return "name="+name + " namespace="+space; }
+    public String toString() { return full; }
     public void writeName(Names names, JsonGenerator gen) throws IOException {
       if (name != null) gen.writeStringField("name", name);
       if (space != null) {
@@ -309,14 +317,14 @@ public abstract class Schema {
     }
     public String getName() { return name.name; }
     public String getNamespace() { return name.space; }
+    public String getFullName() { return name.full; }
     public boolean writeNameRef(Names names, JsonGenerator gen)
       throws IOException {
       if (this.equals(names.get(name))) {
         if (name.space == null || name.space.equals(names.space()))
-          gen.writeString(name.name);
-        else {
-          gen.writeString(name.space+"."+name.name);
-        }
+          gen.writeString(name.name);             // in default namespace
+        else
+          gen.writeString(name.full);             // use fully-qualified name
         return true;
       } else if (name.name != null) {
         names.put(name, this);
