@@ -20,6 +20,7 @@ package org.apache.avro;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -98,6 +99,7 @@ public class TestSchema {
     GenericArray<Long> array = new GenericData.Array<Long>(1, schema);
     array.add(1L);
     check(json, "[1]", array);
+    checkParseError("{\"type\":\"array\"}");      // items required
   }
 
   @Test
@@ -105,6 +107,7 @@ public class TestSchema {
     HashMap<Utf8,Long> map = new HashMap<Utf8,Long>();
     map.put(new Utf8("a"), 1L);
     check("{\"type\":\"map\", \"values\":\"long\"}", "{\"a\":1}", map);
+    checkParseError("{\"type\":\"map\"}");        // values required
   }
 
   @Test
@@ -115,17 +118,26 @@ public class TestSchema {
     GenericData.Record record = new GenericData.Record(schema);
     record.put("f", 11L);
     check(recordJson, "{\"f\":11}", record, false);
+    checkParseError("{\"type\":\"record\"}");
+    checkParseError("{\"type\":\"record\",\"name\":\"X\"}");
+    checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":\"Y\"}");
+    checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":"
+                    +"[{\"name\":\"f\"}]}");       // no type
+    checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":"
+                    +"[{\"type\":\"long\"}]}");    // no name
   }
 
   @Test
   public void testEnum() throws Exception {
     check(BASIC_ENUM_SCHEMA, "\"B\"", "B", false);
+    checkParseError("{\"type\":\"enum\"}");        // symbols required
   }
 
   @Test
   public void testFixed() throws Exception {
     check("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}", "\"a\"",
           new GenericData.Fixed(new byte[]{(byte)'a'}), false);
+    checkParseError("{\"type\":\"fixed\"}");        // size required
   }
 
   @Test
@@ -177,6 +189,15 @@ public class TestSchema {
               new GenericData.Fixed(new byte[]{(byte)'a'}),
               "{\"Bar\":\"a\"}");
     checkJson(union, "X", "{\"Baz\":\"X\"}");
+  }
+
+  private static void checkParseError(String json) {
+    try {
+      Schema schema = Schema.parse(json);
+    } catch (SchemaParseException e) {
+      return;
+    }
+    fail("Should not have parsed: "+json);
   }
 
   private static void check(String schemaJson, String defaultJson,

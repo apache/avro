@@ -746,9 +746,15 @@ public abstract class Schema {
         if (name != null) names.add(result);
         return result;
       } else if (type.equals("array")) {          // array
-        return new ArraySchema(parse(schema.get("items"), names));
+        JsonNode itemsNode = schema.get("items");
+        if (itemsNode == null)
+          throw new SchemaParseException("Array has no items type: "+schema);
+        return new ArraySchema(parse(itemsNode, names));
       } else if (type.equals("map")) {            // map
-        return new MapSchema(parse(schema.get("values"), names));
+        JsonNode valuesNode = schema.get("values");
+        if (valuesNode == null)
+          throw new SchemaParseException("Map has no values type: "+schema);
+        return new MapSchema(parse(valuesNode, names));
       } else if (type.equals("fixed")) {          // fixed
         JsonNode sizeNode = schema.get("size");
         if (sizeNode == null || !sizeNode.isInt())
