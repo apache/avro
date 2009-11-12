@@ -86,8 +86,14 @@ class Writer : private boost::noncopyable
         out_.writeBytes(val, size);
     }
 
-    void writeFixed(const uint8_t *val, size_t size) {
-        out_.writeBytes(val, size);
+    template <size_t N>
+    void writeFixed(const uint8_t (&val)[N]) {
+        out_.writeBytes(val, N);
+    }
+
+    template <size_t N>
+    void writeFixed(const boost::array<uint8_t, N> &val) {
+        out_.writeBytes(val.data(), val.size());
     }
 
     void writeRecord() {}

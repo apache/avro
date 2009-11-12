@@ -147,7 +147,7 @@ struct TestSchema
 
         std::cout << "Fixed16\n";
         
-        s.writeFixed(fixeddata, 16);
+        s.writeFixed(fixeddata);
 
         std::cout << "Int\n";
         s.writeInt(-3456);
@@ -246,8 +246,8 @@ struct TestSchema
     template <typename Parser>
     void readFixed(Parser &p) {
 
-        std::vector<uint8_t> input;
-        p.readFixed(input, 16);
+        boost::array<uint8_t, 16> input;
+        p.readFixed<16>(input);
         BOOST_CHECK_EQUAL(input.size(), 16U);
 
         for(int i=0; i< 16; ++i) {

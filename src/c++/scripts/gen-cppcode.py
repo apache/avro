@@ -56,6 +56,11 @@ def doSymbolic(args):
 
 recordfieldTemplate = '$type$ $name$\n'
 recordTemplate = '''struct $name$ {
+
+    $name$ () :
+$initializers$
+    { }
+
 $recordfields$};
 
 template <typename Serializer>
@@ -78,17 +83,22 @@ def doRecord(args):
     fields = ''
     serializefields = ''
     parsefields = ''
+    initlist = ''
     end = False
     while not end:
         line = getNextLine()
-        if line[0] == 'end': end = True
+        if line[0] == 'end': 
+            end = True
+            initlist = initlist.rstrip(',\n')
         elif line[0] == 'name':
             fieldname = line[1]
             fieldline = getNextLine()
             fieldtypename, fieldtype = processType(fieldline)
             fields += '    ' +  fieldtypename + ' ' + fieldname + ';\n'
             serializefields += '    serialize(s, val.' + fieldname + ');\n'
+            initlist += '        ' + fieldname + '(),\n'
             parsefields += '    parse(p, val.' + fieldname + ');\n'
+    structDef = structDef.replace('$initializers$', initlist)
     structDef = structDef.replace('$recordfields$', fields)
     structDef = structDef.replace('$serializefields$', serializefields)
     structDef = structDef.replace('$parsefields$', parsefields)
@@ -100,7 +110,10 @@ unionTemplate = '''struct $name$ {
 
 $typedeflist$
 
-    $name$() : choice(0), value(T0()) {}
+    $name$() : 
+        choice(0), 
+        value(T0()) 
+    { }
 
 $setfuncs$
 #ifdef AVRO_BOOST_NO_ANYREF
@@ -188,9 +201,15 @@ def doUnion(args):
     return (typename,typename)
 
 enumTemplate = '''struct $name$ {
+
     enum EnumSymbols {
         $enumsymbols$
     };
+
+    $name$() : 
+        value($firstsymbol$) 
+    { }
+
     EnumSymbols value;
 };
 
@@ -211,14 +230,19 @@ def doEnum(args):
     structDef = structDef.replace('$name$', typename)
     end = False
     symbols = '';
+    firstsymbol = '';
     while not end:
         line = getNextLine()
         if line[0] == 'end': end = True
         elif line[0] == 'name':
-            if not symbols=='' : symbols += ', '
+            if symbols== '' :
+                firstsymbol = line[1]
+            else :
+                symbols += ', '
             symbols += line[1]
         else: print "error"
     structDef = structDef.replace('$enumsymbols$', symbols);
+    structDef = structDef.replace('$firstsymbol$', firstsymbol);
     addStruct(typename, structDef)
     return (typename,typename)
 
@@ -226,6 +250,10 @@ arrayTemplate = '''struct $name$ {
     typedef $valuetype$ ValueType;
     typedef std::vector<ValueType> ArrayType;
     
+    $name$() :
+        value()
+    { }
+
     void addValue(const ValueType &val) {
         value.push_back(val);
     }
@@ -283,6 +311,10 @@ mapTemplate = '''struct $name$ {
     typedef $valuetype$ ValueType;
     typedef std::map<std::string, ValueType> MapType;
     
+    $name$() :
+        value()
+    { }
+
     void addValue(const std::string &key, const ValueType &val) {
         value.insert(MapType::value_type(key, val));
     }
@@ -345,17 +377,22 @@ fixedTemplate = '''struct $name$ {
     enum {
         fixedSize = $N$
     };
+
+    $name$() {
+        memset(value, 0, sizeof(value));
+    }
+    
     uint8_t value[fixedSize];
 };
 
 template <typename Serializer>
 inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
-    s.writeFixed(val.value, $name$::fixedSize);
+    s.writeFixed(val.value);
 }
 
 template <typename Parser>
 inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
-    p.readFixed(val.value, $name$::fixedSize);
+    p.readFixed(val.value);
 }
 '''
 
@@ -436,6 +473,7 @@ def writeHeader():
         print "%s\n" % x
 
     for x in structList:
+        print "/*----------------------------------------------------------------------------------*/\n"
         print "%s\n" % x
 
     print "\n} // namespace %s\n" % namespace

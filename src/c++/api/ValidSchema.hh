@@ -49,11 +49,7 @@ class ValidSchema : private boost::noncopyable
     void setSchema(const Schema &schema);
 
     const NodePtr &root() const {
-        return node_;
-    }
-
-    const Type rootType() const {
-        return node_->type();
+        return root_;
     }
 
     void toJson(std::ostream &os) const;
@@ -69,7 +65,7 @@ class ValidSchema : private boost::noncopyable
     bool validate(const NodePtr &node);
 
     SymbolMap symbolMap_;
-    NodePtr node_;
+    NodePtr root_;
 };
 
 } // namespace avro

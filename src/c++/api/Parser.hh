@@ -88,12 +88,14 @@ class Parser : private boost::noncopyable
         reader_.readBytes(val);
     }
 
-    void readFixed(std::vector<uint8_t> &val, size_t size) {
-        reader_.readFixed(val, size);
+    template <size_t N>
+    void readFixed(uint8_t (&val)[N]) {
+        reader_.readFixed(val);
     }
 
-    void readFixed(uint8_t *val, size_t size) {
-        reader_.readFixed(val, size);
+    template<size_t N>
+    void readFixed(boost::array<uint8_t, N> &val) {
+        reader_.readFixed(val);
     }
 
     void readRecord() { 

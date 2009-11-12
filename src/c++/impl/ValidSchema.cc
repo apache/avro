@@ -25,13 +25,13 @@
 namespace avro {
 
     ValidSchema::ValidSchema(const Schema &schema) :
-    node_(schema.root())
+    root_(schema.root())
 {
-    validate(node_);
+    validate(root_);
 }
 
 ValidSchema::ValidSchema() :
-   node_(NullSchema().root()) 
+   root_(NullSchema().root()) 
 { }
 
 void
@@ -39,14 +39,14 @@ ValidSchema::setSchema(const Schema &schema)
 {
     const NodePtr &node(schema.root());
     validate(schema.root());
-    node_ = node;
+    root_ = node;
 }
 
 bool
 ValidSchema::validate(const NodePtr &node) 
 {
     if(!node) {
-        node_.reset(new NodePrimitive(AVRO_NULL));
+        root_.reset(new NodePrimitive(AVRO_NULL));
     }
 
     if(!node->isValid()) {
@@ -80,14 +80,14 @@ ValidSchema::validate(const NodePtr &node)
 void 
 ValidSchema::toJson(std::ostream &os) const
 { 
-    node_->printJson(os, 0);
+    root_->printJson(os, 0);
     os << '\n';
 }
 
 void 
 ValidSchema::toFlatList(std::ostream &os) const
 { 
-    node_->printBasicInfo(os);
+    root_->printBasicInfo(os);
 }
 
 } // namespace avro

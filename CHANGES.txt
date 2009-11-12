@@ -16,6 +16,8 @@ Trunk (unreleased changes)
 
   IMPROVEMENTS
 
+    AVRO-190. Use fixed size C++ types for Avro fixed types. (sbanacho)
+
     AVRO-180. Enhance code generator script and unit tests. (sbanacho)
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

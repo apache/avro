@@ -56,10 +56,20 @@ class ValidatingWriter : private boost::noncopyable
 
     void writeBytes(const uint8_t *val, size_t size);
 
-    void writeFixed(const uint8_t *val, size_t size) {
+
+    template <size_t N>
+    void writeFixed(const uint8_t (&val)[N]) {
         checkSafeToPut(AVRO_FIXED);
-        checkSizeExpected(size);
-        writer_.writeFixed(val, size);
+        checkSizeExpected(N);
+        writer_.writeFixed(val);
+        validator_.advance();
+    }
+
+    template <size_t N>
+    void writeFixed(const boost::array<uint8_t, N> &val) {
+        checkSafeToPut(AVRO_FIXED);
+        checkSizeExpected(val.size());
+        writer_.writeFixed(val);
         validator_.advance();
     }
 

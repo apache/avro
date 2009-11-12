@@ -73,8 +73,14 @@ class Serializer : private boost::noncopyable
         writer_.writeBytes(val);
     }
 
-    void writeFixed(const uint8_t *val, size_t size) {
-        writer_.writeFixed(val, size);
+    template <size_t N>
+    void writeFixed(const uint8_t (&val)[N]) {
+        writer_.writeFixed(val);
+    }
+
+    template <size_t N>
+    void writeFixed(const boost::array<uint8_t, N> &val) {
+        writer_.writeFixed(val);
     }
 
     void writeString(const std::string &val) {
