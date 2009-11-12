@@ -66,6 +66,8 @@ Trunk (unreleased changes)
 
   BUG FIXES
  
+    AVRO-191. Explicitly include stdint.h for C++. (cutting via sbanacho)
+
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
 
     AVRO-141.  Fix a NullPointerException in ReflectData#isRecord().

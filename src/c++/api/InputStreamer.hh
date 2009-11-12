@@ -20,6 +20,7 @@
 #define avro_InputStreamer_hh__
 
 #include <iostream>
+#include <stdint.h>
 
 namespace avro {
 
