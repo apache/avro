@@ -34,7 +34,7 @@ uint32_t encodeZigzag32(int32_t input);
 int32_t decodeZigzag32(uint32_t input);
 
 size_t encodeInt32(int32_t input, boost::array<uint8_t, 5> &output);
-size_t encodeInt64(int64_t input, boost::array<uint8_t, 9> &output);
+size_t encodeInt64(int64_t input, boost::array<uint8_t, 10> &output);
 
 } // namespace avro
 

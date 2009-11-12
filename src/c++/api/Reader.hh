@@ -146,7 +146,7 @@ class Reader : private boost::noncopyable
         int shift = 0;
         do {
             in_.readByte(val);
-            uint64_t newbits = (val & 0x7f) << shift;
+            uint64_t newbits = static_cast<uint64_t>(val & 0x7f) << shift;
             encoded |= newbits;
             shift += 7;
         } while (val & 0x80);

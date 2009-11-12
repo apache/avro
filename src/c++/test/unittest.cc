@@ -80,6 +80,7 @@ struct TestSchema
         record.addField("mybool", BoolSchema());
         FixedSchema fixed(16, "fixed16");
         record.addField("myfixed", fixed);
+        record.addField("mylong", LongSchema());
         record.addField("anotherint", intSchema);
 
         schema_.setSchema(record);
@@ -148,6 +149,9 @@ struct TestSchema
         std::cout << "Fixed16\n";
         
         s.writeFixed(fixeddata);
+
+        std::cout << "Long\n";
+        s.writeLong(7010728798977672067LL);
 
         std::cout << "Int\n";
         s.writeInt(-3456);
@@ -288,6 +292,11 @@ struct TestSchema
 
         printNext(p);
         readFixed(p);
+
+        printNext(p);
+        longval = p.readLong();
+        std::cout << longval << '\n';
+        BOOST_CHECK_EQUAL(longval, 7010728798977672067LL);
 
         printNext(p);
         int32_t intval = p.readInt();

@@ -46,7 +46,7 @@ decodeZigzag32(uint32_t input)
 }
 
 size_t 
-encodeInt64(int64_t input, boost::array<uint8_t, 9> &output)
+encodeInt64(int64_t input, boost::array<uint8_t, 10> &output)
 {
     // get the zigzag encoding 
     uint64_t val = encodeZigzag64(input);

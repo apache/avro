@@ -52,7 +52,7 @@ class Writer : private boost::noncopyable
     }
 
     void writeValue(int64_t val) {
-        boost::array<uint8_t, 9> bytes;
+        boost::array<uint8_t, 10> bytes;
         size_t size = encodeInt64(val, bytes);
         out_.writeBytes(bytes.data(), size);
     }

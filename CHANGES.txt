@@ -68,6 +68,8 @@ Trunk (unreleased changes)
 
   BUG FIXES
  
+    AVRO-194. C++ varint encoding buffer too small. (sbanacho)
+
     AVRO-191. Explicitly include stdint.h for C++. (cutting via sbanacho)
 
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
