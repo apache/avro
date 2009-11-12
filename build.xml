@@ -462,7 +462,10 @@
   <target name="test-avroj" depends="avroj"
    description="Tests avroj commands">
     <exec executable="${basedir}/src/test/bin/test_avroj.sh"
-        failonerror="true" />
+          failonerror="true">
+      <env key="AVROJ" value="${build.dir}/avroj-${version}.jar"/>
+      <env key="TMPDIR" value="${test.java.build.dir}/avroj"/>
+    </exec>
   </target>
 
   <target name="pydoc" description="Generate python api docs">

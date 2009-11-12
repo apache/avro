@@ -22,14 +22,21 @@ set -o xtrace
 # This script will exist at any false return value.
 set -o errexit
 
-AVROJ="java -jar build/avroj-*.jar"
+if [ "$AVROJ" = "" ]; then
+  echo "Error: AVROJ is not set."
+  exit 1
+fi
 
-# Create a temp directory.
-TMPDIR=$(mktemp -d -t test_avroj)
+if [ "$TMPDIR" = "" ]; then
+  echo "Error: TMPDIR is not set."
+  exit 1
+fi
 
 ######################################################################
-echo "Testing code generation..."
+# Clean up temp directory.
+rm -rf $TMPDIR
 
+######################################################################
 $AVROJ compile protocol src/test/schemata/namespace.avpr $TMPDIR/namespace
 # Check that the expected names were generated
 [ "MD5.java TestError.java TestNamespace.java TestRecord.java " = \
@@ -41,13 +48,5 @@ $AVROJ compile schema src/test/schemata/interop.avsc $TMPDIR/schema
     | awk -F "/" '{ print $NF }' | sort | tr '\n' ' ')" ]
 
 ######################################################################
-echo "Testing avroj command..."
-
 $AVROJ 2>&1 | grep -q "Expected one of the following"
 $AVROJ doesnotexist 2>&1 | grep -q "Expected one of the following"
-
-######################################################################
-# Clean up temp directory.
-rm -rf $TMPDIR
-
-echo "Tests passed!"

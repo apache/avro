@@ -62,6 +62,8 @@ Trunk (unreleased changes)
 
     AVRO-192. Improved errors for Java schema parsing problems. (cutting)
 
+    AVRO-193. Fix 'ant test-avroj' on Ubuntu 9.10. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
