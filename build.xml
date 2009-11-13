@@ -244,6 +244,8 @@
     </taskdef>
     <paranamer sourceDirectory="${test.java.generated.dir}"
 	       outputDirectory="${test.java.generated.classes}"/>
+    <paranamer sourceDirectory="${test.java.src.dir}"
+	       outputDirectory="${test.java.classes}"/>
   </target>
 
   <macrodef name="java-avro-compiler">

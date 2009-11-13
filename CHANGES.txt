@@ -93,6 +93,9 @@ Trunk (unreleased changes)
     equals() and hashCode() to be consistent with compareTo().
     (cutting)
 
+    AVRO-171. Fix Java's Protocol#toString() to correctly handle
+    forward-references. (cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

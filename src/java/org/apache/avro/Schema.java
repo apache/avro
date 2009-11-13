@@ -670,6 +670,9 @@ public abstract class Schema {
       }
       return super.get(name);
     }
+    public boolean contains(Schema schema) {
+      return get(((NamedSchema)schema).name) != null;
+    }
     public void add(Schema schema) {
       put(((NamedSchema)schema).name, schema);
     }
@@ -678,16 +681,6 @@ public abstract class Schema {
       if (containsKey(name))
         throw new SchemaParseException("Can't redefine: "+name);
       return super.put(name, schema);
-    }
-    public Names except(final Schema schema) {
-      final Names parent = this;
-      return new Names(space) {
-        public Schema get(Object o) {
-          if (this.containsKey(o)) return this.get(o);
-          if (((NamedSchema)schema).name.equals(o)) return null;
-          return parent.get(o);
-        }
-      };
     }
   }
 

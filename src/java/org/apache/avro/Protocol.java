@@ -212,8 +212,10 @@ public class Protocol {
     gen.writeStringField("namespace", namespace);
     
     gen.writeArrayFieldStart("types");
+    Schema.Names resolved = new Schema.Names(namespace);
     for (Schema type : types.values())
-      type.toJson(types.except(type), gen);
+      if (!resolved.contains(type))
+        type.toJson(resolved, gen);
     gen.writeEndArray();
     
     gen.writeObjectFieldStart("messages");

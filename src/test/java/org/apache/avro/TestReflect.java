@@ -149,4 +149,23 @@ public class TestReflect {
       }
     }
   }
+
+  public static class X { int i; }
+  public static class B1 { X x; }
+  public static class B2 { X x; }
+  public static class A { B1 b1; B2 b2; }
+  public static interface C { void foo(A a); }
+
+  @Test
+  public void testForwardReference() {
+    ReflectData data = ReflectData.get();
+    Protocol reflected = data.getProtocol(C.class);
+    Protocol reparsed = Protocol.parse(reflected.toString());
+    assertEquals(reflected, reparsed);
+    assert(reparsed.getTypes().contains(data.getSchema(A.class)));
+    assert(reparsed.getTypes().contains(data.getSchema(B1.class)));
+    assert(reparsed.getTypes().contains(data.getSchema(B2.class)));
+    assert(reparsed.getTypes().contains(data.getSchema(X.class)));
+  }
+
 }
