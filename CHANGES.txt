@@ -62,8 +62,6 @@ Trunk (unreleased changes)
 
     AVRO-192. Improved errors for Java schema parsing problems. (cutting)
 
-    AVRO-193. Fix 'ant test-avroj' on Ubuntu 9.10. (cutting)
-
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
@@ -92,6 +90,8 @@ Trunk (unreleased changes)
     AVRO-182. Fix Java's generic and specific implementations of
     equals() and hashCode() to be consistent with compareTo().
     (cutting)
+
+    AVRO-193. Fix 'ant test-avroj' on Ubuntu 9.10. (cutting)
 
     AVRO-171. Fix Java's Protocol#toString() to correctly handle
     forward-references. (cutting)
