@@ -62,6 +62,8 @@ Trunk (unreleased changes)
 
     AVRO-192. Improved errors for Java schema parsing problems. (cutting)
 
+    AVRO-195. Complex type support for write streams (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

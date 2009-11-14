@@ -51,8 +51,8 @@ avro_map_print (struct avro_value *value, FILE * fp)
       for (i = 0, hi = apr_hash_first (subpool, self->map); hi;
 	   hi = apr_hash_next (hi), i++)
 	{
-	  avro_value *key;
-	  avro_value *value;
+	  struct avro_value *key;
+	  struct avro_value *value;
 	  apr_hash_this (hi, (void *) &key, &len, (void *) &value);
 	  avro_value_print_info (key, fp);
 	  avro_value_print_info (value, fp);
@@ -95,10 +95,10 @@ avro_map_read_skip (struct avro_value *value, struct avro_reader *reader,
     {
       for (i = 0; i < count; i++)
 	{
-	  avro_value *key =
+	  struct avro_value *key =
 	    avro_value_from_json (self->ctx, self->base_value.parent,
 				  self->key_schema);
-	  avro_value *value =
+	  struct avro_value *value =
 	    avro_value_from_json (self->ctx, self->base_value.parent,
 				  self->value_schema);
 	  if (!key || !value)
@@ -143,8 +143,56 @@ avro_map_skip (struct avro_value *value, struct avro_reader *reader)
 static avro_status_t
 avro_map_write (struct avro_value *value, struct avro_writer *writer)
 {
-  /* TODO */
-  return AVRO_FAILURE;
+  struct avro_map_value *self =
+    container_of (value, struct avro_map_value, base_value);
+  struct avro_io_writer *io;
+  const avro_long_t zero = 0;
+  avro_status_t status;
+  avro_long_t count;
+
+  if (!writer)
+    {
+      return AVRO_FAILURE;
+    }
+  io = writer->io;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+
+  if (self->map)
+    {
+      apr_hash_index_t *hi;
+      count = apr_hash_count (self->map);
+      if (count)
+	{
+	  status = avro_write_long (io, (avro_long_t *) & count);
+	  if (status != AVRO_OK)
+	    {
+	      return status;
+	    }
+	  hi = apr_hash_first (value->pool, self->map);
+	  for (; hi; hi = apr_hash_next (hi))
+	    {
+	      apr_ssize_t len;
+	      struct avro_value *key;
+	      struct avro_value *val;
+	      apr_hash_this (hi, (void *) &key, &len, (void *) &val);
+	      status = avro_value_write_data (key, writer);
+	      if (status != AVRO_OK)
+		{
+		  return status;
+		}
+	      status = avro_value_write_data (val, writer);
+	      if (status != AVRO_OK)
+		{
+		  return status;
+		}
+	    }
+	}
+    }
+  /* Zero terminate */
+  return avro_write_long (io, (avro_long_t *) & zero);
 }
 
 static struct avro_value *
@@ -152,7 +200,7 @@ avro_map_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		 apr_pool_t * pool, const JSON_value * json)
 {
   struct avro_map_value *self;
-  avro_value *value;
+  struct avro_value *value;
   apr_pool_t *tmp_pool;
 
   DEBUG (fprintf (stderr, "Creating map\n"));
@@ -199,7 +247,7 @@ avro_map_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_map_info = {
+const struct avro_value_module avro_map_module = {
   .name = L"map",
   .type = AVRO_MAP,
   .private = 0,

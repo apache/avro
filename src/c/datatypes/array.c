@@ -45,7 +45,8 @@ avro_array_print (struct avro_value *value, FILE * fp)
     {
       for (i = 0; i < self->values->nelts; i++)
 	{
-	  avro_value *item = ((avro_value **) self->values->elts)[i];
+	  struct avro_value *item =
+	    ((struct avro_value **) self->values->elts)[i];
 	  avro_value_print_info (item, fp);
 	}
     }
@@ -87,14 +88,15 @@ avro_array_read_skip (struct avro_value *value, struct avro_reader *reader,
   apr_pool_clear (self->pool);
 
   self->values =
-    skip ? NULL : apr_array_make (self->pool, count, sizeof (avro_value *));
+    skip ? NULL : apr_array_make (self->pool, count,
+				  sizeof (struct avro_value *));
 
   while (count > 0)
     {
       /* Read in the count number of items */
       if (skip)
 	{
-	  avro_value *item =
+	  struct avro_value *item =
 	    avro_value_from_json (self->ctx, self->base_value.parent,
 				  self->item_schema);
 	  for (i = 0; i < count; i++)
@@ -110,7 +112,7 @@ avro_array_read_skip (struct avro_value *value, struct avro_reader *reader,
 	{
 	  for (i = 0; i < count; i++)
 	    {
-	      avro_value *item =
+	      struct avro_value *item =
 		avro_value_from_json (self->ctx, self->base_value.parent,
 				      self->item_schema);
 	      if (!item)
@@ -123,7 +125,7 @@ avro_array_read_skip (struct avro_value *value, struct avro_reader *reader,
 		  return status;
 		}
 	      /* Save the item */
-	      *(avro_value **) apr_array_push (self->values) = item;
+	      *(struct avro_value **) apr_array_push (self->values) = item;
 	    }
 	}
 
@@ -151,18 +153,54 @@ avro_array_skip (struct avro_value *value, struct avro_reader *reader)
 static avro_status_t
 avro_array_write (struct avro_value *value, struct avro_writer *writer)
 {
-/* TODO
   struct avro_array_value *self =
     container_of (value, struct avro_array_value, base_value);
-*/
-  return AVRO_OK;
+  struct avro_io_writer *io;
+  avro_status_t status;
+  const avro_long_t zero = 0;
+
+  if (!writer)
+    {
+      return AVRO_FAILURE;
+    }
+  io = writer->io;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+
+  if (self->values)
+    {
+      avro_long_t len = self->values->nelts;
+      if (len > 0)
+	{
+	  avro_long_t i;
+	  status = avro_write_long (io, &len);
+	  if (status != AVRO_OK)
+	    {
+	      return status;
+	    }
+	  for (i = 0; i < len; i++)
+	    {
+	      struct avro_value *value =
+		((struct avro_value **) self->values->elts)[i];
+	      status = avro_value_write_data (value, writer);
+	      if (status != AVRO_OK)
+		{
+		  return status;
+		}
+	    }
+	}
+    }
+  /* Zero terminate */
+  return avro_write_long (io, (avro_long_t *) & zero);
 }
 
 static struct avro_value *
 avro_array_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		   apr_pool_t * pool, const JSON_value * json)
 {
-  avro_value *value;
+  struct avro_value *value;
   struct avro_array_value *self;
   apr_pool_t *tmp_pool;
 
@@ -207,7 +245,7 @@ avro_array_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_array_info = {
+const struct avro_value_module avro_array_module = {
   .name = L"array",
   .type = AVRO_ARRAY,
   .private = 0,

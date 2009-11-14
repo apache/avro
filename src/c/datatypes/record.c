@@ -24,7 +24,7 @@ struct avro_field_value
   struct avro_value *value;
   struct avro_value *default_value;
 
-  avro_value base_value;
+  struct avro_value base_value;
 };
 
 struct avro_record_value
@@ -33,7 +33,7 @@ struct avro_record_value
   avro_string_t space;
   apr_array_header_t *fields;
 
-  avro_value base_value;
+  struct avro_value base_value;
 };
 
 static void
@@ -277,7 +277,7 @@ avro_record_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_field_info = {
+const struct avro_value_module avro_field_module = {
   .name = L"field",
   .type = AVRO_FIELD,
   .private = 1,
@@ -294,7 +294,7 @@ const struct avro_value_info avro_field_info = {
   .print_info = avro_field_print
 };
 
-const struct avro_value_info avro_record_info = {
+const struct avro_value_module avro_record_module = {
   .name = L"record",
   .type = AVRO_RECORD,
   .private = 0,

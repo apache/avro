@@ -24,8 +24,8 @@ under the License.
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <wchar.h>
+#include <stdint.h>
 
 /**
 @mainpage
@@ -89,14 +89,14 @@ enum avro_type
    AVRO_MAP,    /**< complex map */
    AVRO_ARRAY,  /**< complex array */
    AVRO_UNION,  /**< complex union */
-
-   AVRO_FIELD,  /**< complex record field */
-   AVRO_DECORATOR, /**< resursive schema decorator */
-
    /* NOTE: AVRO_NUM_TYPES must always be last */
    AVRO_NUM_TYPES /**< number of avro types */
 };
 typedef enum avro_type avro_type_t;
+
+typedef struct avro_value * avro_value;
+
+avro_status_t avro_value_type(avro_value value, avro_type_t *type);
 
 #ifdef __cplusplus
 }

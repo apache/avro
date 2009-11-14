@@ -43,7 +43,7 @@ avro_union_read_skip (struct avro_value *value, struct avro_reader *reader,
   struct avro_union_value *self =
     container_of (value, struct avro_union_value, base_value);
   struct avro_io_reader *io;
-  avro_value *requested_value;
+  struct avro_value *requested_value;
 
   io = reader->io;
   if (!io)
@@ -62,7 +62,8 @@ avro_union_read_skip (struct avro_value *value, struct avro_reader *reader,
       return AVRO_FAILURE;
     }
 
-  requested_value = ((avro_value **) self->schemas->elts)[self->value_index];
+  requested_value =
+    ((struct avro_value **) self->schemas->elts)[self->value_index];
   if (!requested_value)
     {
       return AVRO_FAILURE;
@@ -96,15 +97,44 @@ avro_union_skip (struct avro_value *value, struct avro_reader *reader)
 static avro_status_t
 avro_union_write (struct avro_value *value, struct avro_writer *writer)
 {
-  /* TODO */
-  return AVRO_FAILURE;
+  avro_status_t status;
+  struct avro_union_value *self =
+    container_of (value, struct avro_union_value, base_value);
+  struct avro_io_writer *io;
+  struct avro_value *requested_value;
+
+  io = writer->io;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+
+  if (!self->value_set)
+    {
+      return AVRO_FAILURE;
+    }
+
+  status = avro_write_long (io, &self->value_index);
+  if (status != AVRO_OK)
+    {
+      return status;
+    }
+
+  requested_value =
+    ((struct avro_value **) self->schemas->elts)[self->value_index];
+  if (!requested_value)
+    {
+      return AVRO_FAILURE;
+    }
+
+  return avro_value_write_data (requested_value, writer);
 }
 
 static struct avro_value *
 avro_union_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 		   apr_pool_t * pool, const JSON_value * json)
 {
-  avro_value *value;
+  struct avro_value *value;
   struct avro_union_value *self;
   int i;
 
@@ -125,7 +155,8 @@ avro_union_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   self->base_value.schema = json;
 
   self->schemas =
-    apr_array_make (pool, json->json_array->nelts, sizeof (avro_value *));
+    apr_array_make (pool, json->json_array->nelts,
+		    sizeof (struct avro_value *));
   if (!self->schemas)
     {
       return NULL;
@@ -140,13 +171,13 @@ avro_union_create (struct avro_value_ctx *ctx, struct avro_value *parent,
 	  /* Invalid union schema */
 	  return NULL;
 	}
-      *(avro_value **) apr_array_push (self->schemas) = value;
+      *(struct avro_value **) apr_array_push (self->schemas) = value;
     }
   self->value_set = 0;
   return &self->base_value;
 }
 
-const struct avro_value_info avro_union_info = {
+const struct avro_value_module avro_union_module = {
   .name = L"union",
   .type = AVRO_UNION,
   .private = 0,

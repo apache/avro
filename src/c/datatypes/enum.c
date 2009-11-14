@@ -90,11 +90,25 @@ avro_enum_skip (struct avro_value *value, struct avro_reader *reader)
 static avro_status_t
 avro_enum_write (struct avro_value *value, struct avro_writer *writer)
 {
-/* TODO
+  struct avro_io_writer *io;
   struct avro_avro_enum *self =
     container_of (value, struct avro_avro_enum, base_value);
-*/
-  return AVRO_OK;
+
+  if (!writer)
+    {
+      return AVRO_FAILURE;
+    }
+  io = writer->io;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+  if (!self->value_set)
+    {
+      return AVRO_FAILURE;
+    }
+  /* Write the offset */
+  return avro_write_long (io, &self->offset);
 }
 
 static struct avro_value *
@@ -150,7 +164,7 @@ avro_enum_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_enum_info = {
+const struct avro_value_module avro_enum_module = {
   .name = L"enum",
   .type = AVRO_ENUM,
   .private = 0,

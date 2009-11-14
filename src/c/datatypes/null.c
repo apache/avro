@@ -54,7 +54,7 @@ avro_null_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return self;
 }
 
-const struct avro_value_info avro_null_info = {
+const struct avro_value_module avro_null_module = {
   .name = L"null",
   .type = AVRO_NULL,
   .private = 0,

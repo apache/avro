@@ -108,7 +108,7 @@ avro_long_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_long_info = {
+const struct avro_value_module avro_long_module = {
   .name = L"long",
   .type = AVRO_LONG,
   .private = 0,

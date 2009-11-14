@@ -108,7 +108,7 @@ avro_int_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_int_info = {
+const struct avro_value_module avro_int_module = {
   .name = L"int",
   .type = AVRO_INT,
   .private = 0,

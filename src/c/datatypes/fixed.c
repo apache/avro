@@ -27,7 +27,7 @@ struct avro_fixed_value
 
   int value_set;
 
-  avro_value base_value;
+  struct avro_value base_value;
 };
 
 static void
@@ -79,8 +79,20 @@ avro_fixed_skip (struct avro_value *value, struct avro_reader *reader)
 static avro_status_t
 avro_fixed_write (struct avro_value *value, struct avro_writer *writer)
 {
-  /* TODO */
-  return AVRO_FAILURE;
+  struct avro_fixed_value *self =
+    container_of (value, struct avro_fixed_value, base_value);
+  struct avro_io_writer *io;
+
+  if (!writer)
+    {
+      return AVRO_FAILURE;
+    }
+  io = writer->io;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+  return io->write (io, self->value, self->size);
 }
 
 static struct avro_value *
@@ -135,7 +147,7 @@ avro_fixed_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_fixed_info = {
+const struct avro_value_module avro_fixed_module = {
   .name = L"fixed",
   .type = AVRO_FIXED,
   .private = 0,

@@ -18,40 +18,40 @@ under the License.
 */
 #include "avro_private.h"
 
-extern const struct avro_value_info avro_string_info;
-extern const struct avro_value_info avro_bytes_info;
-extern const struct avro_value_info avro_int_info;
-extern const struct avro_value_info avro_long_info;
-extern const struct avro_value_info avro_float_info;
-extern const struct avro_value_info avro_double_info;
-extern const struct avro_value_info avro_boolean_info;
-extern const struct avro_value_info avro_null_info;
-extern const struct avro_value_info avro_record_info;
-extern const struct avro_value_info avro_field_info;
-extern const struct avro_value_info avro_enum_info;
-extern const struct avro_value_info avro_fixed_info;
-extern const struct avro_value_info avro_map_info;
-extern const struct avro_value_info avro_array_info;
-extern const struct avro_value_info avro_union_info;
-extern const struct avro_value_info avro_decorator_info;
-/* WARNING: This registry must match the avro_value_t enum! */
-const struct avro_value_info *avro_value_registry[AVRO_NUM_TYPES] = {
-  &avro_string_info,
-  &avro_bytes_info,
-  &avro_int_info,
-  &avro_long_info,
-  &avro_float_info,
-  &avro_double_info,
-  &avro_boolean_info,
-  &avro_null_info,
-  &avro_record_info,
-  &avro_enum_info,
-  &avro_fixed_info,
-  &avro_map_info,
-  &avro_array_info,
-  &avro_union_info,
-  &avro_field_info,
-  &avro_decorator_info
+extern const struct avro_value_module avro_string_module;
+extern const struct avro_value_module avro_bytes_module;
+extern const struct avro_value_module avro_int_module;
+extern const struct avro_value_module avro_long_module;
+extern const struct avro_value_module avro_float_module;
+extern const struct avro_value_module avro_double_module;
+extern const struct avro_value_module avro_boolean_module;
+extern const struct avro_value_module avro_null_module;
+extern const struct avro_value_module avro_record_module;
+extern const struct avro_value_module avro_field_module;
+extern const struct avro_value_module avro_enum_module;
+extern const struct avro_value_module avro_fixed_module;
+extern const struct avro_value_module avro_map_module;
+extern const struct avro_value_module avro_array_module;
+extern const struct avro_value_module avro_union_module;
+extern const struct avro_value_module avro_decorator_module;
+/* WARNING! This registry needs to match avro_type and avro_private_type enums! */
+const struct avro_value_module *avro_value_registry[AVRO_NUM_PRIVATE_TYPES] = {
+  &avro_string_module,
+  &avro_bytes_module,
+  &avro_int_module,
+  &avro_long_module,
+  &avro_float_module,
+  &avro_double_module,
+  &avro_boolean_module,
+  &avro_null_module,
+  &avro_record_module,
+  &avro_enum_module,
+  &avro_fixed_module,
+  &avro_map_module,
+  &avro_array_module,
+  &avro_union_module,
+  &avro_field_module,
+  &avro_decorator_module
 };
 
 /* TODO: gperf this? */
@@ -63,7 +63,7 @@ avro_type_lookup (const avro_string_t name, avro_type_t * type)
     {
       for (i = 0; i < AVRO_NUM_TYPES; i++)
 	{
-	  const struct avro_value_info *info = avro_value_registry[i];
+	  const struct avro_value_module *info = avro_value_registry[i];
 	  if (!info->private && wcscmp (info->name, name) == 0)
 	    {
 	      *type = info->type;
@@ -103,99 +103,6 @@ avro_type_from_json (const JSON_value * json, avro_type_t * type)
 
   return AVRO_FAILURE;
 }
-
-struct avro_decorator_value
-{
-  struct avro_value_ctx *ctx;
-  struct avro_value *decoratee;
-  struct avro_value base_value;
-};
-
-static void
-avro_decorator_print (struct avro_value *value, FILE * fp)
-{
-  struct avro_decorator_value *self =
-    container_of (value, struct avro_decorator_value, base_value);
-  avro_value_indent (value, fp);
-  fprintf (fp, "decorator(%p)\n", self);
-  avro_value_print_info (self->decoratee, fp);
-}
-
-static avro_status_t
-avro_decorator_read_skip (struct avro_value *value,
-			  struct avro_reader *reader, int skip)
-{
-  struct avro_decorator_value *self =
-    container_of (value, struct avro_decorator_value, base_value);
-  /* Create a new decoratee */
-  self->decoratee = avro_value_from_json (self->ctx, value, value->schema);
-  if (!self->decoratee)
-    {
-      return AVRO_FAILURE;
-    }
-  if (skip)
-    {
-      return avro_value_skip_data (self->decoratee, reader);
-    }
-  return avro_value_read_data (self->decoratee, reader);
-}
-
-static avro_status_t
-avro_decorator_read (struct avro_value *value, struct avro_reader *reader)
-{
-  return avro_decorator_read_skip (value, reader, 0);
-}
-
-static avro_status_t
-avro_decorator_skip (struct avro_value *value, struct avro_reader *reader)
-{
-  return avro_decorator_read_skip (value, reader, 1);
-}
-
-static avro_status_t
-avro_decorator_write (struct avro_value *value, struct avro_writer *writer)
-{
-  return AVRO_FAILURE;
-}
-
-/* Used for recursive schemas */
-struct avro_value *
-avro_decorator_create (struct avro_value_ctx *ctx, struct avro_value *parent,
-		       apr_pool_t * pool, const JSON_value * json)
-{
-  struct avro_decorator_value *self =
-    apr_palloc (pool, sizeof (struct avro_decorator_value));
-  DEBUG (fprintf (stderr, "Creating a decorator\n"));
-  if (!self)
-    {
-      return NULL;
-    }
-  /* Save away the context */
-  self->ctx = ctx;
-  self->base_value.type = AVRO_DECORATOR;
-  self->base_value.pool = pool;
-  self->base_value.parent = parent;
-  self->base_value.schema = json;
-  return &self->base_value;
-}
-
-const struct avro_value_info avro_decorator_info = {
-  .name = L"decorator",
-  .type = AVRO_DECORATOR,
-  .private = 1,
-  .create = avro_decorator_create,
-  .formats = {{
-	       .read_data = avro_decorator_read,
-	       .skip_data = avro_decorator_skip,
-	       .write_data = avro_decorator_write},
-	      {
-	       /* TODO: import/export */
-	       .read_data = avro_decorator_read,
-	       .skip_data = avro_decorator_skip,
-	       .write_data = avro_decorator_write}},
-  .print_info = avro_decorator_print
-};
-
 
 struct avro_value *
 avro_value_from_json (struct avro_value_ctx *ctx,
@@ -303,4 +210,15 @@ avro_value_print_info (struct avro_value *value, FILE * fp)
       return;
     }
   avro_value_registry[value->type]->print_info (value, fp);
+}
+
+avro_status_t
+avro_value_type (avro_value value, avro_type_t * type)
+{
+  if (!value || !type)
+    {
+      return AVRO_FAILURE;
+    }
+  *type = value->type;
+  return AVRO_OK;
 }

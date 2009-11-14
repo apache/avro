@@ -100,7 +100,7 @@ avro_float_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_float_info = {
+const struct avro_value_module avro_float_module = {
   .name = L"float",
   .type = AVRO_FLOAT,
   .private = 0,

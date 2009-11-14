@@ -30,6 +30,13 @@ under the License.
 #include "apr_file_io.h"
 #include "apr_network_io.h"
 
+enum avro_private_types
+{
+  AVRO_FIELD = AVRO_NUM_TYPES,
+  AVRO_DECORATOR,
+  AVRO_NUM_PRIVATE_TYPES
+};
+
 /* Util function */
 char *avro_util_file_read_full (apr_pool_t * pool, const char *fname,
 				apr_size_t * len);
@@ -91,7 +98,6 @@ struct avro_value
   const JSON_value *schema;
   struct avro_value *parent;
 };
-typedef struct avro_value avro_value;
 
 struct avro_value_methods
 {
@@ -109,7 +115,7 @@ struct avro_value_ctx
   apr_hash_t *named_objects;
 };
 
-struct avro_value_info
+struct avro_value_module
 {
   avro_string_t name;
   avro_type_t type;
@@ -121,7 +127,7 @@ struct avro_value_info
   struct avro_value_methods formats[AVRO_NUM_DATA_FORMATS];
 };
 
-extern const struct avro_value_info *avro_value_registry[];
+extern const struct avro_value_module *avro_value_registry[];
 
 avro_status_t avro_value_read_data (struct avro_value *value,
 				    struct avro_reader *channel);

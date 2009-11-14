@@ -24,8 +24,8 @@ struct avro_bytes_value
   void *value;
   int value_set;
   avro_long_t size;
-  avro_value base_value;
   apr_pool_t *pool;
+  struct avro_value base_value;
 };
 
 static void
@@ -38,7 +38,7 @@ avro_bytes_print (struct avro_value *value, FILE * fp)
   fprintf (fp, "bytes(%p)", self);
   if (self->value_set)
     {
-      fprintf (fp, " size=%ld ", self->size);
+      fprintf (fp, " size=%lld ", self->size);
       dump (fp, (char *) self->value, self->size);
     }
   fprintf (fp, "\n");
@@ -95,8 +95,28 @@ avro_bytes_skip (struct avro_value *value, struct avro_reader *reader)
 static avro_status_t
 avro_bytes_write (struct avro_value *value, struct avro_writer *writer)
 {
-  /* TODO */
-  return AVRO_FAILURE;
+  struct avro_io_writer *io;
+  struct avro_bytes_value *self =
+    container_of (value, struct avro_bytes_value, base_value);
+  avro_status_t status;
+  avro_long_t size = self->size;
+
+  if (!writer)
+    {
+      return AVRO_FAILURE;
+    }
+  io = writer->io;
+  if (!io)
+    {
+      return AVRO_FAILURE;
+    }
+
+  status = avro_write_long (io, &size);
+  if (status != AVRO_OK)
+    {
+      return status;
+    }
+  return io->write (io, self->value, size);
 }
 
 static struct avro_value *
@@ -122,7 +142,7 @@ avro_bytes_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_bytes_info = {
+const struct avro_value_module avro_bytes_module = {
   .name = L"bytes",
   .type = AVRO_BYTES,
   .private = 0,

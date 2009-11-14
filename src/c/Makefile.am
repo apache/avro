@@ -18,6 +18,7 @@ util/container_of.h util/endian.c \
 datatypes/array.c datatypes/boolean.c datatypes/bytes.c datatypes/double.c \
 datatypes/enum.c datatypes/fixed.c datatypes/float.c datatypes/int.c datatypes/long.c \
 datatypes/map.c datatypes/null.c datatypes/record.c datatypes/string.c datatypes/union.c \
+datatypes/decorator.c \
 io/file.c io/socket.c io/memory.c io/file_container.c 
 libavro_la_LDFLAGS = \
         -version-info $(LIBAVRO_VERSION) \

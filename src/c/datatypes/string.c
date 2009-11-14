@@ -132,7 +132,7 @@ avro_string_create (struct avro_value_ctx *ctx, struct avro_value *parent,
   return &self->base_value;
 }
 
-const struct avro_value_info avro_string_info = {
+const struct avro_value_module avro_string_module = {
   .name = L"string",
   .type = AVRO_STRING,
   .private = 0,
