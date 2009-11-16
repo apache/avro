@@ -44,8 +44,11 @@ RecordSchema::RecordSchema(const std::string &name) :
 void
 RecordSchema::addField(const std::string &name, const Schema &fieldSchema) 
 {
-    node_->addLeaf(fieldSchema.root());
+    // add the name first. it will throw if the name is a duplicate, preventing
+    // the leaf from being added
     node_->addName(name);
+
+    node_->addLeaf(fieldSchema.root());
 }
 
 EnumSchema::EnumSchema(const std::string &name) :

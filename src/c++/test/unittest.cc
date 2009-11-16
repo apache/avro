@@ -63,6 +63,17 @@ struct TestSchema
         myenum.addSymbol("one");
         myenum.addSymbol("two");
         myenum.addSymbol("three");
+
+        bool caught = false;
+        try {
+            myenum.addSymbol("three");
+        }
+        catch(Exception &e) {
+            std::cout << "(intentional) exception: " << e.what() << '\n';
+            caught = true;
+        }
+        BOOST_CHECK_EQUAL(caught, true);
+
         record.addField("myenum", myenum); 
 
         UnionSchema onion;
@@ -80,10 +91,53 @@ struct TestSchema
         record.addField("mybool", BoolSchema());
         FixedSchema fixed(16, "fixed16");
         record.addField("myfixed", fixed);
-        record.addField("mylong", LongSchema());
+
+        caught = false;
+        try {
+            record.addField("mylong", LongSchema());
+        }
+        catch(Exception &e) {
+            std::cout << "(intentional) exception: " << e.what() << '\n';
+            caught = true;
+        }
+        BOOST_CHECK_EQUAL(caught, true);
+
+        record.addField("mylong2", LongSchema());
+
         record.addField("anotherint", intSchema);
 
         schema_.setSchema(record);
+    }
+
+    void checkNameLookup() {
+        NodePtr node = schema_.root();
+
+        size_t index = 0;
+        bool found = node->nameIndex("mylongxxx", index);
+        BOOST_CHECK_EQUAL(found, false);
+
+        found = node->nameIndex("mylong", index);
+        BOOST_CHECK_EQUAL(found, true);
+        BOOST_CHECK_EQUAL(index, 0U);
+
+        found = node->nameIndex("mylong2", index);
+        BOOST_CHECK_EQUAL(found, true);
+        BOOST_CHECK_EQUAL(index, 8U);
+
+        found = node->nameIndex("myenum", index);
+        BOOST_CHECK_EQUAL(found, true);
+        NodePtr enumNode = node->leafAt(index);
+
+        found = enumNode->nameIndex("one", index);
+        BOOST_CHECK_EQUAL(found, true);
+        BOOST_CHECK_EQUAL(index, 1U);
+
+        found = enumNode->nameIndex("three", index);
+        BOOST_CHECK_EQUAL(found, true);
+        BOOST_CHECK_EQUAL(index, 3U);
+
+        found = enumNode->nameIndex("four", index);
+        BOOST_CHECK_EQUAL(found, false);
     }
 
     template<typename Serializer>
@@ -328,6 +382,8 @@ struct TestSchema
         std::cout << "After\n";
         schema_.toJson(std::cout);
         schema_.toFlatList(std::cout);
+
+        checkNameLookup();
 
         printEncoding();
         printValidatingEncoding(0);

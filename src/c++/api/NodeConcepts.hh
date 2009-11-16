@@ -20,6 +20,7 @@
 #define avro_NodeConcepts_hh__
 
 #include <vector>
+#include <map>
 #include "Exception.hh"
 
 namespace avro {
@@ -165,6 +166,49 @@ struct MultiAttribute
     std::vector<Attribute> attrs_;
 };
 
+
+template<typename T>
+struct NameIndexConcept {
+
+    bool lookup(const std::string &name, size_t &index) const {
+        throw Exception("Name index does not exist");
+        return 0;
+    }
+
+    bool add(const::std::string &name, size_t index) {
+        throw Exception("Name index does not exist");
+        return false;
+    }
+};
+
+template<>
+struct NameIndexConcept < MultiAttribute<std::string> > 
+{
+    typedef std::map<std::string, size_t> IndexMap;
+
+    bool lookup(const std::string &name, size_t &index) const {
+        IndexMap::const_iterator iter = map_.find(name); 
+        if(iter == map_.end()) {
+            return false;
+        }
+        index = iter->second;
+        return true;
+    }
+
+    bool add(const::std::string &name, size_t index) {
+        bool added = false;
+        IndexMap::iterator lb = map_.lower_bound(name); 
+        if(lb == map_.end() || map_.key_comp()(name, lb->first)) {
+            map_.insert(lb, IndexMap::value_type(name, index));
+            added = true;
+        }
+        return added;
+    }
+
+  private:
+
+    IndexMap map_;
+};
 
 } // namespace concepts
 } // namespace avro

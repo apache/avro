@@ -95,6 +95,7 @@ class Node : private boost::noncopyable
     }
     virtual size_t names() const = 0;
     virtual const std::string &nameAt(int index) const = 0;
+    virtual bool nameIndex(const std::string &name, size_t &index) const = 0;
 
     void setFixedSize(int size) {
         checkLock();

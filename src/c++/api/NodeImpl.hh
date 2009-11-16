@@ -86,6 +86,9 @@ class NodeImpl : public Node
     }
 
     void doAddName(const std::string &name) { 
+        if(! nameIndex_.add(name, leafNameAttributes_.size())) {
+            throw Exception("Cannot add duplicate names");
+        }
         leafNameAttributes_.add(name);
     }
 
@@ -95,6 +98,10 @@ class NodeImpl : public Node
 
     const std::string &nameAt(int index) const { 
         return leafNameAttributes_.get(index);
+    }
+
+    bool nameIndex(const std::string &name, size_t &index) const {
+        return nameIndex_.lookup(name, index);
     }
 
     void doSetFixedSize(int size) {
@@ -115,6 +122,7 @@ class NodeImpl : public Node
     LeavesConcept leafAttributes_;
     LeafNamesConcept leafNameAttributes_;
     SizeConcept sizeAttribute_;
+    concepts::NameIndexConcept<LeafNamesConcept> nameIndex_;
 };
 
 typedef concepts::NoAttribute<std::string>     NoName;

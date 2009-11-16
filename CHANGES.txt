@@ -16,10 +16,6 @@ Trunk (unreleased changes)
 
   IMPROVEMENTS
 
-    AVRO-190. Use fixed size C++ types for Avro fixed types. (sbanacho)
-
-    AVRO-180. Enhance code generator script and unit tests. (sbanacho)
-
     AVRO-157. Changes from code review comments for C++. (sbanacho)
 
     AVRO-168. Correct shared library versioning for C implementation (massie)
@@ -53,6 +49,8 @@ Trunk (unreleased changes)
 
     AVRO-177. Upgrade Java dependencies to recent versions. (cutting)
 
+    AVRO-180. Enhance code generator script and unit tests. (sbanacho)
+
     AVRO-186. Full read-path interoperability test (massie)
 
     AVRO-187. Move top-level source files into separate directories 
@@ -60,9 +58,13 @@ Trunk (unreleased changes)
 
     AVRO-188. Need to update svn ignores (massie)
 
+    AVRO-190. Use fixed size C++ types for Avro fixed types. (sbanacho)
+
     AVRO-192. Improved errors for Java schema parsing problems. (cutting)
 
     AVRO-195. Complex type support for write streams (massie)
+
+    AVRO-197. Add mapping of name to index for records and enums. (sbanacho)
 
   OPTIMIZATIONS
 
@@ -70,10 +72,6 @@ Trunk (unreleased changes)
 
   BUG FIXES
  
-    AVRO-194. C++ varint encoding buffer too small. (sbanacho)
-
-    AVRO-191. Explicitly include stdint.h for C++. (cutting via sbanacho)
-
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
 
     AVRO-141.  Fix a NullPointerException in ReflectData#isRecord().
@@ -97,6 +95,10 @@ Trunk (unreleased changes)
 
     AVRO-171. Fix Java's Protocol#toString() to correctly handle
     forward-references. (cutting)
+
+    AVRO-191. Explicitly include stdint.h for C++. (cutting via sbanacho)
+
+    AVRO-194. C++ varint encoding buffer too small. (sbanacho)
 
 Avro 1.2.0 (14 October 2009)
 
