@@ -54,7 +54,7 @@ nodeFromCompilerNode(CompilerNode &node)
         break;
     
       case AVRO_SYMBOLIC:
-        ptr.reset ( new NodeSymbolic(node.nameAttribute_));
+        ptr.reset ( new NodeSymbolic(node.nameAttribute_, node.symbolicAttribute_));
         break;
     
       default:

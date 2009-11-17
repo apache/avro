@@ -261,7 +261,7 @@ struct TestSchema
             printNext(p);
             size = p.readMapBlockSize();
             std::cout << "Size " << size << '\n';
-            for(int32_t i=0; i < size; ++i) {
+            for(int64_t i=0; i < size; ++i) {
                 std::string key;
                 printNext(p);
                 p.readString(key);
@@ -281,7 +281,7 @@ struct TestSchema
             printNext(p);
             size = p.readArrayBlockSize();
             std::cout << "Size " << size << '\n';
-            for(int32_t i=0; i < size; ++i) {
+            for(int64_t i=0; i < size; ++i) {
                 printNext(p);
                 d = p.readDouble();
                 std::cout << i << ":" << d << '\n';
@@ -602,7 +602,7 @@ struct TestBadStuff
 {
     void testBadFile() 
     {
-        std::cout << "TestBadStuff\n";
+        std::cout << "TestBadFile\n";
 
         avro::ValidSchema schema;
         std::ifstream in("agjoewejefkjs");

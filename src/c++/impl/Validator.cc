@@ -173,8 +173,7 @@ Validator::advance()
         &Validator::countingAdvance,
         &Validator::countingAdvance,
         &Validator::unionAdvance,
-        &Validator::fixedAdvance,
-        0 // symbolic
+        &Validator::fixedAdvance
     };
     BOOST_STATIC_ASSERT( (sizeof(funcs)/sizeof(AdvanceFunc)) == (AVRO_NUM_TYPES) );
 
@@ -231,8 +230,7 @@ Validator::setupFlag(Type type)
         typeToFlag(AVRO_ARRAY),
         typeToFlag(AVRO_MAP),
         typeToFlag(AVRO_UNION),
-        typeToFlag(AVRO_FIXED),
-        0
+        typeToFlag(AVRO_FIXED)
     };
     BOOST_STATIC_ASSERT( (sizeof(flags)/sizeof(flag_t)) == (AVRO_NUM_TYPES) );
 
@@ -245,13 +243,13 @@ Validator::setupOperation(const NodePtr &node)
     nextType_ = node->type();
 
     if(nextType_ == AVRO_SYMBOLIC) {
-        NodePtr symNode ( schema_.followSymbol(node->name()) );
+        NodePtr symNode(node->leafAt(0));
         assert(symNode);
         setupOperation(symNode);
         return;
     }
 
-    assert(nextType_ < AVRO_NUM_TYPES);
+    assert(nextType_ < AVRO_SYMBOLIC);
 
     setupFlag(nextType_);
 

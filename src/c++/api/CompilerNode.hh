@@ -43,7 +43,8 @@ class CompilerNode
         FIELDS,
         VALUES,
         ITEMS,
-        TYPES
+        TYPES,
+        SYMBOLIC
     };
 
     CompilerNode() :
@@ -87,6 +88,9 @@ class CompilerNode
           case TYPES:
             typesAttribute_.add(node);
             break;
+          case SYMBOLIC:
+            symbolicAttribute_.add(node);
+            break;
 
           default:
             throw Exception("Can't add node if the attribute type is not set");
@@ -94,7 +98,7 @@ class CompilerNode
     }
 
 
-    // attribute used by records, enums, and fixed:
+    // attribute used by records, enums, symbols, and fixed:
     concepts::SingleAttribute<std::string> nameAttribute_;
 
     // attribute used by fixed:
@@ -112,6 +116,9 @@ class CompilerNode
 
     // attribute used by maps:
     concepts::SingleAttribute<NodePtr> valuesAttribute_;
+
+    // attribute used by symbolic names:
+    concepts::SingleAttribute<NodePtr> symbolicAttribute_;
 
     // attribute used by unions:
     concepts::MultiAttribute<NodePtr> typesAttribute_;

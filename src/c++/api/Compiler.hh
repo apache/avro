@@ -25,6 +25,7 @@
 #include "Types.hh"
 #include "Node.hh"
 #include "CompilerNode.hh"
+#include "SymbolMap.hh"
 
 namespace avro {
 
@@ -86,8 +87,9 @@ class CompilerContext {
     yyFlexLexer lexer_;
     std::string text_;
     
-    NodePtr root_;
-    Stack   stack_;
+    NodePtr   root_;
+    Stack     stack_;
+    SymbolMap symbolMap_;
 };
 
 class ValidSchema;

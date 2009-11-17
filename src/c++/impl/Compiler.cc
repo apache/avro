@@ -71,6 +71,13 @@ CompilerContext::add(const NodePtr &node)
     else {
         stack_.back().addNode(node);
     }   
+
+    if(node->hasName() && node->type() != AVRO_SYMBOLIC) {
+        bool registered = symbolMap_.registerSymbol(node);
+        if(!registered) {
+            throw Exception(boost::format("Symbol %1% already exists") % node->name());
+        }
+    }
 }
 
 void
@@ -120,8 +127,16 @@ CompilerContext::addNamedType()
 #ifdef DEBUG_VERBOSE
     std::cerr << "Adding named type " << text_ << '\n';
 #endif
-    stack_.back().setType(AVRO_SYMBOLIC);
-    stack_.back().nameAttribute_.add(text_);
+
+    NodePtr node = symbolMap_.locateSymbol(text_);
+    if(node) {
+        stack_.back().setType(AVRO_SYMBOLIC);
+        stack_.back().nameAttribute_.add(text_);
+        stack_.back().symbolicAttribute_.add(node);
+    }
+    else {
+        throw Exception(boost::format("Could not resolve symbolic name %1%") % text_);
+    }
 }
 
 void 

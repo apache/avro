@@ -41,15 +41,18 @@ const std::string typeToString[] = {
     "symbolic"
 };
 
-BOOST_STATIC_ASSERT( (sizeof(typeToString)/sizeof(std::string)) == (AVRO_NUM_TYPES) );
+BOOST_STATIC_ASSERT( (sizeof(typeToString)/sizeof(std::string)) == (AVRO_NUM_TYPES+1) );
 
 } // namespace strings
 
-BOOST_STATIC_ASSERT( AVRO_NUM_TYPES < 64 );
 
-std::ostream &operator<< (std::ostream &os, const Type type)
+// this static assert exists because a 32 bit integer is used as a bit-flag for each type,
+// and it would be a problem for this flag if we ever supported more than 32 types
+BOOST_STATIC_ASSERT( AVRO_NUM_TYPES < 32 );
+
+std::ostream &operator<< (std::ostream &os, Type type)
 {
-    if(isAvroType(type)) {
+    if(isAvroTypeOrPseudoType(type)) {
         os << strings::typeToString[type];
     }
     else {

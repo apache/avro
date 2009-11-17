@@ -116,7 +116,7 @@ class NodeImpl : public Node
 
     void printBasicInfo(std::ostream &os) const;
 
-    void setLeafToSymbolic(int index);
+    void setLeafToSymbolic(int index, const NodePtr &node);
    
     NameConcept nameAttribute_;
     LeavesConcept leafAttributes_;
@@ -139,7 +139,7 @@ typedef concepts::NoAttribute<int>     NoSize;
 typedef concepts::SingleAttribute<int> HasSize;
 
 typedef NodeImpl< NoName,  NoLeaves,    NoLeafNames,  NoSize  > NodeImplPrimitive;
-typedef NodeImpl< HasName, NoLeaves,    NoLeafNames,  NoSize  > NodeImplSymbolic;
+typedef NodeImpl< HasName, SingleLeaf,  NoLeafNames,  NoSize  > NodeImplSymbolic;
 
 typedef NodeImpl< HasName, MultiLeaves, LeafNames,    NoSize  > NodeImplRecord;
 typedef NodeImpl< HasName, NoLeaves,    LeafNames,    NoSize  > NodeImplEnum;
@@ -171,8 +171,8 @@ class NodeSymbolic : public NodeImplSymbolic
         NodeImplSymbolic(AVRO_SYMBOLIC)
     { }
 
-    explicit NodeSymbolic(const HasName &name) :
-        NodeImplSymbolic(AVRO_SYMBOLIC, name, NoLeaves(), NoLeafNames(), NoSize())
+    explicit NodeSymbolic(const HasName &name, const SingleLeaf &node) :
+        NodeImplSymbolic(AVRO_SYMBOLIC, name, node, NoLeafNames(), NoSize())
     { }
 
     void printJson(std::ostream &os, int depth) const;
@@ -319,16 +319,20 @@ class NodeFixed : public NodeImplFixed
 
 template < class A, class B, class C, class D >
 inline void 
-NodeImpl<A,B,C,D>::setLeafToSymbolic(int index)
+NodeImpl<A,B,C,D>::setLeafToSymbolic(int index, const NodePtr &node)
 {
     if(!B::hasAttribute) {
         throw Exception("Cannot change leaf node for nonexistent leaf");
     } 
     NodePtr symbol(new NodeSymbolic);
 
-    NodePtr &node = const_cast<NodePtr &>(leafAttributes_.get(index));
+    NodePtr &replaceNode = const_cast<NodePtr &>(leafAttributes_.get(index));
+    if(replaceNode->name() != node->name()) {
+        throw Exception("Symbolic name does not match the name of the schema it references");
+    }
     symbol->setName(node->name());
-    node = symbol;
+    symbol->addLeaf(node);
+    replaceNode = symbol;
 }
 
 template < class A, class B, class C, class D >
@@ -349,7 +353,7 @@ NodeImpl<A,B,C,D>::printBasicInfo(std::ostream &os) const
         if( C::hasAttribute ) {
             os << "name " << nameAt(i) << '\n';
         }
-        if( leafAttributes_.hasAttribute) {
+        if( type() != AVRO_SYMBOLIC && leafAttributes_.hasAttribute) {
             leafAt(i)->printBasicInfo(os);
         }
     }

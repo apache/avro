@@ -49,8 +49,6 @@ def doPrimitive(type):
     return (typeToC[type], type)
 
 def doSymbolic(args):
-    line = getNextLine()
-    if line[0] != 'end': print 'error'
     addForwardDeclare(args[1])
     return (args[1], args[1])
 
@@ -118,8 +116,9 @@ $typedeflist$
 $setfuncs$
 #ifdef AVRO_BOOST_NO_ANYREF
     template<typename T>
-    T getValue() const {
-        return boost::any_cast<T>(value);
+    const T &getValue() const {
+        const T *ptr = boost::any_cast<T>(&value);
+        return *ptr;
     }
 #else
     template<typename T>

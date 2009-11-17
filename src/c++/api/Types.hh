@@ -41,9 +41,12 @@ enum Type {
     AVRO_UNION,
     AVRO_FIXED,
 
-    AVRO_SYMBOLIC,
+    AVRO_NUM_TYPES, // marker
+    
+    // The following is a pseudo-type used in implementation
+    
+    AVRO_SYMBOLIC = AVRO_NUM_TYPES
 
-    AVRO_NUM_TYPES,
 };
 
 inline bool isPrimitive(Type t) {
@@ -58,7 +61,12 @@ inline bool isAvroType(Type t) {
     return (t >= AVRO_STRING) && (t < AVRO_NUM_TYPES);
 }
 
-std::ostream &operator<< (std::ostream &os, const avro::Type type);
+inline bool isAvroTypeOrPseudoType(Type t) {
+    return (t >= AVRO_STRING) && (t <= AVRO_NUM_TYPES);
+}
+
+
+std::ostream &operator<< (std::ostream &os, avro::Type type);
 
 /// define a type to identify Null in template functions
 struct Null {};

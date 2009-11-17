@@ -113,7 +113,7 @@ class Node : private boost::noncopyable
 
     friend class ValidSchema;
 
-    virtual void setLeafToSymbolic(int index) = 0;
+    virtual void setLeafToSymbolic(int index, const NodePtr &node) = 0;
 
     void checkLock() const {
         if(locked()) {

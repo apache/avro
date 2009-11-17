@@ -39,7 +39,7 @@ class OutputStreamer;
 
 class Validator : private boost::noncopyable
 {
-    typedef uint64_t flag_t;
+    typedef uint32_t flag_t;
 
   public:
 

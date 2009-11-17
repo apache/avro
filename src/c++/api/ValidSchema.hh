@@ -22,11 +22,11 @@
 #include <boost/noncopyable.hpp>
 
 #include "Node.hh"
-#include "SymbolMap.hh"
 
 namespace avro {
 
 class Schema;
+class SymbolMap;
 
 /// A ValidSchema is basically a non-mutable Schema that has passed some
 /// minumum of sanity checks.  Once valididated, any Schema that is part of
@@ -56,15 +56,10 @@ class ValidSchema : private boost::noncopyable
 
     void toFlatList(std::ostream &os) const;
 
-    NodePtr followSymbol(const std::string &name) const {
-        return symbolMap_.locateSymbol(name);
-    }
-
   protected:
 
-    bool validate(const NodePtr &node);
+    bool validate(const NodePtr &node, SymbolMap &symbolMap);
 
-    SymbolMap symbolMap_;
     NodePtr root_;
 };
 

@@ -19,6 +19,7 @@
 #include <boost/format.hpp>
 
 #include "ValidSchema.hh"
+#include "SymbolMap.hh"
 #include "Schema.hh"
 #include "Node.hh"
 
@@ -27,7 +28,8 @@ namespace avro {
     ValidSchema::ValidSchema(const Schema &schema) :
     root_(schema.root())
 {
-    validate(root_);
+    SymbolMap symbolMap;
+    validate(root_, symbolMap);
 }
 
 ValidSchema::ValidSchema() :
@@ -38,12 +40,13 @@ void
 ValidSchema::setSchema(const Schema &schema)
 {
     const NodePtr &node(schema.root());
-    validate(schema.root());
+    SymbolMap symbolMap;
+    validate(schema.root(), symbolMap);
     root_ = node;
 }
 
 bool
-ValidSchema::validate(const NodePtr &node) 
+ValidSchema::validate(const NodePtr &node, SymbolMap &symbolMap) 
 {
     if(!node) {
         root_.reset(new NodePrimitive(AVRO_NULL));
@@ -54,12 +57,12 @@ ValidSchema::validate(const NodePtr &node)
     }
     if(node->hasName()) {
         if(node->type() == AVRO_SYMBOLIC) {
-            if(!symbolMap_.hasSymbol(node->name())) {
+            if(!symbolMap.hasSymbol(node->name())) {
                 throw Exception( boost::format("Symbolic name \"%1%\" is unknown") % node->name());
             }
             return true;
         }
-        bool registered = symbolMap_.registerSymbol(node);
+        bool registered = symbolMap.registerSymbol(node);
         if(!registered) {
             return false;
         }
@@ -69,8 +72,16 @@ ValidSchema::validate(const NodePtr &node)
     for(size_t i = 0; i < leaves; ++i) {
         const NodePtr &leaf(node->leafAt(i));
 
-        if(! validate(leaf)) {
-            node->setLeafToSymbolic(i);
+        if(! validate(leaf, symbolMap)) {
+
+            // if validate returns false it means a node with this name already
+            // existed in the map, instead of keeping this node twice in the
+            // map (which could potentially create circular shared pointer
+            // links that could not be easily freed), replace this node with a
+            // symbolic link to the original one.
+            
+            NodePtr redirect = symbolMap.locateSymbol(leaf->name());
+            node->setLeafToSymbolic(i, redirect);
         }
     }
 

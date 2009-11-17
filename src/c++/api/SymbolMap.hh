@@ -42,6 +42,9 @@ class SymbolMap
 
     bool registerSymbol(const NodePtr &node) {
 
+        if(node->type() == AVRO_SYMBOLIC) {
+            throw Exception("Node must not be a symbolic name");
+        }
         const std::string name = node->name();
         if(name.empty()) {
             throw Exception("Node must have a name to be registered");
