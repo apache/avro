@@ -16,30 +16,38 @@
  * limitations under the License.
  */
 
-#ifndef avro_Exception_hh__
-#define avro_Exception_hh__
-
-#include <stdexcept>
-#include <boost/format.hpp>
+#ifndef avro_SchemaResolution_hh__
+#define avro_SchemaResolution_hh__
 
 namespace avro {
 
-/// Wrapper for std::runtime_error that provides convenience constructor
-/// for boost::format objects
 
-class Exception : public virtual std::runtime_error
-{
-  public:
+enum SchemaResolution {
 
-    Exception(const std::string &msg) :
-        std::runtime_error(msg)
-    { }
+    /// The schemas definitely do not match
+    
+    RESOLVE_NO_MATCH, 
 
-    Exception(const boost::format &msg) :
-        std::runtime_error( boost::str(msg))
-    { }  
+    /// The schemas match at a cursory level
+    ///
+    /// For records and enums, this means the name is the same, but it does not
+    /// necessarily mean that every symbol or field is an exact match.
+    
+    RESOLVE_MATCH,    
+
+    /// For primitives, the matching may occur if the type is promotable.  This means that the
+    /// writer matches reader if the writer's type is promoted the specified type.
+    
+    //@{
+    
+    RESOLVE_PROMOTABLE_TO_LONG,
+    RESOLVE_PROMOTABLE_TO_FLOAT,
+    RESOLVE_PROMOTABLE_TO_DOUBLE,
+
+    //@}
+
 };
 
-} // namespace avro
+} // namespace avro 
 
 #endif

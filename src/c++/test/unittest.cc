@@ -30,6 +30,7 @@
 #include "Parser.hh"
 #include "SymbolMap.hh"
 #include "Compiler.hh"
+#include "SchemaResolution.hh"
 
 #include "AvroSerialize.hh"
 
@@ -642,6 +643,124 @@ void addTestCase(boost::unit_test::test_suite &test)
     test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
 }
 
+struct TestResolution
+{
+    TestResolution() :
+        int_(IntSchema()), 
+        long_(LongSchema()),
+        bool_(BoolSchema()), 
+        float_(FloatSchema()), 
+        double_(DoubleSchema()),
+
+        mapOfInt_(MapSchema(IntSchema())),
+        mapOfDouble_(MapSchema(DoubleSchema())),
+
+        arrayOfLong_(ArraySchema(LongSchema())),
+        arrayOfFloat_(ArraySchema(FloatSchema()))
+    {
+        {
+            EnumSchema one("one");
+            one.addSymbol("X");
+            enumOne_.setSchema(one);
+
+            EnumSchema two("two");
+            two.addSymbol("Y");
+            enumTwo_.setSchema(two);
+        }
+    
+        {
+            UnionSchema one;
+            one.addType(IntSchema());
+            one.addType(FloatSchema());
+            unionOne_.setSchema(one);
+
+            UnionSchema two;
+            two.addType(IntSchema());
+            two.addType(DoubleSchema());
+            unionTwo_.setSchema(two);
+        }
+    }
+
+    SchemaResolution resolve(const ValidSchema &writer, const ValidSchema &reader)
+    {
+        return writer.root()->resolve(*reader.root());
+    }
+
+    void test() 
+    {
+        std::cout << "TestResolution\n";
+
+        BOOST_CHECK_EQUAL(resolve(long_, long_), RESOLVE_MATCH); 
+        BOOST_CHECK_EQUAL(resolve(long_, bool_), RESOLVE_NO_MATCH); 
+        BOOST_CHECK_EQUAL(resolve(bool_, long_), RESOLVE_NO_MATCH); 
+
+        BOOST_CHECK_EQUAL(resolve(int_, long_), RESOLVE_PROMOTABLE_TO_LONG); 
+        BOOST_CHECK_EQUAL(resolve(long_, int_), RESOLVE_NO_MATCH); 
+
+        BOOST_CHECK_EQUAL(resolve(int_, float_), RESOLVE_PROMOTABLE_TO_FLOAT); 
+        BOOST_CHECK_EQUAL(resolve(float_, int_), RESOLVE_NO_MATCH); 
+
+        BOOST_CHECK_EQUAL(resolve(int_, double_), RESOLVE_PROMOTABLE_TO_DOUBLE); 
+        BOOST_CHECK_EQUAL(resolve(double_, int_), RESOLVE_NO_MATCH); 
+
+        BOOST_CHECK_EQUAL(resolve(long_, float_), RESOLVE_PROMOTABLE_TO_FLOAT); 
+        BOOST_CHECK_EQUAL(resolve(float_, long_), RESOLVE_NO_MATCH); 
+
+        BOOST_CHECK_EQUAL(resolve(long_, double_), RESOLVE_PROMOTABLE_TO_DOUBLE); 
+        BOOST_CHECK_EQUAL(resolve(double_, long_), RESOLVE_NO_MATCH); 
+
+        BOOST_CHECK_EQUAL(resolve(float_, double_), RESOLVE_PROMOTABLE_TO_DOUBLE); 
+        BOOST_CHECK_EQUAL(resolve(double_, float_), RESOLVE_NO_MATCH); 
+
+        BOOST_CHECK_EQUAL(resolve(int_, mapOfInt_), RESOLVE_NO_MATCH);
+        BOOST_CHECK_EQUAL(resolve(mapOfInt_, int_), RESOLVE_NO_MATCH);
+
+        BOOST_CHECK_EQUAL(resolve(mapOfInt_, mapOfInt_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(mapOfDouble_, mapOfInt_), RESOLVE_NO_MATCH);
+        BOOST_CHECK_EQUAL(resolve(mapOfInt_, mapOfDouble_), RESOLVE_PROMOTABLE_TO_DOUBLE);
+
+        BOOST_CHECK_EQUAL(resolve(long_, arrayOfLong_), RESOLVE_NO_MATCH);
+        BOOST_CHECK_EQUAL(resolve(arrayOfLong_, long_), RESOLVE_NO_MATCH);
+
+        BOOST_CHECK_EQUAL(resolve(arrayOfLong_, arrayOfLong_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(arrayOfFloat_, arrayOfLong_), RESOLVE_NO_MATCH);
+        BOOST_CHECK_EQUAL(resolve(arrayOfLong_, arrayOfFloat_), RESOLVE_PROMOTABLE_TO_FLOAT);
+
+        BOOST_CHECK_EQUAL(resolve(enumOne_, enumOne_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(enumOne_, enumTwo_), RESOLVE_NO_MATCH);
+
+        BOOST_CHECK_EQUAL(resolve(float_, unionOne_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(double_, unionOne_), RESOLVE_NO_MATCH);
+        BOOST_CHECK_EQUAL(resolve(float_, unionTwo_), RESOLVE_PROMOTABLE_TO_DOUBLE);
+
+        BOOST_CHECK_EQUAL(resolve(unionOne_, float_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(unionOne_, double_), RESOLVE_PROMOTABLE_TO_DOUBLE);
+        BOOST_CHECK_EQUAL(resolve(unionTwo_, float_), RESOLVE_PROMOTABLE_TO_FLOAT);
+        BOOST_CHECK_EQUAL(resolve(unionOne_, unionTwo_), RESOLVE_MATCH);
+    }
+
+  private:
+
+    ValidSchema int_;
+    ValidSchema long_;
+    ValidSchema bool_;
+    ValidSchema float_;
+    ValidSchema double_;
+
+    ValidSchema mapOfInt_;
+    ValidSchema mapOfDouble_;
+
+    ValidSchema arrayOfLong_;
+    ValidSchema arrayOfFloat_;
+
+    ValidSchema enumOne_;
+    ValidSchema enumTwo_;
+
+    ValidSchema unionOne_;
+    ValidSchema unionTwo_;
+};
+
+
 boost::unit_test::test_suite*
 init_unit_test_suite( int argc, char* argv[] ) 
 {
@@ -655,6 +774,7 @@ init_unit_test_suite( int argc, char* argv[] )
     addTestCase<TestNested>(*test);
     addTestCase<TestGenerated>(*test);
     addTestCase<TestBadStuff>(*test);
+    addTestCase<TestResolution>(*test);
 
     return test;
 }

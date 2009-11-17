@@ -61,5 +61,11 @@ std::ostream &operator<< (std::ostream &os, Type type)
     return os;
 }
 
+std::ostream &operator<< (std::ostream &os, const Null &)
+{
+    os << "(null value)";
+    return os;
+}
+
 } // namespace avro
 

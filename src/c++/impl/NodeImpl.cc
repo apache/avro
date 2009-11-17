@@ -21,7 +21,172 @@
 
 namespace avro {
 
-/// Wrap an indentation in a struct for ostream operator<< 
+
+template < class A, class B, class C, class D >
+SchemaResolution 
+NodeImpl<A,B,C,D>::furtherResolution(const Node &reader) const
+{
+    SchemaResolution match = RESOLVE_NO_MATCH;
+
+    if(reader.type() == AVRO_SYMBOLIC) {
+    
+        // resolve the symbolic type, and check again
+        const NodePtr &node = reader.leafAt(0);
+        match = resolve(*node);
+    }
+    else if(reader.type() == AVRO_UNION) {
+
+        // in this case, need to see if there is an exact match for the
+        // writer's type, or if not, the first one that can be promoted to a
+        // match
+        
+        for(size_t i= 0; i < reader.leaves(); ++i)  {
+
+            const NodePtr &node = reader.leafAt(i);
+            SchemaResolution thisMatch = resolve(*node);
+
+            // if matched then the search is done
+            if(thisMatch == RESOLVE_MATCH) {
+                match = thisMatch;
+                break;
+            }
+
+            // thisMatch is either no match, or promotable, this will set match to 
+            // promotable if it hasn't been set already
+            if (match == RESOLVE_NO_MATCH) {
+                match = thisMatch;
+            }
+        }
+    }
+
+    return match;
+}
+
+SchemaResolution 
+NodePrimitive::resolve(const Node &reader) const
+{
+    if(type() == reader.type()) {
+        return RESOLVE_MATCH;
+    }
+
+    switch ( type() ) {
+
+      case AVRO_INT:
+
+        if( reader.type() == AVRO_LONG ) { 
+            return RESOLVE_PROMOTABLE_TO_LONG;
+        }   
+
+        // fall-through intentional
+
+      case AVRO_LONG:
+ 
+        if (reader.type() == AVRO_FLOAT) {
+            return RESOLVE_PROMOTABLE_TO_FLOAT;
+        }   
+
+        // fall-through intentional
+
+      case AVRO_FLOAT:
+
+        if (reader.type() == AVRO_DOUBLE) {
+            return RESOLVE_PROMOTABLE_TO_DOUBLE;
+        }   
+
+      default:
+        break;
+    }   
+
+    return furtherResolution(reader);
+}
+
+SchemaResolution 
+NodeRecord::resolve(const Node &reader) const
+{
+    if(reader.type() == AVRO_RECORD) {
+        if(name() == reader.name()) {
+            return RESOLVE_MATCH;
+        }
+    }
+    return furtherResolution(reader);
+}
+
+SchemaResolution 
+NodeEnum::resolve(const Node &reader) const
+{
+    if(reader.type() == AVRO_ENUM) {
+        return (name() == reader.name()) ? RESOLVE_MATCH : RESOLVE_NO_MATCH;
+    }
+    return furtherResolution(reader);
+}
+
+SchemaResolution 
+NodeArray::resolve(const Node &reader) const
+{
+    if(reader.type() == AVRO_ARRAY) {
+        const NodePtr &arrayType = leafAt(0);
+        return arrayType->resolve(*reader.leafAt(0));
+    }
+    return furtherResolution(reader);
+}
+
+SchemaResolution 
+NodeMap::resolve(const Node &reader) const
+{
+    if(reader.type() == AVRO_MAP) {
+        const NodePtr &mapType = leafAt(1);
+        return mapType->resolve(*reader.leafAt(1));
+    }
+    return furtherResolution(reader);
+}
+
+SchemaResolution
+NodeUnion::resolve(const Node &reader) const 
+{
+
+    // If the writer is union, resolution only needs to occur when the selected
+    // type of the writer is known, so this function is not very helpful.
+    //
+    // In this case, this function returns if there is a possible match given
+    // any writer type, so just search type by type returning the best match
+    // found.
+    
+    SchemaResolution match = RESOLVE_NO_MATCH;
+    for(size_t i=0; i < leaves(); ++i) {
+        const NodePtr &node = leafAt(i);
+        SchemaResolution thisMatch = node->resolve(reader);
+        if(thisMatch == RESOLVE_MATCH) {
+            match = thisMatch;
+            break;
+        }
+        if(match == RESOLVE_NO_MATCH) {
+            match = thisMatch;
+        }
+    }
+    return match;
+}
+
+SchemaResolution 
+NodeFixed::resolve(const Node &reader) const
+{
+    if(reader.type() == AVRO_FIXED) {
+        return (
+                (reader.fixedSize() == fixedSize()) &&
+                (reader.name() == name()) 
+            ) ? 
+            RESOLVE_MATCH : RESOLVE_NO_MATCH;
+    }
+    return furtherResolution(reader);
+}
+
+SchemaResolution 
+NodeSymbolic::resolve(const Node &reader) const
+{
+    const NodePtr &node = leafAt(0);
+    return node->resolve(reader);
+}
+
+// Wrap an indentation in a struct for ostream operator<< 
 struct indent { 
     indent(int depth) :
         d(depth)

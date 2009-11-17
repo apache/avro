@@ -81,6 +81,7 @@ class Reader : private boost::noncopyable
 
     void readValue(std::string &val) {
         int64_t size = readSize();
+        val.clear();
         val.reserve(size);
         uint8_t bval;
         for(size_t bytes = 0; bytes < static_cast<size_t>(size); bytes++) {

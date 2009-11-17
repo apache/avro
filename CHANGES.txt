@@ -68,6 +68,8 @@ Trunk (unreleased changes)
 
     AVRO-204. Change the way symbolic references are tracked. (sbanacho)
 
+    AVRO-205. APIs for checking schema resolution. (sbanacho)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

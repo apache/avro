@@ -20,6 +20,7 @@
 #define avro_SymbolMap_hh__
 
 #include <map>
+#include <boost/noncopyable.hpp>
 
 #include "Node.hh"
 #include "Schema.hh"
@@ -32,7 +33,7 @@ namespace avro {
 /// implements the symbolic name to node mapping.
 ///
 
-class SymbolMap 
+class SymbolMap : private boost::noncopyable
 {
 
   public:

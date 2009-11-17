@@ -25,6 +25,7 @@
 
 #include "Exception.hh"
 #include "Types.hh"
+#include "SchemaResolution.hh"
 
 namespace avro {
 
@@ -54,7 +55,6 @@ class Node : private boost::noncopyable
 
     Node(Type type) :
         type_(type),
-        refCount_(0),
         locked_(false)
     {}
 
@@ -105,6 +105,8 @@ class Node : private boost::noncopyable
 
     virtual bool isValid() const = 0;
 
+    virtual SchemaResolution resolve(const Node &reader) const = 0;
+
     virtual void printJson(std::ostream &os, int depth) const = 0;
 
     virtual void printBasicInfo(std::ostream &os) const = 0;
@@ -131,7 +133,6 @@ class Node : private boost::noncopyable
   private:
 
     const Type type_;
-    int refCount_;
     bool locked_;
 };
 

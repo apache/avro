@@ -118,6 +118,8 @@ class NodeImpl : public Node
 
     void setLeafToSymbolic(int index, const NodePtr &node);
    
+    SchemaResolution furtherResolution(const Node &node) const;
+
     NameConcept nameAttribute_;
     LeavesConcept leafAttributes_;
     LeafNamesConcept leafNameAttributes_;
@@ -156,6 +158,8 @@ class NodePrimitive : public NodeImplPrimitive
         NodeImplPrimitive(type)
     { }
 
+    SchemaResolution resolve(const Node &reader)  const;
+
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
@@ -174,6 +178,8 @@ class NodeSymbolic : public NodeImplSymbolic
     explicit NodeSymbolic(const HasName &name, const SingleLeaf &node) :
         NodeImplSymbolic(AVRO_SYMBOLIC, name, node, NoLeafNames(), NoSize())
     { }
+
+    SchemaResolution resolve(const Node &reader)  const;
 
     void printJson(std::ostream &os, int depth) const;
 
@@ -194,6 +200,8 @@ class NodeRecord : public NodeImplRecord
     NodeRecord(const HasName &name, const MultiLeaves &fields, const LeafNames &fieldsNames) :
         NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize())
     { }
+
+    SchemaResolution resolve(const Node &reader)  const;
 
     void printJson(std::ostream &os, int depth) const;
 
@@ -218,6 +226,8 @@ class NodeEnum : public NodeImplEnum
         NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize())
     { }
 
+    SchemaResolution resolve(const Node &reader)  const;
+
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
@@ -239,6 +249,8 @@ class NodeArray : public NodeImplArray
     explicit NodeArray(const SingleLeaf &items) :
         NodeImplArray(AVRO_ARRAY, NoName(), items, NoLeafNames(), NoSize())
     { }
+
+    SchemaResolution resolve(const Node &reader)  const;
 
     void printJson(std::ostream &os, int depth) const;
 
@@ -269,6 +281,8 @@ class NodeMap : public NodeImplMap
         std::swap(leafAttributes_.get(0), leafAttributes_.get(1));
     }
 
+    SchemaResolution resolve(const Node &reader)  const;
+
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
@@ -288,6 +302,8 @@ class NodeUnion : public NodeImplUnion
         NodeImplUnion(AVRO_UNION, NoName(), types, NoLeafNames(), NoSize())
     { }
 
+    SchemaResolution resolve(const Node &reader)  const;
+
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
@@ -306,6 +322,8 @@ class NodeFixed : public NodeImplFixed
     NodeFixed(const HasName &name, const HasSize &size) :
         NodeImplFixed(AVRO_FIXED, name, NoLeaves(), NoLeafNames(), size)
     { }
+
+    SchemaResolution resolve(const Node &reader)  const;
 
     void printJson(std::ostream &os, int depth) const;
 
