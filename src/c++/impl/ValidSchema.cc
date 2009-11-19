@@ -60,7 +60,12 @@ ValidSchema::validate(const NodePtr &node, SymbolMap &symbolMap)
             if(!symbolMap.hasSymbol(node->name())) {
                 throw Exception( boost::format("Symbolic name \"%1%\" is unknown") % node->name());
             }
-            return true;
+
+            boost::shared_ptr<NodeSymbolic> symNode = boost::static_pointer_cast<NodeSymbolic>(node);
+
+            // if the symbolic link is already resolved, we return true,
+            // otherwise returning false will force it to be resolved
+            return symNode->isSet();
         }
         bool registered = symbolMap.registerSymbol(node);
         if(!registered) {

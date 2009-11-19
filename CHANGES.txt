@@ -110,6 +110,11 @@ Trunk (unreleased changes)
 
     AVRO-194. C++ varint encoding buffer too small. (sbanacho)
 
+    AVRO-210. Memory leak with recursive schemas when constructed 
+    by hand. (sbanacho)
+
+    AVRO-211. Nested schema does not get parsed in C++. (sbanacho)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

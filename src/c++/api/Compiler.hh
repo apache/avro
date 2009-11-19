@@ -25,7 +25,6 @@
 #include "Types.hh"
 #include "Node.hh"
 #include "CompilerNode.hh"
-#include "SymbolMap.hh"
 
 namespace avro {
 
@@ -89,7 +88,6 @@ class CompilerContext {
     
     NodePtr   root_;
     Stack     stack_;
-    SymbolMap symbolMap_;
 };
 
 class ValidSchema;

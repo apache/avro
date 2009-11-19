@@ -20,6 +20,7 @@
 
 #include "Validator.hh"
 #include "ValidSchema.hh"
+#include "NodeImpl.hh"
 
 namespace avro {
 
@@ -243,9 +244,9 @@ Validator::setupOperation(const NodePtr &node)
     nextType_ = node->type();
 
     if(nextType_ == AVRO_SYMBOLIC) {
-        NodePtr symNode(node->leafAt(0));
-        assert(symNode);
-        setupOperation(symNode);
+        NodePtr actualNode = resolveSymbol(node);
+        assert(actualNode);
+        setupOperation(actualNode);
         return;
     }
 

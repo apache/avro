@@ -29,6 +29,7 @@
 #include "ValidatingWriter.hh"
 #include "Reader.hh"
 #include "ValidatingReader.hh"
+#include "Node.hh"
 #include "ValidSchema.hh"
 #include "Compiler.hh"
 
@@ -159,6 +160,24 @@ void testParserValid(avro::ValidSchema &valid, const testgen::RootRecord &myReco
     checkOk(myRecord, inRecord);
 }
 
+void testNameIndex(const avro::ValidSchema &schema)
+{
+    const avro::NodePtr &node = schema.root();
+    size_t index = 0;
+    bool found = node->nameIndex("anothernested", index);
+    BOOST_CHECK_EQUAL(found, true);
+    BOOST_CHECK_EQUAL(index, 8U);
+
+    found = node->nameIndex("myenum", index);
+    BOOST_CHECK_EQUAL(found, true);
+    BOOST_CHECK_EQUAL(index, 4U);
+
+    const avro::NodePtr &enumNode = node->leafAt(index);
+    found = enumNode->nameIndex("one", index); 
+    BOOST_CHECK_EQUAL(found, true);
+    BOOST_CHECK_EQUAL(index, 1U);
+}
+
 void runTests(const testgen::RootRecord myRecord) 
 {
     std::cout << "Serialize:\n";
@@ -171,6 +190,8 @@ void runTests(const testgen::RootRecord myRecord)
     std::cout << "Serialize validated:\n";
     serializeToScreenValid(schema, myRecord);
     std::cout << "end Serialize validated\n";
+
+    testNameIndex(schema);
 
     testParser(myRecord);
 

@@ -20,6 +20,7 @@
 #define avro_NodeImpl_hh__
 
 #include <limits>
+#include <boost/weak_ptr.hpp>
 
 #include "Node.hh"
 #include "NodeConcepts.hh"
@@ -87,7 +88,7 @@ class NodeImpl : public Node
 
     void doAddName(const std::string &name) { 
         if(! nameIndex_.add(name, leafNameAttributes_.size())) {
-            throw Exception("Cannot add duplicate names");
+            throw Exception(boost::format("Cannot add duplicate name: %1%") % name);
         }
         leafNameAttributes_.add(name);
     }
@@ -141,7 +142,7 @@ typedef concepts::NoAttribute<int>     NoSize;
 typedef concepts::SingleAttribute<int> HasSize;
 
 typedef NodeImpl< NoName,  NoLeaves,    NoLeafNames,  NoSize  > NodeImplPrimitive;
-typedef NodeImpl< HasName, SingleLeaf,  NoLeafNames,  NoSize  > NodeImplSymbolic;
+typedef NodeImpl< HasName, NoLeaves,    NoLeafNames,  NoSize  > NodeImplSymbolic;
 
 typedef NodeImpl< HasName, MultiLeaves, LeafNames,    NoSize  > NodeImplRecord;
 typedef NodeImpl< HasName, NoLeaves,    LeafNames,    NoSize  > NodeImplEnum;
@@ -169,14 +170,16 @@ class NodePrimitive : public NodeImplPrimitive
 
 class NodeSymbolic : public NodeImplSymbolic
 {
+    typedef boost::weak_ptr<Node> NodeWeakPtr;
+
   public:
 
     NodeSymbolic() :
         NodeImplSymbolic(AVRO_SYMBOLIC)
     { }
 
-    explicit NodeSymbolic(const HasName &name, const SingleLeaf &node) :
-        NodeImplSymbolic(AVRO_SYMBOLIC, name, node, NoLeafNames(), NoSize())
+    explicit NodeSymbolic(const HasName &name) :
+        NodeImplSymbolic(AVRO_SYMBOLIC, name, NoLeaves(), NoLeafNames(), NoSize())
     { }
 
     SchemaResolution resolve(const Node &reader)  const;
@@ -186,6 +189,26 @@ class NodeSymbolic : public NodeImplSymbolic
     bool isValid() const {
         return (nameAttribute_.size() == 1);
     }
+
+    bool isSet() const {
+         return (actualNode_.lock() != 0);
+    }
+
+    NodePtr getNode() const {
+        NodePtr node = actualNode_.lock();
+        if(!node) {
+            throw Exception(boost::format("Could not follow symbol %1%") % name());
+        }
+        return node;
+    }
+
+    void setNode(const NodePtr &node) {
+        actualNode_ = node;
+    }
+
+  protected:
+
+    NodeWeakPtr actualNode_;
 
 };
 
@@ -199,7 +222,13 @@ class NodeRecord : public NodeImplRecord
 
     NodeRecord(const HasName &name, const MultiLeaves &fields, const LeafNames &fieldsNames) :
         NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize())
-    { }
+    { 
+        for(size_t i=0; i < leafNameAttributes_.size(); ++i) {
+            if(!nameIndex_.add(leafNameAttributes_.get(i), i)) {
+                 throw Exception(boost::format("Cannot add duplicate name: %1%") % leafNameAttributes_.get(i));
+            }
+        }
+    }
 
     SchemaResolution resolve(const Node &reader)  const;
 
@@ -224,8 +253,14 @@ class NodeEnum : public NodeImplEnum
 
     NodeEnum(const HasName &name, const LeafNames &symbols) :
         NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize())
-    { }
-
+    { 
+        for(size_t i=0; i < leafNameAttributes_.size(); ++i) {
+            if(!nameIndex_.add(leafNameAttributes_.get(i), i)) {
+                 throw Exception(boost::format("Cannot add duplicate name: %1%") % leafNameAttributes_.get(i));
+            }
+        }
+    }
+        
     SchemaResolution resolve(const Node &reader)  const;
 
     void printJson(std::ostream &os, int depth) const;
@@ -342,15 +377,18 @@ NodeImpl<A,B,C,D>::setLeafToSymbolic(int index, const NodePtr &node)
     if(!B::hasAttribute) {
         throw Exception("Cannot change leaf node for nonexistent leaf");
     } 
-    NodePtr symbol(new NodeSymbolic);
 
     NodePtr &replaceNode = const_cast<NodePtr &>(leafAttributes_.get(index));
     if(replaceNode->name() != node->name()) {
         throw Exception("Symbolic name does not match the name of the schema it references");
     }
-    symbol->setName(node->name());
-    symbol->addLeaf(node);
-    replaceNode = symbol;
+
+    NodePtr symbol(new NodeSymbolic);
+    NodeSymbolic *ptr = static_cast<NodeSymbolic *> (symbol.get());
+
+    ptr->setName(node->name());
+    ptr->setNode(node);
+    replaceNode.swap(symbol);
 }
 
 template < class A, class B, class C, class D >
@@ -378,6 +416,16 @@ NodeImpl<A,B,C,D>::printBasicInfo(std::ostream &os) const
     if(isCompound(type())) {
         os << "end " << type() << '\n';
     }
+}
+
+
+inline NodePtr resolveSymbol(const NodePtr &node) 
+{
+    if(node->type() != AVRO_SYMBOLIC) {
+        throw Exception("Only symbolic nodes may be resolved");
+    }
+    boost::shared_ptr<NodeSymbolic> symNode = boost::static_pointer_cast<NodeSymbolic>(node);
+    return symNode->getNode();
 }
 
 } // namespace avro
