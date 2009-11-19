@@ -76,6 +76,9 @@ Trunk (unreleased changes)
     AVRO-203. Reformat license in Python sources.
     (Jeff Hammerbacher via cutting)
 
+    AVRO-199. Make Python test schemas more readable.
+    (Jeff Hammerbacher via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

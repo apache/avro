@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest, random, cStringIO, time, sys, os, struct
+import unittest, random, cStringIO, time, sys, os, struct, re
 import avro.schema as schema
 import avro.io as io
 import avro.genericio as genericio
@@ -22,6 +22,10 @@ import avro.datafile as datafile
 
 _DIR = "build/test/"
 _FILE = _DIR +"test.py.avro"
+
+def remove_whitespace(string_):
+  """Remove whitespace from a string."""
+  return re.sub(r"\s+", "", string_)
 
 class RandomData(object):
   def __init__(self, schm, seed=None):
@@ -108,91 +112,127 @@ class TestSchema(unittest.TestCase):
     self.__assertdata = assertdata
 
   def testNull(self):
-    self.checkdefault("\"null\"", "null", None)
+    self.checkdefault('"null"', "null", None)
 
   def testBoolean(self):
-    self.checkdefault("\"boolean\"", "true", True)
+    self.checkdefault('"boolean"', "true", True)
 
   def testString(self):
-    self.checkdefault("\"string\"", "\"foo\"", "foo")
+    self.checkdefault('"string"', '"foo"', "foo")
 
   def testBytes(self):
-    self.checkdefault("\"bytes\"", "\"foo\"", "foo")
+    self.checkdefault('"bytes"', '"foo"', "foo")
 
   def testInt(self):
-    self.checkdefault("\"int\"", "5", 5)
+    self.checkdefault('"int"', "5", 5)
 
   def testLong(self):
-    self.checkdefault("\"long\"", "9", 9)
+    self.checkdefault('"long"', "9", 9)
 
   def testFloat(self):
-    self.checkdefault("\"float\"", "1.2", float(1.2))
+    self.checkdefault('"float"', "1.2", float(1.2))
 
   def testDouble(self):
-    self.checkdefault("\"double\"", "1.2", float(1.2))
+    self.checkdefault('"double"', "1.2", float(1.2))
 
   def testArray(self):
-    self.checkdefault("{\"type\":\"array\", \"items\": \"long\"}",
-                       "[1]", [1])
+    array_schema = '{"type": "array", "items": "long"}'
+    self.checkdefault(array_schema, "[1]", [1])
 
   def testMap(self):
-    self.checkdefault("{\"type\":\"map\", \"values\": \"long\"}",
-                      "{\"a\":1}", {unicode("a"):1})
+    map_schema = '{"type": "map", "values": "long"}'
+    self.checkdefault(map_schema, '{"a": 1}', {unicode("a"): 1})
 
   def testRecord(self):
-    self.checkdefault("{\"type\":\"record\", \"name\":\"Test\"," +
-               "\"fields\":[{\"name\":\"f\", \"type\":" +
-               "\"long\"}]}", "{\"f\":11}", {"f" : 11})
+    record_schema = """
+      {"type": "record",
+       "name": "Test",
+       "fields": [{"name": "f",
+                   "type": "long"}]}
+    """
+    self.checkdefault(record_schema, '{"f": 11}', {"f": 11})
 
   def testEnum(self):
-    self.checkdefault("{\"type\": \"enum\", \"name\":\"Test\","+
-               "\"symbols\": [\"A\", \"B\"]}", "\"B\"", "B")
+    enum_schema = '{"type": "enum", "name": "Test","symbols": ["A", "B"]}'
+    self.checkdefault(enum_schema, '"B"', "B")
 
   def testRecursive(self):
-    self.check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
-          +"{\"name\":\"label\", \"type\":\"string\"},"
-          +"{\"name\":\"children\", \"type\":"
-          +"{\"type\": \"array\", \"items\": \"Node\" }}]}")
+    recursive_schema = """
+      {"type": "record",
+       "name": "Node",
+       "fields": [{"name": "label", "type": "string"},
+                  {"name": "children",
+                   "type": {"type": "array", "items": "Node"}}]}
+    """
+    self.check(recursive_schema)
 
   def testLisp(self):
-    self.check("{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
-          +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
-          +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
-          +"{\"name\":\"car\", \"type\":\"Lisp\"},"
-          +"{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}")
+    lisp_schema = """
+      {"type": "record",
+       "name": "Lisp",
+       "fields": [{"name": "value",
+                   "type": ["null", "string",
+                            {"type": "record",
+                             "name": "Cons",
+                             "fields": [{"name": "car", "type": "Lisp"},
+                                        {"name": "cdr", "type": "Lisp"}]}]}]}
+    """
+    self.check(lisp_schema)
 
   def testUnion(self):
-    self.check("[\"string\", \"null\", \"long\", "
-      +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
-      +"{\"name\":\"car\", \"type\":\"string\"}," 
-      +"{\"name\":\"cdr\", \"type\":\"string\"}]}]")
-    self.checkdefault("[\"double\", \"long\"]", "1.1", 1.1)
+    union_schema = """
+      ["string",
+       "null",
+       "long",
+       {"type": "record",
+        "name": "Cons",
+        "fields": [{"name": "car", "type": "string"},
+                   {"name": "cdr", "type": "string"}]}]
+    """
+    self.check(union_schema)
+    self.checkdefault('["double", "long"]', "1.1", 1.1)
 
   def testFixed(self):
-    self.checkdefault("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}", 
-                      "\"a\"", "a") 
+    fixed_schema = '{"type": "fixed", "name": "Test", "size": 1}'
+    self.checkdefault(fixed_schema, '"a"', "a")
 
-  def check(self, string):
-    schm = schema.parse(string)
-    st = schema.stringval(schm)
-    self.assertEquals(string.replace(" ",""), st.replace(" ",""))
-    #test __eq__
-    self.assertEquals(schm, schema.parse(string))
-    #test hashcode doesn't generate infinite recursion
-    schm.__hash__()
-    randomdata = self.__random(schm)
-    for i in range(1,10):
-      self.checkser(schm, randomdata)
-    self.checkdatafile(schm)
+  def check(self, string_):
+    # parse schema, then convert back to string
+    schema_ = schema.parse(string_)
+    parsed_string = schema.stringval(schema_)
+
+    # test that the round-trip didn't mess up anything
+    # NB: I don't think we should do this. Why enforce ordering?
+    self.assertEquals(remove_whitespace(string_),
+                      remove_whitespace(parsed_string))
+
+    # test __eq__
+    self.assertEquals(schema_, schema.parse(string_))
+
+    # test hashcode doesn't generate infinite recursion
+    schema_.__hash__()
+
+    # test serialization of random data
+    randomdata = self.__random(schema_)
+    for i in range(1, 10):
+      self.checkser(schema_, randomdata)
+
+    # test writing of data to file
+    self.checkdatafile(schema_)
 
   def checkdefault(self, schemajson, defaultjson, defaultvalue):
     self.check(schemajson)
-    actual = schema.parse("{\"type\":\"record\", \"name\":\"Foo\","
-                          + "\"fields\":[]}")
-    expected = schema.parse("{\"type\":\"record\", \"name\":\"Foo\"," 
-                             +"\"fields\":[{\"name\":\"f\", "
-                             +"\"type\":"+schemajson+", "
-                             +"\"default\":"+defaultjson+"}]}")
+
+    actual_schema = '{"type": "record", "name": "Foo", "fields": []}'
+    actual = schema.parse(actual_schema)
+
+    expected_schema = """
+      {"type": "record",
+       "name": "Foo",
+       "fields": [{"name": "f", "type": %s, "default": %s}]}
+    """ % (schemajson, defaultjson)
+    expected = schema.parse(expected_schema)
+
     reader = genericio.DatumReader(actual, expected)
     record = reader.read(io.Decoder(cStringIO.StringIO()))
     self.assertEquals(defaultvalue, record.get("f"))
