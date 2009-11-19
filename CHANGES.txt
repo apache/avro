@@ -8,6 +8,9 @@ Trunk (unreleased changes)
     This reverses the inheritance of most classes in the specific and
     reflect packages. (cutting)
 
+    AVRO-201.  Move Python data file code into its own module.
+    (Jeff Hammerbacher via cutting)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

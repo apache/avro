@@ -18,6 +18,7 @@ import unittest, random, cStringIO, time, sys, os, struct
 import avro.schema as schema
 import avro.io as io
 import avro.genericio as genericio
+import avro.datafile as datafile
 
 _DIR = "build/test/"
 _FILE = _DIR +"test.py.avro"
@@ -214,12 +215,12 @@ class TestSchema(unittest.TestCase):
     seed = time.time()
     randomData = self.__random(schm, seed)
     count = 10
-    dw = io.DataFileWriter(schm, open(_FILE, 'wb'), self.__datumwriter())
+    dw = datafile.DataFileWriter(schm, open(_FILE, 'wb'), self.__datumwriter())
     for i in range(0,count):
       dw.append(randomData.next())
     dw.close()
     randomData = self.__random(schm, seed)
-    dr = io.DataFileReader(open(_FILE, "rb"), self.__datumreader())
+    dr = datafile.DataFileReader(open(_FILE, "rb"), self.__datumreader())
     count_read = 0
     for data in dr:
       count_read = count_read + 1
@@ -235,7 +236,7 @@ if __name__ == '__main__':
   file = sys.argv[2]
   count = int(sys.argv[3])
   randomData = RandomData(schm)
-  dw = io.DataFileWriter(schm, open(file, 'wb'), genericio.DatumWriter())
+  dw = datafile.DataFileWriter(schm, open(file, 'wb'), genericio.DatumWriter())
   for i in range(0,count):
     dw.append(randomData.next())
   dw.close()
