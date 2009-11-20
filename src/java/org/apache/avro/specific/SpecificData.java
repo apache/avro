@@ -188,7 +188,7 @@ public class SpecificData extends GenericData {
   /** Create a schema for a Java class. */
   protected Schema createClassSchema(Class c, Map<String,Schema> names) {
     try {
-      return (Schema)(c.getDeclaredField("_SCHEMA").get(null));
+      return (Schema)(c.getDeclaredField("SCHEMA$").get(null));
     } catch (NoSuchFieldException e) {
       throw new AvroRuntimeException(e);
     } catch (IllegalAccessException e) {
@@ -199,7 +199,7 @@ public class SpecificData extends GenericData {
   /** Return the protocol for a Java interface. */
   public Protocol getProtocol(Class iface) {
     try {
-      return (Protocol)(iface.getDeclaredField("_PROTOCOL").get(null));
+      return (Protocol)(iface.getDeclaredField("PROTOCOL").get(null));
     } catch (NoSuchFieldException e) {
       throw new AvroRuntimeException(e);
     } catch (IllegalAccessException e) {

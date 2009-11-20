@@ -42,9 +42,8 @@ public class SpecificCompiler {
   private final Set<Schema> queue = new HashSet<Schema>();
   private final Protocol protocol;
 
-  /** List of Java reserved words from
-   * <a href="http://java.sun.com/docs/books/tutorial/java/nutsandbolts/_keywords.html">Sun</a>.
-   */
+  /* List of Java reserved words from
+   * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
   private static final Set<String> RESERVED_WORDS = new HashSet<String>(
       Arrays.asList(new String[] {
           "abstract", "assert", "boolean", "break", "byte", "case", "catch",
@@ -178,7 +177,7 @@ public class SpecificCompiler {
     StringBuilder out = new StringBuilder();
     header(out, protocol.getNamespace());
     line(out, 0, "public interface "+mangle(protocol.getName())+" {");
-    line(out, 1, "public static final Protocol _PROTOCOL = Protocol.parse(\""
+    line(out, 1, "public static final Protocol PROTOCOL = Protocol.parse(\""
            +esc(protocol)+"\");");
     for (Map.Entry<String,Message> e : protocol.getMessages().entrySet()) {
       String name = e.getKey();
@@ -266,17 +265,17 @@ public class SpecificCompiler {
              : " extends SpecificRecordBase")
            +" implements SpecificRecord {");
       // schema definition
-      line(out, 1, "public static final Schema _SCHEMA = Schema.parse(\""
+      line(out, 1, "public static final Schema SCHEMA$ = Schema.parse(\""
            +esc(schema)+"\");");
       // field declations
       for (Map.Entry<String,Schema.Field> field: schema.getFields().entrySet())
         line(out, 1, "public " + unbox(field.getValue().schema()) + " "
              + mangle(field.getKey()) + ";");
       // schema method
-      line(out, 1, "public Schema getSchema() { return _SCHEMA; }");
+      line(out, 1, "public Schema getSchema() { return SCHEMA$; }");
       // get method
-      line(out, 1, "public Object get(int _field) {");
-      line(out, 2, "switch (_field) {");
+      line(out, 1, "public Object get(int field$) {");
+      line(out, 2, "switch (field$) {");
       int i = 0;
       for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
         line(out, 2, "case "+(i++)+": return "+mangle(field.getKey())+";");
@@ -285,12 +284,12 @@ public class SpecificCompiler {
       line(out, 1, "}");
       // set method
       line(out, 1, "@SuppressWarnings(value=\"unchecked\")");
-      line(out, 1, "public void set(int _field, Object _value) {");
-      line(out, 2, "switch (_field) {");
+      line(out, 1, "public void set(int field$, Object value$) {");
+      line(out, 2, "switch (field$) {");
       i = 0;
       for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
         line(out, 2, "case "+(i++)+": "+field.getKey()+" = ("+
-             type(field.getValue())+")_value; break;");
+             type(field.getValue())+")value$; break;");
       line(out, 2, "default: throw new AvroRuntimeException(\"Bad index\");");
       line(out, 2, "}");
       line(out, 1, "}");
