@@ -132,6 +132,9 @@ Trunk (unreleased changes)
 
     AVRO-223. Fix test-avroj on Mac OS X.  (Philip Zeyliger via cutting)
 
+    AVRO-224. Code cleanup: cleaner distinction between public and private 
+    methods (massie)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

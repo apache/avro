@@ -96,6 +96,8 @@ typedef enum avro_type avro_type_t;
 
 typedef struct avro_value * avro_value;
 
+avro_status_t avro_initialize (void);
+
 avro_status_t avro_value_type(avro_value value, avro_type_t *type);
 
 #ifdef __cplusplus

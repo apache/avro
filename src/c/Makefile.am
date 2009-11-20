@@ -10,7 +10,7 @@ tests/json_tests tests/schema_tests docs version.sh m4
 include_HEADERS = avro.h
 
 lib_LTLIBRARIES = libavro.la
-libavro_la_SOURCES = avro.h avro_private.h avro.c avro_value.c avro_primitives.c \
+libavro_la_SOURCES = avro.h avro_private.h avro.c avro_private.c \
 json/json_parser.c json/json_parser.h json/json_tokenizer.c \
 json/json.c json/json.h json/json_tokenizer.h \
 util/dump.c util/dump.h util/error.c util/error.h \
@@ -18,7 +18,7 @@ util/container_of.h util/endian.c \
 datatypes/array.c datatypes/boolean.c datatypes/bytes.c datatypes/double.c \
 datatypes/enum.c datatypes/fixed.c datatypes/float.c datatypes/int.c datatypes/long.c \
 datatypes/map.c datatypes/null.c datatypes/record.c datatypes/string.c datatypes/union.c \
-datatypes/decorator.c \
+datatypes/decorator.c datatypes/primitives.c \
 io/file.c io/socket.c io/memory.c io/file_container.c 
 libavro_la_LDFLAGS = \
         -version-info $(LIBAVRO_VERSION) \
