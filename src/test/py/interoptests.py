@@ -21,6 +21,7 @@ import avro.ipc as ipc
 import avro.genericio as genericio
 import avro.reflectio as reflectio
 import avro.reflectipc as reflectipc
+import avro.datafile as datafile
 import testio, testipc, testioreflect, testipcreflect
 
 _BLOCKINGFILE_DIR = "build/test/blocking-data-files/"
@@ -39,7 +40,7 @@ class TestGeneratedFiles(unittest.TestCase):
     origschm = schema.parse(open("src/test/schemata/interop.avsc").read())
     for file in os.listdir(_DATAFILE_DIR):
       print "Validating:", file.__str__()
-      dr = io.DataFileReader(open(_DATAFILE_DIR+file, "rb"), 
+      dr = datafile.DataFileReader(open(_DATAFILE_DIR+file, "rb"), 
                              self.__datumreader())
       count = int(dr.getmeta("count"))
       decodedSchm = schema.parse(dr.getmeta("schema"))

@@ -124,6 +124,9 @@ Trunk (unreleased changes)
 
     AVRO-211. Nested schema does not get parsed in C++. (sbanacho)
 
+    AVRO-222. Fix Python interop tests broken by AVRO-201.
+    (Jeff Hammerbacher via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
