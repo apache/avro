@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.avro.reflect.InduceSchemaTool;
 import org.apache.avro.specific.SpecificCompiler.SpecificCompilerTool;
 
 /** Command-line driver.*/
@@ -33,6 +34,7 @@ public class Main {
   private Main() {
     tools = new TreeMap<String, Tool>();
     tools.put("compile", new SpecificCompilerTool());
+    tools.put("induce", new InduceSchemaTool());
   }
 
   public static void main(String[] args) throws Exception {

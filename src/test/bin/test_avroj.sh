@@ -53,7 +53,10 @@ $CMD compile schema src/test/schemata/interop.avsc $TMPDIR/schema
 [ "Foo.java Interop.java Kind.java MD5.java Node.java " = \
   "$(find $TMPDIR/schema -name "*.java" \
     | awk -F "/" '{ print $NF }' | sort | tr '\n' ' ')" ]
-
+######################################################################
+echo "Testing induce schema..."
+$AVROJ induce build/test/classes org.apache.avro.BarRecord | grep -q -F \
+  '{"type":"record","name":"BarRecord","namespace":"org.apache.avro","fields":[{"name":"beerMsg","type":"string"}]}'
 ######################################################################
 $CMD 2>&1 | grep -q "Expected one of the following"
 $CMD doesnotexist 2>&1 | grep -q "Expected one of the following"

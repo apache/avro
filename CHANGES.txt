@@ -17,6 +17,9 @@ Trunk (unreleased changes)
 
     AVRO-158. Permit appending to a data file from Java.  (cutting)
 
+    AVRO-154. Add 'induce' sub-command to avroj command line tool.
+    (Philip Zeyliger via cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

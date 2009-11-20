@@ -461,7 +461,7 @@
     <chmod file="${build.dir}/avroj-${version}.jar" perm="ugo+x"/>
   </target>
 
-  <target name="test-avroj" depends="avroj"
+  <target name="test-avroj" depends="avroj,compile-test-java"
    description="Tests avroj commands">
     <exec executable="${basedir}/src/test/bin/test_avroj.sh"
           failonerror="true">
