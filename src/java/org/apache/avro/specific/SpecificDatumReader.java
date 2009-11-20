@@ -71,8 +71,9 @@ public class SpecificDatumReader extends GenericDatumReader<Object> {
   private static final Map<Class,Constructor> CTOR_CACHE =
     new ConcurrentHashMap<Class,Constructor>();
 
+  /** Create an instance of a class. */
   @SuppressWarnings("unchecked")
-  private static Object newInstance(Class c) {
+  protected static Object newInstance(Class c) {
     Object result;
     try {
       Constructor meth = (Constructor)CTOR_CACHE.get(c);

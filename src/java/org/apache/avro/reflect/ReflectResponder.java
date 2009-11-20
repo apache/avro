@@ -27,11 +27,11 @@ import org.apache.avro.specific.SpecificResponder;
 /** {@link org.apache.avro.ipc.Responder} for existing interfaces.*/
 public class ReflectResponder extends SpecificResponder {
   public ReflectResponder(Class iface, Object impl) {
-    this(ReflectData.get().getProtocol(iface), impl);
+    super(ReflectData.get().getProtocol(iface), impl, ReflectData.get());
   }
   
   public ReflectResponder(Protocol protocol, Object impl) {
-    super(protocol, impl);
+    super(protocol, impl, ReflectData.get());
   }
 
   @Override

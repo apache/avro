@@ -20,6 +20,9 @@ package org.apache.avro.reflect;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.GenericArrayType;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,19 +31,32 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Type;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.util.WeakIdentityHashMap;
 
 import com.thoughtworks.paranamer.CachingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
 
-/** Utilities to use existing Java classes and interfaces via reflection. */
+/** Utilities to use existing Java classes and interfaces via reflection.
+ *
+ * <p><b>Records</b> When creating a record schema, only fields of the direct
+ * class, not it's super classes, are used.  Fields are not permitted to be
+ * null.  {@link Class#getDeclaredFields() declared fields} (not inherited)
+ * which are not static or transient are used.
+ *
+ * <p><b>Arrays</b>Both Java arrays and implementations of {@link List} are
+ * mapped to Avro arrays.
+ *
+ * <p><b>{@link String}</b> is mapped to Avro string.
+ * <p><b>byte[]</b> is mapped to Avro bytes.
+ */
 public class ReflectData extends SpecificData {
   
   /** {@link ReflectData} implementation that permits null field values.  The
@@ -71,7 +87,24 @@ public class ReflectData extends SpecificData {
   @Override
   protected boolean isRecord(Object datum) {
     if (datum == null) return false;
-    return getSchema(datum.getClass()).getType() == Type.RECORD;
+    return getSchema(datum.getClass()).getType() == Schema.Type.RECORD;
+  }
+
+  @Override
+  protected boolean isArray(Object datum) {
+    return datum instanceof List || datum.getClass().isArray();
+  }
+
+  @Override
+  protected boolean isString(Object datum) {
+    return datum instanceof String;
+  }
+
+  @Override
+  protected boolean isBytes(Object datum) {
+    if (datum == null) return false;
+    Class c = datum.getClass();
+    return c.isArray() && c.getComponentType() == Byte.TYPE;
   }
 
   @Override
@@ -95,6 +128,21 @@ public class ReflectData extends SpecificData {
         }
       }
       return true;
+    case ARRAY:
+      if (datum instanceof List) {                // list
+        for (Object element : (List)datum)
+          if (!validate(schema.getElementType(), element))
+            return false;
+        return true;
+      } else if (datum.getClass().isArray()) {    // array
+        int length = java.lang.reflect.Array.getLength(datum);
+        for (int i = 0; i < length; i++)
+          if (!validate(schema.getElementType(),
+                        java.lang.reflect.Array.get(datum, i)))
+            return false;
+        return true;
+      }
+      return false;
     default:
       return super.validate(schema, datum);
     }
@@ -110,42 +158,110 @@ public class ReflectData extends SpecificData {
     }
   }
 
-  /** Create a schema for a Java class.  Note that by design only fields of the
-   * direct class, not it's super classes, are used for creating a record
-   * schema.  Also, fields are not permitted to be null.  {@link
-   * Class#getDeclaredFields() Declared fields} (not inherited) which are not
-   * static or transient are used.*/
+  // Indicates the Java representation for an array schema.  If an entry is
+  // present, it contains the Java List class of this array.  If no entry is
+  // present, then a Java array should be used to implement this array.
+  private static final Map<Schema,Class> LIST_CLASSES =
+    new WeakIdentityHashMap<Schema,Class>();
+  private static synchronized void setListClass(Schema schema, Class c) {
+    LIST_CLASSES.put(schema, c);
+  }
+
+  /** Return the {@link List} subclass that implements this schema.*/
+  public static synchronized Class getListClass(Schema schema) {
+    return LIST_CLASSES.get(schema);
+  }
+
+  private static final Class BYTES_CLASS = new byte[0].getClass();
+
+  @Override
+  public Class getClass(Schema schema) {
+    switch (schema.getType()) {
+    case ARRAY:
+      Class listClass = getListClass(schema);
+      if (listClass != null)
+        return listClass;
+      return java.lang.reflect.Array.newInstance(getClass(schema.getElementType()),0).getClass();
+    case STRING:  return String.class;
+    case BYTES:   return BYTES_CLASS;
+    default:
+      return super.getClass(schema);
+    }
+  }
+
   @Override
   @SuppressWarnings(value="unchecked")
-  protected Schema createClassSchema(Class c, Map<String,Schema> names) {
-    String name = c.getSimpleName();
-    String space = c.getPackage().getName();
-    if (c.getEnclosingClass() != null)                   // nested class
-      space = c.getEnclosingClass().getName() + "$";
-    Schema schema;
-    if (c.isEnum()) {                                    // enum
-      List<String> symbols = new ArrayList<String>();
-      Enum[] constants = (Enum[])c.getEnumConstants();
-      for (int i = 0; i < constants.length; i++)
-        symbols.add(constants[i].name());
-      schema = Schema.createEnum(name, space, symbols);
-    } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed
-      int size = ((FixedSize)c.getAnnotation(FixedSize.class)).value();
-      schema = Schema.createFixed(name, space, size);
-    } else {                                             // record
-      LinkedHashMap<String,Schema.Field> fields =
-        new LinkedHashMap<String,Schema.Field>();
-      schema = Schema.createRecord(name, space,
-                                   Throwable.class.isAssignableFrom(c));
-      names.put(c.getName(), schema);
-      for (Field field : c.getDeclaredFields())
-        if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0) {
-          Schema fieldSchema = createFieldSchema(field, names);
-          fields.put(field.getName(), new Schema.Field(fieldSchema, null));
+  protected Schema createSchema(Type type, Map<String,Schema> names) {
+    if (type instanceof GenericArrayType) {                  // generic array
+      Type component = ((GenericArrayType)type).getGenericComponentType();
+      if (component == Byte.TYPE)                            // byte array
+        return Schema.create(Schema.Type.BYTES);           
+      return Schema.createArray(createSchema(component, names));
+    } else if (type instanceof ParameterizedType) {
+      ParameterizedType ptype = (ParameterizedType)type;
+      Class raw = (Class)ptype.getRawType();
+      Type[] params = ptype.getActualTypeArguments();
+      for (int i = 0; i < params.length; i++)
+        if (List.class.isAssignableFrom(raw)) {              // List
+          if (params.length != 1)
+            throw new AvroTypeException("No array type specified.");
+          Schema schema = Schema.createArray(createSchema(params[0], names));
+          setListClass(schema, raw);
+          return schema;
+        } else if (Map.class.isAssignableFrom(raw)) {        // Map
+          Type key = params[0];
+          Type value = params[1];
+          if (!(key == String.class))
+            throw new AvroTypeException("Map key class not String: "+key);
+          return Schema.createMap(createSchema(value, names));
         }
-      schema.setFields(fields);
+    } else if (type instanceof Class) {                      // Class
+      Class c = (Class)type;
+      if (c.isPrimitive() || Number.class.isAssignableFrom(c)
+          || c == Void.class || c == Boolean.class)          // primitive
+        return super.createSchema(type, names);
+      if (c.isArray()) {                                     // array
+        Class component = c.getComponentType();
+        if (component == Byte.TYPE)                          // byte array
+          return Schema.create(Schema.Type.BYTES);
+        return Schema.createArray(createSchema(component, names));
+      }
+      if (c == String.class)                                 // String
+        return Schema.create(Schema.Type.STRING);
+      String fullName = c.getName();
+      Schema schema = names.get(fullName);
+      if (schema == null) {
+        String name = c.getSimpleName();
+        String space = c.getPackage().getName();
+        if (c.getEnclosingClass() != null)                   // nested class
+          space = c.getEnclosingClass().getName() + "$";
+        if (c.isEnum()) {                                    // Enum
+          List<String> symbols = new ArrayList<String>();
+          Enum[] constants = (Enum[])c.getEnumConstants();
+          for (int i = 0; i < constants.length; i++)
+            symbols.add(constants[i].name());
+          schema = Schema.createEnum(name, space, symbols);
+        } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed
+          int size = ((FixedSize)c.getAnnotation(FixedSize.class)).value();
+          schema = Schema.createFixed(name, space, size);
+        } else {                                             // record
+          LinkedHashMap<String,Schema.Field> fields =
+            new LinkedHashMap<String,Schema.Field>();
+          schema = Schema.createRecord(name, space,
+                                       Throwable.class.isAssignableFrom(c));
+          names.put(c.getName(), schema);
+          for (Field field : c.getDeclaredFields())
+            if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0){
+              Schema fieldSchema = createFieldSchema(field, names);
+              fields.put(field.getName(), new Schema.Field(fieldSchema, null));
+            }
+          schema.setFields(fields);
+        }
+        names.put(fullName, schema);
+      }
+      return schema;
     }
-    return schema;
+    return super.createSchema(type, names);
   }
 
   /** Create a schema for a field. */
@@ -184,17 +300,21 @@ public class ReflectData extends SpecificData {
     LinkedHashMap<String,Schema.Field> fields =
       new LinkedHashMap<String,Schema.Field>();
     String[] paramNames = paranamer.lookupParameterNames(method);
-    java.lang.reflect.Type[] paramTypes = method.getGenericParameterTypes();
-    for (int i = 0; i < paramTypes.length; i++)
-      fields.put(paramNames[i],
-                 new Schema.Field(createSchema(paramTypes[i], names), null));
+    Type[] paramTypes = method.getGenericParameterTypes();
+    for (int i = 0; i < paramTypes.length; i++) {
+      Schema paramSchema = createSchema(paramTypes[i], names);
+      String paramName =  paramNames.length == paramTypes.length
+        ? paramNames[i]
+        : paramSchema.getName()+i;
+      fields.put(paramName, new Schema.Field(paramSchema, null));
+    }
     Schema request = Schema.createRecord(fields);
 
     Schema response = createSchema(method.getGenericReturnType(), names);
 
     List<Schema> errs = new ArrayList<Schema>();
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw
-    for (java.lang.reflect.Type err : method.getGenericExceptionTypes())
+    for (Type err : method.getGenericExceptionTypes())
       if (err != AvroRemoteException.class) 
         errs.add(createSchema(err, names));
     Schema errors = Schema.createUnion(errs);

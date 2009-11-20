@@ -37,14 +37,21 @@ import org.apache.avro.ipc.Responder;
 /** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
 public class SpecificResponder extends Responder {
   private Object impl;
+  private SpecificData data;
 
   public SpecificResponder(Class iface, Object impl) {
     this(SpecificData.get().getProtocol(iface), impl);
   }
     
   public SpecificResponder(Protocol protocol, Object impl) {
+    this(protocol, impl, SpecificData.get());
+  }
+
+  protected SpecificResponder(Protocol protocol, Object impl,
+                              SpecificData data) {
     super(protocol);
     this.impl = impl;
+    this.data = data;
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
@@ -83,7 +90,7 @@ public class SpecificResponder extends Responder {
     int i = 0;
     try {
       for (Map.Entry<String,Schema> param: message.getRequest().getFieldSchemas())
-        paramTypes[i++] = SpecificData.get().getClass(param.getValue());
+        paramTypes[i++] = data.getClass(param.getValue());
       Method method = impl.getClass().getMethod(message.getName(), paramTypes);
       return method.invoke(impl, (Object[])request);
     } catch (InvocationTargetException e) {

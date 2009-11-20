@@ -21,8 +21,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.avro.TestReflect.SampleRecord.AnotherSampleRecord;
 import org.apache.avro.io.BinaryDecoder;
@@ -30,35 +35,158 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.avro.test.Simple;
-import org.apache.avro.test.TestRecord;
+
 import org.junit.Test;
 
 public class TestReflect {
 
-  private static final File FILE = new File("src/test/schemata/simple.avpr");
-  private static final Protocol PROTOCOL;
-  static {
-    try {
-      PROTOCOL = Protocol.parse(FILE);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+  @Test public void testVoid() {
+    check(Void.TYPE, "\"null\"");
+    check(Void.class, "\"null\"");
+  }
+
+  @Test public void testBoolean() {
+    check(Boolean.TYPE, "\"boolean\"");
+    check(Boolean.class, "\"boolean\"");
+  }
+
+  @Test public void testInt() {
+    check(Integer.TYPE, "\"int\"");
+    check(Integer.class, "\"int\"");
+  }
+
+  @Test public void testLong() {
+    check(Long.TYPE, "\"long\"");
+    check(Long.class, "\"long\"");
+  }
+
+  @Test public void testFloat() {
+    check(Float.TYPE, "\"float\"");
+    check(Float.class, "\"float\"");
+  }
+
+  @Test public void testDouble() {
+    check(Double.TYPE, "\"double\"");
+    check(Double.class, "\"double\"");
+  }
+
+  @Test public void testString() {
+    check("Foo", "\"string\"");
+  }
+
+  @Test public void testBytes() {
+    check(new byte[0], "\"bytes\"");
+  }
+
+  public static class R1 {
+    private Map<String,String> mapField = new HashMap<String,String>();
+    private String[] arrayField = new String[] { "foo" };
+    private List<String> listField = new ArrayList<String>();
+
+    {
+      mapField.put("foo", "bar");
+      listField.add("foo");
+    }
+    
+    public boolean equals(Object o) {
+      if (!(o instanceof R1)) return false;
+      R1 that = (R1)o;
+      return mapField.equals(that.mapField)
+        && Arrays.equals(this.arrayField, that.arrayField) 
+        &&  listField.equals(that.listField);
     }
   }
 
-  @Test
-  public void testSchema() throws IOException {
-    assertEquals(PROTOCOL.getType("TestRecord"),
-                 ReflectData.get().getSchema(TestRecord.class));
+  @Test public void testMap() throws Exception {
+    check(R1.class.getDeclaredField("mapField").getGenericType(),
+          "{\"type\":\"map\",\"values\":\"string\"}");
+  }
+
+  @Test public void testArray() throws Exception {
+    check(R1.class.getDeclaredField("arrayField").getGenericType(),
+          "{\"type\":\"array\",\"items\":\"string\"}");
+  }
+  @Test public void testList() throws Exception {
+    check(R1.class.getDeclaredField("listField").getGenericType(),
+          "{\"type\":\"array\",\"items\":\"string\"}");
+  }
+
+  @Test public void testR1() throws Exception {
+    checkReadWrite(new R1());
+  }
+
+  public static class R2 {
+    private String[] arrayField;
+    private List<String> listField;
+    
+    public boolean equals(Object o) {
+      if (!(o instanceof R2)) return false;
+      R2 that = (R2)o;
+      return Arrays.equals(this.arrayField, that.arrayField) 
+        &&  listField.equals(that.listField);
+    }
+  }
+
+  @Test public void testR2() throws Exception {
+    R2 r2 = new R2();
+    r2.arrayField = new String[] {"foo"};
+    r2.listField = new ArrayList<String>();
+    r2.listField.add("foo");
+    checkReadWrite(r2);
+  }
+
+  public static class R3 {
+    private int[] intArray;
+    
+    public boolean equals(Object o) {
+      if (!(o instanceof R3)) return false;
+      R3 that = (R3)o;
+      return Arrays.equals(this.intArray, that.intArray);
+    }
+  }
+
+  @Test public void testR3() throws Exception {
+    R3 r3 = new R3();
+    r3.intArray = new int[] {1};
+    checkReadWrite(r3);
+  }
+
+  void checkReadWrite(Object object) throws Exception {
+    Schema s = ReflectData.get().getSchema(object.getClass());
+    ReflectDatumWriter writer = new ReflectDatumWriter(s);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    writer.write(object, new BinaryEncoder(out));
+    ReflectDatumReader reader = new ReflectDatumReader(s);
+    Object after =
+      reader.read(null, new BinaryDecoder
+                  (new ByteArrayInputStream(out.toByteArray())));
+    assertEquals(object, after);
+  }
+
+  public static enum E { A, B };
+  @Test public void testEnum() throws Exception {
+    check(E.class, "{\"type\":\"enum\",\"name\":\"E\",\"namespace\":"
+          +"\"org.apache.avro.TestReflect$\",\"symbols\":[\"A\",\"B\"]}");
+  }
+
+  public static class R { int a; long b; }
+  @Test public void testRecord() throws Exception {
+    check(R.class, "{\"type\":\"record\",\"name\":\"R\",\"namespace\":"
+          +"\"org.apache.avro.TestReflect$\",\"fields\":["
+          +"{\"name\":\"a\",\"type\":\"int\"},"
+          +"{\"name\":\"b\",\"type\":\"long\"}]}");
+  }
+
+  private void check(Object o, String schemaJson) {
+    check(o.getClass(), schemaJson);
+  }
+
+  private void check(Type type, String schemaJson) {
+    assertEquals(schemaJson, ReflectData.get().getSchema(type).toString());
   }
 
   @Test
-  public void testProtocol() throws IOException {
-    assertEquals(PROTOCOL, ReflectData.get().getProtocol(Simple.class));
-  }
-
-  @Test
-  public void testRecord() throws IOException {
+  public void testRecordIO() throws IOException {
     Schema schm = ReflectData.get().getSchema(SampleRecord.class);
     ReflectDatumWriter writer = new ReflectDatumWriter(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -74,7 +202,7 @@ public class TestReflect {
   }
 
   @Test
-  public void testRecordWithNull() throws IOException {
+  public void testRecordWithNullIO() throws IOException {
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schm = reflectData.getSchema(AnotherSampleRecord.class);
     ReflectDatumWriter writer = new ReflectDatumWriter(schm);

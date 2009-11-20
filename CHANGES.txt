@@ -11,6 +11,10 @@ Trunk (unreleased changes)
     AVRO-201.  Move Python data file code into its own module.
     (Jeff Hammerbacher via cutting)
 
+    AVRO-80.  Java reflect API no longer uses Avro-specific classes
+    for string and array.  Instead now Java strings and arrays or
+    Lists are used. (cutting)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

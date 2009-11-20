@@ -219,8 +219,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case ARRAY:
       Object array = newArray(old, json.size(), schema);
       Schema element = schema.getElementType();
+      int pos = 0;
       for (JsonNode node : json)
-        addToArray(array, defaultFieldValue(peekArray(array), element, node));
+        addToArray(array, pos++,
+                   defaultFieldValue(peekArray(array), element, node));
       return array;
     case MAP:
       Object map = newMap(old, json.size());
@@ -266,12 +268,15 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     Schema actualType = actual.getElementType();
     Schema expectedType = expected.getElementType();
     long l = in.readArrayStart();
+    long base = 0;
     if (l > 0) {
       Object array = newArray(old, (int) l, expected);
       do {
         for (long i = 0; i < l; i++) {
-          addToArray(array, read(peekArray(array), actualType, expectedType, in));  
+          addToArray(array, base+i,
+                     read(peekArray(array), actualType, expectedType, in));  
         }
+        base += l;
       } while ((l = in.arrayNext()) > 0);
       
       return array;
@@ -291,7 +296,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called by the default implementation of {@link #readArray} to add a value.
    * The default implementation is for {@link GenericArray}.*/
   @SuppressWarnings("unchecked")
-  protected void addToArray(Object array, Object e) {
+  protected void addToArray(Object array, long pos, Object e) {
     ((GenericArray) array).add(e);
   }
   

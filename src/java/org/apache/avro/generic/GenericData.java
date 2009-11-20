@@ -194,8 +194,8 @@ public class GenericData {
     case FIXED:
       return datum instanceof GenericFixed
         && ((GenericFixed)datum).bytes().length==schema.getFixedSize();
-    case STRING:  return datum instanceof Utf8;
-    case BYTES:   return datum instanceof ByteBuffer;
+    case STRING:  return isString(datum);
+    case BYTES:   return isBytes(datum);
     case INT:     return datum instanceof Integer;
     case LONG:    return datum instanceof Long;
     case FLOAT:   return datum instanceof Float;

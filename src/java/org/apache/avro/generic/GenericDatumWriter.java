@@ -145,7 +145,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     out.setItemCount(size);
     for (Map.Entry<Object,Object> entry : getMapEntries(datum)) {
       out.startItem();
-      out.writeString((Utf8) entry.getKey());
+      writeString(entry.getKey(), out);
       write(value, entry.getValue(), out);
     }
     out.writeMapEnd();

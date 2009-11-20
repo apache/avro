@@ -178,22 +178,17 @@ public class SpecificData extends GenericData {
       String fullName = c.getName();
       Schema schema = names.get(fullName);
       if (schema == null)
-        schema = createClassSchema(c, names);
+        try {
+          schema = (Schema)(c.getDeclaredField("SCHEMA$").get(null));
+        } catch (NoSuchFieldException e) {
+          throw new AvroRuntimeException(e);
+        } catch (IllegalAccessException e) {
+          throw new AvroRuntimeException(e);
+        }
       names.put(fullName, schema);
       return schema;
     }
     throw new AvroTypeException("Unknown type: "+type);
-  }
-
-  /** Create a schema for a Java class. */
-  protected Schema createClassSchema(Class c, Map<String,Schema> names) {
-    try {
-      return (Schema)(c.getDeclaredField("SCHEMA$").get(null));
-    } catch (NoSuchFieldException e) {
-      throw new AvroRuntimeException(e);
-    } catch (IllegalAccessException e) {
-      throw new AvroRuntimeException(e);
-    }
   }
 
   /** Return the protocol for a Java interface. */

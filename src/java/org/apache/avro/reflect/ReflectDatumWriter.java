@@ -17,9 +17,16 @@
  */
 package org.apache.avro.reflect;
 
+import java.lang.reflect.Array;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.util.Utf8;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
@@ -59,5 +66,40 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
     }
   }
   
+  @Override
+  @SuppressWarnings("unchecked")
+  protected long getArraySize(Object array) {
+    if (array instanceof List)
+      return ((List)array).size();
+    return Array.getLength(array);
+        
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  protected Iterator<Object> getArrayElements(final Object array) {
+    if (array instanceof List)
+      return ((List<Object>)array).iterator();
+    return new Iterator<Object>() {
+      private int i = 0;
+      private final int length = Array.getLength(array);
+      public boolean hasNext() { return i < length; }
+      public Object next() { return Array.get(array, i++); }
+      public void remove() { throw new UnsupportedOperationException(); }
+    };
+  }
+
+  @Override
+  protected void writeString(Object datum, Encoder out) throws IOException {
+    out.writeString(new Utf8((String)datum));
+  }
+
+  @Override
+  protected void writeBytes(Object datum, Encoder out) throws IOException {
+    out.writeBytes((byte[])datum);
+  }
+
+
 }
+
 

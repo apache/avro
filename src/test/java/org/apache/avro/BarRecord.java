@@ -17,16 +17,14 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.util.Utf8;
-
 public class BarRecord {
-  private Utf8 beerMsg;
+  private String beerMsg;
 
   public BarRecord() {
   }
 
   public BarRecord(String beerMsg) {
-    this.beerMsg = new Utf8(beerMsg);
+    this.beerMsg = beerMsg;
   }
 
   @Override
