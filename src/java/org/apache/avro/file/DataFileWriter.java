@@ -19,7 +19,9 @@ package org.apache.avro.file;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.FilterOutputStream;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -51,7 +53,7 @@ import org.apache.avro.generic.GenericDatumReader;
  * stored at the end of the file.  Files may be appended to.
  * @see DataFileReader
  */
-public class DataFileWriter<D> {
+public class DataFileWriter<D> implements Closeable, Flushable {
   private Schema schema;
   private DatumWriter<D> dout;
 

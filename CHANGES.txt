@@ -88,6 +88,9 @@ Trunk (unreleased changes)
     AVRO-202. Add __all__ listing to Python module, to ease import.
     (Jeff Hammerbacher via cutting)
 
+    AVRO-229. Change Java to implement Flushable and Closeable
+    interfaces where appropriate.  (tomwhite via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
