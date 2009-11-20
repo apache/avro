@@ -127,6 +127,8 @@ Trunk (unreleased changes)
     AVRO-222. Fix Python interop tests broken by AVRO-201.
     (Jeff Hammerbacher via cutting)
 
+    AVRO-223. Fix test-avroj on Mac OS X.  (Philip Zeyliger via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

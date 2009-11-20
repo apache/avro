@@ -22,6 +22,11 @@ set -o xtrace
 # This script will exist at any false return value.
 set -o errexit
 
+if [ "$JAVA_HOME" = "" ]; then
+  echo "Error: JAVA_HOME is not set."
+  exit 1
+fi
+
 if [ "$AVROJ" = "" ]; then
   echo "Error: AVROJ is not set."
   exit 1
@@ -32,21 +37,23 @@ if [ "$TMPDIR" = "" ]; then
   exit 1
 fi
 
+CMD="$JAVA_HOME/bin/java -jar $AVROJ"
+
 ######################################################################
 # Clean up temp directory.
 rm -rf $TMPDIR
 
 ######################################################################
-$AVROJ compile protocol src/test/schemata/namespace.avpr $TMPDIR/namespace
+$CMD compile protocol src/test/schemata/namespace.avpr $TMPDIR/namespace
 # Check that the expected names were generated
 [ "MD5.java TestError.java TestNamespace.java TestRecord.java " = \
   "$(find $TMPDIR/namespace -name "*.java" \
     | awk -F "/" '{ print $NF }' | sort | tr '\n' ' ')" ]
-$AVROJ compile schema src/test/schemata/interop.avsc $TMPDIR/schema
+$CMD compile schema src/test/schemata/interop.avsc $TMPDIR/schema
 [ "Foo.java Interop.java Kind.java MD5.java Node.java " = \
   "$(find $TMPDIR/schema -name "*.java" \
     | awk -F "/" '{ print $NF }' | sort | tr '\n' ' ')" ]
 
 ######################################################################
-$AVROJ 2>&1 | grep -q "Expected one of the following"
-$AVROJ doesnotexist 2>&1 | grep -q "Expected one of the following"
+$CMD 2>&1 | grep -q "Expected one of the following"
+$CMD doesnotexist 2>&1 | grep -q "Expected one of the following"
