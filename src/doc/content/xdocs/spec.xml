@@ -335,10 +335,10 @@
 	    <p>An instance of this record whose <code>a</code> field has
 	      value 27 (encoded as hex <code>36</code>) and
 	      whose <code>b</code> field has value "foo" (encoded as hex
-	      bytes <code>OC 66 6f 6f</code>), would be encoded simply
+	      bytes <code>06 66 6f 6f</code>), would be encoded simply
 	      as the concatenation of these, namely the hex byte
 	      sequence:</p>
-	    <source>36 0C 66 6f 6f</source>
+	    <source>36 06 66 6f 6f</source>
 	  </section>
           
           <section>

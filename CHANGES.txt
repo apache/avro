@@ -148,6 +148,8 @@ Trunk (unreleased changes)
     AVRO-225. In generated Java, use dollar-sign, not underscore, to
     prevent name conflicts. (cutting)
 
+    AVRO-227. Fix a typo in the spec document.  (Todd Lipcon via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
