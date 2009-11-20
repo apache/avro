@@ -22,7 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Iterator;
 
+import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.TestSchema;
 import org.apache.avro.specific.SpecificCompiler.OutputFile;
@@ -60,6 +62,74 @@ public class TestSpecificCompiler {
     OutputFile o = outputs.iterator().next();
     assertEquals(o.path, "Test.java");
     assertTrue(o.contents.contains("public enum Test"));
+  }
+
+  @Test
+  public void testMangleIfReserved() {
+    assertEquals("foo", SpecificCompiler.mangle("foo"));
+    assertEquals("goto$", SpecificCompiler.mangle("goto"));
+  }
+
+  @Test
+  public void testManglingForProtocols() {
+    String protocolDef = "" +
+      "{ \"protocol\": \"default\",\n" +
+      "  \"types\":\n" +
+      "    [\n" +
+      "      {\n" +
+      "       \"name\": \"finally\",\n" +
+      "       \"type\": \"error\",\n" +
+      "       \"fields\": [{\"name\": \"catch\", \"type\": \"boolean\"}]\n" +
+      "      }\n" +
+      "    ],\n" +
+      "  \"messages\": { \"goto\":\n" +
+      "    { \"request\": [{\"name\": \"break\", \"type\": \"string\"}],\n" +
+      "      \"response\": \"string\",\n" +
+      "      \"errors\": [\"finally\"]\n" +
+      "    }" +
+      "   }\n" +
+      "}\n";
+    Iterator<OutputFile> i =
+      new SpecificCompiler(Protocol.parse(protocolDef)).compile().iterator();
+    String errType = i.next().contents;
+    String protocol = i.next().contents;
+
+    assertTrue(errType.contains("public class finally$ extends SpecificExceptionBase"));
+    assertTrue(errType.contains("public boolean catch$;"));
+
+    assertTrue(protocol.contains("Utf8 goto$(Utf8 break$)"));
+    assertTrue(protocol.contains("public interface default$"));
+    assertTrue(protocol.contains("throws AvroRemoteException, finally$"));
+
+  }
+
+  @Test
+  public void testManglingForRecords() {
+    String schema = "" +
+      "{ \"name\": \"volatile\", \"type\": \"record\", " +
+      "  \"fields\": [ {\"name\": \"package\", \"type\": \"string\" }," +
+      "                {\"name\": \"short\", \"type\": \"volatile\" } ] }";
+    Collection<OutputFile> c =
+      new SpecificCompiler(Schema.parse(schema)).compile();
+    assertEquals(1, c.size());
+    String contents = c.iterator().next().contents;
+
+    assertTrue(contents.contains("public Utf8 package$;"));
+    assertTrue(contents.contains("class volatile$ extends"));
+    assertTrue(contents.contains("volatile$ short$;"));
+  }
+
+  @Test
+  public void testManglingForEnums() {
+    String enumSchema = "" +
+      "{ \"name\": \"instanceof\", \"type\": \"enum\"," +
+      "  \"symbols\": [\"new\", \"super\", \"switch\"] }";
+    Collection<OutputFile> c =
+      new SpecificCompiler(Schema.parse(enumSchema)).compile();
+    assertEquals(1, c.size());
+    String contents = c.iterator().next().contents;
+
+    assertTrue(contents.contains("new$"));
   }
 
   /**

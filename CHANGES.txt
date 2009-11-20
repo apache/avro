@@ -135,6 +135,9 @@ Trunk (unreleased changes)
     AVRO-224. Code cleanup: cleaner distinction between public and private 
     methods (massie)
 
+    AVRO-221. Mangle Java reserved words in generated code to avoid
+    name conflicts.  (Philip Zeyliger via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

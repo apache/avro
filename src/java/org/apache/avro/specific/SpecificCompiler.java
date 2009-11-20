@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -32,10 +33,29 @@ import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.tool.Tool;
 
-/** Generate specific Java interfaces and classes for protocols and schemas. */
+/**
+ * Generate specific Java interfaces and classes for protocols and schemas.
+ *
+ * Java reserved keywords are mangled to preserve compilation.
+ */
 public class SpecificCompiler {
   private final Set<Schema> queue = new HashSet<Schema>();
   private final Protocol protocol;
+
+  /** List of Java reserved words from
+   * <a href="http://java.sun.com/docs/books/tutorial/java/nutsandbolts/_keywords.html">Sun</a>.
+   */
+  private static final Set<String> RESERVED_WORDS = new HashSet<String>(
+      Arrays.asList(new String[] {
+          "abstract", "assert", "boolean", "break", "byte", "case", "catch",
+          "char", "class", "const", "continue", "default", "do", "double",
+          "else", "enum", "extends", "false", "final", "finally", "float",
+          "for", "goto", "if", "implements", "import", "instanceof", "int",
+          "interface", "long", "native", "new", "null", "package", "private",
+          "protected", "public", "return", "short", "static", "strictfp",
+          "super", "switch", "synchronized", "this", "throw", "throws",
+          "transient", "true", "try", "void", "volatile", "while"
+        }));
 
   public SpecificCompiler(Protocol protocol) {
     // enqueue all types
@@ -89,6 +109,13 @@ public class SpecificCompiler {
     Schema schema = Schema.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.compileToDestination(dest);
+  }
+
+  static String mangle(String word) {
+    if (RESERVED_WORDS.contains(word)) {
+      return word + "$";
+    }
+    return word;
   }
 
   /** Recursively enqueue schemas that need a class generated. */
@@ -150,7 +177,7 @@ public class SpecificCompiler {
     outputFile.path = makePath(protocol.getName(), protocol.getNamespace());
     StringBuilder out = new StringBuilder();
     header(out, protocol.getNamespace());
-    line(out, 0, "public interface "+protocol.getName()+" {");
+    line(out, 0, "public interface "+mangle(protocol.getName())+" {");
     line(out, 1, "public static final Protocol _PROTOCOL = Protocol.parse(\""
            +esc(protocol)+"\");");
     for (Map.Entry<String,Message> e : protocol.getMessages().entrySet()) {
@@ -158,7 +185,7 @@ public class SpecificCompiler {
       Message message = e.getValue();
       Schema request = message.getRequest();
       Schema response = message.getResponse();
-      line(out, 1, unbox(response)+" "+name+"("+params(request)+")");
+      line(out, 1, unbox(response)+" "+ mangle(name)+"("+params(request)+")");
       line(out, 2,"throws AvroRemoteException"+errors(message.getErrors())+";");
     }
     line(out, 0, "}");
@@ -207,7 +234,7 @@ public class SpecificCompiler {
     StringBuilder b = new StringBuilder();
     int count = 0;
     for (Map.Entry<String, Schema> param : request.getFieldSchemas()) {
-      String paramName = param.getKey();
+      String paramName = mangle(param.getKey());
       b.append(unbox(param.getValue()));
       b.append(" ");
       b.append(paramName);
@@ -221,7 +248,7 @@ public class SpecificCompiler {
     StringBuilder b = new StringBuilder();
     for (Schema error : errs.getTypes().subList(1, errs.getTypes().size())) {
       b.append(", ");
-      b.append(error.getName());
+      b.append(mangle(error.getName()));
     }
     return b.toString();
   }
@@ -243,8 +270,8 @@ public class SpecificCompiler {
            +esc(schema)+"\");");
       // field declations
       for (Map.Entry<String,Schema.Field> field: schema.getFields().entrySet())
-        line(out, 1,
-             "public "+unbox(field.getValue().schema())+" "+field.getKey()+";");
+        line(out, 1, "public " + unbox(field.getValue().schema()) + " "
+             + mangle(field.getKey()) + ";");
       // schema method
       line(out, 1, "public Schema getSchema() { return _SCHEMA; }");
       // get method
@@ -252,7 +279,7 @@ public class SpecificCompiler {
       line(out, 2, "switch (_field) {");
       int i = 0;
       for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-        line(out, 2, "case "+(i++)+": return "+field.getKey()+";");
+        line(out, 2, "case "+(i++)+": return "+mangle(field.getKey())+";");
       line(out, 2, "default: throw new AvroRuntimeException(\"Bad index\");");
       line(out, 2, "}");
       line(out, 1, "}");
@@ -274,7 +301,7 @@ public class SpecificCompiler {
       StringBuilder b = new StringBuilder();
       int count = 0;
       for (String symbol : schema.getEnumSymbols()) {
-        b.append(symbol);
+        b.append(mangle(symbol));
         if (++count < schema.getEnumSymbols().size())
           b.append(", ");
       }
@@ -302,7 +329,7 @@ public class SpecificCompiler {
     case RECORD:
     case ENUM:
     case FIXED:
-      return schema.getName();
+      return mangle(schema.getName());
     case ARRAY:
       return "GenericArray<"+type(schema.getElementType())+">";
     case MAP:
