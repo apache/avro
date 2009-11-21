@@ -38,7 +38,7 @@ Trunk (unreleased changes)
     AVRO-155. Make python avro.io.DataFileReader iterable.
     (Jeff Hammerbacher via sharad)
 
-    AVRO-148. Add ant target to build c++ project.  (sbanacho)
+    AVRO-148. Add ant target to build C++ project.  (sbanacho)
 
     AVRO-166. Improve error checking in Java schema parser.
     (Philip Zeyliger via cutting)
@@ -153,6 +153,9 @@ Trunk (unreleased changes)
     prevent name conflicts. (cutting)
 
     AVRO-227. Fix a typo in the spec document.  (Todd Lipcon via cutting)
+
+    AVRO-232. Fix C++ build in cygwin. (sbanacho)
+
 
 Avro 1.2.0 (14 October 2009)
 

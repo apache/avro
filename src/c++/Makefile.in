@@ -113,7 +113,7 @@ $(OBJDIR)/testgen2.hh: $(AVROSCRIPTS)/gen-cppcode.py $(EXECSDIR)/precompile $(AV
 	$(PYTHON) $(AVROSCRIPTS)/gen-cppcode.py -n testgen2 -i obj/bigrecord2.flat -o $(OBJDIR)/testgen2.hh
 
 $(EXECSDIR)/testgen: $(AVROTEST)/testgen.cc $(OBJDIR)/testgen.hh $(OBJDIR)/testgen2.hh $(AVRO_STATIC)
-	$(CXX) $(CXXFLAGS) $(TEST_INCFLAGS) -o $@ $(LIBS) $< $(AVRO_STATIC) 
+	$(CXX) $(CXXFLAGS) $(TEST_INCFLAGS) -o $@ $< $(AVRO_STATIC) $(LIBS)
 
 CPP_DOC_DIR ?= "./doc"
 
