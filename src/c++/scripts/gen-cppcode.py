@@ -27,6 +27,7 @@ headers = '''
 #include "Exception.hh"
 #include "AvroSerialize.hh"
 #include "AvroParse.hh"
+#include "Instruction.hh"
 '''
 
 typeToC= { 'int' : 'int32_t', 'long' :'int64_t', 'float' : 'float', 'double' : 'double', 
@@ -52,6 +53,25 @@ def doSymbolic(args):
     addForwardDeclare(args[1])
     return (args[1], args[1])
 
+def addOffset(name, type, var) :
+    result = '        add(new $offsetType$(offset + offsetof($name$, $var$)));\n'
+    result = result.replace('$name$', name)
+    if typeToC.has_key(type) : 
+        offsetType = 'avro::Offset'
+    else :
+        offsetType = type+ '_Offsets'
+    result = result.replace('$offsetType$', offsetType)
+    result = result.replace('$var$', var)
+    return result;
+
+def addSimpleOffset(type) :
+    result = '        add(new $offsetType$(0));\n'
+    if typeToC.has_key(type) : 
+        offsetType = 'avro::Offset'
+    else :
+        offsetType = type+ '_Offsets'
+    return result.replace('$offsetType$', offsetType)
+
 recordfieldTemplate = '$type$ $name$\n'
 recordTemplate = '''struct $name$ {
 
@@ -72,6 +92,14 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     p.readRecord();
 $parsefields$
 }
+
+class $name$_Offsets : public avro::CompoundOffset {
+  public:
+    $name$_Offsets(size_t offset) :
+        CompoundOffset(offset)
+    {
+$offsetlist$    }
+}; 
 '''
 
 def doRecord(args):
@@ -82,6 +110,7 @@ def doRecord(args):
     serializefields = ''
     parsefields = ''
     initlist = ''
+    offsetlist = ''
     end = False
     while not end:
         line = getNextLine()
@@ -96,10 +125,12 @@ def doRecord(args):
             serializefields += '    serialize(s, val.' + fieldname + ');\n'
             initlist += '        ' + fieldname + '(),\n'
             parsefields += '    parse(p, val.' + fieldname + ');\n'
+            offsetlist += addOffset(typename, fieldtype, fieldname)
     structDef = structDef.replace('$initializers$', initlist)
     structDef = structDef.replace('$recordfields$', fields)
     structDef = structDef.replace('$serializefields$', serializefields)
     structDef = structDef.replace('$parsefields$', parsefields)
+    structDef = structDef.replace('$offsetlist$', offsetlist)
     addStruct(typename, structDef)
     return (typename,typename)
 
@@ -107,10 +138,12 @@ uniontypestemplate = 'typedef $type$ Choice$N$Type'
 unionTemplate = '''struct $name$ {
 
 $typedeflist$
+    typedef void* (*GenericSetter)($name$ *, int64_t);
 
     $name$() : 
         choice(0), 
-        value(T0()) 
+        value(T0()),
+        genericSetter(&$name$::genericSet)
     { }
 
 $setfuncs$
@@ -127,8 +160,17 @@ $setfuncs$
     }
 #endif
 
+    static void *genericSet($name$ *u, int64_t choice) {
+        boost::any *val = &(u->value);
+        void *data;
+        switch (choice) {$switch$
+        }
+        return data;
+    }
+
     int64_t choice; 
     boost::any value;
+    GenericSetter genericSetter;
 };
 
 template <typename Serializer>
@@ -150,15 +192,30 @@ $switchparse$
         throw avro::Exception("Unrecognized union choice");
     }
 }
+
+class $name$_Offsets : public avro::CompoundOffset {
+  public:
+    $name$_Offsets(size_t offset) :
+        CompoundOffset(offset)
+    {
+        add(new Offset(offset + offsetof($name$, choice)));
+        add(new Offset(offset + offsetof($name$, genericSetter)));
+$offsetlist$    }
+}; 
 '''
 
-unionser = '    case $choice$:\n      serialize(s, val.getValue< $type$ >());\n      break;\n'
-unionpar = '    case $choice$:\n      { $type$ chosenVal; parse(p, chosenVal); val.value = chosenVal; }\n      break;\n'
+unionser = '      case $choice$:\n        serialize(s, val.getValue< $type$ >());\n        break;\n'
+unionpar = '      case $choice$:\n        { $type$ chosenVal; parse(p, chosenVal); val.value = chosenVal; }\n        break;\n'
 
 setfunc =  '''    void set_$name$(const $type$ &val) {
         choice = $N$;
         value =  val;
     };\n'''
+
+switcher = '''\n          case $N$:
+            *val = T$N$();
+            data = boost::any_cast<T$N$>(val);
+            break;'''
 
 
 def doUnion(args):
@@ -168,6 +225,8 @@ def doUnion(args):
     switchparse= ''
     typename = 'Union_of'
     setters = ''
+    switches = ''
+    offsetlist = ''
     i = 0
     end = False
     while not end:
@@ -190,12 +249,17 @@ def doUnion(args):
             setter = setter.replace('$type$', uniontype)
             setter = setter.replace('$N$', str(i))
             setters += setter
+            switch = switcher
+            switches += switch.replace('$N$', str(i))
+            offsetlist += addSimpleOffset(name)
         i+= 1
     structDef = structDef.replace('$name$', typename)
     structDef = structDef.replace('$typedeflist$', uniontypes)
     structDef = structDef.replace('$switchserialize$', switchserialize)
     structDef = structDef.replace('$switchparse$', switchparse)
     structDef = structDef.replace('$setfuncs$', setters)
+    structDef = structDef.replace('$switch$', switches)
+    structDef = structDef.replace('$offsetlist$', offsetlist)
     addStruct(typename, structDef)
     return (typename,typename)
 
@@ -221,6 +285,15 @@ template <typename Parser>
 inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.value = static_cast<$name$::EnumSymbols>(p.readEnum());
 }
+
+class $name$_Offsets : public avro::CompoundOffset {
+  public:
+    $name$_Offsets(size_t offset) :
+        CompoundOffset(offset)
+    {
+        add(new Offset(offset + offsetof($name$, value)));
+    }
+}; 
 '''
 
 def doEnum(args):
@@ -248,16 +321,25 @@ def doEnum(args):
 arrayTemplate = '''struct $name$ {
     typedef $valuetype$ ValueType;
     typedef std::vector<ValueType> ArrayType;
+    typedef ValueType* (*GenericSetter)($name$ *);
     
     $name$() :
-        value()
+        value(),
+        genericSetter(&$name$::genericSet)
     { }
+
+    static ValueType *genericSet($name$ *array) {
+        array->value.push_back(ValueType());
+        return &array->value.back();
+    }
 
     void addValue(const ValueType &val) {
         value.push_back(val);
     }
 
     ArrayType value;
+    GenericSetter genericSetter;
+
 };
 
 template <typename Serializer>
@@ -289,16 +371,27 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
         }
     } 
 }
+
+class $name$_Offsets : public avro::CompoundOffset {
+  public:
+    $name$_Offsets(size_t offset) :
+        CompoundOffset(offset)
+    {
+        add(new Offset(offset + offsetof($name$, genericSetter)));
+$offsetlist$    }
+}; 
 '''
 
 def doArray(args):
     structDef = arrayTemplate
     line = getNextLine()
-    arraytype, typename = processType(line);
+    arraytype, typename = processType(line)
+    offsetlist = addSimpleOffset(typename)
     typename = 'Array_of_' + typename
 
     structDef = structDef.replace('$name$', typename)
-    structDef = structDef.replace('$valuetype$', arraytype);
+    structDef = structDef.replace('$valuetype$', arraytype)
+    structDef = structDef.replace('$offsetlist$', offsetlist)
 
     line = getNextLine()
     if line[0] != 'end': print 'error'
@@ -309,16 +402,25 @@ def doArray(args):
 mapTemplate = '''struct $name$ {
     typedef $valuetype$ ValueType;
     typedef std::map<std::string, ValueType> MapType;
+    typedef ValueType* (*GenericSetter)($name$ *, const std::string &);
     
     $name$() :
-        value()
+        value(),
+        genericSetter(&$name$::genericSet)
     { }
 
     void addValue(const std::string &key, const ValueType &val) {
         value.insert(MapType::value_type(key, val));
     }
 
+    static ValueType *genericSet($name$ *map, const std::string &key) { 
+        map->value[key] = ValueType();
+        return &(map->value[key]);
+    }
+
     MapType value;
+    GenericSetter genericSetter;
+
 };
 
 template <typename Serializer>
@@ -355,6 +457,15 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
         }
     } 
 }
+
+class $name$_Offsets : public avro::CompoundOffset {
+  public:
+    $name$_Offsets(size_t offset) :
+        CompoundOffset(offset)
+    {
+        add(new Offset(offset + offsetof($name$, genericSetter)));
+$offsetlist$    }
+}; 
 '''
 
 def doMap(args):
@@ -362,10 +473,13 @@ def doMap(args):
     line = getNextLine() # must be string
     line = getNextLine()
     maptype, typename = processType(line);
+
+    offsetlist = addSimpleOffset(typename)
     typename = 'Map_of_' + typename
 
-    structDef = structDef.replace('$name$', typename);
-    structDef = structDef.replace('$valuetype$', maptype);
+    structDef = structDef.replace('$name$', typename)
+    structDef = structDef.replace('$valuetype$', maptype)
+    structDef = structDef.replace('$offsetlist$', offsetlist)
 
     line = getNextLine()
     if line[0] != 'end': print 'error'
@@ -393,6 +507,15 @@ template <typename Parser>
 inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     p.readFixed(val.value);
 }
+
+class $name$_Offsets : public avro::CompoundOffset {
+  public:
+    $name$_Offsets(size_t offset) :
+        CompoundOffset(offset)
+    {
+        add(new Offset(offset + offsetof($name$, value)));
+    }
+}; 
 '''
 
 def doFixed(args):
@@ -403,8 +526,8 @@ def doFixed(args):
     line = getNextLine()
     if line[0] != 'end': print 'error'
 
-    structDef = structDef.replace('$name$', typename);
-    structDef = structDef.replace('$N$', size);
+    structDef = structDef.replace('$name$', typename)
+    structDef = structDef.replace('$N$', size)
     addStruct(typename, structDef)
     return (typename,typename)
 
@@ -421,6 +544,15 @@ template <typename Parser>
 inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     p.readValue(val.value);
 }
+
+class $name$_Offsets : public avro::CompoundOffset {
+  public:
+    $name$_Offsets(size_t offset) :
+        CompoundOffset(offset)
+    {
+        add(new Offset(offset + offsetof($name$, value)));
+    }
+}; 
 '''
 
 def doPrimitiveStruct(type):

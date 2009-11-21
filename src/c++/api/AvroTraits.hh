@@ -33,6 +33,9 @@ template <typename T>
 struct is_serializable : public boost::false_type{};
 
 template <typename T>
+struct is_promotable : public boost::false_type{};
+
+template <typename T>
 struct type_to_avro {
     static const Type type = AVRO_NUM_TYPES;
 };
@@ -46,9 +49,15 @@ struct type_to_avro<CTYPE> { \
     static const Type type = AVROTYPE; \
 };
 
-DEFINE_PRIMITIVE(int32_t, AVRO_INT)
-DEFINE_PRIMITIVE(int64_t, AVRO_LONG)
-DEFINE_PRIMITIVE(float, AVRO_FLOAT)
+#define DEFINE_PROMOTABLE_PRIMITIVE(CTYPE, AVROTYPE) \
+template <> \
+struct is_promotable<CTYPE> : public boost::true_type{}; \
+\
+DEFINE_PRIMITIVE(CTYPE, AVROTYPE)
+
+DEFINE_PROMOTABLE_PRIMITIVE(int32_t, AVRO_INT)
+DEFINE_PROMOTABLE_PRIMITIVE(int64_t, AVRO_LONG)
+DEFINE_PROMOTABLE_PRIMITIVE(float, AVRO_FLOAT)
 DEFINE_PRIMITIVE(double, AVRO_DOUBLE)
 DEFINE_PRIMITIVE(bool, AVRO_BOOL)
 DEFINE_PRIMITIVE(Null, AVRO_NULL)

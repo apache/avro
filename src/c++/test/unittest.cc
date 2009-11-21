@@ -655,14 +655,6 @@ struct TestBadStuff
     }
 };
 
-
-template<typename T>
-void addTestCase(boost::unit_test::test_suite &test) 
-{
-    boost::shared_ptr<T> newtest( new T );
-    test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
-}
-
 struct TestResolution
 {
     TestResolution() :
@@ -780,6 +772,13 @@ struct TestResolution
     ValidSchema unionTwo_;
 };
 
+
+template<typename T>
+void addTestCase(boost::unit_test::test_suite &test) 
+{
+    boost::shared_ptr<T> newtest( new T );
+    test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
+}
 
 boost::unit_test::test_suite*
 init_unit_test_suite( int argc, char* argv[] ) 

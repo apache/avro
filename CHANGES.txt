@@ -97,6 +97,8 @@ Trunk (unreleased changes)
 
     AVRO-231. Tutorial added to C++ docs. (sbanacho)
 
+    AVRO-220. Dynamic schema resolution from writer to reader. (sbanacho)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

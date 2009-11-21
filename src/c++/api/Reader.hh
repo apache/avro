@@ -101,20 +101,22 @@ class Reader : private boost::noncopyable
         }
     }
 
+    void readFixed(uint8_t *val, size_t size) {
+        for(size_t bytes = 0; bytes < size; bytes++) {
+            in_.readByte(val[bytes]);
+        }
+    }
+
     template <size_t N>
     void readFixed(uint8_t (&val)[N]) {
-        for(size_t bytes = 0; bytes < N; bytes++) {
-            in_.readByte(val[bytes]);
-        }
+        readFixed(val, N);
     }
-
+  
     template <size_t N>
     void readFixed(boost::array<uint8_t, N> &val) {
-        for(size_t bytes = 0; bytes < val.size(); bytes++) {
-            in_.readByte(val[bytes]);
-        }
+        readFixed(val.c_array(), N);
     }
-
+  
     void readRecord() { }
 
     int64_t readArrayBlockSize() {

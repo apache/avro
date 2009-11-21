@@ -38,7 +38,7 @@ AVROSCRIPTS = $(srcdir)/scripts
 
 AVRO_STATIC= $(OBJDIR)/libavrocpp.a
 
-EXECS = unittest testparser precompile testgen
+EXECS = unittest testparser precompile testgen 
 EXECSDIR = obj
 AVRO_EXECS = $(EXECS:%=$(EXECSDIR)/%)
 
@@ -68,9 +68,9 @@ all : $(AVRO_STATIC) $(AVRO_DYNAMIC) $(AVRO_EXECS)
 check: $(AVRO_EXECS)
 	$(EXECSDIR)/testparser < $(AVROSCHEMAS)/bigrecord
 	$(EXECSDIR)/unittest
-	$(EXECSDIR)/testgen $(AVROSCHEMAS)/bigrecord
+	$(EXECSDIR)/testgen $(AVROSCHEMAS)/bigrecord $(AVROSCHEMAS)/bigrecord2
 
-CXXFLAGS = -Wall -g -fPIC $(CPPFLAGS)
+CXXFLAGS = -Wall -g -fPIC -Wno-invalid-offsetof $(CPPFLAGS)
 
 $(AVRO_STATIC) : $(OBJS) $(GENERATEDOBJS)
 	ar ruc $@ $^ 
@@ -104,11 +104,15 @@ $(EXECSDIR)/testparser: $(AVROTEST)/testparser.cc $(AVRO_STATIC)
 $(EXECSDIR)/precompile: $(AVROTEST)/precompile.cc $(AVRO_STATIC)
 	$(CXX) $(CXXFLAGS) $(INCFLAGS) -o $@ $^ $(LIBS)
 
-$(OBJDIR)/code.hh: $(AVROSCRIPTS)/gen-cppcode.py $(EXECSDIR)/precompile $(AVROSCHEMAS)/bigrecord
+$(OBJDIR)/testgen.hh: $(AVROSCRIPTS)/gen-cppcode.py $(EXECSDIR)/precompile $(AVROSCHEMAS)/bigrecord
 	$(EXECSDIR)/precompile < $(AVROSCHEMAS)/bigrecord > obj/bigrecord.flat
-	$(PYTHON) $(AVROSCRIPTS)/gen-cppcode.py -n testgen -i obj/bigrecord.flat -o $(OBJDIR)/code.hh
+	$(PYTHON) $(AVROSCRIPTS)/gen-cppcode.py -n testgen -i obj/bigrecord.flat -o $(OBJDIR)/testgen.hh
 
-$(EXECSDIR)/testgen: $(AVROTEST)/testgen.cc $(OBJDIR)/code.hh $(AVRO_STATIC)
+$(OBJDIR)/testgen2.hh: $(AVROSCRIPTS)/gen-cppcode.py $(EXECSDIR)/precompile $(AVROSCHEMAS)/bigrecord2
+	$(EXECSDIR)/precompile < $(AVROSCHEMAS)/bigrecord2 > obj/bigrecord2.flat
+	$(PYTHON) $(AVROSCRIPTS)/gen-cppcode.py -n testgen2 -i obj/bigrecord2.flat -o $(OBJDIR)/testgen2.hh
+
+$(EXECSDIR)/testgen: $(AVROTEST)/testgen.cc $(OBJDIR)/testgen.hh $(OBJDIR)/testgen2.hh $(AVRO_STATIC)
 	$(CXX) $(CXXFLAGS) $(TEST_INCFLAGS) -o $@ $(LIBS) $< $(AVRO_STATIC) 
 
 CPP_DOC_DIR ?= "./doc"

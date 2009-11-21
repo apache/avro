@@ -62,20 +62,21 @@ class ValidatingReader : private boost::noncopyable
         reader_.readBytes(val);
     }
 
+    void readFixed(uint8_t *val, size_t size) {
+        checkSafeToGet(AVRO_FIXED);
+        checkSizeExpected(size);
+        validator_.advance();
+        reader_.readFixed(val, size);
+    }
+
     template <size_t N>
     void readFixed(uint8_t (&val)[N]) {
-        checkSafeToGet(AVRO_FIXED);
-        checkSizeExpected(N);
-        validator_.advance();
-        reader_.readFixed(val);
+        readFixed(val, N);
     }
 
     template<size_t N>
     void readFixed(boost::array<uint8_t, N> &val) {
-        checkSafeToGet(AVRO_FIXED);
-        checkSizeExpected(val.size());
-        validator_.advance();
-        reader_.readFixed(val);
+        readFixed(val.c_array(), N);
     }
 
     void readRecord();

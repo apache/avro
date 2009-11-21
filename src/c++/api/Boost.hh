@@ -90,6 +90,15 @@ namespace boost {
         bool empty() const {
             return ptrs_.empty();
         }
+        const T& at(size_t index) const {
+            return *(ptrs_.at(index));
+        }
+        const T& operator[](size_t index) const {
+            return *(ptrs_[index]);
+        }
+        size_t size() const {
+            return ptrs_.size();
+        }
       private:
         std::vector<T *> ptrs_;
     };
