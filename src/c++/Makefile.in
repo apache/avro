@@ -113,8 +113,10 @@ $(EXECSDIR)/testgen: $(AVROTEST)/testgen.cc $(OBJDIR)/code.hh $(AVRO_STATIC)
 
 CPP_DOC_DIR ?= "./doc"
 
+DOXYGEN_INPUTS= $(srcdir)/MainPage.dox $(HEADERS)
+
 $(CPP_DOC_DIR)/html/index.html: $(SOURCES) $(HEADERS) $(srcdir)/Doxyfile
-	(cat $(srcdir)/Doxyfile; echo "OUTPUT_DIRECTORY=$(CPP_DOC_DIR)";  echo "INPUT=$(HEADERS)") | $(DOXYGEN) - ;
+	(cat $(srcdir)/Doxyfile; echo "OUTPUT_DIRECTORY=$(CPP_DOC_DIR)";  echo "INPUT=$(DOXYGEN_INPUTS)") | $(DOXYGEN) - ;
 
 doc: $(CPP_DOC_DIR)/html/index.html
 

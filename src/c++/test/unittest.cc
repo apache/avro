@@ -43,6 +43,24 @@ struct TestSchema
     TestSchema() 
     {}
 
+    void createExampleSchema()
+    {
+        // First construct our complex data type:
+        avro::RecordSchema myRecord("complex");
+   
+        // Now populate my record with fields (each field is another schema):
+        myRecord.addField("real", avro::DoubleSchema());
+        myRecord.addField("imaginary", avro::DoubleSchema());
+
+        // The complex record is the same as used above, let's make a schema 
+        // for an array of these record
+  
+        avro::ArraySchema complexArray(myRecord); 
+
+        avro::ValidSchema validComplexArray(complexArray);
+        validComplexArray.toJson(std::cout);
+    }
+
     void buildSchema()
     {
         RecordSchema record("RootRecord");
@@ -394,6 +412,8 @@ struct TestSchema
         saveValidatingEncoding(1);
         readRawData();
         readValidatedData();
+
+        createExampleSchema();
     }
 
     ValidSchema schema_;
