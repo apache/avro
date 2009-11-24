@@ -18,6 +18,8 @@
 package org.apache.avro.reflect;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
@@ -31,7 +33,8 @@ import org.apache.avro.tool.Tool;
 public class InduceSchemaTool implements Tool {
 
   @Override
-  public void run(List<String> args) throws Exception {
+  public void run(InputStream in, PrintStream out, PrintStream err,
+      List<String> args) throws Exception {
     if (args.size() == 0 || args.size() > 2) {
       System.err.println("Usage: [colon-delimited-classpath] classname");
       return;
@@ -55,5 +58,15 @@ public class InduceSchemaTool implements Tool {
 
     Class<?> klass = classLoader.loadClass(className);
     System.out.println(ReflectData.get().getSchema(klass).toString());
+  }
+
+  @Override
+  public String getName() {
+    return "induce";
+  }
+
+  @Override
+  public String getShortDescription() {
+    return "Uses reflection to induce schema for a given class.";
   }
 }

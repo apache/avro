@@ -20,6 +20,8 @@ package org.apache.avro.specific;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -388,7 +390,8 @@ public class SpecificCompiler {
    */
   public static class SpecificCompilerTool implements Tool {
     @Override
-    public void run(List<String> args) throws IOException {
+    public void run(InputStream in, PrintStream out, PrintStream err,
+        List<String> args) throws Exception {
       if (args.size() != 3) {
         System.err.println("Expected 3 arguments: (schema|protocol) inputfile outputdir");
         return;
@@ -404,6 +407,16 @@ public class SpecificCompiler {
         System.err.println("Expected \"schema\" or \"protocol\".");
         return;
       }
+    }
+
+    @Override
+    public String getName() {
+      return "compile";
+    }
+
+    @Override
+    public String getShortDescription() {
+      return "Generates Java code for the given schema.";
     }
   }
 
