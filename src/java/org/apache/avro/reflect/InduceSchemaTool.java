@@ -27,8 +27,7 @@ import java.util.List;
 import org.apache.avro.tool.Tool;
 
 /**
- * Utility to induce the schema of a given class using
- * reflection.
+ * Utility to induce a schema from a class or a protocol from an interface.
  */
 public class InduceSchemaTool implements Tool {
 
@@ -57,7 +56,11 @@ public class InduceSchemaTool implements Tool {
     }
 
     Class<?> klass = classLoader.loadClass(className);
-    System.out.println(ReflectData.get().getSchema(klass).toString());
+    if (klass.isInterface()) {
+      System.out.println(ReflectData.get().getProtocol(klass).toString(true));
+    } else {
+      System.out.println(ReflectData.get().getSchema(klass).toString(true));
+    }
   }
 
   @Override
@@ -67,6 +70,7 @@ public class InduceSchemaTool implements Tool {
 
   @Override
   public String getShortDescription() {
-    return "Uses reflection to induce schema for a given class.";
+    return "Use reflection to induce a schema from a class"
+      + " or a protocol from an interface.";
   }
 }

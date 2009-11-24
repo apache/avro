@@ -54,9 +54,13 @@ $CMD compile schema src/test/schemata/interop.avsc $TMPDIR/schema
   "$(find $TMPDIR/schema -name "*.java" \
     | awk -F "/" '{ print $NF }' | sort | tr '\n' ' ')" ]
 ######################################################################
-echo "Testing induce schema..."
-$CMD induce build/test/classes org.apache.avro.BarRecord | grep -q -F \
-  '{"type":"record","name":"BarRecord","namespace":"org.apache.avro","fields":[{"name":"beerMsg","type":"string"}]}'
+# Testing induce schema
+$CMD induce build/test/classes org.apache.avro.BarRecord \
+ | tr -d '\n ' | grep -q -F  '{"type":"record","name":"BarRecord"'
+######################################################################
+# Test induce protocol
+$CMD induce build/test/classes 'org.apache.avro.TestReflect$C' \
+ | tr -d '\n ' | grep -q -F  '{"protocol":"C"'
 ######################################################################
 $CMD 2>&1 | grep -q "Available tools:"
 $CMD doesnotexist 2>&1 | grep -q "Available tools:"

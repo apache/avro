@@ -103,6 +103,8 @@ Trunk (unreleased changes)
 
     AVRO-233. Elaborate Java tool API. (Philip Zeyliger via cutting)
 
+    AVRO-236. Add protocol support to avroj induce tool.  (cutting)
+    
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

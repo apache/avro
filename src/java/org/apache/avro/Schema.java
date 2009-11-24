@@ -200,10 +200,17 @@ public abstract class Schema {
   }
 
   /** Render this as <a href="http://json.org/">JSON</a>.*/
-  public String toString() {
+  @Override
+  public String toString() { return toString(false); }
+
+  /** Render this as <a href="http://json.org/">JSON</a>.
+   * @param pretty if true, pretty-print JSON.
+   */
+  public String toString(boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
       JsonGenerator gen = FACTORY.createJsonGenerator(writer);
+      if (pretty) gen.useDefaultPrettyPrinter();
       toJson(new Names(), gen);
       gen.flush();
       return writer.toString();

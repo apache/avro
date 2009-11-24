@@ -193,10 +193,18 @@ public class Protocol {
       + types.hashCode() + messages.hashCode();
   }
 
-  public String toString() {
+  /** Render this as <a href="http://json.org/">JSON</a>.*/
+  @Override
+  public String toString() { return toString(false); }
+
+  /** Render this as <a href="http://json.org/">JSON</a>.
+   * @param pretty if true, pretty-print JSON.
+   */
+  public String toString(boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
       JsonGenerator gen = Schema.FACTORY.createJsonGenerator(writer);
+      if (pretty) gen.useDefaultPrettyPrinter();
       toJson(gen);
       gen.flush();
       return writer.toString();
