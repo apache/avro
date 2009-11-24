@@ -44,6 +44,8 @@
     <dependency org="junit" name="junit" rev="4.7" conf="test->default"/>
     <dependency org="checkstyle" name="checkstyle" rev="5.0"
 		conf="test->default"/>
+    <dependency org="org.apache.rat" name="apache-rat" rev="0.6"
+		conf="test->default"/>
   </dependencies>
 
 </ivy-module>

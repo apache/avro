@@ -282,7 +282,25 @@
     </sequential>
   </macrodef>
 
-  <target name="test" depends="test-java,test-py,test-c,test-cpp,test-interop,test-avroj"/>
+  <target name="test" depends="test-java,test-py,test-c,test-cpp,test-interop,test-avroj,rat"/>
+
+  <target name="rat" depends="ivy-retrieve-test,package">
+    <typedef resource="org/apache/rat/anttasks/antlib.xml"
+             uri="antlib:org.apache.rat.anttasks">
+      <classpath refid="test.java.classpath"/>
+    </typedef>
+
+    <rat:report xmlns:rat="antlib:org.apache.rat.anttasks"
+		reportFile="${build.dir}/rat-report.log">
+      <fileset dir="${dist.dir}" excludesfile="${src.dir}/rat-excludes.txt"/>
+    </rat:report>
+    <condition property="rat.passed">
+      <isfileselected file="${build.dir}/rat-report.log">
+	<containsregexp expression="^0 Unknown Licenses"/>
+      </isfileselected>
+    </condition>
+    <fail unless="rat.passed">Unknown licenses: See build/rat-report.txt.</fail>
+  </target>
 
   <macrodef name="test-runner">
     <attribute name="files.location" />

@@ -99,6 +99,8 @@ Trunk (unreleased changes)
 
     AVRO-220. Dynamic schema resolution from writer to reader. (sbanacho)
 
+    AVRO-213. Add Apache RAT to tests, to validate licenses.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
