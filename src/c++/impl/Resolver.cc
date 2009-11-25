@@ -17,17 +17,19 @@
  * limitations under the License.
  */
 
-#include "Instruction.hh"
+#include "Resolver.hh"
+#include "Layout.hh"
 #include "NodeImpl.hh"
 #include "ValidSchema.hh"
-#include "ValidatingReader.hh"
+#include "Reader.hh"
 #include "Boost.hh"
+#include "AvroTraits.hh"
 
 namespace avro {
 
-class DynamicBuilder;
-typedef boost::shared_ptr<Instruction> InstructionPtr;
-typedef boost::ptr_vector<Instruction> InstructionPtrVector;
+class ResolverFactory;
+typedef boost::shared_ptr<Resolver> ResolverPtr;
+typedef boost::ptr_vector<Resolver> ResolverPtrVector;
 
 // #define DEBUG_VERBOSE
 
@@ -43,15 +45,15 @@ NoOp noop;
 #endif
 
 template<typename T>
-class PrimitiveSkipper : public Instruction
+class PrimitiveSkipper : public Resolver
 {
   public:
 
     PrimitiveSkipper() : 
-        Instruction()
+        Resolver()
     {}
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         T val;
         reader.readValue(val);
@@ -60,16 +62,16 @@ class PrimitiveSkipper : public Instruction
 };
 
 template<typename T>
-class PrimitiveParser : public Instruction
+class PrimitiveParser : public Resolver
 {
   public:
 
-    PrimitiveParser(const Offset &offset) : 
-        Instruction(),
+    PrimitiveParser(const PrimitiveLayout &offset) : 
+        Resolver(),
         offset_(offset.offset())
     {}
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         T* location = reinterpret_cast<T *> (address + offset_);
         reader.readValue(*location);
@@ -82,23 +84,23 @@ class PrimitiveParser : public Instruction
 };
 
 template<typename WT, typename RT>
-class PrimitivePromoter : public Instruction
+class PrimitivePromoter : public Resolver
 {
   public:
 
-    PrimitivePromoter(const Offset &offset) : 
-        Instruction(),
+    PrimitivePromoter(const PrimitiveLayout &offset) : 
+        Resolver(),
         offset_(offset.offset())
     {}
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         parseIt<WT>(reader, address);
     }
 
   private:
 
-    void parseIt(ValidatingReader &reader, uint8_t *address, const boost::true_type &) const
+    void parseIt(Reader &reader, uint8_t *address, const boost::true_type &) const
     {
         WT val;
         reader.readValue(val);
@@ -107,11 +109,11 @@ class PrimitivePromoter : public Instruction
         DEBUG_OUT("Promoting " << val);
     }
 
-    void parseIt(ValidatingReader &reader, uint8_t *address, const boost::false_type &) const
+    void parseIt(Reader &reader, uint8_t *address, const boost::false_type &) const
     { }
 
     template<typename T>
-    void parseIt(ValidatingReader &reader, uint8_t *address) const
+    void parseIt(Reader &reader, uint8_t *address) const
     {
         parseIt(reader, address, is_promotable<T>());
     }
@@ -120,15 +122,15 @@ class PrimitivePromoter : public Instruction
 };
 
 template <>
-class PrimitiveSkipper<std::vector<uint8_t> > : public Instruction
+class PrimitiveSkipper<std::vector<uint8_t> > : public Resolver
 {
   public:
 
     PrimitiveSkipper() : 
-        Instruction()
+        Resolver()
     {}
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         std::vector<uint8_t> val;
         reader.readBytes(val);
@@ -137,16 +139,16 @@ class PrimitiveSkipper<std::vector<uint8_t> > : public Instruction
 };
 
 template <>
-class PrimitiveParser<std::vector<uint8_t> > : public Instruction
+class PrimitiveParser<std::vector<uint8_t> > : public Resolver
 {
   public:
 
-    PrimitiveParser(const Offset &offset) : 
-        Instruction(),
+    PrimitiveParser(const PrimitiveLayout &offset) : 
+        Resolver(),
         offset_(offset.offset()) 
     {}
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         std::vector<uint8_t> *location = reinterpret_cast<std::vector<uint8_t> *> (address + offset_);
         reader.readBytes(*location);
@@ -158,60 +160,60 @@ class PrimitiveParser<std::vector<uint8_t> > : public Instruction
     size_t offset_;
 };
 
-class RecordSkipper : public Instruction
+class RecordSkipper : public Resolver
 {
   public:
 
-    RecordSkipper(DynamicBuilder &builder, const NodePtr &writer);
+    RecordSkipper(ResolverFactory &factory, const NodePtr &writer);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Skipping record");
 
         reader.readRecord();
-        size_t steps = instructions_.size();
+        size_t steps = resolvers_.size();
         for(size_t i = 0; i < steps; ++i) {
-            instructions_[i].parse(reader, address);
+            resolvers_[i].parse(reader, address);
         }
     }
 
   protected:
     
-    InstructionPtrVector instructions_;
+    ResolverPtrVector resolvers_;
 
 };
 
-class RecordParser : public Instruction
+class RecordParser : public Resolver
 {
   public:
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading record");
 
         reader.readRecord();
-        size_t steps = instructions_.size();
+        size_t steps = resolvers_.size();
         for(size_t i = 0; i < steps; ++i) {
-            instructions_[i].parse(reader, address);
+            resolvers_[i].parse(reader, address);
         }
     }
 
-    RecordParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets);
+    RecordParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
   protected:
     
-    InstructionPtrVector instructions_;
+    ResolverPtrVector resolvers_;
 
 };
 
 
-class MapSkipper : public Instruction
+class MapSkipper : public Resolver
 {
   public:
 
-    MapSkipper(DynamicBuilder &builder, const NodePtr &writer);
+    MapSkipper(ResolverFactory &factory, const NodePtr &writer);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Skipping map");
 
@@ -221,26 +223,26 @@ class MapSkipper : public Instruction
             size = reader.readMapBlockSize();
             for(int64_t i = 0; i < size; ++i) {
                 reader.readValue(key);
-                instruction_->parse(reader, address);
+                resolver_->parse(reader, address);
             }
         } while (size != 0);
     }
 
   protected:
 
-    InstructionPtr instruction_;
+    ResolverPtr resolver_;
 };
 
 
-class MapParser : public Instruction
+class MapParser : public Resolver
 {
   public:
 
     typedef uint8_t *(*GenericMapSetter)(uint8_t *map, const std::string &key);
 
-    MapParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets);
+    MapParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading map");
 
@@ -257,25 +259,25 @@ class MapParser : public Instruction
 
                 // create a new map entry and get the address
                 uint8_t *location = (*setter)(mapAddress, key);
-                instruction_->parse(reader, location);
+                resolver_->parse(reader, location);
             }
         } while (size != 0);
     }
 
   protected:
     
-    InstructionPtr  instruction_;
+    ResolverPtr  resolver_;
     size_t          offset_;
     size_t          setFuncOffset_;
 };
 
-class ArraySkipper : public Instruction
+class ArraySkipper : public Resolver
 {
   public:
 
-    ArraySkipper(DynamicBuilder &builder, const NodePtr &writer);
+    ArraySkipper(ResolverFactory &factory, const NodePtr &writer);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Skipping array");
 
@@ -283,25 +285,25 @@ class ArraySkipper : public Instruction
         do {
             size = reader.readArrayBlockSize();
             for(int64_t i = 0; i < size; ++i) {
-                instruction_->parse(reader, address);
+                resolver_->parse(reader, address);
             }
         } while (size != 0);
     }
 
   protected:
    
-    InstructionPtr instruction_;
+    ResolverPtr resolver_;
 };
 
 typedef uint8_t *(*GenericArraySetter)(uint8_t *array);
 
-class ArrayParser : public Instruction
+class ArrayParser : public Resolver
 {
   public:
 
-    ArrayParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets);
+    ArrayParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading array");
 
@@ -315,7 +317,7 @@ class ArrayParser : public Instruction
             for(int64_t i = 0; i < size; ++i) {
                 // create a new map entry and get the address
                 uint8_t *location = (*setter)(arrayAddress);
-                instruction_->parse(reader, location);
+                resolver_->parse(reader, location);
             }
         } while (size != 0);
     }
@@ -323,30 +325,30 @@ class ArrayParser : public Instruction
   protected:
     
     ArrayParser() :
-        Instruction()
+        Resolver()
     {}
     
-    InstructionPtr instruction_;
+    ResolverPtr resolver_;
     size_t         offset_;
     size_t         setFuncOffset_;
 };
 
-class EnumSkipper : public Instruction
+class EnumSkipper : public Resolver
 {
   public:
 
-    EnumSkipper(DynamicBuilder &builder, const NodePtr &writer) :
-        Instruction()
+    EnumSkipper(ResolverFactory &factory, const NodePtr &writer) :
+        Resolver()
     { }
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         int64_t val = reader.readEnum();
         DEBUG_OUT("Skipping enum" << val);
     }
 };
 
-class EnumParser : public Instruction
+class EnumParser : public Resolver
 {
   public:
 
@@ -354,8 +356,8 @@ class EnumParser : public Instruction
         VAL
     };
 
-    EnumParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets) :
-        Instruction(),
+    EnumParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
+        Resolver(),
         offset_(offsets.at(0).offset()),
         readerSize_(reader->names())
     { 
@@ -371,7 +373,7 @@ class EnumParser : public Instruction
         }
     }
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         int64_t val = reader.readEnum();
         assert(static_cast<size_t>(val) < mapping_.size());
@@ -391,34 +393,34 @@ protected:
     
 };
 
-class UnionSkipper : public Instruction
+class UnionSkipper : public Resolver
 {
   public:
 
-    UnionSkipper(DynamicBuilder &builder, const NodePtr &writer);
+    UnionSkipper(ResolverFactory &factory, const NodePtr &writer);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Skipping union");
         int64_t choice = reader.readUnion();
-        instructions_[choice].parse(reader, address);
+        resolvers_[choice].parse(reader, address);
     }
 
   protected:
     
-    InstructionPtrVector instructions_;
+    ResolverPtrVector resolvers_;
 };
 
 
-class UnionParser : public Instruction
+class UnionParser : public Resolver
 {
   public:
 
     typedef uint8_t *(*GenericUnionSetter)(uint8_t *, int64_t);
 
-    UnionParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets);
+    UnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading union");
         int64_t writerChoice = reader.readUnion();
@@ -429,47 +431,47 @@ class UnionParser : public Instruction
         uint8_t *value = reinterpret_cast<uint8_t *> (address + offset_);
         uint8_t *location = (*setter)(value, *readerChoice);
 
-        instructions_[writerChoice].parse(reader, location);
+        resolvers_[writerChoice].parse(reader, location);
     }
 
   protected:
     
-    InstructionPtrVector instructions_;
+    ResolverPtrVector resolvers_;
     std::vector<int64_t> choiceMapping_;
     size_t offset_;
     size_t choiceOffset_;
     size_t setFuncOffset_;
 };
 
-class UnionToNonUnionParser : public Instruction
+class UnionToNonUnionParser : public Resolver
 {
   public:
 
     typedef uint8_t *(*GenericUnionSetter)(uint8_t *, int64_t);
 
-    UnionToNonUnionParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const Offset &offsets);
+    UnionToNonUnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const Layout &offsets);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading union to non-union");
         int64_t choice = reader.readUnion();
-        instructions_[choice].parse(reader, address);
+        resolvers_[choice].parse(reader, address);
     }
 
   protected:
     
-    InstructionPtrVector instructions_;
+    ResolverPtrVector resolvers_;
 };
 
-class NonUnionToUnionParser : public Instruction
+class NonUnionToUnionParser : public Resolver
 {
   public:
 
     typedef uint8_t *(*GenericUnionSetter)(uint8_t *, int64_t);
 
-    NonUnionToUnionParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets);
+    NonUnionToUnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading non-union to union");
 
@@ -479,29 +481,29 @@ class NonUnionToUnionParser : public Instruction
         uint8_t *value = reinterpret_cast<uint8_t *> (address + offset_);
         uint8_t *location = (*setter)(value, choice_);
 
-        instruction_->parse(reader, location);
+        resolver_->parse(reader, location);
     }
 
   protected:
     
-    InstructionPtr instruction_;
+    ResolverPtr resolver_;
     size_t choice_;
     size_t offset_;
     size_t choiceOffset_;
     size_t setFuncOffset_;
 };
 
-class FixedSkipper : public Instruction
+class FixedSkipper : public Resolver
 {
   public:
 
-    FixedSkipper(DynamicBuilder &builder, const NodePtr &writer) :
-        Instruction() 
+    FixedSkipper(ResolverFactory &factory, const NodePtr &writer) :
+        Resolver() 
     {
         size_ = writer->fixedSize();
     }
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Skipping fixed");
         uint8_t val[size_];
@@ -514,18 +516,18 @@ class FixedSkipper : public Instruction
     
 };
 
-class FixedParser : public Instruction
+class FixedParser : public Resolver
 {
   public:
 
-    FixedParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets) :
-        Instruction() 
+    FixedParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
+        Resolver() 
     {
         size_ = writer->fixedSize();
         offset_ = offsets.at(0).offset();
     }
 
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const
+    virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading fixed");
         uint8_t *location = reinterpret_cast<uint8_t *> (address + offset_);
@@ -540,20 +542,20 @@ class FixedParser : public Instruction
 };
 
 
-class DynamicBuilder : public boost::noncopyable {
+class ResolverFactory : private boost::noncopyable {
 
     template<typename T>
-    Instruction*
-    buildPrimitiveSkipper(const NodePtr &writer) 
+    Resolver*
+    constructPrimitiveSkipper(const NodePtr &writer) 
     {
         return new PrimitiveSkipper<T>();
     }
 
     template<typename T>
-    Instruction*
-    buildPrimitive(const NodePtr &writer, const NodePtr &reader, const Offset &offset)
+    Resolver*
+    constructPrimitive(const NodePtr &writer, const NodePtr &reader, const Layout &offset)
     {
-        Instruction *instruction;
+        Resolver *instruction;
 
         SchemaResolution match = writer->resolve(*reader);
 
@@ -561,20 +563,24 @@ class DynamicBuilder : public boost::noncopyable {
             instruction = new PrimitiveSkipper<T>();
         } 
         else if (reader->type() == AVRO_UNION) {
-            const CompoundOffset &compoundOffset = static_cast<const CompoundOffset &>(offset);
-            instruction = new NonUnionToUnionParser(*this, writer, reader, compoundOffset);
+            const CompoundLayout &compoundLayout = static_cast<const CompoundLayout &>(offset);
+            instruction = new NonUnionToUnionParser(*this, writer, reader, compoundLayout);
         }
         else if (match == RESOLVE_MATCH) {
-            instruction = new PrimitiveParser<T>(offset);
+            const PrimitiveLayout &primitiveLayout = static_cast<const PrimitiveLayout &>(offset);
+            instruction = new PrimitiveParser<T>(primitiveLayout);
         }
         else if(match == RESOLVE_PROMOTABLE_TO_LONG) {
-            instruction = new PrimitivePromoter<T, int64_t>(offset);
+            const PrimitiveLayout &primitiveLayout = static_cast<const PrimitiveLayout &>(offset);
+            instruction = new PrimitivePromoter<T, int64_t>(primitiveLayout);
         }
         else if(match == RESOLVE_PROMOTABLE_TO_FLOAT) {
-            instruction = new PrimitivePromoter<T, float>(offset);
+            const PrimitiveLayout &primitiveLayout = static_cast<const PrimitiveLayout &>(offset);
+            instruction = new PrimitivePromoter<T, float>(primitiveLayout);
         }
         else if(match == RESOLVE_PROMOTABLE_TO_DOUBLE) {
-            instruction = new PrimitivePromoter<T, double>(offset);
+            const PrimitiveLayout &primitiveLayout = static_cast<const PrimitiveLayout &>(offset);
+            instruction = new PrimitivePromoter<T, double>(primitiveLayout);
         }
         else {
             assert(0);
@@ -583,18 +589,18 @@ class DynamicBuilder : public boost::noncopyable {
     }
 
     template<typename Skipper>
-    Instruction*
-    buildCompoundSkipper(const NodePtr &writer) 
+    Resolver*
+    constructCompoundSkipper(const NodePtr &writer) 
     {
         return new Skipper(*this, writer);
     }
 
 
     template<typename Parser, typename Skipper>
-    Instruction*
-    buildCompound(const NodePtr &writer, const NodePtr &reader, const Offset &offset)
+    Resolver*
+    constructCompound(const NodePtr &writer, const NodePtr &reader, const Layout &offset)
     {
-        Instruction *instruction;
+        Resolver *instruction;
 
         SchemaResolution match = RESOLVE_NO_MATCH;
 
@@ -604,15 +610,15 @@ class DynamicBuilder : public boost::noncopyable {
             instruction = new Skipper(*this, writer);
         }
         else if(writer->type() != AVRO_UNION && reader->type() == AVRO_UNION) {
-            const CompoundOffset &compoundOffset = dynamic_cast<const CompoundOffset &>(offset);
-            instruction = new NonUnionToUnionParser(*this, writer, reader, compoundOffset);
+            const CompoundLayout &compoundLayout = dynamic_cast<const CompoundLayout &>(offset);
+            instruction = new NonUnionToUnionParser(*this, writer, reader, compoundLayout);
         }
         else if(writer->type() == AVRO_UNION && reader->type() != AVRO_UNION) {
             instruction = new UnionToNonUnionParser(*this, writer, reader, offset);
         }
         else {
-            const CompoundOffset &compoundOffset = dynamic_cast<const CompoundOffset &>(offset);
-            instruction = new Parser(*this, writer, reader, compoundOffset);
+            const CompoundLayout &compoundLayout = dynamic_cast<const CompoundLayout &>(offset);
+            instruction = new Parser(*this, writer, reader, compoundLayout);
         } 
 
         return instruction;
@@ -620,11 +626,11 @@ class DynamicBuilder : public boost::noncopyable {
 
   public:
 
-    Instruction *
-    build(const NodePtr &writer, const NodePtr &reader, const Offset &offset)
+    Resolver *
+    construct(const NodePtr &writer, const NodePtr &reader, const Layout &offset)
     {
 
-        typedef Instruction* (DynamicBuilder::*BuilderFunc)(const NodePtr &writer, const NodePtr &reader, const Offset &offset);
+        typedef Resolver* (ResolverFactory::*BuilderFunc)(const NodePtr &writer, const NodePtr &reader, const Layout &offset);
 
         NodePtr currentWriter = (writer->type() == AVRO_SYMBOLIC) ?
             resolveSymbol(writer) : writer;
@@ -633,20 +639,20 @@ class DynamicBuilder : public boost::noncopyable {
             resolveSymbol(reader) : reader;
 
         static const BuilderFunc funcs[] = {
-            &DynamicBuilder::buildPrimitive<std::string>, 
-            &DynamicBuilder::buildPrimitive<std::vector<uint8_t> >,
-            &DynamicBuilder::buildPrimitive<int32_t>,
-            &DynamicBuilder::buildPrimitive<int64_t>,
-            &DynamicBuilder::buildPrimitive<float>,
-            &DynamicBuilder::buildPrimitive<double>,
-            &DynamicBuilder::buildPrimitive<bool>,
-            &DynamicBuilder::buildPrimitive<Null>,
-            &DynamicBuilder::buildCompound<RecordParser, RecordSkipper>,
-            &DynamicBuilder::buildCompound<EnumParser, EnumSkipper>,
-            &DynamicBuilder::buildCompound<ArrayParser, ArraySkipper>,
-            &DynamicBuilder::buildCompound<MapParser, MapSkipper>,
-            &DynamicBuilder::buildCompound<UnionParser, UnionSkipper>,
-            &DynamicBuilder::buildCompound<FixedParser, FixedSkipper>
+            &ResolverFactory::constructPrimitive<std::string>, 
+            &ResolverFactory::constructPrimitive<std::vector<uint8_t> >,
+            &ResolverFactory::constructPrimitive<int32_t>,
+            &ResolverFactory::constructPrimitive<int64_t>,
+            &ResolverFactory::constructPrimitive<float>,
+            &ResolverFactory::constructPrimitive<double>,
+            &ResolverFactory::constructPrimitive<bool>,
+            &ResolverFactory::constructPrimitive<Null>,
+            &ResolverFactory::constructCompound<RecordParser, RecordSkipper>,
+            &ResolverFactory::constructCompound<EnumParser, EnumSkipper>,
+            &ResolverFactory::constructCompound<ArrayParser, ArraySkipper>,
+            &ResolverFactory::constructCompound<MapParser, MapSkipper>,
+            &ResolverFactory::constructCompound<UnionParser, UnionSkipper>,
+            &ResolverFactory::constructCompound<FixedParser, FixedSkipper>
         };
 
         BOOST_STATIC_ASSERT( (sizeof(funcs)/sizeof(BuilderFunc)) == (AVRO_NUM_TYPES) );
@@ -657,30 +663,30 @@ class DynamicBuilder : public boost::noncopyable {
         return  ((this)->*(func))(currentWriter, currentReader, offset);
     }
 
-    Instruction *
+    Resolver *
     skipper(const NodePtr &writer) 
     {
 
-        typedef Instruction* (DynamicBuilder::*BuilderFunc)(const NodePtr &writer);
+        typedef Resolver* (ResolverFactory::*BuilderFunc)(const NodePtr &writer);
 
         NodePtr currentWriter = (writer->type() == AVRO_SYMBOLIC) ?
             writer->leafAt(0) : writer;
 
         static const BuilderFunc funcs[] = {
-            &DynamicBuilder::buildPrimitiveSkipper<std::string>, 
-            &DynamicBuilder::buildPrimitiveSkipper<std::vector<uint8_t> >,
-            &DynamicBuilder::buildPrimitiveSkipper<int32_t>,
-            &DynamicBuilder::buildPrimitiveSkipper<int64_t>,
-            &DynamicBuilder::buildPrimitiveSkipper<float>,
-            &DynamicBuilder::buildPrimitiveSkipper<double>,
-            &DynamicBuilder::buildPrimitiveSkipper<bool>,
-            &DynamicBuilder::buildPrimitiveSkipper<Null>,
-            &DynamicBuilder::buildCompoundSkipper<RecordSkipper>,
-            &DynamicBuilder::buildCompoundSkipper<EnumSkipper>,
-            &DynamicBuilder::buildCompoundSkipper<ArraySkipper>,
-            &DynamicBuilder::buildCompoundSkipper<MapSkipper>,
-            &DynamicBuilder::buildCompoundSkipper<UnionSkipper>,
-            &DynamicBuilder::buildCompoundSkipper<FixedSkipper>
+            &ResolverFactory::constructPrimitiveSkipper<std::string>, 
+            &ResolverFactory::constructPrimitiveSkipper<std::vector<uint8_t> >,
+            &ResolverFactory::constructPrimitiveSkipper<int32_t>,
+            &ResolverFactory::constructPrimitiveSkipper<int64_t>,
+            &ResolverFactory::constructPrimitiveSkipper<float>,
+            &ResolverFactory::constructPrimitiveSkipper<double>,
+            &ResolverFactory::constructPrimitiveSkipper<bool>,
+            &ResolverFactory::constructPrimitiveSkipper<Null>,
+            &ResolverFactory::constructCompoundSkipper<RecordSkipper>,
+            &ResolverFactory::constructCompoundSkipper<EnumSkipper>,
+            &ResolverFactory::constructCompoundSkipper<ArraySkipper>,
+            &ResolverFactory::constructCompoundSkipper<MapSkipper>,
+            &ResolverFactory::constructCompoundSkipper<UnionSkipper>,
+            &ResolverFactory::constructCompoundSkipper<FixedSkipper>
         };
 
         BOOST_STATIC_ASSERT( (sizeof(funcs)/sizeof(BuilderFunc)) == (AVRO_NUM_TYPES) );
@@ -690,44 +696,25 @@ class DynamicBuilder : public boost::noncopyable {
 
         return  ((this)->*(func))(currentWriter);
     }
-
-    DynamicBuilder(const ValidSchema &writer, const ValidSchema &reader, const OffsetPtr &offset) :
-        dparser_(build(writer.root(), reader.root(), *offset))
-    { }
-
-    DynamicParser 
-    build()
-    {
-        return dparser_;
-    }
-
-  private:
-
-    DynamicParser dparser_;
-
 };
 
 
-DynamicParser buildDynamicParser(const ValidSchema &writer, const ValidSchema &reader, const OffsetPtr &offset)
-{
-    DynamicBuilder b(writer, reader, offset);
-    return b.build();
-}
-
-RecordSkipper::RecordSkipper(DynamicBuilder &builder, const NodePtr &writer) :
-    Instruction() 
+RecordSkipper::RecordSkipper(ResolverFactory &factory, const NodePtr &writer) :
+    Resolver() 
 {
     size_t leaves = writer->leaves();
+    resolvers_.reserve(leaves);
     for(size_t i = 0; i < leaves; ++i) {
         const NodePtr &w = writer->leafAt(i);
-        instructions_.push_back(builder.skipper(w));
+        resolvers_.push_back(factory.skipper(w));
     }
 }
 
-RecordParser::RecordParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets) :
-    Instruction()
+RecordParser::RecordParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
+    Resolver()
 {
     size_t leaves = writer->leaves();
+    resolvers_.reserve(leaves);
     for(size_t i = 0; i < leaves; ++i) {
     
         const NodePtr &w = writer->leafAt(i);
@@ -739,45 +726,46 @@ RecordParser::RecordParser(DynamicBuilder &builder, const NodePtr &writer, const
 
         if(found) {
             const NodePtr &r = reader->leafAt(readerIndex);
-            instructions_.push_back(builder.build(w, r, offsets.at(readerIndex)));
+            resolvers_.push_back(factory.construct(w, r, offsets.at(readerIndex)));
         }
         else {
-            instructions_.push_back(builder.skipper(w));
+            resolvers_.push_back(factory.skipper(w));
         }
     }
 }
 
-MapSkipper::MapSkipper(DynamicBuilder &builder, const NodePtr &writer) :
-    Instruction(),
-    instruction_(builder.skipper(writer->leafAt(1)))
+MapSkipper::MapSkipper(ResolverFactory &factory, const NodePtr &writer) :
+    Resolver(),
+    resolver_(factory.skipper(writer->leafAt(1)))
 { }
 
-MapParser::MapParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets) :
-    Instruction(),
-    instruction_(builder.build(writer->leafAt(1), reader->leafAt(1), offsets.at(1))),
+MapParser::MapParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
+    Resolver(),
+    resolver_(factory.construct(writer->leafAt(1), reader->leafAt(1), offsets.at(1))),
     offset_(offsets.offset()),
     setFuncOffset_( offsets.at(0).offset())
 { }
 
-ArraySkipper::ArraySkipper(DynamicBuilder &builder, const NodePtr &writer) :
-    Instruction(),
-    instruction_(builder.skipper(writer->leafAt(0)))
+ArraySkipper::ArraySkipper(ResolverFactory &factory, const NodePtr &writer) :
+    Resolver(),
+    resolver_(factory.skipper(writer->leafAt(0)))
 { }
 
-ArrayParser::ArrayParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets) :
-    Instruction(),
-    instruction_(builder.build(writer->leafAt(0), reader->leafAt(0), offsets.at(1))),
+ArrayParser::ArrayParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
+    Resolver(),
+    resolver_(factory.construct(writer->leafAt(0), reader->leafAt(0), offsets.at(1))),
     offset_(offsets.offset()),
     setFuncOffset_(offsets.at(0).offset())
 { }
 
-UnionSkipper::UnionSkipper(DynamicBuilder &builder, const NodePtr &writer) :
-    Instruction() 
+UnionSkipper::UnionSkipper(ResolverFactory &factory, const NodePtr &writer) :
+    Resolver() 
 {
     size_t leaves = writer->leaves();
+    resolvers_.reserve(leaves);
     for(size_t i = 0; i < leaves; ++i) {
     const NodePtr &w = writer->leafAt(i);
-        instructions_.push_back(builder.skipper(w));
+        resolvers_.push_back(factory.skipper(w));
     }
 }
 
@@ -814,14 +802,16 @@ checkUnionMatch(const NodePtr &writer, const NodePtr &reader, size_t &index)
 
 };
 
-UnionParser::UnionParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets) :
-    Instruction(),
+UnionParser::UnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
+    Resolver(),
     offset_(offsets.offset()),
     choiceOffset_(offsets.at(0).offset()),
     setFuncOffset_(offsets.at(1).offset())
 {
 
     size_t leaves = writer->leaves();
+    resolvers_.reserve(leaves);
+    choiceMapping_.reserve(leaves);
     for(size_t i = 0; i < leaves; ++i) {
 
         // for each writer, we need a schema match for the reader
@@ -831,20 +821,20 @@ UnionParser::UnionParser(DynamicBuilder &builder, const NodePtr &writer, const N
         SchemaResolution match = checkUnionMatch(w, reader, index);
 
         if(match == RESOLVE_NO_MATCH) {
-            instructions_.push_back(builder.skipper(w));
+            resolvers_.push_back(factory.skipper(w));
             // push back a non-sensical number
             choiceMapping_.push_back(reader->leaves());
         }
         else {
             const NodePtr &r = reader->leafAt(index);
-            instructions_.push_back(builder.build(w, r, offsets.at(index+2)));
+            resolvers_.push_back(factory.construct(w, r, offsets.at(index+2)));
             choiceMapping_.push_back(index);
         }
     }
 }
 
-NonUnionToUnionParser::NonUnionToUnionParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const CompoundOffset &offsets) :
-    Instruction(),
+NonUnionToUnionParser::NonUnionToUnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
+    Resolver(),
     offset_(offsets.offset()),
     choiceOffset_(offsets.at(0).offset()),
     setFuncOffset_(offsets.at(1).offset())
@@ -852,17 +842,26 @@ NonUnionToUnionParser::NonUnionToUnionParser(DynamicBuilder &builder, const Node
 
     SchemaResolution bestMatch = checkUnionMatch(writer, reader, choice_);
     assert(bestMatch != RESOLVE_NO_MATCH);
-    instruction_.reset(builder.build(writer, reader->leafAt(choice_), offsets.at(choice_+2)));
+    resolver_.reset(factory.construct(writer, reader->leafAt(choice_), offsets.at(choice_+2)));
 }
 
-UnionToNonUnionParser::UnionToNonUnionParser(DynamicBuilder &builder, const NodePtr &writer, const NodePtr &reader, const Offset &offsets) :
-    Instruction()
+UnionToNonUnionParser::UnionToNonUnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const Layout &offsets) :
+    Resolver()
 {
     size_t leaves = writer->leaves();
+    resolvers_.reserve(leaves);
     for(size_t i = 0; i < leaves; ++i) {
         const NodePtr &w = writer->leafAt(i);
-        instructions_.push_back(builder.build(w, reader, offsets));
+        resolvers_.push_back(factory.construct(w, reader, offsets));
     }
+}
+
+Resolver *constructResolver(const ValidSchema &writerSchema,
+                                    const ValidSchema &readerSchema,
+                                    const Layout &readerLayout)
+{
+    ResolverFactory factory;
+    return factory.construct(writerSchema.root(), readerSchema.root(), readerLayout);
 }
 
 } // namespace avro

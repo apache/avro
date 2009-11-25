@@ -99,6 +99,9 @@ namespace boost {
         size_t size() const {
             return ptrs_.size();
         }
+        void reserve(size_t elems) {
+            ptrs_.reserve(elems);
+        }
       private:
         std::vector<T *> ptrs_;
     };

@@ -27,7 +27,7 @@ headers = '''
 #include "Exception.hh"
 #include "AvroSerialize.hh"
 #include "AvroParse.hh"
-#include "Instruction.hh"
+#include "Layout.hh"
 '''
 
 typeToC= { 'int' : 'int32_t', 'long' :'int64_t', 'float' : 'float', 'double' : 'double', 
@@ -53,23 +53,23 @@ def doSymbolic(args):
     addForwardDeclare(args[1])
     return (args[1], args[1])
 
-def addOffset(name, type, var) :
+def addLayout(name, type, var) :
     result = '        add(new $offsetType$(offset + offsetof($name$, $var$)));\n'
     result = result.replace('$name$', name)
     if typeToC.has_key(type) : 
-        offsetType = 'avro::Offset'
+        offsetType = 'avro::PrimitiveLayout'
     else :
-        offsetType = type+ '_Offsets'
+        offsetType = type+ '_Layout'
     result = result.replace('$offsetType$', offsetType)
     result = result.replace('$var$', var)
     return result;
 
-def addSimpleOffset(type) :
-    result = '        add(new $offsetType$(0));\n'
+def addSimpleLayout(type) :
+    result = '        add(new $offsetType$);\n'
     if typeToC.has_key(type) : 
-        offsetType = 'avro::Offset'
+        offsetType = 'avro::PrimitiveLayout'
     else :
-        offsetType = type+ '_Offsets'
+        offsetType = type+ '_Layout'
     return result.replace('$offsetType$', offsetType)
 
 recordfieldTemplate = '$type$ $name$\n'
@@ -93,10 +93,10 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
 $parsefields$
 }
 
-class $name$_Offsets : public avro::CompoundOffset {
+class $name$_Layout : public avro::CompoundLayout {
   public:
-    $name$_Offsets(size_t offset) :
-        CompoundOffset(offset)
+    $name$_Layout(size_t offset = 0) :
+        CompoundLayout(offset)
     {
 $offsetlist$    }
 }; 
@@ -125,7 +125,7 @@ def doRecord(args):
             serializefields += '    serialize(s, val.' + fieldname + ');\n'
             initlist += '        ' + fieldname + '(),\n'
             parsefields += '    parse(p, val.' + fieldname + ');\n'
-            offsetlist += addOffset(typename, fieldtype, fieldname)
+            offsetlist += addLayout(typename, fieldtype, fieldname)
     structDef = structDef.replace('$initializers$', initlist)
     structDef = structDef.replace('$recordfields$', fields)
     structDef = structDef.replace('$serializefields$', serializefields)
@@ -193,13 +193,13 @@ $switchparse$
     }
 }
 
-class $name$_Offsets : public avro::CompoundOffset {
+class $name$_Layout : public avro::CompoundLayout {
   public:
-    $name$_Offsets(size_t offset) :
-        CompoundOffset(offset)
+    $name$_Layout(size_t offset = 0) :
+        CompoundLayout(offset)
     {
-        add(new Offset(offset + offsetof($name$, choice)));
-        add(new Offset(offset + offsetof($name$, genericSetter)));
+        add(new avro::PrimitiveLayout(offset + offsetof($name$, choice)));
+        add(new avro::PrimitiveLayout(offset + offsetof($name$, genericSetter)));
 $offsetlist$    }
 }; 
 '''
@@ -251,7 +251,7 @@ def doUnion(args):
             setters += setter
             switch = switcher
             switches += switch.replace('$N$', str(i))
-            offsetlist += addSimpleOffset(name)
+            offsetlist += addSimpleLayout(name)
         i+= 1
     structDef = structDef.replace('$name$', typename)
     structDef = structDef.replace('$typedeflist$', uniontypes)
@@ -286,12 +286,12 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.value = static_cast<$name$::EnumSymbols>(p.readEnum());
 }
 
-class $name$_Offsets : public avro::CompoundOffset {
+class $name$_Layout : public avro::CompoundLayout {
   public:
-    $name$_Offsets(size_t offset) :
-        CompoundOffset(offset)
+    $name$_Layout(size_t offset = 0) :
+        CompoundLayout(offset)
     {
-        add(new Offset(offset + offsetof($name$, value)));
+        add(new avro::PrimitiveLayout(offset + offsetof($name$, value)));
     }
 }; 
 '''
@@ -372,12 +372,12 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     } 
 }
 
-class $name$_Offsets : public avro::CompoundOffset {
+class $name$_Layout : public avro::CompoundLayout {
   public:
-    $name$_Offsets(size_t offset) :
-        CompoundOffset(offset)
+    $name$_Layout(size_t offset = 0) :
+        CompoundLayout(offset)
     {
-        add(new Offset(offset + offsetof($name$, genericSetter)));
+        add(new avro::PrimitiveLayout(offset + offsetof($name$, genericSetter)));
 $offsetlist$    }
 }; 
 '''
@@ -386,7 +386,7 @@ def doArray(args):
     structDef = arrayTemplate
     line = getNextLine()
     arraytype, typename = processType(line)
-    offsetlist = addSimpleOffset(typename)
+    offsetlist = addSimpleLayout(typename)
     typename = 'Array_of_' + typename
 
     structDef = structDef.replace('$name$', typename)
@@ -458,12 +458,12 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     } 
 }
 
-class $name$_Offsets : public avro::CompoundOffset {
+class $name$_Layout : public avro::CompoundLayout {
   public:
-    $name$_Offsets(size_t offset) :
-        CompoundOffset(offset)
+    $name$_Layout(size_t offset = 0) :
+        CompoundLayout(offset)
     {
-        add(new Offset(offset + offsetof($name$, genericSetter)));
+        add(new avro::PrimitiveLayout(offset + offsetof($name$, genericSetter)));
 $offsetlist$    }
 }; 
 '''
@@ -474,7 +474,7 @@ def doMap(args):
     line = getNextLine()
     maptype, typename = processType(line);
 
-    offsetlist = addSimpleOffset(typename)
+    offsetlist = addSimpleLayout(typename)
     typename = 'Map_of_' + typename
 
     structDef = structDef.replace('$name$', typename)
@@ -508,12 +508,12 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     p.readFixed(val.value);
 }
 
-class $name$_Offsets : public avro::CompoundOffset {
+class $name$_Layout : public avro::CompoundLayout {
   public:
-    $name$_Offsets(size_t offset) :
-        CompoundOffset(offset)
+    $name$_Layout(size_t offset = 0) :
+        CompoundLayout(offset)
     {
-        add(new Offset(offset + offsetof($name$, value)));
+        add(new avro::PrimitiveLayout(offset + offsetof($name$, value)));
     }
 }; 
 '''
@@ -545,12 +545,12 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     p.readValue(val.value);
 }
 
-class $name$_Offsets : public avro::CompoundOffset {
+class $name$_Layout : public avro::CompoundLayout {
   public:
-    $name$_Offsets(size_t offset) :
-        CompoundOffset(offset)
+    $name$_Layout(size_t offset = 0) :
+        CompoundLayout(offset)
     {
-        add(new Offset(offset + offsetof($name$, value)));
+        add(new avro::PrimitiveLayout(offset + offsetof($name$, value)));
     }
 }; 
 '''

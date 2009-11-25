@@ -273,7 +273,7 @@ NodeArray::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(depth+1) << "\"type\": \"array\",\n";
     os << indent(depth+1) <<  "\"items\": ";
-    leafAttributes_.get()->printJson(os, depth);
+    leafAttributes_.get()->printJson(os, depth+1);
     os << '\n';
     os << indent(depth) << '}';
 }
@@ -284,7 +284,7 @@ NodeMap::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(depth+1) <<"\"type\": \"map\",\n";
     os << indent(depth+1) << "\"values\": ";
-    leafAttributes_.get(1)->printJson(os, depth);
+    leafAttributes_.get(1)->printJson(os, depth+1);
     os << '\n';
     os << indent(depth) << '}';
 }

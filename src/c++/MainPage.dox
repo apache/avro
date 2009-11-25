@@ -335,9 +335,9 @@ structure it generates, it creates a special indexing structure that
 may be used to read the data, even if the data was written with a
 different schema.</P>
 <P>In example.hh, this indexing structure looks like:</P>
-<PRE>class complex_Offsets : public avro::CompoundOffset {
+<PRE>class complex_Layout : public avro::CompoundOffset {
   public:
-    complex_Offsets(size_t offset) :
+    complex_Layout(size_t offset) :
         CompoundOffset(offset)
     {
         add(new avro::Offset(offset + offsetof(complex, real)));
@@ -353,24 +353,23 @@ be created that reads the data to the code generated structure.</P>
 <PRE>void dynamicCast(const avro::ValidSchema &amp;writerSchema, 
                  const avro::ValidSchema &amp;readerSchema) {
 
-    // Instantiate the Offsets object
-    avro::OffsetPtr offsets (new Math::complex_Offsets(0));
+    // Instantiate the Layout object
+    Math::complex_Layout layout;
 
-    // Create a dynamic parser that is aware of my type's layout, and both schemas
-    avro::DynamicParser dynamicParser = 
-         avro::buildDynamicParser(writerSchema, readerSchema, offsets);
+    // Create a schema parser that is aware of my type's layout, and both schemas
+    avro::ResolverSchema resolverSchema(writerSchema, readerSchema, layout);
 
     // Setup the reader
     std::istringstream is(data);
     avro::IStreamer istreamer(is);
-    avro::ValidatingReader r(writerSchema_, is);
+    avro::ResolvingReader reader(resolverSchema, is);
 
     Math::complex c;
     
     // Do the parse
-    dynamicParser-&gt;parse(r, reinterpret_cast&lt;uint8_t *&gt;(&amp;c));
+    avro::parse(reader, c);
 
-    // At this point, the ostringstream “os” stores the serialized data!
+    // At this point, c is populated with the deserialized data!
 }
 </PRE>
 

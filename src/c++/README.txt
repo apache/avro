@@ -23,9 +23,8 @@ The C++ port is thus far incomplete.  Currently, it contains:
    objects of the same data types, and the code to serialize and parse
    it.
 
-What's missing: Defaults are not yet supported. Resolving schema
-conflicts is not yet supported. And the file and rpc containers are
-not yet implemented. Documentation, sparse.
+What's missing: Defaults are not yet supported.  And the file and rpc
+containers are not yet implemented. Documentation, sparse.
 
 INSTRUCTIONS
 

@@ -21,6 +21,7 @@
 
 #include <boost/static_assert.hpp>
 #include "AvroTraits.hh"
+#include "ResolvingReader.hh"
 
 /// \file
 ///
@@ -37,6 +38,12 @@ void parse(Reader &p, T& val)
     parse(p, val, is_serializable<T>());
 }
 
+template <typename T>
+void parse(ResolvingReader &p, T& val)
+{
+    translatingParse(p, val, is_serializable<T>());
+}
+
 /// Type trait should be set to is_serializable in otherwise force the compiler to complain.
 
 template <typename Reader, typename T>
@@ -45,9 +52,16 @@ void parse(Reader &p, T& val, const boost::false_type &)
     BOOST_STATIC_ASSERT(sizeof(T)==0);
 }
 
-/// The remainder of the file includes default implementations for serializable types.
+template <typename Reader, typename T>
+void translatingParse(Reader &p, T& val, const boost::false_type &)
+{
+    BOOST_STATIC_ASSERT(sizeof(T)==0);
+}
 
 // @{
+
+/// The remainder of the file includes default implementations for serializable types.
+
 
 template <typename Reader, typename T>
 void parse(Reader &p, T &val, const boost::true_type &) {
@@ -57,6 +71,11 @@ void parse(Reader &p, T &val, const boost::true_type &) {
 template <typename Reader>
 void parse(Reader &p, std::vector<uint8_t> &val, const boost::true_type &) {
     p.readBytes(val);
+}
+
+template<typename T>
+void translatingParse(ResolvingReader &p, T& val, const boost::true_type &) {
+    p.parse(val);
 }
 
 // @}

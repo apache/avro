@@ -17,77 +17,67 @@
  * limitations under the License.
  */
 
-#ifndef avro_Instruction_hh__
-#define avro_Instruction_hh__
+#ifndef avro_Layout_hh__
+#define avro_Layout_hh__
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <stdint.h>
 #include "Boost.hh"
 
-/// \file Instruction.hh
+/// \file Layout.hh
 ///
 
 namespace avro {
     
-class ValidatingReader;
-class ValidSchema;
+class Layout : private boost::noncopyable {
 
-class Offset : public boost::noncopyable {
+  protected:
 
-  public:
-
-    Offset(size_t offset) :
+    Layout(size_t offset = 0) :
         offset_(offset)
     {}
 
-    virtual ~Offset() {}
+  public:
 
     size_t offset() const {
         return offset_;
     }
+
+    virtual ~Layout() {}
 
   private:
 
     const size_t offset_;
 };
 
-class CompoundOffset : public Offset {
+class PrimitiveLayout : public Layout {
 
   public:
 
-    CompoundOffset(size_t offset) :
-        Offset(offset)
+    PrimitiveLayout(size_t offset = 0) :
+        Layout(offset)
+    {}
+};
+
+class CompoundLayout : public Layout {
+
+  public:
+
+    CompoundLayout(size_t offset = 0) :
+        Layout(offset)
     {}
 
-    void add(Offset * setter) {
-        setters_.push_back(setter);
+    void add(Layout *layout) {
+        layouts_.push_back(layout);
     }
 
-    const Offset &at (size_t idx) const {
-        return setters_.at(idx);
+    const Layout &at (size_t idx) const {
+        return layouts_.at(idx);
     }
 
   private:
 
-    typedef boost::ptr_vector<Offset> Offsets;
-    Offsets setters_;
+    boost::ptr_vector<Layout> layouts_;
 };
-
-typedef boost::shared_ptr<Offset> OffsetPtr;
-
-class Instruction
-{
-
-  public:
-
-    virtual void parse(ValidatingReader &reader, uint8_t *address) const = 0;
-    virtual ~Instruction() {}
-
-};
-
-typedef boost::shared_ptr<Instruction> DynamicParser;
-DynamicParser buildDynamicParser(const ValidSchema &writer, const ValidSchema &reader, const OffsetPtr &offset);
 
 } // namespace avro
 

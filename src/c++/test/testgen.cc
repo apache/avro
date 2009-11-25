@@ -34,7 +34,8 @@
 #include "Node.hh"
 #include "ValidSchema.hh"
 #include "Compiler.hh"
-#include "Instruction.hh"
+#include "ResolvingReader.hh"
+#include "ResolverSchema.hh"
 
 std::string gWriter ("jsonschemas/bigrecord");
 std::string gReader ("jsonschemas/bigrecord2");
@@ -483,25 +484,26 @@ struct TestSchemaResolving {
         return ostring.str();
     }
 
-    void parseData(const std::string &data, avro::DynamicParser &dynamicParser)
+    void parseData(const std::string &data, avro::ResolverSchema &xSchema)
     {
         std::istringstream istring(data);
         avro::IStreamer is(istring);
-        avro::ValidatingReader r(writerSchema_, is);
+        avro::ResolvingReader r(xSchema, is);
 
-        dynamicParser->parse(r, reinterpret_cast<uint8_t *>(&readRecord_));
+        avro::parse(r, readRecord_);
     }
 
     void test()
     {
         std::cout << "Running schema resolution tests\n";
-        avro::OffsetPtr settersRootRecord ( new testgen2::RootRecord_Offsets(0));
-        avro::DynamicParser dynamicParser = buildDynamicParser(writerSchema_, readerSchema_, settersRootRecord);
+        testgen2::RootRecord_Layout layout;
+
+        avro::ResolverSchema xSchema(writerSchema_, readerSchema_, layout);
 
         printRecord(writeRecord_);
 
         std::string writtenData = serializeWriteRecordToString();
-        parseData(writtenData, dynamicParser);
+        parseData(writtenData, xSchema);
 
         printRecord(readRecord_);
 
