@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
@@ -117,21 +118,21 @@ public class TestReflect {
 
   public static class R2 {
     private String[] arrayField;
-    private List<String> listField;
+    private Collection<String> collectionField;
     
     public boolean equals(Object o) {
       if (!(o instanceof R2)) return false;
       R2 that = (R2)o;
       return Arrays.equals(this.arrayField, that.arrayField) 
-        &&  listField.equals(that.listField);
+        &&  collectionField.equals(that.collectionField);
     }
   }
 
   @Test public void testR2() throws Exception {
     R2 r2 = new R2();
     r2.arrayField = new String[] {"foo"};
-    r2.listField = new ArrayList<String>();
-    r2.listField.add("foo");
+    r2.collectionField = new ArrayList<String>();
+    r2.collectionField.add("foo");
     checkReadWrite(r2);
   }
 
@@ -149,6 +150,23 @@ public class TestReflect {
     R3 r3 = new R3();
     r3.intArray = new int[] {1};
     checkReadWrite(r3);
+  }
+
+  public static class R4 {
+    public short value;
+    
+    public boolean equals(Object o) {
+      if (!(o instanceof R4)) return false;
+      return this.value == ((R4)o).value;
+    }
+  }
+
+  public static class R5 extends R4 {}
+
+  @Test public void testR5() throws Exception {
+    R5 r5 = new R5();
+    r5.value = 1;
+    checkReadWrite(r5);
   }
 
   void checkReadWrite(Object object) throws Exception {

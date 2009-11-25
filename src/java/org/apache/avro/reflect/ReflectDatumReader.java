@@ -18,9 +18,10 @@
 package org.apache.avro.reflect;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroRuntimeException;
@@ -46,7 +47,10 @@ public class ReflectDatumReader extends SpecificDatumReader {
   @Override
   protected void addField(Object record, String name, int position, Object o) {
     try {
-      ReflectData.getField(record.getClass(), name).set(record, o);
+      Field field = ReflectData.getField(record.getClass(), name);
+      if (field.getType() == Short.TYPE)
+        o = ((Integer)o).shortValue();            // downgrade int to short
+      field.set(record, o);
     } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }
@@ -69,15 +73,15 @@ public class ReflectDatumReader extends SpecificDatumReader {
   @Override
   @SuppressWarnings(value="unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    Class listClass = ReflectData.get().getListClass(schema);
-    if (listClass != null) {
-      if (old instanceof List) {
-        ((List)old).clear();
+    Class collectionClass = ReflectData.get().getCollectionClass(schema);
+    if (collectionClass != null) {
+      if (old instanceof Collection) {
+        ((Collection)old).clear();
         return old;
       }
-      if (listClass.isAssignableFrom(ArrayList.class))
+      if (collectionClass.isAssignableFrom(ArrayList.class))
         return new ArrayList();
-      return newInstance(listClass);
+      return newInstance(collectionClass);
     }
     Class elementClass = ReflectData.get().getClass(schema.getElementType());
     return Array.newInstance(elementClass, size);
@@ -91,8 +95,8 @@ public class ReflectDatumReader extends SpecificDatumReader {
   @Override
   @SuppressWarnings(value="unchecked")
   protected void addToArray(Object array, long pos, Object e) {
-    if (array instanceof List) {
-      ((List)array).add(e);
+    if (array instanceof Collection) {
+      ((Collection)array).add(e);
     } else {
       Array.set(array, (int)pos, e);
     }

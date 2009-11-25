@@ -20,7 +20,7 @@ package org.apache.avro.reflect;
 import java.lang.reflect.Array;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -60,7 +60,10 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
   @Override
   protected Object getField(Object record, String name, int position) {
     try {
-      return ReflectData.getField(record.getClass(), name).get(record);
+      Object value = ReflectData.getField(record.getClass(), name).get(record);
+      if (value instanceof Short)
+        return ((Short)value).intValue();         // upgrade short to int
+      return value;
     } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }
@@ -69,8 +72,8 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
   @Override
   @SuppressWarnings("unchecked")
   protected long getArraySize(Object array) {
-    if (array instanceof List)
-      return ((List)array).size();
+    if (array instanceof Collection)
+      return ((Collection)array).size();
     return Array.getLength(array);
         
   }
@@ -78,8 +81,8 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
   @Override
   @SuppressWarnings("unchecked")
   protected Iterator<Object> getArrayElements(final Object array) {
-    if (array instanceof List)
-      return ((List<Object>)array).iterator();
+    if (array instanceof Collection)
+      return ((Collection<Object>)array).iterator();
     return new Iterator<Object>() {
       private int i = 0;
       private final int length = Array.getLength(array);

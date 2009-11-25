@@ -111,7 +111,8 @@ public abstract class Responder {
       // create response using local protocol specification
       m = getLocal().getMessages().get(messageName);
       if (m == null)
-        throw new AvroRuntimeException("No such local message: "+messageName);
+        throw new AvroRuntimeException("No message named "+messageName
+                                       +" in "+getLocal());
       Object response = null;
       try {
         response = respond(m, request);

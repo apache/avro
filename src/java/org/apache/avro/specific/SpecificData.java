@@ -145,7 +145,8 @@ public class SpecificData extends GenericData {
       return Schema.create(Type.STRING);
     else if (type == ByteBuffer.class)
       return Schema.create(Type.BYTES);
-    else if ((type == Integer.class) || (type == Integer.TYPE))
+    else if ((type == Integer.class) || (type == Integer.TYPE)
+             || (type == Short.TYPE))
       return Schema.create(Type.INT);
     else if ((type == Long.class) || (type == Long.TYPE))
       return Schema.create(Type.LONG);

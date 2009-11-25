@@ -15,6 +15,11 @@ Trunk (unreleased changes)
     for string and array.  Instead now Java strings and arrays or
     Lists are used. (cutting)
 
+    AVRO-237.  Reflect API now represents any Java Collection as an
+    Avro array.  Also inherited fields are included in records, and
+    inherited methods in protocols.  Finally, Java shorts are
+    supported as integers.  (cutting)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

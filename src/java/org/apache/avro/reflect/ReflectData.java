@@ -23,10 +23,12 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.GenericArrayType;
+import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -46,13 +48,11 @@ import com.thoughtworks.paranamer.Paranamer;
 
 /** Utilities to use existing Java classes and interfaces via reflection.
  *
- * <p><b>Records</b> When creating a record schema, only fields of the direct
- * class, not it's super classes, are used.  Fields are not permitted to be
- * null.  {@link Class#getDeclaredFields() declared fields} (not inherited)
- * which are not static or transient are used.
+ * <p><b>Records</b>Fields are not permitted to be null.  Fields which are not
+ * static or transient are used.
  *
- * <p><b>Arrays</b>Both Java arrays and implementations of {@link List} are
- * mapped to Avro arrays.
+ * <p><b>Arrays</b>Both Java arrays and implementations of {@link Collection}
+ * are mapped to Avro arrays.
  *
  * <p><b>{@link String}</b> is mapped to Avro string.
  * <p><b>byte[]</b> is mapped to Avro bytes.
@@ -92,7 +92,7 @@ public class ReflectData extends SpecificData {
 
   @Override
   protected boolean isArray(Object datum) {
-    return datum instanceof List || datum.getClass().isArray();
+    return (datum instanceof Collection) || datum.getClass().isArray();
   }
 
   @Override
@@ -129,8 +129,8 @@ public class ReflectData extends SpecificData {
       }
       return true;
     case ARRAY:
-      if (datum instanceof List) {                // list
-        for (Object element : (List)datum)
+      if (datum instanceof Collection) {          // collection
+        for (Object element : (Collection)datum)
           if (!validate(schema.getElementType(), element))
             return false;
         return true;
@@ -148,28 +148,49 @@ public class ReflectData extends SpecificData {
     }
   }
 
-  static Field getField(Class c, String name) {
-    try {
-      Field f = c.getDeclaredField(name);
-      f.setAccessible(true);
-      return f;
-    } catch (NoSuchFieldException e) {
-      throw new AvroRuntimeException(e);
+  private static final Map<Class,Map<String,Field>> FIELD_CACHE =
+    new ConcurrentHashMap<Class,Map<String,Field>>();
+
+  /** Return the named field of the provided class.  Implementation caches
+   * values, since this is used at runtime to get and set fields. */
+  protected static Field getField(Class c, String name) {
+    Map<String,Field> fields = FIELD_CACHE.get(c);
+    if (fields == null) {
+      fields = new ConcurrentHashMap<String,Field>();
+      FIELD_CACHE.put(c, fields);
     }
+    Field f = fields.get(name);
+    if (f == null) {
+      f = findField(c, name);
+      fields.put(name, f);
+    }
+    return f;
+  }
+
+  private static Field findField(Class c, String name) {
+    do {
+      try {
+        Field f = c.getDeclaredField(name);
+        f.setAccessible(true);
+        return f;
+      } catch (NoSuchFieldException e) {}
+      c = c.getSuperclass();
+    } while (c != null);
+    throw new AvroRuntimeException("No field named "+name+" in: "+c);
   }
 
   // Indicates the Java representation for an array schema.  If an entry is
-  // present, it contains the Java List class of this array.  If no entry is
-  // present, then a Java array should be used to implement this array.
-  private static final Map<Schema,Class> LIST_CLASSES =
+  // present, it contains the Java Collection class of this array.  If no entry
+  // is present, then a Java array should be used to implement this array.
+  private static final Map<Schema,Class> COLLECTION_CLASSES =
     new WeakIdentityHashMap<Schema,Class>();
-  private static synchronized void setListClass(Schema schema, Class c) {
-    LIST_CLASSES.put(schema, c);
+  private static synchronized void setCollectionClass(Schema schema, Class c) {
+    COLLECTION_CLASSES.put(schema, c);
   }
 
-  /** Return the {@link List} subclass that implements this schema.*/
-  public static synchronized Class getListClass(Schema schema) {
-    return LIST_CLASSES.get(schema);
+  /** Return the {@link Collection} subclass that implements this schema.*/
+  public static synchronized Class getCollectionClass(Schema schema) {
+    return COLLECTION_CLASSES.get(schema);
   }
 
   private static final Class BYTES_CLASS = new byte[0].getClass();
@@ -178,9 +199,9 @@ public class ReflectData extends SpecificData {
   public Class getClass(Schema schema) {
     switch (schema.getType()) {
     case ARRAY:
-      Class listClass = getListClass(schema);
-      if (listClass != null)
-        return listClass;
+      Class collectionClass = getCollectionClass(schema);
+      if (collectionClass != null)
+        return collectionClass;
       return java.lang.reflect.Array.newInstance(getClass(schema.getElementType()),0).getClass();
     case STRING:  return String.class;
     case BYTES:   return BYTES_CLASS;
@@ -201,20 +222,19 @@ public class ReflectData extends SpecificData {
       ParameterizedType ptype = (ParameterizedType)type;
       Class raw = (Class)ptype.getRawType();
       Type[] params = ptype.getActualTypeArguments();
-      for (int i = 0; i < params.length; i++)
-        if (List.class.isAssignableFrom(raw)) {              // List
-          if (params.length != 1)
-            throw new AvroTypeException("No array type specified.");
-          Schema schema = Schema.createArray(createSchema(params[0], names));
-          setListClass(schema, raw);
-          return schema;
-        } else if (Map.class.isAssignableFrom(raw)) {        // Map
-          Type key = params[0];
-          Type value = params[1];
-          if (!(key == String.class))
-            throw new AvroTypeException("Map key class not String: "+key);
-          return Schema.createMap(createSchema(value, names));
-        }
+      if (Map.class.isAssignableFrom(raw)) {                 // Map
+        Type key = params[0];
+        Type value = params[1];
+        if (!(key == String.class))
+          throw new AvroTypeException("Map key class not String: "+key);
+        return Schema.createMap(createSchema(value, names));
+      } else if (Collection.class.isAssignableFrom(raw)) {   // Collection
+        if (params.length != 1)
+          throw new AvroTypeException("No array type specified.");
+        Schema schema = Schema.createArray(createSchema(params[0], names));
+        setCollectionClass(schema, raw);
+        return schema;
+      }
     } else if (type instanceof Class) {                      // Class
       Class c = (Class)type;
       if (c.isPrimitive() || Number.class.isAssignableFrom(c)
@@ -250,7 +270,7 @@ public class ReflectData extends SpecificData {
           schema = Schema.createRecord(name, space,
                                        Throwable.class.isAssignableFrom(c));
           names.put(c.getName(), schema);
-          for (Field field : c.getDeclaredFields())
+          for (Field field : getFields(c))
             if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0){
               Schema fieldSchema = createFieldSchema(field, names);
               fields.put(field.getName(), new Schema.Field(fieldSchema, null));
@@ -262,6 +282,23 @@ public class ReflectData extends SpecificData {
       return schema;
     }
     return super.createSchema(type, names);
+  }
+
+  // Return of this class and its superclasses to serialize.
+  // Not cached, since this is only used to create schemas, which are cached.
+  private Collection<Field> getFields(Class recordClass) {
+    Map<String,Field> fields = new LinkedHashMap<String,Field>();
+    Class c = recordClass;
+    do {
+      if (c.getPackage().getName().startsWith("java."))
+        break;                                    // skip java built-in classes
+      for (Field field : c.getDeclaredFields())
+        if ((field.getModifiers() & (Modifier.TRANSIENT|Modifier.STATIC)) == 0)
+          if (fields.put(field.getName(), field) != null)
+            throw new AvroTypeException(c+" contains two fields named: "+field);
+      c = c.getSuperclass();
+    } while (c != null);
+    return fields.values();
   }
 
   /** Create a schema for a field. */
@@ -279,7 +316,7 @@ public class ReflectData extends SpecificData {
     Protocol protocol =
       new Protocol(iface.getSimpleName(), iface.getPackage().getName()); 
     Map<String,Schema> names = new LinkedHashMap<String,Schema>();
-    for (Method method : iface.getDeclaredMethods())
+    for (Method method : iface.getMethods())
       if ((method.getModifiers() & Modifier.STATIC) == 0)
         protocol.getMessages().put(method.getName(),
                                    getMessage(method, protocol, names));
@@ -302,7 +339,7 @@ public class ReflectData extends SpecificData {
     String[] paramNames = paranamer.lookupParameterNames(method);
     Type[] paramTypes = method.getGenericParameterTypes();
     for (int i = 0; i < paramTypes.length; i++) {
-      Schema paramSchema = createSchema(paramTypes[i], names);
+      Schema paramSchema = getSchema(paramTypes[i], names);
       String paramName =  paramNames.length == paramTypes.length
         ? paramNames[i]
         : paramSchema.getName()+i;
@@ -310,16 +347,25 @@ public class ReflectData extends SpecificData {
     }
     Schema request = Schema.createRecord(fields);
 
-    Schema response = createSchema(method.getGenericReturnType(), names);
+    Schema response = getSchema(method.getGenericReturnType(), names);
 
     List<Schema> errs = new ArrayList<Schema>();
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw
     for (Type err : method.getGenericExceptionTypes())
       if (err != AvroRemoteException.class) 
-        errs.add(createSchema(err, names));
+        errs.add(getSchema(err, names));
     Schema errors = Schema.createUnion(errs);
 
     return protocol.createMessage(method.getName(), request, response, errors);
+  }
+
+  private Schema getSchema(Type type, Map<String,Schema> names) {
+    try {
+      return createSchema(type, names);
+    } catch (AvroTypeException e) {               // friendly exception
+      throw new AvroTypeException("Error getting schema for "+type+": "
+                                  +e.getMessage(), e);
+    }
   }
 
   @Override
