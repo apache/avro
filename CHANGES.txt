@@ -112,6 +112,9 @@ Trunk (unreleased changes)
 
     AVRO-234. C++ code cleanup. (sbanacho)
     
+    AVRO-240. In Python, if simplejson is not available, try using
+    2.6's built-in json module. (Jeff Hammerbacher via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

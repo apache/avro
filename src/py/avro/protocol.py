@@ -14,9 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cStringIO, md5
-import simplejson
-import avro.schema as schema
+import cStringIO
+import md5
+# Use simplejson or Python 2.6 json, prefer simplejson.
+try:
+  import simplejson as json
+except ImportError:
+  import json
+
+from avro import schema
 
 #The version implemented.
 VERSION = 1
@@ -184,5 +190,5 @@ class Protocol(object):
 def parse(json_string):
   """Constructs the Protocol from the json text."""
   protocol = Protocol()
-  protocol._parse(simplejson.loads(json_string))
+  protocol._parse(json.loads(json_string))
   return protocol

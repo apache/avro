@@ -35,7 +35,13 @@ A schema may be one of:
 """
 
 import cStringIO
-import simplejson, odict
+# Use simplejson or Python 2.6 json, prefer simplejson.
+try:
+  import simplejson as json
+except ImportError:
+  import json
+
+import odict
 
 # The schema types
 STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL, \
@@ -521,5 +527,5 @@ def stringval(schm):
 
 def parse(json_string):
   """Constructs the Schema from the json text."""
-  dict = simplejson.loads(json_string)
+  dict = json.loads(json_string)
   return _parse(dict, _Names())
