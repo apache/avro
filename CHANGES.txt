@@ -172,6 +172,7 @@ Trunk (unreleased changes)
 
     AVRO-232. Fix C++ build in cygwin. (sbanacho)
 
+    AVRO-238. Fix so that slf4j-simple is only required by tests.  (cutting)
 
 Avro 1.2.0 (14 October 2009)
 
