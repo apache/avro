@@ -20,6 +20,7 @@ package org.apache.avro;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
@@ -191,6 +192,13 @@ public class TestSchema {
     checkJson(union, "X", "{\"Baz\":\"X\"}");
   }
 
+  @Test
+  public void testComplexProp() throws Exception {
+    String json = "{\"type\":\"null\", \"foo\": [0]}";
+    Schema s = Schema.parse(json);
+    assertEquals(null, s.getProp("foo"));
+  }
+
   private static void checkParseError(String json) {
     try {
       Schema schema = Schema.parse(json);
@@ -214,9 +222,8 @@ public class TestSchema {
   private static void check(String jsonSchema, boolean induce)
     throws Exception {
     Schema schema = Schema.parse(jsonSchema);
-    //System.out.println(schema);
+    checkProp(schema);
     for (Object datum : new RandomData(schema, COUNT)) {
-      //System.out.println(GenericData.get().toString(datum));
 
       if (induce) {
         Schema induced = GenericData.get().induce(datum);
@@ -237,6 +244,19 @@ public class TestSchema {
       // schema we see.
       assertTrue(null != TestSpecificCompiler.compileWithSpecificCompiler(schema));
     }
+  }
+
+  private static void checkProp(Schema s0) throws Exception {
+    if(s0.getType().equals(Schema.Type.UNION)) return; // unions have no props
+    assertEquals(null, s0.getProp("foo"));
+    Schema s1 = Schema.parse(s0.toString());
+    s1.setProp("foo", "bar");
+    assertEquals("bar", s1.getProp("foo"));
+    assertFalse(s0.equals(s1));
+    Schema s2 = Schema.parse(s1.toString());
+    assertEquals("bar", s2.getProp("foo"));
+    assertEquals(s1, s2);
+    assertFalse(s0.equals(s2));
   }
 
   private static void checkBinary(Schema schema, Object datum,

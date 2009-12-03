@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,22 +76,45 @@ public abstract class Schema {
   };
 
   private final Type type;
+  Map<String,String> props = new HashMap<String,String>(1);
 
   Schema(Type type) { this.type = type; }
 
   /** Create a schema for a primitive type. */
   public static Schema create(Type type) {
     switch (type) {
-    case STRING:  return STRING_SCHEMA;
-    case BYTES:   return BYTES_SCHEMA;
-    case INT:     return INT_SCHEMA ;
-    case LONG:    return LONG_SCHEMA ;
-    case FLOAT:   return FLOAT_SCHEMA;
-    case DOUBLE:  return DOUBLE_SCHEMA;
-    case BOOLEAN: return BOOLEAN_SCHEMA;
-    case NULL:    return NULL_SCHEMA;
+    case STRING:  return new StringSchema();
+    case BYTES:   return new BytesSchema();
+    case INT:     return new IntSchema();
+    case LONG:    return new LongSchema();
+    case FLOAT:   return new FloatSchema();
+    case DOUBLE:  return new DoubleSchema();
+    case BOOLEAN: return new BooleanSchema();
+    case NULL:    return new NullSchema();
     default: throw new AvroRuntimeException("Can't create a: "+type);
     }
+  }
+
+  private static final Set<String> RESERVED_PROPS = new HashSet<String>();
+  static {
+    Collections.addAll(RESERVED_PROPS,
+                       "fields", "items", "name", "namespace",
+                       "size", "symbols", "values", "type");
+  }
+
+  /** Return the value of the named property in this schema. */
+  public synchronized String getProp(String name) {
+    return props.get(name);
+  }
+
+  /** Set the value of the named property in this schema. */
+  public synchronized void setProp(String name, String value) {
+    if (RESERVED_PROPS.contains(name))
+      throw new AvroRuntimeException("Can't set a reserved property: "+name);
+    if (value == null)
+      props.remove(name);
+    else
+      props.put(name, value);
   }
 
   /** Create an anonymous record schema. */
@@ -220,19 +245,33 @@ public abstract class Schema {
   }
 
   void toJson(Names names, JsonGenerator gen) throws IOException {
-    gen.writeString(getName());
+    if (props.size() == 0) {                      // no props defined
+      gen.writeString(getName());                 // just write name
+    } else {
+      gen.writeStartObject();
+      gen.writeStringField("type", getName());
+      writeProps(gen);
+      gen.writeEndObject();
+    }
+  }
+
+  void writeProps(JsonGenerator gen) throws IOException {
+    for (Map.Entry<String,String> e : props.entrySet())
+      gen.writeStringField(e.getKey(), e.getValue());
   }
 
   void fieldsToJson(Names names, JsonGenerator gen) throws IOException {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
-
   public boolean equals(Object o) {
     if (o == this) return true;
-    return o instanceof Schema && type.equals(((Schema)o).type);
+    if (!(o instanceof Schema)) return false;
+    Schema that = (Schema)o;
+    if (!(this.type == that.type)) return false;
+    return props.equals(that.props);
   }
-  public int hashCode() { return getType().hashCode(); }
+  public int hashCode() { return getType().hashCode() + props.hashCode(); }
 
   /** A field within a record. */
   public static class Field {
@@ -344,7 +383,9 @@ public abstract class Schema {
     public boolean equalNames(NamedSchema that) {
       return this.name.equals(that.name);
     }
-    public int hashCode() { return getType().hashCode() + name.hashCode(); }
+    public int hashCode() {
+      return getType().hashCode() + name.hashCode() + props.hashCode();
+    }
   }
 
   private static class SeenPair {
@@ -399,7 +440,7 @@ public abstract class Schema {
       if (!(o instanceof RecordSchema)) return false;
       RecordSchema that = (RecordSchema)o;
       if (!equalNames(that)) return false;
-      if (!(o instanceof RecordSchema)) return false;
+      if (!props.equals(that.props)) return false;
       Set seen = SEEN_EQUALS.get();
       SeenPair here = new SeenPair(this, o);
       if (seen.contains(here)) return true;       // prevent stack overflow
@@ -427,6 +468,7 @@ public abstract class Schema {
       writeName(names, gen);
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
+      writeProps(gen);
       gen.writeEndObject();
     }
 
@@ -466,7 +508,9 @@ public abstract class Schema {
       if (o == this) return true;
       if (!(o instanceof EnumSchema)) return false;
       EnumSchema that = (EnumSchema)o;
-      return equalNames(that) && symbols.equals(that.symbols);
+      return equalNames(that)
+        && symbols.equals(that.symbols)
+        && props.equals(that.props);
     }
     public int hashCode() { return super.hashCode() + symbols.hashCode(); }
     void toJson(Names names, JsonGenerator gen) throws IOException {
@@ -478,6 +522,7 @@ public abstract class Schema {
       for (String symbol : symbols)
         gen.writeString(symbol);
       gen.writeEndArray();
+      writeProps(gen);
       gen.writeEndObject();
     }
   }
@@ -491,15 +536,19 @@ public abstract class Schema {
     public Schema getElementType() { return elementType; }
     public boolean equals(Object o) {
       if (o == this) return true;
-      return o instanceof ArraySchema
-        && elementType.equals(((ArraySchema)o).elementType);
+      if (!(o instanceof ArraySchema)) return false;
+      ArraySchema that = (ArraySchema)o;
+      return elementType.equals(that.elementType) && props.equals(that.props);
     }
-    public int hashCode() {return getType().hashCode()+elementType.hashCode();}
+    public int hashCode() {
+      return getType().hashCode() + elementType.hashCode() + props.hashCode();
+    }
     void toJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartObject();
       gen.writeStringField("type", "array");
       gen.writeFieldName("items");
       elementType.toJson(names, gen);
+      writeProps(gen);
       gen.writeEndObject();
     }
   }
@@ -513,17 +562,19 @@ public abstract class Schema {
     public Schema getValueType() { return valueType; }
     public boolean equals(Object o) {
       if (o == this) return true;
-      return o instanceof MapSchema
-        && valueType.equals(((MapSchema)o).valueType);
+      if (!(o instanceof MapSchema)) return false;
+      MapSchema that = (MapSchema)o;
+      return valueType.equals(that.valueType) && props.equals(that.props);
     }
     public int hashCode() {
-      return getType().hashCode()+valueType.hashCode();
+      return getType().hashCode() + valueType.hashCode() + props.hashCode();
     }
     void toJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartObject();
       gen.writeStringField("type", "map");
       gen.writeFieldName("values");
       valueType.toJson(names, gen);
+      writeProps(gen);
       gen.writeEndObject();
     }
   }
@@ -552,9 +603,16 @@ public abstract class Schema {
     public List<Schema> getTypes() { return types; }
     public boolean equals(Object o) {
       if (o == this) return true;
-      return o instanceof UnionSchema && types.equals(((UnionSchema)o).types);
+      if (!(o instanceof UnionSchema)) return false;
+      UnionSchema that = (UnionSchema)o;
+      return types.equals(that.types) && props.equals(that.props);
     }
-    public int hashCode() {return getType().hashCode()+types.hashCode();}
+    public int hashCode() {
+      return getType().hashCode() + types.hashCode() + props.hashCode();
+    }
+    public void setProp(String name, String value) {
+      throw new AvroRuntimeException("Can't set properties on a union: "+this);
+    }
     void toJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartArray();
       for (Schema type : types)
@@ -576,7 +634,7 @@ public abstract class Schema {
       if (o == this) return true;
       if (!(o instanceof FixedSchema)) return false;
       FixedSchema that = (FixedSchema)o;
-      return equalNames(that) && size == that.size;
+      return equalNames(that) && size == that.size && props.equals(that.props);
     }
     public int hashCode() { return super.hashCode() + size; }
     void toJson(Names names, JsonGenerator gen) throws IOException {
@@ -585,6 +643,7 @@ public abstract class Schema {
       gen.writeStringField("type", "fixed");
       writeName(names, gen);
       gen.writeNumberField("size", size);
+      writeProps(gen);
       gen.writeEndObject();
     }
   }
@@ -620,15 +679,6 @@ public abstract class Schema {
   private static class NullSchema extends Schema {
     public NullSchema() { super(Type.NULL); }
   }
-  
-  private static final StringSchema  STRING_SCHEMA =  new StringSchema();
-  private static final BytesSchema   BYTES_SCHEMA =   new BytesSchema();
-  private static final IntSchema     INT_SCHEMA =     new IntSchema();
-  private static final LongSchema    LONG_SCHEMA =    new LongSchema();
-  private static final FloatSchema   FLOAT_SCHEMA =   new FloatSchema();
-  private static final DoubleSchema  DOUBLE_SCHEMA =  new DoubleSchema();
-  private static final BooleanSchema BOOLEAN_SCHEMA = new BooleanSchema();
-  private static final NullSchema    NULL_SCHEMA =    new NullSchema();
 
   public static Schema parse(File file) throws IOException {
     JsonParser parser = FACTORY.createJsonParser(file);
@@ -644,16 +694,16 @@ public abstract class Schema {
     return parse(parseJson(jsonSchema), new Names());
   }
 
-  static final Map<String,Schema> PRIMITIVES = new HashMap<String,Schema>();
+  static final Map<String,Type> PRIMITIVES = new HashMap<String,Type>();
   static {
-    PRIMITIVES.put("string",  STRING_SCHEMA);
-    PRIMITIVES.put("bytes",   BYTES_SCHEMA);
-    PRIMITIVES.put("int",     INT_SCHEMA);
-    PRIMITIVES.put("long",    LONG_SCHEMA);
-    PRIMITIVES.put("float",   FLOAT_SCHEMA);
-    PRIMITIVES.put("double",  DOUBLE_SCHEMA);
-    PRIMITIVES.put("boolean", BOOLEAN_SCHEMA);
-    PRIMITIVES.put("null",    NULL_SCHEMA);
+    PRIMITIVES.put("string",  Type.STRING);
+    PRIMITIVES.put("bytes",   Type.BYTES);
+    PRIMITIVES.put("int",     Type.INT);
+    PRIMITIVES.put("long",    Type.LONG);
+    PRIMITIVES.put("float",   Type.FLOAT);
+    PRIMITIVES.put("double",  Type.DOUBLE);
+    PRIMITIVES.put("boolean", Type.BOOLEAN);
+    PRIMITIVES.put("null",    Type.NULL);
   }
 
   static class Names extends LinkedHashMap<Name, Schema> {
@@ -669,8 +719,8 @@ public abstract class Schema {
     public Schema get(Object o) {
       Name name;
       if (o instanceof String) {
-        Schema primitive = PRIMITIVES.get((String)o);
-        if (primitive != null) return primitive;
+        Type primitive = PRIMITIVES.get((String)o);
+        if (primitive != null) return Schema.create(primitive);
         name = new Name((String)o, space);
       } else {
         name = (Name)o;
@@ -699,6 +749,7 @@ public abstract class Schema {
         throw new SchemaParseException("Undefined name: "+schema);
       return result;
     } else if (schema.isObject()) {
+      Schema result;
       String type = getRequiredText(schema, "type", "No type");
       String name = null, space = null;
       if (type.equals("record") || type.equals("error")
@@ -710,10 +761,11 @@ public abstract class Schema {
         if (names.space() == null && space != null)
           names.space(space);                     // set default namespace
       }
-      if (type.equals("record") || type.equals("error")) { // record
+      if (PRIMITIVES.containsKey(type)) {         // primitive
+        result = create(PRIMITIVES.get(type));
+      } else if (type.equals("record") || type.equals("error")) { // record
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
-        RecordSchema result =
-          new RecordSchema(name, space, type.equals("error"));
+        result = new RecordSchema(name, space, type.equals("error"));
         if (name != null) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())
@@ -734,7 +786,6 @@ public abstract class Schema {
                      new Field(fieldSchema, field.get("default"), order));
         }
         result.setFields(fields);
-        return result;
       } else if (type.equals("enum")) {           // enum
         JsonNode symbolsNode = schema.get("symbols");
         if (symbolsNode == null || !symbolsNode.isArray())
@@ -742,28 +793,33 @@ public abstract class Schema {
         List<String> symbols = new ArrayList<String>();
         for (JsonNode n : symbolsNode)
           symbols.add(n.getTextValue());
-        Schema result = new EnumSchema(name, space, symbols);
+        result = new EnumSchema(name, space, symbols);
         if (name != null) names.add(result);
-        return result;
       } else if (type.equals("array")) {          // array
         JsonNode itemsNode = schema.get("items");
         if (itemsNode == null)
           throw new SchemaParseException("Array has no items type: "+schema);
-        return new ArraySchema(parse(itemsNode, names));
+        result = new ArraySchema(parse(itemsNode, names));
       } else if (type.equals("map")) {            // map
         JsonNode valuesNode = schema.get("values");
         if (valuesNode == null)
           throw new SchemaParseException("Map has no values type: "+schema);
-        return new MapSchema(parse(valuesNode, names));
+        result = new MapSchema(parse(valuesNode, names));
       } else if (type.equals("fixed")) {          // fixed
         JsonNode sizeNode = schema.get("size");
         if (sizeNode == null || !sizeNode.isInt())
           throw new SchemaParseException("Invalid or no size: "+schema);
-        Schema result = new FixedSchema(name, space, sizeNode.getIntValue());
+        result = new FixedSchema(name, space, sizeNode.getIntValue());
         if (name != null) names.add(result);
-        return result;
       } else
-        throw new SchemaParseException("Type not yet supported: "+type);
+        throw new SchemaParseException("Type not supported: "+type);
+      Iterator<String> i = schema.getFieldNames();
+      while (i.hasNext()) {                       // add properties
+        String prop = i.next();
+        if (!RESERVED_PROPS.contains(prop))       // ignore reserved
+          result.setProp(prop, schema.get(prop).getTextValue());
+      }
+      return result;
     } else if (schema.isArray()) {                // union
       List<Schema> types = new ArrayList<Schema>(schema.size());
       for (JsonNode typeNode : schema)

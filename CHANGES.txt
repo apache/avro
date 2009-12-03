@@ -115,6 +115,9 @@ Trunk (unreleased changes)
     AVRO-240. In Python, if simplejson is not available, try using
     2.6's built-in json module. (Jeff Hammerbacher via cutting)
 
+    AVRO-242. In Java, add support for extensible string-valued
+    properties to schemas.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
