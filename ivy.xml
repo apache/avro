@@ -19,7 +19,7 @@
             xmlns:e="http://ant.apache.org/ivy/extra">
 
   <info organisation="org.apache.hadoop"
-	module="${name}" revision="${version}">
+    module="${name}" revision="${version}">
     <license name="Apache 2.0"/>
     <ivyauthor name="Apache Hadoop" url="http://hadoop.apache.org"/>
     <description>Avro</description>
@@ -28,25 +28,30 @@
   <configurations defaultconfmapping="default">
     <conf name="default"/>
     <conf name="test"/>
+    <conf name="eclipse"/>
   </configurations>
 
   <dependencies>
     <dependency org="org.codehaus.jackson" name="jackson-mapper-asl"
-		rev="1.3.0"/>
+        rev="1.3.0"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.5.8"/>
     <dependency org="org.slf4j" name="slf4j-simple" rev="1.5.8"
-		conf="test->default"/>
+        conf="test->default"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer"
-		rev="2.1"/>
+        rev="2.1"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer-ant"
-		rev="2.1"/>
+        rev="2.1"/>
     <dependency org="org.mortbay.jetty" name="jetty"
-		rev="6.1.21"/>
+        rev="6.1.21"/>
     <dependency org="junit" name="junit" rev="4.7" conf="test->default"/>
     <dependency org="checkstyle" name="checkstyle" rev="5.0"
-		conf="test->default"/>
+        conf="test->default"/>
     <dependency org="org.apache.rat" name="apache-rat" rev="0.6"
-		conf="test->default"/>
+        conf="test->default"/>
+    <dependency org="ant-eclipse" name="ant-eclipse" rev="1.0"
+        conf="eclipse->default">
+        <artifact name="ant-eclipse" type="bz2" />
+    </dependency>
   </dependencies>
 
 </ivy-module>

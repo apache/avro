@@ -177,6 +177,8 @@ Trunk (unreleased changes)
 
     AVRO-238. Fix so that slf4j-simple is only required by tests.  (cutting)
 
+    AVRO-184. Better eclipse configuration support. (thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

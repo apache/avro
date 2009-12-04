@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
@@ -97,6 +96,12 @@
   <property name="build.dir.eclipse-test-classes" value="${build.dir.eclipse}/classes-test"/>
 
   <!-- the normal classpath -->
+  <path id="libs">
+    <fileset dir="${ivy.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+  </path>
+
   <path id="java.classpath">
     <pathelement location="${build.classes}"/>
     <fileset dir="${lib.dir}">
@@ -106,7 +111,11 @@
     <fileset dir="${ant.home}/lib">
       <include name="ant.jar" />
     </fileset>
-    <fileset dir="${ivy.lib}">
+    <path refid="libs" />
+  </path>
+
+  <path id="test.libs">
+    <fileset dir="${ivy.test.lib}">
       <include name="**/*.jar" />
     </fileset>
   </path>
@@ -114,10 +123,8 @@
   <path id="test.java.classpath">
     <pathelement location="${test.java.classes}" />
     <pathelement location="${test.java.generated.classes}" />
-    <fileset dir="${ivy.test.lib}">
-      <include name="**/*.jar" />
-    </fileset>
     <path refid="java.classpath"/>
+    <path refid="test.libs"/>
   </path>
 
   <target name="init">
@@ -753,33 +760,43 @@
   <!-- End C++ Targets -->
 
   <!-- Begin Eclipse targets -->
-  <condition property="ant-eclipse.jar.exists">
-    <available file="${lib.dir}/ant-eclipse-1.0-jvm1.2.jar"/>
-  </condition>
+  <property name="ant-eclipse.dir" value="${build.dir}/ant-eclipse"/>
+  <property name="ant-eclipse.lib.dir" value="${ant-eclipse.dir}/lib"/>
 
-  <target name="ant-eclipse-download" unless="ant-eclipse.jar.exists"
-          description="Downloads the ant-eclipse binary.">
-    <get src="http://downloads.sourceforge.net/project/ant-eclipse/ant-eclipse/1.0/ant-eclipse-1.0.bin.tar.bz2"
-         dest="${build.dir}/ant-eclipse-1.0.bin.tar.bz2" usetimestamp="false" />
+  <available file="${ant-eclipse.lib.dir}/ant-eclipse-1.0-jvm1.2.jar"
+        property="ant-eclipse.jar.exists"/>
 
-    <untar src="${build.dir}/ant-eclipse-1.0.bin.tar.bz2"
-           dest="${build.dir}" compression="bzip2">
+  <path id="ant-eclipse.classpath">
+    <fileset dir="${ant-eclipse.lib.dir}">
+      <include name="**/*.jar" />
+    </fileset>
+  </path>
+
+  <target name="ant-eclipse-retrieve" unless="ant-eclipse.jar.exists"
+          depends="ivy-init"
+          description="Retrieves the ant-eclipse binary.">
+    <mkdir dir="${ant-eclipse.lib.dir}"/>
+    <ivy:settings id="ivy.ant-eclipse.settings"
+        file="${basedir}/ivysettings-ant-eclipse.xml" />
+    <ivy:retrieve conf="eclipse"
+        settingsRef="ivy.ant-eclipse.settings"
+		pattern="${build.dir}/[module]-[revision].[ext]"/>
+
+    <untar src="${build.dir}/ant-eclipse-1.0.bz2"
+           dest="${ant-eclipse.dir}" compression="bzip2">
       <patternset>
         <include name="lib/ant-eclipse-1.0-jvm1.2.jar"/>
       </patternset>
     </untar>
-    <delete file="${src.dir}/java/ant-eclipse-1.0.bin.tar.bz2" />
+    <delete file="${build.dir}/ant-eclipse-1.0.bz2" />
   </target>
 
   <target name="eclipse" 
-          depends="compile-test-java,ant-eclipse-download"
+          depends="compile-test-java,ant-eclipse-retrieve"
           description="Create eclipse project files">
-    <ivy:resolve useOrigin="true" conf="test"/>
-    <ivy:cachepath pathid="default.path.id" conf="default" />
-    <ivy:cachepath pathid="junit.path.id" conf="test" transitive="false"/>
     <taskdef name="eclipse"
              classname="prantl.ant.eclipse.EclipseTask"
-             classpathref="java.classpath" />
+             classpathref="ant-eclipse.classpath" />
     <eclipse updatealways="true">
       <project name="${ant.project.name}" />
       <classpath>
@@ -795,8 +812,8 @@
         <!-- Tests require that the generated code has paranamer applied to it,
              so we use the ant build for that. -->
         <library path="${test.java.generated.classes}" source="${test.java.generated.dir}"/>
-        <library pathref="default.path.id" exported="true" />
-        <library pathref="junit.path.id" exported="false" />
+        <library pathref="libs" exported="true" />
+        <library pathref="test.libs" exported="false" />
        </classpath>
     </eclipse>
   </target>
@@ -806,6 +823,7 @@
     <delete file=".eclipse" />
     <delete file=".project" />
     <delete dir=".settings" />
+    <delete dir="${ant-eclipse.lib.dir}" />
     <delete dir="${build.dir.eclipse}" />
   </target>
   <!-- End Eclipse targets -->
