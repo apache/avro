@@ -36,11 +36,13 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
+import org.apache.avro.reflect.Union;
 
 import org.junit.Test;
 
 public class TestReflect {
 
+  // test primitive type inference
   @Test public void testVoid() {
     check(Void.TYPE, "\"null\"");
     check(Void.class, "\"null\"");
@@ -79,6 +81,7 @@ public class TestReflect {
     check(new byte[0], "\"bytes\"");
   }
 
+  // test map, array and list type inference
   public static class R1 {
     private Map<String,String> mapField = new HashMap<String,String>();
     private String[] arrayField = new String[] { "foo" };
@@ -109,13 +112,15 @@ public class TestReflect {
   }
   @Test public void testList() throws Exception {
     check(R1.class.getDeclaredField("listField").getGenericType(),
-          "{\"type\":\"array\",\"items\":\"string\"}");
+          "{\"type\":\"array\",\"items\":\"string\""
+          +",\"java-class\":\"java.util.List\"}");
   }
 
   @Test public void testR1() throws Exception {
     checkReadWrite(new R1());
   }
 
+  // test record, array and list i/o
   public static class R2 {
     private String[] arrayField;
     private Collection<String> collectionField;
@@ -136,6 +141,7 @@ public class TestReflect {
     checkReadWrite(r2);
   }
 
+  // test array i/o of unboxed type
   public static class R3 {
     private int[] intArray;
     
@@ -152,6 +158,7 @@ public class TestReflect {
     checkReadWrite(r3);
   }
 
+  // test inherited fields & short datatype
   public static class R4 {
     public short value;
     
@@ -169,8 +176,50 @@ public class TestReflect {
     checkReadWrite(r5);
   }
 
+  // test union annotation
+  @Union({R7.class, R8.class})
+  public static class R6 {}
+
+  public static class R7 extends R6 {
+    public int value;
+    public boolean equals(Object o) {
+      if (!(o instanceof R7)) return false;
+      return this.value == ((R7)o).value;
+    }
+  }
+  public static class R8 extends R6 {
+    public float value;
+    public boolean equals(Object o) {
+      if (!(o instanceof R8)) return false;
+      return this.value == ((R8)o).value;
+    }
+  }
+
+  // test arrays with union annotation
+  public static class R9  {
+    public R6[] r6s;
+    public boolean equals(Object o) {
+      if (!(o instanceof R9)) return false;
+      return Arrays.equals(this.r6s, ((R9)o).r6s);
+    }
+  }
+
+  @Test public void testR6() throws Exception {
+    R7 r7 = new R7();
+    r7.value = 1;
+    checkReadWrite(r7, ReflectData.get().getSchema(R6.class));
+    R8 r8 = new R8();
+    r8.value = 1;
+    checkReadWrite(r8, ReflectData.get().getSchema(R6.class));
+    R9 r9 = new R9();
+    r9.r6s = new R6[] {r7, r8};
+    checkReadWrite(r9, ReflectData.get().getSchema(R9.class));
+  }
+
   void checkReadWrite(Object object) throws Exception {
-    Schema s = ReflectData.get().getSchema(object.getClass());
+    checkReadWrite(object, ReflectData.get().getSchema(object.getClass()));
+  }
+  void checkReadWrite(Object object, Schema s) throws Exception {
     ReflectDatumWriter writer = new ReflectDatumWriter(s);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.write(object, new BinaryEncoder(out));

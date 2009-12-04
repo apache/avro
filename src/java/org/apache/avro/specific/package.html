@@ -18,6 +18,23 @@
 -->
 
 <body>
-Generate specific Java classes for schemas and protocols</i>.
+Generate specific Java classes for schemas and protocols.
+
+<p>This API is recommended for most RPC uses and for data applications
+  that always use the same datatypes, i.e., whose schemas are known at
+  compile time.  For data applications that accept dynamic datatypes
+  the {@link org.apache.avro.generic generic} API is recommended.
+
+<p>Avro types are mapped to Java as follows:
+
+<ul>
+
+<li>Record, enum, and fixed schemas generate Java class definitions.</li>
+
+<li>All other types are mapped as in the {@link org.apache.avro.generic
+  generic} API.</li>
+
+</ul>
+
 </body>
 </html>

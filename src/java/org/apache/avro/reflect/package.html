@@ -18,6 +18,53 @@
 -->
 
 <body>
-Use Java reflection to generate schemas and protocols for existing classes.
+Use Java reflection to generate schemas and protocols for existing
+classes.
+
+<p>This API is not recommended except as a stepping stone for
+systems that currently uses Java interfaces to define RPC protocols.
+For new RPC systems, the {@link org.apache.avro.specific specific} API
+is preferred.  For systems that process dynamic data, the {@link
+org.apache.avro.generic generic} API is probably best.
+
+<p>Java types are mapped to Avro schemas as follows:
+
+<ul>
+
+<li><b>Classes</b> are mapped to Avro records. Only concrete classes
+  with a no-argument constructor are supported.  Fields are not
+  permitted to be null.  All inherited fields that are not static or
+  transient are used.</li>
+
+<li><b>Arrays</b> are mapped to Avro array schemas.  If an array's
+  elements are a union defined by the {@link
+  org.apache.avro.reflect.Union Union} annotation, the "java-element"
+  property is set to the union's class, e.g.:
+  <pre>{"type": "array", "java-element": "org.acme.Foo"}</pre>
+</li>
+
+<li><b>Collection</b> implementations are mapped to Avro array schemas
+  with the "java-class" property set to the collection
+  implementation, e.g.:
+  <pre>{"type": "array", "java-class": "java.util.ArrayList"}</pre>
+</li>
+
+<li><b>{@link java.lang.String}</b> is mapped to an Avro string schema.</li>
+
+<li><b>byte[]</b> is mapped to an Avro bytes schema.</li>
+
+<li><b>short</b> is mapped to an Avro int schema with the "java-class"
+  property set to "java.lang.Short", e.g.:
+  <pre>{"type": "int", "java-class": "java.lang.Short"}</pre>
+
+<li>All other types are mapped as in the {@link org.apache.avro.generic
+  generic} API.</li>
+
+</ul>
+
+The {@link org.apache.avro.reflect.Union Union} annotation can be used
+to support reflection of schemas for interfaces, abstract base classes
+and other uses of polymorphism.
+
 </body>
 </html>

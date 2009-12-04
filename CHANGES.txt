@@ -118,6 +118,8 @@ Trunk (unreleased changes)
     AVRO-242. In Java, add support for extensible string-valued
     properties to schemas.  (cutting)
 
+    AVRO-241. In Java, add a union annotation for reflection. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

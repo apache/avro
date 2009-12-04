@@ -73,7 +73,8 @@ public class ReflectDatumReader extends SpecificDatumReader {
   @Override
   @SuppressWarnings(value="unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    Class collectionClass = ReflectData.get().getCollectionClass(schema);
+    ReflectData data = ReflectData.get();
+    Class collectionClass = data.getClassProp(schema, ReflectData.CLASS_PROP);
     if (collectionClass != null) {
       if (old instanceof Collection) {
         ((Collection)old).clear();
@@ -83,7 +84,9 @@ public class ReflectDatumReader extends SpecificDatumReader {
         return new ArrayList();
       return newInstance(collectionClass);
     }
-    Class elementClass = ReflectData.get().getClass(schema.getElementType());
+    Class elementClass = data.getClassProp(schema, ReflectData.ELEMENT_PROP);
+    if (elementClass == null)
+      elementClass = data.getClass(schema.getElementType());
     return Array.newInstance(elementClass, size);
   }
 

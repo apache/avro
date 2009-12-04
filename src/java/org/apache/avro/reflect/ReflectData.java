@@ -41,22 +41,11 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.ipc.AvroRemoteException;
-import org.apache.avro.util.WeakIdentityHashMap;
 
 import com.thoughtworks.paranamer.CachingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
 
-/** Utilities to use existing Java classes and interfaces via reflection.
- *
- * <p><b>Records</b>Fields are not permitted to be null.  Fields which are not
- * static or transient are used.
- *
- * <p><b>Arrays</b>Both Java arrays and implementations of {@link Collection}
- * are mapped to Avro arrays.
- *
- * <p><b>{@link String}</b> is mapped to Avro string.
- * <p><b>byte[]</b> is mapped to Avro bytes.
- */
+/** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
   
   /** {@link ReflectData} implementation that permits null field values.  The
@@ -179,18 +168,17 @@ public class ReflectData extends SpecificData {
     throw new AvroRuntimeException("No field named "+name+" in: "+c);
   }
 
-  // Indicates the Java representation for an array schema.  If an entry is
-  // present, it contains the Java Collection class of this array.  If no entry
-  // is present, then a Java array should be used to implement this array.
-  private static final Map<Schema,Class> COLLECTION_CLASSES =
-    new WeakIdentityHashMap<Schema,Class>();
-  private static synchronized void setCollectionClass(Schema schema, Class c) {
-    COLLECTION_CLASSES.put(schema, c);
-  }
+  static final String CLASS_PROP = "java-class";
+  static final String ELEMENT_PROP = "java-element-class";
 
-  /** Return the {@link Collection} subclass that implements this schema.*/
-  public static synchronized Class getCollectionClass(Schema schema) {
-    return COLLECTION_CLASSES.get(schema);
+  static Class getClassProp(Schema schema, String prop) {
+    String name = schema.getProp(prop);
+    if (name == null) return null;
+    try {
+      return Class.forName(name);
+    } catch (ClassNotFoundException e) {
+      throw new AvroRuntimeException(e);
+    }
   }
 
   private static final Class BYTES_CLASS = new byte[0].getClass();
@@ -199,7 +187,7 @@ public class ReflectData extends SpecificData {
   public Class getClass(Schema schema) {
     switch (schema.getType()) {
     case ARRAY:
-      Class collectionClass = getCollectionClass(schema);
+      Class collectionClass = getClassProp(schema, CLASS_PROP);
       if (collectionClass != null)
         return collectionClass;
       return java.lang.reflect.Array.newInstance(getClass(schema.getElementType()),0).getClass();
@@ -217,7 +205,9 @@ public class ReflectData extends SpecificData {
       Type component = ((GenericArrayType)type).getGenericComponentType();
       if (component == Byte.TYPE)                            // byte array
         return Schema.create(Schema.Type.BYTES);           
-      return Schema.createArray(createSchema(component, names));
+      Schema result = Schema.createArray(createSchema(component, names));
+      setElement(result, component);
+      return result;
     } else if (type instanceof ParameterizedType) {
       ParameterizedType ptype = (ParameterizedType)type;
       Class raw = (Class)ptype.getRawType();
@@ -232,7 +222,7 @@ public class ReflectData extends SpecificData {
         if (params.length != 1)
           throw new AvroTypeException("No array type specified.");
         Schema schema = Schema.createArray(createSchema(params[0], names));
-        setCollectionClass(schema, raw);
+        schema.setProp(CLASS_PROP, raw.getName());
         return schema;
       }
     } else if (type instanceof Class) {                      // Class
@@ -244,7 +234,9 @@ public class ReflectData extends SpecificData {
         Class component = c.getComponentType();
         if (component == Byte.TYPE)                          // byte array
           return Schema.create(Schema.Type.BYTES);
-        return Schema.createArray(createSchema(component, names));
+        Schema result = Schema.createArray(createSchema(component, names));
+        setElement(result, component);
+        return result;
       }
       if (c == String.class)                                 // String
         return Schema.create(Schema.Type.STRING);
@@ -255,7 +247,13 @@ public class ReflectData extends SpecificData {
         String space = c.getPackage().getName();
         if (c.getEnclosingClass() != null)                   // nested class
           space = c.getEnclosingClass().getName() + "$";
-        if (c.isEnum()) {                                    // Enum
+        Union union = (Union)c.getAnnotation(Union.class);
+        if (union != null) {                                 // union annotated
+          List<Schema> branches = new ArrayList<Schema>();
+          for (Class branch : union.value())
+            branches.add(createSchema(branch, names));
+          return Schema.createUnion(branches);
+        } else if (c.isEnum()) {                             // Enum
           List<String> symbols = new ArrayList<String>();
           Enum[] constants = (Enum[])c.getEnumConstants();
           for (int i = 0; i < constants.length; i++)
@@ -282,6 +280,17 @@ public class ReflectData extends SpecificData {
       return schema;
     }
     return super.createSchema(type, names);
+  }
+
+  // if array element type is a class with a union annotation, note it
+  // this is required because we cannot set a property on the union itself 
+  @SuppressWarnings(value="unchecked")
+  private void setElement(Schema schema, Type element) {
+    if (!(element instanceof Class)) return;
+    Class c = (Class)element;
+    Union union = (Union)c.getAnnotation(Union.class);
+    if (union != null)                          // element is annotated union
+      schema.setProp(ELEMENT_PROP, c.getName());
   }
 
   // Return of this class and its superclasses to serialize.
