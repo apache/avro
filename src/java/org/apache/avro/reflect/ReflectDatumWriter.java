@@ -60,10 +60,7 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
   @Override
   protected Object getField(Object record, String name, int position) {
     try {
-      Object value = ReflectData.getField(record.getClass(), name).get(record);
-      if (value instanceof Short)
-        return ((Short)value).intValue();         // upgrade short to int
-      return value;
+      return ReflectData.getField(record.getClass(), name).get(record);
     } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }
@@ -102,7 +99,12 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
     out.writeBytes((byte[])datum);
   }
 
+  @Override
+  protected void write(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    if (datum instanceof Short)
+      datum = ((Short)datum).intValue();
+    super.write(schema, datum, out);
+  }
 
 }
-
-

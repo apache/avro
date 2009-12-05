@@ -76,7 +76,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case FIXED:   return readFixed(old, actual, expected, in);
     case STRING:  return readString(old, in);
     case BYTES:   return readBytes(old, in);
-    case INT:     return in.readInt();
+    case INT:     return readInt(old, actual, expected, in);
     case LONG:    return in.readLong();
     case FLOAT:   return in.readFloat();
     case DOUBLE:  return in.readDouble();
@@ -411,6 +411,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * Decoder#readBytes(ByteBuffer)}.*/
   protected Object readBytes(Object old, Decoder in) throws IOException {
     return in.readBytes((ByteBuffer)old);
+  }
+
+  /** Called to read integers.  Subclasses may override to use a different
+   * integer representation.  By default, this calls {@link
+   * Decoder#readInt()}.*/
+  protected Object readInt(Object old, Schema actual, Schema expected,
+                           Decoder in) throws IOException {
+    return in.readInt();
   }
 
   /** Called to create byte arrays from default values.  Subclasses may

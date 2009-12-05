@@ -161,10 +161,13 @@ public class TestReflect {
   // test inherited fields & short datatype
   public static class R4 {
     public short value;
+    public short[] shorts;
     
     public boolean equals(Object o) {
       if (!(o instanceof R4)) return false;
-      return this.value == ((R4)o).value;
+      R4 that = (R4)o;
+      return this.value == that.value
+        && Arrays.equals(this.shorts, that.shorts);
     }
   }
 
@@ -173,6 +176,7 @@ public class TestReflect {
   @Test public void testR5() throws Exception {
     R5 r5 = new R5();
     r5.value = 1;
+    r5.shorts = new short[] {3,255,256,Short.MAX_VALUE,Short.MIN_VALUE};
     checkReadWrite(r5);
   }
 

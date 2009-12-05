@@ -193,6 +193,9 @@ public class ReflectData extends SpecificData {
       return java.lang.reflect.Array.newInstance(getClass(schema.getElementType()),0).getClass();
     case STRING:  return String.class;
     case BYTES:   return BYTES_CLASS;
+    case INT:
+      if (Short.class.getName().equals(schema.getProp(CLASS_PROP)))
+        return Short.TYPE;
     default:
       return super.getClass(schema);
     }
@@ -225,6 +228,10 @@ public class ReflectData extends SpecificData {
         schema.setProp(CLASS_PROP, raw.getName());
         return schema;
       }
+    } else if ((type == Short.class) || (type == Short.TYPE)) {
+      Schema result = Schema.create(Schema.Type.INT);
+      result.setProp(CLASS_PROP, Short.class.getName());
+      return result;
     } else if (type instanceof Class) {                      // Class
       Class c = (Class)type;
       if (c.isPrimitive() || Number.class.isAssignableFrom(c)

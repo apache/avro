@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroRuntimeException;
@@ -47,10 +46,7 @@ public class ReflectDatumReader extends SpecificDatumReader {
   @Override
   protected void addField(Object record, String name, int position, Object o) {
     try {
-      Field field = ReflectData.getField(record.getClass(), name);
-      if (field.getType() == Short.TYPE)
-        o = ((Integer)o).shortValue();            // downgrade int to short
-      field.set(record, o);
+      ReflectData.getField(record.getClass(), name).set(record, o);
     } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }
@@ -121,5 +117,13 @@ public class ReflectDatumReader extends SpecificDatumReader {
     return result;
   }
 
-}
+  @Override
+  protected Object readInt(Object old, Schema actual,
+                           Schema expected, Decoder in) throws IOException {
+    Object value = in.readInt();
+    if (Short.class.getName().equals(expected.getProp(ReflectData.CLASS_PROP)))
+      value = ((Integer)value).shortValue();
+    return value;
+  }
 
+}
