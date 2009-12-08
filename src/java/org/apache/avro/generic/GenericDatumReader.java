@@ -74,7 +74,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case ARRAY:   return readArray(old, actual, expected, in);
     case MAP:     return readMap(old, actual, expected, in);
     case FIXED:   return readFixed(old, actual, expected, in);
-    case STRING:  return readString(old, in);
+    case STRING:  return readString(old, actual, expected, in);
     case BYTES:   return readBytes(old, in);
     case INT:     return readInt(old, actual, expected, in);
     case LONG:    return in.readLong();
@@ -394,6 +394,13 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     } else return new HashMap<Object, Object>(size);
   }
 
+  /** Called to read strings.  Subclasses may override to use a different
+   * string representation.  By default, this calls {@link
+   * #readString(Object,Decoder)}.*/
+  protected Object readString(Object old, Schema actual, Schema expected,
+                              Decoder in) throws IOException {
+    return readString(old, in);
+  }
   /** Called to read strings.  Subclasses may override to use a different
    * string representation.  By default, this calls {@link
    * Decoder#readString(Utf8)}.*/

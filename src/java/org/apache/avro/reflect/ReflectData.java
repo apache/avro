@@ -260,6 +260,10 @@ public class ReflectData extends SpecificData {
           for (Class branch : union.value())
             branches.add(createSchema(branch, names));
           return Schema.createUnion(branches);
+        } else if (c.isAnnotationPresent(Stringable.class)){ // Stringable
+          Schema result = Schema.create(Schema.Type.STRING);
+          result.setProp(CLASS_PROP, c.getName());
+          return result;
         } else if (c.isEnum()) {                             // Enum
           List<String> symbols = new ArrayList<String>();
           Enum[] constants = (Enum[])c.getEnumConstants();

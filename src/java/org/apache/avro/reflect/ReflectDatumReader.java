@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroRuntimeException;
@@ -99,6 +100,27 @@ public class ReflectDatumReader extends SpecificDatumReader {
     } else {
       Array.set(array, (int)pos, e);
     }
+  }
+
+  @Override
+  @SuppressWarnings(value="unchecked")
+  protected Object readString(Object old, Schema actual, Schema s,
+                              Decoder in) throws IOException {
+    String value = (String)readString(null, in);
+    Class c = ReflectData.getClassProp(s, ReflectData.CLASS_PROP);
+    if (c != null)                                // Stringable annotated class
+      try {                                       // use String-arg ctor
+        return c.getConstructor(String.class).newInstance(value);
+      } catch (NoSuchMethodException e) {
+        throw new AvroRuntimeException(e);
+      } catch (InstantiationException e) {
+        throw new AvroRuntimeException(e);
+      } catch (IllegalAccessException e) {
+        throw new AvroRuntimeException(e);
+      } catch (InvocationTargetException e) {
+        throw new AvroRuntimeException(e);
+      }
+    return value;
   }
 
   @Override

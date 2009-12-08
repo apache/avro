@@ -23,7 +23,6 @@ import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -160,10 +159,15 @@ public class TestDataFile {
       readFiles(new SpecificDatumReader());
     }
 
-  @Test
-    public void testGeneratedReflect() throws IOException {
-      readFiles(new ReflectDatumReader());
-    }
+  // Can't use same Interop.java as specific for reflect, since its stringField
+  // has type Utf8, which reflect would try to assign a String to.  We could
+  // fix this by defining a reflect-specific version of Interop.java, but we'd
+  // need to put it on a different classpath than the specific one.
+
+  // @Test
+  //   public void testGeneratedReflect() throws IOException {
+  //     readFiles(new ReflectDatumReader(Interop.class));
+  //   }
 
     private void readFiles(DatumReader<Object> datumReader) throws IOException {
       TestDataFile test = new TestDataFile();

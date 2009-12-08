@@ -69,7 +69,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       write(schema.getTypes().get(index), datum, out);
       break;
     case FIXED:   writeFixed(schema, datum, out);   break;
-    case STRING:  writeString(datum, out);          break;
+    case STRING:  writeString(schema, datum, out);  break;
     case BYTES:   writeBytes(datum, out);           break;
     case INT:     out.writeInt((Integer)datum);     break;
     case LONG:    out.writeLong((Long)datum);       break;
@@ -165,6 +165,12 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     return ((Map) map).entrySet();
   }
   
+  /** Called to write a string.  May be overridden for alternate string
+   * representations.*/
+  protected void writeString(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    writeString(datum, out);
+  }
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
   protected void writeString(Object datum, Encoder out) throws IOException {

@@ -37,6 +37,7 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.reflect.Union;
+import org.apache.avro.reflect.Stringable;
 
 import org.junit.Test;
 
@@ -218,6 +219,24 @@ public class TestReflect {
     R9 r9 = new R9();
     r9.r6s = new R6[] {r7, r8};
     checkReadWrite(r9, ReflectData.get().getSchema(R9.class));
+  }
+
+  // test Stringable annotation
+  @Stringable public static class R10 {
+    private String text;
+    public R10(String text) { this.text = text; }
+    public String toString() { return text; }
+    public boolean equals(Object o) {
+      if (!(o instanceof R10)) return false;
+      return this.text.equals(((R10)o).text);
+    }
+  }
+  
+  @Test public void testR10() throws Exception {
+    Schema r10Schema = ReflectData.get().getSchema(R10.class);
+    assertEquals(Schema.Type.STRING, r10Schema.getType());
+    assertEquals(R10.class.getName(), r10Schema.getProp("java-class"));
+    checkReadWrite(new R10("foo"), r10Schema);
   }
 
   void checkReadWrite(Object object) throws Exception {

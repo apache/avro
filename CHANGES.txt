@@ -123,6 +123,9 @@ Trunk (unreleased changes)
     AVRO-249. In reflection, implement Java short as an int whose
     "java-class" property is set to java.lang.Short. (cutting)
 
+    AVRO-247. In reflection, add Stringable annotation to indicate
+    classes that can be represented by an Avro string.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
