@@ -125,6 +125,9 @@ Trunk (unreleased changes)
 
     AVRO-247. In reflection, add Stringable annotation to indicate
     classes that can be represented by an Avro string.  (cutting)
+    
+    AVRO-246 Java schema parser should take schema from InputStream
+    in addition to file. (thiru)
 
   OPTIMIZATIONS
 

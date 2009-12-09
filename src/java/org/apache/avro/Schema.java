@@ -19,6 +19,7 @@ package org.apache.avro;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collections;
@@ -680,8 +681,33 @@ public abstract class Schema {
     public NullSchema() { super(Type.NULL); }
   }
 
+  /**
+   * Constructs a Schema object from JSON schema file <tt>file</tt>.
+   * The contents of <tt>file</tt> is expected to be in UTF-8 format.
+   * @param file  The file to read the schema from.
+   * @return  The freshly built Schema.
+   * @throws IOException if there was trouble reading the contents
+   * @throws JsonParseException if the contents are invalid
+   */
   public static Schema parse(File file) throws IOException {
     JsonParser parser = FACTORY.createJsonParser(file);
+    try {
+      return Schema.parse(MAPPER.readTree(parser), new Names());
+    } catch (JsonParseException e) {
+      throw new SchemaParseException(e);
+    }
+  }
+
+  /**
+   * Constructs a Schema object from JSON schema stream <tt>in</tt>.
+   * The contents of <tt>in</tt> is expected to be in UTF-8 format.
+   * @param in  The input stream to read the schema from.
+   * @return  The freshly built Schema.
+   * @throws IOException if there was trouble reading the contents
+   * @throws JsonParseException if the contents are invalid
+   */
+  public static Schema parse(InputStream in) throws IOException {
+    JsonParser parser = FACTORY.createJsonParser(in);
     try {
       return Schema.parse(MAPPER.readTree(parser), new Names());
     } catch (JsonParseException e) {
