@@ -181,7 +181,7 @@ public class TestReflect {
     checkReadWrite(r5);
   }
 
-  // test union annotation
+  // test union annotation on a class
   @Union({R7.class, R8.class})
   public static class R6 {}
 
@@ -200,7 +200,7 @@ public class TestReflect {
     }
   }
 
-  // test arrays with union annotation
+  // test arrays of union annotated class
   public static class R9  {
     public R6[] r6s;
     public boolean equals(Object o) {
@@ -219,6 +219,31 @@ public class TestReflect {
     R9 r9 = new R9();
     r9.r6s = new R6[] {r7, r8};
     checkReadWrite(r9, ReflectData.get().getSchema(R9.class));
+  }
+
+  // test union annotation on methods and parameters
+  public static interface P0 {
+    @Union({Void.class,String.class})
+      String foo(@Union({Void.class,String.class}) String s);
+  }
+
+  @Test public void testP0() throws Exception {
+    Protocol p0 = ReflectData.get().getProtocol(P0.class);
+    Protocol.Message message = p0.getMessages().get("foo");
+    // check response schema is union
+    Schema response = message.getResponse();
+    assertEquals(Schema.Type.UNION, response.getType());
+    assertEquals(Schema.Type.NULL, response.getTypes().get(0).getType());
+    assertEquals(Schema.Type.STRING, response.getTypes().get(1).getType());
+    // check request schema is union
+    Schema request = message.getRequest();
+    Schema param = request.getFields().get("s").schema();
+    assertEquals(Schema.Type.UNION, param.getType());
+    assertEquals(Schema.Type.NULL, param.getTypes().get(0).getType());
+    assertEquals(Schema.Type.STRING, param.getTypes().get(1).getType());
+    // check union erasure
+    assertEquals(String.class, ReflectData.get().getClass(response));
+    assertEquals(String.class, ReflectData.get().getClass(param));
   }
 
   // test Stringable annotation

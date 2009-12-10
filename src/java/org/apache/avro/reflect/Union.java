@@ -24,12 +24,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares that a class should be represented by a union type.  Use for base
- * classes or interfaces whose instantiable subclasses should be listed in the
- * parameters to the @Union annotation.
+ * Declares that a Java type should be represented by an Avro union schema.
+ * May be used for base classes or interfaces whose instantiable subclasses can
+ * be listed in the parameters to the @Union annotation.  If applied to method
+ * parameters this determines the reflected message parameter type.  If applied
+ * to a method, this determines its return type.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
+@Target({ElementType.TYPE, ElementType.PARAMETER, ElementType.METHOD})
 @Documented
 public @interface Union {
   /** The instantiable classes that compose this union. */

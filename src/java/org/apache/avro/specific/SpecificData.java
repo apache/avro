@@ -19,6 +19,7 @@ package org.apache.avro.specific;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
@@ -82,6 +83,8 @@ public class SpecificData extends GenericData {
 
   private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
 
+  private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
+
   /** Return the class that implements a schema. */
   public Class getClass(Schema schema) {
     switch (schema.getType()) {
@@ -101,7 +104,11 @@ public class SpecificData extends GenericData {
       return c;
     case ARRAY:   return GenericArray.class;
     case MAP:     return Map.class;
-    case UNION:   return Object.class;
+    case UNION:
+      List<Schema> types = schema.getTypes();     // elide unions with null
+      if ((types.size() == 2) && types.contains(NULL_SCHEMA))
+        return getClass(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
+      return Object.class;
     case STRING:  return Utf8.class;
     case BYTES:   return ByteBuffer.class;
     case INT:     return Integer.TYPE;

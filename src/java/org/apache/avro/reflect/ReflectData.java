@@ -23,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.GenericArrayType;
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
@@ -256,10 +257,7 @@ public class ReflectData extends SpecificData {
           space = c.getEnclosingClass().getName() + "$";
         Union union = (Union)c.getAnnotation(Union.class);
         if (union != null) {                                 // union annotated
-          List<Schema> branches = new ArrayList<Schema>();
-          for (Class branch : union.value())
-            branches.add(createSchema(branch, names));
-          return Schema.createUnion(branches);
+          return getAnnotatedUnion(union, names);
         } else if (c.isAnnotationPresent(Stringable.class)){ // Stringable
           Schema result = Schema.create(Schema.Type.STRING);
           result.setProp(CLASS_PROP, c.getName());
@@ -302,6 +300,14 @@ public class ReflectData extends SpecificData {
     Union union = (Union)c.getAnnotation(Union.class);
     if (union != null)                          // element is annotated union
       schema.setProp(ELEMENT_PROP, c.getName());
+  }
+
+  // construct a schema from a union annotation
+  private Schema getAnnotatedUnion(Union union, Map<String,Schema> names) {
+    List<Schema> branches = new ArrayList<Schema>();
+    for (Class branch : union.value())
+      branches.add(createSchema(branch, names));
+    return Schema.createUnion(branches);
   }
 
   // Return of this class and its superclasses to serialize.
@@ -358,8 +364,14 @@ public class ReflectData extends SpecificData {
       new LinkedHashMap<String,Schema.Field>();
     String[] paramNames = paranamer.lookupParameterNames(method);
     Type[] paramTypes = method.getGenericParameterTypes();
+    Annotation[][] annotations = method.getParameterAnnotations();
     for (int i = 0; i < paramTypes.length; i++) {
-      Schema paramSchema = getSchema(paramTypes[i], names);
+      Schema paramSchema = null;
+      for (int j = 0; j < annotations[i].length; j++)
+        if (annotations[i][j] instanceof Union)
+          paramSchema = getAnnotatedUnion(((Union)annotations[i][j]), names);
+      if (paramSchema == null)
+        paramSchema = getSchema(paramTypes[i], names);
       String paramName =  paramNames.length == paramTypes.length
         ? paramNames[i]
         : paramSchema.getName()+i;
@@ -367,7 +379,10 @@ public class ReflectData extends SpecificData {
     }
     Schema request = Schema.createRecord(fields);
 
-    Schema response = getSchema(method.getGenericReturnType(), names);
+    Union union = (Union)method.getAnnotation(Union.class);
+    Schema response = union == null
+      ? getSchema(method.getGenericReturnType(), names)
+      : getAnnotatedUnion(union, names);
 
     List<Schema> errs = new ArrayList<Schema>();
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw

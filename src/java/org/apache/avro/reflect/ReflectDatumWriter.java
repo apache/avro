@@ -112,7 +112,14 @@ public class ReflectDatumWriter extends SpecificDatumWriter {
     throws IOException {
     if (datum instanceof Short)
       datum = ((Short)datum).intValue();
-    super.write(schema, datum, out);
+    try {
+      super.write(schema, datum, out);
+    } catch (NullPointerException e) {            // improve error message
+      NullPointerException result =
+        new NullPointerException("in "+schema.getName()+" "+e.getMessage());
+      result.initCause(e);
+      throw result;
+    }
   }
 
 }
