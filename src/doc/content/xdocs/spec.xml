@@ -90,6 +90,7 @@
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
 	    of the record (required).</li>
+	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
 	    <li><code>fields</code>: a JSON array, listing fields (required).
 	    Each field is a JSON object with the following attributes:
 	      <ul>
@@ -151,6 +152,7 @@
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
 	    of the enum (required).</li>
+	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
 	    <li><code>symbols</code>: a JSON array, listing symbols,
 	    as JSON strings (required).</li>
 	  </ul>
@@ -207,7 +209,8 @@
           <p>Fixed uses the type name <code>"fixed"</code> and supports
           two attributes:</p>
 	  <ul>
-	    <li><code>name</code>: the name of the fixed (required).</li>
+	    <li><code>name</code>: a string naming this fixed (required).</li>
+	    <li><em>namespace</em>, a string that qualifies the name;</li>
             <li><code>size</code>: an integer, specifying the number
             of bytes per value (required).</li>
 	  </ul>
@@ -219,12 +222,45 @@
       </section> <!-- end complex types -->
 
       <section>
-	<title>Identifiers</title>
-        <p>Record, field and enum names must:</p>
+	<title>Names</title>
+        <p>Record, enums and fixed are named types.  Each has
+          a <em>fullname</em> that is composed of two parts;
+          a <em>name</em> and a <em>namespace</em>.  Equality of names
+          is defined on the fullname.</p>
+	<p>The name portion of a fullname, and record field names must:</p>
 	<ul>
           <li>start with <code>[A-Za-z_]</code></li>
           <li>subsequently contain only <code>[A-Za-z0-9_]</code></li>
 	</ul>
+        <p>A namespace is a dot-separated sequence of such names.</p>
+        <p>In record, enum and fixed definitions, the fullname is
+        determined in one of the following ways:</p>
+	<ul>
+	  <li>A name and namespace are both specified.  For example,
+	  one might use <code>"name": "X", "namespace":
+	  "org.foo"</code> to indicate the
+	  fullname <code>org.foo.X</code>.</li>
+	  <li>A fullname is specified.  If the name specified contains
+	  a dot, then it is assumed to be a fullname, and any
+	  namespace also specified is ignored.  For example,
+	  use <code>"name": "org.foo.X"</code> to indicate the
+	  fullname <code>org.foo.X</code>.</li>
+	  <li>A name only is specified, i.e., a name that contains no
+	  dots.  In this case the namespace is taken from the most
+	  tightly encosing schema or protocol.  For example,
+	  if <code>"name": "X"</code> is specified, and this occurs
+	  within a field of the record definition
+	  of <code>org.foo.Y</code>, then the fullname
+	  is <code>org.foo.X</code>.</li>
+	</ul>
+	<p>References to previously defined names are as in the latter
+	two cases above: if they contain a dot they are a fullname, if
+	they do not contain a dot, the namespace is the namespace of
+	the enclosing definition.</p>
+	<p>Primitive type names have no namespace and their names may
+	not be defined in any namespace.  A schema may only contain
+	multiple definitions of a fullname if the definitions are
+	equivalent.</p>
       </section>
 
     </section> <!-- end schemas -->
@@ -626,7 +662,7 @@
       <p>A protocol is a JSON object with the following attributes:</p>
       <ul>
 	<li><em>name</em>, string, to distinguish it from other protocols;</li>
-	<li><em>namespace</em>, a string which qualifies the name;</li>
+	<li><em>namespace</em>, a string that qualifies the name;</li>
 	<li><em>types</em>, a list of record, enum and error
 	  definitions.  An error definition is just like a record
 	  definition except it uses "error" instead of "record".  Note

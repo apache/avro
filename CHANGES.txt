@@ -132,6 +132,8 @@ Trunk (unreleased changes)
     AVRO-250. Make reflect's Union annotation applicable to message
     parameters and return types too.  (cutting)
 
+    AVRO-253. Improve documentation of schema names in specification. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
