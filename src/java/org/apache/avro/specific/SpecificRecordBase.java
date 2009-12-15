@@ -27,6 +27,7 @@ public abstract class SpecificRecordBase
   public abstract Object get(int field);
   public abstract void set(int field, Object value);
 
+  @Override
   public boolean equals(Object that) {
     if (that == this) return true;                        // identical object
     if (!(that instanceof SpecificRecord)) return false;  // not a record
@@ -34,11 +35,12 @@ public abstract class SpecificRecordBase
     return this.compareTo((SpecificRecord)that) == 0;
   }
     
+  @Override
   public int hashCode() {
     return SpecificData.get().hashCode(this, this.getSchema());
   }
 
-  @SuppressWarnings(value="unchecked")
+  @Override
   public int compareTo(SpecificRecord that) {
     return SpecificData.get().compare(this, that, this.getSchema());
   }

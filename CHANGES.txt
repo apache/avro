@@ -134,6 +134,9 @@ Trunk (unreleased changes)
 
     AVRO-253. Improve documentation of schema names in specification. (cutting)
 
+    AVRO-257. Remove some dead Java code and un-needed casts.
+    (Kevin Oliver via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

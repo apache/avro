@@ -106,8 +106,8 @@ public class ReflectData extends SpecificData {
   public boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
     case RECORD:
+      if (datum == null) return false;
       Class c = datum.getClass(); 
-      if (!(datum instanceof Object)) return false;
       for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
         try {
           if (!validate(entry.getValue(),
@@ -234,7 +234,7 @@ public class ReflectData extends SpecificData {
       result.setProp(CLASS_PROP, Short.class.getName());
       return result;
     } else if (type instanceof Class) {                      // Class
-      Class c = (Class)type;
+      Class<?> c = (Class<?>)type;
       if (c.isPrimitive() || Number.class.isAssignableFrom(c)
           || c == Void.class || c == Boolean.class)          // primitive
         return super.createSchema(type, names);
@@ -255,7 +255,7 @@ public class ReflectData extends SpecificData {
         String space = c.getPackage().getName();
         if (c.getEnclosingClass() != null)                   // nested class
           space = c.getEnclosingClass().getName() + "$";
-        Union union = (Union)c.getAnnotation(Union.class);
+        Union union = c.getAnnotation(Union.class);
         if (union != null) {                                 // union annotated
           return getAnnotatedUnion(union, names);
         } else if (c.isAnnotationPresent(Stringable.class)){ // Stringable
@@ -269,7 +269,7 @@ public class ReflectData extends SpecificData {
             symbols.add(constants[i].name());
           schema = Schema.createEnum(name, space, symbols);
         } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed
-          int size = ((FixedSize)c.getAnnotation(FixedSize.class)).value();
+          int size = c.getAnnotation(FixedSize.class).value();
           schema = Schema.createFixed(name, space, size);
         } else {                                             // record
           LinkedHashMap<String,Schema.Field> fields =
@@ -296,8 +296,8 @@ public class ReflectData extends SpecificData {
   @SuppressWarnings(value="unchecked")
   private void setElement(Schema schema, Type element) {
     if (!(element instanceof Class)) return;
-    Class c = (Class)element;
-    Union union = (Union)c.getAnnotation(Union.class);
+    Class<?> c = (Class<?>)element;
+    Union union = c.getAnnotation(Union.class);
     if (union != null)                          // element is annotated union
       schema.setProp(ELEMENT_PROP, c.getName());
   }
@@ -379,7 +379,7 @@ public class ReflectData extends SpecificData {
     }
     Schema request = Schema.createRecord(fields);
 
-    Union union = (Union)method.getAnnotation(Union.class);
+    Union union = method.getAnnotation(Union.class);
     Schema response = union == null
       ? getSchema(method.getGenericReturnType(), names)
       : getAnnotatedUnion(union, names);
