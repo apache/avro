@@ -179,7 +179,7 @@ public class SpecificCompiler {
     StringBuilder out = new StringBuilder();
     header(out, protocol.getNamespace());
     line(out, 0, "public interface "+mangle(protocol.getName())+" {");
-    line(out, 1, "public static final Protocol PROTOCOL = Protocol.parse(\""
+    line(out, 1, "public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse(\""
            +esc(protocol)+"\");");
     for (Map.Entry<String,Message> e : protocol.getMessages().entrySet()) {
       String name = e.getKey();
@@ -187,7 +187,7 @@ public class SpecificCompiler {
       Schema request = message.getRequest();
       Schema response = message.getResponse();
       line(out, 1, unbox(response)+" "+ mangle(name)+"("+params(request)+")");
-      line(out, 2,"throws AvroRemoteException"+errors(message.getErrors())+";");
+      line(out, 2,"throws org.apache.avro.ipc.AvroRemoteException"+errors(message.getErrors())+";");
     }
     line(out, 0, "}");
 
@@ -208,26 +208,6 @@ public class SpecificCompiler {
     if(namespace != null) {
       line(out, 0, "package "+namespace+";\n");
     }
-    line(out, 0, "import java.nio.ByteBuffer;");
-    line(out, 0, "import java.util.Map;");
-    line(out, 0, "import org.apache.avro.Protocol;");
-    line(out, 0, "import org.apache.avro.Schema;");
-    line(out, 0, "import org.apache.avro.AvroRuntimeException;");
-    line(out, 0, "import org.apache.avro.Protocol;");
-    line(out, 0, "import org.apache.avro.util.Utf8;");
-    line(out, 0, "import org.apache.avro.ipc.AvroRemoteException;");
-    line(out, 0, "import org.apache.avro.generic.GenericArray;");
-    line(out, 0, "import org.apache.avro.specific.SpecificExceptionBase;");
-    line(out, 0, "import org.apache.avro.specific.SpecificRecordBase;");
-    line(out, 0, "import org.apache.avro.specific.SpecificRecord;");
-    line(out, 0, "import org.apache.avro.specific.SpecificFixed;");
-    line(out, 0, "import org.apache.avro.specific.FixedSize;");
-    for (Schema s : queue)
-      if (namespace == null
-          ? (s.getNamespace() != null)
-          : !namespace.equals(s.getNamespace()))
-        line(out, 0, "import "+SpecificData.get().getClassName(s)+";");
-    line(out, 0, "");
     line(out, 0, "@SuppressWarnings(\"all\")");
   }
 
@@ -249,56 +229,57 @@ public class SpecificCompiler {
     StringBuilder b = new StringBuilder();
     for (Schema error : errs.getTypes().subList(1, errs.getTypes().size())) {
       b.append(", ");
-      b.append(mangle(error.getName()));
+      b.append(mangle(error.getFullName()));
     }
     return b.toString();
   }
 
   private OutputFile compile(Schema schema) {
     OutputFile outputFile = new OutputFile();
-    outputFile.path = makePath(schema.getName(), schema.getNamespace());
+    String name = mangle(schema.getName());
+    outputFile.path = makePath(name, schema.getNamespace());
     StringBuilder out = new StringBuilder();
     header(out, schema.getNamespace());
     switch (schema.getType()) {
     case RECORD:
-      line(out, 0, "public class "+type(schema)+
+      line(out, 0, "public class "+name+
            (schema.isError()
-            ? " extends SpecificExceptionBase"
-             : " extends SpecificRecordBase")
-           +" implements SpecificRecord {");
+            ? " extends org.apache.avro.specific.SpecificExceptionBase"
+             : " extends org.apache.avro.specific.SpecificRecordBase")
+           +" implements org.apache.avro.specific.SpecificRecord {");
       // schema definition
-      line(out, 1, "public static final Schema SCHEMA$ = Schema.parse(\""
+      line(out, 1, "public static final org.apache.avro.Schema SCHEMA$ = org.apache.avro.Schema.parse(\""
            +esc(schema)+"\");");
       // field declations
       for (Map.Entry<String,Schema.Field> field: schema.getFields().entrySet())
         line(out, 1, "public " + unbox(field.getValue().schema()) + " "
              + mangle(field.getKey()) + ";");
       // schema method
-      line(out, 1, "public Schema getSchema() { return SCHEMA$; }");
+      line(out, 1, "public org.apache.avro.Schema getSchema() { return SCHEMA$; }");
       // get method
-      line(out, 1, "public Object get(int field$) {");
+      line(out, 1, "public java.lang.Object get(int field$) {");
       line(out, 2, "switch (field$) {");
       int i = 0;
       for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
         line(out, 2, "case "+(i++)+": return "+mangle(field.getKey())+";");
-      line(out, 2, "default: throw new AvroRuntimeException(\"Bad index\");");
+      line(out, 2, "default: throw new org.apache.avro.AvroRuntimeException(\"Bad index\");");
       line(out, 2, "}");
       line(out, 1, "}");
       // set method
       line(out, 1, "@SuppressWarnings(value=\"unchecked\")");
-      line(out, 1, "public void set(int field$, Object value$) {");
+      line(out, 1, "public void set(int field$, java.lang.Object value$) {");
       line(out, 2, "switch (field$) {");
       i = 0;
       for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
         line(out, 2, "case "+(i++)+": "+field.getKey()+" = ("+
              type(field.getValue())+")value$; break;");
-      line(out, 2, "default: throw new AvroRuntimeException(\"Bad index\");");
+      line(out, 2, "default: throw new org.apache.avro.AvroRuntimeException(\"Bad index\");");
       line(out, 2, "}");
       line(out, 1, "}");
       line(out, 0, "}");
       break;
     case ENUM:
-      line(out, 0, "public enum "+type(schema)+" { ");
+      line(out, 0, "public enum "+name+" { ");
       StringBuilder b = new StringBuilder();
       int count = 0;
       for (String symbol : schema.getEnumSymbols()) {
@@ -310,8 +291,8 @@ public class SpecificCompiler {
       line(out, 0, "}");
       break;
     case FIXED:
-      line(out, 0, "@FixedSize("+schema.getFixedSize()+")");
-      line(out, 0, "public class "+type(schema)+" extends SpecificFixed {}");
+      line(out, 0, "@org.apache.avro.specific.FixedSize("+schema.getFixedSize()+")");
+      line(out, 0, "public class "+name+" extends org.apache.avro.specific.SpecificFixed {}");
       break;
     case MAP: case ARRAY: case UNION: case STRING: case BYTES:
     case INT: case LONG: case FLOAT: case DOUBLE: case BOOLEAN: case NULL:
@@ -330,24 +311,24 @@ public class SpecificCompiler {
     case RECORD:
     case ENUM:
     case FIXED:
-      return mangle(schema.getName());
+      return mangle(schema.getFullName());
     case ARRAY:
-      return "GenericArray<"+type(schema.getElementType())+">";
+      return "org.apache.avro.generic.GenericArray<"+type(schema.getElementType())+">";
     case MAP:
-      return "Map<Utf8,"+type(schema.getValueType())+">";
+      return "java.util.Map<org.apache.avro.util.Utf8,"+type(schema.getValueType())+">";
     case UNION:
       List<Schema> types = schema.getTypes();     // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
         return type(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
-      return "Object";
-    case STRING:  return "Utf8";
-    case BYTES:   return "ByteBuffer";
-    case INT:     return "Integer";
-    case LONG:    return "Long";
-    case FLOAT:   return "Float";
-    case DOUBLE:  return "Double";
-    case BOOLEAN: return "Boolean";
-    case NULL:    return "Void";
+      return "java.lang.Object";
+    case STRING:  return "org.apache.avro.util.Utf8";
+    case BYTES:   return "java.nio.ByteBuffer";
+    case INT:     return "java.lang.Integer";
+    case LONG:    return "java.lang.Long";
+    case FLOAT:   return "java.lang.Float";
+    case DOUBLE:  return "java.lang.Double";
+    case BOOLEAN: return "java.lang.Boolean";
+    case NULL:    return "java.lang.Void";
     default: throw new RuntimeException("Unknown type: "+schema);
     }
   }

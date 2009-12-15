@@ -193,6 +193,9 @@ Trunk (unreleased changes)
 
     AVRO-184. Better eclipse configuration support. (thiru)
 
+    AVRO-256. Use fully-qualified class names in generated Java code
+    to eliminate name conflicts. (cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
