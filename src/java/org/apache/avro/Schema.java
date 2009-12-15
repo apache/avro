@@ -128,13 +128,13 @@ public abstract class Schema {
   /** Create a named record schema. */
   public static Schema createRecord(String name, String namespace,
                                     boolean isError) {
-     return new RecordSchema(name, namespace, isError);
+    return new RecordSchema(new Name(name, namespace), isError);
   }
 
   /** Create an enum schema. */
   public static Schema createEnum(String name, String namespace,
                                   List<String> values) {
-    return new EnumSchema(name, namespace, values);
+    return new EnumSchema(new Name(name, namespace), values);
   }
 
   /** Create an array schema. */
@@ -154,7 +154,7 @@ public abstract class Schema {
 
   /** Create a union schema. */
   public static Schema createFixed(String name, String space, int size) {
-    return new FixedSchema(name, space, size);
+    return new FixedSchema(new Name(name, space), size);
   }
 
   /** Return the type of this schema. */
@@ -358,9 +358,9 @@ public abstract class Schema {
 
   private static abstract class NamedSchema extends Schema {
     private final Name name;
-    public NamedSchema(Type type, String name, String space) {
+    public NamedSchema(Type type, Name name) {
       super(type);
-      this.name = new Name(name, space);
+      this.name = name;
     }
     public String getName() { return name.name; }
     public String getNamespace() { return name.space; }
@@ -412,8 +412,8 @@ public abstract class Schema {
     private Map<String,Field> fields;
     private Iterable<Map.Entry<String,Schema>> fieldSchemas;
     private final boolean isError;
-    public RecordSchema(String name, String space, boolean isError) {
-      super(Type.RECORD, name, space);
+    public RecordSchema(Name name, boolean isError) {
+      super(Type.RECORD, name);
       this.isError = isError;
     }
     public boolean isError() { return isError; }
@@ -495,8 +495,8 @@ public abstract class Schema {
   private static class EnumSchema extends NamedSchema {
     private final List<String> symbols;
     private final Map<String,Integer> ordinals;
-    public EnumSchema(String name, String space, List<String> symbols) {
-      super(Type.ENUM, name, space);
+    public EnumSchema(Name name, List<String> symbols) {
+      super(Type.ENUM, name);
       this.symbols = symbols;
       this.ordinals = new HashMap<String,Integer>();
       int i = 0;
@@ -624,8 +624,8 @@ public abstract class Schema {
 
   private static class FixedSchema extends NamedSchema {
     private final int size;
-    public FixedSchema(String name, String space, int size) {
-      super(Type.FIXED, name, space);
+    public FixedSchema(Name name, int size) {
+      super(Type.FIXED, name);
       if (size < 0)
         throw new IllegalArgumentException("Invalid fixed size: "+size);
       this.size = size;
@@ -777,21 +777,25 @@ public abstract class Schema {
     } else if (schema.isObject()) {
       Schema result;
       String type = getRequiredText(schema, "type", "No type");
-      String name = null, space = null;
+      Name name = null;
+      String savedSpace = null;
       if (type.equals("record") || type.equals("error")
           || type.equals("enum") || type.equals("fixed")) {
-        name = getRequiredText(schema, "name", "No name in schema");
-        space = getOptionalText(schema, "namespace");
+        String space = getOptionalText(schema, "namespace");
         if (space == null)
           space = names.space();
-        if (names.space() == null && space != null)
-          names.space(space);                     // set default namespace
+        name = new Name(getRequiredText(schema, "name", "No name in schema"),
+                        space);
+        if (name.space != null) {                 // set default namespace
+          savedSpace = names.space();
+          names.space(name.space);
+        }
       }
       if (PRIMITIVES.containsKey(type)) {         // primitive
         result = create(PRIMITIVES.get(type));
       } else if (type.equals("record") || type.equals("error")) { // record
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
-        result = new RecordSchema(name, space, type.equals("error"));
+        result = new RecordSchema(name, type.equals("error"));
         if (name != null) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())
@@ -819,7 +823,7 @@ public abstract class Schema {
         List<String> symbols = new ArrayList<String>();
         for (JsonNode n : symbolsNode)
           symbols.add(n.getTextValue());
-        result = new EnumSchema(name, space, symbols);
+        result = new EnumSchema(name, symbols);
         if (name != null) names.add(result);
       } else if (type.equals("array")) {          // array
         JsonNode itemsNode = schema.get("items");
@@ -835,7 +839,7 @@ public abstract class Schema {
         JsonNode sizeNode = schema.get("size");
         if (sizeNode == null || !sizeNode.isInt())
           throw new SchemaParseException("Invalid or no size: "+schema);
-        result = new FixedSchema(name, space, sizeNode.getIntValue());
+        result = new FixedSchema(name, sizeNode.getIntValue());
         if (name != null) names.add(result);
       } else
         throw new SchemaParseException("Type not supported: "+type);
@@ -845,6 +849,8 @@ public abstract class Schema {
         if (!RESERVED_PROPS.contains(prop))       // ignore reserved
           result.setProp(prop, schema.get(prop).getTextValue());
       }
+      if (savedSpace != null)
+        names.space(savedSpace);                  // restore space
       return result;
     } else if (schema.isArray()) {                // union
       List<Schema> types = new ArrayList<Schema>(schema.size());

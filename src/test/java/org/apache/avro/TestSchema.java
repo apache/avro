@@ -206,6 +206,21 @@ public class TestSchema {
     assertEquals(Schema.parse("\"boolean\""), s);
   }
 
+  @Test
+  public void testNamespaceScope() throws Exception {
+    String z = "{\"type\":\"record\",\"name\":\"Z\",\"fields\":[]}";
+    String y = "{\"type\":\"record\",\"name\":\"q.Y\",\"fields\":["
+      +"{\"name\":\"f\",\"type\":"+z+"}]}";
+    String x = "{\"type\":\"record\",\"name\":\"p.X\",\"fields\":["
+      +"{\"name\":\"f\",\"type\":"+y+"},"
+      +"{\"name\":\"g\",\"type\":"+z+"}"
+      +"]}";
+    Schema xs = Schema.parse(x);
+    Schema ys = xs.getFields().get("f").schema();
+    assertEquals("p.Z", xs.getFields().get("g").schema().getFullName());
+    assertEquals("q.Z", ys.getFields().get("f").schema().getFullName());
+  }
+
   private static void checkParseError(String json) {
     try {
       Schema schema = Schema.parse(json);

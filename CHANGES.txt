@@ -196,6 +196,9 @@ Trunk (unreleased changes)
     AVRO-256. Use fully-qualified class names in generated Java code
     to eliminate name conflicts. (cutting)
 
+    AVRO-255. Fix Java so that, when parsing schemas, unspecified
+    namespaces are defaulted to nearest enclosing namespace. (cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
