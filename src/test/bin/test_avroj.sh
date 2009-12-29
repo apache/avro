@@ -64,3 +64,5 @@ $CMD induce build/test/classes 'org.apache.avro.TestReflect$C' \
 ######################################################################
 $CMD 2>&1 | grep -q "Available tools:"
 $CMD doesnotexist 2>&1 | grep -q "Available tools:"
+! $CMD 2>&1 > /dev/null
+! $CMD 2>&1 doesnotexist 2>&1 > /dev/null

@@ -137,6 +137,9 @@ Trunk (unreleased changes)
     AVRO-257. Remove some dead Java code and un-needed casts.
     (Kevin Oliver via cutting)
 
+    AVRO-263. Change avroj command line tools to return exit codes.
+    (Todd Lipcon via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

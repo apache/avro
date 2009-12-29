@@ -34,9 +34,10 @@ public interface Tool {
    * @param out Output of tool (typically System.out).
    * @param err Error stream (typically System.err).
    * @param args Non-null list of arguments.
+   * @return result code (0 for success)
    * @throws Exception Just like main(), tools may throw Exception.
    */
-  void run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception;
+  int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception;
 
   /**
    * Name of tool, to be used in listings.

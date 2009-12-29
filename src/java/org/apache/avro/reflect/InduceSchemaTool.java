@@ -32,11 +32,11 @@ import org.apache.avro.tool.Tool;
 public class InduceSchemaTool implements Tool {
 
   @Override
-  public void run(InputStream in, PrintStream out, PrintStream err,
+  public int run(InputStream in, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
     if (args.size() == 0 || args.size() > 2) {
       System.err.println("Usage: [colon-delimited-classpath] classname");
-      return;
+      return 1;
     }
     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     String className;
@@ -61,6 +61,7 @@ public class InduceSchemaTool implements Tool {
     } else {
       System.out.println(ReflectData.get().getSchema(klass).toString(true));
     }
+    return 0;
   }
 
   @Override

@@ -371,11 +371,11 @@ public class SpecificCompiler {
    */
   public static class SpecificCompilerTool implements Tool {
     @Override
-    public void run(InputStream in, PrintStream out, PrintStream err,
+    public int run(InputStream in, PrintStream out, PrintStream err,
         List<String> args) throws Exception {
       if (args.size() != 3) {
         System.err.println("Expected 3 arguments: (schema|protocol) inputfile outputdir");
-        return;
+        return 1;
       }
       String method = args.get(0);
       File input = new File(args.get(1));
@@ -386,8 +386,9 @@ public class SpecificCompiler {
         compileProtocol(input, output);
       } else {
         System.err.println("Expected \"schema\" or \"protocol\".");
-        return;
+        return 1;
       }
+      return 0;
     }
 
     @Override
