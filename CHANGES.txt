@@ -209,6 +209,8 @@ Trunk (unreleased changes)
     AVRO-255. Fix Java so that, when parsing schemas, unspecified
     namespaces are defaulted to nearest enclosing namespace. (cutting)
 
+    AVRO-262. Fix two typos in the spec.  (Jeff Hammerbacher via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

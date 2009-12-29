@@ -354,8 +354,8 @@
             <title>Records</title>
 	    <p>A record is encoded by encoding the values of its
 	      fields in the order that they are declared.  In other
-	      words, a record is encode as just the concatenation of
-	      its field's encodings.  Field values are encoded per
+	      words, a record is encoded as just the concatenation of
+	      the encodings of its fields.  Field values are encoded per
 	      their schema.</p>
 	    <p>For example, the record schema</p>
 	    <source>
