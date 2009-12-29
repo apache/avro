@@ -140,6 +140,8 @@ Trunk (unreleased changes)
     AVRO-263. Change avroj command line tools to return exit codes.
     (Todd Lipcon via cutting)
 
+    AVRO-260. Upgrade to Jackson 1.4.0. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
