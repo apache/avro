@@ -62,6 +62,25 @@ $CMD induce build/test/classes org.apache.avro.BarRecord \
 $CMD induce build/test/classes 'org.apache.avro.TestReflect$C' \
  | tr -d '\n ' | grep -q -F  '{"protocol":"C"'
 ######################################################################
+# Test to/from avro (both fragments and data files)
+$CMD jsontofrag '"string"' <(echo '"Long string implies readable length encoding."') \
+ | cmp -s - <(echo -n 'ZLong string implies readable length encoding.')
+$CMD fragtojson '"string"' <(printf \\006foo) \
+ | cmp -s - <(echo '"foo"')
+# And test that stdin support (via "-") works too
+echo '"The identity function"' \
+  | $CMD jsontofrag '"string"' - \
+  | $CMD fragtojson '"string"' - \
+  | cmp -s - <(echo '"The identity function"')
+
+$CMD fromjson '"string"' <(echo '"foo"'; echo '"bar"') \
+  > $TMPDIR/data_file_write.avro
+$CMD tojson $TMPDIR/data_file_write.avro \
+  | cmp -s - <(echo '"foo"'; echo '"bar"')
+$CMD getschema $TMPDIR/data_file_write.avro \
+  | cmp -s - <(echo '"string"')
+######################################################################
+
 $CMD 2>&1 | grep -q "Available tools:"
 $CMD doesnotexist 2>&1 | grep -q "Available tools:"
 ! $CMD 2>&1 > /dev/null

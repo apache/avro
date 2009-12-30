@@ -29,6 +29,12 @@ Trunk (unreleased changes)
     AVRO-154. Add 'induce' sub-command to avroj command line tool.
     (Philip Zeyliger via cutting)
 
+    AVRO-245. Add four new avroj commands:
+      - fromjson Reads JSON records and writes to an Avro data file.
+      - tojson  Dumps an Avro data file as JSON, one record per line.
+      - fragtojson Renders a binary-encoded Avro datum as JSON.
+      - jsontofrag Renders a JSON-encoded Avro datum as binary.
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

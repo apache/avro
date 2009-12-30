@@ -37,7 +37,12 @@ public class Main {
     tools = new TreeMap<String, Tool>();
     for (Tool tool : new Tool[] {
         new SpecificCompilerTool(),
-        new InduceSchemaTool()
+        new InduceSchemaTool(),
+        new JsonToBinaryFragmentTool(),
+        new BinaryFragmentToJsonTool(),
+        new DataFileReadTool(),
+        new DataFileWriteTool(),
+        new DataFileGetSchemaTool(),
         }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {
