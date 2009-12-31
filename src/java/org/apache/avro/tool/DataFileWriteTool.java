@@ -59,8 +59,8 @@ public class DataFileWriteTool implements Tool {
     try {
       DataInputStream din = new DataInputStream(input);
       DataFileWriter<Object> writer =
-        new DataFileWriter<Object>(schema, out,
-                                   new GenericDatumWriter<Object>());
+        new DataFileWriter<Object>(new GenericDatumWriter<Object>())
+        .create(schema, out);
       Decoder decoder = new JsonDecoder(schema, din);
       Object datum;
       while (true) {

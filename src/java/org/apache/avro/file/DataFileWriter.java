@@ -36,7 +36,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
@@ -60,9 +59,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private BufferedFileOutputStream out;
   private Encoder vout;
 
-  private Map<String,byte[]> meta = new HashMap<String,byte[]>();
+  private final Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
-  private long count;                           // # entries in file
   private int blockCount;                       // # entries in current block
 
   private ByteArrayOutputStream buffer =
@@ -71,29 +69,55 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private byte[] sync;                          // 16 random bytes
 
-  /** Construct a writer to a new file for data matching a schema. */
-  public DataFileWriter(Schema schema, File file,
-                        DatumWriter<D> dout) throws IOException {
-    this(schema, new FileOutputStream(file), dout);
-  }
-  /** Construct a writer to a new file for data matching a schema. */
-  public DataFileWriter(Schema schema, OutputStream outs,
-                        DatumWriter<D> dout) throws IOException {
-    this.schema = schema;
-    this.sync = generateSync();
+  private boolean isOpen;
 
-    setMeta(DataFileConstants.SYNC, sync);
-    setMeta(DataFileConstants.SCHEMA, schema.toString());
-    setMeta(DataFileConstants.CODEC, DataFileConstants.NULL_CODEC);
-
-    init(outs, dout);
-
-    out.write(DataFileConstants.MAGIC);
+  /** Construct a writer, not yet open. */
+  public DataFileWriter(DatumWriter<D> dout) {
+    this.dout = dout;
   }
   
-  /** Construct a writer appending to an existing file. */
-  public DataFileWriter(File file, DatumWriter<D> dout)
+  private void assertOpen() {
+    if (!isOpen) throw new AvroRuntimeException("not open");
+  }
+  private void assertNotOpen() {
+    if (isOpen) throw new AvroRuntimeException("already open");
+  }
+
+  /** Open a new file for data matching a schema. */
+  public DataFileWriter<D> create(Schema schema, File file) throws IOException {
+    return create(schema, new FileOutputStream(file));
+  }
+
+  /** Open a new file for data matching a schema. */
+  public DataFileWriter<D> create(Schema schema, OutputStream outs)
     throws IOException {
+    assertNotOpen();
+
+    this.schema = schema;
+    setMeta(DataFileConstants.SCHEMA, schema.toString());
+    this.sync = generateSync();
+
+    init(outs);
+
+    out.write(DataFileConstants.MAGIC);           // write magic
+
+    vout.writeMapStart();                         // write metadata
+    vout.setItemCount(meta.size());
+    for (Map.Entry<String,byte[]> entry : meta.entrySet()) {
+      vout.startItem();
+      vout.writeString(entry.getKey());
+      vout.writeBytes(entry.getValue());
+    }
+    vout.writeMapEnd();
+
+    out.write(sync);                              // write initial sync
+
+    return this;
+  }
+
+  /** Open a writer appending to an existing file. */
+  public DataFileWriter<D> appendTo(File file) throws IOException {
+    assertNotOpen();
     if (!file.exists())
       throw new FileNotFoundException("Not found: "+file);
     RandomAccessFile raf = new RandomAccessFile(file, "rw");
@@ -103,21 +127,21 @@ public class DataFileWriter<D> implements Closeable, Flushable {
                             new GenericDatumReader<D>());
     this.schema = reader.getSchema();
     this.sync = reader.sync;
-    this.count = reader.getCount();
     this.meta.putAll(reader.meta);
 
     FileChannel channel = raf.getChannel();       // seek to end
     channel.position(channel.size());
 
-    init(new FileOutputStream(fd), dout);
+    init(new FileOutputStream(fd));
+
+    return this;
   }
-  
-  private void init(OutputStream outs, DatumWriter<D> dout)
-    throws IOException {
+
+  private void init(OutputStream outs) throws IOException {
     this.out = new BufferedFileOutputStream(outs);
     this.vout = new BinaryEncoder(out);
-    this.dout = dout;
     dout.setSchema(schema);
+    this.isOpen = true;
   }
 
   private static byte[] generateSync() {
@@ -132,92 +156,63 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   /** Set a metadata property. */
-  public synchronized void setMeta(String key, byte[] value) {
-      meta.put(key, value);
-    }
+  public DataFileWriter<D> setMeta(String key, byte[] value) {
+    assertNotOpen();
+    meta.put(key, value);
+    return this;
+  }
   /** Set a metadata property. */
-  public synchronized void setMeta(String key, String value) {
-      try {
-        setMeta(key, value.getBytes("UTF-8"));
-      } catch (UnsupportedEncodingException e) {
-        throw new RuntimeException(e);
-      }
+  public DataFileWriter<D> setMeta(String key, String value) {
+    try {
+      return setMeta(key, value.getBytes("UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
     }
+  }
   /** Set a metadata property. */
-  public synchronized void setMeta(String key, long value) {
-      setMeta(key, Long.toString(value));
-    }
-
-  /** If the schema for this file is a union, add a branch to it. */
-  public synchronized void addSchema(Schema branch) {
-    if (schema.getType() != Schema.Type.UNION)
-      throw new AvroRuntimeException("Not a union schema: "+schema);
-    List<Schema> types = schema.getTypes();
-    types.add(branch);
-    this.schema = Schema.createUnion(types);
-    this.dout.setSchema(schema);
-    setMeta(DataFileConstants.SCHEMA, schema.toString());
+  public DataFileWriter<D> setMeta(String key, long value) {
+    return setMeta(key, Long.toString(value));
   }
 
   /** Append a datum to the file. */
-  public synchronized void append(D datum) throws IOException {
-      dout.write(datum, bufOut);
-      blockCount++;
-      count++;
-      if (buffer.size() >= DataFileConstants.SYNC_INTERVAL)
-        writeBlock();
-    }
+  public void append(D datum) throws IOException {
+    assertOpen();
+    dout.write(datum, bufOut);
+    blockCount++;
+    if (buffer.size() >= DataFileConstants.SYNC_INTERVAL)
+      writeBlock();
+  }
 
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
-      out.write(sync);
       vout.writeLong(blockCount);
       buffer.writeTo(out);
       buffer.reset();
       blockCount = 0;
+      out.write(sync);
     }
   }
 
   /** Return the current position as a value that may be passed to {@link
    * DataFileReader#seek(long)}.  Forces the end of the current block,
    * emitting a synchronization marker. */
-  public synchronized long sync() throws IOException {
-      writeBlock();
-      return out.tell();
-    }
+  public long sync() throws IOException {
+    assertOpen();
+    writeBlock();
+    return out.tell();
+  }
 
-  /** Flush the current state of the file, including metadata. */
-  public synchronized void flush() throws IOException {
-      writeFooter();
-      out.flush();
-    }
+  /** Flush the current state of the file. */
+  public void flush() throws IOException {
+    sync();
+    out.flush();
+  }
 
   /** Close the file. */
-  public synchronized void close() throws IOException {
-      flush();
-      out.close();
-    }
-
-  private void writeFooter() throws IOException {
-    writeBlock();                               // flush any data
-    setMeta(DataFileConstants.COUNT, count);    // update count
-    bufOut.writeMapStart();              // write meta entries
-    bufOut.setItemCount(meta.size());
-    for (Map.Entry<String,byte[]> entry : meta.entrySet()) {
-      bufOut.startItem();
-      bufOut.writeString(entry.getKey());
-      bufOut.writeBytes(entry.getValue());
-    }
-    bufOut.writeMapEnd();
-    
-    int size = buffer.size()+4;
-    out.write(sync);
-    vout.writeLong(DataFileConstants.FOOTER_BLOCK);                 // tag the block
-    vout.writeLong(size);
-    buffer.writeTo(out);
-    buffer.reset();
-    out.write((byte)(size >>> 24)); out.write((byte)(size >>> 16));
-    out.write((byte)(size >>> 8));  out.write((byte)(size >>> 0));
+  public void close() throws IOException {
+    flush();
+    out.close();
+    isOpen = false;
   }
 
   private class BufferedFileOutputStream extends BufferedOutputStream {

@@ -18,7 +18,6 @@
 package org.apache.avro;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -129,9 +128,8 @@ public class RandomData implements Iterable<Object> {
     }
     Schema sch = Schema.parse(new File(args[0]));
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(sch, 
-          new FileOutputStream(new File(args[1]),false),
-          new GenericDatumWriter<Object>());
+      new DataFileWriter<Object>(new GenericDatumWriter<Object>())
+      .create(sch, new File(args[1]));
     try {
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {
         writer.append(datum);

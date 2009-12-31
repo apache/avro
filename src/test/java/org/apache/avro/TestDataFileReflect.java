@@ -52,8 +52,9 @@ public class TestDataFileReflect {
         reflectData.getSchema(FooRecord.class),
         reflectData.getSchema(BarRecord.class) });
     Schema union = Schema.createUnion(schemas);
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(union, fos,
-        new ReflectDatumWriter(union));
+    DataFileWriter<Object> writer =
+      new DataFileWriter<Object>(new ReflectDatumWriter(union))
+      .create(union, fos);
 
     // test writing to a file
     CheckList check = new CheckList();
@@ -66,59 +67,10 @@ public class TestDataFileReflect {
     ReflectDatumReader din = new ReflectDatumReader();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
-    Object datum = null;
-    long count = reader.getMetaLong("count");
-    for (int i = 0; i < count; i++) {
-      datum = reader.next(datum);
-      check.assertEquals(datum, i);
-    }
-    reader.close();
-  }
-
-  /*
-   * Test that using multiple schemas in a file works doing a union for new
-   * types as they come.
-   */
-  @Test
-  public void testMultiReflectWithUntionAfterWriting() throws IOException {
-    FileOutputStream fos = new FileOutputStream(FILE);
-
-    ReflectData reflectData = ReflectData.get();
-    List<Schema> schemas = new ArrayList<Schema>();
-    schemas.add(reflectData.getSchema(FooRecord.class));
-    Schema union = Schema.createUnion(schemas);
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(union, fos,
-        new ReflectDatumWriter(union));
-
-    CheckList check = new CheckList();
-    // write known type
-    write(writer, new FooRecord(10), check);
-    write(writer, new FooRecord(15), check);
-
-    // we have a new type, add it to the file
-    writer.addSchema(reflectData.getSchema(BarRecord.class));
-
-    // test writing those new types to a file
-    write(writer, new BarRecord("One beer please"), check);
-    write(writer, new BarRecord("Two beers please"), check);
-
-    // does foo record still work?
-    write(writer, new FooRecord(20), check);
-
-    // get one more bar in, just for laughs
-    write(writer, new BarRecord("Many beers please"), check);
-
-    writer.close();
-
-    ReflectDatumReader din = new ReflectDatumReader();
-    SeekableFileInput sin = new SeekableFileInput(FILE);
-    DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
-    Object datum = null;
-    long count = reader.getMetaLong("count");
-    for (int i = 0; i < count; i++) {
-      datum = reader.next(datum);
-      check.assertEquals(datum, i);
-    }
+    int count = 0;
+    for (Object datum : reader)
+      check.assertEquals(datum, count++);
+    Assert.assertEquals(count, check.size());
     reader.close();
   }
 
@@ -131,8 +83,9 @@ public class TestDataFileReflect {
 
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schema = reflectData.getSchema(BarRecord.class);
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(schema, fos,
-        new ReflectDatumWriter(BarRecord.class, reflectData));
+    DataFileWriter<Object> writer = new DataFileWriter<Object>
+      (new ReflectDatumWriter(BarRecord.class, reflectData))
+      .create(schema, fos);
 
     // test writing to a file
     CheckList check = new CheckList();
@@ -145,12 +98,10 @@ public class TestDataFileReflect {
     ReflectDatumReader din = new ReflectDatumReader();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
-    Object datum = null;
-    long count = reader.getMetaLong("count");
-    for (int i = 0; i < count; i++) {
-      datum = reader.next(datum);
-      check.assertEquals(datum, i);
-    }
+    int count = 0;
+    for (Object datum : reader)
+      check.assertEquals(datum, count++);
+    Assert.assertEquals(count, check.size());
     reader.close();
   }
 
@@ -162,8 +113,9 @@ public class TestDataFileReflect {
     FileOutputStream fos = new FileOutputStream(FILE);
 
     Schema schema = ReflectData.get().getSchema(BazRecord.class);
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(schema, fos,
-        new ReflectDatumWriter(schema));
+    DataFileWriter<Object> writer =
+      new DataFileWriter<Object>(new ReflectDatumWriter(schema))
+      .create(schema, fos);
 
     // test writing to a file
     CheckList check = new CheckList();
@@ -174,12 +126,10 @@ public class TestDataFileReflect {
     ReflectDatumReader din = new ReflectDatumReader();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
-    Object datum = null;
-    long count = reader.getMetaLong("count");
-    for (int i = 0; i < count; i++) {
-      datum = reader.next(datum);
-      check.assertEquals(datum, i);
-    }
+    int count = 0;
+    for (Object datum : reader)
+      check.assertEquals(datum, count++);
+    Assert.assertEquals(count, check.size());
     reader.close();
   }
 

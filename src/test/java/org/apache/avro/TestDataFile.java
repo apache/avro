@@ -28,6 +28,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Random;
 import java.io.File;
 import java.io.IOException;
 
@@ -52,11 +53,14 @@ public class TestDataFile {
   @Test
   public void testGenericWrite() throws IOException {
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(SCHEMA, FILE,
-                                 new GenericDatumWriter<Object>());
+      new DataFileWriter<Object>(new GenericDatumWriter<Object>())
+      .create(SCHEMA, FILE);
     try {
+      int count = 0;
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED)) {
         writer.append(datum);
+        if (++count%(COUNT/3) == 0)
+          writer.sync();                          // force some syncs mid-file
       }
     } finally {
       writer.close();
@@ -68,7 +72,6 @@ public class TestDataFile {
     DataFileReader<Object> reader =
       new DataFileReader<Object>(FILE, new GenericDatumReader<Object>());
     try {
-      assertEquals(COUNT, reader.getCount());
       Object datum = null;
       if (VALIDATE) {
         for (Object expected : new RandomData(SCHEMA, COUNT, SEED)) {
@@ -86,10 +89,38 @@ public class TestDataFile {
   }
 
   @Test
+  public void testSplits() throws IOException {
+    DataFileReader<Object> reader =
+      new DataFileReader<Object>(FILE, new GenericDatumReader<Object>());
+    Random rand = new Random(SEED);
+    try {
+      int splits = 10;                            // number of splits
+      int length = (int)FILE.length();            // length of file
+      int end = length;                           // end of split
+      int remaining = end;                        // bytes remaining
+      int count = 0;                              // count of entries
+      while (remaining > 0) {
+        int start = Math.max(0, end - rand.nextInt(2*length/splits));
+        reader.sync(start);                       // count entries in split
+        while (!reader.pastSync(end)) {
+          reader.next();
+          count++;
+        }
+        remaining -= end-start;
+        end = start;
+      }
+      assertEquals(COUNT, count);
+    } finally {
+      reader.close();
+    }
+  }
+
+  @Test
   public void testGenericAppend() throws IOException {
     long start = FILE.length();
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(FILE, new GenericDatumWriter<Object>());
+      new DataFileWriter<Object>(new GenericDatumWriter<Object>())
+      .appendTo(FILE);
     try {
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED+1)) {
         writer.append(datum);
@@ -100,7 +131,6 @@ public class TestDataFile {
     DataFileReader<Object> reader =
       new DataFileReader<Object>(FILE, new GenericDatumReader<Object>());
     try {
-      assertEquals(COUNT*2, reader.getCount());
       reader.seek(start);
       Object datum = null;
       if (VALIDATE) {
@@ -118,18 +148,12 @@ public class TestDataFile {
     }
   }
 
-
-
-  protected void readFile(File f, 
-      DatumReader<Object> datumReader, boolean reuse)
+  protected void readFile(File f, DatumReader<Object> datumReader)
     throws IOException {
     System.out.println("Reading "+ f.getName());
     DataFileReader<Object> reader =
       new DataFileReader<Object>(new SeekableFileInput(f), datumReader);
-    Object datum = null;
-    long count = reader.getMetaLong("count");
-    for (int i = 0; i < count; i++) {
-      datum = reader.next(reuse ? datum : null);
+    for (Object datum : reader) {
       assertNotNull(datum);
     }
   }
@@ -140,10 +164,10 @@ public class TestDataFile {
     if (args.length > 1)
       projection = Schema.parse(new File(args[1]));
     TestDataFile tester = new TestDataFile();
-    tester.readFile(input, new GenericDatumReader<Object>(null, projection), false);
+    tester.readFile(input, new GenericDatumReader<Object>(null, projection));
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)
-      tester.readFile(input, new GenericDatumReader<Object>(null, projection), false);
+      tester.readFile(input, new GenericDatumReader<Object>(null, projection));
     System.out.println("Time: "+(System.currentTimeMillis()-start));
   }
 
@@ -172,7 +196,7 @@ public class TestDataFile {
     private void readFiles(DatumReader<Object> datumReader) throws IOException {
       TestDataFile test = new TestDataFile();
       for (File f : DATAFILE_DIR.listFiles())
-        test.readFile(f, datumReader, true);
+        test.readFile(f, datumReader);
     }
   }
 }

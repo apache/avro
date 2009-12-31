@@ -592,65 +592,52 @@
 
       <p>A file consists of:</p>
       <ul>
-	<li>A <em>header, followed by</em></li>
-	<li>one or more <em>blocks</em>.</li>
-      </ul>
-      <p>There are two kinds of blocks, <em>normal</em>
-	and <em>metadata</em>.  All files must contain at least one
-	metadata block.  A file terminates with its last metadata
-	block.  Any data after the last metadata block is ignored.</p>
-
-      <p>A header consists of:</p>
-      <ul>
-	<li>Four bytes, ASCII 'O', 'b', 'j', followed by zero.</li>
-	<li>A 16-byte sync marker.</li>
+	<li>A <em>file header</em>, followed by</li>
+	<li>one or more <em>file data blocks</em>.</li>
       </ul>
 
-      <p>A metadata block consists of:</p>
+      <p>A file header consists of:</p>
       <ul>
-	<li>The file's 16-byte sync marker.</li>
-	<li>A long with value -1, identifying this as a metadata block.</li>
-	<li>A long indicating the size in bytes of this block.</li>
+	<li>Four bytes, ASCII 'O', 'b', 'j', followed by 1.</li>
+	<li><em>file metadata</em>, including the schema.</li>
+	<li>The 16-byte, randomly-generated sync marker for this file.</li>
+      </ul>
+
+      <p>File metadata consists of:</p>
+      <ul>
 	<li>A long indicating the number of metadata key/value pairs.</li>
 	<li>For each pair, a string key and bytes value.</li>
-	<li>The size in bytes of this block as a 4-byte big-endian integer.
-	  <p>When a file is closed normally, this terminates the file
-	    and permits one to efficiently seek to the start of the
-	    metadata.  If the sync marker there does not match that at
-	    the start of the file, then one must scan for the last
-	    metadata in the file.</p>
-	</li>
       </ul>
 
-      <p>The following metadata properties are reserved:</p>
+      <p>The following file metadata properties are reserved:</p>
       <ul>
 	<li><strong>schema</strong> contains the schema of objects
-	stored in the file, as a string.</li>
-	<li><strong>count</strong> contains the number of objects in
-	the file as a decimal ASCII string.</li>
+	stored in the file, as JSON data (required).</li>
 	<li><strong>codec</strong> the name of the compression codec
 	used to compress blocks, as a string. The only value for codec
 	currently supported is "null" (meaning no compression is
 	performed).  If codec is absent, it is assumed to be
 	"null".</li>
-	<li><strong>sync</strong> the 16-byte sync marker used in this file,
-        as a byte sequence.</li>
       </ul>
 
-      <p>A normal block consists of:</p>
+      <p>A file header is thus described by the following schema:</p>
+      <source>
+{"type": "record", "name": "org.apache.avro.file.Header",
+ "fields" : [
+   {"name": "magic", "type": {"type": "fixed", "size": 4}}
+   {"name": "meta", "type": {"type": "map", "values": "bytes"}}
+   {"name": "sync", "type": {"type": "fixed", "size": 16}}
+  ]
+}
+      </source>
+
+      <p>A file data block consists of:</p>
       <ul>
-	<li>The file's 16-byte sync marker.</li>
-	<li>A long indicating the size in bytes of this block in the file.</li>
+	<li>A long indicating the count of objects in this block.</li>
 	<li>The serialized objects.  If a codec is specified, this is
 	compressed by that codec.</li>
+	<li>The file's 16-byte sync marker.</li>
       </ul>
-
-      <p>Note that this format supports appends, since multiple
-      metadata blocks are permitted.</p>
-
-      <p>To be robust to application failure, implementations can
-      write metadata periodically to limit the amount of the file that
-      must be scanned to find the last metadata block.</p>
 
     </section>
 

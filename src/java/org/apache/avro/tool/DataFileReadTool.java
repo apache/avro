@@ -61,8 +61,7 @@ public class DataFileReadTool implements Tool {
       Schema schema = fileReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
       Encoder encoder = new JsonEncoder(schema, (JsonGenerator)null);
-      Object datum;
-      while (null != (datum = fileReader.next(null))) {
+      for (Object datum : fileReader) {
         // init() recreates the internal Jackson JsonGenerator
         encoder.init(out);
         writer.write(datum, encoder);

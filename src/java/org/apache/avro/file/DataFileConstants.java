@@ -22,7 +22,7 @@ package org.apache.avro.file;
  * Constants used in data files.
  */
 class DataFileConstants {
-  public static final byte VERSION = 0;
+  public static final byte VERSION = 1;
   public static final byte[] MAGIC = new byte[] {
     (byte)'O', (byte)'b', (byte)'j', VERSION
   };
@@ -31,7 +31,6 @@ class DataFileConstants {
   public static final int SYNC_INTERVAL = 1000*SYNC_SIZE; 
 
   public static final String SCHEMA = "schema";
-  public static final String SYNC = "sync";
   public static final String COUNT = "count";
   public static final String CODEC = "codec";
   public static final String NULL_CODEC = "null";

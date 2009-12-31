@@ -19,35 +19,19 @@ package org.apache.avro.file;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.EOFException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.io.File;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.apache.avro.Schema;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.BinaryDecoder;
+import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
 
-/** Read files written by {@link DataFileWriter}.
+/** Random access to files written with {@link DataFileWriter}.
  * @see DataFileWriter
  */
-public class DataFileReader<D> {
-
-  private Schema schema;
-  private DatumReader<D> reader;
-  private SeekableBufferedInput in;
-  private Decoder vin;
-
-  Map<String,byte[]> meta = new HashMap<String,byte[]>();
-
-  private long count;                           // # entries in file
-  private long blockCount;                      // # entries in block
-  byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
-  private byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
+public class DataFileReader<D> extends DataFileStream<D> {
+  private SeekableBufferedInput sin;
+  private long blockStart;
 
   /** Construct a reader for a file. */
   public DataFileReader(File file, DatumReader<D> reader) throws IOException {
@@ -57,133 +41,59 @@ public class DataFileReader<D> {
   /** Construct a reader for a file. */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader)
     throws IOException {
-    this.in = new SeekableBufferedInput(sin);
-
-    byte[] magic = new byte[4];
-    in.read(magic);
-    if (!Arrays.equals(DataFileConstants.MAGIC, magic))
-      throw new IOException("Not a data file.");
-
-    long length = in.length();
-    in.seek(length-4);
-    int footerSize=(in.read()<<24)+(in.read()<<16)+(in.read()<<8)+in.read();
-    in.seek(length-footerSize);
-    this.vin = new BinaryDecoder(in);
-    long l = vin.readMapStart();
-    if (l > 0) {
-      do {
-        for (long i = 0; i < l; i++) {
-          String key = vin.readString(null).toString();
-          ByteBuffer value = vin.readBytes(null);
-          byte[] bb = new byte[value.remaining()];
-          value.get(bb);
-          meta.put(key, bb);
-        }
-      } while ((l = vin.mapNext()) != 0);
-    }
-
-    this.sync = getMeta(DataFileConstants.SYNC);
-    this.count = getMetaLong(DataFileConstants.COUNT);
-    String codec = getMetaString(DataFileConstants.CODEC);
-    if (codec != null && ! codec.equals(DataFileConstants.NULL_CODEC)) {
-      throw new IOException("Unknown codec: " + codec);
-    }
-    this.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA));
-    this.reader = reader;
-
-    reader.setSchema(schema);
-
-    in.seek(DataFileConstants.MAGIC.length);         // seek to start
+    super(new SeekableBufferedInput(sin), reader);
+    this.sin = (SeekableBufferedInput)in;
   }
-  
-  /** Return the schema used in this file. */
-  public Schema getSchema() { return schema; }
-  
-  /** Return the number of records in the file. */
-  public long getCount() { return count; }
-  
-  /** Return the value of a metadata property. */
-  public synchronized byte[] getMeta(String key) {
-    return meta.get(key);
+
+  /** Move to a specific, known synchronization point, one returned from {@link
+   * DataFileWriter#sync()} while writing.  If synchronization points were not
+   * saved while writing a file, use {#sync(long)} instead. */
+  public void seek(long position) throws IOException {
+    sin.seek(position);
+    blockRemaining = 0;
+    blockStart = position;
   }
-  /** Return the value of a metadata property. */
-  public synchronized String getMetaString(String key) {
-    byte[] value = getMeta(key);
-    if (value == null) {
-      return null;
-    }
+
+  /** Move to the next synchronization point after a position. To process a
+   * range of file entires, call this with the starting position, then check
+   * {@link #pastSync(long)} with the end point before each call to {@link
+   * #next()}. */
+  public void sync(long position) throws IOException {
+    seek(position);
     try {
-      return new String(value, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
-  }
-  /** Return the value of a metadata property. */
-  public synchronized long getMetaLong(String key) {
-    return Long.parseLong(getMetaString(key));
-  }
-
-  /** Return the next datum in the file. */
-  public synchronized D next(D reuse) throws IOException {
-    while (blockCount == 0) {                     // at start of block
-
-      if (in.tell() == in.length())               // at eof
-        return null;
-
-      skipSync();                                 // skip a sync
-
-      blockCount = vin.readLong();                // read blockCount
-         
-      if (blockCount == DataFileConstants.FOOTER_BLOCK) { 
-        in.seek(vin.readLong()+in.tell());        // skip a footer
-        blockCount = 0;
-      }
-    }
-    blockCount--;
-    return reader.read(reuse, vin);
-  }
-
-  private void skipSync() throws IOException {
-    vin.readFixed(syncBuffer);
-    if (!Arrays.equals(syncBuffer, sync))
-      throw new IOException("Invalid sync!");
-  }
-
-  /** Move to the specified synchronization point, as returned by {@link
-   * DataFileWriter#sync()}. */
-  public synchronized void seek(long position) throws IOException {
-    in.seek(position);
-    blockCount = 0;
-  }
-
-  /** Move to the next synchronization point after a position. */
-  public synchronized void sync(long position) throws IOException {
-    if (in.tell()+DataFileConstants.SYNC_SIZE >= in.length()) {
-      in.seek(in.length());
+      vin.readFixed(syncBuffer);
+    } catch (EOFException e) {
+      blockStart = sin.tell();
       return;
     }
-    in.seek(position);
-    vin.readFixed(syncBuffer);
-    for (int i = 0; in.tell() < in.length(); i++) {
+    int i=0, b;
+    do {
       int j = 0;
-      for (; j < sync.length; j++) {
-        if (sync[j] != syncBuffer[(i+j)%sync.length])
+      for (; j < SYNC_SIZE; j++) {
+        if (sync[j] != syncBuffer[(i+j)%SYNC_SIZE])
           break;
       }
-      if (j == sync.length) {                     // position before sync
-        in.seek(in.tell() - DataFileConstants.SYNC_SIZE);
+      if (j == SYNC_SIZE) {                       // matched a complete sync
+        blockStart = position + i + SYNC_SIZE;
         return;
       }
-      syncBuffer[i%sync.length] = (byte)in.read();
-    }
+      b = in.read();
+      syncBuffer[i++%SYNC_SIZE] = (byte)b;
+    } while (b != -1);
   }
 
-  /** Close this reader. */
-  public synchronized void close() throws IOException {
-    in.close();
+  @Override
+  void skipSync() throws IOException {            // note block start
+    super.skipSync();
+    blockStart = sin.tell();
   }
 
-  private class SeekableBufferedInput extends BufferedInputStream {
+  /** Return true if past the next synchronization point after a position. */ 
+  public boolean pastSync(long position) {
+    return blockStart >= Math.min(sin.length(), position+SYNC_SIZE);
+  }
+
+  private static class SeekableBufferedInput extends BufferedInputStream {
     private long position;                        // end of buffer
     private long length;                          // file length
 
@@ -220,7 +130,7 @@ public class DataFileReader<D> {
     }
 
     public long tell() { return position-(count-pos); }
-    public long length() throws IOException { return length; }
+    public long length() { return length; }
 
     public int read() throws IOException {        // optimized implementation
       if (pos >= count) return super.read();

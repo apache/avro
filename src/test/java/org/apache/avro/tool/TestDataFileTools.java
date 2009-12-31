@@ -49,8 +49,9 @@ public class TestDataFileTools {
     sampleFile = AvroTestUtil.tempFile(TestDataFileTools.class + ".avro");
     schema = Schema.create(Type.INT);
     
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(
-        schema, sampleFile, new GenericDatumWriter<Object>(schema));
+    DataFileWriter<Object> writer
+      = new DataFileWriter<Object>(new GenericDatumWriter<Object>(schema))
+      .create(schema, sampleFile);
     StringBuilder builder = new StringBuilder();
 
     for (int i = 0; i < COUNT; ++i) {
@@ -106,15 +107,13 @@ public class TestDataFileTools {
     // Read it back, and make sure it's valid.
     GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
     DataFileReader<Object> fileReader = new DataFileReader<Object>(outFile,reader);
-    Object datum;
     int i = 0;
-    while (null != (datum = fileReader.next(null))) {
+    for (Object datum : fileReader) {
       assertEquals(i, datum);
       i++;
     }
     assertEquals(COUNT, i);
     assertEquals(schema, fileReader.getSchema());
-    assertEquals(COUNT, fileReader.getCount());
   }
   
   @Test
@@ -148,7 +147,7 @@ public class TestDataFileTools {
     DataFileReader<Object> fileReader = 
       new DataFileReader<Object>(outFile,reader);
     int i = 0;
-    while (null != fileReader.next(null)) {
+    for (Object datum : fileReader) {
       i++;
     }
     return i;
