@@ -26,10 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+
 import org.apache.avro.Protocol;
 
 /**
@@ -136,7 +137,8 @@ public class TestGenAvro {
     }
 
     private static String slurp(File f) throws IOException {
-      BufferedReader in = new BufferedReader(new FileReader(f));
+      BufferedReader in = new BufferedReader(
+          new InputStreamReader(new FileInputStream(f), "UTF-8"));
 
       String line = null;
       StringBuilder builder = new StringBuilder();

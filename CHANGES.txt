@@ -230,6 +230,9 @@ Trunk (unreleased changes)
 
     AVRO-262. Fix two typos in the spec.  (Jeff Hammerbacher via cutting)
 
+    AVRO-276. Fix GenAvro to specify file encoding as UTF-8.
+    (Philip Zeyliger via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
