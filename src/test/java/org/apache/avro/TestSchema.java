@@ -262,9 +262,8 @@ public class TestSchema {
                   new GenericDatumWriter<Object>(),
                   new GenericDatumReader<Object>());
 
-      // Check that we can generate the code for every
-      // schema we see.
-      assertTrue(null != TestSpecificCompiler.compileWithSpecificCompiler(schema));
+      // Check that we can generate the code for every schema we see.
+      TestSpecificCompiler.assertCompiles(schema, false);
     }
   }
 

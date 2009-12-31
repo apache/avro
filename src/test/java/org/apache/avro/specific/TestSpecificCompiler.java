@@ -21,9 +21,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
+import javax.tools.JavaCompiler;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+import javax.tools.JavaCompiler.CompilationTask;
+
+import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.TestSchema;
@@ -38,16 +47,9 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testCap() {
-    assertEquals("Foobar", SpecificCompiler.cap("foobar"));
-    assertEquals("F", SpecificCompiler.cap("f"));
-    assertEquals("F", SpecificCompiler.cap("F"));
-  }
-
-  @Test
   public void testMakePath() {
-    assertEquals("foo/bar/Baz.java".replace("/", File.separator), SpecificCompiler.makePath("baz", "foo.bar"));
-    assertEquals("Baz.java", SpecificCompiler.makePath("baz", ""));
+    assertEquals("foo/bar/Baz.java".replace("/", File.separator), SpecificCompiler.makePath("Baz", "foo.bar"));
+    assertEquals("baz.java", SpecificCompiler.makePath("baz", ""));
   }
 
   @Test
@@ -56,12 +58,13 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testSimpleEnumSchema() {
+  public void testSimpleEnumSchema() throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(Schema.parse(TestSchema.BASIC_ENUM_SCHEMA)).compile();
     assertEquals(1, outputs.size());
     OutputFile o = outputs.iterator().next();
     assertEquals(o.path, "Test.java");
     assertTrue(o.contents.contains("public enum Test"));
+    assertCompilesWithJavaCompiler(outputs);
   }
 
   @Test
@@ -71,7 +74,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testManglingForProtocols() {
+  public void testManglingForProtocols() throws IOException {
     String protocolDef = "" +
       "{ \"protocol\": \"default\",\n" +
       "  \"types\":\n" +
@@ -89,8 +92,9 @@ public class TestSpecificCompiler {
       "    }" +
       "   }\n" +
       "}\n";
-    Iterator<OutputFile> i =
-      new SpecificCompiler(Protocol.parse(protocolDef)).compile().iterator();
+    Collection<OutputFile> c =
+      new SpecificCompiler(Protocol.parse(protocolDef)).compile();
+    Iterator<OutputFile> i = c.iterator();
     String errType = i.next().contents;
     String protocol = i.next().contents;
 
@@ -100,11 +104,13 @@ public class TestSpecificCompiler {
     assertTrue(protocol.contains("org.apache.avro.util.Utf8 goto$(org.apache.avro.util.Utf8 break$)"));
     assertTrue(protocol.contains("public interface default$"));
     assertTrue(protocol.contains("throws org.apache.avro.ipc.AvroRemoteException, finally$"));
+    
+    assertCompilesWithJavaCompiler(c);
 
   }
 
   @Test
-  public void testManglingForRecords() {
+  public void testManglingForRecords() throws IOException {
     String schema = "" +
       "{ \"name\": \"volatile\", \"type\": \"record\", " +
       "  \"fields\": [ {\"name\": \"package\", \"type\": \"string\" }," +
@@ -117,10 +123,12 @@ public class TestSpecificCompiler {
     assertTrue(contents.contains("public org.apache.avro.util.Utf8 package$;"));
     assertTrue(contents.contains("class volatile$ extends"));
     assertTrue(contents.contains("volatile$ short$;"));
+    
+    assertCompilesWithJavaCompiler(c);
   }
 
   @Test
-  public void testManglingForEnums() {
+  public void testManglingForEnums() throws IOException {
     String enumSchema = "" +
       "{ \"name\": \"instanceof\", \"type\": \"enum\"," +
       "  \"symbols\": [\"new\", \"super\", \"switch\"] }";
@@ -130,13 +138,59 @@ public class TestSpecificCompiler {
     String contents = c.iterator().next().contents;
 
     assertTrue(contents.contains("new$"));
+    
+    assertCompilesWithJavaCompiler(c);
   }
 
   /**
-   * Called from TestSchema as part of its comprehensive checks.
+   * Checks that a schema passes through the SpecificCompiler, and,
+   * optionally, uses the system's Java compiler to check
+   * that the generated code is valid.
    */
-  public static Collection<OutputFile>
-      compileWithSpecificCompiler(Schema schema) {
-    return new SpecificCompiler(schema).compile();
+  public static void
+      assertCompiles(Schema schema, boolean useJavaCompiler) 
+  throws IOException {
+    Collection<OutputFile> outputs = new SpecificCompiler(schema).compile();
+    assertTrue(null != outputs);
+    if (useJavaCompiler) {
+      assertCompilesWithJavaCompiler(outputs);
+    }
+  }
+  
+  /**
+   * Checks that a protocol passes through the SpecificCompiler,
+   * and, optionally, uses the system's Java compiler to check
+   * that the generated code is valid.
+   */
+  public static void assertCompiles(Protocol protocol, boolean useJavaCompiler)
+  throws IOException {
+    Collection<OutputFile> outputs = new SpecificCompiler(protocol).compile();
+    assertTrue(null != outputs);
+    if (useJavaCompiler) {
+      assertCompilesWithJavaCompiler(outputs);
+    }
+  }
+  
+  /** Uses the system's java compiler to actually compile the generated code. */
+  static void assertCompilesWithJavaCompiler(Collection<OutputFile> outputs) 
+  throws IOException {
+    if (outputs.isEmpty()) {
+      return;               // Nothing to compile!
+    }
+    File dstDir = AvroTestUtil.tempFile("realCompiler");
+    List<File> javaFiles = new ArrayList<File>();
+    for (OutputFile o : outputs) {
+      javaFiles.add(o.writeToDestination(dstDir));
+    }
+
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    StandardJavaFileManager fileManager = 
+      compiler.getStandardFileManager(null, null, null);
+    
+    CompilationTask cTask = compiler.getTask(null, fileManager, null, null, 
+        null,
+        fileManager.getJavaFileObjects(
+            javaFiles.toArray(new File[javaFiles.size()])));
+    assertTrue(cTask.call());
   }
 }

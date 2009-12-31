@@ -156,6 +156,9 @@ Trunk (unreleased changes)
 
     AVRO-260. Upgrade to Jackson 1.4.0. (cutting)
 
+    AVRO-269. Use java compiler to validate specific compiler's output.
+    (Philip Zeyliger via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
