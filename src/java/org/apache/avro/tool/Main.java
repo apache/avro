@@ -43,6 +43,7 @@ public class Main {
         new DataFileReadTool(),
         new DataFileWriteTool(),
         new DataFileGetSchemaTool(),
+        new GenAvroTool()
         }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {

@@ -1,0 +1,15 @@
+{
+  "protocol" : "Foo",
+  "namespace" : null,
+  "types" : [ ],
+  "messages" : {
+    "error" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "void" : {
+      "request" : [ ],
+      "response" : "null"
+    }
+  }
+}

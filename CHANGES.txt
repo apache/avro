@@ -43,6 +43,8 @@ Trunk (unreleased changes)
     AVRO-272. Extend RPCContext to include message. 
     (Philip Zeyliger via cutting)
 
+    AVRO-258. Add GenAvro language tool.  (Todd Lipcon via cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd" [
+  <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
+	   "../../../../build/avro.ent">
+  %avro-entities;
+]>
+<document>
+  <header>
+    <title>Avro &AvroVersion; GenAvro Language Docs</title>
+  </header>
+  <body>
+
+    <section id="preamble">
+      <title>Introduction</title>
+
+      <p>This document defines GenAvro, an experimental higher-level language for authoring Avro schemata.
+      Before reading this document, you should have familiarity with the concepts of schemata and protocols,
+      as well as the various primitive and complex types available in Avro.
+      </p>
+      <p>
+        <strong>N.B.</strong> This feature is considered experimental in the current version of Avro and the language
+        has not been finalized. Although major changes are unlikely, some syntax may change in future
+        versions of Avro.
+      </p>
+    </section>
+
+    <section id="overview">
+      <title>Overview</title>
+      <section id="overview_purpose">
+        <title>Purpose</title>
+        <p>The aim of the GenAvro language is to enable developers to author schemata in a way that
+        feels more similar to common programming languages like Java, C++, or Python. Additionally,
+        the GenAvro language may feel more familiar for those users who have previously used the
+        interface description languages (IDLs) in other frameworks like Thrift, Protocol Buffers, or CORBA.
+        </p>
+      </section>
+      <section id="overview_usage">
+        <title>Usage</title>
+        <p>
+          Each GenAvro file defines a single Avro Protocol, and thus generates as its output a JSON-format
+          Avro Protocol file with extension <code>.avpr</code>.
+        </p>
+        <p>
+          To convert a <code>.genavro</code> file into a <code>.avpr</code> file, it must be processed by the
+          <code>avroj genavro</code> tool. For example:
+        </p>
+        <source>
+$ java -jar avroj-1.3.0.jar genavro src/test/genavro/input/namespaces.genavro /tmp/namespaces.avpr
+$ head /tmp/namespaces.avpr
+{
+  "protocol" : "TestNamespace",
+  "namespace" : "avro.test.protocol",
+        </source>
+        <p>
+          The <code>avroj genavro</code> tool can also process input to and from <em>stdin</em> and <em>stdout</em>.
+          See <code>avroj genavro --help</code> for full usage information.
+        </p>
+      </section>
+    </section> <!-- end overview -->
+
+    <section id="defining_protocol">
+      <title>Defining a Protocol in GenAvro</title>
+
+      <p>A GenAvro file consists of exactly one protocol definition. The minimal protocol is defined
+      by the following code:
+      </p>
+      <source>
+protocol MyProtocol {
+}
+      </source>
+      <p>
+        This is equivalent to (and generates) the following JSON protocol definition:
+      </p>
+  <!--  "namespace" : null, TODO: this is generated but shouldnt be - AVRO-263 -->
+      <source>
+{
+"protocol" : "MyProtocol",
+  "types" : [ ],
+  "messages" : {
+  }
+}
+      </source>
+      <p>
+        The namespace of the protocol may be changed using the <code>@namespace</code> annotation:
+      </p>
+      <source>
+@namespace("mynamespace")
+protocol MyProtocol {
+}
+      </source>
+      <p>
+3        This notation is used throughout GenAvro as a way of specifying properties for the annotated element,
+        as will be described later in this document.
+      </p>
+      <p>
+        Protocols in GenAvro can contain the following items:
+      </p>
+        <ul>
+          <li>Definitions of named schemata, including <em>record</em>s, <em>error</em>s, <em>enum</em>s, and <em>fixed</em>s.</li>
+          <li>Definitions of RPC messages</li>
+        </ul>
+    </section>
+    <section id="format_enums">
+      <title>Defining an Enumeration</title>
+      <p>
+        Enums are defined in GenAvro using a syntax similar to C or Java:
+      </p>
+      <source>
+enum Suit {
+  SPADES, DIAMONDS, CLUBS, HEARTS
+}
+      </source>
+      <p>
+        Note that, unlike the JSON format, anonymous enums cannot be defined.
+      </p>
+    </section>
+    <section id="format_fixed">
+      <title>Defining a Fixed Length Field</title>
+      <p>
+        Fixed fields are defined using the following syntax:
+      </p>
+      <source>
+fixed MD5(16);
+      </source>
+      <p>This example defines a fixed-length type called <code>MD5</code> which contains 16 bytes.</p>
+    </section>
+
+    <section id="format_records">
+      <title>Defining Records and Errors</title>
+      <p>
+        Records are defined in GenAvro using a syntax similar to a <code>struct</code> definition in C:
+      </p>
+      <source>
+record Employee {
+  string name;
+  boolean active;
+  long salary;
+}
+      </source>
+      <p>
+        The above example defines a record with the name &ldquo;Employee&rdquo; with three fields.
+      </p>
+      <p>
+        To define an error, simply use the keyword <code>error</code> instead of <code>record</code>.
+        For example:
+      </p>
+      <source>
+error Kaboom {
+  string explanation;
+  int result_code;
+}
+      </source>
+      <p>
+        Each field in a record or error consists of a type and a name, along with optional property annotations.
+      </p>
+      <p>A type reference in GenAvro must be one of:</p>
+      <ul>
+        <li>A primitive type</li>
+        <li>A named schema defined prior to this usage in the same Protocol</li>
+        <li>A complex type (array, map, or union)</li>
+      </ul>
+
+      <section id="primitive_types">
+        <title>Primitive Types</title>
+        <p>The primitive types supported by GenAvro are the same as those supported by Avro's JSON format.
+        This list includes <code>int</code>, <code>long</code>, <code>string</code>, <code>boolean</code>,
+        <code>float</code>, <code>double</code>, <code>null</code>, and <code>bytes</code>.
+        </p>
+      </section>
+
+      <section id="schema_references">
+        <title>References to Named Schemata</title>
+        <p>If a named schema has already been defined in the same GenAvro file, it may be referenced by name
+        as if it were a primitive type:
+        </p>
+        <source>
+record Card {
+  Suit suit; // refers to the enum Card defined above
+  int number;
+}
+        </source>
+      </section>
+      <section id="complex_types">
+        <title>Complex Types</title>
+
+        <section id="arrays">
+          <title>Arrays</title>
+          <p>
+            Array types are written in a manner that will seem familiar to C++ or Java programmers. An array of
+            any type <code>t</code> is denoted <code>array&lt;t&gt;</code>. For example, an array of strings is
+            denoted <code>array&lt;string&gt;</code>, and a multidimensional array of <code>Foo</code> records
+            would be <code>array&lt;array&lt;Foo&gt;&gt;</code>.
+          </p>
+        </section>
+
+        <section id="maps">
+          <title>Maps</title>
+          <p>Map types are written similarly to array types. An array that contains values of type
+          <code>t</code> is written <code>map&lt;t&gt;</code>. As in the JSON schema format, all
+          maps contain <code>string</code>-type keys.</p>
+        </section>
+
+        <section id="unions">
+          <title>Unions</title>
+          <p>Union types are denoted as <code>union { typeA, typeB, typeC, ... }</code>. For example,
+          this record contains a string field that is optional (unioned with <code>null</code>):
+          </p>
+          <source>
+record RecordWithUnion {
+  union { null, string } optionalString;
+}
+          </source>
+          <p>
+            Note that the same restrictions apply to GenAvro unions as apply to unions defined in the
+            JSON format; namely, a record may not contain multiple elements of the same type.
+          </p>
+        </section> <!-- unions -->
+      </section> <!-- complex types -->
+    </section> <!-- how to define records -->
+    <section id="define_messages">
+      <title>Defining RPC Messages</title>
+      <p>The syntax to define an RPC message within a GenAvro protocol is similar to the syntax for
+      a method declaration within a C header file or a Java interface. To define an RPC message
+      <code>add</code> which takes two arguments named <code>foo</code> and <code>bar</code>,
+      returning an <code>int</code>, simply include the following definition within the protocol:
+      </p>
+      <source>
+int add(int foo, int bar);
+      </source>
+      <p>To define a message with no response, you may use the alias <code>void</code>, equivalent
+      to the Avro <code>null</code> type:
+      </p>
+      <source>
+void logMessage(string message);
+      </source>
+      <p>
+        If you have previously defined an error type within the same protocol, you may declare that
+        a message can throw this error using the syntax:
+      </p>
+      <source>
+void goKaboom() throws Kaboom;
+      </source>
+    </section> <!-- define messages -->
+    <section id="minutiae">
+      <title>Other Language Features</title>
+      <section id="minutiae_comments">
+        <title>Comments</title>
+        <p>All Java-style comments are supported within a GenAvro file. Any text following
+        <code>//</code> on a line is ignored, as is any text between <code>/*</code> and
+        <code>*/</code>, possibly spanning multiple lines.</p>
+      </section>
+      <section id="minutiae_escaping">
+        <title>Escaping Identifiers</title>
+        <p>Occasionally, one will need to use a reserved language keyword as an identifier. In order
+        to do so, backticks (<code>`</code>) may be used to escape the identifier. For example, to define
+        a message with the literal name <em>error</em>, you may write:
+        </p>
+        <source>
+void `error`();
+        </source>
+        <p>This syntax is allowed anywhere an identifier is expected.</p>
+      </section>
+      <section id="minutiae_annotations">
+        <title>Annotations for Ordering and Namespaces</title>
+        <p>
+          Java-style annotations may be used to add additional properties to types throughout
+          GenAvro. For example, to specify the sort order of a field within a record, one may use
+          the <code>@order</code> annotation as follows:
+        </p>
+        <source>
+record MyRecord {
+  @order("ascending")
+  string myAscendingSortField;
+
+  @order("descending")
+  string myDescendingField;
+
+  @order("ignore")
+  string myIgnoredField;
+}
+        </source>
+        <p>Similarly, a <code>@namespace</code> annotation may be used to modify the namespace
+        when defining a named schema. For example:
+        </p>
+        <source>
+@namespace("org.apache.avro.firstNamespace")
+protocol MyProto {
+  @namespace("org.apache.avro.someOtherNamespace")
+  record Foo {}
+
+  record Bar {}
+}
+        </source>
+        <p>
+          will define a protocol in the <code>firstNamespace</code> namespace. The record <code>Foo</code> will be
+          defined in <code>someOtherNamespace</code> and <code>Bar</code> will be defined in <code>firstNamespace</code>
+          as it inherits its default from its container.
+        </p>
+      </section>
+    </section>
+    <section id="example">
+      <title>Complete Example</title>
+      <p>The following is a complete example of a GenAvro file that shows most of the above features:</p>
+      <source>
+/**
+ * An example protocol in GenAvro
+ */
+@namespace("org.apache.avro.test")
+protocol Simple {
+  enum Kind {
+    FOO,
+    BAR, // the bar enum value
+    BAZ
+  }
+
+  fixed MD5(16);
+
+  record TestRecord {
+    @order("ignore")
+    string name;
+
+    @order("descending")
+    Kind kind;
+
+    MD5 hash;
+
+    union { MD5, null} nullableHash;
+
+    array&lt;long&gt; arrayOfLongs;
+  }
+
+  error TestError {
+    string message;
+  }
+
+  string hello(string greeting);
+  TestRecord echo(TestRecord `record`);
+  int add(int arg1, int arg2);
+  bytes echoBytes(bytes data);
+  void `error`() throws TestError;
+}
+      </source>
+      <p>Additional examples may be found in the Avro source tree under the <code>src/test/genavro/input</code> directory.</p>
+    </section>
+  </body>
+</document>
