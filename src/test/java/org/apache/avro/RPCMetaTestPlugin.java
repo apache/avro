@@ -95,6 +95,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   public void clientSendRequest(RPCContext context) { 
     ByteBuffer buf = ByteBuffer.wrap("ap".getBytes());
     context.requestCallMeta().put(key, buf);
+    Assert.assertNotNull(context.getMessage());
   }
   
   @Override
@@ -116,6 +117,8 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     buf = ByteBuffer.wrap((partialstr + "a").getBytes());
     Assert.assertTrue(buf.remaining() > 0);
     meta.put(key, buf);
+    
+    Assert.assertNotNull(context.getMessage());
   }
   
   @Override

@@ -38,6 +38,10 @@ Trunk (unreleased changes)
       - tojson  Dumps an Avro data file as JSON, one record per line.
       - fragtojson Renders a binary-encoded Avro datum as JSON.
       - jsontofrag Renders a JSON-encoded Avro datum as binary.
+    (Philip Zeyliger via cutting)
+
+    AVRO-272. Extend RPCContext to include message. 
+    (Philip Zeyliger via cutting)
 
   IMPROVEMENTS
 

@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.avro.Protocol.Message;
 import org.apache.avro.util.Utf8;
 
 /**
@@ -37,6 +38,7 @@ public class RPCContext {
   
   protected Object response;
   protected AvroRemoteException error;
+  private Message message;
   
   /**
    * This is an access method for the handshake state
@@ -146,4 +148,10 @@ public class RPCContext {
   public boolean isError() {
     return error != null;
   }
+
+  public void setMessage(Message message) {
+    this.message = message;    
+  }
+  
+  public Message getMessage() { return message; }
 }

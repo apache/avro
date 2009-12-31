@@ -102,6 +102,8 @@ public abstract class Responder {
       if (m == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
       
+      context.setMessage(m);
+      
       Object request = readRequest(m.getRequest(), in);
       
       for (RPCPlugin plugin : rpcMetaPlugins) {

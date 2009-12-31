@@ -97,6 +97,7 @@ public abstract class Requestor {
       m = getLocal().getMessages().get(messageName);
       if (m == null)
         throw new AvroRuntimeException("Not a local message: "+messageName);
+      context.setMessage(m);
       
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.clientSendRequest(context);
