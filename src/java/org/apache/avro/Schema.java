@@ -732,7 +732,7 @@ public abstract class Schema {
     PRIMITIVES.put("null",    Type.NULL);
   }
 
-  public static class Names extends LinkedHashMap<Name, Schema> {
+  static class Names extends LinkedHashMap<Name, Schema> {
     private String space;                         // default namespace
 
     public Names() {}

@@ -82,7 +82,8 @@ import org.apache.commons.lang.StringEscapeUtils;
  */
 public class GenAvro
 {
-   Names names = new Names();
+  String namespace;
+  Map<String,Schema> names = new LinkedHashMap<String,Schema>();
 }
 
 PARSER_END(GenAvro)
@@ -919,13 +920,13 @@ Schema NamedSchemaDeclaration():
 {
   Schema s;
   Map<String, String> props = new HashMap<String, String>();
-  String savedSpace = names.space();
+  String savedSpace = this.namespace;
 }
 {
   ( SchemaProperty(props) )*
   {
     if (props.containsKey("namespace")) {
-      names.space(props.get("namespace"));
+      this.namespace = props.get("namespace");
     }
   }
  (
@@ -934,7 +935,7 @@ Schema NamedSchemaDeclaration():
    | s = RecordDeclaration()
  )
  {
-   names.space(savedSpace);
+   this.namespace = savedSpace;
    return s;
  }
 }
@@ -974,13 +975,13 @@ Protocol ProtocolDeclaration():
   ( SchemaProperty(props) )*
   {
     if (props.containsKey("namespace")) {
-      names.space(props.get("namespace"));
+      namespace = props.get("namespace");
     }
   }
  "protocol"
    name = Identifier()
  {
-   p = new Protocol(name, names.space());
+   p = new Protocol(name, namespace);
  }
  ProtocolBody(p)
  {
@@ -999,8 +1000,8 @@ Schema EnumDeclaration():
   name = Identifier()
   symbols = EnumBody()
   {
-    Schema s = Schema.createEnum(name, names.space(), symbols);
-    names.add(s);
+    Schema s = Schema.createEnum(name, this.namespace, symbols);
+    names.put(s.getFullName(), s);
     return s;
   }
 }
@@ -1063,9 +1064,9 @@ Schema FixedDeclaration():
   "fixed" name = Identifier() "(" sizeTok = <INTEGER_LITERAL> ")"
   ";"
   {
-    Schema s = Schema.createFixed(name, names.space(),
+    Schema s = Schema.createFixed(name, this.namespace,
                                   Integer.parseInt(sizeTok.image));
-    names.add(s);
+    names.put(s.getFullName(), s);
     return s;
   }
 }
@@ -1084,8 +1085,8 @@ Schema RecordDeclaration():
   name = Identifier()
   {
     Schema result = Schema.createRecord(
-      name, names.space(), isError);
-    names.add(result);
+      name, this.namespace, isError);
+    names.put(result.getFullName(), result);
   }
   "{"
     ( FieldDeclaration(fields) )*
@@ -1251,9 +1252,12 @@ Schema ReferenceType():
     ("." tok = AnyIdentifier() { sb.append(".").append(tok.image); })*
     )
   {
-    Schema type = names.get(sb.toString());
+    String name = sb.toString();
+    if ((name.indexOf('.') == -1) && namespace != null)
+      name = namespace + "." + name;
+    Schema type = names.get(name);
     if (type == null) {
-      throw new ParseException("Undefined name '" + sb + "'" +
+      throw new ParseException("Undefined name '" + name + "'" +
                                " at line " + token.beginLine + ", column " +
                                token.beginColumn);
     }
