@@ -45,6 +45,9 @@ Trunk (unreleased changes)
 
     AVRO-258. Add GenAvro language tool.  (Todd Lipcon via cutting)
 
+    AVRO-267. Add two new avroj commands: rpcsend and rpcreceive.
+    (Philip Zeyliger via cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

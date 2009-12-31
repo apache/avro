@@ -20,7 +20,12 @@ package org.apache.avro.tool;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.JsonDecoder;
 
 /** Static utility methods for tools. */
 class Util {
@@ -35,5 +40,18 @@ class Util {
     } else {
       return new FileInputStream(new File(filename));
     }
+  }
+  
+  /** 
+   * Converts a String JSON object into a generic datum.
+   * 
+   * This is inefficient (creates extra objects), so should be used 
+   * sparingly.
+   */
+  static Object jsonToGenericDatum(Schema schema, String jsonData) throws IOException {
+    GenericDatumReader<Object> reader = 
+      new GenericDatumReader<Object>(schema);
+    Object datum = reader.read(null, new JsonDecoder(schema, jsonData));
+    return datum;
   }
 }

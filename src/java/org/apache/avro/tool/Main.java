@@ -43,7 +43,9 @@ public class Main {
         new DataFileReadTool(),
         new DataFileWriteTool(),
         new DataFileGetSchemaTool(),
-        new GenAvroTool()
+        new GenAvroTool(),
+        new RpcReceiveTool(),
+        new RpcSendTool()
         }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {

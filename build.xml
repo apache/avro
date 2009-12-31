@@ -156,7 +156,8 @@
   </target>
 
   <target name="compile-java" depends="javacc,schemata,ivy-retrieve">
-    <java-compiler excludes="**/ipc/** **/*Requestor.java **/*Responder.java" >
+    <java-compiler
+       excludes="**/ipc/** **/*Requestor.java **/*Responder.java **/tool/**">
       <src path="${build.dir}/src"/>
       <src path="${java.src.dir}"/>
     </java-compiler>

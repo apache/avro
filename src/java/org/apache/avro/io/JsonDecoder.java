@@ -43,8 +43,19 @@ public class JsonDecoder extends ParsingDecoder
     super(root);
     init(in);
   }
+  
+  JsonDecoder(Symbol root, String in) throws IOException {
+    super(root);
+    init(in);
+  }
 
+  /** Creates a new JsonDecoder based on an InputStream. */
   public JsonDecoder(Schema schema, InputStream in) throws IOException {
+    this(new JsonGrammarGenerator().generate(schema), in);
+  }
+  
+  /** Creates a new JsonDecoder based on a String input. */
+  public JsonDecoder(Schema schema, String in) throws IOException {
     this(new JsonGrammarGenerator().generate(schema), in);
   }
 
@@ -56,6 +67,13 @@ public class JsonDecoder extends ParsingDecoder
 
   @Override
   public void init(InputStream in) throws IOException {
+    parser.reset();
+    this.in = new JsonFactory().createJsonParser(in);
+    this.in.nextToken();
+  }
+  
+  /** Re-initializes to start reading from a new String input. */
+  public void init(String in) throws IOException {
     parser.reset();
     this.in = new JsonFactory().createJsonParser(in);
     this.in.nextToken();
