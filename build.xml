@@ -381,7 +381,7 @@
     </copy>
   </target>
 
-  <target name="generate-test-data" depends="compile-test-java, init-py">
+  <target name="generate-test-data" depends="compile-test-java">
     <mkdir dir="${test.java.build.dir}/data-files"/>
   	 <mkdir dir="${test.java.build.dir}/blocking-data-files"/>
     <java classname="org.apache.avro.RandomData"
@@ -396,16 +396,6 @@
   	      <arg value="${test.java.build.dir}/blocking-data-files/test.java.blocking.avro"/>
   	      <arg value="${test.count}"/>
   	 </java>
-
-    <taskdef name="py-run" classname="org.pyant.tasks.PythonRunTask">
-      <classpath refid="java.classpath" />
-    </taskdef>
-    <py-run script="${basedir}/src/test/py/testio.py" python="python"
-      pythonpathref="test.py.path">
-      <arg value="${basedir}/src/test/schemata/interop.avsc"/>
-      <arg value="${test.java.build.dir}/data-files/test.py.avro"/>
-      <arg value="100"/>
-    </py-run>
   </target>
 
   <target name="test-py" depends="init-py" description="Run python unit tests">
@@ -414,23 +404,18 @@
     </taskdef>
     <py-test python="python" pythonpathref="test.py.path" >
       <fileset dir="${basedir}/src/test/py">
-        <include name="test*.py"/>
+        <include name="test_*.py"/>
       </fileset>
     </py-test>
   </target>
 
-  <target name="test-interop" depends="test-interop-java,test-interop-py,test-interop-c"
+  <target name="test-interop" depends="test-interop-java,test-interop-c"
    description="Run multiple languages interoperability tests">
   </target>
 
   <target name="test-interop-java"
     depends="test-interop-data-java,test-interop-rpc-java"
    description="Run java interoperability tests">
-  </target>
-
-  <target name="test-interop-py" 
-    depends="test-interop-data-py,test-interop-rpc-py"
-   description="Run python interoperability tests">
   </target>
 
   <target name="test-interop-c"
@@ -443,25 +428,10 @@
     <test-runner files.location="${test.java.classes}" tests.pattern="**/TestDataFile$InteropTest.class" />
   </target>
 
-  <target name="test-interop-data-py" depends="generate-test-data" 
-    description="Run python data file interoperability tests">
-    <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask">
-      <classpath refid="java.classpath" />
-    </taskdef>
-    <py-test python="python" pythonpathref="test.py.path" >
-      <fileset dir="${basedir}/src/test/py">
-        <include name="interop*.py"/>
-      </fileset>
-    </py-test>
-  </target>
-
-  <target name="start-rpc-daemons" depends="compile-test-java, init-py"
+  <target name="start-rpc-daemons" depends="compile-test-java"
     description="Start the daemons for rpc interoperability tests">
     <delete dir="${test.java.build.dir}/server-ports"/>
     <mkdir dir="${test.java.build.dir}/server-ports"/>
-    <taskdef name="py-run" classname="org.pyant.tasks.PythonRunTask">
-      <classpath refid="java.classpath" />
-    </taskdef>
     <!-- Start the servers. As servers block the ant main thread, these need 
     to be created in parallel threads--> 
     <parallel>
@@ -470,10 +440,6 @@
           <classpath refid="test.java.classpath"/>
           <sysproperty key="test.dir" value="${test.java.build.dir}"/>
         </java>
-        <py-run script="${basedir}/src/test/py/interoptests.py" 
-          python="python" pythonpathref="test.py.path">
-          <arg value="server"/>
-        </py-run>
       </daemons>
 
       <!-- Give some time to start -->
@@ -486,14 +452,6 @@
   <target name="test-interop-rpc-java" depends="start-rpc-daemons"
     description="Run java rpc interoperability tests">
     <test-runner files.location="${test.java.classes}" tests.pattern="**/TestProtocolSpecific$InteropTest.class" />
-  </target>
-
-  <target name="test-interop-rpc-py" depends="start-rpc-daemons"
-    description="Run java rpc interoperability tests">
-        <py-run script="${basedir}/src/test/py/interoptests.py" 
-          python="python" pythonpathref="test.py.path">
-          <arg value="client"/>
-        </py-run>
   </target>
 
   <target name="avroj" depends="compile-java" description="Build standalone avroj jar file">

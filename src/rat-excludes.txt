@@ -13,7 +13,6 @@
 **/Makefile**
 **/configure**
 doc/**
-lib/py/odict.py
 lib/py/simplejson/**
 src/c++/Doxyfile
 src/c++/jsonschemas/**

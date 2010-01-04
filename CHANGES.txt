@@ -164,6 +164,8 @@ Trunk (unreleased changes)
     AVRO-269. Use java compiler to validate specific compiler's output.
     (Philip Zeyliger via cutting)
 
+    AVRO-219. Rework Python API.  (Jeff Hammerbacher via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

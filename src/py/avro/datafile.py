@@ -13,178 +13,274 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Read/Write Avro File Object Containers.
+"""
+import uuid
+import cStringIO
+from avro import schema
+from avro import io
 
-"""Read/Write Avro Data Files"""
+#
+# Constants
+#
 
-import struct, uuid, cStringIO
-import avro.schema as schema
-import avro.io as io
+VERSION = 1
+MAGIC = 'Obj' + chr(VERSION)
+MAGIC_SIZE = len(MAGIC)
+SYNC_SIZE = 16
+SYNC_INTERVAL = 1000 * SYNC_SIZE # TODO(hammer): make configurable
+META_SCHEMA = schema.parse("""\
+{"type": "record", "name": "org.apache.avro.file.Header",
+ "fields" : [
+   {"name": "magic", "type": {"type": "fixed", "name": "magic", "size": %d}},
+   {"name": "meta", "type": {"type": "map", "values": "bytes"}},
+   {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": %d}}]}
+""" % (MAGIC_SIZE, SYNC_SIZE))
+VALID_CODECS = ['null']
+VALID_ENCODINGS = ['binary'] # not used yet
 
-#Data file constants.
-_VERSION = 0
-_MAGIC = "Obj"+chr(_VERSION)
-_SYNC_SIZE = 16
-_SYNC_INTERVAL = 1000*_SYNC_SIZE
-_FOOTER_BLOCK = -1
+#
+# Exceptions
+#
+
+class DataFileException(schema.AvroException):
+  """
+  Raised when there's a problem reading or writing file object containers.
+  """
+  def __init__(self, fail_msg):
+    schema.AvroException.__init__(self, fail_msg)
+
+#
+# Write Path
+#
+
 class DataFileWriter(object):
-  """Stores in a file a sequence of data conforming to a schema. The schema is 
-  stored in the file with the data. Each datum in a file is of the same
-  schema. Data is grouped into blocks.
-  A synchronization marker is written between blocks, so that
-  files may be split. Blocks may be compressed. Extensible metadata is
-  stored at the end of the file. Files may be appended to."""
+  @staticmethod
+  def generate_sync_marker():
+    return uuid.uuid4().bytes
 
-  def __init__(self, schm, writer, dwriter):
-    self.__writer = writer
-    self.__encoder = io.Encoder(writer)
-    self.__dwriter = dwriter
-    self.__dwriter.setschema(schm)
-    self.__count = 0  #entries in file
-    self.__blockcount = 0  #entries in current block
-    self.__buffer = cStringIO.StringIO()
-    self.__bufwriter = io.Encoder(self.__buffer)
-    self.__meta = dict()
-    self.__sync = uuid.uuid4().bytes
-    self.__meta["sync"] = self.__sync
-    self.__meta["codec"] = "null"
-    self.__meta["schema"] = schema.stringval(schm)
-    self.__writer.write(struct.pack(len(_MAGIC).__str__()+'s',
-                                    _MAGIC))
+  # TODO(hammer): make 'encoder' a metadata property
+  def __init__(self, writer, datum_writer, writers_schema=None):
+    """
+    If the schema is not present, presume we're appending.
+    """
+    self._writer = writer
+    self._encoder = io.BinaryEncoder(writer)
+    self._datum_writer = datum_writer
+    self._buffer_writer = cStringIO.StringIO()
+    self._buffer_encoder = io.BinaryEncoder(self._buffer_writer)
+    self._block_count = 0
+    self._meta = {}
 
-  def setmeta(self, key, val):
-    """Set a meta data property."""
-    self.__meta[key] = val
+    if writers_schema is not None:
+      self._sync_marker = DataFileWriter.generate_sync_marker()
+      self.set_meta('codec', 'null')
+      self.set_meta('schema', str(writers_schema))
+      self.datum_writer.writers_schema = writers_schema
+      self._write_header()
+    else:
+      # open writer for reading to collect metadata
+      dfr = DataFileReader(writer, io.DatumReader())
+      
+      # TODO(hammer): collect arbitrary metadata
+      # collect metadata
+      self._sync_marker = dfr.sync_marker
+      self.set_meta('codec', dfr.get_meta('codec'))
+
+      # get schema used to write existing file
+      schema_from_file = dfr.get_meta('schema')
+      self.set_meta('schema', schema_from_file)
+      self.datum_writer.writers_schema = schema.parse(schema_from_file)
+
+      # seek to the end of the file and prepare for writing
+      writer.seek(0, 2)
+
+  # read-only properties
+  writer = property(lambda self: self._writer)
+  encoder = property(lambda self: self._encoder)
+  datum_writer = property(lambda self: self._datum_writer)
+  buffer_writer = property(lambda self: self._buffer_writer)
+  buffer_encoder = property(lambda self: self._buffer_encoder)
+  sync_marker = property(lambda self: self._sync_marker)
+  meta = property(lambda self: self._meta)
+
+  # read/write properties
+  def set_block_count(self, new_val):
+    self._block_count = new_val
+  block_count = property(lambda self: self._block_count, set_block_count)
+
+  # utility functions to read/write metadata entries
+  def get_meta(self, key):
+    return self._meta.get(key)
+  def set_meta(self, key, val):
+    self._meta[key] = val
+
+  def _write_header(self):
+    header = {'magic': MAGIC,
+              'meta': self.meta,
+              'sync': self.sync_marker}
+    self.datum_writer.write_data(META_SCHEMA, header, self.encoder)
+
+  # TODO(hammer): make a schema for blocks and use datum_writer
+  # TODO(hammer): use codec when writing the block contents
+  def _write_block(self):
+    if self.block_count > 0:
+      # write number of items in block
+      self.encoder.write_long(self.block_count)
+
+      # write block contents
+      if self.get_meta('codec') == 'null':
+        self.writer.write(self.buffer_writer.getvalue())
+      else:
+        fail_msg = '"%s" codec is not supported.' % self.get_meta('codec')
+        raise DataFileException(fail_msg)
+
+      # write sync marker
+      self.writer.write(self.sync_marker)
+
+      # reset buffer
+      self.buffer_writer.truncate(0) 
+      self.block_count = 0
 
   def append(self, datum):
     """Append a datum to the file."""
-    self.__dwriter.write(datum, self.__bufwriter)
-    self.__count+=1
-    self.__blockcount+=1
-    if self.__buffer.tell() >= _SYNC_INTERVAL:
-      self.__writeblock()
+    self.datum_writer.write(datum, self.buffer_encoder)
+    self.block_count += 1
 
-  def __writeblock(self):
-    if self.__blockcount > 0:
-      self.__writer.write(self.__sync)
-      self.__encoder.writelong(self.__blockcount)
-      self.__writer.write(self.__buffer.getvalue())
-      self.__buffer.truncate(0) #reset
-      self.__blockcount = 0
+    # if the data to write is larger than the sync interval, write the block
+    if self.buffer_writer.tell() >= SYNC_INTERVAL:
+      self._write_block()
 
   def sync(self):
-    """Return the current position as a value that may be passed to
+    """
+    Return the current position as a value that may be passed to
     DataFileReader.seek(long). Forces the end of the current block,
-    emitting a synchronization marker."""
-    self.__writeblock()
-    return self.__writer.tell()
+    emitting a synchronization marker.
+    """
+    self._write_block()
+    return self.writer.tell()
 
   def flush(self):
     """Flush the current state of the file, including metadata."""
-    self.__writefooter()
-    self.__writer.flush()
+    self._write_block()
+    self.writer.flush()
 
   def close(self):
     """Close the file."""
     self.flush()
-    self.__writer.close()
-
-  def __writefooter(self):
-    self.__writeblock()
-    self.__meta["count"] = self.__count.__str__()
-    
-    self.__bufwriter.writelong(len(self.__meta))
-    for k,v in self.__meta.items():
-      self.__bufwriter.writeutf8(unicode(k,'utf-8'))
-      self.__bufwriter.writebytes(str(v))
-    size = self.__buffer.tell() + 4
-    self.__writer.write(self.__sync)
-    self.__encoder.writelong(_FOOTER_BLOCK)
-    self.__encoder.writelong(size)
-    self.__buffer.flush()
-    self.__writer.write(self.__buffer.getvalue())
-    self.__buffer.truncate(0) #reset
-    self.__writer.write(chr((size >> 24) & 0xFF))
-    self.__writer.write(chr((size >> 16) & 0xFF))
-    self.__writer.write(chr((size >> 8) & 0xFF))
-    self.__writer.write(chr((size >> 0) & 0xFF))
+    self.writer.close()
 
 class DataFileReader(object):
   """Read files written by DataFileWriter."""
+  # TODO(hammer): allow user to specify expected schema?
+  # TODO(hammer): allow user to specify the encoder
+  def __init__(self, reader, datum_reader):
+    self._reader = reader
+    self._decoder = io.BinaryDecoder(reader)
+    self._datum_reader = datum_reader
+    
+    # read the header: magic, meta, sync
+    self._read_header()
 
-  def __init__(self, reader, dreader):
-    self.__reader = reader
-    self.__decoder = io.Decoder(reader)
-    mag = struct.unpack(len(_MAGIC).__str__()+'s', 
-                 self.__reader.read(len(_MAGIC)))[0]
-    if mag != _MAGIC:
-      raise schema.AvroException("Not an avro data file")
-    #find the length
-    self.__reader.seek(0,2)
-    self.__length = self.__reader.tell()
-    self.__reader.seek(-4, 2)
-    footersize = (int(ord(self.__reader.read(1)) << 24) +
-            int(ord(self.__reader.read(1)) << 16) +
-            int(ord(self.__reader.read(1)) << 8) +
-            int(ord(self.__reader.read(1))))
-    seekpos = self.__reader.seek(self.__length-footersize)
-    metalength = self.__decoder.readlong()
-    if metalength < 0:
-      metalength = -metalength
-      self.__decoder.readlong() #ignore byteCount if this is a blocking map
-    self.__meta = dict()
-    for i in range(0, metalength):
-      key = self.__decoder.readutf8()
-      self.__meta[key] = self.__decoder.readbytes()
-    self.__sync = self.__meta.get("sync")
-    self.__count = int(self.__meta.get("count"))
-    self.__codec = self.__meta.get("codec")
-    if (self.__codec != None) and (self.__codec != "null"):
-      raise schema.AvroException("Unknown codec: " + self.__codec)
-    self.__schema = schema.parse(self.__meta.get("schema").encode("utf-8"))
-    self.__blockcount = 0
-    self.__dreader = dreader
-    self.__dreader.setschema(self.__schema)
-    self.__reader.seek(len(_MAGIC))
+    # ensure codec is valid
+    codec_from_file = self.get_meta('codec')
+    if codec_from_file is not None and codec_from_file not in VALID_CODECS:
+      raise DataFileException('Unknown codec: %s.' % codec_from_file)
 
+    # get file length
+    self._file_length = self.determine_file_length()
+
+    # get ready to read
+    self._block_count = 0
+    self.datum_reader.writers_schema = schema.parse(self.get_meta('schema'))
+  
   def __iter__(self):
     return self
 
-  def getmeta(self, key):
-    """Return the value of a metadata property."""
-    return self.__meta.get(key)
+  # read-only properties
+  reader = property(lambda self: self._reader)
+  decoder = property(lambda self: self._decoder)
+  datum_reader = property(lambda self: self._datum_reader)
+  sync_marker = property(lambda self: self._sync_marker)
+  meta = property(lambda self: self._meta)
+  file_length = property(lambda self: self._file_length)
 
+  # read/write properties
+  def set_block_count(self, new_val):
+    self._block_count = new_val
+  block_count = property(lambda self: self._block_count, set_block_count)
+
+  # utility functions to read/write metadata entries
+  def get_meta(self, key):
+    return self._meta.get(key)
+  def set_meta(self, key, val):
+    self._meta[key] = val
+
+  def determine_file_length(self):
+    """
+    Get file length and leave file cursor where we found it.
+    """
+    remember_pos = self.reader.tell()
+    self.reader.seek(0, 2)
+    file_length = self.reader.tell()
+    self.reader.seek(remember_pos)
+    return file_length
+
+  def is_EOF(self):
+    return self.reader.tell() == self.file_length
+
+  def _read_header(self):
+    # seek to the beginning of the file to get magic block
+    self.reader.seek(0, 0) 
+
+    # read header into a dict
+    header = self.datum_reader.read_data(META_SCHEMA, META_SCHEMA, self.decoder)
+
+    # check magic number
+    if header.get('magic') != MAGIC:
+      fail_msg = "Not an Avro data file: %s doesn't match %s."\
+                 % (header.get('magic'), MAGIC)
+      raise schema.AvroException(fail_msg)
+
+    # set metadata
+    self._meta = header['meta']
+
+    # set sync marker
+    self._sync_marker = header['sync']
+
+  def _read_block_header(self):
+    self.block_count = self.decoder.read_long()
+
+  def _skip_sync(self):
+    """
+    Read the length of the sync marker; if it matches the sync marker,
+    return True. Otherwise, seek back to where we started and return False.
+    """
+    proposed_sync_marker = self.reader.read(SYNC_SIZE)
+    if proposed_sync_marker != self.sync_marker:
+      self.reader.seek(-SYNC_SIZE, 1)
+      return False
+    else:
+      return True
+
+  # TODO(hammer): handle block of length zero
+  # TODO(hammer): clean this up with recursion
   def next(self):
     """Return the next datum in the file."""
-    while self.__blockcount == 0:
-      if self.__reader.tell() == self.__length:
+    if self.block_count == 0:
+      if self.is_EOF():
         raise StopIteration
-      self.__skipsync()
-      self.__blockcount = self.__decoder.readlong()
-      if self.__blockcount == _FOOTER_BLOCK:
-        self.__reader.seek(self.__decoder.readlong()+self.__reader.tell())
-        self.__blockcount = 0
-    self.__blockcount-=1
-    datum = self.__dreader.read(self.__decoder)
+      elif self._skip_sync():
+        if self.is_EOF(): raise StopIteration
+        self._read_block_header()
+      else:
+        self._read_block_header()
+
+    datum = self.datum_reader.read(self.decoder) 
+    self.block_count -= 1
     return datum
-
-  def __skipsync(self):
-    if self.__reader.read(_SYNC_SIZE)!=self.__sync:
-      raise schema.AvroException("Invalid sync!")
-
-  def seek(self, pos):
-    """Move to the specified synchronization point, as returned by 
-    DataFileWriter.sync()."""
-    self.__reader.seek(pos)
-    self.__blockcount = 0
-
-  def sync(self, position):
-    """Move to the next synchronization point after a position."""
-    if self.__reader.tell()+_SYNC_SIZE >= self.__length:
-      self.__reader.seek(self.__length)
-      return
-    self.__reader.seek(position)
-    self.__reader.read(_SYNC_SIZE)
 
   def close(self):
     """Close this reader."""
-    self.__reader.close()
+    self.reader.close()
