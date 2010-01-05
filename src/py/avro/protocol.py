@@ -1,0 +1,219 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Protocol implementation.
+"""
+import cStringIO
+import md5
+try:
+  import simplejson as json
+except ImportError:
+  import json
+from avro import schema
+
+#
+# Constants
+#
+
+# TODO(hammer): confirmed 'fixed' with Doug
+VALID_TYPE_SCHEMA_TYPES = ('enum', 'record', 'error', 'fixed')
+
+#
+# Exceptions
+#
+
+class ProtocolParseException(schema.AvroException):
+  pass
+
+#
+# Base Classes
+#
+
+class Protocol(object):
+  """An application protocol."""
+  def _parse_types(self, types, type_names):
+    type_objects = []
+    for type in types:
+      type_object = schema.make_avsc_object(type, type_names)
+      if type_object.type not in VALID_TYPE_SCHEMA_TYPES:
+        fail_msg = 'Type %s not an enum, record, or error.' % type
+        raise ProtocolParseException(fail_msg)
+      type_objects.append(type_object)
+    return type_objects
+
+  def _parse_messages(self, messages, names):
+    message_objects = {}
+    for name, body in messages.iteritems():
+      if message_objects.has_key(name):
+        fail_msg = 'Message name "%s" repeated.' % name
+        raise ProtocolParseException(fail_msg)
+      elif not(hasattr(body, 'get') and callable(body.get)):
+        fail_msg = 'Message name "%s" has non-object body %s.' % (name, body)
+        raise ProtocolParseException(fail_msg)
+
+      request = body.get('request')
+      response = body.get('response')
+      errors = body.get('errors')
+      message_objects[name] = Message(name, request, response, errors, names)
+    return message_objects
+
+  def __init__(self, name, namespace=None, types=None, messages=None):
+    # Ensure valid ctor args
+    if not name:
+      fail_msg = 'Protocols must have a non-empty name.'
+      raise ProtocolParseException(fail_msg)
+    elif not isinstance(name, basestring):
+      fail_msg = 'The name property must be a string.'
+      raise ProtocolParseException(fail_msg)
+    elif namespace is not None and not isinstance(namespace, basestring):
+      fail_msg = 'The namespace property must be a string.'
+      raise ProtocolParseException(fail_msg)
+    elif types is not None and not isinstance(types, list):
+      fail_msg = 'The types property must be a list.'
+      raise ProtocolParseException(fail_msg)
+    elif (messages is not None and 
+          not(hasattr(messages, 'get') and callable(messages.get))):
+      fail_msg = 'The messages property must be a JSON object.'
+      raise ProtocolParseException(fail_msg)
+
+    self._props = {}
+    self.set_prop('name', name)
+    if namespace is not None: self.set_prop('namespace', namespace)
+    type_names = {}
+    if types is not None:
+      self.set_prop('types', self._parse_types(types, type_names))
+    if messages is not None:
+      self.set_prop('messages', self._parse_messages(messages, type_names))
+    self._md5 = md5.new(str(self)).digest()
+
+  # read-only properties
+  name = property(lambda self: self.get_prop('name'))
+  namespace = property(lambda self: self.get_prop('namespace'))
+  fullname = property(lambda self: 
+                      schema.Name.make_fullname(self.name, self.namespace))
+  types = property(lambda self: self.get_prop('types'))
+  types_dict = property(lambda self: dict([(type.name, type)
+                                           for type in self.types]))
+  messages = property(lambda self: self.get_prop('messages'))
+  md5 = property(lambda self: self._md5)
+  props = property(lambda self: self._props)
+
+  # utility functions to manipulate properties dict
+  def get_prop(self, key):
+    return self.props.get(key)
+  def set_prop(self, key, value):
+    self.props[key] = value  
+
+  def __str__(self):
+    # until we implement a JSON encoder for Schema and Message objects,
+    # we'll have to go through and call str() by hand.
+    to_dump = {}
+    to_dump['protocol'] = self.name
+    if self.namespace: to_dump['namespace'] = self.namespace
+    if self.types:
+      to_dump['types'] = [json.loads(str(t)) for t in self.types]
+    if self.messages:
+      messages_dict = {}
+      for name, body in self.messages.iteritems():
+        messages_dict[name] = json.loads(str(body))
+      to_dump['messages'] = messages_dict
+    return json.dumps(to_dump)
+
+  def __eq__(self, that):
+    to_cmp = json.loads(str(self))
+    return to_cmp == json.loads(str(that))
+
+class Message(object):
+  """A Protocol message."""
+  def _parse_request(self, request, names):
+    if not isinstance(request, list):
+      fail_msg = 'Request property not a list: %s' % request
+      raise ProtocolParseException(fail_msg)
+    return schema.RecordSchema.make_field_objects(request, names)
+  
+  def _parse_response(self, response, names):
+    if isinstance(response, basestring) and names.has_key(response):
+      self._response_from_names = True
+      return names.get(response)
+    else:
+      return schema.make_avsc_object(response, names)
+
+  def _parse_errors(self, errors, names):
+    if not isinstance(errors, list):
+      fail_msg = 'Errors property not a list: %s' % errors
+      raise ProtocolParseException(fail_msg)
+    return schema.make_avsc_object(errors, names)
+
+  def __init__(self,  name, request, response, errors=None, names=None):
+    self._name = name
+    self._response_from_names = False
+
+    self._props = {}
+    self.set_prop('request', self._parse_request(request, names))
+    self.set_prop('response', self._parse_response(response, names))
+    if errors is not None:
+      self.set_prop('errors', self._parse_errors(errors, names))
+
+  # read-only properties
+  name = property(lambda self: self._name)
+  response_from_names = property(lambda self: self._response_from_names)
+  request = property(lambda self: self.get_prop('request'))
+  response = property(lambda self: self.get_prop('response'))
+  errors = property(lambda self: self.get_prop('errors'))
+  props = property(lambda self: self._props)
+
+  # utility functions to manipulate properties dict
+  def get_prop(self, key):
+    return self.props.get(key)
+  def set_prop(self, key, value):
+    self.props[key] = value  
+
+  # TODO(hammer): allow schemas and fields to be JSON Encoded!
+  def __str__(self):
+    to_dump = {}
+    to_dump['request'] = [json.loads(str(r)) for r in self.request]
+    if self.response_from_names:
+      to_dump['response'] = self.response.fullname
+    else:
+      to_dump['response'] = json.loads(str(self.response))
+    if self.errors:
+      to_dump['errors'] = json.loads(str(self.errors))
+    return json.dumps(to_dump)
+
+  def __eq__(self, that):
+    return self.name == that.name and self.props == that.props
+      
+def make_avpr_object(json_data):
+  """Build Avro Protocol from data parsed out of JSON string."""
+  if hasattr(json_data, 'get') and callable(json_data.get):
+    name = json_data.get('protocol')
+    namespace = json_data.get('namespace')
+    types = json_data.get('types')
+    messages = json_data.get('messages')
+    return Protocol(name, namespace, types, messages)
+  else:
+    raise ProtocolParseException('Not a JSON object: %s' % json_data)
+
+def parse(json_string):
+  """Constructs the Protocol from the JSON text."""
+  try:
+    json_data = json.loads(json_string)
+  except:
+    raise ProtocolParseException('Error parsing JSON: %s' % json_string)
+
+  # construct the Avro Protocol object
+  return make_avpr_object(json_data)
+
