@@ -48,6 +48,8 @@ Trunk (unreleased changes)
     AVRO-267. Add two new avroj commands: rpcsend and rpcreceive.
     (Philip Zeyliger via cutting)
 
+    AVRO-271. Add a Java local RPC transceiver. (Philip Zeyliger via cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)
