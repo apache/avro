@@ -40,8 +40,9 @@ public class SocketTransceiver extends Transceiver {
     this(SocketChannel.open(address));
   }
 
-  public SocketTransceiver(SocketChannel channel) {
+  public SocketTransceiver(SocketChannel channel) throws IOException {
     this.channel = channel;
+    this.channel.socket().setTcpNoDelay(true);
     LOG.info("open to "+getRemoteName());
   }
 

@@ -75,7 +75,7 @@ public class SocketServer extends Thread implements Server {
 
   private class Connection extends SocketTransceiver implements Runnable {
 
-    public Connection(SocketChannel channel) {
+    public Connection(SocketChannel channel) throws IOException {
       super(channel);
 
       Thread thread = new Thread(group, this);
