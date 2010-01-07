@@ -247,6 +247,10 @@ Trunk (unreleased changes)
 
     AVRO-280. Fix file header schema in specification.  Also fix
     "forrestdoc" build target to work on clean checkout.
+    (Jeff Hammerbacher & cutting)	 
+
+    AVRO-292. Fix Python skipping of ints and longs.
+    (Jeff Hammerbacher via cutting)
 
 Avro 1.2.0 (14 October 2009)
 

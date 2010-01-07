@@ -15,6 +15,7 @@
 # limitations under the License.
 import unittest
 import cStringIO
+from binascii import hexlify
 from avro import schema
 from avro import io
 
@@ -48,6 +49,28 @@ SCHEMAS_TO_VALIDATE = (
                                      {"name": "cdr", "type": "Lisp"}]}]}]}
    """, {'value': {'car': {'value': 'head'}, 'cdr': {'value': None}}}),
 )
+
+BINARY_INT_ENCODINGS = (
+  (0, '00'),
+  (-1, '01'),
+  (1, '02'),
+  (-2, '03'),
+  (2, '04'),
+  (-64, '7f'),
+  (64, '80 01'),
+  (8192, '80 80 01'),
+  (-8193, '81 80 01'),
+)
+
+def avro_hexlify(reader):
+  """Return the hex value, as a string, of a binary-encoded int or long."""
+  bytes = []
+  current_byte = reader.read(1)
+  bytes.append(hexlify(current_byte))
+  while (ord(current_byte) & 0x80) != 0:
+    current_byte = reader.read(1)
+    bytes.append(hexlify(current_byte))
+  return ' '.join(bytes)
 
 class TestIO(unittest.TestCase):
   def test_validate(self):
@@ -149,6 +172,122 @@ class TestIO(unittest.TestCase):
       print 'Correct Round Trip: %s' % (datum == round_trip_datum)
       print ''
     self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
+
+  def test_binary_int_encoding(self):
+    print ''
+    print 'TEST BINARY INT ENCODING'
+    print '========================'
+    print ''
+    correct = 0
+    for value, hex_encoding in BINARY_INT_ENCODINGS:
+      print 'Value: %d' % value
+      print 'Correct Encoding: %s' % hex_encoding
+
+      # write datum in binary to string buffer
+      buffer = cStringIO.StringIO()
+      encoder = io.BinaryEncoder(buffer)
+      datum_writer = io.DatumWriter(schema.parse('"int"'))
+      datum_writer.write(value, encoder)
+
+      # read it out of the buffer and hexlify it
+      buffer.seek(0)
+      hex_val = avro_hexlify(buffer)
+
+      # check it
+      print 'Read Encoding: %s' % hex_val
+      if hex_encoding == hex_val: correct += 1
+      print ''
+    self.assertEquals(correct, len(BINARY_INT_ENCODINGS))
+
+  def test_binary_long_encoding(self):
+    print ''
+    print 'TEST BINARY LONG ENCODING'
+    print '========================='
+    print ''
+    correct = 0
+    for value, hex_encoding in BINARY_INT_ENCODINGS:
+      print 'Value: %d' % value
+      print 'Correct Encoding: %s' % hex_encoding
+
+      # write datum in binary to string buffer
+      buffer = cStringIO.StringIO()
+      encoder = io.BinaryEncoder(buffer)
+      datum_writer = io.DatumWriter(schema.parse('"long"'))
+      datum_writer.write(value, encoder)
+
+      # read it out of the buffer and hexlify it
+      buffer.seek(0)
+      hex_val = avro_hexlify(buffer)
+
+      # check it
+      print 'Read Encoding: %s' % hex_val
+      if hex_encoding == hex_val: correct += 1
+      print ''
+    self.assertEquals(correct, len(BINARY_INT_ENCODINGS))
+
+  def test_skip_long(self):
+    print ''
+    print 'TEST SKIP LONG'
+    print '=============='
+    print ''
+    correct = 0
+    for value_to_skip, hex_encoding in BINARY_INT_ENCODINGS:
+      VALUE_TO_READ = 6253
+      print 'Value to Skip: %d' % value_to_skip
+
+      # write some data in binary to string buffer
+      writer = cStringIO.StringIO()
+      encoder = io.BinaryEncoder(writer)
+      datum_writer = io.DatumWriter(schema.parse('"long"'))
+      datum_writer.write(value_to_skip, encoder)
+      datum_writer.write(VALUE_TO_READ, encoder)
+
+      # skip the value
+      reader = cStringIO.StringIO(writer.getvalue())
+      decoder = io.BinaryDecoder(reader)
+      decoder.skip_long()
+
+      # read data from string buffer
+      datum_reader = io.DatumReader(schema.parse('"long"'))
+      read_value = datum_reader.read(decoder)
+
+      # check it
+      print 'Read Value: %d' % read_value
+      if read_value == VALUE_TO_READ: correct += 1
+      print ''
+    self.assertEquals(correct, len(BINARY_INT_ENCODINGS))
+
+  def test_skip_int(self):
+    print ''
+    print 'TEST SKIP INT'
+    print '============='
+    print ''
+    correct = 0
+    for value_to_skip, hex_encoding in BINARY_INT_ENCODINGS:
+      VALUE_TO_READ = 6253
+      print 'Value to Skip: %d' % value_to_skip
+
+      # write some data in binary to string buffer
+      writer = cStringIO.StringIO()
+      encoder = io.BinaryEncoder(writer)
+      datum_writer = io.DatumWriter(schema.parse('"int"'))
+      datum_writer.write(value_to_skip, encoder)
+      datum_writer.write(VALUE_TO_READ, encoder)
+
+      # skip the value
+      reader = cStringIO.StringIO(writer.getvalue())
+      decoder = io.BinaryDecoder(reader)
+      decoder.skip_int()
+
+      # read data from string buffer
+      datum_reader = io.DatumReader(schema.parse('"int"'))
+      read_value = datum_reader.read(decoder)
+
+      # check it
+      print 'Read Value: %d' % read_value
+      if read_value == VALUE_TO_READ: correct += 1
+      print ''
+    self.assertEquals(correct, len(BINARY_INT_ENCODINGS))
 
 if __name__ == '__main__':
   unittest.main()

@@ -129,6 +129,12 @@ class BinaryDecoder(object):
   # read-only properties
   reader = property(lambda self: self._reader)
 
+  def read(self, n):
+    """
+    Read n bytes.
+    """
+    return self.reader.read(n)
+
   def read_null(self):
     """
     null is written as zero bytes
@@ -140,7 +146,7 @@ class BinaryDecoder(object):
     a boolean is written as a single byte 
     whose value is either 0 (false) or 1 (true).
     """
-    return ord(self.reader.read(1)) == 1
+    return ord(self.read(1)) == 1
 
   def read_int(self):
     """
@@ -152,11 +158,11 @@ class BinaryDecoder(object):
     """
     int and long values are written using variable-length, zig-zag coding.
     """
-    b = ord(self.reader.read(1))
+    b = ord(self.read(1))
     n = b & 0x7F
     shift = 7
     while (b & 0x80) != 0:
-      b = ord(self.reader.read(1))
+      b = ord(self.read(1))
       n |= (b & 0x7F) << shift
       shift += 7
     datum = (n >> 1) ^ -(n & 1)
@@ -168,10 +174,10 @@ class BinaryDecoder(object):
     The float is converted into a 32-bit integer using a method equivalent to
     Java's floatToIntBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.reader.read(1)) & 0xffL)) |
-      ((ord(self.reader.read(1)) & 0xffL) <<  8) |
-      ((ord(self.reader.read(1)) & 0xffL) << 16) |
-      ((ord(self.reader.read(1)) & 0xffL) << 24))
+    bits = (((ord(self.read(1)) & 0xffL)) |
+      ((ord(self.read(1)) & 0xffL) <<  8) |
+      ((ord(self.read(1)) & 0xffL) << 16) |
+      ((ord(self.read(1)) & 0xffL) << 24))
     return STRUCT_FLOAT.unpack(STRUCT_INT.pack(bits))[0]
 
   def read_double(self):
@@ -180,14 +186,14 @@ class BinaryDecoder(object):
     The double is converted into a 64-bit integer using a method equivalent to
     Java's doubleToLongBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.reader.read(1)) & 0xffL)) |
-      ((ord(self.reader.read(1)) & 0xffL) <<  8) |
-      ((ord(self.reader.read(1)) & 0xffL) << 16) |
-      ((ord(self.reader.read(1)) & 0xffL) << 24) |
-      ((ord(self.reader.read(1)) & 0xffL) << 32) |
-      ((ord(self.reader.read(1)) & 0xffL) << 40) |
-      ((ord(self.reader.read(1)) & 0xffL) << 48) |
-      ((ord(self.reader.read(1)) & 0xffL) << 56))
+    bits = (((ord(self.read(1)) & 0xffL)) |
+      ((ord(self.read(1)) & 0xffL) <<  8) |
+      ((ord(self.read(1)) & 0xffL) << 16) |
+      ((ord(self.read(1)) & 0xffL) << 24) |
+      ((ord(self.read(1)) & 0xffL) << 32) |
+      ((ord(self.read(1)) & 0xffL) << 40) |
+      ((ord(self.read(1)) & 0xffL) << 48) |
+      ((ord(self.read(1)) & 0xffL) << 56))
     return STRUCT_DOUBLE.unpack(STRUCT_LONG.pack(bits))[0]
 
   def read_bytes(self):
@@ -203,25 +209,19 @@ class BinaryDecoder(object):
     """
     return unicode(self.read_bytes(), "utf-8")
 
-  def read(self, n):
-    """
-    Read n bytes.
-    """
-    return struct.unpack('%ds' % n, self.reader.read(n))[0]
-
   def skip_null(self):
     pass
 
   def skip_boolean(self):
     self.skip(1)
 
-  # TODO(hammer): I thought ints were VLE?
   def skip_int(self):
-    self.skip(4)
+    self.skip_long()
 
-  # TODO(hammer): I thought longs were VLE?
   def skip_long(self):
-    self.skip(8)
+    b = ord(self.read(1))
+    while (b & 0x80) != 0:
+      b = ord(self.read(1))
 
   def skip_float(self):
     self.skip(4)
