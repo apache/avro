@@ -245,6 +245,9 @@ Trunk (unreleased changes)
     AVRO-276. Fix GenAvro to specify file encoding as UTF-8.
     (Philip Zeyliger via cutting)
 
+    AVRO-280. Fix file header schema in specification.  Also fix
+    "forrestdoc" build target to work on clean checkout.
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

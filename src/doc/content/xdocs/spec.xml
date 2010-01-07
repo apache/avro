@@ -624,9 +624,9 @@
       <source>
 {"type": "record", "name": "org.apache.avro.file.Header",
  "fields" : [
-   {"name": "magic", "type": {"type": "fixed", "size": 4}}
-   {"name": "meta", "type": {"type": "map", "values": "bytes"}}
-   {"name": "sync", "type": {"type": "fixed", "size": 16}}
+   {"name": "magic", "type": {"type": "fixed", "name": "Magic", "size": 4}},
+   {"name": "meta", "type": {"type": "map", "values": "bytes"}},
+   {"name": "sync", "type": {"type": "fixed", "name": "Sync", "size": 16}},
   ]
 }
       </source>
