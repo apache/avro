@@ -255,6 +255,9 @@ Trunk (unreleased changes)
     AVRO-292. Fix Python skipping of ints and longs.
     (Jeff Hammerbacher via cutting)
 
+    AVRO-289. Fix Python schema resolution.
+    (Jeff Hammerbacher via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

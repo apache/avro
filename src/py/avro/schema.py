@@ -187,10 +187,7 @@ class NamedSchema(Schema):
                       Name.make_fullname(self.name, self.namespace))
 
 class Field(object):
-  def __init__(self, type, name, default=None, order=None, names=None):
-    self._props = {}
-    self._type_from_names = False
-
+  def __init__(self, type, name, has_default, default=None, order=None, names=None):
     # Ensure valid ctor args
     if not name:
       fail_msg = 'Fields must have a non-empty name.'
@@ -203,6 +200,9 @@ class Field(object):
       raise SchemaParseException(fail_msg)
 
     # add members
+    self._props = {}
+    self._type_from_names = False
+    self._has_default = has_default
     if (isinstance(type, basestring) and names is not None
         and names.has_key(type)):
       type_schema = names[type]
@@ -216,13 +216,14 @@ class Field(object):
     self.set_prop('type', type_schema)
     self.set_prop('name', name)
     # TODO(hammer): check to ensure default is valid
-    if default is not None: self.set_prop('default', default)
+    if has_default: self.set_prop('default', default)
     if order is not None: self.set_prop('order', order)
 
   # read-only properties
   type = property(lambda self: self.get_prop('type'))
   name = property(lambda self: self.get_prop('name'))
   default = property(lambda self: self.get_prop('default'))
+  has_default = property(lambda self: self._has_default)
   order = property(lambda self: self.get_prop('order'))
   props = property(lambda self: self._props)
   type_from_names = property(lambda self: self._type_from_names)
@@ -463,9 +464,16 @@ class RecordSchema(NamedSchema):
       if hasattr(field, 'get') and callable(field.get):
         type = field.get('type')
         name = field.get('name')
-        default = field.get('default')
+
+        # null values can have a default value of None
+        has_default = False
+        default = None
+        if field.has_key('default'):
+          has_default = True
+          default = field.get('default')
+
         order = field.get('order')
-        new_field = Field(type, name, default, order, names)
+        new_field = Field(type, name, has_default, default, order, names)
         # make sure field name has not been used yet
         if new_field.name in field_names:
           fail_msg = 'Field name %s already in use.' % new_field.name

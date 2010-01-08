@@ -65,11 +65,10 @@ class AvroTypeException(schema.AvroException):
                % (datum, expected_schema)
     schema.AvroException.__init__(self, fail_msg)
 
-class SchemaMatchException(schema.AvroException):
-  """Raised when writer's and reader's schema do not match."""
-  def __init__(self, writers_schema, readers_schema):
-    fail_msg = "Writer's schema %s and Reader's schema %s do not match."\
-               % (writers_schema, readers_schema)
+class SchemaResolutionException(schema.AvroException):
+  def __init__(self, fail_msg, writers_schema=None, readers_schema=None):
+    if writers_schema: fail_msg += "\nWriter's Schema: %s" % writers_schema
+    if readers_schema: fail_msg += "\nReader's Schema: %s" % writers_schema
     schema.AvroException.__init__(self, fail_msg)
 
 #
@@ -249,6 +248,10 @@ class BinaryEncoder(object):
   # read-only properties
   writer = property(lambda self: self._writer)
 
+  def write(self, datum):
+    """Write an abritrary datum."""
+    self.writer.write(datum)
+
   def write_null(self, datum):
     """
     null is written as zero bytes
@@ -261,9 +264,9 @@ class BinaryEncoder(object):
     whose value is either 0 (false) or 1 (true).
     """
     if datum:
-      self.writer.write(chr(1))
+      self.write(chr(1))
     else:
-      self.writer.write(chr(0))
+      self.write(chr(0))
 
   def write_int(self, datum):
     """
@@ -277,9 +280,9 @@ class BinaryEncoder(object):
     """
     datum = (datum << 1) ^ (datum >> 63)
     while (datum & ~0x7F) != 0:
-      self.writer.write(chr((datum & 0x7f) | 0x80))
+      self.write(chr((datum & 0x7f) | 0x80))
       datum >>= 7
-    self.writer.write(chr(datum))
+    self.write(chr(datum))
 
   def write_float(self, datum):
     """
@@ -288,10 +291,10 @@ class BinaryEncoder(object):
     Java's floatToIntBits and then encoded in little-endian format.
     """
     bits = STRUCT_INT.unpack(STRUCT_FLOAT.pack(datum))[0]
-    self.writer.write(chr((bits) & 0xFF))
-    self.writer.write(chr((bits >> 8) & 0xFF))
-    self.writer.write(chr((bits >> 16) & 0xFF))
-    self.writer.write(chr((bits >> 24) & 0xFF))
+    self.write(chr((bits) & 0xFF))
+    self.write(chr((bits >> 8) & 0xFF))
+    self.write(chr((bits >> 16) & 0xFF))
+    self.write(chr((bits >> 24) & 0xFF))
 
   def write_double(self, datum):
     """
@@ -300,21 +303,21 @@ class BinaryEncoder(object):
     Java's doubleToLongBits and then encoded in little-endian format.
     """
     bits = STRUCT_LONG.unpack(STRUCT_DOUBLE.pack(datum))[0]
-    self.writer.write(chr((bits) & 0xFF))
-    self.writer.write(chr((bits >> 8) & 0xFF))
-    self.writer.write(chr((bits >> 16) & 0xFF))
-    self.writer.write(chr((bits >> 24) & 0xFF))
-    self.writer.write(chr((bits >> 32) & 0xFF))
-    self.writer.write(chr((bits >> 40) & 0xFF))
-    self.writer.write(chr((bits >> 48) & 0xFF))
-    self.writer.write(chr((bits >> 56) & 0xFF))
+    self.write(chr((bits) & 0xFF))
+    self.write(chr((bits >> 8) & 0xFF))
+    self.write(chr((bits >> 16) & 0xFF))
+    self.write(chr((bits >> 24) & 0xFF))
+    self.write(chr((bits >> 32) & 0xFF))
+    self.write(chr((bits >> 40) & 0xFF))
+    self.write(chr((bits >> 48) & 0xFF))
+    self.write(chr((bits >> 56) & 0xFF))
 
   def write_bytes(self, datum):
     """
     Bytes are encoded as a long followed by that many bytes of data. 
     """
     self.write_long(len(datum))
-    self.writer.write(struct.pack('%ds' % len(datum), datum))
+    self.write(struct.pack('%ds' % len(datum), datum))
 
   def write_utf8(self, datum):
     """
@@ -323,10 +326,6 @@ class BinaryEncoder(object):
     """
     datum = datum.encode("utf-8")
     self.write_bytes(datum)
-
-  def write(self, datum):
-    """Write an abritrary datum."""
-    self.writer.write(datum)
 
 #
 # DatumReader/Writer
@@ -407,14 +406,16 @@ class DatumReader(object):
   def read_data(self, writers_schema, readers_schema, decoder):
     # schema matching
     if not DatumReader.match_schemas(writers_schema, readers_schema):
-      raise SchemaMatchException(writers_schema, readers_schema)
+      fail_msg = 'Schemas do not match.'
+      raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
     # schema resolution: reader's schema is a union, writer's schema is not
     if writers_schema.type != 'union' and readers_schema.type == 'union':
       for s in readers_schema.schemas:
         if DatumReader.match_schemas(writers_schema, s):
           return self.read_data(writers_schema, s, decoder)
-      raise SchemaMatchException(writers_schema, readers_schema)
+      fail_msg = 'Schemas do not match.'      
+      raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
     # function dispatch for reading data based on type of writer's schema
     if writers_schema.type == 'null':
@@ -501,10 +502,10 @@ class DatumReader(object):
     index_of_symbol = decoder.read_int()
     read_symbol = writers_schema.symbols[index_of_symbol]
 
-    # TODO(hammer): figure out what "unset" means for resolution
     # schema resolution
     if read_symbol not in readers_schema.symbols:
-      pass # 'unset' here
+      fail_msg = "Symbol %s not present in Reader's Schema" % read_symbol
+      raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
     return read_symbol
 
@@ -642,11 +643,13 @@ class DatumReader(object):
       writers_fields_dict = writers_schema.fields_dict
       for field_name, field in readers_fields_dict.items():
         if not writers_fields_dict.has_key(field_name):
-          if field.default is not None:
+          if field.has_default:
             field_val = self._read_default_value(field.type, field.default)
             read_record[field.name] = field_val
           else:
-            pass # 'unset' here
+            fail_msg = 'No default value for field %s' % field_name
+            raise SchemaResolutionException(fail_msg, writers_schema,
+                                            readers_schema)
     return read_record
 
   def skip_record(self, writers_schema, decoder):
@@ -657,9 +660,9 @@ class DatumReader(object):
     """
     Basically a JSON Decoder?
     """
-    if field_schema.type in 'null':
+    if field_schema.type == 'null':
       return None
-    elif field_schema.type in 'boolean':
+    elif field_schema.type == 'boolean':
       return bool(default_value)
     elif field_schema.type == 'int':
       return int(default_value)
