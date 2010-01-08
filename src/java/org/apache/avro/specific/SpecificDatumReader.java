@@ -50,10 +50,6 @@ public class SpecificDatumReader extends GenericDatumReader<Object> {
   protected Object getField(Object record, String name, int position) {
     return ((SpecificRecord)record).get(position);
   }
-  @Override
-  protected void removeField(Object record, String field, int position) {
-    ((SpecificRecord)record).set(position, null);
-  }
 
   @Override
   @SuppressWarnings("unchecked")

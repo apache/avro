@@ -63,11 +63,6 @@ public class ReflectDatumReader extends SpecificDatumReader {
   }
 
   @Override
-  protected void removeField(Object record, String name, int position) {
-    addField(record, name, position, null);
-  }
-
-  @Override
   @SuppressWarnings(value="unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
     ReflectData data = ReflectData.get();

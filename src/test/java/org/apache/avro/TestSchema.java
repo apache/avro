@@ -392,4 +392,42 @@ public class TestSchema {
     assertEquals("Wrong toString", expected, Schema.parse(expected.toString()));
   }
 
+  @SuppressWarnings(value="unchecked")
+  private static void testNoDefaultField() throws Exception {
+    Schema expected =
+      Schema.parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":"+
+                   "[{\"name\":\"f\", \"type\": \"string\"}]}");
+    DatumReader in = new GenericDatumReader(ACTUAL, expected);
+    try {
+      GenericData.Record record = (GenericData.Record)
+        in.read(null, new BinaryDecoder(new ByteArrayInputStream(new byte[0])));
+    } catch (AvroTypeException e) {
+      return;
+    }
+    fail("Should not read: "+expected);
+  }
+
+  @SuppressWarnings(value="unchecked")
+  private static void testEnumMismatch() throws Exception {
+    Schema actual = Schema.parse
+      ("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"X\",\"Y\"]}");
+    Schema expected = Schema.parse
+      ("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"Y\",\"Z\"]}");
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    DatumWriter<Object> writer = new GenericDatumWriter<Object>(actual);
+    Encoder encoder = new BinaryEncoder(out);
+    writer.write("Y", encoder);
+    writer.write("X", encoder);
+    byte[] data = out.toByteArray();
+    Decoder decoder = new BinaryDecoder(new ByteArrayInputStream(data));
+    DatumReader in = new GenericDatumReader(actual, expected);
+    assertEquals("Wrong value", "Y", in.read(null, decoder));
+    try {
+      in.read(null, decoder);
+    } catch (AvroTypeException e) {
+      return;
+    }
+    fail("Should not read: "+expected);
+  }
+
 }

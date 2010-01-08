@@ -162,11 +162,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         if (!actualFields.contains(fieldName)) {  // an unset field
           Field f = entry.getValue();
           JsonNode json = f.defaultValue();
-          if (json != null)                       // has default
-            addField(record, fieldName, f.pos(),  // add default
-                     defaultFieldValue(old, f.schema(), json));
-          else if (old != null)                   // remove stale value
-            removeField(record, fieldName, entry.getValue().pos());
+          if (json == null)                       // no default
+            throw new AvroTypeException("No default value for: "+fieldName);
+          addField(record, fieldName, f.pos(),  // add default
+                   defaultFieldValue(old, f.schema(), json));
         }
       }
     }
@@ -187,13 +186,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return ((GenericRecord) record).get(name);
   }
 
-  /** Called by the default implementation of {@link #readRecord} to remove a
-   * record field value from a reused instance.  The default implementation is
-   * for {@link GenericRecord}.*/
-  protected void removeField(Object record, String field, int position) {
-    ((GenericRecord) record).remove(field);
-  }
-  
   /** Called by the default implementation of {@link #readRecord} to construct
       a default value for a field. */
   protected Object defaultFieldValue(Object old, Schema schema, JsonNode json)
@@ -206,12 +198,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         Field f = entry.getValue();
         JsonNode v = json.get(name);
         if (v == null) v = f.defaultValue();
-        if (v != null) {
-          Object o = old != null ? getField(old, name, f.pos()) : null;
-          addField(record, name, f.pos(), defaultFieldValue(o, f.schema(), v));
-        } else if (old != null) {
-          removeField(record, name, f.pos());
-        }
+        if (v == null)
+          throw new AvroTypeException("No default value for: "+name);
+        Object o = old != null ? getField(old, name, f.pos()) : null;
+        addField(record, name, f.pos(), defaultFieldValue(o, f.schema(), v));
       }
       return record;
     case ENUM:

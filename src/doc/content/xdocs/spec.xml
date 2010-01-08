@@ -971,14 +971,13 @@
 
 	    <li>if the reader's record schema has a field with no
               default value, and writer's schema does not have a field
-              with the same name, then the field's value is
-              unset.</li>
+              with the same name, an error is signalled.</li>
 	  </ul>
 	</li>
 
 	<li><strong>if both are enums:</strong>
 	  <p>if the writer's symbol is not present in the reader's
-	    enum, then the enum's value is unset.</p>
+	    enum, then an error is signalled.</p>
 	</li>
 
 	<li><strong>if both are arrays:</strong>
