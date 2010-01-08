@@ -151,7 +151,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       int fieldPosition = expectedField.pos();
       Object oldDatum =
           (old != null) ? getField(record, fieldName, fieldPosition) : null;
-      addField(record, fieldName, fieldPosition,
+      setField(record, fieldName, fieldPosition,
                read(oldDatum,actualField.schema(),expectedField.schema(), in));
       size++;
     }
@@ -164,7 +164,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
           JsonNode json = f.defaultValue();
           if (json == null)                       // no default
             throw new AvroTypeException("No default value for: "+fieldName);
-          addField(record, fieldName, f.pos(),  // add default
+          setField(record, fieldName, f.pos(),    // set default
                    defaultFieldValue(old, f.schema(), json));
         }
       }
@@ -172,18 +172,18 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return record;
   }
 
-  /** Called by the default implementation of {@link #readRecord} to add a
+  /** Called by the default implementation of {@link #readRecord} to set a
    * record fields value to a record instance.  The default implementation is
    * for {@link GenericRecord}.*/
-  protected void addField(Object record, String name, int position, Object o) {
-    ((GenericRecord) record).put(name, o);
+  protected void setField(Object record, String name, int position, Object o) {
+    ((GenericRecord)record).put(position, o);
   }
   
   /** Called by the default implementation of {@link #readRecord} to retrieve a
    * record field value from a reused instance.  The default implementation is
    * for {@link GenericRecord}.*/
   protected Object getField(Object record, String name, int position) {
-    return ((GenericRecord) record).get(name);
+    return ((GenericRecord)record).get(position);
   }
 
   /** Called by the default implementation of {@link #readRecord} to construct
@@ -201,7 +201,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         if (v == null)
           throw new AvroTypeException("No default value for: "+name);
         Object o = old != null ? getField(old, name, f.pos()) : null;
-        addField(record, name, f.pos(), defaultFieldValue(o, f.schema(), v));
+        setField(record, name, f.pos(), defaultFieldValue(o, f.schema(), v));
       }
       return record;
     case ENUM:

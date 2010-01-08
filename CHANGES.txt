@@ -24,6 +24,9 @@ Trunk (unreleased changes)
     format now permits streaming but no longer supports multiple
     schemas per file.  Java API for reading is iterator-based.
 
+    AVRO-278. Changed GenericRecord API and implementation to be
+    array-based rather than Map-based. (cutting)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

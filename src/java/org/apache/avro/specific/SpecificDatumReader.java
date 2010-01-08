@@ -43,7 +43,7 @@ public class SpecificDatumReader extends GenericDatumReader<Object> {
   }
 
   @Override
-  protected void addField(Object record, String name, int position, Object o) {
+  protected void setField(Object record, String name, int position, Object o) {
     ((SpecificRecord)record).set(position, o);
   }
   @Override

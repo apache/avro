@@ -45,7 +45,7 @@ public class ReflectDatumReader extends SpecificDatumReader {
   }
 
   @Override
-  protected void addField(Object record, String name, int position, Object o) {
+  protected void setField(Object record, String name, int position, Object o) {
     try {
       ReflectData.getField(record.getClass(), name).set(record, o);
     } catch (IllegalAccessException e) {

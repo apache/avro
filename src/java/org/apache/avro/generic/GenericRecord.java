@@ -17,8 +17,14 @@
  */
 package org.apache.avro.generic;
 
-import java.util.Map;
-
-/** A set of fields, each a name/value pair.*/
-public interface GenericRecord extends Map<String,Object>, GenericContainer {
+/** An instance of a record schema.*/
+public interface GenericRecord extends GenericContainer {
+  /** Set the value of a field given its name. */
+  void put(String key, Object v);
+  /** Set the value of a field given its position in the schema. */
+  void put(int i, Object v);
+  /** Return the value of a field given its name. */
+  Object get(String key);
+  /** Return the value of a field given its position in the schema. */
+  Object get(int i);
 }

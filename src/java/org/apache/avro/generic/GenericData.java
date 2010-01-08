@@ -18,9 +18,7 @@
 package org.apache.avro.generic;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -43,17 +41,23 @@ public class GenericData {
   protected GenericData() {}
   
   /** Default implementation of {@link GenericRecord}. */
-  @SuppressWarnings(value="unchecked")
-  public static class Record
-    extends HashMap<String,Object>
-    implements GenericRecord, Comparable<Record> {
+  public static class Record implements GenericRecord, Comparable<Record> {
     private final Schema schema;
+    private final Object[] values;
     public Record(Schema schema) {
-      super(schema.getFields().size());
       this.schema = schema;
+      this.values = new Object[schema.getFields().size()];
     }
-    public Schema getSchema() { return schema; }
-    public boolean equals(Object o) {
+    @Override public Schema getSchema() { return schema; }
+    @Override public void put(String key, Object value) {
+      values[schema.getFields().get(key).pos()] = value;
+    }
+    @Override public void put(int i, Object v) { values[i] = v; }
+    @Override public Object get(String key) {
+      return values[schema.getFields().get(key).pos()];
+    }
+    @Override public Object get(int i) { return values[i]; }
+    @Override public boolean equals(Object o) {
       if (o == this) return true;                 // identical object
       if (!(o instanceof Record)) return false;   // not a record
       Record that = (Record)o;
@@ -61,11 +65,14 @@ public class GenericData {
         return false;                             // not the same schema
       return this.compareTo(that) == 0;
     }
-    public int hashCode() {
+    @Override public int hashCode() {
       return GenericData.get().hashCode(this, schema);
     }
-    public int compareTo(Record that) {
+    @Override public int compareTo(Record that) {
       return GenericData.get().compare(this, that, schema);
+    }
+    @Override public String toString() {
+      return GenericData.get().toString(this);
     }
   }
 
@@ -166,9 +173,11 @@ public class GenericData {
     case RECORD:
       if (!(datum instanceof GenericRecord)) return false;
       GenericRecord fields = (GenericRecord)datum;
-      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
-        if (!validate(entry.getValue(), fields.get(entry.getKey())))
+      for (Map.Entry<String, Field> entry : schema.getFields().entrySet()) {
+        Field f = entry.getValue();
+        if (!validate(f.schema(), fields.get(f.pos())))
           return false;
+      }
       return true;
     case ENUM:
       return schema.getEnumSymbols().contains(datum);
@@ -217,11 +226,12 @@ public class GenericData {
       buffer.append("{");
       int count = 0;
       GenericRecord record = (GenericRecord)datum;
-      for (Map.Entry<String,Object> entry : record.entrySet()) {
-        toString(entry.getKey(), buffer);
+      for (Map.Entry<String,Field> e :
+             record.getSchema().getFields().entrySet()) {
+        toString(e.getKey(), buffer);
         buffer.append(": ");
-        toString(entry.getValue(), buffer);
-        if (++count < record.size())
+        toString(record.get(e.getValue().pos()), buffer);
+        if (++count < record.getSchema().getFields().size())
           buffer.append(", ");
       }
       buffer.append("}");
@@ -267,11 +277,7 @@ public class GenericData {
   /** Create a schema given an example datum. */
   public Schema induce(Object datum) {
     if (datum instanceof GenericRecord) {
-      GenericRecord record = (GenericRecord)datum;
-      LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
-      for (Map.Entry<String,Object> entry : record.entrySet())
-        fields.put(entry.getKey(), new Field(induce(entry.getValue()), null, null));
-      return Schema.createRecord(fields);
+      return ((GenericRecord)datum).getSchema();
     } else if (datum instanceof GenericArray) {
       Schema elementType = null;
       for (Object element : (GenericArray)datum) {
@@ -407,8 +413,7 @@ public class GenericData {
         Field f = e.getValue();
         if (f.order() == Field.Order.IGNORE)
           continue;
-        String name = e.getKey();
-        hashCode = hashCodeAdd(hashCode, r.get(name), f.schema());
+        hashCode = hashCodeAdd(hashCode, r.get(f.pos()), f.schema());
       }
       return hashCode;
     case ARRAY:
@@ -446,8 +451,8 @@ public class GenericData {
         Field f = e.getValue();
         if (f.order() == Field.Order.IGNORE)
           continue;                               // ignore this field
-        String name = e.getKey();
-        int compare = compare(r1.get(name), r2.get(name), f.schema());
+        int pos = f.pos();
+        int compare = compare(r1.get(pos), r2.get(pos), f.schema());
         if (compare != 0)                         // not equal
           return f.order() == Field.Order.DESCENDING ? -compare : compare;
       }

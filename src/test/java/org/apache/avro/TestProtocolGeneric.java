@@ -43,7 +43,6 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Random;
 
 public class TestProtocolGeneric {
@@ -155,7 +154,7 @@ public class TestProtocolGeneric {
       error = e;
     }
     assertNotNull(error);
-    assertEquals("an error", ((Map)error.getValue()).get("message").toString());
+    assertEquals("an error", ((GenericRecord)error.getValue()).get("message").toString());
   }
 
   @Test
