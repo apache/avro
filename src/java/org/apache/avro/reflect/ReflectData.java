@@ -267,20 +267,21 @@ public class ReflectData extends SpecificData {
           Enum[] constants = (Enum[])c.getEnumConstants();
           for (int i = 0; i < constants.length; i++)
             symbols.add(constants[i].name());
-          schema = Schema.createEnum(name, space, symbols);
+          schema = Schema.createEnum(name, null /* doc */, space, symbols);
         } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed
           int size = c.getAnnotation(FixedSize.class).value();
-          schema = Schema.createFixed(name, space, size);
+          schema = Schema.createFixed(name, null /* doc */, space, size);
         } else {                                             // record
           LinkedHashMap<String,Schema.Field> fields =
             new LinkedHashMap<String,Schema.Field>();
-          schema = Schema.createRecord(name, space,
+          schema = Schema.createRecord(name, null /* doc */, space, 
                                        Throwable.class.isAssignableFrom(c));
           names.put(c.getName(), schema);
           for (Field field : getFields(c))
             if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0){
               Schema fieldSchema = createFieldSchema(field, names);
-              fields.put(field.getName(), new Schema.Field(fieldSchema, null));
+              fields.put(field.getName(), new Schema.Field(fieldSchema, 
+                  null /* doc */, null));
             }
           schema.setFields(fields);
         }
@@ -375,7 +376,7 @@ public class ReflectData extends SpecificData {
       String paramName =  paramNames.length == paramTypes.length
         ? paramNames[i]
         : paramSchema.getName()+i;
-      fields.put(paramName, new Schema.Field(paramSchema, null));
+      fields.put(paramName, new Schema.Field(paramSchema, null /* doc */, null));
     }
     Schema request = Schema.createRecord(fields);
 
@@ -391,7 +392,7 @@ public class ReflectData extends SpecificData {
         errs.add(getSchema(err, names));
     Schema errors = Schema.createUnion(errs);
 
-    return protocol.createMessage(method.getName(), request, response, errors);
+    return protocol.createMessage(method.getName(), null /* doc */, request, response, errors);
   }
 
   private Schema getSchema(Type type, Map<String,Schema> names) {

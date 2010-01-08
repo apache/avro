@@ -165,11 +165,12 @@ public class TestProtocolGeneric {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
     LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
     fields.put("extra",
-               new Schema.Field(Schema.create(Schema.Type.BOOLEAN), null));
+               new Schema.Field(Schema.create(Schema.Type.BOOLEAN), null, null));
     fields.put("greeting",
-               new Schema.Field(Schema.create(Schema.Type.STRING), null));
+               new Schema.Field(Schema.create(Schema.Type.STRING), null, null));
     Protocol.Message message =
       protocol.createMessage("hello",
+                             null /* doc */,
                              Schema.createRecord(fields),
                              Schema.create(Schema.Type.STRING),
                              Schema.createUnion(new ArrayList<Schema>()));

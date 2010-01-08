@@ -120,21 +120,21 @@ public abstract class Schema {
 
   /** Create an anonymous record schema. */
   public static Schema createRecord(LinkedHashMap<String,Field> fields) {
-    Schema result = createRecord(null, null, false);
+    Schema result = createRecord(null, null, null, false);
     result.setFields(fields);
     return result;
   }
 
   /** Create a named record schema. */
-  public static Schema createRecord(String name, String namespace,
+  public static Schema createRecord(String name, String doc, String namespace,
                                     boolean isError) {
-    return new RecordSchema(new Name(name, namespace), isError);
+    return new RecordSchema(new Name(name, namespace), doc, isError);
   }
 
   /** Create an enum schema. */
-  public static Schema createEnum(String name, String namespace,
+  public static Schema createEnum(String name, String doc, String namespace,
                                   List<String> values) {
-    return new EnumSchema(new Name(name, namespace), values);
+    return new EnumSchema(new Name(name, namespace), doc, values);
   }
 
   /** Create an array schema. */
@@ -153,8 +153,9 @@ public abstract class Schema {
   }
 
   /** Create a union schema. */
-  public static Schema createFixed(String name, String space, int size) {
-    return new FixedSchema(new Name(name, space), size);
+  public static Schema createFixed(String name, String doc, String space,
+      int size) {
+    return new FixedSchema(new Name(name, space), doc, size);
   }
 
   /** Return the type of this schema. */
@@ -188,6 +189,12 @@ public abstract class Schema {
   /** If this is a record, enum or fixed, returns its name, otherwise the name
    * of the primitive type. */
   public String getName() { return type.name; }
+
+  /** If this is a record, enum, or fixed, returns its docstring,
+   * if available.  Otherwise, returns null. */
+  public String getDoc() {
+    return null;
+  }
 
   /** If this is a record, enum or fixed, returns its namespace, if any. */
   public String getNamespace() {
@@ -286,14 +293,16 @@ public abstract class Schema {
 
     private int position = -1;
     private final Schema schema;
+    private final String doc;
     private final JsonNode defaultValue;
     private final Order order;
 
-    public Field(Schema schema, JsonNode defaultValue) {
-      this(schema, defaultValue, Order.ASCENDING);
+    public Field(Schema schema, String doc, JsonNode defaultValue) {
+      this(schema, doc, defaultValue, Order.ASCENDING);
     }
-    public Field(Schema schema, JsonNode defaultValue, Order order) {
+    public Field(Schema schema, String doc, JsonNode defaultValue, Order order) {
       this.schema = schema;
+      this.doc = doc;
       this.defaultValue = defaultValue;
       this.order = order;
     }
@@ -301,6 +310,8 @@ public abstract class Schema {
     public int pos() { return position; }
     /** This field's {@link Schema}. */
     public Schema schema() { return schema; }
+    /** Field's documentation within the record, if set. May return null. */
+    public String doc() { return doc; }
     public JsonNode defaultValue() { return defaultValue; }
     public Order order() { return order; }
     public boolean equals(Object other) {
@@ -358,11 +369,14 @@ public abstract class Schema {
 
   private static abstract class NamedSchema extends Schema {
     private final Name name;
-    public NamedSchema(Type type, Name name) {
+    private final String doc;
+    public NamedSchema(Type type, Name name, String doc) {
       super(type);
       this.name = name;
+      this.doc = doc;
     }
     public String getName() { return name.name; }
+    public String getDoc() { return doc; }
     public String getNamespace() { return name.space; }
     public String getFullName() { return name.full; }
     public boolean writeNameRef(Names names, JsonGenerator gen)
@@ -412,8 +426,8 @@ public abstract class Schema {
     private Map<String,Field> fields;
     private Iterable<Map.Entry<String,Schema>> fieldSchemas;
     private final boolean isError;
-    public RecordSchema(Name name, boolean isError) {
-      super(Type.RECORD, name);
+    public RecordSchema(Name name, String doc, boolean isError) {
+      super(Type.RECORD, name, doc);
       this.isError = isError;
     }
     public boolean isError() { return isError; }
@@ -495,8 +509,8 @@ public abstract class Schema {
   private static class EnumSchema extends NamedSchema {
     private final List<String> symbols;
     private final Map<String,Integer> ordinals;
-    public EnumSchema(Name name, List<String> symbols) {
-      super(Type.ENUM, name);
+    public EnumSchema(Name name, String doc, List<String> symbols) {
+      super(Type.ENUM, name, doc);
       this.symbols = symbols;
       this.ordinals = new HashMap<String,Integer>();
       int i = 0;
@@ -624,8 +638,8 @@ public abstract class Schema {
 
   private static class FixedSchema extends NamedSchema {
     private final int size;
-    public FixedSchema(Name name, int size) {
-      super(Type.FIXED, name);
+    public FixedSchema(Name name, String doc, int size) {
+      super(Type.FIXED, name, doc);
       if (size < 0)
         throw new IllegalArgumentException("Invalid fixed size: "+size);
       this.size = size;
@@ -779,9 +793,11 @@ public abstract class Schema {
       String type = getRequiredText(schema, "type", "No type");
       Name name = null;
       String savedSpace = null;
+      String doc = null;
       if (type.equals("record") || type.equals("error")
           || type.equals("enum") || type.equals("fixed")) {
         String space = getOptionalText(schema, "namespace");
+        doc = getOptionalText(schema, "doc");
         if (space == null)
           space = names.space();
         name = new Name(getRequiredText(schema, "name", "No name in schema"),
@@ -795,15 +811,14 @@ public abstract class Schema {
         result = create(PRIMITIVES.get(type));
       } else if (type.equals("record") || type.equals("error")) { // record
         LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
-        result = new RecordSchema(name, type.equals("error"));
+        result = new RecordSchema(name, doc, type.equals("error"));
         if (name != null) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())
           throw new SchemaParseException("Record has no fields: "+schema);
         for (JsonNode field : fieldsNode) {
-          JsonNode fieldNameNode = field.get("name");
-          if (fieldNameNode == null)
-            throw new SchemaParseException("No field name: "+field);
+          String fieldName = getRequiredText(field, "name", "No field name");
+          String fieldDoc = getOptionalText(field, "doc");
           JsonNode fieldTypeNode = field.get("type");
           if (fieldTypeNode == null)
             throw new SchemaParseException("No field type: "+field);
@@ -812,8 +827,8 @@ public abstract class Schema {
           JsonNode orderNode = field.get("order");
           if (orderNode != null)
             order = Field.Order.valueOf(orderNode.getTextValue().toUpperCase());
-          fields.put(fieldNameNode.getTextValue(),
-                     new Field(fieldSchema, field.get("default"), order));
+          fields.put(fieldName,
+                     new Field(fieldSchema, fieldDoc, field.get("default"), order));
         }
         result.setFields(fields);
       } else if (type.equals("enum")) {           // enum
@@ -823,7 +838,7 @@ public abstract class Schema {
         List<String> symbols = new ArrayList<String>();
         for (JsonNode n : symbolsNode)
           symbols.add(n.getTextValue());
-        result = new EnumSchema(name, symbols);
+        result = new EnumSchema(name, doc, symbols);
         if (name != null) names.add(result);
       } else if (type.equals("array")) {          // array
         JsonNode itemsNode = schema.get("items");
@@ -839,7 +854,7 @@ public abstract class Schema {
         JsonNode sizeNode = schema.get("size");
         if (sizeNode == null || !sizeNode.isInt())
           throw new SchemaParseException("Invalid or no size: "+schema);
-        result = new FixedSchema(name, sizeNode.getIntValue());
+        result = new FixedSchema(name, doc, sizeNode.getIntValue());
         if (name != null) names.add(result);
       } else
         throw new SchemaParseException("Type not supported: "+type);

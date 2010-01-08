@@ -53,6 +53,9 @@ Trunk (unreleased changes)
     AVRO-273, AVRO-275, & AVRO-279. Add Java RPC statistics collection
     and display. (Philip Zeyliger via cutting)
 
+    AVRO-152. Add support for documentation strings to schemas,
+    protocols, and messages. (Philip Zeyliger via cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

@@ -180,6 +180,7 @@ public class SpecificCompiler {
     outputFile.path = makePath(mangledName, protocol.getNamespace());
     StringBuilder out = new StringBuilder();
     header(out, protocol.getNamespace());
+    doc(out, 1, protocol.getDoc());
     line(out, 0, "public interface " + mangledName + " {");
     line(out, 1, "public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse(\""
            +esc(protocol)+"\");");
@@ -188,6 +189,7 @@ public class SpecificCompiler {
       Message message = e.getValue();
       Schema request = message.getRequest();
       Schema response = message.getResponse();
+      doc(out, 1, e.getValue().getDoc());
       line(out, 1, unbox(response)+" "+ mangle(name)+"("+params(request)+")");
       line(out, 2,"throws org.apache.avro.ipc.AvroRemoteException"+errors(message.getErrors())+";");
     }
@@ -196,6 +198,7 @@ public class SpecificCompiler {
     outputFile.contents = out.toString();
     return outputFile;
   }
+
 
   static String makePath(String name, String space) {
     if (space == null || space.isEmpty()) {
@@ -244,6 +247,7 @@ public class SpecificCompiler {
     header(out, schema.getNamespace());
     switch (schema.getType()) {
     case RECORD:
+      doc(out, 0, schema.getDoc());
       line(out, 0, "public class "+name+
            (schema.isError()
             ? " extends org.apache.avro.specific.SpecificExceptionBase"
@@ -253,9 +257,11 @@ public class SpecificCompiler {
       line(out, 1, "public static final org.apache.avro.Schema SCHEMA$ = org.apache.avro.Schema.parse(\""
            +esc(schema)+"\");");
       // field declations
-      for (Map.Entry<String,Schema.Field> field: schema.getFields().entrySet())
+      for (Map.Entry<String,Schema.Field> field: schema.getFields().entrySet()) {
+        doc(out, 1, field.getValue().doc());
         line(out, 1, "public " + unbox(field.getValue().schema()) + " "
              + mangle(field.getKey()) + ";");
+      }
       // schema method
       line(out, 1, "public org.apache.avro.Schema getSchema() { return SCHEMA$; }");
       // get method
@@ -281,6 +287,7 @@ public class SpecificCompiler {
       line(out, 0, "}");
       break;
     case ENUM:
+      doc(out, 0, schema.getDoc());
       line(out, 0, "public enum "+name+" { ");
       StringBuilder b = new StringBuilder();
       int count = 0;
@@ -293,6 +300,7 @@ public class SpecificCompiler {
       line(out, 0, "}");
       break;
     case FIXED:
+      doc(out, 0, schema.getDoc());
       line(out, 0, "@org.apache.avro.specific.FixedSize("+schema.getFixedSize()+")");
       line(out, 0, "public class "+name+" extends org.apache.avro.specific.SpecificFixed {}");
       break;
@@ -304,6 +312,18 @@ public class SpecificCompiler {
 
     outputFile.contents = out.toString();
     return outputFile;
+  }
+
+  private void doc(StringBuilder out, int indent, String doc) {
+    if (doc != null) {
+      line(out, indent, "/** " + escapeForJavaDoc(doc) + " */");
+    }
+  }
+
+  /** Be sure that generated code will compile by replacing
+   * end-comment markers with the appropriate HTML entity. */
+  private String escapeForJavaDoc(String doc) {
+    return doc.replace("*/", "*&#47;");
   }
 
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);

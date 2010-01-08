@@ -49,6 +49,24 @@ public class TestSchema {
   public static final String BASIC_ENUM_SCHEMA = "{\"type\":\"enum\", \"name\":\"Test\","
             +"\"symbols\": [\"A\", \"B\"]}";
 
+  public static final String SCHEMA_WITH_DOC_TAGS = "{\n"
+      + "  \"type\": \"record\",\n"
+      + "  \"name\": \"outer_record\",\n"
+      + "  \"doc\": \"This is not a world record.\",\n"
+      + "  \"fields\": [\n"
+      + "    { \"type\": { \"type\": \"fixed\", \"doc\": \"Very Inner Fixed\", "
+      + "                  \"name\": \"very_inner_fixed\", \"size\": 1 },\n"
+      + "      \"doc\": \"Inner Fixed\", \"name\": \"inner_fixed\" },\n"
+      + "    { \"type\": \"string\",\n"
+      + "      \"name\": \"inner_string\",\n"
+      + "      \"doc\": \"Inner String\" },\n"
+      + "    { \"type\": { \"type\": \"enum\", \"doc\": \"Very Inner Enum\", \n"
+      + "                  \"name\": \"very_inner_enum\", \n"
+      + "                  \"symbols\": [ \"A\", \"B\", \"C\" ] },\n"
+      + "      \"doc\": \"Inner Enum\", \"name\": \"inner_enum\" },\n"
+      + "    { \"type\": [\"string\", \"int\"], \"doc\": \"Inner Union\", \n"
+      + "      \"name\": \"inner_union\" }\n" + "  ]\n" + "}\n";
+
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
 
@@ -228,6 +246,23 @@ public class TestSchema {
       return;
     }
     fail("Should not have parsed: "+json);
+  }
+
+  /**
+   * Makes sure that "doc" tags are transcribed in the schemas.
+   * Note that there are docs both for fields and for the records
+   * themselves.
+   */
+  @Test
+  public void testDocs() {
+    Schema schema = Schema.parse(SCHEMA_WITH_DOC_TAGS);
+    assertEquals("This is not a world record.", schema.getDoc());
+    assertEquals("Inner Fixed", schema.getFields().get("inner_fixed").doc());
+    assertEquals("Very Inner Fixed", schema.getFields().get("inner_fixed").schema().getDoc());
+    assertEquals("Inner String", schema.getFields().get("inner_string").doc());
+    assertEquals("Inner Enum", schema.getFields().get("inner_enum").doc());
+    assertEquals("Very Inner Enum", schema.getFields().get("inner_enum").schema().getDoc());
+    assertEquals("Inner Union", schema.getFields().get("inner_union").doc());
   }
 
   private static void check(String schemaJson, String defaultJson,

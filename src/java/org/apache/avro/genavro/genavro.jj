@@ -1000,7 +1000,7 @@ Schema EnumDeclaration():
   name = Identifier()
   symbols = EnumBody()
   {
-    Schema s = Schema.createEnum(name, this.namespace, symbols);
+    Schema s = Schema.createEnum(name, null, this.namespace, symbols);
     names.put(s.getFullName(), s);
     return s;
   }
@@ -1064,7 +1064,7 @@ Schema FixedDeclaration():
   "fixed" name = Identifier() "(" sizeTok = <INTEGER_LITERAL> ")"
   ";"
   {
-    Schema s = Schema.createFixed(name, this.namespace,
+    Schema s = Schema.createFixed(name, null, this.namespace,
                                   Integer.parseInt(sizeTok.image));
     names.put(s.getFullName(), s);
     return s;
@@ -1085,7 +1085,7 @@ Schema RecordDeclaration():
   name = Identifier()
   {
     Schema result = Schema.createRecord(
-      name, this.namespace, isError);
+      name, null, this.namespace, isError);
     names.put(result.getFullName(), result);
   }
   "{"
@@ -1142,7 +1142,7 @@ void VariableDeclarator(Schema type, LinkedHashMap<String, Field> fields):
 {
   name = Identifier()
   {
-    fields.put(name, new Field(type, null));
+    fields.put(name, new Field(type, null, null));
   }
 }
 
@@ -1163,7 +1163,7 @@ Message MessageDeclaration(Protocol p):
   ";"
   {
     Schema errors = Schema.createUnion(errorSchemata);
-    return p.createMessage(name, request, response, errors);
+    return p.createMessage(name, null, request, response, errors);
   }
 }
 

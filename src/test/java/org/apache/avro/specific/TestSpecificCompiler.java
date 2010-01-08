@@ -35,6 +35,7 @@ import javax.tools.JavaCompiler.CompilationTask;
 import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.TestProtocolParsing;
 import org.apache.avro.TestSchema;
 import org.apache.avro.specific.SpecificCompiler.OutputFile;
 import org.junit.Test;
@@ -140,6 +141,50 @@ public class TestSpecificCompiler {
     assertTrue(contents.contains("new$"));
     
     assertCompilesWithJavaCompiler(c);
+  }
+
+  @Test
+  public void testSchemaWithDocs() {
+    Collection<OutputFile> outputs = new SpecificCompiler(
+        Schema.parse(TestSchema.SCHEMA_WITH_DOC_TAGS)).compile();
+    assertEquals(3, outputs.size());
+    int count = 0;
+    for (OutputFile o : outputs) {
+      if (o.path.endsWith("outer_record.java")) {
+        count++;
+        assertTrue(o.contents.contains("/** This is not a world record. */"));
+        assertTrue(o.contents.contains("/** Inner Fixed */"));
+        assertTrue(o.contents.contains("/** Inner Enum */"));
+        assertTrue(o.contents.contains("/** Inner String */"));
+      }
+      if (o.path.endsWith("very_inner_fixed.java")) {
+        count++;
+        assertTrue(o.contents.contains("/** Very Inner Fixed */"));
+        assertTrue(o.contents.contains("@org.apache.avro.specific.FixedSize(1)"));
+      }
+      if (o.path.endsWith("very_inner_enum.java")) {
+        count++;
+        assertTrue(o.contents.contains("/** Very Inner Enum */"));
+      }
+    }
+ 
+    assertEquals(3, count);
+  }
+  
+  @Test
+  public void testProtocolWithDocs() throws IOException {
+    Protocol protocol = TestProtocolParsing.getSimpleProtocol();
+    Collection<OutputFile> out = new SpecificCompiler(protocol).compile();
+    assertEquals(5, out.size());
+    int count = 0;
+    for (OutputFile o : out) {
+      if (o.path.endsWith("Simple.java")) {
+        count++;
+        assertTrue(o.contents.contains("/** Protocol used for testing. */"));
+        assertTrue(o.contents.contains("/** Send a greeting */"));
+      }
+    }
+    assertEquals("Missed generated protocol!", 1, count);
   }
 
   /**

@@ -270,7 +270,7 @@ public class GenericData {
       GenericRecord record = (GenericRecord)datum;
       LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
       for (Map.Entry<String,Object> entry : record.entrySet())
-        fields.put(entry.getKey(), new Field(induce(entry.getValue()), null));
+        fields.put(entry.getKey(), new Field(induce(entry.getValue()), null, null));
       return Schema.createRecord(fields);
     } else if (datum instanceof GenericArray) {
       Schema elementType = null;
@@ -302,7 +302,7 @@ public class GenericData {
       }
       return Schema.createMap(value);
     } else if (datum instanceof GenericFixed) {
-      return Schema.createFixed(null, null,
+      return Schema.createFixed(null, null, null,
                                 ((GenericFixed)datum).bytes().length);
     }
     else if (datum instanceof Utf8)       return Schema.create(Type.STRING);

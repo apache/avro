@@ -56,14 +56,16 @@ public class Protocol {
   /** A protocol message. */
   public class Message {
     private String name;
+    private String doc;
     private Schema request;
     private Schema response;
     private Schema errors;
     
     /** Construct a message. */
-    private Message(String name, Schema request,
+    private Message(String name, String doc, Schema request,
                     Schema response, Schema errors) {
       this.name = name;
+      this.doc = doc;
       this.request = request;
       this.response = response;
       this.errors = errors;
@@ -123,10 +125,15 @@ public class Protocol {
         + request.hashCode() + response.hashCode() + errors.hashCode();
     }
 
+    public String getDoc() {
+      return doc;
+    }
+
   }
 
   private String name;
   private String namespace;
+  private String doc;
 
   private Schema.Names types = new Schema.Names();
   private Map<String,Message> messages = new LinkedHashMap<String,Message>();
@@ -155,6 +162,9 @@ public class Protocol {
 
   /** The namespace of this protocol.  Qualifies its name. */
   public String getNamespace() { return namespace; }
+  
+  /** Doc string for this protocol. */
+  public String getDoc() { return doc; }
 
   /** The types of this protocol. */
   public Collection<Schema> getTypes() { return types.values(); }
@@ -172,9 +182,9 @@ public class Protocol {
   /** The messages of this protocol. */
   public Map<String,Message> getMessages() { return messages; }
 
-  public Message createMessage(String name, Schema request,
+  public Message createMessage(String name, String doc, Schema request,
                                Schema response, Schema errors) {
-    return new Message(name, request, response, errors);
+    return new Message(name, doc, request, response, errors);
   }
 
 
@@ -277,6 +287,7 @@ public class Protocol {
     parseName(json);
     parseTypes(json);
     parseMessages(json);
+    parseDoc(json);
   }
 
   private void parseNamespace(JsonNode json) {
@@ -284,6 +295,16 @@ public class Protocol {
     if (nameNode == null) return;                 // no namespace defined
     this.namespace = nameNode.getTextValue();
     types.space(this.namespace);
+  }
+  
+  private void parseDoc(JsonNode json) {
+    this.doc = parseDocNode(json);
+  }
+
+  private String parseDocNode(JsonNode json) {
+    JsonNode nameNode = json.get("doc");
+    if (nameNode == null) return null;                 // no doc defined
+    return nameNode.getTextValue();
   }
 
   private void parseName(JsonNode json) {
@@ -328,6 +349,7 @@ public class Protocol {
         throw new SchemaParseException("No param type: "+field);
       fields.put(fieldNameNode.getTextValue(),
                  new Field(Schema.parse(fieldTypeNode,types),
+                           null /* message fields don't have docs */,
                            field.get("default")));
     }
     Schema request = Schema.createRecord(fields);
@@ -353,7 +375,8 @@ public class Protocol {
         errs.add(schema);
       }
     }
-    return new Message(messageName, request, response,
+    String doc = parseDocNode(json);
+    return new Message(messageName, doc, request, response,
                        Schema.createUnion(errs));
   }
 

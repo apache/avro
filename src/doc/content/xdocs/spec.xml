@@ -86,16 +86,20 @@
         <section id="schema_record">
           <title>Records</title>
           
-	  <p>Records use the type name "record" and support two attributes:</p>
+	  <p>Records use the type name "record" and support three attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
 	    of the record (required).</li>
 	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
+	    <li><code>doc</code>: a JSON string providing documentation to the
+	    user of this schema (optional).</li>
 	    <li><code>fields</code>: a JSON array, listing fields (required).
 	    Each field is a JSON object with the following attributes:
 	      <ul>
 		<li><code>name</code>: a JSON string providing the name
 		  of the field (required), and </li>
+		<li><code>doc</code>: a JSON string describing this field
+                  for users (optional).</li>
 		<li><code>type:</code> A JSON object defining a schema, or
 		  a JSON string naming a record definition
 		  (required).</li>
@@ -153,6 +157,8 @@
 	    <li><code>name</code>: a JSON string providing the name
 	    of the enum (required).</li>
 	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
+	    <li><code>doc</code>: a JSON string providing documentation to the
+	    user of this schema (optional).</li>
 	    <li><code>symbols</code>: a JSON array, listing symbols,
 	    as JSON strings (required).</li>
 	  </ul>
@@ -650,6 +656,7 @@
       <ul>
 	<li><em>name</em>, string, to distinguish it from other protocols;</li>
 	<li><em>namespace</em>, a string that qualifies the name;</li>
+	<li><em>doc</em>, an optional string, describing this protocol;</li>
 	<li><em>types</em>, a list of record, enum and error
 	  definitions.  An error definition is just like a record
 	  definition except it uses "error" instead of "record".  Note
@@ -664,6 +671,7 @@
 	<title>Messages</title>
 	<p>A message has attributes:</p>
 	<ul>
+          <li>a <em>doc</em>, an optional description of the message,</li>
 	  <li>a <em>request</em>, a list of named,
 	    typed <em>parameter</em> schemas (this has the same form
 	    as the fields of a record declaration);</li>
@@ -683,6 +691,7 @@
 {
   "namespace": "com.acme",
   "protocol": "HelloWorld",
+  "doc": "Protocol Greetings",
 
   "types": [
     {"name": "Greeting", "type": "record", "fields": [
@@ -693,6 +702,7 @@
 
   "messages": {
     "hello": {
+      "doc": "Say hello.",
       "request": [{"name": "greeting", "type": "Greeting" }],
       "response": "Greeting",
       "errors": ["Curse"]
@@ -1000,6 +1010,10 @@
 	</li>
 	  
       </ul>
+
+      <p>A schema's "doc" fields are ignored for the purposes of schema resolution.  Hence,
+        the "doc" portion of a schema may be dropped at serialization.</p>
+
     </section>
   </body>
 </document>
