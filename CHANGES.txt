@@ -50,6 +50,9 @@ Trunk (unreleased changes)
 
     AVRO-271. Add a Java local RPC transceiver. (Philip Zeyliger via cutting)
 
+    AVRO-273, AVRO-275, & AVRO-279. Add Java RPC statistics collection
+    and display. (Philip Zeyliger via cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)
