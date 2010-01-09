@@ -182,6 +182,9 @@ Trunk (unreleased changes)
     AVRO-75. Clarify that missing values with no default values cause
     errors, and fix Java implementation.  (cutting)
 
+    AVRO-259. Add null schema check in GenericData.Record and
+    GenericData.Array construtors. (Kevin Oliver via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

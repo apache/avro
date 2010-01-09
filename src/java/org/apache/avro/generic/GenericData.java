@@ -45,6 +45,7 @@ public class GenericData {
     private final Schema schema;
     private final Object[] values;
     public Record(Schema schema) {
+      if (schema == null) throw new NullPointerException();
       this.schema = schema;
       this.values = new Object[schema.getFields().size()];
     }
@@ -85,6 +86,7 @@ public class GenericData {
     private int size;
     private Object[] elements = EMPTY;
     public Array(int capacity, Schema schema) {
+      if (schema == null) throw new NullPointerException();
       this.schema = schema;
       if (capacity != 0)
         elements = new Object[capacity];
@@ -120,7 +122,7 @@ public class GenericData {
       Array that = (Array)o;
       if (!schema.equals(that.schema))
         return false;                             // not the same schema
-      return this.compareTo((Array)that) == 0;
+      return this.compareTo(that) == 0;
     }
     public int compareTo(Array<T> that) {
       return GenericData.get().compare(this, that, this.getSchema());
@@ -403,7 +405,6 @@ public class GenericData {
 
   /** Compute a hash code according to a schema, consistent with {@link
    * #compare(Object,Object,Schema)}. */
-  @SuppressWarnings(value="unchecked")
   public int hashCode(Object o, Schema s) {
     int hashCode = 1;
     switch (s.getType()) {
