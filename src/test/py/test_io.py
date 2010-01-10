@@ -220,6 +220,24 @@ class TestIO(unittest.TestCase):
   # SCHEMA RESOLUTION
   #
 
+  def test_schema_promotion(self):
+    print_test_name('TEST SCHEMA PROMOTION')
+    # note that checking writers_schema.type in read_data
+    # allows us to handle promotion correctly
+    promotable_schemas = ['"int"', '"long"', '"float"', '"double"']
+    incorrect = 0
+    for i, ws in enumerate(promotable_schemas):
+      writers_schema = schema.parse(ws)
+      datum_to_write = 219
+      for rs in promotable_schemas[i + 1:]:
+        readers_schema = schema.parse(rs)
+        writer, enc, dw = write_datum(datum_to_write, writers_schema)
+        datum_read = read_datum(writer, writers_schema, readers_schema)
+        print 'Writer: %s Reader: %s' % (writers_schema, readers_schema)
+        print 'Datum Read: %s' % datum_read
+        if datum_read != datum_to_write: incorrect += 1
+    self.assertEquals(incorrect, 0)
+
   def test_unknown_symbol(self):
     print_test_name('TEST UNKNOWN SYMBOL')
     writers_schema = schema.parse("""\

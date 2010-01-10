@@ -93,7 +93,8 @@ def validate(expected_schema, datum):
     return ((isinstance(datum, int) or isinstance(datum, long)) 
             and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
   elif schema_type in ['float', 'double']:
-    return isinstance(datum, float)
+    return (isinstance(datum, int) or isinstance(datum, long)
+            or isinstance(datum, float))
   elif schema_type == 'fixed':
     return isinstance(datum, str) and len(datum) == expected_schema.size
   elif schema_type == 'enum':

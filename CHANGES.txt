@@ -272,6 +272,8 @@ Trunk (unreleased changes)
 
     AVRO-281. Symlink in build.xml does not work well with Cygwin (thiru)
 
+    AVRO-299. Fix Python numeric promotion.  (Jeff Hammerbacher via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
