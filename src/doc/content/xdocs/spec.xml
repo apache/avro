@@ -59,7 +59,7 @@
         <p>The set of primitive type names is:</p>
         <ul>
           <li><code>string</code>: unicode character sequence</li>
-          <li><code>bytes</code>: sequence of 8-bit bytes</li>
+          <li><code>bytes</code>: sequence of 8-bit unsigned bytes</li>
           <li><code>int</code>: 32-bit signed integer</li>
           <li><code>long</code>: 64-bit signed integer</li>
           <li><code>float</code>: single precision (32-bit) IEEE 754 floating-point number</li>
@@ -108,7 +108,10 @@
 		  field (optional).  Permitted values depend on the
 		  field's schema type, according to the table below.
 		  Default values for union fields correspond to the
-		  first schema in the union.
+		  first schema in the union. Default values for bytes
+		  and fixed fields are JSON strings, where Unicode
+		  code points 0-255 are mapped to unsigned 8-bit byte
+		  values 0-255.
 		  <table class="right">
 		    <caption>field default values</caption>
 		    <tr><th>avro type</th><th>json type</th><th>example</th></tr>
@@ -550,11 +553,12 @@
 	  value.</li>
 	<li><code>boolean</code> data is ordered with false before true.</li>
 	<li><code>null</code> data is always equal.</li>
-	<li><code>string</code> data is compared lexicographically.
-	  Note that since UTF-8 is used as the binary encoding of
-	  strings, sorting by bytes and characters is equivalent.</li>
+	<li><code>string</code> data is compared lexicographically by
+	  Unicode code point.  Note that since UTF-8 is used as the
+	  binary encoding for strings, sorting of bytes and string
+	  binary data is identical.</li>
 	<li><code>bytes</code> and <code>fixed</code> data are
-	  compared lexicographically by byte.</li>
+	  compared lexicographically by unsigned 8-bit values.</li>
 	<li><code>array</code> data is compared lexicographically by
 	  element.</li>
 	<li><code>enum</code> data is ordered by the symbol's position

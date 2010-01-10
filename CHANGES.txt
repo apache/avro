@@ -185,6 +185,9 @@ Trunk (unreleased changes)
     AVRO-259. Add null schema check in GenericData.Record and
     GenericData.Array construtors. (Kevin Oliver via cutting)
 
+    AVRO-294. Clarify that bytes and fixed are unsigned, and how their
+    JSON default values are interpreted.  (Jeff Hammerbacher & cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
