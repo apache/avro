@@ -270,6 +270,8 @@ Trunk (unreleased changes)
     AVRO-289. Fix Python schema resolution.
     (Jeff Hammerbacher via cutting)
 
+    AVRO-281. Symlink in build.xml does not work well with Cygwin (thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
