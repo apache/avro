@@ -122,7 +122,6 @@ class Schema(object):
   def set_prop(self, key, value):
     self.props[key] = value
 
-
 class Name(object):
   """Container class for static methods on Avro names."""
   @staticmethod
@@ -303,6 +302,9 @@ class EnumSchema(NamedSchema):
       raise AvroException(fail_msg)
     elif False in [isinstance(s, basestring) for s in symbols]:
       fail_msg = 'Enum Schems requires All symbols to be JSON strings.'
+      raise AvroException(fail_msg)
+    elif len(set(symbols)) < len(symbols):
+      fail_msg = 'Duplicate symbol: %s' % symbols
       raise AvroException(fail_msg)
 
     # Call parent ctor

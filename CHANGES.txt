@@ -274,6 +274,9 @@ Trunk (unreleased changes)
 
     AVRO-299. Fix Python numeric promotion.  (Jeff Hammerbacher via cutting)
 
+    AVRO-207. Fix Python to detect duplicate enum symbols and add
+    tests for duplicates in unions.  (Jeff Hammerbacher via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
