@@ -188,6 +188,9 @@ Trunk (unreleased changes)
     AVRO-294. Clarify that bytes and fixed are unsigned, and how their
     JSON default values are interpreted.  (Jeff Hammerbacher & cutting)
 
+    AVRO-298. Fix Java's DatumReader and DatumWriter APIs to better
+    use generics.  (philz via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

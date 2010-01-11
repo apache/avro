@@ -268,10 +268,10 @@ public class TestReflect {
     checkReadWrite(object, ReflectData.get().getSchema(object.getClass()));
   }
   void checkReadWrite(Object object, Schema s) throws Exception {
-    ReflectDatumWriter writer = new ReflectDatumWriter(s);
+    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(s);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.write(object, new BinaryEncoder(out));
-    ReflectDatumReader reader = new ReflectDatumReader(s);
+    ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(s);
     Object after =
       reader.read(null, new BinaryDecoder
                   (new ByteArrayInputStream(out.toByteArray())));
@@ -303,14 +303,16 @@ public class TestReflect {
   @Test
   public void testRecordIO() throws IOException {
     Schema schm = ReflectData.get().getSchema(SampleRecord.class);
-    ReflectDatumWriter writer = new ReflectDatumWriter(schm);
+    ReflectDatumWriter<SampleRecord> writer = 
+      new ReflectDatumWriter<SampleRecord>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     SampleRecord record = new SampleRecord();
     record.x = 5;
     record.y = 10;
     writer.write(record, new BinaryEncoder(out));
-    ReflectDatumReader reader = new ReflectDatumReader(schm);
-    Object decoded =
+    ReflectDatumReader<SampleRecord> reader = 
+      new ReflectDatumReader<SampleRecord>(schm);
+    SampleRecord decoded =
       reader.read(null, new BinaryDecoder
                   (new ByteArrayInputStream(out.toByteArray())));
     assertEquals(record, decoded);
@@ -320,16 +322,18 @@ public class TestReflect {
   public void testRecordWithNullIO() throws IOException {
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schm = reflectData.getSchema(AnotherSampleRecord.class);
-    ReflectDatumWriter writer = new ReflectDatumWriter(schm);
+    ReflectDatumWriter<AnotherSampleRecord> writer = 
+      new ReflectDatumWriter<AnotherSampleRecord>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     // keep record.a null and see if that works
     AnotherSampleRecord a = new AnotherSampleRecord();
     writer.write(a, new BinaryEncoder(out));
     AnotherSampleRecord b = new AnotherSampleRecord(10);
     writer.write(b, new BinaryEncoder(out));
-    ReflectDatumReader reader = new ReflectDatumReader(schm);
+    ReflectDatumReader<AnotherSampleRecord> reader = 
+      new ReflectDatumReader<AnotherSampleRecord>(schm);
     ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-    Object decoded = reader.read(null, new BinaryDecoder(in));
+    AnotherSampleRecord decoded = reader.read(null, new BinaryDecoder(in));
     assertEquals(a, decoded);
     decoded = reader.read(null, new BinaryDecoder(in));
     assertEquals(b, decoded);

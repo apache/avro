@@ -55,11 +55,11 @@ public class SpecificResponder extends Responder {
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter(schema);
+    return new SpecificDatumWriter<Object>(schema);
   }
 
   protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new SpecificDatumReader(schema);
+    return new SpecificDatumReader<Object>(schema);
   }
 
   @Override

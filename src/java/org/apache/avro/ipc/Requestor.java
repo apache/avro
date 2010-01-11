@@ -144,11 +144,11 @@ public abstract class Requestor {
   private static final Map<MD5,Protocol> REMOTE_PROTOCOLS =
     Collections.synchronizedMap(new HashMap<MD5,Protocol>());
 
-  private static final SpecificDatumWriter HANDSHAKE_WRITER =
-    new SpecificDatumWriter(HandshakeRequest.class);
+  private static final SpecificDatumWriter<HandshakeRequest> HANDSHAKE_WRITER =
+    new SpecificDatumWriter<HandshakeRequest>(HandshakeRequest.class);
 
-  private static final SpecificDatumReader HANDSHAKE_READER =
-    new SpecificDatumReader(HandshakeResponse.class);
+  private static final SpecificDatumReader<HandshakeResponse> HANDSHAKE_READER =
+    new SpecificDatumReader<HandshakeResponse>(HandshakeResponse.class);
 
   private void writeHandshake(Encoder out) throws IOException {
     MD5 localHash = new MD5();
@@ -175,11 +175,9 @@ public abstract class Requestor {
     HANDSHAKE_WRITER.write(handshake, out);
   }
 
-  @SuppressWarnings("unchecked")
   private boolean readHandshake(Decoder in) throws IOException {
     boolean established = false;
-    HandshakeResponse handshake =
-      (HandshakeResponse)HANDSHAKE_READER.read(null, in);
+    HandshakeResponse handshake = HANDSHAKE_READER.read(null, in);
     switch (handshake.match) {
     case BOTH:
       established = true;

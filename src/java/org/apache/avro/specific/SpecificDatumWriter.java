@@ -24,10 +24,10 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
 
 /** {@link org.apache.avro.io.DatumWriter DatumWriter} for generated Java classes. */
-public class SpecificDatumWriter extends GenericDatumWriter<Object> {
+public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
   public SpecificDatumWriter() {}
 
-  public SpecificDatumWriter(Class c) {
+  public SpecificDatumWriter(Class<T> c) {
     super(SpecificData.get().getSchema(c), SpecificData.get());
   }
   

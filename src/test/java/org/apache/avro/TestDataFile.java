@@ -180,7 +180,7 @@ public class TestDataFile {
 
   @Test
     public void testGeneratedSpecific() throws IOException {
-      readFiles(new SpecificDatumReader());
+      readFiles(new SpecificDatumReader<Object>());
     }
 
   // Can't use same Interop.java as specific for reflect, since its stringField

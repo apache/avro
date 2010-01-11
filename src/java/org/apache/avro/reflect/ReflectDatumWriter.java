@@ -32,16 +32,16 @@ import org.apache.avro.util.Utf8;
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
  * via Java reflection.
  */
-public class ReflectDatumWriter extends SpecificDatumWriter {
+public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   public ReflectDatumWriter() {
     this(ReflectData.get());
   }
 
-  public ReflectDatumWriter(Class c) {
+  public ReflectDatumWriter(Class<T> c) {
     this(c, ReflectData.get());
   }
 
-  public ReflectDatumWriter(Class c, ReflectData data) {
+  public ReflectDatumWriter(Class<T> c, ReflectData data) {
     this(data.getSchema(c), data);
   }
 

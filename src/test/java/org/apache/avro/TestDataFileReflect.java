@@ -53,18 +53,18 @@ public class TestDataFileReflect {
         reflectData.getSchema(BarRecord.class) });
     Schema union = Schema.createUnion(schemas);
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(new ReflectDatumWriter(union))
+      new DataFileWriter<Object>(new ReflectDatumWriter<Object>(union))
       .create(union, fos);
 
     // test writing to a file
-    CheckList check = new CheckList();
+    CheckList<Object> check = new CheckList<Object>();
     write(writer, new BarRecord("One beer please"), check);
     write(writer, new FooRecord(10), check);
     write(writer, new BarRecord("Two beers please"), check);
     write(writer, new FooRecord(20), check);
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader();
+    ReflectDatumReader<Object> din = new ReflectDatumReader<Object>();
     SeekableFileInput sin = new SeekableFileInput(FILE);
     DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
     int count = 0;
@@ -83,23 +83,23 @@ public class TestDataFileReflect {
 
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schema = reflectData.getSchema(BarRecord.class);
-    DataFileWriter<Object> writer = new DataFileWriter<Object>
-      (new ReflectDatumWriter(BarRecord.class, reflectData))
+    DataFileWriter<BarRecord> writer = new DataFileWriter<BarRecord>
+      (new ReflectDatumWriter<BarRecord>(BarRecord.class, reflectData))
       .create(schema, fos);
 
     // test writing to a file
-    CheckList check = new CheckList();
+    CheckList<BarRecord> check = new CheckList<BarRecord>();
     write(writer, new BarRecord("One beer please"), check);
     // null record here, fails when using the default reflectData instance
     write(writer, new BarRecord(), check);
     write(writer, new BarRecord("Two beers please"), check);
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader();
+    ReflectDatumReader<BarRecord> din = new ReflectDatumReader<BarRecord>();
     SeekableFileInput sin = new SeekableFileInput(FILE);
-    DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
+    DataFileReader<BarRecord> reader = new DataFileReader<BarRecord>(sin, din);
     int count = 0;
-    for (Object datum : reader)
+    for (BarRecord datum : reader)
       check.assertEquals(datum, count++);
     Assert.assertEquals(count, check.size());
     reader.close();
@@ -113,34 +113,34 @@ public class TestDataFileReflect {
     FileOutputStream fos = new FileOutputStream(FILE);
 
     Schema schema = ReflectData.get().getSchema(BazRecord.class);
-    DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(new ReflectDatumWriter(schema))
+    DataFileWriter<BazRecord> writer =
+      new DataFileWriter<BazRecord>(new ReflectDatumWriter<BazRecord>(schema))
       .create(schema, fos);
 
     // test writing to a file
-    CheckList check = new CheckList();
+    CheckList<BazRecord> check = new CheckList<BazRecord>();
     write(writer, new BazRecord(10), check);
     write(writer, new BazRecord(20), check);
     writer.close();
 
-    ReflectDatumReader din = new ReflectDatumReader();
+    ReflectDatumReader<BazRecord> din = new ReflectDatumReader<BazRecord>();
     SeekableFileInput sin = new SeekableFileInput(FILE);
-    DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
+    DataFileReader<BazRecord> reader = new DataFileReader<BazRecord>(sin, din);
     int count = 0;
-    for (Object datum : reader)
+    for (BazRecord datum : reader)
       check.assertEquals(datum, count++);
     Assert.assertEquals(count, check.size());
     reader.close();
   }
 
-  private void write(DataFileWriter<Object> writer, Object o, CheckList l)
+  private <T> void write(DataFileWriter<T> writer, T o, CheckList<T> l)
       throws IOException {
     writer.append(l.addAndReturn(o));
   }
 
   @SuppressWarnings("serial")
-  private static class CheckList extends ArrayList<Object> {
-    Object addAndReturn(Object check) {
+  private static class CheckList<T> extends ArrayList<T> {
+    T addAndReturn(T check) {
       add(check);
       return check;
     }

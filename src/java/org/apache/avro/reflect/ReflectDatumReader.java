@@ -33,10 +33,10 @@ import org.apache.avro.io.Decoder;
  * {@link org.apache.avro.io.DatumReader DatumReader} for existing classes via
  * Java reflection.
  */
-public class ReflectDatumReader extends SpecificDatumReader {
+public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   public ReflectDatumReader() {}
 
-  public ReflectDatumReader(Class c) {
+  public ReflectDatumReader(Class<T> c) {
     this(ReflectData.get().getSchema(c));
   }
 
@@ -66,7 +66,7 @@ public class ReflectDatumReader extends SpecificDatumReader {
   @SuppressWarnings(value="unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
     ReflectData data = ReflectData.get();
-    Class collectionClass = data.getClassProp(schema, ReflectData.CLASS_PROP);
+    Class collectionClass = ReflectData.getClassProp(schema, ReflectData.CLASS_PROP);
     if (collectionClass != null) {
       if (old instanceof Collection) {
         ((Collection)old).clear();
@@ -76,7 +76,7 @@ public class ReflectDatumReader extends SpecificDatumReader {
         return new ArrayList();
       return newInstance(collectionClass);
     }
-    Class elementClass = data.getClassProp(schema, ReflectData.ELEMENT_PROP);
+    Class elementClass = ReflectData.getClassProp(schema, ReflectData.ELEMENT_PROP);
     if (elementClass == null)
       elementClass = data.getClass(schema.getElementType());
     return Array.newInstance(elementClass, size);

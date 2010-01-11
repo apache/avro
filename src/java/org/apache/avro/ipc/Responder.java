@@ -153,12 +153,11 @@ public abstract class Responder {
     return bbo.getBufferList();
   }
 
-  private SpecificDatumWriter handshakeWriter =
-    new SpecificDatumWriter(HandshakeResponse.class);
-  private SpecificDatumReader handshakeReader =
-    new SpecificDatumReader(HandshakeRequest.class);
+  private SpecificDatumWriter<HandshakeResponse> handshakeWriter =
+    new SpecificDatumWriter<HandshakeResponse>(HandshakeResponse.class);
+  private SpecificDatumReader<HandshakeRequest> handshakeReader =
+    new SpecificDatumReader<HandshakeRequest>(HandshakeRequest.class);
 
-  @SuppressWarnings("unchecked")
   private Protocol handshake(Decoder in, Encoder out)
     throws IOException {
     HandshakeRequest request = (HandshakeRequest)handshakeReader.read(null, in);
