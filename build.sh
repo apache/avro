@@ -11,7 +11,7 @@ case "$1" in
     test)
 	# run lang-specific tests
 	(cd lang/java; ant test)
-	# (cd lang/py; ant test)
+	(cd lang/py; ant test)
 	# (cd lang/c; make test)
 	# (cd lang/c++; make test)
 	;;
@@ -28,7 +28,7 @@ case "$1" in
 	# build lang-specific artifacts
 	(cd lang/java; ant dist)
 
-	# (cd lang/py; ant dist)
+	(cd lang/py; ant dist)
 
 	# (cd lang/c; make dist)
 
@@ -45,7 +45,7 @@ case "$1" in
 
 	(cd lang/java; ant clean)
 
-	# (cd lang/py; ant clean)
+	(cd lang/py; ant clean)
 
 	# (cd lang/c; make clean)
 

@@ -200,6 +200,8 @@ Trunk (unreleased changes)
     AVRO-282. Improve avroj build to better specify dependencies.
     (philz via cutting)
 
+    AVRO-309. Fix python build, post-AVRO-163. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
