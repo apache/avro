@@ -55,7 +55,7 @@ class MailResponder(ipc.Responder):
 
   def invoke(self, message, request):
     if message.name == 'send':
-      request_content = request[0]
+      request_content = request['message']
       response = "Sent message to %(to)s from %(from)s with body %(body)s" % \
                  request_content
       return response
@@ -70,4 +70,5 @@ class MailHandler(BaseRequestHandler):
 
 if __name__ == '__main__':
   mail_server = TCPServer(SERVER_ADDRESS, MailHandler)
+  mail_server.allow_reuse_address = True
   mail_server.serve_forever()

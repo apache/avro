@@ -64,6 +64,7 @@ VALID_TYPES = PRIMITIVE_TYPES + NAMED_TYPES + (
   'array',
   'map',
   'union',
+  'request',
 )
 
 RESERVED_PROPS = (
@@ -496,7 +497,10 @@ class RecordSchema(NamedSchema):
       raise SchemaParseException(fail_msg)
 
     # Call parent ctor (adds own name to namespace, too)
-    NamedSchema.__init__(self, schema_type, name, namespace, names)
+    if schema_type == 'request':
+      Schema.__init__(self, schema_type)
+    else:
+      NamedSchema.__init__(self, schema_type, name, namespace, names)
 
     # Add class members
     field_objects = RecordSchema.make_field_objects(fields, names)
@@ -514,11 +518,11 @@ class RecordSchema(NamedSchema):
 
   def __str__(self):
     to_dump = self.props.copy()
-    new_fields = []
-    for field in to_dump['fields']:
-      new_fields.append(json.loads(str(field)))
-    to_dump['fields'] = new_fields
-    return json.dumps(to_dump)
+    to_dump['fields'] = [json.loads(str(f)) for f in self.fields]
+    if self.type == 'request':
+      return json.dumps(to_dump['fields'])
+    else:
+      return json.dumps(to_dump)
 
   def __eq__(self, that):
     to_cmp = json.loads(str(self))

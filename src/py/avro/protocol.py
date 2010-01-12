@@ -49,7 +49,7 @@ class Protocol(object):
     for type in types:
       type_object = schema.make_avsc_object(type, type_names)
       if type_object.type not in VALID_TYPE_SCHEMA_TYPES:
-        fail_msg = 'Type %s not an enum, record, or error.' % type
+        fail_msg = 'Type %s not an enum, fixed, record, or error.' % type
         raise ProtocolParseException(fail_msg)
       type_objects.append(type_object)
     return type_objects
@@ -63,7 +63,6 @@ class Protocol(object):
       elif not(hasattr(body, 'get') and callable(body.get)):
         fail_msg = 'Message name "%s" has non-object body %s.' % (name, body)
         raise ProtocolParseException(fail_msg)
-
       request = body.get('request')
       response = body.get('response')
       errors = body.get('errors')
@@ -142,7 +141,7 @@ class Message(object):
     if not isinstance(request, list):
       fail_msg = 'Request property not a list: %s' % request
       raise ProtocolParseException(fail_msg)
-    return schema.RecordSchema.make_field_objects(request, names)
+    return schema.RecordSchema(None, None, request, names, 'request')
   
   def _parse_response(self, response, names):
     if isinstance(response, basestring) and names.has_key(response):
@@ -184,7 +183,7 @@ class Message(object):
   # TODO(hammer): allow schemas and fields to be JSON Encoded!
   def __str__(self):
     to_dump = {}
-    to_dump['request'] = [json.loads(str(r)) for r in self.request]
+    to_dump['request'] = json.loads(str(self.request))
     if self.response_from_names:
       to_dump['response'] = self.response.fullname
     else:

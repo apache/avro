@@ -109,7 +109,7 @@ def validate(expected_schema, datum):
         [validate(expected_schema.values, v) for v in datum.values()])
   elif schema_type == 'union':
     return True in [validate(s, datum) for s in expected_schema.schemas]
-  elif schema_type == 'record':
+  elif schema_type in ['record', 'error', 'request']:
     return (isinstance(datum, dict) and
       False not in
         [validate(f.type, datum.get(f.name)) for f in expected_schema.fields])
@@ -354,6 +354,12 @@ class DatumReader(object):
           DatumReader.check_props(writers_schema, readers_schema, 
                                   ['fullname'])):
       return True
+    elif (w_type == r_type == 'error' and
+          DatumReader.check_props(writers_schema, readers_schema, 
+                                  ['fullname'])):
+      return True
+    elif (w_type == r_type == 'request'):
+      return True
     elif (w_type == r_type == 'fixed' and 
           DatumReader.check_props(writers_schema, readers_schema, 
                                   ['fullname', 'size'])):
@@ -415,7 +421,7 @@ class DatumReader(object):
       for s in readers_schema.schemas:
         if DatumReader.match_schemas(writers_schema, s):
           return self.read_data(writers_schema, s, decoder)
-      fail_msg = 'Schemas do not match.'      
+      fail_msg = 'Schemas do not match.'
       raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
     # function dispatch for reading data based on type of writer's schema
@@ -445,7 +451,7 @@ class DatumReader(object):
       return self.read_map(writers_schema, readers_schema, decoder)
     elif writers_schema.type == 'union':
       return self.read_union(writers_schema, readers_schema, decoder)
-    elif writers_schema.type == 'record':
+    elif writers_schema.type in ['record', 'error', 'request']:
       return self.read_record(writers_schema, readers_schema, decoder)
     else:
       fail_msg = "Cannot read unknown schema type: %s" % writers_schema.type
@@ -478,7 +484,7 @@ class DatumReader(object):
       return self.skip_map(writers_schema, decoder)
     elif writers_schema.type == 'union':
       return self.skip_union(writers_schema, decoder)
-    elif writers_schema.type == 'record':
+    elif writers_schema.type in ['record', 'error', 'request']:
       return self.skip_record(writers_schema, decoder)
     else:
       fail_msg = "Unknown schema type: %s" % schm.type
@@ -745,11 +751,11 @@ class DatumWriter(object):
       self.write_map(writers_schema, datum, encoder)
     elif writers_schema.type == 'union':
       self.write_union(writers_schema, datum, encoder)
-    elif writers_schema.type == 'record':
+    elif writers_schema.type in ['record', 'error', 'request']:
       self.write_record(writers_schema, datum, encoder)
     else:
       fail_msg = 'Unknown type: %s' % writers_schema.type
-      raise io.AvroException(fail_msg)
+      raise schema.AvroException(fail_msg)
 
   def write_fixed(self, writers_schema, datum, encoder):
     """

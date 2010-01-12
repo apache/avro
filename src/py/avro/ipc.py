@@ -178,13 +178,9 @@ class Requestor(object):
     # message parameters
     self.write_request(message.request, request_datum, encoder)
 
-  def write_request(self, request_fields, request_datum, encoder):
-    """
-    Looks an awful lot like new_io.write_record, eh?
-    """
-    for field in request_fields:
-      datum_writer = io.DatumWriter(field.type)
-      datum_writer.write(request_datum.get(field.name), encoder)
+  def write_request(self, request_schema, request_datum, encoder):
+    datum_writer = io.DatumWriter(request_schema)
+    datum_writer.write(request_datum, encoder)
 
   def read_handshake_response(self, decoder):
     handshake_response = HANDSHAKE_REQUESTOR_READER.read(decoder)
@@ -275,7 +271,8 @@ class Responder(object):
     a response or error. Compare to 'handle()' in Thrift.
     """
     call_request = transport.read_framed_message()
-    buffer_decoder = io.BinaryDecoder(cStringIO.StringIO(call_request))
+    buffer_reader = cStringIO.StringIO(call_request)
+    buffer_decoder = io.BinaryDecoder(buffer_reader)
     buffer_writer = cStringIO.StringIO()
     buffer_encoder = io.BinaryEncoder(buffer_writer)
     error = None
@@ -287,7 +284,7 @@ class Responder(object):
       # handshake failure
       if remote_protocol is None:  
         return buffer_writer.getvalue()
-      
+
       # read request using remote protocol
       request_metadata = META_READER.read(buffer_decoder)
       remote_message_name = buffer_decoder.read_utf8()
@@ -302,9 +299,11 @@ class Responder(object):
       if local_message is None:
         fail_msg = 'Unknown local message: %s' % remote_message_name
         raise schema.AvroException(fail_msg)
-      writers_fields = remote_message.request
-      # TODO(hammer) pass reader schema
-      request = self.read_request(writers_fields, buffer_decoder)
+      writers_schema = remote_message.request
+      readers_schema = local_message.request
+      request = self.read_request(writers_schema, readers_schema,
+                                  buffer_decoder)
+
       # perform server logic
       try:
         response = self.invoke(local_message, request)
@@ -368,15 +367,9 @@ class Responder(object):
     """
     pass
 
-  def read_request(self, writers_fields, decoder):
-    """
-    Need to handle schema resolution here. Half-assing it now.
-    """
-    request_data = []
-    for field in writers_fields:
-      datum_reader = io.DatumReader(field.type)
-      request_data.append(datum_reader.read(decoder))
-    return request_data
+  def read_request(self, writers_schema, readers_schema, decoder):
+    datum_reader = io.DatumReader(writers_schema, readers_schema)
+    return datum_reader.read(decoder)
 
   def write_response(self, writers_schema, response_datum, encoder):
     datum_writer = io.DatumWriter(writers_schema)

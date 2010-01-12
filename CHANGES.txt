@@ -191,6 +191,9 @@ Trunk (unreleased changes)
     AVRO-298. Fix Java's DatumReader and DatumWriter APIs to better
     use generics.  (philz via cutting)
 
+    AVRO-288. Implement schema resolution for Python parameters.
+    (Jeff Hammerbacher via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
