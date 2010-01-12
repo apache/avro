@@ -197,6 +197,9 @@ Trunk (unreleased changes)
     AVRO-288. Implement schema resolution for Python parameters.
     (Jeff Hammerbacher via cutting)
 
+    AVRO-282. Improve avroj build to better specify dependencies.
+    (philz via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

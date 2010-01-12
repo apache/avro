@@ -135,7 +135,7 @@
     </condition>
   </target>
 
-  <target name="javacc" depends="ivy-retrieve">
+  <target name="javacc" depends="ivy-retrieve-build">
     <mkdir dir="${build.dir}/src/org/apache/avro/genavro"/>
     <copy tofile="${ivy.lib}/javacc.jar" file="${ivy.lib}/javacc-5.0.jar"
         overwrite="true"/>
@@ -176,9 +176,21 @@
 		  pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
   </target>
 
+  <target name="ivy-retrieve-avroj" depends="init,ivy-init">
+    <!-- Place in separate directory, since these artificats will
+         be packaged in the avroj jar. -->
+    <ivy:retrieve type="jar" conf="avroj"
+		  pattern="${ivy.lib}/avroj/[artifact]-[revision].[ext]"/>
+  </target>
+
   <target name="ivy-retrieve-test" depends="init,ivy-init">
     <ivy:retrieve type="jar" conf="test"
 		  pattern="${ivy.test.lib}/[artifact]-[revision].[ext]"/>
+  </target>
+
+  <target name="ivy-retrieve-build" depends="init,ivy-init">
+    <ivy:retrieve type="jar" conf="build"
+		  pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
   </target>
 
   <macrodef name="java-compiler">
@@ -394,7 +406,8 @@
     <test-runner files.location="${test.java.classes}" tests.pattern="**/TestProtocolSpecific$InteropTest.class" />
   </target>
 
-  <target name="avroj" depends="compile" description="Build standalone avroj jar file">
+  <target name="avroj" depends="compile,ivy-retrieve-avroj"
+	  description="Build standalone avroj jar file">
     <jar jarfile="${build.dir}/avroj-${version}.jar">
       <manifest>
         <attribute name="Main-Class" value="org.apache.avro.tool.Main"/>
@@ -403,7 +416,7 @@
         <attribute name="Implementation-Vendor" value="${Org}"/>
       </manifest>
       <fileset dir="${build.classes}" />
-      <zipgroupfileset dir="${ivy.lib}" includes="*.jar"/>
+      <zipgroupfileset dir="${ivy.lib}/avroj" includes="*.jar"/>
     </jar>
     <chmod file="${build.dir}/avroj-${version}.jar" perm="ugo+x"/>
   </target>

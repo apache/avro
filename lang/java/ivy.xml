@@ -26,9 +26,11 @@
   </info>
 
   <configurations defaultconfmapping="default">
-    <conf name="default"/>
+    <conf name="default"/> <!-- "runtime" configuration -->
     <conf name="test"/>
     <conf name="eclipse"/>
+    <conf name="avroj" extends="default"/>
+    <conf name="build" extends="default"/>
   </configurations>
 
   <dependencies>
@@ -36,7 +38,7 @@
         rev="1.4.0"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.5.8"/>
     <dependency org="org.slf4j" name="slf4j-simple" rev="1.5.8"
-        conf="test->default"/>
+        conf="test->default;avroj->default"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer"
         rev="2.1"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer-ant"
@@ -52,7 +54,8 @@
         conf="eclipse->default">
         <artifact name="ant-eclipse" type="bz2" />
     </dependency>
-    <dependency org="net.java.dev.javacc" name="javacc" rev="5.0" />
+    <dependency org="net.java.dev.javacc" name="javacc" rev="5.0" 
+        conf="build->default" />
     <dependency org="commons-lang" name="commons-lang" rev="2.4" />
   </dependencies>
 
