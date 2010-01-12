@@ -17,23 +17,8 @@ The following packages must be installed before Avro can be built:
 
 BUILDING
 
-One the requirements are installed, Ant can be used as follows:
+One the requirements are installed, build.sh can used as follows:
 
- 'ant javadoc' builds Java API documentation to build/doc/api
- 'ant doc' builds Avro specification document in build/doc/spec.html
- 'ant test' runs tests in src/test
- 'ant jar' creates a jar in build/avro-X.X.jar
- 'ant tar' makes a "release" with docs, jar, src, etc. in build/avro-X.X.tar.gz
- 'ant clean' removes all generated artifacts
-
-USING ECLIPSE
-
-To use Eclipse, use the "ant eclipse" target to trigger the generation
-of an Eclipse project.  This project is automatically created by 
-the ant-eclipse tool (see http://ant-eclipse.sourceforge.net/).
-Note that to build completely, you still have to use "ant", because
-the Eclipse project depends on some generated code.
-
-You should be able to run all the java tests in Eclipse, except
-for the InteropTest.  There is a launcher in .eclipse_launchers,
-that should work if your checkout directory is "avro".
+ './build.sh test' runs tests for all languages
+ './build.sh dist' creates all release distribution files in dist/
+ './build.sh clean' removes all generated artifacts

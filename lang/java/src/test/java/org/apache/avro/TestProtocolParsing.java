@@ -26,7 +26,7 @@ import org.junit.Test;
 
 public class TestProtocolParsing {
   public static Protocol getSimpleProtocol() throws IOException {
-    File file = new File("src/test/schemata/simple.avpr");
+    File file = new File("../../share/test/schemas/simple.avpr");
     Protocol protocol = Protocol.parse(file);
     return protocol;
   }

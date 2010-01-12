@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<project name="doc" default="doc" basedir=".">
+  
+  <!-- Load user's default properties. -->
+  <property file="${user.home}/build.properties" />
+  
+  <loadresource property="version">
+    <file file="${basedir}/../VERSION.txt"/>
+  </loadresource>
+
+  <property name="build.dir" value="../build/avro-doc-${version}"/>
+
+  <target name="doc" depends="forrest.check" description="Generate forrest-based documentation. To use, specify -Dforrest.home=&lt;base of Apache Forrest installation&gt; on the command line." if="forrest.home">
+    <mkdir dir="${build.dir}"/>
+    <echo  file="../build/avro.ent" append="false">
+      &lt;!ENTITY AvroVersion "${version}"&gt;
+    </echo>
+    <exec executable="${forrest.home}/bin/forrest" failonerror="true">
+      <env key="JAVA_HOME" value="${java5.home}"/>
+      <arg value="-Dproject.content-dir=src"/>
+      <arg value="-Dproject.site=../${build.dir}/"/>
+    </exec>
+  </target>
+
+  <target name="forrest.check" unless="forrest.home" depends="java5.check">
+    <fail message="'forrest.home' is not defined. Please pass -Dforrest.home=&lt;base of Apache Forrest installation&gt; to Ant on the command-line." />
+  </target>
+
+  <target name="java5.check" unless="java5.home">
+    <fail message="'java5.home' is not defined.  Forrest requires Java 5.  Please pass -Djava5.home=&lt;base of Java 5 distribution&gt; to Ant on the command-line." />
+  </target>
+
+  <target name="clean" description="Delete build files, and their directories">
+    <delete dir="${basedir}/build"/>
+  </target>
+
+</project>

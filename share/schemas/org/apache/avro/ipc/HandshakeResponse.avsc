@@ -8,7 +8,7 @@
         {"name": "serverProtocol",
          "type": ["null", "string"]},
         {"name": "serverHash",
-         "type": ["null", include(`org/apache/avro/ipc/MD5.js')]},
+         "type": ["null", {"type": "fixed", "name": "MD5", "size": 16}]},
  	{"name": "meta",
          "type": ["null", {"type": "map", "values": "bytes"}]}
     ]

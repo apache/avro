@@ -44,12 +44,12 @@ CMD="$JAVA_HOME/bin/java -jar $AVROJ"
 rm -rf $TMPDIR
 
 ######################################################################
-$CMD compile protocol src/test/schemata/namespace.avpr $TMPDIR/namespace
+$CMD compile protocol ../../share/test/schemas/namespace.avpr $TMPDIR/namespace
 # Check that the expected names were generated
 [ "MD5.java TestError.java TestNamespace.java TestRecord.java " = \
   "$(find $TMPDIR/namespace -name "*.java" \
     | awk -F "/" '{ print $NF }' | sort | tr '\n' ' ')" ]
-$CMD compile schema src/test/schemata/interop.avsc $TMPDIR/schema
+$CMD compile schema ../../share/test/schemas/interop.avsc $TMPDIR/schema
 [ "Foo.java Interop.java Kind.java MD5.java Node.java " = \
   "$(find $TMPDIR/schema -name "*.java" \
     | awk -F "/" '{ print $NF }' | sort | tr '\n' ' ')" ]
