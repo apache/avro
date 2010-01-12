@@ -6,7 +6,12 @@ cd `dirname "$0"`				  # connect to root
 
 VERSION=`cat share/VERSION.txt`
 
-case "$1" in
+set -x						  # echo commands
+
+for target in "$@"
+do
+
+case "$target" in
 
     test)
 	# run lang-specific tests
@@ -56,5 +61,7 @@ case "$1" in
         echo "Usage: $0 {test|dist|clean}"
         exit 1
 esac
+
+done
 
 exit 0

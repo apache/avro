@@ -202,6 +202,8 @@ Trunk (unreleased changes)
 
     AVRO-309. Fix python build, post-AVRO-163. (cutting)
 
+    AVRO-310. Improve top-level build.sh. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
