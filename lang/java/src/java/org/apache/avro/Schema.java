@@ -64,7 +64,7 @@ public abstract class Schema {
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
   static {
-    FACTORY.enableParserFeature(JsonParser.Feature.ALLOW_COMMENTS);
+    FACTORY.enable(JsonParser.Feature.ALLOW_COMMENTS);
     FACTORY.setCodec(MAPPER);
   }
 
