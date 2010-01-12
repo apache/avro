@@ -27,7 +27,7 @@
   <property name="name" value="avro"/>
 
   <loadresource property="version">
-    <file file="${basedir}/../../VERSION.txt"/>
+    <file file="${basedir}/../../share/VERSION.txt"/>
   </loadresource>
   <property name="fullname" value="${name}-${version}"/>
   <property name="year" value="2009"/>

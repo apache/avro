@@ -4,7 +4,7 @@ set -e						  # exit on error
 
 cd `dirname "$0"`				  # connect to root
 
-VERSION=`cat VERSION.txt`
+VERSION=`cat share/VERSION.txt`
 
 case "$1" in
 
@@ -18,6 +18,7 @@ case "$1" in
 
     dist)
 	# build source tarball
+	mkdir build
 	svn export --force . build/avro-src-$VERSION
 	mkdir -p dist
         tar czf dist/avro-src-$VERSION.tar.gz build/avro-src-$VERSION

@@ -6,7 +6,7 @@
   <property file="${user.home}/build.properties" />
   
   <loadresource property="version">
-    <file file="${basedir}/../VERSION.txt"/>
+    <file file="${basedir}/../share/VERSION.txt"/>
   </loadresource>
 
   <property name="build.dir" value="../build/avro-doc-${version}"/>
