@@ -22,7 +22,7 @@ import java.io.PrintStream;
 import java.util.List;
 
 /**
- * Command-line "avroj" utilities should implement this
+ * Command-line "avro-tools" utilities should implement this
  * interface for delegation by {@link Main}.
  */
 public interface Tool {

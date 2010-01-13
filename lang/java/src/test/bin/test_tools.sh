@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Tests "avroj" script and commands.
+# Tests avro-tools commands.
 
 # Echo all commands, so that test failure location is clear.
 set -o xtrace
@@ -27,8 +27,8 @@ if [ "$JAVA_HOME" = "" ]; then
   exit 1
 fi
 
-if [ "$AVROJ" = "" ]; then
-  echo "Error: AVROJ is not set."
+if [ "$TOOLS" = "" ]; then
+  echo "Error: TOOLS is not set."
   exit 1
 fi
 
@@ -37,7 +37,7 @@ if [ "$TMPDIR" = "" ]; then
   exit 1
 fi
 
-CMD="$JAVA_HOME/bin/java -jar $AVROJ"
+CMD="$JAVA_HOME/bin/java -jar $TOOLS"
 
 ######################################################################
 # Clean up temp directory.

@@ -144,10 +144,10 @@ public class TestStatsPluginAndServlet {
   }
 
   /**
-   * Demo program for using RPC stats.  avroj can be used (as below)
+   * Demo program for using RPC stats.  Tool can be used (as below)
    * to trigger RPCs.
    * <pre>
-   * java -jar build/avroj-1.2.0-dev.jar rpcsend '{"protocol":"sleepy","namespace":null,"types":[],"messages":{"sleep":{"request":[{"name":"millis","type":"long"}],"response":"null"}}}' sleep localhost 7002 '{"millis": 20000}'
+   * java -jar build/avro-tools-*.jar rpcsend '{"protocol":"sleepy","namespace":null,"types":[],"messages":{"sleep":{"request":[{"name":"millis","type":"long"}],"response":"null"}}}' sleep localhost 7002 '{"millis": 20000}'
    * </pre>
    * @param args
    * @throws Exception

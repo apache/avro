@@ -29,7 +29,7 @@
     <conf name="default"/> <!-- "runtime" configuration -->
     <conf name="test"/>
     <conf name="eclipse"/>
-    <conf name="avroj" extends="default"/>
+    <conf name="tools" extends="default"/>
     <conf name="build" extends="default"/>
   </configurations>
 
@@ -38,7 +38,7 @@
         rev="1.4.0"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.5.8"/>
     <dependency org="org.slf4j" name="slf4j-simple" rev="1.5.8"
-        conf="test->default;avroj->default"/>
+        conf="test->default;tools->default"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer"
         rev="2.1"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer-ant"

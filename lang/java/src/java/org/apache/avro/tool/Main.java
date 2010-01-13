@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
+import java.io.InputStream;
+
 import org.apache.avro.reflect.InduceSchemaTool;
 import org.apache.avro.specific.SpecificCompiler.SpecificCompilerTool;
 
@@ -72,10 +74,24 @@ public class Main {
           System.in, System.out, System.err, Arrays.asList(args).subList(1, args.length));
       }
     }
+    System.err.print("Version ");
+    printStream(Main.class.getClassLoader().getResourceAsStream("VERSION.txt"));
+    System.err.print(" of ");
+    printStream(Main.class.getClassLoader().getResourceAsStream("NOTICE.txt"));
+    System.err.println("----------------");
+
     System.err.println("Available tools:");
     for (Tool k : tools.values()) {
       System.err.printf("%" + maxLen + "s  %s\n", k.getName(), k.getShortDescription());
     }
+
     return 1;
   }
+
+  private static void printStream(InputStream in) throws Exception {
+    byte[] buffer = new byte[1024];
+    for (int i = in.read(buffer); i != -1; i = in.read(buffer))
+      System.err.write(buffer, 0, i);
+  }
+
 }

@@ -384,8 +384,7 @@ public class SpecificCompiler {
   }
 
   /**
-   * Implementation of Tool for inclusion by the "avroj"
-   * runner.
+   * Implementation of Tool for inclusion by the "avro-tools" runner.
    */
   public static class SpecificCompilerTool implements Tool {
     @Override

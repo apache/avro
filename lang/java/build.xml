@@ -155,6 +155,10 @@
       <src path="${build.dir}/src"/>
       <src path="${java.src.dir}"/>
     </java-compiler>
+    <copy todir="${build.classes}"> 
+      <fileset file="${basedir}/../../NOTICE.txt"/>
+      <fileset file="${basedir}/../../share/VERSION.txt"/>
+    </copy>
   </target>
 
   <target name="ivy-download" unless="ivy.jar.exists" depends="init">
@@ -176,11 +180,11 @@
 		  pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
   </target>
 
-  <target name="ivy-retrieve-avroj" depends="init,ivy-init">
+  <target name="ivy-retrieve-tools" depends="init,ivy-init">
     <!-- Place in separate directory, since these artificats will
-         be packaged in the avroj jar. -->
-    <ivy:retrieve type="jar" conf="avroj"
-		  pattern="${ivy.lib}/avroj/[artifact]-[revision].[ext]"/>
+         be packaged in the tools jar. -->
+    <ivy:retrieve type="jar" conf="tools"
+		  pattern="${ivy.lib}/tools/[artifact]-[revision].[ext]"/>
   </target>
 
   <target name="ivy-retrieve-test" depends="init,ivy-init">
@@ -301,7 +305,7 @@
     </sequential>
   </macrodef>
 
-  <target name="test" depends="test-java,test-avroj"/>
+  <target name="test" depends="test-java,test-tools"/>
 
   <target name="rat" depends="ivy-retrieve-test">
     <typedef resource="org/apache/rat/anttasks/antlib.xml"
@@ -403,9 +407,9 @@
     <test-runner files.location="${test.java.classes}" tests.pattern="**/TestProtocolSpecific$InteropTest.class" />
   </target>
 
-  <target name="avroj" depends="compile,ivy-retrieve-avroj"
-	  description="Build standalone avroj jar file">
-    <jar jarfile="${build.dir}/avroj-${version}.jar">
+  <target name="tools" depends="compile,ivy-retrieve-tools"
+	  description="Build standalone tools jar file">
+    <jar jarfile="${build.dir}/avro-tools-${version}.jar">
       <manifest>
         <attribute name="Main-Class" value="org.apache.avro.tool.Main"/>
         <attribute name="Implementation-Title" value="${Name}"/>
@@ -413,17 +417,17 @@
         <attribute name="Implementation-Vendor" value="${Org}"/>
       </manifest>
       <fileset dir="${build.classes}" />
-      <zipgroupfileset dir="${ivy.lib}/avroj" includes="*.jar"/>
+      <zipgroupfileset dir="${ivy.lib}/tools" includes="*.jar"/>
     </jar>
-    <chmod file="${build.dir}/avroj-${version}.jar" perm="ugo+x"/>
+    <chmod file="${build.dir}/avro-tools-${version}.jar" perm="ugo+x"/>
   </target>
 
-  <target name="test-avroj" depends="avroj,compile-test-java"
-   description="Tests avroj commands">
-    <exec executable="${basedir}/src/test/bin/test_avroj.sh"
+  <target name="test-tools" depends="tools,compile-test-java"
+   description="Tests tools">
+    <exec executable="${basedir}/src/test/bin/test_tools.sh"
           failonerror="true">
-      <env key="AVROJ" value="${build.dir}/avroj-${version}.jar"/>
-      <env key="TMPDIR" value="${test.java.build.dir}/avroj"/>
+      <env key="TOOLS" value="${build.dir}/avro-tools-${version}.jar"/>
+      <env key="TMPDIR" value="${test.java.build.dir}/tools"/>
     </exec>
   </target>
 
@@ -461,16 +465,21 @@
     <fail if="javadoc.warnings">Javadoc warnings!</fail>
   </target>
 
-  <target name="dist" depends="jar, avroj, javadoc"
+  <target name="dist" depends="jar, tools, javadoc"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
 
     <copy todir="${dist.dir}"> 
       <fileset file="${build.dir}/${fullname}.jar"/>
+      <fileset file="${build.dir}/avro-tools-${version}.jar"/>
     </copy>
+    <chmod file="${dist.dir}/avro-tools-${version}.jar" perm="ugo+x"/>
 
     <checksum file="${dist.dir}/${fullname}.jar" algorithm="md5"/>
     <checksum file="${dist.dir}/${fullname}.jar" algorithm="sha1"/>
+
+    <checksum file="${dist.dir}/avro-tools-${version}.jar" algorithm="md5"/>
+    <checksum file="${dist.dir}/avro-tools-${version}.jar" algorithm="sha1"/>
 
     <ivy:makepom ivyfile="${basedir}/ivy.xml"
 		 pomfile="${dist.dir}/${fullname}.pom">

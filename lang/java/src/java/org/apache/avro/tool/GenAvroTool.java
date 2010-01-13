@@ -28,7 +28,7 @@ import java.io.PrintStream;
 import java.util.List;
 
 /**
- * Avroj Tool implementation for generating Avro JSON schemata from
+ * Tool implementation for generating Avro JSON schemata from
  * genavro format files.
  */
 public class GenAvroTool implements Tool {

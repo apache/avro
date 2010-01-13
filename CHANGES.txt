@@ -208,6 +208,10 @@ Trunk (unreleased changes)
 
     AVRO-317. Restore Java data interop tests. (cutting)
 
+    AVRO-320. Rename avroj to be avro-tools.  Also add LICENSE.txt and
+    NOTICE.txt to it, print the NOTICE.txt and version in help, and
+    include the tools jar in distributions.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
