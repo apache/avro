@@ -53,6 +53,7 @@ public class TestDataFile {
   public void testGenericWrite() throws IOException {
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(new GenericDatumWriter<Object>())
+      .setSyncInterval(100)
       .create(SCHEMA, FILE);
     try {
       int count = 0;

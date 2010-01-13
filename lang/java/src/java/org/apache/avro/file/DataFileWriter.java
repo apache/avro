@@ -63,11 +63,11 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private int blockCount;                       // # entries in current block
 
-  private ByteArrayOutputStream buffer =
-    new ByteArrayOutputStream(DataFileConstants.SYNC_INTERVAL*2);
-  private Encoder bufOut = new BinaryEncoder(buffer);
+  private ByteArrayOutputStream buffer;
+  private Encoder bufOut;
 
   private byte[] sync;                          // 16 random bytes
+  private int syncInterval = DataFileConstants.DEFAULT_SYNC_INTERVAL;
 
   private boolean isOpen;
 
@@ -81,6 +81,12 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
   private void assertNotOpen() {
     if (isOpen) throw new AvroRuntimeException("already open");
+  }
+
+  /** Set the synchronization interval for this file, in bytes. */
+  public DataFileWriter<D> setSyncInterval(int syncInterval) {
+    this.syncInterval = syncInterval;
+    return this;
   }
 
   /** Open a new file for data matching a schema. */
@@ -138,6 +144,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   private void init(OutputStream outs) throws IOException {
+    this.buffer = new ByteArrayOutputStream(syncInterval*2);
+    this.bufOut = new BinaryEncoder(buffer);
     this.out = new BufferedFileOutputStream(outs);
     this.vout = new BinaryEncoder(out);
     dout.setSchema(schema);
@@ -179,7 +187,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     assertOpen();
     dout.write(datum, bufOut);
     blockCount++;
-    if (buffer.size() >= DataFileConstants.SYNC_INTERVAL)
+    if (buffer.size() >= syncInterval)
       writeBlock();
   }
 

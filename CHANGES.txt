@@ -62,6 +62,8 @@ Trunk (unreleased changes)
     AVRO-152. Add support for documentation strings to schemas,
     protocols, and messages. (Philip Zeyliger via cutting)
 
+    AVRO-274. Make Java's data file sync interval configurable.  (cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)
