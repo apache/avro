@@ -16,8 +16,9 @@
 -->
 
 <project name="Avro" default="compile"
-	 xmlns:ivy="antlib:org.apache.ivy.ant">
- 
+    xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:mvn="urn:maven-artifact-ant">
+
   <!-- Load user's default properties. -->
   <property file="${user.home}/build.properties" />
 
@@ -465,7 +466,15 @@
     <fail if="javadoc.warnings">Javadoc warnings!</fail>
   </target>
 
-  <target name="dist" depends="jar, tools, javadoc"
+  <target name="pom" depends="ivy-init">
+    <ivy:makepom ivyfile="${basedir}/ivy.xml"
+		 pomfile="${dist.dir}/${fullname}.pom">
+      <mapping conf="default" scope="compile"/>
+      <mapping conf="test" scope="test"/>
+    </ivy:makepom>
+  </target>
+
+  <target name="dist" depends="jar, tools, javadoc, pom"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
 
@@ -480,12 +489,6 @@
 
     <checksum file="${dist.dir}/avro-tools-${version}.jar" algorithm="md5"/>
     <checksum file="${dist.dir}/avro-tools-${version}.jar" algorithm="sha1"/>
-
-    <ivy:makepom ivyfile="${basedir}/ivy.xml"
-		 pomfile="${dist.dir}/${fullname}.pom">
-      <mapping conf="default" scope="compile"/>
-      <mapping conf="test" scope="test"/>
-    </ivy:makepom>
 
     <checksum file="${dist.dir}/${fullname}.pom" algorithm="md5"/>
     <checksum file="${dist.dir}/${fullname}.pom" algorithm="sha1"/>
@@ -568,5 +571,16 @@
     <delete dir="${build.dir.eclipse}" />
   </target>
   <!-- End Eclipse targets -->
+
+  <target name="mvn-install" depends="jar,pom"
+	  description="Installs avro core jar to local fs m2 cache">
+    <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+	     uri="urn:maven-artifact-ant"
+	     classpathref="java.classpath"/>
+    <mvn:pom file="${dist.dir}/${fullname}.pom" id="avro"/>
+    <mvn:install file="${build.dir}/${fullname}.jar">
+      <pom refid="avro"/>
+    </mvn:install>
+  </target>
 
 </project>

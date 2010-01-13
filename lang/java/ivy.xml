@@ -57,6 +57,8 @@
     <dependency org="net.java.dev.javacc" name="javacc" rev="5.0" 
         conf="build->default" />
     <dependency org="commons-lang" name="commons-lang" rev="2.4" />
+    <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.0.9"
+        conf="build->default"/>
   </dependencies>
 
 </ivy-module>

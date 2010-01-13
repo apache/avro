@@ -212,6 +212,9 @@ Trunk (unreleased changes)
     NOTICE.txt to it, print the NOTICE.txt and version in help, and
     include the tools jar in distributions.  (cutting)
 
+    AVRO-314. Add mvn-install ant task to publish jar to local Maven
+    repository.  (Aaron Kimball via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
