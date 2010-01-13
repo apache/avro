@@ -204,6 +204,8 @@ Trunk (unreleased changes)
 
     AVRO-310. Improve top-level build.sh. (cutting)
 
+    AVRO-317. Restore Java data interop tests. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

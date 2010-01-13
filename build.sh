@@ -19,11 +19,24 @@ case "$target" in
 	(cd lang/py; ant test)
 	# (cd lang/c; make test)
 	# (cd lang/c++; make test)
+
+	# create interop test data
+	(cd lang/java; ant interop-data-generate)
+	#(cd lang/py; ant interop-data-generate)
+	#(cd lang/c; make interop-data-generate)
+	#(cd lang/c++; make interop-data-generate)
+
+	# run interop data tests
+	(cd lang/java; ant interop-data-test)
+	#(cd lang/py; ant interop-data-test)
+	#(cd lang/c; make interop-data-test)
+	#(cd lang/c++; make interop-data-test)
+
 	;;
 
     dist)
 	# build source tarball
-	mkdir build
+	mkdir -p build
 	svn export --force . build/avro-src-$VERSION
 	mkdir -p dist
         tar czf dist/avro-src-$VERSION.tar.gz build/avro-src-$VERSION

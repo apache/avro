@@ -19,7 +19,6 @@ package org.apache.avro;
 
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
@@ -40,7 +39,7 @@ public class TestDataFile {
   private static final File DIR
     = new File(System.getProperty("test.dir", "/tmp"));
   private static final File DATAFILE_DIR
-    = new File(System.getProperty("test.dir", "/tmp")+"/data-files/");
+    = new File(System.getProperty("test.dir", "/tmp"));
   private static final File FILE = new File(DIR, "test.avro");
   private static final long SEED = System.currentTimeMillis();
 
@@ -151,8 +150,7 @@ public class TestDataFile {
   protected void readFile(File f, DatumReader<Object> datumReader)
     throws IOException {
     System.out.println("Reading "+ f.getName());
-    DataFileReader<Object> reader =
-      new DataFileReader<Object>(new SeekableFileInput(f), datumReader);
+    DataFileReader<Object> reader = new DataFileReader<Object>(f, datumReader);
     for (Object datum : reader) {
       assertNotNull(datum);
     }
@@ -175,11 +173,13 @@ public class TestDataFile {
 
   @Test
     public void testGeneratedGeneric() throws IOException {
+      System.out.println("Reading with generic:");
       readFiles(new GenericDatumReader<Object>());
     }
 
   @Test
     public void testGeneratedSpecific() throws IOException {
+      System.out.println("Reading with specific:");
       readFiles(new SpecificDatumReader<Object>());
     }
 

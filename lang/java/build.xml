@@ -324,6 +324,7 @@
   <macrodef name="test-runner">
     <attribute name="files.location" />
     <attribute name="tests.pattern" />
+    <attribute name="test.dir" default="${test.java.build.dir}" />
     <sequential>
       <junit showoutput="yes"
              printsummary="withOutAndErr"
@@ -331,7 +332,7 @@
              fork="yes" forkMode="once"
              errorProperty="tests.failed" failureProperty="tests.failed">
         <sysproperty key="test.count" value="${test.count}"/>
-        <sysproperty key="test.dir" value="${test.java.build.dir}"/>
+        <sysproperty key="test.dir" value="@{test.dir}"/>
         <sysproperty key="test.validate" value="${test.validate}"/>
         <sysproperty key="test.genavro.dir" value="${test.genavro.dir}" />
         <sysproperty key="test.genavro.mode" value="${test.genavro.mode}" />
@@ -358,39 +359,35 @@
     <test-runner files.location="${test.java.src.dir}" tests.pattern="**/${test.java.include}.java"/>
   </target>
 
-  <target name="generate-test-data" depends="compile-test-java">
-    <mkdir dir="${test.java.build.dir}/data-files"/>
-  	 <mkdir dir="${test.java.build.dir}/blocking-data-files"/>
+  <target name="interop-data-generate" depends="compile-test-java">
+    <mkdir dir="${top.build}/interop/data"/>
     <java classname="org.apache.avro.RandomData"
       classpathref="test.java.classpath">
-      <arg value="${basedir}/src/test/schemata/interop.avsc"/>
-      <arg value="${test.java.build.dir}/data-files/test.java.avro"/>
+      <arg value="${share.dir}/test/schemas/interop.avsc"/>
+      <arg value="${top.build}/interop/data/java.avro"/>
       <arg value="${test.count}"/>
     </java>
-  	 <java classname="org.apache.avro.GenerateBlockingData"
-  	      classpathref="test.java.classpath">
-  	      <arg value="${basedir}/src/test/schemata/interop.avsc"/>
-  	      <arg value="${test.java.build.dir}/blocking-data-files/test.java.blocking.avro"/>
-  	      <arg value="${test.count}"/>
-  	 </java>
   </target>
 
-  <target name="test-interop-data-java" depends="generate-test-data"
+  <target name="interop-data-test"
     description="Run java data file interoperability tests">
-    <test-runner files.location="${test.java.classes}" tests.pattern="**/TestDataFile$InteropTest.class" />
+    <test-runner files.location="${test.java.classes}"
+		 tests.pattern="**/TestDataFile$InteropTest.class"
+		 test.dir="${top.build}/interop/data" />
   </target>
 
-  <target name="start-rpc-daemons" depends="compile-test-java"
+  <target name="interop-rpc-start" depends="compile-test-java"
     description="Start the daemons for rpc interoperability tests">
-    <delete dir="${test.java.build.dir}/server-ports"/>
-    <mkdir dir="${test.java.build.dir}/server-ports"/>
+    <delete dir="${share.dir}/test/interop/rpc/java"/>
+    <mkdir dir="${share.dir}/test/interop/rpc/java"/>
     <!-- Start the servers. As servers block the ant main thread, these need 
     to be created in parallel threads--> 
     <parallel>
       <daemons>
         <java classname="org.apache.avro.TestProtocolSpecific$InteropTest">
           <classpath refid="test.java.classpath"/>
-          <sysproperty key="test.dir" value="${test.java.build.dir}"/>
+          <sysproperty key="test.dir"
+		       value="${share.dir}/test/interop/rpc/java"/>
         </java>
       </daemons>
 
@@ -401,7 +398,7 @@
     </parallel>
   </target>
 
-  <target name="test-interop-rpc-java" depends="start-rpc-daemons"
+  <target name="interop-rpc-test" 
     description="Run java rpc interoperability tests">
     <test-runner files.location="${test.java.classes}" tests.pattern="**/TestProtocolSpecific$InteropTest.class" />
   </target>
