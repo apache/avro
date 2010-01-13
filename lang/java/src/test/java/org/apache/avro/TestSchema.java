@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 
+import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -72,42 +73,63 @@ public class TestSchema {
 
   @Test
   public void testNull() throws Exception {
+    assertEquals(Schema.create(Type.NULL), Schema.parse("\"null\""));
+    assertEquals(Schema.create(Type.NULL), Schema.parse("{\"type\":\"null\"}"));
     check("\"null\"", "null", null);
   }
 
   @Test
   public void testBoolean() throws Exception {
+    assertEquals(Schema.create(Type.BOOLEAN), Schema.parse("\"boolean\""));
+    assertEquals(Schema.create(Type.BOOLEAN),
+                 Schema.parse("{\"type\":\"boolean\"}"));
     check("\"boolean\"", "true", Boolean.TRUE);
   }
 
   @Test
   public void testString() throws Exception {
+    assertEquals(Schema.create(Type.STRING), Schema.parse("\"string\""));
+    assertEquals(Schema.create(Type.STRING),
+                 Schema.parse("{\"type\":\"string\"}"));
     check("\"string\"", "\"foo\"", new Utf8("foo"));
   }
 
   @Test
   public void testBytes() throws Exception {
+    assertEquals(Schema.create(Type.BYTES), Schema.parse("\"bytes\""));
+    assertEquals(Schema.create(Type.BYTES),
+                 Schema.parse("{\"type\":\"bytes\"}"));
     check("\"bytes\"", "\"\\u0000ABC\\u00FF\"",
           ByteBuffer.wrap(new byte[]{0,65,66,67,-1}));
   }
 
   @Test
   public void testInt() throws Exception {
+    assertEquals(Schema.create(Type.INT), Schema.parse("\"int\""));
+    assertEquals(Schema.create(Type.INT), Schema.parse("{\"type\":\"int\"}"));
     check("\"int\"", "9", new Integer(9));
   }
 
   @Test
   public void testLong() throws Exception {
+    assertEquals(Schema.create(Type.LONG), Schema.parse("\"long\""));
+    assertEquals(Schema.create(Type.LONG), Schema.parse("{\"type\":\"long\"}"));
     check("\"long\"", "11", new Long(11));
   }
 
   @Test
   public void testFloat() throws Exception {
+    assertEquals(Schema.create(Type.FLOAT), Schema.parse("\"float\""));
+    assertEquals(Schema.create(Type.FLOAT),
+                 Schema.parse("{\"type\":\"float\"}"));
     check("\"float\"", "1.1", new Float(1.1));
   }
 
   @Test
   public void testDouble() throws Exception {
+    assertEquals(Schema.create(Type.DOUBLE), Schema.parse("\"double\""));
+    assertEquals(Schema.create(Type.DOUBLE),
+                 Schema.parse("{\"type\":\"double\"}"));
     check("\"double\"", "1.2", new Double(1.2));
   }
 
