@@ -31,7 +31,7 @@
     <file file="${basedir}/../../share/VERSION.txt"/>
   </loadresource>
   <property name="fullname" value="${name}-${version}"/>
-  <property name="year" value="2009"/>
+  <property name="year" value="2010"/>
 
   <property name="share.dir" value="${basedir}/../../share"/>  	
   <property name="top.build" value="${basedir}/../../build"/>  	
@@ -315,15 +315,16 @@
     </typedef>
 
     <rat:report xmlns:rat="antlib:org.apache.rat.anttasks"
-		reportFile="${build.dir}/rat-report.log">
-      <fileset dir="${dist.dir}" excludesfile="${src.dir}/rat-excludes.txt"/>
+		reportFile="${top.build}/rat-report.log">
+      <fileset dir="${top.build}/avro-src-${version}/"
+	       excludesfile="${share.dir}/rat-excludes.txt"/>
     </rat:report>
     <condition property="rat.passed">
-      <isfileselected file="${build.dir}/rat-report.log">
+      <isfileselected file="${top.build}/rat-report.log">
 	<containsregexp expression="^0 Unknown Licenses"/>
       </isfileselected>
     </condition>
-    <fail unless="rat.passed">Unknown licenses: See build/rat-report.txt.</fail>
+    <fail unless="rat.passed">Unknown licenses: See build/rat-report.log.</fail>
   </target>
 
   <macrodef name="test-runner">
