@@ -53,7 +53,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
 
   @Override
   public void flush() throws IOException {
-    parser.processImplicitActions();
+    parser.processTrailingImplicitActions();
     out.flush();
   }
 

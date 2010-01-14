@@ -95,6 +95,13 @@ public class TestResolvingIOResolving {
           "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}", "I",
           new Object[] { 100 } },
+        // default string value
+        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
+            new Object[] { },
+            "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+            + "{\"name\":\"f\", \"type\":\"string\", \"default\": \"hello\"}]}",
+            "S50",
+            new Object[] { "hello" } },
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
             + "{\"name\":\"f2\", \"type\":\"int\"}]}", "I",
           new Object[] { 10 },
@@ -103,18 +110,36 @@ public class TestResolvingIOResolving {
           + "{\"name\":\"f2\", \"type\":\"int\"}]}", "II",
           new Object[] { 10, 101 } },
         { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-            + "{\"name\": \"g1\", " +
-                        "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
-                + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
+            + "{\"name\": \"g1\", "
+            + "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
+            + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
             + "{\"name\": \"g2\", \"type\": \"long\"}]}", "IL",
           new Object[] { 10, 11L },
           "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-            + "{\"name\": \"g1\", " +
-                        "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
-                + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
-                + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
+            + "{\"name\": \"g1\", "
+            + "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
+            + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
+            + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
           + "{\"name\": \"g2\", \"type\": \"long\"}]}}", "IIL",
           new Object[] { 10, 101, 11L } },
+        // Default + array
+        { "{\"type\": \"array\", \"items\":" +
+            "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}}", "[c1s]",
+          new Object[] { },
+          "{\"type\": \"array\", \"items\":"
+            + "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+            + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}}",
+          "[c1sI]",
+          new Object[] { 100 } },
+        // Default + map
+        { "{\"type\": \"map\", \"values\":" +
+            "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}}", "{c1sS10}",
+          new Object[] { "key" },
+          "{\"type\": \"map\", \"values\":"
+            + "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+            + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}}",
+          "{c1sS10I}",
+          new Object[] { "key", 100 } },
     };
   }
 }

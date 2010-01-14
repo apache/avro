@@ -309,6 +309,8 @@ Trunk (unreleased changes)
     AVRO-207. Fix Python to detect duplicate enum symbols and add
     tests for duplicates in unions.  (Jeff Hammerbacher via cutting)
 
+    AVRO-313. Default values for fields or records and array (or map) don't work with ResolvingDecoder (thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

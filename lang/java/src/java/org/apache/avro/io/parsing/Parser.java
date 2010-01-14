@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.io.parsing.Symbol.ImplicitAction;
 
 /**
  * Parser is the class that maintains the stack for parsing. This class
@@ -89,20 +90,15 @@ public class Parser {
   }
   
   /**
-   * Performs any implicit actions at the top the stack, expanding any
-   * production (other than the root) that may be encountered.
-   * This method will fail if there are any repeaters on the stack.
-   * @throws IOException
+   * Performs any "trailing" implicit actions at the top the stack. 
    */
-  public final void processImplicitActions() throws IOException {
-     while (pos > 1) {
+  public final void processTrailingImplicitActions() throws IOException {
+    while (pos >= 1) {
       Symbol top = stack[pos - 1];
-      if (top.kind == Symbol.Kind.IMPLICIT_ACTION) {
+      if (top.kind == Symbol.Kind.IMPLICIT_ACTION 
+        && ((Symbol.ImplicitAction) top).isTrailing) {
         pos--;
         symbolHandler.doAction(null, top);
-      } else if (top.kind != Symbol.Kind.TERMINAL) {
-        pos--;
-        pushProduction(null, top);
       } else {
         break;
       }

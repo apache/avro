@@ -198,6 +198,12 @@ public class ResolvingDecoder extends ValidatingDecoder {
       parser.pushSymbol(branches.getSymbol(in.readIndex()));
     } else if (top instanceof Symbol.ErrorAction) {
       throw new AvroTypeException(((Symbol.ErrorAction) top).msg);
+    } else if (top instanceof Symbol.DefaultStartAction) {
+      Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
+      backup = in;
+      in = (new JsonDecoder(dsa.root, new ByteArrayInputStream(dsa.contents)));
+    } else if (top == Symbol.DEFAULT_END_ACTION) {
+      in = backup;
     }
   }
 }
