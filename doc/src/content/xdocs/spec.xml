@@ -661,11 +661,11 @@
 	<li><em>name</em>, string, to distinguish it from other protocols;</li>
 	<li><em>namespace</em>, a string that qualifies the name;</li>
 	<li><em>doc</em>, an optional string, describing this protocol;</li>
-	<li><em>types</em>, a list of record, enum and error
-	  definitions.  An error definition is just like a record
-	  definition except it uses "error" instead of "record".  Note
-	  that forward references to records, enums and errors are not
-	  currently supported.</li>
+	<li><em>types</em>, a list of definitions of named types
+	  (records, enums, fixed and errors).  An error definition is
+	  just like a record definition except it uses "error" instead
+	  of "record".  Note that forward references to named types
+	  are not permitted.</li>
 	<li><em>messages</em>, a JSON object whose keys are message
 	  names and whose values are objects whose attributes are
 	  described below.  No two messages may have the same name.</li>
@@ -862,13 +862,14 @@
 	      that protocol and its hash for future interactions with
 	      this server.</li>
 
-              <li><code>match=NONE, serverProtocol!=null,
-	      serverHash!=null</code> if the server has not previously
-	      seen the client's protocol and the client sent an
-	      incorrect hash of the server's protocol.
+              <li><code>match=NONE</code> if the server has not
+	      previously seen the client's protocol.
+	      The <code>serverHash</code>
+	      and <code>serverProtocol</code> may also be non-null if
+	      the server's protocol hash was incorrect.
 
-	      <p>In this case The client must then re-submit its
-	      request with its protocol text (<code>clientHash!=null,
+	      <p>In this case the client must then re-submit its request
+	      with its protocol text (<code>clientHash!=null,
 	      clientProtocol!=null, serverHash!=null</code>) and the
 	      server should respond with with a successful match
 	      (<code>match=BOTH, serverProtocol=null,
