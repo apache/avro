@@ -55,7 +55,6 @@ public class SkipParser extends Parser {
    * parser stack reaches the target level.
    */
   public final void skipTo(int target) throws IOException {
-    outer:
     while (target < pos) {
       Symbol top = stack[pos - 1];
       while (top.kind != Symbol.Kind.TERMINAL) {
@@ -64,9 +63,9 @@ public class SkipParser extends Parser {
           skipHandler.skipAction();
         } else {
           --pos;
-          pushProduction(top);
+          pushProduction(null, top);
         }
-        continue outer;
+        top = stack[pos - 1];
       }
       skipHandler.skipTopSymbol();
     }
@@ -79,7 +78,7 @@ public class SkipParser extends Parser {
     int target = pos;
     Symbol repeater = stack[--pos];
     assert repeater.kind == Symbol.Kind.REPEATER;
-    pushProduction(repeater);
+    pushProduction(null, repeater);
     skipTo(target);
   }
 

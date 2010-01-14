@@ -157,7 +157,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
   @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldAdjustAction) {
-      return input == Symbol.FIELD_ACTION ? top : null;
+      return input == Symbol.FIELD_ACTION ? top : Symbol.CONTINUE;
     } if (top instanceof Symbol.ResolvingAction) {
       Symbol.ResolvingAction t = (Symbol.ResolvingAction) top;
       if (t.reader != input) {
@@ -183,7 +183,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else {
       throw new AvroTypeException("Unknown action: " + top);
     }
-    return null;
+    return Symbol.CONTINUE;
   }
 
   @Override
@@ -198,12 +198,6 @@ public class ResolvingDecoder extends ValidatingDecoder {
       parser.pushSymbol(branches.getSymbol(in.readIndex()));
     } else if (top instanceof Symbol.ErrorAction) {
       throw new AvroTypeException(((Symbol.ErrorAction) top).msg);
-    } else if (top instanceof Symbol.DefaultStartAction) {
-      Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
-      backup = in;
-      in = (new JsonDecoder(dsa.root, new ByteArrayInputStream(dsa.contents)));
-    } else if (top == Symbol.DEFAULT_END_ACTION) {
-      in = backup;
     }
   }
 }

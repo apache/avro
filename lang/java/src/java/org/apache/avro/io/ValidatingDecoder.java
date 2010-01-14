@@ -164,7 +164,6 @@ public class ValidatingDecoder extends ParsingDecoder
 
   @Override
   public long arrayNext() throws IOException {
-    parser.processTrailingImplicitActions();
     long result = in.arrayNext();
     if (result == 0) {
       parser.advance(Symbol.ARRAY_END);
@@ -196,7 +195,6 @@ public class ValidatingDecoder extends ParsingDecoder
 
   @Override
   public long mapNext() throws IOException {
-    parser.processTrailingImplicitActions();
     long result = in.mapNext();
     if (result == 0) {
       parser.advance(Symbol.MAP_END);
@@ -226,7 +224,7 @@ public class ValidatingDecoder extends ParsingDecoder
   }
   
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
-    return null;
+    return Symbol.CONTINUE;
   }
 }
 

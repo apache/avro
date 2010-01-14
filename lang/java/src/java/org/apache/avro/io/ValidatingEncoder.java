@@ -192,7 +192,7 @@ public class ValidatingEncoder extends ParsingEncoder
 
   @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
-    return null;
+    return Symbol.CONTINUE;
   }
 
   /** Have we written at least one item into the current collection? */

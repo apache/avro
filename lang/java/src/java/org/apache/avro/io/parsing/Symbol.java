@@ -143,21 +143,9 @@ public abstract class Symbol {
     public String toString() { return printName; }
   }
 
-  public static class ImplicitAction extends Symbol {
-    /**
-     * Set to <tt>true</tt> if and only if this implicit action is 
-     * a trailing action. That is, it is an action that follows
-     * real symbol. E.g {@link Symbol#DEFAULT_END_ACTION}.
-     */
-    public final boolean isTrailing;
-
+  private static class ImplicitAction extends Symbol {
     private ImplicitAction() {
-      this(false);
-    }
-    
-    private ImplicitAction(boolean isTrailing) {
       super(Kind.IMPLICIT_ACTION);
-      this.isTrailing = isTrailing;
     }
   }
   
@@ -379,14 +367,15 @@ public abstract class Symbol {
   public static final Symbol ITEM_END = new Symbol.Terminal("item-end");
 
   /* a pseudo terminal used by parsers */
+  public static final Symbol CONTINUE = new Symbol.Terminal("continue");
   public static final Symbol FIELD_ACTION =
     new Symbol.Terminal("field-action");
 
-  public static final Symbol RECORD_START = new ImplicitAction(false);
-  public static final Symbol RECORD_END = new ImplicitAction(true);
-  public static final Symbol UNION_END = new ImplicitAction(true);
+  public static final Symbol RECORD_START = new ImplicitAction();
+  public static final Symbol RECORD_END = new ImplicitAction();
+  public static final Symbol UNION_END = new ImplicitAction();
   
-  public static final Symbol DEFAULT_END_ACTION = new ImplicitAction(true);
+  public static final Symbol DEFAULT_END_ACTION = new ImplicitAction();
   public static final Symbol MAP_KEY_MARKER =
     new Symbol.Terminal("map-key-marker");
 }

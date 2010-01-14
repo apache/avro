@@ -53,7 +53,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
 
   @Override
   public void flush() throws IOException {
-    parser.processTrailingImplicitActions();
+    parser.processImplicitActions();
     out.flush();
   }
 
@@ -233,7 +233,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     } else {
       throw new AvroTypeException("Unknown action symbol " + top);
     }
-    return null;
+    return Symbol.CONTINUE;
   }
 }
 

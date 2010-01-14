@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.avro.AvroTypeException;
-import org.apache.avro.io.parsing.Symbol.ImplicitAction;
 
 /**
  * Parser is the class that maintains the stack for parsing. This class
@@ -35,16 +34,6 @@ public class Parser {
    * provide this help.
    */
   public interface ActionHandler {
-    /**
-     * Handle the action symbol <tt>top</tt> when the <tt>input</tt> is
-     * sought to be taken off the stack.
-     * @param input The input symbol from the caller of advance
-     * @param top The symbol at the top the stack.
-     * @return  <tt>null</tt> if advance() is to continue processing the
-     * stack. If not <tt>null</tt> the return value will be returned
-     * by advance().
-     * @throws IOException
-     */
     Symbol doAction(Symbol input, Symbol top) throws IOException;
   }
 
@@ -80,39 +69,40 @@ public class Parser {
   public final Symbol advance(Symbol input) throws IOException {
     for (; ;) {
       Symbol top = stack[--pos];
-      if (top == input) {
-        return top; // A common case
-      }
-
-      Symbol.Kind k = top.kind;
-      if (k == Symbol.Kind.IMPLICIT_ACTION) {
-        Symbol result = symbolHandler.doAction(input, top);
-        if (result != null) {
-          return result;
+      if (top.kind == Symbol.Kind.TERMINAL) {
+        if (top == input) {
+          return top; // A common case
+        } else {
+          throw new AvroTypeException("Attempt to process a "
+              + input + " when a "
+              + top + " was expected.");
         }
-      } else if (k == Symbol.Kind.TERMINAL) {
-        throw new AvroTypeException("Attempt to process a "
-                + input + " when a "
-                + top + " was expected.");
-      } else if (k == Symbol.Kind.REPEATER
-          && input == ((Symbol.Repeater) top).end) {
-        return input;
+      } else if (top.kind == Symbol.Kind.IMPLICIT_ACTION) {
+          Symbol result = symbolHandler.doAction(input, top);
+          if (result != Symbol.CONTINUE) {
+            return result;
+          }
       } else {
-        pushProduction(top);
+        pushProduction(input, top);
       }
     }
   }
   
   /**
-   * Performs any "trailing" implicit actions at the top the stack. 
+   * Performs any implicit actions at the top the stack, expanding any
+   * production (other than the root) that may be encountered.
+   * This method will fail if there are any repeaters on the stack.
+   * @throws IOException
    */
-  public final void processTrailingImplicitActions() throws IOException {
-    while (pos >= 1) {
+  public final void processImplicitActions() throws IOException {
+     while (pos > 1) {
       Symbol top = stack[pos - 1];
-      if (top.kind == Symbol.Kind.IMPLICIT_ACTION 
-        && ((Symbol.ImplicitAction) top).isTrailing) {
+      if (top.kind == Symbol.Kind.IMPLICIT_ACTION) {
         pos--;
         symbolHandler.doAction(null, top);
+      } else if (top.kind != Symbol.Kind.TERMINAL) {
+        pos--;
+        pushProduction(null, top);
       } else {
         break;
       }
@@ -126,13 +116,16 @@ public class Parser {
    * @param input
    * @param sym
    */
-  public final void pushProduction(Symbol sym) {
-    Symbol[] p = sym.production;
-    while (pos + p.length > stack.length) {
-      expandStack();
+  public final void pushProduction(Symbol input, Symbol sym) {
+    if (sym.kind != Symbol.Kind.REPEATER ||
+        input != ((Symbol.Repeater) sym).end) {
+      Symbol[] p = sym.production;
+      while (pos + p.length > stack.length) {
+        expandStack();
+      }
+      System.arraycopy(p, 0, stack, pos, p.length);
+      pos += p.length;
     }
-    System.arraycopy(p, 0, stack, pos, p.length);
-    pos += p.length;
   }
 
   /**

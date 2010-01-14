@@ -224,8 +224,6 @@ Trunk (unreleased changes)
 
     AVRO-315. Performance improvements to BinaryDecoder (thiru)
 
-    AVRO-316. Optiminzing inner loop functions of Avro io (thiru)
-
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)

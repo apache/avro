@@ -71,10 +71,12 @@ public class ValidatingGrammarGenerator {
       return Symbol.seq(new Symbol.IntCheckAction(sc.getEnumSymbols().size()),
           Symbol.ENUM);
     case ARRAY:
-      return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, generate(sc.getElementType(), seen)),
+      return Symbol.seq(Symbol.ARRAY_END,
+          Symbol.repeat(Symbol.ARRAY_END, generate(sc.getElementType(), seen)),
           Symbol.ARRAY_START);
     case MAP:
-      return Symbol.seq(Symbol.repeat(Symbol.MAP_END,
+      return Symbol.seq(Symbol.MAP_END,
+          Symbol.repeat(Symbol.MAP_END,
               generate(sc.getValueType(), seen), Symbol.STRING),
           Symbol.MAP_START);
     case RECORD: {
