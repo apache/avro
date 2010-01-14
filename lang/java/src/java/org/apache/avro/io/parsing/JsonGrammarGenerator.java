@@ -64,13 +64,11 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
       return Symbol.seq(new Symbol.EnumLabelsAction(sc.getEnumSymbols()),
           Symbol.ENUM);
     case ARRAY:
-      return Symbol.seq(Symbol.ARRAY_END,
-          Symbol.repeat(Symbol.ARRAY_END,
+      return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END,
               Symbol.ITEM_END, generate(sc.getElementType(), seen)),
           Symbol.ARRAY_START);
     case MAP:
-      return Symbol.seq(Symbol.MAP_END,
-          Symbol.repeat(Symbol.MAP_END,
+      return Symbol.seq(Symbol.repeat(Symbol.MAP_END,
               Symbol.ITEM_END, generate(sc.getValueType(), seen),
               Symbol.MAP_KEY_MARKER, Symbol.STRING),
           Symbol.MAP_START);

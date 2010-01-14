@@ -20,7 +20,12 @@ package org.apache.avro.io;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
+
+import junit.extensions.RepeatedTest;
 
 import org.apache.avro.Schema;
 
@@ -34,39 +39,45 @@ public class Perf {
   
   
   public static void main(String[] args) throws IOException {
-    Test[] tests = null;
-    if (args.length == 0) {
-      tests = new Test[] { new ReadInt(),
-          new ReadLong(), new ReadFloat(), new ReadDouble() };
-    } else if (args.length == 1) {
-      if (args[0].equals("-i")) {
-        tests = new Test[] { new ReadInt() };
-      } else if (args[0].equals("-f")) {
-        tests = new Test[] { new ReadFloat() };
-      } else if (args[0].equals("-d")) {
-        tests = new Test[] { new ReadDouble() };
-      } else if (args[0].equals("-l")) {
-        tests = new Test[] { new ReadLong() };
+    List<Test> tests = new ArrayList<Test>();
+    for (String arg : args) {
+      if (arg.equals("-i")) {
+        tests.add(new ReadInt());
+      } else if (arg.equals("-f")) {
+        tests.add(new ReadFloat());
+      } else if (arg.equals("-d")) {
+        tests.add(new ReadDouble());
+      } else if (arg.equals("-l")) {
+        tests.add(new ReadLong());
+      } else if (arg.equals("-R")) {
+        tests.add(new RepeaterTest());
+      } else {
+        usage();
       }
-    } else {
-      usage();
-      System.exit(1);
+    }
+    if (tests.isEmpty()) {
+      tests.addAll(Arrays.asList(new Test[] {
+         new ReadInt(), new ReadLong(), new ReadFloat(), new ReadDouble(),
+         new RepeaterTest(),
+      }));
     }
     
     for (Test t : tests) {
-      // warmup JVM 
+      // warmup JVM
+      // System.out.println("Warming up...");
       for (int i = 0; i < CYCLES; i++) {
-        t.read();
+        t.test();
       }
       // test
       long s = 0;
       for (int i = 0; i < CYCLES; i++) {
-        long l = t.read();
+        long l = t.test();
         // System.out.println("** " + l);
         s += l;
       }
-       s /= 1000;
-      System.out.println(t.name + "(" + t.schema + "): " + s/1000 + " ms, " +  (CYCLES * (double)COUNT)/s + " million numbers decoded /sec" );
+      s /= 1000;
+      System.out.println(t.name + "(" + t.schema + "): " + s/1000 + " ms, "
+          +  ((CYCLES * (double)COUNT) / s) + " million numbers decoded/sec" );
     }
   }
   
@@ -74,6 +85,7 @@ public class Perf {
     public final String name;
     public final Schema schema;
     protected byte[] data;
+    
     public Test(String name, String json) throws IOException {
       this.name = name;
       this.schema = Schema.parse(json);
@@ -82,8 +94,9 @@ public class Perf {
       genData(e);
       data = bao.toByteArray();
     }
-    public final long read() throws IOException {
-      Decoder d = new BinaryDecoder(new ByteArrayInputStream(data));
+    
+    public final long test() throws IOException {
+      Decoder d = getDecoder();
       long t = System.nanoTime();
       for (long l = d.readArrayStart(); l > 0; l = d.arrayNext()) {
         for (int j = 0; j < l; j++) {
@@ -92,13 +105,22 @@ public class Perf {
       }
       return (System.nanoTime() - t);
     }
+
+    protected Decoder getDecoder() throws IOException {
+      return new BinaryDecoder(new ByteArrayInputStream(data));
+    }
+
     abstract void genData(Encoder e) throws IOException;
     abstract void readInternal(Decoder d) throws IOException;
   }
   
   private static class ReadInt extends Test {
     public ReadInt() throws IOException {
-      super("ReadInt", "{ \"type\": \"array\", \"items\": \"int\"} ");
+      this("ReadInt", "{ \"type\": \"array\", \"items\": \"int\"} ");
+    }
+
+    public ReadInt(String name, String json) throws IOException {
+      super(name, json);
     }
     @Override void genData(Encoder e) throws IOException {
       e.writeArrayStart();
@@ -179,11 +201,26 @@ public class Perf {
       d.readDouble();
     }
   }
+  
+  private static class RepeaterTest extends ReadInt {
+      public RepeaterTest() throws IOException {
+        super("RepeaterTest",
+            "{ \"type\": \"array\", \"items\": \"int\"} ");
+      }
+
+      @Override
+      public Decoder getDecoder() throws IOException {
+        return new ValidatingDecoder(schema, super.getDecoder());
+      }
+    }
+
   private static void usage() {
     System.out.println("Usage: Perf { -i | -l | -f | -d }");
     System.out.println("    -i      measures readInt() performance");
     System.out.println("    -l      measures readLong() performance");
     System.out.println("    -f      measures readFloat() performance");
     System.out.println("    -d      measures readDouble() performance");
+    System.out.println("    -R      measures repeater performance in "
+        + "validating encoder");
   }
 }

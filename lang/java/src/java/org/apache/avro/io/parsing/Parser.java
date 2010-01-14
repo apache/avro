@@ -35,6 +35,16 @@ public class Parser {
    * provide this help.
    */
   public interface ActionHandler {
+    /**
+     * Handle the action symbol <tt>top</tt> when the <tt>input</tt> is
+     * sought to be taken off the stack.
+     * @param input The input symbol from the caller of advance
+     * @param top The symbol at the top the stack.
+     * @return  <tt>null</tt> if advance() is to continue processing the
+     * stack. If not <tt>null</tt> the return value will be returned
+     * by advance().
+     * @throws IOException
+     */
     Symbol doAction(Symbol input, Symbol top) throws IOException;
   }
 
@@ -70,21 +80,25 @@ public class Parser {
   public final Symbol advance(Symbol input) throws IOException {
     for (; ;) {
       Symbol top = stack[--pos];
-      if (top.kind == Symbol.Kind.TERMINAL) {
-        if (top == input) {
-          return top; // A common case
-        } else {
-          throw new AvroTypeException("Attempt to process a "
-              + input + " when a "
-              + top + " was expected.");
+      if (top == input) {
+        return top; // A common case
+      }
+
+      Symbol.Kind k = top.kind;
+      if (k == Symbol.Kind.IMPLICIT_ACTION) {
+        Symbol result = symbolHandler.doAction(input, top);
+        if (result != null) {
+          return result;
         }
-      } else if (top.kind == Symbol.Kind.IMPLICIT_ACTION) {
-          Symbol result = symbolHandler.doAction(input, top);
-          if (result != Symbol.CONTINUE) {
-            return result;
-          }
+      } else if (k == Symbol.Kind.TERMINAL) {
+        throw new AvroTypeException("Attempt to process a "
+                + input + " when a "
+                + top + " was expected.");
+      } else if (k == Symbol.Kind.REPEATER
+          && input == ((Symbol.Repeater) top).end) {
+        return input;
       } else {
-        pushProduction(input, top);
+        pushProduction(top);
       }
     }
   }
@@ -112,16 +126,13 @@ public class Parser {
    * @param input
    * @param sym
    */
-  public final void pushProduction(Symbol input, Symbol sym) {
-    if (sym.kind != Symbol.Kind.REPEATER ||
-        input != ((Symbol.Repeater) sym).end) {
-      Symbol[] p = sym.production;
-      while (pos + p.length > stack.length) {
-        expandStack();
-      }
-      System.arraycopy(p, 0, stack, pos, p.length);
-      pos += p.length;
+  public final void pushProduction(Symbol sym) {
+    Symbol[] p = sym.production;
+    while (pos + p.length > stack.length) {
+      expandStack();
     }
+    System.arraycopy(p, 0, stack, pos, p.length);
+    pos += p.length;
   }
 
   /**

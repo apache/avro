@@ -157,7 +157,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
   @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldAdjustAction) {
-      return input == Symbol.FIELD_ACTION ? top : Symbol.CONTINUE;
+      return input == Symbol.FIELD_ACTION ? top : null;
     } if (top instanceof Symbol.ResolvingAction) {
       Symbol.ResolvingAction t = (Symbol.ResolvingAction) top;
       if (t.reader != input) {
@@ -183,7 +183,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else {
       throw new AvroTypeException("Unknown action: " + top);
     }
-    return Symbol.CONTINUE;
+    return null;
   }
 
   @Override

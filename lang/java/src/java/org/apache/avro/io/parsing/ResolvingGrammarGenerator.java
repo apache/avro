@@ -98,15 +98,13 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         break;
 
       case ARRAY:
-        return Symbol.seq(Symbol.ARRAY_END,
-            Symbol.repeat(Symbol.ARRAY_END,
+        return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END,
                 generate(writer.getElementType(),
                 reader.getElementType(), seen)),
             Symbol.ARRAY_START);
       
       case MAP:
-        return Symbol.seq(Symbol.MAP_END,
-            Symbol.repeat(Symbol.MAP_END,
+        return Symbol.seq(Symbol.repeat(Symbol.MAP_END,
                 generate(writer.getValueType(),
                 reader.getValueType(), seen), Symbol.STRING),
             Symbol.MAP_START);

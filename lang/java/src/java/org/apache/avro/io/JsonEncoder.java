@@ -233,7 +233,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     } else {
       throw new AvroTypeException("Unknown action symbol " + top);
     }
-    return Symbol.CONTINUE;
+    return null;
   }
 }
 
