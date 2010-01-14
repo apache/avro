@@ -129,31 +129,29 @@ public class BinaryDecoder extends Decoder {
     return (n >>> 1) ^ -(n & 1); // back to two's-complement
   }
 
+  private final byte[] buf = new byte[8];
+
   @Override
   public float readFloat() throws IOException {
-    int n = 0;
-    for (int i = 0, shift = 0; i < 4; i++, shift += 8) {
-      int k = in.read();
-      if (k >= 0) {
-        n |= (k & 0xff) << shift;
-      } else {
-        throw new EOFException();
-      }
-    }
+    doReadBytes(buf, 0, 4);
+    int n = (((int) buf[0]) & 0xff)
+      |  ((((int) buf[1]) & 0xff) << 8)
+      |  ((((int) buf[2]) & 0xff) << 16)
+      |  ((((int) buf[3]) & 0xff) << 24);
     return Float.intBitsToFloat(n);
   }
 
   @Override
   public double readDouble() throws IOException {
-    long n = 0;
-    for (int i = 0, shift = 0; i < 8; i++, shift += 8) {
-      long k = in.read();
-      if (k >= 0) {
-        n |= (k & 0xff) << shift;
-      } else {
-        throw new EOFException();
-      }
-    }
+    doReadBytes(buf, 0, 8);
+    long n = (((long) buf[0]) & 0xff)
+      |  ((((long) buf[1]) & 0xff) << 8)
+      |  ((((long) buf[2]) & 0xff) << 16)
+      |  ((((long) buf[3]) & 0xff) << 24)
+      |  ((((long) buf[4]) & 0xff) << 32)
+      |  ((((long) buf[5]) & 0xff) << 40)
+      |  ((((long) buf[6]) & 0xff) << 48)
+      |  ((((long) buf[7]) & 0xff) << 56);
     return Double.longBitsToDouble(n);
   }
     
@@ -217,9 +215,13 @@ public class BinaryDecoder extends Decoder {
    */
   private void doReadBytes(byte[] bytes, int start, int length)
     throws IOException {
-    while (length > 0) {
+    for (; ;) {
       int n = in.read(bytes, start, length);
-      if (n < 0) throw new EOFException();
+      if (n == length || length == 0) {
+        return;
+      } else if (n < 0) {
+        throw new EOFException();
+      }
       start += n;
       length -= n;
     }

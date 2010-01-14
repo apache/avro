@@ -222,6 +222,8 @@ Trunk (unreleased changes)
     AVRO-291. Set NODELAY in Java's SocketTransceiver.
     (Eric Evans via cutting)
 
+    AVRO-315. Performance improvements to BinaryDecoder (thiru)
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
