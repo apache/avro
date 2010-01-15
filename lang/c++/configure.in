@@ -2,14 +2,15 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT([avro], [1.0], [avro-devel@apache.org])
+AC_INIT([avro], [1.2], [avro-devel@apache.org])
+AC_CONFIG_AUX_DIR([config])
+AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([api/AvroParse.hh])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 AC_PROG_LEX
 AC_PROG_YACC
 

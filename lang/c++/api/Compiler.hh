@@ -100,7 +100,7 @@ void compileJsonSchema(std::istream &is, ValidSchema &schema);
 
 /// Non-throwing version of compileJsonSchema.  
 ///
-/// /return True if no error, false if error (with the error string set)
+/// \return True if no error, false if error (with the error string set)
 ///
 
 bool compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error);

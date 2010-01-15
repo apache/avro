@@ -17,7 +17,7 @@
  limitations under the License.
 */
 
-#include "avro.tab.h"
+#include "AvroYacc.h"
 
 // this undef is a hack for my mac implementation
 #undef yyFlexLexer

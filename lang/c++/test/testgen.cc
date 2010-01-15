@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include <fstream>
 #include <sstream>
 #include <boost/test/included/unit_test_framework.hpp>
@@ -166,7 +167,7 @@ void setRecord(testgen::RootRecord &myRecord)
 {
     using namespace testgen;
 
-    uint8_t fixed[] =  {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    uint8_t fixed[] =  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
     myRecord.mylong = 212;
     myRecord.nestedrecord.inval1 = std::numeric_limits<double>::min();
@@ -540,14 +541,23 @@ init_unit_test_suite( int argc, char* argv[] )
 {
     using namespace boost::unit_test;
 
-    if(argc > 1) {
-        gWriter = argv[1];
+    const char *srcPath = getenv("top_srcdir");
+
+    if(srcPath) {
+        std::string srcPathStr(srcPath);
+        gWriter = srcPathStr + '/' + gWriter;
+        gReader = srcPathStr + '/' + gReader;
+    }
+    else {
+        if(argc > 1) {
+            gWriter = argv[1];
+        }
+
+        if(argc > 2) {
+            gReader = argv[2];
+        }
     }
     std::cout << "Using writer schema " << gWriter << std::endl;
-
-    if(argc > 2) {
-        gReader = argv[2];
-    }
     std::cout << "Using reader schema " << gReader << std::endl;
 
     test_suite* test= BOOST_TEST_SUITE( "Avro C++ unit test suite" );
