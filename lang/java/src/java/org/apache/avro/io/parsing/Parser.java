@@ -110,6 +110,22 @@ public class Parser {
   }
 
   /**
+   * Performs any "trailing" implicit actions at the top the stack. 
+   */
+  public final void processTrailingImplicitActions() throws IOException {
+    while (pos >= 1) {
+      Symbol top = stack[pos - 1];
+      if (top.kind == Symbol.Kind.IMPLICIT_ACTION 
+        && ((Symbol.ImplicitAction) top).isTrailing) {
+        pos--;
+        symbolHandler.doAction(null, top);
+      } else {
+        break;
+      }
+    }
+  }
+
+  /**
    * Pushes the production for the given symbol <tt>sym</tt>.
    * If <tt>sym</tt> is a repeater and <tt>input</tt> is either
    * {@link Symbol#ARRAY_END} or {@link Symbol#MAP_END} pushes nothing.
