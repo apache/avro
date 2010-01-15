@@ -389,7 +389,7 @@ public class JsonDecoder extends ParsingDecoder
         String fn = in.getCurrentName();
         if (fa.fname.equals(fn)) {
           in.nextToken();
-          return Symbol.CONTINUE;
+          return null;
         } else {
           throw new AvroTypeException("Expected field name " + fa.fname +
               " got " + in.getCurrentName());
@@ -410,7 +410,7 @@ public class JsonDecoder extends ParsingDecoder
     } else {
       throw new AvroTypeException("Unknown action symbol " + top);
     }
-    return Symbol.CONTINUE;
+    return null;
   }
 
   private AvroTypeException error(String type) {

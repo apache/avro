@@ -64,7 +64,7 @@ public class SkipParser extends Parser {
           skipHandler.skipAction();
         } else {
           --pos;
-          pushProduction(null, top);
+          pushProduction(top);
         }
         continue outer;
       }
@@ -79,7 +79,7 @@ public class SkipParser extends Parser {
     int target = pos;
     Symbol repeater = stack[--pos];
     assert repeater.kind == Symbol.Kind.REPEATER;
-    pushProduction(null, repeater);
+    pushProduction(repeater);
     skipTo(target);
   }
 

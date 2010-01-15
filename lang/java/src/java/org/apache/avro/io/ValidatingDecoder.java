@@ -226,7 +226,7 @@ public class ValidatingDecoder extends ParsingDecoder
   }
   
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
-    return Symbol.CONTINUE;
+    return null;
   }
 }
 

@@ -379,7 +379,6 @@ public abstract class Symbol {
   public static final Symbol ITEM_END = new Symbol.Terminal("item-end");
 
   /* a pseudo terminal used by parsers */
-  public static final Symbol CONTINUE = new Symbol.Terminal("continue");
   public static final Symbol FIELD_ACTION =
     new Symbol.Terminal("field-action");
 
