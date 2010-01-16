@@ -30,6 +30,8 @@ Trunk (unreleased changes)
     AVRO-163. Re-organized source tree into separate directories for
     each language.  (cutting)
 
+    AVRO-344. Complete rewrite of C implementation (massie)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

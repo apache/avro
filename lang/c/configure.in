@@ -5,7 +5,7 @@ AC_PREREQ(2.59)
 AC_INIT([avro-c], m4_esyscmd([./version.sh project]), [http://issues.apache.org/jira/browse/AVRO])
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([avro.h])
+AC_CONFIG_SRCDIR([src/avro.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
 
@@ -19,47 +19,6 @@ AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
-AC_MSG_CHECKING(for apr-1-config)
-AC_PATH_PROG(APR_CONFIG, apr-1-config)
-if test -z "$APR_CONFIG"; then
-  AC_MSG_ERROR(Please make sure that you have the Apache Portable Runtime 'apr' installed 
-  and the apr-1-config binary is on your path.)
-else
-  AC_MSG_RESULT(Found $APR_CONFIG for version `$APR_CONFIG --version`) 
-fi
-APR_CFLAGS=$($APR_CONFIG --cflags --cppflags)
-APR_INCLUDES=$($APR_CONFIG --includes)
-APR_LIBS=$($APR_CONFIG --link-libtool --libs)
-AC_SUBST(APR_CFLAGS)
-AC_SUBST(APR_INCLUDES)
-AC_SUBST(APR_LIBS)
-AC_MSG_CHECKING(for APR cflags)
-AC_MSG_RESULT($APR_CFLAGS)
-AC_MSG_CHECKING(for APR includes)
-AC_MSG_RESULT($APR_INCLUDES)
-AC_MSG_CHECKING(for APR libraries)
-AC_MSG_RESULT($APR_LIBS)
-
-AC_MSG_CHECKING(for apu-1-config)
-AC_PATH_PROG(APR_UTIL_CONFIG, apu-1-config)
-if test -z "$APR_UTIL_CONFIG"; then
-  AC_MSG_ERROR(Please make sure that you have the Apache Portable Runtime Utility 'apr-util'
-  installed and the apu-1-config script is on your path.)
-else
-  AC_MSG_RESULT(Found $APR_UTIL_CONFIG for version `$APR_UTIL_CONFIG --version`)
-fi
-#APU_CFLAGS=$($APR_UTIL_CONFIG --cflags --cppflags)
-APU_INCLUDES=$($APR_UTIL_CONFIG --includes)
-APU_LIBS=$($APR_UTIL_CONFIG --link-libtool --libs)
-#AC_SUBST(APU_CFLAGS)
-AC_SUBST(APU_INCLUDES)
-AC_SUBST(APU_LIBS)
-#AC_MSG_CHECKING(for APR util cflags)
-#AC_MSG_RESULT($APU_CFLAGS)
-AC_MSG_CHECKING(for APR util includes)
-AC_MSG_RESULT($APU_INCLUDES)
-AC_MSG_CHECKING(for APR util libraries)
-AC_MSG_RESULT($APU_LIBS)
 
 
 # Checks for header files.
@@ -70,12 +29,20 @@ AC_CHECK_HEADERS([libintl.h limits.h netinet/in.h stdint.h stdlib.h string.h sys
 AC_C_BIGENDIAN
 AC_C_CONST
 AC_TYPE_SIZE_T
+AC_CHECK_SIZEOF(void *)
+AC_CHECK_SIZEOF(long)
 
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([bzero])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+   Makefile
+   tests/Makefile
+   docs/Makefile
+   src/Makefile
+])
+AC_CONFIG_SUBDIRS([jansson])
 AC_OUTPUT
 
 echo

@@ -1,0 +1,47 @@
+Avro C
+======
+
+The current version of Avro is +{avro_version}+.  The current version of +libavro+ is +{libavro_version}+.
+This document was created +{docdate}+.
+
+== Introduction to Avro
+
+Avro is a data serialization system.
+
+Avro provides:
+
+* Rich data structures.
+* A compact, fast, binary data format.
+* A container file, to store persistent data.
+* Remote procedure call (RPC).
+
+This document will focus on the C API for Avro.  To learn more about
+Avro in general, http://hadoop.apache.org/avro/[visit the Avro website].
+
+== Introduction to Avro C 
+
+....
+    ___                      ______
+   /   |_   ___________     / ____/
+  / /| | | / / ___/ __ \   / /     
+ / ___ | |/ / /  / /_/ /  / /___   
+/_/  |_|___/_/   \____/   \____/   
+                                   
+....
+
+
+
+[source,c]
+----
+#include <stdio.h>
+#include <stdlib.h>
+#include <avro.h>
+
+int
+main(void){
+   schema_t schema = schema_string();
+   fprintf(stderr,"Hello, world!\n");
+   schema_decref(schema);
+   return EXIT_SUCCESS;
+}
+----

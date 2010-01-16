@@ -18,9 +18,9 @@
 #         libavro_binary_age = 0
 #         libavro_interface_age = 0
 #
-libavro_micro_version=2
+libavro_micro_version=3
 libavro_interface_age=0
-libavro_binary_age=2
+libavro_binary_age=0
 
 # IGNORE EVERYTHING ELSE FROM HERE DOWN.........
 if test $# != 1; then
@@ -40,10 +40,10 @@ librevision=$libavro_interface_age
 libage=$(($libavro_binary_age - $libavro_interface_age))
 
 if test "$1" = "project"; then
-	build_xml="../../build.xml"
 	project_ver="undef"
-	if test -f $build_xml; then
-		project_ver=$(sed -n '/name="version"/s/.*value="\(.*\)".*$/\1/p' $build_xml)
+        version_file="../../share/VERSION.txt"
+	if test -f $version_file; then
+		project_ver=$(cat $version_file)
 	fi
 	printf "%s" $project_ver
 elif test "$1" = "libtool"; then

@@ -22,20 +22,20 @@ under the License.
 #include <dirent.h>
 
 #include "avro.h"
-#include "avro_private.h"
-#include "apr_strings.h"
 
-apr_pool_t *pool;
+int test_cases = 0;
 
 static void
 run_tests (char *dirpath, int should_pass)
 {
-  char *jsontext;
-  apr_size_t jsonlen;
-  struct avro_value *value;
+  char jsontext[4096];
+  size_t jsonlen, rval;
+  char filepath[1024];
   DIR *dir;
   struct dirent *dent;
-  char *filepath;
+  FILE *fp;
+  avro_schema_t schema;
+  avro_schema_error_t avro_schema_error;
 
   dir = opendir (dirpath);
   if (dir == NULL)
@@ -48,29 +48,57 @@ run_tests (char *dirpath, int should_pass)
       dent = readdir (dir);
       if (dent && dent->d_name[0] != '.')
 	{
-	  filepath = apr_pstrcat (pool, dirpath, "/", dent->d_name, NULL);
+	  int test_rval;
+	  snprintf (filepath, sizeof (filepath), "%s/%s", dirpath,
+		    dent->d_name);
 	  fprintf (stderr, "TEST %s...", filepath);
-	  jsontext = avro_util_file_read_full (pool, filepath, &jsonlen);
-	  if (!jsontext)
+	  jsonlen = 0;
+	  fp = fopen (filepath, "r");
+	  if (!fp)
 	    {
-	      fprintf (stderr, "Can't read the file\n");
+	      fprintf (stderr, "can't open!\n");
 	      exit (EXIT_FAILURE);
 	    }
-
-	  value = avro_value_create (pool, jsontext, jsonlen);
-	  if (value && should_pass)
+	  rval = fread (jsontext, 1, sizeof (jsontext) - 1, fp);
+	  jsontext[rval] = '\0';
+	  test_rval =
+	    avro_schema_from_json (jsontext, jsonlen, &schema,
+				   &avro_schema_error);
+	  test_cases++;
+	  if (test_rval == 0)
 	    {
-	      avro_value_print_info (value, stderr);
-	    }
-	  else if (!value && !should_pass)
-	    {
-	      /* failure expected */
+	      if (should_pass)
+		{
+		  avro_schema_t schema_copy = avro_schema_copy (schema);
+		  fprintf (stderr, "pass\n");
+		  avro_schema_printf (schema, stderr);
+		  if (!avro_schema_equal (schema, schema_copy))
+		    {
+		      fprintf (stderr,
+			       "failed to avro_schema_equal(schema,avro_schema_copy())\n");
+		      exit (EXIT_FAILURE);
+		    }
+		}
+	      else
+		{
+		  /* Unexpected success */
+		  fprintf (stderr, "fail! (shouldn't succeed but did)\n");
+		  exit (EXIT_FAILURE);
+		}
 	    }
 	  else
 	    {
-	      exit (EXIT_FAILURE);
+	      if (should_pass)
+		{
+		  fprintf (stderr,
+			   "fail! (should have succeeded but didn't)\n");
+		  exit (EXIT_FAILURE);
+		}
+	      else
+		{
+		  fprintf (stderr, "pass\n");
+		}
 	    }
-	  fprintf (stderr, "ok!\n");
 	}
     }
   while (dent != NULL);
@@ -79,25 +107,27 @@ run_tests (char *dirpath, int should_pass)
 int
 main (int argc, char *argv[])
 {
+  int i, j;
   char *srcdir = getenv ("srcdir");
-  char *path;
+  char path[1024];
 
   if (!srcdir)
     {
       srcdir = ".";
     }
 
-  avro_initialize ();
-  apr_pool_create (&pool, NULL);
-
   /* Run the tests that should pass */
-  path = apr_pstrcat (pool, srcdir, "/tests/schema_tests/pass", NULL);
+  snprintf (path, sizeof (path), "%s/schema_tests/pass", srcdir);
   fprintf (stderr, "RUNNING %s\n", path);
   run_tests (path, 1);
-  path = apr_pstrcat (pool, srcdir, "/tests/schema_tests/fail", NULL);
+  snprintf (path, sizeof (path), "%s/schema_tests/fail", srcdir);
   fprintf (stderr, "RUNNING %s\n", path);
   run_tests (path, 0);
 
-  apr_pool_destroy (pool);
+  fprintf (stderr, "==================================================\n");
+  fprintf (stderr, "Finished running %d schema test cases successfully \n",
+	   test_cases);
+  fprintf (stderr, "==================================================\n");
+
   return EXIT_SUCCESS;
 }
