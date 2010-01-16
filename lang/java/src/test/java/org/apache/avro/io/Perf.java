@@ -49,6 +49,8 @@ public class Perf {
         tests.add(new ReadLong());
       } else if (a.equals("-R")) {
         tests.add(new RepeaterTest());
+      } else if (a.equals("-N")) {
+        tests.add(new NestedRecordTest());
       } else {
         usage();
         System.exit(1);
@@ -58,6 +60,7 @@ public class Perf {
       tests.addAll(Arrays.asList(new Test[] {
           new ReadInt(), new ReadLong(),
           new ReadFloat(), new ReadDouble(),
+          new RepeaterTest(), new NestedRecordTest(),
       }));
     }
     
@@ -113,8 +116,13 @@ public class Perf {
   
   private static class ReadInt extends Test {
     public ReadInt() throws IOException {
-      super("ReadInt", "{ \"type\": \"array\", \"items\": \"int\"} ");
+      this("ReadInt", "{ \"type\": \"array\", \"items\": \"int\"} ");
     }
+
+    public ReadInt(String name, String schema) throws IOException {
+      super(name, schema);
+    }
+
     @Override void genData(Encoder e) throws IOException {
       e.writeArrayStart();
       e.setItemCount((COUNT/4) * 4); //next lowest multiple of 4  
@@ -229,9 +237,24 @@ public class Perf {
     protected Decoder getDecoder() throws IOException {
       return new ValidatingDecoder(schema, super.getDecoder());
     }
-
+    
   }
-  
+
+  private static class NestedRecordTest extends ReadInt {
+    public NestedRecordTest() throws IOException {
+      super("RepeaterTest",
+        "{ \"type\": \"array\", \"items\": \n"
+        + "{ \"type\": \"record\", \"name\": \"r1\", \n"
+        + "\"fields\": \n"
+        + "[ { \"name\": \"f1\", \"type\": \"int\" } ] } } ");
+    }
+
+    @Override
+    public Decoder getDecoder() throws IOException {
+      return new ValidatingDecoder(schema, super.getDecoder());
+    }
+  }
+
   private static void usage() {
     System.out.println("Usage: Perf { -i | -l | -f | -d }");
     System.out.println("    -i readInt() performance");

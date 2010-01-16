@@ -230,6 +230,8 @@ Trunk (unreleased changes)
 
     AVRO-316. Optiminzing inner loop functions of Avro io (thiru)
 
+    AVRO-328. Performance improvements Validating encoder/decoder for nested records (thiru)
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
