@@ -52,7 +52,8 @@ public class TestRpcReceiveAndSendTools {
             Integer.toString(port), "{ \"a\": \"alpha\" }"));
     receive.run2(System.err);
     
-    assertEquals("sink\t{\"a\":\"alpha\"}\n", baos1.toString("UTF-8"));
-    assertEquals("\"omega\"\n", baos2.toString("UTF-8"));
+    assertEquals("sink\t{\"a\":\"alpha\"}\n",
+        baos1.toString("UTF-8").replace("\r", ""));
+    assertEquals("\"omega\"\n", baos2.toString("UTF-8").replace("\r", ""));
   }
 }

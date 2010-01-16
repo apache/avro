@@ -129,7 +129,7 @@ public class TestGenAvro {
     public void run() throws Exception {
       String output = generate();
       String slurped = slurp(expectedOut);
-      assertEquals(slurped.trim(), output.trim());
+      assertEquals(slurped.trim(), output.replace("\r", "").trim());
     }
 
     public void write() throws Exception {

@@ -317,6 +317,8 @@ Trunk (unreleased changes)
 
     AVRO-313. Default values for fields or records and array (or map) don't work with ResolvingDecoder (thiru)
 
+    AVRO-337. ant test-java fails in Cygwin due to CRLF v LF problem (thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

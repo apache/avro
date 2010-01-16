@@ -75,7 +75,8 @@ public class TestDataFileTools {
         p, // stdout
         null, // stderr
         Arrays.asList(sampleFile.getPath()));
-    assertEquals(jsonData.toString(), baos.toString("UTF-8"));
+    assertEquals(jsonData.toString(), baos.toString("UTF-8").
+        replace("\r", ""));
   }
   
   @Test
@@ -87,7 +88,8 @@ public class TestDataFileTools {
         p, // stdout
         null, // stderr
         Arrays.asList(sampleFile.getPath()));
-    assertEquals(schema.toString() + "\n", baos.toString("UTF-8"));
+    assertEquals(schema.toString() + "\n",
+        baos.toString("UTF-8").replace("\r", ""));
   }
   
   @Test

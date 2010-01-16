@@ -49,7 +49,7 @@ public class TestJsonToFromBinaryFragmentTools {
         p, // stdout
         null, // stderr
         Arrays.asList(STRING_SCHEMA.toString(), "-"));
-    assertEquals(JSON + "\n", baos.toString(UTF8));
+    assertEquals(JSON + "\n", baos.toString(UTF8).replace("\r", ""));
   }
   
   @Test
