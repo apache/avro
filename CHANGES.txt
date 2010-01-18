@@ -65,6 +65,8 @@ Trunk (unreleased changes)
     protocols, and messages. (Philip Zeyliger via cutting)
 
     AVRO-274. Make Java's data file sync interval configurable.  (cutting)
+  
+    AVRO-346. Add function to validate a datum against a schema. (massie)
 
   IMPROVEMENTS
 
