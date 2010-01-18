@@ -123,7 +123,7 @@ avro_writer_file (FILE * fp)
 }
 
 avro_reader_t
-avro_reader_memory (const char *buf, size_t len)
+avro_reader_memory (const char *buf, int64_t len)
 {
   struct avro_memory_reader_t *mem_reader =
     malloc (sizeof (struct avro_memory_reader_t));
@@ -139,7 +139,7 @@ avro_reader_memory (const char *buf, size_t len)
 }
 
 avro_writer_t
-avro_writer_memory (const char *buf, size_t len)
+avro_writer_memory (const char *buf, int64_t len)
 {
   struct avro_memory_writer_t *mem_writer =
     malloc (sizeof (struct avro_memory_writer_t));

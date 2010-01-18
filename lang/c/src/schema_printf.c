@@ -18,8 +18,8 @@ under the License.
 */
 
 #include "schema.h"
+#include "datum.h"
 
-/* print */
 struct avro_schema_args_t
 {
   int depth;
@@ -41,14 +41,14 @@ avro_schema_printf_indent (struct avro_schema_args_t *args)
 }
 
 static void
-avro_schema_union_print (struct schema_union_t *unionp,
+avro_schema_union_print (struct avro_union_schema_t *unionp,
 			 struct avro_schema_args_t *args)
 {
   fprintf (args->fp, "union");
 }
 
 static void
-avro_schema_array_print (struct schema_array_t *array,
+avro_schema_array_print (struct avro_array_schema_t *array,
 			 struct avro_schema_args_t *args)
 {
   avro_schema_printf_indent (args);
@@ -59,7 +59,7 @@ avro_schema_array_print (struct schema_array_t *array,
 }
 
 static void
-avro_schema_map_print (struct schema_map_t *map,
+avro_schema_map_print (struct avro_map_schema_t *map,
 		       struct avro_schema_args_t *args)
 {
   avro_schema_printf_indent (args);
@@ -70,21 +70,21 @@ avro_schema_map_print (struct schema_map_t *map,
 }
 
 static void
-avro_schema_fixed_print (struct schema_fixed_t *fixed,
+avro_schema_fixed_print (struct avro_fixed_schema_t *fixed,
 			 struct avro_schema_args_t *args)
 {
   fprintf (args->fp, "fixed \"%s\" size=%ld", fixed->name, fixed->size);
 }
 
 static void
-avro_schema_enum_print (struct schema_enum_t *enump,
+avro_schema_enum_print (struct avro_enum_schema_t *enump,
 			struct avro_schema_args_t *args)
 {
   fprintf (args->fp, "enum \"%s\"", enump->name);
 }
 
 static void
-avro_schema_record_field_print (struct record_field_t *field,
+avro_schema_record_field_print (struct avro_record_field_t *field,
 				struct avro_schema_args_t *args)
 {
   avro_schema_printf_indent (args);
@@ -95,16 +95,15 @@ avro_schema_record_field_print (struct record_field_t *field,
 }
 
 static void
-avro_schema_record_print (struct schema_record_t *record,
+avro_schema_record_print (struct avro_record_schema_t *record,
 			  struct avro_schema_args_t *args)
 {
-  size_t i;
-  struct record_field_t *field;
+  struct avro_record_field_t *field;
   avro_schema_printf_indent (args);
   fprintf (args->fp, "record \"%s\"\n", record->name);
   args->depth++;
-  for (field = TAILQ_FIRST (&record->fields);
-       field != NULL; field = TAILQ_NEXT (field, fields))
+  for (field = STAILQ_FIRST (&record->fields);
+       field != NULL; field = STAILQ_NEXT (field, fields))
     {
       avro_schema_record_field_print (field, args);
     }
@@ -130,7 +129,7 @@ avro_schema_name (const avro_schema_t schema)
 }
 
 static void
-avro_schema_link_print (const struct schema_link_t *link,
+avro_schema_link_print (const struct avro_link_schema_t *link,
 			struct avro_schema_args_t *args)
 {
   avro_schema_printf_indent (args);

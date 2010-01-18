@@ -162,9 +162,10 @@ avro_schema_null (void)
 }
 
 avro_schema_t
-avro_schema_fixed (const char *name, const size_t size)
+avro_schema_fixed (const char *name, const int64_t size)
 {
-  struct schema_fixed_t *fixed = malloc (sizeof (struct schema_fixed_t));
+  struct avro_fixed_schema_t *fixed =
+    malloc (sizeof (struct avro_fixed_schema_t));
   if (!fixed)
     {
       return NULL;
@@ -182,42 +183,44 @@ avro_schema_fixed (const char *name, const size_t size)
 avro_schema_t
 avro_schema_union (void)
 {
-  struct schema_union_t *unionp = malloc (sizeof (struct schema_union_t));
-  if (!unionp)
+  struct avro_union_schema_t *schema =
+    malloc (sizeof (struct avro_union_schema_t));
+  if (!schema)
     {
       return NULL;
     }
-  TAILQ_INIT (&unionp->schemas);
-  avro_schema_init (&unionp->obj, AVRO_UNION);
-  return &unionp->obj;
+  STAILQ_INIT (&schema->branches);
+  avro_schema_init (&schema->obj, AVRO_UNION);
+  return &schema->obj;
 }
 
 int
 avro_schema_union_append (const avro_schema_t union_schema,
 			  const avro_schema_t schema)
 {
-  struct schema_union_t *unionp;
-  struct union_schema_t *s;
+  struct avro_union_schema_t *unionp;
+  struct avro_union_branch_t *s;
 
   if (!union_schema || !schema || !is_avro_union (union_schema))
     {
       return EINVAL;
     }
   unionp = avro_schema_to_union (union_schema);
-  s = malloc (sizeof (struct union_schema_t));
+  s = malloc (sizeof (struct avro_union_branch_t));
   if (!s)
     {
       return ENOMEM;
     }
   s->schema = schema;
-  TAILQ_INSERT_TAIL (&unionp->schemas, s, schemas);
+  STAILQ_INSERT_TAIL (&unionp->branches, s, branches);
   return 0;
 }
 
 avro_schema_t
 avro_schema_array (const avro_schema_t items)
 {
-  struct schema_array_t *array = malloc (sizeof (struct schema_array_t));
+  struct avro_array_schema_t *array =
+    malloc (sizeof (struct avro_array_schema_t));
   if (!array)
     {
       return NULL;
@@ -230,7 +233,7 @@ avro_schema_array (const avro_schema_t items)
 avro_schema_t
 avro_schema_map (const avro_schema_t values)
 {
-  struct schema_map_t *map = malloc (sizeof (struct schema_map_t));
+  struct avro_map_schema_t *map = malloc (sizeof (struct avro_map_schema_t));
   if (!map)
     {
       return NULL;
@@ -243,7 +246,8 @@ avro_schema_map (const avro_schema_t values)
 avro_schema_t
 avro_schema_enum (const char *name)
 {
-  struct schema_enum_t *enump = malloc (sizeof (struct schema_enum_t));
+  struct avro_enum_schema_t *enump =
+    malloc (sizeof (struct avro_enum_schema_t));
   if (!enump)
     {
       return NULL;
@@ -257,7 +261,7 @@ avro_schema_enum (const char *name)
     {
       return NULL;
     }
-  TAILQ_INIT (&enump->symbols);
+  STAILQ_INIT (&enump->symbols);
   avro_schema_init (&enump->obj, AVRO_ENUM);
   return &enump->obj;
 }
@@ -266,20 +270,20 @@ int
 avro_schema_enum_symbol_append (const avro_schema_t enum_schema,
 				const char *symbol)
 {
-  struct schema_enum_t *enump;
-  struct enum_symbol_t *enum_symbol;
+  struct avro_enum_schema_t *enump;
+  struct avro_enum_symbol_t *enum_symbol;
   if (!enum_schema || !symbol || !is_avro_enum (enum_schema))
     {
       return EINVAL;
     }
   enump = avro_schema_to_enum (enum_schema);
-  enum_symbol = malloc (sizeof (struct enum_symbol_t));
+  enum_symbol = malloc (sizeof (struct avro_enum_symbol_t));
   if (!enum_symbol)
     {
       return ENOMEM;
     }
   enum_symbol->symbol = strdup (symbol);
-  TAILQ_INSERT_TAIL (&enump->symbols, enum_symbol, symbols);
+  STAILQ_INSERT_TAIL (&enump->symbols, enum_symbol, symbols);
   return 0;
 }
 
@@ -288,8 +292,8 @@ avro_schema_record_field_append (const avro_schema_t record_schema,
 				 const char *field_name,
 				 const avro_schema_t field_schema)
 {
-  struct schema_record_t *record;
-  struct record_field_t *new_field;
+  struct avro_record_schema_t *record;
+  struct avro_record_field_t *new_field;
   if (!record_schema || !field_name || !field_schema
       || !is_avro_record (record_schema) || record_schema == field_schema
       || !is_avro_id (field_name))
@@ -297,21 +301,22 @@ avro_schema_record_field_append (const avro_schema_t record_schema,
       return EINVAL;
     }
   record = avro_schema_to_record (record_schema);
-  new_field = malloc (sizeof (struct record_field_t));
+  new_field = malloc (sizeof (struct avro_record_field_t));
   if (!new_field)
     {
       return ENOMEM;
     }
   new_field->name = strdup (field_name);
   new_field->type = avro_schema_incref (field_schema);
-  TAILQ_INSERT_TAIL (&record->fields, new_field, fields);
+  STAILQ_INSERT_TAIL (&record->fields, new_field, fields);
   return 0;
 }
 
 avro_schema_t
 avro_schema_record (const char *name)
 {
-  struct schema_record_t *record = malloc (sizeof (struct schema_record_t));
+  struct avro_record_schema_t *record =
+    malloc (sizeof (struct avro_record_schema_t));
   if (!record)
     {
       return NULL;
@@ -321,7 +326,7 @@ avro_schema_record (const char *name)
       return NULL;
     }
   record->name = strdup (name);
-  TAILQ_INIT (&record->fields);
+  STAILQ_INIT (&record->fields);
   avro_schema_init (&record->obj, AVRO_RECORD);
   return &record->obj;
 }
@@ -349,12 +354,12 @@ find_named_schemas (const char *name, avro_schema_error_t * error)
 avro_schema_t
 avro_schema_link (avro_schema_t to)
 {
-  struct schema_link_t *link;
+  struct avro_link_schema_t *link;
   if (!is_avro_named_type (to))
     {
       return NULL;
     }
-  link = malloc (sizeof (struct schema_link_t));
+  link = malloc (sizeof (struct avro_link_schema_t));
   if (!link)
     {
       return NULL;
@@ -741,7 +746,7 @@ avro_schema_from_json_t (json_t * json, avro_schema_t * schema,
 }
 
 int
-avro_schema_from_json (const char *jsontext, size_t len,
+avro_schema_from_json (const char *jsontext, const int32_t len,
 		       avro_schema_t * schema, avro_schema_error_t * e)
 {
   json_t *root;
@@ -802,12 +807,12 @@ avro_schema_copy (avro_schema_t schema)
       break;
     case AVRO_RECORD:
       {
-	struct schema_record_t *record_schema =
+	struct avro_record_schema_t *record_schema =
 	  avro_schema_to_record (schema);
-	struct record_field_t *field;
+	struct avro_record_field_t *field;
 	new_schema = avro_schema_record (record_schema->name);
-	for (field = TAILQ_FIRST (&record_schema->fields);
-	     field != NULL; field = TAILQ_NEXT (field, fields))
+	for (field = STAILQ_FIRST (&record_schema->fields);
+	     field != NULL; field = STAILQ_NEXT (field, fields))
 	  {
 	    avro_schema_t field_copy = avro_schema_copy (field->type);
 	    if (!field_copy)
@@ -826,12 +831,12 @@ avro_schema_copy (avro_schema_t schema)
       break;
     case AVRO_ENUM:
       {
-	struct schema_enum_t *enum_schema = avro_schema_to_enum (schema);
+	struct avro_enum_schema_t *enum_schema = avro_schema_to_enum (schema);
 	new_schema = avro_schema_enum (enum_schema->name);
-	struct enum_symbol_t *enum_symbol;
-	for (enum_symbol = TAILQ_FIRST (&enum_schema->symbols);
+	struct avro_enum_symbol_t *enum_symbol;
+	for (enum_symbol = STAILQ_FIRST (&enum_schema->symbols);
 	     enum_symbol != NULL;
-	     enum_symbol = TAILQ_NEXT (enum_symbol, symbols))
+	     enum_symbol = STAILQ_NEXT (enum_symbol, symbols))
 	  {
 	    if (avro_schema_enum_symbol_append
 		(new_schema, enum_symbol->symbol))
@@ -844,14 +849,15 @@ avro_schema_copy (avro_schema_t schema)
       break;
     case AVRO_FIXED:
       {
-	struct schema_fixed_t *fixed_schema = avro_schema_to_fixed (schema);
+	struct avro_fixed_schema_t *fixed_schema =
+	  avro_schema_to_fixed (schema);
 	new_schema =
 	  avro_schema_fixed (fixed_schema->name, fixed_schema->size);
       }
       break;
     case AVRO_MAP:
       {
-	struct schema_map_t *map_schema = avro_schema_to_map (schema);
+	struct avro_map_schema_t *map_schema = avro_schema_to_map (schema);
 	avro_schema_t values_copy = avro_schema_copy (map_schema->values);
 	if (!values_copy)
 	  {
@@ -862,7 +868,8 @@ avro_schema_copy (avro_schema_t schema)
       break;
     case AVRO_ARRAY:
       {
-	struct schema_array_t *array_schema = avro_schema_to_array (schema);
+	struct avro_array_schema_t *array_schema =
+	  avro_schema_to_array (schema);
 	avro_schema_t items_copy = avro_schema_copy (array_schema->items);
 	if (!items_copy)
 	  {
@@ -873,13 +880,14 @@ avro_schema_copy (avro_schema_t schema)
       break;
     case AVRO_UNION:
       {
-	struct schema_union_t *union_schema = avro_schema_to_union (schema);
-	struct union_schema_t *s;
+	struct avro_union_schema_t *union_schema =
+	  avro_schema_to_union (schema);
+	struct avro_union_branch_t *s;
 
 	new_schema = avro_schema_union ();
 
-	for (s = TAILQ_FIRST (&union_schema->schemas);
-	     s != NULL; s = TAILQ_NEXT (s, schemas))
+	for (s = STAILQ_FIRST (&union_schema->branches);
+	     s != NULL; s = STAILQ_NEXT (s, branches))
 	  {
 	    avro_schema_t schema_copy = avro_schema_copy (s->schema);
 	    if (avro_schema_union_append (new_schema, schema_copy))
@@ -893,7 +901,7 @@ avro_schema_copy (avro_schema_t schema)
 
     case AVRO_LINK:
       {
-	struct schema_link_t *link_schema = avro_schema_to_link (schema);
+	struct avro_link_schema_t *link_schema = avro_schema_to_link (schema);
 	/* TODO: use an avro_schema_copy of to instead of pointing to the same reference */
 	avro_schema_incref (link_schema->to);
 	new_schema = avro_schema_link (link_schema->to);

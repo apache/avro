@@ -23,78 +23,78 @@ under the License.
 #include "container_of.h"
 #include "queue.h"
 
-struct record_field_t
+struct avro_record_field_t
 {
   char *name;
   avro_schema_t type;
-  /* TODO: default */
-    TAILQ_ENTRY (record_field_t) fields;
+  /* TODO: default values */
+    STAILQ_ENTRY (avro_record_field_t) fields;
 };
 
-struct schema_record_t
+struct avro_record_schema_t
 {
   struct avro_obj_t obj;
   char *name;
-    TAILQ_HEAD (fields, record_field_t) fields;
+    STAILQ_HEAD (fields, avro_record_field_t) fields;
 };
 
-struct enum_symbol_t
+struct avro_enum_symbol_t
 {
   char *symbol;
-    TAILQ_ENTRY (enum_symbol_t) symbols;
+    STAILQ_ENTRY (avro_enum_symbol_t) symbols;
 };
 
-struct schema_enum_t
+struct avro_enum_schema_t
 {
   struct avro_obj_t obj;
   char *name;
-    TAILQ_HEAD (symbols, enum_symbol_t) symbols;
+    STAILQ_HEAD (symbols, avro_enum_symbol_t) symbols;
 };
 
-struct schema_array_t
+struct avro_array_schema_t
 {
   struct avro_obj_t obj;
   avro_schema_t items;
 };
 
-struct schema_map_t
+struct avro_map_schema_t
 {
   struct avro_obj_t obj;
   avro_schema_t values;
 };
 
-struct union_schema_t
+struct avro_union_branch_t
 {
   avro_schema_t schema;
-    TAILQ_ENTRY (union_schema_t) schemas;
+    STAILQ_ENTRY (avro_union_branch_t) branches;
 };
 
-struct schema_union_t
+struct avro_union_schema_t
 {
   struct avro_obj_t obj;
-    TAILQ_HEAD (schemas, union_schema_t) schemas;
+    STAILQ_HEAD (branch, avro_union_branch_t) branches;
 };
 
-struct schema_fixed_t
+struct avro_fixed_schema_t
 {
   struct avro_obj_t obj;
   const char *name;
   size_t size;
 };
 
-struct schema_link_t
+struct avro_link_schema_t
 {
   struct avro_obj_t obj;
   avro_schema_t to;
 };
 
-#define avro_schema_to_record(schema_)  container_of(schema_, struct schema_record_t, obj)
-#define avro_schema_to_enum(schema_)    container_of(schema_, struct schema_enum_t, obj)
-#define avro_schema_to_array(schema_)   container_of(schema_, struct schema_array_t, obj)
-#define avro_schema_to_map(schema_)     container_of(schema_, struct schema_map_t, obj)
-#define avro_schema_to_union(schema_)   container_of(schema_, struct schema_union_t, obj)
-#define avro_schema_to_fixed(schema_)   container_of(schema_, struct schema_fixed_t, obj)
-#define avro_schema_to_link(schema_)    container_of(schema_, struct schema_link_t, obj)
+#define avro_schema_to_record(schema_)  container_of(schema_, struct avro_record_schema_t, obj)
+#define avro_schema_to_enum(schema_)    container_of(schema_, struct avro_enum_schema_t, obj)
+#define avro_schema_to_array(schema_)   container_of(schema_, struct avro_array_schema_t, obj)
+#define avro_schema_to_map(schema_)     container_of(schema_, struct avro_map_schema_t, obj)
+#define avro_schema_to_union(schema_)   container_of(schema_, struct avro_union_schema_t, obj)
+#define avro_schema_to_fixed(schema_)   container_of(schema_, struct avro_fixed_schema_t, obj)
+#define avro_schema_to_link(schema_)    container_of(schema_, struct avro_link_schema_t, obj)
 
 static inline avro_schema_t
 avro_schema_incref (avro_schema_t schema)
@@ -117,6 +117,5 @@ avro_schema_decref (avro_schema_t schema)
       avro_schema_free (schema);
     }
 }
-
 
 #endif

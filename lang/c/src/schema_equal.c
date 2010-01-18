@@ -21,20 +21,21 @@ under the License.
 #include <string.h>
 
 static int
-schema_record_equal (struct schema_record_t *a, struct schema_record_t *b)
+schema_record_equal (struct avro_record_schema_t *a,
+		     struct avro_record_schema_t *b)
 {
-  struct record_field_t *field_a, *field_b;
+  struct avro_record_field_t *field_a, *field_b;
   if (strcmp (a->name, b->name))
     {
       /* They have different names */
       return 0;
     }
 
-  for (field_a = TAILQ_FIRST (&a->fields),
-       field_b = TAILQ_FIRST (&b->fields);
+  for (field_a = STAILQ_FIRST (&a->fields),
+       field_b = STAILQ_FIRST (&b->fields);
        !(field_a == NULL && field_b == NULL);
-       field_a = TAILQ_NEXT (field_a, fields),
-       field_b = TAILQ_NEXT (field_b, fields))
+       field_a = STAILQ_NEXT (field_a, fields),
+       field_b = STAILQ_NEXT (field_b, fields))
     {
       if (field_a == NULL || field_b == NULL)
 	{
@@ -55,20 +56,20 @@ schema_record_equal (struct schema_record_t *a, struct schema_record_t *b)
 }
 
 static int
-schema_enum_equal (struct schema_enum_t *a, struct schema_enum_t *b)
+schema_enum_equal (struct avro_enum_schema_t *a, struct avro_enum_schema_t *b)
 {
-  struct enum_symbol_t *sym_a, *sym_b;
+  struct avro_enum_symbol_t *sym_a, *sym_b;
 
   if (strcmp (a->name, b->name))
     {
       /* They have different names */
       return 0;
     }
-  for (sym_a = TAILQ_FIRST (&a->symbols),
-       sym_b = TAILQ_FIRST (&b->symbols);
+  for (sym_a = STAILQ_FIRST (&a->symbols),
+       sym_b = STAILQ_FIRST (&b->symbols);
        !(sym_a == NULL && sym_b == NULL);
-       sym_a = TAILQ_NEXT (sym_a, symbols),
-       sym_b = TAILQ_NEXT (sym_b, symbols))
+       sym_a = STAILQ_NEXT (sym_a, symbols),
+       sym_b = STAILQ_NEXT (sym_b, symbols))
     {
       if (sym_a == NULL || sym_b == NULL)
 	{
@@ -84,7 +85,8 @@ schema_enum_equal (struct schema_enum_t *a, struct schema_enum_t *b)
 }
 
 static int
-schema_fixed_equal (struct schema_fixed_t *a, struct schema_fixed_t *b)
+schema_fixed_equal (struct avro_fixed_schema_t *a,
+		    struct avro_fixed_schema_t *b)
 {
   if (strcmp (a->name, b->name))
     {
@@ -95,33 +97,35 @@ schema_fixed_equal (struct schema_fixed_t *a, struct schema_fixed_t *b)
 }
 
 static int
-schema_map_equal (struct schema_map_t *a, struct schema_map_t *b)
+schema_map_equal (struct avro_map_schema_t *a, struct avro_map_schema_t *b)
 {
   return avro_schema_equal (a->values, b->values);
 }
 
 static int
-schema_array_equal (struct schema_array_t *a, struct schema_array_t *b)
+schema_array_equal (struct avro_array_schema_t *a,
+		    struct avro_array_schema_t *b)
 {
   return avro_schema_equal (a->items, b->items);
 }
 
 static int
-schema_union_equal (struct schema_union_t *a, struct schema_union_t *b)
+schema_union_equal (struct avro_union_schema_t *a,
+		    struct avro_union_schema_t *b)
 {
-  struct union_schema_t *schema_a, *schema_b;
+  struct avro_union_branch_t *branch_a, *branch_b;
 
-  for (schema_a = TAILQ_FIRST (&a->schemas),
-       schema_b = TAILQ_FIRST (&b->schemas);
-       !(schema_a == NULL && schema_b == NULL);
-       schema_a = TAILQ_NEXT (schema_a, schemas),
-       schema_b = TAILQ_NEXT (schema_b, schemas))
+  for (branch_a = STAILQ_FIRST (&a->branches),
+       branch_b = STAILQ_FIRST (&b->branches);
+       !(branch_a == NULL && branch_b == NULL);
+       branch_a = STAILQ_NEXT (branch_a, branches),
+       branch_b = STAILQ_NEXT (branch_b, branches))
     {
-      if (schema_a == NULL || schema_b == NULL)
+      if (branch_a == NULL || branch_b == NULL)
 	{
 	  return 0;		/* different num symbols */
 	}
-      if (!avro_schema_equal (schema_a->schema, schema_b->schema))
+      if (!avro_schema_equal (branch_a->schema, branch_b->schema))
 	{
 	  /* They don't have the same schema types */
 	  return 0;
@@ -131,7 +135,7 @@ schema_union_equal (struct schema_union_t *a, struct schema_union_t *b)
 }
 
 static int
-schema_link_equal (struct schema_link_t *a, struct schema_link_t *b)
+schema_link_equal (struct avro_link_schema_t *a, struct avro_link_schema_t *b)
 {
   /* NOTE: links can only be used for named types. They are used
      in recursive schemas so we just check the name of the 

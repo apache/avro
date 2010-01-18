@@ -107,7 +107,6 @@ run_tests (char *dirpath, int should_pass)
 int
 main (int argc, char *argv[])
 {
-  int i, j;
   char *srcdir = getenv ("srcdir");
   char path[1024];
 

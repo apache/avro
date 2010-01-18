@@ -19,6 +19,7 @@ under the License.
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include "avro.h"
 #include "schema.h"
 #include "datum.h"
@@ -35,113 +36,111 @@ avro_datum_init (avro_datum_t datum, avro_type_t type)
 avro_datum_t
 avro_string (const char *str)
 {
-  struct avro_string_datum_t *string_datum =
+  struct avro_string_datum_t *datum =
     malloc (sizeof (struct avro_string_datum_t));
-  if (!string_datum)
+  if (!datum)
     {
       return NULL;
     }
-  string_datum->s = strdup (str);
+  datum->s = strdup (str);
 
-  avro_datum_init (&string_datum->obj, AVRO_STRING);
-  return &string_datum->obj;
+  avro_datum_init (&datum->obj, AVRO_STRING);
+  return &datum->obj;
 }
 
 avro_datum_t
 avro_bytes (const char *buf, int64_t len)
 {
-  struct avro_bytes_datum_t *bytes_datum =
+  struct avro_bytes_datum_t *datum =
     malloc (sizeof (struct avro_bytes_datum_t));
-  if (!bytes_datum)
+  if (!datum)
     {
       return NULL;
     }
-  bytes_datum->buf = malloc (len);
-  if (!bytes_datum->buf)
+  datum->buf = malloc (len);
+  if (!datum->buf)
     {
-      free (bytes_datum);
+      free (datum);
       return NULL;
     }
-  memcpy (bytes_datum->buf, buf, len);
-  bytes_datum->len = len;
+  memcpy (datum->buf, buf, len);
+  datum->len = len;
 
-  avro_datum_init (&bytes_datum->obj, AVRO_BYTES);
-  return &bytes_datum->obj;
+  avro_datum_init (&datum->obj, AVRO_BYTES);
+  return &datum->obj;
 }
 
 avro_datum_t
 avro_int (int32_t i)
 {
-  struct avro_int_datum_t *int_datum =
-    malloc (sizeof (struct avro_int_datum_t));
-  if (!int_datum)
+  struct avro_int_datum_t *datum = malloc (sizeof (struct avro_int_datum_t));
+  if (!datum)
     {
       return NULL;
     }
-  int_datum->i = i;
+  datum->i = i;
 
-  avro_datum_init (&int_datum->obj, AVRO_INT);
-  return &int_datum->obj;
+  avro_datum_init (&datum->obj, AVRO_INT);
+  return &datum->obj;
 }
 
 avro_datum_t
 avro_long (int64_t l)
 {
-  struct avro_long_datum_t *long_datum =
+  struct avro_long_datum_t *datum =
     malloc (sizeof (struct avro_long_datum_t));
-  if (!long_datum)
+  if (!datum)
     {
       return NULL;
     }
-  long_datum->l = l;
+  datum->l = l;
 
-  avro_datum_init (&long_datum->obj, AVRO_LONG);
-  return &long_datum->obj;
+  avro_datum_init (&datum->obj, AVRO_LONG);
+  return &datum->obj;
 }
 
 avro_datum_t
 avro_float (float f)
 {
-  struct avro_float_datum_t *float_datum =
+  struct avro_float_datum_t *datum =
     malloc (sizeof (struct avro_float_datum_t));
-  if (!float_datum)
+  if (!datum)
     {
       return NULL;
     }
-  float_datum->f = f;
+  datum->f = f;
 
-  avro_datum_init (&float_datum->obj, AVRO_FLOAT);
-  return &float_datum->obj;
+  avro_datum_init (&datum->obj, AVRO_FLOAT);
+  return &datum->obj;
 }
 
 avro_datum_t
 avro_double (double d)
 {
-  struct avro_double_datum_t *double_datum =
+  struct avro_double_datum_t *datum =
     malloc (sizeof (struct avro_double_datum_t));
-  if (!double_datum)
+  if (!datum)
     {
       return NULL;
     }
-  double_datum->d = d;
+  datum->d = d;
 
-  avro_datum_init (&double_datum->obj, AVRO_DOUBLE);
-  return &double_datum->obj;
+  avro_datum_init (&datum->obj, AVRO_DOUBLE);
+  return &datum->obj;
 }
 
 avro_datum_t
 avro_boolean (int8_t i)
 {
-  struct avro_boolean_datum_t *boolean_datum =
+  struct avro_boolean_datum_t *datum =
     malloc (sizeof (struct avro_boolean_datum_t));
-  if (!boolean_datum)
+  if (!datum)
     {
       return NULL;
     }
-  boolean_datum->i = i;
-
-  avro_datum_init (&boolean_datum->obj, AVRO_BOOLEAN);
-  return &boolean_datum->obj;
+  datum->i = i;
+  avro_datum_init (&datum->obj, AVRO_BOOLEAN);
+  return &datum->obj;
 }
 
 avro_datum_t
@@ -158,112 +157,116 @@ avro_null (void)
 avro_datum_t
 avro_record (const char *name)
 {
-  /* TODO */
-  return NULL;
+  struct avro_record_datum_t *datum =
+    malloc (sizeof (struct avro_record_datum_t));
+  if (!datum)
+    {
+      return NULL;
+    }
+  datum->name = strdup (name);
+  datum->fields = st_init_strtable ();
+
+  avro_datum_init (&datum->obj, AVRO_RECORD);
+  return &datum->obj;
 }
 
 avro_datum_t
-avro_record_field_get (const avro_datum_t record, const char *field_name)
+avro_record_field_get (const avro_datum_t datum, const char *field_name)
 {
-  /* TODO */
-  return NULL;
+  struct avro_record_datum_t *field = NULL;
+  if (is_avro_datum (datum) && is_avro_record (datum))
+    {
+      struct avro_record_datum_t *record = avro_datum_to_record (datum);
+      st_lookup (record->fields, (st_data_t) field_name,
+		 (st_data_t *) & field);
+    }
+  return &field->obj;
 }
 
 int
-avro_record_field_append (const avro_datum_t record,
-			  const char *field_name, const avro_datum_t value)
+avro_record_field_set (const avro_datum_t datum,
+		       const char *field_name, const avro_datum_t field_value)
 {
-  /* TODO */
-  return 1;
+  if (is_avro_datum (datum) && is_avro_record (datum))
+    {
+      struct avro_record_datum_t *record = avro_datum_to_record (datum);
+      st_insert (record->fields, (st_data_t) field_name,
+		 (st_data_t) field_value);
+      return 0;
+    }
+  return EINVAL;
 }
 
 avro_datum_t
 avro_enum (const char *name, const char *symbol)
 {
-  /* TODO */
-  return NULL;
-}
-
-int
-avro_enum_symbol_append (const avro_datum_t enum_value, const char *symbol)
-{
-  /* TODO */
-  return 1;
-}
-
-avro_datum_t
-avro_fixed_from_schema (struct schema_fixed_t * schema)
-{
-  struct avro_fixed_datum_t *datum;
-  if (!schema)
-    {
-      return NULL;
-    }
-  datum = malloc (sizeof (struct avro_fixed_datum_t));
+  struct avro_enum_datum_t *datum =
+    malloc (sizeof (struct avro_enum_datum_t));
   if (!datum)
     {
       return NULL;
     }
-  avro_schema_incref (&schema->obj);
-  datum->schema = schema;
+  datum->name = strdup (name);
+  datum->symbol = strdup (symbol);
+
+  avro_datum_init (&datum->obj, AVRO_ENUM);
+  return &datum->obj;
+}
+
+avro_datum_t
+avro_fixed (const char *name, const int64_t size, const char *bytes)
+{
+  struct avro_fixed_datum_t *datum =
+    malloc (sizeof (struct avro_fixed_datum_t));
+  if (!datum)
+    {
+      return NULL;
+    }
+  datum->name = strdup (name);
+  datum->size = size;
+  datum->bytes = malloc (size);
+  if (datum->bytes)
+    {
+      free (datum);
+      return NULL;
+    }
+  memcpy (datum->bytes, bytes, size);
   avro_datum_init (&datum->obj, AVRO_FIXED);
   return &datum->obj;
 }
 
 avro_datum_t
-avro_fixed (const char *name, const size_t len, const char *bytes)
+avro_map (const avro_datum_t values)
 {
-  struct avro_fixed_datum_t *fixed;
-  avro_datum_t datum;
-  avro_schema_t schema = avro_schema_fixed (name, len);
-  if (!schema)
-    {
-      return NULL;
-    }
-  datum = avro_fixed_from_schema (schema);
-  avro_schema_decref (schema);	/* only want one reference */
+  struct avro_map_datum_t *datum = malloc (sizeof (struct avro_map_datum_t));
   if (!datum)
     {
       return NULL;
     }
-  fixed = avro_datum_to_fixed (datum);
-  /* TODO */
-  return datum;
-}
-
-avro_datum_t
-avro_map (const avro_datum_t values)
-{
-  /* TODO */
-  return NULL;
+  datum->map = st_init_strtable ();
+  avro_datum_init (&datum->obj, AVRO_MAP);
+  return &datum->obj;
 }
 
 avro_datum_t
 avro_array (const avro_datum_t items)
 {
-  /* TODO */
-  return NULL;
-}
-
-avro_datum_t
-avro_union (void)
-{
-  /* TODO */
-  return NULL;
-}
-
-int
-avro_union_append (const avro_datum_t union_value, const avro_datum_t value)
-{
-  /* TODO */
-  return 1;
+  struct avro_array_datum_t *datum =
+    malloc (sizeof (struct avro_array_datum_t));
+  if (!datum)
+    {
+      return NULL;
+    }
+  STAILQ_INIT (&datum->els);
+  avro_datum_init (&datum->obj, AVRO_ARRAY);
+  return &datum->obj;
 }
 
 avro_datum_t
 avro_datum_incref (avro_datum_t value)
 {
   /* TODO */
-  return NULL;
+  return value;
 }
 
 void
@@ -278,7 +281,7 @@ avro_datum_print (avro_datum_t value, FILE * fp)
 
 }
 
-static int
+int
 schema_match (avro_schema_t writers_schema, avro_schema_t readers_schema)
 {
   if (is_avro_union (writers_schema) || is_avro_union (readers_schema))
@@ -413,16 +416,16 @@ avro_read_data (avro_reader_t reader, avro_schema_t writers_schema,
   /* schema resolution */
   if (!is_avro_union (writers_schema) && is_avro_union (readers_schema))
     {
-      struct union_schema_t *s;
-      struct schema_union_t *union_schema =
+      struct avro_union_branch_t *branch;
+      struct avro_union_schema_t *union_schema =
 	avro_schema_to_union (readers_schema);
 
-      for (s = TAILQ_FIRST (&union_schema->schemas);
-	   s != NULL; s = TAILQ_NEXT (s, schemas))
+      for (branch = STAILQ_FIRST (&union_schema->branches);
+	   branch != NULL; branch = STAILQ_NEXT (branch, branches))
 	{
-	  if (schema_match (writers_schema, s->schema))
+	  if (schema_match (writers_schema, branch->schema))
 	    {
-	      return avro_read_data (reader, writers_schema, s->schema,
+	      return avro_read_data (reader, writers_schema, branch->schema,
 				     datum);
 	    }
 	}
@@ -522,6 +525,165 @@ avro_read_data (avro_reader_t reader, avro_schema_t writers_schema,
     }
 
   return rval;
+}
+
+struct validate_st
+{
+  avro_schema_t expected_schema;
+  int rval;
+};
+
+static int
+schema_map_validate_foreach (char *key, avro_datum_t datum,
+			     struct validate_st *vst)
+{
+  if (!schema_datum_validate (vst->expected_schema, datum))
+    {
+      vst->rval = 0;
+      return ST_STOP;
+    }
+  return ST_CONTINUE;
+}
+
+int
+schema_datum_validate (avro_schema_t expected_schema, avro_datum_t datum)
+{
+  if (!is_avro_schema (expected_schema) || !is_avro_datum (datum))
+    {
+      return EINVAL;
+    }
+  /* null */
+  if (is_avro_null (expected_schema) && is_avro_null (datum))
+    {
+      return 1;
+    }
+  /* boolean */
+  else if (is_avro_boolean (expected_schema) && is_avro_boolean (datum))
+    {
+      return 1;
+    }
+  /* string */
+  else if (is_avro_string (expected_schema) && is_avro_boolean (datum))
+    {
+      return 1;
+    }
+  /* bytes */
+  else if (is_avro_bytes (expected_schema) && is_avro_bytes (datum))
+    {
+      return 1;
+    }
+  /* int */
+  else if (is_avro_int (expected_schema)
+	   && (is_avro_int (datum)
+	       || (is_avro_long (datum)
+		   && (INT_MIN <= (avro_datum_to_long (datum))->l
+		       && (avro_datum_to_long (datum))->l <= INT_MAX))))
+    {
+      return 1;
+    }
+  /* long */
+  else if (is_avro_long (expected_schema)
+	   && (is_avro_int (datum) || is_avro_long (datum)))
+    {
+      return 1;
+    }
+  /* float or double */
+  else
+    if ((is_avro_float (expected_schema) || is_avro_double (expected_schema))
+	&& (is_avro_int (datum) || is_avro_long (datum)
+	    || is_avro_float (datum)))
+    {
+      return 1;
+    }
+  /* fixed */
+  else if (is_avro_fixed (expected_schema)
+	   && (is_avro_fixed (datum)
+	       && ((avro_schema_to_fixed (expected_schema))->size ==
+		   (avro_datum_to_fixed (datum))->size)))
+    {
+      return 1;
+    }
+  /* enum */
+  else if (is_avro_enum (expected_schema))
+    {
+      struct avro_enum_schema_t *enump =
+	avro_schema_to_enum (expected_schema);
+      struct avro_enum_symbol_t *symbol = STAILQ_FIRST (&enump->symbols);
+      while (symbol)
+	{
+	  if (!strcmp (symbol->symbol, (avro_datum_to_enum (datum))->symbol))
+	    {
+	      return 1;
+	    }
+	  symbol = STAILQ_NEXT (symbol, symbols);
+	}
+      return 0;
+    }
+  /* array */
+  else if (is_avro_array (expected_schema) && is_avro_array (datum))
+    {
+      struct avro_array_datum_t *array = avro_datum_to_array (datum);
+      struct avro_array_element_t *el = STAILQ_FIRST (&array->els);
+      while (el)
+	{
+	  if (!schema_datum_validate
+	      ((avro_schema_to_array (expected_schema))->items, el->datum))
+	    {
+	      return 0;
+	    }
+	  el = STAILQ_NEXT (el, els);
+	}
+      return 1;
+    }
+  /* map */
+  else if (is_avro_map (expected_schema) && is_avro_map (datum))
+    {
+      struct validate_st vst = { expected_schema, 1 };
+      st_foreach ((avro_datum_to_map (datum))->map,
+		  schema_map_validate_foreach, (st_data_t) & vst);
+      return vst.rval;
+    }
+  /* union */
+  else if (is_avro_union (expected_schema))
+    {
+      struct avro_union_schema_t *union_schema =
+	avro_schema_to_union (expected_schema);
+      struct avro_union_branch_t *branch;
+
+      for (branch = STAILQ_FIRST (&union_schema->branches);
+	   branch != NULL; branch = STAILQ_NEXT (branch, branches))
+	{
+	  if (schema_datum_validate (branch->schema, datum))
+	    {
+	      return 1;
+	    }
+	}
+      return 0;
+    }
+  /* record */
+  else if (is_avro_record (expected_schema) && is_avro_record (datum))
+    {
+      struct avro_record_schema_t *record_schema =
+	avro_schema_to_record (expected_schema);
+      struct avro_record_field_t *field;
+      for (field = STAILQ_FIRST (&record_schema->fields);
+	   field != NULL; field = STAILQ_NEXT (field, fields))
+	{
+	  avro_datum_t field_datum =
+	    avro_record_field_get (datum, field->name);
+	  if (!field_datum)
+	    {
+	      /* TODO: check for default values */
+	      return 0;
+	    }
+	  if (!schema_datum_validate (field->type, field_datum))
+	    {
+	      return 0;
+	    }
+	}
+      return 1;
+    }
+  return 0;
 }
 
 int

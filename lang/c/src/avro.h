@@ -26,7 +26,6 @@ extern "C"
 
 #include <stdio.h>
 #include <stdint.h>
-#include <unistd.h>
 
   enum avro_type_t
   {
@@ -93,8 +92,8 @@ extern "C"
                               ||is_avro_fixed(obj))
 #define is_avro_map(obj)      (obj && avro_typeof(obj) == AVRO_MAP)
 #define is_avro_array(obj)    (obj && avro_typeof(obj) == AVRO_ARRAY)
-#define is_avro_union(obj)    (obj && avro_typeof(obj) == AVRO_UNION)
-#define is_avro_complex_type(obj) (!(is_avro_primitive(obj) || is_avro_link(obj)))
+#define is_avro_union(obj)    (obj && avro_classof(obj) == AVRO_SCHEMA && avro_typeof(obj) == AVRO_UNION)
+#define is_avro_complex_type(obj) (!(is_avro_primitive(obj))
 #define is_avro_link(obj)     (obj && avro_typeof(obj) == AVRO_LINK)
 
   /* schema */
@@ -120,7 +119,7 @@ extern "C"
   int avro_schema_enum_symbol_append (const avro_schema_t enump,
 				      const char *symbol);
 
-  avro_schema_t avro_schema_fixed (const char *name, const size_t len);
+  avro_schema_t avro_schema_fixed (const char *name, const int64_t len);
   avro_schema_t avro_schema_map (const avro_schema_t values);
   avro_schema_t avro_schema_array (const avro_schema_t items);
 
@@ -131,7 +130,7 @@ extern "C"
   avro_schema_t avro_schema_link (avro_schema_t schema);
 
   typedef struct avro_schema_error_t *avro_schema_error_t;
-  int avro_schema_from_json (const char *jsontext, size_t len,
+  int avro_schema_from_json (const char *jsontext, const int32_t len,
 			     avro_schema_t * schema,
 			     avro_schema_error_t * error);
 
@@ -143,7 +142,24 @@ extern "C"
 
   void avro_schema_printf (avro_schema_t schema, FILE * fp);
 
-  /* value */
+  /* io */
+  typedef struct avro_reader_t *avro_reader_t;
+  typedef struct avro_writer_t *avro_writer_t;
+
+  avro_reader_t avro_reader_file (FILE * fp);
+  avro_writer_t avro_writer_file (FILE * fp);
+  avro_reader_t avro_reader_memory (const char *buf, int64_t len);
+  avro_writer_t avro_writer_memory (const char *buf, int64_t len);
+
+  int avro_read (avro_reader_t reader, void *buf, int64_t len);
+  int avro_skip (avro_reader_t reader, int64_t len);
+  int avro_write (avro_writer_t writer, void *buf, int64_t len);
+  int avro_flush (avro_writer_t writer);
+
+  void avro_reader_free (avro_reader_t reader);
+  void avro_writer_free (avro_writer_t writer);
+
+  /* datum */
   typedef struct avro_obj_t *avro_datum_t;
   avro_datum_t avro_string (const char *str);
   avro_datum_t avro_bytes (const char *buf, int64_t len);
@@ -157,13 +173,13 @@ extern "C"
   avro_datum_t avro_record (const char *name);
   avro_datum_t avro_record_field_get (const avro_datum_t record,
 				      const char *field_name);
-  int avro_record_field_append (const avro_datum_t record,
-				const char *field_name,
-				const avro_datum_t value);
+  int avro_record_field_set (const avro_datum_t record,
+			     const char *field_name,
+			     const avro_datum_t value);
 
   avro_datum_t avro_enum (const char *name, const char *symbol);
 
-  avro_datum_t avro_fixed (const char *name, const size_t len,
+  avro_datum_t avro_fixed (const char *name, const int64_t len,
 			   const char *bytes);
 
   avro_datum_t avro_map (const avro_datum_t values);
@@ -178,29 +194,16 @@ extern "C"
 
   void avro_datum_print (avro_datum_t value, FILE * fp);
 
-/* IO */
-  typedef struct avro_reader_t *avro_reader_t;
-  typedef struct avro_writer_t *avro_writer_t;
+  int schema_match (avro_schema_t writers_schema,
+		    avro_schema_t readers_schema);
 
-  avro_reader_t avro_reader_file (FILE * fp);
-  avro_writer_t avro_writer_file (FILE * fp);
-  avro_reader_t avro_reader_memory (const char *buf, size_t len);
-  avro_writer_t avro_writer_memory (const char *buf, size_t len);
+  int schema_datum_validate (avro_schema_t expected_schema,
+			     avro_datum_t datum);
 
-  int avro_read (avro_reader_t reader, void *buf, int64_t len);
-  int avro_skip (avro_reader_t reader, int64_t len);
-  int avro_write (avro_writer_t writer, void *buf, int64_t len);
-  int avro_flush (avro_writer_t writer);
-
-  void avro_reader_free (avro_reader_t reader);
-  void avro_writer_free (avro_writer_t writer);
-
-/* Datum */
   int avro_read_data (avro_reader_t reader, avro_schema_t writer_schema,
 		      avro_schema_t reader_schema, avro_datum_t * datum);
   int avro_write_data (avro_writer_t writer, avro_schema_t writer_schema,
 		       avro_datum_t datum);
-
 
 #ifdef __cplusplus
 }

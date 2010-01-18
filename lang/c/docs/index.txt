@@ -29,19 +29,15 @@ Avro in general, http://hadoop.apache.org/avro/[visit the Avro website].
                                    
 ....
 
+The C implementation is still *alpha* is not ready for
+production use.  The current code is being tested on
++MacOS X+ and +Linux+.
 
+We're making rapid progress and the +avro.h+ header file 
+can give you an idea of what the API will likely look like.
 
 [source,c]
 ----
-#include <stdio.h>
-#include <stdlib.h>
-#include <avro.h>
-
-int
-main(void){
-   schema_t schema = schema_string();
-   fprintf(stderr,"Hello, world!\n");
-   schema_decref(schema);
-   return EXIT_SUCCESS;
-}
+include::../src/avro.h[]
 ----
+

@@ -21,6 +21,8 @@ under the License.
 #define AVRO_DATUM_H
 #include "avro.h"		/* for avro_schema_t */
 #include "container_of.h"
+#include "st.h"
+#include "queue.h"
 
 struct avro_string_datum_t
 {
@@ -68,8 +70,41 @@ struct avro_boolean_datum_t
 struct avro_fixed_datum_t
 {
   struct avro_obj_t obj;
-  struct schema_fixed_t *schema;
+  char *name;
   char *bytes;
+  int64_t size;
+};
+
+struct avro_map_datum_t
+{
+  struct avro_obj_t obj;
+  st_table *map;
+};
+
+struct avro_record_datum_t
+{
+  struct avro_obj_t obj;
+  const char *name;
+  st_table *fields;
+};
+
+struct avro_enum_datum_t
+{
+  struct avro_obj_t obj;
+  const char *name;
+  const char *symbol;
+};
+
+struct avro_array_element_t
+{
+  avro_datum_t datum;
+    STAILQ_ENTRY (avro_array_element_t) els;
+};
+
+struct avro_array_datum_t
+{
+  struct avro_obj_t obj;
+    STAILQ_HEAD (els, avro_array_element_t) els;
 };
 
 #define avro_datum_to_string(datum_)    container_of(datum_, struct avro_string_datum_t, obj)
@@ -80,5 +115,9 @@ struct avro_fixed_datum_t
 #define avro_datum_to_double(datum_)    container_of(datum_, struct avro_double_datum_t, obj)
 #define avro_datum_to_boolean(datum_)   container_of(datum_, struct avro_boolean_datum_t, obj)
 #define avro_datum_to_fixed(datum_)     container_of(datum_, struct avro_fixed_datum_t, obj)
+#define avro_datum_to_map(datum_)       container_of(datum_, struct avro_map_datum_t, obj)
+#define avro_datum_to_record(datum_)    container_of(datum_, struct avro_record_datum_t, obj)
+#define avro_datum_to_enum(datum_)      container_of(datum_, struct avro_enum_datum_t, obj)
+#define avro_datum_to_array(datum_)     container_of(datum_, struct avro_array_datum_t, obj)
 
 #endif
