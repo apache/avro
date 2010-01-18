@@ -21,6 +21,16 @@ cd `dirname "$0"`				  # connect to root
 
 VERSION=`cat share/VERSION.txt`
 
+function usage {
+  echo "Usage: $0 {test|dist|clean}"
+  exit 1
+}
+
+if [ $# -eq 0 ]
+then
+  usage
+fi
+
 set -x						  # echo commands
 
 for target in "$@"
@@ -91,8 +101,8 @@ case "$target" in
 	;;
 
     *)
-        echo "Usage: $0 {test|dist|clean}"
-        exit 1
+        usage
+        ;;
 esac
 
 done
