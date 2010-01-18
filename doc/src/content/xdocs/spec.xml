@@ -658,17 +658,19 @@
 
       <p>A protocol is a JSON object with the following attributes:</p>
       <ul>
-	<li><em>name</em>, string, to distinguish it from other protocols;</li>
-	<li><em>namespace</em>, a string that qualifies the name;</li>
-	<li><em>doc</em>, an optional string, describing this protocol;</li>
-	<li><em>types</em>, a list of definitions of named types
+	<li><em>protocol</em>, a string, the name of the protocol
+	(required);</li>
+	<li><em>namespace</em>, an optional string that qualifies the name;</li>
+	<li><em>doc</em>, an optional string describing this protocol;</li>
+	<li><em>types</em>, an optional list of definitions of named types
 	  (records, enums, fixed and errors).  An error definition is
 	  just like a record definition except it uses "error" instead
 	  of "record".  Note that forward references to named types
 	  are not permitted.</li>
-	<li><em>messages</em>, a JSON object whose keys are message
-	  names and whose values are objects whose attributes are
-	  described below.  No two messages may have the same name.</li>
+	<li><em>messages</em>, an optional JSON object whose keys are
+	  message names and whose values are objects whose attributes
+	  are described below.  No two messages may have the same
+	  name.</li>
       </ul>
 
       <section>

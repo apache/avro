@@ -221,6 +221,9 @@ Trunk (unreleased changes)
 
     AVRO-243. Use automake generated Makefile.in (sbanacho)
 
+    AVRO-198. Fix specification of protocol name, also clarify which
+    properties are required.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
