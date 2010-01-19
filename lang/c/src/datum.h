@@ -33,8 +33,8 @@ struct avro_string_datum_t
 struct avro_bytes_datum_t
 {
   struct avro_obj_t obj;
-  char *buf;
-  size_t len;
+  char *bytes;
+  int64_t size;
 };
 
 struct avro_int_datum_t
@@ -107,17 +107,17 @@ struct avro_array_datum_t
     STAILQ_HEAD (els, avro_array_element_t) els;
 };
 
-#define avro_datum_to_string(datum_)    container_of(datum_, struct avro_string_datum_t, obj)
-#define avro_datum_to_bytes(datum_)     container_of(datum_, struct avro_bytes_datum_t, obj)
-#define avro_datum_to_int(datum_)       container_of(datum_, struct avro_int_datum_t, obj)
-#define avro_datum_to_long(datum_)      container_of(datum_, struct avro_long_datum_t, obj)
-#define avro_datum_to_float(datum_)     container_of(datum_, struct avro_float_datum_t, obj)
-#define avro_datum_to_double(datum_)    container_of(datum_, struct avro_double_datum_t, obj)
-#define avro_datum_to_boolean(datum_)   container_of(datum_, struct avro_boolean_datum_t, obj)
-#define avro_datum_to_fixed(datum_)     container_of(datum_, struct avro_fixed_datum_t, obj)
-#define avro_datum_to_map(datum_)       container_of(datum_, struct avro_map_datum_t, obj)
-#define avro_datum_to_record(datum_)    container_of(datum_, struct avro_record_datum_t, obj)
-#define avro_datum_to_enum(datum_)      container_of(datum_, struct avro_enum_datum_t, obj)
-#define avro_datum_to_array(datum_)     container_of(datum_, struct avro_array_datum_t, obj)
+#define avro_datum_to_string(datum_)    (container_of(datum_, struct avro_string_datum_t, obj))
+#define avro_datum_to_bytes(datum_)     (container_of(datum_, struct avro_bytes_datum_t, obj))
+#define avro_datum_to_int(datum_)       (container_of(datum_, struct avro_int_datum_t, obj))
+#define avro_datum_to_long(datum_)      (container_of(datum_, struct avro_long_datum_t, obj))
+#define avro_datum_to_float(datum_)     (container_of(datum_, struct avro_float_datum_t, obj))
+#define avro_datum_to_double(datum_)    (container_of(datum_, struct avro_double_datum_t, obj))
+#define avro_datum_to_boolean(datum_)   (container_of(datum_, struct avro_boolean_datum_t, obj))
+#define avro_datum_to_fixed(datum_)     (container_of(datum_, struct avro_fixed_datum_t, obj))
+#define avro_datum_to_map(datum_)       (container_of(datum_, struct avro_map_datum_t, obj))
+#define avro_datum_to_record(datum_)    (container_of(datum_, struct avro_record_datum_t, obj))
+#define avro_datum_to_enum(datum_)      (container_of(datum_, struct avro_enum_datum_t, obj))
+#define avro_datum_to_array(datum_)     (container_of(datum_, struct avro_array_datum_t, obj))
 
 #endif

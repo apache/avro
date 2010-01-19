@@ -194,10 +194,12 @@ extern "C"
 
   void avro_datum_print (avro_datum_t value, FILE * fp);
 
-  int schema_match (avro_schema_t writers_schema,
+  int avro_datum_equal (avro_datum_t a, avro_datum_t b);
+
+  int avro_schema_match (avro_schema_t writers_schema,
 		    avro_schema_t readers_schema);
 
-  int schema_datum_validate (avro_schema_t expected_schema,
+  int avro_schema_datum_validate (avro_schema_t expected_schema,
 			     avro_datum_t datum);
 
   int avro_read_data (avro_reader_t reader, avro_schema_t writer_schema,

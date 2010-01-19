@@ -27,7 +27,7 @@ under the License.
 static int
 read_long (avro_reader_t reader, int64_t * l)
 {
-  uint64_t n = 0;
+  uint64_t value = 0;
   uint8_t b;
   int offset = 0;
   do
@@ -38,11 +38,11 @@ read_long (avro_reader_t reader, int64_t * l)
 	  return EILSEQ;
 	}
       AVRO_READ (reader, &b, 1);
-      n |= (int64_t) (b & 0x7F) << (7 * offset);
+      value |= (int64_t) (b & 0x7F) << (7 * offset);
       ++offset;
     }
   while (b & 0x80);
-  *l = (n >> 1) ^ -(n & 1);
+  *l = ((value >> 1) ^ -(value & 1));
   return 0;
 }
 
@@ -69,7 +69,7 @@ write_long (avro_writer_t writer, int64_t l)
 {
   uint8_t b;
   uint64_t n = (l << 1) ^ (l >> 63);
-  while ((n & ~0x7F) != 0)
+  while (n & ~0x7F)
     {
       b = ((((uint8_t) n) & 0x7F) | 0x80);
       AVRO_WRITE (writer, &b, 1);
@@ -123,7 +123,7 @@ read_bytes (avro_reader_t reader, char **bytes, int64_t * len)
     {
       return ENOMEM;
     }
-  *bytes[*len] = '\0';
+  (*bytes)[*len] = '\0';
   AVRO_READ (reader, *bytes, *len);
   return 0;
 }
@@ -144,9 +144,15 @@ skip_bytes (avro_reader_t reader)
 static int
 write_bytes (avro_writer_t writer, const char *bytes, const int64_t len)
 {
+  int rval;
   if (len < 0)
     {
       return EINVAL;
+    }
+  rval = write_long (writer, len);
+  if (rval)
+    {
+      return rval;
     }
   AVRO_WRITE (writer, (char *) bytes, len);
   return 0;

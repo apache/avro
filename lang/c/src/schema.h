@@ -88,13 +88,13 @@ struct avro_link_schema_t
   avro_schema_t to;
 };
 
-#define avro_schema_to_record(schema_)  container_of(schema_, struct avro_record_schema_t, obj)
-#define avro_schema_to_enum(schema_)    container_of(schema_, struct avro_enum_schema_t, obj)
-#define avro_schema_to_array(schema_)   container_of(schema_, struct avro_array_schema_t, obj)
-#define avro_schema_to_map(schema_)     container_of(schema_, struct avro_map_schema_t, obj)
-#define avro_schema_to_union(schema_)   container_of(schema_, struct avro_union_schema_t, obj)
-#define avro_schema_to_fixed(schema_)   container_of(schema_, struct avro_fixed_schema_t, obj)
-#define avro_schema_to_link(schema_)    container_of(schema_, struct avro_link_schema_t, obj)
+#define avro_schema_to_record(schema_)  (container_of(schema_, struct avro_record_schema_t, obj))
+#define avro_schema_to_enum(schema_)    (container_of(schema_, struct avro_enum_schema_t, obj))
+#define avro_schema_to_array(schema_)   (container_of(schema_, struct avro_array_schema_t, obj))
+#define avro_schema_to_map(schema_)     (container_of(schema_, struct avro_map_schema_t, obj))
+#define avro_schema_to_union(schema_)   (container_of(schema_, struct avro_union_schema_t, obj))
+#define avro_schema_to_fixed(schema_)   (container_of(schema_, struct avro_fixed_schema_t, obj))
+#define avro_schema_to_link(schema_)    (container_of(schema_, struct avro_link_schema_t, obj))
 
 static inline avro_schema_t
 avro_schema_incref (avro_schema_t schema)

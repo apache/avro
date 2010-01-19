@@ -333,6 +333,8 @@ Trunk (unreleased changes)
  
     AVRO-347. Add the --unsafe flag to asciidoc in order to include source/header files (massie)
 
+    AVRO-352. Incorrect binary encoding for strings and bytes (massie)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

@@ -5,7 +5,7 @@ ACLOCAL_AMFLAGS=-I m4
 
 EXTRA_DIST=schema_tests
 
-check_PROGRAMS=test_avro_schema
+check_PROGRAMS=test_avro_schema test_avro_data
 
 test_LDADD=$(top_builddir)/src/libavro.la
 
