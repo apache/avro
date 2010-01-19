@@ -7,6 +7,7 @@ build_dir="../../build/c"
 dist_dir="../../dist"
 version=$(./version.sh project)
 tarball="avro-c-$version.tar.gz"
+doc_dir="../../build/avro-doc-$version/api/c"
 
 function autoreconf_check {
   if [ ! -f configure ]; then
@@ -42,7 +43,11 @@ case "$1" in
 	if [ ! -d $dist_dir ]; then 
            mkdir -p $dist_dir 
         fi
+	if [ ! -d $doc_dir ]; then
+           mkdir -p $doc_dir
+	fi
 	mv $build_dir/$tarball $dist_dir
+	cp $build_dir/docs/*.html $doc_dir
         md5file="$dist_dir/$tarball.md5"
 	md5sum $dist_dir/$tarball > $md5file 2>/dev/null || md5 $dist_dir/$tarball > $md5file 2>/dev/null
         clean
