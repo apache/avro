@@ -224,6 +224,9 @@ Trunk (unreleased changes)
     AVRO-198. Fix specification of protocol name, also clarify which
     properties are required.  (cutting)
 
+    AVRO-336. Check that appropriate schemas are passed to
+    GenericData#Record and #Array.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

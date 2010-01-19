@@ -19,18 +19,31 @@ package org.apache.avro.generic;
 
 import static org.junit.Assert.*;
 
+import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
+
 import org.junit.Test;
 
 public class TestGenericData {
   
-  @Test(expected=NullPointerException.class)
+  @Test(expected=AvroRuntimeException.class)
     public void testrecordConstructorNullSchema() throws Exception {
     new GenericData.Record(null);
   }
     
-  @Test(expected=NullPointerException.class)
+  @Test(expected=AvroRuntimeException.class)
+    public void testrecordConstructorWrongSchema() throws Exception {
+    new GenericData.Record(Schema.create(Schema.Type.INT));
+  }
+
+  @Test(expected=AvroRuntimeException.class)
     public void testArrayConstructorNullSchema() throws Exception {
     new GenericData.Array<Object>(1, null);
   }
     
+  @Test(expected=AvroRuntimeException.class)
+    public void testArrayConstructorWrongSchema() throws Exception {
+    new GenericData.Array<Object>(1, Schema.create(Schema.Type.INT));
+  }
+
 }

@@ -45,7 +45,8 @@ public class GenericData {
     private final Schema schema;
     private final Object[] values;
     public Record(Schema schema) {
-      if (schema == null) throw new NullPointerException();
+      if (schema == null || !Type.RECORD.equals(schema.getType()))
+        throw new AvroRuntimeException("Not a record schema: "+schema);
       this.schema = schema;
       this.values = new Object[schema.getFields().size()];
     }
@@ -86,7 +87,8 @@ public class GenericData {
     private int size;
     private Object[] elements = EMPTY;
     public Array(int capacity, Schema schema) {
-      if (schema == null) throw new NullPointerException();
+      if (schema == null || !Type.ARRAY.equals(schema.getType()))
+        throw new AvroRuntimeException("Not an array schema: "+schema);
       this.schema = schema;
       if (capacity != 0)
         elements = new Object[capacity];
