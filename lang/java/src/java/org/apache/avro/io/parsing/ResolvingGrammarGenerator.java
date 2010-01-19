@@ -190,13 +190,20 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     LitS wsc = new LitS2(writer, reader);
     Symbol result = seen.get(wsc);
     if (result == null) {
-      // first count the number of entries in the production;
-      int count = 0;
-
       Map<String, Field> wfields = writer.getFields();
       Map<String, Field> rfields = reader.getFields();
+
+      // First, compute reordering of reader fields, plus
+      // number elements in the result's production
+      Field[] reordered = new Field[rfields.size()];
+      int ridx = 0;
+      int count = 1 + wfields.size();
+
       for (String fn : wfields.keySet()) {
-        count += (rfields.get(fn) == null) ? 1 : 2;
+        Field rdrField = rfields.get(fn);
+        if (rdrField != null) {
+          reordered[ridx++] = rdrField;
+        }
       }
 
       for (Map.Entry<String, Field> rfe : rfields.entrySet()) {
@@ -208,12 +215,14 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
             seen.put(wsc, result);
             return result;
           } else {
-            count += 4;
+            reordered[ridx++] = rf;
+            count += 3;
           }
         }
       }
 
       Symbol[] production = new Symbol[count];
+      production[--count] = new Symbol.FieldOrderAction(reordered);
 
       /**
        * We construct a symbol without filling the array. Please see
@@ -239,8 +248,6 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
               seen));
         } else {
           production[--count] =
-            new Symbol.FieldAdjustAction(rf.pos(), fname);
-          production[--count] =
             generate(wfe.getValue().schema(), rf.schema(), seen);
         }
       }
@@ -251,7 +258,6 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         Field wf = wfields.get(fname);
         if (wf == null) {
           Field rf = rfe.getValue();
-          production[--count] = new Symbol.FieldAdjustAction(rf.pos(), fname);
           production[--count] = new Symbol.DefaultStartAction(
               new JsonGrammarGenerator().generate(rf.schema()),
               rf.defaultValue());

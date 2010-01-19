@@ -51,6 +51,8 @@ public class Perf {
         tests.add(new RepeaterTest());
       } else if (a.equals("-N")) {
         tests.add(new NestedRecordTest());
+      } else if (a.equals("-S")) {
+        tests.add(new ResolverTest());
       } else {
         usage();
         System.exit(1);
@@ -107,6 +109,10 @@ public class Perf {
     }
     
     protected Decoder getDecoder() throws IOException {
+      return newDecoder(data);
+    }
+
+    protected static Decoder newDecoder(byte[] data) {
       return new BinaryDecoder(new ByteArrayInputStream(data));
     }
 
@@ -205,11 +211,18 @@ public class Perf {
   
   private static class RepeaterTest extends Test {
     public RepeaterTest() throws IOException {
-      super("RepeaterTest", "{ \"type\": \"array\", \"items\":\n"
+      this("RepeaterTest");
+    }
+    
+    public RepeaterTest(String name) throws IOException {
+      super(name, "{ \"type\": \"array\", \"items\":\n"
           + "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
           + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
           + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
-          + "{ \"name\": \"f3\", \"type\": \"double\" }\n"
+          + "{ \"name\": \"f3\", \"type\": \"double\" },\n"
+          + "{ \"name\": \"f4\", \"type\": \"int\" },\n"
+          + "{ \"name\": \"f5\", \"type\": \"int\" },\n"
+          + "{ \"name\": \"f6\", \"type\": \"int\" }\n"
           + "] } }");
     }
     
@@ -222,6 +235,9 @@ public class Perf {
         e.writeDouble(r.nextDouble());
         e.writeDouble(r.nextDouble());
         e.writeDouble(r.nextDouble());
+        e.writeInt(r.nextInt());
+        e.writeInt(r.nextInt());
+        e.writeInt(r.nextInt());
       }
       e.writeArrayEnd();
     }
@@ -231,6 +247,9 @@ public class Perf {
       d.readDouble();
       d.readDouble();
       d.readDouble();
+      d.readInt();
+      d.readInt();
+      d.readInt();
     }
     
     @Override
@@ -239,10 +258,23 @@ public class Perf {
     }
     
   }
+  
+  private static class ResolverTest extends RepeaterTest {
+
+    public ResolverTest() throws IOException {
+      super("ResolverTest");
+    }
+    
+    @Override
+    protected Decoder getDecoder() throws IOException {
+      return new ResolvingDecoder(schema, schema, newDecoder(data));
+    }
+    
+  }
 
   private static class NestedRecordTest extends ReadInt {
     public NestedRecordTest() throws IOException {
-      super("RepeaterTest",
+      super("NestedRecordTest",
         "{ \"type\": \"array\", \"items\": \n"
         + "{ \"type\": \"record\", \"name\": \"r1\", \n"
         + "\"fields\": \n"
@@ -262,5 +294,7 @@ public class Perf {
     System.out.println("    -f readFloat() performance");
     System.out.println("    -d readDouble() performance");
     System.out.println("    -R repeater performance in validating decoder");
+    System.out.println("    -N nested record performance in validating decoder");
+    System.out.println("    -S resolving decoder performance");
   }
 }

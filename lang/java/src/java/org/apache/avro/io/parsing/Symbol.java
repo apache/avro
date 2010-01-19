@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -466,6 +467,13 @@ public abstract class Symbol {
     }
   }
   
+  public static final class FieldOrderAction extends ImplicitAction {
+    public final Schema.Field[] fields;
+    public FieldOrderAction(Schema.Field[] fields) {
+      this.fields = fields;
+    }
+  }
+
   public static class DefaultStartAction extends ImplicitAction {
     public final Symbol root;
     public final byte[] contents;
