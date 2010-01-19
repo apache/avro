@@ -640,6 +640,9 @@ Avro 1.0.0 -- 9 July 2009
     AVRO-68. Add license headers to C sources and improve C packaging.
     (Matt Massie via cutting)
 
+    AVRO-351. Shorten induce tool description; add check to avoid overly verbose 
+    descriptions. (philz)
+
   OPTIMIZATIONS
 
   BUG FIXES

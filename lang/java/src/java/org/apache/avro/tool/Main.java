@@ -31,11 +31,11 @@ public class Main {
   /**
    * Available tools, initialized in constructor.
    */
-  private final Map<String, Tool> tools;
+  final Map<String, Tool> tools;
 
   int maxLen = 0;
 
-  private Main() {
+  Main() {
     tools = new TreeMap<String, Tool>();
     for (Tool tool : new Tool[] {
         new SpecificCompilerTool(),

@@ -71,7 +71,6 @@ public class InduceSchemaTool implements Tool {
 
   @Override
   public String getShortDescription() {
-    return "Use reflection to induce a schema from a class"
-      + " or a protocol from an interface.";
+    return "Induce schema/protocol from Java class/interface via reflection.";
   }
 }
