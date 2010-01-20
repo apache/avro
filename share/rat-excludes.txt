@@ -18,8 +18,14 @@ lang/c++/Doxyfile
 lang/c++/jsonschemas/**
 lang/c/autom4te.cache/**
 lang/c/config**
+lang/c++/config**
 lang/c/docs/**
 lang/c/json/**
 lang/c/tests/**
 lang/c/version.sh
 lang/ruby/Manifest
+lang/c/build.sh
+lang/c/jansson/**
+lang/c/src/queue.h
+lang/c/src/st.h
+lang/c/src/st.c

@@ -339,6 +339,8 @@ Trunk (unreleased changes)
 
     AVRO-352. Incorrect binary encoding for strings and bytes (massie)
 
+    AVRO-356. RAT fails with "Unknown license" error (massie)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
