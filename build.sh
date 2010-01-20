@@ -44,6 +44,7 @@ case "$target" in
 	(cd lang/py; ant test)
 	(cd lang/c; ./build.sh test)
 	# (cd lang/c++; make test)
+	# (cd lang/ruby; rake test)
 
 	# create interop test data
 	(cd lang/java; ant interop-data-generate)

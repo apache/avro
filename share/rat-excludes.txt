@@ -22,3 +22,4 @@ lang/c/docs/**
 lang/c/json/**
 lang/c/tests/**
 lang/c/version.sh
+lang/ruby/Manifest

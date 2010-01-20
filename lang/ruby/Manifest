@@ -1,0 +1,15 @@
+CHANGELOG
+Rakefile
+lib/rb/avro.rb
+lib/rb/avro/collect_hash.rb
+lib/rb/avro/data_file.rb
+lib/rb/avro/io.rb
+lib/rb/avro/ipc.rb
+lib/rb/avro/protocol.rb
+lib/rb/avro/schema.rb
+test/rb/sample_ipc_client.rb
+test/rb/sample_ipc_server.rb
+test/rb/test_help.rb
+test/rb/test_io.rb
+test/rb/test_protocol.rb
+Manifest

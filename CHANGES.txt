@@ -68,6 +68,8 @@ Trunk (unreleased changes)
   
     AVRO-346. Add function to validate a datum against a schema. (massie)
 
+    AVRO-306. Add Ruby implementation. (Jeff Hodges via cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)
