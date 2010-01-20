@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)queue.h	8.5 (Berkeley) 8/20/94
+ *      @(#)queue.h     8.5 (Berkeley) 8/20/94
  */
 
 #ifndef	_SYS_QUEUE_H_
@@ -143,7 +143,6 @@ struct {								\
 #define	LIST_FIRST(head)		((head)->lh_first)
 #define	LIST_NEXT(elm, field)		((elm)->field.le_next)
 
-
 /*
  * Singly-linked List definitions.
  */
@@ -203,7 +202,6 @@ struct {								\
 #define	SLIST_EMPTY(head)	((head)->slh_first == NULL)
 #define	SLIST_FIRST(head)	((head)->slh_first)
 #define	SLIST_NEXT(elm, field)	((elm)->field.sle_next)
-
 
 /*
  * Singly-linked Tail queue declarations.
@@ -278,7 +276,6 @@ struct {								\
 #define	STAILQ_FIRST(head)	((head)->stqh_first)
 #define	STAILQ_NEXT(elm, field)	((elm)->field.stqe_next)
 
-
 /*
  * Simple queue definitions.
  */
@@ -351,7 +348,6 @@ struct {								\
 #define	SIMPLEQ_EMPTY(head)		((head)->sqh_first == NULL)
 #define	SIMPLEQ_FIRST(head)		((head)->sqh_first)
 #define	SIMPLEQ_NEXT(elm, field)	((elm)->field.sqe_next)
-
 
 /*
  * Tail queue definitions.
@@ -445,7 +441,6 @@ struct {								\
 	(*(((struct headname *)((head)->tqh_last))->tqh_last))
 #define	TAILQ_PREV(elm, headname, field) \
 	(*(((struct headname *)((elm)->field.tqe_prev))->tqh_last))
-
 
 /*
  * Circular queue definitions.
@@ -554,4 +549,4 @@ struct {								\
 	    ? ((head)->cqh_last)					\
 	    : (elm->field.cqe_prev))
 
-#endif /* sys/queue.h */
+#endif				/* sys/queue.h */

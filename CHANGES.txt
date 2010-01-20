@@ -233,6 +233,8 @@ Trunk (unreleased changes)
 
     AVRO-359. Add support for encoding/decoding arrays and maps (massie)
 
+    AVRO-360. Standardize on Linux coding style instead of GNU (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
