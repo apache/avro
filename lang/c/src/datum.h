@@ -104,6 +104,7 @@ struct avro_array_element_t
 struct avro_array_datum_t
 {
   struct avro_obj_t obj;
+  int64_t num_elements;
     STAILQ_HEAD (els, avro_array_element_t) els;
 };
 

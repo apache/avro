@@ -231,6 +231,8 @@ Trunk (unreleased changes)
 
     AVRO-353. Publish the C API to avro-doc package when 'dist' target run (massie)
 
+    AVRO-359. Add support for encoding/decoding arrays and maps (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

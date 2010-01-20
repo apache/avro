@@ -182,8 +182,13 @@ extern "C"
   avro_datum_t avro_fixed (const char *name, const int64_t len,
 			   const char *bytes);
 
-  avro_datum_t avro_map (const avro_datum_t values);
-  avro_datum_t avro_array (const avro_datum_t items);
+  avro_datum_t avro_map (void);
+  int avro_map_set (const avro_datum_t map, const char *key,
+		    const avro_datum_t value);
+
+  avro_datum_t avro_array (void);
+  int avro_array_append_datum (const avro_datum_t array_datum,
+			       const avro_datum_t datum);
 
   avro_datum_t avro_union (void);
   int avro_union_append (const avro_datum_t union_value,
@@ -197,10 +202,10 @@ extern "C"
   int avro_datum_equal (avro_datum_t a, avro_datum_t b);
 
   int avro_schema_match (avro_schema_t writers_schema,
-		    avro_schema_t readers_schema);
+			 avro_schema_t readers_schema);
 
   int avro_schema_datum_validate (avro_schema_t expected_schema,
-			     avro_datum_t datum);
+				  avro_datum_t datum);
 
   int avro_read_data (avro_reader_t reader, avro_schema_t writer_schema,
 		      avro_schema_t reader_schema, avro_datum_t * datum);

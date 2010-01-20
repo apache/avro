@@ -20,34 +20,42 @@ under the License.
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
-#include <assert.h>
 #include "avro.h"
-#include "dump.h"
-#include "datum.h"
 
 char buf[4096];
+avro_reader_t reader;
+avro_writer_t writer;
 
 typedef int (*avro_test) (void);
 
-struct test_case
+void
+write_read_check (avro_schema_t writers_schema, avro_schema_t readers_schema,
+		  avro_datum_t datum, char *type)
 {
-  long value;
-  unsigned len;
-  uint8_t bytes[16];
-};
-typedef struct test_case test_case;
+  avro_datum_t datum_out;
+  reader = avro_reader_memory (buf, sizeof (buf));
+  writer = avro_writer_memory (buf, sizeof (buf));
 
-struct test_case test_cases[] = {
-  {.value = 0,.len = 1,.bytes = {0x0}},
-  {.value = -1,.len = 1,.bytes = {0x1}},
-  {.value = 1,.len = 1,.bytes = {0x2}},
-  {.value = -2,.len = 1,.bytes = {0x3}},
-  {.value = 2,.len = 1,.bytes = {0x4}},
-  {.value = -64,.len = 1,.bytes = {0x7f}},
-  {.value = 64,.len = 2,.bytes = {0x80, 0x01}},
-  {.value = -65,.len = 2,.bytes = {0x81, 0x01}},
-  {.value = 65,.len = 2,.bytes = {0x82, 0x01}}
-};
+  if (avro_write_data (writer, writers_schema, datum))
+    {
+      fprintf (stderr, "Unable to write %s\n", type);
+      exit (EXIT_FAILURE);
+    }
+  if (avro_read_data (reader, writers_schema, readers_schema, &datum_out))
+    {
+      fprintf (stderr, "Unable to read %s\n", type);
+      exit (EXIT_FAILURE);
+    }
+  if (!avro_datum_equal (datum, datum_out))
+    {
+      fprintf (stderr, "Unable to encode/decode %s\n", type);
+      exit (EXIT_FAILURE);
+    }
+
+  avro_datum_decref (datum_out);
+  avro_reader_free (reader);
+  avro_writer_free (writer);
+}
 
 static int
 test_string (void)
@@ -60,38 +68,10 @@ test_string (void)
   };
   for (i = 0; i < sizeof (strings) / sizeof (strings[0]); i++)
     {
-      avro_reader_t reader;
-      avro_writer_t writer;
       avro_schema_t writer_schema = avro_schema_string ();
-      avro_datum_t datum_in = avro_string (strings[i]);
-      avro_datum_t datum_out;
-
-      reader = avro_reader_memory (buf, sizeof (buf));
-      if (!reader)
-	{
-	  assert (0 && "Can't create a memory reader");
-	}
-      writer = avro_writer_memory (buf, sizeof (buf));
-      if (!writer)
-	{
-	  assert (0 && "Can't create a memory writer");
-	}
-      if (avro_write_data (writer, writer_schema, datum_in))
-	{
-	  assert (0 && "Can't write string");
-	}
-      if (avro_read_data (reader, writer_schema, NULL, &datum_out))
-	{
-	  assert (0 && "Can't read string");
-	}
-      if (!avro_datum_equal (datum_in, datum_out))
-	{
-	  assert (0 && "String didn't survive encoding/decoding");
-	}
-      avro_datum_decref (datum_in);
-      avro_datum_decref (datum_out);
-      avro_reader_free (reader);
-      avro_writer_free (writer);
+      avro_datum_t datum = avro_string (strings[i]);
+      write_read_check (writer_schema, NULL, datum, "string");
+      avro_datum_decref (datum);
     }
   return 0;
 }
@@ -100,110 +80,52 @@ static int
 test_bytes (void)
 {
   char bytes[] = { 0xDE, 0xAD, 0xBE, 0xEF };
-  avro_reader_t reader = avro_reader_memory (buf, sizeof (buf));
-  avro_writer_t writer = avro_writer_memory (buf, sizeof (buf));
   avro_schema_t writer_schema = avro_schema_bytes ();
-  avro_datum_t datum_in = avro_bytes (bytes, sizeof (bytes));
-  avro_datum_t datum_out;
+  avro_datum_t datum = avro_bytes (bytes, sizeof (bytes));
 
-  if (avro_write_data (writer, writer_schema, datum_in))
-    {
-      assert (0 && "Unable to write bytes");
-    }
-  if (avro_read_data (reader, writer_schema, NULL, &datum_out))
-    {
-      assert (0 && "Unable to read bytes");
-    }
-  if (!avro_datum_equal (datum_in, datum_out))
-    {
-      assert (0 && "Byte did not encode/decode correctly");
-    }
-  avro_datum_decref (datum_in);
-  avro_datum_decref (datum_out);
-  avro_reader_free (reader);
-  avro_writer_free (writer);
-  return 0;
-}
-
-static int
-test_int_long (int long_test)
-{
-  int i;
-  for (i = 0; i < 100; i++)
-    {
-      avro_reader_t reader = avro_reader_memory (buf, sizeof (buf));
-      avro_writer_t writer = avro_writer_memory (buf, sizeof (buf));
-      avro_schema_t writer_schema =
-	long_test ? avro_schema_long () : avro_schema_int ();
-      avro_datum_t datum_in = long_test ? avro_long (rand ()) :
-	avro_int (rand ());
-      avro_datum_t datum_out;
-
-      if (avro_write_data (writer, writer_schema, datum_in))
-	{
-	  assert (0 && "Unable to write int/long");
-	}
-      if (avro_read_data (reader, writer_schema, NULL, &datum_out))
-	{
-	  assert (0 && "Unable to read int/long");
-	}
-      if (!avro_datum_equal (datum_in, datum_out))
-	{
-	  assert (0 && "Unable to encode/decode int/long");
-	}
-      avro_datum_decref (datum_in);
-      avro_datum_decref (datum_out);
-      avro_reader_free (reader);
-      avro_writer_free (writer);
-    }
+  write_read_check (writer_schema, NULL, datum, "bytes");
+  avro_datum_decref (datum);
   return 0;
 }
 
 static int
 test_int (void)
 {
-  return test_int_long (0);
+  int i;
+  for (i = 0; i < 100; i++)
+    {
+      avro_schema_t writer_schema = avro_schema_int ();
+      avro_datum_t datum = avro_int (rand ());
+      write_read_check (writer_schema, NULL, datum, "int");
+      avro_datum_decref (datum);
+    }
+  return 0;
 }
 
 static int
 test_long (void)
 {
-  return test_int_long (1);
+  int i;
+  for (i = 0; i < 100; i++)
+    {
+      avro_schema_t writer_schema = avro_schema_long ();
+      avro_datum_t datum = avro_long (rand ());
+      write_read_check (writer_schema, NULL, datum, "long");
+      avro_datum_decref (datum);
+    }
+  return 0;
 }
 
 static
-test_float_double (int double_test)
+test_double (void)
 {
   int i;
-
   for (i = 0; i < 100; i++)
     {
-      avro_reader_t reader = avro_reader_memory (buf, sizeof (buf));
-      avro_writer_t writer = avro_writer_memory (buf, sizeof (buf));
-      avro_schema_t schema =
-	double_test ? avro_schema_double () : avro_schema_float ();
-      avro_datum_t datum_in =
-	double_test ? avro_double ((double) (rand ())) :
-	avro_float ((float) (rand ()));
-      avro_datum_t datum_out;
-
-      if (avro_write_data (writer, schema, datum_in))
-	{
-	  assert (0 && "Unable to write float/double");
-	}
-      if (avro_read_data (reader, schema, NULL, &datum_out))
-	{
-	  assert (0 && "Unable to read float/double");
-	}
-      if (!avro_datum_equal (datum_in, datum_out))
-	{
-	  assert (0 && "Unable to encode/decode float/double");
-	}
-
-      avro_datum_decref (datum_in);
-      avro_datum_decref (datum_out);
-      avro_reader_free (reader);
-      avro_writer_free (writer);
+      avro_schema_t schema = avro_schema_double ();
+      avro_datum_t datum = avro_double ((double) (rand ()));
+      write_read_check (schema, NULL, datum, "double");
+      avro_datum_decref (datum);
     }
   return 0;
 }
@@ -211,42 +133,27 @@ test_float_double (int double_test)
 static int
 test_float (void)
 {
-  return test_float_double (0);
-}
-
-static int
-test_double (void)
-{
-  return test_float_double (1);
+  int i;
+  for (i = 0; i < 100; i++)
+    {
+      avro_schema_t schema = avro_schema_double ();
+      avro_datum_t datum = avro_double ((double) (rand ()));
+      write_read_check (schema, NULL, datum, "float");
+      avro_datum_decref (datum);
+    }
+  return 0;
 }
 
 static int
 test_boolean (void)
 {
   int i;
-  for (i = 0; i < 1000; i++)
+  for (i = 0; i < 100; i++)
     {
-      avro_reader_t reader = avro_reader_memory (buf, sizeof (buf));
-      avro_writer_t writer = avro_writer_memory (buf, sizeof (buf));
       avro_schema_t schema = avro_schema_boolean ();
-      avro_datum_t datum_in = avro_boolean (rand () % 2);
-      avro_datum_t datum_out;
-
-      if (avro_write_data (writer, schema, datum_in))
-	{
-	  assert (0 && "Unable to write boolean");
-	}
-      if (avro_read_data (reader, schema, schema, &datum_out))
-	{
-	  assert (0 && "Unable to read boolean");
-	}
-      if (!avro_datum_equal (datum_in, datum_out))
-	{
-	  assert (0 && "Unable to encode/decode boolean");
-	}
-
-      avro_reader_free (reader);
-      avro_writer_free (writer);
+      avro_datum_t datum = avro_boolean (rand () % 2);
+      write_read_check (schema, NULL, datum, "boolean");
+      avro_datum_decref (datum);
     }
   return 0;
 }
@@ -254,6 +161,10 @@ test_boolean (void)
 static int
 test_null (void)
 {
+  avro_schema_t schema = avro_schema_null ();
+  avro_datum_t datum = avro_null ();
+  write_read_check (schema, NULL, datum, "null");
+  avro_datum_decref (datum);
   return 0;
 }
 
@@ -274,14 +185,38 @@ test_enum (void)
 int
 test_array (void)
 {
-  /* TODO */
+  int i, rval;
+  avro_schema_t schema = avro_schema_array (avro_schema_int ());
+  avro_datum_t datum = avro_array ();
+
+  for (i = 0; i < 10; i++)
+    {
+      rval = avro_array_append_datum (datum, avro_int (i));
+      if (rval)
+	{
+	  exit (rval);
+	}
+    }
+  write_read_check (schema, NULL, datum, "array");
+  avro_datum_decref (datum);
   return 0;
 }
 
 int
 test_map (void)
 {
-  /* TODO */
+  avro_schema_t schema = avro_schema_map (avro_schema_long ());
+  avro_datum_t datum = avro_map ();
+  int64_t i = 0;
+  char *nums[] =
+    { "zero", "one", "two", "three", "four", "five", "six", NULL };
+  while (nums[i])
+    {
+      avro_map_set (datum, nums[i], avro_long (i));
+      i++;
+    }
+  write_read_check (schema, NULL, datum, "map");
+  avro_datum_decref (datum);
   return 0;
 }
 

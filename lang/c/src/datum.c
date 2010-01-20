@@ -34,6 +34,69 @@ avro_datum_init (avro_datum_t datum, avro_type_t type)
   datum->refcount = 1;
 }
 
+static int
+array_equal (struct avro_array_datum_t *a, struct avro_array_datum_t *b)
+{
+  struct avro_array_element_t *a_el, *b_el;
+  if (a->num_elements != b->num_elements)
+    {
+      return 0;
+    }
+  for (a_el = STAILQ_FIRST (&a->els),
+       b_el = STAILQ_FIRST (&b->els);
+       !(a_el == NULL && a_el == NULL);
+       a_el = STAILQ_NEXT (a_el, els), b_el = STAILQ_NEXT (b_el, els))
+    {
+      if (a_el == NULL || b_el == NULL)
+	{
+	  return 0;		/* different number of elements */
+	}
+      if (!avro_datum_equal (a_el->datum, b_el->datum))
+	{
+	  return 0;
+	}
+    }
+  return 1;
+}
+
+struct map_equal_args
+{
+  int rval;
+  st_table *st;
+};
+
+static int
+map_equal_foreach (char *key, avro_datum_t datum, struct map_equal_args *args)
+{
+  avro_datum_t datum_other = NULL;
+
+  st_lookup (args->st, (st_data_t) key, (st_data_t *) & datum_other);
+  if (!datum_other)
+    {
+      args->rval = 0;
+      return ST_STOP;
+    }
+  if (!avro_datum_equal (datum, datum_other))
+    {
+      args->rval = 0;
+      return ST_STOP;
+    }
+  return ST_CONTINUE;
+}
+
+static int
+map_equal (struct avro_map_datum_t *a, struct avro_map_datum_t *b)
+{
+  struct map_equal_args args = { 1, avro_datum_to_map (b)->map };
+  if (a->map->num_entries != b->map->num_entries)
+    {
+      return 0;
+    }
+  st_foreach (avro_datum_to_map (a)->map,
+	      map_equal_foreach, (st_data_t) & args);
+  return args.rval;
+}
+
 int
 avro_datum_equal (avro_datum_t a, avro_datum_t b)
 {
@@ -67,11 +130,13 @@ avro_datum_equal (avro_datum_t a, avro_datum_t b)
       return avro_datum_to_boolean (a)->i == avro_datum_to_boolean (b)->i;
     case AVRO_NULL:
       return 1;
+    case AVRO_ARRAY:
+      return array_equal (avro_datum_to_array (a), avro_datum_to_array (b));
+    case AVRO_MAP:
+      return map_equal (avro_datum_to_map (a), avro_datum_to_map (b));
     case AVRO_RECORD:
     case AVRO_ENUM:
     case AVRO_FIXED:
-    case AVRO_MAP:
-    case AVRO_ARRAY:
     case AVRO_UNION:
     case AVRO_LINK:
       /* TODO */
@@ -283,7 +348,7 @@ avro_fixed (const char *name, const int64_t size, const char *bytes)
 }
 
 avro_datum_t
-avro_map (const avro_datum_t values)
+avro_map (void)
 {
   struct avro_map_datum_t *datum = malloc (sizeof (struct avro_map_datum_t));
   if (!datum)
@@ -295,8 +360,23 @@ avro_map (const avro_datum_t values)
   return &datum->obj;
 }
 
+int
+avro_map_set (const avro_datum_t datum, const char *key,
+	      const avro_datum_t value)
+{
+  struct avro_map_datum_t *map;
+  if (!is_avro_datum (datum) || !is_avro_map (datum) || !key
+      || !is_avro_datum (value))
+    {
+      return EINVAL;
+    }
+  map = avro_datum_to_map (datum);
+  st_insert (map->map, (st_data_t) key, (st_data_t) value);
+  return 0;
+}
+
 avro_datum_t
-avro_array (const avro_datum_t items)
+avro_array (void)
 {
   struct avro_array_datum_t *datum =
     malloc (sizeof (struct avro_array_datum_t));
@@ -305,9 +385,35 @@ avro_array (const avro_datum_t items)
       return NULL;
     }
   STAILQ_INIT (&datum->els);
+  datum->num_elements = 0;
+
   avro_datum_init (&datum->obj, AVRO_ARRAY);
   return &datum->obj;
 }
+
+int
+avro_array_append_datum (const avro_datum_t array_datum,
+			 const avro_datum_t datum)
+{
+  struct avro_array_datum_t *array;
+  struct avro_array_element_t *el;
+  if (!is_avro_datum (array_datum) || !is_avro_array (array_datum)
+      || !is_avro_datum (datum))
+    {
+      return EINVAL;
+    }
+  array = avro_datum_to_array (array_datum);
+  el = malloc (sizeof (struct avro_array_element_t));
+  if (!el)
+    {
+      return ENOMEM;
+    }
+  el->datum = datum;
+  STAILQ_INSERT_TAIL (&array->els, el, els);
+  array->num_elements++;
+  return 0;
+}
+
 
 avro_datum_t
 avro_datum_incref (avro_datum_t value)
@@ -331,72 +437,67 @@ avro_datum_print (avro_datum_t value, FILE * fp)
 int
 avro_schema_match (avro_schema_t writers_schema, avro_schema_t readers_schema)
 {
-  if (is_avro_union (writers_schema) || is_avro_union (readers_schema))
+  if (!is_avro_schema (writers_schema) || !is_avro_schema (readers_schema))
     {
-      return 1;
-    }
-  /* union */
-  else if (is_avro_primitive (writers_schema)
-	   && is_avro_primitive (readers_schema)
-	   && avro_typeof (writers_schema) == avro_typeof (readers_schema))
-    {
-      return 1;
-    }
-  /* record */
-  else if (is_avro_record (writers_schema) && is_avro_record (readers_schema)
-	   && strcmp (avro_schema_name (writers_schema),
-		      avro_schema_name (readers_schema)) == 0)
-    {
-      return 1;
-    }
-  /* fixed */
-  else if (is_avro_fixed (writers_schema) && is_avro_fixed (readers_schema)
-	   && strcmp (avro_schema_name (writers_schema),
-		      avro_schema_name (readers_schema)) == 0
-	   && (avro_schema_to_fixed (writers_schema))->size ==
-	   (avro_schema_to_fixed (readers_schema))->size)
-    {
-      return 1;
-    }
-  /* enum */
-  else if (is_avro_enum (writers_schema) && is_avro_enum (readers_schema)
-	   && strcmp (avro_schema_name (writers_schema),
-		      avro_schema_name (readers_schema)) == 0)
-    {
-      return 1;
-    }
-  /* map */
-  else if (is_avro_map (writers_schema) && is_avro_map (readers_schema)
-	   && avro_typeof ((avro_schema_to_map (writers_schema))->values)
-	   == avro_typeof ((avro_schema_to_map (readers_schema))->values))
-    {
-      return 1;
-    }
-  /* array */
-  else if (is_avro_array (writers_schema) && is_avro_array (readers_schema)
-	   && avro_typeof ((avro_schema_to_array (writers_schema))->items)
-	   == avro_typeof ((avro_schema_to_array (readers_schema))->items))
-    {
-      return 1;
+      return 0;
     }
 
-  /* handle schema promotion */
-  else if (is_avro_int (writers_schema)
-	   && (is_avro_long (readers_schema) || is_avro_float (readers_schema)
-	       || is_avro_double (readers_schema)))
+  switch (avro_typeof (writers_schema))
     {
+    case AVRO_UNION:
       return 1;
+
+    case AVRO_INT:
+      return is_avro_int (readers_schema) || is_avro_long (readers_schema)
+	|| is_avro_float (readers_schema) || is_avro_double (readers_schema);
+
+    case AVRO_LONG:
+      return is_avro_long (readers_schema) || is_avro_float (readers_schema)
+	|| is_avro_double (readers_schema);
+
+    case AVRO_FLOAT:
+      return is_avro_float (readers_schema)
+	|| is_avro_double (readers_schema);
+
+    case AVRO_STRING:
+    case AVRO_BYTES:
+    case AVRO_DOUBLE:
+    case AVRO_BOOLEAN:
+    case AVRO_NULL:
+      return avro_typeof (writers_schema) == avro_typeof (readers_schema);
+
+    case AVRO_RECORD:
+      return is_avro_record (readers_schema)
+	&& strcmp (avro_schema_name (writers_schema),
+		   avro_schema_name (readers_schema)) == 0;
+
+    case AVRO_FIXED:
+      return is_avro_fixed (readers_schema)
+	&& strcmp (avro_schema_name (writers_schema),
+		   avro_schema_name (readers_schema)) == 0
+	&& (avro_schema_to_fixed (writers_schema))->size ==
+	(avro_schema_to_fixed (readers_schema))->size;
+
+    case AVRO_ENUM:
+      return is_avro_enum (readers_schema)
+	&& strcmp (avro_schema_to_enum (writers_schema)->name,
+		   avro_schema_to_enum (readers_schema)->name) == 0;
+
+    case AVRO_MAP:
+      return is_avro_map (readers_schema)
+	&& avro_typeof (avro_schema_to_map (writers_schema)->values)
+	== avro_typeof (avro_schema_to_map (readers_schema)->values);
+
+    case AVRO_ARRAY:
+      return is_avro_array (readers_schema)
+	&& avro_typeof (avro_schema_to_array (writers_schema)->items)
+	== avro_typeof (avro_schema_to_array (readers_schema)->items);
+
+    case AVRO_LINK:
+      /* TODO */
+      break;
     }
-  else if (is_avro_long (writers_schema)
-	   && (is_avro_float (readers_schema)
-	       && is_avro_double (readers_schema)))
-    {
-      return 1;
-    }
-  else if (is_avro_float (writers_schema) && is_avro_double (readers_schema))
-    {
-      return 1;
-    }
+
   return 0;
 }
 
@@ -418,18 +519,121 @@ read_enum (avro_reader_t reader, const avro_encoding_t * enc,
 
 static int
 read_array (avro_reader_t reader, const avro_encoding_t * enc,
-	    avro_schema_t writers_schema, avro_schema_t readers_schema,
-	    avro_datum_t * datum)
+	    struct avro_array_schema_t *writers_schema,
+	    struct avro_array_schema_t *readers_schema, avro_datum_t * datum)
 {
-  return 1;
+  int rval;
+  int64_t i;
+  int64_t block_count;
+  int64_t block_size;
+  avro_datum_t array_datum;
+
+  rval = enc->read_long (reader, &block_count);
+  if (rval)
+    {
+      return rval;
+    }
+
+  array_datum = avro_array ();
+  while (block_count != 0)
+    {
+      if (block_count < 0)
+	{
+	  block_count = block_count * -1;
+	  rval = enc->read_long (reader, &block_size);
+	  if (rval)
+	    {
+	      return rval;
+	    }
+	}
+
+      for (i = 0; i < block_count; i++)
+	{
+	  avro_datum_t datum;
+
+	  rval =
+	    avro_read_data (reader, writers_schema->items,
+			    readers_schema->items, &datum);
+	  if (rval)
+	    {
+	      return rval;
+	    }
+	  rval = avro_array_append_datum (array_datum, datum);
+	  if (rval)
+	    {
+	      avro_datum_decref (array_datum);
+	      return rval;
+	    }
+	}
+
+      rval = enc->read_long (reader, &block_count);
+      if (rval)
+	{
+	  return rval;
+	}
+    }
+  *datum = array_datum;
+  return 0;
 }
 
 static int
 read_map (avro_reader_t reader, const avro_encoding_t * enc,
-	  avro_schema_t writers_schema, avro_schema_t readers_schema,
-	  avro_datum_t * datum)
+	  struct avro_map_schema_t *writers_schema,
+	  struct avro_map_schema_t *readers_schema, avro_datum_t * datum)
 {
-  return 1;
+  int rval;
+  int64_t i, block_count;
+  avro_datum_t map = avro_map ();
+
+  rval = enc->read_long (reader, &block_count);
+  if (rval)
+    {
+      return rval;
+    }
+  while (block_count != 0)
+    {
+      int64_t block_size;
+      if (block_count < 0)
+	{
+	  block_count = block_count * -1;
+	  rval = enc->read_long (reader, &block_size);
+	  if (rval)
+	    {
+	      return rval;
+	    }
+	}
+      for (i = 0; i < block_count; i++)
+	{
+	  char *key;
+	  avro_datum_t value;
+	  rval = enc->read_string (reader, &key);
+	  if (rval)
+	    {
+	      return rval;
+	    }
+	  rval =
+	    avro_read_data (reader,
+			    avro_schema_to_map (writers_schema)->values,
+			    avro_schema_to_map (readers_schema)->values,
+			    &value);
+	  if (rval)
+	    {
+	      return rval;
+	    }
+	  rval = avro_map_set (map, key, value);
+	  if (rval)
+	    {
+	      return rval;
+	    }
+	}
+      rval = enc->read_long (reader, &block_count);
+      if (rval)
+	{
+	  return rval;
+	}
+    }
+  *datum = map;
+  return 0;
 }
 
 static int
@@ -492,6 +696,7 @@ avro_read_data (avro_reader_t reader, avro_schema_t writers_schema,
     {
     case AVRO_NULL:
       rval = enc->read_null (reader);
+      *datum = avro_null ();
       break;
 
     case AVRO_BOOLEAN:
@@ -560,11 +765,15 @@ avro_read_data (avro_reader_t reader, avro_schema_t writers_schema,
       break;
 
     case AVRO_ARRAY:
-      rval = read_array (reader, enc, writers_schema, readers_schema, datum);
+      rval =
+	read_array (reader, enc, avro_schema_to_array (writers_schema),
+		    avro_schema_to_array (readers_schema), datum);
       break;
 
     case AVRO_MAP:
-      rval = read_map (reader, enc, writers_schema, readers_schema, datum);
+      rval =
+	read_map (reader, enc, avro_schema_to_map (writers_schema),
+		  avro_schema_to_map (readers_schema), datum);
       break;
 
     case AVRO_UNION:
@@ -689,7 +898,8 @@ avro_schema_datum_validate (avro_schema_t expected_schema, avro_datum_t datum)
     case AVRO_MAP:
       if (is_avro_map (datum))
 	{
-	  struct validate_st vst = { expected_schema, 1 };
+	  struct validate_st vst =
+	    { avro_schema_to_map (expected_schema)->values, 1 };
 	  st_foreach (avro_datum_to_map (datum)->map,
 		      schema_map_validate_foreach, (st_data_t) & vst);
 	  return vst.rval;
@@ -742,8 +952,8 @@ avro_schema_datum_validate (avro_schema_t expected_schema, avro_datum_t datum)
     case AVRO_LINK:
       {
 	return
-	  avro_schema_datum_validate ((avro_schema_to_link (expected_schema))->to,
-				 datum);
+	  avro_schema_datum_validate ((avro_schema_to_link
+				       (expected_schema))->to, datum);
       }
       break;
     }
@@ -774,20 +984,87 @@ write_fixed (avro_writer_t writer, const avro_encoding_t * enc,
   return EINVAL;
 }
 
+struct write_map_args
+{
+  int rval;
+  avro_writer_t writer;
+  const avro_encoding_t *enc;
+  avro_schema_t values_schema;
+};
+
+static int
+write_map_foreach (char *key, avro_datum_t datum, struct write_map_args *args)
+{
+  int rval = args->enc->write_string (args->writer, key);
+  if (rval)
+    {
+      args->rval = rval;
+      return ST_STOP;
+    }
+  rval = avro_write_data (args->writer, args->values_schema, datum);
+  if (rval)
+    {
+      args->rval = rval;
+      return ST_STOP;
+    }
+  return ST_CONTINUE;
+}
+
 static int
 write_map (avro_writer_t writer, const avro_encoding_t * enc,
-	   avro_schema_t writer_schema, avro_datum_t datum)
+	   struct avro_map_schema_t *writer_schema,
+	   struct avro_map_datum_t *datum)
 {
-  /* TODO */
-  return EINVAL;
+  int rval;
+  struct write_map_args args = { 0, writer, enc, writer_schema->values };
+
+  if (datum->map->num_entries)
+    {
+      rval = enc->write_long (writer, datum->map->num_entries);
+      if (rval)
+	{
+	  return rval;
+	}
+      st_foreach (datum->map, write_map_foreach, (st_data_t) & args);
+    }
+  if (!args.rval)
+    {
+      rval = enc->write_long (writer, 0);
+      if (rval)
+	{
+	  return rval;
+	}
+      return 0;
+    }
+  return args.rval;
 }
 
 static int
 write_array (avro_writer_t writer, const avro_encoding_t * enc,
-	     avro_schema_t writer_schema, avro_datum_t datum)
+	     struct avro_array_schema_t *schema,
+	     struct avro_array_datum_t *array)
 {
-  /* TODO */
-  return EINVAL;
+  int rval;
+  struct avro_array_element_t *el;
+
+  if (array->num_elements)
+    {
+      rval = enc->write_long (writer, array->num_elements);
+      if (rval)
+	{
+	  return rval;
+	}
+      for (el = STAILQ_FIRST (&array->els);
+	   el != NULL; el = STAILQ_NEXT (el, els))
+	{
+	  rval = avro_write_data (writer, schema->items, el->datum);
+	  if (rval)
+	    {
+	      return rval;
+	    }
+	}
+    }
+  return enc->write_long (writer, 0);
 }
 
 int
@@ -797,7 +1074,7 @@ avro_write_data (avro_writer_t writer, avro_schema_t writer_schema,
   const avro_encoding_t *enc = &avro_binary_encoding;
   int rval = -1;
 
-  if (!(is_avro_schema (writer_schema) && is_avro_datum (datum)))
+  if (!writer || !(is_avro_schema (writer_schema) && is_avro_datum (datum)))
     {
       return EINVAL;
     }
@@ -904,10 +1181,14 @@ avro_write_data (avro_writer_t writer, avro_schema_t writer_schema,
       rval = write_fixed (writer, enc, writer_schema, datum);
       break;
     case AVRO_MAP:
-      rval = write_map (writer, enc, writer_schema, datum);
+      rval =
+	write_map (writer, enc, avro_schema_to_map (writer_schema),
+		   avro_datum_to_map (datum));
       break;
     case AVRO_ARRAY:
-      rval = write_array (writer, enc, writer_schema, datum);
+      rval =
+	write_array (writer, enc, avro_schema_to_array (writer_schema),
+		     avro_datum_to_array (datum));
       break;
 
     case AVRO_UNION:

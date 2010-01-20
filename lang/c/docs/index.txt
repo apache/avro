@@ -41,3 +41,12 @@ can give you an idea of what the API will likely look like.
 include::../src/avro.h[]
 ----
 
+Another good way to learn how to encode/decode data in +Avro C+ is
+to look at the +test_avro_data.c+ unit test.  This simple unit test
+checks that all the avro types can be encoded/decoded correctly.
+
+[source,c]
+----
+include::../tests/test_avro_data.c[]
+----
+
