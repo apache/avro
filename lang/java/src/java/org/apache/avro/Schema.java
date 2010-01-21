@@ -185,6 +185,11 @@ public abstract class Schema {
   public int getEnumOrdinal(String symbol) {
     throw new AvroRuntimeException("Not an enum: "+this);
   }    
+  
+  /** If this is an enum, returns true if it contains given symbol. */
+  public boolean hasEnumSymbol(String symbol) {
+    throw new AvroRuntimeException("Not an enum: "+this);
+  }
 
   /** If this is a record, enum or fixed, returns its name, otherwise the name
    * of the primitive type. */
@@ -374,6 +379,9 @@ public abstract class Schema {
       super(type);
       this.name = name;
       this.doc = doc;
+      if (PRIMITIVES.containsKey(name.full)) {
+        throw new AvroTypeException("Schemas may not be named after primitives: " + name.full);
+      }
     }
     public String getName() { return name.name; }
     public String getDoc() { return doc; }
@@ -518,6 +526,8 @@ public abstract class Schema {
         ordinals.put(symbol, i++);
     }
     public List<String> getEnumSymbols() { return symbols; }
+    public boolean hasEnumSymbol(String symbol) { 
+      return ordinals.containsKey(symbol); }
     public int getEnumOrdinal(String symbol) { return ordinals.get(symbol); }
     public boolean equals(Object o) {
       if (o == this) return true;
@@ -909,5 +919,6 @@ public abstract class Schema {
       throw new RuntimeException(e);
     }
   }
+
 
 }

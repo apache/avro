@@ -253,6 +253,9 @@ Trunk (unreleased changes)
 
     AVRO-345. Optimization for ResolvingDecoder (thiru)
 
+    AVRO-363. estSchema had two tests disabled; new test for named schemas 
+    named after primitives. (philz)
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)

@@ -244,7 +244,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     String name = expected.getName();
     if (name != null && !name.equals(actual.getName()))
       throw new AvroTypeException("Expected "+expected+", found "+actual);
-    return createEnum(actual.getEnumSymbols().get(in.readEnum()), expected);
+    String symbol = actual.getEnumSymbols().get(in.readEnum());
+    if (expected.hasEnumSymbol(symbol)) {
+      return createEnum(symbol, expected);
+    } else {
+      throw new AvroTypeException("Symbol " + symbol + " not in " + expected);
+    }
   }
 
   /** Called to create an enum value. May be overridden for alternate enum

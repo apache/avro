@@ -263,7 +263,7 @@ public class TestSchema {
 
   private static void checkParseError(String json) {
     try {
-      Schema schema = Schema.parse(json);
+      Schema.parse(json);
     } catch (SchemaParseException e) {
       return;
     }
@@ -414,23 +414,17 @@ public class TestSchema {
     assertEquals("Wrong toString", expected, Schema.parse(expected.toString()));
   }
 
-  @SuppressWarnings(value="unchecked")
-  private static void testNoDefaultField() throws Exception {
+  @Test(expected=AvroTypeException.class)
+  public void testNoDefaultField() throws Exception {
     Schema expected =
       Schema.parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":"+
                    "[{\"name\":\"f\", \"type\": \"string\"}]}");
-    DatumReader in = new GenericDatumReader(ACTUAL, expected);
-    try {
-      GenericData.Record record = (GenericData.Record)
-        in.read(null, new BinaryDecoder(new ByteArrayInputStream(new byte[0])));
-    } catch (AvroTypeException e) {
-      return;
-    }
-    fail("Should not read: "+expected);
+    DatumReader<Object> in = new GenericDatumReader<Object>(ACTUAL, expected);
+    in.read(null, new BinaryDecoder(new ByteArrayInputStream(new byte[0])));
   }
 
-  @SuppressWarnings(value="unchecked")
-  private static void testEnumMismatch() throws Exception {
+  @Test
+  public void testEnumMismatch() throws Exception {
     Schema actual = Schema.parse
       ("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"X\",\"Y\"]}");
     Schema expected = Schema.parse
@@ -442,14 +436,23 @@ public class TestSchema {
     writer.write("X", encoder);
     byte[] data = out.toByteArray();
     Decoder decoder = new BinaryDecoder(new ByteArrayInputStream(data));
-    DatumReader in = new GenericDatumReader(actual, expected);
+    DatumReader<String> in = new GenericDatumReader<String>(actual, expected);
     assertEquals("Wrong value", "Y", in.read(null, decoder));
     try {
       in.read(null, decoder);
+      fail("Should have thrown exception.");
     } catch (AvroTypeException e) {
-      return;
+      // expected
     }
-    fail("Should not read: "+expected);
   }
 
+  @Test(expected=AvroTypeException.class)
+  public void testRecordWithPrimitiveName() {
+    Schema.parse("{\"type\":\"record\", \"name\":\"string\", \"fields\": []}");
+  }
+  
+  @Test(expected=AvroTypeException.class)
+  public void testEnumWithPrimitiveName() {
+    Schema.parse("{\"type\":\"enum\", \"name\":\"null\", \"symbols\": [\"A\"]}");
+  }
 }
