@@ -225,6 +225,13 @@ RECORD_EXAMPLES = [
     """, True),
   ExampleSchema("""\
     {"type": "record",
+     "name": "ipAddr",
+     "fields": [{"name": "addr", 
+                 "type": [{"name": "IPv6", "type": "fixed", "size": 16},
+                          {"name": "IPv4", "type": "fixed", "size": 4}]}]}
+    """, True),
+  ExampleSchema("""\
+    {"type": "record",
      "name": "Address",
      "fields": [{"type": "string"},
                 {"type": "string", "name": "City"}]}

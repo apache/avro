@@ -235,6 +235,9 @@ Trunk (unreleased changes)
 
     AVRO-360. Standardize on Linux coding style instead of GNU (massie)
 
+    AVRO-362. Add test to ensure Python implementation handles Union schema
+    with two fixed types of different names (hammer)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
