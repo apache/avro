@@ -237,9 +237,12 @@ static int test_union(void)
 
 static int test_fixed(void)
 {
-	/*
-	 * TODO 
-	 */
+	char bytes[] = { 0xD, 0xA, 0xD, 0xA, 0xB, 0xA, 0xB, 0xA };
+	avro_schema_t schema = avro_schema_fixed("msg", sizeof(bytes));
+	avro_datum_t datum = avro_wrapfixed("msg", bytes, sizeof(bytes));
+	write_read_check(schema, NULL, datum, "fixed");
+	avro_datum_decref(datum);
+	avro_schema_decref(schema);
 	return 0;
 }
 

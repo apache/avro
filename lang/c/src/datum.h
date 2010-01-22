@@ -65,6 +65,7 @@ struct avro_fixed_datum_t {
 	char *name;
 	char *bytes;
 	int64_t size;
+	void (*free) (void *ptr);
 };
 
 struct avro_map_datum_t {

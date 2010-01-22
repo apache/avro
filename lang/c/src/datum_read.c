@@ -93,14 +93,6 @@ avro_schema_match(avro_schema_t writers_schema, avro_schema_t readers_schema)
 }
 
 static int
-read_fixed(avro_reader_t reader, const avro_encoding_t * enc,
-	   avro_schema_t writers_schema, avro_schema_t readers_schema,
-	   avro_datum_t * datum)
-{
-	return 1;
-}
-
-static int
 read_enum(avro_reader_t reader, const avro_encoding_t * enc,
 	  struct avro_enum_schema_t *writers_schema,
 	  struct avro_enum_schema_t *readers_schema, avro_datum_t * datum)
@@ -320,14 +312,18 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 	switch (avro_typeof(writers_schema)) {
 	case AVRO_NULL:
 		rval = enc->read_null(reader);
-		*datum = avro_null();
+		if (!rval) {
+			*datum = avro_null();
+		}
 		break;
 
 	case AVRO_BOOLEAN:
 		{
 			int8_t b;
 			rval = enc->read_boolean(reader, &b);
-			*datum = avro_boolean(b);
+			if (!rval) {
+				*datum = avro_boolean(b);
+			}
 		}
 		break;
 
@@ -335,7 +331,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			char *s;
 			rval = enc->read_string(reader, &s);
-			*datum = avro_givestring(s);
+			if (!rval) {
+				*datum = avro_givestring(s);
+			}
 		}
 		break;
 
@@ -343,7 +341,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			int32_t i;
 			rval = enc->read_int(reader, &i);
-			*datum = avro_int(i);
+			if (!rval) {
+				*datum = avro_int(i);
+			}
 		}
 		break;
 
@@ -351,7 +351,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			int64_t l;
 			rval = enc->read_long(reader, &l);
-			*datum = avro_long(l);
+			if (!rval) {
+				*datum = avro_long(l);
+			}
 		}
 		break;
 
@@ -359,7 +361,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			float f;
 			rval = enc->read_float(reader, &f);
-			*datum = avro_float(f);
+			if (!rval) {
+				*datum = avro_float(f);
+			}
 		}
 		break;
 
@@ -367,7 +371,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			double d;
 			rval = enc->read_double(reader, &d);
-			*datum = avro_double(d);
+			if (!rval) {
+				*datum = avro_double(d);
+			}
 		}
 		break;
 
@@ -376,14 +382,28 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			char *bytes;
 			int64_t len;
 			rval = enc->read_bytes(reader, &bytes, &len);
-			*datum = avro_givebytes(bytes, len);
+			if (!rval) {
+				*datum = avro_givebytes(bytes, len);
+			}
 		}
 		break;
 
-	case AVRO_FIXED:
-		rval =
-		    read_fixed(reader, enc, writers_schema, readers_schema,
-			       datum);
+	case AVRO_FIXED:{
+			char *bytes;
+			const char *name =
+			    avro_schema_to_fixed(writers_schema)->name;
+			int64_t size =
+			    avro_schema_to_fixed(writers_schema)->size;
+
+			bytes = malloc(size);
+			if (!bytes) {
+				return ENOMEM;
+			}
+			rval = avro_read(reader, bytes, size);
+			if (!rval) {
+				*datum = avro_givefixed(name, bytes, size);
+			}
+		}
 		break;
 
 	case AVRO_ENUM:

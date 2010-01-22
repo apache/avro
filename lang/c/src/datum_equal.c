@@ -89,6 +89,12 @@ static int enum_equal(struct avro_enum_datum_t *a, struct avro_enum_datum_t *b)
 	    && strcmp(a->symbol, b->symbol) == 0;
 }
 
+static int fixed_equal(struct avro_fixed_datum_t *a,
+		       struct avro_fixed_datum_t *b)
+{
+	return a->size == b->size && memcmp(a->bytes, b->bytes, a->size) == 0;
+}
+
 int avro_datum_equal(avro_datum_t a, avro_datum_t b)
 {
 	if (!(is_avro_datum(a) && is_avro_datum(b))) {
@@ -134,6 +140,9 @@ int avro_datum_equal(avro_datum_t a, avro_datum_t b)
 		return enum_equal(avro_datum_to_enum(a), avro_datum_to_enum(b));
 
 	case AVRO_FIXED:
+		return fixed_equal(avro_datum_to_fixed(a),
+				   avro_datum_to_fixed(b));
+
 	case AVRO_UNION:
 	case AVRO_LINK:
 		/*

@@ -249,7 +249,9 @@ avro_datum_t avro_enum(const char *name, const char *symbol)
 	return &datum->obj;
 }
 
-avro_datum_t avro_fixed(const char *name, const int64_t size, const char *bytes)
+static avro_datum_t avro_fixed_private(const char *name, const char *bytes,
+				       const int64_t size,
+				       void (*fixed_free) (void *ptr))
 {
 	struct avro_fixed_datum_t *datum =
 	    malloc(sizeof(struct avro_fixed_datum_t));
@@ -258,14 +260,33 @@ avro_datum_t avro_fixed(const char *name, const int64_t size, const char *bytes)
 	}
 	datum->name = strdup(name);
 	datum->size = size;
-	datum->bytes = malloc(size);
-	if (datum->bytes) {
-		free(datum);
-		return NULL;
-	}
-	memcpy(datum->bytes, bytes, size);
+	datum->bytes = (char *)bytes;
+	datum->free = fixed_free;
+
 	avro_datum_init(&datum->obj, AVRO_FIXED);
 	return &datum->obj;
+}
+
+avro_datum_t avro_fixed(const char *name, const char *bytes, const int64_t size)
+{
+	char *bytes_copy = malloc(size);
+	if (!bytes_copy) {
+		return NULL;
+	}
+	memcpy(bytes_copy, bytes, size);
+	return avro_fixed_private(name, bytes, size, free);
+}
+
+avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
+			    const int64_t size)
+{
+	return avro_fixed_private(name, bytes, size, NULL);
+}
+
+avro_datum_t avro_givefixed(const char *name, const char *bytes,
+			    const int64_t size)
+{
+	return avro_fixed_private(name, bytes, size, free);
 }
 
 avro_datum_t avro_map(void)
@@ -430,7 +451,9 @@ static void avro_datum_free(avro_datum_t datum)
 				struct avro_fixed_datum_t *fixed;
 				fixed = avro_datum_to_fixed(datum);
 				free((void *)fixed->name);
-				free((void *)fixed->bytes);
+				if (fixed->free) {
+					fixed->free((void *)fixed->bytes);
+				}
 				free(fixed);
 			}
 			break;

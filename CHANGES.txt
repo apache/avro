@@ -246,6 +246,8 @@ Trunk (unreleased changes)
 
     AVRO-369. Add support for encoding/decoding enum values (massie)
 
+    AVRO-370. Add support for encoding/decoding fixed data (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

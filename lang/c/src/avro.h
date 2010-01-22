@@ -188,7 +188,12 @@ int avro_record_field_set(const avro_datum_t record,
 
 avro_datum_t avro_enum(const char *name, const char *symbol);
 
-avro_datum_t avro_fixed(const char *name, const int64_t len, const char *bytes);
+avro_datum_t avro_fixed(const char *name, const char *bytes,
+			const int64_t size);
+avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
+			    const int64_t size);
+avro_datum_t avro_givefixed(const char *name, const char *bytes,
+			    const int64_t size);
 
 avro_datum_t avro_map(void);
 int avro_map_set(const avro_datum_t map, const char *key,

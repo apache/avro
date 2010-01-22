@@ -55,16 +55,6 @@ write_enum(avro_writer_t writer, const avro_encoding_t * enc,
 	return enc->write_long(writer, index);
 }
 
-static int
-write_fixed(avro_writer_t writer, const avro_encoding_t * enc,
-	    avro_schema_t writer_schema, avro_datum_t datum)
-{
-	/*
-	 * TODO 
-	 */
-	return EINVAL;
-}
-
 struct write_map_args {
 	int rval;
 	avro_writer_t writer;
@@ -228,14 +218,17 @@ avro_write_data(avro_writer_t writer, avro_schema_t writer_schema,
 		    write_record(writer, enc,
 				 avro_schema_to_record(writer_schema), datum);
 		break;
+
 	case AVRO_ENUM:
 		rval =
 		    write_enum(writer, enc, avro_schema_to_enum(writer_schema),
 			       avro_datum_to_enum(datum));
 		break;
+
 	case AVRO_FIXED:
-		rval = write_fixed(writer, enc, writer_schema, datum);
-		break;
+		return avro_write(writer, avro_datum_to_fixed(datum)->bytes,
+				  avro_datum_to_fixed(datum)->size);
+
 	case AVRO_MAP:
 		rval =
 		    write_map(writer, enc, avro_schema_to_map(writer_schema),
