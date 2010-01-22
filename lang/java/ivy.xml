@@ -60,7 +60,7 @@
     <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.0.9"
         conf="build->default"/>
     <dependency org="net.sf.jopt-simple" name="jopt-simple" rev="3.2"
-        conf="test->default;tools->default"/>
+        conf="build->default;test->default;tools->default"/>
   </dependencies>
 
 </ivy-module>
