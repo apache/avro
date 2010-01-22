@@ -43,7 +43,7 @@ case "$target" in
 	(cd lang/java; ant test)
 	(cd lang/py; ant test)
 	(cd lang/c; ./build.sh test)
-	# (cd lang/c++; make test)
+	(cd lang/c++; ./build.sh test)
 	# (cd lang/ruby; rake test)
 
 	# create interop test data
@@ -77,10 +77,9 @@ case "$target" in
 
 	(cd lang/py; ant dist)
 
-	# (cd lang/c; make dist)
-        (cd lang/c; ./build.sh dist)
+	#(cd lang/c; ./build.sh dist)
 
-	# (cd lang/c++; make dist)
+	(cd lang/c++; ./build.sh dist)
 
 	# build docs
 	(cd doc; ant)
@@ -95,10 +94,9 @@ case "$target" in
 
 	(cd lang/py; ant clean)
 
-	# (cd lang/c; make clean)
-        (cd lang/c; ./build.sh clean)
+	(cd lang/c; ./build.sh clean)
 
-	# (cd lang/c++; make clean)
+	(cd lang/c++; ./build.sh clean)
 	;;
 
     *)

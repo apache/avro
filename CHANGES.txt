@@ -32,6 +32,8 @@ Trunk (unreleased changes)
 
     AVRO-344. Complete rewrite of C implementation (massie)
 
+    AVRO-349. Fix C++ build for post-AVRO-163. (sbanacho)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

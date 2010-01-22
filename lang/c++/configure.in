@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT([avro], [1.2], [avro-devel@apache.org])
+AC_INIT([avro-cpp], m4_esyscmd([cat ../../share/VERSION.txt]), [avro-devel@apache.org])
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([api/AvroParse.hh])

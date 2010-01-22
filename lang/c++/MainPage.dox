@@ -241,11 +241,8 @@ the API:</P>
     std::istringstream is(myData);
     avro::Istreamer istreamer(is);
     
-    // ValidatingReader is the object that will do the actual I/O
-    avro::ValidatingReader reader(istreamer);
-
     // Manually parse data, the Parser object binds the data to the schema
-    avro::Parser&lt;ValidatingReader&gt; parser(mySchema, reader);
+    avro::Parser&lt;ValidatingReader&gt; parser(mySchema, istreamer);
 
     assert( parser.nextType() == AVRO_READER);
     
@@ -350,8 +347,8 @@ doubles.  According the schema resolution rules, the schemas are
 compatible, because floats are promotable to doubles.  As long as
 both the old and the new schemas are available, a dynamic parser may
 be created that reads the data to the code generated structure.</P>
-<PRE>void dynamicCast(const avro::ValidSchema &amp;writerSchema, 
-                 const avro::ValidSchema &amp;readerSchema) {
+<PRE>void dynamicParse(const avro::ValidSchema &amp;writerSchema, 
+                  const avro::ValidSchema &amp;readerSchema) {
 
     // Instantiate the Layout object
     Math::complex_Layout layout;
