@@ -14,6 +14,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License. 
  */
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include "encoding.h"
@@ -101,10 +102,27 @@ read_fixed(avro_reader_t reader, const avro_encoding_t * enc,
 
 static int
 read_enum(avro_reader_t reader, const avro_encoding_t * enc,
-	  avro_schema_t writers_schema, avro_schema_t readers_schema,
-	  avro_datum_t * datum)
+	  struct avro_enum_schema_t *writers_schema,
+	  struct avro_enum_schema_t *readers_schema, avro_datum_t * datum)
 {
-	return 1;
+	int rval;
+	int64_t i, index;
+	struct avro_enum_symbol_t *sym;
+
+	rval = enc->read_long(reader, &index);
+	if (rval) {
+		return rval;
+	}
+
+	sym = STAILQ_FIRST(&writers_schema->symbols);
+	for (i = 0; i != index && sym != NULL;
+	     sym = STAILQ_NEXT(sym, symbols), i++) {
+	}
+	if (!sym) {
+		return EINVAL;
+	}
+	*datum = avro_enum(writers_schema->name, sym->symbol);
+	return 0;
 }
 
 static int
@@ -370,8 +388,8 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 
 	case AVRO_ENUM:
 		rval =
-		    read_enum(reader, enc, writers_schema, readers_schema,
-			      datum);
+		    read_enum(reader, enc, avro_schema_to_enum(writers_schema),
+			      avro_schema_to_enum(readers_schema), datum);
 		break;
 
 	case AVRO_ARRAY:

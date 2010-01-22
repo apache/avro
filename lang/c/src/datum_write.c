@@ -16,6 +16,7 @@
  */
 #include <errno.h>
 #include <assert.h>
+#include <string.h>
 #include "schema.h"
 #include "datum.h"
 #include "encoding.h"
@@ -39,12 +40,19 @@ write_record(avro_writer_t writer, const avro_encoding_t * enc,
 
 static int
 write_enum(avro_writer_t writer, const avro_encoding_t * enc,
-	   avro_schema_t writer_schema, avro_datum_t datum)
+	   struct avro_enum_schema_t *enump, struct avro_enum_datum_t *datum)
 {
-	/*
-	 * TODO 
-	 */
-	return EINVAL;
+	int64_t index;
+	struct avro_enum_symbol_t *sym = STAILQ_FIRST(&enump->symbols);
+	for (index = 0; sym != NULL; sym = STAILQ_NEXT(sym, symbols), index++) {
+		if (strcmp(sym->symbol, datum->symbol) == 0) {
+			break;
+		}
+	}
+	if (!sym) {
+		return EINVAL;
+	}
+	return enc->write_long(writer, index);
 }
 
 static int
@@ -221,7 +229,9 @@ avro_write_data(avro_writer_t writer, avro_schema_t writer_schema,
 				 avro_schema_to_record(writer_schema), datum);
 		break;
 	case AVRO_ENUM:
-		rval = write_enum(writer, enc, writer_schema, datum);
+		rval =
+		    write_enum(writer, enc, avro_schema_to_enum(writer_schema),
+			       avro_datum_to_enum(datum));
 		break;
 	case AVRO_FIXED:
 		rval = write_fixed(writer, enc, writer_schema, datum);

@@ -83,6 +83,12 @@ static int record_equal(struct avro_record_datum_t *a,
 	return args.rval;
 }
 
+static int enum_equal(struct avro_enum_datum_t *a, struct avro_enum_datum_t *b)
+{
+	return strcmp(a->name, b->name) == 0
+	    && strcmp(a->symbol, b->symbol) == 0;
+}
+
 int avro_datum_equal(avro_datum_t a, avro_datum_t b)
 {
 	if (!(is_avro_datum(a) && is_avro_datum(b))) {
@@ -125,6 +131,8 @@ int avro_datum_equal(avro_datum_t a, avro_datum_t b)
 				    avro_datum_to_record(b));
 
 	case AVRO_ENUM:
+		return enum_equal(avro_datum_to_enum(a), avro_datum_to_enum(b));
+
 	case AVRO_FIXED:
 	case AVRO_UNION:
 	case AVRO_LINK:

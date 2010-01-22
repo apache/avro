@@ -177,9 +177,18 @@ static int test_record(void)
 
 static int test_enum(void)
 {
-	/*
-	 * TODO 
-	 */
+	avro_schema_t schema = avro_schema_enum("language");
+	avro_datum_t datum = avro_enum("language", "C");
+
+	avro_schema_enum_symbol_append(schema, "C");
+	avro_schema_enum_symbol_append(schema, "C++");
+	avro_schema_enum_symbol_append(schema, "Python");
+	avro_schema_enum_symbol_append(schema, "Ruby");
+	avro_schema_enum_symbol_append(schema, "Java");
+
+	write_read_check(schema, NULL, datum, "enum");
+	avro_datum_decref(datum);
+	avro_schema_decref(schema);
 	return 0;
 }
 
