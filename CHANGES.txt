@@ -69,6 +69,8 @@ Trunk (unreleased changes)
     AVRO-346. Add function to validate a datum against a schema. (massie)
 
     AVRO-306. Add Ruby implementation. (Jeff Hodges via cutting)
+    
+    AVRO-135. Add compression to data files. (philz)
 
   IMPROVEMENTS
 

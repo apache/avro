@@ -20,29 +20,30 @@ package org.apache.avro.file;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilterOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
-import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
 import java.nio.channels.FileChannel;
 import java.rmi.server.UID;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.generic.GenericDatumReader;
 
 /** Stores in a file a sequence of data conforming to a schema.  The schema is
  * stored in the file with the data.  Each datum in a file is of the same
@@ -70,6 +71,13 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private int syncInterval = DataFileConstants.DEFAULT_SYNC_INTERVAL;
 
   private boolean isOpen;
+  private Codec codec;
+  
+  private static final HashSet<String> RESERVED_META = new HashSet<String>();
+  static {
+    RESERVED_META.add("codec");
+    RESERVED_META.add("schema");
+  }
 
   /** Construct a writer, not yet open. */
   public DataFileWriter(DatumWriter<D> dout) {
@@ -81,6 +89,17 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
   private void assertNotOpen() {
     if (isOpen) throw new AvroRuntimeException("already open");
+  }
+  
+  /** 
+   * Configures this writer to use the given codec. 
+   * May not be reset after writes have begun.
+   */
+  public DataFileWriter<D> setCodec(CodecFactory c) {
+    assertNotOpen();
+    this.codec = c.createInstance();
+    setMetaInternal("codec", codec.getName());
+    return this;
   }
 
   /** Set the synchronization interval for this file, in bytes. */
@@ -100,7 +119,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     assertNotOpen();
 
     this.schema = schema;
-    setMeta(DataFileConstants.SCHEMA, schema.toString());
+    setMetaInternal(DataFileConstants.SCHEMA, schema.toString());
     this.sync = generateSync();
 
     init(outs);
@@ -134,6 +153,13 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.schema = reader.getSchema();
     this.sync = reader.sync;
     this.meta.putAll(reader.meta);
+    byte[] codecBytes = this.meta.get("codec");
+    if (codecBytes != null) {
+      String strCodec = new String(codecBytes, "UTF-8");
+      this.codec = CodecFactory.fromString(strCodec).createInstance();
+    } else {
+      this.codec = CodecFactory.nullCodec().createInstance();
+    }
 
     FileChannel channel = raf.getChannel();       // seek to end
     channel.position(channel.size());
@@ -144,11 +170,14 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   private void init(OutputStream outs) throws IOException {
-    this.buffer = new ByteArrayOutputStream(syncInterval*2);
-    this.bufOut = new BinaryEncoder(buffer);
     this.out = new BufferedFileOutputStream(outs);
     this.vout = new BinaryEncoder(out);
     dout.setSchema(schema);
+    this.buffer = new ByteArrayOutputStream(syncInterval*2);
+    if (this.codec == null) {
+      this.codec = CodecFactory.nullCodec().createInstance();
+    }
+    this.bufOut = new BinaryEncoder(buffer);
     this.isOpen = true;
   }
 
@@ -163,12 +192,28 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     }
   }
 
-  /** Set a metadata property. */
-  public DataFileWriter<D> setMeta(String key, byte[] value) {
+  private DataFileWriter<D> setMetaInternal(String key, byte[] value) {
     assertNotOpen();
     meta.put(key, value);
     return this;
   }
+  
+  public DataFileWriter<D> setMetaInternal(String key, String value) {
+    try {
+      return setMetaInternal(key, value.getBytes("UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /** Set a metadata property. */
+  public DataFileWriter<D> setMeta(String key, byte[] value) {
+    if (RESERVED_META.contains(key)) {
+      throw new AvroRuntimeException("Cannot set reserved meta key: " + key);
+    }
+    return setMetaInternal(key, value);
+  }
+  
   /** Set a metadata property. */
   public DataFileWriter<D> setMeta(String key, String value) {
     try {
@@ -194,7 +239,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
       vout.writeLong(blockCount);
-      buffer.writeTo(out);
+      codec.compress(buffer, out);
       buffer.reset();
       blockCount = 0;
       out.write(sync);

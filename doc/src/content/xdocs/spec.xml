@@ -624,10 +624,10 @@
 	<li><strong>schema</strong> contains the schema of objects
 	stored in the file, as JSON data (required).</li>
 	<li><strong>codec</strong> the name of the compression codec
-	used to compress blocks, as a string. The only value for codec
-	currently supported is "null" (meaning no compression is
-	performed).  If codec is absent, it is assumed to be
-	"null".</li>
+	used to compress blocks, as a string.  Implementations
+        are required to support the following codecs: "null" and "deflate".  
+        If codec is absent, it is assumed to be "null".  The codecs
+        are described with more detail below.</li>
       </ul>
 
       <p>A file header is thus described by the following schema:</p>
@@ -648,6 +648,26 @@
 	compressed by that codec.</li>
 	<li>The file's 16-byte sync marker.</li>
       </ul>
+
+      <section>
+      <title>Required Codecs</title>
+        <section>
+        <title>null</title>
+        <p>The "null" codec simply passes through data uncompressed.</p>
+        </section>
+
+        <section>
+        <title>deflate</title>
+        <p>The "deflate" codec writes the length of the compressed
+        data (as an Avro-encoded long), followed by data compressed using the
+        deflate algorithm as specified in 
+        <a href="http://www.isi.edu/in-notes/rfc1951.txt">RFC 1951</a>,
+        and typically implemented using the zlib library.  Note that this
+        format (unlike the "zlib format" in RFC 1950) does not have a
+        checksum.
+        </p>
+        </section>
+      </section>
 
     </section>
 

@@ -23,7 +23,12 @@ import java.io.DataInputStream;
 import java.io.PrintStream;
 import java.util.List;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
 import org.apache.avro.Schema;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.generic.GenericDatumReader;
@@ -47,20 +52,31 @@ public class DataFileWriteTool implements Tool {
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
-    if (args.size() != 2) {
+
+    OptionParser p = new OptionParser();
+    OptionSpec<String> codec =
+      p.accepts("codec", "Compression codec")
+      .withRequiredArg()
+      .defaultsTo("null")
+      .ofType(String.class);
+    OptionSet opts = p.parse(args.toArray(new String[0]));
+
+    if (opts.nonOptionArguments().size() != 2) {
       err.println("Expected 2 args: schema input_file");
+      p.printHelpOn(err);
       return 1;
     }
-    
+
     Schema schema = Schema.parse(args.get(0));
     DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
-    
+
     InputStream input = Util.fileOrStdin(args.get(1), stdin);
     try {
       DataInputStream din = new DataInputStream(input);
       DataFileWriter<Object> writer =
-        new DataFileWriter<Object>(new GenericDatumWriter<Object>())
-        .create(schema, out);
+        new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+      writer.setCodec(CodecFactory.fromString(codec.value(opts)));
+      writer.create(schema, out);
       Decoder decoder = new JsonDecoder(schema, din);
       Object datum;
       while (true) {

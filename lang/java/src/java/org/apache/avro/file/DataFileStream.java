@@ -22,17 +22,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
-import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
-import org.apache.avro.io.BinaryDecoder;
 
 /** Streaming access to files written by {@link DataFileWriter}.  Use {@link
  * DataFileReader} for file-based input.
@@ -43,14 +43,20 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
   private Schema schema;
   private DatumReader<D> reader;
 
+  /** Raw input stream. */
   final InputStream in;
+  /** Decoder on raw input stream.  (Used for metadata.) */
   final Decoder vin;
+  /** Secondary decoder, for datums.
+   *  (Different than vin for compressed segments.) */
+  Decoder datumIn = null;
 
   Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
   long blockRemaining;                          // # entries remaining in block
   byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
   byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
+  private Codec codec;
 
   /** Construct a reader for an input stream.  For file-based input, use {@link
    * DataFileReader}.  This performs no buffering, for good performance, be
@@ -83,19 +89,25 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
     }
     vin.readFixed(sync);                          // read sync
 
-    String codec = getMetaString(DataFileConstants.CODEC);
-    if (codec != null && ! codec.equals(DataFileConstants.NULL_CODEC)) {
-      throw new IOException("Unknown codec: " + codec);
-    }
+    this.codec = resolveCodec();
     this.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA));
     this.reader = reader;
 
     reader.setSchema(schema);
   }
-  
+
+  private Codec resolveCodec() {
+    String codecStr = getMetaString(DataFileConstants.CODEC);
+    if (codecStr != null) {
+      return CodecFactory.fromString(codecStr).createInstance();
+    } else {
+      return CodecFactory.nullCodec().createInstance();
+    }
+  }
+
   /** Return the schema used in this file. */
   public Schema getSchema() { return schema; }
-  
+
   /** Return the value of a metadata property. */
   public byte[] getMeta(String key) {
     return meta.get(key);
@@ -125,8 +137,10 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
   /** True if more entries remain in this file. */
   public boolean hasNext() {
     try {
-      if (blockRemaining == 0)
+      if (blockRemaining == 0) {
         blockRemaining = vin.readLong();          // read block count
+        datumIn = codec.decompress(in, vin);
+      }
       return blockRemaining != 0;
     } catch (EOFException e) {                    // at EOF
       return false;
@@ -153,7 +167,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
   public D next(D reuse) throws IOException {
     if (!hasNext())
       throw new NoSuchElementException();
-    D result = reader.read(reuse, vin);
+    D result = reader.read(reuse, datumIn);
     if (--blockRemaining == 0)
       skipSync();
     return result;

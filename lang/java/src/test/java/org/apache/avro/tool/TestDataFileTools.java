@@ -25,7 +25,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
@@ -93,16 +96,30 @@ public class TestDataFileTools {
   }
   
   @Test
+  public void testWriteWithDeflate() throws Exception {
+    testWrite("deflate", Arrays.asList("--codec", "deflate"), "deflate");
+  }
+  
+  @Test
   public void testWrite() throws Exception {
+    testWrite("plain", Collections.<String>emptyList(), "null");
+  }
+  
+  public void testWrite(String name, List<String> extra, String expectedCodec) 
+      throws Exception {
     File outFile = AvroTestUtil.tempFile(
-        TestDataFileTools.class + ".testWrite." + ".avro");
+        TestDataFileTools.class + ".testWrite." + name + ".avro");
     FileOutputStream fout = new FileOutputStream(outFile);
     PrintStream out = new PrintStream(fout);
+    List<String> args = new ArrayList<String>();
+    args.add(schema.toString());
+    args.add("-");
+    args.addAll(extra);
     new DataFileWriteTool().run(
         new StringInputStream(jsonData),
         new PrintStream(out), // stdout
         null, // stderr
-        Arrays.asList(schema.toString(), "-"));
+        args);
     out.close();
     fout.close();
     
@@ -116,6 +133,7 @@ public class TestDataFileTools {
     }
     assertEquals(COUNT, i);
     assertEquals(schema, fileReader.getSchema());
+    assertEquals(expectedCodec, fileReader.getMetaString("codec"));
   }
   
   @Test
@@ -149,7 +167,7 @@ public class TestDataFileTools {
     DataFileReader<Object> fileReader = 
       new DataFileReader<Object>(outFile,reader);
     int i = 0;
-    for (Object datum : fileReader) {
+    for (@SuppressWarnings("unused") Object datum : fileReader) {
       i++;
     }
     return i;

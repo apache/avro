@@ -250,7 +250,7 @@
     </checkstyle>
   </target>
 
-  <target name="compile-test-java" depends="ivy-retrieve-test,compile">
+  <target name="compile-test-java" depends="ivy-retrieve-test,ivy-retrieve-tools,compile">
     <java-avro-compiler src="${test.schemata.dir}"
 			generated="${test.java.generated.dir}"
 			dest="${test.java.generated.classes}"

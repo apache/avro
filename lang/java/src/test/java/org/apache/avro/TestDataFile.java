@@ -17,6 +17,16 @@
  */
 package org.apache.avro;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
@@ -24,23 +34,41 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Random;
-import java.io.File;
-import java.io.IOException;
-
+@RunWith(Parameterized.class)
 public class TestDataFile {
+  private static final Logger LOG =
+    LoggerFactory.getLogger(TestDataFile.class);
+
+  CodecFactory codec = null;
+  public TestDataFile(CodecFactory codec) {
+    this.codec = codec;
+    LOG.info("Running with codec: " + codec);
+  }
+
+  @Parameters
+  public static List<Object[]> codecs() {
+    List<Object[]> r = new ArrayList<Object[]>();
+    r.add(new Object[] { null });
+    r.add(new Object[] { CodecFactory.deflateCodec(1) });
+    r.add(new Object[] { CodecFactory.deflateCodec(9) });
+    r.add(new Object[] { CodecFactory.nullCodec() });
+    return r;
+  }
+
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
-  private static final boolean VALIDATE = 
+  private static final boolean VALIDATE =
     !"false".equals(System.getProperty("test.validate", "true"));
   private static final File DIR
     = new File(System.getProperty("test.dir", "/tmp"));
   private static final File DATAFILE_DIR
     = new File(System.getProperty("test.dir", "/tmp"));
-  private static final File FILE = new File(DIR, "test.avro");
   private static final long SEED = System.currentTimeMillis();
 
   private static final String SCHEMA_JSON =
@@ -49,12 +77,19 @@ public class TestDataFile {
     +"{\"name\":\"longField\", \"type\":\"long\"}]}";
   private static final Schema SCHEMA = Schema.parse(SCHEMA_JSON);
 
+  private File makeFile() {
+    return new File(DIR, "test-" + codec + ".avro");
+  }
+
   @Test
   public void testGenericWrite() throws IOException {
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(new GenericDatumWriter<Object>())
-      .setSyncInterval(100)
-      .create(SCHEMA, FILE);
+      .setSyncInterval(100);
+    if (codec != null) {
+      writer.setCodec(codec);
+    }
+    writer.create(SCHEMA, makeFile());
     try {
       int count = 0;
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED)) {
@@ -70,7 +105,7 @@ public class TestDataFile {
   @Test
   public void testGenericRead() throws IOException {
     DataFileReader<Object> reader =
-      new DataFileReader<Object>(FILE, new GenericDatumReader<Object>());
+      new DataFileReader<Object>(makeFile(), new GenericDatumReader<Object>());
     try {
       Object datum = null;
       if (VALIDATE) {
@@ -90,12 +125,13 @@ public class TestDataFile {
 
   @Test
   public void testSplits() throws IOException {
+    File file = makeFile();
     DataFileReader<Object> reader =
-      new DataFileReader<Object>(FILE, new GenericDatumReader<Object>());
+      new DataFileReader<Object>(file, new GenericDatumReader<Object>());
     Random rand = new Random(SEED);
     try {
       int splits = 10;                            // number of splits
-      int length = (int)FILE.length();            // length of file
+      int length = (int)file.length();            // length of file
       int end = length;                           // end of split
       int remaining = end;                        // bytes remaining
       int count = 0;                              // count of entries
@@ -117,10 +153,11 @@ public class TestDataFile {
 
   @Test
   public void testGenericAppend() throws IOException {
-    long start = FILE.length();
+    File file = makeFile();
+    long start = file.length();
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(new GenericDatumWriter<Object>())
-      .appendTo(FILE);
+      .appendTo(file);
     try {
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED+1)) {
         writer.append(datum);
@@ -129,7 +166,7 @@ public class TestDataFile {
       writer.close();
     }
     DataFileReader<Object> reader =
-      new DataFileReader<Object>(FILE, new GenericDatumReader<Object>());
+      new DataFileReader<Object>(file, new GenericDatumReader<Object>());
     try {
       reader.seek(start);
       Object datum = null;
@@ -162,7 +199,7 @@ public class TestDataFile {
     Schema projection = null;
     if (args.length > 1)
       projection = Schema.parse(new File(args[1]));
-    TestDataFile tester = new TestDataFile();
+    TestDataFile tester = new TestDataFile(null);
     tester.readFile(input, new GenericDatumReader<Object>(null, projection));
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)
@@ -195,7 +232,7 @@ public class TestDataFile {
   //   }
 
     private void readFiles(DatumReader<Object> datumReader) throws IOException {
-      TestDataFile test = new TestDataFile();
+      TestDataFile test = new TestDataFile(null);
       for (File f : DATAFILE_DIR.listFiles())
         test.readFile(f, datumReader);
     }
