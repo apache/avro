@@ -194,12 +194,15 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 					   avro_schema_to_map(readers_schema)->
 					   values, &value);
 			if (rval) {
+				free(key);
 				return rval;
 			}
 			rval = avro_map_set(map, key, value);
 			if (rval) {
+				free(key);
 				return rval;
 			}
+			free(key);
 		}
 		rval = enc->read_long(reader, &block_count);
 		if (rval) {
@@ -314,7 +317,7 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			char *s;
 			rval = enc->read_string(reader, &s);
-			*datum = avro_string(s);
+			*datum = avro_givestring(s);
 		}
 		break;
 
@@ -355,7 +358,7 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			char *bytes;
 			int64_t len;
 			rval = enc->read_bytes(reader, &bytes, &len);
-			*datum = avro_bytes(bytes, len);
+			*datum = avro_givebytes(bytes, len);
 		}
 		break;
 

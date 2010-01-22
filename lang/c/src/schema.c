@@ -58,12 +58,118 @@ static int is_avro_id(const char *name)
 	return 0;
 }
 
-/*
- * TODO 
- */
-void avro_schema_free(avro_schema_t schema)
+static void avro_schema_free(avro_schema_t schema)
 {
-	return;
+	if (is_avro_schema(schema)) {
+		switch (avro_typeof(schema)) {
+		case AVRO_STRING:
+		case AVRO_BYTES:
+		case AVRO_INT:
+		case AVRO_LONG:
+		case AVRO_FLOAT:
+		case AVRO_DOUBLE:
+		case AVRO_BOOLEAN:
+		case AVRO_NULL:
+			/* no memory allocated for primitives */
+			return;
+
+		case AVRO_RECORD:{
+				struct avro_record_schema_t *record;
+				record = avro_schema_to_record(schema);
+				free(record->name);
+				while (!STAILQ_EMPTY(&record->fields)) {
+					struct avro_record_field_t *field;
+					field = STAILQ_FIRST(&record->fields);
+					STAILQ_REMOVE_HEAD(&record->fields,
+							   fields);
+					avro_schema_decref(field->type);
+					free(field->name);
+					free(field);
+				}
+				free(record);
+			}
+			break;
+
+		case AVRO_ENUM:{
+				struct avro_enum_schema_t *enump;
+				enump = avro_schema_to_enum(schema);
+				free(enump->name);
+				while (!STAILQ_EMPTY(&enump->symbols)) {
+					struct avro_enum_symbol_t *symbol;
+					symbol = STAILQ_FIRST(&enump->symbols);
+					STAILQ_REMOVE_HEAD(&enump->symbols,
+							   symbols);
+					free(symbol->symbol);
+					free(symbol);
+				}
+				free(enump);
+			}
+			break;
+
+		case AVRO_FIXED:{
+				struct avro_fixed_schema_t *fixed;
+				fixed = avro_schema_to_fixed(schema);
+				free((char *)fixed->name);
+				free(fixed);
+			}
+			break;
+
+		case AVRO_MAP:{
+				struct avro_map_schema_t *map;
+				map = avro_schema_to_map(schema);
+				avro_schema_decref(map->values);
+				free(map);
+			}
+			break;
+
+		case AVRO_ARRAY:{
+				struct avro_array_schema_t *array;
+				array = avro_schema_to_array(schema);
+				avro_schema_decref(array->items);
+				free(array);
+			}
+			break;
+		case AVRO_UNION:{
+				struct avro_union_schema_t *unionp;
+				unionp = avro_schema_to_union(schema);
+				while (!STAILQ_EMPTY(&unionp->branches)) {
+					struct avro_union_branch_t *branch;
+					branch =
+					    STAILQ_FIRST(&unionp->branches);
+					STAILQ_REMOVE_HEAD(&unionp->branches,
+							   branches);
+					avro_schema_decref(branch->schema);
+					free(branch);
+				}
+				free(unionp);
+			}
+			break;
+
+		case AVRO_LINK:{
+				struct avro_link_schema_t *link;
+				link = avro_schema_to_link(schema);
+				avro_schema_decref(link->to);
+				free(link);
+			}
+			break;
+		}
+	}
+}
+
+avro_schema_t avro_schema_incref(avro_schema_t schema)
+{
+	if (schema && schema->refcount != (unsigned int)-1) {
+		++schema->refcount;
+	}
+	return schema;
+}
+
+void avro_schema_decref(avro_schema_t schema)
+{
+	if (schema && schema->refcount != (unsigned int)-1
+	    && --schema->refcount == 0) {
+		avro_schema_free(schema);
+	}
 }
 
 avro_schema_t avro_schema_string(void)
@@ -189,7 +295,7 @@ avro_schema_union_append(const avro_schema_t union_schema,
 	if (!s) {
 		return ENOMEM;
 	}
-	s->schema = schema;
+	s->schema = avro_schema_incref(schema);
 	STAILQ_INSERT_TAIL(&unionp->branches, s, branches);
 	return 0;
 }

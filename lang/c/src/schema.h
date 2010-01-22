@@ -87,22 +87,4 @@ struct avro_link_schema_t {
 #define avro_schema_to_fixed(schema_)   (container_of(schema_, struct avro_fixed_schema_t, obj))
 #define avro_schema_to_link(schema_)    (container_of(schema_, struct avro_link_schema_t, obj))
 
-static inline avro_schema_t avro_schema_incref(avro_schema_t schema)
-{
-	if (schema && schema->refcount != (unsigned int)-1) {
-		++schema->refcount;
-	}
-	return schema;
-}
-
-void avro_schema_free(avro_schema_t schema);
-
-static inline void avro_schema_decref(avro_schema_t schema)
-{
-	if (schema && schema->refcount != (unsigned int)-1
-	    && --schema->refcount == 0) {
-		avro_schema_free(schema);
-	}
-}
-
 #endif

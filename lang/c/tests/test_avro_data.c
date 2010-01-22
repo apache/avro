@@ -60,12 +60,13 @@ static int test_string(void)
 		"a new nation", "conceived in Liberty",
 		"and dedicated to the proposition that all men are created equal."
 	};
+	avro_schema_t writer_schema = avro_schema_string();
 	for (i = 0; i < sizeof(strings) / sizeof(strings[0]); i++) {
-		avro_schema_t writer_schema = avro_schema_string();
-		avro_datum_t datum = avro_string(strings[i]);
+		avro_datum_t datum = avro_wrapstring(strings[i]);
 		write_read_check(writer_schema, NULL, datum, "string");
 		avro_datum_decref(datum);
 	}
+	avro_schema_decref(writer_schema);
 	return 0;
 }
 
@@ -73,70 +74,76 @@ static int test_bytes(void)
 {
 	char bytes[] = { 0xDE, 0xAD, 0xBE, 0xEF };
 	avro_schema_t writer_schema = avro_schema_bytes();
-	avro_datum_t datum = avro_bytes(bytes, sizeof(bytes));
+	avro_datum_t datum = avro_wrapbytes(bytes, sizeof(bytes));
 
 	write_read_check(writer_schema, NULL, datum, "bytes");
 	avro_datum_decref(datum);
+	avro_schema_decref(writer_schema);
 	return 0;
 }
 
 static int test_int(void)
 {
 	int i;
+	avro_schema_t writer_schema = avro_schema_int();
 	for (i = 0; i < 100; i++) {
-		avro_schema_t writer_schema = avro_schema_int();
 		avro_datum_t datum = avro_int(rand());
 		write_read_check(writer_schema, NULL, datum, "int");
 		avro_datum_decref(datum);
 	}
+	avro_schema_decref(writer_schema);
 	return 0;
 }
 
 static int test_long(void)
 {
 	int i;
+	avro_schema_t writer_schema = avro_schema_long();
 	for (i = 0; i < 100; i++) {
-		avro_schema_t writer_schema = avro_schema_long();
 		avro_datum_t datum = avro_long(rand());
 		write_read_check(writer_schema, NULL, datum, "long");
 		avro_datum_decref(datum);
 	}
+	avro_schema_decref(writer_schema);
 	return 0;
 }
 
 static int test_double(void)
 {
 	int i;
+	avro_schema_t schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
-		avro_schema_t schema = avro_schema_double();
 		avro_datum_t datum = avro_double((double)(rand()));
 		write_read_check(schema, NULL, datum, "double");
 		avro_datum_decref(datum);
 	}
+	avro_schema_decref(schema);
 	return 0;
 }
 
 static int test_float(void)
 {
 	int i;
+	avro_schema_t schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
-		avro_schema_t schema = avro_schema_double();
 		avro_datum_t datum = avro_double((double)(rand()));
 		write_read_check(schema, NULL, datum, "float");
 		avro_datum_decref(datum);
 	}
+	avro_schema_decref(schema);
 	return 0;
 }
 
 static int test_boolean(void)
 {
 	int i;
+	avro_schema_t schema = avro_schema_boolean();
 	for (i = 0; i <= 1; i++) {
-		avro_schema_t schema = avro_schema_boolean();
 		avro_datum_t datum = avro_boolean(i);
 		write_read_check(schema, NULL, datum, "boolean");
 		avro_datum_decref(datum);
 	}
+	avro_schema_decref(schema);
 	return 0;
 }
 
@@ -157,10 +164,14 @@ static int test_record(void)
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
 
-	avro_record_field_set(datum, "name", avro_string("Joseph Campbell"));
+	avro_record_field_set(datum, "name",
+			      avro_wrapstring("Joseph Campbell"));
 	avro_record_field_set(datum, "age", avro_int(83));
 
 	write_read_check(schema, NULL, datum, "record");
+
+	avro_datum_decref(datum);
+	avro_schema_decref(schema);
 	return 0;
 }
 
@@ -186,6 +197,7 @@ static int test_array(void)
 	}
 	write_read_check(schema, NULL, datum, "array");
 	avro_datum_decref(datum);
+	avro_schema_decref(schema);
 	return 0;
 }
 
@@ -202,6 +214,7 @@ static int test_map(void)
 	}
 	write_read_check(schema, NULL, datum, "map");
 	avro_datum_decref(datum);
+	avro_schema_decref(schema);
 	return 0;
 }
 

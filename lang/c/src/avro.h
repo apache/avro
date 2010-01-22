@@ -136,6 +136,9 @@ const char *avro_schema_name(const avro_schema_t schema);
 avro_schema_t avro_schema_copy(avro_schema_t schema);
 int avro_schema_equal(avro_schema_t a, avro_schema_t b);
 
+avro_schema_t avro_schema_incref(avro_schema_t schema);
+void avro_schema_decref(avro_schema_t schema);
+
 void avro_schema_printf(avro_schema_t schema, FILE * fp);
 
 /*
@@ -165,7 +168,11 @@ void avro_writer_free(avro_writer_t writer);
  */
 typedef struct avro_obj_t *avro_datum_t;
 avro_datum_t avro_string(const char *str);
+avro_datum_t avro_wrapstring(const char *str);
+avro_datum_t avro_givestring(const char *str);
 avro_datum_t avro_bytes(const char *buf, int64_t len);
+avro_datum_t avro_wrapbytes(const char *buf, int64_t len);
+avro_datum_t avro_givebytes(const char *buf, int64_t len);
 avro_datum_t avro_int(int32_t i);
 avro_datum_t avro_long(int64_t l);
 avro_datum_t avro_float(float f);

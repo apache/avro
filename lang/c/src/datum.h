@@ -25,12 +25,14 @@
 struct avro_string_datum_t {
 	struct avro_obj_t obj;
 	char *s;
+	void (*free) (void *ptr);
 };
 
 struct avro_bytes_datum_t {
 	struct avro_obj_t obj;
 	char *bytes;
 	int64_t size;
+	void (*free) (void *ptr);
 };
 
 struct avro_int_datum_t {

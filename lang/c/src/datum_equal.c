@@ -77,11 +77,8 @@ static int record_equal(struct avro_record_datum_t *a,
 {
 	struct st_equal_args args = { 1, b->fields };
 	if (a->fields->num_entries != b->fields->num_entries) {
-		fprintf(stderr, "num entries mismatch %d != %d\n",
-			a->fields->num_entries, b->fields->num_entries);
 		return 0;
 	}
-	fprintf(stderr, "Each record has %d values\n", a->fields->num_entries);
 	st_foreach(a->fields, st_equal_foreach, (st_data_t) & args);
 	return args.rval;
 }

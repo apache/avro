@@ -70,6 +70,8 @@ static void run_tests(char *dirpath, int should_pass)
 							"failed to avro_schema_equal(schema,avro_schema_copy())\n");
 						exit(EXIT_FAILURE);
 					}
+					avro_schema_decref(schema_copy);
+					avro_schema_decref(schema);
 				} else {
 					/*
 					 * Unexpected success 

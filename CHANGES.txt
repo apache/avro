@@ -242,6 +242,8 @@ Trunk (unreleased changes)
 
     AVRO-364. Add support for encoding/decoding records (massie)
 
+    AVRO-367. Complete memory management for the C implementation (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
