@@ -223,7 +223,7 @@ Trunk (unreleased changes)
     AVRO-314. Add mvn-install ant task to publish jar to local Maven
     repository.  (Aaron Kimball via cutting)
 
-    AVRO-243. Use automake generated Makefile.in (sbanacho)
+    AVRO-243. Use automake generated Makefile.in. (sbanacho)
 
     AVRO-198. Fix specification of protocol name, also clarify which
     properties are required.  (cutting)
@@ -352,6 +352,8 @@ Trunk (unreleased changes)
     tests for duplicates in unions.  (Jeff Hammerbacher via cutting)
 
     AVRO-313. Default values for fields or records and array (or map) don't work with ResolvingDecoder (thiru)
+
+    AVRO-47. Use void* for byte sequences. (sbanacho)
 
     AVRO-337. ant test-java fails in Cygwin due to CRLF v LF problem (thiru)
  

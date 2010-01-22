@@ -78,10 +78,10 @@ class Writer : private boost::noncopyable
     }
 
     void writeValue(const std::string &val) {
-        writeBytes(reinterpret_cast<const uint8_t *>(val.c_str()), val.size());
+        writeBytes(val.c_str(), val.size());
     }
 
-    void writeBytes(const uint8_t *val, size_t size) {
+    void writeBytes(const void *val, size_t size) {
         this->writeValue(static_cast<int64_t>(size));
         out_.writeBytes(val, size);
     }

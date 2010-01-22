@@ -31,7 +31,7 @@ ValidatingWriter::ValidatingWriter(const ValidSchema &schema, OutputStreamer &ou
 { }
 
 void
-ValidatingWriter::writeBytes(const uint8_t *val, size_t size)
+ValidatingWriter::writeBytes(const void *val, size_t size)
 {
     checkSafeToPut(AVRO_BYTES);
     writer_.writeBytes(val, size);

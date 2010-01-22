@@ -43,7 +43,7 @@ class InputStreamer {
     virtual size_t readByte(uint8_t &byte) = 0;
     virtual size_t readWord(uint32_t &word) = 0;
     virtual size_t readLongWord(uint64_t &word) = 0;
-    virtual size_t readBytes(uint8_t *bytes, size_t size) = 0;
+    virtual size_t readBytes(void *bytes, size_t size) = 0;
 };
 
 
@@ -79,7 +79,7 @@ class IStreamer : public InputStreamer {
         return is_.gcount();
     }
 
-    size_t readBytes(uint8_t *bytes, size_t size) {
+    size_t readBytes(void *bytes, size_t size) {
         is_.read(reinterpret_cast<char *>(bytes), size);
         return is_.gcount();
     }

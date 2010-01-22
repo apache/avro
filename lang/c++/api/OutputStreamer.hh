@@ -44,7 +44,7 @@ class OutputStreamer {
     virtual size_t writeByte(uint8_t byte) = 0;
     virtual size_t writeWord(uint32_t word) = 0;
     virtual size_t writeLongWord(uint64_t word) = 0;
-    virtual size_t writeBytes(const uint8_t *bytes, size_t size) = 0;
+    virtual size_t writeBytes(const void *bytes, size_t size) = 0;
 };
 
 
@@ -61,18 +61,19 @@ class ScreenStreamer : public OutputStreamer {
     }
 
     size_t writeWord(uint32_t word) {
-        ScreenStreamer::writeBytes(reinterpret_cast<uint8_t *>(&word), sizeof(word));
+        ScreenStreamer::writeBytes(&word, sizeof(word));
         return sizeof(uint32_t);
     }
 
     size_t writeLongWord(uint64_t word) {
-        ScreenStreamer::writeBytes(reinterpret_cast<uint8_t *>(&word), sizeof(word));
+        ScreenStreamer::writeBytes(&word, sizeof(word));
         return sizeof(uint64_t);
     }
 
-    size_t writeBytes(const uint8_t *bytes, size_t size) {
+    size_t writeBytes(const void *bytes, size_t size) {
+        const uint8_t *ptr = reinterpret_cast<const uint8_t *>(bytes);
         for (size_t i= 0; i < size; ++i) {
-            ScreenStreamer::writeByte(*bytes++);
+            ScreenStreamer::writeByte(*ptr++);
         }
         std::cout << std::endl;
         return size;
@@ -111,7 +112,7 @@ class OStreamer : public OutputStreamer {
         return sizeof(uint64_t);
     }
 
-    size_t writeBytes(const uint8_t *bytes, size_t size) {
+    size_t writeBytes(const void *bytes, size_t size) {
         os_.write(reinterpret_cast<const char *>(bytes), size);
         return size;
     }

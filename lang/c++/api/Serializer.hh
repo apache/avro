@@ -69,7 +69,7 @@ class Serializer : private boost::noncopyable
         writer_.writeValue(val);
     }
 
-    void writeBytes(const uint8_t *val, size_t size) {
+    void writeBytes(const void *val, size_t size) {
         writer_.writeBytes(val);
     }
 
