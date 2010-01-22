@@ -33,6 +33,7 @@ struct avro_record_field_t {
 struct avro_record_schema_t {
 	struct avro_obj_t obj;
 	char *name;
+	/* TODO: st_table of names for faster lookup on record_read() */
 	 STAILQ_HEAD(fields, avro_record_field_t) fields;
 };
 

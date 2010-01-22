@@ -307,9 +307,12 @@ static avro_schema_t
 find_named_schemas(const char *name, avro_schema_error_t * error)
 {
 	st_table *st = (*error)->named_schemas;
-	avro_schema_t schema;
-	if (st_lookup(st, (st_data_t) name, (st_data_t *) & schema)) {
-		return schema;
+	union {
+		avro_schema_t schema;
+		st_data_t data;
+	} val;
+	if (st_lookup(st, (st_data_t) name, &(val.data))) {
+		return val.schema;
 	}
 	return NULL;
 };

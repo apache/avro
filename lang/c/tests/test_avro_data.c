@@ -46,7 +46,7 @@ write_read_check(avro_schema_t writers_schema,
 		fprintf(stderr, "Unable to encode/decode %s\n", type);
 		exit(EXIT_FAILURE);
 	}
-
+	avro_reader_dump(reader, stderr);
 	avro_datum_decref(datum_out);
 	avro_reader_free(reader);
 	avro_writer_free(writer);
@@ -104,7 +104,7 @@ static int test_long(void)
 	return 0;
 }
 
-static test_double(void)
+static int test_double(void)
 {
 	int i;
 	for (i = 0; i < 100; i++) {
@@ -131,9 +131,9 @@ static int test_float(void)
 static int test_boolean(void)
 {
 	int i;
-	for (i = 0; i < 100; i++) {
+	for (i = 0; i <= 1; i++) {
 		avro_schema_t schema = avro_schema_boolean();
-		avro_datum_t datum = avro_boolean(rand() % 2);
+		avro_datum_t datum = avro_boolean(i);
 		write_read_check(schema, NULL, datum, "boolean");
 		avro_datum_decref(datum);
 	}
@@ -149,7 +149,22 @@ static int test_null(void)
 	return 0;
 }
 
-int test_record(void)
+static int test_record(void)
+{
+	avro_schema_t schema = avro_schema_record("person");
+	avro_datum_t datum = avro_record("person");
+
+	avro_schema_record_field_append(schema, "name", avro_schema_string());
+	avro_schema_record_field_append(schema, "age", avro_schema_int());
+
+	avro_record_field_set(datum, "name", avro_string("Joseph Campbell"));
+	avro_record_field_set(datum, "age", avro_int(83));
+
+	write_read_check(schema, NULL, datum, "record");
+	return 0;
+}
+
+static int test_enum(void)
 {
 	/*
 	 * TODO 
@@ -157,15 +172,7 @@ int test_record(void)
 	return 0;
 }
 
-int test_enum(void)
-{
-	/*
-	 * TODO 
-	 */
-	return 0;
-}
-
-int test_array(void)
+static int test_array(void)
 {
 	int i, rval;
 	avro_schema_t schema = avro_schema_array(avro_schema_int());
@@ -182,7 +189,7 @@ int test_array(void)
 	return 0;
 }
 
-int test_map(void)
+static int test_map(void)
 {
 	avro_schema_t schema = avro_schema_map(avro_schema_long());
 	avro_datum_t datum = avro_map();
@@ -198,7 +205,7 @@ int test_map(void)
 	return 0;
 }
 
-int test_union(void)
+static int test_union(void)
 {
 	/*
 	 * TODO 
@@ -206,7 +213,7 @@ int test_union(void)
 	return 0;
 }
 
-int test_fixed(void)
+static int test_fixed(void)
 {
 	/*
 	 * TODO 
@@ -240,12 +247,10 @@ int main(void)
 	srandom(time(NULL));
 	for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
 		struct avro_tests *test = tests + i;
-		fprintf(stderr, "Running %s tests...\n", test->name);
+		fprintf(stderr, "**** Running %s tests ****\n", test->name);
 		if (test->func() != 0) {
-			fprintf(stderr, "failed!\n");
 			return EXIT_FAILURE;
 		}
-		fprintf(stderr, "\t... %s tests passed!\n", test->name);
 	}
 	return EXIT_SUCCESS;
 }

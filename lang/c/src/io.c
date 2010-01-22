@@ -21,6 +21,7 @@
 #include <string.h>
 #include "avro.h"
 #include "container_of.h"
+#include "dump.h"
 
 enum avro_io_type_t {
 	AVRO_FILE_IO,
@@ -213,6 +214,22 @@ int avro_skip(avro_reader_t reader, int64_t len)
 	 * TODO 
 	 */
 	return -1;
+}
+
+void avro_writer_dump(avro_writer_t writer, FILE * fp)
+{
+	if (is_memory_io(writer)) {
+		dump(fp, (char *)avro_writer_to_memory(writer)->buf,
+		     avro_writer_to_memory(writer)->written);
+	}
+}
+
+void avro_reader_dump(avro_reader_t reader, FILE * fp)
+{
+	if (is_memory_io(reader)) {
+		dump(fp, (char *)avro_reader_to_memory(reader)->buf,
+		     avro_reader_to_memory(reader)->read);
+	}
 }
 
 void avro_reader_free(avro_reader_t reader)

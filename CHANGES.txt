@@ -238,6 +238,8 @@ Trunk (unreleased changes)
     AVRO-362. Add test to ensure Python implementation handles Union schema
     with two fixed types of different names (hammer)
 
+    AVRO-364. Add support for encoding/decoding records (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
