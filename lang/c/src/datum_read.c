@@ -225,10 +225,26 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 
 static int
 read_union(avro_reader_t reader, const avro_encoding_t * enc,
-	   avro_schema_t writers_schema, avro_schema_t readers_schema,
-	   avro_datum_t * datum)
+	   struct avro_union_schema_t *writers_schema,
+	   struct avro_union_schema_t *readers_schema, avro_datum_t * datum)
 {
-	return 1;
+	int rval;
+	int64_t i, index;
+	struct avro_union_branch_t *branch;
+
+	rval = enc->read_long(reader, &index);
+	if (rval) {
+		return rval;
+	}
+
+	branch = STAILQ_FIRST(&writers_schema->branches);
+	for (i = 0; i != index && branch != NULL;
+	     branch = STAILQ_NEXT(branch, branches)) {
+	}
+	if (!branch) {
+		return EILSEQ;
+	}
+	return avro_read_data(reader, branch->schema, NULL, datum);
 }
 
 /* TODO: handle default values in fields */
@@ -427,8 +443,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 
 	case AVRO_UNION:
 		rval =
-		    read_union(reader, enc, writers_schema, readers_schema,
-			       datum);
+		    read_union(reader, enc,
+			       avro_schema_to_union(writers_schema),
+			       avro_schema_to_union(readers_schema), datum);
 		break;
 
 	case AVRO_RECORD:

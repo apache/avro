@@ -479,9 +479,7 @@ static void avro_datum_free(avro_datum_t datum)
 				free(array);
 			}
 			break;
-		case AVRO_UNION:{
-				/* TODO */
-			}
+		case AVRO_UNION:
 			break;
 		case AVRO_LINK:{
 				/* TODO */

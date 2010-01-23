@@ -229,9 +229,18 @@ static int test_map(void)
 
 static int test_union(void)
 {
-	/*
-	 * TODO 
-	 */
+	avro_schema_t schema = avro_schema_union();
+	avro_datum_t datum;
+
+	avro_schema_union_append(schema, avro_schema_string());
+	avro_schema_union_append(schema, avro_schema_int());
+	avro_schema_union_append(schema, avro_schema_null());
+
+	datum = avro_wrapstring("Follow your bliss.");
+
+	write_read_check(schema, NULL, datum, "union");
+	avro_datum_decref(datum);
+	avro_schema_decref(schema);
 	return 0;
 }
 
@@ -266,7 +275,8 @@ int main(void)
 		"enum", test_enum}, {
 		"array", test_array}, {
 		"map", test_map}, {
-		"fixed", test_fixed}
+		"fixed", test_fixed}, {
+		"union", test_union}
 	};
 
 	srandom(time(NULL));

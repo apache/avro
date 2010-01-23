@@ -144,6 +144,7 @@ int avro_datum_equal(avro_datum_t a, avro_datum_t b)
 				   avro_datum_to_fixed(b));
 
 	case AVRO_UNION:
+		break;
 	case AVRO_LINK:
 		/*
 		 * TODO 

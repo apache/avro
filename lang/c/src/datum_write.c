@@ -128,6 +128,29 @@ write_array(avro_writer_t writer, const avro_encoding_t * enc,
 	return enc->write_long(writer, 0);
 }
 
+static int
+write_union(avro_writer_t writer, const avro_encoding_t * enc,
+	    struct avro_union_schema_t *schema, avro_datum_t datum)
+{
+	int rval;
+	int64_t index;
+	struct avro_union_branch_t *branch = STAILQ_FIRST(&schema->branches);
+	for (index = 0; branch != NULL;
+	     branch = STAILQ_NEXT(branch, branches), index++) {
+		if (avro_schema_datum_validate(branch->schema, datum)) {
+			break;
+		}
+	}
+	if (!branch) {
+		return EINVAL;
+	}
+	rval = enc->write_long(writer, index);
+	if (rval) {
+		return rval;
+	}
+	return avro_write_data(writer, branch->schema, datum);
+}
+
 int
 avro_write_data(avro_writer_t writer, avro_schema_t writer_schema,
 		avro_datum_t datum)
@@ -242,9 +265,9 @@ avro_write_data(avro_writer_t writer, avro_schema_t writer_schema,
 		break;
 
 	case AVRO_UNION:
-		{
-			assert(0 && "Bug in schema validation code");
-		}
+		rval =
+		    write_union(writer, enc,
+				avro_schema_to_union(writer_schema), datum);
 		break;
 
 	case AVRO_LINK:

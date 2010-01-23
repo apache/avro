@@ -250,6 +250,8 @@ Trunk (unreleased changes)
 
     AVRO-370. Add support for encoding/decoding fixed data (massie)
 
+    AVRO-371. Add support for encoding/decoding unions (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

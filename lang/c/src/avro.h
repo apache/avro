@@ -203,8 +203,7 @@ avro_datum_t avro_array(void);
 int avro_array_append_datum(const avro_datum_t array_datum,
 			    const avro_datum_t datum);
 
-avro_datum_t avro_union(void);
-int avro_union_append(const avro_datum_t union_value, const avro_datum_t value);
+avro_datum_t avro_union(const avro_schema_t schema, const avro_datum_t datum);
 
 avro_datum_t avro_datum_incref(avro_datum_t value);
 void avro_datum_decref(avro_datum_t value);
