@@ -367,6 +367,8 @@ Trunk (unreleased changes)
 
     AVRO-356. RAT fails with "Unknown license" error (massie)
 
+    AVRO-355. io.Perf test harness uses different random number seeds for each run (Kevin Oliver via thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
