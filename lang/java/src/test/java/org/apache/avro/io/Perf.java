@@ -35,7 +35,6 @@ public class Perf {
   private static final int COUNT = 200000; // needs to be a multiple of 4
   private static final int CYCLES = 150;
   
-  
   public static void main(String[] args) throws IOException {
     List<Test> tests = new ArrayList<Test>();
     for (String a : args) {
@@ -116,6 +115,16 @@ public class Perf {
       return new BinaryDecoder(new ByteArrayInputStream(data));
     }
 
+    /**
+     * Use a fixed value seed for random number generation
+     * to allow for better cross-run comparisons.
+     */
+    private static final long SEED = 19781210;
+
+    protected static Random newRandom() {
+      return new Random(SEED);
+    }
+
     abstract void genData(Encoder e) throws IOException;
     abstract void readInternal(Decoder d) throws IOException;
   }
@@ -132,7 +141,7 @@ public class Perf {
     @Override void genData(Encoder e) throws IOException {
       e.writeArrayStart();
       e.setItemCount((COUNT/4) * 4); //next lowest multiple of 4  
-      Random r = new Random();
+      Random r = newRandom();
       for (int i = 0; i < COUNT/4; i++) {
         e.writeInt(r.nextInt(50)); // fits in 1 byte
         e.writeInt(r.nextInt(5000)); // fits in 2 bytes
@@ -155,7 +164,7 @@ public class Perf {
     @Override void genData(Encoder e) throws IOException {
       e.writeArrayStart();
       e.setItemCount((COUNT / 4) *4);
-      Random r = new Random();
+      Random r = newRandom();
       for (int i = 0; i < COUNT /4; i++) {
         e.writeLong(r.nextLong() % 0x7FL); // half fit in 1, half in 2 
         e.writeLong(r.nextLong() % 0x1FFFFFL); // half fit in <=3, half in 4
@@ -178,7 +187,7 @@ public class Perf {
     @Override void genData(Encoder e) throws IOException {
        e.writeArrayStart();
       e.setItemCount(COUNT);
-      Random r = new Random();
+      Random r = newRandom();
       for (int i = 0; i < COUNT; i++) {
         e.writeFloat(r.nextFloat());
       }
@@ -197,7 +206,7 @@ public class Perf {
     @Override void genData(Encoder e) throws IOException {
        e.writeArrayStart();
       e.setItemCount(COUNT);
-      Random r = new Random();
+      Random r = newRandom();
       for (int i = 0; i < COUNT; i++) {
         e.writeDouble(r.nextFloat());
       }
@@ -230,7 +239,7 @@ public class Perf {
     protected void genData(Encoder e) throws IOException {
       e.writeArrayStart();
       e.setItemCount(COUNT);
-      Random r = new Random();
+      Random r = newRandom();
       for (int i = 0; i < COUNT; i++) {
         e.writeDouble(r.nextDouble());
         e.writeDouble(r.nextDouble());
