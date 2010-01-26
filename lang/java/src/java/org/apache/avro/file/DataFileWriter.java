@@ -35,7 +35,6 @@ import java.rmi.server.UID;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
@@ -72,12 +71,6 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private boolean isOpen;
   private Codec codec;
-  
-  private static final HashSet<String> RESERVED_META = new HashSet<String>();
-  static {
-    RESERVED_META.add("codec");
-    RESERVED_META.add("schema");
-  }
 
   /** Construct a writer, not yet open. */
   public DataFileWriter(DatumWriter<D> dout) {
@@ -98,7 +91,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   public DataFileWriter<D> setCodec(CodecFactory c) {
     assertNotOpen();
     this.codec = c.createInstance();
-    setMetaInternal("codec", codec.getName());
+    setMetaInternal(DataFileConstants.CODEC, codec.getName());
     return this;
   }
 
@@ -153,7 +146,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.schema = reader.getSchema();
     this.sync = reader.sync;
     this.meta.putAll(reader.meta);
-    byte[] codecBytes = this.meta.get("codec");
+    byte[] codecBytes = this.meta.get(DataFileConstants.CODEC);
     if (codecBytes != null) {
       String strCodec = new String(codecBytes, "UTF-8");
       this.codec = CodecFactory.fromString(strCodec).createInstance();
@@ -208,12 +201,16 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Set a metadata property. */
   public DataFileWriter<D> setMeta(String key, byte[] value) {
-    if (RESERVED_META.contains(key)) {
+    if (isReserved(key)) {
       throw new AvroRuntimeException("Cannot set reserved meta key: " + key);
     }
     return setMetaInternal(key, value);
   }
   
+  private boolean isReserved(String key) {
+    return key.startsWith("avro.");
+  }
+
   /** Set a metadata property. */
   public DataFileWriter<D> setMeta(String key, String value) {
     try {

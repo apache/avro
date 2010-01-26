@@ -619,11 +619,12 @@
 	<li>For each pair, a string key and bytes value.</li>
       </ul>
 
-      <p>The following file metadata properties are reserved:</p>
+      <p>All metadata properties that start with "avro." are reserved.
+      The following file metadata properties are currently used:</p>
       <ul>
-	<li><strong>schema</strong> contains the schema of objects
+	<li><strong>avro.schema</strong> contains the schema of objects
 	stored in the file, as JSON data (required).</li>
-	<li><strong>codec</strong> the name of the compression codec
+	<li><strong>avro.codec</strong> the name of the compression codec
 	used to compress blocks, as a string.  Implementations
         are required to support the following codecs: "null" and "deflate".  
         If codec is absent, it is assumed to be "null".  The codecs

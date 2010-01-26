@@ -30,8 +30,9 @@ class DataFileConstants {
   public static final int SYNC_SIZE = 16;
   public static final int DEFAULT_SYNC_INTERVAL = 1000*SYNC_SIZE; 
 
-  public static final String SCHEMA = "schema";
-  public static final String COUNT = "count";
-  public static final String CODEC = "codec";
+  public static final String SCHEMA = "avro.schema";
+  public static final String CODEC = "avro.codec";
   public static final String NULL_CODEC = "null";
+  public static final String DEFLATE_CODEC = "deflate";
+
 }

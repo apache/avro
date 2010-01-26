@@ -49,7 +49,8 @@ public class TestDataFileTools {
   
   @BeforeClass
   public static void writeSampleFile() throws IOException {
-    sampleFile = AvroTestUtil.tempFile(TestDataFileTools.class + ".avro");
+    sampleFile = AvroTestUtil.tempFile(
+      TestDataFileTools.class.getName() + ".avro");
     schema = Schema.create(Type.INT);
     
     DataFileWriter<Object> writer
@@ -133,7 +134,7 @@ public class TestDataFileTools {
     }
     assertEquals(COUNT, i);
     assertEquals(schema, fileReader.getSchema());
-    assertEquals(expectedCodec, fileReader.getMetaString("codec"));
+    assertEquals(expectedCodec, fileReader.getMetaString("avro.codec"));
   }
   
   @Test

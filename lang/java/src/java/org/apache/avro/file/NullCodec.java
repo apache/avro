@@ -42,7 +42,7 @@ final class NullCodec extends Codec {
 
   @Override
   String getName() {
-    return "null";
+    return DataFileConstants.NULL_CODEC;
   }
 
   @Override

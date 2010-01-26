@@ -66,7 +66,7 @@ class DeflateCodec extends Codec {
 
   @Override
   String getName() {
-    return "deflate";
+    return DataFileConstants.DEFLATE_CODEC;
   }
 
   @Override
