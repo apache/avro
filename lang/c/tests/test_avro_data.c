@@ -190,8 +190,8 @@ static int test_record(void)
 	name_datum = avro_wrapstring("Joseph Campbell");
 	age_datum = avro_int32(83);
 
-	avro_record_field_set(datum, "name", name_datum);
-	avro_record_field_set(datum, "age", age_datum);
+	avro_record_set(datum, "name", name_datum);
+	avro_record_set(datum, "age", age_datum);
 
 	write_read_check(schema, NULL, datum, "record");
 

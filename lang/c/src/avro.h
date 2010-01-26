@@ -203,8 +203,10 @@ int avro_double_get(avro_datum_t datum, double *d);
 int avro_boolean_get(avro_datum_t datum, int8_t * i);
 
 int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size);
-avro_datum_t avro_record_field_get(const avro_datum_t record,
-				   const char *field_name);
+int avro_record_get(const avro_datum_t record, const char *field_name,
+		    avro_datum_t * value);
+int avro_map_get(const avro_datum_t datum, const char *key,
+		 avro_datum_t * value);
 
 /* setters */
 int avro_string_set(avro_datum_t datum, const char *p);
@@ -229,8 +231,8 @@ int avro_givefixed_set(avro_datum_t datum, const char *bytes,
 int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
 		       const int64_t size);
 
-int avro_record_field_set(const avro_datum_t record,
-			  const char *field_name, const avro_datum_t value);
+int avro_record_set(const avro_datum_t record, const char *field_name,
+		    const avro_datum_t value);
 int avro_map_set(const avro_datum_t map, const char *key,
 		 const avro_datum_t value);
 int avro_array_append_datum(const avro_datum_t array_datum,

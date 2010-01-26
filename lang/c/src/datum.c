@@ -196,7 +196,7 @@ int avro_wrapbytes_set(avro_datum_t datum, const char *bytes,
 
 int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size)
 {
-	if (!(is_avro_datum(datum) && is_avro_string(datum)) || !bytes || !size) {
+	if (!(is_avro_datum(datum) && is_avro_bytes(datum)) || !bytes || !size) {
 		return EINVAL;
 	}
 	*bytes = avro_datum_to_bytes(datum)->bytes;
@@ -392,41 +392,36 @@ avro_datum_t avro_record(const char *name)
 	return &datum->obj;
 }
 
-avro_datum_t
-avro_record_field_get(const avro_datum_t datum, const char *field_name)
+int
+avro_record_get(const avro_datum_t datum, const char *field_name,
+		avro_datum_t * field)
 {
 	union {
 		avro_datum_t field;
 		st_data_t data;
 	} val;
-	if (is_avro_datum(datum) && is_avro_record(datum)) {
-		struct avro_record_datum_t *record =
-		    avro_datum_to_record(datum);
+	if (is_avro_datum(datum) && is_avro_record(datum) && field_name) {
 		if (st_lookup
-		    (record->fields, (st_data_t) field_name, &(val.data))) {
-			return val.field;
+		    (avro_datum_to_record(datum)->fields,
+		     (st_data_t) field_name, &(val.data))) {
+			*field = val.field;
+			return 0;
 		}
 	}
-	return NULL;
+	return EINVAL;
 }
 
 int
-avro_record_field_set(const avro_datum_t datum,
-		      const char *field_name, const avro_datum_t field_value)
+avro_record_set(const avro_datum_t datum, const char *field_name,
+		const avro_datum_t field_value)
 {
 	char *key = (char *)field_name;
-	union {
-		avro_datum_t old_value;
-		st_data_t data;
-	} val;
+	avro_datum_t old_field;
 
-	if (is_avro_datum(datum) && is_avro_record(datum)) {
-		struct avro_record_datum_t *record =
-		    avro_datum_to_record(datum);
-		if (st_lookup
-		    (record->fields, (st_data_t) field_name, &val.data)) {
+	if (is_avro_datum(datum) && is_avro_record(datum) && field_name) {
+		if (avro_record_get(datum, field_name, &old_field) == 0) {
 			/* Overriding old value */
-			avro_datum_decref(val.old_value);
+			avro_datum_decref(old_field);
 		} else {
 			/* Inserting new value */
 			key = strdup(field_name);
@@ -435,7 +430,7 @@ avro_record_field_set(const avro_datum_t datum,
 			}
 		}
 		avro_datum_incref(field_value);
-		st_insert(record->fields, (st_data_t) key,
+		st_insert(avro_datum_to_record(datum)->fields, (st_data_t) key,
 			  (st_data_t) field_value);
 		return 0;
 	}
@@ -545,7 +540,7 @@ int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
 
 int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size)
 {
-	if (!(is_avro_datum(datum) && is_avro_string(datum)) || !bytes || !size) {
+	if (!(is_avro_datum(datum) && is_avro_fixed(datum)) || !bytes || !size) {
 		return EINVAL;
 	}
 	*bytes = avro_datum_to_fixed(datum)->bytes;
@@ -566,24 +561,41 @@ avro_datum_t avro_map(void)
 }
 
 int
+avro_map_get(const avro_datum_t datum, const char *key, avro_datum_t * value)
+{
+	struct avro_map_datum_t *map;
+	union {
+		avro_datum_t datum;
+		st_data_t data;
+	} val;
+
+	if (!(is_avro_datum(datum) && is_avro_map(datum) && key && value)) {
+		return EINVAL;
+	}
+
+	map = avro_datum_to_map(datum);
+	if (st_lookup(map->map, (st_data_t) key, &(val.data))) {
+		*value = val.datum;
+		return 0;
+	}
+	return EINVAL;
+}
+
+int
 avro_map_set(const avro_datum_t datum, const char *key,
 	     const avro_datum_t value)
 {
 	char *save_key = (char *)key;
-	struct avro_map_datum_t *map;
-	union {
-		st_data_t data;
-		avro_datum_t old_datum;
-	} val;
+	avro_datum_t old_datum;
 
 	if (!is_avro_datum(datum) || !is_avro_map(datum) || !key
 	    || !is_avro_datum(value)) {
 		return EINVAL;
 	}
-	map = avro_datum_to_map(datum);
-	if (st_lookup(map->map, (st_data_t) key, &(val.data))) {
+
+	if (avro_map_get(datum, key, &old_datum) == 0) {
 		/* Overwriting an old value */
-		avro_datum_decref(val.old_datum);
+		avro_datum_decref(old_datum);
 	} else {
 		/* Inserting a new value */
 		save_key = strdup(key);
@@ -592,7 +604,8 @@ avro_map_set(const avro_datum_t datum, const char *key,
 		}
 	}
 	avro_datum_incref(value);
-	st_insert(map->map, (st_data_t) save_key, (st_data_t) value);
+	st_insert(avro_datum_to_map(datum)->map, (st_data_t) save_key,
+		  (st_data_t) value);
 	return 0;
 }
 

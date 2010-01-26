@@ -279,8 +279,7 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 				return rval;
 			}
 			rval =
-			    avro_record_field_set(record, field->name,
-						  field_datum);
+			    avro_record_set(record, field->name, field_datum);
 			if (rval) {
 				return rval;
 			}

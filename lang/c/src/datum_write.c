@@ -28,9 +28,13 @@ write_record(avro_writer_t writer, const avro_encoding_t * enc,
 	int rval;
 	struct avro_record_field_t *field = STAILQ_FIRST(&record->fields);
 	for (; field != NULL; field = STAILQ_NEXT(field, fields)) {
-		rval = avro_write_data(writer, field->type,
-				       avro_record_field_get(datum,
-							     field->name));
+		int field_rval;
+		avro_datum_t field_datum;
+		field_rval = avro_record_get(datum, field->name, &field_datum);
+		if (field_rval) {
+			return field_rval;
+		}
+		rval = avro_write_data(writer, field->type, field_datum);
 		if (rval) {
 			return rval;
 		}

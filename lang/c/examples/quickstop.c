@@ -58,11 +58,11 @@ add_person(const char *first, const char *last, const char *phone, int32_t age)
 	avro_datum_t age_datum = avro_int32(age);
 	avro_datum_t phone_datum = avro_string(phone);
 
-	if (avro_record_field_set(person, "ID", id_datum)
-	    || avro_record_field_set(person, "First", first_datum)
-	    || avro_record_field_set(person, "Last", last_datum)
-	    || avro_record_field_set(person, "Age", age_datum)
-	    || avro_record_field_set(person, "Phone", phone_datum)) {
+	if (avro_record_set(person, "ID", id_datum)
+	    || avro_record_set(person, "First", first_datum)
+	    || avro_record_set(person, "Last", last_datum)
+	    || avro_record_set(person, "Age", age_datum)
+	    || avro_record_set(person, "Phone", phone_datum)) {
 		fprintf(stderr, "Unable to create Person datum structure");
 		exit(EXIT_FAILURE);
 	}
@@ -97,11 +97,11 @@ int print_person(void)
 		avro_datum_t id_datum, first_datum, last_datum, phone_datum,
 		    age_datum;
 
-		id_datum = avro_record_field_get(person, "ID");
-		first_datum = avro_record_field_get(person, "First");
-		last_datum = avro_record_field_get(person, "Last");
-		phone_datum = avro_record_field_get(person, "Phone");
-		age_datum = avro_record_field_get(person, "Age");
+		avro_record_get(person, "ID", &id_datum);
+		avro_record_get(person, "First", &first_datum);
+		avro_record_get(person, "Last", &last_datum);
+		avro_record_get(person, "Phone", &phone_datum);
+		avro_record_get(person, "Age", &age_datum);
 
 		avro_int64_get(id_datum, &i64);
 		fprintf(stdout, "%ld | ", i64);

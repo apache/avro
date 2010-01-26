@@ -156,13 +156,16 @@ avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 			for (field = STAILQ_FIRST(&record_schema->fields);
 			     field != NULL;
 			     field = STAILQ_NEXT(field, fields)) {
-				avro_datum_t field_datum =
-				    avro_record_field_get(datum, field->name);
-				if (!field_datum) {
+				int field_rval;
+				avro_datum_t field_datum;
+				field_rval =
+				    avro_record_get(datum, field->name,
+						    &field_datum);
+				if (field_rval) {
 					/*
 					 * TODO: check for default values 
 					 */
-					return 0;
+					return field_rval;
 				}
 				if (!avro_schema_datum_validate
 				    (field->type, field_datum)) {

@@ -260,6 +260,8 @@ Trunk (unreleased changes)
     AVRO-378. Add example code to the C implementation and update 
               documentation (massie)
 
+    AVRO-379. Changed record getter/setter API to match other datatypes (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

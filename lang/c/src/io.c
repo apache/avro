@@ -152,10 +152,12 @@ avro_read_memory(struct avro_memory_reader_t *reader, void *buf, int64_t len)
 static int
 avro_read_file(struct avro_file_reader_t *reader, void *buf, int64_t len)
 {
-	/*
-	 * TODO 
-	 */
-	return -1;
+	int rval = fread(buf, len, 1, reader->fp);
+
+	if (rval == 0) {
+		return ferror(reader->fp) ? -1 : 0;
+	}
+	return 0;
 }
 
 int avro_read(avro_reader_t reader, void *buf, int64_t len)
@@ -188,10 +190,14 @@ avro_write_memory(struct avro_memory_writer_t *writer, void *buf, int64_t len)
 static int
 avro_write_file(struct avro_file_writer_t *writer, void *buf, int64_t len)
 {
-	/*
-	 * TODO 
-	 */
-	return -1;
+	int rval;
+	if (len > 0) {
+		rval = fwrite(buf, len, 1, writer->fp);
+		if (rval == 0) {
+			return feof(writer->fp) ? -1 : 0;
+		}
+	}
+	return 0;
 }
 
 int avro_write(avro_writer_t writer, void *buf, int64_t len)
