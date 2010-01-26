@@ -36,7 +36,7 @@ import org.apache.avro.util.Utf8;
  */
 public class ValidatingEncoder extends ParsingEncoder 
   implements Parser.ActionHandler {
-  protected Encoder out;
+  protected final Encoder out;
   protected final Parser parser;
   /**
    * Has anything been written into the collections?

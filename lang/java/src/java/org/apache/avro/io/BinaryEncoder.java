@@ -95,7 +95,9 @@ public class BinaryEncoder extends Encoder {
 
   @Override
   public void flush() throws IOException {
-    out.flush();
+    if (out != null) {
+      out.flush();
+    }
   }
 
   @Override

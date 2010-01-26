@@ -42,7 +42,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   protected BitSet isEmpty = new BitSet();
 
   public JsonEncoder(Schema sc, OutputStream out) throws IOException {
-    this(sc, new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8));
+    this(sc, getJsonGenerator(out));
   }
 
   public JsonEncoder(Schema sc, JsonGenerator out) throws IOException {
@@ -54,15 +54,21 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   @Override
   public void flush() throws IOException {
     parser.processImplicitActions();
-    out.flush();
+    if (out != null) {
+      out.flush();
+    }
   }
 
   @Override
   public void init(OutputStream out) throws IOException {
-    if (this.out != null) {
-      flush();
-    }
-    this.out = new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
+    flush();
+    this.out = getJsonGenerator(out);
+  }
+
+  private static JsonGenerator getJsonGenerator(OutputStream out)
+    throws IOException {
+    return out == null ? null :
+      new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
   }
 
   @Override

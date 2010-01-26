@@ -373,6 +373,8 @@ Trunk (unreleased changes)
 
     AVRO-355. io.Perf test harness uses different random number seeds for each run (Kevin Oliver via thiru)
 
+    AVRO-375. Initializing uninizialized encoders fail (thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
