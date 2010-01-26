@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.avro.AvroTypeException;
 import org.apache.avro.ipc.ByteBufferInputStream;
 import org.apache.avro.util.Utf8;
 
@@ -105,11 +104,19 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public int readInt() throws IOException {
-    long result = readLong();
-    if (result < Integer.MIN_VALUE || Integer.MAX_VALUE < result) {
-      throw new AvroTypeException("Integer overflow.");
+    int n = 0;
+    for (int shift = 0; ; shift += 7) {
+      int b = in.read();
+      if (b >= 0) {
+         n |= (b & 0x7F) << shift;
+         if ((b & 0x80) == 0) {
+           break;
+         }
+      } else {
+        throw new EOFException();
+      }
     }
-    return (int)result;
+    return (n >>> 1) ^ -(n & 1); // back to two's-complement
   }
 
   @Override

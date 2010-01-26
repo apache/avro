@@ -272,6 +272,8 @@ Trunk (unreleased changes)
     AVRO-363. estSchema had two tests disabled; new test for named schemas 
     named after primitives. (philz)
 
+    AVRO-354. Performance improvement to BinaryDecoder.readInt() (Kevin Oliver via thiru)
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
