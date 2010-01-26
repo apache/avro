@@ -369,7 +369,7 @@ avro_schema_record_field_append(const avro_schema_t record_schema,
 {
 	struct avro_record_schema_t *record;
 	struct avro_record_field_t *new_field;
-	if (!record_schema || !field_name || !field_schema
+	if (!field_name || !field_schema || !is_avro_schema(record_schema)
 	    || !is_avro_record(record_schema) || record_schema == field_schema
 	    || !is_avro_id(field_name)) {
 		return EINVAL;
@@ -784,6 +784,8 @@ avro_schema_from_json(const char *jsontext, const int32_t len,
 
 	root = json_loads(jsontext, &error->json_error);
 	if (!root) {
+		st_free_table(error->named_schemas);
+		free(error);
 		return EINVAL;
 	}
 
@@ -792,6 +794,11 @@ avro_schema_from_json(const char *jsontext, const int32_t len,
 	 */
 	rval = avro_schema_from_json_t(root, schema, e);
 	json_decref(root);
+	st_free_table(error->named_schemas);
+	if (rval == 0) {
+		/* no need for an error return */
+		free(error);
+	}
 	return rval;
 }
 

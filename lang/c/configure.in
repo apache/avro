@@ -41,6 +41,7 @@ AC_CONFIG_FILES([
    tests/Makefile
    docs/Makefile
    src/Makefile
+   examples/Makefile
 ])
 AC_CONFIG_SUBDIRS([jansson])
 AC_OUTPUT

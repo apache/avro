@@ -157,6 +157,7 @@ read_array(avro_reader_t reader, const avro_encoding_t * enc,
 				avro_datum_decref(array_datum);
 				return rval;
 			}
+			avro_datum_decref(datum);
 		}
 
 		rval = enc->read_long(reader, &block_count);
@@ -212,6 +213,7 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 				free(key);
 				return rval;
 			}
+			avro_datum_decref(value);
 			free(key);
 		}
 		rval = enc->read_long(reader, &block_count);
@@ -282,6 +284,7 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 			if (rval) {
 				return rval;
 			}
+			avro_datum_decref(field_datum);
 		} else {
 			/* TODO: skip_record */
 			return -1;

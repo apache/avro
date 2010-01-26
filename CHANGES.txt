@@ -257,6 +257,9 @@ Trunk (unreleased changes)
 
     AVRO-377. Add getters and setters for all Avro datum types (massie)
 
+    AVRO-378. Add example code to the C implementation and update 
+              documentation (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

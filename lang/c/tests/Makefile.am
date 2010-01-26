@@ -1,5 +1,5 @@
 # -pedantic
-AM_CPPFLAGS=-I$(top_srcdir)/src -I$(top_srcdir)/jansson/src
+AM_CPPFLAGS=-I$(top_srcdir)/src
 AM_CFLAGS=-Wall 
 ACLOCAL_AMFLAGS=-I m4
 

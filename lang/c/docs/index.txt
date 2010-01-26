@@ -29,17 +29,76 @@ Avro in general, http://hadoop.apache.org/avro/[visit the Avro website].
                                    
 ....
 
-The C implementation is still *alpha* is not ready for
-production use.  The current code is being tested on
-+MacOS X+ and +Linux+.
+The C implementation is still not quite ready for production use.
+The current code is being tested on +MacOS X+ and +Linux+.  We're
+always looking for contributions so, if you're a C hacker, please
+feel free to submit patches to the project by visiting
+http://hadoop.apache.org/avro/[the Avro website].
 
-We're making rapid progress and the +avro.h+ header file 
-can give you an idea of what the API will likely look like.
+== Examples
+
+Imagine you're a free-lance hacker in Leonardo, New Jersey and you've 
+been approached by the owner of the local *Quick Stop Convenience* store.
+He wants you to create a contact database case he needs to call an employee 
+to work on their day off.
+
+You might build a simple contact system using Avro C like the following...
+
+[source,c]
+----
+include::../examples/quickstop.c[]
+----
+
+When you compile and run this program, you should get the following output
+
+----
+Successfully added Hicks, Dante id=1
+Successfully added Graves, Randal id=2
+Successfully added Loughran, Veronica id=3
+Successfully added Bree, Caitlin id=4
+Successfully added Silent, Bob id=5
+Successfully added ???, Jay id=6
+
+Avro is compact. Here is the data for all 6 people.
+| 02 0A 44 61 6E 74 65 0A | 48 69 63 6B 73 1C 28 35 |	..Dante.Hicks.(5
+| 35 35 29 20 31 32 33 2D | 34 35 36 37 40 04 0C 52 |	55) 123-4567@..R
+| 61 6E 64 61 6C 0C 47 72 | 61 76 65 73 1C 28 35 35 |	andal.Graves.(55
+| 35 29 20 31 32 33 2D 35 | 36 37 38 3C 06 10 56 65 |	5) 123-5678<..Ve
+| 72 6F 6E 69 63 61 10 4C | 6F 75 67 68 72 61 6E 1C |	ronica.Loughran.
+| 28 35 35 35 29 20 31 32 | 33 2D 30 39 38 37 38 08 |	(555) 123-09878.
+| 0E 43 61 69 74 6C 69 6E | 08 42 72 65 65 1C 28 35 |	.Caitlin.Bree.(5
+| 35 35 29 20 31 32 33 2D | 32 33 32 33 36 0A 06 42 |	55) 123-23236..B
+| 6F 62 0C 53 69 6C 65 6E | 74 1C 28 35 35 35 29 20 |	ob.Silent.(555) 
+| 31 32 33 2D 36 34 32 32 | 3A 0C 06 4A 61 79 06 3F |	123-6422:..Jay.?
+| 3F 3F 1C 28 35 35 35 29 | 20 31 32 33 2D 39 31 38 |	??.(555) 123-918
+| 32 34 .. .. .. .. .. .. | .. .. .. .. .. .. .. .. |	24..............
+
+Now let's read all the records back out
+1 |           Dante |           Hicks |            (555) 123-4567 |   32
+2 |          Randal |          Graves |            (555) 123-5678 |   30
+3 |        Veronica |        Loughran |            (555) 123-0987 |   28
+4 |         Caitlin |            Bree |            (555) 123-2323 |   27
+5 |             Bob |          Silent |            (555) 123-6422 |   29
+6 |             Jay |             ??? |            (555) 123-9182 |   26
+----
+
+The *Quick Stop* store owner was so pleased, he asked you to create a 
+movie database for his *RST Video* store.
+
+== Reference files
+
+=== avro.h
+
+The +avro.h+ header file contains the complete public API
+for +Avro C+.  The documentation is rather sparse right now
+but we'll be adding more information soon.
 
 [source,c]
 ----
 include::../src/avro.h[]
 ----
+
+=== test_avro_data.c 
 
 Another good way to learn how to encode/decode data in +Avro C+ is
 to look at the +test_avro_data.c+ unit test.  This simple unit test

@@ -434,6 +434,7 @@ avro_record_field_set(const avro_datum_t datum,
 				return ENOMEM;
 			}
 		}
+		avro_datum_incref(field_value);
 		st_insert(record->fields, (st_data_t) key,
 			  (st_data_t) field_value);
 		return 0;
@@ -590,6 +591,7 @@ avro_map_set(const avro_datum_t datum, const char *key,
 			return ENOMEM;
 		}
 	}
+	avro_datum_incref(value);
 	st_insert(map->map, (st_data_t) save_key, (st_data_t) value);
 	return 0;
 }
@@ -623,7 +625,7 @@ avro_array_append_datum(const avro_datum_t array_datum,
 	if (!el) {
 		return ENOMEM;
 	}
-	el->datum = datum;
+	el->datum = avro_datum_incref(datum);
 	STAILQ_INSERT_TAIL(&array->els, el, els);
 	array->num_elements++;
 	return 0;

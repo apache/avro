@@ -1,5 +1,5 @@
 EXTRA_DIST=version.sh m4
-SUBDIRS = docs jansson src tests
+SUBDIRS = docs jansson src tests examples
 
 # Linux kernel source indent format options
 INDENT_OPTS=-nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -ce -ci4 \
@@ -7,7 +7,7 @@ INDENT_OPTS=-nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -ce -ci4 \
 -saf -saw -ncs -nsc -sob -nfca -cp33 -ss -ts8
 
 pretty:
-	@for dir in src tests; do \
+	@for dir in src tests examples; do \
 	indent $(INDENT_OPTS) $(top_srcdir)/$$dir/*.[c,h]; \
 	mv $(top_srcdir)/$$dir/*~ /tmp; \
 	done

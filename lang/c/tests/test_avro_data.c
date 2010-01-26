@@ -182,16 +182,21 @@ static int test_record(void)
 {
 	avro_schema_t schema = avro_schema_record("person");
 	avro_datum_t datum = avro_record("person");
+	avro_datum_t name_datum, age_datum;
 
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
 
-	avro_record_field_set(datum, "name",
-			      avro_wrapstring("Joseph Campbell"));
-	avro_record_field_set(datum, "age", avro_int32(83));
+	name_datum = avro_wrapstring("Joseph Campbell");
+	age_datum = avro_int32(83);
+
+	avro_record_field_set(datum, "name", name_datum);
+	avro_record_field_set(datum, "age", age_datum);
 
 	write_read_check(schema, NULL, datum, "record");
 
+	avro_datum_decref(name_datum);
+	avro_datum_decref(age_datum);
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
 	return 0;
@@ -221,11 +226,14 @@ static int test_array(void)
 	avro_datum_t datum = avro_array();
 
 	for (i = 0; i < 10; i++) {
-		rval = avro_array_append_datum(datum, avro_int32(i));
+		avro_datum_t i32_datum = avro_int32(i);
+		rval = avro_array_append_datum(datum, i32_datum);
+		avro_datum_decref(i32_datum);
 		if (rval) {
-			exit(rval);
+			exit(EXIT_FAILURE);
 		}
 	}
+
 	write_read_check(schema, NULL, datum, "array");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
@@ -240,7 +248,9 @@ static int test_map(void)
 	char *nums[] =
 	    { "zero", "one", "two", "three", "four", "five", "six", NULL };
 	while (nums[i]) {
-		avro_map_set(datum, nums[i], avro_int64(i));
+		avro_datum_t i_datum = avro_int64(i);
+		avro_map_set(datum, nums[i], i_datum);
+		avro_datum_decref(i_datum);
 		i++;
 	}
 	write_read_check(schema, NULL, datum, "map");
