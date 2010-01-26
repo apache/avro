@@ -1,8 +1,5 @@
 *.pyc
 .svn
-/.classpath
-/.eclipse
-/.project
 /build
 test-output
 /dist

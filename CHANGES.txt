@@ -277,6 +277,8 @@ Trunk (unreleased changes)
 
     AVRO-354. Performance improvement to BinaryDecoder.readInt() (Kevin Oliver via thiru)
 
+    AVRO-343. Minor fixes to Eclipse config after build re-org (philz)
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
