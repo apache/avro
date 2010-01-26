@@ -252,6 +252,8 @@ Trunk (unreleased changes)
 
     AVRO-371. Add support for encoding/decoding unions (massie)
 
+    AVRO-377. Add getters and setters for all Avro datum types (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

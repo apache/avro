@@ -57,21 +57,21 @@ avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 	case AVRO_BYTES:
 		return is_avro_bytes(datum);
 
-	case AVRO_INT:
-		return is_avro_int(datum)
-		    || (is_avro_long(datum)
-			&& (INT_MIN <= avro_datum_to_long(datum)->l
-			    && avro_datum_to_long(datum)->l <= INT_MAX));
+	case AVRO_INT32:
+		return is_avro_int32(datum)
+		    || (is_avro_int64(datum)
+			&& (INT_MIN <= avro_datum_to_int64(datum)->i64
+			    && avro_datum_to_int64(datum)->i64 <= INT_MAX));
 
-	case AVRO_LONG:
-		return is_avro_int(datum) || is_avro_long(datum);
+	case AVRO_INT64:
+		return is_avro_int32(datum) || is_avro_int64(datum);
 
 	case AVRO_FLOAT:
-		return is_avro_int(datum) || is_avro_long(datum)
+		return is_avro_int32(datum) || is_avro_int64(datum)
 		    || is_avro_float(datum);
 
 	case AVRO_DOUBLE:
-		return is_avro_int(datum) || is_avro_long(datum)
+		return is_avro_int32(datum) || is_avro_int64(datum)
 		    || is_avro_float(datum) || is_avro_double(datum);
 
 	case AVRO_FIXED:

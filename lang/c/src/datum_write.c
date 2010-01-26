@@ -181,13 +181,13 @@ avro_write_data(avro_writer_t writer, avro_schema_t writer_schema,
 		    enc->write_bytes(writer, avro_datum_to_bytes(datum)->bytes,
 				     avro_datum_to_bytes(datum)->size);
 		break;
-	case AVRO_INT:
+	case AVRO_INT32:
 		{
 			int32_t i;
-			if (is_avro_int(datum)) {
-				i = avro_datum_to_int(datum)->i;
-			} else if (is_avro_long(datum)) {
-				i = (int32_t) avro_datum_to_long(datum)->l;
+			if (is_avro_int32(datum)) {
+				i = avro_datum_to_int32(datum)->i32;
+			} else if (is_avro_int64(datum)) {
+				i = (int32_t) avro_datum_to_int64(datum)->i64;
 			} else {
 				assert(0
 				       &&
@@ -196,16 +196,16 @@ avro_write_data(avro_writer_t writer, avro_schema_t writer_schema,
 			rval = enc->write_int(writer, i);
 		}
 		break;
-	case AVRO_LONG:
-		rval = enc->write_long(writer, avro_datum_to_long(datum)->l);
+	case AVRO_INT64:
+		rval = enc->write_long(writer, avro_datum_to_int64(datum)->i64);
 		break;
 	case AVRO_FLOAT:
 		{
 			float f;
-			if (is_avro_int(datum)) {
-				f = (float)(avro_datum_to_int(datum)->i);
-			} else if (is_avro_long(datum)) {
-				f = (float)(avro_datum_to_long(datum)->l);
+			if (is_avro_int32(datum)) {
+				f = (float)(avro_datum_to_int32(datum)->i32);
+			} else if (is_avro_int64(datum)) {
+				f = (float)(avro_datum_to_int64(datum)->i64);
 			} else if (is_avro_float(datum)) {
 				f = avro_datum_to_float(datum)->f;
 			} else if (is_avro_double(datum)) {
@@ -221,10 +221,10 @@ avro_write_data(avro_writer_t writer, avro_schema_t writer_schema,
 	case AVRO_DOUBLE:
 		{
 			double d;
-			if (is_avro_int(datum)) {
-				d = (double)(avro_datum_to_int(datum)->i);
-			} else if (is_avro_long(datum)) {
-				d = (double)(avro_datum_to_long(datum)->l);
+			if (is_avro_int32(datum)) {
+				d = (double)(avro_datum_to_int32(datum)->i32);
+			} else if (is_avro_int64(datum)) {
+				d = (double)(avro_datum_to_int64(datum)->i64);
 			} else if (is_avro_float(datum)) {
 				d = (double)(avro_datum_to_float(datum)->f);
 			} else if (is_avro_double(datum)) {

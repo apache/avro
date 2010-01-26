@@ -16,6 +16,7 @@
  */
 #include <stdlib.h>
 #include <stdint.h>
+#include <limits.h>
 #include <time.h>
 #include <string.h>
 #include "avro.h"
@@ -25,6 +26,27 @@ avro_reader_t reader;
 avro_writer_t writer;
 
 typedef int (*avro_test) (void);
+
+void init_rand(void)
+{
+	srand(time(NULL));
+}
+
+double rand_number(double from, double to)
+{
+	double range = to - from;
+	return from + ((double)rand() / (RAND_MAX + 1.0)) * range;
+}
+
+int64_t rand_int64(void)
+{
+	return (int64_t) rand_number(LONG_MIN, LONG_MAX);
+}
+
+int32_t rand_int32(void)
+{
+	return (int32_t) rand_number(INT_MIN, INT_MAX);
+}
 
 void
 write_read_check(avro_schema_t writers_schema,
@@ -82,12 +104,12 @@ static int test_bytes(void)
 	return 0;
 }
 
-static int test_int(void)
+static int test_int32(void)
 {
 	int i;
 	avro_schema_t writer_schema = avro_schema_int();
 	for (i = 0; i < 100; i++) {
-		avro_datum_t datum = avro_int(rand());
+		avro_datum_t datum = avro_int32(rand_int32());
 		write_read_check(writer_schema, NULL, datum, "int");
 		avro_datum_decref(datum);
 	}
@@ -95,12 +117,12 @@ static int test_int(void)
 	return 0;
 }
 
-static int test_long(void)
+static int test_int64(void)
 {
 	int i;
 	avro_schema_t writer_schema = avro_schema_long();
 	for (i = 0; i < 100; i++) {
-		avro_datum_t datum = avro_long(rand());
+		avro_datum_t datum = avro_int64(rand_int64());
 		write_read_check(writer_schema, NULL, datum, "long");
 		avro_datum_decref(datum);
 	}
@@ -113,7 +135,7 @@ static int test_double(void)
 	int i;
 	avro_schema_t schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
-		avro_datum_t datum = avro_double((double)(rand()));
+		avro_datum_t datum = avro_double(rand_number(-1.0E10, 1.0E10));
 		write_read_check(schema, NULL, datum, "double");
 		avro_datum_decref(datum);
 	}
@@ -126,7 +148,7 @@ static int test_float(void)
 	int i;
 	avro_schema_t schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
-		avro_datum_t datum = avro_double((double)(rand()));
+		avro_datum_t datum = avro_double(rand_number(-1.0E10, 1.0E10));
 		write_read_check(schema, NULL, datum, "float");
 		avro_datum_decref(datum);
 	}
@@ -166,7 +188,7 @@ static int test_record(void)
 
 	avro_record_field_set(datum, "name",
 			      avro_wrapstring("Joseph Campbell"));
-	avro_record_field_set(datum, "age", avro_int(83));
+	avro_record_field_set(datum, "age", avro_int32(83));
 
 	write_read_check(schema, NULL, datum, "record");
 
@@ -199,7 +221,7 @@ static int test_array(void)
 	avro_datum_t datum = avro_array();
 
 	for (i = 0; i < 10; i++) {
-		rval = avro_array_append_datum(datum, avro_int(i));
+		rval = avro_array_append_datum(datum, avro_int32(i));
 		if (rval) {
 			exit(rval);
 		}
@@ -218,7 +240,7 @@ static int test_map(void)
 	char *nums[] =
 	    { "zero", "one", "two", "three", "four", "five", "six", NULL };
 	while (nums[i]) {
-		avro_map_set(datum, nums[i], avro_long(i));
+		avro_map_set(datum, nums[i], avro_int64(i));
 		i++;
 	}
 	write_read_check(schema, NULL, datum, "map");
@@ -265,8 +287,8 @@ int main(void)
 		{
 		"string", test_string}, {
 		"bytes", test_bytes}, {
-		"int", test_int}, {
-		"long", test_long}, {
+		"int", test_int32}, {
+		"long", test_int64}, {
 		"float", test_float}, {
 		"double", test_double}, {
 		"boolean", test_boolean}, {
@@ -279,7 +301,7 @@ int main(void)
 		"union", test_union}
 	};
 
-	srandom(time(NULL));
+	init_rand();
 	for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
 		struct avro_tests *test = tests + i;
 		fprintf(stderr, "**** Running %s tests ****\n", test->name);

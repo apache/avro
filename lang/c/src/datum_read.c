@@ -32,14 +32,14 @@ avro_schema_match(avro_schema_t writers_schema, avro_schema_t readers_schema)
 	case AVRO_UNION:
 		return 1;
 
-	case AVRO_INT:
-		return is_avro_int(readers_schema)
-		    || is_avro_long(readers_schema)
+	case AVRO_INT32:
+		return is_avro_int32(readers_schema)
+		    || is_avro_int64(readers_schema)
 		    || is_avro_float(readers_schema)
 		    || is_avro_double(readers_schema);
 
-	case AVRO_LONG:
-		return is_avro_long(readers_schema)
+	case AVRO_INT64:
+		return is_avro_int64(readers_schema)
 		    || is_avro_float(readers_schema)
 		    || is_avro_double(readers_schema);
 
@@ -353,22 +353,22 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		}
 		break;
 
-	case AVRO_INT:
+	case AVRO_INT32:
 		{
 			int32_t i;
 			rval = enc->read_int(reader, &i);
 			if (!rval) {
-				*datum = avro_int(i);
+				*datum = avro_int32(i);
 			}
 		}
 		break;
 
-	case AVRO_LONG:
+	case AVRO_INT64:
 		{
 			int64_t l;
 			rval = enc->read_long(reader, &l);
 			if (!rval) {
-				*datum = avro_long(l);
+				*datum = avro_int64(l);
 			}
 		}
 		break;

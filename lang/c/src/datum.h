@@ -35,14 +35,14 @@ struct avro_bytes_datum_t {
 	void (*free) (void *ptr);
 };
 
-struct avro_int_datum_t {
+struct avro_int32_datum_t {
 	struct avro_obj_t obj;
-	int32_t i;
+	int32_t i32;
 };
 
-struct avro_long_datum_t {
+struct avro_int64_datum_t {
 	struct avro_obj_t obj;
-	int64_t l;
+	int64_t i64;
 };
 
 struct avro_float_datum_t {
@@ -98,8 +98,8 @@ struct avro_array_datum_t {
 
 #define avro_datum_to_string(datum_)    (container_of(datum_, struct avro_string_datum_t, obj))
 #define avro_datum_to_bytes(datum_)     (container_of(datum_, struct avro_bytes_datum_t, obj))
-#define avro_datum_to_int(datum_)       (container_of(datum_, struct avro_int_datum_t, obj))
-#define avro_datum_to_long(datum_)      (container_of(datum_, struct avro_long_datum_t, obj))
+#define avro_datum_to_int32(datum_)     (container_of(datum_, struct avro_int32_datum_t, obj))
+#define avro_datum_to_int64(datum_)     (container_of(datum_, struct avro_int64_datum_t, obj))
 #define avro_datum_to_float(datum_)     (container_of(datum_, struct avro_float_datum_t, obj))
 #define avro_datum_to_double(datum_)    (container_of(datum_, struct avro_double_datum_t, obj))
 #define avro_datum_to_boolean(datum_)   (container_of(datum_, struct avro_boolean_datum_t, obj))

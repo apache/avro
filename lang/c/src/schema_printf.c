@@ -152,9 +152,9 @@ avro_schema_printf_internal(avro_schema_t schema,
 		avro_schema_primitive_print("string", args);
 	} else if (is_avro_bytes(schema)) {
 		avro_schema_primitive_print("bytes", args);
-	} else if (is_avro_int(schema)) {
+	} else if (is_avro_int32(schema)) {
 		avro_schema_primitive_print("int", args);
-	} else if (is_avro_long(schema)) {
+	} else if (is_avro_int64(schema)) {
 		avro_schema_primitive_print("long", args);
 	} else if (is_avro_float(schema)) {
 		avro_schema_primitive_print("float", args);

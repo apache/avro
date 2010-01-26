@@ -62,6 +62,55 @@ avro_datum_t avro_wrapstring(const char *str)
 	return avro_string_private((char *)str, NULL);
 }
 
+int avro_string_get(avro_datum_t datum, char **p)
+{
+	if (!(is_avro_datum(datum) && is_avro_string(datum)) || !p) {
+		return EINVAL;
+	}
+	*p = avro_datum_to_string(datum)->s;
+	return 0;
+}
+
+static int avro_string_set_private(avro_datum_t datum, const char *p,
+				   void (*string_free) (void *ptr))
+{
+	struct avro_string_datum_t *string;
+	if (!(is_avro_datum(datum) && is_avro_string(datum)) || !p) {
+		return EINVAL;
+	}
+	string = avro_datum_to_string(datum);
+	if (string->free) {
+		string->free(string->s);
+	}
+	string->free = string_free;
+	string->s = (char *)p;
+	return 0;
+}
+
+int avro_string_set(avro_datum_t datum, const char *p)
+{
+	char *string_copy = strdup(p);
+	int rval;
+	if (!string_copy) {
+		return ENOMEM;
+	}
+	rval = avro_string_set_private(datum, p, free);
+	if (rval) {
+		free(string_copy);
+	}
+	return rval;
+}
+
+int avro_givestring_set(avro_datum_t datum, const char *p)
+{
+	return avro_string_set_private(datum, p, free);
+}
+
+int avro_wrapstring_set(avro_datum_t datum, const char *p)
+{
+	return avro_string_set_private(datum, p, NULL);
+}
+
 static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 				       void (*bytes_free) (void *ptr))
 {
@@ -98,30 +147,127 @@ avro_datum_t avro_wrapbytes(const char *bytes, int64_t size)
 	return avro_bytes_private((char *)bytes, size, NULL);
 }
 
-avro_datum_t avro_int(int32_t i)
+static int avro_bytes_set_private(avro_datum_t datum, const char *bytes,
+				  const int64_t size,
+				  void (*bytes_free) (void *ptr))
 {
-	struct avro_int_datum_t *datum =
-	    malloc(sizeof(struct avro_int_datum_t));
+	struct avro_bytes_datum_t *b;
+
+	if (!(is_avro_datum(datum) && is_avro_bytes(datum))) {
+		return EINVAL;
+	}
+
+	b = avro_datum_to_bytes(datum);
+	if (b->free) {
+		b->free(b->bytes);
+	}
+
+	b->free = bytes_free;
+	b->bytes = (char *)bytes;
+	return 0;
+}
+
+int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
+{
+	int rval;
+	char *bytes_copy = malloc(size);
+	if (!bytes_copy) {
+		return ENOMEM;
+	}
+	memcpy(bytes_copy, bytes, size);
+	rval = avro_bytes_set_private(datum, bytes, size, free);
+	if (rval) {
+		free(bytes_copy);
+	}
+	return rval;
+}
+
+int avro_givebytes_set(avro_datum_t datum, const char *bytes,
+		       const int64_t size)
+{
+	return avro_bytes_set_private(datum, bytes, size, free);
+}
+
+int avro_wrapbytes_set(avro_datum_t datum, const char *bytes,
+		       const int64_t size)
+{
+	return avro_bytes_set_private(datum, bytes, size, NULL);
+}
+
+int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size)
+{
+	if (!(is_avro_datum(datum) && is_avro_string(datum)) || !bytes || !size) {
+		return EINVAL;
+	}
+	*bytes = avro_datum_to_bytes(datum)->bytes;
+	*size = avro_datum_to_bytes(datum)->size;
+	return 0;
+}
+
+avro_datum_t avro_int32(int32_t i)
+{
+	struct avro_int32_datum_t *datum =
+	    malloc(sizeof(struct avro_int32_datum_t));
 	if (!datum) {
 		return NULL;
 	}
-	datum->i = i;
+	datum->i32 = i;
 
-	avro_datum_init(&datum->obj, AVRO_INT);
+	avro_datum_init(&datum->obj, AVRO_INT32);
 	return &datum->obj;
 }
 
-avro_datum_t avro_long(int64_t l)
+int avro_int32_get(avro_datum_t datum, int32_t * i)
 {
-	struct avro_long_datum_t *datum =
-	    malloc(sizeof(struct avro_long_datum_t));
+	if (!(is_avro_datum(datum) && is_avro_int32(datum)) || !i) {
+		return EINVAL;
+	}
+	*i = avro_datum_to_int32(datum)->i32;
+	return 0;
+}
+
+int avro_int32_set(avro_datum_t datum, const int32_t i)
+{
+	struct avro_int32_datum_t *intp;
+	if (!(is_avro_datum(datum) && is_avro_int32(datum))) {
+		return EINVAL;
+	}
+	intp = avro_datum_to_int32(datum);
+	intp->i32 = i;
+	return 0;
+}
+
+avro_datum_t avro_int64(int64_t l)
+{
+	struct avro_int64_datum_t *datum =
+	    malloc(sizeof(struct avro_int64_datum_t));
 	if (!datum) {
 		return NULL;
 	}
-	datum->l = l;
+	datum->i64 = l;
 
-	avro_datum_init(&datum->obj, AVRO_LONG);
+	avro_datum_init(&datum->obj, AVRO_INT64);
 	return &datum->obj;
+}
+
+int avro_int64_get(avro_datum_t datum, int64_t * l)
+{
+	if (!(is_avro_datum(datum) && is_avro_int64(datum)) || !l) {
+		return EINVAL;
+	}
+	*l = avro_datum_to_int64(datum)->i64;
+	return 0;
+}
+
+int avro_int64_set(avro_datum_t datum, const int64_t l)
+{
+	struct avro_int64_datum_t *longp;
+	if (!(is_avro_datum(datum) && is_avro_int64(datum))) {
+		return EINVAL;
+	}
+	longp = avro_datum_to_int64(datum);
+	longp->i64 = l;
+	return 0;
 }
 
 avro_datum_t avro_float(float f)
@@ -137,6 +283,26 @@ avro_datum_t avro_float(float f)
 	return &datum->obj;
 }
 
+int avro_float_set(avro_datum_t datum, const float f)
+{
+	struct avro_float_datum_t *floatp;
+	if (!(is_avro_datum(datum) && is_avro_float(datum))) {
+		return EINVAL;
+	}
+	floatp = avro_datum_to_float(datum);
+	floatp->f = f;
+	return 0;
+}
+
+int avro_float_get(avro_datum_t datum, float *f)
+{
+	if (!(is_avro_datum(datum) && is_avro_float(datum)) || !f) {
+		return EINVAL;
+	}
+	*f = avro_datum_to_float(datum)->f;
+	return 0;
+}
+
 avro_datum_t avro_double(double d)
 {
 	struct avro_double_datum_t *datum =
@@ -150,6 +316,26 @@ avro_datum_t avro_double(double d)
 	return &datum->obj;
 }
 
+int avro_double_set(avro_datum_t datum, const double d)
+{
+	struct avro_double_datum_t *doublep;
+	if (!(is_avro_datum(datum) && is_avro_double(datum))) {
+		return EINVAL;
+	}
+	doublep = avro_datum_to_double(datum);
+	doublep->d = d;
+	return 0;
+}
+
+int avro_double_get(avro_datum_t datum, double *d)
+{
+	if (!(is_avro_datum(datum) && is_avro_double(datum)) || !d) {
+		return EINVAL;
+	}
+	*d = avro_datum_to_double(datum)->d;
+	return 0;
+}
+
 avro_datum_t avro_boolean(int8_t i)
 {
 	struct avro_boolean_datum_t *datum =
@@ -160,6 +346,26 @@ avro_datum_t avro_boolean(int8_t i)
 	datum->i = i;
 	avro_datum_init(&datum->obj, AVRO_BOOLEAN);
 	return &datum->obj;
+}
+
+int avro_boolean_set(avro_datum_t datum, const int8_t i)
+{
+	struct avro_boolean_datum_t *booleanp;
+	if (!(is_avro_datum(datum) && is_avro_boolean(datum))) {
+		return EINVAL;
+	}
+	booleanp = avro_datum_to_boolean(datum);
+	booleanp->i = i;
+	return 0;
+}
+
+int avro_boolean_get(avro_datum_t datum, int8_t * i)
+{
+	if (!(is_avro_datum(datum) && is_avro_boolean(datum)) || !i) {
+		return EINVAL;
+	}
+	*i = avro_datum_to_boolean(datum)->i;
+	return 0;
 }
 
 avro_datum_t avro_null(void)
@@ -289,6 +495,63 @@ avro_datum_t avro_givefixed(const char *name, const char *bytes,
 	return avro_fixed_private(name, bytes, size, free);
 }
 
+static int avro_fixed_set_private(avro_datum_t datum, const char *bytes,
+				  const int64_t size,
+				  void (*fixed_free) (void *ptr))
+{
+	struct avro_fixed_datum_t *fixed;
+
+	if (!(is_avro_datum(datum) && is_avro_fixed(datum))) {
+		return EINVAL;
+	}
+
+	fixed = avro_datum_to_fixed(datum);
+	if (fixed->free) {
+		fixed->free(fixed->bytes);
+	}
+
+	fixed->free = fixed_free;
+	fixed->bytes = (char *)bytes;
+	return 0;
+}
+
+int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
+{
+	int rval;
+	char *bytes_copy = malloc(size);
+	if (!bytes_copy) {
+		return ENOMEM;
+	}
+	memcpy(bytes_copy, bytes, size);
+	rval = avro_fixed_set_private(datum, bytes, size, free);
+	if (rval) {
+		free(bytes_copy);
+	}
+	return rval;
+}
+
+int avro_givefixed_set(avro_datum_t datum, const char *bytes,
+		       const int64_t size)
+{
+	return avro_fixed_set_private(datum, bytes, size, free);
+}
+
+int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
+		       const int64_t size)
+{
+	return avro_fixed_set_private(datum, bytes, size, NULL);
+}
+
+int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size)
+{
+	if (!(is_avro_datum(datum) && is_avro_string(datum)) || !bytes || !size) {
+		return EINVAL;
+	}
+	*bytes = avro_datum_to_fixed(datum)->bytes;
+	*size = avro_datum_to_fixed(datum)->size;
+	return 0;
+}
+
 avro_datum_t avro_map(void)
 {
 	struct avro_map_datum_t *datum =
@@ -395,15 +658,15 @@ static void avro_datum_free(avro_datum_t datum)
 				free(bytes);
 			}
 			break;
-		case AVRO_INT:{
-				struct avro_int_datum_t *i;
-				i = avro_datum_to_int(datum);
+		case AVRO_INT32:{
+				struct avro_int32_datum_t *i;
+				i = avro_datum_to_int32(datum);
 				free(i);
 			}
 			break;
-		case AVRO_LONG:{
-				struct avro_long_datum_t *l;
-				l = avro_datum_to_long(datum);
+		case AVRO_INT64:{
+				struct avro_int64_datum_t *l;
+				l = avro_datum_to_int64(datum);
 				free(l);
 			}
 			break;

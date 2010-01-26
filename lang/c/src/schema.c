@@ -64,8 +64,8 @@ static void avro_schema_free(avro_schema_t schema)
 		switch (avro_typeof(schema)) {
 		case AVRO_STRING:
 		case AVRO_BYTES:
-		case AVRO_INT:
-		case AVRO_LONG:
+		case AVRO_INT32:
+		case AVRO_INT64:
 		case AVRO_FLOAT:
 		case AVRO_DOUBLE:
 		case AVRO_BOOLEAN:
@@ -195,7 +195,7 @@ avro_schema_t avro_schema_bytes(void)
 avro_schema_t avro_schema_int(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_INT,
+		.type = AVRO_INT32,
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
@@ -205,7 +205,7 @@ avro_schema_t avro_schema_int(void)
 avro_schema_t avro_schema_long(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_LONG,
+		.type = AVRO_INT64,
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
@@ -468,9 +468,9 @@ avro_type_from_json_t(json_t * json, avro_type_t * type,
 	} else if (strcmp(type_str, "bytes") == 0) {
 		*type = AVRO_BYTES;
 	} else if (strcmp(type_str, "int") == 0) {
-		*type = AVRO_INT;
+		*type = AVRO_INT32;
 	} else if (strcmp(type_str, "long") == 0) {
-		*type = AVRO_LONG;
+		*type = AVRO_INT64;
 	} else if (strcmp(type_str, "float") == 0) {
 		*type = AVRO_FLOAT;
 	} else if (strcmp(type_str, "double") == 0) {
@@ -522,11 +522,11 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 		*schema = avro_schema_bytes();
 		break;
 
-	case AVRO_INT:
+	case AVRO_INT32:
 		*schema = avro_schema_int();
 		break;
 
-	case AVRO_LONG:
+	case AVRO_INT64:
 		*schema = avro_schema_long();
 		break;
 
@@ -804,8 +804,8 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 	switch (avro_typeof(schema)) {
 	case AVRO_STRING:
 	case AVRO_BYTES:
-	case AVRO_INT:
-	case AVRO_LONG:
+	case AVRO_INT32:
+	case AVRO_INT64:
 	case AVRO_FLOAT:
 	case AVRO_DOUBLE:
 	case AVRO_BOOLEAN:

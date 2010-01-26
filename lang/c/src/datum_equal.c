@@ -113,10 +113,12 @@ int avro_datum_equal(avro_datum_t a, avro_datum_t b)
 		    && memcmp(avro_datum_to_bytes(a)->bytes,
 			      avro_datum_to_bytes(b)->bytes,
 			      avro_datum_to_bytes(a)->size) == 0;
-	case AVRO_INT:
-		return avro_datum_to_int(a)->i == avro_datum_to_int(b)->i;
-	case AVRO_LONG:
-		return avro_datum_to_long(a)->l == avro_datum_to_long(b)->l;
+	case AVRO_INT32:
+		return avro_datum_to_int32(a)->i32 ==
+		    avro_datum_to_int32(b)->i32;
+	case AVRO_INT64:
+		return avro_datum_to_int64(a)->i64 ==
+		    avro_datum_to_int64(b)->i64;
 	case AVRO_FLOAT:
 		return avro_datum_to_float(a)->f == avro_datum_to_float(b)->f;
 	case AVRO_DOUBLE:

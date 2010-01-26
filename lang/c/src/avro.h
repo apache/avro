@@ -29,8 +29,8 @@ extern "C" {
 enum avro_type_t {
 	AVRO_STRING,
 	AVRO_BYTES,
-	AVRO_INT,
-	AVRO_LONG,
+	AVRO_INT32,
+	AVRO_INT64,
 	AVRO_FLOAT,
 	AVRO_DOUBLE,
 	AVRO_BOOLEAN,
@@ -64,16 +64,16 @@ struct avro_obj_t {
 #define avro_typeof(obj)      ((obj)->type)
 #define is_avro_string(obj)   (obj && avro_typeof(obj) == AVRO_STRING)
 #define is_avro_bytes(obj)    (obj && avro_typeof(obj) == AVRO_BYTES)
-#define is_avro_int(obj)      (obj && avro_typeof(obj) == AVRO_INT)
-#define is_avro_long(obj)     (obj && avro_typeof(obj) == AVRO_LONG)
+#define is_avro_int32(obj)    (obj && avro_typeof(obj) == AVRO_INT32)
+#define is_avro_int64(obj)    (obj && avro_typeof(obj) == AVRO_INT64)
 #define is_avro_float(obj)    (obj && avro_typeof(obj) == AVRO_FLOAT)
 #define is_avro_double(obj)   (obj && avro_typeof(obj) == AVRO_DOUBLE)
 #define is_avro_boolean(obj)  (obj && avro_typeof(obj) == AVRO_BOOLEAN)
 #define is_avro_null(obj)     (obj && avro_typeof(obj) == AVRO_NULL)
 #define is_avro_primitive(obj)(is_avro_string(obj) \
                              ||is_avro_bytes(obj) \
-                             ||is_avro_int(obj) \
-                             ||is_avro_long(obj) \
+                             ||is_avro_int32(obj) \
+                             ||is_avro_int64(obj) \
                              ||is_avro_float(obj) \
                              ||is_avro_double(obj) \
                              ||is_avro_boolean(obj) \
@@ -166,6 +166,8 @@ void avro_writer_free(avro_writer_t writer);
 /*
  * datum 
  */
+
+/* constructors */
 typedef struct avro_obj_t *avro_datum_t;
 avro_datum_t avro_string(const char *str);
 avro_datum_t avro_wrapstring(const char *str);
@@ -173,38 +175,68 @@ avro_datum_t avro_givestring(const char *str);
 avro_datum_t avro_bytes(const char *buf, int64_t len);
 avro_datum_t avro_wrapbytes(const char *buf, int64_t len);
 avro_datum_t avro_givebytes(const char *buf, int64_t len);
-avro_datum_t avro_int(int32_t i);
-avro_datum_t avro_long(int64_t l);
+avro_datum_t avro_int32(int32_t i);
+avro_datum_t avro_int64(int64_t l);
 avro_datum_t avro_float(float f);
 avro_datum_t avro_double(double d);
 avro_datum_t avro_boolean(int8_t i);
 avro_datum_t avro_null(void);
-
 avro_datum_t avro_record(const char *name);
-avro_datum_t avro_record_field_get(const avro_datum_t record,
-				   const char *field_name);
-int avro_record_field_set(const avro_datum_t record,
-			  const char *field_name, const avro_datum_t value);
-
 avro_datum_t avro_enum(const char *name, const char *symbol);
-
 avro_datum_t avro_fixed(const char *name, const char *bytes,
 			const int64_t size);
 avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
 			    const int64_t size);
 avro_datum_t avro_givefixed(const char *name, const char *bytes,
 			    const int64_t size);
-
 avro_datum_t avro_map(void);
+avro_datum_t avro_array(void);
+avro_datum_t avro_union(const avro_schema_t schema, const avro_datum_t datum);
+
+/* getters */
+int avro_string_get(avro_datum_t datum, char **p);
+int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size);
+int avro_int32_get(avro_datum_t datum, int32_t * i);
+int avro_int64_get(avro_datum_t datum, int64_t * l);
+int avro_float_get(avro_datum_t datum, float *f);
+int avro_double_get(avro_datum_t datum, double *d);
+int avro_boolean_get(avro_datum_t datum, int8_t * i);
+
+int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size);
+avro_datum_t avro_record_field_get(const avro_datum_t record,
+				   const char *field_name);
+
+/* setters */
+int avro_string_set(avro_datum_t datum, const char *p);
+int avro_givestring_set(avro_datum_t datum, const char *p);
+int avro_wrapstring_set(avro_datum_t datum, const char *p);
+
+int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size);
+int avro_givebytes_set(avro_datum_t datum, const char *bytes,
+		       const int64_t size);
+int avro_wrapbytes_set(avro_datum_t datum, const char *bytes,
+		       const int64_t size);
+
+int avro_int32_set(avro_datum_t datum, const int32_t i);
+int avro_int64_set(avro_datum_t datum, const int64_t l);
+int avro_float_set(avro_datum_t datum, const float f);
+int avro_double_set(avro_datum_t datum, const double d);
+int avro_boolean_set(avro_datum_t datum, const int8_t i);
+
+int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size);
+int avro_givefixed_set(avro_datum_t datum, const char *bytes,
+		       const int64_t size);
+int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
+		       const int64_t size);
+
+int avro_record_field_set(const avro_datum_t record,
+			  const char *field_name, const avro_datum_t value);
 int avro_map_set(const avro_datum_t map, const char *key,
 		 const avro_datum_t value);
-
-avro_datum_t avro_array(void);
 int avro_array_append_datum(const avro_datum_t array_datum,
 			    const avro_datum_t datum);
 
-avro_datum_t avro_union(const avro_schema_t schema, const avro_datum_t datum);
-
+/* reference counting */
 avro_datum_t avro_datum_incref(avro_datum_t value);
 void avro_datum_decref(avro_datum_t value);
 
