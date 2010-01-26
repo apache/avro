@@ -375,6 +375,8 @@ Trunk (unreleased changes)
 
     AVRO-375. Initializing uninizialized encoders fail (thiru)
 
+    AVRO-373. EOF detection broken in JsonDecoder (thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

@@ -60,6 +60,7 @@ public class JsonDecoder extends ParsingDecoder
   }
 
   private void advance(Symbol symbol) throws IOException {
+    this.parser.processTrailingImplicitActions();
     if (in.getCurrentToken() == null && this.parser.depth() == 1)
       throw new EOFException();
     parser.advance(symbol);
