@@ -15,7 +15,7 @@ Avro provides:
 * A container file, to store persistent data.
 * Remote procedure call (RPC).
 
-This document will focus on the C API for Avro.  To learn more about
+This document will focus on the C implementation of Avro.  To learn more about
 Avro in general, http://hadoop.apache.org/avro/[visit the Avro website].
 
 == Introduction to Avro C 
@@ -29,17 +29,97 @@ Avro in general, http://hadoop.apache.org/avro/[visit the Avro website].
                                    
 ....
 
+[quote,Waldi Ravens,(walra%moacs11 @ nl.net) 94/03/18]
+____
+A C program is like a fast dance on a newly waxed dance floor by people carrying razors.
+____
+
 The C implementation is still not quite ready for production use.
 The current code is being tested on +MacOS X+ and +Linux+.  We're
 always looking for contributions so, if you're a C hacker, please
-feel free to submit patches to the project by visiting
-http://hadoop.apache.org/avro/[the Avro website].
+feel free to http://hadoop.apache.org/avro/[submit patches to the
+project].
+
+== Reference Counting
+
++Avro C+ does reference counting for all schema and data objects.
+When the number of references drops to zero, the memory is freed.
+
+For example, to create and free a string, you would use:
+----
+avro_datum_t string = avro_string("This is my string");
+
+...
+avro_datum_decref(string);
+----
+
+Things get a little more complicated when you consider more elaborate
+schema and data structures.
+
+For example, let's say that you create a record with a single
+string field:
+----
+avro_datum_t example = avro_record("Example");
+avro_datum_t solo_field = avro_string("Example field value");
+
+avro_record_set(example, "solo", solo_field);
+
+...
+avro_datum_decref(example);
+----
+
+In this example, the +solo_field+ datum would *not* be freed since it 
+has two references: the original reference and a reference inside
+the +Example+ record.  The +avro_datum_decref(example)+ call drops
+the number of reference to one.  If you are finished with the +solo_field+
+schema, then you need to +avro_schema_decref(solo_field)+ to
+completely dereference the +solo_field+ datum and free it.
+
+== Wrap It and Give It
+
+You'll notice that some datatypes can be "wrapped" and "given".  This
+allows C programmers the freedom to decide who is responsible for
+the memory.  Let's take strings for example.
+
+To create a string datum, you have three different methods:
+----
+avro_datum_t avro_string(const char *str);
+avro_datum_t avro_wrapstring(const char *str);
+avro_datum_t avro_givestring(const char *str);
+----
+
+If you use, +avro_string+ then +Avro C+ will make a copy of your
+string and free it when the datum is dereferenced.  In some cases,
+especially when dealing with large amounts of data, you want 
+to avoid this memory copy.  That's where +avro_wrapstring+ and
++avro_givestring+ can help.
+
+If you use, +avro_wrapstring+ then +Avro C+ will do no memory 
+management at all.  It will just save a pointer to your data and
+it's your responsibility to free the string.  
+
+WARNING: When using +avro_wrapstring+, do not free the string 
+before you dereference the string datum with +avro_datum_decref()+.
+
+Lastly, if you use +avro_givestring+ then +Avro C+ will free the
+string later when the datum is dereferenced.  In a sense, you
+are "giving" responsibility for freeing the string to +Avro C+.
+
+[WARNING] 
+===============================
+Don't "give" +Avro C+ a string that you haven't allocated from the heap with +malloc+.
+
+For example, *don't* do this:
+----
+avro_datum_t bad_idea = avro_givestring("This isn't allocated on the heap");
+----
+===============================
 
 == Examples
 
 Imagine you're a free-lance hacker in Leonardo, New Jersey and you've 
 been approached by the owner of the local *Quick Stop Convenience* store.
-He wants you to create a contact database case he needs to call an employee 
+He wants you to create a contact database case he needs to call employees
 to work on their day off.
 
 You might build a simple contact system using Avro C like the following...
@@ -83,7 +163,7 @@ Now let's read all the records back out
 ----
 
 The *Quick Stop* store owner was so pleased, he asked you to create a 
-movie database for his *RST Video* store.
+movie database for his *RST Video* store.  
 
 == Reference files
 

@@ -262,6 +262,9 @@ Trunk (unreleased changes)
 
     AVRO-379. Changed record getter/setter API to match other datatypes (massie)
 
+    AVRO-381. Update documentation to talk about reference counting and 
+              memory management (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
