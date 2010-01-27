@@ -430,7 +430,7 @@ public class GenericData {
     case NULL:
       return 0;
     default:
-      return o.hashCode();
+      return (o == null) ? 0 : o.hashCode();
     }
   }
 

@@ -390,6 +390,8 @@ Trunk (unreleased changes)
 
     AVRO-373. EOF detection broken in JsonDecoder (thiru)
 
+    AVRO-382. Avro hashCode throws a NullPointerException when fields are uninitialized (Michael Armbrust via philz)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

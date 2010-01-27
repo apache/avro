@@ -82,6 +82,12 @@ public class TestProtocolSpecific {
   }
 
   @Test
+  public void testHashCode() throws IOException {
+    TestError error = new TestError();
+    error.hashCode();
+  }
+
+  @Test
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
     record.name = new Utf8("foo");
