@@ -265,6 +265,8 @@ Trunk (unreleased changes)
     AVRO-381. Update documentation to talk about reference counting and 
               memory management (massie)
 
+    AVRO-384. Add schema projection to the C implementation (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

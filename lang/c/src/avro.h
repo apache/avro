@@ -255,6 +255,7 @@ int avro_schema_datum_validate(avro_schema_t
 int avro_read_data(avro_reader_t reader,
 		   avro_schema_t writer_schema,
 		   avro_schema_t reader_schema, avro_datum_t * datum);
+int avro_skip_data(avro_reader_t reader, avro_schema_t writer_schema);
 int avro_write_data(avro_writer_t writer,
 		    avro_schema_t writer_schema, avro_datum_t datum);
 

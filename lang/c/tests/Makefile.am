@@ -15,7 +15,4 @@ test_avro_schema_LDADD=$(test_LDADD)
 test_avro_data_SOURCES=test_avro_data.c
 test_avro_data_LDADD=$(test_LDADD)
 
-test_avro_interop_SOURCES=test_avro_interop.c
-test_avro_interop_LDADD=$(test_LDADD)
-
 TESTS=$(check_PROGRAMS) test_valgrind

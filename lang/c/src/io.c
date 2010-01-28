@@ -139,7 +139,7 @@ avro_writer_t avro_writer_memory(const char *buf, int64_t len)
 static int
 avro_read_memory(struct avro_memory_reader_t *reader, void *buf, int64_t len)
 {
-	if (len) {
+	if (len > 0) {
 		if ((reader->len - reader->read) < len) {
 			return ENOSPC;
 		}
@@ -174,6 +174,42 @@ int avro_read(avro_reader_t reader, void *buf, int64_t len)
 	return EINVAL;
 }
 
+static int avro_skip_memory(struct avro_memory_reader_t *reader, int64_t len)
+{
+	if (len > 0) {
+		if ((reader->len - reader->read) < len) {
+			return ENOSPC;
+		}
+		reader->read += len;
+	}
+	return 0;
+}
+
+static int avro_skip_file(struct avro_file_reader_t *reader, int64_t len)
+{
+	int rval;
+	if (len > 0) {
+		rval = fseek(reader->fp, len, SEEK_CUR);
+		if (rval < 0) {
+			return rval;
+		}
+	}
+	return 0;
+}
+
+int avro_skip(avro_reader_t reader, int64_t len)
+{
+	if (len >= 0) {
+		if (is_memory_io(reader)) {
+			return avro_skip_memory(avro_reader_to_memory(reader),
+						len);
+		} else if (is_file_io(reader)) {
+			return avro_skip_file(avro_reader_to_file(reader), len);
+		}
+	}
+	return 0;
+}
+
 static int
 avro_write_memory(struct avro_memory_writer_t *writer, void *buf, int64_t len)
 {
@@ -206,20 +242,12 @@ int avro_write(avro_writer_t writer, void *buf, int64_t len)
 		if (is_memory_io(writer)) {
 			return avro_write_memory(avro_writer_to_memory(writer),
 						 buf, len);
-		} else if (is_memory_io(writer)) {
+		} else if (is_file_io(writer)) {
 			return avro_write_file(avro_writer_to_file(writer), buf,
 					       len);
 		}
 	}
 	return EINVAL;
-}
-
-int avro_skip(avro_reader_t reader, int64_t len)
-{
-	/*
-	 * TODO 
-	 */
-	return -1;
 }
 
 void avro_writer_dump(avro_writer_t writer, FILE * fp)

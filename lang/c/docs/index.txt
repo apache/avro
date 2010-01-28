@@ -154,16 +154,25 @@ Avro is compact. Here is the data for all 6 people.
 | 32 34 .. .. .. .. .. .. | .. .. .. .. .. .. .. .. |	24..............
 
 Now let's read all the records back out
-1 |           Dante |           Hicks |            (555) 123-4567 |   32
-2 |          Randal |          Graves |            (555) 123-5678 |   30
-3 |        Veronica |        Loughran |            (555) 123-0987 |   28
-4 |         Caitlin |            Bree |            (555) 123-2323 |   27
-5 |             Bob |          Silent |            (555) 123-6422 |   29
-6 |             Jay |             ??? |            (555) 123-9182 |   26
+1 |           Dante |           Hicks |  (555) 123-4567 | 32
+2 |          Randal |          Graves |  (555) 123-5678 | 30
+3 |        Veronica |        Loughran |  (555) 123-0987 | 28
+4 |         Caitlin |            Bree |  (555) 123-2323 | 27
+5 |             Bob |          Silent |  (555) 123-6422 | 29
+6 |             Jay |             ??? |  (555) 123-9182 | 26
+
+
+Use projection to print only the First name and phone numbers
+          Dante |  (555) 123-4567 | 
+         Randal |  (555) 123-5678 | 
+       Veronica |  (555) 123-0987 | 
+        Caitlin |  (555) 123-2323 | 
+            Bob |  (555) 123-6422 | 
+            Jay |  (555) 123-9182 | 
 ----
 
-The *Quick Stop* store owner was so pleased, he asked you to create a 
-movie database for his *RST Video* store.  
+The *Quick Stop* owner was so pleased, he asked you to create a 
+movie database for his *RST Video* store.
 
 == Reference files
 

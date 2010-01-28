@@ -285,8 +285,10 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 			}
 			avro_datum_decref(field_datum);
 		} else {
-			/* TODO: skip_record */
-			return -1;
+			rval = avro_skip_data(reader, field->type);
+			if (rval) {
+				return rval;
+			}
 		}
 	}
 	return 0;

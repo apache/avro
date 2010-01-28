@@ -22,8 +22,7 @@ if ! which valgrind; then
 	exit 77
 fi
 
-LD_LIBRARY_PATH="../src/.libs/:${LD_LIBRARY_PATH}"
-valgrind --leak-check=full --show-reachable=yes -q .libs/test_avro_data 2>&1 |\
+LD_LIBRARY_PATH="../src/.libs/" valgrind --leak-check=full --show-reachable=yes -q .libs/test_avro_data 2>&1 |\
 grep -E '^==[0-9]+== '
 if [ $? -eq 0 ]; then
 	# Expression found. Test failed.
