@@ -34,6 +34,8 @@ Trunk (unreleased changes)
 
     AVRO-349. Fix C++ build for post-AVRO-163. (sbanacho)
 
+    AVRO-374. Remove and ignore files that are created by autoreconf. (sbanacho)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

@@ -17,6 +17,16 @@
 
 set -e # exit on error
 
+function usage {
+  echo "Usage: $0 {test|dist|clean}"
+  exit 1
+}
+
+if [ $# -eq 0 ]
+then
+  usage
+fi
+
 cd `dirname "$0"` # connect to root
 
 VERSION=`cat ../../share/VERSION.txt`
@@ -34,7 +44,12 @@ for target in "$@"
 do
 
 function do_autoreconf {
-    autoreconf -f -i
+    if [ ! -f configure ]; then
+        autoreconf -f -i
+    fi
+    if [ ! -f configure ]; then
+        exit 1
+    fi
 }
 
 function check_dir {
@@ -53,7 +68,7 @@ function do_configure {
     check_dir $build_dir
 
     if [ ! -f $build_dir/Makefile ]; then
-        (cd $build_dir && $root_dir/configure)
+        (cd $build_dir && ../../lang/c++/configure)
     fi
 
     if [ ! -f $build_dir/Makefile ]; then
@@ -114,7 +129,7 @@ case "$target" in
 	;;
 
     dist)
-    #do_configure
+    do_configure
     do_dist
     ;;
 
@@ -123,8 +138,7 @@ case "$target" in
 	;;
 
     *)
-        echo "Usage: $0 {test|dist|clean}"
-        exit 1
+        usage
 esac
 
 done
