@@ -247,16 +247,18 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
 
   @Override
   public void flush() throws IOException {
-    BlockedValue bv = blockStack[stackTop];
-    if (bv.state == BlockedValue.State.ROOT) {
-      out.write(buf, 0, pos);
-      pos = 0;
-    } else {
-      while (bv.state != BlockedValue.State.OVERFLOW) {
-        compact();
+    if (out != null) {
+      BlockedValue bv = blockStack[stackTop];
+      if (bv.state == BlockedValue.State.ROOT) {
+        out.write(buf, 0, pos);
+        pos = 0;
+      } else {
+        while (bv.state != BlockedValue.State.OVERFLOW) {
+          compact();
+        }
       }
+      out.flush();
     }
-    out.flush();
 
     assert check();
   }

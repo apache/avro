@@ -396,6 +396,8 @@ Trunk (unreleased changes)
 
     AVRO-382. Avro hashCode throws a NullPointerException when fields are uninitialized (Michael Armbrust via philz)
 
+    AVRO-385. Initializing uninizialized BlockingBinaryEncoder fails (thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

@@ -32,6 +32,12 @@ public class TestEncoders {
   }
 
   @Test
+  public void testBlockingBinaryEncoderInit() throws IOException {
+    OutputStream out = null;
+    new BlockingBinaryEncoder(out).init(new ByteArrayOutputStream());
+  }
+
+  @Test
   public void testJsonEncoderInit() throws IOException {
     Schema s = Schema.parse("\"int\"");
     OutputStream out = null;
