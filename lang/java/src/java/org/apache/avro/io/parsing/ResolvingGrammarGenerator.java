@@ -17,14 +17,20 @@
  */
 package org.apache.avro.io.parsing;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.Encoder;
+import org.codehaus.jackson.JsonNode;
 
 /**
  * The class that generates a resolving grammar to resolve between two
@@ -258,15 +264,119 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         Field wf = wfields.get(fname);
         if (wf == null) {
           Field rf = rfe.getValue();
-          production[--count] = new Symbol.DefaultStartAction(
-              new JsonGrammarGenerator().generate(rf.schema()),
-              rf.defaultValue());
+          Symbol r = new JsonGrammarGenerator().generate(rf.schema());
+          byte[] bb = getBinary(rf.schema(), rf.defaultValue());
+          production[--count] = new Symbol.DefaultStartAction(r, bb);
           production[--count] = super.generate(rf.schema(), seen);
           production[--count] = Symbol.DEFAULT_END_ACTION;
         }
       }
     }
     return result;
+  }
+
+  /**
+   * Returns the Avro binary encoded version of <tt>n</tt> according to
+   * the schema <tt>s</tt>.
+   * @param s The schema for encoding
+   * @param n The Json node that has the value to be encoded.
+   * @return  The binary encoded version of <tt>n</tt>.
+   * @throws IOException
+   */
+  private static byte[] getBinary(Schema s, JsonNode n) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Encoder e = new BinaryEncoder(out);
+    encode(e, s, n);
+    return out.toByteArray();
+  }
+  
+  /**
+   * Encodes the given Json node <tt>n</tt> on to the encoder <tt>e</tt>
+   * according to the schema <tt>s</tt>.
+   * @param e The encoder to encode into.
+   * @param s The schema for the object being encoded.
+   * @param n The Json node to encode.
+   * @throws IOException
+   */
+  
+  static void encode(Encoder e, Schema s, JsonNode n)
+    throws IOException {
+    switch (s.getType()) {
+    case RECORD:
+      for (Map.Entry<String, Field> entry : s.getFields().entrySet()) {
+        String name = entry.getKey();
+        Field f = entry.getValue();
+        JsonNode v = n.get(name);
+        if (v == null) {
+          v = f.defaultValue();
+        }
+        if (v == null) {
+          throw new AvroTypeException("No default value for: " + name);
+        }
+        encode(e, f.schema(), v);
+      }
+      break;
+    case ENUM:
+      e.writeEnum(s.getEnumOrdinal(n.getTextValue()));
+      break;
+    case ARRAY:
+      e.writeArrayStart();
+      e.setItemCount(n.size());
+      Schema i = s.getElementType();
+      for (JsonNode node : n) {
+        e.startItem();
+        encode(e, i, node);
+      }
+      e.writeArrayEnd();
+      break;
+    case MAP:
+      e.writeMapStart();
+      e.setItemCount(n.size());
+      Schema v = s.getValueType();
+      for (Iterator<String> it = n.getFieldNames(); it.hasNext();) {
+        e.startItem();
+        String key = it.next();
+        e.writeString(key);
+        encode(e, v, n.get(key));
+      }
+      e.writeMapEnd();
+      break;
+    case UNION:
+      e.writeIndex(0);
+      encode(e, s.getTypes().get(0), n);
+      break;
+    case FIXED:
+      byte[] bb = n.getTextValue().getBytes("ISO-8859-1");
+      if (bb.length != s.getFixedSize()) {
+        bb = Arrays.copyOf(bb, s.getFixedSize());
+      }
+      e.writeFixed(bb);
+      break;
+    case STRING:
+      e.writeString(n.getTextValue());
+      break;
+    case BYTES:
+      e.writeBytes(n.getTextValue().getBytes("ISO-8859-1"));
+      break;
+    case INT:
+      e.writeInt(n.getIntValue());
+      break;
+    case LONG:
+      e.writeLong(n.getLongValue());
+      break;
+    case FLOAT:
+      e.writeFloat((float) n.getDoubleValue());
+      break;
+    case DOUBLE:
+      e.writeDouble(n.getDoubleValue());
+      break;
+    case BOOLEAN:
+      e.writeBoolean(n.getBooleanValue());
+      break;
+    case NULL:
+      e.writeNull();
+      break;
+    }
   }
 
   private static Symbol mkEnumAdjust(List<String> rsymbols,

@@ -17,8 +17,6 @@
  */
 package org.apache.avro.io.parsing;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,11 +25,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.avro.Schema;
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * Symbol is the base of all symbols (terminals and non-terminals) of
@@ -477,15 +470,9 @@ public abstract class Symbol {
   public static class DefaultStartAction extends ImplicitAction {
     public final Symbol root;
     public final byte[] contents;
-    public DefaultStartAction(Symbol root, JsonNode defaultValue)
-      throws IOException {
+    public DefaultStartAction(Symbol root, byte[] contents) {
       this.root = root;
-      ByteArrayOutputStream os = new ByteArrayOutputStream();
-      JsonGenerator g = new JsonFactory().createJsonGenerator(os,
-          JsonEncoding.UTF8);
-      new ObjectMapper().writeTree(g, defaultValue);
-      g.flush();
-      this.contents = os.toByteArray();
+      this.contents = contents;
     }
   }
 

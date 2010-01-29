@@ -291,6 +291,8 @@ Trunk (unreleased changes)
 
     AVRO-343. Minor fixes to Eclipse config after build re-org (philz)
 
+    AVRO-383. Optiminzing ResolvingDecoder for default values (thiru)
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)

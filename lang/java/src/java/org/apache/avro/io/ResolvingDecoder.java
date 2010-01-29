@@ -165,7 +165,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else if (top instanceof Symbol.DefaultStartAction) {
       Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
       backup = in;
-      in = (new JsonDecoder(dsa.root, new ByteArrayInputStream(dsa.contents)));
+      in = (new BinaryDecoder(new ByteArrayInputStream(dsa.contents)));
     } else if (top == Symbol.DEFAULT_END_ACTION) {
       in = backup;
     } else {

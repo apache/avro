@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 
 /**
  * Performance tests for various low level operations of
@@ -52,6 +53,8 @@ public class Perf {
         tests.add(new NestedRecordTest());
       } else if (a.equals("-S")) {
         tests.add(new ResolverTest());
+      } else if (a.equals("-M")) {
+        tests.add(new MigrationTest());
       } else {
         usage();
         System.exit(1);
@@ -281,6 +284,49 @@ public class Perf {
     
   }
 
+  /**
+   * Tests the performance of introducing default values.
+   */
+  private static class MigrationTest extends RepeaterTest {
+    private final Schema readerSchema;
+    public MigrationTest() throws IOException {
+      super("MigrationTest");
+      readerSchema = Schema.parse( "{ \"type\": \"array\", \"items\":\n"
+          + "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
+          + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
+          + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
+          + "{ \"name\": \"f3\", \"type\": \"double\" },\n"
+          + "{ \"name\": \"f3_1\", \"type\": \"string\", "
+              + "\"default\": \"undefined\" },\n"
+          + "{ \"name\": \"f3_2\", \"type\": \"string\","
+              + "\"default\": \"undefined\" },\n"
+          + "{ \"name\": \"f4\", \"type\": \"int\" },\n"
+          + "{ \"name\": \"f5\", \"type\": \"int\" },\n"
+          + "{ \"name\": \"f6\", \"type\": \"int\" }\n"
+          + "] } }");
+    }
+    
+    @Override
+    protected Decoder getDecoder() throws IOException {
+      return new ResolvingDecoder(schema, readerSchema, newDecoder(data));
+    }
+    
+    @Override
+    protected void readInternal(Decoder d) throws IOException {
+      ResolvingDecoder r = (ResolvingDecoder) d;
+      Field[] ff = r.readFieldOrder();
+      for (Field f : ff) {
+        if (f.pos() < 3) {
+          r.readDouble();
+        } else if (f.pos() >= 5) {
+          r.readInt();
+        } else {
+          r.readString(null);
+        }
+      }
+    }
+  }
+  
   private static class NestedRecordTest extends ReadInt {
     public NestedRecordTest() throws IOException {
       super("NestedRecordTest",
