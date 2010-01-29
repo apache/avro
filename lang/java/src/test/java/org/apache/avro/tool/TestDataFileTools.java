@@ -134,7 +134,11 @@ public class TestDataFileTools {
     }
     assertEquals(COUNT, i);
     assertEquals(schema, fileReader.getSchema());
-    assertEquals(expectedCodec, fileReader.getMetaString("avro.codec"));
+    String codecStr = fileReader.getMetaString("avro.codec");
+    if (null == codecStr) {
+      codecStr = "null";
+    }
+    assertEquals(expectedCodec, codecStr);
   }
   
   @Test

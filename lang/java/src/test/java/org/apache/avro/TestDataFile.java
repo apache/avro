@@ -55,6 +55,7 @@ public class TestDataFile {
   public static List<Object[]> codecs() {
     List<Object[]> r = new ArrayList<Object[]>();
     r.add(new Object[] { null });
+    r.add(new Object[] { CodecFactory.deflateCodec(0) });
     r.add(new Object[] { CodecFactory.deflateCodec(1) });
     r.add(new Object[] { CodecFactory.deflateCodec(9) });
     r.add(new Object[] { CodecFactory.nullCodec() });
@@ -183,7 +184,7 @@ public class TestDataFile {
     } finally {
       reader.close();
     }
-  }
+  }  
 
   protected void readFile(File f, DatumReader<Object> datumReader)
     throws IOException {

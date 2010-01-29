@@ -61,7 +61,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private final Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
-  private int blockCount;                       // # entries in current block
+  private long blockCount;                       // # entries in current block
 
   private ByteArrayOutputStream buffer;
   private Encoder bufOut;
@@ -95,8 +95,22 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     return this;
   }
 
-  /** Set the synchronization interval for this file, in bytes. */
+  /**
+   * Set the synchronization interval for this file, in bytes. 
+   * Valid values range from 32 to 2^30
+   * Suggested values are between 2K and 2M
+   * 
+   * Invalid values throw IllegalArgumentException
+   * 
+   * @param syncInterval 
+   *   the approximate number of uncompressed bytes to write in each block
+   * @return 
+   *   this DataFileWriter
+   */
   public DataFileWriter<D> setSyncInterval(int syncInterval) {
+    if (syncInterval < 32 || syncInterval > (1 << 30)) {
+      throw new IllegalArgumentException("Invalid syncInterval value: " + syncInterval);
+    }
     this.syncInterval = syncInterval;
     return this;
   }
@@ -127,6 +141,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       vout.writeBytes(entry.getValue());
     }
     vout.writeMapEnd();
+    vout.flush(); //vout may be buffered, flush before writing to out
 
     out.write(sync);                              // write initial sync
 
@@ -166,7 +181,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.out = new BufferedFileOutputStream(outs);
     this.vout = new BinaryEncoder(out);
     dout.setSchema(schema);
-    this.buffer = new ByteArrayOutputStream(syncInterval*2);
+    this.buffer = new ByteArrayOutputStream(
+        Math.min((int)(syncInterval * 1.25), Integer.MAX_VALUE/2 -1));
     if (this.codec == null) {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
@@ -236,7 +252,10 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
       vout.writeLong(blockCount);
-      codec.compress(buffer, out);
+      ByteArrayOutputStream block = codec.compress(buffer);
+      vout.writeLong(block.size());
+      vout.flush(); //vout may be buffered, flush before writing to out
+      block.writeTo(out);
       buffer.reset();
       blockCount = 0;
       out.write(sync);
@@ -285,4 +304,3 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
 }
-

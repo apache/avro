@@ -79,6 +79,9 @@ Trunk (unreleased changes)
     AVRO-368. Reserve avro.* in object container files, and 
     rename existing reserved words. (philz)
 
+    AVRO-380. Avro Container File format change: add block size to block
+    descriptor.  (Scott Carey via philz)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

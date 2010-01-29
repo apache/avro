@@ -17,17 +17,16 @@
  */
 package org.apache.avro.file;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
 
 /** 
@@ -58,7 +57,6 @@ class DeflateCodec extends Codec {
   ByteArrayOutputStream compressionBuffer;
   private Deflater deflater;
   private int compressionLevel;
-  private Inflater inflater;
 
   public DeflateCodec(int compressionLevel) {
     this.compressionLevel = compressionLevel;
@@ -70,34 +68,30 @@ class DeflateCodec extends Codec {
   }
 
   @Override
-  void compress(ByteArrayOutputStream buffer, OutputStream out) throws IOException {
+  ByteArrayOutputStream compress(ByteArrayOutputStream buffer) 
+    throws IOException {
     if (compressionBuffer == null) {
       compressionBuffer = new ByteArrayOutputStream(buffer.size());
+    } else {
+      compressionBuffer.reset();
     }
     if (deflater == null) {
-      deflater = new Deflater(compressionLevel, false);
+      deflater = new Deflater(compressionLevel, true);
     }
-    // Pass output through deflate, and prepend with length of compressed output.
+    // Pass output through deflate
     DeflaterOutputStream deflaterStream = 
       new DeflaterOutputStream(compressionBuffer, deflater);
     buffer.writeTo(deflaterStream);
     deflaterStream.finish();
-    new BinaryEncoder(out).writeLong(compressionBuffer.size());
-    compressionBuffer.writeTo(out);
-    compressionBuffer.reset();
     deflater.reset();
+    return compressionBuffer;
   }
 
   @Override
-  Decoder decompress(InputStream in, Decoder vin) throws IOException {
-    if (inflater == null) {
-      inflater = new Inflater(false);
-    }
-    long compressedLength = vin.readLong();
+  Decoder decompress(byte[] in) throws IOException {
+    Inflater inflater = new Inflater(true);
     InputStream uncompressed = new InflaterInputStream(
-        new LengthLimitedInputStream(in, compressedLength),
-        inflater);
-    inflater.reset();
+        new ByteArrayInputStream(in), inflater);
     return new BinaryDecoder(uncompressed);
   }
 

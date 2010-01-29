@@ -19,8 +19,6 @@ package org.apache.avro.file;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import org.apache.avro.io.Decoder;
 
@@ -32,8 +30,8 @@ import org.apache.avro.io.Decoder;
 abstract class Codec {
   /** Name of the codec; written to the file's metadata. */
   abstract String getName();
-  /** Compresses the input data into out. */
-  abstract void compress(ByteArrayOutputStream data, OutputStream out) throws IOException;
-  /** Returns a decoder on the uncompressed stream. */
-  abstract Decoder decompress(InputStream in, Decoder vin) throws IOException;
+  /** Compresses the input data and return the result as a ByteArrayOutputStream */
+  abstract ByteArrayOutputStream compress(ByteArrayOutputStream data) throws IOException;
+  /** Returns a decoder on the uncompressed data. */
+  abstract Decoder decompress(byte[] compressedData) throws IOException;
 }

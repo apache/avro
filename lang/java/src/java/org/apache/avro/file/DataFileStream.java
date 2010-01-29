@@ -48,7 +48,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
   /** Decoder on raw input stream.  (Used for metadata.) */
   final Decoder vin;
   /** Secondary decoder, for datums.
-   *  (Different than vin for compressed segments.) */
+   *  (Different than vin for block segments.) */
   Decoder datumIn = null;
 
   Map<String,byte[]> meta = new HashMap<String,byte[]>();
@@ -138,8 +138,29 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
   public boolean hasNext() {
     try {
       if (blockRemaining == 0) {
+        // check that the previous block was finished
+        // clunky and inefficient with the current Decoder API
+        // the only way to detect end of stream is with EOFException
+        if (null != datumIn) {
+          try {
+            datumIn.readBoolean();
+            throw new IOException("Block read partially, the data may be corrupt");
+          } catch (EOFException eof) {
+            // this indicates the block is at its end as we expect
+          }
+        }
         blockRemaining = vin.readLong();          // read block count
-        datumIn = codec.decompress(in, vin);
+        long compressedSize = vin.readLong(); // read block size
+        if (compressedSize > Integer.MAX_VALUE) {
+          throw new IOException("Block size too large: " + compressedSize);
+        }
+        byte[] block = new byte[(int)compressedSize];
+        // if vin buffers in, the below will needs to handle it
+        int sizeRead = in.read(block); 
+        if (sizeRead != compressedSize) {
+          throw new IOException("Incomplete Block");
+        }
+        datumIn = codec.decompress(block);
       }
       return blockRemaining != 0;
     } catch (EOFException e) {                    // at EOF

@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import junit.framework.Assert;
+
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
@@ -57,5 +59,17 @@ public class TestDataFileMeta {
     w.setMeta("foo", "bar");
   }
 
-
+  @Test
+  public void testBlockSizeSetInvalid() {
+    int exceptions = 0;
+    for (int i = -1; i < 33; i++) {
+      // 33 invalid, one valid
+      try {
+        new DataFileWriter<Object>(new GenericDatumWriter<Object>()).setSyncInterval(i);
+      } catch (IllegalArgumentException iae) {
+        exceptions++;
+      }
+    }
+    Assert.assertEquals(33, exceptions);
+  }
 }

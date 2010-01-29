@@ -645,11 +645,15 @@
       <p>A file data block consists of:</p>
       <ul>
 	<li>A long indicating the count of objects in this block.</li>
+	<li>A long indicating the size in bytes of the serialized objects
+	in the current block, after any codec is applied</li>
 	<li>The serialized objects.  If a codec is specified, this is
 	compressed by that codec.</li>
 	<li>The file's 16-byte sync marker.</li>
       </ul>
-
+	  <p>Thus, each block's binary data can be efficiently extracted or skipped without
+	  deserializing the contents.  The combination of block size, object counts, and 
+	  sync markers enable detection of corrupt blocks and help ensure data integrity.</p>
       <section>
       <title>Required Codecs</title>
         <section>
