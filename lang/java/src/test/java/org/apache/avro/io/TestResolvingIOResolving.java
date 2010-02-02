@@ -129,6 +129,30 @@ public class TestResolvingIOResolving {
             + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]} }",
             "[c1sI]",
           new Object[] { 100 } },
+        // Enum resolution
+        { "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"x\",\"y\",\"z\"]}",
+            "e2",
+            new Object[] {  },
+            "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"y\", \"z\" ]}",
+            "e1",
+            new Object[] {  } },
+        { "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"x\", \"y\" ]}",
+            "e1",
+            new Object[] {  },
+            "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"y\", \"z\" ]}",
+            "e0",
+            new Object[] {  } },
+
+        // Union
+        { "\"int\"", "I", new Object[] { 100 },
+            "[ \"long\", \"int\"]", "U1I", new Object[] { 100 } },
+        { "[ \"long\", \"int\"]", "U1I", new Object[] { 100 } ,
+            "\"int\"", "I", new Object[] { 100 } },
+        // Union + promotion
+        { "\"int\"", "I", new Object[] { 100 },
+            "[ \"long\", \"string\"]", "U0L", new Object[] { 100L } },
+        { "[ \"int\", \"string\"]", "U0I", new Object[] { 100 },
+            "\"long\"", "L", new Object[] { 100 } },
     };
   }
 }

@@ -378,8 +378,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     }
   }
 
-  private static Symbol mkEnumAdjust(List<String> rsymbols,
-      List<String> wsymbols){
+  private static Symbol mkEnumAdjust(List<String> wsymbols,
+      List<String> rsymbols){
     Object[] adjustments = new Object[wsymbols.size()];
     for (int i = 0; i < adjustments.length; i++) {
       int j = rsymbols.indexOf(wsymbols.get(i));

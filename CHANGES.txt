@@ -402,6 +402,8 @@ Trunk (unreleased changes)
     AVRO-382. Avro hashCode throws a NullPointerException when fields are uninitialized (Michael Armbrust via philz)
 
     AVRO-385. Initializing uninizialized BlockingBinaryEncoder fails (thiru)
+    
+    AVRO-389. ResolvingDecoder does not resolve enum well (thiru)
 
 Avro 1.2.0 (14 October 2009)
 
