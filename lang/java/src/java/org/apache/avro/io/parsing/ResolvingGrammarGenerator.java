@@ -266,7 +266,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
           Field rf = rfe.getValue();
           byte[] bb = getBinary(rf.schema(), rf.defaultValue());
           production[--count] = new Symbol.DefaultStartAction(bb);
-          production[--count] = super.generate(rf.schema(), seen);
+          production[--count] = generate(rf.schema(), rf.schema(), seen);
           production[--count] = Symbol.DEFAULT_END_ACTION;
         }
       }

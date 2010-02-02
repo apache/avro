@@ -460,6 +460,9 @@ public class TestValidatingIO {
           assertEquals(idx, vi.readIndex());
           continue;
         }
+      case 'R':
+          ((ResolvingDecoder) vi).readFieldOrder();
+          continue;
       default:
         fail();
       }

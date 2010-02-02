@@ -405,6 +405,8 @@ Trunk (unreleased changes)
     
     AVRO-389. ResolvingDecoder does not resolve enum well (thiru)
 
+    AVRO-390. ResolvingDecoder does not handle default values for records well (thiru)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

@@ -86,21 +86,21 @@ public class TestResolvingIOResolving {
           new Object[] { 10, "hello" },
           "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f2\", \"type\":\"string\" },"
-          + "{\"name\":\"f1\", \"type\":\"long\"}]}", "LS10",
+          + "{\"name\":\"f1\", \"type\":\"long\"}]}", "RLS10",
           new Object[] { 10L, "hello" } },
 
         // Default values
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
           new Object[] { },
           "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-          + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}", "I",
+          + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}", "RI",
           new Object[] { 100 } },
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
             + "{\"name\":\"f2\", \"type\":\"int\"}]}", "I",
           new Object[] { 10 },
           "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
-          + "{\"name\":\"f2\", \"type\":\"int\"}]}", "II",
+          + "{\"name\":\"f2\", \"type\":\"int\"}]}", "RII",
           new Object[] { 10, 101 } },
         { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
             + "{\"name\": \"g1\", " +
@@ -113,8 +113,20 @@ public class TestResolvingIOResolving {
                         "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
                 + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
                 + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
-          + "{\"name\": \"g2\", \"type\": \"long\"}]}}", "IIL",
+          + "{\"name\": \"g2\", \"type\": \"long\"}]}}", "RRIIL",
           new Object[] { 10, 101, 11L } },
+        // Default value for a record.
+        { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+            + "{\"name\": \"g2\", \"type\": \"long\"}]}", "L",
+          new Object[] { 11L },
+          "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+            + "{\"name\": \"g1\", " +
+                "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
+              + "{\"name\":\"f1\", \"type\":\"int\" },"
+              + "{\"name\":\"f2\", \"type\":\"int\"}] }, "
+              + "\"default\": { \"f1\": 10, \"f2\": 101 } }, "
+            + "{\"name\": \"g2\", \"type\": \"long\"}]}", "RLRII",
+          new Object[] { 11L, 10, 101} },
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
           new Object[] { },
           "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
