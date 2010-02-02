@@ -175,8 +175,8 @@ public class GenericData {
   public boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
     case RECORD:
-      if (!(datum instanceof GenericRecord)) return false;
-      GenericRecord fields = (GenericRecord)datum;
+      if (!(datum instanceof IndexedRecord)) return false;
+      IndexedRecord fields = (IndexedRecord)datum;
       for (Map.Entry<String, Field> entry : schema.getFields().entrySet()) {
         Field f = entry.getValue();
         if (!validate(f.schema(), fields.get(f.pos())))
@@ -225,11 +225,12 @@ public class GenericData {
     toString(datum, buffer);
     return buffer.toString();
   }
-  private void toString(Object datum, StringBuilder buffer) {
-    if (datum instanceof GenericRecord) {
+  /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
+  protected void toString(Object datum, StringBuilder buffer) {
+    if (datum instanceof IndexedRecord) {
       buffer.append("{");
       int count = 0;
-      GenericRecord record = (GenericRecord)datum;
+      IndexedRecord record = (IndexedRecord)datum;
       for (Map.Entry<String,Field> e :
              record.getSchema().getFields().entrySet()) {
         toString(e.getKey(), buffer);
@@ -280,8 +281,8 @@ public class GenericData {
 
   /** Create a schema given an example datum. */
   public Schema induce(Object datum) {
-    if (datum instanceof GenericRecord) {
-      return ((GenericRecord)datum).getSchema();
+    if (datum instanceof IndexedRecord) {
+      return ((IndexedRecord)datum).getSchema();
     } else if (datum instanceof GenericArray) {
       Schema elementType = null;
       for (Object element : (GenericArray)datum) {
@@ -370,11 +371,11 @@ public class GenericData {
 
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isRecord(Object datum) {
-    return datum instanceof GenericRecord;
+    return datum instanceof IndexedRecord;
   }
 
   /** Called to obtain the schema of a record.  By default calls
-   * {GenericRecord#getSchema().  May be overridden for alternate record
+   * {GenericContainer#getSchema().  May be overridden for alternate record
    * representations. */
   protected Schema getRecordSchema(Object record) {
     return ((GenericContainer)record).getSchema();
@@ -387,7 +388,7 @@ public class GenericData {
   
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isMap(Object datum) {
-    return (datum instanceof Map) && (!(datum instanceof GenericRecord));
+    return datum instanceof Map;
   }
   
   /** Called by the default implementation of {@link #instanceOf}.*/
@@ -408,10 +409,11 @@ public class GenericData {
   /** Compute a hash code according to a schema, consistent with {@link
    * #compare(Object,Object,Schema)}. */
   public int hashCode(Object o, Schema s) {
+    if (o == null) return 0;                      // incomplete datum
     int hashCode = 1;
     switch (s.getType()) {
     case RECORD:
-      GenericRecord r = (GenericRecord)o;
+      IndexedRecord r = (IndexedRecord)o;
       for (Map.Entry<String, Field> e : s.getFields().entrySet()) {
         Field f = e.getValue();
         if (f.order() == Field.Order.IGNORE)
@@ -430,7 +432,7 @@ public class GenericData {
     case NULL:
       return 0;
     default:
-      return (o == null) ? 0 : o.hashCode();
+      return o.hashCode();
     }
   }
 
@@ -448,8 +450,8 @@ public class GenericData {
     if (o1 == o2) return 0;
     switch (s.getType()) {
     case RECORD:
-      GenericRecord r1 = (GenericRecord)o1;
-      GenericRecord r2 = (GenericRecord)o2;
+      IndexedRecord r1 = (IndexedRecord)o1;
+      IndexedRecord r2 = (IndexedRecord)o2;
       for (Map.Entry<String, Field> e : s.getFields().entrySet()) {
         Field f = e.getValue();
         if (f.order() == Field.Order.IGNORE)

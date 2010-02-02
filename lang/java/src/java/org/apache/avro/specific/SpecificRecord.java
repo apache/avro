@@ -17,12 +17,10 @@
  */
 package org.apache.avro.specific;
 
-import org.apache.avro.generic.GenericContainer;
+import org.apache.avro.generic.IndexedRecord;
 
 /** Implemented by generated record classes. Permits efficient access to
  * fields.*/
-public interface SpecificRecord extends GenericContainer {
-  Object get(int field);
-  void set(int field, Object value);
+public interface SpecificRecord extends IndexedRecord {
 }
 

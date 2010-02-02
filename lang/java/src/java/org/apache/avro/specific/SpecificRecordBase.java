@@ -25,7 +25,7 @@ public abstract class SpecificRecordBase
 
   public abstract Schema getSchema();
   public abstract Object get(int field);
-  public abstract void set(int field, Object value);
+  public abstract void put(int field, Object value);
 
   @Override
   public boolean equals(Object that) {
@@ -43,6 +43,11 @@ public abstract class SpecificRecordBase
   @Override
   public int compareTo(SpecificRecord that) {
     return SpecificData.get().compare(this, that, this.getSchema());
+  }
+
+  @Override
+  public String toString() {
+    return SpecificData.get().toString(this);
   }
 
 }

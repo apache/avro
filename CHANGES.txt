@@ -36,6 +36,11 @@ Trunk (unreleased changes)
 
     AVRO-374. Remove and ignore files that are created by autoreconf. (sbanacho)
 
+    AVRO-387. Add IndexedRecord interface, common to both specific and
+    generic records, so that toString() and hashCode() implementations
+    can be shared.  Also fix toString() and hashCode() to not throw
+    NPE for uninitialized records. (cutting)
+
   NEW FEATURES
 
     AVRO-151. Validating Avro schema parser for C (massie)

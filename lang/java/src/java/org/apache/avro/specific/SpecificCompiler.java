@@ -275,7 +275,7 @@ public class SpecificCompiler {
       line(out, 1, "}");
       // set method
       line(out, 1, "@SuppressWarnings(value=\"unchecked\")");
-      line(out, 1, "public void set(int field$, java.lang.Object value$) {");
+      line(out, 1, "public void put(int field$, java.lang.Object value$) {");
       line(out, 2, "switch (field$) {");
       i = 0;
       for (Map.Entry<String, Schema> field : schema.getFieldSchemas())

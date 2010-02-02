@@ -17,7 +17,6 @@
  */
 package org.apache.avro.specific;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -30,7 +29,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.Protocol;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
-import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericArray;
@@ -64,15 +62,6 @@ public class SpecificData extends GenericData {
   @Override
   public boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
-    case RECORD:
-      Class c = datum.getClass(); 
-      if (!(datum instanceof SpecificRecord)) return false;
-      SpecificRecord record = (SpecificRecord)datum;
-      Iterator<Field> fields = schema.getFields().values().iterator();
-      for (int i = 0; fields.hasNext(); i++)
-        if (!validate(fields.next().schema(), record.get(i)))
-          return false;
-      return true;
     case ENUM:
       return datum instanceof Enum
         && schema.getEnumSymbols().contains(((Enum)datum).name());
@@ -210,40 +199,8 @@ public class SpecificData extends GenericData {
   }
 
   @Override
-  public int hashCode(Object o, Schema s) {
-    switch (s.getType()) {
-    case RECORD:
-      int hashCode = 1;
-      SpecificRecord r = (SpecificRecord)o;
-      Iterator<Field> fields = s.getFields().values().iterator();
-      for (int i = 0; fields.hasNext(); i++) {
-        Field f = fields.next();
-        if (f.order() == Field.Order.IGNORE)
-          continue;
-        hashCode = hashCodeAdd(hashCode, r.get(i), f.schema());
-      }
-      return hashCode;
-    default:
-      return super.hashCode(o, s);
-    }
-  }
-
-  @Override
   public int compare(Object o1, Object o2, Schema s) {
     switch (s.getType()) {
-    case RECORD:
-      SpecificRecord r1 = (SpecificRecord)o1;
-      SpecificRecord r2 = (SpecificRecord)o2;
-      Iterator<Field> fields = s.getFields().values().iterator();
-      for (int i = 0; fields.hasNext(); i++) {
-        Field f = fields.next();
-        if (f.order() == Field.Order.IGNORE)
-          continue;                               // ignore this field
-        int compare = compare(r1.get(i), r2.get(i), f.schema());
-        if (compare != 0)                         // not equal
-          return f.order() == Field.Order.DESCENDING ? -compare : compare;
-      }
-      return 0;
     case ENUM:
       return ((Enum)o1).ordinal() - ((Enum)o2).ordinal();
     default:

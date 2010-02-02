@@ -93,9 +93,9 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   
   /** Called by the default implementation of {@link #writeRecord} to retrieve
    * a record field value.  The default implementation is for {@link
-   * GenericRecord}.*/
+   * IndexedRecord}.*/
   protected Object getField(Object record, String field, int position) {
-    return ((GenericRecord) record).get(position);
+    return ((IndexedRecord) record).get(position);
   }
   
   /** Called to write an enum value.  May be overridden for alternate enum

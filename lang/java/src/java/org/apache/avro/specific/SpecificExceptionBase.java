@@ -27,7 +27,7 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
 
   public abstract Schema getSchema();
   public abstract Object get(int field);
-  public abstract void set(int field, Object value);
+  public abstract void put(int field, Object value);
 
   public boolean equals(Object that) {
     if (that == this) return true;                        // identical object

@@ -19,8 +19,11 @@ package org.apache.avro.generic;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema.Type;
 
 import org.junit.Test;
 
@@ -44,6 +47,14 @@ public class TestGenericData {
   @Test(expected=AvroRuntimeException.class)
     public void testArrayConstructorWrongSchema() throws Exception {
     new GenericData.Array<Object>(1, Schema.create(Schema.Type.INT));
+  }
+  
+  @Test
+  /** Make sure that even with nulls, hashCode() doesn't throw NPE. */
+  public void testHashCode() {
+    GenericData.get().hashCode(null, Schema.create(Type.NULL));
+    GenericData.get().hashCode(null, Schema.createUnion(
+        Arrays.asList(Schema.create(Type.BOOLEAN), Schema.create(Type.STRING))));
   }
 
 }

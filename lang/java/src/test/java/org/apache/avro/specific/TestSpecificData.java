@@ -15,13 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.generic;
+package org.apache.avro.specific;
 
-/** A generic instance of a record schema.  Fields are accessible by name as
- * well as by index. */
-public interface GenericRecord extends IndexedRecord {
-  /** Set the value of a field given its name. */
-  void put(String key, Object v);
-  /** Return the value of a field given its name. */
-  Object get(String key);
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import org.apache.avro.test.TestRecord;
+
+public class TestSpecificData {
+  
+  @Test
+  /** Make sure that even with nulls, hashCode() doesn't throw NPE. */
+  public void testHashCode() {
+    new TestRecord().hashCode();
+    SpecificData.get().hashCode(null, TestRecord.SCHEMA$);
+  }
+
+  @Test
+  /** Make sure that even with nulls, toString() doesn't throw NPE. */
+  public void testToString() {
+    new TestRecord().toString();
+  }
+
 }

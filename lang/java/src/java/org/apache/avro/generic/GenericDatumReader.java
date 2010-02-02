@@ -174,16 +174,16 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Called by the default implementation of {@link #readRecord} to set a
    * record fields value to a record instance.  The default implementation is
-   * for {@link GenericRecord}.*/
+   * for {@link IndexedRecord}.*/
   protected void setField(Object record, String name, int position, Object o) {
-    ((GenericRecord)record).put(position, o);
+    ((IndexedRecord)record).put(position, o);
   }
   
   /** Called by the default implementation of {@link #readRecord} to retrieve a
    * record field value from a reused instance.  The default implementation is
-   * for {@link GenericRecord}.*/
+   * for {@link IndexedRecord}.*/
   protected Object getField(Object record, String name, int position) {
-    return ((GenericRecord)record).get(position);
+    return ((IndexedRecord)record).get(position);
   }
 
   /** Called by the default implementation of {@link #readRecord} to construct
@@ -359,8 +359,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * a {@link GenericData.Record}.
    */
   protected Object newRecord(Object old, Schema schema) {
-    if (old instanceof GenericRecord) {
-      GenericRecord record = (GenericRecord)old;
+    if (old instanceof IndexedRecord) {
+      IndexedRecord record = (IndexedRecord)old;
       if (record.getSchema() == schema)
         return record;
     }
