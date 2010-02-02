@@ -56,7 +56,9 @@ public class GenericData {
     }
     @Override public void put(int i, Object v) { values[i] = v; }
     @Override public Object get(String key) {
-      return values[schema.getFields().get(key).pos()];
+      Field field = schema.getFields().get(key);
+      if (field == null) return null;
+      return values[field.pos()];
     }
     @Override public Object get(int i) { return values[i]; }
     @Override public boolean equals(Object o) {

@@ -414,6 +414,10 @@ Trunk (unreleased changes)
 
     AVRO-361. Specific Compiler fails to handle union with two fixed branches (Scott Carey via philz)
 
+    AVRO-350. Fix GenericData.Record#get(String) to return null rather than
+    throw NPE when passed a field name that's not in the record.
+    (Kevin Oliver via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
