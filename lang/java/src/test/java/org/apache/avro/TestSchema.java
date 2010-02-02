@@ -27,7 +27,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
@@ -233,6 +236,61 @@ public class TestSchema {
   }
 
   @Test
+  public void testComplexUnions() throws Exception {
+    // one of each unnamed type and two of named types
+    String partial = "[\"int\", \"long\", \"float\", \"double\", \"boolean\", \"bytes\"," +
+    " \"string\", {\"type\":\"array\", \"items\": \"long\"}," +
+    " {\"type\":\"map\", \"values\":\"long\"}";
+    String namedTypes = ", {\"type\":\"record\",\"name\":\"Foo\",\"fields\":[]}," +
+    " {\"type\":\"fixed\",\"name\":\"Bar\",\"size\": 1}," +
+    " {\"type\":\"enum\",\"name\":\"Baz\",\"symbols\": [\"X\"]}";
+    
+    String namedTypes2 = ", {\"type\":\"record\",\"name\":\"Foo2\",\"fields\":[]}," +
+    " {\"type\":\"fixed\",\"name\":\"Bar2\",\"size\": 1}," +
+    " {\"type\":\"enum\",\"name\":\"Baz2\",\"symbols\": [\"X\"]}";
+    
+    check(partial + namedTypes + "]", false);
+    check(partial + namedTypes + namedTypes2 + "]", false); 
+    checkParseError(partial + namedTypes + namedTypes + "]");
+    
+    // fail with two branches of the same unnamed type
+    checkUnionError(new Schema[] {Schema.create(Type.INT), Schema.create(Type.INT)});
+    checkUnionError(new Schema[] {Schema.create(Type.LONG), Schema.create(Type.LONG)});
+    checkUnionError(new Schema[] {Schema.create(Type.FLOAT), Schema.create(Type.FLOAT)});
+    checkUnionError(new Schema[] {Schema.create(Type.DOUBLE), Schema.create(Type.DOUBLE)});
+    checkUnionError(new Schema[] {Schema.create(Type.BOOLEAN), Schema.create(Type.BOOLEAN)});
+    checkUnionError(new Schema[] {Schema.create(Type.BYTES), Schema.create(Type.BYTES)});
+    checkUnionError(new Schema[] {Schema.create(Type.STRING), Schema.create(Type.STRING)});
+    checkUnionError(new Schema[] {Schema.createArray(Schema.create(Type.INT)), 
+        Schema.createArray(Schema.create(Type.INT))});
+    checkUnionError(new Schema[] {Schema.createMap(Schema.create(Type.INT)), 
+        Schema.createMap(Schema.create(Type.INT))});
+    
+    List<String> symbols = new ArrayList<String>();
+    symbols.add("NOTHING");
+    
+    // succeed with two branches of the same named type, if different names
+    buildUnion(new Schema[] {Schema.createRecord("Foo", null, "org.test", false),
+        Schema.createRecord("Foo2", null, "org.test", false)});
+    buildUnion(new Schema[] {Schema.createEnum("Bar", null, "org.test", symbols),
+        Schema.createEnum("Bar2", null, "org.test", symbols)});
+    buildUnion(new Schema[] {Schema.createFixed("Baz", null, "org.test", 2),
+        Schema.createFixed("Baz2", null, "org.test", 1)});
+
+    // fail with two branches of the same named type, but same names
+    checkUnionError(new Schema[] {Schema.createRecord("Foo", null, "org.test", false),
+        Schema.createRecord("Foo", null, "org.test", false)});
+    checkUnionError(new Schema[] {Schema.createEnum("Bar", null, "org.test", symbols),
+        Schema.createEnum("Bar", null, "org.test", symbols)});
+    checkUnionError(new Schema[] {Schema.createFixed("Baz", null, "org.test", 2),
+        Schema.createFixed("Baz", null, "org.test", 1)});
+    
+    Schema union = buildUnion(new Schema[] {Schema.create(Type.INT)});
+    // fail if creating a union of a union
+    checkUnionError(new Schema[] {union});
+  }
+  
+  @Test
   public void testComplexProp() throws Exception {
     String json = "{\"type\":\"null\", \"foo\": [0]}";
     Schema s = Schema.parse(json);
@@ -268,6 +326,21 @@ public class TestSchema {
       return;
     }
     fail("Should not have parsed: "+json);
+  }
+
+  private static void checkUnionError(Schema[] branches) {
+    List<Schema> branchList = Arrays.asList(branches);
+    try {
+      Schema.createUnion(branchList);
+      fail("Union should not have constructed from: " + branchList);
+    } catch (AvroRuntimeException are) {
+      return;
+    }
+  }
+
+  private static Schema buildUnion(Schema[] branches) {
+    List<Schema> branchList = Arrays.asList(branches);
+    return Schema.createUnion(branchList);
   }
 
   /**

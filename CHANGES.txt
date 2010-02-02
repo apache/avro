@@ -407,6 +407,8 @@ Trunk (unreleased changes)
 
     AVRO-390. ResolvingDecoder does not handle default values for records well (thiru)
 
+    AVRO-361. Specific Compiler fails to handle union with two fixed branches (Scott Carey via philz)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

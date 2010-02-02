@@ -610,13 +610,24 @@ public abstract class Schema {
       super(Type.UNION);
       this.types = types;
       int seen = 0;
+      Set<String> seenNames = new HashSet<String>();
       for (Schema type : types) {                 // check legality of union
         switch (type.getType()) {
         case UNION: 
           throw new AvroRuntimeException("Nested union: "+this);
         case RECORD:
-          if (type.getName() != null)
-            continue;
+        case FIXED:
+        case ENUM:
+          String fullname = type.getFullName();
+          if (fullname != null) {
+            if (seenNames.add(fullname)) {
+              continue;
+            } else {
+              throw new AvroRuntimeException("Duplicate name in union:" + fullname);
+            }
+          } else {
+            throw new AvroRuntimeException("Nameless Record, Fixed, or Enum in union:"+this);
+          }
         default:
           int mask = 1 << type.getType().ordinal();
           if ((seen & mask) != 0)
