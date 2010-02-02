@@ -468,10 +468,8 @@ public abstract class Symbol {
   }
 
   public static class DefaultStartAction extends ImplicitAction {
-    public final Symbol root;
     public final byte[] contents;
-    public DefaultStartAction(Symbol root, byte[] contents) {
-      this.root = root;
+    public DefaultStartAction(byte[] contents) {
       this.contents = contents;
     }
   }

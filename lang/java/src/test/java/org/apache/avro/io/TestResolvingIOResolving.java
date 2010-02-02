@@ -115,6 +115,20 @@ public class TestResolvingIOResolving {
                 + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
           + "{\"name\": \"g2\", \"type\": \"long\"}]}}", "IIL",
           new Object[] { 10, 101, 11L } },
+        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
+          new Object[] { },
+          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f\", \"type\":{ \"type\": \"array\", \"items\": \"int\" }, "
+            + "\"default\": [100]}]}", "[c1sI]",
+          new Object[] { 100 } },
+        { "{ \"type\": \"array\", \"items\": {\"type\":\"record\","
+            + "\"name\":\"r\",\"fields\":[]} }", "[c1s]",
+            new Object[] { },
+          "{ \"type\": \"array\", \"items\": {\"type\":\"record\","
+            + "\"name\":\"r\",\"fields\":["
+            + "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]} }",
+            "[c1sI]",
+          new Object[] { 100 } },
     };
   }
 }

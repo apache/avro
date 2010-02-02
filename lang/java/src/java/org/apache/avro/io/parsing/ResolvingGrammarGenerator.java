@@ -264,9 +264,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         Field wf = wfields.get(fname);
         if (wf == null) {
           Field rf = rfe.getValue();
-          Symbol r = new JsonGrammarGenerator().generate(rf.schema());
           byte[] bb = getBinary(rf.schema(), rf.defaultValue());
-          production[--count] = new Symbol.DefaultStartAction(r, bb);
+          production[--count] = new Symbol.DefaultStartAction(bb);
           production[--count] = super.generate(rf.schema(), seen);
           production[--count] = Symbol.DEFAULT_END_ACTION;
         }
