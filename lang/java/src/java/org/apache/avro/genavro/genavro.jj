@@ -1142,7 +1142,7 @@ void VariableDeclarator(Schema type, LinkedHashMap<String, Field> fields):
 {
   name = Identifier()
   {
-    fields.put(name, new Field(type, null, null));
+    fields.put(name, new Field(name, type, null, null));
   }
 }
 

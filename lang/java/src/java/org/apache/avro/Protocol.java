@@ -347,8 +347,9 @@ public class Protocol {
       JsonNode fieldTypeNode = field.get("type");
       if (fieldTypeNode == null)
         throw new SchemaParseException("No param type: "+field);
-      fields.put(fieldNameNode.getTextValue(),
-                 new Field(Schema.parse(fieldTypeNode,types),
+      String name = fieldNameNode.getTextValue();
+      fields.put(name,
+          new Field(name, Schema.parse(fieldTypeNode,types),
                            null /* message fields don't have docs */,
                            field.get("default")));
     }

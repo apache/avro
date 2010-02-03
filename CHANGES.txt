@@ -277,6 +277,8 @@ Trunk (unreleased changes)
 
     AVRO-384. Add schema projection to the C implementation (massie)
 
+    AVRO-388. Using ResolvingDecoder in GenericDatumReader (thiru)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

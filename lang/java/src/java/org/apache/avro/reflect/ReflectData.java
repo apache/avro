@@ -280,8 +280,8 @@ public class ReflectData extends SpecificData {
           for (Field field : getFields(c))
             if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0){
               Schema fieldSchema = createFieldSchema(field, names);
-              fields.put(field.getName(), new Schema.Field(fieldSchema, 
-                  null /* doc */, null));
+              fields.put(field.getName(), new Schema.Field(field.getName(),
+                  fieldSchema, null /* doc */, null));
             }
           schema.setFields(fields);
         }
@@ -376,7 +376,8 @@ public class ReflectData extends SpecificData {
       String paramName =  paramNames.length == paramTypes.length
         ? paramNames[i]
         : paramSchema.getName()+i;
-      fields.put(paramName, new Schema.Field(paramSchema, null /* doc */, null));
+      fields.put(paramName, new Schema.Field(paramName, paramSchema,
+          null /* doc */, null));
     }
     Schema request = Schema.createRecord(fields);
 

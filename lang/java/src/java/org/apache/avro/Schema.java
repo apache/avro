@@ -296,21 +296,26 @@ public abstract class Schema {
       private Order() { this.name = this.name().toLowerCase(); }
     };
 
+    private final String name;    // name of the field.
     private int position = -1;
     private final Schema schema;
     private final String doc;
     private final JsonNode defaultValue;
     private final Order order;
 
-    public Field(Schema schema, String doc, JsonNode defaultValue) {
-      this(schema, doc, defaultValue, Order.ASCENDING);
+    public Field(String name, Schema schema, String doc,
+        JsonNode defaultValue) {
+      this(name, schema, doc, defaultValue, Order.ASCENDING);
     }
-    public Field(Schema schema, String doc, JsonNode defaultValue, Order order) {
+    public Field(String name, Schema schema, String doc,
+        JsonNode defaultValue, Order order) {
+      this.name = name;
       this.schema = schema;
       this.doc = doc;
       this.defaultValue = defaultValue;
       this.order = order;
     }
+    public String name() { return name; };
     /** The position of this field within the record. */
     public int pos() { return position; }
     /** This field's {@link Schema}. */
@@ -848,8 +853,8 @@ public abstract class Schema {
           JsonNode orderNode = field.get("order");
           if (orderNode != null)
             order = Field.Order.valueOf(orderNode.getTextValue().toUpperCase());
-          fields.put(fieldName,
-                     new Field(fieldSchema, fieldDoc, field.get("default"), order));
+          fields.put(fieldName, new Field(fieldName, fieldSchema,
+              fieldDoc, field.get("default"), order));
         }
         result.setFields(fields);
       } else if (type.equals("enum")) {           // enum

@@ -99,7 +99,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
 
   @Override
   @SuppressWarnings(value="unchecked")
-  protected Object readString(Object old, Schema actual, Schema s,
+  protected Object readString(Object old, Schema s,
                               Decoder in) throws IOException {
     String value = (String)readString(null, in);
     Class c = ReflectData.getClassProp(s, ReflectData.CLASS_PROP);
@@ -135,7 +135,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   }
 
   @Override
-  protected Object readInt(Object old, Schema actual,
+  protected Object readInt(Object old,
                            Schema expected, Decoder in) throws IOException {
     Object value = in.readInt();
     if (Short.class.getName().equals(expected.getProp(ReflectData.CLASS_PROP)))

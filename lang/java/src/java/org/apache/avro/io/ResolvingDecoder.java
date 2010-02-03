@@ -44,7 +44,37 @@ public class ResolvingDecoder extends ValidatingDecoder {
   
   public ResolvingDecoder(Schema writer, Schema reader, Decoder in)
     throws IOException {
-    super(new ResolvingGrammarGenerator().generate(writer, reader), in);
+    this(resolve(writer, reader), in);
+  }
+  
+  /**
+   * Constructs a <tt>ResolvingDecoder</tt> using the given resolver.
+   * The resolver must have been returned by a previous call to
+   * {@link #resolve(Schema, Schema)}.
+   * @param resolver  The resolver to use.
+   * @param in  The underlying decoder.
+   * @throws IOException
+   */
+  public ResolvingDecoder(Object resolver, Decoder in)
+    throws IOException {
+    super((Symbol) resolver, in);
+  }
+
+  /**
+   * Produces an opaque resolver that can be used to construct a new
+   * {@link ResolvingDecoder#ResolvingDecoder(Object, Decoder)}. The
+   * returned Object is immutable and hence can be simultaneously used
+   * in many ResolvingDecoders. This method is reasonably expensive, the
+   * users are encouraged to cache the result.
+   * 
+   * @param writer  The writer's schema.
+   * @param reader  The reader's schema.
+   * @return  The opaque reolver.
+   * @throws IOException
+   */
+  public static Object resolve(Schema writer, Schema reader)
+    throws IOException {
+    return new ResolvingGrammarGenerator().generate(writer, reader);
   }
 
   /** Returns the actual order in which the reader's fields will be

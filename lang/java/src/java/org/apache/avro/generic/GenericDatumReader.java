@@ -19,156 +19,92 @@ package org.apache.avro.generic;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.nio.ByteBuffer;
 
-import org.codehaus.jackson.JsonNode;
-
 import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Type;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.Utf8;
 
 /** {@link DatumReader} for generic Java objects. */
 public class GenericDatumReader<D> implements DatumReader<D> {
   private Schema actual;
   private Schema expected;
+  private Object resolver;
 
   public GenericDatumReader() {}
 
   public GenericDatumReader(Schema actual) {
-    setSchema(actual);
-    setExpected(actual);
+    this.actual = actual;
+    this.expected = actual;
   }
 
-  public GenericDatumReader(Schema actual, Schema expected) {
-    setSchema(actual);
-    setExpected(expected);
+  public GenericDatumReader(Schema actual, Schema expected)
+    throws IOException {
+    this.actual = actual;
+    this.expected = expected;
   }
 
-  public void setSchema(Schema actual) { this.actual = actual; }
+  @Override
+  public void setSchema(Schema actual) {
+    this.actual = actual;
+    if (expected == null) {
+      expected = actual;
+    }
+    resolver = null;
+  }
 
-  public void setExpected(Schema expected) { this.expected = expected; }
+  public void setExpected(Schema expected) throws IOException {
+    this.expected = expected;
+  }
 
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
-    return (D) read(reuse, actual, expected != null ? expected : actual, in);
+    if (resolver == null) {
+      resolver = ResolvingDecoder.resolve(actual, expected);
+    }
+    return (D) read(reuse, expected, new ResolvingDecoder(resolver, in));
   }
   
   /** Called to read data.*/
-  protected Object read(Object old, Schema actual,
-                        Schema expected, Decoder in) throws IOException {
-    if (actual.getType() == Type.UNION)           // resolve unions
-      actual = actual.getTypes().get((int)in.readIndex());
-    if (expected.getType() == Type.UNION)
-      expected = resolveExpected(actual, expected);
-    switch (actual.getType()) {
-    case RECORD:  return readRecord(old, actual, expected, in);
-    case ENUM:    return readEnum(actual, expected, in);
-    case ARRAY:   return readArray(old, actual, expected, in);
-    case MAP:     return readMap(old, actual, expected, in);
-    case FIXED:   return readFixed(old, actual, expected, in);
-    case STRING:  return readString(old, actual, expected, in);
+  protected Object read(Object old, Schema expected,
+      ResolvingDecoder in) throws IOException {
+    switch (expected.getType()) {
+    case RECORD:  return readRecord(old, expected, in);
+    case ENUM:    return readEnum(expected, in);
+    case ARRAY:   return readArray(old, expected, in);
+    case MAP:     return readMap(old, expected, in);
+    case UNION:   return read(old, expected.getTypes().get(in.readIndex()), in);
+    case FIXED:   return readFixed(old, expected, in);
+    case STRING:  return readString(old, expected, in);
     case BYTES:   return readBytes(old, in);
-    case INT:     return readInt(old, actual, expected, in);
+    case INT:     return readInt(old, expected, in);
     case LONG:    return in.readLong();
     case FLOAT:   return in.readFloat();
     case DOUBLE:  return in.readDouble();
     case BOOLEAN: return in.readBoolean();
     case NULL:    in.readNull(); return null;
-    default: throw new AvroRuntimeException("Unknown type: "+actual);
+    default: throw new AvroRuntimeException("Unknown type: " + expected);
     }
-  }
-
-  private Schema resolveExpected(Schema actual, Schema expected) {
-    // first scan for exact match
-    for (Schema branch : expected.getTypes())
-      if (branch.getType() == actual.getType())
-        switch (branch.getType()) {
-        case RECORD:
-        case ENUM:
-        case FIXED:
-          String name = branch.getName();
-          if (name == null || name.equals(actual.getName()))
-            return branch;
-          break;
-        default:
-          return branch;
-        }
-    // then scan match via numeric promotion
-    for (Schema branch : expected.getTypes())
-      switch (actual.getType()) {
-      case INT:
-        switch (branch.getType()) {
-        case LONG: case FLOAT: case DOUBLE:
-          return branch;
-        }
-        break;
-      case LONG:
-        switch (branch.getType()) {
-        case FLOAT: case DOUBLE:
-          return branch;
-        }
-        break;
-      case FLOAT:
-        switch (branch.getType()) {
-        case DOUBLE:
-          return branch;
-        }
-        break;
-      }
-    throw new AvroTypeException("Expected "+expected+", found "+actual);
   }
 
   /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
-  protected Object readRecord(Object old, Schema actual, Schema expected,
-                              Decoder in) throws IOException {
-    /* TODO: We may want to compute the expected and actual mapping and cache
-     * the mapping (keyed by <actual, expected>). */
-    String recordName = expected.getName();
-    if (recordName != null && !recordName.equals(actual.getName()))
-      throw new AvroTypeException("Expected "+expected+", found "+actual);
-    Map<String, Field> expectedFields = expected.getFields();
-    // all fields not in expected should be removed by newRecord.
+  protected Object readRecord(Object old, Schema expected, 
+      ResolvingDecoder in) throws IOException {
     Object record = newRecord(old, expected);
-    int size = 0;
-    for (Map.Entry<String, Field> entry : actual.getFields().entrySet()) {
-      String fieldName = entry.getKey();
-      Field actualField = entry.getValue();
-      Field expectedField =
-          expected == actual ? actualField : expectedFields.get(entry.getKey());
-      if (expectedField == null) {
-        skip(actualField.schema(), in);
-        continue;
-      }
-      int fieldPosition = expectedField.pos();
-      Object oldDatum =
-          (old != null) ? getField(record, fieldName, fieldPosition) : null;
-      setField(record, fieldName, fieldPosition,
-               read(oldDatum,actualField.schema(),expectedField.schema(), in));
-      size++;
+    
+    for (Field f : in.readFieldOrder()) {
+      int pos = f.pos();
+      String name = f.name();
+      Object oldDatum = (old != null) ? getField(record, name, pos) : null;
+      setField(record, name, pos, read(oldDatum, f.schema(), in));
     }
-    if (expectedFields.size() > size) {           // not all fields set
-      Set<String> actualFields = actual.getFields().keySet();
-      for (Map.Entry<String, Field> entry : expectedFields.entrySet()) {
-        String fieldName = entry.getKey();
-        if (!actualFields.contains(fieldName)) {  // an unset field
-          Field f = entry.getValue();
-          JsonNode json = f.defaultValue();
-          if (json == null)                       // no default
-            throw new AvroTypeException("No default value for: "+fieldName);
-          setField(record, fieldName, f.pos(),    // set default
-                   defaultFieldValue(old, f.schema(), json));
-        }
-      }
-    }
+
     return record;
   }
 
@@ -186,70 +122,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return ((IndexedRecord)record).get(position);
   }
 
-  /** Called by the default implementation of {@link #readRecord} to construct
-      a default value for a field. */
-  protected Object defaultFieldValue(Object old, Schema schema, JsonNode json)
-    throws IOException {
-    switch (schema.getType()) {
-    case RECORD:
-      Object record = newRecord(old, schema);
-      for (Map.Entry<String, Field> entry : schema.getFields().entrySet()) {
-        String name = entry.getKey();
-        Field f = entry.getValue();
-        JsonNode v = json.get(name);
-        if (v == null) v = f.defaultValue();
-        if (v == null)
-          throw new AvroTypeException("No default value for: "+name);
-        Object o = old != null ? getField(old, name, f.pos()) : null;
-        setField(record, name, f.pos(), defaultFieldValue(o, f.schema(), v));
-      }
-      return record;
-    case ENUM:
-      return createEnum(json.getTextValue(), schema);
-    case ARRAY:
-      Object array = newArray(old, json.size(), schema);
-      Schema element = schema.getElementType();
-      int pos = 0;
-      for (JsonNode node : json)
-        addToArray(array, pos++,
-                   defaultFieldValue(peekArray(array), element, node));
-      return array;
-    case MAP:
-      Object map = newMap(old, json.size());
-      Schema value = schema.getValueType();
-      for (Iterator<String> i = json.getFieldNames(); i.hasNext();) {
-        String key = i.next();
-        addToMap(map, new Utf8(key),
-                 defaultFieldValue(null, value, json.get(key)));
-      }
-      return map;
-    case UNION:   return defaultFieldValue(old, schema.getTypes().get(0), json);
-    case FIXED:   return createFixed(old,json.getTextValue().getBytes("ISO-8859-1"),schema);
-    case STRING:  return createString(json.getTextValue());
-    case BYTES:  return createBytes(json.getTextValue().getBytes("ISO-8859-1"));
-    case INT:     return json.getIntValue();
-    case LONG:    return json.getLongValue();
-    case FLOAT:   return (float)json.getDoubleValue();
-    case DOUBLE:  return json.getDoubleValue();
-    case BOOLEAN: return json.getBooleanValue();
-    case NULL:    return null;
-    default: throw new AvroRuntimeException("Unknown type: "+actual);
-    }
+  /** Called by the default implementation of {@link #readRecord} to remove a
+   * record field value from a reused instance.  The default implementation is
+   * for {@link GenericRecord}.*/
+  protected void removeField(Object record, String field, int position) {
+    ((GenericRecord)record).put(position, null);
   }
-
+  
   /** Called to read an enum value. May be overridden for alternate enum
    * representations.  By default, returns the symbol as a String. */
-  protected Object readEnum(Schema actual, Schema expected, Decoder in)
-    throws IOException {
-    String name = expected.getName();
-    if (name != null && !name.equals(actual.getName()))
-      throw new AvroTypeException("Expected "+expected+", found "+actual);
-    String symbol = actual.getEnumSymbols().get(in.readEnum());
-    if (expected.hasEnumSymbol(symbol)) {
-      return createEnum(symbol, expected);
-    } else {
-      throw new AvroTypeException("Symbol " + symbol + " not in " + expected);
-    }
+  protected Object readEnum(Schema expected, Decoder in) throws IOException {
+    return createEnum(expected.getEnumSymbols().get(in.readEnum()), expected);
   }
 
   /** Called to create an enum value. May be overridden for alternate enum
@@ -258,9 +141,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   /** Called to read an array instance.  May be overridden for alternate array
    * representations.*/
-  protected Object readArray(Object old, Schema actual, Schema expected,
-                             Decoder in) throws IOException {
-    Schema actualType = actual.getElementType();
+  protected Object readArray(Object old, Schema expected,
+      ResolvingDecoder in) throws IOException {
     Schema expectedType = expected.getElementType();
     long l = in.readArrayStart();
     long base = 0;
@@ -268,12 +150,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       Object array = newArray(old, (int) l, expected);
       do {
         for (long i = 0; i < l; i++) {
-          addToArray(array, base+i,
-                     read(peekArray(array), actualType, expectedType, in));  
+          addToArray(array, base + i, read(peekArray(array), expectedType, in));
         }
         base += l;
       } while ((l = in.arrayNext()) > 0);
-      
       return array;
     } else {
       return newArray(old, 0, expected);
@@ -297,18 +177,15 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   
   /** Called to read a map instance.  May be overridden for alternate map
    * representations.*/
-  protected Object readMap(Object old, Schema actual, Schema expected,
-                           Decoder in) throws IOException {
-    Schema aValue = actual.getValueType();
+  protected Object readMap(Object old, Schema expected,
+      ResolvingDecoder in) throws IOException {
     Schema eValue = expected.getValueType();
     long l = in.readMapStart();
     Object map = newMap(old, (int) l);
     if (l > 0) {
       do {
         for (int i = 0; i < l; i++) {
-          addToMap(map,
-              readString(null, in),
-              read(null, aValue, eValue, in));
+          addToMap(map, readString(null, in), read(null, eValue, in));
         }
       } while ((l = in.mapNext()) > 0);
     }
@@ -324,13 +201,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   
   /** Called to read a fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
-  protected Object readFixed(Object old, Schema actual, Schema expected,
-                             Decoder in)
+  protected Object readFixed(Object old, Schema expected, Decoder in)
     throws IOException {
-    if (!actual.equals(expected))
-      throw new AvroTypeException("Expected "+expected+", found "+actual);
     GenericFixed fixed = (GenericFixed)createFixed(old, expected);
-    in.readFixed(fixed.bytes(), 0, actual.getFixedSize());
+    in.readFixed(fixed.bytes(), 0, expected.getFixedSize());
     return fixed;
   }
 
@@ -392,7 +266,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read strings.  Subclasses may override to use a different
    * string representation.  By default, this calls {@link
    * #readString(Object,Decoder)}.*/
-  protected Object readString(Object old, Schema actual, Schema expected,
+  protected Object readString(Object old, Schema expected,
                               Decoder in) throws IOException {
     return readString(old, in);
   }
@@ -418,8 +292,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read integers.  Subclasses may override to use a different
    * integer representation.  By default, this calls {@link
    * Decoder#readInt()}.*/
-  protected Object readInt(Object old, Schema actual, Schema expected,
-                           Decoder in) throws IOException {
+  protected Object readInt(Object old, Schema expected, Decoder in)
+    throws IOException {
     return in.readInt();
   }
 
