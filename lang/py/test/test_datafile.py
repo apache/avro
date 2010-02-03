@@ -51,6 +51,7 @@ SCHEMAS_TO_VALIDATE = (
 )
 
 FILENAME = 'test_datafile.out'
+CODECS_TO_VALIDATE = ('null', 'deflate')
 
 # TODO(hammer): clean up written files with ant, not os.remove
 class TestDataFile(unittest.TestCase):
@@ -61,38 +62,40 @@ class TestDataFile(unittest.TestCase):
     print ''
     correct = 0
     for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      print ''
-      print 'SCHEMA NUMBER %d' % (i + 1)
-      print '================'
-      print ''
-      print 'Schema: %s' % example_schema
-      print 'Datum: %s' % datum
+      for codec in CODECS_TO_VALIDATE:
+        print ''
+        print 'SCHEMA NUMBER %d' % (i + 1)
+        print '================'
+        print ''
+        print 'Schema: %s' % example_schema
+        print 'Datum: %s' % datum
+        print 'Codec: %s' % codec
 
-      # write data in binary to file 10 times
-      writer = open(FILENAME, 'wb')
-      datum_writer = io.DatumWriter()
-      schema_object = schema.parse(example_schema)
-      dfw = datafile.DataFileWriter(writer, datum_writer, schema_object)
-      for i in range(10):
-        dfw.append(datum)
-      dfw.close()
+        # write data in binary to file 10 times
+        writer = open(FILENAME, 'wb')
+        datum_writer = io.DatumWriter()
+        schema_object = schema.parse(example_schema)
+        dfw = datafile.DataFileWriter(writer, datum_writer, schema_object, codec=codec)
+        for i in range(10):
+          dfw.append(datum)
+        dfw.close()
 
-      # read data in binary from file
-      reader = open(FILENAME, 'rb')
-      datum_reader = io.DatumReader()
-      dfr = datafile.DataFileReader(reader, datum_reader)
-      round_trip_data = []
-      for datum in dfr:
-        round_trip_data.append(datum)
+        # read data in binary from file
+        reader = open(FILENAME, 'rb')
+        datum_reader = io.DatumReader()
+        dfr = datafile.DataFileReader(reader, datum_reader)
+        round_trip_data = []
+        for datum in dfr:
+          round_trip_data.append(datum)
 
-      print 'Round Trip Data: %s' % round_trip_data
-      print 'Round Trip Data Length: %d' % len(round_trip_data)
-      is_correct = [datum] * 10 == round_trip_data
-      if is_correct: correct += 1
-      print 'Correct Round Trip: %s' % is_correct
-      print ''
+        print 'Round Trip Data: %s' % round_trip_data
+        print 'Round Trip Data Length: %d' % len(round_trip_data)
+        is_correct = [datum] * 10 == round_trip_data
+        if is_correct: correct += 1
+        print 'Correct Round Trip: %s' % is_correct
+        print ''
     os.remove(FILENAME)
-    self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
+    self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
 
   def test_append(self):
     print ''
@@ -101,44 +104,46 @@ class TestDataFile(unittest.TestCase):
     print ''
     correct = 0
     for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      print ''
-      print 'SCHEMA NUMBER %d' % (i + 1)
-      print '================'
-      print ''
-      print 'Schema: %s' % example_schema
-      print 'Datum: %s' % datum
+      for codec in CODECS_TO_VALIDATE:
+        print ''
+        print 'SCHEMA NUMBER %d' % (i + 1)
+        print '================'
+        print ''
+        print 'Schema: %s' % example_schema
+        print 'Datum: %s' % datum
+        print 'Codec: %s' % codec
 
-      # write data in binary to file once
-      writer = open(FILENAME, 'wb')
-      datum_writer = io.DatumWriter()
-      schema_object = schema.parse(example_schema)
-      dfw = datafile.DataFileWriter(writer, datum_writer, schema_object)
-      dfw.append(datum)
-      dfw.close()
-
-      # open file, write, and close nine times
-      for i in range(9):
-        writer = open(FILENAME, 'ab+')
-        dfw = datafile.DataFileWriter(writer, io.DatumWriter())
+        # write data in binary to file once
+        writer = open(FILENAME, 'wb')
+        datum_writer = io.DatumWriter()
+        schema_object = schema.parse(example_schema)
+        dfw = datafile.DataFileWriter(writer, datum_writer, schema_object, codec=codec)
         dfw.append(datum)
         dfw.close()
 
-      # read data in binary from file
-      reader = open(FILENAME, 'rb')
-      datum_reader = io.DatumReader()
-      dfr = datafile.DataFileReader(reader, datum_reader)
-      appended_data = []
-      for datum in dfr:
-        appended_data.append(datum)
+        # open file, write, and close nine times
+        for i in range(9):
+          writer = open(FILENAME, 'ab+')
+          dfw = datafile.DataFileWriter(writer, io.DatumWriter())
+          dfw.append(datum)
+          dfw.close()
 
-      print 'Appended Data: %s' % appended_data
-      print 'Appended Data Length: %d' % len(appended_data)
-      is_correct = [datum] * 10 == appended_data
-      if is_correct: correct += 1
-      print 'Correct Appended: %s' % is_correct
-      print ''
+        # read data in binary from file
+        reader = open(FILENAME, 'rb')
+        datum_reader = io.DatumReader()
+        dfr = datafile.DataFileReader(reader, datum_reader)
+        appended_data = []
+        for datum in dfr:
+          appended_data.append(datum)
+
+        print 'Appended Data: %s' % appended_data
+        print 'Appended Data Length: %d' % len(appended_data)
+        is_correct = [datum] * 10 == appended_data
+        if is_correct: correct += 1
+        print 'Correct Appended: %s' % is_correct
+        print ''
     os.remove(FILENAME)
-    self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
+    self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
 
 if __name__ == '__main__':
   unittest.main()

@@ -279,6 +279,8 @@ Trunk (unreleased changes)
 
     AVRO-388. Using ResolvingDecoder in GenericDatumReader (thiru)
 
+    AVRO-386. Python implementaiton of compression (philz)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

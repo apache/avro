@@ -16,6 +16,7 @@
 """
 Read/Write Avro File Object Containers.
 """
+import zlib
 import uuid
 import cStringIO
 from avro import schema
@@ -37,8 +38,11 @@ META_SCHEMA = schema.parse("""\
    {"name": "meta", "type": {"type": "map", "values": "bytes"}},
    {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": %d}}]}
 """ % (MAGIC_SIZE, SYNC_SIZE))
-VALID_CODECS = ['null']
+VALID_CODECS = ['null', 'deflate']
 VALID_ENCODINGS = ['binary'] # not used yet
+
+CODEC_KEY = "avro.codec"
+SCHEMA_KEY = "avro.schema"
 
 #
 # Exceptions
@@ -61,9 +65,11 @@ class DataFileWriter(object):
     return uuid.uuid4().bytes
 
   # TODO(hammer): make 'encoder' a metadata property
-  def __init__(self, writer, datum_writer, writers_schema=None):
+  def __init__(self, writer, datum_writer, writers_schema=None, codec='null'):
     """
     If the schema is not present, presume we're appending.
+
+    @param writer: File-like object to write into.
     """
     self._writer = writer
     self._encoder = io.BinaryEncoder(writer)
@@ -74,9 +80,11 @@ class DataFileWriter(object):
     self._meta = {}
 
     if writers_schema is not None:
+      if codec not in VALID_CODECS:
+        raise DataFileException("Unknown codec: %r" % codec)
       self._sync_marker = DataFileWriter.generate_sync_marker()
-      self.set_meta('codec', 'null')
-      self.set_meta('schema', str(writers_schema))
+      self.set_meta('avro.codec', codec)
+      self.set_meta('avro.schema', str(writers_schema))
       self.datum_writer.writers_schema = writers_schema
       self._write_header()
     else:
@@ -86,11 +94,11 @@ class DataFileWriter(object):
       # TODO(hammer): collect arbitrary metadata
       # collect metadata
       self._sync_marker = dfr.sync_marker
-      self.set_meta('codec', dfr.get_meta('codec'))
+      self.set_meta('avro.codec', dfr.get_meta('avro.codec'))
 
       # get schema used to write existing file
-      schema_from_file = dfr.get_meta('schema')
-      self.set_meta('schema', schema_from_file)
+      schema_from_file = dfr.get_meta('avro.schema')
+      self.set_meta('avro.schema', schema_from_file)
       self.datum_writer.writers_schema = schema.parse(schema_from_file)
 
       # seek to the end of the file and prepare for writing
@@ -123,18 +131,27 @@ class DataFileWriter(object):
     self.datum_writer.write_data(META_SCHEMA, header, self.encoder)
 
   # TODO(hammer): make a schema for blocks and use datum_writer
-  # TODO(hammer): use codec when writing the block contents
   def _write_block(self):
     if self.block_count > 0:
       # write number of items in block
       self.encoder.write_long(self.block_count)
 
       # write block contents
-      if self.get_meta('codec') == 'null':
-        self.writer.write(self.buffer_writer.getvalue())
+      uncompressed_data = self.buffer_writer.getvalue()
+      if self.get_meta(CODEC_KEY) == 'null':
+        compressed_data = uncompressed_data
+      elif self.get_meta(CODEC_KEY) == 'deflate':
+        # The first two characters and last character are zlib
+        # wrappers around deflate data.
+        compressed_data = zlib.compress(uncompressed_data)[2:-1]
       else:
-        fail_msg = '"%s" codec is not supported.' % self.get_meta('codec')
+        fail_msg = '"%s" codec is not supported.' % self.get_meta(CODEC_KEY)
         raise DataFileException(fail_msg)
+
+      # Write length of block
+      self.encoder.write_long(len(compressed_data))
+      # Write block
+      self.writer.write(compressed_data)
 
       # write sync marker
       self.writer.write(self.sync_marker)
@@ -177,30 +194,34 @@ class DataFileReader(object):
   # TODO(hammer): allow user to specify the encoder
   def __init__(self, reader, datum_reader):
     self._reader = reader
-    self._decoder = io.BinaryDecoder(reader)
+    self._raw_decoder = io.BinaryDecoder(reader)
+    self._datum_decoder = None # Maybe reset at every block.
     self._datum_reader = datum_reader
     
     # read the header: magic, meta, sync
     self._read_header()
 
     # ensure codec is valid
-    codec_from_file = self.get_meta('codec')
-    if codec_from_file is not None and codec_from_file not in VALID_CODECS:
-      raise DataFileException('Unknown codec: %s.' % codec_from_file)
+    self.codec = self.get_meta('avro.codec')
+    if self.codec is None:
+      self.codec = "null"
+    if self.codec not in VALID_CODECS:
+      raise DataFileException('Unknown codec: %s.' % self.codec)
 
     # get file length
     self._file_length = self.determine_file_length()
 
     # get ready to read
     self._block_count = 0
-    self.datum_reader.writers_schema = schema.parse(self.get_meta('schema'))
+    self.datum_reader.writers_schema = schema.parse(self.get_meta(SCHEMA_KEY))
   
   def __iter__(self):
     return self
 
   # read-only properties
   reader = property(lambda self: self._reader)
-  decoder = property(lambda self: self._decoder)
+  raw_decoder = property(lambda self: self._raw_decoder)
+  datum_decoder = property(lambda self: self._datum_decoder)
   datum_reader = property(lambda self: self._datum_reader)
   sync_marker = property(lambda self: self._sync_marker)
   meta = property(lambda self: self._meta)
@@ -235,7 +256,8 @@ class DataFileReader(object):
     self.reader.seek(0, 0) 
 
     # read header into a dict
-    header = self.datum_reader.read_data(META_SCHEMA, META_SCHEMA, self.decoder)
+    header = self.datum_reader.read_data(
+      META_SCHEMA, META_SCHEMA, self.raw_decoder)
 
     # check magic number
     if header.get('magic') != MAGIC:
@@ -250,7 +272,19 @@ class DataFileReader(object):
     self._sync_marker = header['sync']
 
   def _read_block_header(self):
-    self.block_count = self.decoder.read_long()
+    self.block_count = self.raw_decoder.read_long()
+    if self.codec == "null":
+      # Skip a long; we don't need to use the length.
+      self.raw_decoder.skip_long()
+      self._datum_decoder = self._raw_decoder
+    else:
+      # Compressed data is stored as (length, data), which
+      # corresponds to have bytes is stored.
+      data = self.raw_decoder.read_bytes()
+      # -15 is the log of the window size; negative indicates
+      # "raw" (no zlib headers) decompression.  See zlib.h.
+      uncompressed = zlib.decompress(data, -15)
+      self._datum_decoder = io.BinaryDecoder(cStringIO.StringIO(uncompressed))
 
   def _skip_sync(self):
     """
@@ -277,7 +311,7 @@ class DataFileReader(object):
       else:
         self._read_block_header()
 
-    datum = self.datum_reader.read(self.decoder) 
+    datum = self.datum_reader.read(self.datum_decoder) 
     self.block_count -= 1
     return datum
 
