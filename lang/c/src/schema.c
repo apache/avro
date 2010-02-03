@@ -24,6 +24,8 @@
 #include "st.h"
 #include "schema.h"
 
+#define DEFAULT_TABLE_SIZE 32
+
 struct avro_schema_error_t {
 	st_table *named_schemas;
 	json_error_t json_error;
@@ -58,6 +60,27 @@ static int is_avro_id(const char *name)
 	return 0;
 }
 
+static int record_free_foreach(int i, struct avro_record_field_t *field,
+			       void *arg)
+{
+	free(field->name);
+	avro_schema_decref(field->type);
+	free(field);
+	return ST_DELETE;
+}
+
+static int enum_free_foreach(int i, char *sym, void *arg)
+{
+	free(sym);
+	return ST_DELETE;
+}
+
+static int union_free_foreach(int i, avro_schema_t schema, void *arg)
+{
+	avro_schema_decref(schema);
+	return ST_DELETE;
+}
+
 static void avro_schema_free(avro_schema_t schema)
 {
 	if (is_avro_schema(schema)) {
@@ -77,15 +100,10 @@ static void avro_schema_free(avro_schema_t schema)
 				struct avro_record_schema_t *record;
 				record = avro_schema_to_record(schema);
 				free(record->name);
-				while (!STAILQ_EMPTY(&record->fields)) {
-					struct avro_record_field_t *field;
-					field = STAILQ_FIRST(&record->fields);
-					STAILQ_REMOVE_HEAD(&record->fields,
-							   fields);
-					avro_schema_decref(field->type);
-					free(field->name);
-					free(field);
-				}
+				st_foreach(record->fields, record_free_foreach,
+					   0);
+				st_free_table(record->fields_byname);
+				st_free_table(record->fields);
 				free(record);
 			}
 			break;
@@ -94,14 +112,10 @@ static void avro_schema_free(avro_schema_t schema)
 				struct avro_enum_schema_t *enump;
 				enump = avro_schema_to_enum(schema);
 				free(enump->name);
-				while (!STAILQ_EMPTY(&enump->symbols)) {
-					struct avro_enum_symbol_t *symbol;
-					symbol = STAILQ_FIRST(&enump->symbols);
-					STAILQ_REMOVE_HEAD(&enump->symbols,
-							   symbols);
-					free(symbol->symbol);
-					free(symbol);
-				}
+				st_foreach(enump->symbols, enum_free_foreach,
+					   0);
+				st_free_table(enump->symbols);
+				st_free_table(enump->symbols_byname);
 				free(enump);
 			}
 			break;
@@ -132,15 +146,9 @@ static void avro_schema_free(avro_schema_t schema)
 		case AVRO_UNION:{
 				struct avro_union_schema_t *unionp;
 				unionp = avro_schema_to_union(schema);
-				while (!STAILQ_EMPTY(&unionp->branches)) {
-					struct avro_union_branch_t *branch;
-					branch =
-					    STAILQ_FIRST(&unionp->branches);
-					STAILQ_REMOVE_HEAD(&unionp->branches,
-							   branches);
-					avro_schema_decref(branch->schema);
-					free(branch);
-				}
+				st_foreach(unionp->branches, union_free_foreach,
+					   0);
+				st_free_table(unionp->branches);
 				free(unionp);
 			}
 			break;
@@ -275,7 +283,12 @@ avro_schema_t avro_schema_union(void)
 	if (!schema) {
 		return NULL;
 	}
-	STAILQ_INIT(&schema->branches);
+	schema->branches = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!schema->branches) {
+		free(schema);
+		return NULL;
+	}
+
 	avro_schema_init(&schema->obj, AVRO_UNION);
 	return &schema->obj;
 }
@@ -285,18 +298,13 @@ avro_schema_union_append(const avro_schema_t union_schema,
 			 const avro_schema_t schema)
 {
 	struct avro_union_schema_t *unionp;
-	struct avro_union_branch_t *s;
-
 	if (!union_schema || !schema || !is_avro_union(union_schema)) {
 		return EINVAL;
 	}
 	unionp = avro_schema_to_union(union_schema);
-	s = malloc(sizeof(struct avro_union_branch_t));
-	if (!s) {
-		return ENOMEM;
-	}
-	s->schema = avro_schema_incref(schema);
-	STAILQ_INSERT_TAIL(&unionp->branches, s, branches);
+	st_insert(unionp->branches, unionp->branches->num_entries,
+		  (st_data_t) schema);
+	avro_schema_incref(schema);
 	return 0;
 }
 
@@ -326,19 +334,33 @@ avro_schema_t avro_schema_map(const avro_schema_t values)
 
 avro_schema_t avro_schema_enum(const char *name)
 {
-	struct avro_enum_schema_t *enump =
-	    malloc(sizeof(struct avro_enum_schema_t));
-	if (!enump) {
+	struct avro_enum_schema_t *enump;
+
+	if (!is_avro_id(name)) {
 		return NULL;
 	}
-	if (!is_avro_id(name)) {
+	enump = malloc(sizeof(struct avro_enum_schema_t));
+	if (!enump) {
 		return NULL;
 	}
 	enump->name = strdup(name);
 	if (!enump->name) {
+		free(enump);
 		return NULL;
 	}
-	STAILQ_INIT(&enump->symbols);
+	enump->symbols = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!enump->symbols) {
+		free(enump->name);
+		free(enump);
+		return NULL;
+	}
+	enump->symbols_byname = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!enump->symbols_byname) {
+		st_free_table(enump->symbols);
+		free(enump->name);
+		free(enump);
+		return NULL;
+	}
 	avro_schema_init(&enump->obj, AVRO_ENUM);
 	return &enump->obj;
 }
@@ -348,17 +370,19 @@ avro_schema_enum_symbol_append(const avro_schema_t enum_schema,
 			       const char *symbol)
 {
 	struct avro_enum_schema_t *enump;
-	struct avro_enum_symbol_t *enum_symbol;
+	char *sym;
+	long idx;
 	if (!enum_schema || !symbol || !is_avro_enum(enum_schema)) {
 		return EINVAL;
 	}
 	enump = avro_schema_to_enum(enum_schema);
-	enum_symbol = malloc(sizeof(struct avro_enum_symbol_t));
-	if (!enum_symbol) {
+	sym = strdup(symbol);
+	if (!sym) {
 		return ENOMEM;
 	}
-	enum_symbol->symbol = strdup(symbol);
-	STAILQ_INSERT_TAIL(&enump->symbols, enum_symbol, symbols);
+	idx = enump->symbols->num_entries;
+	st_insert(enump->symbols, (st_data_t) idx, (st_data_t) sym);
+	st_insert(enump->symbols_byname, (st_data_t) sym, (st_data_t) idx);
 	return 0;
 }
 
@@ -381,22 +405,42 @@ avro_schema_record_field_append(const avro_schema_t record_schema,
 	}
 	new_field->name = strdup(field_name);
 	new_field->type = avro_schema_incref(field_schema);
-	STAILQ_INSERT_TAIL(&record->fields, new_field, fields);
+	st_insert(record->fields, record->fields->num_entries,
+		  (st_data_t) new_field);
+	st_insert(record->fields_byname, (st_data_t) new_field->name,
+		  (st_data_t) new_field);
 	return 0;
 }
 
 avro_schema_t avro_schema_record(const char *name)
 {
-	struct avro_record_schema_t *record =
-	    malloc(sizeof(struct avro_record_schema_t));
-	if (!record) {
-		return NULL;
-	}
+	struct avro_record_schema_t *record;
 	if (!is_avro_id(name)) {
 		return NULL;
 	}
+	record = malloc(sizeof(struct avro_record_schema_t));
+	if (!record) {
+		return NULL;
+	}
 	record->name = strdup(name);
-	STAILQ_INIT(&record->fields);
+	if (!record->name) {
+		free(record);
+		return NULL;
+	}
+	record->fields = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!record->fields) {
+		free(record->name);
+		free(record);
+		return NULL;
+	}
+	record->fields_byname = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!record->fields_byname) {
+		st_free_table(record->fields);
+		free(record->name);
+		free(record);
+		return NULL;
+	}
+
 	avro_schema_init(&record->obj, AVRO_RECORD);
 	return &record->obj;
 }
@@ -776,7 +820,7 @@ avro_schema_from_json(const char *jsontext, const int32_t len,
 	}
 	*e = error;
 
-	error->named_schemas = st_init_strtable();
+	error->named_schemas = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!error->named_schemas) {
 		free(error);
 		return ENOMEM;
@@ -804,6 +848,7 @@ avro_schema_from_json(const char *jsontext, const int32_t len,
 
 avro_schema_t avro_schema_copy(avro_schema_t schema)
 {
+	long i;
 	avro_schema_t new_schema = NULL;
 	if (!schema) {
 		return NULL;
@@ -827,22 +872,18 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 		{
 			struct avro_record_schema_t *record_schema =
 			    avro_schema_to_record(schema);
-			struct avro_record_field_t *field;
 			new_schema = avro_schema_record(record_schema->name);
-			for (field = STAILQ_FIRST(&record_schema->fields);
-			     field != NULL;
-			     field = STAILQ_NEXT(field, fields)) {
-				avro_schema_t field_copy =
-				    avro_schema_copy(field->type);
-				if (!field_copy) {
-					avro_schema_decref(new_schema);
-					return NULL;
-				}
-				if (avro_schema_record_field_append
-				    (new_schema, field->name, field_copy)) {
-					avro_schema_decref(new_schema);
-					return NULL;
-				}
+			for (i = 0; i < record_schema->fields->num_entries; i++) {
+				union {
+					st_data_t data;
+					struct avro_record_field_t *field;
+				} val;
+				st_lookup(record_schema->fields, i, &val.data);
+				avro_schema_t type_copy =
+				    avro_schema_copy(val.field->type);
+				avro_schema_record_field_append(new_schema,
+								val.field->name,
+								type_copy);
 			}
 		}
 		break;
@@ -852,15 +893,14 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 			struct avro_enum_schema_t *enum_schema =
 			    avro_schema_to_enum(schema);
 			new_schema = avro_schema_enum(enum_schema->name);
-			struct avro_enum_symbol_t *enum_symbol;
-			for (enum_symbol = STAILQ_FIRST(&enum_schema->symbols);
-			     enum_symbol != NULL;
-			     enum_symbol = STAILQ_NEXT(enum_symbol, symbols)) {
-				if (avro_schema_enum_symbol_append
-				    (new_schema, enum_symbol->symbol)) {
-					avro_schema_decref(new_schema);
-					return NULL;
-				}
+			for (i = 0; i < enum_schema->symbols->num_entries; i++) {
+				union {
+					st_data_t data;
+					char *sym;
+				} val;
+				st_lookup(enum_schema->symbols, i, &val.data);
+				avro_schema_enum_symbol_append(new_schema,
+							       val.sym);
 			}
 		}
 		break;
@@ -905,14 +945,17 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 		{
 			struct avro_union_schema_t *union_schema =
 			    avro_schema_to_union(schema);
-			struct avro_union_branch_t *s;
 
 			new_schema = avro_schema_union();
-
-			for (s = STAILQ_FIRST(&union_schema->branches);
-			     s != NULL; s = STAILQ_NEXT(s, branches)) {
-				avro_schema_t schema_copy =
-				    avro_schema_copy(s->schema);
+			for (i = 0; i < union_schema->branches->num_entries;
+			     i++) {
+				avro_schema_t schema_copy;
+				union {
+					st_data_t data;
+					avro_schema_t schema;
+				} val;
+				st_lookup(union_schema->branches, i, &val.data);
+				schema_copy = avro_schema_copy(val.schema);
 				if (avro_schema_union_append
 				    (new_schema, schema_copy)) {
 					avro_schema_decref(new_schema);

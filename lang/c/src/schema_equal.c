@@ -22,29 +22,29 @@ static int
 schema_record_equal(struct avro_record_schema_t *a,
 		    struct avro_record_schema_t *b)
 {
-	struct avro_record_field_t *field_a, *field_b;
+	long i;
 	if (strcmp(a->name, b->name)) {
 		/*
 		 * They have different names 
 		 */
 		return 0;
 	}
-
-	for (field_a = STAILQ_FIRST(&a->fields),
-	     field_b = STAILQ_FIRST(&b->fields);
-	     !(field_a == NULL && field_b == NULL);
-	     field_a = STAILQ_NEXT(field_a, fields),
-	     field_b = STAILQ_NEXT(field_b, fields)) {
-		if (field_a == NULL || field_b == NULL) {
-			return 0;	/* different num fields */
+	for (i = 0; i < a->fields->num_entries; i++) {
+		union {
+			st_data_t data;
+			struct avro_record_field_t *f;
+		} fa, fb;
+		st_lookup(a->fields, i, &fa.data);
+		if (!st_lookup(b->fields, i, &fb.data)) {
+			return 0;
 		}
-		if (strcmp(field_a->name, field_b->name)) {
+		if (strcmp(fa.f->name, fb.f->name)) {
 			/*
 			 * They have fields with different names 
 			 */
 			return 0;
 		}
-		if (!avro_schema_equal(field_a->type, field_b->type)) {
+		if (!avro_schema_equal(fa.f->type, fb.f->type)) {
 			/*
 			 * They have fields with different schemas 
 			 */
@@ -57,23 +57,23 @@ schema_record_equal(struct avro_record_schema_t *a,
 static int
 schema_enum_equal(struct avro_enum_schema_t *a, struct avro_enum_schema_t *b)
 {
-	struct avro_enum_symbol_t *sym_a, *sym_b;
-
+	long i;
 	if (strcmp(a->name, b->name)) {
 		/*
 		 * They have different names 
 		 */
 		return 0;
 	}
-	for (sym_a = STAILQ_FIRST(&a->symbols),
-	     sym_b = STAILQ_FIRST(&b->symbols);
-	     !(sym_a == NULL && sym_b == NULL);
-	     sym_a = STAILQ_NEXT(sym_a, symbols),
-	     sym_b = STAILQ_NEXT(sym_b, symbols)) {
-		if (sym_a == NULL || sym_b == NULL) {
-			return 0;	/* different num symbols */
+	for (i = 0; i < a->symbols->num_entries; i++) {
+		union {
+			st_data_t data;
+			char *sym;
+		} sa, sb;
+		st_lookup(a->symbols, i, &sa.data);
+		if (!st_lookup(b->symbols, i, &sb.data)) {
+			return 0;
 		}
-		if (strcmp(sym_a->symbol, sym_b->symbol)) {
+		if (strcmp(sa.sym, sb.sym) != 0) {
 			/*
 			 * They have different symbol names 
 			 */
@@ -110,17 +110,17 @@ schema_array_equal(struct avro_array_schema_t *a, struct avro_array_schema_t *b)
 static int
 schema_union_equal(struct avro_union_schema_t *a, struct avro_union_schema_t *b)
 {
-	struct avro_union_branch_t *branch_a, *branch_b;
-
-	for (branch_a = STAILQ_FIRST(&a->branches),
-	     branch_b = STAILQ_FIRST(&b->branches);
-	     !(branch_a == NULL && branch_b == NULL);
-	     branch_a = STAILQ_NEXT(branch_a, branches),
-	     branch_b = STAILQ_NEXT(branch_b, branches)) {
-		if (branch_a == NULL || branch_b == NULL) {
-			return 0;	/* different num symbols */
+	long i;
+	for (i = 0; i < a->branches->num_entries; i++) {
+		union {
+			st_data_t data;
+			avro_schema_t schema;
+		} ab, bb;
+		st_lookup(a->branches, i, &ab.data);
+		if (!st_lookup(b->branches, i, &bb.data)) {
+			return 0;
 		}
-		if (!avro_schema_equal(branch_a->schema, branch_b->schema)) {
+		if (!avro_schema_equal(ab.schema, bb.schema)) {
 			/*
 			 * They don't have the same schema types 
 			 */

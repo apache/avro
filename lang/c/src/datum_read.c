@@ -98,22 +98,21 @@ read_enum(avro_reader_t reader, const avro_encoding_t * enc,
 	  struct avro_enum_schema_t *readers_schema, avro_datum_t * datum)
 {
 	int rval;
-	int64_t i, index;
-	struct avro_enum_symbol_t *sym;
+	int64_t index;
+	union {
+		st_data_t data;
+		char *sym;
+	} val;
 
 	rval = enc->read_long(reader, &index);
 	if (rval) {
 		return rval;
 	}
 
-	sym = STAILQ_FIRST(&writers_schema->symbols);
-	for (i = 0; i != index && sym != NULL;
-	     sym = STAILQ_NEXT(sym, symbols), i++) {
-	}
-	if (!sym) {
+	if (!st_lookup(writers_schema->symbols, index, &val.data)) {
 		return EINVAL;
 	}
-	*datum = avro_enum(writers_schema->name, sym->symbol);
+	*datum = avro_enum(writers_schema->name, val.sym);
 	return 0;
 }
 
@@ -231,22 +230,21 @@ read_union(avro_reader_t reader, const avro_encoding_t * enc,
 	   struct avro_union_schema_t *readers_schema, avro_datum_t * datum)
 {
 	int rval;
-	int64_t i, index;
-	struct avro_union_branch_t *branch;
+	int64_t index;
+	union {
+		st_data_t data;
+		avro_schema_t schema;
+	} val;
 
 	rval = enc->read_long(reader, &index);
 	if (rval) {
 		return rval;
 	}
 
-	branch = STAILQ_FIRST(&writers_schema->branches);
-	for (i = 0; i != index && branch != NULL;
-	     branch = STAILQ_NEXT(branch, branches)) {
-	}
-	if (!branch) {
+	if (!st_lookup(writers_schema->branches, index, &val.data)) {
 		return EILSEQ;
 	}
-	return avro_read_data(reader, branch->schema, NULL, datum);
+	return avro_read_data(reader, val.schema, NULL, datum);
 }
 
 /* TODO: handle default values in fields */
@@ -256,36 +254,35 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 	    struct avro_record_schema_t *readers_schema, avro_datum_t * datum)
 {
 	int rval;
-	struct avro_record_field_t *reader_field;
-	struct avro_record_field_t *field;
+	long i;
 	avro_datum_t record;
 	avro_datum_t field_datum;
 
 	record = *datum = avro_record(writers_schema->name);
-	for (field = STAILQ_FIRST(&writers_schema->fields);
-	     field != NULL; field = STAILQ_NEXT(field, fields)) {
-		for (reader_field = STAILQ_FIRST(&readers_schema->fields);
-		     reader_field != NULL;
-		     reader_field = STAILQ_NEXT(reader_field, fields)) {
-			if (strcmp(field->name, reader_field->name) == 0) {
-				break;
-			}
-		}
-		if (reader_field) {
+	for (i = 0; i < writers_schema->fields->num_entries; i++) {
+		union {
+			st_data_t data;
+			struct avro_record_field_t *field;
+		} rfield, wfield;
+		st_lookup(writers_schema->fields, i, &wfield.data);
+		if (st_lookup
+		    (readers_schema->fields_byname,
+		     (st_data_t) wfield.field->name, &rfield.data)) {
 			rval =
-			    avro_read_data(reader, field->type,
-					   reader_field->type, &field_datum);
+			    avro_read_data(reader, wfield.field->type,
+					   rfield.field->type, &field_datum);
 			if (rval) {
 				return rval;
 			}
 			rval =
-			    avro_record_set(record, field->name, field_datum);
+			    avro_record_set(record, wfield.field->name,
+					    field_datum);
 			if (rval) {
 				return rval;
 			}
 			avro_datum_decref(field_datum);
 		} else {
-			rval = avro_skip_data(reader, field->type);
+			rval = avro_skip_data(reader, wfield.field->type);
 			if (rval) {
 				return rval;
 			}
@@ -299,6 +296,7 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 	       avro_schema_t readers_schema, avro_datum_t * datum)
 {
 	int rval = EINVAL;
+	long i;
 	const avro_encoding_t *enc = &avro_binary_encoding;
 
 	if (!reader || !is_avro_schema(writers_schema) || !datum) {
@@ -315,15 +313,18 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 	 * schema resolution 
 	 */
 	if (!is_avro_union(writers_schema) && is_avro_union(readers_schema)) {
-		struct avro_union_branch_t *branch;
 		struct avro_union_schema_t *union_schema =
 		    avro_schema_to_union(readers_schema);
 
-		for (branch = STAILQ_FIRST(&union_schema->branches);
-		     branch != NULL; branch = STAILQ_NEXT(branch, branches)) {
-			if (avro_schema_match(writers_schema, branch->schema)) {
+		for (i = 0; i < union_schema->branches->num_entries; i++) {
+			union {
+				st_data_t data;
+				avro_schema_t schema;
+			} val;
+			st_lookup(union_schema->branches, i, &val.data);
+			if (avro_schema_match(writers_schema, val.schema)) {
 				return avro_read_data(reader, writers_schema,
-						      branch->schema, datum);
+						      val.schema, datum);
 			}
 		}
 		return EINVAL;

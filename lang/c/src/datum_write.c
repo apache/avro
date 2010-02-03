@@ -26,15 +26,20 @@ write_record(avro_writer_t writer, const avro_encoding_t * enc,
 	     struct avro_record_schema_t *record, avro_datum_t datum)
 {
 	int rval;
-	struct avro_record_field_t *field = STAILQ_FIRST(&record->fields);
-	for (; field != NULL; field = STAILQ_NEXT(field, fields)) {
-		int field_rval;
+	long i;
+
+	for (i = 0; i < record->fields->num_entries; i++) {
 		avro_datum_t field_datum;
-		field_rval = avro_record_get(datum, field->name, &field_datum);
-		if (field_rval) {
-			return field_rval;
+		union {
+			st_data_t data;
+			struct avro_record_field_t *field;
+		} val;
+		st_lookup(record->fields, i, &val.data);
+		rval = avro_record_get(datum, val.field->name, &field_datum);
+		if (rval) {
+			return rval;
 		}
-		rval = avro_write_data(writer, field->type, field_datum);
+		rval = avro_write_data(writer, val.field->type, field_datum);
 		if (rval) {
 			return rval;
 		}
@@ -46,17 +51,15 @@ static int
 write_enum(avro_writer_t writer, const avro_encoding_t * enc,
 	   struct avro_enum_schema_t *enump, struct avro_enum_datum_t *datum)
 {
-	int64_t index;
-	struct avro_enum_symbol_t *sym = STAILQ_FIRST(&enump->symbols);
-	for (index = 0; sym != NULL; sym = STAILQ_NEXT(sym, symbols), index++) {
-		if (strcmp(sym->symbol, datum->symbol) == 0) {
-			break;
-		}
-	}
-	if (!sym) {
+	union {
+		st_data_t data;
+		long idx;
+	} val;
+	if (!st_lookup
+	    (enump->symbols_byname, (st_data_t) datum->symbol, &val.data)) {
 		return EINVAL;
 	}
-	return enc->write_long(writer, index);
+	return enc->write_long(writer, val.idx);
 }
 
 struct write_map_args {
@@ -113,17 +116,21 @@ write_array(avro_writer_t writer, const avro_encoding_t * enc,
 	    struct avro_array_datum_t *array)
 {
 	int rval;
-	struct avro_array_element_t *el;
+	long i;
 
-	if (array->num_elements) {
-		rval = enc->write_long(writer, array->num_elements);
+	if (array->els->num_entries) {
+		rval = enc->write_long(writer, array->els->num_entries);
 		if (rval) {
 			return rval;
 		}
-		for (el = STAILQ_FIRST(&array->els);
-		     el != NULL; el = STAILQ_NEXT(el, els)) {
+		for (i = 0; i < array->els->num_entries; i++) {
+			union {
+				st_data_t data;
+				avro_datum_t datum;
+			} val;
+			st_lookup(array->els, i, &val.data);
 			rval =
-			    avro_write_data(writer, schema->items, el->datum);
+			    avro_write_data(writer, schema->items, val.datum);
 			if (rval) {
 				return rval;
 			}
@@ -137,22 +144,23 @@ write_union(avro_writer_t writer, const avro_encoding_t * enc,
 	    struct avro_union_schema_t *schema, avro_datum_t datum)
 {
 	int rval;
-	int64_t index;
-	struct avro_union_branch_t *branch = STAILQ_FIRST(&schema->branches);
-	for (index = 0; branch != NULL;
-	     branch = STAILQ_NEXT(branch, branches), index++) {
-		if (avro_schema_datum_validate(branch->schema, datum)) {
-			break;
+	long i;
+
+	for (i = 0; i < schema->branches->num_entries; i++) {
+		union {
+			st_data_t data;
+			avro_schema_t schema;
+		} val;
+		st_lookup(schema->branches, i, &val.data);
+		if (avro_schema_datum_validate(val.schema, datum)) {
+			rval = enc->write_long(writer, i);
+			if (rval) {
+				return rval;
+			}
+			return avro_write_data(writer, val.schema, datum);
 		}
 	}
-	if (!branch) {
-		return EINVAL;
-	}
-	rval = enc->write_long(writer, index);
-	if (rval) {
-		return rval;
-	}
-	return avro_write_data(writer, branch->schema, datum);
+	return EINVAL;
 }
 
 int

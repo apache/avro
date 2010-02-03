@@ -19,7 +19,7 @@
 
 #include "avro.h"
 #include "container_of.h"
-#include "queue.h"
+#include "st.h"
 
 struct avro_record_field_t {
 	char *name;
@@ -27,25 +27,20 @@ struct avro_record_field_t {
 	/*
 	 * TODO: default values 
 	 */
-	 STAILQ_ENTRY(avro_record_field_t) fields;
 };
 
 struct avro_record_schema_t {
 	struct avro_obj_t obj;
 	char *name;
-	/* TODO: st_table of names for faster lookup on record_read() */
-	 STAILQ_HEAD(fields, avro_record_field_t) fields;
-};
-
-struct avro_enum_symbol_t {
-	char *symbol;
-	 STAILQ_ENTRY(avro_enum_symbol_t) symbols;
+	st_table *fields;
+	st_table *fields_byname;
 };
 
 struct avro_enum_schema_t {
 	struct avro_obj_t obj;
 	char *name;
-	 STAILQ_HEAD(symbols, avro_enum_symbol_t) symbols;
+	st_table *symbols;
+	st_table *symbols_byname;
 };
 
 struct avro_array_schema_t {
@@ -58,14 +53,9 @@ struct avro_map_schema_t {
 	avro_schema_t values;
 };
 
-struct avro_union_branch_t {
-	avro_schema_t schema;
-	 STAILQ_ENTRY(avro_union_branch_t) branches;
-};
-
 struct avro_union_schema_t {
 	struct avro_obj_t obj;
-	 STAILQ_HEAD(branch, avro_union_branch_t) branches;
+	st_table *branches;
 };
 
 struct avro_fixed_schema_t {

@@ -21,6 +21,8 @@
 #include "datum.h"
 #include "encoding.h"
 
+#define DEFAULT_TABLE_SIZE 32
+
 static void avro_datum_init(avro_datum_t datum, avro_type_t type)
 {
 	datum->type = type;
@@ -386,7 +388,16 @@ avro_datum_t avro_record(const char *name)
 		return NULL;
 	}
 	datum->name = strdup(name);
-	datum->fields = st_init_strtable();
+	if (!datum->name) {
+		free(datum);
+		return NULL;
+	}
+	datum->fields = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->fields) {
+		free(datum->name);
+		free(datum);
+		return NULL;
+	}
 
 	avro_datum_init(&datum->obj, AVRO_RECORD);
 	return &datum->obj;
@@ -555,7 +566,12 @@ avro_datum_t avro_map(void)
 	if (!datum) {
 		return NULL;
 	}
-	datum->map = st_init_strtable();
+	datum->map = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->map) {
+		free(datum);
+		return NULL;
+	}
+
 	avro_datum_init(&datum->obj, AVRO_MAP);
 	return &datum->obj;
 }
@@ -616,8 +632,11 @@ avro_datum_t avro_array(void)
 	if (!datum) {
 		return NULL;
 	}
-	STAILQ_INIT(&datum->els);
-	datum->num_elements = 0;
+	datum->els = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->els) {
+		free(datum);
+		return NULL;
+	}
 
 	avro_datum_init(&datum->obj, AVRO_ARRAY);
 	return &datum->obj;
@@ -628,19 +647,13 @@ avro_array_append_datum(const avro_datum_t array_datum,
 			const avro_datum_t datum)
 {
 	struct avro_array_datum_t *array;
-	struct avro_array_element_t *el;
 	if (!is_avro_datum(array_datum) || !is_avro_array(array_datum)
 	    || !is_avro_datum(datum)) {
 		return EINVAL;
 	}
 	array = avro_datum_to_array(array_datum);
-	el = malloc(sizeof(struct avro_array_element_t));
-	if (!el) {
-		return ENOMEM;
-	}
-	el->datum = avro_datum_incref(datum);
-	STAILQ_INSERT_TAIL(&array->els, el, els);
-	array->num_elements++;
+	st_insert(array->els, array->els->num_entries,
+		  (st_data_t) avro_datum_incref(datum));
 	return 0;
 }
 
@@ -648,6 +661,12 @@ static int char_datum_free_foreach(char *key, avro_datum_t datum, void *arg)
 {
 	avro_datum_decref(datum);
 	free(key);
+	return ST_DELETE;
+}
+
+static int array_free_foreach(int i, avro_datum_t datum, void *arg)
+{
+	avro_datum_decref(datum);
 	return ST_DELETE;
 }
 
@@ -747,13 +766,8 @@ static void avro_datum_free(avro_datum_t datum)
 		case AVRO_ARRAY:{
 				struct avro_array_datum_t *array;
 				array = avro_datum_to_array(datum);
-				while (!STAILQ_EMPTY(&array->els)) {
-					struct avro_array_element_t *el;
-					el = STAILQ_FIRST(&array->els);
-					STAILQ_REMOVE_HEAD(&array->els, els);
-					avro_datum_decref(el->datum);
-					free(el);
-				}
+				st_foreach(array->els, array_free_foreach, 0);
+				st_free_table(array->els);
 				free(array);
 			}
 			break;

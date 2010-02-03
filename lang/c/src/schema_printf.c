@@ -92,13 +92,17 @@ static void
 avro_schema_record_print(struct avro_record_schema_t *record,
 			 struct avro_schema_args_t *args)
 {
-	struct avro_record_field_t *field;
+	long i;
 	avro_schema_printf_indent(args);
 	fprintf(args->fp, "record \"%s\"\n", record->name);
 	args->depth++;
-	for (field = STAILQ_FIRST(&record->fields);
-	     field != NULL; field = STAILQ_NEXT(field, fields)) {
-		avro_schema_record_field_print(field, args);
+	for (i = 0; i < record->fields->num_entries; i++) {
+		union {
+			st_data_t data;
+			struct avro_record_field_t *field;
+		} val;
+		st_lookup(record->fields, i, &val.data);
+		avro_schema_record_field_print(val.field, args);
 	}
 	args->depth--;
 }

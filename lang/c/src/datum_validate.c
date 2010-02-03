@@ -40,6 +40,9 @@ schema_map_validate_foreach(char *key, avro_datum_t datum,
 int
 avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 {
+	int rval;
+	long i;
+
 	if (!is_avro_schema(expected_schema) || !is_avro_datum(datum)) {
 		return EINVAL;
 	}
@@ -80,49 +83,45 @@ avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 			    avro_datum_to_fixed(datum)->size));
 
 	case AVRO_ENUM:
-		{
+		if (is_avro_enum(datum)) {
 			struct avro_enum_schema_t *enump =
 			    avro_schema_to_enum(expected_schema);
-			struct avro_enum_symbol_t *symbol =
-			    STAILQ_FIRST(&enump->symbols);
-			while (symbol) {
-				if (!strcmp
-				    (symbol->symbol,
-				     avro_datum_to_enum(datum)->symbol)) {
-					return 1;
-				}
-				symbol = STAILQ_NEXT(symbol, symbols);
-			}
-			return 0;
+			struct avro_enum_datum_t *d = avro_datum_to_enum(datum);
+			union {
+				st_data_t data;
+				long idx;
+			} val;
+			return st_lookup(enump->symbols_byname,
+					 (st_data_t) d->symbol, &val.data);
 		}
-		break;
+		return 0;
 
 	case AVRO_ARRAY:
-		{
-			if (is_avro_array(datum)) {
-				struct avro_array_datum_t *array =
-				    avro_datum_to_array(datum);
-				struct avro_array_element_t *el =
-				    STAILQ_FIRST(&array->els);
-				while (el) {
-					if (!avro_schema_datum_validate
-					    ((avro_schema_to_array
-					      (expected_schema))->items,
-					     el->datum)) {
-						return 0;
-					}
-					el = STAILQ_NEXT(el, els);
+		if (is_avro_array(datum)) {
+			struct avro_array_datum_t *array =
+			    avro_datum_to_array(datum);
+
+			for (i = 0; i < array->els->num_entries; i++) {
+				union {
+					st_data_t data;
+					avro_datum_t datum;
+				} val;
+				st_lookup(array->els, i, &val.data);
+				if (!avro_schema_datum_validate
+				    ((avro_schema_to_array
+				      (expected_schema))->items, val.datum)) {
+					return 0;
 				}
-				return 1;
 			}
-			return 0;
+			return 1;
 		}
-		break;
+		return 0;
 
 	case AVRO_MAP:
 		if (is_avro_map(datum)) {
 			struct validate_st vst =
-			    { avro_schema_to_map(expected_schema)->values, 1 };
+			    { avro_schema_to_map(expected_schema)->values, 1
+			};
 			st_foreach(avro_datum_to_map(datum)->map,
 				   schema_map_validate_foreach,
 				   (st_data_t) & vst);
@@ -134,41 +133,45 @@ avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 		{
 			struct avro_union_schema_t *union_schema =
 			    avro_schema_to_union(expected_schema);
-			struct avro_union_branch_t *branch;
 
-			for (branch = STAILQ_FIRST(&union_schema->branches);
-			     branch != NULL;
-			     branch = STAILQ_NEXT(branch, branches)) {
+			for (i = 0; i < union_schema->branches->num_entries;
+			     i++) {
+				union {
+					st_data_t data;
+					avro_schema_t schema;
+				} val;
+				st_lookup(union_schema->branches, i, &val.data);
 				if (avro_schema_datum_validate
-				    (branch->schema, datum)) {
+				    (val.schema, datum)) {
 					return 1;
 				}
 			}
-			return 0;
 		}
-		break;
+		return 0;
 
 	case AVRO_RECORD:
 		if (is_avro_record(datum)) {
 			struct avro_record_schema_t *record_schema =
 			    avro_schema_to_record(expected_schema);
-			struct avro_record_field_t *field;
-			for (field = STAILQ_FIRST(&record_schema->fields);
-			     field != NULL;
-			     field = STAILQ_NEXT(field, fields)) {
-				int field_rval;
+			for (i = 0; i < record_schema->fields->num_entries; i++) {
 				avro_datum_t field_datum;
-				field_rval =
-				    avro_record_get(datum, field->name,
+				union {
+					st_data_t data;
+					struct avro_record_field_t *field;
+				} val;
+				st_lookup(record_schema->fields, i, &val.data);
+
+				rval =
+				    avro_record_get(datum, val.field->name,
 						    &field_datum);
-				if (field_rval) {
+				if (rval) {
 					/*
 					 * TODO: check for default values 
 					 */
-					return field_rval;
+					return rval;
 				}
 				if (!avro_schema_datum_validate
-				    (field->type, field_datum)) {
+				    (val.field->type, field_datum)) {
 					return 0;
 				}
 			}

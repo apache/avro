@@ -21,18 +21,19 @@
 static int
 array_equal(struct avro_array_datum_t *a, struct avro_array_datum_t *b)
 {
-	struct avro_array_element_t *a_el, *b_el;
-	if (a->num_elements != b->num_elements) {
+	long i;
+
+	if (a->els->num_entries != b->els->num_entries) {
 		return 0;
 	}
-	for (a_el = STAILQ_FIRST(&a->els),
-	     b_el = STAILQ_FIRST(&b->els);
-	     !(a_el == NULL && a_el == NULL);
-	     a_el = STAILQ_NEXT(a_el, els), b_el = STAILQ_NEXT(b_el, els)) {
-		if (a_el == NULL || b_el == NULL) {
-			return 0;	/* different number of elements */
-		}
-		if (!avro_datum_equal(a_el->datum, b_el->datum)) {
+	for (i = 0; i < a->els->num_entries; i++) {
+		union {
+			st_data_t data;
+			avro_datum_t datum;
+		} ael, bel;
+		st_lookup(a->els, i, &ael.data);
+		st_lookup(b->els, i, &bel.data);
+		if (!avro_datum_equal(ael.datum, bel.datum)) {
 			return 0;
 		}
 	}

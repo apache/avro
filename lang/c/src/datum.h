@@ -20,7 +20,6 @@
 #include "avro.h"		/* for avro_schema_t */
 #include "container_of.h"
 #include "st.h"
-#include "queue.h"
 
 struct avro_string_datum_t {
 	struct avro_obj_t obj;
@@ -85,15 +84,9 @@ struct avro_enum_datum_t {
 	const char *symbol;
 };
 
-struct avro_array_element_t {
-	avro_datum_t datum;
-	 STAILQ_ENTRY(avro_array_element_t) els;
-};
-
 struct avro_array_datum_t {
 	struct avro_obj_t obj;
-	int64_t num_elements;
-	 STAILQ_HEAD(els, avro_array_element_t) els;
+	st_table *els;
 };
 
 #define avro_datum_to_string(datum_)    (container_of(datum_, struct avro_string_datum_t, obj))

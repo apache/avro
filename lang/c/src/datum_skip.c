@@ -101,33 +101,35 @@ static int skip_union(avro_reader_t reader, const avro_encoding_t * enc,
 		      struct avro_union_schema_t *writers_schema)
 {
 	int rval;
-	int64_t i, index;
-	struct avro_union_branch_t *branch;
+	int64_t index;
+	union {
+		st_data_t data;
+		avro_schema_t schema;
+	} val;
 
 	rval = enc->read_long(reader, &index);
 	if (rval) {
 		return rval;
 	}
-
-	branch = STAILQ_FIRST(&writers_schema->branches);
-	for (i = 0; i != index && branch != NULL;
-	     branch = STAILQ_NEXT(branch, branches)) {
-	}
-	if (!branch) {
+	if (!st_lookup(writers_schema->branches, index, &val.data)) {
 		return EILSEQ;
 	}
-	return avro_skip_data(reader, branch->schema);
+	return avro_skip_data(reader, val.schema);
 }
 
 static int skip_record(avro_reader_t reader, const avro_encoding_t * enc,
 		       struct avro_record_schema_t *writers_schema)
 {
 	int rval;
-	struct avro_record_field_t *field;
+	long i;
 
-	for (field = STAILQ_FIRST(&writers_schema->fields);
-	     field != NULL; field = STAILQ_NEXT(field, fields)) {
-		rval = avro_skip_data(reader, field->type);
+	for (i = 0; i < writers_schema->fields->num_entries; i++) {
+		union {
+			st_data_t data;
+			struct avro_record_field_t *field;
+		} val;
+		st_lookup(writers_schema->fields, i, &val.data);
+		rval = avro_skip_data(reader, val.field->type);
 		if (rval) {
 			return rval;
 		}
