@@ -445,6 +445,8 @@ Trunk (unreleased changes)
     throw NPE when passed a field name that's not in the record.
     (Kevin Oliver via cutting)
 
+    AVRO-401. Fix a typo in the specification.  (Tom White via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

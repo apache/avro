@@ -577,7 +577,7 @@
 	  <ul>
 	    <li><code>"ascending"</code>, then the order of its values
 	      is unaltered.</li>
-	    <li><code>"ascending"</code>, then the order of its values
+	    <li><code>"descending"</code>, then the order of its values
 	      is reversed.</li>
 	    <li><code>"ignore"</code>, then its values are ignored
 	      when sorting.</li>
