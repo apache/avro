@@ -87,6 +87,9 @@ Trunk (unreleased changes)
     AVRO-380. Avro Container File format change: add block size to block
     descriptor.  (Scott Carey via philz)
 
+    AVRO-322. Add a working client and server to Python implementation 
+    using HTTP as a transport (hammer)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

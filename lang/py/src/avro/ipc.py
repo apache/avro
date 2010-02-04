@@ -18,7 +18,6 @@ Support for inter-process calls.
 """
 import cStringIO
 import struct
-import socket
 from avro import io
 from avro import protocol
 from avro import schema
@@ -96,26 +95,26 @@ class ConnectionClosedException(schema.AvroException):
 
 class Requestor(object):
   """Base class for the client side of a protocol interaction."""
-  def __init__(self, local_protocol, transport):
+  def __init__(self, local_protocol, transceiver):
     self._local_protocol = local_protocol
-    self._transport = transport
+    self._transceiver = transceiver
     self._remote_protocol = None
     self._remote_hash = None
     self._send_protocol = None
 
   # read-only properties
   local_protocol = property(lambda self: self._local_protocol)
-  transport = property(lambda self: self._transport)
+  transceiver = property(lambda self: self._transceiver)
 
   # read/write properties
   def set_remote_protocol(self, new_remote_protocol):
     self._remote_protocol = new_remote_protocol
-    REMOTE_PROTOCOLS[self.transport.remote_name] = self.remote_protocol
+    REMOTE_PROTOCOLS[self.transceiver.remote_name] = self.remote_protocol
   remote_protocol = property(lambda self: self._remote_protocol,
                              set_remote_protocol)
   def set_remote_hash(self, new_remote_hash):
     self._remote_hash = new_remote_hash
-    REMOTE_HASHES[self.transport.remote_name] = self.remote_hash
+    REMOTE_HASHES[self.transceiver.remote_name] = self.remote_hash
   remote_hash = property(lambda self: self._remote_hash, set_remote_hash)
   def set_send_protocol(self, new_send_protocol):
     self._send_protocol = new_send_protocol
@@ -131,9 +130,9 @@ class Requestor(object):
     self.write_handshake_request(buffer_encoder)
     self.write_call_request(message_name, request_datum, buffer_encoder)
 
-    # send the handshake and call request;  block until call response
+    # send the handshake and call request; block until call response
     call_request = buffer_writer.getvalue()
-    call_response = self.transport.transceive(call_request)
+    call_response = self.transceiver.transceive(call_request)
 
     # process the handshake and call response
     buffer_decoder = io.BinaryDecoder(cStringIO.StringIO(call_response))
@@ -145,7 +144,7 @@ class Requestor(object):
 
   def write_handshake_request(self, encoder):
     local_hash = self.local_protocol.md5
-    remote_name = self.transport.remote_name
+    remote_name = self.transceiver.remote_name
     remote_hash = REMOTE_HASHES.get(remote_name)
     if remote_hash is None:
       remote_hash = local_hash
@@ -265,12 +264,11 @@ class Responder(object):
   def set_protocol_cache(self, hash, protocol):
     self.protocol_cache[hash] = protocol
 
-  def respond(self, transport):
+  def respond(self, call_request):
     """
     Called by a server to deserialize a request, compute and serialize
     a response or error. Compare to 'handle()' in Thrift.
     """
-    call_request = transport.read_framed_message()
     buffer_reader = cStringIO.StringIO(call_request)
     buffer_decoder = io.BinaryDecoder(buffer_reader)
     buffer_writer = cStringIO.StringIO()
@@ -279,8 +277,7 @@ class Responder(object):
     response_metadata = {}
     
     try:
-      remote_protocol = self.process_handshake(transport, buffer_decoder,
-                                               buffer_encoder)
+      remote_protocol = self.process_handshake(buffer_decoder, buffer_encoder)
       # handshake failure
       if remote_protocol is None:  
         return buffer_writer.getvalue()
@@ -329,7 +326,7 @@ class Responder(object):
       self.write_error(SYSTEM_ERROR_SCHEMA, error, buffer_encoder)
     return buffer_writer.getvalue()
 
-  def process_handshake(self, transport, decoder, encoder):
+  def process_handshake(self, decoder, encoder):
     handshake_request = HANDSHAKE_RESPONDER_READER.read(decoder)
     handshake_response = {}
 
@@ -380,35 +377,44 @@ class Responder(object):
     datum_writer.write(str(error_exception), encoder)
 
 #
-# Transport Implementations
+# Utility classes
 #
 
-class SocketTransport(object):
-  """A simple socket-based Transport implementation."""
-  def __init__(self, sock):
-    self._sock = sock
+class FramedReader(object):
+  """Wrapper around a file-like object to read framed data."""
+  def __init__(self, reader):
+    self._reader = reader
 
   # read-only properties
-  sock = property(lambda self: self._sock)
-  remote_name = property(lambda self: self.sock.getsockname())
-
-  def transceive(self, request):
-    self.write_framed_message(request)
-    return self.read_framed_message()
+  reader = property(lambda self: self._reader)
 
   def read_framed_message(self):
     message = []
     while True:
       buffer = cStringIO.StringIO()
-      buffer_length = self.read_buffer_length()
+      buffer_length = self._read_buffer_length()
       if buffer_length == 0:
         return ''.join(message)
       while buffer.tell() < buffer_length:
-        chunk = self.sock.recv(buffer_length - buffer.tell())
+        chunk = self.reader.read(buffer_length - buffer.tell())
         if chunk == '':
-          raise ConnectionClosedException("Socket read 0 bytes.")
+          raise ConnectionClosedException("Reader read 0 bytes.")
         buffer.write(chunk)
       message.append(buffer.getvalue())
+
+  def _read_buffer_length(self):
+    read = self.reader.read(BUFFER_HEADER_LENGTH)
+    if read == '':
+      raise ConnectionClosedException("Reader read 0 bytes.")
+    return BIG_ENDIAN_INT_STRUCT.unpack(read)[0]
+
+class FramedWriter(object):
+  """Wrapper around a file-like object to write framed data."""
+  def __init__(self, writer):
+    self._writer = writer
+
+  # read-only properties
+  writer = property(lambda self: self._writer)
 
   def write_framed_message(self, message):
     message_length = len(message)
@@ -427,26 +433,49 @@ class SocketTransport(object):
   def write_buffer(self, chunk):
     buffer_length = len(chunk)
     self.write_buffer_length(buffer_length)
-    total_bytes_sent = 0
-    while total_bytes_sent < buffer_length:
-      bytes_sent = self.sock.send(chunk[total_bytes_sent:])
-      if bytes_sent == 0:
-        raise ConnectionClosedException("Socket sent 0 bytes.")
-      total_bytes_sent += bytes_sent
+    self.writer.write(chunk)
 
   def write_buffer_length(self, n):
-    bytes_sent = self.sock.sendall(BIG_ENDIAN_INT_STRUCT.pack(n))
-    if bytes_sent == 0:
-      raise ConnectionClosedException("socket sent 0 bytes")
+    self.writer.write(BIG_ENDIAN_INT_STRUCT.pack(n))
 
-  def read_buffer_length(self):
-    read = self.sock.recv(BUFFER_HEADER_LENGTH)
-    if read == '':
-      raise ConnectionClosedException("Socket read 0 bytes.")
-    return BIG_ENDIAN_INT_STRUCT.unpack(read)[0]
+#
+# Transceiver Implementations
+#
+
+class HTTPTransceiver(object):
+  """
+  A simple HTTP-based transceiver implementation.
+  Useful for clients but not for servers
+  """
+  def __init__(self, conn):
+    self._conn = conn
+
+  # read-only properties
+  conn = property(lambda self: self._conn)
+  sock = property(lambda self: self.conn.sock)
+  remote_name = property(lambda self: self.sock.getsockname())
+
+  def transceive(self, request):
+    self.write_framed_message(request)
+    return self.read_framed_message()
+
+  def read_framed_message(self):
+    response_reader = FramedReader(self.conn.getresponse())
+    return response_reader.read_framed_message()
+
+  def write_framed_message(self, message):
+    req_method = 'POST'
+    req_resource = '/'
+    req_headers = {'Content-Type': 'avro/binary'}
+
+    req_body_buffer = FramedWriter(cStringIO.StringIO())
+    req_body_buffer.write_framed_message(message)
+    req_body = req_body_buffer.writer.getvalue()
+
+    self.conn.request(req_method, req_resource, req_body, req_headers)
 
   def close(self):
-    self.sock.close()
+    self.conn.close()
 
 #
 # Server Implementations (none yet)
