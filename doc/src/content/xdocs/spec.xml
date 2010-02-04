@@ -163,7 +163,8 @@
 	    <li><code>doc</code>: a JSON string providing documentation to the
 	    user of this schema (optional).</li>
 	    <li><code>symbols</code>: a JSON array, listing symbols,
-	    as JSON strings (required).</li>
+	    as JSON strings (required).  All symbols in an enum must
+	    be unique; duplicates are prohibited.</li>
 	  </ul>
 	  <p>For example, playing card suits might be defined with:</p>
 	  <source>

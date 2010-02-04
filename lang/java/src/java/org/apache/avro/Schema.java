@@ -528,7 +528,8 @@ public abstract class Schema {
       this.ordinals = new HashMap<String,Integer>();
       int i = 0;
       for (String symbol : symbols)
-        ordinals.put(symbol, i++);
+        if (ordinals.put(symbol, i++) != null)
+          throw new SchemaParseException("Duplicate enum symbol: "+symbol);
     }
     public List<String> getEnumSymbols() { return symbols; }
     public boolean hasEnumSymbol(String symbol) { 

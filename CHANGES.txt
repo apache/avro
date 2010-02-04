@@ -300,6 +300,8 @@ Trunk (unreleased changes)
     AVRO-342. Document that Java's socket and datagram RPC transports
     are non-standard.  (cutting)
 
+    AVRO-208. Clarify that enum symbols must be unique.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

@@ -175,6 +175,7 @@ public class TestSchema {
   public void testEnum() throws Exception {
     check(BASIC_ENUM_SCHEMA, "\"B\"", "B", false);
     checkParseError("{\"type\":\"enum\"}");        // symbols required
+    checkParseError("{\"type\":\"enum\",\"symbols\": [\"X\",\"X\"]}");
   }
 
   @Test
