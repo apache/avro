@@ -284,7 +284,7 @@ Trunk (unreleased changes)
     AVRO-394. Simplify and consolidate all data structures into hash
     tables (massie)
 
-    AVRO-340.  Add a constructor for Utf8 that accepts byte[].
+    AVRO-393.  Add a constructor for Utf8 that accepts byte[].
     (Jeff Hodges via cutting)
 
   OPTIMIZATIONS
