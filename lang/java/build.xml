@@ -339,6 +339,7 @@
              errorProperty="tests.failed" failureProperty="tests.failed">
         <sysproperty key="test.count" value="${test.count}"/>
         <sysproperty key="test.dir" value="@{test.dir}"/>
+        <sysproperty key="share.dir" value="${share.dir}"/>
         <sysproperty key="test.validate" value="${test.validate}"/>
         <sysproperty key="test.genavro.dir" value="${test.genavro.dir}" />
         <sysproperty key="test.genavro.mode" value="${test.genavro.mode}" />
@@ -365,7 +366,8 @@
     <test-runner files.location="${test.java.src.dir}" tests.pattern="**/${test.java.include}.java"/>
   </target>
 
-  <target name="interop-data-generate" depends="compile-test-java">
+  <target name="interop-data-generate" depends="compile-test-java"
+	  description="Generate java interop data files.">
     <mkdir dir="${top.build}/interop/data"/>
     <java classname="org.apache.avro.RandomData"
       classpathref="test.java.classpath">

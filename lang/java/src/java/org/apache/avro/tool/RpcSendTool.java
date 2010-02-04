@@ -20,8 +20,13 @@ package org.apache.avro.tool;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.URL;
+import java.io.File;
+import java.net.URI;
 import java.util.List;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -52,25 +57,45 @@ public class RpcSendTool implements Tool {
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
-    if (args.size() != 5) {
-      err.println(
-          "Expected 5 arguments: protocol message_name host port json_data");
+    OptionParser p = new OptionParser();
+    OptionSpec<String> file =
+      p.accepts("file", "Data file containing request parameters.")
+      .withRequiredArg()
+      .ofType(String.class);
+    OptionSpec<String> data =
+      p.accepts("data", "JSON-encoded request parameters.")
+      .withRequiredArg()
+      .ofType(String.class);
+    OptionSet opts = p.parse(args.toArray(new String[0]));
+    args = opts.nonOptionArguments();
+
+    if (args.size() != 3) {
+      err.println("Usage: uri protocol_file message_name (-data d | -file f)");
+      p.printHelpOn(err);
       return 1;
     }
-    Protocol protocol = Protocol.parse(args.get(0));
-    String messageName = args.get(1);
+
+    URI uri = new URI(args.get(0));
+    Protocol protocol = Protocol.parse(new File(args.get(1)));
+    String messageName = args.get(2);
     Message message = protocol.getMessages().get(messageName);
     if (message == null) {
       err.println(String.format("No message named '%s' found in protocol '%s'.",
           messageName, protocol));
       return 1;
     }
-    String host = args.get(2);
-    int port = Integer.parseInt(args.get(3));
-    String jsonData = args.get(4);
     
-    Object datum = Util.jsonToGenericDatum(message.getRequest(), jsonData);
-    GenericRequestor client = makeClient(protocol, host, port);
+    Object datum;
+    if (data.value(opts) != null) {
+      datum = Util.jsonToGenericDatum(message.getRequest(), data.value(opts));
+    } else if (file.value(opts) != null) {
+      datum = Util.datumFromFile(message.getRequest(), file.value(opts));
+    } else {
+      err.println("One of -data or -file must be specified.");
+      return 1;
+    }
+
+    GenericRequestor client = makeClient(protocol, uri);
     Object response = client.request(message.getName(), datum);
     dumpJson(out, message.getResponse(), response);
     return 0;
@@ -88,10 +113,10 @@ public class RpcSendTool implements Tool {
     out.flush();
   }
 
-  private GenericRequestor makeClient(Protocol protocol, String host, int port) 
+  private GenericRequestor makeClient(Protocol protocol, URI uri) 
   throws IOException {
     HttpTransceiver transceiver = 
-      new HttpTransceiver(new URL("http", host, port, "/"));
+      new HttpTransceiver(uri.toURL());
     GenericRequestor requestor = new GenericRequestor(protocol, transceiver);
     return requestor;
   }

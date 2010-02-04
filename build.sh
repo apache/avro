@@ -58,6 +58,9 @@ case "$target" in
 	#(cd lang/c; make interop-data-test)
 	#(cd lang/c++; make interop-data-test)
 
+	# run interop rpc tests
+	/bin/bash share/test/interop/bin/test_rpc_interop.sh
+
 	;;
 
     dist)

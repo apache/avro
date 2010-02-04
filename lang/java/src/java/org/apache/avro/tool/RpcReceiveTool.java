@@ -20,8 +20,14 @@ package org.apache.avro.tool;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.net.URI;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
@@ -88,7 +94,14 @@ public class RpcReceiveTool implements Tool {
         throw new RuntimeException(e);
       }
       out.println();
-      latch.countDown();
+      new Thread() {
+        public void run() {
+          try {
+            Thread.sleep(1000);
+          } catch (InterruptedException e) {}
+          latch.countDown();
+        }
+      }.start();
       return response;
     }
   }
@@ -106,12 +119,26 @@ public class RpcReceiveTool implements Tool {
 
   int run1(InputStream in, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
-    if (args.size() != 4) {
-      err.println("Expected four arguments: protocol port message_name json_response");
+    OptionParser p = new OptionParser();
+    OptionSpec<String> file =
+      p.accepts("file", "Data file containing response datum.")
+      .withRequiredArg()
+      .ofType(String.class);
+    OptionSpec<String> data =
+      p.accepts("data", "JSON-encoded response datum.")
+      .withRequiredArg()
+      .ofType(String.class);
+    OptionSet opts = p.parse(args.toArray(new String[0]));
+    args = opts.nonOptionArguments();
+
+    if (args.size() != 3) {
+      err.println("Usage: uri protocol_file message_name (-data d | -file f)");
+      p.printHelpOn(err);
       return 1;
     }
-    Protocol protocol = Protocol.parse(args.get(0));
-    int port = Integer.parseInt(args.get(1));
+
+    URI uri = new URI(args.get(0));
+    Protocol protocol = Protocol.parse(new File(args.get(1)));
     String messageName = args.get(2);
     expectedMessage = protocol.getMessages().get(messageName);
     if (expectedMessage == null) {
@@ -119,14 +146,23 @@ public class RpcReceiveTool implements Tool {
           messageName, protocol));
       return 1;
     }
-    String jsonData = args.get(3);
+    if (data.value(opts) != null) {
+      this.response =
+        Util.jsonToGenericDatum(expectedMessage.getResponse(),
+                                data.value(opts));
+    } else if (file.value(opts) != null) {
+      this.response = Util.datumFromFile(expectedMessage.getResponse(),
+                                         file.value(opts));
+    } else {
+      err.println("One of -data or -file must be specified.");
+      return 1;
+    }
+    
     this.out = out;
     
-    this.response = Util.jsonToGenericDatum(expectedMessage.getResponse(), jsonData);
-    
     latch = new CountDownLatch(1);
-    server = new HttpServer(new SinkResponder(protocol), port);
-    err.println("Listening on port " + server.getPort());
+    server = new HttpServer(new SinkResponder(protocol), uri.getPort());
+    out.println("Port: " + server.getPort());
     return 0;
   }
   

@@ -26,6 +26,7 @@ import java.io.InputStream;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.JsonDecoder;
+import org.apache.avro.file.DataFileReader;
 
 /** Static utility methods for tools. */
 class Util {
@@ -54,4 +55,17 @@ class Util {
     Object datum = reader.read(null, new JsonDecoder(schema, jsonData));
     return datum;
   }
+
+  /** Reads and returns the first datum in a data file. */
+  static Object datumFromFile(Schema schema, String file) throws IOException {
+    DataFileReader<Object> in =
+      new DataFileReader<Object>(new File(file),
+                                 new GenericDatumReader<Object>(schema));
+    try {
+      return in.next();
+    } finally {
+      in.close();
+    }
+  }
+
 }
