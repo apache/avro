@@ -27,7 +27,8 @@ import java.nio.channels.DatagramChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A simple datagram-based server implementation. */
+/** A datagram-based server implementation. This uses a simple, non-standard
+ * wire protocol and is not intended for production services. */
 public class DatagramServer extends Thread implements Server {
   private static final Logger LOG =
     LoggerFactory.getLogger(DatagramServer.class);

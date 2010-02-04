@@ -292,7 +292,13 @@ Trunk (unreleased changes)
 
     AVRO-395. Add a cscope Makefile target (Eli Collins via massie)
 
-    AVRO-397. Whitespace change and comment clarification in datafile.py (hammer)
+    AVRO-397. Whitespace change and comment clarification in
+    datafile.py (hammer)
+
+    AVRO-340. Define usage of HTTP as RPC transport in spec.  (cutting)
+
+    AVRO-342. Document that Java's socket and datagram RPC transports
+    are non-standard.  (cutting)
 
   OPTIMIZATIONS
 

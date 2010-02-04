@@ -26,14 +26,14 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.net.URL;
-import java.net.URLConnection;
+import java.net.HttpURLConnection;
 
 /** An HTTP-based {@link Transceiver} implementation. */
 public class HttpTransceiver extends Transceiver {
   static final String CONTENT_TYPE = "avro/binary"; 
 
   private URL url;
-  private URLConnection connection;
+  private HttpURLConnection connection;
   
   public HttpTransceiver(URL url) { this.url = url; }
 
@@ -42,7 +42,8 @@ public class HttpTransceiver extends Transceiver {
   @Override
   public synchronized List<ByteBuffer> transceive(List<ByteBuffer> request)
     throws IOException {
-    this.connection = url.openConnection();
+    this.connection = (HttpURLConnection)url.openConnection();
+    connection.setRequestMethod("POST");
     connection.setRequestProperty("Content-Type", CONTENT_TYPE);
     connection.setRequestProperty("Content-Length",
                                   Integer.toString(getLength(request)));

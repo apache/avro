@@ -28,7 +28,8 @@ import java.nio.channels.DatagramChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A datagram-based {@link Transceiver} implementation. */
+/** A datagram-based {@link Transceiver} implementation. This uses a simple,
+ * non-standard wire protocol and is not intended for production services. */
 public class DatagramTransceiver extends Transceiver {
   private static final Logger LOG
     = LoggerFactory.getLogger(DatagramTransceiver.class);

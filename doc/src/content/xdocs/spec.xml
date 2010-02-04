@@ -750,11 +750,7 @@
       <section>
 	<title>Message Transport</title>
 	<p>Messages may be transmitted via
-	different <em>transport</em> mechanisms.  For example, one
-	might use the HTTP, raw sockets, or SSL, etc.  This document
-	specifies formats for request and response message data, but
-	it does not yet specify any details of how message data is
-	encapsulated in different transports.</p>
+	different <em>transport</em> mechanisms.</p>
 
 	<p>To the transport, a <em>message</em> is an opaque byte sequence.</p>
 
@@ -772,6 +768,23 @@
 	    messages with unique identifiers.</p>
 	  </li>
 	</ul>
+
+	<section>
+	  <title>HTTP as Transport</title>
+	  <p>When
+	    <a href="http://www.w3.org/Protocols/rfc2616/rfc2616.html">HTTP</a>
+	    is used as a transport, each Avro message exchange is an
+	    HTTP request/response pair.  All messages of an Avro
+	    protocol should share a single URL at an HTTP server.
+	    Other protocols may also use that URL.  Both normal and
+	    error Avro response messages should use the 200 (OK)
+	    response code.  The chunked encoding may be used for
+	    requests and responses, but, regardless the Avro request
+	    and response are the entire content of an HTTP request and
+	    response.  The HTTP Content-Type of requests and responses
+	    should be specified as "avro/binary".  Requests should be
+	    made using the POST method.</p>
+	</section>
       </section>
 
       <section>

@@ -28,7 +28,8 @@ import java.nio.channels.SocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A simple socket-based server implementation. */
+/** A socket-based server implementation. This uses a simple, non-standard wire
+ * protocol and is not intended for production services. */
 public class SocketServer extends Thread implements Server {
   private static final Logger LOG = LoggerFactory.getLogger(SocketServer.class);
 

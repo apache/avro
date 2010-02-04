@@ -28,7 +28,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A simple socket-based {@link Transceiver} implementation. */
+/** A socket-based {@link Transceiver} implementation.  This uses a simple,
+ * non-standard wire protocol and is not intended for production services. */
 public class SocketTransceiver extends Transceiver {
   private static final Logger LOG
     = LoggerFactory.getLogger(SocketTransceiver.class);
