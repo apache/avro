@@ -22,6 +22,7 @@
 #include "avro.h"
 
 int test_cases = 0;
+avro_writer_t avro_stderr;
 
 static void run_tests(char *dirpath, int should_pass)
 {
@@ -63,7 +64,9 @@ static void run_tests(char *dirpath, int should_pass)
 					avro_schema_t schema_copy =
 					    avro_schema_copy(schema);
 					fprintf(stderr, "pass\n");
-					avro_schema_printf(schema, stderr);
+					avro_schema_to_json(schema,
+							    avro_stderr);
+					fprintf(stderr, "\n");
 					if (!avro_schema_equal
 					    (schema, schema_copy)) {
 						fprintf(stderr,
@@ -103,6 +106,8 @@ int main(int argc, char *argv[])
 		srcdir = ".";
 	}
 
+	avro_stderr = avro_writer_file(stderr);
+
 	/*
 	 * Run the tests that should pass 
 	 */
@@ -119,5 +124,6 @@ int main(int argc, char *argv[])
 		test_cases);
 	fprintf(stderr, "==================================================\n");
 
+	avro_writer_free(avro_stderr);
 	return EXIT_SUCCESS;
 }

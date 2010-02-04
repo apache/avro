@@ -304,6 +304,9 @@ Trunk (unreleased changes)
 
     AVRO-321. Restore Java RPC interop tests. (cutting)
 
+    AVRO-402. Add method for writing avro_schema_t structure to an 
+              avro_writer_t (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

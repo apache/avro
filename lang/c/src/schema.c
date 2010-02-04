@@ -983,3 +983,187 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 	}
 	return new_schema;
 }
+
+const char *avro_schema_name(const avro_schema_t schema)
+{
+	if (is_avro_record(schema)) {
+		return (avro_schema_to_record(schema))->name;
+	} else if (is_avro_enum(schema)) {
+		return (avro_schema_to_enum(schema))->name;
+	} else if (is_avro_fixed(schema)) {
+		return (avro_schema_to_fixed(schema))->name;
+	}
+	return NULL;
+}
+
+/* simple helper for writing strings */
+static int avro_write_str(avro_writer_t out, const char *str)
+{
+	return avro_write(out, (char *)str, strlen(str));
+}
+
+static int write_field(avro_writer_t out, struct avro_record_field_t *field)
+{
+	int rval;
+	check(rval, avro_write_str(out, "{\"name\":\""));
+	check(rval, avro_write_str(out, field->name));
+	check(rval, avro_write_str(out, "\",\"type\":"));
+	check(rval, avro_schema_to_json(field->type, out));
+	return avro_write_str(out, "}");
+}
+
+static int write_record(avro_writer_t out, struct avro_record_schema_t *record)
+{
+	int rval;
+	long i;
+
+	check(rval, avro_write_str(out, "{\"type\":\"record\",\"name\":\""));
+	check(rval, avro_write_str(out, record->name));
+	check(rval, avro_write_str(out, "\",\"fields\":["));
+	for (i = 0; i < record->fields->num_entries; i++) {
+		union {
+			st_data_t data;
+			struct avro_record_field_t *field;
+		} val;
+		st_lookup(record->fields, i, &val.data);
+		if (i) {
+			check(rval, avro_write_str(out, ","));
+		}
+		check(rval, write_field(out, val.field));
+	}
+	return avro_write_str(out, "]}");
+}
+
+static int write_enum(avro_writer_t out, struct avro_enum_schema_t *enump)
+{
+	int rval;
+	long i;
+	check(rval, avro_write_str(out, "{\"type\":\"enum\",\"name\":\""));
+	check(rval, avro_write_str(out, enump->name));
+	check(rval, avro_write_str(out, "\",\"symbols\":["));
+
+	for (i = 0; i < enump->symbols->num_entries; i++) {
+		union {
+			st_data_t data;
+			char *sym;
+		} val;
+		st_lookup(enump->symbols, i, &val.data);
+		if (i) {
+			check(rval, avro_write_str(out, ","));
+		}
+		check(rval, avro_write_str(out, "\""));
+		check(rval, avro_write_str(out, val.sym));
+		check(rval, avro_write_str(out, "\""));
+	}
+	return avro_write_str(out, "]}");
+}
+static int write_fixed(avro_writer_t out, struct avro_fixed_schema_t *fixed)
+{
+	int rval;
+	char size[16];
+	check(rval, avro_write_str(out, "{\"type\":\"fixed\",\"name\":\""));
+	check(rval, avro_write_str(out, fixed->name));
+	check(rval, avro_write_str(out, "\",\"size\":"));
+	snprintf(size, sizeof(size), "%lld", fixed->size);
+	check(rval, avro_write_str(out, size));
+	return avro_write_str(out, "}");
+}
+static int write_map(avro_writer_t out, struct avro_map_schema_t *map)
+{
+	int rval;
+	check(rval, avro_write_str(out, "{\"type\":\"map\",\"values\":"));
+	check(rval, avro_schema_to_json(map->values, out));
+	return avro_write_str(out, "}");
+}
+static int write_array(avro_writer_t out, struct avro_array_schema_t *array)
+{
+	int rval;
+	check(rval, avro_write_str(out, "{\"type\":\"array\",\"items\":"));
+	check(rval, avro_schema_to_json(array->items, out));
+	return avro_write_str(out, "}");
+}
+static int write_union(avro_writer_t out, struct avro_union_schema_t *unionp)
+{
+	int rval;
+	long i;
+	check(rval, avro_write_str(out, "["));
+
+	for (i = 0; i < unionp->branches->num_entries; i++) {
+		union {
+			st_data_t data;
+			avro_schema_t schema;
+		} val;
+		st_lookup(unionp->branches, i, &val.data);
+		if (i) {
+			check(rval, avro_write_str(out, ","));
+		}
+		check(rval, avro_schema_to_json(val.schema, out));
+	}
+	return avro_write_str(out, "]");
+}
+static int write_link(avro_writer_t out, struct avro_link_schema_t *link)
+{
+	int rval;
+	check(rval, avro_write_str(out, "\""));
+	check(rval, avro_write_str(out, avro_schema_name(link->to)));
+	return avro_write_str(out, "\"");
+}
+
+int avro_schema_to_json(avro_schema_t schema, avro_writer_t out)
+{
+	int rval;
+
+	if (!is_avro_schema(schema) || !out) {
+		return EINVAL;
+	}
+
+	if (is_avro_primitive(schema)) {
+		check(rval, avro_write_str(out, "{\"type\":\""));
+	}
+
+	switch (avro_typeof(schema)) {
+	case AVRO_STRING:
+		check(rval, avro_write_str(out, "string"));
+		break;
+	case AVRO_BYTES:
+		check(rval, avro_write_str(out, "bytes"));
+		break;
+	case AVRO_INT32:
+		check(rval, avro_write_str(out, "int"));
+		break;
+	case AVRO_INT64:
+		check(rval, avro_write_str(out, "long"));
+		break;
+	case AVRO_FLOAT:
+		check(rval, avro_write_str(out, "float"));
+		break;
+	case AVRO_DOUBLE:
+		check(rval, avro_write_str(out, "double"));
+		break;
+	case AVRO_BOOLEAN:
+		check(rval, avro_write_str(out, "boolean"));
+		break;
+	case AVRO_NULL:
+		check(rval, avro_write_str(out, "null"));
+		break;
+	case AVRO_RECORD:
+		return write_record(out, avro_schema_to_record(schema));
+	case AVRO_ENUM:
+		return write_enum(out, avro_schema_to_enum(schema));
+	case AVRO_FIXED:
+		return write_fixed(out, avro_schema_to_fixed(schema));
+	case AVRO_MAP:
+		return write_map(out, avro_schema_to_map(schema));
+	case AVRO_ARRAY:
+		return write_array(out, avro_schema_to_array(schema));
+	case AVRO_UNION:
+		return write_union(out, avro_schema_to_union(schema));
+	case AVRO_LINK:
+		return write_link(out, avro_schema_to_link(schema));
+	}
+
+	if (is_avro_primitive(schema)) {
+		return avro_write_str(out, "\"}");
+	}
+	return EINVAL;
+}

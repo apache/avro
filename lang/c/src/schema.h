@@ -18,7 +18,7 @@
 #define AVRO_SCHEMA_H
 
 #include "avro.h"
-#include "container_of.h"
+#include "avro_private.h"
 #include "st.h"
 
 struct avro_record_field_t {

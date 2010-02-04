@@ -90,6 +90,9 @@ struct avro_obj_t {
 #define is_avro_complex_type(obj) (!(is_avro_primitive(obj))
 #define is_avro_link(obj)     (obj && avro_typeof(obj) == AVRO_LINK)
 
+typedef struct avro_reader_t *avro_reader_t;
+typedef struct avro_writer_t *avro_writer_t;
+
 /*
  * schema 
  */
@@ -129,6 +132,7 @@ typedef struct avro_schema_error_t *avro_schema_error_t;
 int avro_schema_from_json(const char *jsontext,
 			  const int32_t len,
 			  avro_schema_t * schema, avro_schema_error_t * error);
+int avro_schema_to_json(avro_schema_t schema, avro_writer_t out);
 
 int avro_schema_to_specific(avro_schema_t schema, const char *prefix);
 
@@ -139,14 +143,9 @@ int avro_schema_equal(avro_schema_t a, avro_schema_t b);
 avro_schema_t avro_schema_incref(avro_schema_t schema);
 void avro_schema_decref(avro_schema_t schema);
 
-void avro_schema_printf(avro_schema_t schema, FILE * fp);
-
 /*
  * io 
  */
-typedef struct avro_reader_t *avro_reader_t;
-typedef struct avro_writer_t *avro_writer_t;
-
 avro_reader_t avro_reader_file(FILE * fp);
 avro_writer_t avro_writer_file(FILE * fp);
 avro_reader_t avro_reader_memory(const char *buf, int64_t len);

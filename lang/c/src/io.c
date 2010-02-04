@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <string.h>
 #include "avro.h"
-#include "container_of.h"
+#include "avro_private.h"
 #include "dump.h"
 
 enum avro_io_type_t {

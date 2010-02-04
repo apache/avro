@@ -18,7 +18,7 @@
 #ifndef AVRO_DATUM_H
 #define AVRO_DATUM_H
 #include "avro.h"		/* for avro_schema_t */
-#include "container_of.h"
+#include "avro_private.h"
 #include "st.h"
 
 struct avro_string_datum_t {

@@ -14,8 +14,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License. 
  */
-#ifndef CONTAINER_OF_H
-#define CONTAINER_OF_H
+#ifndef AVRO_PRIVATE_H
+#define AVRO_PRIVATE_H
+
+#define sys_call(rval, call) do { rval = call; } while(rval < 0 && errno == EINTR)
+
+#define check(rval, call) { rval = call; if(rval) return rval; }
 
 #define container_of(ptr_, type_, member_)  \
     ((type_ *)((char *)ptr_ - (size_t)&((type_ *)0)->member_))
