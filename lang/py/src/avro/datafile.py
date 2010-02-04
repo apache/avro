@@ -150,6 +150,7 @@ class DataFileWriter(object):
 
       # Write length of block
       self.encoder.write_long(len(compressed_data))
+
       # Write block
       self.writer.write(compressed_data)
 
@@ -279,7 +280,7 @@ class DataFileReader(object):
       self._datum_decoder = self._raw_decoder
     else:
       # Compressed data is stored as (length, data), which
-      # corresponds to have bytes is stored.
+      # corresponds to how the "bytes" type is encoded.
       data = self.raw_decoder.read_bytes()
       # -15 is the log of the window size; negative indicates
       # "raw" (no zlib headers) decompression.  See zlib.h.

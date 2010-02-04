@@ -289,6 +289,8 @@ Trunk (unreleased changes)
 
     AVRO-395. Add a cscope Makefile target (Eli Collins via massie)
 
+    AVRO-397. Whitespace change and comment clarification in datafile.py (hammer)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
