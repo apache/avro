@@ -39,6 +39,11 @@ public class Utf8 implements Comparable<Utf8> {
     this.length = bytes.length;
   }
 
+  public Utf8(byte[] bytes) {
+    this.bytes = bytes;
+    this.length = bytes.length;
+  }
+
   public byte[] getBytes() { return bytes; }
   public int getLength() { return length; }
 
