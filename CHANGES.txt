@@ -287,6 +287,8 @@ Trunk (unreleased changes)
     AVRO-393.  Add a constructor for Utf8 that accepts byte[].
     (Jeff Hodges via cutting)
 
+    AVRO-395. Add a cscope Makefile target (Eli Collins via massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

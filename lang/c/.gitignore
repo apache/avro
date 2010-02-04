@@ -7,3 +7,4 @@ configure
 *.lo
 *.o
 INSTALL
+cscope.*
