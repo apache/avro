@@ -155,7 +155,7 @@ avro_read_file(struct avro_file_reader_t *reader, void *buf, int64_t len)
 	int rval = fread(buf, len, 1, reader->fp);
 
 	if (rval == 0) {
-		return ferror(reader->fp) ? -1 : 0;
+		return ferror(reader->fp) || feof(reader->fp) ? -1 : 0;
 	}
 	return 0;
 }
