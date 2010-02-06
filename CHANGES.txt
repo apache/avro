@@ -313,6 +313,9 @@ Trunk (unreleased changes)
 
     AVRO-400. Adding warning for unused parameters (Eli Collins via massie)
 
+    AVRO-409. Update contact database example to use a file object 
+              container for C implementation (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
