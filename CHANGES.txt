@@ -309,6 +309,8 @@ Trunk (unreleased changes)
 
     AVRO-398. avro_read_file doesn't detect eof (Eli Collins via massie)
 
+    AVRO-403. Add file object container support to C implementation (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

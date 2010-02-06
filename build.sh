@@ -49,12 +49,13 @@ case "$target" in
 	# create interop test data
 	(cd lang/java; ant interop-data-generate)
 	#(cd lang/py; ant interop-data-generate)
-	#(cd lang/c; make interop-data-generate)
+	(cd lang/c; ./build.sh interop-data-generate)
 	#(cd lang/c++; make interop-data-generate)
 
 	# run interop data tests
 	(cd lang/java; ant interop-data-test)
 	#(cd lang/py; ant interop-data-test)
+	(cd lang/c; ./build.sh interop-data-test)
 	#(cd lang/c; make interop-data-test)
 	#(cd lang/c++; make interop-data-test)
 

@@ -250,6 +250,28 @@ int avro_write(avro_writer_t writer, void *buf, int64_t len)
 	return EINVAL;
 }
 
+void avro_writer_reset(avro_writer_t writer)
+{
+	if (is_memory_io(writer)) {
+		avro_writer_to_memory(writer)->written = 0;
+	}
+}
+
+int64_t avro_writer_tell(avro_writer_t writer)
+{
+	if (is_memory_io(writer)) {
+		return avro_writer_to_memory(writer)->written;
+	}
+	return -1;
+}
+
+void avro_writer_flush(avro_writer_t writer)
+{
+	if (is_file_io(writer)) {
+		fflush(avro_writer_to_file(writer)->fp);
+	}
+}
+
 void avro_writer_dump(avro_writer_t writer, FILE * fp)
 {
 	if (is_memory_io(writer)) {
@@ -271,6 +293,7 @@ void avro_reader_free(avro_reader_t reader)
 	if (is_memory_io(reader)) {
 		free(avro_reader_to_memory(reader));
 	} else if (is_file_io(reader)) {
+		fclose(avro_reader_to_file(reader)->fp);
 		free(avro_reader_to_file(reader));
 	}
 }
@@ -280,6 +303,7 @@ void avro_writer_free(avro_writer_t writer)
 	if (is_memory_io(writer)) {
 		free(avro_writer_to_memory(writer));
 	} else if (is_file_io(writer)) {
+		fclose(avro_writer_to_file(writer)->fp);
 		free(avro_writer_to_file(writer));
 	}
 }

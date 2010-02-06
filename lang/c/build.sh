@@ -31,6 +31,18 @@ function clean {
 
 case "$1" in
 
+    interop-data-generate)
+	prepare_build
+	make -C $build_dir
+	$build_dir/tests/generate_interop_data "../../share/test/schemas/interop.avsc"  "../../build/interop/data"
+	;;
+
+    interop-data-test)
+	prepare_build
+	make -C $build_dir
+	$build_dir/tests/test_interop_data "../../build/interop/data"
+	;;
+
     test)
 	prepare_build
 	make -C $build_dir check
@@ -58,7 +70,7 @@ case "$1" in
 	;;
 
     *)
-        echo "Usage: $0 {test|dist|clean}"
+        echo "Usage: $0 {interop-data-generate|interop-data-test|test|dist|clean}"
         exit 1
 esac
 
