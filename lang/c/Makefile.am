@@ -8,7 +8,7 @@ INDENT_OPTS=-nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -ce -ci4 \
 
 cscope:
 	cd $(top_srcdir) ; \
-	find src tests examples -iname '*.[chsSly]' > cscope.files ; \
+	find src tests examples jansson -iname '*.[chsSly]' > cscope.files ; \
 	cscope -kqb
 
 pretty:

@@ -311,6 +311,8 @@ Trunk (unreleased changes)
 
     AVRO-403. Add file object container support to C implementation (massie)
 
+    AVRO-400. Adding warning for unused parameters (Eli Collins via massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

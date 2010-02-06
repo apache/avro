@@ -114,7 +114,7 @@ int print_person(avro_reader_t reader, avro_schema_t reader_schema)
 		}
 		if (avro_record_get(person, "Age", &age_datum) == 0) {
 			avro_int32_get(age_datum, &i32);
-			fprintf(stdout, "%ld", i32);
+			fprintf(stdout, "%d", i32);
 		}
 		fprintf(stdout, "\n");
 

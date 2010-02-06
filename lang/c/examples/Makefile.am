@@ -1,6 +1,6 @@
 # -pedantic
 AM_CPPFLAGS=-I$(top_srcdir)/src 
-AM_CFLAGS=-Wall 
+AM_CFLAGS=-Wall -Wextra -Wunused-parameter
 ACLOCAL_AMFLAGS=-I m4
 
 check_PROGRAMS=quickstop

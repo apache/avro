@@ -61,7 +61,7 @@ struct avro_union_schema_t {
 struct avro_fixed_schema_t {
 	struct avro_obj_t obj;
 	const char *name;
-	size_t size;
+	int64_t size;
 };
 
 struct avro_link_schema_t {
