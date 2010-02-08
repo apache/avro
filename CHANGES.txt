@@ -461,6 +461,8 @@ Trunk (unreleased changes)
 
     AVRO-408. lang/c/build.sh 'dist' broken (massie)
 
+    AVRO-407. Fix a bug in the Java data file reader. (Scott Carey via cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
