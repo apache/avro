@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.avro.Schema.Type;
@@ -315,9 +316,9 @@ public class TestSchema {
       +"{\"name\":\"g\",\"type\":"+z+"}"
       +"]}";
     Schema xs = Schema.parse(x);
-    Schema ys = xs.getFields().get("f").schema();
-    assertEquals("p.Z", xs.getFields().get("g").schema().getFullName());
-    assertEquals("q.Z", ys.getFields().get("f").schema().getFullName());
+    Schema ys = xs.getField("f").schema();
+    assertEquals("p.Z", xs.getField("g").schema().getFullName());
+    assertEquals("q.Z", ys.getField("f").schema().getFullName());
   }
 
   private static void checkParseError(String json) {
@@ -353,12 +354,12 @@ public class TestSchema {
   public void testDocs() {
     Schema schema = Schema.parse(SCHEMA_WITH_DOC_TAGS);
     assertEquals("This is not a world record.", schema.getDoc());
-    assertEquals("Inner Fixed", schema.getFields().get("inner_fixed").doc());
-    assertEquals("Very Inner Fixed", schema.getFields().get("inner_fixed").schema().getDoc());
-    assertEquals("Inner String", schema.getFields().get("inner_string").doc());
-    assertEquals("Inner Enum", schema.getFields().get("inner_enum").doc());
-    assertEquals("Very Inner Enum", schema.getFields().get("inner_enum").schema().getDoc());
-    assertEquals("Inner Union", schema.getFields().get("inner_union").doc());
+    assertEquals("Inner Fixed", schema.getField("inner_fixed").doc());
+    assertEquals("Very Inner Fixed", schema.getField("inner_fixed").schema().getDoc());
+    assertEquals("Inner String", schema.getField("inner_string").doc());
+    assertEquals("Inner Enum", schema.getField("inner_enum").doc());
+    assertEquals("Very Inner Enum", schema.getField("inner_enum").schema().getDoc());
+    assertEquals("Inner Union", schema.getField("inner_union").doc());
   }
 
   private static void check(String schemaJson, String defaultJson,
@@ -402,7 +403,7 @@ public class TestSchema {
     if(s0.getType().equals(Schema.Type.UNION)) return; // unions have no props
     assertEquals(null, s0.getProp("foo"));
     Schema s1 = Schema.parse(s0.toString());
-    s1.setProp("foo", "bar");
+    s1.addProp("foo", "bar");
     assertEquals("bar", s1.getProp("foo"));
     assertFalse(s0.equals(s1));
     Schema s2 = Schema.parse(s1.toString());
@@ -528,5 +529,84 @@ public class TestSchema {
   @Test(expected=AvroTypeException.class)
   public void testEnumWithPrimitiveName() {
     Schema.parse("{\"type\":\"enum\", \"name\":\"null\", \"symbols\": [\"A\"]}");
+  }
+  
+  private static Schema enumSchema() {
+    return Schema.parse("{ \"type\": \"enum\", \"name\": \"e\", "
+        + "\"symbols\": [\"a\", \"b\"]}");
+  }
+
+  @Test(expected=AvroRuntimeException.class)
+  public void testImmutability1() {
+    Schema s = enumSchema();
+    s.addProp("p1", "1");
+    s.addProp("p1", "2");
+  }
+  
+  @Test(expected=AvroRuntimeException.class)
+  public void testImmutability2() {
+    Schema s = enumSchema();
+    s.addProp("p1", null);
+  }
+
+  private static List<String> lockedArrayList() {
+    return new Schema.LockableArrayList<String>(Arrays.asList(new String[] {
+        "a", "b", "c" })).lock();
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList1() {
+    lockedArrayList().add("p");
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList2() {
+    lockedArrayList().remove("a");
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList3() {
+    lockedArrayList().addAll(Arrays.asList(new String[] { "p" }));
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList4() {
+    lockedArrayList().addAll(0,
+        Arrays.asList(new String[] { "p" }));
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList5() {
+    lockedArrayList().
+      removeAll(Arrays.asList(new String[] { "a" }));
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList6() {
+    lockedArrayList().
+      retainAll(Arrays.asList(new String[] { "a" }));
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList7() {
+    lockedArrayList().clear();
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList8() {
+    lockedArrayList().iterator().remove();
+  }
+
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList9() {
+    Iterator<String> it = lockedArrayList().iterator();
+    it.next();
+    it.remove();
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testLockedArrayList10() {
+    lockedArrayList().remove(1);
   }
 }

@@ -42,7 +42,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Random;
 
 public class TestProtocolGeneric {
@@ -162,12 +162,10 @@ public class TestProtocolGeneric {
       argument to check that schema is sent to parse request. */
   public void testHandshake() throws IOException {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
-    LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
-    fields.put("extra",
-               new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN),
+    List<Field> fields = new ArrayList<Field>();
+    fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN),
                    null, null));
-    fields.put("greeting",
-               new Schema.Field("greeting", Schema.create(Schema.Type.STRING),
+    fields.add(new Schema.Field("greeting", Schema.create(Schema.Type.STRING),
                    null, null));
     Protocol.Message message =
       protocol.createMessage("hello",

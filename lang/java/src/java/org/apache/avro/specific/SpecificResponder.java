@@ -21,7 +21,6 @@ package org.apache.avro.specific;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol;
@@ -66,8 +65,8 @@ public class SpecificResponder extends Responder {
   public Object readRequest(Schema schema, Decoder in) throws IOException {
     Object[] args = new Object[schema.getFields().size()];
     int i = 0;
-    for (Map.Entry<String, Schema> param : schema.getFieldSchemas())
-      args[i++] = getDatumReader(param.getValue()).read(null, in);
+    for (Schema.Field param : schema.getFields())
+      args[i++] = getDatumReader(param.schema()).read(null, in);
     return args;
   }
 
@@ -89,8 +88,8 @@ public class SpecificResponder extends Responder {
     Class[] paramTypes = new Class[message.getRequest().getFields().size()];
     int i = 0;
     try {
-      for (Map.Entry<String,Schema> param: message.getRequest().getFieldSchemas())
-        paramTypes[i++] = data.getClass(param.getValue());
+      for (Schema.Field param: message.getRequest().getFields())
+        paramTypes[i++] = data.getClass(param.schema());
       Method method = impl.getClass().getMethod(message.getName(), paramTypes);
       return method.invoke(impl, (Object[])request);
     } catch (InvocationTargetException e) {

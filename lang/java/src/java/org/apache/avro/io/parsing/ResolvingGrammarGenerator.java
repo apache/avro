@@ -196,8 +196,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     LitS wsc = new LitS2(writer, reader);
     Symbol result = seen.get(wsc);
     if (result == null) {
-      Map<String, Field> wfields = writer.getFields();
-      Map<String, Field> rfields = reader.getFields();
+      List<Field> wfields = writer.getFields();
+      List<Field> rfields = reader.getFields();
 
       // First, compute reordering of reader fields, plus
       // number elements in the result's production
@@ -205,17 +205,16 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       int ridx = 0;
       int count = 1 + wfields.size();
 
-      for (String fn : wfields.keySet()) {
-        Field rdrField = rfields.get(fn);
+      for (Field f : wfields) {
+        Field rdrField = reader.getField(f.name());
         if (rdrField != null) {
           reordered[ridx++] = rdrField;
         }
       }
 
-      for (Map.Entry<String, Field> rfe : rfields.entrySet()) {
-        String fname = rfe.getKey();
-        if (wfields.get(fname) == null) {
-          Field rf = rfe.getValue();
+      for (Field rf : rfields) {
+        String fname = rf.name();
+        if (writer.getField(fname) == null) {
           if (rf.defaultValue() == null) {
             result = Symbol.error("Found " + writer + ", expecting " + reader);
             seen.put(wsc, result);
@@ -245,25 +244,24 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
        */
 
       // Handle all the writer's fields
-      for (Map.Entry<String, Field> wfe : wfields.entrySet()) {
-        String fname = wfe.getKey();
-        Field rf = rfields.get(fname);
+      for (Field wf : wfields) {
+        String fname = wf.name();
+        Field rf = reader.getField(fname);
         if (rf == null) {
           production[--count] =
-            new Symbol.SkipAction(super.generate(wfe.getValue().schema(),
+            new Symbol.SkipAction(super.generate(wf.schema(),
               seen));
         } else {
           production[--count] =
-            generate(wfe.getValue().schema(), rf.schema(), seen);
+            generate(wf.schema(), rf.schema(), seen);
         }
       }
 
       // Add default values for fields missing from Writer
-      for (Map.Entry<String, Field> rfe : rfields.entrySet()) {
-        String fname = rfe.getKey();
-        Field wf = wfields.get(fname);
+      for (Field rf : rfields) {
+        String fname = rf.name();
+        Field wf = writer.getField(fname);
         if (wf == null) {
-          Field rf = rfe.getValue();
           byte[] bb = getBinary(rf.schema(), rf.defaultValue());
           production[--count] = new Symbol.DefaultStartAction(bb);
           production[--count] = generate(rf.schema(), rf.schema(), seen);
@@ -302,9 +300,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     throws IOException {
     switch (s.getType()) {
     case RECORD:
-      for (Map.Entry<String, Field> entry : s.getFields().entrySet()) {
-        String name = entry.getKey();
-        Field f = entry.getValue();
+      for (Field f : s.getFields()) {
+        String name = f.name();
         JsonNode v = n.get(name);
         if (v == null) {
           v = f.defaultValue();

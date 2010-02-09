@@ -126,8 +126,8 @@ public class SpecificCompiler {
     switch (schema.getType()) {
     case RECORD:
       queue.add(schema);
-      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-        enqueue(field.getValue());
+      for (Schema.Field field : schema.getFields())
+        enqueue(field.schema());
       break;
     case MAP:
       enqueue(schema.getValueType());
@@ -219,9 +219,9 @@ public class SpecificCompiler {
   private String params(Schema request) {
     StringBuilder b = new StringBuilder();
     int count = 0;
-    for (Map.Entry<String, Schema> param : request.getFieldSchemas()) {
-      String paramName = mangle(param.getKey());
-      b.append(unbox(param.getValue()));
+    for (Schema.Field param : request.getFields()) {
+      String paramName = mangle(param.name());
+      b.append(unbox(param.schema()));
       b.append(" ");
       b.append(paramName);
       if (++count < request.getFields().size())
@@ -257,10 +257,10 @@ public class SpecificCompiler {
       line(out, 1, "public static final org.apache.avro.Schema SCHEMA$ = org.apache.avro.Schema.parse(\""
            +esc(schema)+"\");");
       // field declations
-      for (Map.Entry<String,Schema.Field> field: schema.getFields().entrySet()) {
-        doc(out, 1, field.getValue().doc());
-        line(out, 1, "public " + unbox(field.getValue().schema()) + " "
-             + mangle(field.getKey()) + ";");
+      for (Schema.Field field : schema.getFields()) {
+        doc(out, 1, field.doc());
+        line(out, 1, "public " + unbox(field.schema()) + " "
+             + mangle(field.name()) + ";");
       }
       // schema method
       line(out, 1, "public org.apache.avro.Schema getSchema() { return SCHEMA$; }");
@@ -268,8 +268,8 @@ public class SpecificCompiler {
       line(out, 1, "public java.lang.Object get(int field$) {");
       line(out, 2, "switch (field$) {");
       int i = 0;
-      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-        line(out, 2, "case "+(i++)+": return "+mangle(field.getKey())+";");
+      for (Schema.Field field : schema.getFields())
+        line(out, 2, "case "+(i++)+": return "+mangle(field.name())+";");
       line(out, 2, "default: throw new org.apache.avro.AvroRuntimeException(\"Bad index\");");
       line(out, 2, "}");
       line(out, 1, "}");
@@ -278,9 +278,9 @@ public class SpecificCompiler {
       line(out, 1, "public void put(int field$, java.lang.Object value$) {");
       line(out, 2, "switch (field$) {");
       i = 0;
-      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-        line(out, 2, "case "+(i++)+": "+mangle(field.getKey())+" = ("+
-             type(field.getValue())+")value$; break;");
+      for (Schema.Field field : schema.getFields())
+        line(out, 2, "case "+(i++)+": "+mangle(field.name())+" = ("+
+             type(field.schema())+")value$; break;");
       line(out, 2, "default: throw new org.apache.avro.AvroRuntimeException(\"Bad index\");");
       line(out, 2, "}");
       line(out, 1, "}");

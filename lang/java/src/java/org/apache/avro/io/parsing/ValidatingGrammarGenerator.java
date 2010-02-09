@@ -91,7 +91,7 @@ public class ValidatingGrammarGenerator {
         seen.put(wsc, rresult);
 
         int i = production.length;
-        for (Field f : sc.getFields().values()) {
+        for (Field f : sc.getFields()) {
           production[--i] = generate(f.schema(), seen);
         }
       }

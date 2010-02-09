@@ -17,7 +17,6 @@
  */
 package org.apache.avro.io;
 
-import java.util.Map;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
@@ -81,8 +80,7 @@ public class BinaryData {
     Decoder d1 = d.d1; Decoder d2 = d.d2;
     switch (schema.getType()) {
     case RECORD: {
-      for (Map.Entry<String, Field> entry : schema.getFields().entrySet()) {
-        Field field = entry.getValue();
+      for (Field field : schema.getFields()) {
         if (field.order() == Field.Order.IGNORE) {
           GenericDatumReader.skip(field.schema(), d1);
           GenericDatumReader.skip(field.schema(), d2);

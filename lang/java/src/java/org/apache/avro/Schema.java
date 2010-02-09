@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -57,6 +58,19 @@ import org.codehaus.jackson.map.ObjectMapper;
  * <li>A 64-bit IEEE <i>double</i>-float; or
  * <li>A <i>boolean</i>; or
  * <li><i>null</i>.
+ * </ul>
+ * 
+ * A schema can be constructed using one of its static <tt>createXXX</tt>
+ * methods. The schema objects are <i>logically</i> immutable.
+ * There are only two mutating methods - {@link #setFields(List)} and
+ * {@link #addProp(String, String)}. The following restrictions apply on these
+ * two methods.
+ * <ul>
+ * <li> {@link #setFields(List)}, can be called at most once. This method exists
+ * in order to enable clients to build recursive schemas.
+ * <li> {@link #addProp(String, String)} can be called with property names
+ * that are not present already. It is not possible to change or delete an
+ * existing property.
  * </ul>
  */
 public abstract class Schema {
@@ -103,23 +117,45 @@ public abstract class Schema {
                        "size", "symbols", "values", "type");
   }
 
-  /** Return the value of the named property in this schema. */
+  /**
+   * Returns the value of the named property in this schema.
+   * Returns <tt>null</tt> if there is no property with that name.
+   */
   public synchronized String getProp(String name) {
     return props.get(name);
   }
 
-  /** Set the value of the named property in this schema. */
-  public synchronized void setProp(String name, String value) {
-    if (RESERVED_PROPS.contains(name))
-      throw new AvroRuntimeException("Can't set a reserved property: "+name);
-    if (value == null)
-      props.remove(name);
-    else
+  /**
+   * Adds a property with the given name <tt>name</tt> and
+   * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
+   * <tt>null</tt>. It is illegal to add a property if another with
+   * the same name but different value already exists in this schema.
+   * 
+   * @param name The name of the property to add
+   * @param value The value for the property to add
+   */
+  public synchronized void addProp(String name, String value) {
+    if (RESERVED_PROPS.contains(name)) {
+      throw new AvroRuntimeException("Can't set a reserved property: " + name);
+    }
+    
+    if (value == null) {
+      throw new AvroRuntimeException(
+          "Can't set a null value for property: " + name);
+    }
+    
+    String v = props.get(name);
+    if (v != null) {
+      if (! v.equals(value)) {
+        throw new AvroRuntimeException("Can't overwrite property: " + name);
+      }
+    } else {
       props.put(name, value);
+    }
   }
 
   /** Create an anonymous record schema. */
-  public static Schema createRecord(LinkedHashMap<String,Field> fields) {
+  public static Schema createRecord(List<Field> fields) {
     Schema result = createRecord(null, null, null, false);
     result.setFields(fields);
     return result;
@@ -134,7 +170,8 @@ public abstract class Schema {
   /** Create an enum schema. */
   public static Schema createEnum(String name, String doc, String namespace,
                                   List<String> values) {
-    return new EnumSchema(new Name(name, namespace), doc, values);
+    return new EnumSchema(new Name(name, namespace), doc,
+        new LockableArrayList<String>(values));
   }
 
   /** Create an array schema. */
@@ -149,7 +186,7 @@ public abstract class Schema {
 
   /** Create a union schema. */
   public static Schema createUnion(List<Schema> types) {
-    return new UnionSchema(types);
+    return new UnionSchema(new LockableArrayList<Schema>(types));
   }
 
   /** Create a union schema. */
@@ -161,18 +198,28 @@ public abstract class Schema {
   /** Return the type of this schema. */
   public Type getType() { return type; }
 
-  /** If this is a record, returns its fields. */
-  public Map<String, Field> getFields() {
+  /**
+   * If this is a record, returns the Field with the
+   * given name <tt>fieldName</tt>. If there is no field by that name, a
+   * <tt>null</tt> is returned.
+   */
+  public Field getField(String fieldname) {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
-  /** If this is a record, enumerate its field names and their schemas. */
-  public Iterable<Map.Entry<String,Schema>> getFieldSchemas() {
+  /**
+   * If this is a record, returns the fields in it. The returned
+   * list is in the order of their positions.
+   */
+  public List<Field> getFields() {
     throw new AvroRuntimeException("Not a record: "+this);
   }
-  
-  /** If this is a record, set its fields. */
-  public void setFields(LinkedHashMap<String,Field> fields) {
+
+  /**
+   * If this is a record, set its fields. The fields can be set
+   * only once in a schema.
+   */
+  public void setFields(List<Field> fields) {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
@@ -436,32 +483,41 @@ public abstract class Schema {
 
   @SuppressWarnings(value="unchecked")
   private static class RecordSchema extends NamedSchema {
-    private Map<String,Field> fields;
-    private Iterable<Map.Entry<String,Schema>> fieldSchemas;
+    private List<Field> fields;
+    private Map<String, Field> fieldMap;
     private final boolean isError;
     public RecordSchema(Name name, String doc, boolean isError) {
       super(Type.RECORD, name, doc);
       this.isError = isError;
     }
     public boolean isError() { return isError; }
-    public Map<String, Field> getFields() { return fields; }
-    public Iterable<Map.Entry<String, Schema>> getFieldSchemas() {
-      return fieldSchemas;
+
+    @Override
+    public Field getField(String fieldname) {
+      return fieldMap.get(fieldname);
     }
-    public void setFields(LinkedHashMap<String,Field> fields) {
-      if (this.fields != null)
+
+    @Override
+    public List<Field> getFields() {
+      return fields;
+    }
+
+    @Override
+    public void setFields(List<Field> fields) {
+      if (this.fields != null) {
         throw new AvroRuntimeException("Fields are already set");
-      int i = 0;
-      LinkedHashMap<String,Schema> schemas = new LinkedHashMap<String,Schema>();
-      for (Map.Entry<String, Field> pair : fields.entrySet()) {
-        Field f = pair.getValue();
-        if (f.position != -1)
-          throw new AvroRuntimeException("Field already used: "+f);
-        f.position = i++;
-        schemas.put(pair.getKey(), f.schema());
       }
-      this.fields = fields;
-      this.fieldSchemas = schemas.entrySet();
+      int i = 0;
+      fieldMap = new HashMap<String, Field>();
+      LockableArrayList ff = new LockableArrayList();
+      for (Field f : fields) {
+        if (f.position != -1)
+          throw new AvroRuntimeException("Field already used: " + f);
+        f.position = i++;
+        fieldMap.put(f.name(), f);
+        ff.add(f);
+      }
+      this.fields = ff.lock();
     }
     public boolean equals(Object o) {
       if (o == this) return true;
@@ -502,17 +558,17 @@ public abstract class Schema {
 
     void fieldsToJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartArray();
-      for (Map.Entry<String, Field> entry : fields.entrySet()) {
+      for (Field f : fields) {
         gen.writeStartObject();
-        gen.writeStringField("name", entry.getKey());
+        gen.writeStringField("name", f.name());
         gen.writeFieldName("type");
-        entry.getValue().schema().toJson(names, gen);
-        if (entry.getValue().defaultValue() != null) {
+        f.schema().toJson(names, gen);
+        if (f.defaultValue() != null) {
           gen.writeFieldName("default");
-          gen.writeTree(entry.getValue().defaultValue());
+          gen.writeTree(f.defaultValue());
         }
-        if (entry.getValue().order() != Field.Order.ASCENDING)
-          gen.writeStringField("order", entry.getValue().order().name);
+        if (f.order() != Field.Order.ASCENDING)
+          gen.writeStringField("order", f.order().name);
         gen.writeEndObject();
       }
       gen.writeEndArray();
@@ -522,9 +578,10 @@ public abstract class Schema {
   private static class EnumSchema extends NamedSchema {
     private final List<String> symbols;
     private final Map<String,Integer> ordinals;
-    public EnumSchema(Name name, String doc, List<String> symbols) {
+    public EnumSchema(Name name, String doc,
+        LockableArrayList<String> symbols) {
       super(Type.ENUM, name, doc);
-      this.symbols = symbols;
+      this.symbols = symbols.lock();
       this.ordinals = new HashMap<String,Integer>();
       int i = 0;
       for (String symbol : symbols)
@@ -612,9 +669,9 @@ public abstract class Schema {
 
   private static class UnionSchema extends Schema {
     private final List<Schema> types;
-    public UnionSchema(List<Schema> types) {
+    public UnionSchema(LockableArrayList<Schema> types) {
       super(Type.UNION);
-      this.types = types;
+      this.types = types.lock();
       int seen = 0;
       Set<String> seenNames = new HashSet<String>();
       for (Schema type : types) {                 // check legality of union
@@ -652,9 +709,12 @@ public abstract class Schema {
     public int hashCode() {
       return getType().hashCode() + types.hashCode() + props.hashCode();
     }
-    public void setProp(String name, String value) {
+    
+    @Override
+    public void addProp(String name, String value) {
       throw new AvroRuntimeException("Can't set properties on a union: "+this);
     }
+    
     void toJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartArray();
       for (Schema type : types)
@@ -837,7 +897,7 @@ public abstract class Schema {
       if (PRIMITIVES.containsKey(type)) {         // primitive
         result = create(PRIMITIVES.get(type));
       } else if (type.equals("record") || type.equals("error")) { // record
-        LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
+        List<Field> fields = new ArrayList<Field>();
         result = new RecordSchema(name, doc, type.equals("error"));
         if (name != null) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
@@ -854,7 +914,7 @@ public abstract class Schema {
           JsonNode orderNode = field.get("order");
           if (orderNode != null)
             order = Field.Order.valueOf(orderNode.getTextValue().toUpperCase());
-          fields.put(fieldName, new Field(fieldName, fieldSchema,
+          fields.add(new Field(fieldName, fieldSchema,
               fieldDoc, field.get("default"), order));
         }
         result.setFields(fields);
@@ -862,7 +922,7 @@ public abstract class Schema {
         JsonNode symbolsNode = schema.get("symbols");
         if (symbolsNode == null || !symbolsNode.isArray())
           throw new SchemaParseException("Enum has no symbols: "+schema);
-        List<String> symbols = new ArrayList<String>();
+        LockableArrayList<String> symbols = new LockableArrayList<String>();
         for (JsonNode n : symbolsNode)
           symbols.add(n.getTextValue());
         result = new EnumSchema(name, doc, symbols);
@@ -888,14 +948,16 @@ public abstract class Schema {
       Iterator<String> i = schema.getFieldNames();
       while (i.hasNext()) {                       // add properties
         String prop = i.next();
-        if (!RESERVED_PROPS.contains(prop))       // ignore reserved
-          result.setProp(prop, schema.get(prop).getTextValue());
+        String value = schema.get(prop).getTextValue();
+        if (!RESERVED_PROPS.contains(prop) && value != null) // ignore reserved
+          result.addProp(prop, value);
       }
       if (savedSpace != null)
         names.space(savedSpace);                  // restore space
       return result;
     } else if (schema.isArray()) {                // union
-      List<Schema> types = new ArrayList<Schema>(schema.size());
+      LockableArrayList<Schema> types =
+        new LockableArrayList<Schema>(schema.size());
       for (JsonNode typeNode : schema)
         types.add(parse(typeNode, names));
       return new UnionSchema(types);
@@ -937,5 +999,89 @@ public abstract class Schema {
     }
   }
 
+  /**
+   * No change is permitted on LockableArrayList once lock() has been
+   * called on it.
+   * @param <E>
+   */
+  
+  /*
+   * This class keeps a boolean variable <tt>locked</tt> which is set
+   * to <tt>true</tt> in the lock() method. It's legal to call
+   * lock() any number of times. Any lock() other than the first one
+   * is a no-op.
+   * 
+   * This class throws <tt>IllegalStateException</tt> if a mutating
+   * operation is performed after being locked. Since modifications through
+   * iterator also use the list's mutating operations, this effectively
+   * blocks all modifications.
+   */
+  static class LockableArrayList<E> extends ArrayList<E> {
+    private static final long serialVersionUID = 1L;
+    private boolean locked = false;
+    
+    public LockableArrayList() {
+    }
 
+    public LockableArrayList(int size) {
+      super(size);
+    }
+
+    public LockableArrayList(List<E> types) {
+      super(types);
+    }
+
+    public List<E> lock() {
+      locked = true;
+      return this;
+    }
+
+    private void ensureUnlocked() {
+      if (locked) {
+        throw new IllegalStateException();
+      }
+    }
+
+    public boolean add(E e) {
+      ensureUnlocked();
+      return super.add(e);
+    }
+    
+    public boolean remove(Object o) {
+      ensureUnlocked();
+      return super.remove(o);
+    }
+    
+    public E remove(int index) {
+      ensureUnlocked();
+      return super.remove(index);
+    }
+      
+    public boolean addAll(Collection<? extends E> c) {
+      ensureUnlocked();
+      return super.addAll(c);
+    }
+    
+    public boolean addAll(int index, Collection<? extends E> c) {
+      ensureUnlocked();
+      return super.addAll(index, c);
+    }
+    
+    public boolean removeAll(Collection<?> c) {
+      ensureUnlocked();
+      return super.removeAll(c);
+    }
+    
+    public boolean retainAll(Collection<?> c) {
+      ensureUnlocked();
+      return super.retainAll(c);
+    }
+    
+    public void clear() {
+      ensureUnlocked();
+      super.clear();
+    }
+
+  }
+  
 }

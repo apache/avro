@@ -17,7 +17,8 @@
  */
 package org.apache.avro.generic;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -62,7 +63,7 @@ public class TestGenericData {
 
   @Test
   public void testRecordGetFieldDoesntExist() throws Exception {
-    LinkedHashMap<String, Field> fields = new LinkedHashMap<String, Field>();
+    List<Field> fields = new ArrayList<Field>();
     Schema schema = Schema.createRecord(fields);
     GenericData.Record record = new GenericData.Record(schema);
     assertNull(record.get("does not exist"));

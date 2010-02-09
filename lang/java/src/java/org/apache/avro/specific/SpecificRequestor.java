@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
-import java.util.Map;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -66,8 +65,8 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     throws IOException {
     Object[] args = (Object[])request;
     int i = 0;
-    for (Map.Entry<String, Schema> param : schema.getFieldSchemas())
-      getDatumWriter(param.getValue()).write(args[i++], out);
+    for (Schema.Field param : schema.getFields())
+      getDatumWriter(param.schema()).write(args[i++], out);
   }
     
   @Override

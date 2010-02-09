@@ -108,10 +108,10 @@ public class ReflectData extends SpecificData {
     case RECORD:
       if (datum == null) return false;
       Class c = datum.getClass(); 
-      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas()) {
+      for (Schema.Field f : schema.getFields()) {
         try {
-          if (!validate(entry.getValue(),
-                        getField(c, entry.getKey()).get(datum)))
+          if (!validate(f.schema(),
+                        getField(c, f.name()).get(datum)))
           return false;
         } catch (IllegalAccessException e) {
           throw new AvroRuntimeException(e);
@@ -226,12 +226,12 @@ public class ReflectData extends SpecificData {
         if (params.length != 1)
           throw new AvroTypeException("No array type specified.");
         Schema schema = Schema.createArray(createSchema(params[0], names));
-        schema.setProp(CLASS_PROP, raw.getName());
+        schema.addProp(CLASS_PROP, raw.getName());
         return schema;
       }
     } else if ((type == Short.class) || (type == Short.TYPE)) {
       Schema result = Schema.create(Schema.Type.INT);
-      result.setProp(CLASS_PROP, Short.class.getName());
+      result.addProp(CLASS_PROP, Short.class.getName());
       return result;
     } else if (type instanceof Class) {                      // Class
       Class<?> c = (Class<?>)type;
@@ -260,7 +260,7 @@ public class ReflectData extends SpecificData {
           return getAnnotatedUnion(union, names);
         } else if (c.isAnnotationPresent(Stringable.class)){ // Stringable
           Schema result = Schema.create(Schema.Type.STRING);
-          result.setProp(CLASS_PROP, c.getName());
+          result.addProp(CLASS_PROP, c.getName());
           return result;
         } else if (c.isEnum()) {                             // Enum
           List<String> symbols = new ArrayList<String>();
@@ -272,15 +272,14 @@ public class ReflectData extends SpecificData {
           int size = c.getAnnotation(FixedSize.class).value();
           schema = Schema.createFixed(name, null /* doc */, space, size);
         } else {                                             // record
-          LinkedHashMap<String,Schema.Field> fields =
-            new LinkedHashMap<String,Schema.Field>();
+          List<Schema.Field> fields = new ArrayList<Schema.Field>();
           schema = Schema.createRecord(name, null /* doc */, space, 
                                        Throwable.class.isAssignableFrom(c));
           names.put(c.getName(), schema);
           for (Field field : getFields(c))
             if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0){
               Schema fieldSchema = createFieldSchema(field, names);
-              fields.put(field.getName(), new Schema.Field(field.getName(),
+              fields.add(new Schema.Field(field.getName(),
                   fieldSchema, null /* doc */, null));
             }
           schema.setFields(fields);
@@ -300,7 +299,7 @@ public class ReflectData extends SpecificData {
     Class<?> c = (Class<?>)element;
     Union union = c.getAnnotation(Union.class);
     if (union != null)                          // element is annotated union
-      schema.setProp(ELEMENT_PROP, c.getName());
+      schema.addProp(ELEMENT_PROP, c.getName());
   }
 
   // construct a schema from a union annotation
@@ -361,8 +360,7 @@ public class ReflectData extends SpecificData {
 
   private Message getMessage(Method method, Protocol protocol,
                              Map<String,Schema> names) {
-    LinkedHashMap<String,Schema.Field> fields =
-      new LinkedHashMap<String,Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<Schema.Field>();
     String[] paramNames = paranamer.lookupParameterNames(method);
     Type[] paramTypes = method.getGenericParameterTypes();
     Annotation[][] annotations = method.getParameterAnnotations();
@@ -376,8 +374,8 @@ public class ReflectData extends SpecificData {
       String paramName =  paramNames.length == paramTypes.length
         ? paramNames[i]
         : paramSchema.getName()+i;
-      fields.put(paramName, new Schema.Field(paramName, paramSchema,
-          null /* doc */, null));
+      fields.add(new Schema.Field(paramName, paramSchema,
+        null /* doc */, null));
     }
     Schema request = Schema.createRecord(fields);
 

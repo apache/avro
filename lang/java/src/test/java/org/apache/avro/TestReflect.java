@@ -237,7 +237,7 @@ public class TestReflect {
     assertEquals(Schema.Type.STRING, response.getTypes().get(1).getType());
     // check request schema is union
     Schema request = message.getRequest();
-    Schema param = request.getFields().get("s").schema();
+    Schema param = request.getField("s").schema();
     assertEquals(Schema.Type.UNION, param.getType());
     assertEquals(Schema.Type.NULL, param.getTypes().get(0).getType());
     assertEquals(Schema.Type.STRING, param.getTypes().get(1).getType());

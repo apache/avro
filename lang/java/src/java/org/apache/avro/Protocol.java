@@ -339,7 +339,7 @@ public class Protocol {
     JsonNode requestNode = json.get("request");
     if (requestNode == null || !requestNode.isArray())
       throw new SchemaParseException("No request specified: "+json);
-    LinkedHashMap<String,Field> fields = new LinkedHashMap<String,Field>();
+    List<Field> fields = new ArrayList<Field>();
     for (JsonNode field : requestNode) {
       JsonNode fieldNameNode = field.get("name");
       if (fieldNameNode == null)
@@ -348,8 +348,7 @@ public class Protocol {
       if (fieldTypeNode == null)
         throw new SchemaParseException("No param type: "+field);
       String name = fieldNameNode.getTextValue();
-      fields.put(name,
-          new Field(name, Schema.parse(fieldTypeNode,types),
+      fields.add(new Field(name, Schema.parse(fieldTypeNode,types),
                            null /* message fields don't have docs */,
                            field.get("default")));
     }

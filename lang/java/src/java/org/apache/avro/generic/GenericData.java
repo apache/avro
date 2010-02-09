@@ -52,11 +52,11 @@ public class GenericData {
     }
     @Override public Schema getSchema() { return schema; }
     @Override public void put(String key, Object value) {
-      values[schema.getFields().get(key).pos()] = value;
+      values[schema.getField(key).pos()] = value;
     }
     @Override public void put(int i, Object v) { values[i] = v; }
     @Override public Object get(String key) {
-      Field field = schema.getFields().get(key);
+      Field field = schema.getField(key);
       if (field == null) return null;
       return values[field.pos()];
     }
@@ -179,8 +179,7 @@ public class GenericData {
     case RECORD:
       if (!(datum instanceof IndexedRecord)) return false;
       IndexedRecord fields = (IndexedRecord)datum;
-      for (Map.Entry<String, Field> entry : schema.getFields().entrySet()) {
-        Field f = entry.getValue();
+      for (Field f : schema.getFields()) {
         if (!validate(f.schema(), fields.get(f.pos())))
           return false;
       }
@@ -233,11 +232,10 @@ public class GenericData {
       buffer.append("{");
       int count = 0;
       IndexedRecord record = (IndexedRecord)datum;
-      for (Map.Entry<String,Field> e :
-             record.getSchema().getFields().entrySet()) {
-        toString(e.getKey(), buffer);
+      for (Field f : record.getSchema().getFields()) {
+        toString(f.name(), buffer);
         buffer.append(": ");
-        toString(record.get(e.getValue().pos()), buffer);
+        toString(record.get(f.pos()), buffer);
         if (++count < record.getSchema().getFields().size())
           buffer.append(", ");
       }
@@ -416,8 +414,7 @@ public class GenericData {
     switch (s.getType()) {
     case RECORD:
       IndexedRecord r = (IndexedRecord)o;
-      for (Map.Entry<String, Field> e : s.getFields().entrySet()) {
-        Field f = e.getValue();
+      for (Field f : s.getFields()) {
         if (f.order() == Field.Order.IGNORE)
           continue;
         hashCode = hashCodeAdd(hashCode, r.get(f.pos()), f.schema());
@@ -454,8 +451,7 @@ public class GenericData {
     case RECORD:
       IndexedRecord r1 = (IndexedRecord)o1;
       IndexedRecord r2 = (IndexedRecord)o2;
-      for (Map.Entry<String, Field> e : s.getFields().entrySet()) {
-        Field f = e.getValue();
+      for (Field f : s.getFields()) {
         if (f.order() == Field.Order.IGNORE)
           continue;                               // ignore this field
         int pos = f.pos();

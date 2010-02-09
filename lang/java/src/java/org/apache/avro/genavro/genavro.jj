@@ -1074,7 +1074,7 @@ Schema FixedDeclaration():
 Schema RecordDeclaration():
 {
   String name;
-  LinkedHashMap<String, Field> fields = new LinkedHashMap<String, Field>();
+  List<Field> fields = new ArrayList<Field>();
   boolean isError;
 }
 {
@@ -1115,7 +1115,7 @@ void SchemaProperty(Map<String, String> properties):
 }
 
 
-void FieldDeclaration(LinkedHashMap<String, Field> fields):
+void FieldDeclaration(List<Field> fields):
 {
   Schema type;
   Map<String, String> props = new HashMap<String, String>();
@@ -1130,19 +1130,19 @@ void FieldDeclaration(LinkedHashMap<String, Field> fields):
   ";"
   {
     for (Map.Entry<String, String> propEntry : props.entrySet()) {
-      type.setProp(propEntry.getKey(), propEntry.getValue());
+      type.addProp(propEntry.getKey(), propEntry.getValue());
     }
   }
 }
 
-void VariableDeclarator(Schema type, LinkedHashMap<String, Field> fields):
+void VariableDeclarator(Schema type, List<Field> fields):
 {
   String name;
 }
 {
   name = Identifier()
   {
-    fields.put(name, new Field(name, type, null, null));
+    fields.add(new Field(name, type, null, null));
   }
 }
 
@@ -1178,7 +1178,7 @@ void ErrorList(List<Schema> errors):
 
 Schema FormalParameters():
 {
-  LinkedHashMap<String, Field> fields = new LinkedHashMap<String, Field>();
+  List<Field> fields = new ArrayList<Field>();
 }
 {
   (
@@ -1189,7 +1189,7 @@ Schema FormalParameters():
   }
 }
 
-void FormalParameter(LinkedHashMap<String, Field> fields):
+void FormalParameter(List<Field> fields):
 {
   Schema type;
 }

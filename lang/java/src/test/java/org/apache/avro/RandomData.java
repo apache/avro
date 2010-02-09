@@ -66,8 +66,8 @@ public class RandomData implements Iterable<Object> {
     switch (schema.getType()) {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
-      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
-        record.put(entry.getKey(), generate(entry.getValue(), random, d+1));
+      for (Schema.Field field : schema.getFields())
+        record.put(field.name(), generate(field.schema(), random, d+1));
       return record;
     case ENUM:
       List<String> symbols = schema.getEnumSymbols();

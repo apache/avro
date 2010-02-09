@@ -306,8 +306,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   public static void skip(Schema schema, Decoder in) throws IOException {
     switch (schema.getType()) {
     case RECORD:
-      for (Map.Entry<String, Schema> entry : schema.getFieldSchemas())
-        skip(entry.getValue(), in);
+      for (Field field : schema.getFields())
+        skip(field.schema(), in);
       break;
     case ENUM:
       in.readInt();

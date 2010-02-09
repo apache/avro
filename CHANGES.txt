@@ -318,6 +318,8 @@ Trunk (unreleased changes)
 
     AVRO-420. Add namespace support to C implementation (massie)
 
+    AVRO-261. Allow Schemas to be immutable (thiru)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
