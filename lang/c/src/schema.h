@@ -32,6 +32,7 @@ struct avro_record_field_t {
 struct avro_record_schema_t {
 	struct avro_obj_t obj;
 	char *name;
+	char *space;
 	st_table *fields;
 	st_table *fields_byname;
 };

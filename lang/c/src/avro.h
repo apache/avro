@@ -107,7 +107,7 @@ avro_schema_t avro_schema_double(void);
 avro_schema_t avro_schema_boolean(void);
 avro_schema_t avro_schema_null(void);
 
-avro_schema_t avro_schema_record(const char *name);
+avro_schema_t avro_schema_record(const char *name, const char *space);
 avro_schema_t avro_schema_record_field_get(const avro_schema_t
 					   record, const char *field_name);
 int avro_schema_record_field_append(const avro_schema_t record,
@@ -180,7 +180,7 @@ avro_datum_t avro_float(float f);
 avro_datum_t avro_double(double d);
 avro_datum_t avro_boolean(int8_t i);
 avro_datum_t avro_null(void);
-avro_datum_t avro_record(const char *name);
+avro_datum_t avro_record(const char *name, const char *space);
 avro_datum_t avro_enum(const char *name, const char *symbol);
 avro_datum_t avro_fixed(const char *name, const char *bytes,
 			const int64_t size);

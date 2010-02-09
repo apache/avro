@@ -77,6 +77,20 @@ static int record_equal(struct avro_record_datum_t *a,
 			struct avro_record_datum_t *b)
 {
 	struct st_equal_args args = { 1, b->fields };
+	if (strcmp(a->name, b->name)) {
+		/* This have different names */
+		return 0;
+	}
+	if (a->space && b->space) {
+		/* They have different namespaces */
+		if (strcmp(a->space, b->space)) {
+			return 0;
+		}
+	} else if (a->space || b->space) {
+		/* One has a namespace, one doesn't */
+		return 0;
+	}
+
 	if (a->fields->num_entries != b->fields->num_entries) {
 		return 0;
 	}

@@ -316,6 +316,8 @@ Trunk (unreleased changes)
     AVRO-409. Update contact database example to use a file object 
               container for C implementation (massie)
 
+    AVRO-420. Add namespace support to C implementation (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

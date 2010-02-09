@@ -100,6 +100,9 @@ static void avro_schema_free(avro_schema_t schema)
 				struct avro_record_schema_t *record;
 				record = avro_schema_to_record(schema);
 				free(record->name);
+				if (record->space) {
+					free(record->space);
+				}
 				st_foreach(record->fields, record_free_foreach,
 					   0);
 				st_free_table(record->fields_byname);
@@ -412,7 +415,7 @@ avro_schema_record_field_append(const avro_schema_t record_schema,
 	return 0;
 }
 
-avro_schema_t avro_schema_record(const char *name)
+avro_schema_t avro_schema_record(const char *name, const char *space)
 {
 	struct avro_record_schema_t *record;
 	if (!is_avro_id(name)) {
@@ -427,8 +430,17 @@ avro_schema_t avro_schema_record(const char *name)
 		free(record);
 		return NULL;
 	}
+	record->space = space ? strdup(space) : NULL;
+	if (space && !record->space) {
+		free(record->name);
+		free(record);
+		return NULL;
+	}
 	record->fields = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!record->fields) {
+		if (record->space) {
+			free(record->space);
+		}
 		free(record->name);
 		free(record);
 		return NULL;
@@ -593,9 +605,12 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 	case AVRO_RECORD:
 		{
 			json_t *json_name = json_object_get(json, "name");
+			json_t *json_namespace =
+			    json_object_get(json, "namespace");
 			json_t *json_fields = json_object_get(json, "fields");
 			unsigned int num_fields;
 			const char *record_name;
+			const char *record_namespace;
 
 			if (!json_is_string(json_name)) {
 				return EINVAL;
@@ -611,7 +626,14 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 			if (!record_name) {
 				return EINVAL;
 			}
-			*schema = avro_schema_record(record_name);
+			if (json_is_string(json_namespace)) {
+				record_namespace =
+				    json_string_value(json_namespace);
+			} else {
+				record_namespace = NULL;
+			}
+			*schema =
+			    avro_schema_record(record_name, record_namespace);
 			if (save_named_schemas(record_name, *schema, error)) {
 				return ENOMEM;
 			}
@@ -872,7 +894,9 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 		{
 			struct avro_record_schema_t *record_schema =
 			    avro_schema_to_record(schema);
-			new_schema = avro_schema_record(record_schema->name);
+			new_schema =
+			    avro_schema_record(record_schema->name,
+					       record_schema->space);
 			for (i = 0; i < record_schema->fields->num_entries; i++) {
 				union {
 					st_data_t data;
@@ -1019,7 +1043,13 @@ static int write_record(avro_writer_t out, struct avro_record_schema_t *record)
 
 	check(rval, avro_write_str(out, "{\"type\":\"record\",\"name\":\""));
 	check(rval, avro_write_str(out, record->name));
-	check(rval, avro_write_str(out, "\",\"fields\":["));
+	check(rval, avro_write_str(out, "\","));
+	if (record->space) {
+		check(rval, avro_write_str(out, "\"namespace\":\""));
+		check(rval, avro_write_str(out, record->space));
+		check(rval, avro_write_str(out, "\","));
+	}
+	check(rval, avro_write_str(out, "\"fields\":["));
 	for (i = 0; i < record->fields->num_entries; i++) {
 		union {
 			st_data_t data;

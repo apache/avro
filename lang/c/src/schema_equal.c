@@ -29,6 +29,15 @@ schema_record_equal(struct avro_record_schema_t *a,
 		 */
 		return 0;
 	}
+	if (a->space && b->space) {
+		/* They have different namespaces */
+		if (strcmp(a->space, b->space)) {
+			return 0;
+		}
+	} else if (a->space || b->space) {
+		/* One has a namespace, one doesn't */
+		return 0;
+	}
 	for (i = 0; i < a->fields->num_entries; i++) {
 		union {
 			st_data_t data;

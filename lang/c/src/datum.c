@@ -380,7 +380,7 @@ avro_datum_t avro_null(void)
 	return &obj;
 }
 
-avro_datum_t avro_record(const char *name)
+avro_datum_t avro_record(const char *name, const char *space)
 {
 	struct avro_record_datum_t *datum =
 	    malloc(sizeof(struct avro_record_datum_t));
@@ -392,10 +392,17 @@ avro_datum_t avro_record(const char *name)
 		free(datum);
 		return NULL;
 	}
+	datum->space = space ? strdup(space) : NULL;
+	if (space && !datum->space) {
+		free((void *)datum->name);
+		free((void *)datum);
+		return NULL;
+	}
 	datum->fields = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->fields) {
-		free(datum->name);
-		free(datum);
+		free((void *)datum->space);
+		free((void *)datum->name);
+		free((void *)datum);
 		return NULL;
 	}
 
@@ -730,6 +737,9 @@ static void avro_datum_free(avro_datum_t datum)
 				struct avro_record_datum_t *record;
 				record = avro_datum_to_record(datum);
 				free((void *)record->name);
+				if (record->space) {
+					free((void *)record->space);
+				}
 				st_foreach(record->fields,
 					   char_datum_free_foreach, 0);
 				st_free_table(record->fields);

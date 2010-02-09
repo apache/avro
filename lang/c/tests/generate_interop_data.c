@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	check(rval, avro_file_writer_create(outpath, schema, &file_writer));
 
 	/* TODO: create a method for generating random data from schema */
-	interop = avro_record("interop");
+	interop = avro_record("interop", "org.apache.avro");
 	avro_record_set(interop, "intField", avro_int32(42));
 	avro_record_set(interop, "longField", avro_int64(4242));
 	avro_record_set(interop, "stringField",
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	avro_record_set(interop, "fixedField",
 			avro_fixed("MD5", "1234567890123456", 16));
 
-	node_datum = avro_record("Node");
+	node_datum = avro_record("Node", NULL);
 	avro_record_set(node_datum, "label",
 			avro_wrapstring("If you label me, you negate me."));
 	avro_record_set(node_datum, "children", avro_array());

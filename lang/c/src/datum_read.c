@@ -258,7 +258,8 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 	avro_datum_t record;
 	avro_datum_t field_datum;
 
-	record = *datum = avro_record(writers_schema->name);
+	record = *datum =
+	    avro_record(writers_schema->name, writers_schema->space);
 	for (i = 0; i < writers_schema->fields->num_entries; i++) {
 		union {
 			st_data_t data;

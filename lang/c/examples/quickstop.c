@@ -49,7 +49,7 @@ void
 add_person(avro_file_writer_t db, const char *first, const char *last,
 	   const char *phone, int32_t age)
 {
-	avro_datum_t person = avro_record("Person");
+	avro_datum_t person = avro_record("Person", NULL);
 
 	avro_datum_t id_datum = avro_int64(++id);
 	avro_datum_t first_datum = avro_string(first);
@@ -169,7 +169,7 @@ int main(void)
 	   interested in.  This is particularly useful when you have 
 	   huge data sets and you'll only interest in particular fields
 	   e.g. your contacts First name and phone number */
-	projection_schema = avro_schema_record("Person");
+	projection_schema = avro_schema_record("Person", NULL);
 	first_name_schema = avro_schema_string();
 	phone_schema = avro_schema_string();
 	avro_schema_record_field_append(projection_schema, "First",

@@ -75,6 +75,7 @@ struct avro_map_datum_t {
 struct avro_record_datum_t {
 	struct avro_obj_t obj;
 	const char *name;
+	const char *space;
 	st_table *fields;
 };
 
