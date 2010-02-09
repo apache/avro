@@ -380,6 +380,20 @@ avro_datum_t avro_null(void)
 	return &obj;
 }
 
+avro_datum_t avro_union(int64_t discriminant, avro_datum_t value)
+{
+	struct avro_union_datum_t *datum =
+	    malloc(sizeof(struct avro_union_datum_t));
+	if (!datum) {
+		return NULL;
+	}
+	datum->discriminant = discriminant;
+	datum->value = avro_datum_incref(value);
+
+	avro_datum_init(&datum->obj, AVRO_UNION);
+	return &datum->obj;
+}
+
 avro_datum_t avro_record(const char *name, const char *space)
 {
 	struct avro_record_datum_t *datum =
@@ -398,11 +412,23 @@ avro_datum_t avro_record(const char *name, const char *space)
 		free((void *)datum);
 		return NULL;
 	}
-	datum->fields = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
-	if (!datum->fields) {
-		free((void *)datum->space);
-		free((void *)datum->name);
-		free((void *)datum);
+	datum->field_order = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->field_order) {
+		if (space) {
+			free((void *)datum->space);
+		}
+		free((char *)datum->name);
+		free(datum);
+		return NULL;
+	}
+	datum->fields_byname = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->fields_byname) {
+		st_free_table(datum->field_order);
+		if (space) {
+			free((void *)datum->space);
+		}
+		free((char *)datum->name);
+		free(datum);
 		return NULL;
 	}
 
@@ -420,7 +446,7 @@ avro_record_get(const avro_datum_t datum, const char *field_name,
 	} val;
 	if (is_avro_datum(datum) && is_avro_record(datum) && field_name) {
 		if (st_lookup
-		    (avro_datum_to_record(datum)->fields,
+		    (avro_datum_to_record(datum)->fields_byname,
 		     (st_data_t) field_name, &(val.data))) {
 			*field = val.field;
 			return 0;
@@ -442,20 +468,25 @@ avro_record_set(const avro_datum_t datum, const char *field_name,
 			avro_datum_decref(old_field);
 		} else {
 			/* Inserting new value */
+			struct avro_record_datum_t *record =
+			    avro_datum_to_record(datum);
 			key = strdup(field_name);
 			if (!key) {
 				return ENOMEM;
 			}
+			st_insert(record->field_order,
+				  record->field_order->num_entries,
+				  (st_data_t) key);
 		}
 		avro_datum_incref(field_value);
-		st_insert(avro_datum_to_record(datum)->fields, (st_data_t) key,
-			  (st_data_t) field_value);
+		st_insert(avro_datum_to_record(datum)->fields_byname,
+			  (st_data_t) key, (st_data_t) field_value);
 		return 0;
 	}
 	return EINVAL;
 }
 
-avro_datum_t avro_enum(const char *name, const char *symbol)
+avro_datum_t avro_enum(const char *name, int i)
 {
 	struct avro_enum_datum_t *datum =
 	    malloc(sizeof(struct avro_enum_datum_t));
@@ -463,7 +494,7 @@ avro_datum_t avro_enum(const char *name, const char *symbol)
 		return NULL;
 	}
 	datum->name = strdup(name);
-	datum->symbol = strdup(symbol);
+	datum->value = i;
 
 	avro_datum_init(&datum->obj, AVRO_ENUM);
 	return &datum->obj;
@@ -740,9 +771,10 @@ static void avro_datum_free(avro_datum_t datum)
 				if (record->space) {
 					free((void *)record->space);
 				}
-				st_foreach(record->fields,
+				st_foreach(record->fields_byname,
 					   char_datum_free_foreach, 0);
-				st_free_table(record->fields);
+				st_free_table(record->field_order);
+				st_free_table(record->fields_byname);
 				free(record);
 			}
 			break;
@@ -750,7 +782,6 @@ static void avro_datum_free(avro_datum_t datum)
 				struct avro_enum_datum_t *enump;
 				enump = avro_datum_to_enum(datum);
 				free((void *)enump->name);
-				free((void *)enump->symbol);
 				free(enump);
 			}
 			break;
@@ -781,7 +812,12 @@ static void avro_datum_free(avro_datum_t datum)
 				free(array);
 			}
 			break;
-		case AVRO_UNION:
+		case AVRO_UNION:{
+				struct avro_union_datum_t *unionp;
+				unionp = avro_datum_to_union(datum);
+				avro_datum_decref(unionp->value);
+				free(unionp);
+			}
 			break;
 		case AVRO_LINK:{
 				/* TODO */

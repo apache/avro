@@ -34,9 +34,27 @@ ____
 A C program is like a fast dance on a newly waxed dance floor by people carrying razors.
 ____
 
-The C implementation is still not quite ready for production use.
-The current code is being tested on +MacOS X+ and +Linux+.  We're
-always looking for contributions so, if you're a C hacker, please
+The C implementation has been tested on +MacOSX+ and +Linux+ but, over
+time, the number of support OSes should grow.  Please let us know if
+you're using +Avro C+ on other systems. There are no dependencies on 
+external libraries.  We embedded http://www.digip.org/jansson/[Jansson] into
++Avro C+ for parsing JSON into schema structures.  
+
+The C implementation supports:
+
+* binary encoding/decoding of all primitive and complex data types
+* storage to an Avro Object Container File
+* schema resolution, promotion and projection
+* validating and non-validating mode for writing Avro data
+
+The C implementation is lacking:
+
+* RPC
+
+To learn about the API, take a look at the examples and reference files
+later in this document.
+
+We're always looking for contributions so, if you're a C hacker, please
 feel free to http://hadoop.apache.org/avro/[submit patches to the
 project].
 
@@ -107,7 +125,7 @@ are "giving" responsibility for freeing the string to +Avro C+.
 
 [WARNING] 
 ===============================
-Don't "give" +Avro C+ a string that you haven't allocated from the heap with +malloc+.
+Don't "give" +Avro C+ a string that you haven't allocated from the heap with e.g. +malloc+ or +strdup+.
 
 For example, *don't* do this:
 ----
@@ -115,7 +133,30 @@ avro_datum_t bad_idea = avro_givestring("This isn't allocated on the heap");
 ----
 ===============================
 
+== Schema Validation
+
+If you want to write a datum, you would use the following function
+
+[source,c]
+----
+int avro_write_data(avro_writer_t writer,
+                    avro_schema_t writers_schema, avro_datum_t datum);
+----
+
+If you pass in a +writers_schema+, then you +datum+ will be validated *before*
+it is sent to the +writer+.  This check ensures that your data has the 
+correct format.  If you are certain your datum is correct, you can pass
+a +NULL+ value for +writers_schema+ and +Avro C+ will not validate before
+writing.
+
+NOTE: Data written to an Avro File Object Container is always validated.
+
 == Examples
+
+[quote,Dante Hicks]
+____
+I'm not even supposed to be here today!
+____
 
 Imagine you're a free-lance hacker in Leonardo, New Jersey and you've 
 been approached by the owner of the local *Quick Stop Convenience* store.

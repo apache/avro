@@ -21,27 +21,45 @@
 #include "datum.h"
 #include "encoding.h"
 
+static int write_datum(avro_writer_t writer, const avro_encoding_t * enc,
+		       avro_schema_t writers_schema, avro_datum_t datum);
+
 static int
 write_record(avro_writer_t writer, const avro_encoding_t * enc,
-	     struct avro_record_schema_t *record, avro_datum_t datum)
+	     struct avro_record_schema_t *schema, avro_datum_t datum)
 {
 	int rval;
 	long i;
+	avro_datum_t field_datum;
 
-	for (i = 0; i < record->fields->num_entries; i++) {
-		avro_datum_t field_datum;
-		union {
-			st_data_t data;
-			struct avro_record_field_t *field;
-		} val;
-		st_lookup(record->fields, i, &val.data);
-		rval = avro_record_get(datum, val.field->name, &field_datum);
-		if (rval) {
-			return rval;
+	if (schema) {
+		for (i = 0; i < schema->fields->num_entries; i++) {
+			union {
+				st_data_t data;
+				struct avro_record_field_t *field;
+			} val;
+			st_lookup(schema->fields, i, &val.data);
+			check(rval,
+			      avro_record_get(datum, val.field->name,
+					      &field_datum));
+			check(rval,
+			      write_datum(writer, enc, val.field->type,
+					  field_datum));
 		}
-		rval = avro_write_data(writer, val.field->type, field_datum);
-		if (rval) {
-			return rval;
+	} else {
+		/* No schema.  Just write the record datum */
+		struct avro_record_datum_t *record =
+		    avro_datum_to_record(datum);
+		for (i = 0; i < record->field_order->num_entries; i++) {
+			union {
+				st_data_t data;
+				char *name;
+			} val;
+			st_lookup(record->field_order, i, &val.data);
+			check(rval,
+			      avro_record_get(datum, val.name, &field_datum));
+			check(rval,
+			      write_datum(writer, enc, NULL, field_datum));
 		}
 	}
 	return 0;
@@ -51,15 +69,7 @@ static int
 write_enum(avro_writer_t writer, const avro_encoding_t * enc,
 	   struct avro_enum_schema_t *enump, struct avro_enum_datum_t *datum)
 {
-	union {
-		st_data_t data;
-		long idx;
-	} val;
-	if (!st_lookup
-	    (enump->symbols_byname, (st_data_t) datum->symbol, &val.data)) {
-		return EINVAL;
-	}
-	return enc->write_long(writer, val.idx);
+	return enc->write_long(writer, datum->value);
 }
 
 struct write_map_args {
@@ -77,7 +87,7 @@ write_map_foreach(char *key, avro_datum_t datum, struct write_map_args *args)
 		args->rval = rval;
 		return ST_STOP;
 	}
-	rval = avro_write_data(args->writer, args->values_schema, datum);
+	rval = write_datum(args->writer, args->enc, args->values_schema, datum);
 	if (rval) {
 		args->rval = rval;
 		return ST_STOP;
@@ -87,11 +97,12 @@ write_map_foreach(char *key, avro_datum_t datum, struct write_map_args *args)
 
 static int
 write_map(avro_writer_t writer, const avro_encoding_t * enc,
-	  struct avro_map_schema_t *writer_schema,
+	  struct avro_map_schema_t *writers_schema,
 	  struct avro_map_datum_t *datum)
 {
 	int rval;
-	struct write_map_args args = { 0, writer, enc, writer_schema->values };
+	struct write_map_args args =
+	    { 0, writer, enc, writers_schema ? writers_schema->values : NULL };
 
 	if (datum->map->num_entries) {
 		rval = enc->write_long(writer, datum->map->num_entries);
@@ -129,11 +140,10 @@ write_array(avro_writer_t writer, const avro_encoding_t * enc,
 				avro_datum_t datum;
 			} val;
 			st_lookup(array->els, i, &val.data);
-			rval =
-			    avro_write_data(writer, schema->items, val.datum);
-			if (rval) {
-				return rval;
-			}
+			check(rval,
+			      write_datum(writer, enc,
+					  schema ? schema->items : NULL,
+					  val.datum));
 		}
 	}
 	return enc->write_long(writer, 0);
@@ -141,153 +151,138 @@ write_array(avro_writer_t writer, const avro_encoding_t * enc,
 
 static int
 write_union(avro_writer_t writer, const avro_encoding_t * enc,
-	    struct avro_union_schema_t *schema, avro_datum_t datum)
+	    struct avro_union_schema_t *schema,
+	    struct avro_union_datum_t *unionp)
 {
 	int rval;
-	long i;
+	avro_schema_t write_schema = NULL;
 
-	for (i = 0; i < schema->branches->num_entries; i++) {
+	check(rval, enc->write_long(writer, unionp->discriminant));
+	if (schema) {
 		union {
 			st_data_t data;
 			avro_schema_t schema;
 		} val;
-		st_lookup(schema->branches, i, &val.data);
-		if (avro_schema_datum_validate(val.schema, datum)) {
-			rval = enc->write_long(writer, i);
-			if (rval) {
-				return rval;
-			}
-			return avro_write_data(writer, val.schema, datum);
+		if (!st_lookup
+		    (schema->branches, unionp->discriminant, &val.data)) {
+			return EINVAL;
 		}
+		write_schema = val.schema;
 	}
-	return EINVAL;
+	return write_datum(writer, enc, write_schema, unionp->value);
 }
 
-int
-avro_write_data(avro_writer_t writer, avro_schema_t writer_schema,
-		avro_datum_t datum)
+static int write_datum(avro_writer_t writer, const avro_encoding_t * enc,
+		       avro_schema_t writers_schema, avro_datum_t datum)
+{
+	int rval;
+
+	if (is_avro_schema(writers_schema) && is_avro_link(writers_schema)) {
+		return write_datum(writer, enc,
+				   (avro_schema_to_link(writers_schema))->to,
+				   datum);
+	}
+
+	switch (avro_typeof(datum)) {
+	case AVRO_NULL:
+		return enc->write_null(writer);
+
+	case AVRO_BOOLEAN:
+		return enc->write_boolean(writer,
+					  avro_datum_to_boolean(datum)->i);
+
+	case AVRO_STRING:
+		return enc->write_string(writer,
+					 avro_datum_to_string(datum)->s);
+
+	case AVRO_BYTES:
+		return enc->write_bytes(writer,
+					avro_datum_to_bytes(datum)->bytes,
+					avro_datum_to_bytes(datum)->size);
+
+	case AVRO_INT32:
+	case AVRO_INT64:{
+			int64_t val = avro_typeof(datum) == AVRO_INT32 ?
+			    avro_datum_to_int32(datum)->i32 :
+			    avro_datum_to_int64(datum)->i64;
+			if (is_avro_schema(writers_schema)) {
+				/* handle promotion */
+				if (is_avro_float(writers_schema)) {
+					return enc->write_float(writer,
+								(float)val);
+				} else if (is_avro_double(writers_schema)) {
+					return enc->write_double(writer,
+								 (double)val);
+				}
+			}
+			return enc->write_long(writer, val);
+		}
+
+	case AVRO_FLOAT:{
+			float val = avro_datum_to_float(datum)->f;
+			if (is_avro_schema(writers_schema)
+			    && is_avro_double(writers_schema)) {
+				/* handle promotion */
+				return enc->write_double(writer, (double)val);
+			}
+			return enc->write_float(writer, val);
+		}
+
+	case AVRO_DOUBLE:
+		return enc->write_double(writer,
+					 avro_datum_to_double(datum)->d);
+
+	case AVRO_RECORD:
+		return write_record(writer, enc,
+				    avro_schema_to_record(writers_schema),
+				    datum);
+
+	case AVRO_ENUM:
+		return write_enum(writer, enc,
+				  avro_schema_to_enum(writers_schema),
+				  avro_datum_to_enum(datum));
+
+	case AVRO_FIXED:
+		return avro_write(writer,
+				  avro_datum_to_fixed(datum)->bytes,
+				  avro_datum_to_fixed(datum)->size);
+
+	case AVRO_MAP:
+		return write_map(writer, enc,
+				 avro_schema_to_map(writers_schema),
+				 avro_datum_to_map(datum));
+
+	case AVRO_ARRAY:
+		return write_array(writer, enc,
+				   avro_schema_to_array(writers_schema),
+				   avro_datum_to_array(datum));
+
+	case AVRO_UNION:
+		return write_union(writer, enc,
+				   avro_schema_to_union(writers_schema),
+				   avro_datum_to_union(datum));
+
+	case AVRO_LINK:
+		break;
+	}
+
+	return 0;
+}
+
+int avro_write_data(avro_writer_t writer, avro_schema_t writers_schema,
+		    avro_datum_t datum)
 {
 	const avro_encoding_t *enc = &avro_binary_encoding;
 	int rval = -1;
 
-	if (!writer || !(is_avro_schema(writer_schema) && is_avro_datum(datum))) {
+	if (!writer || !is_avro_datum(datum)) {
 		return EINVAL;
 	}
-	if (!avro_schema_datum_validate(writer_schema, datum)) {
+	/* Only validate datum if a writer's schema is provided */
+	if (is_avro_schema(writers_schema)
+	    && !avro_schema_datum_validate(writers_schema, datum)) {
 		return EINVAL;
 	}
-	switch (avro_typeof(writer_schema)) {
-	case AVRO_NULL:
-		rval = enc->write_null(writer);
-		break;
-	case AVRO_BOOLEAN:
-		rval =
-		    enc->write_boolean(writer, avro_datum_to_boolean(datum)->i);
-		break;
-	case AVRO_STRING:
-		rval =
-		    enc->write_string(writer, avro_datum_to_string(datum)->s);
-		break;
-	case AVRO_BYTES:
-		rval =
-		    enc->write_bytes(writer, avro_datum_to_bytes(datum)->bytes,
-				     avro_datum_to_bytes(datum)->size);
-		break;
-	case AVRO_INT32:
-		{
-			int32_t i;
-			if (is_avro_int32(datum)) {
-				i = avro_datum_to_int32(datum)->i32;
-			} else if (is_avro_int64(datum)) {
-				i = (int32_t) avro_datum_to_int64(datum)->i64;
-			} else {
-				assert(0
-				       &&
-				       "Serious bug in schema validation code");
-			}
-			rval = enc->write_int(writer, i);
-		}
-		break;
-	case AVRO_INT64:
-		rval = enc->write_long(writer, avro_datum_to_int64(datum)->i64);
-		break;
-	case AVRO_FLOAT:
-		{
-			float f;
-			if (is_avro_int32(datum)) {
-				f = (float)(avro_datum_to_int32(datum)->i32);
-			} else if (is_avro_int64(datum)) {
-				f = (float)(avro_datum_to_int64(datum)->i64);
-			} else if (is_avro_float(datum)) {
-				f = avro_datum_to_float(datum)->f;
-			} else if (is_avro_double(datum)) {
-				f = (float)(avro_datum_to_double(datum)->d);
-			} else {
-				assert(0
-				       &&
-				       "Serious bug in schema validation code");
-			}
-			rval = enc->write_float(writer, f);
-		}
-		break;
-	case AVRO_DOUBLE:
-		{
-			double d;
-			if (is_avro_int32(datum)) {
-				d = (double)(avro_datum_to_int32(datum)->i32);
-			} else if (is_avro_int64(datum)) {
-				d = (double)(avro_datum_to_int64(datum)->i64);
-			} else if (is_avro_float(datum)) {
-				d = (double)(avro_datum_to_float(datum)->f);
-			} else if (is_avro_double(datum)) {
-				d = avro_datum_to_double(datum)->d;
-			} else {
-				assert(0 && "Bug in schema validation code");
-			}
-			rval = enc->write_double(writer, d);
-		}
-		break;
-
-	case AVRO_RECORD:
-		rval =
-		    write_record(writer, enc,
-				 avro_schema_to_record(writer_schema), datum);
-		break;
-
-	case AVRO_ENUM:
-		rval =
-		    write_enum(writer, enc, avro_schema_to_enum(writer_schema),
-			       avro_datum_to_enum(datum));
-		break;
-
-	case AVRO_FIXED:
-		return avro_write(writer, avro_datum_to_fixed(datum)->bytes,
-				  avro_datum_to_fixed(datum)->size);
-
-	case AVRO_MAP:
-		rval =
-		    write_map(writer, enc, avro_schema_to_map(writer_schema),
-			      avro_datum_to_map(datum));
-		break;
-	case AVRO_ARRAY:
-		rval =
-		    write_array(writer, enc,
-				avro_schema_to_array(writer_schema),
-				avro_datum_to_array(datum));
-		break;
-
-	case AVRO_UNION:
-		rval =
-		    write_union(writer, enc,
-				avro_schema_to_union(writer_schema), datum);
-		break;
-
-	case AVRO_LINK:
-		rval =
-		    avro_write_data(writer,
-				    (avro_schema_to_link(writer_schema))->to,
-				    datum);
-		break;
-	}
-	return rval;
+	return write_datum(writer, &avro_binary_encoding,
+			   writers_schema, datum);
 }

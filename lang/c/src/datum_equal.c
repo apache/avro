@@ -76,7 +76,7 @@ static int map_equal(struct avro_map_datum_t *a, struct avro_map_datum_t *b)
 static int record_equal(struct avro_record_datum_t *a,
 			struct avro_record_datum_t *b)
 {
-	struct st_equal_args args = { 1, b->fields };
+	struct st_equal_args args = { 1, b->fields_byname };
 	if (strcmp(a->name, b->name)) {
 		/* This have different names */
 		return 0;
@@ -90,18 +90,16 @@ static int record_equal(struct avro_record_datum_t *a,
 		/* One has a namespace, one doesn't */
 		return 0;
 	}
-
-	if (a->fields->num_entries != b->fields->num_entries) {
+	if (a->fields_byname->num_entries != b->fields_byname->num_entries) {
 		return 0;
 	}
-	st_foreach(a->fields, st_equal_foreach, (st_data_t) & args);
+	st_foreach(a->fields_byname, st_equal_foreach, (st_data_t) & args);
 	return args.rval;
 }
 
 static int enum_equal(struct avro_enum_datum_t *a, struct avro_enum_datum_t *b)
 {
-	return strcmp(a->name, b->name) == 0
-	    && strcmp(a->symbol, b->symbol) == 0;
+	return strcmp(a->name, b->name) == 0 && a->value == b->value;
 }
 
 static int fixed_equal(struct avro_fixed_datum_t *a,
@@ -110,7 +108,14 @@ static int fixed_equal(struct avro_fixed_datum_t *a,
 	return a->size == b->size && memcmp(a->bytes, b->bytes, a->size) == 0;
 }
 
-int avro_datum_equal(avro_datum_t a, avro_datum_t b)
+static int union_equal(struct avro_union_datum_t *a,
+		       struct avro_union_datum_t *b)
+{
+	/* XXX: not sure. a->discriminant == b->discriminant important? */
+	return avro_datum_equal(a->value, b->value);
+}
+
+int avro_datum_equal(const avro_datum_t a, const avro_datum_t b)
 {
 	if (!(is_avro_datum(a) && is_avro_datum(b))) {
 		return 0;
@@ -161,7 +166,9 @@ int avro_datum_equal(avro_datum_t a, avro_datum_t b)
 				   avro_datum_to_fixed(b));
 
 	case AVRO_UNION:
-		break;
+		return union_equal(avro_datum_to_union(a),
+				   avro_datum_to_union(b));
+
 	case AVRO_LINK:
 		/*
 		 * TODO 

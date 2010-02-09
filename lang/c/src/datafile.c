@@ -283,7 +283,7 @@ static int file_write_block(avro_file_writer_t w)
 		/* Write the sync marker */
 		check(rval, write_sync(w));
 		/* Reset the datum writer */
-		avro_writer_reset(w->writer);
+		avro_writer_reset(w->datum_writer);
 		w->block_count = 0;
 	}
 	return 0;

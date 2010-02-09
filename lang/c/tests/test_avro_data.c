@@ -53,25 +53,38 @@ write_read_check(avro_schema_t writers_schema,
 		 avro_schema_t readers_schema, avro_datum_t datum, char *type)
 {
 	avro_datum_t datum_out;
-	reader = avro_reader_memory(buf, sizeof(buf));
-	writer = avro_writer_memory(buf, sizeof(buf));
+	int validate;
 
-	if (avro_write_data(writer, writers_schema, datum)) {
-		fprintf(stderr, "Unable to write %s\n", type);
-		exit(EXIT_FAILURE);
+	for (validate = 0; validate <= 1; validate++) {
+
+		reader = avro_reader_memory(buf, sizeof(buf));
+		writer = avro_writer_memory(buf, sizeof(buf));
+
+		/* Validating read/write */
+		if (avro_write_data
+		    (writer, validate ? writers_schema : NULL, datum)) {
+			fprintf(stderr, "Unable to write %s validate=%d\n",
+				type, validate);
+			exit(EXIT_FAILURE);
+		}
+		if (avro_read_data
+		    (reader, writers_schema, readers_schema, &datum_out)) {
+			fprintf(stderr, "Unable to read %s validate=%d\n", type,
+				validate);
+			exit(EXIT_FAILURE);
+		}
+		if (!avro_datum_equal(datum, datum_out)) {
+			fprintf(stderr,
+				"Unable to encode/decode %s validate=%d\n",
+				type, validate);
+			exit(EXIT_FAILURE);
+		}
+
+		avro_reader_dump(reader, stderr);
+		avro_datum_decref(datum_out);
+		avro_reader_free(reader);
+		avro_writer_free(writer);
 	}
-	if (avro_read_data(reader, writers_schema, readers_schema, &datum_out)) {
-		fprintf(stderr, "Unable to read %s\n", type);
-		exit(EXIT_FAILURE);
-	}
-	if (!avro_datum_equal(datum, datum_out)) {
-		fprintf(stderr, "Unable to encode/decode %s\n", type);
-		exit(EXIT_FAILURE);
-	}
-	avro_reader_dump(reader, stderr);
-	avro_datum_decref(datum_out);
-	avro_reader_free(reader);
-	avro_writer_free(writer);
 }
 
 static int test_string(void)
@@ -204,8 +217,15 @@ static int test_record(void)
 
 static int test_enum(void)
 {
+	enum avro_languages {
+		AVRO_C,
+		AVRO_CPP,
+		AVRO_PYTHON,
+		AVRO_RUBY,
+		AVRO_JAVA
+	};
 	avro_schema_t schema = avro_schema_enum("language");
-	avro_datum_t datum = avro_enum("language", "C");
+	avro_datum_t datum = avro_enum("language", AVRO_C);
 
 	avro_schema_enum_symbol_append(schema, "C");
 	avro_schema_enum_symbol_append(schema, "C++");
@@ -262,6 +282,7 @@ static int test_map(void)
 static int test_union(void)
 {
 	avro_schema_t schema = avro_schema_union();
+	avro_datum_t union_datum;
 	avro_datum_t datum;
 
 	avro_schema_union_append(schema, avro_schema_string());
@@ -269,8 +290,10 @@ static int test_union(void)
 	avro_schema_union_append(schema, avro_schema_null());
 
 	datum = avro_wrapstring("Follow your bliss.");
+	union_datum = avro_union(0, datum);
 
-	write_read_check(schema, NULL, datum, "union");
+	write_read_check(schema, NULL, union_datum, "union");
+	avro_datum_decref(union_datum);
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
 	return 0;

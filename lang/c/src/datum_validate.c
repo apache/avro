@@ -84,15 +84,11 @@ avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 
 	case AVRO_ENUM:
 		if (is_avro_enum(datum)) {
-			struct avro_enum_schema_t *enump =
-			    avro_schema_to_enum(expected_schema);
-			struct avro_enum_datum_t *d = avro_datum_to_enum(datum);
-			union {
-				st_data_t data;
-				long idx;
-			} val;
-			return st_lookup(enump->symbols_byname,
-					 (st_data_t) d->symbol, &val.data);
+			long value = avro_datum_to_enum(datum)->value;
+			long max_value =
+			    avro_schema_to_enum(expected_schema)->symbols->
+			    num_entries;
+			return 0 <= value && value <= max_value;
 		}
 		return 0;
 
@@ -130,24 +126,25 @@ avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 		break;
 
 	case AVRO_UNION:
-		{
+		if (is_avro_union(datum)) {
 			struct avro_union_schema_t *union_schema =
 			    avro_schema_to_union(expected_schema);
+			struct avro_union_datum_t *union_datum =
+			    avro_datum_to_union(datum);
+			union {
+				st_data_t data;
+				avro_schema_t schema;
+			} val;
 
-			for (i = 0; i < union_schema->branches->num_entries;
-			     i++) {
-				union {
-					st_data_t data;
-					avro_schema_t schema;
-				} val;
-				st_lookup(union_schema->branches, i, &val.data);
-				if (avro_schema_datum_validate
-				    (val.schema, datum)) {
-					return 1;
-				}
+			if (!st_lookup
+			    (union_schema->branches, union_datum->discriminant,
+			     &val.data)) {
+				return 0;
 			}
+			return avro_schema_datum_validate(val.schema,
+							  union_datum->value);
 		}
-		return 0;
+		break;
 
 	case AVRO_RECORD:
 		if (is_avro_record(datum)) {

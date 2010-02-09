@@ -86,7 +86,7 @@ struct avro_obj_t {
                               ||is_avro_fixed(obj))
 #define is_avro_map(obj)      (obj && avro_typeof(obj) == AVRO_MAP)
 #define is_avro_array(obj)    (obj && avro_typeof(obj) == AVRO_ARRAY)
-#define is_avro_union(obj)    (obj && avro_classof(obj) == AVRO_SCHEMA && avro_typeof(obj) == AVRO_UNION)
+#define is_avro_union(obj)    (obj && avro_typeof(obj) == AVRO_UNION)
 #define is_avro_complex_type(obj) (!(is_avro_primitive(obj))
 #define is_avro_link(obj)     (obj && avro_typeof(obj) == AVRO_LINK)
 
@@ -181,7 +181,7 @@ avro_datum_t avro_double(double d);
 avro_datum_t avro_boolean(int8_t i);
 avro_datum_t avro_null(void);
 avro_datum_t avro_record(const char *name, const char *space);
-avro_datum_t avro_enum(const char *name, const char *symbol);
+avro_datum_t avro_enum(const char *name, int i);
 avro_datum_t avro_fixed(const char *name, const char *bytes,
 			const int64_t size);
 avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
@@ -190,7 +190,7 @@ avro_datum_t avro_givefixed(const char *name, const char *bytes,
 			    const int64_t size);
 avro_datum_t avro_map(void);
 avro_datum_t avro_array(void);
-avro_datum_t avro_union(const avro_schema_t schema, const avro_datum_t datum);
+avro_datum_t avro_union(int64_t discriminant, const avro_datum_t datum);
 
 /* getters */
 int avro_string_get(avro_datum_t datum, char **p);

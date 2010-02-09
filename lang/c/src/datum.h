@@ -76,18 +76,25 @@ struct avro_record_datum_t {
 	struct avro_obj_t obj;
 	const char *name;
 	const char *space;
-	st_table *fields;
+	st_table *field_order;
+	st_table *fields_byname;
 };
 
 struct avro_enum_datum_t {
 	struct avro_obj_t obj;
 	const char *name;
-	const char *symbol;
+	int value;
 };
 
 struct avro_array_datum_t {
 	struct avro_obj_t obj;
 	st_table *els;
+};
+
+struct avro_union_datum_t {
+	struct avro_obj_t obj;
+	int64_t discriminant;
+	avro_datum_t value;
 };
 
 #define avro_datum_to_string(datum_)    (container_of(datum_, struct avro_string_datum_t, obj))
@@ -102,5 +109,6 @@ struct avro_array_datum_t {
 #define avro_datum_to_record(datum_)    (container_of(datum_, struct avro_record_datum_t, obj))
 #define avro_datum_to_enum(datum_)      (container_of(datum_, struct avro_enum_datum_t, obj))
 #define avro_datum_to_array(datum_)     (container_of(datum_, struct avro_array_datum_t, obj))
+#define avro_datum_to_union(datum_)	(container_of(datum_, struct avro_union_datum_t, obj))
 
 #endif

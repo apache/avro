@@ -20,6 +20,7 @@
 #include "encoding.h"
 #include "schema.h"
 #include "datum.h"
+#include "avro_private.h"
 
 int
 avro_schema_match(avro_schema_t writers_schema, avro_schema_t readers_schema)
@@ -99,20 +100,9 @@ read_enum(avro_reader_t reader, const avro_encoding_t * enc,
 {
 	int rval;
 	int64_t index;
-	union {
-		st_data_t data;
-		char *sym;
-	} val;
 
-	rval = enc->read_long(reader, &index);
-	if (rval) {
-		return rval;
-	}
-
-	if (!st_lookup(writers_schema->symbols, index, &val.data)) {
-		return EINVAL;
-	}
-	*datum = avro_enum(writers_schema->name, val.sym);
+	check(rval, enc->read_long(reader, &index));
+	*datum = avro_enum(writers_schema->name, index);
 	return 0;
 }
 
@@ -230,21 +220,20 @@ read_union(avro_reader_t reader, const avro_encoding_t * enc,
 	   struct avro_union_schema_t *readers_schema, avro_datum_t * datum)
 {
 	int rval;
-	int64_t index;
+	int64_t discriminant;
+	avro_datum_t value;
 	union {
 		st_data_t data;
 		avro_schema_t schema;
 	} val;
-
-	rval = enc->read_long(reader, &index);
-	if (rval) {
-		return rval;
-	}
-
-	if (!st_lookup(writers_schema->branches, index, &val.data)) {
+	check(rval, enc->read_long(reader, &discriminant));
+	if (!st_lookup(writers_schema->branches, discriminant, &val.data)) {
 		return EILSEQ;
 	}
-	return avro_read_data(reader, val.schema, NULL, datum);
+	check(rval, avro_read_data(reader, val.schema, NULL, &value));
+	*datum = avro_union(discriminant, value);
+	avro_datum_decref(value);
+	return 0;
 }
 
 /* TODO: handle default values in fields */
@@ -307,27 +296,6 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 	if (readers_schema == NULL) {
 		readers_schema = writers_schema;
 	} else if (!avro_schema_match(writers_schema, readers_schema)) {
-		return EINVAL;
-	}
-
-	/*
-	 * schema resolution 
-	 */
-	if (!is_avro_union(writers_schema) && is_avro_union(readers_schema)) {
-		struct avro_union_schema_t *union_schema =
-		    avro_schema_to_union(readers_schema);
-
-		for (i = 0; i < union_schema->branches->num_entries; i++) {
-			union {
-				st_data_t data;
-				avro_schema_t schema;
-			} val;
-			st_lookup(union_schema->branches, i, &val.data);
-			if (avro_schema_match(writers_schema, val.schema)) {
-				return avro_read_data(reader, writers_schema,
-						      val.schema, datum);
-			}
-		}
 		return EINVAL;
 	}
 

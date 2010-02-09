@@ -10,3 +10,5 @@ examples_LDADD=$(top_builddir)/src/libavro.la
 
 quickstop_SOURCES=quickstop.c
 quickstop_LDADD=$(examples_LDADD)
+
+CLEANFILES=quickstop.db
