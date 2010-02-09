@@ -44,20 +44,21 @@ case "$target" in
 	(cd lang/py; ant test)
 	(cd lang/c; ./build.sh test)
 	(cd lang/c++; ./build.sh test)
-	# (cd lang/ruby; rake test)
+	(cd lang/ruby; rake test)
 
 	# create interop test data
 	(cd lang/java; ant interop-data-generate)
 	#(cd lang/py; ant interop-data-generate)
 	(cd lang/c; ./build.sh interop-data-generate)
 	#(cd lang/c++; make interop-data-generate)
+	(cd lang/ruby; rake generate_interop)
 
 	# run interop data tests
 	(cd lang/java; ant interop-data-test)
 	#(cd lang/py; ant interop-data-test)
 	(cd lang/c; ./build.sh interop-data-test)
-	#(cd lang/c; make interop-data-test)
 	#(cd lang/c++; make interop-data-test)
+	(cd lang/ruby; rake interop)
 
 	# run interop rpc tests
 	/bin/bash share/test/interop/bin/test_rpc_interop.sh
@@ -101,6 +102,9 @@ case "$target" in
 	(cd lang/c; ./build.sh clean)
 
 	(cd lang/c++; ./build.sh clean)
+
+	(cd lang/ruby; rake clean)
+
 	;;
 
     *)

@@ -344,6 +344,8 @@ Trunk (unreleased changes)
 
     AVRO-383. Optimizing ResolvingDecoder for default values (thiru)
 
+    AVRO-411. Add Ruby data file interop tests. (Jeff Hodges via cutting) 
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)

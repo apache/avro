@@ -18,7 +18,7 @@ require 'openssl'
 
 module Avro
   module DataFile
-    VERSION = 0
+    VERSION = 1
     MAGIC = "Obj" + [VERSION].pack('c')
     MAGIC_SIZE = MAGIC.size
     SYNC_SIZE = 16
@@ -50,22 +50,22 @@ module Avro
 
         if writers_schema
           @sync_marker = Writer.generate_sync_marker
-          meta['codec'] = 'null'
-          meta['schema'] = writers_schema.to_s
+          meta['avro.codec'] = 'null'
+          meta['avro.schema'] = writers_schema.to_s
           datum_writer.writers_schema = writers_schema
           write_header
         else
           # open writer for reading to collect metadata
-          dfr = DataFileReader.new(writer, Avro::IO::DatumReader.new)
+          dfr = Reader.new(writer, Avro::IO::DatumReader.new)
 
           # FIXME(jmhodges): collect arbitrary metadata
           # collect metadata
           @sync_marker = dfr.sync_marker
-          meta['codec'] = dfr.meta['codec']
+          meta['avro.codec'] = dfr.meta['avro.codec']
 
           # get schema used to write existing file
-          schema_from_file = dfr.meta['schema']
-          meta['schema'] = schema_from_file
+          schema_from_file = dfr.meta['avro.schema']
+          meta['avro.schema'] = schema_from_file
           datum_writer.writers_schema = Schema.parse(schema_from_file)
 
           # seek to the end of the file and prepare for writing
@@ -128,10 +128,10 @@ module Avro
           encoder.write_long(to_write.size)
 
           # write block contents
-          if meta['codec'] == 'null'
+          if meta['avro.codec'] == 'null'
             writer.write(to_write)
           else
-            msg = "#{meta['codec'].inspect} coded is not supported"
+            msg = "#{meta['avro.codec'].inspect} coded is not supported"
             raise DataFileError, msg
           end
 
@@ -161,14 +161,14 @@ module Avro
         read_header
 
         # ensure the codec is valid
-        codec_from_file = meta['codec']
+        codec_from_file = meta['avro.codec']
         if codec_from_file && ! VALID_CODECS.include?(codec_from_file)
           raise DataFileError, "Unknown codec: #{codec_from_file}"
         end
 
         # get ready to read
         @block_count = 0
-        datum_reader.writers_schema = Schema.parse meta['schema']
+        datum_reader.writers_schema = Schema.parse meta['avro.schema']
       end
 
       # Iterates through each datum in this file
@@ -209,7 +209,7 @@ module Avro
           msg = 'Not an Avro data file: shorter than the Avro magic block'
           raise DataFileError, msg
         elsif magic_in_file != MAGIC
-          msg = "Not an Avro data file: #{magic_in_file} doesn't match #{MAGIC}"
+          msg = "Not an Avro data file: #{magic_in_file.inspect} doesn't match #{MAGIC.inspect}"
           raise DataFileError, msg
         end
 

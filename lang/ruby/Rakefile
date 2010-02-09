@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'rubygems'
 require 'echoe'
 Echoe.new('avro') do |p|
   p.author = "Jeff Hodges"
@@ -22,3 +23,31 @@ Echoe.new('avro') do |p|
   p.url = "http://hadoop.apache.org/avro/"
   p.runtime_dependencies = %w[rubygems yajl]
 end
+
+t = Rake::TestTask.new(:interop)
+t.pattern = 'interop/test*.rb'
+
+task :generate_interop do
+  $:.unshift(HERE + '/lib')
+  $:.unshift(HERE + '/test')
+  require 'avro'
+  require 'random_data'
+
+  schema = Avro::Schema.parse(File.read(SCHEMAS + '/interop.avsc'))
+  r = RandomData.new(schema, ENV['SEED'])
+  f = File.open(BUILD + '/interop/data/ruby.avro', 'w')
+  writer = Avro::DataFile::Writer.new(f, Avro::IO::DatumWriter.new(schema), schema)
+  begin
+    writer << r.next
+    writer << r.next
+  ensure
+    writer.close
+  end
+end
+
+
+HERE = File.expand_path(File.dirname(__FILE__))
+SHARE = HERE + '/../../share'
+SCHEMAS = SHARE + '/test/schemas'
+BUILD = HERE + '/../../build'
+
