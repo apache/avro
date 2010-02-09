@@ -346,7 +346,8 @@ Trunk (unreleased changes)
 
     AVRO-383. Optimizing ResolvingDecoder for default values (thiru)
 
-    AVRO-411. Add Ruby data file interop tests. (Jeff Hodges via cutting) 
+    AVRO-411, AVRO-413. Add Ruby data file interop tests. (Jeff Hodges
+    via cutting)
 
   BUG FIXES
  
