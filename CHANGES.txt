@@ -322,6 +322,8 @@ Trunk (unreleased changes)
 
     AVRO-412. Allow schema validation to be optional (massie)
 
+    AVRO-295. JsonEncoder is not flushed after writing using ReflectDatumWriter (thiru)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
