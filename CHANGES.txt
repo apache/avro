@@ -351,6 +351,8 @@ Trunk (unreleased changes)
     AVRO-411, AVRO-413. Add Ruby data file interop tests. (Jeff Hodges
     via cutting)
 
+    AVRO-399. Make data file interop tests work with the Python implementation (hammer)
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)

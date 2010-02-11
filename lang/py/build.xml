@@ -23,6 +23,7 @@
 
   <property name="share.dir" value="${basedir}/../../share"/>
   <property name="dist.dir" value="${basedir}/../../dist"/>
+  <property name="top.build" value="${basedir}/../../build"/>
 
   <loadresource property="version">
     <file file="${share.dir}/VERSION.txt"/>
@@ -56,8 +57,30 @@
     <py-test python="python" pythonpathref="test.path" >
       <fileset dir="${basedir}/test">
         <include name="test_*.py"/>
+        <exclude name="test_datafile_interop.py"/>
       </fileset>
     </py-test>
+  </target>
+
+  <target name="interop-data-test" description="Run python interop data tests">
+    <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask"
+	     classpathref="java.classpath"/>
+    <py-test python="python" pythonpathref="test.path" >
+      <fileset dir="${basedir}/test">
+        <include name="test_datafile_interop.py"/>
+      </fileset>
+    </py-test>
+  </target>
+
+  <target name="interop-data-generate"
+          description="Generate Python interop data files.">
+    <mkdir dir="${top.build}/interop/data"/>
+    <exec executable="python">
+      <env key="PYTHONPATH" value="$PYTHONPATH:${basedir}/src"/>
+      <arg value="${basedir}/test/gen_interop_data.py"/>
+      <arg value="${share.dir}/test/schemas/interop.avsc"/>
+      <arg value="${top.build}/interop/data/py.avro"/>
+    </exec>
   </target>
 
   <target name="doc" description="Generate python api docs">
