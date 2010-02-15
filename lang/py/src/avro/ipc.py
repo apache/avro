@@ -16,6 +16,7 @@
 """
 Support for inter-process calls.
 """
+import httplib
 import cStringIO
 import struct
 from avro import io
@@ -112,10 +113,12 @@ class Requestor(object):
     REMOTE_PROTOCOLS[self.transceiver.remote_name] = self.remote_protocol
   remote_protocol = property(lambda self: self._remote_protocol,
                              set_remote_protocol)
+
   def set_remote_hash(self, new_remote_hash):
     self._remote_hash = new_remote_hash
     REMOTE_HASHES[self.transceiver.remote_name] = self.remote_hash
   remote_hash = property(lambda self: self._remote_hash, set_remote_hash)
+
   def set_send_protocol(self, new_send_protocol):
     self._send_protocol = new_send_protocol
   send_protocol = property(lambda self: self._send_protocol, set_send_protocol)
@@ -140,7 +143,7 @@ class Requestor(object):
     if call_response_exists:
       return self.read_call_response(message_name, buffer_decoder)
     else:
-      self.request(message_name, request_datum)
+      return self.request(message_name, request_datum)
 
   def write_handshake_request(self, encoder):
     local_hash = self.local_protocol.md5
@@ -190,14 +193,16 @@ class Requestor(object):
     elif match == 'CLIENT':
       if self.send_protocol:
         raise schema.AvroException('Handshake failure.')
-      self.remote_protocol = handshake_response.get('serverProtocol')
+      self.remote_protocol = protocol.parse(
+                             handshake_response.get('serverProtocol'))
       self.remote_hash = handshake_response.get('serverHash')
       self.send_protocol = False
       return False
     elif match == 'NONE':
       if self.send_protocol:
         raise schema.AvroException('Handshake failure.')
-      self.remote_protocol = handshake_response.get('serverProtocol')
+      self.remote_protocol = protocol.parse(
+                             handshake_response.get('serverProtocol'))
       self.remote_hash = handshake_response.get('serverHash')
       self.send_protocol = True
       return False
@@ -239,7 +244,8 @@ class Requestor(object):
 
   def read_response(self, writers_schema, readers_schema, decoder):
     datum_reader = io.DatumReader(writers_schema, readers_schema)
-    return datum_reader.read(decoder)
+    result = datum_reader.read(decoder)
+    return result
 
   def read_error(self, writers_schema, readers_schema, decoder):
     datum_reader = io.DatumReader(writers_schema, readers_schema)
@@ -448,16 +454,24 @@ class HTTPTransceiver(object):
   Useful for clients but not for servers
   """
   def __init__(self, conn):
-    self._conn = conn
+    self.conn = conn
 
   # read-only properties
-  conn = property(lambda self: self._conn)
   sock = property(lambda self: self.conn.sock)
   remote_name = property(lambda self: self.sock.getsockname())
 
+  # read/write properties
+  def set_conn(self, new_conn):
+    self._conn = new_conn
+  conn = property(lambda self: self._conn, set_conn)
+
   def transceive(self, request):
+    self.conn.close()
+    self.conn = httplib.HTTPConnection(self.conn.host, self.conn.port)
+    conn_success = self.conn.connect()
     self.write_framed_message(request)
-    return self.read_framed_message()
+    result = self.read_framed_message()
+    return result
 
   def read_framed_message(self):
     response_reader = FramedReader(self.conn.getresponse())

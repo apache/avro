@@ -90,6 +90,9 @@ Trunk (unreleased changes)
     AVRO-322. Add a working client and server to Python implementation 
     using HTTP as a transport (hammer)
 
+    AVRO-287. Make RPC interop tests work with new Python implementation
+    (hammer)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

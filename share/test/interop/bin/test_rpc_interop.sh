@@ -26,8 +26,13 @@ VERSION=`cat share/VERSION.txt`
 java_client="java -jar lang/java/build/avro-tools-$VERSION.jar rpcsend"
 java_server="java -jar lang/java/build/avro-tools-$VERSION.jar rpcreceive"
 
-clients=("$java_client")
-servers=("$java_server")
+py_client="python lang/py/src/avro/tool.py rpcsend"
+py_server="python lang/py/src/avro/tool.py rpcreceive"
+
+export PYTHONPATH=$PYTHONPATH:lang/py/src         # path to avro Python module
+
+clients=("$java_client" "$py_client")
+servers=("$java_server" "$py_server")
 
 proto=share/test/schemas/simple.avpr
 
