@@ -35,7 +35,7 @@
 
   <property name="share.dir" value="${basedir}/../../share"/>  	
   <property name="top.build" value="${basedir}/../../build"/>  	
-  <property name="dist.dir" value="${basedir}/../../dist"/>
+  <property name="dist.dir" value="${basedir}/../../dist/java"/>
 
   <property name="src.dir" value="${basedir}/src"/>  	
   <property name="java.src.dir" value="${src.dir}/java"/>  	
@@ -469,6 +469,12 @@
     <fail if="javadoc.warnings">Javadoc warnings!</fail>
   </target>
 
+  <target name="source">
+    <jar jarfile="${build.dir}/${fullname}-sources.jar">
+      <fileset dir="${java.src.dir}" includes="**/*.java"/>
+    </jar>
+  </target>
+
   <target name="pom" depends="ivy-init">
     <ivy:makepom ivyfile="${basedir}/ivy.xml"
 		 pomfile="${dist.dir}/${fullname}.pom">
@@ -477,24 +483,30 @@
     </ivy:makepom>
   </target>
 
-  <target name="dist" depends="jar, tools, javadoc, pom"
+  <target name="dist" depends="jar, tools, javadoc, pom, source"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
 
     <copy todir="${dist.dir}"> 
       <fileset file="${build.dir}/${fullname}.jar"/>
+      <fileset file="${build.dir}/${fullname}-sources.jar"/>
       <fileset file="${build.dir}/avro-tools-${version}.jar"/>
     </copy>
     <chmod file="${dist.dir}/avro-tools-${version}.jar" perm="ugo+x"/>
 
-    <checksum file="${dist.dir}/${fullname}.jar" algorithm="md5"/>
-    <checksum file="${dist.dir}/${fullname}.jar" algorithm="sha1"/>
+    <checksum algorithm="md5">
+      <fileset file="${dist.dir}/${fullname}.jar"/>
+      <fileset file="${dist.dir}/${fullname}-sources.jar"/>
+      <fileset file="${dist.dir}/avro-tools-${version}.jar"/>
+      <fileset file="${dist.dir}/${fullname}.pom"/>
+    </checksum>
 
-    <checksum file="${dist.dir}/avro-tools-${version}.jar" algorithm="md5"/>
-    <checksum file="${dist.dir}/avro-tools-${version}.jar" algorithm="sha1"/>
-
-    <checksum file="${dist.dir}/${fullname}.pom" algorithm="md5"/>
-    <checksum file="${dist.dir}/${fullname}.pom" algorithm="sha1"/>
+    <checksum algorithm="sha1">
+      <fileset file="${dist.dir}/${fullname}.jar"/>
+      <fileset file="${dist.dir}/${fullname}-sources.jar"/>
+      <fileset file="${dist.dir}/avro-tools-${version}.jar"/>
+      <fileset file="${dist.dir}/${fullname}.pom"/>
+    </checksum>
 
     <copy todir="${top.build}/avro-doc-${version}/api/java">
       <fileset dir="${build.javadoc}"/>
@@ -575,13 +587,15 @@
   </target>
   <!-- End Eclipse targets -->
 
-  <target name="mvn-install" depends="jar,pom"
+  <target name="mvn-install" depends="jar,pom,source"
 	  description="Installs avro core jar to local fs m2 cache">
     <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
 	     uri="urn:maven-artifact-ant"
 	     classpathref="java.classpath"/>
     <mvn:pom file="${dist.dir}/${fullname}.pom" id="avro"/>
     <mvn:install file="${build.dir}/${fullname}.jar">
+      <attach file="${build.dir}/${fullname}-sources.jar"
+	      classifier="sources" />
       <pom refid="avro"/>
     </mvn:install>
   </target>
