@@ -29,8 +29,6 @@
     <file file="${share.dir}/VERSION.txt"/>
   </loadresource>
 
-  <property name="doc.dir" value="${basedir}/../../build/avro-doc-${version}"/>
-
   <path id="java.classpath">
     <fileset dir="lib">
       <include name="**/*.jar" />
@@ -83,17 +81,13 @@
     </exec>
   </target>
 
-  <target name="doc" description="Generate python api docs">
-    <taskdef name="py-doc" classname="org.pyant.tasks.PythonDocTask"
-	     classpathref="java.classpath"/>
-    <mkdir dir="${doc.dir}/api/py"/>
-    <py-doc python="python" pythonpathref="test.path" defaultexcludes="true"
-       destdir="${doc.dir}/api/py">
-      <fileset dir="${basedir}/src"/>
-    </py-doc>
-  </target>
-
-  <target name="dist" depends="doc" description="Build distribution">
+  <target name="dist" description="Build egg">
+    <mkdir dir="${dist.dir}"/>
+    <exec executable="python" failonerror="true">
+      <arg value="setup.py"/>
+      <arg value="bdist_egg"/>
+      <arg value="--dist-dir=${dist.dir}"/>
+    </exec>
   </target>
 
   <target name="clean" description="Delete build files, and their directories">

@@ -1,4 +1,5 @@
-#!/usr/bin/env ruby
+#! /usr/bin/env python
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,28 +15,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+try:
+  from setuptools import setup
+except ImportError:
+  from distutils.core import setup
 
-require 'rubygems'
-require 'test/unit'
-require 'avro'
+VERSION_FILE='../../share/VERSION.txt'
 
-class TestInterop < Test::Unit::TestCase
-  HERE = File.expand_path(File.dirname(__FILE__))
-  SHARE = HERE + '/../../../share'
-  SCHEMAS = SHARE + '/test/schemas'
-  Dir[HERE + '/../../../build/interop/data/*'].each do |fn|  
-    define_method("test_read_#{File.basename(fn, 'avro')}") do
-      projection = Avro::Schema.parse(File.read(SCHEMAS+'/interop.avsc'))
+setup(
+  name = 'avro',
+  version = file(VERSION_FILE, 'r').read(),
+  packages = ['avro',],
+  package_dir = {'avro': 'src/avro'},
 
-      File.open(fn) do |f|
-        r = Avro::DataFile::Reader.new(f, Avro::IO::DatumReader.new(projection))
-        i = 0
-        r.each do |datum|
-          i += 1
-          assert_not_nil datum, "nil datum from #{fn}"
-        end
-        assert_not_equal 0, i, "no data read in from #{fn}"
-      end
-    end
-  end
-end
+  # Project uses simplejson, so ensure that it gets installed or upgraded
+  # on the target machine
+  install_requires = ['simplejson >= 2.0.9'],
+
+  # metadata for upload to PyPI
+  author = 'Apache Avro',
+  author_email = 'avro-dev@hadoop.apache.org',
+  description = 'Avro is a serialization and RPC framework.',
+  license = 'Apache License 2.0',
+  keywords = 'avro serialization rpc',
+  url = 'http://hadoop.apache.org/avro',
+)

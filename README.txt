@@ -9,7 +9,7 @@ REQUIREMENTS
 The following packages must be installed before Avro can be built:
 
  - Java: JDK 1.6
- - Python: 2.5 or greater
+ - Python: 2.5 or greater, python-setuptools for dist target
  - C: gcc, autoconf, automake, libtool, asciidoc 
  - C++: g++, flex, bison, libboost-dev
  - Ruby: ruby, gem, rake, echoe, jajl-ruby

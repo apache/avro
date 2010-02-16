@@ -1,4 +1,5 @@
 **/*.avpr
+**/*.avro
 **/*.avsc
 **/*.gperf
 **/*.html
