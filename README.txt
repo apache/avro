@@ -12,7 +12,7 @@ The following packages must be installed before Avro can be built:
  - Python: 2.5 or greater, python-setuptools for dist target
  - C: gcc, autoconf, automake, libtool, asciidoc 
  - C++: g++, flex, bison, libboost-dev
- - Ruby: ruby, gem, rake, echoe, jajl-ruby
+ - Ruby: ruby 1.86 or greater, gem, rake, echoe, jajl-ruby
  - Apache Ant 1.7
  - Apache Forrest 0.8 (for documentation, requires Java 1.5)
 

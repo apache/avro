@@ -287,7 +287,7 @@ module Avro
           ns_type = new_schema.type
           if VALID_TYPES.include?(ns_type) &&
               !NAMED_TYPES.include?(ns_type) &&
-              schema_objects.map(&:type).include?(ns_type)
+              schema_objects.map{|o| o.type }.include?(ns_type)
             raise SchemaParseError, "#{ns_type} is already in Union"
           elsif ns_type == 'union'
             raise SchemaParseError, "Unions cannot contain other unions"

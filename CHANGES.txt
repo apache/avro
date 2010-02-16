@@ -481,6 +481,8 @@ Trunk (unreleased changes)
 
     AVRO-407. Fix a bug in the Java data file reader. (Scott Carey via cutting)
 
+    AVRO-415. Fix Ruby to work with Ruby 1.8.6.
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES
