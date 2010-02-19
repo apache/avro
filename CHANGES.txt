@@ -487,6 +487,8 @@ Trunk (unreleased changes)
 
     AVRO-415. Fix Ruby to work with Ruby 1.8.6.
 
+    AVRO-421. Fix some dist target issues.  (cutting)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

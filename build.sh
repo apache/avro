@@ -73,7 +73,7 @@ case "$target" in
 	(cd lang/java; ant rat)
 
 	mkdir -p dist
-        tar czf dist/avro-src-$VERSION.tar.gz build/avro-src-$VERSION
+        (cd build; tar czf ../dist/avro-src-$VERSION.tar.gz avro-src-$VERSION)
 	md5sum dist/avro-src-$VERSION.tar.gz > dist/avro-src-$VERSION.tar.gz.md5
 	sha1sum dist/avro-src-$VERSION.tar.gz > dist/avro-src-$VERSION.tar.gz.sha1
 
@@ -82,13 +82,13 @@ case "$target" in
 
 	(cd lang/py; ant dist)
 
-	#(cd lang/c; ./build.sh dist)
+	(cd lang/c; ./build.sh dist)
 
 	(cd lang/c++; ./build.sh dist)
 
 	# build docs
 	(cd doc; ant)
-	(cd build; tar czf - avro-doc-$VERSION) > dist/avro-doc-$VERSION.tar.gz
+	(cd build; tar czf ../dist/avro-doc-$VERSION.tar.gz avro-doc-$VERSION)
 	;;
 
     clean)
