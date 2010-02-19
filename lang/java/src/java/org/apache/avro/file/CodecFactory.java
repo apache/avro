@@ -67,4 +67,10 @@ public abstract class CodecFactory {
     return REGISTERED.put(name, c);
   }
   
+  @Override
+  public String toString() {
+    Codec instance = this.createInstance();
+    return instance.toString();
+  }
+  
 }

@@ -17,11 +17,8 @@
  */
 package org.apache.avro.file;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryDecoder;
+import java.nio.ByteBuffer;
 
 /** Implements "null" (pass through) codec. */
 final class NullCodec extends Codec {
@@ -29,13 +26,12 @@ final class NullCodec extends Codec {
   private static final NullCodec INSTANCE = new NullCodec();
 
   static class Option extends CodecFactory {
-
     @Override
     protected Codec createInstance() {
       return INSTANCE;
     }
-    
   }
+
   /** No options available for NullCodec. */
   public static final CodecFactory OPTION = new Option();
 
@@ -45,15 +41,24 @@ final class NullCodec extends Codec {
   }
 
   @Override
-  ByteArrayOutputStream compress(ByteArrayOutputStream buffer)
-      throws IOException {
+  ByteBuffer compress(ByteBuffer buffer) throws IOException {
     return buffer;
   }
-  
+
   @Override
-  BinaryDecoder decompress(byte[] data, int offset, int length)
-      throws IOException {
-    return DecoderFactory.defaultFactory().createBinaryDecoder(
-        data, offset, length, null);
+  ByteBuffer decompress(ByteBuffer data) throws IOException {
+    return data;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other)
+      return true;
+    return (this.getClass() == other.getClass());
+  }
+
+  @Override
+  public int hashCode() {
+    return 2;
   }
 }

@@ -80,20 +80,22 @@ public class DataFileReader<D> extends DataFileStream<D> {
       syncBuffer[i++%SYNC_SIZE] = (byte)b;
     } while (b != -1);
     } catch (EOFException e) {
+      // fall through
+    }
+    // if no match or EOF set start to the end position
       blockStart = sin.tell();
+    //System.out.println("block start location after EOF: " + blockStart );
       return;
-  }
   }
 
   @Override
-  void skipSync() throws IOException {            // note block start
-    super.skipSync();
+  protected void blockFinished() throws IOException {
     blockStart = sin.tell() - vin.inputStream().available();
   }
 
   /** Return true if past the next synchronization point after a position. */ 
   public boolean pastSync(long position) throws IOException {
-    return blockStart >= Math.min(sin.length(), position+SYNC_SIZE);
+    return ((blockStart >= position+SYNC_SIZE)||(blockStart >= sin.length()));
   }
 
   private static class SeekableInputStream extends InputStream 
@@ -161,7 +163,7 @@ public class DataFileReader<D> extends DataFileStream<D> {
       long remaining = (in.length() - in.tell());
       return (remaining > Integer.MAX_VALUE) ? Integer.MAX_VALUE
           : (int) remaining;
-}
+    }
   }
 }
 

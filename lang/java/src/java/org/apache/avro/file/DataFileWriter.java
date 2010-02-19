@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.rmi.server.UID;
 import java.security.MessageDigest;
@@ -39,6 +40,7 @@ import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileStream.DataBlock;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
@@ -63,7 +65,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private long blockCount;                       // # entries in current block
 
-  private ByteArrayOutputStream buffer;
+  private NonCopyingByteArrayOutputStream buffer;
   private Encoder bufOut;
 
   private byte[] sync;                          // 16 random bytes
@@ -181,12 +183,12 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.out = new BufferedFileOutputStream(outs);
     this.vout = new BinaryEncoder(out);
     dout.setSchema(schema);
-    this.buffer = new ByteArrayOutputStream(
+    buffer = new NonCopyingByteArrayOutputStream(
         Math.min((int)(syncInterval * 1.25), Integer.MAX_VALUE/2 -1));
+    this.bufOut = new BinaryEncoder(buffer);
     if (this.codec == null) {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
-    this.bufOut = new BinaryEncoder(buffer);
     this.isOpen = true;
   }
 
@@ -249,16 +251,72 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       writeBlock();
   }
 
+  /**
+   * Appends data from another file.  otherFile must have the same schema.
+   * Data blocks will be copied without de-serializing data.  If the codecs
+   * of the two files are compatible, data blocks are copied directly without
+   * decompression.  If the codecs are not compatible, blocks from otherFile
+   * are uncompressed and then compressed using this file's codec.
+   * <p/>
+   * If the recompress flag is set all blocks are decompressed and then compressed
+   * using this file's codec.  This is useful when the two files have compatible
+   * compression codecs but different codec options.  For example, one might
+   * append a file compressed with deflate at compression level 1 to a file with
+   * deflate at compression level 7.  If <i>recompress</i> is false, blocks
+   * will be copied without changing the compression level.  If true, they will
+   * be converted to the new compression level.
+   * @param otherFile
+   * @param recompress
+   * @throws IOException
+   */
+  public void appendAllFrom(DataFileStream<D> otherFile, boolean recompress) throws IOException {
+    assertOpen();
+    // make sure other file has same schema
+    Schema otherSchema = otherFile.getSchema();
+    if (!this.schema.equals(otherSchema)) {
+      throw new IOException("Schema from file " + otherFile + " does not match");
+    }
+    // flush anything written so far
+    writeBlock();
+    Codec otherCodec = otherFile.resolveCodec();
+    DataBlock nextBlockRaw = null;
+    if (codec.equals(otherCodec) && !recompress) {
+      // copy raw bytes
+      while(otherFile.hasNextBlock()) {
+        nextBlockRaw = otherFile.nextBlock(nextBlockRaw);
+        writeRawBlock(nextBlockRaw);
+      }
+    } else {
+      while(otherFile.hasNextBlock()) {
+        nextBlockRaw = otherFile.nextBlock(nextBlockRaw);
+        ByteBuffer uncompressedData = otherCodec.decompress(ByteBuffer.wrap(
+            nextBlockRaw.data, 0, nextBlockRaw.blockSize));
+        ByteBuffer compressed = codec.compress(uncompressedData);
+        nextBlockRaw.data = compressed.array();
+        nextBlockRaw.blockSize = compressed.remaining();
+        writeRawBlock(nextBlockRaw);
+      }
+    }
+  }
+  
+  private void writeRawBlock(DataBlock rawBlock) throws IOException {
+    vout.writeLong(rawBlock.numEntries);
+    vout.writeLong(rawBlock.blockSize);
+    vout.writeFixed(rawBlock.data, 0, rawBlock.blockSize);
+    vout.writeFixed(sync);
+  }
+  
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
       vout.writeLong(blockCount);
-      ByteArrayOutputStream block = codec.compress(buffer);
-      vout.writeLong(block.size());
-      vout.flush(); //vout may be buffered, flush before writing to out
-      block.writeTo(out);
+      ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
+      ByteBuffer block = codec.compress(uncompressed);
+      vout.writeLong(block.remaining());
+      vout.writeFixed(block.array(), block.position() + block.arrayOffset(), 
+          block.remaining());
       buffer.reset();
       blockCount = 0;
-      out.write(sync);
+      vout.writeFixed(sync);
     }
   }
 
@@ -274,6 +332,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   /** Flush the current state of the file. */
   public void flush() throws IOException {
     sync();
+    vout.flush();
     out.flush();
   }
 
@@ -301,6 +360,15 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     }
 
     public long tell() { return position+count; }
+  }
+
+  static class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
+    NonCopyingByteArrayOutputStream(int initialSize) {
+      super(initialSize);
+    }
+    ByteBuffer getByteArrayAsByteBuffer() {
+      return ByteBuffer.wrap(buf, 0, count);
+    }
   }
 
 }

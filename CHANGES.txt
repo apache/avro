@@ -95,6 +95,9 @@ Trunk (unreleased changes)
 
     AVRO-136. Add support for building/releasing python eggs (hammer)
 
+    AVRO-414. Add Java support for concatenating and appending data
+    files. (Scott Carey via cutting)
+
   IMPROVEMENTS
 
     AVRO-157. Changes from code review comments for C++. (sbanacho)

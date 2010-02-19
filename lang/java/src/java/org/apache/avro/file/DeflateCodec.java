@@ -18,16 +18,16 @@
 package org.apache.avro.file;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.file.DataFileWriter.NonCopyingByteArrayOutputStream;
 
 /** 
  * Implements DEFLATE (RFC1951) compression and decompression. 
@@ -54,8 +54,11 @@ class DeflateCodec extends Codec {
     }
   }
 
-  ByteArrayOutputStream compressionBuffer;
+  NonCopyingByteArrayOutputStream compressionBuffer;
   private Deflater deflater;
+  private Inflater inflater;
+  //currently only do 'nowrap' -- RFC 1951, not zlib
+  private boolean nowrap = true; 
   private int compressionLevel;
 
   public DeflateCodec(int compressionLevel) {
@@ -68,32 +71,75 @@ class DeflateCodec extends Codec {
   }
 
   @Override
-  ByteArrayOutputStream compress(ByteArrayOutputStream buffer) 
-    throws IOException {
+  ByteBuffer compress(ByteBuffer data) throws IOException {
     if (compressionBuffer == null) {
-      compressionBuffer = new ByteArrayOutputStream(buffer.size());
-    } else {
-      compressionBuffer.reset();
+      compressionBuffer = new NonCopyingByteArrayOutputStream(
+          data.remaining());
     }
     if (deflater == null) {
-      deflater = new Deflater(compressionLevel, true);
+      deflater = new Deflater(compressionLevel, nowrap);
     }
     // Pass output through deflate
     DeflaterOutputStream deflaterStream = 
       new DeflaterOutputStream(compressionBuffer, deflater);
-    buffer.writeTo(deflaterStream);
+    deflaterStream.write(data.array(),
+        data.position() + data.arrayOffset(),
+        data.limit() + data.arrayOffset());
     deflaterStream.finish();
+    ByteBuffer result = compressionBuffer.getByteArrayAsByteBuffer();
     deflater.reset();
-    return compressionBuffer;
+    compressionBuffer.reset();
+    return result;
   }
 
   @Override
-  BinaryDecoder decompress(byte[] data, int offset, int length)
-      throws IOException {
-    Inflater inflater = new Inflater(true);
+  ByteBuffer decompress(ByteBuffer data) throws IOException {
+    if (compressionBuffer == null) {
+      compressionBuffer = new NonCopyingByteArrayOutputStream(
+          data.remaining());
+    }
+    if (inflater == null) {
+      inflater = new Inflater(nowrap);
+    }
     InputStream uncompressed = new InflaterInputStream(
-        new ByteArrayInputStream(data, offset, length), inflater);
-    return DecoderFactory.defaultFactory().createBinaryDecoder(uncompressed, null);
+        new ByteArrayInputStream(data.array(),
+            data.position() + data.arrayOffset(),
+            data.remaining()), inflater);
+    int read;
+    byte[] buff = new byte[2048];
+    try {
+      while (true) {
+        read = uncompressed.read(buff);
+        if (read < 0) break;
+        compressionBuffer.write(buff, 0, read);
+      } 
+    } catch (EOFException e) {
+      // sometimes InflaterInputStream.read
+      // throws this instead of returning -1
+    }
+    ByteBuffer result = compressionBuffer.getByteArrayAsByteBuffer();
+    inflater.reset();
+    compressionBuffer.reset();
+    return result;
   }
 
+  @Override
+  public int hashCode() {
+    return nowrap ? 0 : 1;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (getClass() != obj.getClass())
+      return false;
+    DeflateCodec other = (DeflateCodec)obj;
+    return (this.nowrap == other.nowrap);
+  }
+
+  @Override
+  public String toString() {
+    return getName() + "-" + compressionLevel;
+  }
 }

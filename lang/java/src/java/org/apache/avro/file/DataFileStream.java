@@ -42,6 +42,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
 
   private Schema schema;
   private DatumReader<D> reader;
+  private long blockSize;
+  private boolean availableBlock = false;
 
   /** Decoder on raw input stream.  (Used for metadata.) */
   BinaryDecoder vin;
@@ -104,7 +106,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
     reader.setSchema(schema);
   }
 
-  private Codec resolveCodec() {
+  Codec resolveCodec() {
     String codecStr = getMetaString(DataFileConstants.CODEC);
     if (codecStr != null) {
       return CodecFactory.fromString(codecStr).createInstance();
@@ -142,7 +144,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
    * pointer into the file. */
   public Iterator<D> iterator() { return this; }
 
-  private byte[] block = null;
+  private DataBlock block = null;
   /** True if more entries remain in this file. */
   public boolean hasNext() {
     try {
@@ -154,19 +156,14 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
             throw new IOException("Block read partially, the data may be corrupt");
           }
         }
-        blockRemaining = vin.readLong();          // read block count
-        long compressedSize = vin.readLong();     // read block size
-        if (compressedSize > Integer.MAX_VALUE ||
-            compressedSize < 0) {
-          throw new IOException("Block size invalid or too large for this " +
-            "implementation: " + compressedSize);
+        if (hasNextBlock()) {
+          block = nextBlock(block);
+          ByteBuffer blockBuffer = ByteBuffer.wrap(block.data, 0, block.blockSize);
+          blockBuffer = codec.decompress(blockBuffer);
+          datumIn = DecoderFactory.defaultFactory().createBinaryDecoder(
+              blockBuffer.array(), blockBuffer.arrayOffset() +
+              blockBuffer.position(), blockBuffer.remaining(), datumIn);
         }
-        if (block == null || block.length < (int) compressedSize) {
-          block = new byte[(int) compressedSize];
-        }
-         // throws if it can't read the size requested
-        vin.readFixed(block, 0, (int)compressedSize); 
-         datumIn = codec.decompress(block, 0, (int) compressedSize);
       }
       return blockRemaining != 0;
     } catch (EOFException e) {                    // at EOF
@@ -195,9 +192,51 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
     if (!hasNext())
       throw new NoSuchElementException();
     D result = reader.read(reuse, datumIn);
-    if (--blockRemaining == 0)
-      skipSync();
+    if (0 == --blockRemaining) {
+      blockFinished();
+    }
     return result;
+  }
+
+  protected void blockFinished() throws IOException {
+    // nothing for the stream impl
+  }
+
+  boolean hasNextBlock() {
+    try {
+      if (availableBlock) return true;
+      if (vin.isEnd()) return false;
+      blockRemaining = vin.readLong();      // read block count
+      blockSize = vin.readLong();           // read block size
+      if (blockSize > Integer.MAX_VALUE ||
+          blockSize < 0) {
+        throw new IOException("Block size invalid or too large for this " +
+          "implementation: " + blockSize);
+      }
+      availableBlock = true;
+      return true;
+    } catch (EOFException eof) {
+      return false;
+    } catch (IOException e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
+
+  DataBlock nextBlock(DataBlock reuse) throws IOException {
+    if (!hasNextBlock()) {
+      throw new NoSuchElementException();
+    }
+    if (reuse == null || reuse.data.length < (int) blockSize) {
+      reuse = new DataBlock(blockRemaining, (int) blockSize);
+    } else {
+      reuse.numEntries = blockRemaining;
+      reuse.blockSize = (int)blockSize;
+    }
+    // throws if it can't read the size requested
+    vin.readFixed(reuse.data, 0, reuse.blockSize);
+    skipSync();
+    availableBlock = false;
+    return reuse;
   }
 
   void skipSync() throws IOException {
@@ -212,6 +251,17 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
   /** Close this reader. */
   public void close() throws IOException {
     vin.inputStream().close();
+  }
+
+  static class DataBlock {
+    byte[] data;
+    long numEntries;
+    int blockSize;
+    DataBlock(long numEntries, int blockSize) {
+      this.data = new byte[blockSize];
+      this.numEntries = numEntries;
+      this.blockSize = blockSize;
+    }
   }
 
 }
