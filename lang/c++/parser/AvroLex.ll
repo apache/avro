@@ -17,6 +17,11 @@
  limitations under the License.
 */
 
+// on some systems, won't find an EOF definition 
+#ifndef EOF
+#define EOF (-1)
+#endif
+
 #include "AvroYacc.h"
 
 // this undef is a hack for my mac implementation

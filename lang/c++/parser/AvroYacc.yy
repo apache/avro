@@ -17,7 +17,6 @@
  limitations under the License.
 */
 
-#include <stdio.h>
 #include <boost/format.hpp>
 #include "Compiler.hh"
 #include "Exception.hh"

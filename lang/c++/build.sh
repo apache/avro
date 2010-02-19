@@ -34,7 +34,7 @@ VERSION=`cat ../../share/VERSION.txt`
 root_dir=$(pwd)
 build_dir="../../build/avro-cpp-$VERSION"
 dist_dir="../../dist"
-doc_dir="../../build/avro-doc-$VERSION/api/cpp"
+doc_dir="../../build/avro-doc-$VERSION/api/cpp/html"
 
 tarfile=avro-cpp-$VERSION.tar.gz
 

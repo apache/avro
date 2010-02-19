@@ -133,7 +133,7 @@ bigrecord.precompile: $(top_srcdir)/jsonschemas/bigrecord precompile$(EXEEXT)
 bigrecord2.precompile: $(top_srcdir)/jsonschemas/bigrecord2 precompile$(EXEEXT) 
 	$(top_builddir)/precompile$(EXEEXT) < $< > $@
 
-DOXYGEN_INPUTS= $(top_srcdir)/MainPage.dox $(library_include_HEADERS)
+DOXYGEN_INPUTS= $(top_srcdir)/MainPage.dox $(patsubst %,$(top_srcdir)/%, $(library_include_HEADERS))
 
 CPP_DOC_DIR ?= "$(top_builddir)/doc"
 

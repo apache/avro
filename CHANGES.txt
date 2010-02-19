@@ -489,6 +489,8 @@ Trunk (unreleased changes)
 
     AVRO-421. Fix some dist target issues.  (cutting)
 
+    AVRO-422. Build c++ docs in correct location. (sbanacho)
+
 Avro 1.2.0 (14 October 2009)
 
   INCOMPATIBLE CHANGES

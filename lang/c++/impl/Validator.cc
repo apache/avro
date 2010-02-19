@@ -291,7 +291,7 @@ Validator::getNextFieldName(std::string &name) const
     if(idx >= 0 && compoundStack_[idx].node->type() == AVRO_RECORD) {
         size_t pos = compoundStack_[idx].pos-1;
         const NodePtr &node = compoundStack_[idx].node;
-        if(pos>= 0 && pos < node->leaves()) {
+        if(pos < node->leaves()) {
             name = node->nameAt(pos);
             found = true;
         }
