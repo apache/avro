@@ -329,6 +329,8 @@ Trunk (unreleased changes)
 
     AVRO-295. JsonEncoder is not flushed after writing using ReflectDatumWriter (thiru)
 
+    AVRO-416. Produce Java source archive.  (Ryan Rawson via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
