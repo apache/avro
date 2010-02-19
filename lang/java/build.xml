@@ -475,6 +475,12 @@
     </jar>
   </target>
 
+  <target name="javadocjar">
+    <jar jarfile="${build.dir}/${fullname}-javadoc.jar">
+      <fileset dir="${build.javadoc}" includes="**/*"/>
+    </jar>
+  </target>
+
   <target name="pom" depends="ivy-init">
     <ivy:makepom ivyfile="${basedir}/ivy.xml"
 		 pomfile="${dist.dir}/${fullname}.pom">
@@ -483,13 +489,14 @@
     </ivy:makepom>
   </target>
 
-  <target name="dist" depends="jar, tools, javadoc, pom, source"
+  <target name="dist" depends="jar, tools, javadoc, pom, source, javadocjar"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
 
     <copy todir="${dist.dir}"> 
       <fileset file="${build.dir}/${fullname}.jar"/>
       <fileset file="${build.dir}/${fullname}-sources.jar"/>
+      <fileset file="${build.dir}/${fullname}-javadoc.jar"/>
       <fileset file="${build.dir}/avro-tools-${version}.jar"/>
     </copy>
     <chmod file="${dist.dir}/avro-tools-${version}.jar" perm="ugo+x"/>
@@ -497,6 +504,7 @@
     <checksum algorithm="md5">
       <fileset file="${dist.dir}/${fullname}.jar"/>
       <fileset file="${dist.dir}/${fullname}-sources.jar"/>
+      <fileset file="${dist.dir}/${fullname}-javadoc.jar"/>
       <fileset file="${dist.dir}/avro-tools-${version}.jar"/>
       <fileset file="${dist.dir}/${fullname}.pom"/>
     </checksum>
@@ -504,6 +512,7 @@
     <checksum algorithm="sha1">
       <fileset file="${dist.dir}/${fullname}.jar"/>
       <fileset file="${dist.dir}/${fullname}-sources.jar"/>
+      <fileset file="${dist.dir}/${fullname}-javadoc.jar"/>
       <fileset file="${dist.dir}/avro-tools-${version}.jar"/>
       <fileset file="${dist.dir}/${fullname}.pom"/>
     </checksum>
@@ -595,7 +604,9 @@
     <mvn:pom file="${dist.dir}/${fullname}.pom" id="avro"/>
     <mvn:install file="${build.dir}/${fullname}.jar">
       <attach file="${build.dir}/${fullname}-sources.jar"
-	      classifier="sources" />
+           classifier="sources" />
+      <attach file="${build.dir}/${fullname}-javadoc.jar"
+           classifier="javadoc" />
       <pom refid="avro"/>
     </mvn:install>
   </target>

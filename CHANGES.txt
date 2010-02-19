@@ -331,6 +331,8 @@ Trunk (unreleased changes)
 
     AVRO-416. Produce Java source archive.  (Ryan Rawson via cutting)
 
+    AVRO-417. Produce Java documentation archive.  (Scott Carey via cutting)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)
