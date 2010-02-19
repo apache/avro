@@ -32,10 +32,11 @@ import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
@@ -84,7 +85,7 @@ public abstract class Requestor {
   /** Writes a request message and reads a response or error message. */
   public Object request(String messageName, Object request)
     throws IOException {
-    Decoder in;
+    BinaryDecoder in = null;
     Message m;
     RPCContext context = new RPCContext();
     do {
@@ -111,7 +112,7 @@ public abstract class Requestor {
         getTransceiver().transceive(bbo.getBufferList());
       
       ByteBufferInputStream bbi = new ByteBufferInputStream(response);
-      in = new BinaryDecoder(bbi);
+      in = DecoderFactory.defaultFactory().createBinaryDecoder(bbi, in);
     } while (!readHandshake(in));
 
     // use remote protocol to read response

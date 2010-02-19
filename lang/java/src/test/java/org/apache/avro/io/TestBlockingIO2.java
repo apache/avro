@@ -17,10 +17,8 @@
  */
 package org.apache.avro.io;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.Arrays;
 
@@ -53,8 +51,7 @@ public class TestBlockingIO2 {
     
     byte[] bb = os.toByteArray();
     
-    InputStream in = new ByteArrayInputStream(bb);
-    decoder = new BinaryDecoder(in);
+    decoder = DecoderFactory.defaultFactory().createBinaryDecoder(bb, null);
     this.calls = calls;
   }
     

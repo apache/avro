@@ -38,11 +38,11 @@ import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.io.JsonEncoder;
@@ -424,7 +424,8 @@ public class TestSchema {
     reader.setSchema(schema);
         
     Object decoded =
-      reader.read(null, new BinaryDecoder(new ByteArrayInputStream(data)));
+      reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+          data, null));
       
     assertEquals("Decoded data does not match.", datum, decoded);
   }
@@ -484,7 +485,8 @@ public class TestSchema {
     Schema expected = Schema.parse(recordJson);
     DatumReader in = new GenericDatumReader(ACTUAL, expected);
     GenericData.Record record = (GenericData.Record)
-      in.read(null, new BinaryDecoder(new ByteArrayInputStream(new byte[0])));
+      in.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+          new byte[0], null));
     assertEquals("Wrong default.", defaultValue, record.get("f"));
     assertEquals("Wrong toString", expected, Schema.parse(expected.toString()));
   }
@@ -495,7 +497,8 @@ public class TestSchema {
       Schema.parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":"+
                    "[{\"name\":\"f\", \"type\": \"string\"}]}");
     DatumReader<Object> in = new GenericDatumReader<Object>(ACTUAL, expected);
-    in.read(null, new BinaryDecoder(new ByteArrayInputStream(new byte[0])));
+    in.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+        new ByteArrayInputStream(new byte[0]), null));
   }
 
   @Test
@@ -510,7 +513,8 @@ public class TestSchema {
     writer.write("Y", encoder);
     writer.write("X", encoder);
     byte[] data = out.toByteArray();
-    Decoder decoder = new BinaryDecoder(new ByteArrayInputStream(data));
+    Decoder decoder = DecoderFactory.defaultFactory().createBinaryDecoder(
+        data, null);
     DatumReader<String> in = new GenericDatumReader<String>(actual, expected);
     assertEquals("Wrong value", "Y", in.read(null, decoder));
     try {

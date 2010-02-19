@@ -17,12 +17,11 @@
  */
 package org.apache.avro.file;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.Decoder;
 
 /** Implements "null" (pass through) codec. */
 final class NullCodec extends Codec {
@@ -46,12 +45,15 @@ final class NullCodec extends Codec {
   }
 
   @Override
-  ByteArrayOutputStream compress(ByteArrayOutputStream buffer) throws IOException {
+  ByteArrayOutputStream compress(ByteArrayOutputStream buffer)
+      throws IOException {
     return buffer;
   }
   
   @Override
-  Decoder decompress(byte[] in) throws IOException {
-    return new BinaryDecoder(new ByteArrayInputStream(in));
+  BinaryDecoder decompress(byte[] data, int offset, int length)
+      throws IOException {
+    return DecoderFactory.defaultFactory().createBinaryDecoder(
+        data, offset, length, null);
   }
 }

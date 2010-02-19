@@ -25,7 +25,7 @@ import org.apache.avro.util.Utf8;
 
 /**
  * Low-level support for de-serializing Avro values.
- *
+ * <p>
  *  This class has two types of methods.  One type of methods support
  *  the reading of leaf values (for example, {@link #readLong} and
  *  {@link #readString}).
@@ -42,6 +42,13 @@ public abstract class Decoder {
   
   /** Start reading against a different input stream.  Stateful
     * subclasses will reset their states to their initial state. 
+    * <p/>
+    * A Decoder may read ahead beyond the minimum bytes necessary,
+    * similar to a BufferedInputStream.
+    * In order to interleave reads on this stream's data between
+    * Decoder and another reader, the other reader must use the
+    * buffer-aware input stream returned by the Decoder implementation,
+    * if applicable.
    * @throws IOException */
   public abstract void init(InputStream in) throws IOException;
 

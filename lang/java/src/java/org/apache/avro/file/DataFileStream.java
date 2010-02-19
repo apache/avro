@@ -30,9 +30,9 @@ import java.util.NoSuchElementException;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.Decoder;
 
 /** Streaming access to files written by {@link DataFileWriter}.  Use {@link
  * DataFileReader} for file-based input.
@@ -43,13 +43,11 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
   private Schema schema;
   private DatumReader<D> reader;
 
-  /** Raw input stream. */
-  final InputStream in;
   /** Decoder on raw input stream.  (Used for metadata.) */
-  final Decoder vin;
+  BinaryDecoder vin;
   /** Secondary decoder, for datums.
    *  (Different than vin for block segments.) */
-  Decoder datumIn = null;
+  BinaryDecoder datumIn = null;
 
   Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
@@ -58,14 +56,25 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
   byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
   private Codec codec;
 
-  /** Construct a reader for an input stream.  For file-based input, use {@link
-   * DataFileReader}.  This performs no buffering, for good performance, be
-   * sure to pass in a {@link java.io.BufferedInputStream}. */
+  /** Construct a reader for an input stream.  For file-based input, use 
+   * {@link DataFileReader}.  This will buffer, wrapping with a 
+   * {@link java.io.BufferedInputStream}
+   * is not necessary. */
   public DataFileStream(InputStream in, DatumReader<D> reader)
     throws IOException {
-    this.in = in;
-    this.vin = new BinaryDecoder(in);
+    this.reader = reader;
+    initialize(in);
+  }
 
+  /**
+   * create an unitialized DataFileStream
+   */
+  protected DataFileStream(DatumReader<D> reader) throws IOException {
+    this.reader = reader;
+  }
+  
+  void initialize(InputStream in) throws IOException {
+    this.vin = DecoderFactory.defaultFactory().createBinaryDecoder(in, vin);
     byte[] magic = new byte[DataFileConstants.MAGIC.length];
     try {
       vin.readFixed(magic);                         // read magic
@@ -91,7 +100,6 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
 
     this.codec = resolveCodec();
     this.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA));
-    this.reader = reader;
 
     reader.setSchema(schema);
   }
@@ -134,29 +142,31 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
    * pointer into the file. */
   public Iterator<D> iterator() { return this; }
 
+  private byte[] block = null;
   /** True if more entries remain in this file. */
   public boolean hasNext() {
     try {
       if (blockRemaining == 0) {
         // check that the previous block was finished
-        // clunky and inefficient with the current Decoder API
-        // the only way to detect end of stream is with EOFException
         if (null != datumIn) {
-          try {
-            datumIn.readBoolean();
+          boolean atEnd = datumIn.isEnd();
+          if (!atEnd) {
             throw new IOException("Block read partially, the data may be corrupt");
-          } catch (EOFException eof) {
-            // this indicates the block is at its end as we expect
           }
         }
         blockRemaining = vin.readLong();          // read block count
         long compressedSize = vin.readLong();     // read block size
-        if (compressedSize > Integer.MAX_VALUE) {
-          throw new IOException("Block size too large: " + compressedSize);
+        if (compressedSize > Integer.MAX_VALUE ||
+            compressedSize < 0) {
+          throw new IOException("Block size invalid or too large for this " +
+            "implementation: " + compressedSize);
         }
-        byte[] block = new byte[(int)compressedSize];
+        if (block == null || block.length < (int) compressedSize) {
+          block = new byte[(int) compressedSize];
+        }
+         // throws if it can't read the size requested
         vin.readFixed(block, 0, (int)compressedSize); 
-        datumIn = codec.decompress(block);
+         datumIn = codec.decompress(block, 0, (int) compressedSize);
       }
       return blockRemaining != 0;
     } catch (EOFException e) {                    // at EOF
@@ -201,7 +211,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
 
   /** Close this reader. */
   public void close() throws IOException {
-    in.close();
+    vin.inputStream().close();
   }
 
 }

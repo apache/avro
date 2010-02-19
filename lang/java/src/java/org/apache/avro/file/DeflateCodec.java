@@ -26,8 +26,8 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.Decoder;
 
 /** 
  * Implements DEFLATE (RFC1951) compression and decompression. 
@@ -88,11 +88,12 @@ class DeflateCodec extends Codec {
   }
 
   @Override
-  Decoder decompress(byte[] in) throws IOException {
+  BinaryDecoder decompress(byte[] data, int offset, int length)
+      throws IOException {
     Inflater inflater = new Inflater(true);
     InputStream uncompressed = new InflaterInputStream(
-        new ByteArrayInputStream(in), inflater);
-    return new BinaryDecoder(uncompressed);
+        new ByteArrayInputStream(data, offset, length), inflater);
+    return DecoderFactory.defaultFactory().createBinaryDecoder(uncompressed, null);
   }
 
 }

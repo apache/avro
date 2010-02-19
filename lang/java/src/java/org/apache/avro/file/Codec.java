@@ -20,7 +20,7 @@ package org.apache.avro.file;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.avro.io.Decoder;
+import org.apache.avro.io.BinaryDecoder;
 
 /** 
  * Interface for Avro-supported compression codecs for data files.
@@ -33,5 +33,5 @@ abstract class Codec {
   /** Compresses the input data and return the result as a ByteArrayOutputStream */
   abstract ByteArrayOutputStream compress(ByteArrayOutputStream data) throws IOException;
   /** Returns a decoder on the uncompressed data. */
-  abstract Decoder decompress(byte[] compressedData) throws IOException;
+  abstract BinaryDecoder decompress(byte[] compressedData, int offset, int length) throws IOException;
 }

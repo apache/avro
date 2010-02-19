@@ -36,6 +36,7 @@ import org.codehaus.jackson.JsonToken;
 public class JsonDecoder extends ParsingDecoder
   implements Parser.ActionHandler {
   private JsonParser in;
+  private static JsonFactory jsonFactory = new JsonFactory();
   
   static final String CHARSET = "ISO-8859-1";
 
@@ -69,7 +70,7 @@ public class JsonDecoder extends ParsingDecoder
   @Override
   public void init(InputStream in) throws IOException {
     parser.reset();
-    this.in = new JsonFactory().createJsonParser(in);
+    this.in = jsonFactory.createJsonParser(in);
     this.in.nextToken();
   }
   

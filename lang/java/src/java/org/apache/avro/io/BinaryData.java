@@ -17,41 +17,34 @@
  */
 package org.apache.avro.io;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.BinaryDecoder.BufferAccessor;
 
 /** Utilities for binary-encoded data. */
 public class BinaryData {
 
   private BinaryData() {}                      // no public ctor
 
-  private static class Buffer extends ByteArrayInputStream {
-    public Buffer() { super(new byte[0]); }
-    public byte[] buf() { return buf; }
-    public int pos() { return pos; }
-    public void skip(int i) { this.pos += i; }
-    public void set(byte[] buf, int pos) {
-      this.buf = buf;
-      this.pos = pos;
-      this.count = buf.length;
-    }
-  }
-
   private static class Decoders {
-    private final Buffer b1, b2;
-    private final Decoder d1, d2;
+     private final BufferAccessor b1, b2;
+     private final BinaryDecoder d1, d2;
     public Decoders() {
-      this.b1 = new Buffer();
-      this.b2 = new Buffer();
-      this.d1 = new BinaryDecoder(b1);
-      this.d2 = new BinaryDecoder(b2);
+       this.d1 = new BinaryDecoder(new byte[0], 0, 0);
+       this.d2 = new BinaryDecoder(new byte[0], 0, 0);
+       this.b1 = d1.getBufferAccessor();
+       this.b2 = d2.getBufferAccessor();
     }
+     public void set(byte[] data1, int off1, int len1, 
+         byte[] data2, int off2, int len2) {
+       this.d1.init(data1, off1, len1);
+       this.d2.init(data2, off2, len2);
   }
+  }                     // no public ctor
 
   private static final ThreadLocal<Decoders> DECODERS
     = new ThreadLocal<Decoders>() {
@@ -65,8 +58,7 @@ public class BinaryData {
                             byte[] b2, int s2,
                             Schema schema) {
     Decoders decoders = DECODERS.get();
-    decoders.b1.set(b1, s1);
-    decoders.b2.set(b2, s2);
+    decoders.set(b1, s1, b1.length, b2, s2, b2.length);
     try {
       return compare(decoders, schema);
     } catch (IOException e) {
@@ -92,7 +84,12 @@ public class BinaryData {
       }
       return 0;
     }
-    case ENUM: case INT: case LONG: {
+    case ENUM: case INT: {
+      int i1 = d1.readInt();
+      int i2 = d2.readInt();
+      return i1 == i2 ? 0 : (i1 > i2 ? 1 : -1);
+    }
+    case LONG: {
       long l1 = d1.readLong();
       long l2 = d2.readLong();
       return l1 == l2 ? 0 : (l1 > l2 ? 1 : -1);
@@ -135,19 +132,19 @@ public class BinaryData {
     }
     case FIXED: {
       int size = schema.getFixedSize();
-      int c = compareBytes(d.b1.buf(), d.b1.pos(), size,
-                           d.b2.buf(), d.b2.pos(), size);
-      d.b1.skip(size);
-      d.b2.skip(size);
+      int c = compareBytes(d.b1.getBuf(), d.b1.getPos(), size,
+                           d.b2.getBuf(), d.b2.getPos(), size);
+      d.d1.skipFixed(size);
+      d.d2.skipFixed(size);
       return c;
     }
     case STRING: case BYTES: {
       int l1 = d1.readInt();
       int l2 = d2.readInt();
-      int c = compareBytes(d.b1.buf(), d.b1.pos(), l1,
-                           d.b2.buf(), d.b2.pos(), l2);
-      d.b1.skip(l1);
-      d.b2.skip(l2);
+      int c = compareBytes(d.b1.getBuf(), d.b1.getPos(), l1,
+                           d.b2.getBuf(), d.b2.getPos(), l2);
+      d.d1.skipFixed(l1);
+      d.d2.skipFixed(l2);
       return c;
     }
     case FLOAT: {

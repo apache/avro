@@ -17,7 +17,6 @@
  */
 package org.apache.avro.io;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -35,20 +34,26 @@ import org.apache.avro.generic.GenericDatumReader;
  * Avro encoding and decoding.
  */
 public class Perf {
-  private static final int COUNT = 200000; // needs to be a multiple of 4
-  private static final int CYCLES = 150;
+  private static final int COUNT = 100000; // needs to be a multiple of 4
+  private static final int CYCLES = 500;
   
   public static void main(String[] args) throws IOException {
     List<Test> tests = new ArrayList<Test>();
+    ReadInt readIntTest = null;
     for (String a : args) {
       if (a.equals("-i")) {
-        tests.add(new ReadInt());
+        readIntTest = new ReadInt();
+        tests.add(readIntTest);
       } else if (a.equals("-f")) {
         tests.add(new ReadFloat());
       } else if (a.equals("-d")) {
         tests.add(new ReadDouble());
       } else if (a.equals("-l")) {
         tests.add(new ReadLong());
+      } else if (a.equals("-ls")) {
+        tests.add(new ReadLongSmall(readIntTest));
+      } else if (a.equals("-b")) {
+        tests.add(new ReadBoolean());
       } else if (a.equals("-R")) {
         tests.add(new RepeaterTest());
       } else if (a.equals("-N")) {
@@ -71,32 +76,47 @@ public class Perf {
       }
     }
     if (tests.isEmpty()) {
+      readIntTest = new ReadInt();
       tests.addAll(Arrays.asList(new Test[] {
-          new ReadInt(), new ReadLong(),
-          new ReadFloat(), new ReadDouble(),
+          readIntTest, 
+          new ReadLongSmall(readIntTest), 
+          new ReadLong(),
+          new ReadFloat(), 
+          new ReadDouble(),
+          new ReadBoolean(),
           new RepeaterTest(), new NestedRecordTest(),
           new ResolverTest(), new MigrationTest(),
           new GenericReaderTest(), new GenericReaderWithDefaultTest(),
           new GenericReaderWithOutOfOrderTest(),
-          new GenericReaderWithPromotionTest(),
+          new GenericReaderWithPromotionTest()
       }));
     }
     
-    for (Test t : tests) {
+    for (int k = 0; k < tests.size(); k++) {
+      Test t = tests.get(k);
+      // get everything to compile once 
+      t.read();
+    }
+    for (int k = 0; k < tests.size(); k++) {
+      Test t = tests.get(k);
       // warmup JVM 
-      for (int i = 0; i < CYCLES; i++) {
+      for (int i = 0; i < t.cycles; i++) {
         t.read();
     }
     // test
     long s = 0;
-    for (int i = 0; i < CYCLES; i++) {
+    for (int i = 0; i < t.cycles; i++) {
       long l = t.read();
       // System.out.println("** " + l);
       s += l;
     }
     s /= 1000;
+    double entries = (t.cycles * (double) t.count);
+    double bytes = t.cycles * (double) t.data.length;
     System.out.println(t.name + ": " + (s / 1000) + " ms, "
-        +  ((CYCLES * (double) COUNT) / s) + " million entries/sec");
+        +  (entries / s) + " million entries/sec.  "
+        +  (bytes / s) + " million bytes/sec" );
+    tests.set(k, null);
     }
   }
   
@@ -106,6 +126,10 @@ public class Perf {
      * Name of the test.
      */
     public final String name;
+    public final int count;
+    public final int cycles;
+    protected byte[] data;
+    protected static DecoderFactory factory = new DecoderFactory();
     
     /**
      * Reads the contents and returns the time taken in nanoseconds.
@@ -114,20 +138,40 @@ public class Perf {
      */
     abstract long read() throws IOException;
     
-    public Test(String name) {
+    public Test(String name, int cycles, int count) {
       this.name = name;
+      this.cycles = cycles;
+      this.count = count;
+    }
+    
+    protected void generateRepeaterData(Encoder e) throws IOException {
+      e.writeArrayStart();
+      e.setItemCount(count);
+      Random r = newRandom();
+      for (int i = 0; i < count; i++) {
+        e.writeDouble(r.nextDouble());
+        e.writeDouble(r.nextDouble());
+        e.writeDouble(r.nextDouble());
+        e.writeInt(r.nextInt());
+        e.writeInt(r.nextInt());
+        e.writeInt(r.nextInt());
+  }
+      e.writeArrayEnd();
     }
   }
   
   private static abstract class DecoderTest extends Test {
     public final Schema schema;
-    protected byte[] data;
     public DecoderTest(String name, String json) throws IOException {
-      super(name);
+      this(name, json, 1);
+    }
+    public DecoderTest(String name, String json, int factor) throws IOException {
+      super(name, CYCLES, COUNT/factor);
       this.schema = Schema.parse(json);
       ByteArrayOutputStream bao = new ByteArrayOutputStream();
       Encoder e = new BinaryEncoder(bao);
       genData(e);
+      e.flush();
       data = bao.toByteArray();
     }
 
@@ -148,7 +192,7 @@ public class Perf {
     }
 
     protected static Decoder newDecoder(byte[] data) {
-      return new BinaryDecoder(new ByteArrayInputStream(data));
+      return factory.createBinaryDecoder(data, null);
     }
 
     abstract void genData(Encoder e) throws IOException;
@@ -176,9 +220,9 @@ public class Perf {
 
     @Override void genData(Encoder e) throws IOException {
       e.writeArrayStart();
-      e.setItemCount((COUNT/4) * 4); //next lowest multiple of 4  
+      e.setItemCount((count/4) * 4); //next lowest multiple of 4  
       Random r = newRandom();
-      for (int i = 0; i < COUNT/4; i++) {
+      for (int i = 0; i < count/4; i++) {
         e.writeInt(r.nextInt(50)); // fits in 1 byte
         e.writeInt(r.nextInt(5000)); // fits in 2 bytes
         e.writeInt(r.nextInt(500000)); // fits in 3 bytes
@@ -193,6 +237,21 @@ public class Perf {
     }
   }
 
+  // This is the same data as ReadInt, but using readLong.
+  private static class ReadLongSmall extends DecoderTest {
+    public ReadLongSmall(ReadInt dataFrom) throws IOException {
+      super("ReadLongSmall", "{ \"type\": \"array\", \"items\": \"long\"} ");
+      data = dataFrom.data;
+    }
+    @Override void genData(Encoder e) throws IOException {
+    }
+    @Override
+    void readInternal(Decoder d) throws IOException {
+       d.readLong();
+    }
+  }
+ 
+  // this tests reading Longs that are sometimes very large
   private static class ReadLong extends DecoderTest {
     public ReadLong() throws IOException {
       super("ReadLong", "{ \"type\": \"array\", \"items\": \"long\"} ");
@@ -201,9 +260,9 @@ public class Perf {
     @Override
     void genData(Encoder e) throws IOException {
       e.writeArrayStart();
-      e.setItemCount((COUNT / 4) *4);
+      e.setItemCount((count / 4) *4);
       Random r = newRandom();
-      for (int i = 0; i < COUNT /4; i++) {
+      for (int i = 0; i < count /4; i++) {
         e.writeLong(r.nextLong() % 0x7FL); // half fit in 1, half in 2 
         e.writeLong(r.nextLong() % 0x1FFFFFL); // half fit in <=3, half in 4
         e.writeLong(r.nextLong() % 0x3FFFFFFFFL); // half in <=5, half in 6
@@ -226,9 +285,9 @@ public class Perf {
     @Override
     void genData(Encoder e) throws IOException {
       e.writeArrayStart();
-      e.setItemCount(COUNT);
+      e.setItemCount(count);
       Random r = newRandom();
-      for (int i = 0; i < COUNT; i++) {
+      for (int i = 0; i < count; i++) {
         e.writeFloat(r.nextFloat());
       }
       e.writeArrayEnd();
@@ -240,6 +299,25 @@ public class Perf {
     }
   }
 
+  private static class ReadBoolean extends DecoderTest {
+    public ReadBoolean() throws IOException {
+      super("ReadBoolean", "{ \"type\": \"array\", \"items\": \"boolean\"} ");
+    }
+    @Override void genData(Encoder e) throws IOException {
+       e.writeArrayStart();
+      e.setItemCount(count);
+      Random r = newRandom();
+      for (int i = 0; i < count; i++) {
+        e.writeBoolean(r.nextBoolean());
+      }
+      e.writeArrayEnd();
+    }
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      d.readBoolean();
+    }
+  }
+
   private static class ReadDouble extends DecoderTest {
     public ReadDouble() throws IOException {
       super("ReadDouble", "{ \"type\": \"array\", \"items\": \"double\"} ");
@@ -248,9 +326,9 @@ public class Perf {
     @Override
     void genData(Encoder e) throws IOException {
       e.writeArrayStart();
-      e.setItemCount(COUNT);
+      e.setItemCount(count);
       Random r = newRandom();
-      for (int i = 0; i < COUNT; i++) {
+      for (int i = 0; i < count; i++) {
         e.writeDouble(r.nextFloat());
       }
       e.writeArrayEnd();
@@ -272,27 +350,13 @@ public class Perf {
     + "{ \"name\": \"f6\", \"type\": \"int\" }\n"
     + "] } }";
 
-  private static void generateRepeaterData(Encoder e) throws IOException {
-    e.writeArrayStart();
-    e.setItemCount(COUNT);
-    Random r = newRandom();
-    for (int i = 0; i < COUNT; i++) {
-      e.writeDouble(r.nextDouble());
-      e.writeDouble(r.nextDouble());
-      e.writeDouble(r.nextDouble());
-      e.writeInt(r.nextInt());
-      e.writeInt(r.nextInt());
-      e.writeInt(r.nextInt());
-    }
-    e.writeArrayEnd();
-  }
   private static class RepeaterTest extends DecoderTest {
     public RepeaterTest() throws IOException {
       this("RepeaterTest");
     }
     
     public RepeaterTest(String name) throws IOException {
-      super(name, REPEATER_SCHEMA);
+      super(name, REPEATER_SCHEMA, 6);
     }
     
     @Override
@@ -401,14 +465,13 @@ public class Perf {
   
   private static class GenericReaderTest extends Test {
     public final Schema writerSchema;
-    protected byte[] data;
 
     public GenericReaderTest() throws IOException {
       this("GenericReaderTest");
     }
 
     public GenericReaderTest(String name) throws IOException {
-      super(name);
+      super(name, CYCLES, COUNT/12);
       this.writerSchema = Schema.parse(REPEATER_SCHEMA);
       ByteArrayOutputStream bao = new ByteArrayOutputStream();
       Encoder e = new BinaryEncoder(bao);
@@ -421,10 +484,11 @@ public class Perf {
       GenericDatumReader<Object> r = getReader();
       long t = System.nanoTime();
       Decoder d =
-        new BinaryDecoder(new ByteArrayInputStream(data));
+        DecoderFactory.defaultFactory().createBinaryDecoder(data, null);
+      Object reuse = null;
       for (; ;) {
         try {
-          r.read(null, d);
+          reuse = r.read(reuse, d);
         } catch (EOFException e) {
           break;
         }
@@ -490,11 +554,14 @@ public class Perf {
   }
 
   private static void usage() {
-    System.out.println("Usage: Perf { -i | -l | -f | -d }");
+    System.out.println("Usage: Perf { -i | -ls | -l | -f | -d | -b | -R | -N " +
+      "| -S | -M | -G | -Gd | -Go | Gp }");
     System.out.println("  -i readInt()");
+    System.out.println("  -ls readLongSmall()");
     System.out.println("  -l readLong()");
     System.out.println("  -f readFloat()");
     System.out.println("  -d readDouble()");
+    System.out.println("  -b readBoolean()");
     System.out.println("  -R repeater in validating decoder");
     System.out.println("  -N nested record in validating decoder");
     System.out.println("  -S resolving decoder");

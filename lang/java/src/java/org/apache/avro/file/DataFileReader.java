@@ -17,12 +17,12 @@
  */
 package org.apache.avro.file;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.EOFException;
 import java.io.InputStream;
 import java.io.File;
 
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
 
@@ -30,7 +30,7 @@ import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
  * @see DataFileWriter
  */
 public class DataFileReader<D> extends DataFileStream<D> {
-  private SeekableBufferedInput sin;
+  private SeekableInputStream sin;
   private long blockStart;
 
   /** Construct a reader for a file. */
@@ -41,8 +41,9 @@ public class DataFileReader<D> extends DataFileStream<D> {
   /** Construct a reader for a file. */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader)
     throws IOException {
-    super(new SeekableBufferedInput(sin), reader);
-    this.sin = (SeekableBufferedInput)in;
+    super(reader);
+    this.sin = new SeekableInputStream(sin);
+    initialize(this.sin);
   }
 
   /** Move to a specific, known synchronization point, one returned from {@link
@@ -50,6 +51,7 @@ public class DataFileReader<D> extends DataFileStream<D> {
    * saved while writing a file, use {#sync(long)} instead. */
   public void seek(long position) throws IOException {
     sin.seek(position);
+    vin = DecoderFactory.defaultFactory().createBinaryDecoder(this.sin, vin);
     blockRemaining = 0;
     blockStart = position;
   }
@@ -61,12 +63,9 @@ public class DataFileReader<D> extends DataFileStream<D> {
   public void sync(long position) throws IOException {
     seek(position);
     try {
+      int i=0, b;
+      InputStream in = vin.inputStream();
       vin.readFixed(syncBuffer);
-    } catch (EOFException e) {
-      blockStart = sin.tell();
-      return;
-    }
-    int i=0, b;
     do {
       int j = 0;
       for (; j < SYNC_SIZE; j++) {
@@ -80,70 +79,89 @@ public class DataFileReader<D> extends DataFileStream<D> {
       b = in.read();
       syncBuffer[i++%SYNC_SIZE] = (byte)b;
     } while (b != -1);
+    } catch (EOFException e) {
+      blockStart = sin.tell();
+      return;
+  }
   }
 
   @Override
   void skipSync() throws IOException {            // note block start
     super.skipSync();
-    blockStart = sin.tell();
+    blockStart = sin.tell() - vin.inputStream().available();
   }
 
   /** Return true if past the next synchronization point after a position. */ 
-  public boolean pastSync(long position) {
+  public boolean pastSync(long position) throws IOException {
     return blockStart >= Math.min(sin.length(), position+SYNC_SIZE);
   }
 
-  private static class SeekableBufferedInput extends BufferedInputStream {
-    private long position;                        // end of buffer
-    private long length;                          // file length
+  private static class SeekableInputStream extends InputStream 
+  implements SeekableInput {
+    private final byte[] oneByte = new byte[1];
+    private SeekableInput in;
 
-    private class PositionFilter extends InputStream {
-      private SeekableInput in;
-      public PositionFilter(SeekableInput in) throws IOException {
+    SeekableInputStream(SeekableInput in) throws IOException {
         this.in = in;
       }
-      public int read() { throw new UnsupportedOperationException(); }
-      public int read(byte[] b, int off, int len) throws IOException {
-        int value = in.read(b, off, len);
-        if (value > 0) position += value;         // update on read
-        return value;
-      }
-    }
-
-    public SeekableBufferedInput(SeekableInput in) throws IOException {
-      super(null);
-      this.in = new PositionFilter(in);
-      this.length = in.length();
-    }
-
+    
+    @Override
     public void seek(long p) throws IOException {
-      if (p < 0) throw new IOException("Illegal seek: "+p);
-      long start = position - count;
-      if (p >= start && p < position) {            // in buffer
-        this.pos = (int)(p - start);
-      } else {                                     // not in buffer
-        this.pos = 0;
-        this.count = 0;
-        ((PositionFilter)in).in.seek(p);
-        this.position = p;
+      if (p < 0)
+        throw new IOException("Illegal seek: " + p);
+      in.seek(p);
       }
+
+    @Override
+    public long tell() throws IOException {
+      return in.tell();
     }
 
-    public long tell() { return position-(count-pos); }
-    public long length() { return length; }
-
-    public int read() throws IOException {        // optimized implementation
-      if (pos >= count) return super.read();
-      return buf[pos++] & 0xff;
+    @Override
+    public long length() throws IOException {
+      return in.length();
     }
 
-    public long skip(long skip) throws IOException { // optimized implementation
-      if (skip > count-pos)
-        return super.skip(skip);
-      pos += (int)skip;
-      return skip;
+    @Override
+    public int read(byte[] b) throws IOException {
+      return in.read(b, 0, b.length);
+      }
+    
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      return in.read(b, off, len);
+    }
+
+    @Override
+    public int read() throws IOException {
+      int n = read(oneByte, 0, 1);
+      if (n == 1) {
+        return oneByte[0] & 0xff;
+      } else {
+        return n;
+    }
+    };
+
+    @Override
+    public long skip(long skip) throws IOException {
+      long position = in.tell();
+      long length = in.length();
+      long remaining = length - position;
+      if (remaining > skip) {
+        in.seek(skip);
+        return in.tell() - position;
+      } else {
+        in.seek(remaining);
+        return in.tell() - position;
     }
   }
 
+    @Override
+    public int available() throws IOException {
+      long remaining = (in.length() - in.tell());
+      return (remaining > Integer.MAX_VALUE) ? Integer.MAX_VALUE
+          : (int) remaining;
+}
+  }
 }
 

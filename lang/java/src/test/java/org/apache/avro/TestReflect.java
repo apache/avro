@@ -18,27 +18,29 @@
 package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Map;
-import java.util.List;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.avro.Schema.Field;
 import org.apache.avro.TestReflect.SampleRecord.AnotherSampleRecord;
-import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.Decoder;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.avro.reflect.Union;
 import org.apache.avro.reflect.Stringable;
-
+import org.apache.avro.reflect.Union;
 import org.junit.Test;
 
 public class TestReflect {
@@ -237,7 +239,9 @@ public class TestReflect {
     assertEquals(Schema.Type.STRING, response.getTypes().get(1).getType());
     // check request schema is union
     Schema request = message.getRequest();
-    Schema param = request.getField("s").schema();
+    Field field = request.getField("s");
+    assertNotNull("field 's' should not be null", field);
+    Schema param = field.schema();
     assertEquals(Schema.Type.UNION, param.getType());
     assertEquals(Schema.Type.NULL, param.getTypes().get(0).getType());
     assertEquals(Schema.Type.STRING, param.getTypes().get(1).getType());
@@ -273,8 +277,8 @@ public class TestReflect {
     writer.write(object, new BinaryEncoder(out));
     ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(s);
     Object after =
-      reader.read(null, new BinaryDecoder
-                  (new ByteArrayInputStream(out.toByteArray())));
+      reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+          out.toByteArray(), null));
     assertEquals(object, after);
   }
 
@@ -313,8 +317,8 @@ public class TestReflect {
     ReflectDatumReader<SampleRecord> reader = 
       new ReflectDatumReader<SampleRecord>(schm);
     SampleRecord decoded =
-      reader.read(null, new BinaryDecoder
-                  (new ByteArrayInputStream(out.toByteArray())));
+      reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+          out.toByteArray(), null));
     assertEquals(record, decoded);
   }
 
@@ -326,16 +330,19 @@ public class TestReflect {
       new ReflectDatumWriter<AnotherSampleRecord>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     // keep record.a null and see if that works
+    BinaryEncoder e = new BinaryEncoder(out);
     AnotherSampleRecord a = new AnotherSampleRecord();
-    writer.write(a, new BinaryEncoder(out));
+    writer.write(a, e);
     AnotherSampleRecord b = new AnotherSampleRecord(10);
-    writer.write(b, new BinaryEncoder(out));
+    writer.write(b, e);
+    e.flush();
     ReflectDatumReader<AnotherSampleRecord> reader = 
       new ReflectDatumReader<AnotherSampleRecord>(schm);
     ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-    AnotherSampleRecord decoded = reader.read(null, new BinaryDecoder(in));
+    Decoder d = DecoderFactory.defaultFactory().createBinaryDecoder(in, null);
+    AnotherSampleRecord decoded = reader.read(null, d);
     assertEquals(a, decoded);
-    decoded = reader.read(null, new BinaryDecoder(in));
+    decoded = reader.read(null, d);
     assertEquals(b, decoded);
   }
 

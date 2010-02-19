@@ -37,7 +37,7 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
@@ -85,7 +85,8 @@ public abstract class Responder {
   /** Called by a server to deserialize a request, compute and serialize
    * a response or error. */
   public List<ByteBuffer> respond(List<ByteBuffer> buffers) throws IOException {
-    Decoder in = new BinaryDecoder(new ByteBufferInputStream(buffers));
+    Decoder in = DecoderFactory.defaultFactory().createBinaryDecoder(
+        new ByteBufferInputStream(buffers), null);
     ByteBufferOutputStream bbo = new ByteBufferOutputStream();
     Encoder out = new BinaryEncoder(bbo);
     AvroRemoteException error = null;

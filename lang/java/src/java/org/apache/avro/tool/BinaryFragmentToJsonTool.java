@@ -23,11 +23,11 @@ import java.io.PrintStream;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.JsonEncoder;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
@@ -55,7 +55,8 @@ public class BinaryFragmentToJsonTool implements Tool {
     }
     try {
       DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
-      Object datum = reader.read(null, new BinaryDecoder(input));
+      Object datum = reader.read(null,
+          DecoderFactory.defaultFactory().createBinaryDecoder(input, null));
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
       JsonGenerator g =
         new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);

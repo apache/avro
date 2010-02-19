@@ -97,14 +97,14 @@ public class TestResolvingIO {
       throws IOException {
     // TestValidatingIO.dump(bytes);
     // System.out.println(new String(bytes, "UTF-8"));
-    InputStream in = new ByteArrayInputStream(bytes);
     Decoder bvi = null;
     switch (encoding) {
     case BINARY:
     case BLOCKING_BINARY:
-      bvi = new BinaryDecoder(in);
+      bvi = DecoderFactory.defaultFactory().createBinaryDecoder(bytes, null);
       break;
     case JSON:
+      InputStream in = new ByteArrayInputStream(bytes);
       bvi = new JsonDecoder(wsc, in);
       break;
     }

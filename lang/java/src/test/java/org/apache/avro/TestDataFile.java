@@ -63,15 +63,14 @@ public class TestDataFile {
   }
 
   private static final int COUNT =
-    Integer.parseInt(System.getProperty("test.count", "10"));
+    Integer.parseInt(System.getProperty("test.count", "200"));
   private static final boolean VALIDATE =
     !"false".equals(System.getProperty("test.validate", "true"));
   private static final File DIR
     = new File(System.getProperty("test.dir", "/tmp"));
   private static final File DATAFILE_DIR
-    = new File(System.getProperty("test.dir", "/tmp"));
+    = new File(System.getProperty("test.dir", "/Users/scottc/Documents/workspace/avro2/build/interop/data"));
   private static final long SEED = System.currentTimeMillis();
-
   private static final String SCHEMA_JSON =
     "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
     +"{\"name\":\"stringField\", \"type\":\"string\"},"

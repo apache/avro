@@ -17,7 +17,6 @@
  */
 package org.apache.avro.io;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import org.apache.avro.AvroTypeException;
@@ -195,7 +194,8 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else if (top instanceof Symbol.DefaultStartAction) {
       Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
       backup = in;
-      in = new BinaryDecoder(new ByteArrayInputStream(dsa.contents));
+      in = DecoderFactory.defaultFactory()
+        .createBinaryDecoder(dsa.contents, null);
     } else if (top == Symbol.DEFAULT_END_ACTION) {
       in = backup;
     } else {
@@ -219,7 +219,8 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else if (top instanceof Symbol.DefaultStartAction) {
       Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
       backup = in;
-      in = new BinaryDecoder(new ByteArrayInputStream(dsa.contents));
+      in = DecoderFactory.defaultFactory()
+        .createBinaryDecoder(dsa.contents, null);
     } else if (top == Symbol.DEFAULT_END_ACTION) {
       in = backup;
     }

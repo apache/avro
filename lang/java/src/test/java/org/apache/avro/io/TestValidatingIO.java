@@ -298,14 +298,14 @@ public class TestValidatingIO {
     throws IOException {
     // dump(bytes);
     // System.out.println(new String(bytes, "UTF-8"));
-    InputStream in = new ByteArrayInputStream(bytes);
     Decoder bvi = null;
     switch (encoding) {
     case BINARY:
     case BLOCKING_BINARY:
-      bvi = new BinaryDecoder(in);
+      bvi = DecoderFactory.defaultFactory().createBinaryDecoder(bytes, null);
       break;
     case JSON:
+      InputStream in = new ByteArrayInputStream(bytes);
       bvi = new JsonDecoder(sc, in);
     }
     Decoder vi = new ValidatingDecoder(sc, bvi);
