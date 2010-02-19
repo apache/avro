@@ -362,6 +362,9 @@ Trunk (unreleased changes)
 
     AVRO-399. Make data file interop tests work with the Python implementation (hammer)
 
+    AVRO-392. Overhaul of Java binary decoder to significantly improve
+    performance.  (Scott Carey via cutting)
+
   BUG FIXES
  
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
