@@ -69,7 +69,7 @@ public class TestDataFile {
   private static final File DIR
     = new File(System.getProperty("test.dir", "/tmp"));
   private static final File DATAFILE_DIR
-    = new File(System.getProperty("test.dir", "/Users/scottc/Documents/workspace/avro2/build/interop/data"));
+    = new File(System.getProperty("test.dir", "/tmp"));
   private static final long SEED = System.currentTimeMillis();
   private static final String SCHEMA_JSON =
     "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
