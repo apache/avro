@@ -89,6 +89,8 @@ case "$target" in
 	# build docs
 	(cd doc; ant)
 	(cd build; tar czf ../dist/avro-doc-$VERSION.tar.gz avro-doc-$VERSION)
+
+	cp DIST_README.txt dist/README.txt
 	;;
 
     clean)

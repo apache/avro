@@ -4,7 +4,7 @@ set -e						  # exit on error
 
 root_dir=$(pwd)
 build_dir="../../build/c"
-dist_dir="../../dist"
+dist_dir="../../dist/c"
 version=$(./version.sh project)
 tarball="avro-c-$version.tar.gz"
 doc_dir="../../build/avro-doc-$version/api/c"

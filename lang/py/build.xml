@@ -22,7 +22,7 @@
   <property file="${user.home}/build.properties" />
 
   <property name="share.dir" value="${basedir}/../../share"/>
-  <property name="dist.dir" value="${basedir}/../../dist"/>
+  <property name="dist.dir" value="${basedir}/../../dist/py"/>
   <property name="top.build" value="${basedir}/../../build"/>
 
   <loadresource property="version">
