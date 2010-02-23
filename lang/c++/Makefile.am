@@ -121,6 +121,10 @@ testgen_CXXFLAGS = $(AM_CXXFLAGS) -Wno-invalid-offsetof
 testgen_LDFLAGS = -static -no-install $(BOOST_LDFLAGS)
 testgen_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB)
 
+# Make sure we never package up '.svn' directories
+dist-hook:
+	find $(distdir) -name '.svn' | xargs rm -rf
+
 testgen.hh : bigrecord.precompile 
 	$(PYTHON) $(top_srcdir)/scripts/gen-cppcode.py -n testgen -i $< -o $@
 
