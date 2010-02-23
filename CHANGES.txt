@@ -336,6 +336,8 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-417. Produce Java documentation archive.  (Scott Carey via cutting)
 
+    AVRO-428. Improve file read performance by buffering data (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

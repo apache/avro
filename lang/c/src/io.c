@@ -42,6 +42,9 @@ struct avro_writer_t {
 struct avro_file_reader_t {
 	struct avro_reader_t reader;
 	FILE *fp;
+	char *cur;
+	char *end;
+	char buffer[4096];
 };
 
 struct avro_file_writer_t {
@@ -91,6 +94,7 @@ avro_reader_t avro_reader_file(FILE * fp)
 	if (!file_reader) {
 		return NULL;
 	}
+	memset(file_reader, 0, sizeof(struct avro_file_reader_t));
 	file_reader->fp = fp;
 	reader_init(&file_reader->reader, AVRO_FILE_IO);
 	return &file_reader->reader;
@@ -149,15 +153,58 @@ avro_read_memory(struct avro_memory_reader_t *reader, void *buf, int64_t len)
 	return 0;
 }
 
+#define bytes_available(reader) (reader->end - reader->cur)
+#define buffer_reset(reader) {reader->cur = reader->end = reader->buffer;}
+
 static int
 avro_read_file(struct avro_file_reader_t *reader, void *buf, int64_t len)
 {
-	int rval = fread(buf, len, 1, reader->fp);
+	int64_t needed = len;
+	void *p = buf;
+	int rval;
 
-	if (rval == 0) {
-		return ferror(reader->fp) || feof(reader->fp) ? -1 : 0;
+	if (len == 0) {
+		return 0;
 	}
-	return 0;
+
+	if (needed > sizeof(reader->buffer)) {
+		if (bytes_available(reader) > 0) {
+			memcpy(p, reader->cur, bytes_available(reader));
+			p += bytes_available(reader);
+			needed -= bytes_available(reader);
+			buffer_reset(reader);
+		}
+		rval = fread(p, 1, needed, reader->fp);
+		if (rval != needed) {
+			return -1;
+		}
+		return 0;
+	} else if (needed <= bytes_available(reader)) {
+		memcpy(p, reader->cur, needed);
+		reader->cur += needed;
+		return 0;
+	} else {
+		memcpy(p, reader->cur, bytes_available(reader));
+		p += bytes_available(reader);
+		needed -= bytes_available(reader);
+
+		rval =
+		    fread(reader->buffer, 1, sizeof(reader->buffer),
+			  reader->fp);
+		if (rval == 0) {
+			return -1;
+		}
+		reader->cur = reader->buffer;
+		reader->end = reader->cur + rval;
+
+		if (bytes_available(reader) < needed) {
+			return -1;
+		}
+		memcpy(p, reader->cur, needed);
+		reader->cur += needed;
+		return 0;
+	}
+	return -1;
 }
 
 int avro_read(avro_reader_t reader, void *buf, int64_t len)
@@ -188,8 +235,17 @@ static int avro_skip_memory(struct avro_memory_reader_t *reader, int64_t len)
 static int avro_skip_file(struct avro_file_reader_t *reader, int64_t len)
 {
 	int rval;
-	if (len > 0) {
-		rval = fseek(reader->fp, len, SEEK_CUR);
+	int64_t needed = len;
+
+	if (len == 0) {
+		return 0;
+	}
+	if (needed <= bytes_available(reader)) {
+		reader->cur += needed;
+	} else {
+		needed -= bytes_available(reader);
+		buffer_reset(reader);
+		rval = fseek(reader->fp, needed, SEEK_CUR);
 		if (rval < 0) {
 			return rval;
 		}
