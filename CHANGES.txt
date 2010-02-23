@@ -338,6 +338,8 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-428. Improve file read performance by buffering data (massie)
 
+    AVRO-430. Remove subversion directories from Avro C tarball (massie)
+
   OPTIMIZATIONS
 
     AVRO-172. More efficient schema processing (massie)

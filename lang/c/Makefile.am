@@ -1,6 +1,10 @@
 EXTRA_DIST=version.sh m4
 SUBDIRS = docs jansson src tests examples
 
+# Make sure we never package up '.svn' directories
+dist-hook:
+	find $(distdir) -name '.svn' | xargs rm -rf
+
 # Linux kernel source indent format options
 INDENT_OPTS=-nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -ce -ci4 \
 -cli0 -d0 -di1 -nfc1 -i8 -ip0 -l80 -lp -npcs -nprs -npsl -sai \
