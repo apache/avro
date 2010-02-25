@@ -664,8 +664,7 @@
 
         <section>
         <title>deflate</title>
-        <p>The "deflate" codec writes the length of the compressed
-        data (as an Avro-encoded long), followed by data compressed using the
+        <p>The "deflate" codec writes the data block using the
         deflate algorithm as specified in 
         <a href="http://www.isi.edu/in-notes/rfc1951.txt">RFC 1951</a>,
         and typically implemented using the zlib library.  Note that this
