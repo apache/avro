@@ -18,9 +18,10 @@ require 'rubygems'
 require 'echoe'
 VERSION = File.open('../../share/VERSION.txt').read
 Echoe.new('avro', VERSION) do |p|
-  p.author = "Jeff Hodges"
-  p.author = "Ryan King"
+  p.author = "Apache Software Foundation"
+  p.email = "avro-dev@hadoop.apache.org"
   p.summary = "Apache Avro for Ruby"
+  p.description = "Apache is a data serialization and RPC format"
   p.url = "http://hadoop.apache.org/avro/"
   p.runtime_dependencies = %w[rubygems yajl]
 end
