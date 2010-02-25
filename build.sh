@@ -86,6 +86,8 @@ case "$target" in
 
 	(cd lang/c++; ./build.sh dist)
 
+	(cd lang/ruby; rake dist)
+
 	# build docs
 	(cd doc; ant)
 	(cd build; tar czf ../dist/avro-doc-$VERSION.tar.gz avro-doc-$VERSION)

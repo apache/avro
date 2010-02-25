@@ -16,7 +16,8 @@
 
 require 'rubygems'
 require 'echoe'
-Echoe.new('avro') do |p|
+VERSION = File.open('../../share/VERSION.txt').read
+Echoe.new('avro', VERSION) do |p|
   p.author = "Jeff Hodges"
   p.author = "Ryan King"
   p.summary = "Apache Avro for Ruby"
@@ -51,3 +52,7 @@ SHARE = HERE + '/../../share'
 SCHEMAS = SHARE + '/test/schemas'
 BUILD = HERE + '/../../build'
 
+task :dist => [:manifest, :gem] do
+  mkdir_p "../../dist/ruby"
+  cp "pkg/avro-#{VERSION}.gem", "../../dist/ruby"
+end

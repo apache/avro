@@ -2,11 +2,15 @@ Avro Change Log
 
 Avro 1.3.1 (unreleased)
 
+  IMPROVEMENTS
+
+    AVRO-426. Include a ruby gem in distributions.
+    (Ryan King via cutting)
+
   BUG FIXES
 
     AVRO-424. Fix the specification of the deflate codec.
     (Scott Carey via cutting)
-
 
 Avro 1.3.0 (24 February 2010)
 
