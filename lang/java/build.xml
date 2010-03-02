@@ -475,7 +475,7 @@
     </jar>
   </target>
 
-  <target name="javadocjar">
+  <target name="javadoc-jar" depends="javadoc">
     <jar jarfile="${build.dir}/${fullname}-javadoc.jar">
       <fileset dir="${build.javadoc}" includes="**/*"/>
     </jar>
@@ -489,7 +489,7 @@
     </ivy:makepom>
   </target>
 
-  <target name="dist" depends="jar, tools, javadoc, pom, source, javadocjar"
+  <target name="dist" depends="jar, tools, javadoc, pom, source, javadoc-jar"
 	  description="Build distribution">
     <mkdir dir="${dist.dir}"/>
 
@@ -596,7 +596,7 @@
   </target>
   <!-- End Eclipse targets -->
 
-  <target name="mvn-install" depends="jar,pom,source"
+  <target name="mvn-install" depends="jar,pom,source,javadoc-jar"
 	  description="Installs avro core jar to local fs m2 cache">
     <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
 	     uri="urn:maven-artifact-ant"
