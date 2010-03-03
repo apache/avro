@@ -61,9 +61,7 @@ public class ReflectData extends SpecificData {
 
     protected Schema createFieldSchema(Field field, Map<String, Schema> names) {
       Schema schema = super.createFieldSchema(field, names);
-      return Schema.createUnion(Arrays.asList(new Schema[] {
-            schema,
-            Schema.create(Schema.Type.NULL) }));
+      return makeNullable(schema);
     }
   }
   
@@ -310,6 +308,12 @@ public class ReflectData extends SpecificData {
     return Schema.createUnion(branches);
   }
 
+  /** Create and return a union of the null schema and the provided schema. */
+  public static Schema makeNullable(Schema schema) {
+    return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+                                            schema));
+  }
+
   // Return of this class and its superclasses to serialize.
   // Not cached, since this is only used to create schemas, which are cached.
   private Collection<Field> getFields(Class recordClass) {
@@ -329,7 +333,10 @@ public class ReflectData extends SpecificData {
 
   /** Create a schema for a field. */
   protected Schema createFieldSchema(Field field, Map<String, Schema> names) {
-    return createSchema(field.getGenericType(), names);
+    Schema schema = createSchema(field.getGenericType(), names);
+    if (field.isAnnotationPresent(Nullable.class))           // nullable
+      schema = makeNullable(schema);
+    return schema;
   }
 
   /** Return the protocol for a Java interface.
@@ -365,12 +372,12 @@ public class ReflectData extends SpecificData {
     Type[] paramTypes = method.getGenericParameterTypes();
     Annotation[][] annotations = method.getParameterAnnotations();
     for (int i = 0; i < paramTypes.length; i++) {
-      Schema paramSchema = null;
+      Schema paramSchema = getSchema(paramTypes[i], names);
       for (int j = 0; j < annotations[i].length; j++)
         if (annotations[i][j] instanceof Union)
           paramSchema = getAnnotatedUnion(((Union)annotations[i][j]), names);
-      if (paramSchema == null)
-        paramSchema = getSchema(paramTypes[i], names);
+        else if (annotations[i][j] instanceof Nullable)
+          paramSchema = makeNullable(paramSchema);
       String paramName =  paramNames.length == paramTypes.length
         ? paramNames[i]
         : paramSchema.getName()+i;
@@ -383,6 +390,8 @@ public class ReflectData extends SpecificData {
     Schema response = union == null
       ? getSchema(method.getGenericReturnType(), names)
       : getAnnotatedUnion(union, names);
+    if (method.isAnnotationPresent(Nullable.class))          // nullable
+      response = makeNullable(response);
 
     List<Schema> errs = new ArrayList<Schema>();
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw
@@ -407,6 +416,5 @@ public class ReflectData extends SpecificData {
   public int compare(Object o1, Object o2, Schema s) {
     throw new UnsupportedOperationException();
   }
-
 
 }

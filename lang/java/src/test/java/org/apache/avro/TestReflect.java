@@ -40,6 +40,7 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.reflect.Stringable;
+import org.apache.avro.reflect.Nullable;
 import org.apache.avro.reflect.Union;
 import org.junit.Test;
 
@@ -266,6 +267,57 @@ public class TestReflect {
     assertEquals(Schema.Type.STRING, r10Schema.getType());
     assertEquals(R10.class.getName(), r10Schema.getProp("java-class"));
     checkReadWrite(new R10("foo"), r10Schema);
+  }
+
+  // test Nullable annotation on field
+  public static class R11 {
+    @Nullable private String text;
+    public boolean equals(Object o) {
+      if (!(o instanceof R11)) return false;
+      R11 that = (R11)o;
+      if (this.text == null) return that.text == null;
+      return this.text.equals(that.text);
+    }
+  }
+  
+  @Test public void testR11() throws Exception {
+    Schema r11Record = ReflectData.get().getSchema(R11.class);
+    assertEquals(Schema.Type.RECORD, r11Record.getType());
+    Schema r11Field = r11Record.getField("text").schema();
+    assertEquals(Schema.Type.UNION, r11Field.getType());
+    assertEquals(Schema.Type.NULL, r11Field.getTypes().get(0).getType());
+    Schema r11String = r11Field.getTypes().get(1);
+    assertEquals(Schema.Type.STRING, r11String.getType());
+    R11 r11 = new R11();
+    checkReadWrite(r11, r11Record);
+    r11.text = "foo";
+    checkReadWrite(r11, r11Record);
+  }
+
+  // test nullable annotation on methods and parameters
+  public static interface P1 {
+    @Nullable String foo(@Nullable String s);
+  }
+
+  @Test public void testP1() throws Exception {
+    Protocol p1 = ReflectData.get().getProtocol(P1.class);
+    Protocol.Message message = p1.getMessages().get("foo");
+    // check response schema is union
+    Schema response = message.getResponse();
+    assertEquals(Schema.Type.UNION, response.getType());
+    assertEquals(Schema.Type.NULL, response.getTypes().get(0).getType());
+    assertEquals(Schema.Type.STRING, response.getTypes().get(1).getType());
+    // check request schema is union
+    Schema request = message.getRequest();
+    Field field = request.getField("s");
+    assertNotNull("field 's' should not be null", field);
+    Schema param = field.schema();
+    assertEquals(Schema.Type.UNION, param.getType());
+    assertEquals(Schema.Type.NULL, param.getTypes().get(0).getType());
+    assertEquals(Schema.Type.STRING, param.getTypes().get(1).getType());
+    // check union erasure
+    assertEquals(String.class, ReflectData.get().getClass(response));
+    assertEquals(String.class, ReflectData.get().getClass(param));
   }
 
   void checkReadWrite(Object object) throws Exception {

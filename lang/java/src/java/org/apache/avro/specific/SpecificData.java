@@ -157,7 +157,6 @@ public class SpecificData extends GenericData {
       ParameterizedType ptype = (ParameterizedType)type;
       Class raw = (Class)ptype.getRawType();
       java.lang.reflect.Type[] params = ptype.getActualTypeArguments();
-      for (int i = 0; i < params.length; i++)
       if (GenericArray.class.isAssignableFrom(raw)) { // array
         if (params.length != 1)
           throw new AvroTypeException("No array type specified.");
@@ -168,6 +167,8 @@ public class SpecificData extends GenericData {
         if (!(key == Utf8.class))
           throw new AvroTypeException("Map key class not Utf8: "+key);
         return Schema.createMap(createSchema(value, names));
+      } else {
+        return createSchema(raw, names);
       }
     } else if (type instanceof Class) {               // class
       Class c = (Class)type;

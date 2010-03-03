@@ -2,6 +2,10 @@ Avro Change Log
 
 Avro 1.3.1 (unreleased)
 
+  NEW FEATURES
+
+    AVRO-432. Add @Nullable annotation to Java reflect API. (cutting)
+
   IMPROVEMENTS
 
     AVRO-426. Include a ruby gem in distributions.
