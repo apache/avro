@@ -18,12 +18,9 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
-# Checks for libraries.
-
-
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([libintl.h limits.h netinet/in.h stdint.h stdlib.h string.h sys/param.h sys/time.h unistd.h wchar.h])
+AC_CHECK_HEADERS([limits.h stdint.h stdlib.h string.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN
@@ -31,10 +28,6 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(long)
-
-# Checks for library functions.
-AC_FUNC_MALLOC
-AC_CHECK_FUNCS([bzero])
 
 AC_CONFIG_FILES([
    Makefile
