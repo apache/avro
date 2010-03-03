@@ -75,9 +75,12 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   @Override
-  public AvroRemoteException readError(Schema schema, Decoder in)
+  public Exception readError(Schema schema, Decoder in)
     throws IOException {
-    return (AvroRemoteException)getDatumReader(schema).read(null, in);
+    Object value = getDatumReader(schema).read(null, in);
+    if (value instanceof Exception)
+      return (Exception)value;
+    return new AvroRemoteException(value);
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

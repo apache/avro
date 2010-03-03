@@ -30,7 +30,6 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.Responder;
 
 /** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
@@ -77,14 +76,13 @@ public class SpecificResponder extends Responder {
   }
 
   @Override
-  public void writeError(Schema schema, AvroRemoteException error,
+  public void writeError(Schema schema, Object error,
                          Encoder out) throws IOException {
     getDatumWriter(schema).write(error, out);
   }
 
   @Override
-  public Object respond(Message message, Object request)
-    throws AvroRemoteException {
+  public Object respond(Message message, Object request) throws Exception {
     Class[] paramTypes = new Class[message.getRequest().getFields().size()];
     int i = 0;
     try {
@@ -93,10 +91,7 @@ public class SpecificResponder extends Responder {
       Method method = impl.getClass().getMethod(message.getName(), paramTypes);
       return method.invoke(impl, (Object[])request);
     } catch (InvocationTargetException e) {
-      Throwable target = e.getTargetException();
-      if (target instanceof AvroRemoteException)
-        throw (AvroRemoteException)target;
-      else throw new AvroRuntimeException(e);
+      throw (Exception)e.getTargetException();
     } catch (NoSuchMethodException e) {
       throw new AvroRuntimeException(e);
     } catch (IllegalAccessException e) {

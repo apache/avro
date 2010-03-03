@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.net.InetSocketAddress;
 import java.util.Random;
@@ -49,6 +50,7 @@ public class TestProtocolReflect {
     TestRecord echo(TestRecord record);
     int add(int arg1, int arg2);
     byte[] echoBytes(byte[] data);
+    void error() throws SimpleError;
   }
   
   public static class TestImpl implements Simple {
@@ -56,8 +58,8 @@ public class TestProtocolReflect {
     public int add(int arg1, int arg2) { return arg1 + arg2; }
     public TestRecord echo(TestRecord record) { return record; }
     public byte[] echoBytes(byte[] data) { return data; }
+    public void error() throws SimpleError { throw new SimpleError(); }
   }
-
 
   protected static Server server;
   protected static Transceiver client;
@@ -101,11 +103,21 @@ public class TestProtocolReflect {
     assertArrayEquals(data, echoed);
   }
 
+  @Test
+  public void testError() throws IOException {
+    SimpleError error = null;
+    try {
+      proxy.error();
+    } catch (SimpleError e) {
+      error = e;
+    }
+    assertNotNull(error);
+  }
+
   @After
   public void testStopServer() throws IOException {
     client.close();
     server.close();
   }
-
 
 }

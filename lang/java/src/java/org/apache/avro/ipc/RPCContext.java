@@ -37,7 +37,7 @@ public class RPCContext {
   protected Map<Utf8,ByteBuffer> requestCallMeta, responseCallMeta;
   
   protected Object response;
-  protected AvroRemoteException error;
+  protected Exception error;
   private Message message;
   
   /**
@@ -124,7 +124,7 @@ public class RPCContext {
     return response;
   }
   
-  void setError(AvroRemoteException error) {
+  void setError(Exception error) {
     this.response = null;
     this.error = error;
   }
@@ -135,7 +135,7 @@ public class RPCContext {
    * @return the exception generated at the server, or
    * null if no such exception
    */
-  public AvroRemoteException error() {
+  public Exception error() {
     return error;
   }
   

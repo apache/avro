@@ -89,7 +89,7 @@ public abstract class Responder {
         new ByteBufferInputStream(buffers), null);
     ByteBufferOutputStream bbo = new ByteBufferOutputStream();
     Encoder out = new BinaryEncoder(bbo);
-    AvroRemoteException error = null;
+    Exception error = null;
     RPCContext context = new RPCContext();
     try {
       Protocol remote = handshake(in, out);
@@ -120,12 +120,8 @@ public abstract class Responder {
       try {
         response = respond(m, request);
         context.setResponse(response);
-      } catch (AvroRemoteException e) {
-        error = e;
-        context.setError(error);
       } catch (Exception e) {
-        LOG.warn("application error", e);
-        error = new AvroRemoteException(new Utf8(e.toString()));
+        error = e;
         context.setError(error);
       }
       
@@ -140,15 +136,14 @@ public abstract class Responder {
       else
         writeError(m.getErrors(), error, out);
 
-    } catch (AvroRuntimeException e) {            // system error
+    } catch (Exception e) {                       // system error
       LOG.warn("system error", e);
-      error = new AvroRemoteException(e);
-      context.setError(error);
+      context.setError(e);
       bbo = new ByteBufferOutputStream();
       out = new BinaryEncoder(bbo);
       META_WRITER.write(context.responseCallMeta(), out);
       out.writeBoolean(true);
-      writeError(Protocol.SYSTEM_ERRORS, error, out);
+      writeError(Protocol.SYSTEM_ERRORS, new Utf8(e.toString()), out);
     }
       
     return bbo.getBufferList();
@@ -194,7 +189,7 @@ public abstract class Responder {
 
   /** Computes the response for a message. */
   public abstract Object respond(Message message, Object request)
-    throws AvroRemoteException;
+    throws Exception;
 
   /** Reads a request message. */
   public abstract Object readRequest(Schema schema, Decoder in)
@@ -205,7 +200,7 @@ public abstract class Responder {
                                      Encoder out) throws IOException;
 
   /** Writes an error message. */
-  public abstract void writeError(Schema schema, AvroRemoteException error,
+  public abstract void writeError(Schema schema, Object error,
                                   Encoder out) throws IOException;
 
 }

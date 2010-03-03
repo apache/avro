@@ -84,7 +84,7 @@ public abstract class Requestor {
 
   /** Writes a request message and reads a response or error message. */
   public Object request(String messageName, Object request)
-    throws IOException {
+    throws Exception {
     BinaryDecoder in = null;
     Message m;
     RPCContext context = new RPCContext();
@@ -130,7 +130,7 @@ public abstract class Requestor {
       return response;
       
     } else {
-      AvroRemoteException error = readError(m.getErrors(), in);
+      Exception error = readError(m.getErrors(), in);
       context.setError(error);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.clientReceiveResponse(context);
@@ -225,7 +225,7 @@ public abstract class Requestor {
     throws IOException;
 
   /** Reads an error message. */
-  public abstract AvroRemoteException readError(Schema schema, Decoder in)
+  public abstract Exception readError(Schema schema, Decoder in)
     throws IOException;
 }
 

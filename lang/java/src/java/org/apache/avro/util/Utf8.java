@@ -20,8 +20,10 @@ package org.apache.avro.util;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.avro.io.BinaryData;
+import org.apache.avro.reflect.Stringable;
 
 /** A Utf8 string. */
+@Stringable
 public class Utf8 implements Comparable<Utf8> {
   private static final byte[] EMPTY = new byte[0];
 

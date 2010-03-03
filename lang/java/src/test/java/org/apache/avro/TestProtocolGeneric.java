@@ -24,7 +24,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRequestor;
 import org.apache.avro.generic.GenericResponder;
 import org.apache.avro.ipc.AvroRemoteException;
-import org.apache.avro.ipc.Requestor;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
@@ -96,7 +95,7 @@ public class TestProtocolGeneric {
 
   protected static SocketServer server;
   protected static Transceiver client;
-  protected static Requestor requestor;
+  protected static GenericRequestor requestor;
 
   @Before
   public void testStartServer() throws Exception {
@@ -177,7 +176,7 @@ public class TestProtocolGeneric {
     Transceiver t
       = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     try {
-      Requestor r = new GenericRequestor(protocol, t);
+      GenericRequestor r = new GenericRequestor(protocol, t);
       GenericRecord params = new GenericData.Record(message.getRequest());
       params.put("extra", Boolean.TRUE);
       params.put("greeting", new Utf8("bob"));

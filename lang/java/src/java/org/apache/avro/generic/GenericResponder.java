@@ -46,9 +46,11 @@ public abstract class GenericResponder extends Responder {
   }
 
   @Override
-  public void writeError(Schema schema, AvroRemoteException error,
+  public void writeError(Schema schema, Object error,
                          Encoder out) throws IOException {
-    new GenericDatumWriter<Object>(schema).write(error.getValue(), out);
+    if (error instanceof AvroRemoteException)
+      error = ((AvroRemoteException)error).getValue();
+    new GenericDatumWriter<Object>(schema).write(error, out);
   }
 
 }

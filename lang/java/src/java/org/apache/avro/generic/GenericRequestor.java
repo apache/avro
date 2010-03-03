@@ -36,6 +36,20 @@ public class GenericRequestor extends Requestor {
   }
 
   @Override
+  public Object request(String messageName, Object request)
+    throws IOException {
+    try {
+      return super.request(messageName, request);
+    } catch (Exception e) {
+      if (e instanceof RuntimeException)
+        throw (RuntimeException)e;
+      if (e instanceof IOException)
+        throw (IOException)e;
+      throw new AvroRemoteException(e);
+    }
+  }
+
+  @Override
   public void writeRequest(Schema schema, Object request, Encoder out)
     throws IOException {
     new GenericDatumWriter<Object>(schema).write(request, out);
