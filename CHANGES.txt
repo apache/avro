@@ -15,6 +15,8 @@ Avro 1.3.1 (unreleased)
     AVRO-431. Fix Java's mvn-install Ant target to work in clean build.
     (cutting)
 
+    AVRO-437. Fix some typos in docs. (Amichai Rothman via cutting)
+
 Avro 1.3.0 (24 February 2010)
 
   INCOMPATIBLE CHANGES
