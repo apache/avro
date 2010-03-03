@@ -58,14 +58,14 @@
         <title>Primitive Types</title>
         <p>The set of primitive type names is:</p>
         <ul>
-          <li><code>string</code>: unicode character sequence</li>
-          <li><code>bytes</code>: sequence of 8-bit unsigned bytes</li>
+          <li><code>null</code>: no value</li>
+          <li><code>boolean</code>: a binary value</li>
           <li><code>int</code>: 32-bit signed integer</li>
           <li><code>long</code>: 64-bit signed integer</li>
           <li><code>float</code>: single precision (32-bit) IEEE 754 floating-point number</li>
           <li><code>double</code>: double precision (64-bit) IEEE 754 floating-point number</li>
-          <li><code>boolean</code>: a binary value</li>
-          <li><code>null</code>: no value</li>
+          <li><code>bytes</code>: sequence of 8-bit unsigned bytes</li>
+          <li><code>string</code>: unicode character sequence</li>
         </ul>
         
         <p>Primitive types have no specified attributes.</p>
@@ -115,12 +115,12 @@
 		  <table class="right">
 		    <caption>field default values</caption>
 		    <tr><th>avro type</th><th>json type</th><th>example</th></tr>
-		    <tr><td>string</td><td>string</td><td>"foo"</td></tr>
-		    <tr><td>bytes</td><td>string</td><td>"\u00FF"</td></tr>
+		    <tr><td>null</td><td>null</td><td>null</td></tr>
+		    <tr><td>boolean</td><td>boolean</td><td>true</td></tr>
 		    <tr><td>int,long</td><td>integer</td><td>1</td></tr>
 		    <tr><td>float,double</td><td>number</td><td>1.1</td></tr>
-		    <tr><td>boolean</td><td>boolean</td><td>true</td></tr>
-		    <tr><td>null</td><td>null</td><td>null</td></tr>
+		    <tr><td>bytes</td><td>string</td><td>"\u00FF"</td></tr>
+		    <tr><td>string</td><td>string</td><td>"foo"</td></tr>
 		    <tr><td>record</td><td>object</td><td>{"a": 1}</td></tr>
 		    <tr><td>enum</td><td>string</td><td>"FOO"</td></tr>
 		    <tr><td>array</td><td>array</td><td>[1]</td></tr>
@@ -308,20 +308,10 @@
           <title>Primitive Types</title>
           <p>Primitive types are encoded in binary as follows:</p>
           <ul>
-            <li>a <code>string</code> is encoded as
-              a <code>long</code> followed by that many bytes of UTF-8
-              encoded character data.
-	      <p>For example, the three-character string "foo" would
-		be encoded as the long value 3 (encoded as
-		hex <code>06</code>) followed by the UTF-8 encoding of
-		'f', 'o', and 'o' (the hex bytes <code>66 6f
-		6f</code>):
-	      </p>
-	      <source>06 66 6f 6f</source>
-	    </li>
-            <li><code>bytes</code> are encoded as
-              a <code>long</code> followed by that many bytes of data.
-	    </li>
+            <li><code>null</code> is written as zero bytes.</li>
+            <li>a <code>boolean</code> is written as a single byte whose
+              value is either <code>0</code> (false) or <code>1</code>
+              (true).</li>
             <li><code>int</code> and <code>long</code> values are written
               using <a href="ext:vint">variable-length</a>
 	      <a href="ext:zigzag">zig-zag</a> coding.  Some examples:
@@ -347,10 +337,20 @@
               to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Double.html#doubleToLongBits%28double%29">Java's
 		doubleToLongBits</a> and then encoded in little-endian
               format.</li>
-            <li>a <code>boolean</code> is written as a single byte whose
-              value is either <code>0</code> (false) or <code>1</code>
-              (true).</li>
-            <li><code>null</code> is written as zero bytes.</li>
+            <li><code>bytes</code> are encoded as
+              a <code>long</code> followed by that many bytes of data.
+            </li>
+            <li>a <code>string</code> is encoded as
+              a <code>long</code> followed by that many bytes of UTF-8
+              encoded character data.
+              <p>For example, the three-character string "foo" would
+              be encoded as the long value 3 (encoded as
+              hex <code>06</code>) followed by the UTF-8 encoding of
+              'f', 'o', and 'o' (the hex bytes <code>66 6f
+              6f</code>):
+              </p>
+              <source>06 66 6f 6f</source>
+            </li>
           </ul>
 
 	</section>
@@ -409,122 +409,113 @@
               count zero indicates the end of the array.  Each item is
               encoded per the array's item schema.</p>
 
-	    <p>If a block's count is negative, then the count is
-	      followed immediately by a <code>long</code>
-	      block <em>size</em>, indicating the number of bytes in the
-	      block.  The actual count in this case is the absolute value
-	      of the count written.</p>
+            <p>If a block's count is negative, its absolute value is used,
+              and the count is followed immediately by a <code>long</code>
+              block <em>size</em> indicating the number of bytes in the
+              block.  This block size permits fast skipping through data,
+              e.g., when projecting a record to a subset of its fields.</p>
 
-	    <p>For example, the array schema</p>
-	    <source>{"type": "array", "items": "long"}</source>
-	    <p>an array containing the items 3 and 27 could be encoded
-	      as the long value 2 (encoded as hex 04) followed by long
-	      values 3 and 27 (encoded as hex <code>06 36</code>)
-	      terminated by zero:</p>
-	    <source>04 06 36 00</source>
+            <p>For example, the array schema</p>
+            <source>{"type": "array", "items": "long"}</source>
+            <p>an array containing the items 3 and 27 could be encoded
+              as the long value 2 (encoded as hex 04) followed by long
+              values 3 and 27 (encoded as hex <code>06 36</code>)
+              terminated by zero:</p>
+            <source>04 06 36 00</source>
 
-	    <p>The blocked representation permits one to read and write
-	      arrays larger than can be buffered in memory, since one can
-	      start writing items without knowing the full length of the
-	      array.  The optional block sizes permit fast skipping
-	      through data, e.g., when projecting a record to a subset of
-	      its fields.</p>
+            <p>The blocked representation permits one to read and write
+              arrays larger than can be buffered in memory, since one can
+              start writing items without knowing the full length of the
+              array.</p>
 
-	  </section>
+          </section>
 
-          <section>
+	  <section>
             <title>Maps</title>
             <p>Maps are encoded as a series of <em>blocks</em>.  Each
               block consists of a <code>long</code> <em>count</em>
               value, followed by that many key/value pairs.  A block
               with count zero indicates the end of the map.  Each item
               is encoded per the map's value schema.</p>
-
-	    <p>If a block's count is negative, then the count is
-	      followed immediately by a <code>long</code>
-	      block <em>size</em>, indicating the number of bytes in the
-	      block.  The actual count in this case is the absolute value
-	      of the count written.</p>
-
-	    <p>The blocked representation permits one to read and write
-	      maps larger than can be buffered in memory, since one can
-	      start writing items without knowing the full length of the
-	      map.  The optional block sizes permit fast skipping through
-	      data, e.g., when projecting a record to a subset of its
-	      fields.</p>
-
-	    <p><em>NOTE: Blocking has not yet been fully implemented and
-		may change.  Arbitrarily large objects must be easily
-		writable and readable but until we have proven this with an
-		implementation and tests this part of the specification
-		should be considered draft.</em></p>
+	    
+            <p>If a block's count is negative, its absolute value is used,
+              and the count is followed immediately by a <code>long</code>
+              block <em>size</em> indicating the number of bytes in the
+              block.  This block size permits fast skipping through data,
+              e.g., when projecting a record to a subset of its fields.</p>
+	    
+            <p>The blocked representation permits one to read and write
+              maps larger than can be buffered in memory, since one can
+              start writing items without knowing the full length of the
+              map.</p>
+	
 	  </section>
 
           <section>
             <title>Unions</title>
-	    <p>A union is encoded by first writing a <code>long</code>
-	      value indicating the zero-based position within the
-	      union of the schema of its value.  The value is then
-	      encoded per the indicated schema within the union.</p>
-	    <p>For example, the union
-	      schema <code>["string","null"]</code> would encode:</p>
+            <p>A union is encoded by first writing a <code>long</code>
+              value indicating the zero-based position within the
+              union of the schema of its value.  The value is then
+              encoded per the indicated schema within the union.</p>
+            <p>For example, the union
+              schema <code>["string","null"]</code> would encode:</p>
             <ul>
               <li><code>null</code> as the integer 1 (the index of
-		"null" in the union, encoded as
-		hex <code>02</code>): <source>02</source></li>
+                "null" in the union, encoded as
+                hex <code>02</code>): <source>02</source></li>
               <li>the string <code>"a"</code> as zero (the index of
-		"string" in the union), followed by the serialized string:
-		<source>00 02 61</source></li>
+                "string" in the union), followed by the serialized string:
+                <source>00 02 61</source></li>
             </ul>
           </section>
 
           <section>
             <title>Fixed</title>
-	    <p>Fixed instances are encoded using the number of bytes
-	      declared in the schema.</p>
+            <p>Fixed instances are encoded using the number of bytes
+              declared in the schema.</p>
           </section>
 
-	</section> <!-- end complex types -->
+        </section> <!-- end complex types -->
 
       </section>
 
       <section id="json_encoding">
         <title>JSON Encoding</title>
-	
-	<p>Except for unions, the JSON encoding is the same as is used
-	to encode <a href="#schema_record">field default
-	values</a>.</p>
+        
+        <p>Except for unions, the JSON encoding is the same as is used
+        to encode <a href="#schema_record">field default
+        values</a>.</p>
 
-	<p>The value of a union is encoded in JSON as follows:</p>
+        <p>The value of a union is encoded in JSON as follows:</p>
 
-	<ul>
-	  <li>if its type is <code>null</code>, then it is encoded as
-	  a JSON null;</li>
-	  <li>otherwise it is encoded as a JSON object with one
-	  name/value pair whose name is the type's name and whose
-	  value is the recursively encoded value.  For Avro's named
-	  types (record, fixed or enum) the user-specified name is
-	  used, for other types the type name is used.</li>
-	</ul>
-	  
-	<p>For example, the union
-	  schema <code>["null","string","Foo"]</code>, where Foo is a
-	  record name, would encode:</p>
+        <ul>
+          <li>if its type is <code>null</code>, then it is encoded as
+          a JSON null;</li>
+          <li>otherwise it is encoded as a JSON object with one
+          name/value pair whose name is the type's name and whose
+          value is the recursively encoded value.  For Avro's named
+          types (record, fixed or enum) the user-specified name is
+          used, for other types the type name is used.</li>
+        </ul>
+          
+        <p>For example, the union
+          schema <code>["null","string","Foo"]</code>, where Foo is a
+          record name, would encode:</p>
         <ul>
           <li><code>null</code> as <code>null</code>;</li>
           <li>the string <code>"a"</code> as
-	    <code>{"string": "a"}</code>; and</li>
+            <code>{"string": "a"}</code>; and</li>
           <li>a Foo instance as <code>{"Foo": {...}}</code>,
           where <code>{...}</code> indicates the JSON encoding of a
           Foo instance.</li>
         </ul>
 
-	<p>Note that a schema is still required to correctly process
-	JSON-encoded data.  For example, the JSON encoding does not
-	distinguish between <code>int</code>
-	and <code>long</code>, <code>float</code>
-	and <code>double</code>, records and maps, enums and strings,
-	etc.</p>
+        <p>Note that a schema is still required to correctly process
+        JSON-encoded data.  For example, the JSON encoding does not
+        distinguish between <code>int</code>
+        and <code>long</code>, <code>float</code>
+        and <code>double</code>, records and maps, enums and strings,
+        etc.</p>
 
       </section>
 
@@ -534,59 +525,59 @@
       <title>Sort Order</title>
 
       <p>Avro defines a standard sort order for data.  This permits
-	data written by one system to be efficiently sorted by another
-	system.  This can be an important optimization, as sort order
-	comparisons are sometimes the most frequent per-object
-	operation.  Note also that Avro binary-encoded data can be
-	efficiently ordered without deserializing it to objects.</p>
+        data written by one system to be efficiently sorted by another
+        system.  This can be an important optimization, as sort order
+        comparisons are sometimes the most frequent per-object
+        operation.  Note also that Avro binary-encoded data can be
+        efficiently ordered without deserializing it to objects.</p>
 
       <p>Data items may only be compared if they have identical
-	schemas.  Pairwise comparisons are implemented recursively
-	with a depth-first, left-to-right traversal of the schema.
-	The first mismatch encountered determines the order of the
-	items.</p>
+        schemas.  Pairwise comparisons are implemented recursively
+        with a depth-first, left-to-right traversal of the schema.
+        The first mismatch encountered determines the order of the
+        items.</p>
 
       <p>Two items with the same schema are compared according to the
-	following rules.</p>
+        following rules.</p>
       <ul>
-	<li><code>int</code>, <code>long</code>, <code>float</code>
-	  and <code>double</code> data is ordered by ascending numeric
-	  value.</li>
-	<li><code>boolean</code> data is ordered with false before true.</li>
-	<li><code>null</code> data is always equal.</li>
-	<li><code>string</code> data is compared lexicographically by
-	  Unicode code point.  Note that since UTF-8 is used as the
-	  binary encoding for strings, sorting of bytes and string
-	  binary data is identical.</li>
-	<li><code>bytes</code> and <code>fixed</code> data are
-	  compared lexicographically by unsigned 8-bit values.</li>
-	<li><code>array</code> data is compared lexicographically by
-	  element.</li>
-	<li><code>enum</code> data is ordered by the symbol's position
-	  in the enum schema.  For example, an enum whose symbols are
-	  <code>["z", "a"]</code> would sort <code>"z"</code> values
-	  before <code>"a"</code> values.</li>
-	<li><code>union</code> data is first ordered by the branch
-	  within the union, and, within that, by the type of the
-	  branch.  For example, an <code>["int", "string"]</code>
-	  union would order all int values before all string values,
-	  with the ints and strings themselves ordered as defined
-	  above.</li>
-	<li><code>record</code> data is ordered lexicographically by
-	  field.  If a field specifies that its order is:
-	  <ul>
-	    <li><code>"ascending"</code>, then the order of its values
-	      is unaltered.</li>
-	    <li><code>"descending"</code>, then the order of its values
-	      is reversed.</li>
-	    <li><code>"ignore"</code>, then its values are ignored
-	      when sorting.</li>
-	  </ul>
-	</li>
-	<li><code>map</code> data may not be compared.  It is an error
-	  to attempt to compare data containing maps unless those maps
-	  are in an <code>"order":"ignore"</code> record field.
-	</li>
+        <li><code>null</code> data is always equal.</li>
+        <li><code>boolean</code> data is ordered with false before true.</li>
+        <li><code>int</code>, <code>long</code>, <code>float</code>
+          and <code>double</code> data is ordered by ascending numeric
+          value.</li>
+        <li><code>bytes</code> and <code>fixed</code> data are
+          compared lexicographically by unsigned 8-bit values.</li>
+        <li><code>string</code> data is compared lexicographically by
+          Unicode code point.  Note that since UTF-8 is used as the
+          binary encoding for strings, sorting of bytes and string
+          binary data is identical.</li>
+        <li><code>array</code> data is compared lexicographically by
+          element.</li>
+        <li><code>enum</code> data is ordered by the symbol's position
+          in the enum schema.  For example, an enum whose symbols are
+          <code>["z", "a"]</code> would sort <code>"z"</code> values
+          before <code>"a"</code> values.</li>
+        <li><code>union</code> data is first ordered by the branch
+          within the union, and, within that, by the type of the
+          branch.  For example, an <code>["int", "string"]</code>
+          union would order all int values before all string values,
+          with the ints and strings themselves ordered as defined
+          above.</li>
+        <li><code>record</code> data is ordered lexicographically by
+          field.  If a field specifies that its order is:
+          <ul>
+            <li><code>"ascending"</code>, then the order of its values
+              is unaltered.</li>
+            <li><code>"descending"</code>, then the order of its values
+              is reversed.</li>
+            <li><code>"ignore"</code>, then its values are ignored
+              when sorting.</li>
+          </ul>
+        </li>
+        <li><code>map</code> data may not be compared.  It is an error
+          to attempt to compare data containing maps unless those maps
+          are in an <code>"order":"ignore"</code> record field.
+        </li>
       </ul>
     </section>
 
@@ -594,39 +585,39 @@
       <title>Object Container Files</title>
       <p>Avro includes a simple object container file format.  A file
       has a schema, and all objects stored in the file must be written
-      according to that schema.  Objects are stored in blocks that may
-      be compressed.  Syncronization markers are used between blocks
-      to permit efficient splitting of files for MapReduce
-      processing.</p>
+      according to that schema, using binary encoding.  Objects are
+      stored in blocks that may be compressed.  Syncronization markers
+      are used between blocks to permit efficient splitting of files
+      for MapReduce processing.</p>
 
       <p>Files may include arbitrary user-specified metadata.</p>
 
       <p>A file consists of:</p>
       <ul>
-	<li>A <em>file header</em>, followed by</li>
-	<li>one or more <em>file data blocks</em>.</li>
+        <li>A <em>file header</em>, followed by</li>
+        <li>one or more <em>file data blocks</em>.</li>
       </ul>
 
       <p>A file header consists of:</p>
       <ul>
-	<li>Four bytes, ASCII 'O', 'b', 'j', followed by 1.</li>
-	<li><em>file metadata</em>, including the schema.</li>
-	<li>The 16-byte, randomly-generated sync marker for this file.</li>
+        <li>Four bytes, ASCII 'O', 'b', 'j', followed by 1.</li>
+        <li><em>file metadata</em>, including the schema.</li>
+        <li>The 16-byte, randomly-generated sync marker for this file.</li>
       </ul>
 
       <p>File metadata consists of:</p>
       <ul>
-	<li>A long indicating the number of metadata key/value pairs.</li>
-	<li>For each pair, a string key and bytes value.</li>
+        <li>A long indicating the number of metadata key/value pairs.</li>
+        <li>For each pair, a string key and bytes value.</li>
       </ul>
 
       <p>All metadata properties that start with "avro." are reserved.
       The following file metadata properties are currently used:</p>
       <ul>
-	<li><strong>avro.schema</strong> contains the schema of objects
-	stored in the file, as JSON data (required).</li>
-	<li><strong>avro.codec</strong> the name of the compression codec
-	used to compress blocks, as a string.  Implementations
+        <li><strong>avro.schema</strong> contains the schema of objects
+        stored in the file, as JSON data (required).</li>
+        <li><strong>avro.codec</strong> the name of the compression codec
+        used to compress blocks, as a string.  Implementations
         are required to support the following codecs: "null" and "deflate".  
         If codec is absent, it is assumed to be "null".  The codecs
         are described with more detail below.</li>
@@ -645,16 +636,16 @@
 
       <p>A file data block consists of:</p>
       <ul>
-	<li>A long indicating the count of objects in this block.</li>
-	<li>A long indicating the size in bytes of the serialized objects
-	in the current block, after any codec is applied</li>
-	<li>The serialized objects.  If a codec is specified, this is
-	compressed by that codec.</li>
-	<li>The file's 16-byte sync marker.</li>
+        <li>A long indicating the count of objects in this block.</li>
+        <li>A long indicating the size in bytes of the serialized objects
+        in the current block, after any codec is applied</li>
+        <li>The serialized objects.  If a codec is specified, this is
+        compressed by that codec.</li>
+        <li>The file's 16-byte sync marker.</li>
       </ul>
-	  <p>Thus, each block's binary data can be efficiently extracted or skipped without
-	  deserializing the contents.  The combination of block size, object counts, and 
-	  sync markers enable detection of corrupt blocks and help ensure data integrity.</p>
+          <p>Thus, each block's binary data can be efficiently extracted or skipped without
+          deserializing the contents.  The combination of block size, object counts, and 
+          sync markers enable detection of corrupt blocks and help ensure data integrity.</p>
       <section>
       <title>Required Codecs</title>
         <section>
@@ -683,42 +674,44 @@
 
       <p>A protocol is a JSON object with the following attributes:</p>
       <ul>
-	<li><em>protocol</em>, a string, the name of the protocol
-	(required);</li>
-	<li><em>namespace</em>, an optional string that qualifies the name;</li>
-	<li><em>doc</em>, an optional string describing this protocol;</li>
-	<li><em>types</em>, an optional list of definitions of named types
-	  (records, enums, fixed and errors).  An error definition is
-	  just like a record definition except it uses "error" instead
-	  of "record".  Note that forward references to named types
-	  are not permitted.</li>
-	<li><em>messages</em>, an optional JSON object whose keys are
-	  message names and whose values are objects whose attributes
-	  are described below.  No two messages may have the same
-	  name.</li>
+        <li><em>protocol</em>, a string, the name of the protocol
+        (required);</li>
+        <li><em>namespace</em>, an optional string that qualifies the name;</li>
+        <li><em>doc</em>, an optional string describing this protocol;</li>
+        <li><em>types</em>, an optional list of definitions of named types
+          (records, enums, fixed and errors).  An error definition is
+          just like a record definition except it uses "error" instead
+          of "record".  Note that forward references to named types
+          are not permitted.</li>
+        <li><em>messages</em>, an optional JSON object whose keys are
+          message names and whose values are objects whose attributes
+          are described below.  No two messages may have the same
+          name.</li>
       </ul>
+      <p>The name and namespace qualification rules defined for schema objects
+	apply to protocols as well.</p>
 
       <section>
-	<title>Messages</title>
-	<p>A message has attributes:</p>
-	<ul>
+        <title>Messages</title>
+        <p>A message has attributes:</p>
+        <ul>
           <li>a <em>doc</em>, an optional description of the message,</li>
-	  <li>a <em>request</em>, a list of named,
-	    typed <em>parameter</em> schemas (this has the same form
-	    as the fields of a record declaration);</li>
-	  <li>a <em>response</em> schema; and</li> 
-	  <li>an optional union of <em>error</em> schemas.</li>
-	</ul>
-	<p>A request parameter list is processed equivalently to an
-	  anonymous record.  Since record field lists may vary between
-	  reader and writer, request parameters may also differ
-	  between the caller and responder, and such differences are
-	  resolved in the same manner as record field differences.</p>
+          <li>a <em>request</em>, a list of named,
+            typed <em>parameter</em> schemas (this has the same form
+            as the fields of a record declaration);</li>
+          <li>a <em>response</em> schema; and</li> 
+          <li>an optional union of <em>error</em> schemas.</li>
+        </ul>
+        <p>A request parameter list is processed equivalently to an
+          anonymous record.  Since record field lists may vary between
+          reader and writer, request parameters may also differ
+          between the caller and responder, and such differences are
+          resolved in the same manner as record field differences.</p>
       </section>
       <section>
-	<title>Sample Protocol</title>
-	<p>For example, one may define a simple HelloWorld protocol with:</p>
-	<source>
+        <title>Sample Protocol</title>
+        <p>For example, one may define a simple HelloWorld protocol with:</p>
+        <source>
 {
   "namespace": "com.acme",
   "protocol": "HelloWorld",
@@ -740,7 +733,7 @@
     }
   }
 }
-	</source>
+        </source>
       </section>
     </section>
 
@@ -748,101 +741,101 @@
       <title>Protocol Wire Format</title>
 
       <section>
-	<title>Message Transport</title>
-	<p>Messages may be transmitted via
-	different <em>transport</em> mechanisms.</p>
+        <title>Message Transport</title>
+        <p>Messages may be transmitted via
+        different <em>transport</em> mechanisms.</p>
 
-	<p>To the transport, a <em>message</em> is an opaque byte sequence.</p>
+        <p>To the transport, a <em>message</em> is an opaque byte sequence.</p>
 
-	<p>A transport is a system that supports:</p>
-	<ul>
-	  <li><strong>transmission of request messages</strong>
-	  </li>
-	  <li><strong>receipt of corresponding response messages</strong>
-	    <p>Servers will send a response message back to the client
-	    corresponding to each request message.  The mechanism of
-	    that correspondance is transport-specific.  For example,
-	    in HTTP it might be implicit, since HTTP directly supports
-	    requests and responses.  But a transport that multiplexes
-	    many client threads over a single socket would need to tag
-	    messages with unique identifiers.</p>
-	  </li>
-	</ul>
+        <p>A transport is a system that supports:</p>
+        <ul>
+          <li><strong>transmission of request messages</strong>
+          </li>
+          <li><strong>receipt of corresponding response messages</strong>
+            <p>Servers will send a response message back to the client
+            corresponding to each request message.  The mechanism of
+            that correspondance is transport-specific.  For example,
+            in HTTP it might be implicit, since HTTP directly supports
+            requests and responses.  But a transport that multiplexes
+            many client threads over a single socket would need to tag
+            messages with unique identifiers.</p>
+          </li>
+        </ul>
 
-	<section>
-	  <title>HTTP as Transport</title>
-	  <p>When
-	    <a href="http://www.w3.org/Protocols/rfc2616/rfc2616.html">HTTP</a>
-	    is used as a transport, each Avro message exchange is an
-	    HTTP request/response pair.  All messages of an Avro
-	    protocol should share a single URL at an HTTP server.
-	    Other protocols may also use that URL.  Both normal and
-	    error Avro response messages should use the 200 (OK)
-	    response code.  The chunked encoding may be used for
-	    requests and responses, but, regardless the Avro request
-	    and response are the entire content of an HTTP request and
-	    response.  The HTTP Content-Type of requests and responses
-	    should be specified as "avro/binary".  Requests should be
-	    made using the POST method.</p>
-	</section>
+        <section>
+          <title>HTTP as Transport</title>
+          <p>When
+            <a href="http://www.w3.org/Protocols/rfc2616/rfc2616.html">HTTP</a>
+            is used as a transport, each Avro message exchange is an
+            HTTP request/response pair.  All messages of an Avro
+            protocol should share a single URL at an HTTP server.
+            Other protocols may also use that URL.  Both normal and
+            error Avro response messages should use the 200 (OK)
+            response code.  The chunked encoding may be used for
+            requests and responses, but, regardless the Avro request
+            and response are the entire content of an HTTP request and
+            response.  The HTTP Content-Type of requests and responses
+            should be specified as "avro/binary".  Requests should be
+            made using the POST method.</p>
+        </section>
       </section>
 
       <section>
-	<title>Message Framing</title>
-	<p>Avro messages are <em>framed</em> as a list of buffers.</p>
-	<p>Framing is a layer between messages and the transport.
-	It exists to optimize certain operations.</p>
+        <title>Message Framing</title>
+        <p>Avro messages are <em>framed</em> as a list of buffers.</p>
+        <p>Framing is a layer between messages and the transport.
+        It exists to optimize certain operations.</p>
 
-	<p>The format of framed message data is:</p>
-	<ul>
-	  <li>a series of <em>buffers</em>, where each buffer consists of:
-	    <ul>
-	      <li>a four-byte, big-endian <em>buffer length</em>, followed by</li>
-	      <li>that many bytes of <em>buffer data</em>.</li>
-	    </ul>
-	  </li>
-	  <li>A message is always terminated by a zero-lenghted buffer.</li>
-	</ul>
+        <p>The format of framed message data is:</p>
+        <ul>
+          <li>a series of <em>buffers</em>, where each buffer consists of:
+            <ul>
+              <li>a four-byte, big-endian <em>buffer length</em>, followed by</li>
+              <li>that many bytes of <em>buffer data</em>.</li>
+            </ul>
+          </li>
+          <li>A message is always terminated by a zero-lenghted buffer.</li>
+        </ul>
 
-	<p>Framing is transparent to request and response message
-	formats (described below).  Any message may be presented as a
-	single or multiple buffers.</p>
+        <p>Framing is transparent to request and response message
+        formats (described below).  Any message may be presented as a
+        single or multiple buffers.</p>
 
-	<p>Framing can permit readers to more efficiently get
-	different buffers from different sources and for writers to
-	more efficiently store different buffers to different
-	destinations.  In particular, it can reduce the number of
-	times large binary objects are copied.  For example, if an RPC
-	parameter consists of a megabyte of file data, that data can
-	be copied directly to a socket from a file descriptor, and, on
-	the other end, it could be written directly to a file
-	descriptor, never entering user space.</p>
+        <p>Framing can permit readers to more efficiently get
+        different buffers from different sources and for writers to
+        more efficiently store different buffers to different
+        destinations.  In particular, it can reduce the number of
+        times large binary objects are copied.  For example, if an RPC
+        parameter consists of a megabyte of file data, that data can
+        be copied directly to a socket from a file descriptor, and, on
+        the other end, it could be written directly to a file
+        descriptor, never entering user space.</p>
 
-	<p>A simple, recommended, framing policy is for writers to
-	create a new segment whenever a single binary object is
-	written that is larger than a normal output buffer.  Small
-	objects are then appended in buffers, while larger objects are
-	written as their own buffers.  When a reader then tries to
-	read a large object the runtime can hand it an entire buffer
-	directly, without having to copy it.</p>
+        <p>A simple, recommended, framing policy is for writers to
+        create a new segment whenever a single binary object is
+        written that is larger than a normal output buffer.  Small
+        objects are then appended in buffers, while larger objects are
+        written as their own buffers.  When a reader then tries to
+        read a large object the runtime can hand it an entire buffer
+        directly, without having to copy it.</p>
       </section>
 
       <section>
-	<title>Handshake</title>
+        <title>Handshake</title>
 
-	<p>RPC requests and responses are prefixed by handshakes.  The
-	purpose of the handshake is to ensure that the client and the
-	server have each other's protocol definition, so that the
-	client can correctly deserialize responses, and the server can
-	correctly deserialize requests.  Both clients and servers
-	should maintain a cache of recently seen protocols, so that,
-	in most cases, a handshake will be completed without extra
-	round-trip network exchanges or the transmission of full
-	protocol text.</p>
+        <p>RPC requests and responses are prefixed by handshakes.  The
+        purpose of the handshake is to ensure that the client and the
+        server have each other's protocol definition, so that the
+        client can correctly deserialize responses, and the server can
+        correctly deserialize requests.  Both clients and servers
+        should maintain a cache of recently seen protocols, so that,
+        in most cases, a handshake will be completed without extra
+        round-trip network exchanges or the transmission of full
+        protocol text.</p>
 
-	<p>The handshake process uses the following record schemas:</p>
+        <p>The handshake process uses the following record schemas:</p>
 
-	<source>
+        <source>
 {
   "type": "record",
   "name": "HandshakeRequest", "namespace":"org.apache.avro.ipc",
@@ -860,7 +853,7 @@
   "fields": [
     {"name": "match",
      "type": {"type": "enum", "name": "HandshakeMatch",
-	      "symbols": ["BOTH", "CLIENT", "NONE"]}},
+              "symbols": ["BOTH", "CLIENT", "NONE"]}},
     {"name": "serverProtocol",
      "type": ["null", "string"]},
     {"name": "serverHash",
@@ -869,92 +862,92 @@
      "type": ["null", {"type": "map", "values": "bytes"}]}
   ]
 }
-	</source>
+        </source>
 
         <ul>
-	  <li>A client first prefixes each request with
-	  a <code>HandshakeRequest</code> containing just the hash of
-	  its protocol and of the server's protocol
-	  (<code>clientHash!=null, clientProtocol=null,
-	  serverHash!=null</code>), where the hashes are 128-bit MD5
-	  hashes of the JSON protocol text. If a client has never
-	  connected to a given server, it sends its hash as a guess of
-	  the server's hash, otherwise it sends the hash that it
-	  previously obtained from this server.</li>
+          <li>A client first prefixes each request with
+          a <code>HandshakeRequest</code> containing just the hash of
+          its protocol and of the server's protocol
+          (<code>clientHash!=null, clientProtocol=null,
+          serverHash!=null</code>), where the hashes are 128-bit MD5
+          hashes of the JSON protocol text. If a client has never
+          connected to a given server, it sends its hash as a guess of
+          the server's hash, otherwise it sends the hash that it
+          previously obtained from this server.</li>
 
-	  <li>The server responds with
-	  a <code>HandshakeResponse</code> containing one of:
-	    <ul>
-	      <li><code>match=BOTH, serverProtocol=null,
-	      serverHash=null</code> if the client sent the valid hash
-	      of the server's protocol and the server knows what
-	      protocol corresponds to the client's hash. In this case,
-	      the request is complete and the response data
-	      immediately follows the HandshakeResponse.</li>
+          <li>The server responds with
+          a <code>HandshakeResponse</code> containing one of:
+            <ul>
+              <li><code>match=BOTH, serverProtocol=null,
+              serverHash=null</code> if the client sent the valid hash
+              of the server's protocol and the server knows what
+              protocol corresponds to the client's hash. In this case,
+              the request is complete and the response data
+              immediately follows the HandshakeResponse.</li>
 
-	      <li><code>match=CLIENT, serverProtocol!=null,
-	      serverHash!=null</code> if the server has previously
-	      seen the client's protocol, but the client sent an
-	      incorrect hash of the server's protocol. The request is
-	      complete and the response data immediately follows the
-	      HandshakeResponse. The client must use the returned
-	      protocol to process the response and should also cache
-	      that protocol and its hash for future interactions with
-	      this server.</li>
+              <li><code>match=CLIENT, serverProtocol!=null,
+              serverHash!=null</code> if the server has previously
+              seen the client's protocol, but the client sent an
+              incorrect hash of the server's protocol. The request is
+              complete and the response data immediately follows the
+              HandshakeResponse. The client must use the returned
+              protocol to process the response and should also cache
+              that protocol and its hash for future interactions with
+              this server.</li>
 
               <li><code>match=NONE</code> if the server has not
-	      previously seen the client's protocol.
-	      The <code>serverHash</code>
-	      and <code>serverProtocol</code> may also be non-null if
-	      the server's protocol hash was incorrect.
+              previously seen the client's protocol.
+              The <code>serverHash</code>
+              and <code>serverProtocol</code> may also be non-null if
+              the server's protocol hash was incorrect.
 
-	      <p>In this case the client must then re-submit its request
-	      with its protocol text (<code>clientHash!=null,
-	      clientProtocol!=null, serverHash!=null</code>) and the
-	      server should respond with a successful match
-	      (<code>match=BOTH, serverProtocol=null,
-	      serverHash=null</code>) as above.</p>
-	      </li>
-	    </ul>
-	  </li>
-	</ul>
+              <p>In this case the client must then re-submit its request
+              with its protocol text (<code>clientHash!=null,
+              clientProtocol!=null, serverHash!=null</code>) and the
+              server should respond with a successful match
+              (<code>match=BOTH, serverProtocol=null,
+              serverHash=null</code>) as above.</p>
+              </li>
+            </ul>
+          </li>
+        </ul>
 
-	<p>The <code>meta</code> field is reserved for future
-	handshake enhancements.</p>
+        <p>The <code>meta</code> field is reserved for future
+        handshake enhancements.</p>
 
       </section>
 
       <section>
-	<title>Call Format</title>
-	<p>A <em>call</em> consists of a request message paired with
-	its resulting response or error message.  Requests and
-	responses contain extensible metadata, and both kinds of
-	messages are framed as described above.</p>
+        <title>Call Format</title>
+        <p>A <em>call</em> consists of a request message paired with
+        its resulting response or error message.  Requests and
+        responses contain extensible metadata, and both kinds of
+        messages are framed as described above.</p>
 
-	<p>The format of a call request is:</p>
-	<ul>
-	  <li><em>request metadata</em>, a map with values of
-	  type <code>bytes</code></li>
-	  <li>the <em>message name</em>, an Avro string,
-	  followed by</li>
-	  <li>the message <em>parameters</em>.  Parameters are
-	  serialized according to the message's request
-	  declaration.</li>
-	</ul>
+        <p>The format of a call request is:</p>
+        <ul>
+          <li><em>request metadata</em>, a map with values of
+          type <code>bytes</code></li>
+          <li>the <em>message name</em>, an Avro string,
+          followed by</li>
+          <li>the message <em>parameters</em>.  Parameters are
+          serialized according to the message's request
+          declaration.</li>
+        </ul>
 
-	<p>The format of a call response is:</p>
-	<ul>
-	  <li><em>response metadata</em>, a map with values of
-	  type <code>bytes</code></li>
-	  <li>a one-byte <em>error flag</em> boolean, followed by either:
-	    <ul>
-	      <li>if the error flag is false, the message <em>response</em>,
-		serialized per the message's response schema.</li>
-	      <li>if the error flag is true, the <em>error</em>,
-	      serialized per the message's error union schema.</li>
-	    </ul>
-	  </li>
-	</ul>
+        <p>The format of a call response is:</p>
+        <ul>
+          <li><em>response metadata</em>, a map with values of
+          type <code>bytes</code></li>
+          <li>a one-byte <em>error flag</em> boolean, followed by either:
+            <ul>
+              <li>if the error flag is false, the message <em>response</em>,
+                serialized per the message's response schema.</li>
+              <li>if the error flag is true, the <em>error</em>,
+              serialized per the message's error union schema.</li>
+            </ul>
+          </li>
+        </ul>
       </section>
 
     </section>
@@ -963,96 +956,96 @@
       <title>Schema Resolution</title>
 
       <p>A reader of Avro data, whether from an RPC or a file, can
-	always parse that data because its schema is provided.  But
-	that schema may not be exactly the schema that was expected.
-	For example, if the data was written with a different version
-	of the software than it is read, then records may have had
-	fields added or removed.  This section specifies how such
-	schema differences should be resolved.</p>
+        always parse that data because its schema is provided.  But
+        that schema may not be exactly the schema that was expected.
+        For example, if the data was written with a different version
+        of the software than it is read, then records may have had
+        fields added or removed.  This section specifies how such
+        schema differences should be resolved.</p>
 
       <p>We call the schema used to write the data as
-	the <em>writer's</em> schema, and the schema that the
-	application expects the <em>reader's</em> schema.  Differences
-	between these should be resolved as follows:</p>
+        the <em>writer's</em> schema, and the schema that the
+        application expects the <em>reader's</em> schema.  Differences
+        between these should be resolved as follows:</p>
 
       <ul>
-	<li><p>It is an error if the two schemas do not <em>match</em>.</p>
-	  <p>To match, one of the following must hold:</p>
-	  <ul>
-	    <li>both schemas are arrays whose item types match</li>
-	    <li>both schemas are maps whose value types match</li>
-	    <li>both schemas are enums whose names match</li>
-	    <li>both schemas are fixed whose sizes and names match</li>
-	    <li>both schemas are records with the same name</li>
-	    <li>either schema is a union</li>
-	    <li>both schemas have same primitive type</li>
-	    <li>the writer's schema may be <em>promoted</em> to the
-	      reader's as follows:
-	      <ul>
-		<li>int is promotable to long, float, or double</li>
-		<li>long is promotable to float or double</li>
-		<li>float is promotable to double</li>
-		</ul>
-	    </li>
-	  </ul>
-	</li>
+        <li><p>It is an error if the two schemas do not <em>match</em>.</p>
+          <p>To match, one of the following must hold:</p>
+          <ul>
+            <li>both schemas are arrays whose item types match</li>
+            <li>both schemas are maps whose value types match</li>
+            <li>both schemas are enums whose names match</li>
+            <li>both schemas are fixed whose sizes and names match</li>
+            <li>both schemas are records with the same name</li>
+            <li>either schema is a union</li>
+            <li>both schemas have same primitive type</li>
+            <li>the writer's schema may be <em>promoted</em> to the
+              reader's as follows:
+              <ul>
+                <li>int is promotable to long, float, or double</li>
+                <li>long is promotable to float or double</li>
+                <li>float is promotable to double</li>
+                </ul>
+            </li>
+          </ul>
+        </li>
 
-	<li><strong>if both are records:</strong>
-	  <ul>
-	    <li>the ordering of fields may be different: fields are
+        <li><strong>if both are records:</strong>
+          <ul>
+            <li>the ordering of fields may be different: fields are
               matched by name.</li>
-	    
-	    <li>schemas for fields with the same name in both records
-	      are resolved recursively.</li>
-	    
-	    <li>if the writer's record contains a field with a name
-	      not present in the reader's record, the writer's value
-	      for that field is ignored.</li>
-	    
-	    <li>if the reader's record schema has a field that
+            
+            <li>schemas for fields with the same name in both records
+              are resolved recursively.</li>
+            
+            <li>if the writer's record contains a field with a name
+              not present in the reader's record, the writer's value
+              for that field is ignored.</li>
+            
+            <li>if the reader's record schema has a field that
               contains a default value, and writer's schema does not
               have a field with the same name, then the reader should
               use the default value from its field.</li>
 
-	    <li>if the reader's record schema has a field with no
+            <li>if the reader's record schema has a field with no
               default value, and writer's schema does not have a field
               with the same name, an error is signalled.</li>
-	  </ul>
-	</li>
+          </ul>
+        </li>
 
-	<li><strong>if both are enums:</strong>
-	  <p>if the writer's symbol is not present in the reader's
-	    enum, then an error is signalled.</p>
-	</li>
+        <li><strong>if both are enums:</strong>
+          <p>if the writer's symbol is not present in the reader's
+            enum, then an error is signalled.</p>
+        </li>
 
-	<li><strong>if both are arrays:</strong>
-	  <p>This resolution algorithm is applied recursively to the reader's and
-	    writer's array item schemas.</p>
-	</li>
+        <li><strong>if both are arrays:</strong>
+          <p>This resolution algorithm is applied recursively to the reader's and
+            writer's array item schemas.</p>
+        </li>
 
-	<li><strong>if both are maps:</strong>
-	  <p>This resolution algorithm is applied recursively to the reader's and
-	    writer's value schemas.</p>
-	</li>
+        <li><strong>if both are maps:</strong>
+          <p>This resolution algorithm is applied recursively to the reader's and
+            writer's value schemas.</p>
+        </li>
 
-	<li><strong>if both are unions:</strong>
-	  <p>The first schema in the reader's union that matches the
-	    selected writer's union schema is recursively resolved
-	    against it.  if none match, an error is signalled.</p>
-	</li>
+        <li><strong>if both are unions:</strong>
+          <p>The first schema in the reader's union that matches the
+            selected writer's union schema is recursively resolved
+            against it.  if none match, an error is signalled.</p>
+        </li>
 
-	<li><strong>if reader's is a union, but writer's is not</strong>
-	  <p>The first schema in the reader's union that matches the
-	    writer's schema is recursively resolved against it.  If none
-	    match, an error is signalled.</p>
-	</li>
-	  
-	<li><strong>if writer's is a union, but reader's is not</strong>
-	  <p>If the reader's schema matches the selected writer's schema,
-	    it is recursively resolved against it.  If they do not
-	    match, an error is signalled.</p>
-	</li>
-	  
+        <li><strong>if reader's is a union, but writer's is not</strong>
+          <p>The first schema in the reader's union that matches the
+            writer's schema is recursively resolved against it.  If none
+            match, an error is signalled.</p>
+        </li>
+          
+        <li><strong>if writer's is a union, but reader's is not</strong>
+          <p>If the reader's schema matches the selected writer's schema,
+            it is recursively resolved against it.  If they do not
+            match, an error is signalled.</p>
+        </li>
+          
       </ul>
 
       <p>A schema's "doc" fields are ignored for the purposes of schema resolution.  Hence,
