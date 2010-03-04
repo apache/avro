@@ -72,6 +72,18 @@ static int write_long(avro_writer_t writer, int64_t l)
 	return 0;
 }
 
+static int64_t size_long(avro_writer_t writer, int64_t l)
+{
+	int64_t len = 0;
+	uint64_t n = (l << 1) ^ (l >> 63);
+	while (n & ~0x7F) {
+		len++;
+		n >>= 7;
+	}
+	len++;
+	return len;
+}
+
 static int read_int(avro_reader_t reader, int32_t * i)
 {
 	int64_t l;
@@ -95,6 +107,12 @@ static int write_int(avro_writer_t writer, const int32_t i)
 {
 	int64_t l = i;
 	return write_long(writer, l);
+}
+
+static int64_t size_int(avro_writer_t writer, const int32_t i)
+{
+	int64_t l = i;
+	return size_long(writer, l);
 }
 
 static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
@@ -138,6 +156,12 @@ write_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 	return 0;
 }
 
+static int64_t
+size_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
+{
+	return size_long(writer, len) + len;
+}
+
 static int read_string(avro_reader_t reader, char **s)
 {
 	int64_t len;
@@ -153,6 +177,12 @@ static int write_string(avro_writer_t writer, const char *s)
 {
 	int64_t len = strlen(s);
 	return write_bytes(writer, s, len);
+}
+
+static int64_t size_string(avro_writer_t writer, const char *s)
+{
+	int64_t len = strlen(s);
+	return size_bytes(writer, s, len);
 }
 
 static int read_float(avro_reader_t reader, float *f)
@@ -203,6 +233,11 @@ static int write_float(avro_writer_t writer, const float f)
 	AVRO_WRITE(writer, (void *)&v.i, 4);
 #endif
 	return 0;
+}
+
+static int64_t size_float(avro_writer_t writer, const float f)
+{
+	return 4;
 }
 
 static int read_double(avro_reader_t reader, double *d)
@@ -264,6 +299,11 @@ static int write_double(avro_writer_t writer, const double d)
 	return 0;
 }
 
+static int64_t size_double(avro_writer_t writer, const double d)
+{
+	return 8;
+}
+
 static int read_boolean(avro_reader_t reader, int8_t * b)
 {
 	AVRO_READ(reader, b, 1);
@@ -282,6 +322,11 @@ static int write_boolean(avro_writer_t writer, const int8_t b)
 	return 0;
 }
 
+static int64_t size_boolean(avro_writer_t writer, const int8_t b)
+{
+	return 1;
+}
+
 static int read_skip_null(avro_reader_t reader)
 {
 	/*
@@ -298,6 +343,11 @@ static int write_null(avro_writer_t writer)
 	return 0;
 }
 
+static int64_t size_null(avro_writer_t writer)
+{
+	return 0;
+}
+
 const avro_encoding_t avro_binary_encoding = {
 	.description = "BINARY FORMAT",
 	/*
@@ -306,46 +356,54 @@ const avro_encoding_t avro_binary_encoding = {
 	.read_string = read_string,
 	.skip_string = skip_string,
 	.write_string = write_string,
+	.size_string = size_string,
 	/*
 	 * bytes 
 	 */
 	.read_bytes = read_bytes,
 	.skip_bytes = skip_bytes,
 	.write_bytes = write_bytes,
+	.size_bytes = size_bytes,
 	/*
 	 * int 
 	 */
 	.read_int = read_int,
 	.skip_int = skip_int,
 	.write_int = write_int,
+	.size_int = size_int,
 	/*
 	 * long 
 	 */
 	.read_long = read_long,
 	.skip_long = skip_long,
 	.write_long = write_long,
+	.size_long = size_long,
 	/*
 	 * float 
 	 */
 	.read_float = read_float,
 	.skip_float = skip_float,
 	.write_float = write_float,
+	.size_float = size_float,
 	/*
 	 * double 
 	 */
 	.read_double = read_double,
 	.skip_double = skip_double,
 	.write_double = write_double,
+	.size_double = size_double,
 	/*
 	 * boolean 
 	 */
 	.read_boolean = read_boolean,
 	.skip_boolean = skip_boolean,
 	.write_boolean = write_boolean,
+	.size_boolean = size_boolean,
 	/*
 	 * null 
 	 */
 	.read_null = read_skip_null,
 	.skip_null = read_skip_null,
-	.write_null = write_null
+	.write_null = write_null,
+	.size_null = size_null
 };

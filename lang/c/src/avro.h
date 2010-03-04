@@ -257,6 +257,8 @@ int avro_read_data(avro_reader_t reader,
 int avro_skip_data(avro_reader_t reader, avro_schema_t writer_schema);
 int avro_write_data(avro_writer_t writer,
 		    avro_schema_t writer_schema, avro_datum_t datum);
+int64_t avro_size_data(avro_writer_t writer,
+		       avro_schema_t writer_schema, avro_datum_t datum);
 
 /* File object container */
 typedef struct avro_file_reader_t *avro_file_reader_t;
