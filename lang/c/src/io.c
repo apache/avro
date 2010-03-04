@@ -167,7 +167,7 @@ avro_read_file(struct avro_file_reader_t *reader, void *buf, int64_t len)
 		return 0;
 	}
 
-	if (needed > sizeof(reader->buffer)) {
+	if (needed > (int64_t) sizeof(reader->buffer)) {
 		if (bytes_available(reader) > 0) {
 			memcpy(p, reader->cur, bytes_available(reader));
 			p += bytes_available(reader);

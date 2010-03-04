@@ -175,8 +175,6 @@ write_union(avro_writer_t writer, const avro_encoding_t * enc,
 static int write_datum(avro_writer_t writer, const avro_encoding_t * enc,
 		       avro_schema_t writers_schema, avro_datum_t datum)
 {
-	int rval;
-
 	if (is_avro_schema(writers_schema) && is_avro_link(writers_schema)) {
 		return write_datum(writer, enc,
 				   (avro_schema_to_link(writers_schema))->to,
@@ -272,9 +270,6 @@ static int write_datum(avro_writer_t writer, const avro_encoding_t * enc,
 int avro_write_data(avro_writer_t writer, avro_schema_t writers_schema,
 		    avro_datum_t datum)
 {
-	const avro_encoding_t *enc = &avro_binary_encoding;
-	int rval = -1;
-
 	if (!writer || !is_avro_datum(datum)) {
 		return EINVAL;
 	}

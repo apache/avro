@@ -286,7 +286,6 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 	       avro_schema_t readers_schema, avro_datum_t * datum)
 {
 	int rval = EINVAL;
-	long i;
 	const avro_encoding_t *enc = &avro_binary_encoding;
 
 	if (!reader || !is_avro_schema(writers_schema) || !datum) {

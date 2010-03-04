@@ -45,7 +45,7 @@ struct avro_file_writer_t {
 /* TODO: should we just read /dev/random? */
 static void generate_sync(struct avro_file_writer_t *w)
 {
-	int i;
+	unsigned int i;
 	srand(time(NULL));
 	for (i = 0; i < sizeof(w->sync); i++) {
 		w->sync[i] = ((double)rand() / (RAND_MAX + 1.0)) * 255;

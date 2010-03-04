@@ -109,7 +109,7 @@ static long primes[] = {
 static int new_size(size)
 int size;
 {
-	int i;
+	unsigned int i;
 
 #if 0
 	for (i = 3; i < 31; i++) {
