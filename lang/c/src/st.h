@@ -8,17 +8,11 @@
  */
 
 #ifndef ST_INCLUDED
-
 #define ST_INCLUDED
 
-#if SIZEOF_LONG == SIZEOF_VOID_P
-typedef unsigned long st_data_t;
-#elif SIZEOF_LONG_LONG == SIZEOF_VOID_P
-typedef unsigned LONG_LONG st_data_t;
-#else
-#error ---->> st.c requires sizeof(void*) == sizeof(long) to be compiled. <<---
-#endif
-#define ST_DATA_T_DEFINED
+#include <stdint.h>		/* for uintptr_t */
+
+typedef uintptr_t st_data_t;
 typedef struct st_table st_table;
 
 struct st_hash_type {

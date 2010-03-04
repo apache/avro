@@ -24,6 +24,9 @@ Avro 1.3.1 (unreleased)
   
     AVRO-448. encoding_binary.c doesn't build on big endian platforms
     (Bruce Mitchener via massie)
+ 
+    AVRO-442. sizeof void* and sizeof long detected at configure time
+    (Bruce Mitchener via massie)
 
   BUG FIXES
 

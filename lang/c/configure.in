@@ -25,8 +25,6 @@ AC_CHECK_HEADERS([limits.h stdint.h stdlib.h string.h])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_SIZE_T
-AC_CHECK_SIZEOF(void *)
-AC_CHECK_SIZEOF(long)
 
 AC_CONFIG_FILES([
    Makefile
