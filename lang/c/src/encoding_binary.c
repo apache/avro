@@ -19,6 +19,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/types.h>
 
 #define MAX_VARINT_BUF_SIZE 10
 
@@ -187,14 +188,14 @@ static int64_t size_string(avro_writer_t writer, const char *s)
 
 static int read_float(avro_reader_t reader, float *f)
 {
-#if WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	uint8_t buf[4];
 #endif
 	union {
 		float f;
 		int32_t i;
 	} v;
-#if WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	AVRO_READ(avro, buf, 4);
 	v.i = ((int32_t) buf[0] << 0)
 	    | ((int32_t) buf[1] << 8)
@@ -214,7 +215,7 @@ static int skip_float(avro_reader_t reader)
 
 static int write_float(avro_writer_t writer, const float f)
 {
-#if WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	uint8_t buf[4];
 #endif
 	union {
@@ -223,7 +224,7 @@ static int write_float(avro_writer_t writer, const float f)
 	} v;
 
 	v.f = f;
-#if WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	buf[0] = (uint8_t) (v.i >> 0);
 	buf[1] = (uint8_t) (v.i >> 8);
 	buf[2] = (uint8_t) (v.i >> 16);
@@ -242,7 +243,7 @@ static int64_t size_float(avro_writer_t writer, const float f)
 
 static int read_double(avro_reader_t reader, double *d)
 {
-#if WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	uint8_t buf[8];
 #endif
 	union {
@@ -250,7 +251,7 @@ static int read_double(avro_reader_t reader, double *d)
 		int64_t l;
 	} v;
 
-#if WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	AVRO_READ(avro, buf, 8);
 	v.l = ((int64_t) buf[0] << 0)
 	    | ((int64_t) buf[1] << 8)
@@ -274,7 +275,7 @@ static int skip_double(avro_reader_t reader)
 
 static int write_double(avro_writer_t writer, const double d)
 {
-#if WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	uint8_t buf[8];
 #endif
 	union {
@@ -283,7 +284,7 @@ static int write_double(avro_writer_t writer, const double d)
 	} v;
 
 	v.d = d;
-#if WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	buf[0] = (uint8_t) (v.l >> 0);
 	buf[1] = (uint8_t) (v.l >> 8);
 	buf[2] = (uint8_t) (v.l >> 16);

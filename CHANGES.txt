@@ -19,6 +19,9 @@ Avro 1.3.1 (unreleased)
     AVRO-445. avro_size_data() to pre-calculate the size of an 
     avro_datum_t in serialized form (Bruce Mitchener via massie)
 
+    AVRO-443. Endianness is determined at configure time rather 
+    than compile time (Bruce Mitchener via massie)
+
   BUG FIXES
 
     AVRO-424. Fix the specification of the deflate codec.
