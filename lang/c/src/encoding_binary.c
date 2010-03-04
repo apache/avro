@@ -196,7 +196,7 @@ static int read_float(avro_reader_t reader, float *f)
 		int32_t i;
 	} v;
 #if BYTE_ORDER == BIG_ENDIAN
-	AVRO_READ(avro, buf, 4);
+	AVRO_READ(reader, buf, 4);
 	v.i = ((int32_t) buf[0] << 0)
 	    | ((int32_t) buf[1] << 8)
 	    | ((int32_t) buf[2] << 16) | ((int32_t) buf[3] << 24);
@@ -252,7 +252,7 @@ static int read_double(avro_reader_t reader, double *d)
 	} v;
 
 #if BYTE_ORDER == BIG_ENDIAN
-	AVRO_READ(avro, buf, 8);
+	AVRO_READ(reader, buf, 8);
 	v.l = ((int64_t) buf[0] << 0)
 	    | ((int64_t) buf[1] << 8)
 	    | ((int64_t) buf[2] << 16)
