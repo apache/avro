@@ -19,6 +19,11 @@
 
 #include "avro.h"
 
+#ifdef HAVE_CONFIG_H
+/* This is only true for now in the autotools build */
+#include "config.h"
+#endif
+
 #define check(rval, call) { rval = call; if(rval) return rval; }
 
 #define AVRO_UNUSED(var) (void)var;
