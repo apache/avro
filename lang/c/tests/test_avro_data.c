@@ -98,7 +98,7 @@ write_read_check(avro_schema_t writers_schema,
 
 static int test_string(void)
 {
-	int i;
+	unsigned int i;
 	const char *strings[] = { "Four score and seven years ago",
 		"our father brought forth on this continent",
 		"a new nation", "conceived in Liberty",
@@ -321,7 +321,7 @@ static int test_fixed(void)
 
 int main(void)
 {
-	int i;
+	unsigned int i;
 	struct avro_tests {
 		char *name;
 		avro_test func;

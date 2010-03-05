@@ -32,6 +32,8 @@ static int
 schema_map_validate_foreach(char *key, avro_datum_t datum,
 			    struct validate_st *vst)
 {
+	AVRO_UNUSED(key);
+
 	if (!avro_schema_datum_validate(vst->expected_schema, datum)) {
 		vst->rval = 0;
 		return ST_STOP;

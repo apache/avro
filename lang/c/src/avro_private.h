@@ -21,6 +21,8 @@
 
 #define check(rval, call) { rval = call; if(rval) return rval; }
 
+#define AVRO_UNUSED(var) (void)var;
+
 #define container_of(ptr_, type_, member_)  \
     ((type_ *)((char *)ptr_ - (size_t)&((type_ *)0)->member_))
 

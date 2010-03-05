@@ -71,6 +71,8 @@ static int
 write_enum(avro_writer_t writer, const avro_encoding_t * enc,
 	   struct avro_enum_schema_t *enump, struct avro_enum_datum_t *datum)
 {
+	AVRO_UNUSED(enump);
+
 	return enc->write_long(writer, datum->value);
 }
 

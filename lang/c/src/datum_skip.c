@@ -125,6 +125,8 @@ static int skip_record(avro_reader_t reader, const avro_encoding_t * enc,
 	int rval;
 	long i;
 
+	AVRO_UNUSED(enc);
+
 	for (i = 0; i < writers_schema->fields->num_entries; i++) {
 		union {
 			st_data_t data;

@@ -102,6 +102,8 @@ read_enum(avro_reader_t reader, const avro_encoding_t * enc,
 	int rval;
 	int64_t index;
 
+	AVRO_UNUSED(readers_schema);
+
 	check(rval, enc->read_long(reader, &index));
 	*datum = avro_enum(writers_schema->name, index);
 	return 0;
@@ -227,6 +229,9 @@ read_union(avro_reader_t reader, const avro_encoding_t * enc,
 		st_data_t data;
 		avro_schema_t schema;
 	} val;
+
+	AVRO_UNUSED(readers_schema);
+
 	check(rval, enc->read_long(reader, &discriminant));
 	if (!st_lookup(writers_schema->branches, discriminant, &val.data)) {
 		return EILSEQ;
@@ -247,6 +252,8 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 	long i;
 	avro_datum_t record;
 	avro_datum_t field_datum;
+
+	AVRO_UNUSED(enc);
 
 	record = *datum =
 	    avro_record(writers_schema->name, writers_schema->space);

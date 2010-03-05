@@ -64,6 +64,9 @@ static int is_avro_id(const char *name)
 static int record_free_foreach(int i, struct avro_record_field_t *field,
 			       void *arg)
 {
+	AVRO_UNUSED(i);
+	AVRO_UNUSED(arg);
+
 	free(field->name);
 	avro_schema_decref(field->type);
 	free(field);
@@ -72,12 +75,18 @@ static int record_free_foreach(int i, struct avro_record_field_t *field,
 
 static int enum_free_foreach(int i, char *sym, void *arg)
 {
+	AVRO_UNUSED(i);
+	AVRO_UNUSED(arg);
+
 	free(sym);
 	return ST_DELETE;
 }
 
 static int union_free_foreach(int i, avro_schema_t schema, void *arg)
 {
+	AVRO_UNUSED(i);
+	AVRO_UNUSED(arg);
+
 	avro_schema_decref(schema);
 	return ST_DELETE;
 }
@@ -832,6 +841,8 @@ avro_schema_from_json(const char *jsontext, const int32_t len,
 	json_t *root;
 	int rval = 0;
 	struct avro_schema_error_t *error;
+
+	AVRO_UNUSED(len);
 
 	if (!jsontext || !schema) {
 		return EINVAL;

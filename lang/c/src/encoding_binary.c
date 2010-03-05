@@ -77,6 +77,8 @@ static int write_long(avro_writer_t writer, int64_t l)
 
 static int64_t size_long(avro_writer_t writer, int64_t l)
 {
+	AVRO_UNUSED(writer);
+
 	int64_t len = 0;
 	uint64_t n = (l << 1) ^ (l >> 63);
 	while (n & ~0x7F) {
@@ -162,6 +164,8 @@ write_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 static int64_t
 size_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 {
+	AVRO_UNUSED(bytes);
+
 	return size_long(writer, len) + len;
 }
 
@@ -240,6 +244,9 @@ static int write_float(avro_writer_t writer, const float f)
 
 static int64_t size_float(avro_writer_t writer, const float f)
 {
+	AVRO_UNUSED(writer);
+	AVRO_UNUSED(f);
+
 	return 4;
 }
 
@@ -304,6 +311,9 @@ static int write_double(avro_writer_t writer, const double d)
 
 static int64_t size_double(avro_writer_t writer, const double d)
 {
+	AVRO_UNUSED(writer);
+	AVRO_UNUSED(d);
+
 	return 8;
 }
 
@@ -327,6 +337,9 @@ static int write_boolean(avro_writer_t writer, const int8_t b)
 
 static int64_t size_boolean(avro_writer_t writer, const int8_t b)
 {
+	AVRO_UNUSED(writer);
+	AVRO_UNUSED(b);
+
 	return 1;
 }
 
@@ -335,6 +348,8 @@ static int read_skip_null(avro_reader_t reader)
 	/*
 	 * no-op 
 	 */
+	AVRO_UNUSED(reader);
+
 	return 0;
 }
 
@@ -343,11 +358,15 @@ static int write_null(avro_writer_t writer)
 	/*
 	 * no-op 
 	 */
+	AVRO_UNUSED(writer);
+
 	return 0;
 }
 
 static int64_t size_null(avro_writer_t writer)
 {
+	AVRO_UNUSED(writer);
+
 	return 0;
 }
 

@@ -451,6 +451,8 @@ st_data_t never;
 static int delete_never(key, value, never)
 st_data_t key, value, never;
 {
+	AVRO_UNUSED(key);
+
 	if (value == never)
 		return ST_DELETE;
 	return ST_CONTINUE;

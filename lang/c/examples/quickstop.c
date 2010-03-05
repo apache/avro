@@ -81,7 +81,7 @@ add_person(avro_file_writer_t db, const char *first, const char *last,
 	avro_datum_decref(phone_datum);
 	avro_datum_decref(person);
 
-	fprintf(stdout, "Successfully added %s, %s id=%ld\n", last, first, id);
+	fprintf(stdout, "Successfully added %s, %s id=%lld\n", last, first, id);
 }
 
 int print_person(avro_file_reader_t db, avro_schema_t reader_schema)
@@ -99,7 +99,7 @@ int print_person(avro_file_reader_t db, avro_schema_t reader_schema)
 
 		if (avro_record_get(person, "ID", &id_datum) == 0) {
 			avro_int64_get(id_datum, &i64);
-			fprintf(stdout, "%ld | ", i64);
+			fprintf(stdout, "%lld | ", i64);
 		}
 		if (avro_record_get(person, "First", &first_datum) == 0) {
 			avro_string_get(first_datum, &p);
