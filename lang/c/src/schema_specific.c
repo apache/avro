@@ -15,10 +15,10 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_private.h"
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include "avro.h"
 #include "schema.h"
 
 enum specific_state {

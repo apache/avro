@@ -14,12 +14,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License. 
  */
+
+#include "avro_private.h"
 #include <stdlib.h>
-#include <stdint.h>
 #include <limits.h>
 #include <time.h>
 #include <string.h>
-#include "avro.h"
 
 char buf[4096];
 avro_reader_t reader;

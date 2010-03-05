@@ -14,10 +14,11 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
+#include <avro.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <avro.h>
 
 avro_schema_t person_schema;
 int64_t id = 0;

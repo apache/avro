@@ -14,12 +14,13 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License. 
  */
+
+#include "avro_private.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
 
-#include "avro.h"
 #include "jansson.h"
 #include "st.h"
 #include "schema.h"

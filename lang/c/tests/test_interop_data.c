@@ -1,7 +1,6 @@
+#include "avro_private.h"
 #include <stdio.h>
 #include <unistd.h>
-#include <avro.h>
-#include "avro_private.h"
 
 int main(void)
 {

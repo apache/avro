@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_private.h"
 #include "schema.h"
 #include <string.h>
 

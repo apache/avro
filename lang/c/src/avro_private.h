@@ -17,7 +17,7 @@
 #ifndef AVRO_PRIVATE_H
 #define AVRO_PRIVATE_H
 
-#define sys_call(rval, call) do { rval = call; } while(rval < 0 && errno == EINTR)
+#include "avro.h"
 
 #define check(rval, call) { rval = call; if(rval) return rval; }
 

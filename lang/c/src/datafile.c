@@ -14,7 +14,7 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License. 
  */
-#include <avro.h>
+
 #include "avro_private.h"
 #include "encoding.h"
 #include <stdio.h>

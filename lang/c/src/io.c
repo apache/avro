@@ -14,13 +14,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License. 
  */
+
+#include "avro_private.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "avro.h"
-#include "avro_private.h"
 #include "dump.h"
 
 enum avro_io_type_t {

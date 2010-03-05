@@ -14,13 +14,14 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License. 
  */
+
+#include "avro_private.h"
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include "encoding.h"
 #include "schema.h"
 #include "datum.h"
-#include "avro_private.h"
 
 int
 avro_schema_match(avro_schema_t writers_schema, avro_schema_t readers_schema)

@@ -6,11 +6,12 @@
 /*
  * static char sccsid[] = "@(#) st.c 5.1 89/12/14 Crucible"; 
  */
+
+#include "avro_private.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
 #include "st.h"
 
 typedef struct st_table_entry st_table_entry;
