@@ -76,7 +76,7 @@
   <property name="javac.args" value=""/>
   <property name="javac.args.warnings" value="-Xlint:unchecked"/>
 
-  <property name="ivy.version" value="2.1.0-rc1"/>
+  <property name="ivy.version" value="2.1.0"/>
   <property name="ivy.url"
 	    value="http://repo2.maven.org/maven2/org/apache/ivy/ivy" />
   <property name="ivy.home" value="${user.home}/.ant" />

@@ -35,17 +35,17 @@
 
   <dependencies>
     <dependency org="org.codehaus.jackson" name="jackson-mapper-asl"
-        rev="1.4.0"/>
-    <dependency org="org.slf4j" name="slf4j-api" rev="1.5.8"/>
-    <dependency org="org.slf4j" name="slf4j-simple" rev="1.5.8"
+        rev="1.4.2"/>
+    <dependency org="org.slf4j" name="slf4j-api" rev="1.5.11"/>
+    <dependency org="org.slf4j" name="slf4j-simple" rev="1.5.11"
         conf="test->default;tools->default"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer"
-        rev="2.1"/>
+        rev="2.2"/>
     <dependency org="com.thoughtworks.paranamer" name="paranamer-ant"
-        rev="2.1"/>
+        rev="2.2"/>
     <dependency org="org.mortbay.jetty" name="jetty"
-        rev="6.1.21"/>
-    <dependency org="junit" name="junit" rev="4.7" conf="test->default"/>
+        rev="6.1.22"/>
+    <dependency org="junit" name="junit" rev="4.8.1" conf="test->default"/>
     <dependency org="checkstyle" name="checkstyle" rev="5.0"
         conf="test->default"/>
     <dependency org="org.apache.rat" name="apache-rat" rev="0.6"
@@ -56,8 +56,8 @@
     </dependency>
     <dependency org="net.java.dev.javacc" name="javacc" rev="5.0" 
         conf="build->default" />
-    <dependency org="commons-lang" name="commons-lang" rev="2.4" />
-    <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.0.9"
+    <dependency org="commons-lang" name="commons-lang" rev="2.5" />
+    <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.1.0"
         conf="build->default"/>
     <dependency org="net.sf.jopt-simple" name="jopt-simple" rev="3.2"
         conf="build->default;test->default;tools->default"/>
