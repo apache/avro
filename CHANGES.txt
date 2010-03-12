@@ -41,6 +41,8 @@ Avro 1.3.1 (16 March 2010)
 
     AVRO-446. Add a build.sh task that signs and checksums artifacts. (cutting)
 
+    AVRO-454. Change DataFileStream to implement Closeable. (cutting)
+
   BUG FIXES
 
     AVRO-424. Fix the specification of the deflate codec.

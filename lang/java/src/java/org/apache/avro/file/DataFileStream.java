@@ -20,6 +20,7 @@ package org.apache.avro.file;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Closeable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -38,7 +39,7 @@ import org.apache.avro.io.DatumReader;
  * DataFileReader} for file-based input.
  * @see DataFileWriter
  */
-public class DataFileStream<D> implements Iterator<D>, Iterable<D> {
+public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   private Schema schema;
   private DatumReader<D> reader;
