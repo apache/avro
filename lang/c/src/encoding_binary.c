@@ -63,15 +63,15 @@ static int skip_long(avro_reader_t reader)
 
 static int write_long(avro_writer_t writer, int64_t l)
 {
-	uint8_t b;
+	char buf[MAX_VARINT_BUF_SIZE];
+	uint8_t bytes_written = 0;
 	uint64_t n = (l << 1) ^ (l >> 63);
 	while (n & ~0x7F) {
-		b = ((((uint8_t) n) & 0x7F) | 0x80);
-		AVRO_WRITE(writer, &b, 1);
+		buf[bytes_written++] = (char)((((uint8_t) n) & 0x7F) | 0x80);
 		n >>= 7;
 	}
-	b = (uint8_t) n;
-	AVRO_WRITE(writer, &b, 1);
+	buf[bytes_written++] = (char)n;
+	AVRO_WRITE(writer, buf, bytes_written);
 	return 0;
 }
 
