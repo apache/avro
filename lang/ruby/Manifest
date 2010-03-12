@@ -16,4 +16,3 @@ test/sample_ipc_server.rb
 test/test_help.rb
 test/test_io.rb
 test/test_protocol.rb
-tmp/test.rb.avro

@@ -97,7 +97,6 @@ function do_tar_file {
         exit 1
     fi
     cp -f $build_dir/$tarfile $dist_dir/$tarfile
-    md5sum $dist_dir/$tarfile > $dist_dir/$tarfile.md5
 }
 
 function do_dist {

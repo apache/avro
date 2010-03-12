@@ -501,22 +501,6 @@
     </copy>
     <chmod file="${dist.dir}/avro-tools-${version}.jar" perm="ugo+x"/>
 
-    <checksum algorithm="md5">
-      <fileset file="${dist.dir}/${fullname}.jar"/>
-      <fileset file="${dist.dir}/${fullname}-sources.jar"/>
-      <fileset file="${dist.dir}/${fullname}-javadoc.jar"/>
-      <fileset file="${dist.dir}/avro-tools-${version}.jar"/>
-      <fileset file="${dist.dir}/${fullname}.pom"/>
-    </checksum>
-
-    <checksum algorithm="sha1">
-      <fileset file="${dist.dir}/${fullname}.jar"/>
-      <fileset file="${dist.dir}/${fullname}-sources.jar"/>
-      <fileset file="${dist.dir}/${fullname}-javadoc.jar"/>
-      <fileset file="${dist.dir}/avro-tools-${version}.jar"/>
-      <fileset file="${dist.dir}/${fullname}.pom"/>
-    </checksum>
-
     <copy todir="${top.build}/avro-doc-${version}/api/java">
       <fileset dir="${build.javadoc}"/>
     </copy>

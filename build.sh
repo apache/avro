@@ -74,8 +74,6 @@ case "$target" in
 
 	mkdir -p dist
         (cd build; tar czf ../dist/avro-src-$VERSION.tar.gz avro-src-$VERSION)
-	md5sum dist/avro-src-$VERSION.tar.gz > dist/avro-src-$VERSION.tar.gz.md5
-	sha1sum dist/avro-src-$VERSION.tar.gz > dist/avro-src-$VERSION.tar.gz.sha1
 
 	# build lang-specific artifacts
 	(cd lang/java; ant dist)
@@ -93,6 +91,25 @@ case "$target" in
 	(cd build; tar czf ../dist/avro-doc-$VERSION.tar.gz avro-doc-$VERSION)
 
 	cp DIST_README.txt dist/README.txt
+	;;
+
+    sign)
+
+	set +x
+
+	echo -n "Enter password: "
+	stty -echo
+	read password
+	stty echo
+
+	for f in $(find dist -type f \
+	    \! -name '*.sha1' \! -name '*.asc' \! -name '*.txt' );
+	do
+	    sha1sum $f > $f.sha1
+	    gpg --passphrase $password --armor --output $f.asc --detach-sig $f
+	done
+
+	set -x
 	;;
 
     clean)

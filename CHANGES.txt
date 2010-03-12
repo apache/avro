@@ -37,6 +37,9 @@ Avro 1.3.1 (unreleased)
     AVRO-440. config.h output not correctly used (Bruce Mitchener via massie)
 
     AVRO-460. Performance improvement to write_long() (Bruce Mitchener via massie)
+    AVRO-455. Update Java dependencies. (David Dabbs via cutting)
+
+    AVRO-446. Add a build.sh task that signs and checksums artifacts. (cutting)
 
   BUG FIXES
 
