@@ -15,6 +15,7 @@ AC_DEFINE_UNQUOTED(LIBAVRO_VERSION, $LIBAVRO_VERSION, [Libtool version info for 
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 

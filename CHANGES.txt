@@ -45,6 +45,9 @@ Avro 1.3.1 (16 March 2010)
 
     AVRO-449. CMake-based build system for Avro/C (Bruce Mitchener via massie)
 
+    AVRO-418. avro.h generates errors when included in C++ code 
+    (Bruce Mitchener via massie)
+
   BUG FIXES
 
     AVRO-424. Fix the specification of the deflate codec.

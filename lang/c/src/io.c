@@ -28,38 +28,38 @@ enum avro_io_type_t {
 };
 typedef enum avro_io_type_t avro_io_type_t;
 
-struct avro_reader_t {
+struct avro_reader_t_ {
 	avro_io_type_t type;
 	unsigned long refcount;
 };
 
-struct avro_writer_t {
+struct avro_writer_t_ {
 	avro_io_type_t type;
 	unsigned long refcount;
 };
 
-struct avro_file_reader_t {
-	struct avro_reader_t reader;
+struct _avro_reader_file_t {
+	struct avro_reader_t_ reader;
 	FILE *fp;
 	char *cur;
 	char *end;
 	char buffer[4096];
 };
 
-struct avro_file_writer_t {
-	struct avro_writer_t writer;
+struct _avro_writer_file_t {
+	struct avro_writer_t_ writer;
 	FILE *fp;
 };
 
-struct avro_memory_reader_t {
-	struct avro_reader_t reader;
+struct _avro_reader_memory_t {
+	struct avro_reader_t_ reader;
 	const char *buf;
 	int64_t len;
 	int64_t read;
 };
 
-struct avro_memory_writer_t {
-	struct avro_writer_t writer;
+struct _avro_writer_memory_t {
+	struct avro_writer_t_ writer;
 	const char *buf;
 	int64_t len;
 	int64_t written;
@@ -69,10 +69,10 @@ struct avro_memory_writer_t {
 #define is_memory_io(obj)        (obj && avro_io_typeof(obj) == AVRO_MEMORY_IO)
 #define is_file_io(obj)          (obj && avro_io_typeof(obj) == AVRO_FILE_IO)
 
-#define avro_reader_to_memory(reader_)  container_of(reader_, struct avro_memory_reader_t, reader)
-#define avro_reader_to_file(reader_)    container_of(reader_, struct avro_file_reader_t, reader)
-#define avro_writer_to_memory(writer_)  container_of(writer_, struct avro_memory_writer_t, writer)
-#define avro_writer_to_file(writer_)    container_of(writer_, struct avro_file_writer_t, writer)
+#define avro_reader_to_memory(reader_)  container_of(reader_, struct _avro_reader_memory_t, reader)
+#define avro_reader_to_file(reader_)    container_of(reader_, struct _avro_reader_file_t, reader)
+#define avro_writer_to_memory(writer_)  container_of(writer_, struct _avro_writer_memory_t, writer)
+#define avro_writer_to_file(writer_)    container_of(writer_, struct _avro_writer_file_t, writer)
 
 static void reader_init(avro_reader_t reader, avro_io_type_t type)
 {
@@ -88,12 +88,12 @@ static void writer_init(avro_writer_t writer, avro_io_type_t type)
 
 avro_reader_t avro_reader_file(FILE * fp)
 {
-	struct avro_file_reader_t *file_reader =
-	    malloc(sizeof(struct avro_file_reader_t));
+	struct _avro_reader_file_t *file_reader =
+	    malloc(sizeof(struct _avro_reader_file_t));
 	if (!file_reader) {
 		return NULL;
 	}
-	memset(file_reader, 0, sizeof(struct avro_file_reader_t));
+	memset(file_reader, 0, sizeof(struct _avro_reader_file_t));
 	file_reader->fp = fp;
 	reader_init(&file_reader->reader, AVRO_FILE_IO);
 	return &file_reader->reader;
@@ -101,8 +101,8 @@ avro_reader_t avro_reader_file(FILE * fp)
 
 avro_writer_t avro_writer_file(FILE * fp)
 {
-	struct avro_file_writer_t *file_writer =
-	    malloc(sizeof(struct avro_file_writer_t));
+	struct _avro_writer_file_t *file_writer =
+	    malloc(sizeof(struct _avro_writer_file_t));
 	if (!file_writer) {
 		return NULL;
 	}
@@ -113,8 +113,8 @@ avro_writer_t avro_writer_file(FILE * fp)
 
 avro_reader_t avro_reader_memory(const char *buf, int64_t len)
 {
-	struct avro_memory_reader_t *mem_reader =
-	    malloc(sizeof(struct avro_memory_reader_t));
+	struct _avro_reader_memory_t *mem_reader =
+	    malloc(sizeof(struct _avro_reader_memory_t));
 	if (!mem_reader) {
 		return NULL;
 	}
@@ -127,8 +127,8 @@ avro_reader_t avro_reader_memory(const char *buf, int64_t len)
 
 avro_writer_t avro_writer_memory(const char *buf, int64_t len)
 {
-	struct avro_memory_writer_t *mem_writer =
-	    malloc(sizeof(struct avro_memory_writer_t));
+	struct _avro_writer_memory_t *mem_writer =
+	    malloc(sizeof(struct _avro_writer_memory_t));
 	if (!mem_writer) {
 		return NULL;
 	}
@@ -140,7 +140,7 @@ avro_writer_t avro_writer_memory(const char *buf, int64_t len)
 }
 
 static int
-avro_read_memory(struct avro_memory_reader_t *reader, void *buf, int64_t len)
+avro_read_memory(struct _avro_reader_memory_t *reader, void *buf, int64_t len)
 {
 	if (len > 0) {
 		if ((reader->len - reader->read) < len) {
@@ -156,7 +156,7 @@ avro_read_memory(struct avro_memory_reader_t *reader, void *buf, int64_t len)
 #define buffer_reset(reader) {reader->cur = reader->end = reader->buffer;}
 
 static int
-avro_read_file(struct avro_file_reader_t *reader, void *buf, int64_t len)
+avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 {
 	int64_t needed = len;
 	void *p = buf;
@@ -220,7 +220,7 @@ int avro_read(avro_reader_t reader, void *buf, int64_t len)
 	return EINVAL;
 }
 
-static int avro_skip_memory(struct avro_memory_reader_t *reader, int64_t len)
+static int avro_skip_memory(struct _avro_reader_memory_t *reader, int64_t len)
 {
 	if (len > 0) {
 		if ((reader->len - reader->read) < len) {
@@ -231,7 +231,7 @@ static int avro_skip_memory(struct avro_memory_reader_t *reader, int64_t len)
 	return 0;
 }
 
-static int avro_skip_file(struct avro_file_reader_t *reader, int64_t len)
+static int avro_skip_file(struct _avro_reader_file_t *reader, int64_t len)
 {
 	int rval;
 	int64_t needed = len;
@@ -266,7 +266,7 @@ int avro_skip(avro_reader_t reader, int64_t len)
 }
 
 static int
-avro_write_memory(struct avro_memory_writer_t *writer, void *buf, int64_t len)
+avro_write_memory(struct _avro_writer_memory_t *writer, void *buf, int64_t len)
 {
 	if (len) {
 		if ((writer->len - writer->written) < len) {
@@ -279,7 +279,7 @@ avro_write_memory(struct avro_memory_writer_t *writer, void *buf, int64_t len)
 }
 
 static int
-avro_write_file(struct avro_file_writer_t *writer, void *buf, int64_t len)
+avro_write_file(struct _avro_writer_file_t *writer, void *buf, int64_t len)
 {
 	int rval;
 	if (len > 0) {

@@ -30,3 +30,6 @@ add_executable(test_avro_data test_avro_data.c)
 target_link_libraries(test_avro_data avro-static)
 add_test(test_avro_data ${CMAKE_COMMAND} -E chdir ${AvroC_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/test_avro_data)
 
+add_executable(test_cpp test_cpp.cpp)
+target_link_libraries(test_cpp avro-static)
+add_test(test_cpp ${CMAKE_COMMAND} -E chdir ${AvroC_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/test_cpp)

@@ -27,7 +27,7 @@
 
 #define DEFAULT_TABLE_SIZE 32
 
-struct avro_schema_error_t {
+struct avro_schema_error_t_ {
 	st_table *named_schemas;
 	json_error_t json_error;
 };
@@ -840,7 +840,7 @@ avro_schema_from_json(const char *jsontext, const int32_t len,
 {
 	json_t *root;
 	int rval = 0;
-	struct avro_schema_error_t *error;
+	avro_schema_error_t error;
 
 	AVRO_UNUSED(len);
 
@@ -848,7 +848,7 @@ avro_schema_from_json(const char *jsontext, const int32_t len,
 		return EINVAL;
 	}
 
-	error = malloc(sizeof(struct avro_schema_error_t));
+	error = malloc(sizeof(struct avro_schema_error_t_));
 	if (!error) {
 		return ENOMEM;
 	}

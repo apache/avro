@@ -24,7 +24,7 @@
 #include <time.h>
 #include <string.h>
 
-struct avro_file_reader_t {
+struct avro_file_reader_t_ {
 	avro_schema_t writers_schema;
 	avro_reader_t reader;
 	char sync[16];
@@ -33,7 +33,7 @@ struct avro_file_reader_t {
 	int64_t current_blocklen;
 };
 
-struct avro_file_writer_t {
+struct avro_file_writer_t_ {
 	avro_schema_t writers_schema;
 	avro_writer_t writer;
 	char sync[16];
@@ -43,7 +43,7 @@ struct avro_file_writer_t {
 };
 
 /* TODO: should we just read /dev/random? */
-static void generate_sync(struct avro_file_writer_t *w)
+static void generate_sync(avro_file_writer_t w)
 {
 	unsigned int i;
 	srand(time(NULL));
@@ -52,12 +52,12 @@ static void generate_sync(struct avro_file_writer_t *w)
 	}
 }
 
-static int write_sync(struct avro_file_writer_t *w)
+static int write_sync(avro_file_writer_t w)
 {
 	return avro_write(w->writer, w->sync, sizeof(w->sync));
 }
 
-static int write_header(struct avro_file_writer_t *w)
+static int write_header(avro_file_writer_t w)
 {
 	int rval;
 	uint8_t version = 1;
@@ -92,8 +92,7 @@ static int write_header(struct avro_file_writer_t *w)
 }
 
 static int
-file_writer_init_fp(const char *path, const char *mode,
-		    struct avro_file_writer_t *w)
+file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
 {
 	FILE *fp = fopen(path, mode);
 	if (!fp) {
@@ -107,8 +106,7 @@ file_writer_init_fp(const char *path, const char *mode,
 }
 
 static int
-file_writer_create(const char *path, avro_schema_t schema,
-		   struct avro_file_writer_t *w)
+file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w)
 {
 	int rval = file_writer_init_fp(path, "wx", w);
 	if (rval) {
@@ -130,12 +128,12 @@ int
 avro_file_writer_create(const char *path, avro_schema_t schema,
 			avro_file_writer_t * writer)
 {
-	struct avro_file_writer_t *w;
+	avro_file_writer_t w;
 	int rval;
 	if (!path || !is_avro_schema(schema) || !writer) {
 		return EINVAL;
 	}
-	w = malloc(sizeof(struct avro_file_writer_t));
+	w = malloc(sizeof(struct avro_file_writer_t_));
 	if (!w) {
 		return ENOMEM;
 	}
@@ -181,7 +179,7 @@ static int file_read_header(avro_reader_t reader,
 	return avro_read(reader, sync, synclen);
 }
 
-static int file_writer_open(const char *path, struct avro_file_writer_t *w)
+static int file_writer_open(const char *path, avro_file_writer_t w)
 {
 	int rval;
 	FILE *fp;
@@ -209,12 +207,12 @@ static int file_writer_open(const char *path, struct avro_file_writer_t *w)
 
 int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 {
-	struct avro_file_writer_t *w;
+	avro_file_writer_t w;
 	int rval;
 	if (!path || !writer) {
 		return EINVAL;
 	}
-	w = malloc(sizeof(struct avro_file_writer_t));
+	w = malloc(sizeof(struct avro_file_writer_t_));
 	if (!w) {
 		return ENOMEM;
 	}
@@ -242,8 +240,7 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 {
 	int rval;
 	FILE *fp;
-	struct avro_file_reader_t *r =
-	    malloc(sizeof(struct avro_file_reader_t));
+	avro_file_reader_t r = malloc(sizeof(struct avro_file_reader_t_));
 	if (!r) {
 		return ENOMEM;
 	}

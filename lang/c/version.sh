@@ -18,9 +18,9 @@
 #         libavro_binary_age = 0
 #         libavro_interface_age = 0
 #
-libavro_micro_version=19
-libavro_interface_age=0
-libavro_binary_age=1
+libavro_micro_version=20
+libavro_interface_age=1
+libavro_binary_age=2
 
 # IGNORE EVERYTHING ELSE FROM HERE DOWN.........
 if test $# != 1; then
