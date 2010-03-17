@@ -1,5 +1,14 @@
 Avro Change Log
 
+Avro 1.3.2 (unreleased)
+
+  IMPROVEMENTS
+
+    AVRO-449. CMake-based build system for Avro/C (Bruce Mitchener via massie)
+
+    AVRO-418. avro.h generates errors when included in C++ code 
+    (Bruce Mitchener via massie)
+
 Avro 1.3.1 (16 March 2010)
 
   NEW FEATURES
@@ -42,11 +51,6 @@ Avro 1.3.1 (16 March 2010)
     AVRO-446. Add a build.sh task that signs and checksums artifacts. (cutting)
 
     AVRO-454. Change DataFileStream to implement Closeable. (cutting)
-
-    AVRO-449. CMake-based build system for Avro/C (Bruce Mitchener via massie)
-
-    AVRO-418. avro.h generates errors when included in C++ code 
-    (Bruce Mitchener via massie)
 
   BUG FIXES
 
