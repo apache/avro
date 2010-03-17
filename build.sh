@@ -22,7 +22,7 @@ cd `dirname "$0"`				  # connect to root
 VERSION=`cat share/VERSION.txt`
 
 function usage {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {test|dist|sign|clean}"
   exit 1
 }
 
@@ -105,6 +105,7 @@ case "$target" in
 	for f in $(find dist -type f \
 	    \! -name '*.sha1' \! -name '*.asc' \! -name '*.txt' );
 	do
+	    md5sum $f > $f.md5
 	    sha1sum $f > $f.sha1
 	    gpg --passphrase $password --armor --output $f.asc --detach-sig $f
 	done
