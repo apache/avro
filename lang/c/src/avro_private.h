@@ -31,8 +31,4 @@
 #define container_of(ptr_, type_, member_)  \
     ((type_ *)((char *)ptr_ - (size_t)&((type_ *)0)->member_))
 
-void avro_writer_reset(avro_writer_t writer);
-int64_t avro_writer_tell(avro_writer_t writer);
-void avro_writer_flush(avro_writer_t writer);
-
 #endif

@@ -9,6 +9,9 @@ Avro 1.3.2 (unreleased)
     AVRO-418. avro.h generates errors when included in C++ code 
     (Bruce Mitchener via massie)
 
+    AVRO-480. avro_flush() is in the header, but not implemented
+    (Bruce Mitchener via massie)
+
   BUG FIXES
 
     AVRO-479. Fix 'sign' target in top-level build.sh to generate md5

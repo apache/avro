@@ -154,7 +154,10 @@ avro_writer_t avro_writer_memory(const char *buf, int64_t len);
 int avro_read(avro_reader_t reader, void *buf, int64_t len);
 int avro_skip(avro_reader_t reader, int64_t len);
 int avro_write(avro_writer_t writer, void *buf, int64_t len);
-int avro_flush(avro_writer_t writer);
+
+void avro_writer_reset(avro_writer_t writer);
+int64_t avro_writer_tell(avro_writer_t writer);
+void avro_writer_flush(avro_writer_t writer);
 
 void avro_writer_dump(avro_writer_t writer, FILE * fp);
 void avro_reader_dump(avro_reader_t reader, FILE * fp);
