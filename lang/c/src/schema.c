@@ -16,6 +16,7 @@
  */
 
 #include "avro_private.h"
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -1106,7 +1107,7 @@ static int write_fixed(avro_writer_t out, struct avro_fixed_schema_t *fixed)
 	check(rval, avro_write_str(out, "{\"type\":\"fixed\",\"name\":\""));
 	check(rval, avro_write_str(out, fixed->name));
 	check(rval, avro_write_str(out, "\",\"size\":"));
-	snprintf(size, sizeof(size), "%lld", fixed->size);
+	snprintf(size, sizeof(size), "%"PRId64, fixed->size);
 	check(rval, avro_write_str(out, size));
 	return avro_write_str(out, "}");
 }

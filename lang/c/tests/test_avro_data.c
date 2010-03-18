@@ -16,10 +16,11 @@
  */
 
 #include "avro_private.h"
-#include <stdlib.h>
+#include <inttypes.h>
 #include <limits.h>
-#include <time.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 char buf[4096];
 avro_reader_t reader;
@@ -72,7 +73,7 @@ write_read_check(avro_schema_t writers_schema,
 				   datum);
 		if (size != avro_writer_tell(writer)) {
 			fprintf(stderr,
-				"Unable to calculate size %s validate=%d (%lld != %lld)\n",
+				"Unable to calculate size %s validate=%d (%"PRId64" != %"PRId64")\n",
 				type, validate, size, avro_writer_tell(writer));
 			exit(EXIT_FAILURE);
 		}
