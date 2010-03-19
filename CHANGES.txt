@@ -17,6 +17,9 @@ Avro 1.3.2 (unreleased)
     AVRO-451. Try to use hashlib in Python implementation and fall
     back to md5 if we can't find it (Bruce Mitchener via hammer)
 
+    AVRO-423. HTTPTransceiver does not reuse connections
+    (Eric Evans via hammer)
+
   BUG FIXES
 
     AVRO-479. Fix 'sign' target in top-level build.sh to generate md5

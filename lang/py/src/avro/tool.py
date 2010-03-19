@@ -91,9 +91,7 @@ def run_server(uri, proto, msg, datum):
 
 def send_message(uri, proto, msg, datum):
   url_obj = urlparse.urlparse(uri)
-  conn = httplib.HTTPConnection(url_obj.hostname, url_obj.port)
-  conn.connect()
-  client = ipc.HTTPTransceiver(conn)
+  client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
   proto_json = file(proto, 'r').read()
   requestor = ipc.Requestor(protocol.parse(proto_json), client)
   print requestor.request(msg, datum)

@@ -453,8 +453,9 @@ class HTTPTransceiver(object):
   A simple HTTP-based transceiver implementation.
   Useful for clients but not for servers
   """
-  def __init__(self, conn):
-    self.conn = conn
+  def __init__(self, host, port):
+    self.conn = httplib.HTTPConnection(host, port)
+    self.conn.connect()
 
   # read-only properties
   sock = property(lambda self: self.conn.sock)
@@ -466,16 +467,16 @@ class HTTPTransceiver(object):
   conn = property(lambda self: self._conn, set_conn)
 
   def transceive(self, request):
-    self.conn.close()
-    self.conn = httplib.HTTPConnection(self.conn.host, self.conn.port)
-    conn_success = self.conn.connect()
     self.write_framed_message(request)
     result = self.read_framed_message()
     return result
 
   def read_framed_message(self):
-    response_reader = FramedReader(self.conn.getresponse())
-    return response_reader.read_framed_message()
+    response = self.conn.getresponse()
+    response_reader = FramedReader(response)
+    framed_message = response_reader.read_framed_message()
+    response.read()    # ensure we're ready for subsequent requests
+    return framed_message
 
   def write_framed_message(self, message):
     req_method = 'POST'
