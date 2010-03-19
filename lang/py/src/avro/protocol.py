@@ -17,7 +17,10 @@
 Protocol implementation.
 """
 import cStringIO
-import md5
+try:
+  import hashlib
+except ImportError:
+  import md5
 try:
   import simplejson as json
 except ImportError:
@@ -96,7 +99,10 @@ class Protocol(object):
       self.set_prop('types', self._parse_types(types, type_names))
     if messages is not None:
       self.set_prop('messages', self._parse_messages(messages, type_names))
-    self._md5 = md5.new(str(self)).digest()
+    if hashlib:
+      self._md5 = hashlib.md5(str(self)).digest()
+    else:
+      self._md5 = md5.new(str(self)).digest()
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))

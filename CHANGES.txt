@@ -14,6 +14,9 @@ Avro 1.3.2 (unreleased)
 
     AVRO-481. Buildbot warning fixes (Bruce Mitchener via massie)
 
+    AVRO-451. Try to use hashlib in Python implementation and fall
+    back to md5 if we can't find it (Bruce Mitchener via hammer)
+
   BUG FIXES
 
     AVRO-479. Fix 'sign' target in top-level build.sh to generate md5
