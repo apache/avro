@@ -19,6 +19,7 @@ package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -318,6 +319,32 @@ public class TestReflect {
     // check union erasure
     assertEquals(String.class, ReflectData.get().getClass(response));
     assertEquals(String.class, ReflectData.get().getClass(param));
+  }
+
+  // test error
+  public static class E1 extends Exception {}
+  public static interface P2 {
+    void error() throws E1;
+  }
+
+  @Test public void testP2() throws Exception {
+    Schema e1 = ReflectData.get().getSchema(E1.class);
+    assertEquals(Schema.Type.RECORD, e1.getType());
+    assertTrue(e1.isError());
+    Field message = e1.getField("detailMessage");
+    assertNotNull("field 'detailMessage' should not be null", message);
+    Schema messageSchema = message.schema();
+    assertEquals(Schema.Type.UNION, messageSchema.getType());
+    assertEquals(Schema.Type.NULL, messageSchema.getTypes().get(0).getType());
+    assertEquals(Schema.Type.STRING, messageSchema.getTypes().get(1).getType());
+
+    Protocol p2 = ReflectData.get().getProtocol(P2.class);
+    Protocol.Message m = p2.getMessages().get("error");
+    // check error schema is union
+    Schema response = m.getErrors();
+    assertEquals(Schema.Type.UNION, response.getType());
+    assertEquals(Schema.Type.STRING, response.getTypes().get(0).getType());
+    assertEquals(e1, response.getTypes().get(1));
   }
 
   void checkReadWrite(Object object) throws Exception {

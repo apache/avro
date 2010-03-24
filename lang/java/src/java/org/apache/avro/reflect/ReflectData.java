@@ -271,8 +271,8 @@ public class ReflectData extends SpecificData {
           schema = Schema.createFixed(name, null /* doc */, space, size);
         } else {                                             // record
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
-          schema = Schema.createRecord(name, null /* doc */, space, 
-                                       Throwable.class.isAssignableFrom(c));
+          boolean error = Throwable.class.isAssignableFrom(c);
+          schema = Schema.createRecord(name, null /* doc */, space, error);
           names.put(c.getName(), schema);
           for (Field field : getFields(c))
             if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0){
@@ -280,6 +280,9 @@ public class ReflectData extends SpecificData {
               fields.add(new Schema.Field(field.getName(),
                   fieldSchema, null /* doc */, null));
             }
+          if (error)                              // add Throwable message
+            fields.add(new Schema.Field("detailMessage", THROWABLE_MESSAGE,
+                                        null, null));
           schema.setFields(fields);
         }
         names.put(fullName, schema);
@@ -288,6 +291,9 @@ public class ReflectData extends SpecificData {
     }
     return super.createSchema(type, names);
   }
+
+  private static final Schema THROWABLE_MESSAGE =
+    makeNullable(Schema.create(Schema.Type.STRING));
 
   // if array element type is a class with a union annotation, note it
   // this is required because we cannot set a property on the union itself 

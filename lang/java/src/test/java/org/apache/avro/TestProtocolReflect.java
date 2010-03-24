@@ -50,7 +50,7 @@ public class TestProtocolReflect {
     TestRecord echo(TestRecord record);
     int add(int arg1, int arg2);
     byte[] echoBytes(byte[] data);
-    void error() throws SimpleError;
+    void error() throws SimpleException;
   }
   
   public static class TestImpl implements Simple {
@@ -58,7 +58,9 @@ public class TestProtocolReflect {
     public int add(int arg1, int arg2) { return arg1 + arg2; }
     public TestRecord echo(TestRecord record) { return record; }
     public byte[] echoBytes(byte[] data) { return data; }
-    public void error() throws SimpleError { throw new SimpleError(); }
+    public void error() throws SimpleException {
+      throw new SimpleException("foo");
+    }
   }
 
   protected static Server server;
@@ -105,13 +107,14 @@ public class TestProtocolReflect {
 
   @Test
   public void testError() throws IOException {
-    SimpleError error = null;
+    SimpleException error = null;
     try {
       proxy.error();
-    } catch (SimpleError e) {
+    } catch (SimpleException e) {
       error = e;
     }
     assertNotNull(error);
+    assertEquals("foo", error.getMessage());
   }
 
   @After
