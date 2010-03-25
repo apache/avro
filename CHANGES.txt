@@ -20,6 +20,8 @@ Avro 1.3.2 (unreleased)
     AVRO-423. HTTPTransceiver does not reuse connections
     (Eric Evans via hammer)
 
+    AVRO-490. Add Ant task to deploy Java artifacts to Maven repo. (cutting)
+
   BUG FIXES
 
     AVRO-479. Fix 'sign' target in top-level build.sh to generate md5
