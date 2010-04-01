@@ -61,6 +61,10 @@
         conf="build->default"/>
     <dependency org="net.sf.jopt-simple" name="jopt-simple" rev="3.2"
         conf="build->default;test->default;tools->default"/>
+    <dependency org="org.apache.hadoop" name="hadoop-core" rev="0.20.2"
+                conf="build->default" transitive="false"/>
+    <dependency org="commons-httpclient" name="commons-httpclient" rev="3.0.1"
+		conf="test->default"/>
   </dependencies>
 
 </ivy-module>

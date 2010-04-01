@@ -1,0 +1,51 @@
+<html>
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+
+<body>
+Tools to permit using Avro data
+with <a href="http://hadoop.apache.org/">Hadoop</a> MapReduce jobs.
+
+<p>Avro data files do not contain key/value pairs as expected by
+  Hadoop's MapReduce API, but rather just a sequence of values.  Thus
+  we provide here a layer on top of Hadoop's MapReduce API which
+  eliminates the key/value distinction.</p>
+
+<p>To use this for jobs whose input and output are Avro data files:
+ <ul>
+   <li>Subclass {@link org.apache.avro.mapred.AvroMapper} and specify
+   this as your job's mapper.</li>
+   <li>Subclass {@link org.apache.avro.mapred.AvroReducer} and specify
+   this as your job's reducer and perhaps combiner.</li>
+   <li>Depending on whether your mapper uses Avro's specific or
+   generic API for inputs, call one of {@link
+   org.apache.avro.mapred.AvroJob#setInputSpecific} or {@link
+   org.apache.avro.mapred.AvroJob#setInputGeneric} with your input schema.</li>
+   <li>Depending on whether your job uses Avro's specific or generic
+   API for outputs, call one of {@link
+   org.apache.avro.mapred.AvroJob#setOutputSpecific} or {@link
+   org.apache.avro.mapred.AvroJob#setOutputGeneric} with your output
+   schema.</li>
+   <li>Specify input files with {@link org.apache.hadoop.mapred.FileInputFormat#setInputPaths}</li>
+   <li>Specify an output directory with {@link
+   org.apache.hadoop.mapred.FileOutputFormat#setOutputPath}</li>
+   <li>Run your job with {@link org.apache.hadoop.mapred.JobClient#runJob}</li>
+ </ul>
+</p>
+</body>
+</html>

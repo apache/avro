@@ -1,0 +1,6 @@
+{"type":"record", "name":"org.apache.avro.mapred.WordCount",
+ "fields":[
+     {"name":"word", "type":"string"},
+     {"name":"count", "type":"int", "order":"ignore"}
+ ]
+}

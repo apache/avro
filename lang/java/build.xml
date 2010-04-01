@@ -66,6 +66,8 @@
 	    value="http://jackson.codehaus.org/0.9.3/javadoc/"/>
   <property name="javadoc.link.servlet"
 	    value="http://java.sun.com/products/servlet/2.3/javadoc/"/>
+  <property name="javadoc.link.hadoop"
+	    value="http://hadoop.apache.org/common/docs/current/api/"/>
   <property name="javadoc.packages" value="org.${org}.${name}.*"/>
 
   <property name="javac.encoding" value="ISO-8859-1"/>
@@ -456,6 +458,7 @@
         <link href="${javadoc.link.java}"/>
         <link href="${javadoc.link.jackson}"/>
         <link href="${javadoc.link.servlet}"/>
+        <link href="${javadoc.link.hadoop}"/>
 
         <classpath >
           <path refid="java.classpath" />

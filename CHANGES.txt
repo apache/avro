@@ -6,6 +6,8 @@ Avro 1.4.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-493. Add support for Hadoop Mapreduce with Avro data files. (cutting)
+
   IMPROVEMENTS
 
   BUG FIXES
