@@ -424,7 +424,6 @@ module Avro
         if readers_fields_hash.size > read_record.size
           writers_fields_hash = writers_schema.fields_hash
           readers_fields_hash.each do |field_name, field|
-            
             unless writers_fields_hash.has_key? field_name
               if !field.default.nil?
                 field_val = read_default_value(field.type, field.default)
@@ -480,6 +479,41 @@ module Avro
         else
           fail_msg = "Unknown type: #{field_schema.type}"
           raise AvroError(fail_msg)
+        end
+      end
+
+      def skip_data(writers_schema, decoder)
+        case writers_schema.type
+        when 'null'
+          decoder.skip_null
+        when 'boolean'
+          decoder.skip_boolean
+        when 'string'
+          decoder.skip_string
+        when 'int'
+          decoder.skip_int
+        when 'long'
+          decoder.skip_long
+        when 'float'
+          decoder.skip_float
+        when 'double'
+          decoder.skip_double
+        when 'bytes'
+          decoder.skip_bytes
+        when 'fixed'
+          skip_fixed(writers_schema, decoder)
+        when 'enum'
+          skip_enum(writers_schema, decoder)
+        when 'array'
+          skip_array(writers_schema, decoder)
+        when 'map'
+          skip_map(writers_schema, decoder)
+        when 'union'
+          skip_union(writers_schema, decoder)
+        when 'record', 'error', 'request'
+          skip_record(writers_schema, decoder)
+        else
+          raise AvroError, "Unknown schema type: #{schm.type}"
         end
       end
     end # DatumReader
