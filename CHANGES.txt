@@ -9,8 +9,14 @@ Avro 1.4.0 (unreleased)
     AVRO-493. Add support for Hadoop Mapreduce with Avro data files. (cutting)
 
   IMPROVEMENTS
+    AVRO-486. DataFile.open for the ruby side (jmhodges)
+
+    AVRO-491. Doing doubles and floats better in the ruby impl. (jmhodges)
 
   BUG FIXES
+    AVRO-461. Skipping primitives in the ruby side (jmhodges)
+
+    AVRO-489. Skipping complex objects in the ruby impl. (jmhodges)
 
 Avro 1.3.2 (31 March 2010)
 
