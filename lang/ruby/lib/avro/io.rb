@@ -76,12 +76,7 @@ module Avro
         # The float is converted into a 32-bit integer using a method
         # equivalent to Java's floatToIntBits and then encoded in
         # little-endian format.
-
-        bits = (byte! & 0xFF) |
-          ((byte! & 0xff) <<  8) |
-          ((byte! & 0xff) << 16) |
-          ((byte! & 0xff) << 24)
-        [bits].pack('i').unpack('e')[0]
+        @reader.read(4).unpack('e')[0]
       end
 
       def read_double
@@ -89,16 +84,7 @@ module Avro
         # The double is converted into a 64-bit integer using a method
         # equivalent to Java's doubleToLongBits and then encoded in
         # little-endian format.
-
-        bits = (byte! & 0xFF) |
-          ((byte! & 0xff) <<  8) |
-          ((byte! & 0xff) << 16) |
-          ((byte! & 0xff) << 24) |
-          ((byte! & 0xff) << 32) |
-          ((byte! & 0xff) << 40) |
-          ((byte! & 0xff) << 48) |
-          ((byte! & 0xff) << 56)
-        [bits].pack('Q').unpack('d')[0]
+        @reader.read(8).unpack('E')[0]
       end
 
       def read_bytes
@@ -202,11 +188,7 @@ module Avro
       # equivalent to Java's floatToIntBits and then encoded in
       # little-endian format.
       def write_float(datum)
-        bits = [datum].pack('e').unpack('i')[0]
-        @writer.write(((bits      ) & 0xFF).chr)
-        @writer.write(((bits >> 8 ) & 0xFF).chr)
-        @writer.write(((bits >> 16) & 0xFF).chr)
-        @writer.write(((bits >> 24) & 0xFF).chr)
+        @writer.write([datum].pack('e'))
       end
 
       # A double is written as 8 bytes.
@@ -214,15 +196,7 @@ module Avro
       # equivalent to Java's doubleToLongBits and then encoded in
       # little-endian format.
       def write_double(datum)
-        bits = [datum].pack('d').unpack('Q')[0]
-        @writer.write(((bits      ) & 0xFF).chr)
-        @writer.write(((bits >> 8 ) & 0xFF).chr)
-        @writer.write(((bits >> 16) & 0xFF).chr)
-        @writer.write(((bits >> 24) & 0xFF).chr)
-        @writer.write(((bits >> 32) & 0xFF).chr)
-        @writer.write(((bits >> 40) & 0xFF).chr)
-        @writer.write(((bits >> 48) & 0xFF).chr)
-        @writer.write(((bits >> 56) & 0xFF).chr)
+        @writer.write([datum].pack('E'))
       end
 
       # Bytes are encoded as a long followed by that many bytes of data.
