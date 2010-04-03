@@ -46,7 +46,7 @@ module Avro
       yield io if block_given?
       io
     ensure
-      io.close if block_given?
+      io.close if block_given? && io
     end
 
     class << self
