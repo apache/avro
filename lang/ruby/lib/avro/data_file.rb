@@ -29,6 +29,39 @@ module Avro
 
     class DataFileError < AvroError; end
 
+    def self.open(file_path, mode='r', schema=nil)
+      schema = Avro::Schema.parse(schema) if schema
+      case mode
+      when 'w'
+        unless schema
+          raise DataFileError, "Writing an Avro file requires a schema."
+        end
+        io = open_writer(File.open(file_path, 'wb'), schema)
+      when 'r'
+        io = open_reader(File.open(file_path, 'rb'), schema)
+      else
+        raise DataFileError, "Only modes 'r' and 'w' allowed. You gave #{mode.inspect}."
+      end
+
+      yield io if block_given?
+      io
+    ensure
+      io.close if block_given?
+    end
+
+    class << self
+      private
+      def open_writer(file, schema)
+        writer = Avro::IO::DatumWriter.new(schema)
+        Avro::DataFile::Writer.new(file, writer, schema)
+      end
+
+      def open_reader(file, schema)
+        reader = Avro::IO::DatumReader.new(nil, schema)
+        Avro::DataFile::Reader.new(file, reader)
+      end
+    end
+
     class Writer
       def self.generate_sync_marker
         OpenSSL::Random.random_bytes(16)
