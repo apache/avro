@@ -13,6 +13,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-491. Doing doubles and floats better in the ruby impl. (jmhodges)
 
+    AVRO-501. missing function in C api to access array elements after 
+    decoding an array. (Bruce Mitchener via massie)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 

@@ -686,6 +686,23 @@ avro_datum_t avro_array(void)
 }
 
 int
+avro_array_get(const avro_datum_t array_datum, int64_t index, avro_datum_t * value)
+{
+    union {
+        st_data_t data;
+        avro_datum_t datum;
+    } val;
+	if (is_avro_datum(array_datum) && is_avro_array(array_datum)) {
+        const struct avro_array_datum_t * array = avro_datum_to_array(array_datum);
+        if (st_lookup(array->els, index, &val.data)) {
+            *value = val.datum;
+            return 0;
+        }
+    }
+    return EINVAL;
+}
+
+int
 avro_array_append_datum(const avro_datum_t array_datum,
 			const avro_datum_t datum)
 {
