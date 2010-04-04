@@ -685,6 +685,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 								    json_string_value
 								    (json_field_name),
 								    json_field_type_schema);
+				avro_schema_decref(json_field_type_schema);
 				if (field_rval != 0) {
 					avro_schema_decref(*schema);
 					return field_rval;
@@ -755,6 +756,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 				return items_rval;
 			}
 			*schema = avro_schema_array(items_schema);
+			avro_schema_decref(items_schema);
 		}
 		break;
 
@@ -774,6 +776,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 				return values_rval;
 			}
 			*schema = avro_schema_map(values_schema);
+			avro_schema_decref(values_schema);
 		}
 		break;
 
@@ -800,6 +803,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 				}
 				schema_rval =
 				    avro_schema_union_append(*schema, s);
+				avro_schema_decref(s);
 				if (schema_rval != 0) {
 					avro_schema_decref(*schema);
 					return schema_rval;
