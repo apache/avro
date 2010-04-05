@@ -24,6 +24,8 @@ Avro 1.4.0 (unreleased)
     AVRO-502. Memory leak from parsing JSON schema.
     (Robert G. Jakabosky via massie)
 
+    AVRO-496. python sample_http_client.py is broken (Jeff Hodges via hammer)
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS

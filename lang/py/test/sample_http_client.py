@@ -59,9 +59,7 @@ class UsageError(Exception):
     return repr(self.value)
 
 def make_requestor(server_host, server_port, protocol):
-  conn = httplib.HTTPConnection(SERVER_HOST, SERVER_PORT)
-  conn.connect()
-  client = ipc.HTTPTransceiver(conn)
+  client = ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
   return ipc.Requestor(protocol, client)
 
 if __name__ == '__main__':
