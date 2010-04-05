@@ -19,8 +19,6 @@
 #ifndef avro_ValidSchema_hh__ 
 #define avro_ValidSchema_hh__ 
 
-#include <boost/noncopyable.hpp>
-
 #include "Node.hh"
 
 namespace avro {
@@ -39,11 +37,12 @@ class SymbolMap;
 /// parsers/serializers, converted to a json schema, etc.
 ///
 
-class ValidSchema : private boost::noncopyable
+class ValidSchema 
 {
   public:
 
     explicit ValidSchema(const Schema &schema);
+    explicit ValidSchema(const ValidSchema &schema);
     ValidSchema();
 
     void setSchema(const Schema &schema);
@@ -61,6 +60,12 @@ class ValidSchema : private boost::noncopyable
     bool validate(const NodePtr &node, SymbolMap &symbolMap);
 
     NodePtr root_;
+
+  private:
+
+    // not implemented, only copy construct allowed
+    ValidSchema &operator=(const Schema &rhs);
+
 };
 
 } // namespace avro

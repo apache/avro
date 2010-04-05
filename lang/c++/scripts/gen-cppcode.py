@@ -1,22 +1,24 @@
 #!/usr/bin/python
 
-#Licensed to the Apache Software Foundation (ASF) under one
-#or more contributor license agreements.  See the NOTICE file
-#distributed with this work for additional information
-#regarding copyright ownership.  The ASF licenses this file
-#to you under the Apache License, Version 2.0 (the
-#"License"); you may not use this file except in compliance
-#with the License.  You may obtain a copy of the License at
-#
-#http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
-
-done = False
+license = '''
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+'''
 
 headers = '''
 #include <stdint.h>
@@ -29,6 +31,8 @@ headers = '''
 #include "AvroParse.hh"
 #include "Layout.hh"
 '''
+
+done = False
 
 typeToC= { 'int' : 'int32_t', 'long' :'int64_t', 'float' : 'float', 'double' : 'double', 
 'boolean' : 'bool', 'null': 'avro::Null', 'string' : 'std::string', 'bytes' : 'std::vector<uint8_t>'} 
@@ -162,7 +166,7 @@ $setfuncs$
 
     static void *genericSet($name$ *u, int64_t choice) {
         boost::any *val = &(u->value);
-        void *data;
+        void *data = NULL;
         switch (choice) {$switch$
         }
         return data;
@@ -594,9 +598,12 @@ def getNextLine():
         globals()["done"] = True
     return line.split(' ')
     
-def writeHeader():
-    print "#ifndef %s_AvroGenerated_hh__" % namespace
-    print "#define %s_AvroGenerated_hh__" % namespace
+def writeHeader(filebase, namespace):
+    headerstring = "%s_%s_hh__" % (namespace, filebase)
+
+    print license
+    print "#ifndef %s" % headerstring
+    print "#define %s" % headerstring 
     print headers
     print "namespace %s {\n" % namespace
 
@@ -615,7 +622,7 @@ def writeHeader():
 
     print "\n} // namespace avro\n"
 
-    print "#endif // %s_AvroGenerated_hh__" % namespace
+    print "#endif // %s" % headerstring
 
 
 def usage():
@@ -642,6 +649,7 @@ if __name__ == "__main__":
     saveout = sys.stdout              
     inputFile = False
     outputFile = False
+    outputFileBase = 'AvroGenerated'
 
     for o, a in opts:
         if o in ("-i", "--input"):
@@ -657,6 +665,7 @@ if __name__ == "__main__":
                 sys.stdout = outputFile
             except:
                 print "Could not open file " + a
+            outputFileBase = a.rstrip('.hp')  # strip for .h, .hh, .hpp
         elif o in ("-n", "--namespace"):
             namespace = a
         elif o in ("-h", "--help"):
@@ -668,7 +677,7 @@ if __name__ == "__main__":
             sys.exit()
 
     generateCode()
-    writeHeader()
+    writeHeader(outputFileBase, namespace)
 
     sys.stdin = savein
     sys.stdout = saveout

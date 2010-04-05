@@ -73,7 +73,7 @@ int yylex(int *val, void *ctx)
 ws [ \t\r\n]
 nonws [^ \t\r\n]
 delim {ws}*:{ws}*
-avrotext [a-zA-Z_][a-zA-Z0-9_]*
+avrotext [a-zA-Z_][a-zA-Z0-9_.]*
 startunion \[
 startobject \{
 integer [0-9]+

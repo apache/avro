@@ -1,5 +1,5 @@
 
-AM_CXXFLAGS= -I$(top_srcdir)/api $(BOOST_CPPFLAGS)
+AM_CXXFLAGS= -I$(top_srcdir)/api $(BOOST_CPPFLAGS) -Wall -Werror -Wno-invalid-offsetof
 ACLOCAL_AMFLAGS=-I m4
 
 BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
@@ -117,7 +117,6 @@ unittest_LDFLAGS = -static -no-install $(BOOST_LDFLAGS)
 unittest_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB)
 
 testgen_SOURCES = test/testgen.cc testgen.hh testgen2.hh
-testgen_CXXFLAGS = $(AM_CXXFLAGS) -Wno-invalid-offsetof  
 testgen_LDFLAGS = -static -no-install $(BOOST_LDFLAGS)
 testgen_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB)
 

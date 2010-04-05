@@ -26,14 +26,13 @@ namespace avro {
 
 Validator::Validator(const ValidSchema &schema) :
     schema_(schema),
-    parseTree_(schema.root()),
     nextType_(AVRO_NULL),
     expectedTypesFlag_(0),
     compoundStarted_(false),
     waitingForCount_(false),
     count_(0)
 {
-    setupOperation(parseTree_);
+    setupOperation(schema_.root());
 }
 
 void 

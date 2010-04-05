@@ -25,12 +25,16 @@
 
 namespace avro {
 
-    ValidSchema::ValidSchema(const Schema &schema) :
+ValidSchema::ValidSchema(const Schema &schema) :
     root_(schema.root())
 {
     SymbolMap symbolMap;
     validate(root_, symbolMap);
 }
+
+ValidSchema::ValidSchema(const ValidSchema &schema) :
+    root_(schema.root())
+{ }
 
 ValidSchema::ValidSchema() :
    root_(NullSchema().root()) 

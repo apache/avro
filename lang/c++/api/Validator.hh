@@ -24,11 +24,10 @@
 #include <stdint.h>
 
 #include "Types.hh"
-#include "Node.hh"
+#include "ValidSchema.hh"
 
 namespace avro {
 
-class ValidSchema;
 class OutputStreamer;
 
 /// This class is used by both the ValidatingSerializer and ValidationParser
@@ -80,13 +79,7 @@ class Validator : private boost::noncopyable
 
     void setupFlag(Type type);
 
-    const ValidSchema &schema_;
-
-    // since this only keeps a reference to the schema, to ensure its parse
-    // tree is not deleted, keep a copy of a shared pointer to the root of the
-    // tree
-
-    const NodePtr parseTree_;
+    const ValidSchema schema_;
 
     Type nextType_; 
     flag_t expectedTypesFlag_;

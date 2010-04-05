@@ -16,6 +16,8 @@ Avro 1.4.0 (unreleased)
     AVRO-501. missing function in C api to access array elements after 
     decoding an array. (Bruce Mitchener via massie)
 
+    AVRO-497. Minor changes to C++ autotools, makefiles, and code generator. (sbanacho)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 
