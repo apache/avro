@@ -18,6 +18,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-497. Minor changes to C++ autotools, makefiles, and code generator. (sbanacho)
 
+    AVRO-450. HTTP IPC for ruby. (jmhodges)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 
