@@ -51,7 +51,7 @@ module Avro
             fields = json_obj['fields']
             return RecordSchema.new(name, namespace, fields, names, type)
           else
-            raise SchemaParseError.new("Unknown Named Type: #{type}")
+            raise SchemaParseError.new("Unknown named type: #{type}")
           end
         elsif VALID_TYPES.include?(type)
           case type
@@ -73,7 +73,7 @@ module Avro
       elsif PRIMITIVE_TYPES.include? json_obj
         return PrimitiveSchema.new(json_obj)
       else
-        msg = "Could not make an Avro Schema object from #{json_obj}"
+        msg = "#{json_obj.inspect} is not a schema we know about."
         raise SchemaParseError.new(msg)
       end
     end
@@ -127,6 +127,15 @@ module Avro
 
     def hash(seen=nil)
       @type.hash
+    end
+
+    def subparse(json_obj, names=nil)
+      begin
+        Schema.real_parse(json_obj, names)
+      rescue => e
+        raise e if e.is_a? SchemaParseError
+        raise SchemaParseError, "Sub-schema for #{self.class.name} not a valid Avro schema. Bad schema: #{json_obj}"
+      end
     end
 
     def to_hash
@@ -215,12 +224,7 @@ module Avro
           @items = names[items]
           @items_schema_from_names = true
         else
-          begin
-            @items = Schema.real_parse(items, names)
-          rescue => e
-            msg = "Items schema not a valid Avro schema" + e.to_s
-            raise SchemaParseError, msg
-          end
+          @items = subparse(items, names)
         end
       end
 
@@ -244,11 +248,7 @@ module Avro
           values_schema = names[values]
           @values_schema_from_names = true
         else
-          begin
-            values_schema = Schema.real_parse(values, names)
-          rescue => e
-            raise SchemaParseError.new('Values schema not a valid Avro schema.' + e.to_s)
-          end
+          values_schema = subparse(values, names)
         end
         @values = values_schema
       end
@@ -277,11 +277,7 @@ module Avro
             new_schema = names[schema]
             from_names = true
           else
-            begin
-              new_schema = Schema.real_parse(schema, names)
-            rescue
-              raise SchemaParseError, 'Union item must be a valid Avro schema'
-            end
+            new_schema = subparse(schema, names)
           end
 
           ns_type = new_schema.type
@@ -361,7 +357,7 @@ module Avro
       end
     end
 
-    class Field
+    class Field < Schema
       attr_reader :type, :name, :default, :order, :type_from_names
       def initialize(type, name, default=nil, order=nil, names=nil)
         @type_from_names = false
@@ -369,7 +365,7 @@ module Avro
           type_schema = names[type]
           @type_from_names = true
         else
-          type_schema = Schema.real_parse(type, names)
+          type_schema = subparse(type, names)
         end
         @type = type_schema
         @name = name
