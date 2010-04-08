@@ -20,14 +20,13 @@
 
 #include "ValidatingWriter.hh"
 #include "ValidSchema.hh"
-#include "OutputStreamer.hh"
 #include "AvroTraits.hh"
 
 namespace avro {
 
-ValidatingWriter::ValidatingWriter(const ValidSchema &schema, OutputStreamer &out) :
+ValidatingWriter::ValidatingWriter(const ValidSchema &schema) :
     validator_(schema),
-    writer_(out)
+    writer_()
 { }
 
 void

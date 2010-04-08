@@ -21,7 +21,7 @@
 
 #include <boost/noncopyable.hpp>
 
-#include "OutputStreamer.hh"
+#include "buffer/Buffer.hh"
 #include "Zigzag.hh"
 #include "Types.hh"
 
@@ -34,27 +34,25 @@ class Writer : private boost::noncopyable
 
   public:
 
-    explicit Writer(OutputStreamer &out) :
-        out_(out)
-    {}
+    Writer() {}
 
     void writeValue(const Null &) {}
 
     void writeValue(bool val) {
         int8_t byte = (val != 0);
-        out_.writeByte(byte);
+        buffer_.writeTo(byte);
     }
 
     void writeValue(int32_t val) {
         boost::array<uint8_t, 5> bytes;
         size_t size = encodeInt32(val, bytes);
-        out_.writeBytes(bytes.data(), size);
+        buffer_.writeTo(reinterpret_cast<const char *>(bytes.data()), size);
     }
 
     void writeValue(int64_t val) {
         boost::array<uint8_t, 10> bytes;
         size_t size = encodeInt64(val, bytes);
-        out_.writeBytes(bytes.data(), size);
+        buffer_.writeTo(reinterpret_cast<const char *>(bytes.data()), size);
     }
 
     void writeValue(float val) {
@@ -64,7 +62,7 @@ class Writer : private boost::noncopyable
         } v;
     
         v.f = val;
-        out_.writeWord(v.i);
+        buffer_.writeTo(v.i);
     }
 
     void writeValue(double val) {
@@ -74,7 +72,7 @@ class Writer : private boost::noncopyable
         } v;
         
         v.d = val;
-        out_.writeLongWord(v.i);
+        buffer_.writeTo(v.i);
     }
 
     void writeValue(const std::string &val) {
@@ -83,17 +81,17 @@ class Writer : private boost::noncopyable
 
     void writeBytes(const void *val, size_t size) {
         this->writeValue(static_cast<int64_t>(size));
-        out_.writeBytes(val, size);
+        buffer_.writeTo(reinterpret_cast<const char *>(val), size);
     }
 
     template <size_t N>
     void writeFixed(const uint8_t (&val)[N]) {
-        out_.writeBytes(val, N);
+        buffer_.writeTo(reinterpret_cast<const char *>(val), N);
     }
 
     template <size_t N>
     void writeFixed(const boost::array<uint8_t, N> &val) {
-        out_.writeBytes(val.data(), val.size());
+        buffer_.writeTo(reinterpret_cast<const char *>(val.data()), val.size());
     }
 
     void writeRecord() {}
@@ -103,7 +101,7 @@ class Writer : private boost::noncopyable
     }
 
     void writeArrayEnd() {
-        out_.writeByte(0);
+        buffer_.writeTo<uint8_t>(0);
     }
 
     void writeMapBlock(int64_t size) {
@@ -111,7 +109,7 @@ class Writer : private boost::noncopyable
     }
 
     void writeMapEnd() {
-        out_.writeByte(0);
+        buffer_.writeTo<uint8_t>(0);
     }
 
     void writeUnion(int64_t choice) {
@@ -122,9 +120,13 @@ class Writer : private boost::noncopyable
         this->writeValue(static_cast<int64_t>(choice));
     }
 
+    InputBuffer buffer() const {
+        return buffer_;
+    }
+
   private:
 
-    OutputStreamer &out_;
+    OutputBuffer buffer_;
 
 };
 

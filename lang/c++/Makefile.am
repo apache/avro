@@ -16,12 +16,10 @@ api/Boost.hh \
 api/Compiler.hh \
 api/CompilerNode.hh \
 api/Exception.hh \
-api/InputStreamer.hh \
 api/Layout.hh \
 api/Node.hh \
 api/NodeConcepts.hh \
 api/NodeImpl.hh \
-api/OutputStreamer.hh \
 api/Parser.hh \
 api/Reader.hh \
 api/Resolver.hh \
@@ -37,7 +35,14 @@ api/ValidatingReader.hh \
 api/ValidatingWriter.hh \
 api/Validator.hh \
 api/Writer.hh \
-api/Zigzag.hh 
+api/Zigzag.hh \
+api/buffer/BufferStreambuf.hh \
+api/buffer/detail/BufferDetailIterator.hh \
+api/buffer/detail/BufferDetail.hh \
+api/buffer/BufferStream.hh \
+api/buffer/BufferPrint.hh \
+api/buffer/Buffer.hh \
+api/buffer/BufferReader.hh
 
 BUILT_SOURCES = AvroYacc.h testgen.hh testgen2.hh
 
@@ -56,35 +61,7 @@ testparser_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB)
 
 lib_LTLIBRARIES = libavrocpp.la
 
-libavrocpp_la_SOURCES = \
-api/AvroParse.hh \
-api/AvroSerialize.hh \
-api/AvroTraits.hh \
-api/Boost.hh \
-api/Compiler.hh \
-api/CompilerNode.hh \
-api/Exception.hh \
-api/InputStreamer.hh \
-api/Layout.hh \
-api/Node.hh \
-api/NodeConcepts.hh \
-api/NodeImpl.hh \
-api/OutputStreamer.hh \
-api/Parser.hh \
-api/Reader.hh \
-api/Resolver.hh \
-api/ResolverSchema.hh \
-api/ResolvingReader.hh \
-api/Schema.hh \
-api/SchemaResolution.hh \
-api/Serializer.hh \
-api/SymbolMap.hh \
-api/Types.hh \
-api/ValidSchema.hh \
-api/ValidatingReader.hh \
-api/ValidatingWriter.hh \
-api/Validator.hh \
-api/Writer.hh \
+libavrocpp_la_SOURCES = $(library_include_HEADERS) \
 api/Zigzag.hh \
 impl/Compiler.cc \
 impl/CompilerNode.cc \
@@ -107,9 +84,9 @@ parser/AvroLex.ll
 AM_LFLAGS= -o$(LEX_OUTPUT_ROOT).c
 AM_YFLAGS = -d
 
-check_PROGRAMS = unittest testgen 
+check_PROGRAMS = unittest testgen buffertest
 
-TESTS=unittest testgen
+TESTS=unittest testgen buffertest
 TESTS_ENVIRONMENT = top_srcdir=$(top_srcdir)
 
 unittest_SOURCES = test/unittest.cc
@@ -119,6 +96,10 @@ unittest_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB)
 testgen_SOURCES = test/testgen.cc testgen.hh testgen2.hh
 testgen_LDFLAGS = -static -no-install $(BOOST_LDFLAGS)
 testgen_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB)
+
+buffertest_SOURCES = test/buffertest.cc 
+buffertest_LDFLAGS = -static -no-install $(BOOST_LDFLAGS)
+buffertest_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB) $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB)
 
 # Make sure we never package up '.svn' directories
 dist-hook:

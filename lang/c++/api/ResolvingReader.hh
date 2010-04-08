@@ -28,14 +28,12 @@
 
 namespace avro {
 
-class InputStreamer;
-
 class ResolvingReader : private boost::noncopyable
 {
 
   public:
 
-    ResolvingReader(const ResolverSchema &schema, InputStreamer &in) :
+    ResolvingReader(const ResolverSchema &schema, const InputBuffer &in) :
         reader_(in),
         schema_(schema)
     {}

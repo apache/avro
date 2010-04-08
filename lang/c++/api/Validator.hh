@@ -28,7 +28,6 @@
 
 namespace avro {
 
-class OutputStreamer;
 
 /// This class is used by both the ValidatingSerializer and ValidationParser
 /// objects.  It advances the parse tree (containing logic how to advance

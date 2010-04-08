@@ -20,6 +20,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-450. HTTP IPC for ruby. (jmhodges)
 
+    AVRO-508. Use page-backed buffers for C++ serialization input or output. (sbanacho)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 

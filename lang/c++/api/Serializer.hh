@@ -36,13 +36,13 @@ class Serializer : private boost::noncopyable
   public:
 
     /// Constructor only works with Writer
-    explicit Serializer(OutputStreamer &out) :
-        writer_(out)
+    explicit Serializer() :
+        writer_()
     {}
 
     /// Constructor only works with ValidatingWriter
-    Serializer(const ValidSchema &schema, OutputStreamer &out) :
-        writer_(schema, out)
+    Serializer(const ValidSchema &schema) :
+        writer_(schema)
     {}
 
     void writeNull() {
@@ -113,6 +113,10 @@ class Serializer : private boost::noncopyable
 
     void writeEnum(int64_t choice) {
         writer_.writeEnum(choice);
+    }
+
+    InputBuffer buffer() const {
+        return writer_.buffer();
     }
 
   private:

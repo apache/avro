@@ -103,44 +103,28 @@ at an example of serializing this data:</P>
     c.real = 10.0;
     c.imaginary = 20.0;
 
-    // Declare the stream to which to serialize the data to
-    std::ostringstream os;
-
-    // Ostreamer wraps a stream so that Avro serializer can use it
-    avro::Ostreamer ostreamer(os);
-    
-    // Writer is the object that will do the actual I/O
-    avro::Writer writer(ostreamer);
+    // Writer is the object that will do the actual I/O and buffer the results
+    avro::Writer writer;
 
     // This will invoke the writer on my object
     avro::serialize(writer, c);
 
-    // At this point, the ostringstream “os” stores the serialized data!
+    // At this point, the writer stores the serialized data in a buffer,
+    // which can be extracted to an immutable buffer
+    InputBuffer buffer = writer.buffer();
 }</PRE><P>
 Using the generated code, all that is required to serialize the data
-is to call avro::serialize() on the object. There is some setup
-required to tell where to write the data. The Ostreamer object is a
-simple object that understands how to wite to STL ostreams. It is
-derived from a virtual base class called OutputStreamer. You can
-derive from OutputStream to create an object that can write to any
-kind of buffer you wish.</P>
+is to call avro::serialize() on the object.</P>
+The data may be be accessed by requesting an avro::InputBuffer 
+object.  From there, it can be sent to a file, over the network, etc.</P>
 <P>Now let's do the inverse, and read the serialized data into our
 object:</P>
-<PRE>void parseMyData(const std::string &amp;myData)
+<PRE>void parseMyData(const avro::InputBuffer &amp;myData)
 {
     Math::complex c;
 
-    // Assume the serialized data is being passed as the contents of a string
-    // (Note: this may not be the best way since the data is binary)
-
-    // Declare a stream from which to read the serialized data
-    std::istringstream is(myData);
-
-    // Istreamer wraps a stream so that Avro parser can use it
-    avro::Istreamer istreamer(is);
-    
     // Reader is the object that will do the actual I/O
-    avro::Reader reader(istreamer);
+    avro::Reader reader(myData);
 
     // This will invoke the reader on my object
     avro::parse(reader, c);
@@ -205,11 +189,8 @@ function from above, but this time checking against our schema.</P>
     c.real = 10.0;
     c.imaginary = 20.0;
 
-    std::ostringstream os;
-    avro::Ostreamer ostreamer(os);
-    
     // ValidatingWriter will make sure our serializer is writing the correct types
-    avro::ValidatingWriter writer(mySchema, ostreamer);
+    avro::ValidatingWriter writer(mySchema);
 
     try {
         avro::serialize(writer, c);
@@ -236,13 +217,10 @@ provides an interface to query the next type to expect, and the
 field's name if it is a member of a record.</P>
 <P>The following code is not very flexible, but it does demonstrate
 the API:</P>
-<PRE>void parseMyData(const std::string &amp;myData, const avro::ValidSchema &amp;mySchema)
+<PRE>void parseMyData(const avro::InputBuffer &amp;myData, const avro::ValidSchema &amp;mySchema)
 {
-    std::istringstream is(myData);
-    avro::Istreamer istreamer(is);
-    
     // Manually parse data, the Parser object binds the data to the schema
-    avro::Parser&lt;ValidatingReader&gt; parser(mySchema, istreamer);
+    avro::Parser&lt;ValidatingReader&gt; parser(mySchema, myData);
 
     assert( parser.nextType() == AVRO_READER);
     
@@ -357,9 +335,7 @@ be created that reads the data to the code generated structure.</P>
     avro::ResolverSchema resolverSchema(writerSchema, readerSchema, layout);
 
     // Setup the reader
-    std::istringstream is(data);
-    avro::IStreamer istreamer(is);
-    avro::ResolvingReader reader(resolverSchema, is);
+    avro::ResolvingReader reader(resolverSchema, data);
 
     Math::complex c;
     

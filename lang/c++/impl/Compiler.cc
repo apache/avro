@@ -17,7 +17,6 @@
  */
 
 #include "Compiler.hh"
-#include "InputStreamer.hh"
 #include "Types.hh"
 #include "Schema.hh"
 #include "ValidSchema.hh"

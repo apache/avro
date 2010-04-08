@@ -36,12 +36,12 @@ class Parser : private boost::noncopyable
   public:
 
     // Constructor only works with Writer
-    explicit Parser(InputStreamer &in) :
+    explicit Parser(const InputBuffer &in) :
         reader_(in)
     {}
 
     /// Constructor only works with ValidatingWriter
-    Parser(const ValidSchema &schema, InputStreamer &in) :
+    Parser(const ValidSchema &schema, const InputBuffer &in) :
         reader_(schema, in)
     {}
 

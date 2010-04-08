@@ -30,7 +30,6 @@
 namespace avro {
 
 class ValidSchema;
-class InputStreamer;
 
 /// As an avro object is being parsed from binary data to its C++
 /// representation, this parser will walk the parse tree and ensure that the
@@ -47,7 +46,7 @@ class ValidatingReader : private boost::noncopyable
 
   public:
 
-    ValidatingReader(const ValidSchema &schema, InputStreamer &in);
+    ValidatingReader(const ValidSchema &schema, const InputBuffer &in);
 
     template<typename T>
     void readValue(T &val) {

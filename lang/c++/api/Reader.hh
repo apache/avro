@@ -23,9 +23,9 @@
 #include <vector>
 #include <boost/noncopyable.hpp>
 
-#include "InputStreamer.hh"
 #include "Zigzag.hh"
 #include "Types.hh"
+#include "buffer/BufferReader.hh"
 
 namespace avro {
 
@@ -39,15 +39,15 @@ class Reader : private boost::noncopyable
 
   public:
 
-    explicit Reader(InputStreamer &in) :
-        in_(in)
+    explicit Reader(const InputBuffer &buffer) :
+        reader_(buffer)
     {}
 
     void readValue(Null &) {}
 
     void readValue(bool &val) {
         uint8_t ival;
-        in_.readByte(ival);
+        reader_.read(ival);
         val = (ival != 0);
     }
 
@@ -66,7 +66,7 @@ class Reader : private boost::noncopyable
             float f;
             uint32_t i;
         } v;
-        in_.readWord(v.i);
+        reader_.read(v.i);
         val = v.f;
     }
 
@@ -75,19 +75,13 @@ class Reader : private boost::noncopyable
             double d;
             uint64_t i;
         } v;
-        in_.readLongWord(v.i);
+        reader_.read(v.i);
         val = v.d;
     }
 
     void readValue(std::string &val) {
         int64_t size = readSize();
-        val.clear();
-        val.reserve(size);
-        uint8_t bval;
-        for(size_t bytes = 0; bytes < static_cast<size_t>(size); bytes++) {
-            in_.readByte(bval);
-            val.push_back(bval);
-        }
+        reader_.read(val, size);
     }
 
     void readBytes(std::vector<uint8_t> &val) {
@@ -96,15 +90,13 @@ class Reader : private boost::noncopyable
         val.reserve(size);
         uint8_t bval;
         for(size_t bytes = 0; bytes < static_cast<size_t>(size); bytes++) {
-            in_.readByte(bval);
+            reader_.read(bval);
             val.push_back(bval);
         }
     }
 
     void readFixed(uint8_t *val, size_t size) {
-        for(size_t bytes = 0; bytes < size; bytes++) {
-            in_.readByte(val[bytes]);
-        }
+        reader_.read(reinterpret_cast<char *>(val), size);
     }
 
     template <size_t N>
@@ -148,7 +140,7 @@ class Reader : private boost::noncopyable
         uint8_t val = 0;
         int shift = 0;
         do {
-            in_.readByte(val);
+            reader_.read(val);
             uint64_t newbits = static_cast<uint64_t>(val & 0x7f) << shift;
             encoded |= newbits;
             shift += 7;
@@ -157,7 +149,7 @@ class Reader : private boost::noncopyable
         return encoded;
     }
 
-    InputStreamer &in_;
+    BufferReader reader_;
 
 };
 

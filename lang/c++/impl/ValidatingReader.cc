@@ -20,11 +20,10 @@
 
 #include "ValidatingReader.hh"
 #include "ValidSchema.hh"
-#include "OutputStreamer.hh"
 
 namespace avro {
 
-ValidatingReader::ValidatingReader(const ValidSchema &schema, InputStreamer &in) :
+ValidatingReader::ValidatingReader(const ValidSchema &schema, const InputBuffer &in) :
     validator_(schema),
     reader_(in)
 { }

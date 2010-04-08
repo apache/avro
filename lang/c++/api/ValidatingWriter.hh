@@ -28,7 +28,6 @@
 namespace avro {
 
 class ValidSchema;
-class OutputStreamer;
 
 /// This class walks the parse tree as data is being serialized, and throws if
 /// attempt to serialize a data type does not match the type expected in the
@@ -39,7 +38,7 @@ class ValidatingWriter : private boost::noncopyable
 
   public:
 
-    ValidatingWriter(const ValidSchema &schema, OutputStreamer &out);
+    ValidatingWriter(const ValidSchema &schema);
 
     template<typename T>
     void writeValue(T val) {
@@ -83,6 +82,10 @@ class ValidatingWriter : private boost::noncopyable
     void writeUnion(int64_t choice);
 
     void writeEnum(int64_t choice);
+
+    InputBuffer buffer() const {
+        return writer_.buffer();
+    }
 
   private:
 

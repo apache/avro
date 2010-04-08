@@ -25,8 +25,6 @@
 #include "testgen.hh" // < generated header
 #include "testgen2.hh" // < generated header
 
-#include "OutputStreamer.hh"
-#include "InputStreamer.hh"
 #include "Serializer.hh"
 #include "Writer.hh"
 #include "ValidatingWriter.hh"
@@ -37,6 +35,7 @@
 #include "Compiler.hh"
 #include "ResolvingReader.hh"
 #include "ResolverSchema.hh"
+#include "buffer/BufferPrint.hh"
 
 std::string gWriter ("jsonschemas/bigrecord");
 std::string gReader ("jsonschemas/bigrecord2");
@@ -207,20 +206,20 @@ struct TestCodeGenerator {
     void serializeToScreen()
     {
         std::cout << "Serialize:\n";
-        avro::ScreenStreamer os;
-        avro::Writer writer(os);
+        avro::Writer writer;
 
         avro::serialize(writer, myRecord_);
+        std::cout << writer.buffer();
         std::cout << "end Serialize\n";
     }
 
     void serializeToScreenValid()
     {
         std::cout << "Validated Serialize:\n";
-        avro::ScreenStreamer os;
-        avro::ValidatingWriter writer(schema_, os);
+        avro::ValidatingWriter writer(schema_);
 
         avro::serialize(writer, myRecord_);
+        std::cout << writer.buffer();
         std::cout << "end Validated Serialize\n";
     }
 
@@ -303,16 +302,12 @@ struct TestCodeGenerator {
 
     void testParser()
     {
-        std::ostringstream ostring;
-        avro::OStreamer os(ostring);
-        avro::Writer s (os);
+        avro::Writer s;
 
         avro::serialize(s, myRecord_); 
 
         testgen::RootRecord inRecord;
-        std::istringstream istring(ostring.str());
-        avro::IStreamer is(istring);
-        avro::Reader p(is);
+        avro::Reader p(s.buffer());
         avro::parse(p, inRecord);
 
         checkOk(myRecord_, inRecord);
@@ -321,19 +316,15 @@ struct TestCodeGenerator {
 
     void testParserValid()
     {
-        std::ostringstream ostring;
-        avro::OStreamer os(ostring);
-        avro::ValidatingWriter s (schema_, os);
+        avro::ValidatingWriter s (schema_);
 
         avro::serialize(s, myRecord_);
 
         testgen::RootRecord inRecord;
-        std::istringstream istring(ostring.str());
-        avro::IStreamer is(istring);
-        avro::ValidatingReader p(schema_, is);
+        avro::ValidatingReader p(schema_, s.buffer());
         avro::parse(p, inRecord);
 
-        //checkOk(myRecord_, inRecord);
+        checkOk(myRecord_, inRecord);
     }
 
     void testNameIndex()
@@ -476,20 +467,17 @@ struct TestSchemaResolving {
         }
     }
 
-    std::string serializeWriteRecordToString()
+    avro::InputBuffer serializeWriteRecordToBuffer()
     {
         std::ostringstream ostring;
-        avro::OStreamer os(ostring);
-        avro::Writer s (os);
+        avro::Writer s;
         avro::serialize(s, writeRecord_);
-        return ostring.str();
+        return s.buffer();
     }
 
-    void parseData(const std::string &data, avro::ResolverSchema &xSchema)
+    void parseData(const avro::InputBuffer &buf, avro::ResolverSchema &xSchema)
     {
-        std::istringstream istring(data);
-        avro::IStreamer is(istring);
-        avro::ResolvingReader r(xSchema, is);
+        avro::ResolvingReader r(xSchema, buf);
 
         avro::parse(r, readRecord_);
     }
@@ -503,8 +491,8 @@ struct TestSchemaResolving {
 
         printRecord(writeRecord_);
 
-        std::string writtenData = serializeWriteRecordToString();
-        parseData(writtenData, xSchema);
+        avro::InputBuffer buffer = serializeWriteRecordToBuffer();
+        parseData(buffer, xSchema);
 
         printRecord(readRecord_);
 
