@@ -1,11 +1,13 @@
 
-AM_CXXFLAGS= -I$(top_srcdir)/api $(BOOST_CPPFLAGS) -Wall -Werror -Wno-invalid-offsetof
-ACLOCAL_AMFLAGS=-I m4
-
 BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
 BOOST_LDFLAGS = @BOOST_LDFLAGS@
 BOOST_REGEX_LIB = @BOOST_REGEX_LIB@
 PYTHON = @PYTHON@
+
+AM_CXXFLAGS= -I$(top_srcdir)/api $(BOOST_CPPFLAGS) -Wall -Wno-invalid-offsetof
+# removed -Werror for Cygwin builds, maybe should add a check flag
+
+ACLOCAL_AMFLAGS=-I m4
 
 library_includedir=$(includedir)/avrocpp
 library_include_HEADERS = \

@@ -18,10 +18,11 @@ AC_CHECK_PROG(DOXYGEN, doxygen, doxygen)
 AC_CHECK_PROG(PYTHON, python, python)
 
 # Checks for libraries.
-AX_BOOST_BASE([1.35.0])
+AX_BOOST_BASE([1.32.0])
 AX_BOOST_REGEX
 AX_BOOST_THREAD
 AX_BOOST_SYSTEM
+AX_BOOST_ASIO
 
 # Checks for header files.
 AC_FUNC_ALLOCA

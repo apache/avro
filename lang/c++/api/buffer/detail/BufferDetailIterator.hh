@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef avro_BufferDetailIterator_hh__
 #define avro_BufferDetailIterator_hh__
 
@@ -47,9 +65,11 @@ struct InputIteratorHelper
     /// Conversion operator.   It doesn't check for null, because the only
     /// the only time the chunk should be null is when it's the iterator 
     /// end(), which should never be dereferenced anyway.
+#ifdef BOOST_HAVE_ASIO
     operator ConstAsioBuffer() const {
         return ConstAsioBuffer(data(), size());
     }
+#endif
 
     BufferImpl::ChunkList::const_iterator iter_; ///< the current iterator
 };
@@ -88,9 +108,11 @@ struct OutputIteratorHelper
     /// Conversion operator.   It doesn't check for null, because the only
     /// the only time the chunk should be null is when it's the iterator 
     /// end(), which should never be dereferenced anyway.
+#ifdef HAVE_BOOST_ASIO
     operator MutableAsioBuffer() const {
         return MutableAsioBuffer(data(), size());
     }
+#endif
 
     BufferImpl::ChunkList::const_iterator iter_; ///< the current iterator
 };

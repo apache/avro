@@ -32,6 +32,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-496. python sample_http_client.py is broken (Jeff Hodges via hammer)
 
+    AVRO-515. Fix build and compatibility problems. (sbanacho)
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS

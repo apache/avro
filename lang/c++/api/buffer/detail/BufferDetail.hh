@@ -1,11 +1,31 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef avro_BufferDetail_hh__
 #define avro_BufferDetail_hh__
 
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/asio/buffer.hpp>
 #include <boost/function.hpp>
+#ifdef HAVE_BOOST_ASIO
+#include <boost/asio/buffer.hpp>
+#endif
 #include <exception>
 #include <cassert>
 #include <deque>
@@ -23,8 +43,10 @@ namespace detail {
 
 typedef char    data_type;
 typedef size_t  size_type;
+#ifdef HAVE_BOOST_ASIO
 typedef boost::asio::const_buffer   ConstAsioBuffer;
 typedef boost::asio::mutable_buffer MutableAsioBuffer;
+#endif
 
 /// The size in bytes for blocks backing buffer chunks. 
 const size_type kMinBlockSize = 4096;
