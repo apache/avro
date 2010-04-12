@@ -23,7 +23,7 @@ Avro 1.4.0 (unreleased)
     AVRO-508. Use page-backed buffers for C++ serialization input or
     output. (sbanacho)
 
-    AVRO-516. Removing unnecessary ruby StringIO calls. (jmhodges)
+    AVRO-514. Removing unnecessary ruby StringIO calls. (jmhodges)
 
     AVRO-516. Ruby socket RPC should use big endian buffer lengths.
     (jmhodges)
