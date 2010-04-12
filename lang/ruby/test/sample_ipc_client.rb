@@ -66,8 +66,7 @@ if $0 == __FILE__
     'body' => ARGV[2]
   }
 
-  num_messages = ARGV[3].to_i
-  num_message = 1 if num_messages == 0
+  num_messages = (ARGV[3] || 1).to_i
 
   # build the parameters for the request
   params = {'message' => message}

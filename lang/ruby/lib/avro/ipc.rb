@@ -239,8 +239,7 @@ module Avro::IPC
     # Called by a server to deserialize a request, compute and serialize
     # a response or error. Compare to 'handle()' in Thrift.
     def respond(call_request)
-      buffer_reader = StringIO.new(call_request)
-      buffer_decoder = Avro::IO::BinaryDecoder.new(StringIO.new(call_request))
+      buffer_decoder = Avro::IO::BinaryDecoder.new(call_request)
       buffer_writer = StringIO.new('', 'w+')
       buffer_encoder = Avro::IO::BinaryEncoder.new(buffer_writer)
       error = nil
