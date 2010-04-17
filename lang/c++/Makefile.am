@@ -101,7 +101,7 @@ testgen_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB)
 
 buffertest_SOURCES = test/buffertest.cc 
 buffertest_LDFLAGS = -static -no-install $(BOOST_LDFLAGS)
-buffertest_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB) $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB)
+buffertest_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB) $(BOOST_THREAD_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB)
 
 # Make sure we never package up '.svn' directories
 dist-hook:

@@ -65,7 +65,7 @@ struct InputIteratorHelper
     /// Conversion operator.   It doesn't check for null, because the only
     /// the only time the chunk should be null is when it's the iterator 
     /// end(), which should never be dereferenced anyway.
-#ifdef BOOST_HAVE_ASIO
+#ifdef HAVE_BOOST_ASIO
     operator ConstAsioBuffer() const {
         return ConstAsioBuffer(data(), size());
     }

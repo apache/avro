@@ -41,6 +41,8 @@ Avro 1.4.0 (unreleased)
     AVRO-516. Ruby socket RPC should use big endian buffer lengths.
     (jmhodges)
 
+    AVRO-518. Add link to boost filesystem library.  (John Plevyak via sbanacho)
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS
