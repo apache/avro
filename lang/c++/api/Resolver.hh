@@ -23,12 +23,13 @@
 #include <boost/noncopyable.hpp>
 #include <stdint.h>
 
+#include "Reader.hh"
+
 /// \file Resolver.hh
 ///
 
 namespace avro {
 
-class Reader;
 class ValidSchema;
 class Layout;
     

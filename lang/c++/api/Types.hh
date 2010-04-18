@@ -45,7 +45,8 @@ enum Type {
     
     // The following is a pseudo-type used in implementation
     
-    AVRO_SYMBOLIC = AVRO_NUM_TYPES
+    AVRO_SYMBOLIC = AVRO_NUM_TYPES,
+    AVRO_UNKNOWN  = -1
 
 };
 

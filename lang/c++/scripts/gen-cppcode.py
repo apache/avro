@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-license = '''
-/**
+license = '''/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -88,13 +87,13 @@ $recordfields$};
 template <typename Serializer>
 inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     s.writeRecord();
-$serializefields$
+$serializefields$    s.writeRecordEnd();
 }
 
 template <typename Parser>
 inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     p.readRecord();
-$parsefields$
+$parsefields$    p.readRecordEnd();
 }
 
 class $name$_Layout : public avro::CompoundLayout {
@@ -181,8 +180,7 @@ template <typename Serializer>
 inline void serialize(Serializer &s, const $name$ &val, const boost::true_type &) {
     s.writeUnion(val.choice);
     switch(val.choice) {
-$switchserialize$
-    default :
+$switchserialize$      default :
         throw avro::Exception("Unrecognized union choice");
     }
 }
@@ -191,8 +189,7 @@ template <typename Parser>
 inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     val.choice = p.readUnion();
     switch(val.choice) {
-$switchparse$
-    default :
+$switchparse$      default :
         throw avro::Exception("Unrecognized union choice");
     }
 }

@@ -27,9 +27,7 @@
 
 #include "Serializer.hh"
 #include "Writer.hh"
-#include "ValidatingWriter.hh"
 #include "Reader.hh"
-#include "ValidatingReader.hh"
 #include "Node.hh"
 #include "ValidSchema.hh"
 #include "Compiler.hh"

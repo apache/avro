@@ -33,8 +33,6 @@ api/Serializer.hh \
 api/SymbolMap.hh \
 api/Types.hh \
 api/ValidSchema.hh \
-api/ValidatingReader.hh \
-api/ValidatingWriter.hh \
 api/Validator.hh \
 api/Writer.hh \
 api/Zigzag.hh \
@@ -74,8 +72,6 @@ impl/ResolverSchema.cc \
 impl/Schema.cc \
 impl/Types.cc \
 impl/ValidSchema.cc \
-impl/ValidatingReader.cc \
-impl/ValidatingWriter.cc \
 impl/Validator.cc \
 impl/Zigzag.cc \
 parser/AvroYacc.yy \
@@ -107,10 +103,10 @@ buffertest_LDADD = $(top_builddir)/libavrocpp.la $(BOOST_REGEX_LIB) $(BOOST_THRE
 dist-hook:
 	find $(distdir) -name '.svn' | xargs rm -rf
 
-testgen.hh : bigrecord.precompile 
+testgen.hh : bigrecord.precompile $(top_srcdir)/scripts/gen-cppcode.py
 	$(PYTHON) $(top_srcdir)/scripts/gen-cppcode.py -n testgen -i $< -o $@
 
-testgen2.hh : bigrecord2.precompile 
+testgen2.hh : bigrecord2.precompile $(top_srcdir)/scripts/gen-cppcode.py 
 	$(PYTHON) $(top_srcdir)/scripts/gen-cppcode.py -n testgen2 -i $< -o $@
 
 bigrecord.precompile: $(top_srcdir)/jsonschemas/bigrecord precompile$(EXEEXT)

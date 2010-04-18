@@ -25,6 +25,7 @@
 
 #include "Zigzag.hh"
 #include "Types.hh"
+#include "Validator.hh"
 #include "buffer/BufferReader.hh"
 
 namespace avro {
@@ -34,34 +35,46 @@ namespace avro {
 /// in the avro binary data is the expected type.
 ///
 
-class Reader : private boost::noncopyable
+template<class ValidatorType>
+class ReaderImpl : private boost::noncopyable
 {
 
   public:
 
-    explicit Reader(const InputBuffer &buffer) :
+    explicit ReaderImpl(const InputBuffer &buffer) :
         reader_(buffer)
     {}
 
-    void readValue(Null &) {}
+    ReaderImpl(const ValidSchema &schema, const InputBuffer &buffer) :
+        validator_(schema),
+        reader_(buffer)
+    {}
+
+    void readValue(Null &) {
+        validator_.checkTypeExpected(AVRO_NULL);
+    }
 
     void readValue(bool &val) {
+        validator_.checkTypeExpected(AVRO_BOOL);
         uint8_t ival;
         reader_.read(ival);
         val = (ival != 0);
     }
 
     void readValue(int32_t &val) {
+        validator_.checkTypeExpected(AVRO_INT);
         uint32_t encoded = readVarInt();
         val = decodeZigzag32(encoded);
     }
 
     void readValue(int64_t &val) {
+        validator_.checkTypeExpected(AVRO_LONG);
         uint64_t encoded = readVarInt();
         val = decodeZigzag64(encoded);
     }
 
     void readValue(float &val) {
+        validator_.checkTypeExpected(AVRO_FLOAT);
         union { 
             float f;
             uint32_t i;
@@ -71,6 +84,7 @@ class Reader : private boost::noncopyable
     }
 
     void readValue(double &val) {
+        validator_.checkTypeExpected(AVRO_DOUBLE);
         union { 
             double d;
             uint64_t i;
@@ -80,11 +94,13 @@ class Reader : private boost::noncopyable
     }
 
     void readValue(std::string &val) {
+        validator_.checkTypeExpected(AVRO_STRING);
         int64_t size = readSize();
         reader_.read(val, size);
     }
 
     void readBytes(std::vector<uint8_t> &val) {
+        validator_.checkTypeExpected(AVRO_BYTES);
         int64_t size = readSize();
         
         val.reserve(size);
@@ -96,44 +112,65 @@ class Reader : private boost::noncopyable
     }
 
     void readFixed(uint8_t *val, size_t size) {
+        validator_.checkFixedSizeExpected(size);
         reader_.read(reinterpret_cast<char *>(val), size);
     }
 
     template <size_t N>
     void readFixed(uint8_t (&val)[N]) {
-        readFixed(val, N);
+        this->readFixed(val, N);
     }
   
     template <size_t N>
     void readFixed(boost::array<uint8_t, N> &val) {
-        readFixed(val.c_array(), N);
+        this->readFixed(val.c_array(), N);
     }
   
-    void readRecord() { }
+    void readRecord() { 
+        validator_.checkTypeExpected(AVRO_RECORD);
+        validator_.checkTypeExpected(AVRO_LONG);
+        validator_.setCount(1);
+    }
+
+    void readRecordEnd() { 
+        validator_.checkTypeExpected(AVRO_RECORD);
+        validator_.checkTypeExpected(AVRO_LONG);
+        validator_.setCount(0);
+    }
 
     int64_t readArrayBlockSize() {
-        return readSize();
+        validator_.checkTypeExpected(AVRO_ARRAY);
+        return readCount();
     }
 
     int64_t readUnion() { 
-        return readSize();
+        validator_.checkTypeExpected(AVRO_UNION);
+        return readCount();
     }
 
     int64_t readEnum() {
-        return readSize();
+        validator_.checkTypeExpected(AVRO_ENUM);
+        return readCount();
     }
 
     int64_t readMapBlockSize() {
-        return readSize();
+        validator_.checkTypeExpected(AVRO_MAP);
+        return readCount();
+    }
+
+    Type nextType() const {
+        return validator_.nextTypeExpected();
+    }
+
+    bool currentRecordName(std::string &name) const {
+        return validator_.getCurrentRecordName(name);
+    }
+
+    bool nextFieldName(std::string &name) const {
+        return validator_.getNextFieldName(name);
     }
 
   private:
-
-    int64_t readSize() {
-        int64_t size(0);
-        readValue(size);
-        return size;
-    }
 
     uint64_t readVarInt() {
         uint64_t encoded = 0;
@@ -149,10 +186,26 @@ class Reader : private boost::noncopyable
         return encoded;
     }
 
-    BufferReader reader_;
+    int64_t readSize() {
+        uint64_t encoded = readVarInt();
+        int64_t size = decodeZigzag64(encoded);
+        return size;
+    }
+
+    int64_t readCount() {
+        validator_.checkTypeExpected(AVRO_LONG);
+        int64_t count = readSize();
+        validator_.setCount(count);
+        return count;
+    }
+
+    ValidatorType validator_;
+    BufferReader  reader_;
 
 };
 
+typedef ReaderImpl<NullValidator> Reader;
+typedef ReaderImpl<Validator> ValidatingReader;
 
 } // namespace avro
 

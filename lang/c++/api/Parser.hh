@@ -20,7 +20,6 @@
 #define avro_Parser_hh__
 
 #include "Reader.hh"
-#include "ValidatingReader.hh"
 
 namespace avro {
 
@@ -100,6 +99,10 @@ class Parser : private boost::noncopyable
 
     void readRecord() { 
         reader_.readRecord();
+    }
+
+    void readRecordEnd() { 
+        reader_.readRecordEnd();
     }
 
     int64_t readArrayBlockSize() {

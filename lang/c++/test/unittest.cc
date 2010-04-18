@@ -216,6 +216,7 @@ struct TestSchema
         std::cout << "Record\n";
         s.writeRecord();
         s.writeFloat(-101.101f);
+        s.writeRecordEnd();
 
         std::cout << "Bool\n";
         s.writeBool(true);
@@ -229,6 +230,7 @@ struct TestSchema
 
         std::cout << "Int\n";
         s.writeInt(-3456);
+        s.writeRecordEnd();
     }
 
     void printEncoding() {
@@ -321,6 +323,7 @@ struct TestSchema
         float f = p.readFloat();
         std::cout << f << '\n';
         BOOST_CHECK_EQUAL(f, -101.101f);
+        p.readRecordEnd();
     }
 
     template <typename Parser>
@@ -378,6 +381,7 @@ struct TestSchema
         int32_t intval = p.readInt();
         std::cout << intval << '\n';
         BOOST_CHECK_EQUAL(intval, -3456);
+        p.readRecordEnd();
     }
 
     void readRawData() {
@@ -519,6 +523,7 @@ struct TestNested
         s.writeUnion(0);
         s.writeNull();
         s.writeBool(true);
+        s.writeRecordEnd();
 
         return s.buffer();
     }
@@ -538,30 +543,43 @@ struct TestNested
                 s.writeRecord();
                 s.writeLong(3);
                 s.writeUnion(0);
+                { 
+                    s.writeNull();
+                }
+                s.writeBool(false);
+                s.writeRecordEnd();
             }
-            s.writeNull();
+            s.writeBool(false);
+            s.writeRecordEnd();
+
         }
         s.writeBool(true);
+        s.writeRecordEnd();
 
         return s.buffer();
+    }
+
+    void readRecord(Parser<ValidatingReader> &p) 
+    {
+        p.readRecord();
+        int64_t val = p.readLong();
+        std::cout << "longval = " << val << '\n';
+        int64_t path = p.readUnion();
+        if (path == 1) {
+            readRecord(p);
+        }
+        else {
+            p.readNull();
+        }
+        bool b = p.readBool();
+        std::cout << "bval = " << b << '\n';
+        p.readRecordEnd();
     }
 
     void validatingParser(InputBuffer &buf) 
     {
         Parser<ValidatingReader> p(schema_, buf);
-        int64_t val = 0;
-        int64_t path = 0;
-    
-        do {
-            p.readRecord();
-            val = p.readLong();
-            std::cout << "longval = " << val << '\n';
-            path = p.readUnion();
-        } while(path == 1);
-
-        p.readNull();
-        bool b = p.readBool();
-        std::cout << "bval = " << b << '\n';
+        readRecord(p);
     }
 
     void testToScreen() {

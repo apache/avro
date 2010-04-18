@@ -22,7 +22,6 @@
 #include <boost/noncopyable.hpp>
 
 #include "Writer.hh"
-#include "ValidatingWriter.hh"
 
 namespace avro {
 
@@ -89,6 +88,10 @@ class Serializer : private boost::noncopyable
 
     void writeRecord() {
         writer_.writeRecord();
+    }
+
+    void writeRecordEnd() {
+        writer_.writeRecordEnd();
     }
 
     void writeArrayBlock(int64_t size) {

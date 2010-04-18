@@ -28,6 +28,40 @@
 
 namespace avro {
 
+class NullValidator : private boost::noncopyable
+{
+  public:
+
+    explicit NullValidator(const ValidSchema &schema) {}
+    NullValidator() {}
+
+    void setCount(int64_t val) {}
+
+    bool typeIsExpected(Type type) const {
+        return true;
+    }
+
+    Type nextTypeExpected() const {
+        return AVRO_UNKNOWN;
+    }
+
+    int nextSizeExpected() const {
+        return 0;
+    }
+
+    bool getCurrentRecordName(std::string &name) const {
+        return true;
+    }
+
+    bool getNextFieldName(std::string &name) const {
+        return true;
+    }
+
+    void checkTypeExpected(Type type) { }
+    void checkFixedSizeExpected(int size) { }
+
+
+};
 
 /// This class is used by both the ValidatingSerializer and ValidationParser
 /// objects.  It advances the parse tree (containing logic how to advance
@@ -37,14 +71,11 @@ namespace avro {
 
 class Validator : private boost::noncopyable
 {
-    typedef uint32_t flag_t;
-
   public:
 
     explicit Validator(const ValidSchema &schema);
 
-    void advance();
-    void advanceWithCount(int64_t val);
+    void setCount(int64_t val);
 
     bool typeIsExpected(Type type) const {
         return (expectedTypesFlag_ & typeToFlag(type));
@@ -59,7 +90,29 @@ class Validator : private boost::noncopyable
     bool getCurrentRecordName(std::string &name) const;
     bool getNextFieldName(std::string &name) const;
 
+    void checkTypeExpected(Type type) {
+        if(! typeIsExpected(type)) {
+            throw Exception(
+                boost::format("Type %1% does not match schema %2%") 
+                    % type % nextType_
+            );
+        }
+        advance();
+    }
+
+    void checkFixedSizeExpected(int size) { 
+        if( nextSizeExpected() != size) {
+            throw Exception(
+                boost::format("Wrong size for fixed, got %1%, expected %2%") 
+                    % size % nextSizeExpected()
+            );
+        }
+        checkTypeExpected(AVRO_FIXED);
+    }
+
   private:
+
+    typedef uint32_t flag_t;
 
     flag_t typeToFlag(Type type) const {
         flag_t flag = (1L << type);
@@ -70,8 +123,11 @@ class Validator : private boost::noncopyable
 
     void setWaitingForCount();
 
-    void recordAdvance();
+    void advance();
+    void doAdvance();
+
     void enumAdvance();
+    bool countingSetup();
     void countingAdvance();
     void unionAdvance();
     void fixedAdvance();
@@ -91,7 +147,7 @@ class Validator : private boost::noncopyable
             node(n), pos(0)
         {}
         NodePtr node;  ///< save the node
-        size_t  pos; ///< track the leaf position to visit
+        size_t  pos;   ///< track the leaf position to visit
     };
 
     std::vector<CompoundType> compoundStack_;

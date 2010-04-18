@@ -25,6 +25,7 @@ Avro 1.4.0 (unreleased)
 
     AVRO-514. Removing unnecessary ruby StringIO calls. (jmhodges)
 
+    AVRO-520. Refactor C++ validation code. (sbanacho)
 
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)

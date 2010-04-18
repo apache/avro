@@ -139,6 +139,7 @@ inline void serialize(Serializer &amp;s, const complex &amp;val, const boost::tr
     s.writeRecord();
     serialize(s, val.real);
     serialize(s, val.imaginary);
+    s.writeRecordEnd();
 }
 
 template &lt;typename Parser&gt;
@@ -146,6 +147,7 @@ inline void parse(Parser &amp;p, complex &amp;val, const boost::true_type &amp;)
     p.readRecord();
     parse(p, val.real);
     parse(p, val.imaginary);
+    p.readRecordEnd();
 }</PRE><P>
 It also adds the following to the avro namespace:</P>
 <PRE>template &lt;&gt; struct is_serializable&lt;Math::complex&gt; : public boost::true_type{};</PRE><P>
@@ -222,10 +224,10 @@ the API:</P>
     // Manually parse data, the Parser object binds the data to the schema
     avro::Parser&lt;ValidatingReader&gt; parser(mySchema, myData);
 
-    assert( parser.nextType() == AVRO_READER);
+    assert( parser.nextType() == AVRO_RECORD);
     
     // Begin parsing
-    parser.beginRecord();
+    parser.readRecord();
    
     Math::complex c;
 
@@ -242,6 +244,8 @@ the API:</P>
             std::cout &lt;&lt; “I did not expect that!\n”
         }
     }
+
+    parser.readRecordEnd();
 }</PRE><P>
 The above code shows that if you don't know the schema at compile
 time, you can still write code that parses the data, by reading the

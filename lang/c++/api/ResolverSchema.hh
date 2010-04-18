@@ -24,6 +24,7 @@
 #include <boost/shared_ptr.hpp>
 #include <stdint.h>
 #include "Boost.hh"
+#include "Reader.hh"
 
 /// \file ResolverSchema.hh
 ///
@@ -31,7 +32,6 @@
 namespace avro {
     
 class ValidSchema;
-class Reader;
 class Layout;
 class Resolver;
 
