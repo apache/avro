@@ -79,6 +79,16 @@ public class TestResolvingIOResolving {
   private static Object[][] dataForResolvingTests() {
     // The mnemonics are the same as {@link TestValidatingIO#testSchemas}
     return new Object[][] {
+        // Projection
+        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f1\", \"type\":\"string\"},"
+          + "{\"name\":\"f2\", \"type\":\"string\"},"
+          + "{\"name\":\"f3\", \"type\":\"int\"}]}", "S10S10IS10S10I",
+          new Object[] { "s1", "s2", 100, "t1", "t2", 200 },
+          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f1\", \"type\":\"string\" },"
+          + "{\"name\":\"f2\", \"type\":\"string\"}]}", "RS10S10RS10S10",
+          new Object[] { "s1", "s2", "t1", "t2" } },
         // Reordered fields
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":\"int\"},"

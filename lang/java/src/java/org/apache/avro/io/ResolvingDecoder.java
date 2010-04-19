@@ -121,6 +121,25 @@ public class ResolvingDecoder extends ValidatingDecoder {
     return ((Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION)).
       fields;
   }
+  
+  /**
+   * Consume any more data that has been written by the writer but not
+   * needed by the reader so that the the underlying decoder is in proper
+   * shape for the next record. This situation happens when, for example,
+   * the writer writes a record with two fields and the reader needs only the
+   * first field.
+   * 
+   * This function should be called after completely decoding an object but
+   * before next object can be decoded from the same underlying decoder
+   * either directly or through another resolving decoder. If the same resolving
+   * decoder is used for the next object as well, calling this method is
+   * optional; the state of this resolving decoder ensures that any leftover
+   * portions are consumed before the next object is decoded.
+   * @throws IOException
+   */
+  public final void drain() throws IOException {
+    parser.processImplicitActions();
+  }
 
   @Override
   public long readLong() throws IOException {
