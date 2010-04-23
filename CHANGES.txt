@@ -27,6 +27,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-520. Refactor C++ validation code. (sbanacho)
 
+    AVRO-521. Out of memory and other issues with Junit tests for mapreduce (thiru)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 

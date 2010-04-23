@@ -18,8 +18,6 @@
 
 package org.apache.avro.mapred;
 
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -31,8 +29,9 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
+import org.junit.Test;
 
-public class TestWordCountSpecific extends TestCase {
+public class TestWordCountSpecific {
   
   private static WordCount newWordCount(String word, int count) {
     WordCount value = new WordCount();
@@ -42,6 +41,7 @@ public class TestWordCountSpecific extends TestCase {
   }
 
   public static class MapImpl extends AvroMapper<Utf8, WordCount> {
+    @Override
     public void map(Utf8 text) throws IOException {
       StringTokenizer tokens = new StringTokenizer(text.toString());
       while (tokens.hasMoreTokens())
@@ -53,6 +53,7 @@ public class TestWordCountSpecific extends TestCase {
 
     private WordCount previous;
 
+    @Override
     public void reduce(WordCount current) throws IOException {
       if (current.equals(previous)) {
         previous.count++;
@@ -63,6 +64,7 @@ public class TestWordCountSpecific extends TestCase {
       }
     }
     
+    @Override
     public void close() throws IOException {
       if (previous != null)
         collect(previous);
@@ -70,27 +72,35 @@ public class TestWordCountSpecific extends TestCase {
 
   }
 
+  @Test
+  @SuppressWarnings("deprecation")
   public void testJob() throws Exception {
-    WordCountUtil.writeLinesFile();
-
     JobConf job = new JobConf();
-    job.setJobName("wordcount");
- 
-    AvroJob.setInputSpecific(job, Schema.create(Schema.Type.STRING));
-    AvroJob.setOutputSpecific(job, WordCount.SCHEMA$);
-
-    job.setMapperClass(MapImpl.class);        
-    job.setCombinerClass(ReduceImpl.class);
-    job.setReducerClass(ReduceImpl.class);
-
-    String dir = System.getProperty("test.dir",".")+"/mapred";
-    FileInputFormat.setInputPaths(job, new Path(dir+"/in"));
-    FileOutputFormat.setOutputPath(job, new Path(dir+"/out"));
-    FileOutputFormat.setCompressOutput(job, true);
-
-    JobClient.runJob(job);
-
-    WordCountUtil.validateCountsFile();
+    String dir = System.getProperty("test.dir", ".") + "/mapred";
+    Path outputPath = new Path(dir + "/out");
+    
+    try {
+      WordCountUtil.writeLinesFile();
+  
+      job.setJobName("wordcount");
+   
+      AvroJob.setInputSpecific(job, Schema.create(Schema.Type.STRING));
+      AvroJob.setOutputSpecific(job, WordCount.SCHEMA$);
+  
+      job.setMapperClass(MapImpl.class);        
+      job.setCombinerClass(ReduceImpl.class);
+      job.setReducerClass(ReduceImpl.class);
+  
+      FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
+      FileOutputFormat.setOutputPath(job, outputPath);
+      FileOutputFormat.setCompressOutput(job, true);
+  
+      JobClient.runJob(job);
+  
+      WordCountUtil.validateCountsFile();
+    } finally {
+      outputPath.getFileSystem(job).delete(outputPath);
+    }
 
   }
 

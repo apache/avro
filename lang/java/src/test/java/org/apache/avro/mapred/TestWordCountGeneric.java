@@ -18,8 +18,6 @@
 
 package org.apache.avro.mapred;
 
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -33,8 +31,9 @@ import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericData;
+import org.junit.Test;
 
-public class TestWordCountGeneric extends TestCase {
+public class TestWordCountGeneric {
   
   private static GenericRecord newWordCount(String word, int count) {
     GenericRecord value = new GenericData.Record(WordCount.SCHEMA$);
@@ -75,27 +74,34 @@ public class TestWordCountGeneric extends TestCase {
 
   }
 
+  @Test
+  @SuppressWarnings("deprecation")
   public void testJob() throws Exception {
-    WordCountUtil.writeLinesFile();
-
+    String dir = System.getProperty("test.dir", ".") + "/mapred";
+    Path outputPath = new Path(dir + "/out");
     JobConf job = new JobConf();
-    job.setJobName("wordcount");
- 
-    AvroJob.setInputGeneric(job, Schema.create(Schema.Type.STRING));
-    AvroJob.setOutputGeneric(job, WordCount.SCHEMA$);
-
-    job.setMapperClass(MapImpl.class);        
-    job.setCombinerClass(ReduceImpl.class);
-    job.setReducerClass(ReduceImpl.class);
-
-    String dir = System.getProperty("test.dir",".")+"/mapred";
-    FileInputFormat.setInputPaths(job, new Path(dir+"/in"));
-    FileOutputFormat.setOutputPath(job, new Path(dir+"/out"));
-    FileOutputFormat.setCompressOutput(job, true);
-
-    JobClient.runJob(job);
-
-    WordCountUtil.validateCountsFile();
+    try {
+      WordCountUtil.writeLinesFile();
+  
+      job.setJobName("wordcount");
+   
+      AvroJob.setInputGeneric(job, Schema.create(Schema.Type.STRING));
+      AvroJob.setOutputGeneric(job, WordCount.SCHEMA$);
+  
+      job.setMapperClass(MapImpl.class);        
+      job.setCombinerClass(ReduceImpl.class);
+      job.setReducerClass(ReduceImpl.class);
+  
+      FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
+      FileOutputFormat.setOutputPath(job, outputPath);
+      FileOutputFormat.setCompressOutput(job, true);
+  
+      JobClient.runJob(job);
+  
+      WordCountUtil.validateCountsFile();
+    } finally {
+      outputPath.getFileSystem(job).delete(outputPath);
+    }
   }
 
 }

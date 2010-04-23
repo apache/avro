@@ -340,6 +340,7 @@
              printsummary="withOutAndErr"
              haltonfailure="no"
              fork="yes" forkMode="once"
+             maxmemory="128m"
              errorProperty="tests.failed" failureProperty="tests.failed">
         <sysproperty key="test.count" value="${test.count}"/>
         <sysproperty key="test.dir" value="@{test.dir}"/>
