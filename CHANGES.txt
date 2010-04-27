@@ -48,6 +48,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-517. Resolving Decoder fails in some cases. (thiru) 
 
+    AVRO-524. DataFileWriter.appendTo leads to intermittent IOException during write() (thiru)
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS
