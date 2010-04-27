@@ -29,6 +29,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-521. Out of memory and other issues with Junit tests for mapreduce (thiru)
 
+    AVRO-511. Ruby implementation passes the rpc interop tests.
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 
