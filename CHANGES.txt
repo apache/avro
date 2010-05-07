@@ -33,6 +33,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-525. remove unused imports (hammer via Esteve Fernandez)
 
+    AVRO-526. Fall back to pure Python StringIO if cStringIO is not available
+    (hammer via Esteve Fernandez)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 
