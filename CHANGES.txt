@@ -31,10 +31,10 @@ Avro 1.4.0 (unreleased)
 
     AVRO-511. Ruby implementation passes the rpc interop tests.
 
-    AVRO-525. remove unused imports (hammer via Esteve Fernandez)
+    AVRO-525. remove unused imports (Esteve Fernandez via hammer)
 
     AVRO-526. Fall back to pure Python StringIO if cStringIO is not available
-    (hammer via Esteve Fernandez)
+    (Esteve Fernandez via hammer)
 
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
@@ -57,7 +57,7 @@ Avro 1.4.0 (unreleased)
 
     AVRO-524. DataFileWriter.appendTo leads to intermittent IOException during write() (thiru)
 
-    AVRO-527. Undefined variable "schm" error (hammer via Esteve Fernandez)
+    AVRO-527. Undefined variable "schm" error (Esteve Fernandez via hammer)
 
 Avro 1.3.2 (31 March 2010)
 
