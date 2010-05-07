@@ -487,7 +487,7 @@ class DatumReader(object):
     elif writers_schema.type in ['record', 'error', 'request']:
       return self.skip_record(writers_schema, decoder)
     else:
-      fail_msg = "Unknown schema type: %s" % schm.type
+      fail_msg = "Unknown schema type: %s" % writers_schema.type
       raise schema.AvroException(fail_msg)
 
   def read_fixed(self, writers_schema, readers_schema, decoder):
