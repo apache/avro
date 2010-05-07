@@ -16,7 +16,6 @@
 """
 Protocol implementation.
 """
-import cStringIO
 try:
   import hashlib
 except ImportError:
