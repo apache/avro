@@ -501,4 +501,15 @@ public class TestReflect {
     assert(reparsed.getTypes().contains(data.getSchema(X.class)));
   }
 
+  public static interface P3 {
+    void m1();
+    void m1(int x);
+  }
+
+  @Test(expected=AvroTypeException.class)
+  public void testOverloadedMethod() { 
+    ReflectData.get().getProtocol(P3.class);
+  }
+
+
 }

@@ -355,10 +355,14 @@ public class ReflectData extends SpecificData {
     Protocol protocol =
       new Protocol(iface.getSimpleName(), iface.getPackage().getName()); 
     Map<String,Schema> names = new LinkedHashMap<String,Schema>();
+    Map<String,Message> messages = protocol.getMessages();
     for (Method method : iface.getMethods())
-      if ((method.getModifiers() & Modifier.STATIC) == 0)
-        protocol.getMessages().put(method.getName(),
-                                   getMessage(method, protocol, names));
+      if ((method.getModifiers() & Modifier.STATIC) == 0) {
+        String name = method.getName();
+        if (messages.containsKey(name))
+          throw new AvroTypeException("Two methods with same name: "+name);
+        messages.put(name, getMessage(method, protocol, names));
+      }
 
     // reverse types, since they were defined in reference order
     List<Schema> types = new ArrayList<Schema>();
