@@ -63,6 +63,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-527. Undefined variable "schm" error (Esteve Fernandez via hammer)
 
+    AVRO-499. Java: Fix protocol reflection to reject interfaces with
+    multiple methods of the same name.  (cutting)
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS
