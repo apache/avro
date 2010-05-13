@@ -36,6 +36,8 @@ Avro 1.4.0 (unreleased)
     AVRO-526. Fall back to pure Python StringIO if cStringIO is not available
     (Esteve Fernandez via hammer)
 
+    AVRO-540. Java: Make GenericArray reversible.  (Eric Evans via cutting)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 

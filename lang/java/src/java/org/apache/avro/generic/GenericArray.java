@@ -33,5 +33,8 @@ public interface GenericArray<T> extends Iterable<T>, GenericContainer {
    * store an element, if any.  This permits reuse of arrays and their elements
    * without allocating new objects. */
   T peek();
+  
+  /** Reverses the order of the elements in this array. */
+  void reverse();
 }
 

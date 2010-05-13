@@ -131,6 +131,19 @@ public class GenericData {
     public int compareTo(Array<T> that) {
       return GenericData.get().compare(this, that, this.getSchema());
     }
+    public void reverse() {
+      int left = 0;
+      int right = elements.length - 1;
+      
+      while (left < right) {
+        Object tmp = elements[left];
+        elements[left] = elements[right];
+        elements[right] = tmp;
+        
+        left++;
+        right--;
+      }
+    }
     public String toString() {
       StringBuffer buffer = new StringBuffer();
       buffer.append("[");
