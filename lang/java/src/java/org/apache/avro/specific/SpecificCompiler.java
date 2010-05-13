@@ -188,10 +188,14 @@ public class SpecificCompiler {
       String name = e.getKey();
       Message message = e.getValue();
       Schema request = message.getRequest();
-      Schema response = message.getResponse();
+      String response = message.isOneWay() ? "void"
+        : unbox(message.getResponse());
       doc(out, 1, e.getValue().getDoc());
-      line(out, 1, unbox(response)+" "+ mangle(name)+"("+params(request)+")");
-      line(out, 2,"throws org.apache.avro.ipc.AvroRemoteException"+errors(message.getErrors())+";");
+      line(out, 1, response+" "+ mangle(name)+"("+params(request)+")"
+           + (message.isOneWay() ? ""
+              : (" throws org.apache.avro.ipc.AvroRemoteException"
+                 +errors(message.getErrors())))
+           +";");
     }
     line(out, 0, "}");
 

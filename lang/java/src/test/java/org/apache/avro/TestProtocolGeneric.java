@@ -28,7 +28,7 @@ import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.util.Utf8;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -99,6 +99,7 @@ public class TestProtocolGeneric {
 
   @Before
   public void testStartServer() throws Exception {
+    if (server != null) return;
     server = new SocketServer(new TestResponder(), new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     requestor = new GenericRequestor(PROTOCOL, client);
@@ -187,8 +188,8 @@ public class TestProtocolGeneric {
     }
   }
 
-  @After
-  public void testStopServer() throws IOException {
+  @AfterClass
+  public static void testStopServer() throws IOException {
     client.close();
     server.close();
   }

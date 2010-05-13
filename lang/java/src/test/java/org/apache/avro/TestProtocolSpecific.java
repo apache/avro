@@ -30,9 +30,9 @@ import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestError;
 import org.apache.avro.test.TestRecord;
 import org.apache.avro.util.Utf8;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.Before;
+import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -51,6 +51,8 @@ public class TestProtocolSpecific {
   protected static final File SERVER_PORTS_DIR
   = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
 
+  public static int ackCount;
+
   public static class TestImpl implements Simple {
     public Utf8 hello(Utf8 greeting) { return new Utf8("goodbye"); }
     public int add(int arg1, int arg2) { return arg1 + arg2; }
@@ -61,6 +63,7 @@ public class TestProtocolSpecific {
       error.message = new Utf8("an error");
       throw error;
     }
+    public void ack() { ackCount++; }
   }
 
   protected static Server server;
@@ -69,6 +72,7 @@ public class TestProtocolSpecific {
 
   @Before
   public void testStartServer() throws Exception {
+    if (server != null) return;
     server = new SocketServer(new SpecificResponder(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
@@ -137,8 +141,18 @@ public class TestProtocolSpecific {
     assertEquals("an error", error.message.toString());
   }
 
-  @After
-  public void testStopServer() throws IOException {
+  @Test
+  public void testOneWay() throws IOException {
+    ackCount = 0;
+    proxy.ack();
+    proxy.hello(new Utf8("foo"));                 // intermix normal req
+    proxy.ack();
+    try { Thread.sleep(100); } catch (InterruptedException e) {}
+    assertEquals(2, ackCount);
+  }
+
+  @AfterClass
+  public static void testStopServer() throws IOException {
     client.close();
     server.close();
   }

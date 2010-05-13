@@ -23,21 +23,49 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-/** Base class for transmitters and recievers of raw binary messages. */
+import org.apache.avro.Protocol;
+
+/** Base transport class used by {@link Requestor}. */
 public abstract class Transceiver implements Closeable {
 
   public abstract String getRemoteName();
 
+  /** Called by {@link Requestor#request(String,Object)} for two-way messages.
+   * By default calls {@link #writeBuffers(List)} followed by
+   * {@link #readBuffers()}. */
   public synchronized List<ByteBuffer> transceive(List<ByteBuffer> request)
     throws IOException {
     writeBuffers(request);
     return readBuffers();
   }
 
+  /** Called by the default definition of {@link #transceive(List)}.*/
   public abstract List<ByteBuffer> readBuffers() throws IOException;
 
+  /** Called by {@link Requestor#request(String,Object)} for one-way messages.*/
   public abstract void writeBuffers(List<ByteBuffer> buffers)
     throws IOException;
+
+  /** True if a handshake has been completed for this connection.  Used to
+   * determine whether a handshake need be completed prior to a one-way
+   * message.  Requests and responses are always prefixed by handshakes, but
+   * one-way messages.  If the first request sent over a connection is one-way,
+   * then a handshake-only response is returned.  Subsequent one-way messages
+   * over the connection will have no response data sent.  Returns false by
+   * default. */
+  public boolean isConnected() { return false; }
+
+  /** Called with the remote protocol when a handshake has been completed.
+   * After this has been called and while a connection is maintained, {@link
+   * #isConnected()} should return true and #getRemote() should return this
+   * protocol.  Does nothing by default. */
+  public void setRemote(Protocol protocol) {}
+
+  /** Returns the protocol passed to {@link #setRemote(Protocol)}.  Throws
+   * IllegalStateException by default. */
+  public Protocol getRemote() {
+    throw new IllegalStateException("Not connected.");
+  }
 
   public void close() throws IOException {}
 }

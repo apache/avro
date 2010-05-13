@@ -699,14 +699,17 @@
           <li>a <em>request</em>, a list of named,
             typed <em>parameter</em> schemas (this has the same form
             as the fields of a record declaration);</li>
-          <li>a <em>response</em> schema; and</li> 
-          <li>an optional union of <em>error</em> schemas.</li>
+          <li>a <em>response</em> schema; </li> 
+          <li>an optional union of <em>error</em> schemas; and</li>
+          <li>an optional <em>one-way</em> boolean parameter.</li>
         </ul>
         <p>A request parameter list is processed equivalently to an
           anonymous record.  Since record field lists may vary between
           reader and writer, request parameters may also differ
           between the caller and responder, and such differences are
           resolved in the same manner as record field differences.</p>
+	<p>The one-way parameter may only be true when the response type
+	  is <code>"null"</code> and no errors are listed.</p>
       </section>
       <section>
         <title>Sample Protocol</title>
@@ -752,15 +755,22 @@
           <li><strong>transmission of request messages</strong>
           </li>
           <li><strong>receipt of corresponding response messages</strong>
-            <p>Servers will send a response message back to the client
-            corresponding to each request message.  The mechanism of
-            that correspondance is transport-specific.  For example,
-            in HTTP it might be implicit, since HTTP directly supports
-            requests and responses.  But a transport that multiplexes
-            many client threads over a single socket would need to tag
+            <p>Servers may send a response message back to the client
+            corresponding to a request message.  The mechanism of
+            correspondance is transport-specific.  For example, in
+            HTTP it is implicit, since HTTP directly supports requests
+            and responses.  But a transport that multiplexes many
+            client threads over a single socket would need to tag
             messages with unique identifiers.</p>
           </li>
         </ul>
+
+	<p>Transports may be either <em>stateless</em>
+        or <em>stateful</em>.  In a stateless transport, messaging
+        assumes no established connection state, while stateful
+        transports establish connections that may be used for multiple
+        messages.  This distinction is discussed further in
+        the <a href="#handshake">handshake</a> section below.</p>
 
         <section>
           <title>HTTP as Transport</title>
@@ -777,6 +787,7 @@
             response.  The HTTP Content-Type of requests and responses
             should be specified as "avro/binary".  Requests should be
             made using the POST method.</p>
+	  <p>HTTP is used by Avro as a stateless transport.</p>
         </section>
       </section>
 
@@ -820,18 +831,26 @@
         directly, without having to copy it.</p>
       </section>
 
-      <section>
+      <section id="handshake">
         <title>Handshake</title>
 
-        <p>RPC requests and responses are prefixed by handshakes.  The
-        purpose of the handshake is to ensure that the client and the
-        server have each other's protocol definition, so that the
-        client can correctly deserialize responses, and the server can
-        correctly deserialize requests.  Both clients and servers
+	<p>The purpose of the handshake is to ensure that the client
+        and the server have each other's protocol definition, so that
+        the client can correctly deserialize responses, and the server
+        can correctly deserialize requests.  Both clients and servers
         should maintain a cache of recently seen protocols, so that,
         in most cases, a handshake will be completed without extra
         round-trip network exchanges or the transmission of full
         protocol text.</p>
+
+        <p>RPC requests and responses may not be processed until a
+        handshake has been completed.  With a stateless transport, all
+        requests and responses are prefixed by handshakes.  With a
+        stateful transport, handshakes are only attached to requests
+        and responses until a successful handshake response has been
+        returned over a connection.  After this, request and response
+        payloads are sent without handshakes for the lifetime of that
+        connection.</p>
 
         <p>The handshake process uses the following record schemas:</p>
 
@@ -935,7 +954,11 @@
           declaration.</li>
         </ul>
 
-        <p>The format of a call response is:</p>
+
+        <p>When a message is declared one-way and a stateful
+        connection has been established by a successful handshake
+        response, no response data is sent.  Otherwise the format of
+        the call response is:</p>
         <ul>
           <li><em>response metadata</em>, a map with values of
           type <code>bytes</code></li>

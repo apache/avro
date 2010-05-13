@@ -24,7 +24,7 @@ import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,6 +64,7 @@ public class TestBulkData {
 
   @Before
   public void startServer() throws Exception {
+    if (server != null) return;
     server =
       new HttpServer(new SpecificResponder(BulkData.class, new BulkDataImpl()),
                      0);
@@ -84,8 +85,8 @@ public class TestBulkData {
       proxy.write(DATA.duplicate());
   }
 
-  @After
-  public void stopServer() throws Exception {
+  @AfterClass
+  public static void stopServer() throws Exception {
     server.close();
   }
 

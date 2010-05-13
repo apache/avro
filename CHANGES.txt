@@ -8,6 +8,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-493. Add support for Hadoop Mapreduce with Avro data files. (cutting)
 
+    AVRO-285: Specify one-way messages and implement in Java. (cutting)
+
   IMPROVEMENTS
     AVRO-486. DataFile.open for the ruby side (jmhodges)
 

@@ -28,8 +28,9 @@ import java.net.InetSocketAddress;
 
 public class TestNamespaceReflect extends TestNamespaceSpecific {
 
-  @Before
+  @Before @Override
   public void testStartServer() throws Exception {
+    if (server != null) return;
     server = new SocketServer(new ReflectResponder(TestNamespace.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));

@@ -44,8 +44,13 @@ import org.codehaus.jackson.JsonGenerator;
  * <li>a list of named <i>messages</i>, each of which specifies,
  *   <ul>
  *   <li><i>request</i>, the parameter schemas;
- *   <li><i>response</i>, the response schema;
- *   <li><i>errors</i>, a list of potential error schema names.
+ *   <li>one of either;
+ *     <ul><li>one-way</li></ul>
+ *   or
+ *     <ul>
+ *       <li><i>response</i>, the response schema;
+ *       <li><i>errors</i>, an optional list of potential error schema names.
+ *     </ul>
  *   </ul>
  * </ul>
  */
@@ -58,17 +63,12 @@ public class Protocol {
     private String name;
     private String doc;
     private Schema request;
-    private Schema response;
-    private Schema errors;
     
     /** Construct a message. */
-    private Message(String name, String doc, Schema request,
-                    Schema response, Schema errors) {
+    private Message(String name, String doc, Schema request) {
       this.name = name;
       this.doc = doc;
       this.request = request;
-      this.response = response;
-      this.errors = errors;
     }
 
     /** The name of this message. */
@@ -76,10 +76,15 @@ public class Protocol {
     /** The parameters of this message. */
     public Schema getRequest() { return request; }
     /** The returned data. */
-    public Schema getResponse() { return response; }
+    public Schema getResponse() { return Schema.create(Schema.Type.NULL); }
     /** Errors that might be thrown. */
-    public Schema getErrors() { return errors; }
+    public Schema getErrors() {
+      return Schema.createUnion(new ArrayList<Schema>());
+    }
     
+    /** Returns true if this is a one-way message, with no response or errors.*/
+    public boolean isOneWay() { return true; }
+
     public String toString() {
       try {
         StringWriter writer = new StringWriter();
@@ -97,17 +102,13 @@ public class Protocol {
       gen.writeFieldName("request");
       request.fieldsToJson(types, gen);
 
-      gen.writeFieldName("response");
-      response.toJson(types, gen);
-
-      List<Schema> errTypes = errors.getTypes();  // elide system error
-      if (errTypes.size() > 1) {
-        Schema errs = Schema.createUnion(errTypes.subList(1, errTypes.size()));
-        gen.writeFieldName("errors");
-        errs.toJson(types, gen);
-      }
-
+      toJson1(gen);
       gen.writeEndObject();
+    }
+
+    void toJson1(JsonGenerator gen) throws IOException {
+      gen.writeStringField("response", "null");
+      gen.writeBooleanField("one-way", true);
     }
 
     public boolean equals(Object o) {
@@ -115,18 +116,55 @@ public class Protocol {
       if (!(o instanceof Message)) return false;
       Message that = (Message)o;
       return this.name.equals(that.name)
-        && this.request.equals(that.request)
-        && this.response.equals(that.response)
-        && this.errors.equals(that.errors);
+        && this.request.equals(that.request);
     }
 
     public int hashCode() {
-      return name.hashCode()
-        + request.hashCode() + response.hashCode() + errors.hashCode();
+      return name.hashCode() + request.hashCode();
     }
 
-    public String getDoc() {
-      return doc;
+    public String getDoc() { return doc; }
+
+  }
+
+  private class TwoWayMessage extends Message {
+    private Schema response;
+    private Schema errors;
+    
+    /** Construct a message. */
+    private TwoWayMessage(String name, String doc, Schema request,
+                          Schema response, Schema errors) {
+      super(name, doc, request);
+      this.response = response;
+      this.errors = errors;
+    }
+
+    @Override public Schema getResponse() { return response; }
+    @Override public Schema getErrors() { return errors; }
+    @Override public boolean isOneWay() { return false; }
+
+    @Override public boolean equals(Object o) {
+      if (!super.equals(o)) return false;
+      if (!(o instanceof TwoWayMessage)) return false;
+      TwoWayMessage that = (TwoWayMessage)o;
+      return this.response.equals(that.response)
+        && this.errors.equals(that.errors);
+    }
+
+    @Override public int hashCode() {
+      return super.hashCode() + response.hashCode() + errors.hashCode();
+    }
+
+    @Override void toJson1(JsonGenerator gen) throws IOException {
+      gen.writeFieldName("response");
+      response.toJson(types, gen);
+
+      List<Schema> errs = errors.getTypes();  // elide system error
+      if (errs.size() > 1) {
+        Schema union = Schema.createUnion(errs.subList(1, errs.size()));
+        gen.writeFieldName("errors");
+        union.toJson(types, gen);
+      }
     }
 
   }
@@ -182,11 +220,16 @@ public class Protocol {
   /** The messages of this protocol. */
   public Map<String,Message> getMessages() { return messages; }
 
-  public Message createMessage(String name, String doc, Schema request,
-                               Schema response, Schema errors) {
-    return new Message(name, doc, request, response, errors);
+  /** Create a one-way message. */
+  public Message createMessage(String name, String doc, Schema request) {
+    return new Message(name, doc, request);
   }
 
+  /** Create a two-way message. */
+  public Message createMessage(String name, String doc, Schema request,
+                               Schema response, Schema errors) {
+    return new TwoWayMessage(name, doc, request, response, errors);
+  }
 
   public boolean equals(Object o) {
     if (o == this) return true;
@@ -354,14 +397,33 @@ public class Protocol {
     }
     Schema request = Schema.createRecord(fields);
     
+    boolean oneWay = false;
+    JsonNode oneWayNode = json.get("one-way");
+    if (oneWayNode != null) {
+      if (!oneWayNode.isBoolean())
+        throw new SchemaParseException("one-way must be boolean: "+json);
+      oneWay = oneWayNode.getBooleanValue();
+    }
+
     JsonNode responseNode = json.get("response");
-    if (responseNode == null)
+    if (!oneWay && responseNode == null)
       throw new SchemaParseException("No response specified: "+json);
+
+    JsonNode decls = json.get("errors");
+
+    if (oneWay) {
+      if (decls != null)
+        throw new SchemaParseException("one-way can't have errors: "+json);
+      if (responseNode != null
+          && Schema.parse(responseNode, types).getType() != Schema.Type.NULL)
+        throw new SchemaParseException("One way response must be null: "+json);
+      return new Message(messageName, doc, request);
+    }
+
     Schema response = Schema.parse(responseNode, types);
 
     List<Schema> errs = new ArrayList<Schema>();
     errs.add(SYSTEM_ERROR);                       // every method can throw
-    JsonNode decls = json.get("errors");
     if (decls != null) {
       if (!decls.isArray())
         throw new SchemaParseException("Errors not an array: "+json);
@@ -376,8 +438,8 @@ public class Protocol {
       }
     }
     String doc = parseDocNode(json);
-    return new Message(messageName, doc, request, response,
-                       Schema.createUnion(errs));
+    return new TwoWayMessage(messageName, doc, request, response,
+                             Schema.createUnion(errs));
   }
 
   public static void main(String[] args) throws Exception {

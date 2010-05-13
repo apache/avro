@@ -29,8 +29,9 @@ import java.net.InetSocketAddress;
 
 public class TestProtocolDatagram extends TestProtocolSpecific {
 
-  @Before
+  @Before @Override
   public void testStartServer() throws Exception {
+    if (server != null) return;
     server =
       new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
                          new InetSocketAddress("localhost",

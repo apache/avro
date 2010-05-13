@@ -28,6 +28,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.avro.Protocol;
+
 /** A socket-based {@link Transceiver} implementation.  This uses a simple,
  * non-standard wire protocol and is not intended for production services. */
 public class SocketTransceiver extends Transceiver {
@@ -36,6 +38,8 @@ public class SocketTransceiver extends Transceiver {
 
   private SocketChannel channel;
   private ByteBuffer header = ByteBuffer.allocate(4);
+
+  private Protocol remote;
   
   public SocketTransceiver(SocketAddress address) throws IOException {
     this(SocketChannel.open(address));
@@ -74,6 +78,7 @@ public class SocketTransceiver extends Transceiver {
 
   public synchronized void writeBuffers(List<ByteBuffer> buffers)
     throws IOException {
+    if (buffers == null) return;                  // no data to write
     for (ByteBuffer buffer : buffers) {
       writeLength(buffer.limit());                // length-prefix
       channel.write(buffer);
@@ -88,7 +93,17 @@ public class SocketTransceiver extends Transceiver {
     channel.write(header);
   }
 
-  public void close() throws IOException {
+  @Override public boolean isConnected() { return remote != null; }
+
+  @Override public void setRemote(Protocol remote) {
+    this.remote = remote;
+  }
+
+  @Override public Protocol getRemote() {
+    return remote;
+  }
+
+  @Override public void close() throws IOException {
     if (channel.isOpen()) {
       LOG.info("closing to "+getRemoteName());
       channel.close();

@@ -83,8 +83,9 @@ public abstract class Requestor {
   }
 
   /** Writes a request message and reads a response or error message. */
-  public Object request(String messageName, Object request)
+  public synchronized Object request(String messageName, Object request)
     throws Exception {
+    Transceiver t = getTransceiver();
     BinaryDecoder in = null;
     Message m;
     RPCContext context = new RPCContext();
@@ -92,7 +93,7 @@ public abstract class Requestor {
       ByteBufferOutputStream bbo = new ByteBufferOutputStream();
       Encoder out = new BinaryEncoder(bbo);
 
-      writeHandshake(out);                      // prepend handshake
+      writeHandshake(out);                      // prepend handshake if needed
 
       // use local protocol to write request
       m = getLocal().getMessages().get(messageName);
@@ -105,24 +106,32 @@ public abstract class Requestor {
       }
       
       META_WRITER.write(context.requestCallMeta(), out);
-      out.writeString(m.getName());       // write message name
+      out.writeString(m.getName());               // write message name
       writeRequest(m.getRequest(), request, out); // write request payload
       
-      List<ByteBuffer> response =                 // transceive
-        getTransceiver().transceive(bbo.getBufferList());
-      
-      ByteBufferInputStream bbi = new ByteBufferInputStream(response);
-      in = DecoderFactory.defaultFactory().createBinaryDecoder(bbi, in);
+      if (m.isOneWay() && t.isConnected()) {      // send one-way message
+        t.writeBuffers(bbo.getBufferList());
+        return null;
+      } else {                                    // two-way message
+        List<ByteBuffer> response = t.transceive(bbo.getBufferList());
+        ByteBufferInputStream bbi = new ByteBufferInputStream(response);
+        in = DecoderFactory.defaultFactory().createBinaryDecoder(bbi, in);
+      }
     } while (!readHandshake(in));
 
     // use remote protocol to read response
-    m = getRemote().getMessages().get(messageName);
-    if (m == null)
+    Message rm = getRemote().getMessages().get(messageName);
+    if (rm == null)
       throw new AvroRuntimeException("Not a remote message: "+messageName);
+    if (m.isOneWay() != rm.isOneWay())
+      throw new AvroRuntimeException("Not both one-way messages: "+messageName);
+
+    if (m.isOneWay() && t.isConnected()) return null; // one-way w/ handshake
+        
     context.setRequestCallMeta(META_READER.read(null, in));
     
     if (!in.readBoolean()) {                      // no error
-      Object response = readResponse(m.getResponse(), in);
+      Object response = readResponse(rm.getResponse(), in);
       context.setResponse(response);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.clientReceiveResponse(context);
@@ -130,7 +139,7 @@ public abstract class Requestor {
       return response;
       
     } else {
-      Exception error = readError(m.getErrors(), in);
+      Exception error = readError(rm.getErrors(), in);
       context.setError(error);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.clientReceiveResponse(context);
@@ -152,6 +161,7 @@ public abstract class Requestor {
     new SpecificDatumReader<HandshakeResponse>(HandshakeResponse.class);
 
   private void writeHandshake(Encoder out) throws IOException {
+    if (getTransceiver().isConnected()) return;
     MD5 localHash = new MD5();
     localHash.bytes(local.getMD5());
     String remoteName = transceiver.getRemoteName();
@@ -177,6 +187,7 @@ public abstract class Requestor {
   }
 
   private boolean readHandshake(Decoder in) throws IOException {
+    if (getTransceiver().isConnected()) return true;
     boolean established = false;
     HandshakeResponse handshake = HANDSHAKE_READER.read(null, in);
     switch (handshake.match) {
@@ -205,6 +216,8 @@ public abstract class Requestor {
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.clientFinishConnect(context);
     }
+    if (established)
+      getTransceiver().setRemote(remote);
     return established;
   }
 

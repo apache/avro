@@ -27,11 +27,11 @@ import org.apache.avro.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
 import org.junit.Before;
 
-
 public class TestProtocolSpecificMeta extends TestProtocolSpecific {
   
-  @Before
+  @Before @Override
   public void testStartServer() throws Exception {
+    if (server != null) return;
     Responder responder = new SpecificResponder(Simple.class, new TestImpl());
     responder.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     responder.addRPCPlugin(new RPCMetaTestPlugin("key2"));

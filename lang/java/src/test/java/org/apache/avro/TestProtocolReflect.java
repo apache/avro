@@ -24,7 +24,7 @@ import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.reflect.ReflectRequestor;
 import org.apache.avro.reflect.ReflectResponder;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -69,6 +69,7 @@ public class TestProtocolReflect {
 
   @Before
   public void testStartServer() throws Exception {
+    if (server != null) return;
     server = new SocketServer(new ReflectResponder(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
@@ -117,8 +118,8 @@ public class TestProtocolReflect {
     assertEquals("foo", error.getMessage());
   }
 
-  @After
-  public void testStopServer() throws IOException {
+  @AfterClass
+  public static void testStopServer() throws IOException {
     client.close();
     server.close();
   }

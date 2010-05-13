@@ -18,11 +18,14 @@
 package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
+
+import org.apache.avro.Protocol.Message;
 
 public class TestProtocolParsing {
   public static Protocol getSimpleProtocol() throws IOException {
@@ -36,7 +39,49 @@ public class TestProtocolParsing {
     Protocol protocol = getSimpleProtocol();
     
     assertEquals(protocol.getDoc(), "Protocol used for testing.");
-    assertEquals(5, protocol.getMessages().size());
+    assertEquals(6, protocol.getMessages().size());
     assertEquals("Pretend you're in a cave!", protocol.getMessages().get("echo").getDoc());    
   }
+  
+  private static Message parseMessage(String message) throws Exception {
+    return Protocol.parse("{\"protocol\": \"org.foo.Bar\","
+                          +"\"types\": [],"
+                          +"\"messages\": {"
+                          + message
+                          + "}}").getMessages().values().iterator().next();
+  }
+
+  @Test public void oneWay() throws Exception {
+    Message m;
+    // permit one-way messages w/ null resposne
+    m = parseMessage("\"ack\": {"
+                     +"\"request\": [],"
+                     +"\"response\": \"null\","
+                     +"\"one-way\": true}");
+    assertTrue(m.isOneWay());
+    // permit one-way messages w/o response
+    m = parseMessage("\"ack\": {"
+                     +"\"request\": [],"
+                     +"\"one-way\": true}");
+    assertTrue(m.isOneWay());
+  }
+
+  @Test(expected=SchemaParseException.class)
+  public void oneWayResponse() throws Exception {
+    // prohibit one-way messages with a non-null response type
+    parseMessage("\"ack\": {"
+                 +"\"request\": [\"string\"],"
+                 +"\"response\": \"string\","
+                 +"\"one-way\": true}");
+  }
+
+  @Test(expected=SchemaParseException.class)
+  public void oneWayError() throws Exception {
+    // prohibit one-way messages with errors
+    parseMessage("\"ack\": {"
+                 +"\"request\": [\"string\"],"
+                 +"\"errors\": [],"
+                 +"\"one-way\": true}");
+  }
+
 }

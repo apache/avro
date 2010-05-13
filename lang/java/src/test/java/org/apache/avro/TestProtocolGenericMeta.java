@@ -27,8 +27,9 @@ import org.junit.Before;
 
 public class TestProtocolGenericMeta extends TestProtocolGeneric {
   
-  @Before
+  @Before @Override
   public void testStartServer() throws Exception {
+    if (server != null) return;
     Responder responder = new TestResponder();
     responder.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     responder.addRPCPlugin(new RPCMetaTestPlugin("key2"));

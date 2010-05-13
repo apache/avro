@@ -28,7 +28,7 @@ import org.apache.avro.test.util.MD5;
 import org.apache.avro.test.errors.TestError;
 import org.apache.avro.test.namespace.TestRecord;
 import org.apache.avro.util.Utf8;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -54,6 +54,7 @@ public class TestNamespaceSpecific {
 
   @Before
   public void testStartServer() throws Exception {
+    if (server != null) return;
     server = new SocketServer(new SpecificResponder(TestNamespace.class, new TestImpl()),
                               new InetSocketAddress(0));
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
@@ -83,8 +84,8 @@ public class TestNamespaceSpecific {
     assertEquals("an error", error.message.toString());
   }
 
-  @After
-  public void testStopServer() throws IOException {
+  @AfterClass
+  public static void testStopServer() throws IOException {
     client.close();
     server.close();
   }

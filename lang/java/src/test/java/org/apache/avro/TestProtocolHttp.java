@@ -28,8 +28,9 @@ import java.net.URL;
 
 public class TestProtocolHttp extends TestProtocolSpecific {
 
-  @Before
+  @Before @Override
   public void testStartServer() throws Exception {
+    if (server != null) return;
     server =
       new HttpServer(new SpecificResponder(Simple.class, new TestImpl()), 0);
     client =

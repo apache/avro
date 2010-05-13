@@ -85,37 +85,49 @@ public abstract class Responder {
   /** Called by a server to deserialize a request, compute and serialize
    * a response or error. */
   public List<ByteBuffer> respond(List<ByteBuffer> buffers) throws IOException {
+    return respond(buffers, null);
+  }
+
+  /** Called by a server to deserialize a request, compute and serialize a
+   * response or error.  Transciever is used by connection-based servers to
+   * track handshake status of connection. */
+  public List<ByteBuffer> respond(List<ByteBuffer> buffers,
+                                  Transceiver connection) throws IOException {
     Decoder in = DecoderFactory.defaultFactory().createBinaryDecoder(
         new ByteBufferInputStream(buffers), null);
     ByteBufferOutputStream bbo = new ByteBufferOutputStream();
     Encoder out = new BinaryEncoder(bbo);
     Exception error = null;
     RPCContext context = new RPCContext();
+    boolean wasConnected = connection != null && connection.isConnected();
     try {
-      Protocol remote = handshake(in, out);
+      Protocol remote = handshake(in, out, connection);
       if (remote == null)                        // handshake failed
         return bbo.getBufferList();
 
       // read request using remote protocol specification
       context.setRequestCallMeta(META_READER.read(null, in));
       String messageName = in.readString(null).toString();
-      Message m = remote.getMessages().get(messageName);
-      if (m == null)
+      Message rm = remote.getMessages().get(messageName);
+      if (rm == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
       
-      context.setMessage(m);
+      context.setMessage(rm);
       
-      Object request = readRequest(m.getRequest(), in);
+      Object request = readRequest(rm.getRequest(), in);
       
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.serverReceiveRequest(context);
       }
 
       // create response using local protocol specification
-      m = getLocal().getMessages().get(messageName);
+      Message m = getLocal().getMessages().get(messageName);
       if (m == null)
         throw new AvroRuntimeException("No message named "+messageName
                                        +" in "+getLocal());
+      if (m.isOneWay() != rm.isOneWay())
+        throw new AvroRuntimeException("Not both one-way: "+messageName);
+
       Object response = null;
       try {
         response = respond(m, request);
@@ -125,6 +137,9 @@ public abstract class Responder {
         context.setError(error);
       }
       
+      if (m.isOneWay() && wasConnected)           // no response data
+        return null;
+
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.serverSendResponse(context);
       }
@@ -154,8 +169,10 @@ public abstract class Responder {
   private SpecificDatumReader<HandshakeRequest> handshakeReader =
     new SpecificDatumReader<HandshakeRequest>(HandshakeRequest.class);
 
-  private Protocol handshake(Decoder in, Encoder out)
+  private Protocol handshake(Decoder in, Encoder out, Transceiver connection)
     throws IOException {
+    if (connection != null && connection.isConnected())
+      return connection.getRemote();
     HandshakeRequest request = (HandshakeRequest)handshakeReader.read(null, in);
     Protocol remote = protocols.get(request.clientHash);
     if (remote == null && request.clientProtocol != null) {
@@ -184,6 +201,10 @@ public abstract class Responder {
     response.meta = context.responseHandshakeMeta();
     
     handshakeWriter.write(response, out);
+
+    if (connection != null && response.match != HandshakeMatch.NONE)
+      connection.setRemote(remote);
+
     return remote;
   }
 

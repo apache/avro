@@ -89,7 +89,7 @@ public class SocketServer extends Thread implements Server {
       try {
         try {
           while (true) {
-            writeBuffers(responder.respond(readBuffers()));
+            writeBuffers(responder.respond(readBuffers(), this));
           }
         } catch (ClosedChannelException e) {
           return;
