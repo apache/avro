@@ -129,12 +129,12 @@ module Avro
       @type.hash
     end
 
-    def to_avro
+    def to_hash
       {'type' => @type}
     end
 
     def to_s
-      Yajl.dump to_avro
+      Yajl.dump to_hash
     end
 
     class NamedSchema < Schema
@@ -145,7 +145,7 @@ module Avro
         names = Name.add_name(names, self)
       end
 
-      def to_avro
+      def to_hash
         props = {'name' => @name}
         props.merge!('namespace' => @namespace) if @namespace
         super.merge props
@@ -194,8 +194,8 @@ module Avro
         fields.inject({}){|hsh, field| hsh[field.name] = field; hsh }
       end
 
-      def to_avro
-        hsh = super.merge('fields' => @fields.map {|f| f.to_avro } )
+      def to_hash
+        hsh = super.merge('fields' => @fields.map {|f|Yajl.load(f.to_s)} )
         if type == 'request'
           hsh['fields']
         else
@@ -224,11 +224,11 @@ module Avro
         end
       end
 
-      def to_avro
+      def to_hash
         name_or_json = if items_schema_from_names
                          items.fullname
                        else
-                         items.to_avro
+                         Yajl.load(items.to_s)
                        end
         super.merge('items' => name_or_json)
       end
@@ -253,12 +253,12 @@ module Avro
         @values = values_schema
       end
 
-      def to_avro
+      def to_hash
         to_dump = super
         if values_schema_from_names
           to_dump['values'] = values
         else
-          to_dump['values'] = values.to_avro
+          to_dump['values'] = Yajl.load(values.to_s)
         end
         to_dump
       end
@@ -299,7 +299,7 @@ module Avro
         end
       end
 
-      def to_avro
+      def to_s
         # FIXME(jmhodges) this from_name pattern is really weird and
         # seems code-smelly.
         to_dump = []
@@ -307,10 +307,10 @@ module Avro
           if schema_from_names_indices.include?(i)
             to_dump << schema.fullname
           else
-            to_dump << schema.to_avro
+            to_dump << Yajl.load(schema.to_s)
           end
         end
-        to_dump
+        Yajl.dump(to_dump)
       end
     end
 
@@ -325,7 +325,7 @@ module Avro
         @symbols = symbols
       end
 
-      def to_avro
+      def to_hash
         super.merge('symbols' => symbols)
       end
     end
@@ -340,9 +340,8 @@ module Avro
         super(type)
       end
 
-      def to_avro
-        hsh = super
-        hsh.size == 1 ? type : hsh
+      def to_s
+        to_hash.size == 1 ? type.inspect : Yajl.dump(to_hash)
       end
     end
 
@@ -357,7 +356,7 @@ module Avro
         @size = size
       end
 
-      def to_avro
+      def to_hash
         super.merge('size' => @size)
       end
     end
@@ -378,8 +377,8 @@ module Avro
         @order = order
       end
 
-      def to_avro
-        sigh_type = type_from_names ? type.fullname : type.to_avro
+      def to_hash
+        sigh_type = type_from_names ? type.fullname : Yajl.load(type.to_s)
         hsh = {
           'name' => name,
           'type' => sigh_type
@@ -387,6 +386,10 @@ module Avro
         hsh['default'] = default if default
         hsh['order'] = order if order
         hsh
+      end
+
+      def to_s
+        Yajl.dump(to_hash)
       end
     end
   end
