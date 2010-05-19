@@ -221,7 +221,7 @@ module Avro
     class DatumReader
       def self.check_props(schema_one, schema_two, prop_list)
         prop_list.all? do |prop|
-          schema_one.to_hash[prop] == schema_two.to_hash[prop]
+          schema_one.send(prop) == schema_two.send(prop)
         end
       end
 
@@ -230,31 +230,32 @@ module Avro
         r_type = readers_schema.type
 
         # This conditional is begging for some OO love.
-        if [w_type, r_type].include? 'union'
+        if w_type == 'union' || r_type == 'union'
           return true
-        elsif Schema::PRIMITIVE_TYPES.include?(w_type) &&
-              Schema::PRIMITIVE_TYPES.include?(r_type) &&
-            w_type == r_type
-          return true
-        elsif (w_type == r_type) && (r_type == 'record') &&
-            check_props(writers_schema, readers_schema, ['fullname'])
-          return true
-        elsif w_type == r_type && r_type == 'error' && check_props(writers_scheam, readers_schema, ['fullname'])
-          return true
-        elsif w_type == r_type && r_type == 'request'
-          return true
-        elsif (w_type == r_type) && (r_type == 'fixed') &&
-            check_props(writers_schema, readers_schema, ['fullname', 'size'])
-          return true
-        elsif (w_type == r_type) && (r_type == 'enum') &&
-            check_props(writers_schema, readers_schema, ['fullname'])
-          return true
-        elsif (w_type == r_type) && (r_type == 'map') &&
-            check_props(writers_schema.values, readers_schema.values, ['type'])
-          return true
-        elsif (w_type == r_type) && (r_type == 'array') &&
-            check_props(writers_schema.items, readers_schema.items, ['type'])
-          return true
+        end
+
+        if w_type == r_type
+          if Schema::PRIMITIVE_TYPES.include?(w_type) &&
+              Schema::PRIMITIVE_TYPES.include?(r_type)
+            return true
+          end
+
+          case r_type
+          when 'record'
+            return check_props(writers_schema, readers_schema, [:fullname])
+          when 'error'
+            return check_props(writers_scheam, readers_schema, [:fullname])
+          when 'request'
+            return true
+          when 'fixed'
+            return check_props(writers_schema, readers_schema, [:fullname, :size])
+          when 'enum'
+            return check_props(writers_schema, readers_schema, [:fullname])
+          when 'map'
+            return check_props(writers_schema.values, readers_schema.values, [:type])
+          when 'array'
+            return check_props(writers_schema.items, readers_schema.items, [:type])
+          end
         end
 
         # Handle schema promotion

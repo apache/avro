@@ -40,6 +40,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-540. Java: Make GenericArray reversible.  (Eric Evans via cutting)
 
+    AVRO-543. Schema comparison is hella slow on the Ruby side. (jmhodges)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 

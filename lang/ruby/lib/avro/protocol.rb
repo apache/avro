@@ -57,11 +57,11 @@ module Avro
     end
 
     def to_s
-      Yajl.dump to_hash
+      Yajl.dump to_avro
     end
 
     def ==(other)
-      to_hash == Yajl.load(other.to_s)
+      to_avro == other.to_avro
     end
 
     private
@@ -96,13 +96,14 @@ module Avro
       message_objects
     end
 
-    def to_hash
+    protected
+    def to_avro
       hsh = {'protocol' => name}
       hsh['namespace'] = namespace if namespace
-      hsh['types'] = types.map{|t| Yajl.load(t.to_s) } if types
+      hsh['types'] = types.map{|t| t.to_avro } if types
 
       if messages
-        hsh['messages'] = messages.collect_hash{|k,t| [k, Yajl.load(t.to_s)] }
+        hsh['messages'] = messages.collect_hash{|k,t| [k, t.to_avro] }
       end
 
       hsh
@@ -119,18 +120,22 @@ module Avro
         @errors = parse_errors(errors, names) if errors
       end
 
-      def to_s
-        hsh = {'request' => Yajl.load(request.to_s)}
+      def to_avro
+        hsh = {'request' => request.to_avro}
         if response_from_names
           hsh['response'] = response.fullname
         else
-          hsh['response'] = Yajl.load(response.to_s)
+          hsh['response'] = response.to_avro
         end
 
         if errors
-          hsh['errors'] = Yajl.load(errors.to_s)
+          hsh['errors'] = errors.to_avro
         end
-        Yajl.dump hsh
+        hsh
+      end
+
+      def to_s
+        Yajl.dump to_avro
       end
 
       def parse_request(request, names)
