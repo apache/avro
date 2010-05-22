@@ -22,7 +22,7 @@
 #include "st.h"
 
 struct avro_record_field_t {
-	char *name;
+	avro_atom_t name;
 	avro_schema_t type;
 	/*
 	 * TODO: default values 
@@ -35,6 +35,7 @@ struct avro_record_schema_t {
 	char *space;
 	st_table *fields;
 	st_table *fields_byname;
+	int32_t num_fields;
 };
 
 struct avro_enum_schema_t {

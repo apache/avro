@@ -76,8 +76,10 @@ struct avro_record_datum_t {
 	struct avro_obj_t obj;
 	const char *name;
 	const char *space;
-	st_table *field_order;
+	avro_atom_t *field_order;
 	st_table *fields_byname;
+	int32_t num_fields;
+	int32_t alloc_fields;
 };
 
 struct avro_enum_datum_t {
@@ -88,7 +90,9 @@ struct avro_enum_datum_t {
 
 struct avro_array_datum_t {
 	struct avro_obj_t obj;
-	st_table *els;
+    int32_t num_els;
+	int32_t alloc_els;
+    avro_datum_t *els;
 };
 
 struct avro_union_datum_t {

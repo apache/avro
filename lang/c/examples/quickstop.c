@@ -24,6 +24,15 @@
 avro_schema_t person_schema;
 int64_t id = 0;
 
+struct atom_holder {
+	avro_atom_t id;
+	avro_atom_t first;
+	avro_atom_t last;
+	avro_atom_t phone;
+	avro_atom_t age;
+};
+struct atom_holder atoms;
+
 /* A simple schema for our tutorial */
 #define PERSON_SCHEMA \
 "{\"type\":\"record\",\
@@ -46,6 +55,24 @@ void init_schema(void)
 	}
 }
 
+void init_atoms(void)
+{
+	atoms.id = avro_atom_add("ID");
+	atoms.first = avro_atom_add("First");
+	atoms.last = avro_atom_add("Last");
+	atoms.phone = avro_atom_add("Phone");
+	atoms.age = avro_atom_add("Age");
+}
+
+void cleanup_atoms(void)
+{
+	avro_atom_decref(atoms.id);
+	avro_atom_decref(atoms.first);
+	avro_atom_decref(atoms.last);
+	avro_atom_decref(atoms.phone);
+	avro_atom_decref(atoms.age);
+}
+
 /* Create a datum to match the person schema and save it */
 void
 add_person(avro_file_writer_t db, const char *first, const char *last,
@@ -59,11 +86,11 @@ add_person(avro_file_writer_t db, const char *first, const char *last,
 	avro_datum_t age_datum = avro_int32(age);
 	avro_datum_t phone_datum = avro_string(phone);
 
-	if (avro_record_set(person, "ID", id_datum)
-	    || avro_record_set(person, "First", first_datum)
-	    || avro_record_set(person, "Last", last_datum)
-	    || avro_record_set(person, "Age", age_datum)
-	    || avro_record_set(person, "Phone", phone_datum)) {
+	if (avro_record_set(person, atoms.id, id_datum)
+	    || avro_record_set(person, atoms.first, first_datum)
+	    || avro_record_set(person, atoms.last, last_datum)
+	    || avro_record_set(person, atoms.age, age_datum)
+	    || avro_record_set(person, atoms.phone, phone_datum)) {
 		fprintf(stderr, "Unable to create Person datum structure");
 		exit(EXIT_FAILURE);
 	}
@@ -98,23 +125,23 @@ int print_person(avro_file_reader_t db, avro_schema_t reader_schema)
 		avro_datum_t id_datum, first_datum, last_datum, phone_datum,
 		    age_datum;
 
-		if (avro_record_get(person, "ID", &id_datum) == 0) {
+		if (avro_record_get(person, atoms.id, &id_datum) == 0) {
 			avro_int64_get(id_datum, &i64);
 			fprintf(stdout, "%"PRId64" | ", i64);
 		}
-		if (avro_record_get(person, "First", &first_datum) == 0) {
+		if (avro_record_get(person, atoms.first, &first_datum) == 0) {
 			avro_string_get(first_datum, &p);
 			fprintf(stdout, "%15s | ", p);
 		}
-		if (avro_record_get(person, "Last", &last_datum) == 0) {
+		if (avro_record_get(person, atoms.last, &last_datum) == 0) {
 			avro_string_get(last_datum, &p);
 			fprintf(stdout, "%15s | ", p);
 		}
-		if (avro_record_get(person, "Phone", &phone_datum) == 0) {
+		if (avro_record_get(person, atoms.phone, &phone_datum) == 0) {
 			avro_string_get(phone_datum, &p);
 			fprintf(stdout, "%15s | ", p);
 		}
-		if (avro_record_get(person, "Age", &age_datum) == 0) {
+		if (avro_record_get(person, atoms.age, &age_datum) == 0) {
 			avro_int32_get(age_datum, &i32);
 			fprintf(stdout, "%d", i32);
 		}
@@ -135,8 +162,15 @@ int main(void)
 	int64_t i;
 	const char *dbname = "quickstop.db";
 
+	avro_init();
+
+	/* Initialize our atoms */
+	init_atoms();
+
 	/* Initialize the schema structure from JSON */
 	init_schema();
+
+	fprintf(stdout, "Let's create our initial database\n");
 
 	/* Delete the database if it exists */
 	unlink(dbname);
@@ -196,5 +230,8 @@ int main(void)
 
 	/* We don't need this schema anymore */
 	avro_schema_decref(person_schema);
+
+	cleanup_atoms();
+	avro_shutdown();
 	return 0;
 }

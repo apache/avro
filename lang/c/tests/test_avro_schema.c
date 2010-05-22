@@ -105,6 +105,8 @@ int main(int argc, char *argv[])
 	AVRO_UNUSED(argc);
 	AVRO_UNUSED(argv);
 
+	avro_init();
+
 	if (!srcdir) {
 		srcdir = ".";
 	}
@@ -128,5 +130,8 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "==================================================\n");
 
 	avro_writer_free(avro_stderr);
+
+	avro_shutdown();
+
 	return EXIT_SUCCESS;
 }

@@ -57,15 +57,10 @@ size_record(avro_writer_t writer, const avro_encoding_t * enc,
 		/* No schema.  Just write the record datum */
 		struct avro_record_datum_t *record =
 		    avro_datum_to_record(datum);
-		for (i = 0; i < record->field_order->num_entries; i++) {
-			union {
-				st_data_t data;
-				char *name;
-			} val;
-			st_lookup(record->field_order, i, &val.data);
+		for (i = 0; i < record->num_fields; i++) {
+			avro_atom_t name = record->field_order[i];
 			size_check(rval,
-				   avro_record_get(datum, val.name,
-						   &field_datum));
+				   avro_record_get(datum, name, &field_datum));
 			size_accum(rval, size,
 				   size_datum(writer, enc, NULL, field_datum));
 		}
@@ -143,19 +138,14 @@ size_array(avro_writer_t writer, const avro_encoding_t * enc,
 	int64_t size;
 
 	size = 0;
-	if (array->els->num_entries) {
+	if (array->num_els) {
 		size_accum(rval, size,
-			   enc->size_long(writer, array->els->num_entries));
-		for (i = 0; i < array->els->num_entries; i++) {
-			union {
-				st_data_t data;
-				avro_datum_t datum;
-			} val;
-			st_lookup(array->els, i, &val.data);
+			   enc->size_long(writer, array->num_els));
+		for (i = 0; i < array->num_els; i++) {
 			size_accum(rval, size,
 				   size_datum(writer, enc,
 					      schema ? schema->items : NULL,
-					      val.datum));
+					      array->els[i]));
 		}
 	}
 	size_accum(rval, size, enc->size_long(writer, 0));
