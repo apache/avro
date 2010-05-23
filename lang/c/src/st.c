@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "st.h"
+#include "allocator.h"
 
 typedef struct st_table_entry st_table_entry;
 
@@ -58,8 +59,8 @@ static void rehash(st_table *);
 #define calloc xcalloc
 #endif
 
-#define alloc(type) (type*)malloc((unsigned)sizeof(type))
-#define Calloc(n,s) (char*)calloc((n),(s))
+#define alloc(type) (type*)g_avro_allocator.malloc((unsigned)sizeof(type))
+#define Calloc(n,s) (char*)g_avro_allocator.calloc((n),(s))
 
 #define EQUAL(table,x,y) ((x)==(y) || (*table->type->compare)((x),(y)) == 0)
 
@@ -207,12 +208,12 @@ st_table *table;
 		ptr = table->bins[i];
 		while (ptr != 0) {
 			next = ptr->next;
-			free(ptr);
+			g_avro_allocator.free(ptr);
 			ptr = next;
 		}
 	}
-	free(table->bins);
-	free(table);
+	g_avro_allocator.free(table->bins);
+	g_avro_allocator.free(table);
 }
 
 #define PTR_NOT_EQUAL(table, ptr, hash_val, key) \
@@ -327,7 +328,7 @@ register st_table *table;
 			ptr = next;
 		}
 	}
-	free(table->bins);
+	g_avro_allocator.free(table->bins);
 	table->num_bins = new_num_bins;
 	table->bins = new_bins;
 }
@@ -349,7 +350,7 @@ st_table *old_table;
 	    Calloc((unsigned)num_bins, sizeof(st_table_entry *));
 
 	if (new_table->bins == 0) {
-		free(new_table);
+		g_avro_allocator.free(new_table);
 		return 0;
 	}
 
@@ -359,8 +360,8 @@ st_table *old_table;
 		while (ptr != 0) {
 			entry = alloc(st_table_entry);
 			if (entry == 0) {
-				free(new_table->bins);
-				free(new_table);
+				g_avro_allocator.free(new_table->bins);
+				g_avro_allocator.free(new_table);
 				return 0;
 			}
 			*entry = *ptr;
@@ -396,7 +397,7 @@ st_data_t *value;
 		if (value != 0)
 			*value = ptr->record;
 		*key = ptr->key;
-		free(ptr);
+		g_avro_allocator.free(ptr);
 		return 1;
 	}
 
@@ -408,7 +409,7 @@ st_data_t *value;
 			if (value != 0)
 				*value = tmp->record;
 			*key = tmp->key;
-			free(tmp);
+			g_avro_allocator.free(tmp);
 			return 1;
 		}
 	}
@@ -515,7 +516,7 @@ st_data_t arg;
 					last->next = ptr->next;
 				}
 				ptr = ptr->next;
-				free(tmp);
+				g_avro_allocator.free(tmp);
 				table->num_entries--;
 			}
 		}

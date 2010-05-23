@@ -16,12 +16,15 @@
  */
 
 #include "avro_private.h"
+#include "allocator_system.h"
 
 // TODO: Make these configurable in the future somehow
 #define INITIAL_ATOM_TABLE_SIZE 512
 
 void avro_init(void)
 {
+    avro_allocator_system_initialize();
+
 	if (NULL == g_avro_atom_table) {
 		g_avro_atom_table = avro_atom_table_create(INITIAL_ATOM_TABLE_SIZE);
 	}

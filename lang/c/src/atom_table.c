@@ -16,7 +16,7 @@
  */
 
 #include "avro_private.h"
-
+#include "allocator.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -61,11 +61,11 @@ avro_atom_table_t avro_atom_table_create(int32_t size)
 	avro_atom_table_t table;
 	int32_t i;
 
-	table = (avro_atom_table_t)malloc(sizeof(struct avro_atom_table_t_));
+	table = (avro_atom_table_t)g_avro_allocator.malloc(sizeof(struct avro_atom_table_t_));
 	table->size = size;
 	table->count = 0;
-	table->entries = malloc(sizeof(avro_atom_entry_t) * table->size);
-	table->hashtab = malloc(sizeof(int32_t) * table->size);
+	table->entries = g_avro_allocator.malloc(sizeof(avro_atom_entry_t) * table->size);
+	table->hashtab = g_avro_allocator.malloc(sizeof(int32_t) * table->size);
 	table->freelist = 0;
 
 	memset(table->entries, 0, sizeof(avro_atom_entry_t) * table->size);
@@ -85,12 +85,12 @@ void avro_atom_table_destroy(avro_atom_table_t table)
 	int32_t i;
 	for (i = 0; i < table->size; i++) {
 		if (table->entries[i].str) {
-			free(table->entries[i].str);
+			g_avro_allocator.free(table->entries[i].str);
 		}
 	}
-	free(table->entries);
-	free(table->hashtab);
-	free(table);
+	g_avro_allocator.free(table->entries);
+	g_avro_allocator.free(table->hashtab);
+	g_avro_allocator.free(table);
 }
 
 void avro_atom_table_dump(avro_atom_table_t table)
@@ -141,8 +141,8 @@ avro_atom_t avro_atom_table_add_length(avro_atom_table_t table, const char *str,
 			new_size = table->size * 2;
 		}
 
-		table->entries = realloc(table->entries, sizeof(avro_atom_entry_t) * new_size);
-		table->hashtab = realloc(table->hashtab, sizeof(int32_t) * new_size);
+		table->entries = g_avro_allocator.realloc(table->entries, sizeof(avro_atom_entry_t) * new_size);
+		table->hashtab = g_avro_allocator.realloc(table->hashtab, sizeof(int32_t) * new_size);
 
 		/* Make new string of freelist. */
 		memset(&(table->entries[table->size]), 0, sizeof(avro_atom_entry_t) * (new_size-table->size));
@@ -169,7 +169,7 @@ avro_atom_t avro_atom_table_add_length(avro_atom_table_t table, const char *str,
 	atom = table->freelist;
 	entry = &(table->entries[atom]);
 	table->freelist = entry->next;
-	entry->str = strdup(str);
+	entry->str = avro_strdup(str);
 	entry->length = length;
 	entry->refcount = 1;
 	entry->hash_value = hash_value;
@@ -235,7 +235,7 @@ void avro_atom_table_decref(avro_atom_table_t table, avro_atom_t atom)
 		bucket = _atom_string_hash(table->entries[atom].str) % table->size;
 
 		/* Free the string. */
-		free(table->entries[atom].str);
+		g_avro_allocator.free(table->entries[atom].str);
 		table->entries[atom].str = NULL;
 		table->entries[atom].length = 0;
 		table->entries[atom].hash_value = 0;

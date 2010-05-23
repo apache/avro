@@ -18,6 +18,10 @@
 #
 
 set(AVRO_SRC
+    allocator.c
+    allocator.h
+    allocator_system.c
+    allocator_system.h
     atom_table.c
     avro.c
     avro.h

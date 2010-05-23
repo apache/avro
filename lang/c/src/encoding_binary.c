@@ -16,6 +16,7 @@
  */
 
 #include "avro_private.h"
+#include "allocator.h"
 #include "encoding.h"
 #include <stdlib.h>
 #include <limits.h>
@@ -126,7 +127,7 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 	if (rval) {
 		return rval;
 	}
-	*bytes = malloc(*len + 1);
+	*bytes = g_avro_allocator.malloc(*len + 1);
 	if (!*bytes) {
 		return ENOMEM;
 	}
