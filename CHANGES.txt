@@ -68,6 +68,9 @@ Avro 1.4.0 (unreleased)
     AVRO-499. Java: Fix protocol reflection to reject interfaces with
     multiple methods of the same name.  (cutting)
 
+    AVRO-548. Python client should handle CLIENT handshake match status
+    correctly. (hammer)
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS

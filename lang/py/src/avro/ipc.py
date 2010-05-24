@@ -200,7 +200,7 @@ class Requestor(object):
                              handshake_response.get('serverProtocol'))
       self.remote_hash = handshake_response.get('serverHash')
       self.send_protocol = False
-      return False
+      return True
     elif match == 'NONE':
       if self.send_protocol:
         raise schema.AvroException('Handshake failure.')
