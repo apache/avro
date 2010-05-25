@@ -109,7 +109,11 @@ file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
 static int
 file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w)
 {
+#ifdef WIN32
+	int rval = file_writer_init_fp(path, "w", w);
+#else
 	int rval = file_writer_init_fp(path, "wx", w);
+#endif
 	if (rval) {
 		check(rval, file_writer_init_fp(path, "w", w));
 	}

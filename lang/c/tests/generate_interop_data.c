@@ -18,7 +18,7 @@
 #include "avro_private.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include "config.h"
 
 struct atom_holder {
 	avro_atom_t arrayField;

@@ -16,10 +16,11 @@
  */
 
 #include "avro_private.h"
+#include "config.h"
+#include "dir_iterator.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <dirent.h>
+#include <stdio.h>
 
 int test_cases = 0;
 avro_writer_t avro_stderr;
@@ -29,23 +30,23 @@ static void run_tests(char *dirpath, int should_pass)
 	char jsontext[4096];
 	size_t jsonlen, rval;
 	char filepath[1024];
-	DIR *dir;
-	struct dirent *dent;
+	dir_iterator_t dir;
+	const char *dent;
 	FILE *fp;
 	avro_schema_t schema;
 	avro_schema_error_t avro_schema_error;
 
-	dir = opendir(dirpath);
+	dir = dir_iterator_new(dirpath);
 	if (dir == NULL) {
 		fprintf(stderr, "Unable to open '%s'\n", dirpath);
 		exit(EXIT_FAILURE);
 	}
-	do {
-		dent = readdir(dir);
-		if (dent && dent->d_name[0] != '.') {
+	while (dir_iterator_next(dir)) {
+		dent = dir_iterator_value(dir);
+		if (dent && dent[0] != '.') {
 			int test_rval;
 			snprintf(filepath, sizeof(filepath), "%s/%s", dirpath,
-				 dent->d_name);
+				 dent);
 			fprintf(stderr, "TEST %s...", filepath);
 			jsonlen = 0;
 			fp = fopen(filepath, "r");
@@ -94,7 +95,10 @@ static void run_tests(char *dirpath, int should_pass)
 			}
 		}
 	}
-	while (dent != NULL);
+	if (NULL != dir)
+	{
+		dir_iterator_destroy(dir);
+	}
 }
 
 int main(int argc, char *argv[])

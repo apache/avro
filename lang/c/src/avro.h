@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-#include <stdint.h>
+#include "types.h"
 
 typedef int32_t avro_atom_t;
 
@@ -201,7 +201,7 @@ avro_datum_t avro_givefixed(const char *name, const char *bytes,
 			    const int64_t size);
 avro_datum_t avro_map(void);
 avro_datum_t avro_array(void);
-avro_datum_t avro_union(int64_t discriminant, const avro_datum_t datum);
+avro_datum_t avro_union(int64_t discriminant, avro_datum_t datum);
 
 /* getters */
 int avro_string_get(avro_datum_t datum, char **p);
@@ -255,7 +255,7 @@ void avro_datum_decref(avro_datum_t value);
 
 void avro_datum_print(avro_datum_t value, FILE * fp);
 
-int avro_datum_equal(avro_datum_t a, avro_datum_t b);
+int avro_datum_equal(const avro_datum_t a, const avro_datum_t b);
 
 int avro_schema_match(avro_schema_t writers_schema,
 		      avro_schema_t readers_schema);

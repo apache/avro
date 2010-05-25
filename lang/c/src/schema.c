@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "config.h"
 #include "avro_private.h"
 #include <inttypes.h>
 #include <stdlib.h>
@@ -198,9 +199,9 @@ void avro_schema_decref(avro_schema_t schema)
 avro_schema_t avro_schema_string(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_STRING,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_STRING, // type
+		AVRO_SCHEMA, // class_type
+		1            // refcount
 	};
 	return &obj;
 }
@@ -208,9 +209,9 @@ avro_schema_t avro_schema_string(void)
 avro_schema_t avro_schema_bytes(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_BYTES,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_BYTES,  // type
+		AVRO_SCHEMA, // class_type
+		1            // refcount
 	};
 	return &obj;
 }
@@ -218,9 +219,9 @@ avro_schema_t avro_schema_bytes(void)
 avro_schema_t avro_schema_int(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_INT32,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_INT32,  // type
+		AVRO_SCHEMA, // class_type
+		1            // refcount
 	};
 	return &obj;
 }
@@ -228,9 +229,9 @@ avro_schema_t avro_schema_int(void)
 avro_schema_t avro_schema_long(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_INT64,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_INT64,  // type
+		AVRO_SCHEMA, // class_type
+		1            // refcount
 	};
 	return &obj;
 }
@@ -238,9 +239,9 @@ avro_schema_t avro_schema_long(void)
 avro_schema_t avro_schema_float(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_FLOAT,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_FLOAT,  // type
+		AVRO_SCHEMA, // class_type
+		1            // refcount
 	};
 	return &obj;
 }
@@ -248,9 +249,9 @@ avro_schema_t avro_schema_float(void)
 avro_schema_t avro_schema_double(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_DOUBLE,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_DOUBLE, // type
+		AVRO_SCHEMA, // class_type
+		1            // refcount
 	};
 	return &obj;
 }
@@ -258,9 +259,9 @@ avro_schema_t avro_schema_double(void)
 avro_schema_t avro_schema_boolean(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_BOOLEAN,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_BOOLEAN, // type
+		AVRO_SCHEMA,  // class_type
+		1             // refcount
 	};
 	return &obj;
 }
@@ -268,9 +269,9 @@ avro_schema_t avro_schema_boolean(void)
 avro_schema_t avro_schema_null(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_NULL,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_NULL,   // type
+		AVRO_SCHEMA, // class_type
+		1            // refcount
 	};
 	return &obj;
 }
@@ -921,9 +922,9 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 					st_data_t data;
 					struct avro_record_field_t *field;
 				} val;
+				avro_schema_t type_copy;
 				st_lookup(record_schema->fields, i, &val.data);
-				avro_schema_t type_copy =
-				    avro_schema_copy(val.field->type);
+				type_copy = avro_schema_copy(val.field->type);
 				// FIXME: Remove avro_atom_to_string() here.
 				avro_schema_record_field_append(new_schema,
 								avro_atom_to_string(val.field->name),

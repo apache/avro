@@ -15,12 +15,48 @@
  * permissions and limitations under the License. 
  */
 
-#ifndef DUMP_H
-#define DUMP_H
-
+#include "avro_private.h"
+#include "../dir_iterator.h"
 #include <stdio.h>
-#include "types.h"
+#include <stdlib.h>
+#include <sys/types.h>
+#include <dirent.h>
 
-void dump(FILE * out, const caddr_t addr, const long len);
+struct dir_iterator_t_
+{
+	DIR *dir;
+	struct dirent *dent;
+};
 
-#endif
+dir_iterator_t dir_iterator_new(char *dir_path)
+{
+	dir_iterator_t dir = (dir_iterator_t)malloc(sizeof(struct dir_iterator_t_));
+	if (dir)
+	{
+		dir->dir = opendir(dir_path);
+	}
+	return dir;
+}
+
+void dir_iterator_destroy(dir_iterator_t dir)
+{
+	free(dir);
+}
+
+int dir_iterator_next(dir_iterator_t dir)
+{
+	dir->dent = readdir(dir->dir);
+	if (!dir->dent)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+const char* dir_iterator_value(dir_iterator_t dir)
+{
+	return dir->dent->d_name;
+}

@@ -160,7 +160,7 @@ static int
 avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 {
 	int64_t needed = len;
-	void *p = buf;
+	char *p = buf;
 	int rval;
 
 	if (len == 0) {

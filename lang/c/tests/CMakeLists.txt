@@ -22,7 +22,19 @@ target_link_libraries(generate_interop_data avro-static)
 add_executable(test_interop_data test_interop_data.c)
 target_link_libraries(test_interop_data avro-static)
 
-add_executable(test_avro_schema test_avro_schema.c)
+if(WIN32)
+    add_executable(test_avro_schema
+        test_avro_schema.c
+        dir_iterator.h
+        windows/dir_iterator.c
+    )
+else()
+    add_executable(test_avro_schema
+        test_avro_schema.c
+        dir_iterator.h
+        linux/dir_iterator.c
+    )
+endif()
 target_link_libraries(test_avro_schema avro-static)
 add_test(test_avro_schema ${CMAKE_COMMAND} -E chdir ${AvroC_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/test_avro_schema)
 

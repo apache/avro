@@ -379,9 +379,9 @@ int avro_boolean_get(avro_datum_t datum, int8_t * i)
 avro_datum_t avro_null(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_NULL,
-		.class_type = AVRO_DATUM,
-		.refcount = 1
+		AVRO_NULL,  // type
+		AVRO_DATUM, // class_type
+		1           // refcount
 	};
 	return &obj;
 }

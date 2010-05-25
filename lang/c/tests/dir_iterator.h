@@ -15,12 +15,9 @@
  * permissions and limitations under the License. 
  */
 
-#ifndef DUMP_H
-#define DUMP_H
+typedef struct dir_iterator_t_* dir_iterator_t;
 
-#include <stdio.h>
-#include "types.h"
-
-void dump(FILE * out, const caddr_t addr, const long len);
-
-#endif
+dir_iterator_t dir_iterator_new(char *dir_path);
+void           dir_iterator_destroy(dir_iterator_t dir);
+int            dir_iterator_next(dir_iterator_t dir);
+const char*    dir_iterator_value(dir_iterator_t dir);
