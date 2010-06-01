@@ -21,7 +21,6 @@ NOTE: The API for the command-line tool is experimental.
 """
 import sys
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-import httplib
 import urlparse
 from avro import io
 from avro import datafile

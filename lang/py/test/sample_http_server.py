@@ -18,7 +18,6 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from avro import ipc
 from avro import protocol
-from avro import schema
 
 MAIL_PROTOCOL_JSON = """\
 {"namespace": "example.proto",
