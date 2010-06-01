@@ -173,6 +173,7 @@ module Avro
 
           # reset buffer
           buffer_writer.truncate(0)
+          buffer_writer.rewind
           self.block_count = 0
         end
       end

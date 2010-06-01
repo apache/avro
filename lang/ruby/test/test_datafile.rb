@@ -118,4 +118,26 @@ JSON
       end
     end
   end
+
+  def test_data_writer_handles_sync_interval
+    writer_schema = <<-JSON
+{ "type": "record",
+  "name": "something",
+  "fields": [
+    {"name": "something_boolean", "type": "boolean"}
+]}
+JSON
+
+    data = {"something_boolean" => true }
+
+    Avro::DataFile.open('data.avr', 'w', writer_schema) do |dw|
+      while dw.writer.tell < Avro::DataFile::SYNC_INTERVAL
+        dw << data
+      end
+      block_count = dw.block_count
+      dw << data
+      # ensure we didn't just write another block
+      assert_equal(block_count+1, dw.block_count)
+    end
+  end
 end

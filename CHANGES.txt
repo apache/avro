@@ -73,7 +73,10 @@ Avro 1.4.0 (unreleased)
 
     AVR0-555 Missing license headers in some ruby source
     files. (jmhodges)
- 
+
+    AVRO-554 Fixing syncing in ruby data file writing. (Grant Rodgers
+    via jmhodges)
+
 Avro 1.3.3 (Unreleased)
 
 Avro 1.3.2 (31 March 2010)
