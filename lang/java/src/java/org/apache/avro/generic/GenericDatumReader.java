@@ -67,7 +67,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (resolver == null) {
       resolver = ResolvingDecoder.resolve(actual, expected);
     }
-    return (D) read(reuse, expected, new ResolvingDecoder(resolver, in));
+    ResolvingDecoder r = new ResolvingDecoder(resolver, in);
+    D result = (D) read(reuse, expected, r);
+    r.drain();
+    return result;
   }
   
   /** Called to read data.*/
