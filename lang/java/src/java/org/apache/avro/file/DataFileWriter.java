@@ -31,7 +31,6 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.rmi.server.UID;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -155,7 +154,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     assertNotOpen();
     if (!file.exists())
       throw new FileNotFoundException("Not found: "+file);
-    RandomAccessFile raf = new RandomAccessFile(file, "rw");
+    RandomAccessFile raf = new RandomAccessFile(file, "r");
     FileDescriptor fd = raf.getFD();
     DataFileReader<D> reader =
       new DataFileReader<D>(new SeekableFileInput(fd),
@@ -170,11 +169,9 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     } else {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
+    raf.close();
 
-    FileChannel channel = raf.getChannel();       // seek to end
-    channel.position(channel.size());
-
-    init(new FileOutputStream(fd));
+    init(new FileOutputStream(file, true));
 
     return this;
   }
