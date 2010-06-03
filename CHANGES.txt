@@ -22,6 +22,9 @@ Avro 1.3.3 (Unreleased)
 
     AVRO-524. DataFileWriter.appendTo leads to intermittent IOException during write() (thiru)
 
+    AVRO-499. Java: Fix protocol reflection to reject interfaces with
+    multiple methods of the same name.  (cutting)
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS
