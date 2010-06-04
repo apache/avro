@@ -161,25 +161,28 @@ module Avro::IPC
 
     def read_handshake_response(decoder)
       handshake_response = HANDSHAKE_REQUESTOR_READER.read(decoder)
-      case match = handshake_response['match']
+      we_have_matching_schema = false
+
+      case handshake_response['match']
       when 'BOTH'
         self.send_protocol = false
-        true
+        we_have_matching_schema = true
       when 'CLIENT'
         raise AvroError.new('Handshake failure. match == CLIENT') if send_protocol
         self.remote_protocol = Avro::Protocol.parse(handshake_response['serverProtocol'])
         self.remote_hash = handshake_response['serverHash']
         self.send_protocol = false
-        false
+        we_have_matching_schema = true
       when 'NONE'
         raise AvroError.new('Handshake failure. match == NONE') if send_protocol
         self.remote_protocol = Avro::Protocol.parse(handshake_response['serverProtocol'])
         self.remote_hash = handshake_response['serverHash']
         self.send_protocol = true
-        false
       else
         raise AvroError.new("Unexpected match: #{match}")
       end
+
+      return we_have_matching_schema
     end
 
     def read_call_response(message_name, decoder)
