@@ -16,14 +16,14 @@
 
 require 'rubygems'
 require 'echoe'
-VERSION = File.open('../../share/VERSION.txt').read
+VERSION = File.open('../../share/VERSION.txt').read.sub('-SNAPSHOT', '.pre1').chomp
 Echoe.new('avro', VERSION) do |p|
   p.author = "Apache Software Foundation"
   p.email = "avro-dev@hadoop.apache.org"
   p.summary = "Apache Avro for Ruby"
   p.description = "Apache is a data serialization and RPC format"
   p.url = "http://hadoop.apache.org/avro/"
-  p.runtime_dependencies = %w[rubygems yajl]
+  p.runtime_dependencies = %w[yajl-ruby]
 end
 
 t = Rake::TestTask.new(:interop)
