@@ -24,8 +24,6 @@ Avro 1.3.3 (Unreleased)
 
     AVRO-514. Removing unnecessary ruby StringIO calls. (jmhodges)
 
-    AVRO-516. Ruby socket RPC should use big endian buffer lengths.
-    (jmhodges)
 
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
@@ -45,6 +43,7 @@ Avro 1.3.3 (Unreleased)
     multiple methods of the same name.  (cutting)
 
     AVRO-489. Skipping complex objects in the ruby impl. (jmhodges)
+    (jmhodges)
 
 Avro 1.3.2 (31 March 2010)
 
