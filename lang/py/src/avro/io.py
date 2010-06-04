@@ -606,6 +606,10 @@ class DatumReader(object):
     """
     # schema resolution
     index_of_schema = int(decoder.read_long())
+    if index_of_schema >= len(writers_schema.schemas):
+      fail_msg = "Can't access branch index %d for union with %d branches"\
+                 % (index_of_schema, writers_schema.schemas)
+      raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
     selected_writers_schema = writers_schema.schemas[index_of_schema]
     
     # read data

@@ -11,6 +11,9 @@ Avro 1.3.3 (Unreleased)
 
     AVRO-560. Python impl should include system errors in every protocol (hammer)
 
+    AVRO-559. Handle read_union error where the list index of the union branch 
+    to follow exceeds the size of the union schema (hammer)
+
   BUG FIXES
 
     AVRO-496. python sample_http_client.py is broken (Jeff Hodges via hammer)
