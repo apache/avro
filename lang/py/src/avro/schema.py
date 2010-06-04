@@ -65,6 +65,7 @@ VALID_TYPES = PRIMITIVE_TYPES + NAMED_TYPES + (
   'map',
   'union',
   'request',
+  'error_union'
 )
 
 RESERVED_PROPS = (
@@ -457,6 +458,22 @@ class UnionSchema(Schema):
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
+class ErrorUnionSchema(UnionSchema):
+  def __init__(self, schemas, names=None):
+    # Prepend "string" to handle system errors
+    UnionSchema.__init__(self, ['string'] + schemas, names)
+
+  def __str__(self):
+    to_dump = []
+    for i, schema in enumerate(self.schemas):
+      # Don't print the system error schema
+      if schema.type == 'string': continue
+      if i in self.schema_from_names_indices:
+        to_dump.append(schema.fullname)
+      else:
+        to_dump.append(json.loads(str(schema)))
+    return json.dumps(to_dump)
+
 class RecordSchema(NamedSchema):
   @staticmethod
   def make_field_objects(field_data, names):
@@ -565,6 +582,9 @@ def make_avsc_object(json_data, names=None):
       elif type == 'map':
         values = json_data.get('values')
         return MapSchema(values, names)
+      elif type == 'error_union':
+        declared_errors = json_data.get('declared_errors')
+        return ErrorUnionSchema(declared_errors, names)
       else:
         raise SchemaParseException('Unknown Valid Type: %s' % type)
     elif type is None:

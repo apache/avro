@@ -159,7 +159,8 @@ class Message(object):
     if not isinstance(errors, list):
       fail_msg = 'Errors property not a list: %s' % errors
       raise ProtocolParseException(fail_msg)
-    return schema.make_avsc_object(errors, names)
+    errors_for_parsing = {'type': 'error_union', 'declared_errors': errors}
+    return schema.make_avsc_object(errors_for_parsing, names)
 
   def __init__(self,  name, request, response, errors=None, names=None):
     self._name = name
