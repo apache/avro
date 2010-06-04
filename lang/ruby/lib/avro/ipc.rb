@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-require 'stringio'
 
 module Avro::IPC
 
@@ -239,7 +238,7 @@ module Avro::IPC
     # Called by a server to deserialize a request, compute and serialize
     # a response or error. Compare to 'handle()' in Thrift.
     def respond(call_request)
-      buffer_decoder = Avro::IO::BinaryDecoder.new(call_request)
+      buffer_decoder = Avro::IO::BinaryDecoder.new(StringIO.new(call_request))
       buffer_writer = StringIO.new('', 'w+')
       buffer_encoder = Avro::IO::BinaryEncoder.new(buffer_writer)
       error = nil
@@ -308,7 +307,7 @@ module Avro::IPC
       remote_protocol = protocol_cache[client_hash]
 
       if !remote_protocol && client_protocol
-        remote_protocol = protocol.parse(client_protocol)
+        remote_protocol = Avro::Protocol.parse(client_protocol)
         protocol_cache[client_hash] = remote_protocol
       end
 

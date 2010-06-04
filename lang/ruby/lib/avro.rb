@@ -17,6 +17,8 @@
 require 'yajl'
 require 'set'
 require 'md5'
+require 'net/http'
+require 'stringio'
 
 module Avro
   VERSION = "FIXME"

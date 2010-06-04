@@ -68,7 +68,6 @@ class MailHandler < WEBrick::HTTPServlet::AbstractServlet
     writer = Avro::IPC::FramedWriter.new(StringIO.new)
     writer.write_framed_message(unframed_resp)
     resp.body = writer.to_s
-    raise WEBrick::HTTPStatus::OK
   end
 end
 
