@@ -516,6 +516,42 @@ module Avro
           raise AvroError, "Unknown schema type: #{schm.type}"
         end
       end
+
+      def skip_fixed(writers_schema, decoder)
+        decoder.skip(writers_schema.size)
+      end
+
+      def skip_enum(writers_schema, decoder)
+        decoder.skip_int
+      end
+
+      def skip_array(writers_schema, decoder)
+        skip_blocks(decoder) { skip_data(writers_schema.items, decoder) }
+      end
+
+      def skip_map(writers_schema, decoder)
+        skip_blocks(decoder) {
+          decoder.skip_string
+          skip_data(writers_schema.values, decoder)
+        }
+      end
+
+      def skip_record(writers_schema, decoder)
+        writers_schema.fields.each{|f| skip_data(f.type, decoder) }
+      end
+
+      private
+      def skip_blocks(decoder, &blk)
+        block_count = decoder.read_long
+        while block_count != 0
+          if block_count < 0
+            decoder.skip(decoder.read_long)
+          else
+            block_count.times &blk
+          end
+          block_count = decoder.read_long
+        end
+      end
     end # DatumReader
 
     # DatumWriter for generic ruby objects
