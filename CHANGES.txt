@@ -49,6 +49,11 @@ Avro 1.3.3 (Unreleased)
     AVRO-489. Skipping complex objects in the ruby impl. (jmhodges)
     (jmhodges)
 
+    AVR0-555 Missing license headers in some ruby source
+    files. (jmhodges)
+ 
+Avro 1.3.3 (Unreleased)
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS
