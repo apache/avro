@@ -18,7 +18,10 @@ Read/Write Avro File Object Containers.
 """
 import zlib
 import uuid
-import cStringIO
+try:
+  from cStringIO import StringIO
+except ImportError:
+  from StringIO import StringIO
 from avro import schema
 from avro import io
 
@@ -74,7 +77,7 @@ class DataFileWriter(object):
     self._writer = writer
     self._encoder = io.BinaryEncoder(writer)
     self._datum_writer = datum_writer
-    self._buffer_writer = cStringIO.StringIO()
+    self._buffer_writer = StringIO()
     self._buffer_encoder = io.BinaryEncoder(self._buffer_writer)
     self._block_count = 0
     self._meta = {}
@@ -285,7 +288,7 @@ class DataFileReader(object):
       # -15 is the log of the window size; negative indicates
       # "raw" (no zlib headers) decompression.  See zlib.h.
       uncompressed = zlib.decompress(data, -15)
-      self._datum_decoder = io.BinaryDecoder(cStringIO.StringIO(uncompressed))
+      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
 
   def _skip_sync(self):
     """
