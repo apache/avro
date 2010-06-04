@@ -10,11 +10,15 @@ Avro 1.3.3 (Unreleased)
     (Esteve Fernandez via hammer)
 
     AVRO-560. Python impl should include system errors in every protocol (hammer)
+    AVRO-486. DataFile.open for the ruby side (jmhodges)
 
     AVRO-559. Handle read_union error where the list index of the union branch 
     to follow exceeds the size of the union schema (hammer)
 
+    AVRO-491. Doing doubles and floats better in the ruby impl. (jmhodges)
+
   BUG FIXES
+    AVRO-461. Skipping primitives in the ruby side (jmhodges)
 
     AVRO-496. python sample_http_client.py is broken (Jeff Hodges via hammer)
 
@@ -29,6 +33,8 @@ Avro 1.3.3 (Unreleased)
 
     AVRO-499. Java: Fix protocol reflection to reject interfaces with
     multiple methods of the same name.  (cutting)
+
+    AVRO-489. Skipping complex objects in the ruby impl. (jmhodges)
 
 Avro 1.3.2 (31 March 2010)
 
