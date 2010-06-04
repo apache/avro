@@ -27,6 +27,8 @@ Avro 1.3.3 (Unreleased)
 
     AVRO-511. Ruby implementation passes the rpc interop tests.
 
+    AVRO-543. Schema comparison is hella slow on the Ruby side. (jmhodges)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 
