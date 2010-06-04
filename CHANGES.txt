@@ -42,6 +42,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-543. Schema comparison is hella slow on the Ruby side. (jmhodges)
 
+    AVRO-560. Python impl should include system errors in every protocol (hammer)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 

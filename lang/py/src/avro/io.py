@@ -107,7 +107,7 @@ def validate(expected_schema, datum):
       False not in [isinstance(k, basestring) for k in datum.keys()] and
       False not in
         [validate(expected_schema.values, v) for v in datum.values()])
-  elif schema_type == 'union':
+  elif schema_type in ['union', 'error_union']:
     return True in [validate(s, datum) for s in expected_schema.schemas]
   elif schema_type in ['record', 'error', 'request']:
     return (isinstance(datum, dict) and
@@ -345,7 +345,7 @@ class DatumReader(object):
   def match_schemas(writers_schema, readers_schema):
     w_type = writers_schema.type
     r_type = readers_schema.type
-    if 'union' in [w_type, r_type]:
+    if 'union' in [w_type, r_type] or 'error_union' in [w_type, r_type]:
       return True
     elif (w_type in schema.PRIMITIVE_TYPES and r_type in schema.PRIMITIVE_TYPES
           and w_type == r_type):
@@ -417,7 +417,8 @@ class DatumReader(object):
       raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
     # schema resolution: reader's schema is a union, writer's schema is not
-    if writers_schema.type != 'union' and readers_schema.type == 'union':
+    if (writers_schema.type not in ['union', 'error_union']
+        and readers_schema.type in ['union', 'error_union']):
       for s in readers_schema.schemas:
         if DatumReader.match_schemas(writers_schema, s):
           return self.read_data(writers_schema, s, decoder)
@@ -449,7 +450,7 @@ class DatumReader(object):
       return self.read_array(writers_schema, readers_schema, decoder)
     elif writers_schema.type == 'map':
       return self.read_map(writers_schema, readers_schema, decoder)
-    elif writers_schema.type == 'union':
+    elif writers_schema.type in ['union', 'error_union']:
       return self.read_union(writers_schema, readers_schema, decoder)
     elif writers_schema.type in ['record', 'error', 'request']:
       return self.read_record(writers_schema, readers_schema, decoder)
@@ -482,7 +483,7 @@ class DatumReader(object):
       return self.skip_array(writers_schema, decoder)
     elif writers_schema.type == 'map':
       return self.skip_map(writers_schema, decoder)
-    elif writers_schema.type == 'union':
+    elif writers_schema.type in ['union', 'error_union']:
       return self.skip_union(writers_schema, decoder)
     elif writers_schema.type in ['record', 'error', 'request']:
       return self.skip_record(writers_schema, decoder)
@@ -691,7 +692,7 @@ class DatumReader(object):
         map_val = self._read_default_value(field_schema.values, json_val)
         read_map[key] = map_val
       return read_map
-    elif field_schema.type == 'union':
+    elif field_schema.type in ['union', 'error_union']:
       return self._read_default_value(field_schema.schemas[0], default_value)
     elif field_schema.type == 'record':
       read_record = {}
@@ -749,7 +750,7 @@ class DatumWriter(object):
       self.write_array(writers_schema, datum, encoder)
     elif writers_schema.type == 'map':
       self.write_map(writers_schema, datum, encoder)
-    elif writers_schema.type == 'union':
+    elif writers_schema.type in ['union', 'error_union']:
       self.write_union(writers_schema, datum, encoder)
     elif writers_schema.type in ['record', 'error', 'request']:
       self.write_record(writers_schema, datum, encoder)

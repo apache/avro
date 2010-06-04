@@ -241,8 +241,8 @@ class Requestor(object):
       readers_schema = local_message_schema.response
       return self.read_response(writers_schema, readers_schema, decoder)
     else:
-      writers_schema = remote_message_schema.errors or SYSTEM_ERROR_SCHEMA
-      readers_schema = local_message_schema.errors or SYSTEM_ERROR_SCHEMA
+      writers_schema = remote_message_schema.errors
+      readers_schema = local_message_schema.errors
       raise self.read_error(writers_schema, readers_schema, decoder)
 
   def read_response(self, writers_schema, readers_schema, decoder):
@@ -325,7 +325,7 @@ class Responder(object):
         writers_schema = local_message.response
         self.write_response(writers_schema, response, buffer_encoder)
       else:
-        writers_schema = local_message.errors or SYSTEM_ERROR_SCHEMA
+        writers_schema = local_message.errors
         self.write_error(writers_schema, error, buffer_encoder)
     except schema.AvroException, e:
       error = AvroRemoteException(str(e))
