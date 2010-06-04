@@ -75,6 +75,8 @@ Avro 1.4.0 (unreleased)
     AVRO-554 Fixing syncing in ruby data file writing. (Grant Rodgers
     via jmhodges)
 
+    AVRO-562 ruby side had busted client handshaking. (jmhodges)
+
 Avro 1.3.3 (Unreleased)
 
   BUG FIXES
