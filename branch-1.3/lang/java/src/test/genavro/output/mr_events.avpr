@@ -1,0 +1,118 @@
+{
+  "protocol" : "Events",
+  "namespace" : "org.apache.hadoop.mapreduce.jobhistory",
+  "types" : [ {
+    "type" : "record",
+    "name" : "JhCounter",
+    "fields" : [ {
+      "name" : "name",
+      "type" : "string"
+    }, {
+      "name" : "displayName",
+      "type" : "string"
+    }, {
+      "name" : "value",
+      "type" : "long"
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "JhCounterGroup",
+    "fields" : [ {
+      "name" : "name",
+      "type" : "string"
+    }, {
+      "name" : "displayName",
+      "type" : "string"
+    }, {
+      "name" : "counts",
+      "type" : {
+        "type" : "array",
+        "items" : "JhCounter"
+      }
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "JhCounters",
+    "fields" : [ {
+      "name" : "name",
+      "type" : "string"
+    }, {
+      "name" : "groups",
+      "type" : {
+        "type" : "array",
+        "items" : "JhCounterGroup"
+      }
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "JobFinished",
+    "fields" : [ {
+      "name" : "jobid",
+      "type" : "string"
+    }, {
+      "name" : "finishTime",
+      "type" : "long"
+    }, {
+      "name" : "finishedMaps",
+      "type" : "int"
+    }, {
+      "name" : "finishedReduces",
+      "type" : "int"
+    }, {
+      "name" : "failedMaps",
+      "type" : "int"
+    }, {
+      "name" : "failedReduces",
+      "type" : "int"
+    }, {
+      "name" : "totalCounters",
+      "type" : "JhCounters"
+    }, {
+      "name" : "mapCounters",
+      "type" : "JhCounters"
+    }, {
+      "name" : "reduceCounters",
+      "type" : "JhCounters"
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "JobInited",
+    "fields" : [ {
+      "name" : "jobid",
+      "type" : "string"
+    }, {
+      "name" : "launchTime",
+      "type" : "long"
+    }, {
+      "name" : "totalMaps",
+      "type" : "int"
+    }, {
+      "name" : "totalReduces",
+      "type" : "int"
+    }, {
+      "name" : "jobStatus",
+      "type" : "string"
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "JobSubmitted",
+    "fields" : [ {
+      "name" : "jobid",
+      "type" : "string"
+    }, {
+      "name" : "jobName",
+      "type" : "string"
+    }, {
+      "name" : "userName",
+      "type" : "string"
+    }, {
+      "name" : "submitTime",
+      "type" : "long"
+    }, {
+      "name" : "jobConfPath",
+      "type" : "string"
+    } ]
+  } ],
+  "messages" : {
+  }
+}

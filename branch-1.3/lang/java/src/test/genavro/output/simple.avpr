@@ -1,0 +1,78 @@
+{
+  "protocol" : "Simple",
+  "namespace" : "org.apache.avro.test",
+  "types" : [ {
+    "type" : "enum",
+    "name" : "Kind",
+    "symbols" : [ "FOO", "BAR", "BAZ" ],
+    "order" : "descending"
+  }, {
+    "type" : "fixed",
+    "name" : "MD5",
+    "size" : 16
+  }, {
+    "type" : "record",
+    "name" : "TestRecord",
+    "fields" : [ {
+      "name" : "name",
+      "type" : {
+        "type" : "string",
+        "order" : "ignore"
+      }
+    }, {
+      "name" : "kind",
+      "type" : "Kind"
+    }, {
+      "name" : "hash",
+      "type" : "MD5"
+    }, {
+      "name" : "nullableHash",
+      "type" : [ "MD5", "null" ]
+    } ]
+  }, {
+    "type" : "error",
+    "name" : "TestError",
+    "fields" : [ {
+      "name" : "message",
+      "type" : "string"
+    } ]
+  } ],
+  "messages" : {
+    "hello" : {
+      "request" : [ {
+        "name" : "greeting",
+        "type" : "string"
+      } ],
+      "response" : "string"
+    },
+    "echo" : {
+      "request" : [ {
+        "name" : "record",
+        "type" : "TestRecord"
+      } ],
+      "response" : "TestRecord"
+    },
+    "add" : {
+      "request" : [ {
+        "name" : "arg1",
+        "type" : "int"
+      }, {
+        "name" : "arg2",
+        "type" : "int"
+      } ],
+      "response" : "int"
+    },
+    "echoBytes" : {
+      "request" : [ {
+        "name" : "data",
+        "type" : "bytes"
+      } ],
+      "response" : "bytes"
+    },
+    "error" : {
+      "request" : [ ],
+      "response" : "null",
+      "errors" : [ "TestError" ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+*.pyc
+.svn
+/build
+test-output
+/dist
