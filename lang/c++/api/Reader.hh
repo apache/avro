@@ -56,7 +56,7 @@ class ReaderImpl : private boost::noncopyable
 
     void readValue(bool &val) {
         validator_.checkTypeExpected(AVRO_BOOL);
-        uint8_t ival;
+        uint8_t ival = 0;
         reader_.read(ival);
         val = (ival != 0);
     }
@@ -102,13 +102,8 @@ class ReaderImpl : private boost::noncopyable
     void readBytes(std::vector<uint8_t> &val) {
         validator_.checkTypeExpected(AVRO_BYTES);
         int64_t size = readSize();
-        
-        val.reserve(size);
-        uint8_t bval;
-        for(size_t bytes = 0; bytes < static_cast<size_t>(size); bytes++) {
-            reader_.read(bval);
-            val.push_back(bval);
-        }
+        val.resize(size);
+        reader_.read(reinterpret_cast<char *>(&val[0]), size);
     }
 
     void readFixed(uint8_t *val, size_t size) {

@@ -47,6 +47,9 @@ Avro 1.4.0 (unreleased)
     AVRO-559. Handle read_union error where the list index of the union branch 
     to follow exceeds the size of the union schema (hammer)
 
+    AVRO-556. Poor performance for Reader::readBytes can be easily improved
+    (Dave Wright via sbanacho)
+
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 
