@@ -18,7 +18,8 @@ Avro 1.4.0 (unreleased)
     AVRO-501. missing function in C api to access array elements after 
     decoding an array. (Bruce Mitchener via massie)
 
-    AVRO-497. Minor changes to C++ autotools, makefiles, and code generator. (sbanacho)
+    AVRO-497. Minor changes to C++ autotools, makefiles, and code
+    generator. (sbanacho)
 
     AVRO-450. HTTP IPC for ruby. (jmhodges)
 
@@ -29,7 +30,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-520. Refactor C++ validation code. (sbanacho)
 
-    AVRO-521. Out of memory and other issues with Junit tests for mapreduce (thiru)
+    AVRO-521. Out of memory and other issues with Junit tests for
+    mapreduce (thiru)
 
     AVRO-511. Ruby implementation passes the rpc interop tests.
 
@@ -42,7 +44,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-543. Schema comparison is hella slow on the Ruby side. (jmhodges)
 
-    AVRO-560. Python impl should include system errors in every protocol (hammer)
+    AVRO-560. Python impl should include system errors in every
+    protocol (hammer)
 
     AVRO-559. Handle read_union error where the list index of the union branch 
     to follow exceeds the size of the union schema (hammer)
@@ -157,7 +160,9 @@ Avro 1.3.1 (16 March 2010)
 
     AVRO-440. config.h output not correctly used (Bruce Mitchener via massie)
 
-    AVRO-460. Performance improvement to write_long() (Bruce Mitchener via massie)
+    AVRO-460. Performance improvement to write_long() (Bruce Mitchener
+    via massie)
+
     AVRO-455. Update Java dependencies. (David Dabbs via cutting)
 
     AVRO-446. Add a build.sh task that signs and checksums artifacts. (cutting)
@@ -433,7 +438,8 @@ Avro 1.3.0 (24 February 2010)
     AVRO-336. Check that appropriate schemas are passed to
     GenericData#Record and #Array.  (cutting)
 
-    AVRO-353. Publish the C API to avro-doc package when 'dist' target run (massie)
+    AVRO-353. Publish the C API to avro-doc package when 'dist' target
+    run (massie)
 
     AVRO-359. Add support for encoding/decoding arrays and maps (massie)
 
