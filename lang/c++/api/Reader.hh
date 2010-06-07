@@ -92,19 +92,12 @@ class Reader : private boost::noncopyable
 
     void readBytes(std::vector<uint8_t> &val) {
         int64_t size = readSize();
-        
-        val.reserve(size);
-        uint8_t bval;
-        for(size_t bytes = 0; bytes < static_cast<size_t>(size); bytes++) {
-            in_.readByte(bval);
-            val.push_back(bval);
-        }
+        val.resize(size);
+        in_.readBytes(&val[0], size);
     }
 
     void readFixed(uint8_t *val, size_t size) {
-        for(size_t bytes = 0; bytes < size; bytes++) {
-            in_.readByte(val[bytes]);
-        }
+        in_.readBytes(val, size);
     }
 
     template <size_t N>

@@ -1,6 +1,6 @@
 Avro Change Log
 
-Avro 1.3.3 (Unreleased)
+Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS
 
@@ -27,6 +27,10 @@ Avro 1.3.3 (Unreleased)
     AVRO-543. Schema comparison is hella slow on the Ruby side. (jmhodges)
 
     AVRO-504. ruby impl could stand better error messages on schema parsing (jmhodges)
+
+    AVRO-556. Poor performance for Reader::readBytes improved
+    (Dave Wright via sbanacho)
+
 
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
