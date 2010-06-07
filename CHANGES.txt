@@ -83,6 +83,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-562 ruby side had busted client handshaking. (jmhodges)
 
+    AVRO-566. Java: fix so that JAVA_HOME is bound by build.xml for
+    test_tools.sh.  (cutting)
+
 Avro 1.3.3 (Unreleased)
 
   BUG FIXES

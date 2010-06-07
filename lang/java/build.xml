@@ -436,6 +436,7 @@
           failonerror="true">
       <env key="TOOLS" value="${build.dir}/avro-tools-${version}.jar"/>
       <env key="TMPDIR" value="${test.java.build.dir}/tools"/>
+      <env key="JAVA_HOME" value="${java.home}"/>
     </exec>
   </target>
 
