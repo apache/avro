@@ -68,7 +68,7 @@ class AvroTypeException(schema.AvroException):
 class SchemaResolutionException(schema.AvroException):
   def __init__(self, fail_msg, writers_schema=None, readers_schema=None):
     if writers_schema: fail_msg += "\nWriter's Schema: %s" % writers_schema
-    if readers_schema: fail_msg += "\nReader's Schema: %s" % writers_schema
+    if readers_schema: fail_msg += "\nReader's Schema: %s" % readers_schema
     schema.AvroException.__init__(self, fail_msg)
 
 #
@@ -508,6 +508,10 @@ class DatumReader(object):
     """
     # read data
     index_of_symbol = decoder.read_int()
+    if index_of_symbol >= len(writers_schema.symbols):
+      fail_msg = "Can't access enum index %d for enum with %d symbols"\
+                 % (index_of_symbol, len(writers_schema.symbols))
+      raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
     read_symbol = writers_schema.symbols[index_of_symbol]
 
     # schema resolution
@@ -608,7 +612,7 @@ class DatumReader(object):
     index_of_schema = int(decoder.read_long())
     if index_of_schema >= len(writers_schema.schemas):
       fail_msg = "Can't access branch index %d for union with %d branches"\
-                 % (index_of_schema, writers_schema.schemas)
+                 % (index_of_schema, len(writers_schema.schemas))
       raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
     selected_writers_schema = writers_schema.schemas[index_of_schema]
     
@@ -617,6 +621,10 @@ class DatumReader(object):
 
   def skip_union(self, writers_schema, decoder):
     index_of_schema = int(decoder.read_long())
+    if index_of_schema >= len(writers_schema.schemas):
+      fail_msg = "Can't access branch index %d for union with %d branches"\
+                 % (index_of_schema, len(writers_schema.schemas))
+      raise SchemaResolutionException(fail_msg, writers_schema)
     return self.skip_data(writers_schema.schemas[index_of_schema], decoder)
 
   def read_record(self, writers_schema, readers_schema, decoder):

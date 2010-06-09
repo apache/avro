@@ -40,6 +40,9 @@ Avro 1.4.0 (unreleased)
     AVRO-566. Java: fix so that JAVA_HOME is bound by build.xml for
     test_tools.sh.  (cutting)
 
+    AVRO-571. Fix how we handle out-of-bounds indexes for union and 
+    enum parsing in Python (hammer)
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS
