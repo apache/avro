@@ -11,9 +11,6 @@ Avro 1.4.0 (unreleased)
     AVRO-285: Specify one-way messages and implement in Java. (cutting)
 
   IMPROVEMENTS
-    AVRO-486. DataFile.open for the ruby side (jmhodges)
-
-    AVRO-491. Doing doubles and floats better in the ruby impl. (jmhodges)
 
     AVRO-501. missing function in C api to access array elements after 
     decoding an array. (Bruce Mitchener via massie)
@@ -21,54 +18,64 @@ Avro 1.4.0 (unreleased)
     AVRO-497. Minor changes to C++ autotools, makefiles, and code
     generator. (sbanacho)
 
-    AVRO-450. HTTP IPC for ruby. (jmhodges)
-
     AVRO-508. Use page-backed buffers for C++ serialization input or
     output. (sbanacho)
-
-    AVRO-514. Removing unnecessary ruby StringIO calls. (jmhodges)
 
     AVRO-520. Refactor C++ validation code. (sbanacho)
 
     AVRO-521. Out of memory and other issues with Junit tests for
     mapreduce (thiru)
 
-    AVRO-511. Ruby implementation passes the rpc interop tests.
+    AVRO-540. Java: Make GenericArray reversible.  (Eric Evans via cutting)
+
+  BUG FIXES
+
+    AVRO-502. Memory leak from parsing JSON schema.
+    (Robert G. Jakabosky via massie)
+
+    AVRO-515. Fix build and compatibility problems. (sbanacho)
+
+    AVRO-518. Add link to boost filesystem library.  (John Plevyak via sbanacho)
+
+    AVRO-566. Java: fix so that JAVA_HOME is bound by build.xml for
+    test_tools.sh.  (cutting)
+
+Avro 1.3.3 (7 June 2010)
+
+  IMPROVEMENTS
 
     AVRO-525. remove unused imports (Esteve Fernandez via hammer)
 
     AVRO-526. Fall back to pure Python StringIO if cStringIO is not available
     (Esteve Fernandez via hammer)
 
-    AVRO-540. Java: Make GenericArray reversible.  (Eric Evans via cutting)
+    AVRO-560. Python impl should include system errors in every protocol (hammer)
 
-    AVRO-543. Schema comparison is hella slow on the Ruby side. (jmhodges)
-
-    AVRO-560. Python impl should include system errors in every
-    protocol (hammer)
+    AVRO-486. DataFile.open for the ruby side (jmhodges)
 
     AVRO-559. Handle read_union error where the list index of the union branch 
     to follow exceeds the size of the union schema (hammer)
 
-    AVRO-556. Poor performance for Reader::readBytes can be easily improved
+    AVRO-491. Doing doubles and floats better in the ruby impl. (jmhodges)
+
+    AVRO-450. HTTP IPC for ruby. (jmhodges)
+
+    AVRO-514. Removing unnecessary ruby StringIO calls. (jmhodges)
+
+    AVRO-511. Ruby implementation passes the rpc interop tests.
+
+    AVRO-543. Schema comparison is hella slow on the Ruby side. (jmhodges)
+
+    AVRO-504. ruby impl could stand better error messages on schema parsing (jmhodges)
+
+    AVRO-556. Poor performance for Reader::readBytes improved
     (Dave Wright via sbanacho)
+
 
   BUG FIXES
     AVRO-461. Skipping primitives in the ruby side (jmhodges)
 
-    AVRO-489. Skipping complex objects in the ruby impl. (jmhodges)
-
-    AVRO-502. Memory leak from parsing JSON schema.
-    (Robert G. Jakabosky via massie)
-
     AVRO-496. python sample_http_client.py is broken (Jeff Hodges via hammer)
-
-    AVRO-515. Fix build and compatibility problems. (sbanacho)
-
-    AVRO-516. Ruby socket RPC should use big endian buffer lengths.
-    (jmhodges)
-
-    AVRO-518. Add link to boost filesystem library.  (John Plevyak via sbanacho)
 
     AVRO-527. Undefined variable "schm" error (Esteve Fernandez via hammer)
 
@@ -83,21 +90,22 @@ Avro 1.4.0 (unreleased)
 
     AVRO-562 ruby side had busted client handshaking. (jmhodges)
 
-    AVRO-566. Java: fix so that JAVA_HOME is bound by build.xml for
-    test_tools.sh.  (cutting)
-
-Avro 1.3.3 (Unreleased)
-
-  BUG FIXES
- 
     AVRO-517. Resolving Decoder fails in some cases. (thiru) 
 
-    AVRO-524. DataFileWriter.appendTo leads to intermittent
-    IOException during write() (thiru)
+    AVRO-524. DataFileWriter.appendTo leads to intermittent IOException during write() (thiru)
 
     AVRO-499. Java: Fix protocol reflection to reject interfaces with
     multiple methods of the same name.  (cutting)
 
+    AVRO-489. Skipping complex objects in the ruby impl. (jmhodges)
+
+    AVR0-555 Missing license headers in some ruby source
+    files. (jmhodges)
+
+    AVRO-500. ruby side dev packaging (jmhodges)
+
+    AVRO-516. ruby: buffer length should not be little-endian in socket rpc (jmhodges)
+ 
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS
