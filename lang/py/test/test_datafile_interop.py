@@ -18,20 +18,18 @@ import unittest
 from avro import io
 from avro import datafile
 
-INTEROP_DATA_DIR = os.path.join(os.path.dirname(__file__), '../../../build/interop/data')
-
 class TestDataFileInterop(unittest.TestCase):
   def test_interop(self):
     print ''
     print 'TEST INTEROP'
     print '============'
     print ''
-    for f in os.listdir(INTEROP_DATA_DIR):
+    for f in os.listdir('@INTEROP_DATA_DIR@'):
       print 'READING %s' % f
       print ''
 
       # read data in binary from file
-      reader = open(os.path.join(INTEROP_DATA_DIR, f), 'rb')
+      reader = open(os.path.join('@INTEROP_DATA_DIR@', f), 'rb')
       datum_reader = io.DatumReader()
       dfr = datafile.DataFileReader(reader, datum_reader)
       for datum in dfr:

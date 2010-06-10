@@ -19,15 +19,25 @@
 <project name="Avro" default="dist">
  
   <!-- Load user's default properties. -->
-  <property file="${user.home}/build.properties" />
+  <property file="${user.home}/build.properties"/>
 
+  <!-- Shared directories -->
   <property name="share.dir" value="${basedir}/../../share"/>
+  <property name="share.schema.dir" value="${share.dir}/schemas/"/>
   <property name="dist.dir" value="${basedir}/../../dist/py"/>
   <property name="top.build" value="${basedir}/../../build"/>
+  <property name="interop.data.dir" value="${top.build}/interop/data"/>
 
-  <loadresource property="version">
-    <file file="${share.dir}/VERSION.txt"/>
-  </loadresource>
+  <!-- Python implementation directories -->
+  <property name="build.dir" value="${basedir}/build"/>
+  <property name="src.dir" value="${basedir}/src"/>
+  <property name="lib.dir" value="${basedir}/lib"/>
+  <property name="test.dir" value="${basedir}/test"/>
+
+  <!-- Load shared properties -->
+  <loadfile srcFile="${share.dir}/VERSION.txt" property="avro.version" />
+  <loadfile srcFile="${share.schema.dir}/org/apache/avro/ipc/HandshakeRequest.avsc" property="handshake.request.json"/>
+  <loadfile srcFile="${share.schema.dir}/org/apache/avro/ipc/HandshakeResponse.avsc" property="handshake.response.json"/>
 
   <path id="java.classpath">
     <fileset dir="lib">
@@ -36,64 +46,122 @@
   </path>
 
   <path id="test.path">
-    <pathelement location="${basedir}/src"/>
-    <pathelement location="${basedir}/test"/>
-    <pathelement location="${basedir}/lib"/>
+    <pathelement location="${build.dir}/src"/>
+    <pathelement location="${build.dir}/test"/>
+    <pathelement location="${build.dir}/lib"/>
   </path>
 
-  <target name="init">
-    <copy todir="${basedir}/src/avro">
-      <fileset dir="${share.dir}/schemas/org/apache/avro/ipc">
-      	<include name="**/*.avsc"/>
-      </fileset>
+  <target name="init" description="Create the build directory.">
+    <mkdir dir="${build.dir}"/>
+  </target>
+
+  <target name="build"
+          description="Copy project files to build/ and do string replacement."
+          depends="init">
+    <!-- Copy src/, test/, lib/ -->
+    <copy todir="${build.dir}/src">
+      <fileset dir="${src.dir}">
+        <exclude name="**/*.pyc"/>
+        <exclude name="**/*.py~"/>
+      </fileset> 
+    </copy>
+    <copy todir="${build.dir}/test">
+      <fileset dir="${test.dir}">
+        <exclude name="**/*.pyc"/>
+        <exclude name="**/*.py~"/>
+      </fileset> 
+    </copy>
+    <copy todir="${build.dir}/lib">
+      <fileset dir="${lib.dir}" />
+    </copy>
+
+    <!-- Inline the handshake schemas -->
+    <copy file="${src.dir}/avro/ipc.py"
+          toFile="${build.dir}/src/avro/ipc.py"
+          overwrite="true">
+      <filterset>
+        <filter token="HANDSHAKE_REQUEST_SCHEMA" 
+          value="${handshake.request.json}"/>
+        <filter token="HANDSHAKE_RESPONSE_SCHEMA" 
+          value="${handshake.response.json}"/>
+     </filterset>
+    </copy>
+
+    <!-- Inline the Avro version -->
+    <copy file="${basedir}/setup.py"
+          toFile="${build.dir}/setup.py"
+          overwrite="true">
+      <filterset>
+        <filter token="AVRO_VERSION" value="${avro.version}"/>
+      </filterset>
+    </copy>
+
+    <!-- Inline the interop data directory -->
+    <copy file="${test.dir}/test_datafile_interop.py"
+          toFile="${build.dir}/test/test_datafile_interop.py"
+          overwrite="true">
+      <filterset>
+        <filter token="INTEROP_DATA_DIR" value="${interop.data.dir}"/>
+      </filterset>
     </copy>
   </target>
 
-  <target name="test" depends="init" description="Run python unit tests">
+  <target name="test"
+          description="Run python unit tests"
+          depends="build">
     <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask"
 	     classpathref="java.classpath"/>
     <py-test python="python" pythonpathref="test.path" >
-      <fileset dir="${basedir}/test">
+      <fileset dir="${build.dir}/test">
         <include name="test_*.py"/>
         <exclude name="test_datafile_interop.py"/>
       </fileset>
     </py-test>
+    <delete dir="${build.dir}"/>
   </target>
 
-  <target name="interop-data-test" description="Run python interop data tests">
+  <target name="interop-data-test"
+          description="Run python interop data tests"
+          depends="build">
     <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask"
 	     classpathref="java.classpath"/>
     <py-test python="python" pythonpathref="test.path" >
-      <fileset dir="${basedir}/test">
+      <fileset dir="${build.dir}/test">
         <include name="test_datafile_interop.py"/>
       </fileset>
     </py-test>
+    <delete dir="${build.dir}"/>
   </target>
 
   <target name="interop-data-generate"
-          description="Generate Python interop data files.">
-    <mkdir dir="${top.build}/interop/data"/>
+          description="Generate Python interop data files."
+          depends="build">
+    <mkdir dir="${interop.data.dir}"/>
     <exec executable="python">
-      <env key="PYTHONPATH" value="$PYTHONPATH:${basedir}/src"/>
-      <arg value="${basedir}/test/gen_interop_data.py"/>
+      <env key="PYTHONPATH" value="$PYTHONPATH:${build.dir}/src"/>
+      <arg value="${build.dir}/test/gen_interop_data.py"/>
       <arg value="${share.dir}/test/schemas/interop.avsc"/>
-      <arg value="${top.build}/interop/data/py.avro"/>
+      <arg value="${interop.data.dir}/py.avro"/>
     </exec>
+    <delete dir="${build.dir}"/>
   </target>
 
-  <target name="dist" description="Build egg">
+  <target name="dist"
+          description="Build source distribution"
+          depends="build">
     <mkdir dir="${dist.dir}"/>
     <exec executable="python" failonerror="true">
-      <arg value="setup.py"/>
-      <arg value="bdist_egg"/>
+      <arg value="${build.dir}/setup.py"/>
+      <arg value="sdist"/>
       <arg value="--dist-dir=${dist.dir}"/>
     </exec>
   </target>
 
-  <target name="clean" description="Delete build files, and their directories">
-    <delete>
-      <fileset dir="src" includes="**/*.pyc" />
-      <fileset dir="${basedir}/src/avro" includes="**/*.avsc"/>
+  <target name="clean"
+          description="Delete build files and their directories">
+    <delete includeemptydirs="true" failonerror="false">
+      <fileset file="MANIFEST"/>
+      <fileset dir="${build.dir}"/>
     </delete>
   </target>
 

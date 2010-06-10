@@ -20,11 +20,9 @@ try:
 except ImportError:
   from distutils.core import setup
 
-VERSION_FILE='../../share/VERSION.txt'
-
 setup(
   name = 'avro',
-  version = file(VERSION_FILE, 'r').read(),
+  version = '@AVRO_VERSION@',
   packages = ['avro',],
   package_dir = {'avro': 'src/avro'},
 

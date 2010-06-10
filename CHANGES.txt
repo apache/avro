@@ -31,6 +31,10 @@ Avro 1.4.0 (unreleased)
     AVRO-284. Handle namespaces correctly in new Python implementation
     (Patrick Wendell via hammer)
 
+    AVRO-331. Inline shared state during the Python build process
+    (version, handshake schemas, and interop data directory)
+    (Patrick Wendell via hammer)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.
