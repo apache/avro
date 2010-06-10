@@ -700,7 +700,17 @@
             typed <em>parameter</em> schemas (this has the same form
             as the fields of a record declaration);</li>
           <li>a <em>response</em> schema; </li> 
-          <li>an optional union of <em>error</em> schemas; and</li>
+          <li>an optional union of declared <em>error</em> schemas.
+	    The <em>effective</em> union has <code>"string"</code>
+	    prepended to the declared union, to permit transmission of
+	    undeclared "system" errors.  For example, if the declared
+	    error union is <code>["AccessError"]</code>, then the
+	    effective union is <code>["string", "AccessError"]</code>.
+	    When no errors are declared, the effective error union
+	    is <code>["string"]</code>.  Errors are serialized using
+	    the effective union; however, a protocol's JSON
+	    declaration contains only the declared union.
+	  </li>
           <li>an optional <em>one-way</em> boolean parameter.</li>
         </ul>
         <p>A request parameter list is processed equivalently to an
@@ -967,7 +977,8 @@
               <li>if the error flag is false, the message <em>response</em>,
                 serialized per the message's response schema.</li>
               <li>if the error flag is true, the <em>error</em>,
-              serialized per the message's error union schema.</li>
+              serialized per the message's effective error union
+              schema.</li>
             </ul>
           </li>
         </ul>

@@ -35,6 +35,8 @@ Avro 1.4.0 (unreleased)
     (version, handshake schemas, and interop data directory)
     (Patrick Wendell via hammer)
 
+    AVRO-447. Describe implicit protocol "system" error in spec. (cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.
