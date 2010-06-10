@@ -92,8 +92,10 @@ class Protocol(object):
 
     self._props = {}
     self.set_prop('name', name)
-    if namespace is not None: self.set_prop('namespace', namespace)
-    type_names = {}
+    type_names = schema.Names()
+    if namespace is not None: 
+      self.set_prop('namespace', namespace)
+      type_names.default_namespace = namespace
     if types is not None:
       self.set_prop('types', self._parse_types(types, type_names))
     if messages is not None:
@@ -107,7 +109,7 @@ class Protocol(object):
   name = property(lambda self: self.get_prop('name'))
   namespace = property(lambda self: self.get_prop('namespace'))
   fullname = property(lambda self: 
-                      schema.Name.make_fullname(self.name, self.namespace))
+                      schema.Name(self.name, self.namespace).get_full_name())
   types = property(lambda self: self.get_prop('types'))
   types_dict = property(lambda self: dict([(type.name, type)
                                            for type in self.types]))
@@ -149,9 +151,9 @@ class Message(object):
     return schema.RecordSchema(None, None, request, names, 'request')
   
   def _parse_response(self, response, names):
-    if isinstance(response, basestring) and names.has_key(response):
+    if isinstance(response, basestring) and names.has_name(response, None):
       self._response_from_names = True
-      return names.get(response)
+      return names.get_name(response, None)
     else:
       return schema.make_avsc_object(response, names)
 

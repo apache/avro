@@ -28,6 +28,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-540. Java: Make GenericArray reversible.  (Eric Evans via cutting)
 
+    AVRO-284. Handle namespaces correctly in new Python implementation
+    (Patrick Wendell via hammer)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

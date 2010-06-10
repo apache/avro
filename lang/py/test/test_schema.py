@@ -367,8 +367,30 @@ class TestSchema(unittest.TestCase):
     equivalent.
     """
     print_test_name('TEST FULLNAME')
-    fullname = schema.Name.make_fullname('a', 'o.a.h')
+
+    # name and namespace specified    
+    fullname = schema.Name('a', 'o.a.h', None).get_full_name()
     self.assertEqual(fullname, 'o.a.h.a')
+
+    # fullname and namespace specified
+    fullname = schema.Name('a.b.c.d', 'o.a.h', None).get_full_name()
+    self.assertEqual(fullname, 'a.b.c.d')
+    
+    # name and default namespace specified
+    fullname = schema.Name('a', None, 'b.c.d').get_full_name()
+    self.assertEqual(fullname, 'b.c.d.a')
+
+    # fullname and default namespace specified
+    fullname = schema.Name('a.b.c.d', None, 'o.a.h').get_full_name()
+    self.assertEqual(fullname, 'a.b.c.d')
+
+    # fullname, namespace, default namespace specified
+    fullname = schema.Name('a.b.c.d', 'o.a.a', 'o.a.h').get_full_name()
+    self.assertEqual(fullname, 'a.b.c.d')
+
+    # name, namespace, default namespace specified
+    fullname = schema.Name('a', 'o.a.a', 'o.a.h').get_full_name()
+    self.assertEqual(fullname, 'o.a.a.a')
 
 if __name__ == '__main__':
   unittest.main()

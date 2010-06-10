@@ -146,6 +146,142 @@ EXAMPLES = [
 
 }
     """, True),
+ExampleProtocol("""\
+{"namespace": "org.apache.avro.test.namespace",
+ "protocol": "TestImplicitNamespace",
+
+ "types": [
+     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+     {"name": "ReferencedRecord", "type": "record", 
+       "fields": [ {"name": "foo", "type": "string"} ] },
+     {"name": "TestRecord", "type": "record",
+      "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
+                  {"name": "unqalified", "type": "ReferencedRecord"} ]
+     },
+     {"name": "TestError",
+      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+     }
+ ],
+
+ "messages": {
+     "echo": {
+         "request": [{"name": "qualified", 
+             "type": "org.apache.avro.test.namespace.TestRecord"}],
+         "response": "TestRecord"
+     },
+
+     "error": {
+         "request": [],
+         "response": "null",
+         "errors": ["org.apache.avro.test.namespace.TestError"]
+     }
+
+ }
+
+}
+    """, True),
+ExampleProtocol("""\
+{"namespace": "org.apache.avro.test.namespace",
+ "protocol": "TestNamespaceTwo",
+
+ "types": [
+     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+     {"name": "ReferencedRecord", "type": "record", 
+       "namespace": "org.apache.avro.other.namespace", 
+       "fields": [ {"name": "foo", "type": "string"} ] },
+     {"name": "TestRecord", "type": "record",
+      "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
+                  {"name": "qualified", 
+                    "type": "org.apache.avro.other.namespace.ReferencedRecord"} 
+                ]
+     },
+     {"name": "TestError",
+      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+     }
+ ],
+
+ "messages": {
+     "echo": {
+         "request": [{"name": "qualified", 
+             "type": "org.apache.avro.test.namespace.TestRecord"}],
+         "response": "TestRecord"
+     },
+
+     "error": {
+         "request": [],
+         "response": "null",
+         "errors": ["org.apache.avro.test.namespace.TestError"]
+     }
+
+ }
+
+}
+    """, True),
+ExampleProtocol("""\
+{"namespace": "org.apache.avro.test.namespace",
+ "protocol": "TestValidRepeatedName",
+
+ "types": [
+     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+     {"name": "ReferencedRecord", "type": "record", 
+       "namespace": "org.apache.avro.other.namespace", 
+       "fields": [ {"name": "foo", "type": "string"} ] },
+     {"name": "ReferencedRecord", "type": "record", 
+       "fields": [ {"name": "bar", "type": "double"} ] },
+     {"name": "TestError",
+      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+     }
+ ],
+
+ "messages": {
+     "echo": {
+         "request": [{"name": "qualified", 
+             "type": "ReferencedRecord"}],
+         "response": "org.apache.avro.other.namespace.ReferencedRecord"
+     },
+
+     "error": {
+         "request": [],
+         "response": "null",
+         "errors": ["org.apache.avro.test.namespace.TestError"]
+     }
+
+ }
+
+}
+    """, True),
+ExampleProtocol("""\
+{"namespace": "org.apache.avro.test.namespace",
+ "protocol": "TestInvalidRepeatedName",
+
+ "types": [
+     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+     {"name": "ReferencedRecord", "type": "record", 
+       "fields": [ {"name": "foo", "type": "string"} ] },
+     {"name": "ReferencedRecord", "type": "record", 
+       "fields": [ {"name": "bar", "type": "double"} ] },
+     {"name": "TestError",
+      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
+     }
+ ],
+
+ "messages": {
+     "echo": {
+         "request": [{"name": "qualified", 
+             "type": "ReferencedRecord"}],
+         "response": "org.apache.avro.other.namespace.ReferencedRecord"
+     },
+
+     "error": {
+         "request": [],
+         "response": "null",
+         "errors": ["org.apache.avro.test.namespace.TestError"]
+     }
+
+ }
+
+}
+    """, False),
   ExampleProtocol("""\
 {"namespace": "org.apache.avro.test",
  "protocol": "BulkData",

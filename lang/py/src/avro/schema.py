@@ -125,36 +125,108 @@ class Schema(object):
     self.props[key] = value
 
 class Name(object):
-  """Container class for static methods on Avro names."""
-  @staticmethod
-  def make_fullname(name, namespace):
-    if name.find('.') < 0 and namespace is not None:
-      return '.'.join([namespace, name])
+  """Class to describe Avro name."""
+  
+  def __init__(self, name_attr, space_attr, default_space):
+    """
+    Formulate full name according to the specification.
+    
+    @arg name_attr: name value read in schema or None.
+    @arg space_attr: namespace value read in schema or None.
+    @ard default_space: the current default space or None.
+    """
+    # Ensure valid ctor args
+    if not (isinstance(name_attr, basestring) or (name_attr is None)):
+      fail_msg = 'Name must be non-empty string or None.'
+      raise SchemaParseException(fail_msg)
+    elif name_attr == "":
+      fail_msg = 'Name must be non-empty string or None.'
+      raise SchemaParseException(fail_msg)
+
+    if not (isinstance(space_attr, basestring) or (space_attr is None)):
+      fail_msg = 'Space must be non-empty string or None.'
+      raise SchemaParseException(fail_msg)
+    elif name_attr == "":
+      fail_msg = 'Space must be non-empty string or None.'
+      raise SchemaParseException(fail_msg)
+  
+    if not (isinstance(default_space, basestring) or (default_space is None)):
+      fail_msg = 'Default space must be non-empty string or None.'
+      raise SchemaParseException(fail_msg)
+    elif name_attr == "":
+      fail_msg = 'Default must be non-empty string or None.'
+      raise SchemaParseException(fail_msg)
+    
+    self._full = None; 
+    
+    if name_attr is None or name_attr == "":
+        return;
+    
+    if (name_attr.find('.') < 0):
+      if (space_attr is not None) and (space_attr != ""):
+        self._full = "%s.%s" % (space_attr, name_attr)
+      else:
+        if (default_space is not None) and (default_space != ""):
+           self._full = "%s.%s" % (default_space, name_attr)
+        else:
+          self._full = name_attr
     else:
-      return name
+        self._full = name_attr         
+    
+  def __eq__(self, other):
+    if not isinstance(other, Name):
+        return False
+    return (self.get_full_name() == other.get_full_name())
+      
+  def get_full_name(self):
+    return self._full;
 
-  @staticmethod
-  def extract_namespace(name, namespace):
-    parts = name.rsplit('.', 1)
-    if len(parts) > 1:
-      namespace, name = parts
-    return name, namespace
+  def get_space(self):
+    """Back out a namespace from full name."""
+    if self._full is None:
+        return None
+    
+    if (self._full.find('.') > 0):
+      return self._full.rsplit(".", 1)[0]
+    else:
+      return ""
 
-  @staticmethod
-  def add_name(names, new_schema):
-    """Add a new schema object to the names dictionary (in place)."""
-    new_fullname = new_schema.fullname
-    if new_fullname in VALID_TYPES:
-      fail_msg = '%s is a reserved type name.' % new_fullname
+class Names(object):
+  """Track name set and default namespace during parsing."""
+  def __init__(self, default_namespace=None):
+      self.names = {}
+      self.default_namespace = default_namespace
+      
+  def has_name(self, name_attr, space_attr):
+      test = Name(name_attr, space_attr, self.default_namespace).get_full_name()
+      return self.names.has_key(test)
+  
+  def get_name(self, name_attr, space_attr):    
+      test = Name(name_attr, space_attr, self.default_namespace).get_full_name()
+      if not self.names.has_key(test):
+          return None
+      return self.names[test]
+      
+  def add_name(self, name_attr, space_attr, new_schema):
+    """
+    Add a new schema object to the name set.
+    
+      @arg name_attr: name value read in schema
+      @arg space_attr: namespace value read in schema.
+      
+      @return: the Name that was just added.
+    """
+    to_add = Name(name_attr, space_attr, self.default_namespace)
+    
+    if to_add.get_full_name() in VALID_TYPES:
+      fail_msg = '%s is a reserved type name.' % to_add.get_full_name()
       raise SchemaParseException(fail_msg)
-    elif names is not None and names.has_key(new_fullname):
-      fail_msg = 'The name "%s" is already in use.' % new_fullname
+    elif self.names.has_key(to_add.get_full_name()):
+      fail_msg = 'The name "%s" is already in use.' % to_add.get_full_name()
       raise SchemaParseException(fail_msg)
-    elif names is None:
-      names = {}
 
-    names[new_fullname] = new_schema
-    return names
+    self.names[to_add.get_full_name()] = new_schema
+    return to_add
 
 class NamedSchema(Schema):
   """Named Schemas specified in NAMED_TYPES."""
@@ -174,18 +246,17 @@ class NamedSchema(Schema):
     Schema.__init__(self, type)
 
     # Add class members
-    name, namespace = Name.extract_namespace(name, namespace)
-    self.set_prop('name', name)
-    if namespace is not None: self.set_prop('namespace', namespace)
-
-    # Add name to names dictionary
-    names = Name.add_name(names, self)
+    new_name = names.add_name(name, namespace, self)
+    self.set_prop('name', new_name.get_full_name())
+    if new_name.get_space() is not None: 
+        self.set_prop('namespace', new_name.get_space())
+    self.set_prop('fullname', new_name.get_full_name())
+    
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
   namespace = property(lambda self: self.get_prop('namespace'))
-  fullname = property(lambda self: 
-                      Name.make_fullname(self.name, self.namespace))
+  fullname = property(lambda self: self.get_prop('fullname'))
 
 class Field(object):
   def __init__(self, type, name, has_default, default=None, order=None, names=None):
@@ -204,15 +275,16 @@ class Field(object):
     self._props = {}
     self._type_from_names = False
     self._has_default = has_default
+
     if (isinstance(type, basestring) and names is not None
-        and names.has_key(type)):
-      type_schema = names[type]
+        and names.has_name(type, None)):
+      type_schema = names.get_name(type, None)
       self._type_from_names = True
     else:
       try:
         type_schema = make_avsc_object(type, names)
       except:
-        fail_msg = 'Type property not a valid Avro schema.'
+        fail_msg = 'Type property "%s" not a valid Avro schema.' % type
         raise SchemaParseException(fail_msg)
     self.set_prop('type', type_schema)
     self.set_prop('name', name)
@@ -335,10 +407,10 @@ class ArraySchema(Schema):
 
     # Call parent ctor
     Schema.__init__(self, 'array')
-
     # Add class members
-    if isinstance(items, basestring) and names.has_key(items):
-      items_schema = names[items]
+
+    if isinstance(items, basestring) and names.has_name(items, None):
+      items_schema = names.get_name(items, None)
       self._items_schema_from_names = True
     else:
       try:
@@ -374,8 +446,8 @@ class MapSchema(Schema):
     Schema.__init__(self, 'map')
 
     # Add class members
-    if isinstance(values, basestring) and names.has_key(values):
-      values_schema = names[values]
+    if isinstance(values, basestring) and names.has_name(values, None):
+      values_schema = names.get_name(values)
       self._values_schema_from_names = True
     else:
       try:
@@ -421,8 +493,8 @@ class UnionSchema(Schema):
     self._schema_from_names_indices = []
     for i, schema in enumerate(schemas):
       from_names = False
-      if isinstance(schema, basestring) and names.has_key(schema):
-        new_schema = names[schema]
+      if isinstance(schema, basestring) and names.has_name(schema, None):
+        new_schema = names.get_name(schema, None)
         from_names = True
       else:
         try:
@@ -434,7 +506,7 @@ class UnionSchema(Schema):
           and new_schema.type in [schema.type for schema in schema_objects]):
         raise SchemaParseException('%s type already in Union' % new_schema.type)
       elif new_schema.type == 'union':
-        raise SchemaParseException('Unions cannont contain other unions.')
+        raise SchemaParseException('Unions cannot contain other unions.')
       else:
         schema_objects.append(new_schema)
         if from_names: self._schema_from_names_indices.append(i)
@@ -482,7 +554,7 @@ class RecordSchema(NamedSchema):
     field_names = []
     for i, field in enumerate(field_data):
       if hasattr(field, 'get') and callable(field.get):
-        type = field.get('type')
+        type = field.get('type')        
         name = field.get('name')
 
         # null values can have a default value of None
@@ -519,9 +591,17 @@ class RecordSchema(NamedSchema):
     else:
       NamedSchema.__init__(self, schema_type, name, namespace, names)
 
+    if schema_type == 'record': 
+      old_default = names.default_namespace
+      names.default_namespace = Name(name, namespace,
+                                     names.default_namespace).get_space()
+
     # Add class members
     field_objects = RecordSchema.make_field_objects(fields, names)
     self.set_prop('fields', field_objects)
+    
+    if schema_type == 'record':
+      names.default_namespace = old_default
 
   # read-only properties
   fields = property(lambda self: self.get_prop('fields'))
@@ -554,8 +634,11 @@ def make_avsc_object(json_data, names=None):
   """
   Build Avro Schema from data parsed out of JSON string.
 
-  @arg names: dict of schema name, object pairs
+  @arg names: A Name object (tracks seen names and default space)
   """
+  if names == None:
+    names = Names()
+  
   # JSON object (non-union)
   if hasattr(json_data, 'get') and callable(json_data.get):
     type = json_data.get('type')
@@ -612,8 +695,8 @@ def parse(json_string):
   except:
     raise SchemaParseException('Error parsing JSON: %s' % json_string)
 
-  # Initialize the names dictionary
-  names = {}
+  # Initialize the names object
+  names = Names()
 
   # construct the Avro Schema object
   return make_avsc_object(json_data, names)
