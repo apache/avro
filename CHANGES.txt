@@ -13,6 +13,9 @@ Avro 1.4.0 (unreleased)
     AVRO-512. Java: Define and implement MapReduce connector
     protocols. (cutting)
 
+    AVRO-577. Java: Add MapReduce InputFormat for plain text files.
+    (Tom White via cutting)
+
   IMPROVEMENTS
 
     AVRO-501. missing function in C api to access array elements after 
