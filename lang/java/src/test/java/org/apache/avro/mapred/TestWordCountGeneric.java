@@ -103,5 +103,35 @@ public class TestWordCountGeneric {
       outputPath.getFileSystem(job).delete(outputPath);
     }
   }
+  
+  @Test
+  @SuppressWarnings("deprecation")
+  public void testAvroUtf8InputFormat() throws Exception {
+    String dir = System.getProperty("test.dir", ".") + "/mapred";
+    Path outputPath = new Path(dir + "/out");
+    JobConf job = new JobConf();
+    try {
+      WordCountUtil.writeLinesTextFile();
+  
+      job.setJobName("wordcount");
+   
+      job.setInputFormat(AvroUtf8InputFormat.class);
+      AvroJob.setOutputGeneric(job, WordCount.SCHEMA$);
+  
+      job.setMapperClass(MapImpl.class);        
+      job.setCombinerClass(ReduceImpl.class);
+      job.setReducerClass(ReduceImpl.class);
+  
+      FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
+      FileOutputFormat.setOutputPath(job, outputPath);
+      FileOutputFormat.setCompressOutput(job, true);
+  
+      JobClient.runJob(job);
+  
+      WordCountUtil.validateCountsFile();
+    } finally {
+      outputPath.getFileSystem(job).delete(outputPath);
+    }
+  }
 
 }

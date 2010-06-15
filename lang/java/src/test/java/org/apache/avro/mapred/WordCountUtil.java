@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.BufferedInputStream;
+import java.io.PrintStream;
 import java.util.StringTokenizer;
 import java.util.Map;
 import java.util.TreeMap;
@@ -46,6 +47,8 @@ class WordCountUtil {
     = new File(System.getProperty("test.dir", ".") + "/mapred");
   private static final File LINES_FILE
     = new File(new File(DIR, "in"), "lines.avro");
+  private static final File LINES_TEXT_FILE
+    = new File(new File(DIR, "in"), "lines.txt");
   private static final File COUNTS_FILE
     = new File(new File(DIR, "out"), "part-00000.avro");
 
@@ -77,6 +80,15 @@ class WordCountUtil {
     out.create(Schema.create(Schema.Type.STRING), LINES_FILE);
     for (String line : LINES)
       out.append(new Utf8(line));
+    out.close();
+  }
+  
+  public static void writeLinesTextFile() throws IOException {
+    FileUtil.fullyDelete(DIR);
+    LINES_FILE.getParentFile().mkdirs();
+    PrintStream out = new PrintStream(LINES_TEXT_FILE);
+    for (String line : LINES)
+      out.println(line);
     out.close();
   }
 
