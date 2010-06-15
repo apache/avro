@@ -18,10 +18,10 @@
 <ivy-module version="2.0"
             xmlns:e="http://ant.apache.org/ivy/extra">
 
-  <info organisation="org.apache.hadoop"
+  <info organisation="org.apache.avro"
     module="${name}" revision="${version}">
     <license name="Apache 2.0"/>
-    <ivyauthor name="Apache Hadoop" url="http://hadoop.apache.org"/>
+    <ivyauthor name="Apache Avro" url="http://avro.apache.org"/>
     <description>Avro</description>
   </info>
 
@@ -62,9 +62,9 @@
     <dependency org="net.sf.jopt-simple" name="jopt-simple" rev="3.2"
         conf="build->default;test->default;tools->default"/>
     <dependency org="org.apache.hadoop" name="hadoop-core" rev="0.20.2"
-                conf="build->default" transitive="false"/>
+                conf="build->default;tools->default" transitive="false"/>
     <dependency org="commons-httpclient" name="commons-httpclient" rev="3.0.1"
-		conf="test->default"/>
+		conf="test->default;tools->default"/>
   </dependencies>
 
 </ivy-module>

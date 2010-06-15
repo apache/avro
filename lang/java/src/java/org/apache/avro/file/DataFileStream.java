@@ -54,6 +54,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
+  ByteBuffer blockBuffer;
+  long blockCount;                              // # entries in block
   long blockRemaining;                          // # entries remaining in block
   byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
   byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
@@ -159,7 +161,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
         }
         if (hasNextBlock()) {
           block = nextBlock(block);
-          ByteBuffer blockBuffer = ByteBuffer.wrap(block.data, 0, block.blockSize);
+          blockBuffer = ByteBuffer.wrap(block.data, 0, block.blockSize);
           blockBuffer = codec.decompress(blockBuffer);
           datumIn = DecoderFactory.defaultFactory().createBinaryDecoder(
               blockBuffer.array(), blockBuffer.arrayOffset() +
@@ -199,6 +201,20 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     return result;
   }
 
+  /** Expert: Return the next block in the file, as binary-encoded data. */
+  public ByteBuffer nextBlock() throws IOException {
+    if (!hasNext())
+      throw new NoSuchElementException();
+    if (blockRemaining != blockCount)
+      throw new IllegalStateException("Not at block start.");
+    blockRemaining = 0;
+    datumIn = null;
+    return blockBuffer;
+  }
+
+  /** Expert: Return the count of items in the current block. */
+  public long getBlockCount() { return blockCount; }
+
   protected void blockFinished() throws IOException {
     // nothing for the stream impl
   }
@@ -214,6 +230,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
         throw new IOException("Block size invalid or too large for this " +
           "implementation: " + blockSize);
       }
+      blockCount = blockRemaining;
       availableBlock = true;
       return true;
     } catch (EOFException eof) {

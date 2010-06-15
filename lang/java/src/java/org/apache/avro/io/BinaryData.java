@@ -184,4 +184,111 @@ public class BinaryData {
     return l1 - l2;
   }
 
+  private static class HashData {
+    private final BufferAccessor bytes;
+    private final BinaryDecoder decoder;
+    public HashData() {
+      this.decoder = new BinaryDecoder(new byte[0], 0, 0);
+      this.bytes = decoder.getBufferAccessor();
+    }
+    public void set(byte[] bytes, int start, int len) {
+      this.decoder.init(bytes, start, len);
+    }
+  }
+
+  private static final ThreadLocal<HashData> HASH_DATA
+    = new ThreadLocal<HashData>() {
+    @Override protected HashData initialValue() { return new HashData(); }
+  };
+
+  /** Hash binary encoded data. Consistent with {@link
+   * org.apache.avro.generic.GenericData#hashCode(Object, Schema)}.*/
+  public static int hashCode(byte[] bytes, int start, int length,
+                             Schema schema) {
+    HashData data = HASH_DATA.get();
+    data.set(bytes, start, length);
+    try {
+      return hashCode(data, schema);
+    } catch (IOException e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
+
+  private static int hashCode(HashData data, Schema schema)
+    throws IOException {
+    Decoder decoder = data.decoder;
+    switch (schema.getType()) {
+    case RECORD: {
+      int hashCode = 1;
+      for (Field field : schema.getFields()) {
+        if (field.order() == Field.Order.IGNORE) {
+          GenericDatumReader.skip(field.schema(), decoder);
+          continue;
+        }
+        hashCode = hashCode*31 + hashCode(data, field.schema());
+      }
+      return hashCode;
+    }
+    case ENUM: case INT:
+      return decoder.readInt();
+    case FLOAT:
+      return Float.floatToIntBits(decoder.readFloat());
+    case LONG: {
+      long l = decoder.readLong();
+      return (int)(l^(l>>>32));
+    }
+    case DOUBLE: {
+      long l = Double.doubleToLongBits(decoder.readDouble());
+      return (int)(l^(l>>>32));
+    }
+    case ARRAY: {
+      Schema elementType = schema.getElementType();
+      int hashCode = 1;
+      for (long l = decoder.readArrayStart(); l != 0; l = decoder.arrayNext())
+        for (long i = 0; i < l; i++)
+          hashCode = hashCode*31 + hashCode(data, elementType);
+      return hashCode;
+    }
+    case MAP:
+      throw new AvroRuntimeException("Can't hashCode maps!");
+    case UNION:
+      return hashCode(data, schema.getTypes().get(decoder.readInt()));
+    case FIXED:
+      return hashBytes(1, data, schema.getFixedSize(), false);
+    case STRING:
+      return hashBytes(0, data, decoder.readInt(), false);
+    case BYTES:
+      return hashBytes(1, data, decoder.readInt(), true);
+    case BOOLEAN:
+      return decoder.readBoolean() ? 1231 : 1237;
+    case NULL:
+      return 0;
+    default:
+      throw new AvroRuntimeException("Unexpected schema to hashCode!");
+    }
+  }
+
+  private static int hashBytes(int init, HashData data, int len, boolean rev)
+    throws IOException {
+    int hashCode = init;
+    byte[] bytes = data.bytes.getBuf();
+    int start = data.bytes.getPos();
+    int end = start+len;
+    if (rev) 
+      for (int i = end-1; i >= start; i--)
+        hashCode = hashCode*31 + bytes[i];
+    else
+      for (int i = start; i < end; i++)
+        hashCode = hashCode*31 + bytes[i];
+    data.decoder.skipFixed(len);
+    return hashCode;
+  }
+
+  /** Skip a binary-encoded long, returning the position after it. */
+  public static int skipLong(byte[] bytes, int start) {
+    int i = start;
+    for (int b = bytes[i++]; ((b & 0x80) != 0); b = bytes[i++]) {}
+    return i;
+  }
+
 }

@@ -89,6 +89,7 @@ public class SpecificResponder extends Responder {
       for (Schema.Field param: message.getRequest().getFields())
         paramTypes[i++] = data.getClass(param.schema());
       Method method = impl.getClass().getMethod(message.getName(), paramTypes);
+      method.setAccessible(true);
       return method.invoke(impl, (Object[])request);
     } catch (InvocationTargetException e) {
       throw (Exception)e.getTargetException();

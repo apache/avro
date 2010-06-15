@@ -54,8 +54,10 @@ public class TestCompare {
 
   @Test
   public void testString() throws Exception {
+    check("\"string\"", new Utf8(""), new Utf8("a"));
     check("\"string\"", new Utf8("a"), new Utf8("b"));
     check("\"string\"", new Utf8("a"), new Utf8("ab"));
+    check("\"string\"", new Utf8("ab"), new Utf8("b"));
   }
 
   @Test
@@ -219,6 +221,21 @@ public class TestCompare {
     assert(!o2.equals(null));
 
     assert(o1.hashCode() != o2.hashCode());
+
+    // check BinaryData.hashCode against Object.hashCode
+    if (schema.getType() != Schema.Type.ENUM) {
+      assertEquals(o1.hashCode(),
+                   BinaryData.hashCode(b1, 0, b1.length, schema));
+      assertEquals(o2.hashCode(),
+                   BinaryData.hashCode(b2, 0, b2.length, schema));
+    }
+
+    // check BinaryData.hashCode against GenericData.hashCode
+    assertEquals(comparator.hashCode(o1, schema),
+                 BinaryData.hashCode(b1, 0, b1.length, schema));
+    assertEquals(comparator.hashCode(o2, schema),
+                 BinaryData.hashCode(b2, 0, b2.length, schema));
+
   }
 
   @SuppressWarnings(value="unchecked")

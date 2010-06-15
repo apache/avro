@@ -52,10 +52,7 @@ public class AvroKeySerialization<T> extends Configured
     //  We need not rely on mapred.task.is.map here to determine whether map
     //  output or final output is desired, since the mapreduce framework never
     //  creates a deserializer for final output, only for map output.
-    String json = getConf().get(AvroJob.MAP_OUTPUT_SCHEMA,
-                                getConf().get(AvroJob.OUTPUT_SCHEMA));
-    Schema schema = Schema.parse(json);
-
+    Schema schema = AvroJob.getMapOutputSchema(getConf());
     String api = getConf().get(AvroJob.MAP_OUTPUT_API,
                                getConf().get(AvroJob.OUTPUT_API));
     DatumReader<T> reader = AvroJob.API_SPECIFIC.equals(api)
@@ -105,14 +102,13 @@ public class AvroKeySerialization<T> extends Configured
     // or final output is needed.
     boolean isMap = getConf().getBoolean("mapred.task.is.map", false);
 
-    String json = getConf().get(AvroJob.OUTPUT_SCHEMA);
-    if (isMap) 
-      json = getConf().get(AvroJob.MAP_OUTPUT_SCHEMA, json);
-    Schema schema = Schema.parse(json);
+    Schema schema = isMap
+      ? AvroJob.getMapOutputSchema(getConf())
+      : AvroJob.getOutputSchema(getConf());
 
     String api = getConf().get(AvroJob.OUTPUT_API);
     if (isMap) 
-      api = getConf().get(AvroJob.MAP_OUTPUT_API, json);
+      api = getConf().get(AvroJob.MAP_OUTPUT_API, api);
 
     DatumWriter<T> writer = AvroJob.API_SPECIFIC.equals(api)
       ? new SpecificDatumWriter<T>(schema)

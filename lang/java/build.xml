@@ -151,7 +151,8 @@
 
   <target name="compile" depends="javacc,ivy-retrieve">
     <java-compiler
-       excludes="**/ipc/** **/*Requestor.java **/*Responder.java **/tool/**">
+       excludes="**/ipc/** **/*Requestor.java **/*Responder.java
+       **/tool/** **/mapred/**">
       <src path="${build.dir}/src"/>
       <src path="${java.src.dir}"/>
     </java-compiler>
@@ -415,6 +416,24 @@
     <test-runner files.location="${test.java.classes}" tests.pattern="**/TestProtocolSpecific$InteropTest.class" />
   </target>
 
+  <target name="tether-wordcount-jar" depends="compile-test-java"
+	  description="Build tether wordcount jar file">
+    <jar jarfile="${test.java.build.dir}/wordcount.jar">
+      <manifest>
+        <attribute name="Main-Class"
+		   value="org.apache.avro.mapred.tether.WordCountTask"/>
+      </manifest>
+      <fileset dir="${build.classes}" />
+      <zipgroupfileset dir="${ivy.lib}" includes="jackson*.jar"/>
+      <zipgroupfileset dir="${ivy.test.lib}" includes="slf4j*.jar"/>
+      <fileset dir="${test.java.classes}"
+	       includes="org/apache/avro/mapred/tether/*"/>
+      <fileset dir="${test.java.generated.classes}"
+	       includes="org/apache/avro/mapred/*"/>
+    </jar>
+    <chmod file="${test.java.build.dir}/wordcount.jar" perm="ugo+x"/>
+  </target>
+
   <target name="tools" depends="compile,ivy-retrieve-tools"
 	  description="Build standalone tools jar file">
     <jar jarfile="${build.dir}/avro-tools-${version}.jar">
@@ -430,13 +449,14 @@
     <chmod file="${build.dir}/avro-tools-${version}.jar" perm="ugo+x"/>
   </target>
 
-  <target name="test-tools" depends="tools,compile-test-java"
+  <target name="test-tools" depends="tools,unit-test-java,tether-wordcount-jar"
    description="Tests tools">
     <exec executable="${basedir}/src/test/bin/test_tools.sh"
           failonerror="true">
       <env key="TOOLS" value="${build.dir}/avro-tools-${version}.jar"/>
       <env key="TMPDIR" value="${test.java.build.dir}/tools"/>
       <env key="JAVA_HOME" value="${java.home}"/>
+      <env key="HADOOP_LOG_DIR" value="${build.dir}/logs"/>
     </exec>
   </target>
 

@@ -79,29 +79,25 @@ public class TestWordCountSpecific {
     String dir = System.getProperty("test.dir", ".") + "/mapred";
     Path outputPath = new Path(dir + "/out");
     
-    try {
-      WordCountUtil.writeLinesFile();
-  
-      job.setJobName("wordcount");
-   
-      AvroJob.setInputSpecific(job, Schema.create(Schema.Type.STRING));
-      AvroJob.setOutputSpecific(job, WordCount.SCHEMA$);
-  
-      job.setMapperClass(MapImpl.class);        
-      job.setCombinerClass(ReduceImpl.class);
-      job.setReducerClass(ReduceImpl.class);
-  
-      FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
-      FileOutputFormat.setOutputPath(job, outputPath);
-      FileOutputFormat.setCompressOutput(job, true);
-  
-      JobClient.runJob(job);
-  
-      WordCountUtil.validateCountsFile();
-    } finally {
-      outputPath.getFileSystem(job).delete(outputPath);
-    }
-
+    outputPath.getFileSystem(job).delete(outputPath);
+    WordCountUtil.writeLinesFile();
+    
+    job.setJobName("wordcount");
+    
+    AvroJob.setInputSpecific(job, Schema.create(Schema.Type.STRING));
+    AvroJob.setOutputSpecific(job, WordCount.SCHEMA$);
+    
+    job.setMapperClass(MapImpl.class);        
+    job.setCombinerClass(ReduceImpl.class);
+    job.setReducerClass(ReduceImpl.class);
+    
+    FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
+    FileOutputFormat.setOutputPath(job, outputPath);
+    FileOutputFormat.setCompressOutput(job, true);
+    
+    JobClient.runJob(job);
+    
+    WordCountUtil.validateCountsFile();
   }
 
 }

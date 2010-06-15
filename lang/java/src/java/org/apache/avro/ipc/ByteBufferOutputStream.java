@@ -76,16 +76,14 @@ public class ByteBufferOutputStream extends OutputStream {
     buffer.put(b, off, len);
   }
 
-  /** Add a buffer to the output without copying, if possible.
-   * Sets buffer's position to its limit.
-   */
+  /** Add a buffer to the output without copying, if possible. */
   public void writeBuffer(ByteBuffer buffer) throws IOException {
     if (buffer.remaining() < BUFFER_SIZE) {
       write(buffer.array(), buffer.position(), buffer.remaining());
-    } else {
-      buffers.add(buffer);                        // append w/o copying
+    } else {                                      // append w/o copying bytes
+      ByteBuffer dup = buffer.duplicate();
+      dup.position(buffer.limit());               // ready for flip
+      buffers.add(dup);
     }
-    buffer.position(buffer.limit());              // mark data as consumed
   }
 }
-

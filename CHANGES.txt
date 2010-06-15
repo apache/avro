@@ -10,6 +10,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-285: Specify one-way messages and implement in Java. (cutting)
 
+    AVRO-512. Java: Define and implement MapReduce connector
+    protocols. (cutting)
+
   IMPROVEMENTS
 
     AVRO-501. missing function in C api to access array elements after 

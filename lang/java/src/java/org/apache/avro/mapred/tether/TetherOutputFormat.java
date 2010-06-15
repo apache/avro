@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.avro.mapred;
+package org.apache.avro.mapred.tether;
 
 import java.io.IOException;
 
@@ -30,57 +30,46 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.util.Progressable;
 
 import org.apache.avro.Schema;
-import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.mapred.AvroJob;
+import org.apache.avro.mapred.AvroOutputFormat;
 
 /** An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files. */
-public class AvroOutputFormat <T>
-  extends FileOutputFormat<AvroWrapper<T>, NullWritable> {
-
-  /** The file name extension for avro data files. */
-  public final static String EXT = ".avro";
-
-  /** The configuration key for Avro deflate level. */
-  public static final String DEFLATE_LEVEL_KEY = "avro.mapred.deflate.level";
-
-  /** The default deflate level. */
-  public static final int DEFAULT_DEFLATE_LEVEL = 1;
+class TetherOutputFormat
+  extends FileOutputFormat<TetherData, NullWritable> {
 
   /** Enable output compression using the deflate codec and specify its level.*/
   public static void setDeflateLevel(JobConf job, int level) {
     FileOutputFormat.setCompressOutput(job, true);
-    job.setInt(DEFLATE_LEVEL_KEY, level);
+    job.setInt(AvroOutputFormat.DEFLATE_LEVEL_KEY, level);
   }
 
-  public RecordWriter<AvroWrapper<T>, NullWritable>
+  @SuppressWarnings("unchecked")
+  public RecordWriter<TetherData, NullWritable>
     getRecordWriter(FileSystem ignore, JobConf job,
                     String name, Progressable prog)
     throws IOException {
 
     Schema schema = AvroJob.getOutputSchema(job);
-
-    DatumWriter<T> datumWriter =
-      AvroJob.API_SPECIFIC.equals(job.get(AvroJob.OUTPUT_API))
-      ? new SpecificDatumWriter<T>()
-      : new GenericDatumWriter<T>();
-
-    final DataFileWriter<T> writer = new DataFileWriter<T>(datumWriter);
+    
+    final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter());
 
     if (FileOutputFormat.getCompressOutput(job)) {
-      int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
+      int level = job.getInt(AvroOutputFormat.DEFLATE_LEVEL_KEY,
+                             AvroOutputFormat.DEFAULT_DEFLATE_LEVEL);
       writer.setCodec(CodecFactory.deflateCodec(level));
     }
 
-    Path path = FileOutputFormat.getTaskOutputPath(job, name+EXT);
+    Path path =
+      FileOutputFormat.getTaskOutputPath(job, name+AvroOutputFormat.EXT);
     writer.create(schema, path.getFileSystem(job).create(path));
 
-    return new RecordWriter<AvroWrapper<T>, NullWritable>() {
-        public void write(AvroWrapper<T> wrapper, NullWritable ignore)
+    return new RecordWriter<TetherData, NullWritable>() {
+        public void write(TetherData datum, NullWritable ignore)
           throws IOException {
-          writer.append(wrapper.datum());
+          writer.appendEncoded(datum.buffer());
         }
         public void close(Reporter reporter) throws IOException {
           writer.close();

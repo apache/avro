@@ -25,6 +25,7 @@ import java.io.InputStream;
 
 import org.apache.avro.reflect.InduceSchemaTool;
 import org.apache.avro.specific.SpecificCompiler.SpecificCompilerTool;
+import org.apache.avro.mapred.tether.TetherJob;
 
 /** Command-line driver.*/
 public class Main {
@@ -47,7 +48,8 @@ public class Main {
         new DataFileGetSchemaTool(),
         new GenAvroTool(),
         new RpcReceiveTool(),
-        new RpcSendTool()
+        new RpcSendTool(),
+        new TetherJob()
         }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {

@@ -80,9 +80,9 @@ public class Utf8 implements Comparable<Utf8> {
   }
 
   public int hashCode() {
-    int hash = length;
+    int hash = 0;
     for (int i = 0; i < this.length; i++)
-      hash += bytes[i] & 0xFF;
+      hash = hash*31 + bytes[i];
     return hash;
   }
 

@@ -441,6 +441,8 @@ public class GenericData {
       return hashCode;
     case UNION:
       return hashCode(o, s.getTypes().get(resolveUnion(s, o)));
+    case ENUM:
+      return s.getEnumOrdinal(o.toString());
     case NULL:
       return 0;
     default:

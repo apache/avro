@@ -248,6 +248,18 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       writeBlock();
   }
 
+  /** Expert: Append a pre-encoded datum to the file.  No validation is
+   * performed to check that the encoding conforms to the file's schema.
+   * Appending non-conforming data may result in an unreadable file. */
+  public void appendEncoded(ByteBuffer datum) throws IOException {
+    assertOpen();
+    int start = datum.position();
+    buffer.write(datum.array(), start, datum.limit()-start);
+    blockCount++;
+    if (buffer.size() >= syncInterval)
+      writeBlock();
+  }
+
   /**
    * Appends data from another file.  otherFile must have the same schema.
    * Data blocks will be copied without de-serializing data.  If the codecs
