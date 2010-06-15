@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -186,6 +187,40 @@ public class TestSpecificCompiler {
     }
     assertEquals("Missed generated protocol!", 1, count);
   }
+  
+  @Test
+  public void testNeedCompile() throws IOException, InterruptedException {
+    String schema = "" +
+      "{ \"name\": \"Foo\", \"type\": \"record\", " +
+      "  \"fields\": [ {\"name\": \"package\", \"type\": \"string\" }," +
+      "                {\"name\": \"short\", \"type\": \"Foo\" } ] }";
+    File inputFile = File.createTempFile("input", "avsc");
+    FileWriter fw = new FileWriter(inputFile);
+    fw.write(schema);
+    fw.close();
+    
+    File outputDir = new File(System.getProperty("test.dir") + 
+      System.getProperty("file.separator") + "test_need_compile");
+    File outputFile = new File(outputDir, "Foo.java");
+    outputFile.delete();
+    assertTrue(!outputFile.exists());
+    outputDir.delete();
+    assertTrue(!outputDir.exists());
+    SpecificCompiler.compileSchema(inputFile, outputDir);
+    assertTrue(outputDir.exists());
+    assertTrue(outputFile.exists());
+
+    long lastModified = outputFile.lastModified();
+    Thread.sleep(1000);  //granularity of JVM doesn't seem to go below 1 sec
+    SpecificCompiler.compileSchema(inputFile, outputDir);
+    assertEquals(lastModified, outputFile.lastModified());
+    
+    fw = new FileWriter(inputFile);
+    fw.write(schema);
+    fw.close();
+    SpecificCompiler.compileSchema(inputFile, outputDir);
+    assertTrue(lastModified != outputFile.lastModified());
+  }
 
   /**
    * Checks that a schema passes through the SpecificCompiler, and,
@@ -225,7 +260,7 @@ public class TestSpecificCompiler {
     File dstDir = AvroTestUtil.tempFile("realCompiler");
     List<File> javaFiles = new ArrayList<File>();
     for (OutputFile o : outputs) {
-      javaFiles.add(o.writeToDestination(dstDir));
+      javaFiles.add(o.writeToDestination(null, dstDir));
     }
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();

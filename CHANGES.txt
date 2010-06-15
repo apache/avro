@@ -43,6 +43,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-447. Describe implicit protocol "system" error in spec. (cutting)
 
+    AVRO-150. Java: fix compiler to not re-generate up-to-date code.
+    (John Yu via cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

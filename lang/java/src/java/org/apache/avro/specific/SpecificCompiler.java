@@ -79,11 +79,13 @@ public class SpecificCompiler {
     String contents;
 
     /**
-     * Writes output to path destination directory, creating directories as
-     * necessary.  Returns the created file.
+     * Writes output to path destination directory when it is newer than src,
+     * creating directories as necessary.  Returns the created file.
      */
-    File writeToDestination(File destDir) throws IOException {
+    File writeToDestination(File src, File destDir) throws IOException {
       File f = new File(destDir, path);
+      if (src != null && f.exists() && f.lastModified() >= src.lastModified())
+        return f;                                 // already up to date: ignore
       f.getParentFile().mkdirs();
       FileWriter fw = new FileWriter(f);
       try {
@@ -103,14 +105,14 @@ public class SpecificCompiler {
   public static void compileProtocol(File src, File dest) throws IOException {
     Protocol protocol = Protocol.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(protocol);
-    compiler.compileToDestination(dest);
+    compiler.compileToDestination(src, dest);
   }
 
   /** Generates Java classes for a schema. */
   public static void compileSchema(File src, File dest) throws IOException {
     Schema schema = Schema.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(schema);
-    compiler.compileToDestination(dest);
+    compiler.compileToDestination(src, dest);
   }
 
   static String mangle(String word) {
@@ -164,13 +166,14 @@ public class SpecificCompiler {
     return out;
   }
 
-  private void compileToDestination(File dst) throws IOException {
+  private void compileToDestination(File src, File dst) throws IOException {
     for (Schema schema : queue) {
       OutputFile o = compile(schema);
-      o.writeToDestination(dst);
+      File outputFile = new File(dst, o.path);
+      o.writeToDestination(src, dst);
     }
     if (protocol != null) {
-      compileInterface(protocol).writeToDestination(dst);
+      compileInterface(protocol).writeToDestination(src, dst);
     }
   }
 
