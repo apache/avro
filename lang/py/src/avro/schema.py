@@ -114,7 +114,8 @@ class Schema(object):
     if not hasattr(self, '_props'): self._props = {}
     self.set_prop('type', type)
 
-  # read-only properties
+  # Read-only properties dict. Printing schemas
+  # creates JSON properties directly from this dict. 
   props = property(lambda self: self._props)
   type = property(lambda self: self.get_prop('type'))
 
@@ -176,10 +177,9 @@ class Name(object):
   def __eq__(self, other):
     if not isinstance(other, Name):
         return False
-    return (self.get_full_name() == other.get_full_name())
+    return (self.fullname == other.fullname)
       
-  def get_full_name(self):
-    return self._full;
+  fullname = property(lambda self: self._full)
 
   def get_space(self):
     """Back out a namespace from full name."""
@@ -198,11 +198,11 @@ class Names(object):
       self.default_namespace = default_namespace
       
   def has_name(self, name_attr, space_attr):
-      test = Name(name_attr, space_attr, self.default_namespace).get_full_name()
+      test = Name(name_attr, space_attr, self.default_namespace).fullname
       return self.names.has_key(test)
   
   def get_name(self, name_attr, space_attr):    
-      test = Name(name_attr, space_attr, self.default_namespace).get_full_name()
+      test = Name(name_attr, space_attr, self.default_namespace).fullname
       if not self.names.has_key(test):
           return None
       return self.names[test]
@@ -218,14 +218,14 @@ class Names(object):
     """
     to_add = Name(name_attr, space_attr, self.default_namespace)
     
-    if to_add.get_full_name() in VALID_TYPES:
-      fail_msg = '%s is a reserved type name.' % to_add.get_full_name()
+    if to_add.fullname in VALID_TYPES:
+      fail_msg = '%s is a reserved type name.' % to_add.fullname
       raise SchemaParseException(fail_msg)
-    elif self.names.has_key(to_add.get_full_name()):
-      fail_msg = 'The name "%s" is already in use.' % to_add.get_full_name()
+    elif self.names.has_key(to_add.fullname):
+      fail_msg = 'The name "%s" is already in use.' % to_add.fullname
       raise SchemaParseException(fail_msg)
 
-    self.names[to_add.get_full_name()] = new_schema
+    self.names[to_add.fullname] = new_schema
     return to_add
 
 class NamedSchema(Schema):
@@ -247,16 +247,20 @@ class NamedSchema(Schema):
 
     # Add class members
     new_name = names.add_name(name, namespace, self)
-    self.set_prop('name', new_name.get_full_name())
-    if new_name.get_space() is not None: 
-        self.set_prop('namespace', new_name.get_space())
-    self.set_prop('fullname', new_name.get_full_name())
+
+    # Store name and namespace as they were read in origin schema
+    self.set_prop('name', name)
+    if namespace is not None: 
+      self.set_prop('namespace', new_name.get_space())
+
+    # Store full name as calculated from name, namespace
+    self._fullname = new_name.fullname
     
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
   namespace = property(lambda self: self.get_prop('namespace'))
-  fullname = property(lambda self: self.get_prop('fullname'))
+  fullname = property(lambda self: self._fullname)
 
 class Field(object):
   def __init__(self, type, name, has_default, default=None, order=None, names=None):

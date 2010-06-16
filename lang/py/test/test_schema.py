@@ -369,27 +369,27 @@ class TestSchema(unittest.TestCase):
     print_test_name('TEST FULLNAME')
 
     # name and namespace specified    
-    fullname = schema.Name('a', 'o.a.h', None).get_full_name()
+    fullname = schema.Name('a', 'o.a.h', None).fullname
     self.assertEqual(fullname, 'o.a.h.a')
 
     # fullname and namespace specified
-    fullname = schema.Name('a.b.c.d', 'o.a.h', None).get_full_name()
+    fullname = schema.Name('a.b.c.d', 'o.a.h', None).fullname
     self.assertEqual(fullname, 'a.b.c.d')
     
     # name and default namespace specified
-    fullname = schema.Name('a', None, 'b.c.d').get_full_name()
+    fullname = schema.Name('a', None, 'b.c.d').fullname
     self.assertEqual(fullname, 'b.c.d.a')
 
     # fullname and default namespace specified
-    fullname = schema.Name('a.b.c.d', None, 'o.a.h').get_full_name()
+    fullname = schema.Name('a.b.c.d', None, 'o.a.h').fullname
     self.assertEqual(fullname, 'a.b.c.d')
 
     # fullname, namespace, default namespace specified
-    fullname = schema.Name('a.b.c.d', 'o.a.a', 'o.a.h').get_full_name()
+    fullname = schema.Name('a.b.c.d', 'o.a.a', 'o.a.h').fullname
     self.assertEqual(fullname, 'a.b.c.d')
 
     # name, namespace, default namespace specified
-    fullname = schema.Name('a', 'o.a.a', 'o.a.h').get_full_name()
+    fullname = schema.Name('a', 'o.a.a', 'o.a.h').fullname
     self.assertEqual(fullname, 'o.a.a.a')
 
 if __name__ == '__main__':
