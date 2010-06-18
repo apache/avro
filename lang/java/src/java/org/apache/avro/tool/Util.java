@@ -17,29 +17,77 @@
  */
 package org.apache.avro.tool;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.file.DataFileReader;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /** Static utility methods for tools. */
 class Util {
   /**
-   * Returns stdin if filename is "-", else opens the file
+   * Returns stdin if filename is "-", else opens the local or HDFS file
    * and returns an InputStream for it.
+   * @throws IOException 
    */
-  static InputStream fileOrStdin(String filename, InputStream stdin) 
-      throws FileNotFoundException {
+  static BufferedInputStream fileOrStdin(String filename, InputStream stdin) 
+      throws IOException {
     if (filename.equals("-")) {
-      return stdin;
-    } else {
-      return new FileInputStream(new File(filename));
+      return new BufferedInputStream(stdin);
+    } 
+    else {
+      String[] parts = filename.split(":");
+      if (parts.length == 1) {
+        return new BufferedInputStream(new FileInputStream(new File(filename)));
+      }
+      else if (parts[0].equals("hdfs")) {
+        FileSystem fs = FileSystem.get(
+            URI.create(filename), new Configuration());
+        return new BufferedInputStream(fs.open(new Path(filename)));
+      }
+      else {
+        throw new FileNotFoundException();
+      }
+    }
+  }
+  
+  /**
+   * Returns stdout if filename is "-", else opens the local or HDFS file
+   * and returns an OutputStream for it.
+   * @throws IOException 
+   */
+  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout) 
+  throws IOException {
+    if (filename.equals("-")) {
+      return new BufferedOutputStream(stdout);
+    } 
+    else {
+      String[] parts = filename.split(":");
+      if (parts.length == 1) {
+        return new BufferedOutputStream(
+            new FileOutputStream(new File(filename)));
+      }
+      else if (parts[0].equals("hdfs")) {
+        FileSystem fs = FileSystem.get(
+            URI.create(filename), new Configuration());
+        return new BufferedOutputStream(fs.create(new Path(filename)));
+      }
+      else {
+        throw new FileNotFoundException();
+      }
     }
   }
   

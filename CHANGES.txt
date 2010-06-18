@@ -16,6 +16,9 @@ Avro 1.4.0 (unreleased)
     AVRO-577. Java: Add MapReduce InputFormat for plain text files.
     (Tom White via cutting)
 
+    AVRO-567. Add command-line tools for text file import & export.
+    (Patrick Wendell via cutting)
+
   IMPROVEMENTS
 
     AVRO-501. missing function in C api to access array elements after 

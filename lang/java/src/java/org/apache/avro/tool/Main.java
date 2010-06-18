@@ -23,9 +23,9 @@ import java.util.TreeMap;
 
 import java.io.InputStream;
 
+import org.apache.avro.mapred.tether.TetherJob;
 import org.apache.avro.reflect.InduceSchemaTool;
 import org.apache.avro.specific.SpecificCompiler.SpecificCompilerTool;
-import org.apache.avro.mapred.tether.TetherJob;
 
 /** Command-line driver.*/
 public class Main {
@@ -49,6 +49,8 @@ public class Main {
         new GenAvroTool(),
         new RpcReceiveTool(),
         new RpcSendTool(),
+        new FromTextTool(),
+        new ToTextTool(),
         new TetherJob()
         }) {
       Tool prev = tools.put(tool.getName(), tool);
