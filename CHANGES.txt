@@ -4,6 +4,9 @@ Avro 1.4.0 (unreleased)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-372.  Rename GenAvro to be Avro IDL.  The tool name is now
+    'idl'.  The file suffix is now '.avdl'.  (cutting)
+
   NEW FEATURES
 
     AVRO-493. Add support for Hadoop Mapreduce with Avro data files. (cutting)

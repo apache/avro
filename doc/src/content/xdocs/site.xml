@@ -45,7 +45,7 @@ See http://forrest.apache.org/docs/linking.html for more info
     <java-api   label="Java API"          href="ext:api/java/index" />
     <c-api      label="C API"             href="ext:api/c/index" />
     <cpp-api    label="C++ API"           href="ext:api/cpp/index" />
-    <genavro    label="GenAvro language"  href="genavro.html" />
+    <idl        label="IDL language"      href="idl.html" />
     <wiki       label="Wiki"              href="ext:wiki" />
     <faq        label="FAQ"               href="ext:faq" />
   </docs>

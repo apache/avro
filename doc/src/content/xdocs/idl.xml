@@ -22,14 +22,14 @@
 ]>
 <document>
   <header>
-    <title>Avro &AvroVersion; GenAvro Language Docs</title>
+    <title>Avro IDL &AvroVersion;</title>
   </header>
   <body>
 
     <section id="preamble">
       <title>Introduction</title>
 
-      <p>This document defines GenAvro, an experimental higher-level language for authoring Avro schemata.
+      <p>This document defines Avro IDL, an experimental higher-level language for authoring Avro schemata.
       Before reading this document, you should have familiarity with the concepts of schemata and protocols,
       as well as the various primitive and complex types available in Avro.
       </p>
@@ -44,40 +44,40 @@
       <title>Overview</title>
       <section id="overview_purpose">
         <title>Purpose</title>
-        <p>The aim of the GenAvro language is to enable developers to author schemata in a way that
+        <p>The aim of the Avro IDL language is to enable developers to author schemata in a way that
         feels more similar to common programming languages like Java, C++, or Python. Additionally,
-        the GenAvro language may feel more familiar for those users who have previously used the
+        the Avro IDL language may feel more familiar for those users who have previously used the
         interface description languages (IDLs) in other frameworks like Thrift, Protocol Buffers, or CORBA.
         </p>
       </section>
       <section id="overview_usage">
         <title>Usage</title>
         <p>
-          Each GenAvro file defines a single Avro Protocol, and thus generates as its output a JSON-format
+          Each Avro IDL file defines a single Avro Protocol, and thus generates as its output a JSON-format
           Avro Protocol file with extension <code>.avpr</code>.
         </p>
         <p>
-          To convert a <code>.genavro</code> file into a <code>.avpr</code> file, it must be processed by the
-          <code>avroj genavro</code> tool. For example:
+          To convert a <code>.avdl</code> file into a <code>.avpr</code> file, it must be processed by the
+          <code>idl</code> tool. For example:
         </p>
         <source>
-$ java -jar avroj-1.3.0.jar genavro src/test/genavro/input/namespaces.genavro /tmp/namespaces.avpr
+$ java -jar avroj-tools-1.4.0.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
 $ head /tmp/namespaces.avpr
 {
   "protocol" : "TestNamespace",
   "namespace" : "avro.test.protocol",
         </source>
         <p>
-          The <code>avroj genavro</code> tool can also process input to and from <em>stdin</em> and <em>stdout</em>.
-          See <code>avroj genavro --help</code> for full usage information.
+          The <code>idl</code> tool can also process input to and from <em>stdin</em> and <em>stdout</em>.
+          See <code>idl --help</code> for full usage information.
         </p>
       </section>
     </section> <!-- end overview -->
 
     <section id="defining_protocol">
-      <title>Defining a Protocol in GenAvro</title>
+      <title>Defining a Protocol in Avro IDL</title>
 
-      <p>A GenAvro file consists of exactly one protocol definition. The minimal protocol is defined
+      <p>An Avro IDL file consists of exactly one protocol definition. The minimal protocol is defined
       by the following code:
       </p>
       <source>
@@ -105,11 +105,11 @@ protocol MyProtocol {
 }
       </source>
       <p>
-3        This notation is used throughout GenAvro as a way of specifying properties for the annotated element,
+3        This notation is used throughout Avro IDL as a way of specifying properties for the annotated element,
         as will be described later in this document.
       </p>
       <p>
-        Protocols in GenAvro can contain the following items:
+        Protocols in Avro IDL can contain the following items:
       </p>
         <ul>
           <li>Definitions of named schemata, including <em>record</em>s, <em>error</em>s, <em>enum</em>s, and <em>fixed</em>s.</li>
@@ -119,7 +119,7 @@ protocol MyProtocol {
     <section id="format_enums">
       <title>Defining an Enumeration</title>
       <p>
-        Enums are defined in GenAvro using a syntax similar to C or Java:
+        Enums are defined in Avro IDL using a syntax similar to C or Java:
       </p>
       <source>
 enum Suit {
@@ -144,7 +144,7 @@ fixed MD5(16);
     <section id="format_records">
       <title>Defining Records and Errors</title>
       <p>
-        Records are defined in GenAvro using a syntax similar to a <code>struct</code> definition in C:
+        Records are defined in Avro IDL using a syntax similar to a <code>struct</code> definition in C:
       </p>
       <source>
 record Employee {
@@ -169,7 +169,7 @@ error Kaboom {
       <p>
         Each field in a record or error consists of a type and a name, along with optional property annotations.
       </p>
-      <p>A type reference in GenAvro must be one of:</p>
+      <p>A type reference in Avro IDL must be one of:</p>
       <ul>
         <li>A primitive type</li>
         <li>A named schema defined prior to this usage in the same Protocol</li>
@@ -178,7 +178,7 @@ error Kaboom {
 
       <section id="primitive_types">
         <title>Primitive Types</title>
-        <p>The primitive types supported by GenAvro are the same as those supported by Avro's JSON format.
+        <p>The primitive types supported by Avro IDL are the same as those supported by Avro's JSON format.
         This list includes <code>int</code>, <code>long</code>, <code>string</code>, <code>boolean</code>,
         <code>float</code>, <code>double</code>, <code>null</code>, and <code>bytes</code>.
         </p>
@@ -186,7 +186,7 @@ error Kaboom {
 
       <section id="schema_references">
         <title>References to Named Schemata</title>
-        <p>If a named schema has already been defined in the same GenAvro file, it may be referenced by name
+        <p>If a named schema has already been defined in the same Avro IDL file, it may be referenced by name
         as if it were a primitive type:
         </p>
         <source>
@@ -227,7 +227,7 @@ record RecordWithUnion {
 }
           </source>
           <p>
-            Note that the same restrictions apply to GenAvro unions as apply to unions defined in the
+            Note that the same restrictions apply to Avro IDL unions as apply to unions defined in the
             JSON format; namely, a record may not contain multiple elements of the same type.
           </p>
         </section> <!-- unions -->
@@ -235,7 +235,7 @@ record RecordWithUnion {
     </section> <!-- how to define records -->
     <section id="define_messages">
       <title>Defining RPC Messages</title>
-      <p>The syntax to define an RPC message within a GenAvro protocol is similar to the syntax for
+      <p>The syntax to define an RPC message within a Avro IDL protocol is similar to the syntax for
       a method declaration within a C header file or a Java interface. To define an RPC message
       <code>add</code> which takes two arguments named <code>foo</code> and <code>bar</code>,
       returning an <code>int</code>, simply include the following definition within the protocol:
@@ -261,7 +261,7 @@ void goKaboom() throws Kaboom;
       <title>Other Language Features</title>
       <section id="minutiae_comments">
         <title>Comments</title>
-        <p>All Java-style comments are supported within a GenAvro file. Any text following
+        <p>All Java-style comments are supported within a Avro IDL file. Any text following
         <code>//</code> on a line is ignored, as is any text between <code>/*</code> and
         <code>*/</code>, possibly spanning multiple lines.</p>
       </section>
@@ -280,7 +280,7 @@ void `error`();
         <title>Annotations for Ordering and Namespaces</title>
         <p>
           Java-style annotations may be used to add additional properties to types throughout
-          GenAvro. For example, to specify the sort order of a field within a record, one may use
+          Avro IDL. For example, to specify the sort order of a field within a record, one may use
           the <code>@order</code> annotation as follows:
         </p>
         <source>
@@ -316,10 +316,10 @@ protocol MyProto {
     </section>
     <section id="example">
       <title>Complete Example</title>
-      <p>The following is a complete example of a GenAvro file that shows most of the above features:</p>
+      <p>The following is a complete example of a Avro IDL file that shows most of the above features:</p>
       <source>
 /**
- * An example protocol in GenAvro
+ * An example protocol in Avro IDL
  */
 @namespace("org.apache.avro.test")
 protocol Simple {
@@ -356,7 +356,7 @@ protocol Simple {
   void `error`() throws TestError;
 }
       </source>
-      <p>Additional examples may be found in the Avro source tree under the <code>src/test/genavro/input</code> directory.</p>
+      <p>Additional examples may be found in the Avro source tree under the <code>src/test/idl/input</code> directory.</p>
     </section>
   </body>
 </document>

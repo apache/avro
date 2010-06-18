@@ -46,7 +46,7 @@ public class Main {
         new DataFileReadTool(),
         new DataFileWriteTool(),
         new DataFileGetSchemaTool(),
-        new GenAvroTool(),
+        new IdlTool(),
         new RpcReceiveTool(),
         new RpcSendTool(),
         new FromTextTool(),

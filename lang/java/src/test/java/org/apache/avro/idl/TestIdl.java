@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.avro.genavro;
+package org.apache.avro.idl;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,20 +34,20 @@ import java.io.InputStreamReader;
 import org.apache.avro.Protocol;
 
 /**
- * Simple test harness for GenAvro.
+ * Simple test harness for Idl.
  * This relies on an input/ and output/ directory. Inside
- * the input/ directory are .genavro files. Each file should have
+ * the input/ directory are .avdl files. Each file should have
  * a corresponding .avpr file in output/. When the test is run,
- * it generates and stringifies each .genavro file and compares
+ * it generates and stringifies each .avdl file and compares
  * it to the expected output, failing if the two differ.
  *
  * To make it simpler to write these tests, you can run
- *   ant -Dtestcase=TestGenAvro -Dtest.genavro.mode=write
+ *   ant -Dtestcase=TestIdl -Dtest.idl.mode=write
  * which will *replace* all expected output.
  */
-public class TestGenAvro {
+public class TestIdl {
   private static final File TEST_DIR =
-    new File(System.getProperty("test.genavro.dir"));
+    new File(System.getProperty("test.idl.dir"));
 
   private static final File TEST_INPUT_DIR =
     new File(TEST_DIR, "input");
@@ -56,7 +56,7 @@ public class TestGenAvro {
     new File(TEST_DIR, "output");
 
   private static final String TEST_MODE =
-    System.getProperty("test.genavro.mode", "run");
+    System.getProperty("test.idl.mode", "run");
 
   private List<GenTest> tests;
 
@@ -68,12 +68,12 @@ public class TestGenAvro {
 
     tests = new ArrayList<GenTest>();
     for (File inF : TEST_INPUT_DIR.listFiles()) {
-      if (!inF.getName().endsWith(".genavro")) continue;
+      if (!inF.getName().endsWith(".avdl")) continue;
       if (inF.getName().startsWith(".")) continue;
 
       File outF = new File(
         TEST_OUTPUT_DIR,
-        inF.getName().replaceFirst("\\.genavro$", ".avpr"));
+        inF.getName().replaceFirst("\\.avdl$", ".avpr"));
       tests.add(new GenTest(inF, outF));
     }
   }
@@ -121,7 +121,7 @@ public class TestGenAvro {
     }
 
     private String generate() throws Exception {
-      GenAvro parser = new GenAvro(new FileInputStream(in), "UTF-8");
+      Idl parser = new Idl(new FileInputStream(in), "UTF-8");
       Protocol p = parser.CompilationUnit();
       return p.toString(true);
     }

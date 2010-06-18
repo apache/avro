@@ -19,7 +19,7 @@
 package org.apache.avro.tool;
 
 import org.apache.avro.Protocol;
-import org.apache.avro.genavro.GenAvro;
+import org.apache.avro.idl.Idl;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,9 +29,9 @@ import java.util.List;
 
 /**
  * Tool implementation for generating Avro JSON schemata from
- * genavro format files.
+ * idl format files.
  */
-public class GenAvroTool implements Tool {
+public class IdlTool implements Tool {
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err,
                   List<String> args) throws Exception {
@@ -42,7 +42,7 @@ public class GenAvroTool implements Tool {
     if (args.size() > 2 ||
         (args.size() == 1 && (args.get(0).equals("--help") ||
                               args.get(0).equals("-help")))) {
-      err.println("Usage: GenAvroTool [in] [out]");
+      err.println("Usage: idl [in] [out]");
       err.println("");
       err.println("If an output path is not specified, outputs to stdout.");
       err.println("If no input or output is specified, takes input from");
@@ -60,7 +60,7 @@ public class GenAvroTool implements Tool {
     }
 
 
-    GenAvro parser = new GenAvro(parseIn);
+    Idl parser = new Idl(parseIn);
     Protocol p = parser.CompilationUnit();
     parseOut.print(p.toString(true));
     return 0;
@@ -68,11 +68,11 @@ public class GenAvroTool implements Tool {
 
   @Override
   public String getName() {
-    return "genavro";
+    return "idl";
   }
 
   @Override
   public String getShortDescription() {
-    return "Generates a JSON schema from a GenAvro file";
+    return "Generates a JSON schema from an Avro IDL file";
   }
 }

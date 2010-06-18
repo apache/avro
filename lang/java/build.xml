@@ -51,8 +51,8 @@
   <property name="test.junit.output.format" value="plain"/>
   <property name="test.java.src.dir" value="${basedir}/src/test/java"/>
   <property name="test.schemata.dir" value="${share.dir}/test/schemas"/>
-  <property name="test.genavro.dir" value="${basedir}/src/test/genavro"/>
-  <property name="test.genavro.mode" value="run" />
+  <property name="test.idl.dir" value="${basedir}/src/test/idl"/>
+  <property name="test.idl.mode" value="run" />
   <property name="test.java.build.dir" value="${build.dir}/test"/>
   <property name="test.java.generated.build.dir" value="${test.java.build.dir}/generated"/>
   <property name="test.java.generated.dir" value="${test.java.generated.build.dir}/src"/>
@@ -142,15 +142,15 @@
 
   <target name="javacc-check" depends="ivy-retrieve-build">
   <uptodate property="javacc.uptodate"
-            srcfile="${java.src.dir}/org/apache/avro/genavro/genavro.jj"
-            targetfile="${build.dir}/src/org/apache/avro/genavro"/>
+            srcfile="${java.src.dir}/org/apache/avro/idl/idl.jj"
+            targetfile="${build.dir}/src/org/apache/avro/idl"/>
   </target>
 
   <target name="javacc" depends="javacc-check" unless="javacc.uptodate">
-    <mkdir dir="${build.dir}/src/org/apache/avro/genavro"/>
+    <mkdir dir="${build.dir}/src/org/apache/avro/idl"/>
     <copy tofile="${ivy.lib}/javacc.jar" file="${ivy.lib}/javacc-5.0.jar"/>
-    <javacc target="${java.src.dir}/org/apache/avro/genavro/genavro.jj"
-            outputdirectory="${build.dir}/src/org/apache/avro/genavro"
+    <javacc target="${java.src.dir}/org/apache/avro/idl/idl.jj"
+            outputdirectory="${build.dir}/src/org/apache/avro/idl"
             javacchome="${ivy.lib}"/>
   </target>
 
@@ -350,8 +350,8 @@
         <sysproperty key="test.dir" value="@{test.dir}"/>
         <sysproperty key="share.dir" value="${share.dir}"/>
         <sysproperty key="test.validate" value="${test.validate}"/>
-        <sysproperty key="test.genavro.dir" value="${test.genavro.dir}" />
-        <sysproperty key="test.genavro.mode" value="${test.genavro.mode}" />
+        <sysproperty key="test.idl.dir" value="${test.idl.dir}" />
+        <sysproperty key="test.idl.mode" value="${test.idl.mode}" />
         <classpath refid="test.java.classpath"/>
         <formatter type="${test.junit.output.format}"/>
         <batchtest todir="${test.java.build.dir}" unless="testcase">

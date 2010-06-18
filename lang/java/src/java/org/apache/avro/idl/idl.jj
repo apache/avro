@@ -56,9 +56,9 @@ options {
   JDK_VERSION = "1.6";
 }
 
-PARSER_BEGIN(GenAvro)
+PARSER_BEGIN(Idl)
 
-package org.apache.avro.genavro;
+package org.apache.avro.idl;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -80,13 +80,13 @@ import org.apache.commons.lang.StringEscapeUtils;
  * Note: each instance is not thread-safe, but multiple separate
  * instances are safely independent.
  */
-public class GenAvro
+public class Idl
 {
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
 }
 
-PARSER_END(GenAvro)
+PARSER_END(Idl)
 
 /* WHITE SPACE */
 
@@ -894,11 +894,11 @@ TOKEN :
 
 
 /********************************************
- * THE GENAVRO LANGUAGE GRAMMAR STARTS HERE *
+ * THE AVRO IDL LANGUAGE GRAMMAR STARTS HERE *
  ********************************************/
 
 /**
- * The input to genavro is a CompilationUnit, which is currently
+ * The input to Idl is a CompilationUnit, which is currently
  * just a single Protocol.
  */
 Protocol CompilationUnit():
