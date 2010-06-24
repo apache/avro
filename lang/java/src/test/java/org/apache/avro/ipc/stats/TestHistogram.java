@@ -19,6 +19,7 @@ package org.apache.avro.ipc.stats;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,7 +47,38 @@ public class TestHistogram {
     assertArrayEquals(new int[] { 1, 1, 2, 4, 8, 4 }, h.getHistogram());
 
     assertEquals("[0,1)=1;[1,2)=1;[2,4)=2;[4,8)=4;[8,16)=8;[16,infinity)=4", h.toString());
+    
+    String[] correctBucketLabels = {
+        "[0,1)", "[1,2)", "[2,4)", "[4,8)", "[8,16)", "[16,infinity)"};
+    
+    // test bucket iterator
+    int pos = 0;
+    Iterator<String> it = h.getSegmenter().getBuckets();
+    while (it.hasNext()) {
+      assertEquals(correctBucketLabels[pos], it.next());
+      pos = pos + 1;
+    }
+    assertEquals(correctBucketLabels.length, pos);
+    
+    List<String> labels = h.getSegmenter().getBucketLabels();
+    assertEquals(correctBucketLabels.length, labels.size());
+    if (labels.size() == correctBucketLabels.length) {
+      for (int i = 0; i < labels.size(); i++) {
+        assertEquals(correctBucketLabels[i], labels.get(i));
+      }
+    }
 
+    String[] correctBoundryLabels = {
+        "0", "1", "2", "4", "8", "16"};
+    List<String> boundryLabels = h.getSegmenter().getBoundaryLabels();
+    
+    assertEquals(correctBoundryLabels.length, boundryLabels.size());
+    if (boundryLabels.size() == correctBoundryLabels.length) {
+      for (int i = 0; i < boundryLabels.size(); i++) {
+        assertEquals(correctBoundryLabels[i], boundryLabels.get(i));
+      }
+    }
+    
     List<Entry<String>> entries = new ArrayList<Entry<String>>();
     for (Entry<String> entry : h.entries()) {
       entries.add(entry);
@@ -54,6 +86,13 @@ public class TestHistogram {
     assertEquals("[0,1)", entries.get(0).bucket);
     assertEquals(4, entries.get(5).count);
     assertEquals(6, entries.size());
+    
+    h.add(1010);
+    h.add(9191);
+    List<Integer> recent = h.getRecentAdditions();
+    assertTrue(recent.contains(1010));
+    assertTrue(recent.contains(9191));
+    
   }
 
   @Test(expected=Histogram.SegmenterException.class)
@@ -71,12 +110,21 @@ public class TestHistogram {
     public Iterator<String> getBuckets() {
       return Arrays.asList("X").iterator();
     }
+    
+    public List<String> getBoundaryLabels() {
+      return Arrays.asList("X");
+    }
+    
+    public List<String> getBucketLabels() {
+      return Arrays.asList("X");
+    }
 
     @Override
     public int segment(Float value) { return 0; }
 
     @Override
     public int size() { return 1; }
+
   }
 
   @Test

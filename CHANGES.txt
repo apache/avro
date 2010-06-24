@@ -23,6 +23,8 @@ Avro 1.4.0 (unreleased)
     (Patrick Wendell via cutting)
 
   IMPROVEMENTS
+    AVRO-584. Update Histogram for Stats Plugin
+    (Patrick Wendell via philz)
 
     AVRO-501. missing function in C api to access array elements after 
     decoding an array. (Bruce Mitchener via massie)

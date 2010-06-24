@@ -17,14 +17,18 @@
  */
 package org.apache.avro.ipc.stats;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
 /**
  * Represents a histogram of values.  This class uses a {@link Segmenter}
- * to determine which bucket to place a given value into.
+ * to determine which bucket to place a given value into. Also stores the last
+ * MAX_HISTORY_SIZE entries which have been added to this histogram, in order.
  *
  * Note that Histogram, by itself, is not synchronized.
  * @param <B> Bucket type.  Often String, since buckets are typically
@@ -32,9 +36,15 @@ import java.util.TreeMap;
  * @param <T> Type of value
  */
 class Histogram<B, T> {
+  /**
+   * How many recent additions we should track.
+   */
+  public static final int MAX_HISTORY_SIZE = 20; 
+  
   private Segmenter<B, T> segmenter;
   private int[] counts;
   protected int totalCount;
+  private LinkedList<T> recentAdditions;
 
   /**
    * Interface to determine which bucket to place a value in.
@@ -57,6 +67,17 @@ class Histogram<B, T> {
      * is consistent with the segment numbers.
      */
     Iterator<B> getBuckets();
+    
+    /**
+     * Returns a List of bucket boundaries. Useful for printing
+     * segmenters.
+     */
+    List<String> getBoundaryLabels();
+    
+    /**
+     * Returns the bucket labels as an array;
+     */
+    List<String> getBucketLabels();
   }
 
   public static class SegmenterException extends RuntimeException {
@@ -95,20 +116,41 @@ class Histogram<B, T> {
     private String rangeAsString(T a, T b) {
       return String.format("[%s,%s)", a, b == null ? "infinity" : b);
     }
-
+    
+    @Override
+    public ArrayList<String> getBoundaryLabels() {
+      ArrayList<String> outArray = new ArrayList<String>(index.keySet().size());
+      for (T obj: index.keySet()) {
+        outArray.add(obj.toString());
+      }
+      return outArray;
+    }
+    
+    @Override
+    public ArrayList<String> getBucketLabels() {
+      ArrayList<String> outArray = new ArrayList<String>(index.keySet().size());
+      Iterator<String> bucketsIt = this.getBuckets();
+      while (bucketsIt.hasNext()) {
+        outArray.add(bucketsIt.next());
+      }
+      return outArray;
+    }
+    
     @Override
     public Iterator<String> getBuckets() {
       return new Iterator<String>() {
         Iterator<T> it = index.keySet().iterator();
         T cur = it.next(); // there's always at least one element
-
+        int pos = 0;
+        
         @Override
         public boolean hasNext() {
-          return it.hasNext();
+          return (pos < index.keySet().size());
         }
 
         @Override
         public String next() {
+          pos = pos + 1;
           T left = cur;
           cur = it.hasNext() ? it.next() : null;
           return rangeAsString(left, cur);
@@ -117,7 +159,6 @@ class Histogram<B, T> {
         @Override
         public void remove() {
           throw new UnsupportedOperationException();
-
         }
       };
     }
@@ -129,6 +170,7 @@ class Histogram<B, T> {
   public Histogram(Segmenter<B, T> segmenter) {
     this.segmenter = segmenter;
     this.counts = new int[segmenter.size()];
+    this.recentAdditions = new LinkedList<T>();
   }
 
   /** Tallies a value in the histogram. */
@@ -136,6 +178,10 @@ class Histogram<B, T> {
     int i = segmenter.segment(value);
     counts[i]++;
     totalCount++;
+    if (this.recentAdditions.size() > Histogram.MAX_HISTORY_SIZE) {
+      this.recentAdditions.pollLast();
+    }
+    this.recentAdditions.push(value);
   }
 
   /**
@@ -144,11 +190,27 @@ class Histogram<B, T> {
   public int[] getHistogram() {
     return counts;
   }
+  
+  /**
+   * Returns the underlying segmenter used for this histogram.
+   */
+  public Segmenter<B, T> getSegmenter() {
+    return this.segmenter;
+  }
+  
+  /**
+   * Returns values recently added to this histogram. These are in reverse
+   * order (most recent first).
+   */
+  public List<T> getRecentAdditions() {
+    return this.recentAdditions;
+  }
 
   /** Returns the total count of entries. */
   public int getCount() {
     return totalCount;
   }
+  
 
   public String toString() {
     StringBuilder sb = new StringBuilder();
