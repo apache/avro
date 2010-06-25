@@ -19,6 +19,7 @@ package org.apache.avro.ipc;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Protocol.Message;
@@ -28,7 +29,9 @@ import org.apache.avro.util.Utf8;
  * This class represents the context of an RPC call or RPC handshake.
  * Designed to provide information to RPC plugin writers,
  * this class encapsulates information about the rpc exchange,
- * including handshake and call metadata.
+ * including handshake and call metadata. Note: this data includes
+ * full copies of the RPC payload, so plugins which store RPCContexts
+ * beyond the life of each call should be conscious of memory use.
  *
  */
 public class RPCContext {
@@ -39,6 +42,8 @@ public class RPCContext {
   protected Object response;
   protected Exception error;
   private Message message;
+  List<ByteBuffer> requestPayload;
+  List<ByteBuffer> responsePayload;
   
   /**
    * This is an access method for the handshake state
@@ -148,10 +153,44 @@ public class RPCContext {
   public boolean isError() {
     return error != null;
   }
-
+  
+  /** Sets the {@link Message} corresponding to this RPC */
   public void setMessage(Message message) {
     this.message = message;    
   }
   
+  /** Returns the {@link Message} corresponding to this RPC
+   * @return this RPC's {@link Message} 
+   */
   public Message getMessage() { return message; }
+  
+  /** Sets the serialized payload of the request in this RPC. Will
+   * not include handshake or meta-data. */
+  public void setRequestPayload(List<ByteBuffer> payload) {
+    this.requestPayload = payload;
+  }
+ 
+  /** Returns the serialized payload of the request in this RPC. Will
+   * not include handshake or meta-data. If the request payload has not been
+   * set yet, returns null.
+   * 
+   * @return this RPC's request payload.*/
+  public List<ByteBuffer> getRequestPayload() {
+    return this.requestPayload;
+  }
+  
+  /** Returns the serialized payload of the response in this RPC. Will
+   * not include handshake or meta-data. If the response payload has not been
+   * set yet, returns null.
+   * 
+   * @return this RPC's response payload.*/
+  public List<ByteBuffer> getResponsePayload() {
+    return this.responsePayload;
+  }
+  
+  /** Sets the serialized payload of the response in this RPC. Will
+   * not include handshake or meta-data. */
+  public void setResponsePayload(List<ByteBuffer> payload) {
+    this.responsePayload = payload;
+  }
 }

@@ -22,6 +22,9 @@ Avro 1.4.0 (unreleased)
     AVRO-567. Add command-line tools for text file import & export.
     (Patrick Wendell via cutting)
 
+    AVRO-578. Java: add payload data to RPC context for use by
+    plugins.  (Patrick Wendell via cutting)
+
   IMPROVEMENTS
     AVRO-584. Update Histogram for Stats Plugin
     (Patrick Wendell via philz)

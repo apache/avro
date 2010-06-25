@@ -92,28 +92,36 @@ public abstract class Requestor {
     do {
       ByteBufferOutputStream bbo = new ByteBufferOutputStream();
       Encoder out = new BinaryEncoder(bbo);
-
-      writeHandshake(out);                      // prepend handshake if needed
-
+      
       // use local protocol to write request
       m = getLocal().getMessages().get(messageName);
       if (m == null)
         throw new AvroRuntimeException("Not a local message: "+messageName);
       context.setMessage(m);
+    
+      writeRequest(m.getRequest(), request, out); // write request payload
+      List<ByteBuffer> payload = bbo.getBufferList();
       
+      context.setRequestPayload(payload);
       for (RPCPlugin plugin : rpcMetaPlugins) {
-        plugin.clientSendRequest(context);
+        plugin.clientSendRequest(context);        // get meta-data from plugins
       }
       
+      writeHandshake(out);                       // prepend handshake if needed
       META_WRITER.write(context.requestCallMeta(), out);
       out.writeString(m.getName());               // write message name
-      writeRequest(m.getRequest(), request, out); // write request payload
       
+      bbo.append(payload);
+      
+      List<ByteBuffer> requestBytes = bbo.getBufferList();
+
       if (m.isOneWay() && t.isConnected()) {      // send one-way message
-        t.writeBuffers(bbo.getBufferList());
+        t.writeBuffers(requestBytes);
+        
         return null;
       } else {                                    // two-way message
-        List<ByteBuffer> response = t.transceive(bbo.getBufferList());
+        List<ByteBuffer> response = t.transceive(requestBytes);
+        context.setResponsePayload(response);
         ByteBufferInputStream bbi = new ByteBufferInputStream(response);
         in = DecoderFactory.defaultFactory().createBinaryDecoder(bbi, in);
       }

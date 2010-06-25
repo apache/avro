@@ -96,15 +96,18 @@ public abstract class Responder {
     Decoder in = DecoderFactory.defaultFactory().createBinaryDecoder(
         new ByteBufferInputStream(buffers), null);
     ByteBufferOutputStream bbo = new ByteBufferOutputStream();
-    Encoder out = new BinaryEncoder(bbo);
+    BinaryEncoder out = new BinaryEncoder(bbo);
     Exception error = null;
     RPCContext context = new RPCContext();
+    List<ByteBuffer> payload = null;
+    List<ByteBuffer> handshake = null;
     boolean wasConnected = connection != null && connection.isConnected();
     try {
       Protocol remote = handshake(in, out, connection);
       if (remote == null)                        // handshake failed
         return bbo.getBufferList();
-
+      handshake = bbo.getBufferList();
+      
       // read request using remote protocol specification
       context.setRequestCallMeta(META_READER.read(null, in));
       String messageName = in.readString(null).toString();
@@ -112,10 +115,10 @@ public abstract class Responder {
       if (rm == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
       
-      context.setMessage(rm);
-      
       Object request = readRequest(rm.getRequest(), in);
       
+      context.setRequestPayload(buffers);
+      context.setMessage(rm);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.serverReceiveRequest(context);
       }
@@ -129,6 +132,7 @@ public abstract class Responder {
         throw new AvroRuntimeException("Not both one-way: "+messageName);
 
       Object response = null;
+      
       try {
         response = respond(m, request);
         context.setResponse(response);
@@ -140,27 +144,33 @@ public abstract class Responder {
       if (m.isOneWay() && wasConnected)           // no response data
         return null;
 
-      for (RPCPlugin plugin : rpcMetaPlugins) {
-        plugin.serverSendResponse(context);
-      }
-      
-      META_WRITER.write(context.responseCallMeta(), out);
       out.writeBoolean(error != null);
       if (error == null)
         writeResponse(m.getResponse(), response, out);
       else
         writeError(m.getErrors(), error, out);
-
     } catch (Exception e) {                       // system error
       LOG.warn("system error", e);
       context.setError(e);
       bbo = new ByteBufferOutputStream();
       out = new BinaryEncoder(bbo);
-      META_WRITER.write(context.responseCallMeta(), out);
       out.writeBoolean(true);
       writeError(Protocol.SYSTEM_ERRORS, new Utf8(e.toString()), out);
     }
-      
+
+    payload = bbo.getBufferList();
+    
+    // Grab meta-data from plugins
+    context.setResponsePayload(payload);
+    for (RPCPlugin plugin : rpcMetaPlugins) {
+      plugin.serverSendResponse(context);
+    }
+    META_WRITER.write(context.responseCallMeta(), out);
+    
+    // Prepend handshake and append payload
+    bbo.prepend(handshake);
+    bbo.append(payload);
+
     return bbo.getBufferList();
   }
 

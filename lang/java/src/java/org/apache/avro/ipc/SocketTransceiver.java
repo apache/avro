@@ -80,6 +80,7 @@ public class SocketTransceiver extends Transceiver {
     throws IOException {
     if (buffers == null) return;                  // no data to write
     for (ByteBuffer buffer : buffers) {
+      if (buffer.limit() == 0) continue;
       writeLength(buffer.limit());                // length-prefix
       channel.write(buffer);
     }
