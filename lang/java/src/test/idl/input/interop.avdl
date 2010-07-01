@@ -28,18 +28,18 @@ protocol InteropProtocol {
 
   record Node {
     string label;
-    array<Node> children;
+    array<Node> children = [];
   }
 
   record Interop {
-    int intField;
-    long longField;
+    int intField = 1;
+    long longField = -1;
     string stringField;
-    boolean boolField;
-    float floatField;
-    double doubleField;
+    boolean boolField = false;
+    float floatField = 0.0;
+    double doubleField = -1.0e12;
     null nullField;
-    array<double> arrayField;
+    array<double> arrayField = [{"label":"foo", "children":[]}];
     map<Foo> mapField;
     union { boolean, double, array<bytes> } unionFIeld;
     Kind enumField;

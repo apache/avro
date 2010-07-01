@@ -18,7 +18,8 @@
       "type" : {
         "type" : "string",
         "order" : "ignore"
-      }
+      },
+      "default" : "foo"
     }, {
       "name" : "kind",
       "type" : "Kind"
@@ -48,7 +49,10 @@
     "echo" : {
       "request" : [ {
         "name" : "record",
-        "type" : "TestRecord"
+        "type" : "TestRecord",
+        "default" : {
+          "name" : "bar"
+        }
       } ],
       "response" : "TestRecord"
     },
@@ -58,7 +62,8 @@
         "type" : "int"
       }, {
         "name" : "arg2",
-        "type" : "int"
+        "type" : "int",
+        "default" : 0
       } ],
       "response" : "int"
     },

@@ -149,7 +149,7 @@ fixed MD5(16);
       <source>
 record Employee {
   string name;
-  boolean active;
+  boolean active = true;
   long salary;
 }
       </source>
@@ -163,11 +163,12 @@ record Employee {
       <source>
 error Kaboom {
   string explanation;
-  int result_code;
+  int result_code = -1;
 }
       </source>
       <p>
-        Each field in a record or error consists of a type and a name, along with optional property annotations.
+        Each field in a record or error consists of a type and a name,
+        optional property annotations and an optional default value.
       </p>
       <p>A type reference in Avro IDL must be one of:</p>
       <ul>
@@ -196,6 +197,16 @@ record Card {
 }
         </source>
       </section>
+      <section id="default_values">
+        <title>Default Values</title>
+
+	<p>Default values for fields may be optionally
+	specified by using an equals sign after the field name
+	followed by a JSON expression indicating the default value.
+	This JSON is interpreted as described in
+	the <a href="spec.html#schema_record">spec</a>.</p>
+
+      </section> <!-- default values -->
       <section id="complex_types">
         <title>Complex Types</title>
 
@@ -241,8 +252,10 @@ record RecordWithUnion {
       returning an <code>int</code>, simply include the following definition within the protocol:
       </p>
       <source>
-int add(int foo, int bar);
+int add(int foo, int bar = 0);
       </source>
+      <p>Message arguments, like record fields, may specify default
+      values.</p>
       <p>To define a message with no response, you may use the alias <code>void</code>, equivalent
       to the Avro <code>null</code> type:
       </p>

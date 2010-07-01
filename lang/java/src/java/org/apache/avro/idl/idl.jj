@@ -72,6 +72,9 @@ import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.*;
+
 import org.apache.commons.lang.StringEscapeUtils;
 
 /**
@@ -82,6 +85,8 @@ import org.apache.commons.lang.StringEscapeUtils;
  */
 public class Idl
 {
+  static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
+
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
 }
@@ -162,9 +167,11 @@ TOKEN :
 TOKEN :
 {
   < INTEGER_LITERAL:
-        <DECIMAL_LITERAL> (["l","L"])?
+  ("-")?
+    (   <DECIMAL_LITERAL> (["l","L"])?
       | <HEX_LITERAL> (["l","L"])?
       | <OCTAL_LITERAL> (["l","L"])?
+        )  
   >
 |
   < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
@@ -174,8 +181,8 @@ TOKEN :
   < #OCTAL_LITERAL: "0" (["0"-"7"])* >
 |
   < FLOATING_POINT_LITERAL:
-        <DECIMAL_FLOATING_POINT_LITERAL>
-      | <HEXADECIMAL_FLOATING_POINT_LITERAL>
+  ("-")?
+    ( <DECIMAL_FLOATING_POINT_LITERAL> | <HEXADECIMAL_FLOATING_POINT_LITERAL> )
   >
 |
   < #DECIMAL_FLOATING_POINT_LITERAL:
@@ -879,9 +886,13 @@ TOKEN :
 | < RPAREN: ")" >
 | < LBRACE: "{" >
 | < RBRACE: "}" >
+| < LBRACK: "[" >
+| < RBRACK: "]" >
+| < COLON:  ":" >
 | < SEMICOLON: ";" >
 | < COMMA: "," >
 | < AT: "@" >
+| < EQUALS: "=" >
 | < DOT: "." >
 }
 
@@ -1103,7 +1114,7 @@ void SchemaProperty(Map<String, String> properties):
   String val;
 }
 {
-  "@" key = Identifier() "(" val = Literal() ")"
+  "@" key = Identifier() "(" val = JsonString() ")"
   {
     if (properties.containsKey(key)) {
       throw new ParseException("Property '" + key + "' already specified " +
@@ -1138,11 +1149,15 @@ void FieldDeclaration(List<Field> fields):
 void VariableDeclarator(Schema type, List<Field> fields):
 {
   String name;
+  JsonNode defaultValue = null;
 }
 {
   name = Identifier()
+
+    [ <EQUALS> defaultValue=Json() ]
+    
   {
-    fields.add(new Field(name, type, null, null));
+    fields.add(new Field(name, type, null, defaultValue));
   }
 }
 
@@ -1292,46 +1307,6 @@ Schema ResultType():
   | schema = Type() { return schema; }
 }
 
-
-String Literal():
-{ Token t; }
-{
-  (
-    t = <INTEGER_LITERAL>
-  | t = <FLOATING_POINT_LITERAL>
-  | t = <CHARACTER_LITERAL>
-  | t = BooleanLiteral()
-  | t = NullLiteral()
-  )
-  {
-    return t.image;
-  }
-| t = <STRING_LITERAL>
-  {
-    String betweenQuotes = t.image.substring(1, t.image.length() - 1);
-    return StringEscapeUtils.unescapeJavaScript(betweenQuotes);
-  }
-}
-
-Token BooleanLiteral():
-{ Token t; }
-{
-  (   t = "true"
-    | t = "false"
-  )
-  {
-    return t;
-  }
-}
-
-Token NullLiteral():
-{
-  Token t;
-}
-{
-  t = "null" { return t; }
-}
-
 String Identifier():
 {
   Token t;
@@ -1371,4 +1346,67 @@ Token AnyIdentifier():
   {
     return t;
   }
+}
+
+JsonNode Json() :
+{ String s; Token t; JsonNode n; }
+{ 
+( s = JsonString() { n = new TextNode(s); }
+| (t=<INTEGER_LITERAL> { n = new LongNode(Long.parseLong(t.image)); })
+| (t=<FLOATING_POINT_LITERAL> {n=new DoubleNode(Double.parseDouble(t.image));})
+| n=JsonObject()
+| n=JsonArray()
+| ( "true" { n = BooleanNode.TRUE; } )
+| ( "false" { n = BooleanNode.FALSE; } )
+| ( "null" { n = NullNode.instance; } )
+ )
+  { return n; }
+}
+
+String JsonString() :
+{ Token t; }
+{
+  t = <STRING_LITERAL>
+  {
+    String betweenQuotes = t.image.substring(1, t.image.length() - 1);
+    return StringEscapeUtils.unescapeJavaScript(betweenQuotes);
+  }
+}
+
+JsonNode JsonObject() :
+{ 
+  ObjectNode o = FACTORY.objectNode();
+}
+{
+  "{" [ JsonFields(o) ] "}"
+  { return o; }
+}
+
+void JsonFields(ObjectNode o) :
+{}
+{
+  JsonPair(o) [ "," JsonFields(o) ]
+}
+
+void JsonPair(ObjectNode o) :
+{
+  String name;
+  JsonNode value;
+}
+{
+  name=JsonString() <COLON> value=Json()
+    { o.put(name, value); } 
+}
+
+JsonNode JsonArray() :
+{ ArrayNode a = FACTORY.arrayNode(); }
+{
+  <LBRACK> [ JsonElements(a) ] <RBRACK>
+    { return a; }
+}
+
+void JsonElements(ArrayNode a) :
+{ JsonNode element; }
+{
+  element=Json() { a.add(element); } [ "," JsonElements(a) ]
 }

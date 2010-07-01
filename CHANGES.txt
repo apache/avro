@@ -57,6 +57,8 @@ Avro 1.4.0 (unreleased)
     AVRO-150. Java: fix compiler to not re-generate up-to-date code.
     (John Yu via cutting)
 
+    AVRO-494. Add support for default values to IDL.  (cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

@@ -31,7 +31,7 @@ protocol Simple {
 
   record TestRecord {
     @order("ignore")
-    string name;
+    string name = "foo";
 
     @order("descending")
     Kind kind;
@@ -46,8 +46,8 @@ protocol Simple {
   }
 
   string hello(string greeting);
-  TestRecord echo(TestRecord `record`);
-  int add(int arg1, int arg2);
+  TestRecord echo(TestRecord `record` = {"name": "bar"});
+  int add(int arg1, int arg2 = 0);
   bytes echoBytes(bytes data);
   void `error`() throws TestError;
 }
