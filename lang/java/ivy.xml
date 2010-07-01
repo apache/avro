@@ -65,6 +65,7 @@
                 conf="build->default;test->default;tools->default" transitive="false"/>
     <dependency org="commons-httpclient" name="commons-httpclient" rev="3.0.1"
 		conf="test->default;tools->default"/>
+    <dependency org="org.jboss.netty" name="netty" rev="3.2.1.Final"/>
   </dependencies>
 
 </ivy-module>

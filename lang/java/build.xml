@@ -184,27 +184,38 @@
     <!-- ensure that ivy taskdef is only run once, otw ant will error -->
     <property name="ivy.initialized" value="true"/>
   </target>
+  
+  <target name="ivy-retrieve-netty">
+    <ivy:settings id="ivy.jboss.settings" 
+        file="${basedir}/ivysettings-jboss-repos.xml" />
+    <ivy:retrieve type="jar" conf="default"
+        settingsRef="ivy.jboss.settings"
+        pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
+    <ivy:retrieve type="bundle" conf="default"
+        settingsRef="ivy.jboss.settings"
+        pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
+  </target>
 
-  <target name="ivy-retrieve" depends="init,ivy-init">
+  <target name="ivy-retrieve" depends="init,ivy-init,ivy-retrieve-netty">
     <ivy:retrieve type="jar" conf="default"
 		  pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
   </target>
 
-  <target name="ivy-retrieve-tools" depends="init,ivy-init">
+  <target name="ivy-retrieve-tools" depends="init,ivy-init,ivy-retrieve-netty">
     <!-- Place in separate directory, since these artificats will
          be packaged in the tools jar. -->
     <ivy:retrieve type="jar" conf="tools"
 		  pattern="${ivy.lib}/tools/[artifact]-[revision].[ext]"/>
   </target>
 
-  <target name="ivy-retrieve-test" depends="init,ivy-init">
+  <target name="ivy-retrieve-test" depends="init,ivy-init,ivy-retrieve-netty">
     <ivy:retrieve type="jar" conf="test"
 		  pattern="${ivy.test.lib}/[artifact]-[revision].[ext]"/>
   </target>
 
-  <target name="ivy-retrieve-build" depends="init,ivy-init">
+  <target name="ivy-retrieve-build" depends="init,ivy-init,ivy-retrieve-netty">
     <ivy:retrieve type="jar" conf="build"
-		  pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
+          pattern="${ivy.lib}/[artifact]-[revision].[ext]"/>
   </target>
 
   <macrodef name="java-compiler">

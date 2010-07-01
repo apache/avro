@@ -25,6 +25,9 @@ Avro 1.4.0 (unreleased)
     AVRO-578. Java: add payload data to RPC context for use by
     plugins.  (Patrick Wendell via cutting)
 
+    AVRO-405: Java: Add Netty-based RPC transceiver and server
+    implementation. (Harry Wang via cutting)
+
   IMPROVEMENTS
     AVRO-584. Update Histogram for Stats Plugin
     (Patrick Wendell via philz)
