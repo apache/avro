@@ -175,6 +175,19 @@ public class TestResolvingIOResolving {
             "[ \"long\", \"string\"]", "U0L", new Object[] { 100L } },
         { "[ \"int\", \"string\"]", "U0I", new Object[] { 100 },
             "\"long\"", "L", new Object[] { 100 } },
+        // Record where union field is skipped.
+        { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f0\", \"type\":\"boolean\"},"
+          + "{\"name\":\"f1\", \"type\":\"int\"},"
+          + "{\"name\":\"f2\", \"type\":[\"int\", \"long\"]},"
+          + "{\"name\":\"f3\", \"type\":\"float\"}"
+          + "]}", "BIU0IF",
+          new Object[] { true, 100, 121, 10.75f },
+          "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+          + "{\"name\":\"f0\", \"type\":\"boolean\"},"
+          + "{\"name\":\"f1\", \"type\":\"long\"},"
+          + "{\"name\":\"f3\", \"type\":\"double\"}]}", "BLD",
+          new Object[] { true, 100L, 10.75d } },
     };
   }
 }

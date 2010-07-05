@@ -54,7 +54,7 @@ public class TestResolvingIO {
   
   @Test
   public void testIdentical() throws IOException {
-    performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsRdrSchm, sRdrCls);
+    performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsWrtSchm, sWrtCls);
   }
 
   private static final int COUNT = 10;

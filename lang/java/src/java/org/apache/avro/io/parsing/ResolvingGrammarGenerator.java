@@ -249,8 +249,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         Field rf = reader.getField(fname);
         if (rf == null) {
           production[--count] =
-            new Symbol.SkipAction(super.generate(wf.schema(),
-              seen));
+            new Symbol.SkipAction(generate(wf.schema(), wf.schema(), seen));
         } else {
           production[--count] =
             generate(wf.schema(), rf.schema(), seen);
