@@ -36,6 +36,7 @@ public class TestProtocolSpecificMeta extends TestProtocolSpecific {
     responder.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     responder.addRPCPlugin(new RPCMetaTestPlugin("key2"));
     server = new SocketServer(responder, new InetSocketAddress(0));
+    server.start();
     
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);

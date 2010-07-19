@@ -72,6 +72,7 @@ public class TestProtocolReflect {
     if (server != null) return;
     server = new SocketServer(new ReflectResponder(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
+    server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     proxy = (Simple)ReflectRequestor.getClient(Simple.class, client);
   }

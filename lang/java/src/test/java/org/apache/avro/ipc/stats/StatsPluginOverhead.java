@@ -97,7 +97,9 @@ public class StatsPluginOverhead {
       r.addRPCPlugin(new StatsPlugin());
     }
     // Start Avro server
-    return new HttpServer(r, 0);
+    HttpServer server = new HttpServer(r, 0);
+    server.start();
+    return server;
   }
 
 }

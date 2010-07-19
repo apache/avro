@@ -28,6 +28,7 @@ public class TestNettyServer {
     System.out.println("starting server...");
     Responder responder = new SpecificResponder(Mail.class, new MailImpl());
     Server server = new NettyServer(responder, new InetSocketAddress(0));
+    server.start();
     Thread.sleep(1000); // waiting for server startup
 
     int serverPort = server.getPort();

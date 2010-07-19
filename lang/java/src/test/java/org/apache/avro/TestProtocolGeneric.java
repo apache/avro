@@ -101,6 +101,7 @@ public class TestProtocolGeneric {
   public void testStartServer() throws Exception {
     if (server != null) return;
     server = new SocketServer(new TestResponder(), new InetSocketAddress(0));
+    server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     requestor = new GenericRequestor(PROTOCOL, client);
   }

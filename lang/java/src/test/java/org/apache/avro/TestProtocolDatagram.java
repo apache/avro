@@ -36,6 +36,7 @@ public class TestProtocolDatagram extends TestProtocolSpecific {
       new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
                          new InetSocketAddress("localhost",
                                                new Random().nextInt(10000)+10000));
+    server.start();
     client = new DatagramTransceiver(new InetSocketAddress("localhost", server.getPort()));
     proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
   }

@@ -33,6 +33,7 @@ public class TestNamespaceReflect extends TestNamespaceSpecific {
     if (server != null) return;
     server = new SocketServer(new ReflectResponder(TestNamespace.class, new TestImpl()),
                               new InetSocketAddress(0));
+    server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     proxy = (TestNamespace)ReflectRequestor.getClient(TestNamespace.class, client);
   }

@@ -46,6 +46,7 @@ public class TetherTaskRunner implements InputProtocol {
     this.inputServer = new SocketServer
       (new SpecificResponder(InputProtocol.class, this),
        new InetSocketAddress(0));
+    inputServer.start();
 
     // open output to parent
     task.open(inputServer.getPort());

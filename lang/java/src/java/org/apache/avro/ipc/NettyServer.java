@@ -67,7 +67,6 @@ public class NettyServer extends Thread implements Server {
 
     setName("AvroNettyServer on " + addr);
     setDaemon(true);
-    start();
   }
 
   @Override

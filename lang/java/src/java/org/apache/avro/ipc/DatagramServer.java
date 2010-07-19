@@ -50,7 +50,6 @@ public class DatagramServer extends Thread implements Server {
 
     setName(name);
     setDaemon(true);
-    start();
   }
 
   public int getPort() { return channel.socket().getLocalPort(); }
@@ -72,6 +71,7 @@ public class DatagramServer extends Thread implements Server {
 
   public static void main(String[] arg) throws Exception {
     DatagramServer server = new DatagramServer(null, new InetSocketAddress(0));
+    server.start();
     System.out.println("started");
     server.join();
   }

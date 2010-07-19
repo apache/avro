@@ -7,6 +7,10 @@ Avro 1.4.0 (unreleased)
     AVRO-372.  Rename GenAvro to be Avro IDL.  The tool name is now
     'idl'.  The file suffix is now '.avdl'.  (cutting)
 
+    AVRO-544. Java: Change Server interface, adding start() and join()
+    methods.  Servers are no longer started in their constructor.
+    (hammer & cutting)
+
   NEW FEATURES
 
     AVRO-493. Add support for Hadoop Mapreduce with Avro data files. (cutting)

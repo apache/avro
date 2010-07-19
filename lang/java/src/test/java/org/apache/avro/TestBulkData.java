@@ -68,6 +68,7 @@ public class TestBulkData {
     server =
       new HttpServer(new SpecificResponder(BulkData.class, new BulkDataImpl()),
                      0);
+    server.start();
     client =
       new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
     proxy = (BulkData)SpecificRequestor.getClient(BulkData.class, client);

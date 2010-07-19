@@ -57,6 +57,7 @@ public class TestNamespaceSpecific {
     if (server != null) return;
     server = new SocketServer(new SpecificResponder(TestNamespace.class, new TestImpl()),
                               new InetSocketAddress(0));
+    server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     proxy = (TestNamespace)SpecificRequestor.getClient(TestNamespace.class, client);
   }

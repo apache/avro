@@ -162,6 +162,7 @@ public class RpcReceiveTool implements Tool {
     
     latch = new CountDownLatch(1);
     server = new HttpServer(new SinkResponder(protocol), uri.getPort());
+    server.start();
     out.println("Port: " + server.getPort());
     return 0;
   }

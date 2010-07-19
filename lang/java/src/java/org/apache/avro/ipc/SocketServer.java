@@ -49,7 +49,6 @@ public class SocketServer extends Thread implements Server {
 
     setName(name);
     setDaemon(true);
-    start();
   }
 
   public int getPort() { return channel.socket().getLocalPort(); }

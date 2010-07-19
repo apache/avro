@@ -63,6 +63,7 @@ class TetheredProcess  {
       this.outputServer = new SocketServer
         (new SpecificResponder(OutputProtocol.class, outputService),
          new InetSocketAddress(0));
+      outputServer.start();
       
       // start sub-process, connecting back to server
       this.subprocess = startSubprocess(job);

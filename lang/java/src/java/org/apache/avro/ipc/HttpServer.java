@@ -29,20 +29,15 @@ import org.mortbay.jetty.servlet.ServletHolder;
 public class HttpServer implements Server {
   private org.mortbay.jetty.Server server;
 
-  /** Starts a server on the named port. */
+  /** Constructs a server to run on the named port. */
   public HttpServer(Responder responder, int port) throws IOException {
     this(new ResponderServlet(responder), port);
   }
 
-  /** Starts a server on the named port. */
+  /** Constructs a server to run on the named port. */
   public HttpServer(ResponderServlet servlet, int port) throws IOException {
     this.server = new org.mortbay.jetty.Server(port);
-    new Context(server,"/").addServlet(new ServletHolder(servlet), "/*");
-    try {
-      server.start();
-    } catch (Exception e) {
-      throw new AvroRuntimeException(e);
-    }
+    new Context(server, "/").addServlet(new ServletHolder(servlet), "/*");
   }
 
   @Override
@@ -55,5 +50,23 @@ public class HttpServer implements Server {
     } catch (Exception e) {
       throw new AvroRuntimeException(e);
     }
+  }
+
+  /** Start the server.
+   * @throws AvroRuntimeException if the underlying Jetty server
+   * throws any exception while starting.
+  */
+  @Override
+  public void start() {
+    try {
+      server.start();
+    } catch (Exception e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
+
+  @Override
+  public void join() throws InterruptedException {
+    server.join();
   }
 }

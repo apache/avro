@@ -75,6 +75,7 @@ public class TestProtocolSpecific {
     if (server != null) return;
     server = new SocketServer(new SpecificResponder(Simple.class, new TestImpl()),
                               new InetSocketAddress(0));
+    server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
   }
@@ -186,6 +187,7 @@ public class TestProtocolSpecific {
       SocketServer server = new SocketServer(
           new SpecificResponder(Simple.class, new TestImpl()),
           new InetSocketAddress(0));
+      server.start();
       File portFile = new File(SERVER_PORTS_DIR, "java-port");
       FileWriter w = new FileWriter(portFile);
       w.write(Integer.toString(server.getPort()));

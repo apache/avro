@@ -166,15 +166,14 @@ public class TestStatsPluginAndServlet {
     r.addRPCPlugin(p);
 
     // Start Avro server
-    new HttpServer(r, Integer.parseInt(args[0]));
+    HttpServer avroServer = new HttpServer(r, Integer.parseInt(args[0]));
+    avroServer.start();
 
     // Ideally we could use the same Jetty server
     Server httpServer = new Server(Integer.parseInt(args[1]));
     new Context(httpServer, "/").addServlet(
         new ServletHolder(new StatsServlet(p)), "/*");
     httpServer.start();
-    while(true) {
-      Thread.sleep(60*1000);
-    }
+    httpServer.join();
   }
 }

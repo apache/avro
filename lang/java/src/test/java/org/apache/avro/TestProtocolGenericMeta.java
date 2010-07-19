@@ -34,6 +34,7 @@ public class TestProtocolGenericMeta extends TestProtocolGeneric {
     responder.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     responder.addRPCPlugin(new RPCMetaTestPlugin("key2"));
     server = new SocketServer(responder, new InetSocketAddress(0));
+    server.start();
     
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     requestor = new GenericRequestor(PROTOCOL, client);
