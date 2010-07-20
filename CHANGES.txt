@@ -66,6 +66,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-494. Add support for default values to IDL.  (cutting)
 
+    AVRO-596. Start Netty server eagerly in constructor.
+    (Patrick Linehan via cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

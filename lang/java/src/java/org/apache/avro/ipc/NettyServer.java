@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
 import org.apache.avro.ipc.NettyTransportCodec.NettyDataPack;
@@ -49,40 +50,20 @@ import org.slf4j.LoggerFactory;
 /**
  * A Netty-based RPC {@link Server} implementation.
  */
-public class NettyServer extends Thread implements Server {
+public class NettyServer implements Server {
   private static final Logger LOG = LoggerFactory.getLogger(NettyServer.class
       .getName());
 
   private Responder responder;
-  private InetSocketAddress addr;
 
   private Channel serverChannel;
   private ChannelGroup allChannels = new DefaultChannelGroup(
       "avro-netty-server");
   private ChannelFactory channelFactory;
-
+  private CountDownLatch closed = new CountDownLatch(1);
+  
   public NettyServer(Responder responder, InetSocketAddress addr) {
     this.responder = responder;
-    this.addr = addr;
-
-    setName("AvroNettyServer on " + addr);
-    setDaemon(true);
-  }
-
-  @Override
-  public void close() {
-    ChannelGroupFuture future = allChannels.close();
-    future.awaitUninterruptibly();
-    channelFactory.releaseExternalResources();
-  }
-
-  @Override
-  public int getPort() {
-    return ((InetSocketAddress) serverChannel.getLocalAddress()).getPort();
-  }
-
-  @Override
-  public void run() {
     channelFactory = new NioServerSocketChannelFactory(Executors
         .newCachedThreadPool(), Executors.newCachedThreadPool());
     ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
@@ -98,6 +79,29 @@ public class NettyServer extends Thread implements Server {
     });
     serverChannel = bootstrap.bind(addr);
     allChannels.add(serverChannel);
+  }
+
+  @Override
+  public void start() {
+    // No-op.
+  }
+  
+  @Override
+  public void close() {
+    ChannelGroupFuture future = allChannels.close();
+    future.awaitUninterruptibly();
+    channelFactory.releaseExternalResources();
+    closed.countDown();
+  }
+  
+  @Override
+  public int getPort() {
+    return ((InetSocketAddress) serverChannel.getLocalAddress()).getPort();
+  }
+
+  @Override
+  public void join() throws InterruptedException {
+    closed.await();
   }
 
   /**
