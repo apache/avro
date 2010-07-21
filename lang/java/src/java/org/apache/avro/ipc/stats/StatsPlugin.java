@@ -17,11 +17,8 @@
  */
 package org.apache.avro.ipc.stats;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,15 +32,14 @@ import org.apache.avro.ipc.stats.Stopwatch.Ticks;
 
 /**
  * Collects count and latency statistics about RPC calls.  Keeps
- * data for every method. Can be added to a Requestor (client)
- * or Responder (server). 
+ * data for every method.
  *
  * This uses milliseconds as the standard unit of measure
  * throughout the class, stored in floats.
  */
 public class StatsPlugin extends RPCPlugin {
   /** Static declaration of histogram buckets. */
-  static final Segmenter<String, Float> LATENCY_SEGMENTER =
+  static final Segmenter<String, Float> DEFAULT_SEGMENTER =
     new Histogram.TreeMapSegmenter<Float>(new TreeSet<Float>(Arrays.asList(
             0f,
            25f,
@@ -61,74 +57,28 @@ public class StatsPlugin extends RPCPlugin {
         60000f, // 1 minute
        600000f)));
 
-  static final Segmenter<String, Integer> PAYLOAD_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Integer>(new TreeSet<Integer>(Arrays.asList(
-            0,
-           25,
-           50,
-           75,
-          100,
-          200,
-          300,
-          500,
-          750,
-         1000, // 1 k
-         2000,
-         5000,
-        10000,
-        50000, 
-       100000)));
-  
   /** Per-method histograms.
-   * Must be accessed while holding a lock. */
+   * Must be accessed while holding a lock on methodTimings. */
   Map<Message, FloatHistogram<?>> methodTimings =
     new HashMap<Message, FloatHistogram<?>>();
 
-  Map<Message, IntegerHistogram<?>> sendPayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
-  
-  Map<Message, IntegerHistogram<?>> receivePayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
-  
   /** RPCs in flight. */
   ConcurrentMap<RPCContext, Stopwatch> activeRpcs =
     new ConcurrentHashMap<RPCContext, Stopwatch>();
   private Ticks ticks;
 
-  /** How long I've been alive */
-  public Date startupTime = new Date();
-  
-  private Segmenter<?, Float> floatSegmenter;
-  private Segmenter<?, Integer> integerSegmenter;
+  private Segmenter<?, Float> segmenter;
 
   /** Construct a plugin with custom Ticks and Segmenter implementations. */
-  StatsPlugin(Ticks ticks, Segmenter<?, Float> floatSegmenter, 
-      Segmenter<?, Integer> integerSegmenter) {
-    this.floatSegmenter = floatSegmenter;
-    this.integerSegmenter = integerSegmenter;
+  StatsPlugin(Ticks ticks, Segmenter<?, Float> segmenter) {
+    this.segmenter = segmenter;
     this.ticks = ticks;
   }
 
   /** Construct a plugin with default (system) ticks, and default
    * histogram segmentation. */
   public StatsPlugin() {
-    this(Stopwatch.SYSTEM_TICKS, LATENCY_SEGMENTER, PAYLOAD_SEGMENTER);
-  }
-  
-  /**
-   * Helper to get the size of an RPC payload.
-   */
-  private int getPayloadSize(List<ByteBuffer> payload) {
-    if (payload == null) {
-      return 0;
-    }
-    
-    int size = 0;
-    for (ByteBuffer bb: payload) {
-      size = size + bb.limit();
-    }
-    
-    return size;
+    this(Stopwatch.SYSTEM_TICKS, DEFAULT_SEGMENTER);
   }
 
   @Override
@@ -136,65 +86,15 @@ public class StatsPlugin extends RPCPlugin {
     Stopwatch t = new Stopwatch(ticks);
     t.start();
     this.activeRpcs.put(context, t);
-    
-    synchronized(receivePayloads) {
-      IntegerHistogram<?> h = receivePayloads.get(context.getMessage());
-      if (h == null) {
-        h = createNewIntegerHistogram();
-        receivePayloads.put(context.getMessage(), h);
-      }
-      h.add(getPayloadSize(context.getRequestPayload()));
-    }
   }
-  
+
   @Override
   public void serverSendResponse(RPCContext context) {
     Stopwatch t = this.activeRpcs.remove(context);
     t.stop();
     publish(context, t);
-    
-    synchronized(sendPayloads) {
-      IntegerHistogram<?> h = sendPayloads.get(context.getMessage());
-      if (h == null) {
-        h = createNewIntegerHistogram();
-        sendPayloads.put(context.getMessage(), h);
-      }
-      h.add(getPayloadSize(context.getResponsePayload()));
-    }
   }
-  
-  @Override
-  public void clientSendRequest(RPCContext context) {
-    Stopwatch t = new Stopwatch(ticks);
-    t.start();
-    this.activeRpcs.put(context, t);
-    
-    synchronized(sendPayloads) {
-      IntegerHistogram<?> h = sendPayloads.get(context.getMessage());
-      if (h == null) {
-        h = createNewIntegerHistogram();
-       sendPayloads.put(context.getMessage(), h);
-      }
-      h.add(getPayloadSize(context.getRequestPayload()));
-    }
-  }
-  
-  @Override
-  public void clientReceiveResponse(RPCContext context) {
-    Stopwatch t = this.activeRpcs.remove(context);
-    t.stop();
-    publish(context, t);
-    
-    synchronized(receivePayloads) {
-      IntegerHistogram<?> h = receivePayloads.get(context.getMessage());
-      if (h == null) {
-        h = createNewIntegerHistogram();
-        receivePayloads.put(context.getMessage(), h);
-      }
-      h.add(getPayloadSize(context.getRequestPayload()));
-    }
-  }
-  
+
   /** Adds timing to the histograms. */
   private void publish(RPCContext context, Stopwatch t) {
     Message message = context.getMessage();
@@ -202,7 +102,7 @@ public class StatsPlugin extends RPCPlugin {
     synchronized(methodTimings) {
       FloatHistogram<?> h = methodTimings.get(context.getMessage());
       if (h == null) {
-        h = createNewFloatHistogram();
+        h = createNewHistogram();
         methodTimings.put(context.getMessage(), h);
       }
       h.add(nanosToMillis(t.elapsedNanos()));
@@ -210,15 +110,10 @@ public class StatsPlugin extends RPCPlugin {
   }
 
   @SuppressWarnings("unchecked")
-  private FloatHistogram<?> createNewFloatHistogram() {
-    return new FloatHistogram(floatSegmenter);
+  private FloatHistogram<?> createNewHistogram() {
+    return new FloatHistogram(segmenter);
   }
 
-  @SuppressWarnings("unchecked")
-  private IntegerHistogram<?> createNewIntegerHistogram() {
-    return new IntegerHistogram(integerSegmenter);
-  }
-  
   /** Converts nanoseconds to milliseconds. */
   static float nanosToMillis(long elapsedNanos) {
     return elapsedNanos / 1000000.0f;

@@ -30,5 +30,3 @@ lang/c/jansson/**
 lang/c/src/queue.h
 lang/c/src/st.h
 lang/c/src/st.c
-lang/java/src/java/org/apache/avro/ipc/stats/static/*.js
-lang/java/src/java/org/apache/avro/ipc/stats/static/*.css

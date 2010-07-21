@@ -45,7 +45,6 @@
         rev="2.2"/>
     <dependency org="org.mortbay.jetty" name="jetty"
         rev="6.1.22"/>
-    <dependency org="org.apache.velocity" name="velocity" rev="1.6.4"/>
     <dependency org="junit" name="junit" rev="4.8.1" conf="test->default"/>
     <dependency org="checkstyle" name="checkstyle" rev="5.0"
         conf="test->default"/>
