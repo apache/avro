@@ -32,6 +32,10 @@ Avro 1.4.0 (unreleased)
     AVRO-405: Java: Add Netty-based RPC transceiver and server
     implementation. (Harry Wang via cutting)
 
+    AVRO-580. Permit intermixing of generic and specific data.
+    SpecificDatumReader and SpecificDatumWriter will now use generic
+    types when no specific class is available.  (cutting)
+
   IMPROVEMENTS
     AVRO-584. Update Histogram for Stats Plugin
     (Patrick Wendell via philz)
@@ -68,6 +72,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-596. Start Netty server eagerly in constructor.
     (Patrick Linehan via cutting)
+
+    AVRO-581. Java: Update MapReduce APIs to use key/value pairs for
+    intermediate data.  (cutting)
 
   BUG FIXES
 

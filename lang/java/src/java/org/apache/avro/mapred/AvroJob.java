@@ -20,7 +20,6 @@ package org.apache.avro.mapred;
 
 import java.util.Collection;
 
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.avro.Schema;
@@ -29,12 +28,9 @@ import org.apache.avro.Schema;
 public class AvroJob {
   private AvroJob() {}                            // no public ctor
 
-  static final String API_GENERIC = "generic";
-  static final String API_SPECIFIC = "specific";
-
-  static final String INPUT_API = "avro.input.api";
-  static final String OUTPUT_API = "avro.output.api";
-  static final String MAP_OUTPUT_API = "avro.map.output.api";
+  static final String MAPPER = "avro.mapper";
+  static final String COMBINER = "avro.combiner";
+  static final String REDUCER = "avro.reducer";
 
   /** The configuration key for a job's input schema. */
   public static final String INPUT_SCHEMA = "avro.input.schema";
@@ -43,86 +39,86 @@ public class AvroJob {
   /** The configuration key for a job's output schema. */
   public static final String OUTPUT_SCHEMA = "avro.output.schema";
 
-  /** Configure a job's map input to use Avro's generic API. */
-  public static void setInputGeneric(JobConf job, Schema s) {
-    job.set(INPUT_API, API_GENERIC);
-    configureAvroInput(job, s);
-  }
-
-  /** Configure a job's map input to use Avro's specific API. */
-  public static void setInputSpecific(JobConf job, Schema s) {
-    job.set(INPUT_API, API_SPECIFIC);
-    configureAvroInput(job, s);
-  }
-
-  private static void configureAvroInput(JobConf job, Schema s) {
+  /** Configure a job's map input schema. */
+  public static void setInputSchema(JobConf job, Schema s) {
     job.set(INPUT_SCHEMA, s.toString());
-    job.setInputFormat(AvroInputFormat.class);
+    configureAvroJob(job);
   }
 
-  /** Configure a job's map output key schema using Avro's generic API. */
-  public static void setMapOutputGeneric(JobConf job, Schema s) {
-    job.set(MAP_OUTPUT_API, API_GENERIC);
-    setMapOutputSchema(job, s);
-    configureAvroOutput(job);
+  /** Return a job's map input schema. */
+  public static Schema getInputSchema(Configuration job) {
+    return Schema.parse(job.get(INPUT_SCHEMA));
   }
 
-  /** Configure a job's map output key schema using Avro's specific API. */
-  public static void setMapOutputSpecific(JobConf job, Schema s) {
-    job.set(MAP_OUTPUT_API, API_SPECIFIC);
-    setMapOutputSchema(job, s);
-    configureAvroOutput(job);
-  }
-
-  /** Configure a job's output key schema using Avro's generic API. */
-  public static void setOutputGeneric(JobConf job, Schema s) {
-    job.set(OUTPUT_API, API_GENERIC);
-    setOutputSchema(job, s);
-    configureAvroOutput(job);
-  }
-
-  /** Configure a job's output key schema using Avro's specific API. */
-  public static void setOutputSpecific(JobConf job, Schema s) {
-    job.set(OUTPUT_API, API_SPECIFIC);
-    setOutputSchema(job, s);
-    configureAvroOutput(job);
-  }
-
-  /** Set a job's map output key schema. */
+  /** Configure a job's map output schema.  The map output schema defaults to
+   * the output schema and need only be specified when it differs.  Thus must
+   * be a {@link Pair} schema. */
   public static void setMapOutputSchema(JobConf job, Schema s) {
     job.set(MAP_OUTPUT_SCHEMA, s.toString());
+    configureAvroJob(job);
   }
 
   /** Return a job's map output key schema. */
   public static Schema getMapOutputSchema(Configuration job) {
-    return Schema.parse(job.get(AvroJob.MAP_OUTPUT_SCHEMA,
-                                job.get(AvroJob.OUTPUT_SCHEMA)));
+    return Schema.parse(job.get(MAP_OUTPUT_SCHEMA, job.get(OUTPUT_SCHEMA)));
   }
 
-  /** Set a job's output key schema. */
+  /** Configure a job's output schema.  Unless this is a map-only job, this
+   * must be a {@link Pair} schema. */
   public static void setOutputSchema(JobConf job, Schema s) {
     job.set(OUTPUT_SCHEMA, s.toString());
+    configureAvroJob(job);
   }
 
   /** Return a job's output key schema. */
   public static Schema getOutputSchema(Configuration job) {
-    return Schema.parse(job.get(AvroJob.OUTPUT_SCHEMA));
+    return Schema.parse(job.get(OUTPUT_SCHEMA));
   }
 
-  private static void configureAvroOutput(JobConf job) {
+  private static void configureAvroJob(JobConf job) {
+    if (job.get("mapred.input.format.class") == null)
+      job.setInputFormat(AvroInputFormat.class);
+    if (job.get("mapred.output.format.class") == null)
+      job.setOutputFormat(AvroOutputFormat.class);
+
     job.setOutputKeyClass(AvroWrapper.class);
     job.setOutputKeyComparatorClass(AvroKeyComparator.class);
-    job.setMapOutputValueClass(NullWritable.class);
-    job.setOutputFormat(AvroOutputFormat.class);
+    job.setMapOutputKeyClass(AvroKey.class);
+    job.setMapOutputValueClass(AvroValue.class);
 
-    // add AvroKeySerialization to io.serializations
+
+    job.setMapperClass(HadoopMapper.class);
+    job.setReducerClass(HadoopReducer.class);
+
+    // add AvroSerialization to io.serializations
     Collection<String> serializations =
       job.getStringCollection("io.serializations");
-    if (!serializations.contains(AvroKeySerialization.class.getName())) {
-      serializations.add(AvroKeySerialization.class.getName());
+    if (!serializations.contains(AvroSerialization.class.getName())) {
+      serializations.add(AvroSerialization.class.getName());
       job.setStrings("io.serializations",
                      serializations.toArray(new String[0]));
     }
   }
+
+  /** Configure a job's mapper implementation. */
+  public static void setMapperClass(JobConf job,
+                                    Class<? extends AvroMapper> c) {
+    job.set(MAPPER, c.getName());
+  }
+
+  /** Configure a job's combiner implementation. */
+  public static void setCombinerClass(JobConf job,
+                                      Class<? extends AvroReducer> c) {
+    job.set(COMBINER, c.getName());
+    job.setCombinerClass(HadoopCombiner.class);
+  }
+
+  /** Configure a job's reducer implementation. */
+  public static void setReducerClass(JobConf job,
+                                     Class<? extends AvroReducer> c) {
+    job.set(REDUCER, c.getName());
+  }
+
+  
 
 }

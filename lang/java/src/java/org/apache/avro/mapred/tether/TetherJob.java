@@ -137,9 +137,11 @@ public class TetherJob extends Configured implements Tool {
       FileInputFormat.addInputPaths(job, in.value(opts));
       FileOutputFormat.setOutputPath(job, out.value(opts));
       TetherJob.setExecutable(job, exec.value(opts));
-      AvroJob.setOutputSchema(job, Schema.parse(outSchema.value(opts)));
+      job.set(AvroJob.OUTPUT_SCHEMA,
+              Schema.parse(outSchema.value(opts)).toString());
       if (opts.hasArgument(mapOutSchema))
-        AvroJob.setMapOutputSchema(job, Schema.parse(mapOutSchema.value(opts)));
+        job.set(AvroJob.MAP_OUTPUT_SCHEMA,
+                Schema.parse(mapOutSchema.value(opts)).toString());
       if (opts.hasArgument(reduces))
         job.setNumReduceTasks(reduces.value(opts));
     } catch (Exception e) {

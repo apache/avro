@@ -26,51 +26,36 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.Reporter;
 
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
-public class TestWordCountSpecific {
-  
-  private static WordCount newWordCount(String word, int count) {
-    WordCount value = new WordCount();
-    value.word = new Utf8(word);
-    value.count = count;
-    return value;
-  }
+public class TestWordCount {
 
-  public static class MapImpl extends AvroMapper<Utf8, WordCount> {
+  public static class MapImpl extends AvroMapper<Utf8, Pair<Utf8, Long> > {
     @Override
-    public void map(Utf8 text) throws IOException {
+      public void map(Utf8 text, AvroCollector<Pair<Utf8,Long>> collector,
+                      Reporter reporter) throws IOException {
       StringTokenizer tokens = new StringTokenizer(text.toString());
       while (tokens.hasMoreTokens())
-        collect(newWordCount(tokens.nextToken(), 1));
+        collector.collect(new Pair<Utf8,Long>(new Utf8(tokens.nextToken()),1L));
     }
   }
   
-  public static class ReduceImpl extends AvroReducer<WordCount, WordCount> {
-
-    private WordCount previous;
-
+  public static class ReduceImpl
+    extends AvroReducer<Utf8, Long, Pair<Utf8, Long> > {
     @Override
-    public void reduce(WordCount current) throws IOException {
-      if (current.equals(previous)) {
-        previous.count++;
-      } else {
-        if (previous != null)
-          collect(previous);
-        previous = newWordCount(current.word.toString(), current.count);
-      }
+    public void reduce(Utf8 word, Iterable<Long> counts,
+                       AvroCollector<Pair<Utf8,Long>> collector,
+                       Reporter reporter) throws IOException {
+      long sum = 0;
+      for (long count : counts)
+        sum += count;
+      collector.collect(new Pair<Utf8,Long>(word, sum));
     }
-    
-    @Override
-    public void close() throws IOException {
-      if (previous != null)
-        collect(previous);
-    }
-
-  }
+  }    
 
   @Test
   @SuppressWarnings("deprecation")
@@ -84,12 +69,13 @@ public class TestWordCountSpecific {
     
     job.setJobName("wordcount");
     
-    AvroJob.setInputSpecific(job, Schema.create(Schema.Type.STRING));
-    AvroJob.setOutputSpecific(job, WordCount.SCHEMA$);
+    AvroJob.setInputSchema(job, Schema.create(Schema.Type.STRING));
+    AvroJob.setOutputSchema(job,
+                            new Pair<Utf8,Long>(new Utf8(""), 0L).getSchema());
     
-    job.setMapperClass(MapImpl.class);        
-    job.setCombinerClass(ReduceImpl.class);
-    job.setReducerClass(ReduceImpl.class);
+    AvroJob.setMapperClass(job, MapImpl.class);        
+    AvroJob.setCombinerClass(job, ReduceImpl.class);
+    AvroJob.setReducerClass(job, ReduceImpl.class);
     
     FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
     FileOutputFormat.setOutputPath(job, outputPath);

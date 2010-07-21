@@ -18,11 +18,11 @@
 
 package org.apache.avro.mapred;
 
-/** The wrapper of values for jobs configured with {@link AvroJob} . */
+/** The wrapper of data for jobs configured with {@link AvroJob} . */
 public class AvroWrapper<T> {
   private T datum;
 
-  /** Wrap a value datum. */
+  /** Wrap a datum. */
   public AvroWrapper(T datum) { this.datum = datum; }
 
   /** Return the wrapped datum. */

@@ -22,32 +22,30 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 
 import org.apache.avro.util.Utf8;
-import org.apache.avro.mapred.WordCount;
+import org.apache.avro.mapred.Pair;
 
 /** Example Java tethered mapreduce executable.  Implements map and reduce
  * functions for word count. */
-public class WordCountTask extends TetherTask<Utf8,WordCount,WordCount> {
+public class WordCountTask
+  extends TetherTask<Utf8,Pair<Utf8,Long>,Pair<Utf8,Long>> {
   
-  @Override public void map(Utf8 text, Collector<WordCount> collector)
+  @Override public void map(Utf8 text, Collector<Pair<Utf8,Long>> collector)
     throws IOException {
     StringTokenizer tokens = new StringTokenizer(text.toString());
-    while (tokens.hasMoreTokens()) {
-      WordCount wc = new WordCount();
-      wc.word = new Utf8(tokens.nextToken());
-      wc.count = 1;
-      collector.collect(wc);
-    }
+    while (tokens.hasMoreTokens())
+      collector.collect(new Pair<Utf8,Long>(new Utf8(tokens.nextToken()),1L));
   }
   
-  private int sum;
+  private long sum;
 
-  @Override public void reduce(WordCount wc, Collector<WordCount> c) {
-    sum += wc.count;
+  @Override public void reduce(Pair<Utf8,Long> wc,
+                               Collector<Pair<Utf8,Long>> c) {
+    sum += wc.value();
   }
     
-  @Override public void reduceFlush(WordCount wc, Collector<WordCount> c)
+  @Override public void reduceFlush(Pair<Utf8,Long> wc, Collector<Pair<Utf8,Long>> c)
     throws IOException {
-    wc.count = sum;
+    wc.value(sum);
     c.collect(wc);
     sum = 0;
   }

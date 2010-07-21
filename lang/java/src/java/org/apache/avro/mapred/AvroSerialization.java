@@ -33,13 +33,11 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
 /** The {@link Serialization} used by jobs configured with {@link AvroJob}. */
-public class AvroKeySerialization<T> extends Configured 
+public class AvroSerialization<T> extends Configured 
   implements Serialization<AvroWrapper<T>> {
 
   public boolean accept(Class<?> c) {
@@ -52,14 +50,12 @@ public class AvroKeySerialization<T> extends Configured
     //  We need not rely on mapred.task.is.map here to determine whether map
     //  output or final output is desired, since the mapreduce framework never
     //  creates a deserializer for final output, only for map output.
-    Schema schema = AvroJob.getMapOutputSchema(getConf());
-    String api = getConf().get(AvroJob.MAP_OUTPUT_API,
-                               getConf().get(AvroJob.OUTPUT_API));
-    DatumReader<T> reader = AvroJob.API_SPECIFIC.equals(api)
-      ? new SpecificDatumReader<T>(schema)
-      : new GenericDatumReader<T>(schema);
-
-    return new AvroWrapperDeserializer(reader);
+    boolean isKey = AvroKey.class.isAssignableFrom(c);
+    Schema schema = isKey
+      ? Pair.getKeySchema(AvroJob.getMapOutputSchema(getConf()))
+      : Pair.getValueSchema(AvroJob.getMapOutputSchema(getConf()));
+    return new AvroWrapperDeserializer(new SpecificDatumReader<T>(schema),
+                                       isKey);
   }
   
   private static final DecoderFactory FACTORY = new DecoderFactory();
@@ -70,9 +66,11 @@ public class AvroKeySerialization<T> extends Configured
 
     private DatumReader<T> reader;
     private BinaryDecoder decoder;
+    private boolean isKey;
     
-    public AvroWrapperDeserializer(DatumReader<T> reader) {
+    public AvroWrapperDeserializer(DatumReader<T> reader, boolean isKey) {
       this.reader = reader;
+      this.isKey = isKey;
     }
     
     public void open(InputStream in) {
@@ -83,7 +81,7 @@ public class AvroKeySerialization<T> extends Configured
       throws IOException {
       T datum = reader.read(wrapper == null ? null : wrapper.datum(), decoder);
       if (wrapper == null) {
-        wrapper = new AvroWrapper<T>(datum);
+        wrapper = isKey? new AvroKey<T>(datum) : new AvroValue<T>(datum);
       } else {
         wrapper.datum(datum);
       }
@@ -101,19 +99,12 @@ public class AvroKeySerialization<T> extends Configured
     // Here we must rely on mapred.task.is.map to tell whether the map output
     // or final output is needed.
     boolean isMap = getConf().getBoolean("mapred.task.is.map", false);
-
-    Schema schema = isMap
-      ? AvroJob.getMapOutputSchema(getConf())
-      : AvroJob.getOutputSchema(getConf());
-
-    String api = getConf().get(AvroJob.OUTPUT_API);
-    if (isMap) 
-      api = getConf().get(AvroJob.MAP_OUTPUT_API, api);
-
-    DatumWriter<T> writer = AvroJob.API_SPECIFIC.equals(api)
-      ? new SpecificDatumWriter<T>(schema)
-      : new GenericDatumWriter<T>(schema);
-    return new AvroWrapperSerializer(writer);
+    Schema schema = !isMap
+      ? AvroJob.getOutputSchema(getConf())
+      : (AvroKey.class.isAssignableFrom(c)
+         ? Pair.getKeySchema(AvroJob.getMapOutputSchema(getConf()))
+         : Pair.getValueSchema(AvroJob.getMapOutputSchema(getConf())));
+    return new AvroWrapperSerializer(new SpecificDatumWriter<T>(schema));
   }
 
   private class AvroWrapperSerializer implements Serializer<AvroWrapper<T>> {

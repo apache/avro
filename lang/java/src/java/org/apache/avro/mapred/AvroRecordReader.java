@@ -25,9 +25,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.RecordReader;
 
+import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 
 /** An {@link RecordReader} for Avro data files. */
@@ -42,12 +41,9 @@ public class AvroRecordReader<T>
   public AvroRecordReader(JobConf job, FileSplit split)
     throws IOException {
     this.in = new FsInput(split.getPath(), job);
-    DatumReader<T> datumReader =
-      AvroJob.API_SPECIFIC.equals(job.get(AvroJob.INPUT_API))
-      ? new SpecificDatumReader<T>()
-      : new GenericDatumReader<T>();
 
-    this.reader = new DataFileReader<T>(in, datumReader);
+    Schema s = AvroJob.getInputSchema(job);
+    this.reader = new DataFileReader<T>(in, new SpecificDatumReader<T>(s));
 
     reader.sync(split.getStart());                    // sync to start
     this.start = in.tell();

@@ -58,14 +58,14 @@ class WordCountUtil {
     "the rain in spain falls mainly on the plains"
   };
 
-  private static final Map<String,Integer> COUNTS =
-    new TreeMap<String,Integer>();
+  private static final Map<String,Long> COUNTS =
+    new TreeMap<String,Long>();
   static {
     for (String line : LINES) {
       StringTokenizer tokens = new StringTokenizer(line);
       while (tokens.hasMoreTokens()) {
         String word = tokens.nextToken();
-        int count = COUNTS.containsKey(word) ? COUNTS.get(word) : 0;
+        long count = COUNTS.containsKey(word) ? COUNTS.get(word) : 0L;
         count++;
         COUNTS.put(word, count);
       }
@@ -93,13 +93,15 @@ class WordCountUtil {
   }
 
   public static void validateCountsFile() throws IOException {
-    DatumReader<WordCount> reader = new SpecificDatumReader<WordCount>();
+    DatumReader<Pair<Utf8,Long>> reader
+      = new SpecificDatumReader<Pair<Utf8,Long>>();
     InputStream in = new BufferedInputStream(new FileInputStream(COUNTS_FILE));
-    DataFileStream<WordCount> counts = new DataFileStream<WordCount>(in,reader);
+    DataFileStream<Pair<Utf8,Long>> counts
+      = new DataFileStream<Pair<Utf8,Long>>(in,reader);
     int numWords = 0;
-    for (WordCount wc : counts) {
-      assertEquals(wc.word.toString(),
-                   (int)COUNTS.get(wc.word.toString()), wc.count);
+    for (Pair<Utf8,Long> wc : counts) {
+      assertEquals(wc.key().toString(),
+                   COUNTS.get(wc.key().toString()), wc.value());
       numWords++;
     }
     in.close();

@@ -412,9 +412,9 @@ public class TestSchema {
     assertFalse(s0.equals(s2));
   }
 
-  private static void checkBinary(Schema schema, Object datum,
-                                  DatumWriter<Object> writer,
-                                  DatumReader<Object> reader)
+  public static void checkBinary(Schema schema, Object datum,
+                                 DatumWriter<Object> writer,
+                                 DatumReader<Object> reader)
     throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);

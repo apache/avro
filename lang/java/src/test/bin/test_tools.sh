@@ -81,7 +81,7 @@ $CMD getschema $TMPDIR/data_file_write.avro \
   | cmp -s - <(echo '"string"')
 ######################################################################
 # Test tethered mapred
-$CMD tether --in build/test/mapred/in --out build/test/mapred/tout --outschema ../../share/test/schemas/WordCount.avsc --program build/test/wordcount.jar
+$CMD tether --in build/test/mapred/in --out build/test/mapred/tout --outschema src/test/java/org/apache/avro/mapred/tether/WordCount.avsc --program build/test/wordcount.jar
 $CMD tojson build/test/mapred/tout/part-00000.avro \
   | cmp -s - <($CMD tojson build/test/mapred/out/part-00000.avro)
 

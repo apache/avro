@@ -36,5 +36,10 @@ Generate specific Java classes for schemas and protocols.
 
 </ul>
 
+<p>Note that when a generated class is not found corresponding to a
+  record, enum or fixed schema, a {@link org.apache.avro.generic
+  generic} representation is used.  This permits generated classes to
+  be nested within generic data structures.
+
 </body>
 </html>

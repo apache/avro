@@ -44,14 +44,12 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
   }
   
   @Override
-  protected Object getField(Object record, String name, int position) {
-    return ((SpecificRecord)record).get(position);
-  }
-
-  @Override
   protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
-    out.writeEnum(((Enum)datum).ordinal());
+    if (!(datum instanceof Enum))
+      super.writeEnum(schema, datum, out);        // punt to generic
+    else
+      out.writeEnum(((Enum)datum).ordinal());
   }
 
 }

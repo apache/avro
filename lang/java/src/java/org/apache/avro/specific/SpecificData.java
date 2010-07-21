@@ -72,9 +72,10 @@ public class SpecificData extends GenericData {
 
   private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
 
+  private static final Class NO_CLASS = new Object(){}.getClass();
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
-  /** Return the class that implements a schema. */
+  /** Return the class that implements a schema, or null if none exists. */
   public Class getClass(Schema schema) {
     switch (schema.getType()) {
     case FIXED:
@@ -85,12 +86,12 @@ public class SpecificData extends GenericData {
       if (c == null) {
         try {
           c = Class.forName(getClassName(schema));
-          classCache.put(name, c);
         } catch (ClassNotFoundException e) {
-          throw new AvroRuntimeException(e);
+          c = NO_CLASS;
         }
+        classCache.put(name, c);
       }
-      return c;
+      return c == NO_CLASS ? null : c;
     case ARRAY:   return GenericArray.class;
     case MAP:     return Map.class;
     case UNION:
@@ -203,14 +204,11 @@ public class SpecificData extends GenericData {
   public int compare(Object o1, Object o2, Schema s) {
     switch (s.getType()) {
     case ENUM:
-      return ((Enum)o1).ordinal() - ((Enum)o2).ordinal();
+      if (!(o1 instanceof String))                // not generic
+        return ((Enum)o1).ordinal() - ((Enum)o2).ordinal();
     default:
       return super.compare(o1, o2, s);
     }
   }
 
 }
-
-
-
-

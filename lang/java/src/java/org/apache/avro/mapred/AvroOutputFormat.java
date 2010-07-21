@@ -30,8 +30,6 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.util.Progressable;
 
 import org.apache.avro.Schema;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.CodecFactory;
@@ -60,14 +58,13 @@ public class AvroOutputFormat <T>
                     String name, Progressable prog)
     throws IOException {
 
-    Schema schema = AvroJob.getOutputSchema(job);
+    boolean isMapOnly = job.getNumReduceTasks() == 0;
+    Schema schema = isMapOnly
+      ? AvroJob.getMapOutputSchema(job)
+      : AvroJob.getOutputSchema(job);
 
-    DatumWriter<T> datumWriter =
-      AvroJob.API_SPECIFIC.equals(job.get(AvroJob.OUTPUT_API))
-      ? new SpecificDatumWriter<T>()
-      : new GenericDatumWriter<T>();
-
-    final DataFileWriter<T> writer = new DataFileWriter<T>(datumWriter);
+    final DataFileWriter<T> writer =
+      new DataFileWriter<T>(new SpecificDatumWriter<T>());
 
     if (FileOutputFormat.getCompressOutput(job)) {
       int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);

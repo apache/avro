@@ -28,19 +28,16 @@ Avro data, with map and reduce functions written in Java.
 
 <p>To use this for jobs whose input and output are Avro data files:
  <ul>
+   <li>Call {@link org.apache.avro.mapred.AvroJob#setInputSchema} and
+   {@link org.apache.avro.mapred.AvroJob#setOutputSchema} with your
+   job's input and output schemas.</li>
    <li>Subclass {@link org.apache.avro.mapred.AvroMapper} and specify
-   this as your job's mapper.</li>
+   this as your job's mapper with {@link
+   org.apache.avro.mapred.AvroJob#setMapperClass}</li>
    <li>Subclass {@link org.apache.avro.mapred.AvroReducer} and specify
-   this as your job's reducer and perhaps combiner.</li>
-   <li>Depending on whether your mapper uses Avro's specific or
-   generic API for inputs, call one of {@link
-   org.apache.avro.mapred.AvroJob#setInputSpecific} or {@link
-   org.apache.avro.mapred.AvroJob#setInputGeneric} with your input schema.</li>
-   <li>Depending on whether your job uses Avro's specific or generic
-   API for outputs, call one of {@link
-   org.apache.avro.mapred.AvroJob#setOutputSpecific} or {@link
-   org.apache.avro.mapred.AvroJob#setOutputGeneric} with your output
-   schema.</li>
+   this as your job's reducer and perhaps combiner, with {@link
+   org.apache.avro.mapred.AvroJob#setReducerClass} and {@link
+   org.apache.avro.mapred.AvroJob#setCombinerClass}</li>
    <li>Specify input files with {@link org.apache.hadoop.mapred.FileInputFormat#setInputPaths}</li>
    <li>Specify an output directory with {@link
    org.apache.hadoop.mapred.FileOutputFormat#setOutputPath}</li>

@@ -24,7 +24,6 @@ import org.apache.hadoop.conf.Configuration;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryData;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificData;
 
 /** The {@link RawComparator} used by jobs configured with {@link AvroJob}. */
@@ -32,29 +31,20 @@ public class AvroKeyComparator<T>
   extends Configured implements RawComparator<AvroWrapper<T>> {
 
   private Schema schema;
-  private GenericData model;
 
   @Override
   public void setConf(Configuration conf) {
     super.setConf(conf);
-    if (conf != null) {
-      schema = AvroJob.getMapOutputSchema(conf);
-      String api = getConf().get(AvroJob.MAP_OUTPUT_API,
-                                 getConf().get(AvroJob.OUTPUT_API));
-      model = AvroJob.API_SPECIFIC.equals(api)
-        ? SpecificData.get()
-        : GenericData.get();
-    }
+    if (conf != null)
+      schema = Pair.getKeySchema(AvroJob.getMapOutputSchema(conf));
   }
 
   public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-    int diff = BinaryData.compare(b1, s1, b2, s2, schema);
-    return diff == 0 ? -1 : diff;
+    return BinaryData.compare(b1, s1, b2, s2, schema);
   }
 
   public int compare(AvroWrapper<T> x, AvroWrapper<T> y) {
-    int diff = model.compare(x.datum(), y.datum(), schema);
-    return diff == 0 ? -1 : diff;
+    return SpecificData.get().compare(x.datum(), y.datum(), schema);
   }
 
 }

@@ -39,46 +39,51 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   @Override
   protected Object newRecord(Object old, Schema schema) {
     Class c = SpecificData.get().getClass(schema);
-    return (c.isInstance(old) ? old : newInstance(c));
-  }
-
-  @Override
-  protected void setField(Object record, String name, int position, Object o) {
-    ((SpecificRecord)record).put(position, o);
-  }
-  @Override
-  protected Object getField(Object record, String name, int position) {
-    return ((SpecificRecord)record).get(position);
+    if (c == null) return super.newRecord(old, schema); // punt to generic
+    return (c.isInstance(old) ? old : newInstance(c, schema));
   }
 
   @Override
   @SuppressWarnings("unchecked")
   protected Object createEnum(String symbol, Schema schema) {
-    return Enum.valueOf(SpecificData.get().getClass(schema), symbol);
+    Class c = SpecificData.get().getClass(schema);
+    if (c == null) return super.createEnum(symbol, schema); // punt to generic
+    return Enum.valueOf(c, symbol);
   }
 
   @Override
   protected Object createFixed(Object old, Schema schema) {
     Class c = SpecificData.get().getClass(schema);
-    return c.isInstance(old) ? old : newInstance(c);
+    if (c == null) return super.createFixed(old, schema); // punt to generic
+    return c.isInstance(old) ? old : newInstance(c, schema);
   }
 
-  private static final Class<?>[] EMPTY_ARRAY = new Class[]{};
+  private static final Class<?>[] NO_ARG = new Class[]{};
+  private static final Class<?>[] SCHEMA_ARG = new Class[]{Schema.class};
   private static final Map<Class,Constructor> CTOR_CACHE =
     new ConcurrentHashMap<Class,Constructor>();
 
-  /** Create an instance of a class. */
+  /** Tag interface that indicates that a class has a one-argument constructor
+   * that accepts a Schema.
+   * @see SpecificDatumReader#newInstance
+   */
+  public interface SchemaConstructable {}
+
+  /** Create an instance of a class.  If the class implements {@link
+   * SchemaConstructable}, call a constructor with a {@link
+   * org.apache.avro.Schema} parameter, otherwise use a no-arg constructor. */
   @SuppressWarnings("unchecked")
-  protected static Object newInstance(Class c) {
+  protected static Object newInstance(Class c, Schema s) {
+    boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
     Object result;
     try {
       Constructor meth = (Constructor)CTOR_CACHE.get(c);
       if (meth == null) {
-        meth = c.getDeclaredConstructor(EMPTY_ARRAY);
+        meth = c.getDeclaredConstructor(useSchema ? SCHEMA_ARG : NO_ARG);
         meth.setAccessible(true);
         CTOR_CACHE.put(c, meth);
       }
-      result = meth.newInstance();
+      result = meth.newInstance(useSchema ? new Object[]{s} : (Object[])null);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
