@@ -76,6 +76,9 @@ Avro 1.4.0 (unreleased)
     AVRO-581. Java: Update MapReduce APIs to use key/value pairs for
     intermediate data.  (cutting)
 
+    AVRO-582. Java: Add comment to generated code indicating that
+    set() and get() are not for use by applications.  (cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

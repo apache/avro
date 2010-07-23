@@ -272,6 +272,7 @@ public class SpecificCompiler {
       // schema method
       line(out, 1, "public org.apache.avro.Schema getSchema() { return SCHEMA$; }");
       // get method
+      line(out, 1, "// Used by DatumWriter.  Applications should not call. ");
       line(out, 1, "public java.lang.Object get(int field$) {");
       line(out, 2, "switch (field$) {");
       int i = 0;
@@ -280,7 +281,8 @@ public class SpecificCompiler {
       line(out, 2, "default: throw new org.apache.avro.AvroRuntimeException(\"Bad index\");");
       line(out, 2, "}");
       line(out, 1, "}");
-      // set method
+      // put method
+      line(out, 1, "// Used by DatumReader.  Applications should not call. ");
       line(out, 1, "@SuppressWarnings(value=\"unchecked\")");
       line(out, 1, "public void put(int field$, java.lang.Object value$) {");
       line(out, 2, "switch (field$) {");
