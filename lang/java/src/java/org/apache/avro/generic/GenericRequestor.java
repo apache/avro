@@ -22,11 +22,13 @@ import java.io.IOException;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.Requestor;
 import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.util.Utf8;
 
 /** {@link Requestor} implementation for generic Java data. */
 public class GenericRequestor extends Requestor {
@@ -61,9 +63,12 @@ public class GenericRequestor extends Requestor {
   }
 
   @Override
-  public AvroRemoteException readError(Schema schema, Decoder in)
+  public Exception readError(Schema schema, Decoder in)
     throws IOException {
-    return new AvroRemoteException(new GenericDatumReader<Object>(schema).read(null,in));
+    Object error = new GenericDatumReader<Object>(schema).read(null,in);
+    if (error instanceof Utf8)
+      return new AvroRuntimeException(error.toString()); // system error
+    return new AvroRemoteException(error);
   }
 
 }

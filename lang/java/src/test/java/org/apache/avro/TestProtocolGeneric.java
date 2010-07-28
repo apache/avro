@@ -58,6 +58,8 @@ public class TestProtocolGeneric {
     }
   }
 
+  private static boolean throwUndeclaredError;
+
   protected static class TestResponder extends GenericResponder {
     public TestResponder() { super(PROTOCOL); }
     public Object respond(Message message, Object request)
@@ -82,6 +84,7 @@ public class TestProtocolGeneric {
       }
 
       if ("error".equals(message.getName())) {
+        if (throwUndeclaredError) throw new RuntimeException("foo");
         GenericRecord error =
           new GenericData.Record(PROTOCOL.getType("TestError"));
         error.put("message", new Utf8("an error"));
@@ -156,6 +159,22 @@ public class TestProtocolGeneric {
     }
     assertNotNull(error);
     assertEquals("an error", ((GenericRecord)error.getValue()).get("message").toString());
+  }
+
+  @Test
+  public void testUndeclaredError() throws IOException {
+    this.throwUndeclaredError = true;
+    RuntimeException error = null;
+    GenericRecord params =
+      new GenericData.Record(PROTOCOL.getMessages().get("error").getRequest());
+    try {
+      requestor.request("error", params);
+    } catch (RuntimeException e) {
+      error = e;
+    } finally {
+      this.throwUndeclaredError = false;
+    }
+    assertNotNull(error);
   }
 
   @Test

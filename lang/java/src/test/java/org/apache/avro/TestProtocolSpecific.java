@@ -53,12 +53,15 @@ public class TestProtocolSpecific {
 
   public static int ackCount;
 
+  private static boolean throwUndeclaredError;
+
   public static class TestImpl implements Simple {
     public Utf8 hello(Utf8 greeting) { return new Utf8("goodbye"); }
     public int add(int arg1, int arg2) { return arg1 + arg2; }
     public TestRecord echo(TestRecord record) { return record; }
     public ByteBuffer echoBytes(ByteBuffer data) { return data; }
     public Void error() throws AvroRemoteException {
+      if (throwUndeclaredError) throw new RuntimeException("foo");
       TestError error = new TestError();
       error.message = new Utf8("an error");
       throw error;
@@ -141,6 +144,21 @@ public class TestProtocolSpecific {
     assertNotNull(error);
     assertEquals("an error", error.message.toString());
   }
+
+  @Test
+  public void testUndeclaredError() throws Exception {
+    this.throwUndeclaredError = true;
+    RuntimeException error = null;
+    try {
+      proxy.error();
+    } catch (RuntimeException e) {
+      error = e;
+    } finally {
+      this.throwUndeclaredError = false;
+    }
+    assertNotNull(error);
+  }
+
 
   @Test
   public void testOneWay() throws IOException {

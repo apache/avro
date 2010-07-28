@@ -18,11 +18,15 @@
 
 package org.apache.avro.reflect;
 
+import java.io.IOException;
+
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol;
+import org.apache.avro.io.Encoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.util.Utf8;
 
 /** {@link org.apache.avro.ipc.Responder} for existing interfaces.*/
 public class ReflectResponder extends SpecificResponder {
@@ -44,5 +48,14 @@ public class ReflectResponder extends SpecificResponder {
     return new ReflectDatumReader<Object>(schema);
   }
 
-}
+  @Override
+  public void writeError(Schema schema, Object error,
+                         Encoder out) throws IOException {
+    if (error instanceof Utf8)
+      error = error.toString();                   // system error: convert
+    super.writeError(schema, error, out);
+  }
 
+
+
+}

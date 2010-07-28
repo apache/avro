@@ -25,11 +25,11 @@ import java.lang.reflect.InvocationHandler;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.Requestor;
 
@@ -80,7 +80,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     Object value = getDatumReader(schema).read(null, in);
     if (value instanceof Exception)
       return (Exception)value;
-    return new AvroRemoteException(value);
+    return new AvroRuntimeException(value.toString());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
