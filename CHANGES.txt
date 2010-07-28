@@ -37,6 +37,10 @@ Avro 1.4.0 (unreleased)
     types when no specific class is available.  (cutting)
 
   IMPROVEMENTS
+
+    AVRO-587. Add Charts and Templating to Stats View
+    (Patrick Wendell via philz)
+
     AVRO-584. Update Histogram for Stats Plugin
     (Patrick Wendell via philz)
 
