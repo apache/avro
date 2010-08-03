@@ -107,6 +107,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-573. Java: Fix various bugs with undeclared RPC exceptions. (cutting)
 
+    AVRO-604. Java: Fix missing build dependency for checkstyle target.
+    (Patrick Wendell via cutting)
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS

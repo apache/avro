@@ -266,7 +266,7 @@
     </jar>
   </target>
   
-  <target name="checkstyle-java" depends="compile">
+  <target name="checkstyle-java" depends="compile, ivy-retrieve-test">
     <taskdef resource="checkstyletask.properties">
       <classpath refid="test.java.classpath" />
     </taskdef>
