@@ -930,6 +930,12 @@ public abstract class Schema {
           JsonNode fieldTypeNode = field.get("type");
           if (fieldTypeNode == null)
             throw new SchemaParseException("No field type: "+field);
+          if (fieldTypeNode.isTextual()
+              && names.get(fieldTypeNode.getTextValue()) == null)
+            throw new SchemaParseException
+              (fieldTypeNode+" is not a defined name."
+               +" The type of the \""+fieldName+"\" field must be"
+               +" a defined name or a {\"type\": ...} expression.");
           Schema fieldSchema = parse(fieldTypeNode, names);
           Field.Order order = Field.Order.ASCENDING;
           JsonNode orderNode = field.get("order");

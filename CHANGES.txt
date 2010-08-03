@@ -85,6 +85,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-601. Java: Add per-field property support. (cutting)
 
+    AVRO-583. Java: Improve error message when types not correctly
+    nested. (cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.
