@@ -88,6 +88,10 @@ Avro 1.4.0 (unreleased)
     AVRO-583. Java: Improve error message when types not correctly
     nested. (cutting)
 
+    AVRO-603. Java: Add a constructor for SpecificDatumReader that
+    accepts both reader's and writer's schema.  Also improve javadoc
+    for related constructors and setters.  (Stu Hood via cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

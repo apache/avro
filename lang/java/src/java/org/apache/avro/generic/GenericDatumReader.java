@@ -38,28 +38,30 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   public GenericDatumReader() {}
 
-  public GenericDatumReader(Schema actual) {
-    this.actual = actual;
-    this.expected = actual;
+  /** Construct where the writer's and reader's schemas are the same. */
+  public GenericDatumReader(Schema schema) {
+    this.actual = schema;
+    this.expected = schema;
   }
 
-  public GenericDatumReader(Schema actual, Schema expected)
-    throws IOException {
-    this.actual = actual;
-    this.expected = expected;
+  /** Construct given writer's and reader's schema. */
+  public GenericDatumReader(Schema writer, Schema reader) {
+    this.actual = writer;
+    this.expected = reader;
   }
 
   @Override
-  public void setSchema(Schema actual) {
-    this.actual = actual;
+  public void setSchema(Schema writer) {
+    this.actual = writer;
     if (expected == null) {
       expected = actual;
     }
     resolver = null;
   }
 
-  public void setExpected(Schema expected) throws IOException {
-    this.expected = expected;
+  /** Set the reader's schema. */
+  public void setExpected(Schema reader) throws IOException {
+    this.expected = reader;
   }
 
   @SuppressWarnings("unchecked")
