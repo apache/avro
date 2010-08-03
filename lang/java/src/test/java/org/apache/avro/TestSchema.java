@@ -158,8 +158,16 @@ public class TestSchema {
   @Test
   public void testRecord() throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
-      +"[{\"name\":\"f\", \"type\":\"long\"}]}";
+      +"[{\"name\":\"f\", \"type\":\"long\", \"foo\":\"bar\"}]}";
     Schema schema = Schema.parse(recordJson);
+
+    // test field props
+    assertEquals("bar", schema.getField("f").getProp("foo"));
+    assertEquals("bar", Schema.parse(schema.toString())
+                 .getField("f").getProp("foo"));
+    schema.getField("f").addProp("baz", "boo");
+    assertEquals("boo", schema.getField("f").getProp("baz"));
+
     GenericData.Record record = new GenericData.Record(schema);
     record.put("f", 11L);
     check(recordJson, "{\"f\":11}", record, false);

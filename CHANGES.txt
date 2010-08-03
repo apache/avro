@@ -83,6 +83,8 @@ Avro 1.4.0 (unreleased)
     AVRO-582. Java: Add comment to generated code indicating that
     set() and get() are not for use by applications.  (cutting)
 
+    AVRO-601. Java: Add per-field property support. (cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

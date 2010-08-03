@@ -91,7 +91,6 @@ public abstract class Schema {
   };
 
   private final Type type;
-  Map<String,String> props = new HashMap<String,String>(1);
 
   Schema(Type type) { this.type = type; }
 
@@ -110,12 +109,40 @@ public abstract class Schema {
     }
   }
 
-  private static final Set<String> RESERVED_PROPS = new HashSet<String>();
+  private static final class Props extends HashMap<String,String> {
+    private Set<String> reserved;
+    public Props(Set<String> reserved) {
+      super(1);
+      this.reserved = reserved;
+    }
+    public void add(String name, String value) {
+      if (reserved.contains(name))
+        throw new AvroRuntimeException("Can't set reserved property: " + name);
+      
+      if (value == null)
+        throw new AvroRuntimeException("Can't set a property to null: " + name);
+    
+      String old = get(name);
+      if (old == null)
+        put(name, value);
+      else if (!old.equals(value))
+        throw new AvroRuntimeException("Can't overwrite property: " + name);
+    }
+
+    public void write(JsonGenerator gen) throws IOException {
+      for (Map.Entry<String,String> e : entrySet())
+        gen.writeStringField(e.getKey(), e.getValue());
+    }
+  }
+
+  private static final Set<String> SCHEMA_RESERVED = new HashSet<String>();
   static {
-    Collections.addAll(RESERVED_PROPS,
-                       "fields", "items", "name", "namespace",
+    Collections.addAll(SCHEMA_RESERVED,
+                       "doc", "fields", "items", "name", "namespace",
                        "size", "symbols", "values", "type");
   }
+
+  Props props = new Props(SCHEMA_RESERVED);
 
   /**
    * Returns the value of the named property in this schema.
@@ -135,23 +162,7 @@ public abstract class Schema {
    * @param value The value for the property to add
    */
   public synchronized void addProp(String name, String value) {
-    if (RESERVED_PROPS.contains(name)) {
-      throw new AvroRuntimeException("Can't set a reserved property: " + name);
-    }
-    
-    if (value == null) {
-      throw new AvroRuntimeException(
-          "Can't set a null value for property: " + name);
-    }
-    
-    String v = props.get(name);
-    if (v != null) {
-      if (! v.equals(value)) {
-        throw new AvroRuntimeException("Can't overwrite property: " + name);
-      }
-    } else {
-      props.put(name, value);
-    }
+    props.add(name, value);
   }
 
   /** Create an anonymous record schema. */
@@ -310,14 +321,9 @@ public abstract class Schema {
     } else {
       gen.writeStartObject();
       gen.writeStringField("type", getName());
-      writeProps(gen);
+      props.write(gen);
       gen.writeEndObject();
     }
-  }
-
-  void writeProps(JsonGenerator gen) throws IOException {
-    for (Map.Entry<String,String> e : props.entrySet())
-      gen.writeStringField(e.getKey(), e.getValue());
   }
 
   void fieldsToJson(Names names, JsonGenerator gen) throws IOException {
@@ -333,6 +339,11 @@ public abstract class Schema {
   }
   public int hashCode() { return getType().hashCode() + props.hashCode(); }
 
+  private static final Set<String> FIELD_RESERVED = new HashSet<String>();
+  static {
+    Collections.addAll(FIELD_RESERVED, "default","doc","name","order","type");
+  }
+
   /** A field within a record. */
   public static class Field {
 
@@ -344,11 +355,12 @@ public abstract class Schema {
     };
 
     private final String name;    // name of the field.
-    private int position = -1;
+    private transient int position = -1;
     private final Schema schema;
     private final String doc;
     private final JsonNode defaultValue;
     private final Order order;
+    private final Props props = new Props(FIELD_RESERVED);
 
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue) {
@@ -371,17 +383,25 @@ public abstract class Schema {
     public String doc() { return doc; }
     public JsonNode defaultValue() { return defaultValue; }
     public Order order() { return order; }
+    /** Return the value of the named property in this field or null. */
+    public synchronized String getProp(String name) { return props.get(name); }
+    /** Add a property with the given name to this field. */
+    public synchronized void addProp(String name, String value) {
+      props.add(name, value);
+    }
     public boolean equals(Object other) {
       if (other == this) return true;
       if (!(other instanceof Field)) return false;
       Field that = (Field) other;
-      return (position == that.position) &&
+      return (name.equals(that.name)) &&
         (schema.equals(that.schema)) &&
         (defaultValue == null
          ? that.defaultValue == null
-         : (defaultValue.equals(that.defaultValue)));
+         : (defaultValue.equals(that.defaultValue))) &&
+        (order.equals(that.order)) &&
+        props.equals(that.props);
     }
-    public int hashCode() { return schema.hashCode(); }
+    public int hashCode() { return name.hashCode() + schema.hashCode(); }
   }
 
   private static class Name {
@@ -552,7 +572,7 @@ public abstract class Schema {
       writeName(names, gen);
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
-      writeProps(gen);
+      props.write(gen);
       gen.writeEndObject();
     }
 
@@ -569,6 +589,7 @@ public abstract class Schema {
         }
         if (f.order() != Field.Order.ASCENDING)
           gen.writeStringField("order", f.order().name);
+        f.props.write(gen);
         gen.writeEndObject();
       }
       gen.writeEndArray();
@@ -610,7 +631,7 @@ public abstract class Schema {
       for (String symbol : symbols)
         gen.writeString(symbol);
       gen.writeEndArray();
-      writeProps(gen);
+      props.write(gen);
       gen.writeEndObject();
     }
   }
@@ -636,7 +657,7 @@ public abstract class Schema {
       gen.writeStringField("type", "array");
       gen.writeFieldName("items");
       elementType.toJson(names, gen);
-      writeProps(gen);
+      props.write(gen);
       gen.writeEndObject();
     }
   }
@@ -662,7 +683,7 @@ public abstract class Schema {
       gen.writeStringField("type", "map");
       gen.writeFieldName("values");
       valueType.toJson(names, gen);
-      writeProps(gen);
+      props.write(gen);
       gen.writeEndObject();
     }
   }
@@ -745,7 +766,7 @@ public abstract class Schema {
       gen.writeStringField("type", "fixed");
       writeName(names, gen);
       gen.writeNumberField("size", size);
-      writeProps(gen);
+      props.write(gen);
       gen.writeEndObject();
     }
   }
@@ -914,8 +935,16 @@ public abstract class Schema {
           JsonNode orderNode = field.get("order");
           if (orderNode != null)
             order = Field.Order.valueOf(orderNode.getTextValue().toUpperCase());
-          fields.add(new Field(fieldName, fieldSchema,
-              fieldDoc, field.get("default"), order));
+          Field f = new Field(fieldName, fieldSchema,
+                              fieldDoc, field.get("default"), order);
+          Iterator<String> i = field.getFieldNames();
+          while (i.hasNext()) {                       // add field props
+            String prop = i.next();
+            String value = field.get(prop).getTextValue();
+            if (!FIELD_RESERVED.contains(prop) && value != null)
+              f.addProp(prop, value);
+          }
+          fields.add(f);
         }
         result.setFields(fields);
       } else if (type.equals("enum")) {           // enum
@@ -949,7 +978,7 @@ public abstract class Schema {
       while (i.hasNext()) {                       // add properties
         String prop = i.next();
         String value = schema.get(prop).getTextValue();
-        if (!RESERVED_PROPS.contains(prop) && value != null) // ignore reserved
+        if (!SCHEMA_RESERVED.contains(prop) && value != null) // ignore reserved
           result.addProp(prop, value);
       }
       if (savedSpace != null)
