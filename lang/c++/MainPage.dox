@@ -224,24 +224,28 @@ the API:</P>
     // Manually parse data, the Parser object binds the data to the schema
     avro::Parser&lt;ValidatingReader&gt; parser(mySchema, myData);
 
-    assert( parser.nextType() == AVRO_RECORD);
+    assert( nextType(parser) == avro::AVRO_RECORD);
     
     // Begin parsing
     parser.readRecord();
    
     Math::complex c;
 
-    assert( parser.currentRecordName() == “complex”);
+    std::string recordName;
+    assert( currentRecordName(parser, recordName) == true);
+    assert( recordName == “complex”);
+    std::string fieldName;
     for(int i=0; i &lt; 2; ++i) {
-        assert( parser.nextType() == AVRO_DOUBLE);
-        if(parser.nextFieldName() == “real”) {
+        assert( nextType(parser) == avro::AVRO_DOUBLE);
+        assert( nextFieldName(parser, fieldName) == true);
+        if(fieldName == “real”) {
             c.real = parser.readDouble();
         } 
-        else if (parser.nextFieldName() == “imaginary”) {
+        else if (fieldName == “imaginary”) {
             c.imaginary = parser.readDouble();
         } 
         else {
-            std::cout &lt;&lt; “I did not expect that!\n”
+            std::cout &lt;&lt; “I did not expect that!\n”;
         }
     }
 
