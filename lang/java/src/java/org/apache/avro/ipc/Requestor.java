@@ -102,14 +102,14 @@ public abstract class Requestor {
       writeRequest(m.getRequest(), request, out); // write request payload
       List<ByteBuffer> payload = bbo.getBufferList();
       
+      writeHandshake(out);                       // prepend handshake if needed
+      META_WRITER.write(context.requestCallMeta(), out);
+      out.writeString(m.getName());               // write message name
+      
       context.setRequestPayload(payload);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.clientSendRequest(context);        // get meta-data from plugins
       }
-      
-      writeHandshake(out);                       // prepend handshake if needed
-      META_WRITER.write(context.requestCallMeta(), out);
-      out.writeString(m.getName());               // write message name
       
       bbo.append(payload);
       

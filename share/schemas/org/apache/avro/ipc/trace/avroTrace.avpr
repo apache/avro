@@ -1,0 +1,69 @@
+{
+  "protocol" : "AvroTrace",
+  "namespace" : "org.apache.avro.ipc.trace",
+  "types" : [ {
+    "type" : "enum",
+    "name" : "SpanEvent",
+    "symbols" : [ "SERVER_RECV", "SERVER_SEND", "CLIENT_RECV", "CLIENT_SEND" ]
+  }, {
+    "type" : "fixed",
+    "name" : "ID",
+    "size" : 8
+  }, {
+    "type" : "record",
+    "name" : "TimestampedEvent",
+    "fields" : [ {
+      "name" : "timeStamp",
+      "type" : "long"
+    }, {
+      "name" : "event",
+      "type" : [ "SpanEvent", "string" ]
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "Span",
+    "fields" : [ {
+      "name" : "traceID",
+      "type" : "ID"
+    }, {
+      "name" : "spanID",
+      "type" : "ID"
+    }, {
+      "name" : "parentSpanID",
+      "type" : [ "ID", "null" ]
+    }, {
+      "name" : "messageName",
+      "type" : "string"
+    }, {
+      "name" : "requestPayloadSize",
+      "type" : "long"
+    }, {
+      "name" : "responsePayloadSize",
+      "type" : "long"
+    }, {
+      "name" : "requestorHostname",
+      "type" : [ "string", "null" ]
+    }, {
+      "name" : "responderHostname",
+      "type" : [ "string", "null" ]
+    }, {
+      "name" : "events",
+      "type" : {
+        "type" : "array",
+        "items" : "TimestampedEvent"
+      }
+    }, {
+      "name" : "complete",
+      "type" : "boolean"
+    } ]
+  } ],
+  "messages" : {
+    "getAllSpans" : {
+      "request" : [ ],
+      "response" : {
+        "type" : "array",
+        "items" : "Span"
+      }
+    }
+  }
+}

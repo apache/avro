@@ -13,6 +13,9 @@ Avro 1.4.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-595. Add Basic Trace Collection and Propagation.
+    (Patrick Wendell via philz)
+
     AVRO-493. Add support for Hadoop Mapreduce with Avro data files. (cutting)
 
     AVRO-285: Specify one-way messages and implement in Java. (cutting)
