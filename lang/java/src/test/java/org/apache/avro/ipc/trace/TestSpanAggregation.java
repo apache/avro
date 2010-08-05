@@ -122,6 +122,7 @@ public class TestSpanAggregation {
    *        e                    
    */
   @Test
+  @SuppressWarnings("unchecked")
   public void testTraceFormation1() {
     Span a1 = createClientSpan(idValue(1), idValue(1), null, new Utf8("a"));
     Span a2 = createServerSpan(idValue(1), idValue(1), null, new Utf8("a"));
@@ -179,7 +180,7 @@ public class TestSpanAggregation {
     event2.event = SpanEvent.CLIENT_RECV;
     event2.timeStamp = System.currentTimeMillis() * 1000000;
     
-    out.events = new GenericData.Array(
+    out.events = new GenericData.Array<TimestampedEvent>(
         2, Schema.createArray(TimestampedEvent.SCHEMA$));
     out.events.add(event1);
     out.events.add(event2);
@@ -210,7 +211,7 @@ public class TestSpanAggregation {
     event2.event = SpanEvent.SERVER_SEND;
     event2.timeStamp = System.currentTimeMillis();
     
-    out.events = new GenericData.Array(
+    out.events = new GenericData.Array<TimestampedEvent>(
         2, Schema.createArray(TimestampedEvent.SCHEMA$));
     out.events.add(event1);
     out.events.add(event2);

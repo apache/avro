@@ -81,7 +81,7 @@
   <property name="javac.deprecation" value="off"/>
   <property name="javac.version" value="1.6"/>
   <property name="javac.args" value=""/>
-  <property name="javac.args.warnings" value="-Xlint:unchecked"/>
+  <property name="javac.args.warnings" value="-Xlint:unchecked -Werror"/>
 
   <property name="ivy.version" value="2.1.0"/>
   <property name="ivy.url"
