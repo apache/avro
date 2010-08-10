@@ -127,6 +127,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-602. C++: Update documentation to match API.  (Jingguo Yao via cutting)
 
+    AVRO-609. Java: Fix JsonToBinaryFragmentTool to flush output. (cutting)
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS

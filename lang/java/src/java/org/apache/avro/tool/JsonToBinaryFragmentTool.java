@@ -57,6 +57,7 @@ public class JsonToBinaryFragmentTool implements Tool {
     GenericDatumWriter<Object> writer = 
         new GenericDatumWriter<Object>(schema);
     writer.write(datum, new BinaryEncoder(out));
+    out.flush();
     } finally {
       if (needsClosing) {
         input.close();

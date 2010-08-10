@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 
@@ -42,7 +43,7 @@ public class TestJsonToFromBinaryFragmentTools {
   @Test
   public void testBinaryToJson() throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream p = new PrintStream(baos);
+    PrintStream p = new PrintStream(new BufferedOutputStream(baos));
     
     new BinaryFragmentToJsonTool().run(
         new ByteArrayInputStream(AVRO.getBytes(UTF8)), // stdin
@@ -55,7 +56,7 @@ public class TestJsonToFromBinaryFragmentTools {
   @Test
   public void testJsonToBinary() throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream p = new PrintStream(baos);
+    PrintStream p = new PrintStream(new BufferedOutputStream(baos));
     new JsonToBinaryFragmentTool().run(
         new ByteArrayInputStream(JSON.getBytes(UTF8)), // stdin
         p, // stdout
