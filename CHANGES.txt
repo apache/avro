@@ -11,6 +11,14 @@ Avro 1.4.0 (unreleased)
     methods.  Servers are no longer started in their constructor.
     (hammer & cutting)
 
+    AVRO-605. Java: Change Utf8 to implement CharSequence and change
+    specific, generic & reflect APIs to accept any CharSequence
+    implementation for string schemas, including java.lang.String.
+    This incompatibly changes method signatures of generated protocol
+    interfaces.  It also incompatibly changes the generic
+    representation of enum symbols from java.lang.String to
+    org.apache.avro.generic.GenericEnumSymbol.
+
   NEW FEATURES
 
     AVRO-595. Add Basic Trace Collection and Propagation.

@@ -27,7 +27,6 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.util.Utf8;
 import org.apache.avro.io.BinaryData;
 
 /** Utilities for generic Java data. */
@@ -186,6 +185,22 @@ public class GenericData {
     }
   }
 
+  /** Default implementation of {@link GenericEnumSymbol}. */
+  public static class EnumSymbol implements GenericEnumSymbol {
+    private String symbol;
+    public EnumSymbol(String symbol) { this.symbol = symbol; }
+
+    public boolean equals(Object o) {
+      if (o == this) return true;
+      return o instanceof GenericEnumSymbol
+        && symbol.equals(o.toString());
+    }
+
+    public int hashCode() { return symbol.hashCode(); }
+
+    public String toString() { return symbol; }
+  }
+
   /** Returns true if a Java datum matches a schema. */
   public boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
@@ -198,7 +213,7 @@ public class GenericData {
       }
       return true;
     case ENUM:
-      return schema.getEnumSymbols().contains(datum);
+      return schema.getEnumSymbols().contains(datum.toString());
     case ARRAY:
       if (!(datum instanceof GenericArray)) return false;
       for (Object element : (GenericArray)datum)
@@ -277,7 +292,7 @@ public class GenericData {
           buffer.append(", ");
       }
       buffer.append("}");
-    } else if (datum instanceof Utf8 || datum instanceof String) {
+    } else if (datum instanceof CharSequence) {
       buffer.append("\"");
       buffer.append(datum);                       // TODO: properly escape!
       buffer.append("\"");
@@ -329,7 +344,7 @@ public class GenericData {
       return Schema.createFixed(null, null, null,
                                 ((GenericFixed)datum).bytes().length);
     }
-    else if (datum instanceof Utf8)       return Schema.create(Type.STRING);
+    else if (datum instanceof CharSequence) return Schema.create(Type.STRING);
     else if (datum instanceof ByteBuffer) return Schema.create(Type.BYTES);
     else if (datum instanceof Integer)    return Schema.create(Type.INT);
     else if (datum instanceof Long)       return Schema.create(Type.LONG);
@@ -396,7 +411,7 @@ public class GenericData {
 
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isEnum(Object datum) {
-    return datum instanceof String;
+    return datum instanceof GenericEnumSymbol;
   }
   
   /** Called by the default implementation of {@link #instanceOf}.*/
@@ -411,7 +426,7 @@ public class GenericData {
 
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isString(Object datum) {
-    return datum instanceof Utf8;
+    return datum instanceof CharSequence;
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/
@@ -476,7 +491,7 @@ public class GenericData {
       }
       return 0;
     case ENUM:
-      return s.getEnumOrdinal((String)o1) - s.getEnumOrdinal((String)o2);
+      return s.getEnumOrdinal(o1.toString()) - s.getEnumOrdinal(o2.toString());
     case ARRAY:
       GenericArray a1 = (GenericArray)o1;
       GenericArray a2 = (GenericArray)o2;

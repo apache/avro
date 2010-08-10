@@ -32,7 +32,6 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericArray;
-import org.apache.avro.util.Utf8;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -45,29 +44,8 @@ public class SpecificData extends GenericData {
   public static SpecificData get() { return INSTANCE; }
 
   @Override
-  protected boolean isRecord(Object datum) {
-    return datum instanceof SpecificRecord;
-  }
-
-  @Override
-  protected Schema getRecordSchema(Object record) {
-    return ((SpecificRecord)record).getSchema();
-  }
-
-  @Override
   protected boolean isEnum(Object datum) {
-    return datum instanceof Enum;
-  }
-
-  @Override
-  public boolean validate(Schema schema, Object datum) {
-    switch (schema.getType()) {
-    case ENUM:
-      return datum instanceof Enum
-        && schema.getEnumSymbols().contains(((Enum)datum).name());
-    default:
-      return super.validate(schema, datum);
-    }
+    return datum instanceof Enum || super.isEnum(datum);
   }
 
   private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
@@ -99,7 +77,7 @@ public class SpecificData extends GenericData {
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
         return getClass(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return Object.class;
-    case STRING:  return Utf8.class;
+    case STRING:  return CharSequence.class;
     case BYTES:   return ByteBuffer.class;
     case INT:     return Integer.TYPE;
     case LONG:    return Long.TYPE;
@@ -138,7 +116,8 @@ public class SpecificData extends GenericData {
   @SuppressWarnings(value="unchecked")
   protected Schema createSchema(java.lang.reflect.Type type,
                                 Map<String,Schema> names) {
-    if (type == Utf8.class)
+    if (type instanceof Class
+        && CharSequence.class.isAssignableFrom((Class)type))
       return Schema.create(Type.STRING);
     else if (type == ByteBuffer.class)
       return Schema.create(Type.BYTES);
@@ -165,8 +144,9 @@ public class SpecificData extends GenericData {
       } else if (Map.class.isAssignableFrom(raw)) {   // map
         java.lang.reflect.Type key = params[0];
         java.lang.reflect.Type value = params[1];
-        if (!(key == Utf8.class))
-          throw new AvroTypeException("Map key class not Utf8: "+key);
+        if (!(type instanceof Class
+              && CharSequence.class.isAssignableFrom((Class)type)))
+          throw new AvroTypeException("Map key class not CharSequence: "+key);
         return Schema.createMap(createSchema(value, names));
       } else {
         return createSchema(raw, names);

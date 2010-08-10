@@ -20,15 +20,16 @@ package org.apache.avro.util;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.avro.io.BinaryData;
-import org.apache.avro.reflect.Stringable;
 
-/** A Utf8 string. */
-@Stringable
-public class Utf8 implements Comparable<Utf8> {
+/** A Utf8 string.  Unlike {@link String}, instances are mutable.  This is more
+ * efficient than {@link String} when reading or writing a sequence of values,
+ * as a single instance may be reused. */
+public class Utf8 implements Comparable<Utf8>, CharSequence {
   private static final byte[] EMPTY = new byte[0];
 
-  byte[] bytes = EMPTY;
-  int length;
+  private byte[] bytes = EMPTY;
+  private int length;
+  private String string;
 
   public Utf8() {}
 
@@ -39,6 +40,7 @@ public class Utf8 implements Comparable<Utf8> {
       throw new RuntimeException(e);
     }
     this.length = bytes.length;
+    this.string = string;
   }
 
   public Utf8(byte[] bytes) {
@@ -46,25 +48,45 @@ public class Utf8 implements Comparable<Utf8> {
     this.length = bytes.length;
   }
 
+  /** Return UTF-8 encoded bytes.
+   * Only valid through {@link #getByteLength()}. */
   public byte[] getBytes() { return bytes; }
+
+  /** Return length in bytes.
+   * @deprecated call {@link #getByteLength()} instead. */
   public int getLength() { return length; }
 
+  /** Return length in bytes. */
+  public int getByteLength() { return length; }
+
+  /** Set length in bytes.  Should called whenever byte content changes, even
+   * if the length does not change, as this also clears the cached String.
+   * @deprecated call {@link #setByteLength(int)} instead. */
   public Utf8 setLength(int newLength) {
+    return setByteLength(newLength);
+  }
+
+  /** Set length in bytes.  Should called whenever byte content changes, even
+   * if the length does not change, as this also clears the cached String. */
+  public Utf8 setByteLength(int newLength) {
     if (this.length < newLength) {
       byte[] newBytes = new byte[newLength];
       System.arraycopy(bytes, 0, newBytes, 0, this.length);
       this.bytes = newBytes;
     }
     this.length = newLength;
+    this.string = null;
     return this;
   }
 
   public String toString() {
-    try {
-      return new String(bytes, 0, length, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    if (this.string == null)
+      try {
+        this.string = new String(bytes, 0, length, "UTF-8");
+      } catch (UnsupportedEncodingException e) {
+        throw new RuntimeException(e);
+      }
+    return this.string;
   }
 
   public boolean equals(Object o) {
@@ -90,5 +112,13 @@ public class Utf8 implements Comparable<Utf8> {
     return BinaryData.compareBytes(this.bytes, 0, this.length,
                                    that.bytes, 0, that.length);
   }
+
+  // CharSequence implementation
+  @Override public char charAt(int index) { return toString().charAt(index); }
+  @Override public int length() { return toString().length(); }
+  @Override public CharSequence subSequence(int start, int end) {
+    return toString().subSequence(start, end);
+  }
+
 
 }

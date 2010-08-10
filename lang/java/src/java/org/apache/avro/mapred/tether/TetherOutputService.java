@@ -24,8 +24,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
-import org.apache.avro.util.Utf8;
-
 class TetherOutputService implements OutputProtocol {
   private Reporter reporter;
   private OutputCollector<TetherData, NullWritable> collector;
@@ -69,14 +67,14 @@ class TetherOutputService implements OutputProtocol {
     output(datum);
   }
 
-  public void status(Utf8 message) { reporter.setStatus(message.toString());  }
+  public void status(CharSequence message) { reporter.setStatus(message.toString());  }
 
 
-  public void count(Utf8 group, Utf8 name, long amount) {
+  public void count(CharSequence group, CharSequence name, long amount) {
     reporter.getCounter(group.toString(), name.toString()).increment(amount);
   }
 
-  public synchronized void fail(Utf8 message) {
+  public synchronized void fail(CharSequence message) {
     TetherMapRunner.LOG.warn("Failing: "+message);
     error = message.toString();
     notify();

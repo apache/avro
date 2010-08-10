@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.util.Utf8;
 
 /**
  * This class represents the context of an RPC call or RPC handshake.
@@ -36,8 +35,8 @@ import org.apache.avro.util.Utf8;
  */
 public class RPCContext {
   
-  protected Map<Utf8,ByteBuffer> requestHandshakeMeta, responseHandshakeMeta;
-  protected Map<Utf8,ByteBuffer> requestCallMeta, responseCallMeta;
+  protected Map<CharSequence,ByteBuffer> requestHandshakeMeta, responseHandshakeMeta;
+  protected Map<CharSequence,ByteBuffer> requestCallMeta, responseCallMeta;
   
   protected Object response;
   protected Exception error;
@@ -51,14 +50,14 @@ public class RPCContext {
    * @return a map representing handshake state from
    * the client to the server
    */
-  public Map<Utf8,ByteBuffer> requestHandshakeMeta() {
+  public Map<CharSequence,ByteBuffer> requestHandshakeMeta() {
     if (requestHandshakeMeta == null) {
-      requestHandshakeMeta = new HashMap<Utf8,ByteBuffer>();
+      requestHandshakeMeta = new HashMap<CharSequence,ByteBuffer>();
     }
     return requestHandshakeMeta;
   }
   
-  void setRequestHandshakeMeta(Map<Utf8,ByteBuffer> newmeta) {
+  void setRequestHandshakeMeta(Map<CharSequence,ByteBuffer> newmeta) {
     requestHandshakeMeta = newmeta;
   }
   
@@ -68,14 +67,14 @@ public class RPCContext {
    * @return a map representing handshake state from
    * the server to the client
    */
-  public Map<Utf8,ByteBuffer> responseHandshakeMeta() {
+  public Map<CharSequence,ByteBuffer> responseHandshakeMeta() {
     if (responseHandshakeMeta == null) {
-      responseHandshakeMeta = new HashMap<Utf8,ByteBuffer>();
+      responseHandshakeMeta = new HashMap<CharSequence,ByteBuffer>();
     }
     return responseHandshakeMeta;
   }
   
-  void setResponseHandshakeMeta(Map<Utf8,ByteBuffer> newmeta) {
+  void setResponseHandshakeMeta(Map<CharSequence,ByteBuffer> newmeta) {
     responseHandshakeMeta = newmeta;
   }
   
@@ -85,14 +84,14 @@ public class RPCContext {
    * @return a map representing per-call state from
    * the client to the server
    */
-  public Map<Utf8,ByteBuffer> requestCallMeta() {
+  public Map<CharSequence,ByteBuffer> requestCallMeta() {
     if (requestCallMeta == null) {
-      requestCallMeta = new HashMap<Utf8,ByteBuffer>();
+      requestCallMeta = new HashMap<CharSequence,ByteBuffer>();
     }
     return requestCallMeta;
   }
   
-  void setRequestCallMeta(Map<Utf8,ByteBuffer> newmeta) {
+  void setRequestCallMeta(Map<CharSequence,ByteBuffer> newmeta) {
     requestCallMeta = newmeta;
   }
   
@@ -102,14 +101,14 @@ public class RPCContext {
    * @return a map representing per-call state from
    * the server to the client
    */
-  public Map<Utf8,ByteBuffer> responseCallMeta() {
+  public Map<CharSequence,ByteBuffer> responseCallMeta() {
     if (responseCallMeta == null) {
-      responseCallMeta = new HashMap<Utf8,ByteBuffer>();
+      responseCallMeta = new HashMap<CharSequence,ByteBuffer>();
     }
     return responseCallMeta;
   }
   
-  void setResponseCallMeta(Map<Utf8,ByteBuffer> newmeta) {
+  void setResponseCallMeta(Map<CharSequence,ByteBuffer> newmeta) {
     responseCallMeta = newmeta;
   }
   

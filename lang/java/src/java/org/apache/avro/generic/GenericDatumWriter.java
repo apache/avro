@@ -101,7 +101,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.*/
   protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
-    out.writeEnum(schema.getEnumOrdinal((String)datum));
+    out.writeEnum(schema.getEnumOrdinal(datum.toString()));
   }
   
   /** Called to write a array.  May be overridden for alternate array
@@ -173,7 +173,9 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
   protected void writeString(Object datum, Encoder out) throws IOException {
-    out.writeString((Utf8)datum);
+    out.writeString(datum instanceof Utf8
+                    ? (Utf8)datum
+                    : new Utf8(datum.toString()));
   }
 
   /** Called to write a bytes.  May be overridden for alternate bytes

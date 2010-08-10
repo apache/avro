@@ -50,10 +50,10 @@ public abstract class Responder {
 
   private static final Schema META =
     Schema.createMap(Schema.create(Schema.Type.BYTES));
-  private static final GenericDatumReader<Map<Utf8,ByteBuffer>> META_READER =
-    new GenericDatumReader<Map<Utf8,ByteBuffer>>(META);
-  private static final GenericDatumWriter<Map<Utf8,ByteBuffer>> META_WRITER =
-    new GenericDatumWriter<Map<Utf8,ByteBuffer>>(META);
+  private static final GenericDatumReader<Map<CharSequence,ByteBuffer>>
+    META_READER = new GenericDatumReader<Map<CharSequence,ByteBuffer>>(META);
+  private static final GenericDatumWriter<Map<CharSequence,ByteBuffer>>
+    META_WRITER = new GenericDatumWriter<Map<CharSequence,ByteBuffer>>(META);
 
   private Map<MD5,Protocol> protocols
     = Collections.synchronizedMap(new HashMap<MD5,Protocol>());
@@ -203,7 +203,7 @@ public abstract class Responder {
     }
     
     RPCContext context = new RPCContext();
-    context.setRequestHandshakeMeta((Map<Utf8, ByteBuffer>) request.meta);
+    context.setRequestHandshakeMeta((Map<CharSequence, ByteBuffer>) request.meta);
     
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.serverConnecting(context);

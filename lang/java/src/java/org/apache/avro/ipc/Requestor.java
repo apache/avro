@@ -49,10 +49,10 @@ public abstract class Requestor {
 
   private static final Schema META =
     Schema.createMap(Schema.create(Schema.Type.BYTES));
-  private static final GenericDatumReader<Map<Utf8,ByteBuffer>> META_READER =
-    new GenericDatumReader<Map<Utf8,ByteBuffer>>(META);
-  private static final GenericDatumWriter<Map<Utf8,ByteBuffer>> META_WRITER =
-    new GenericDatumWriter<Map<Utf8,ByteBuffer>>(META);
+  private static final GenericDatumReader<Map<CharSequence,ByteBuffer>>
+    META_READER = new GenericDatumReader<Map<CharSequence,ByteBuffer>>(META);
+  private static final GenericDatumWriter<Map<CharSequence,ByteBuffer>>
+    META_WRITER = new GenericDatumWriter<Map<CharSequence,ByteBuffer>>(META);
 
   private Protocol local;
   private Protocol remote;
@@ -218,7 +218,7 @@ public abstract class Requestor {
     
     RPCContext context = new RPCContext();
     if (handshake.meta != null) {
-      context.setResponseHandshakeMeta((Map<Utf8, ByteBuffer>) handshake.meta);
+      context.setResponseHandshakeMeta((Map<CharSequence, ByteBuffer>) handshake.meta);
     }
       
     for (RPCPlugin plugin : rpcMetaPlugins) {

@@ -346,13 +346,13 @@ public class SpecificCompiler {
     case ARRAY:
       return "org.apache.avro.generic.GenericArray<"+type(schema.getElementType())+">";
     case MAP:
-      return "java.util.Map<org.apache.avro.util.Utf8,"+type(schema.getValueType())+">";
+      return "java.util.Map<java.lang.CharSequence,"+type(schema.getValueType())+">";
     case UNION:
       List<Schema> types = schema.getTypes();     // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
         return type(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "java.lang.Object";
-    case STRING:  return "org.apache.avro.util.Utf8";
+    case STRING:  return "java.lang.CharSequence";
     case BYTES:   return "java.nio.ByteBuffer";
     case INT:     return "java.lang.Integer";
     case LONG:    return "java.lang.Long";

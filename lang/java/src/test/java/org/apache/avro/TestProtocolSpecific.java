@@ -56,7 +56,9 @@ public class TestProtocolSpecific {
   private static boolean throwUndeclaredError;
 
   public static class TestImpl implements Simple {
-    public Utf8 hello(Utf8 greeting) { return new Utf8("goodbye"); }
+    public CharSequence hello(CharSequence greeting) {
+      return new Utf8("goodbye");
+    }
     public int add(int arg1, int arg2) { return arg1 + arg2; }
     public TestRecord echo(TestRecord record) { return record; }
     public ByteBuffer echoBytes(ByteBuffer data) { return data; }
@@ -85,7 +87,7 @@ public class TestProtocolSpecific {
 
   @Test
   public void testHello() throws IOException {
-    Utf8 response = proxy.hello(new Utf8("bob"));
+    CharSequence response = proxy.hello(new Utf8("bob"));
     assertEquals(new Utf8("goodbye"), response);
   }
 

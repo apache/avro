@@ -36,7 +36,7 @@ import org.apache.avro.util.Utf8;
  */
 public final class RPCMetaTestPlugin extends RPCPlugin {
   
-  protected final Utf8 key;
+  protected final CharSequence key;
   
   public RPCMetaTestPlugin(String keyname) {
     key = new Utf8(keyname);
@@ -73,7 +73,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   
   @Override
   public void clientFinishConnect(RPCContext context) {
-    Map<Utf8,ByteBuffer> handshakeMeta = context.responseHandshakeMeta();
+    Map<CharSequence,ByteBuffer> handshakeMeta = context.responseHandshakeMeta();
     
     Assert.assertNull(context.getRequestPayload());
     Assert.assertNull(context.getResponsePayload());
@@ -107,7 +107,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   
   @Override
   public void serverReceiveRequest(RPCContext context) {
-    Map<Utf8,ByteBuffer> meta = context.requestCallMeta();
+    Map<CharSequence,ByteBuffer> meta = context.requestCallMeta();
     
     Assert.assertNotNull(meta);    
     Assert.assertNotNull(context.getMessage());
@@ -175,7 +175,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     checkRPCMetaMap(context.responseCallMeta());
   }
   
-  protected void checkRPCMetaMap(Map<Utf8,ByteBuffer> rpcMeta) {
+  protected void checkRPCMetaMap(Map<CharSequence,ByteBuffer> rpcMeta) {
     Assert.assertNotNull(rpcMeta);
     Assert.assertTrue("key not present in map", rpcMeta.containsKey(key));
     

@@ -15,7 +15,7 @@ public class TestNettyServer {
 
   public static class MailImpl implements Mail {
     // in this simple example just return details of the message
-    public Utf8 send(Message message) {
+    public CharSequence send(Message message) {
       return new Utf8("Sent message to [" + message.to.toString() + "] from ["
           + message.from.toString() + "] with body [" + message.body.toString()
           + "]");
@@ -44,7 +44,7 @@ public class TestNettyServer {
     msg.body = new Utf8("I love you!");
 
     try {
-      Utf8 result = proxy.send(msg);
+      CharSequence result = proxy.send(msg);
       System.out.println("Result: " + result);
       Assert.assertEquals(
           "Sent message to [wife] from [husband] with body [I love you!]",

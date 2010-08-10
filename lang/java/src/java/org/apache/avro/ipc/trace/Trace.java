@@ -59,10 +59,10 @@ public class Trace {
   }
 
   private class NodeComparator implements Comparator<TraceNode> {
-    @Override
+    @Override @SuppressWarnings("unchecked")
     public int compare(TraceNode tn0, TraceNode tn1) {
       // We sort nodes alphabetically by the message name
-      int result = tn0.span.messageName.compareTo(tn1.span.messageName);
+      int result = ((Comparable)tn0.span.messageName).compareTo((Comparable)tn1.span.messageName);
       
       if (result != 0) {
         return result;

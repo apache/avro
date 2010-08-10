@@ -107,7 +107,7 @@ public abstract class TetherTask<IN,MID,OUT> {
     outputClient.configure(inputPort);
   }
 
-  void configure(TaskType taskType, Utf8 inSchemaText, Utf8 outSchemaText) {
+  void configure(TaskType taskType, CharSequence inSchemaText, CharSequence outSchemaText) {
     this.taskType = taskType;
     try {
       Schema inSchema = Schema.parse(inSchemaText.toString());

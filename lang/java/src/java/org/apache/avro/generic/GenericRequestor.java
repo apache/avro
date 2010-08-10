@@ -28,7 +28,6 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.Requestor;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.util.Utf8;
 
 /** {@link Requestor} implementation for generic Java data. */
 public class GenericRequestor extends Requestor {
@@ -66,7 +65,7 @@ public class GenericRequestor extends Requestor {
   public Exception readError(Schema schema, Decoder in)
     throws IOException {
     Object error = new GenericDatumReader<Object>(schema).read(null,in);
-    if (error instanceof Utf8)
+    if (error instanceof CharSequence)
       return new AvroRuntimeException(error.toString()); // system error
     return new AvroRemoteException(error);
   }

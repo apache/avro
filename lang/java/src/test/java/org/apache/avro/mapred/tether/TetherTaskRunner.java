@@ -25,7 +25,6 @@ import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.avro.util.Utf8;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.specific.SpecificResponder;
 
@@ -53,8 +52,8 @@ public class TetherTaskRunner implements InputProtocol {
   }
 
   @Override public void configure(TaskType taskType,
-                                  Utf8 inSchema,
-                                  Utf8 outSchema) {
+                                  CharSequence inSchema,
+                                  CharSequence outSchema) {
     LOG.info("got configure");
     task.configure(taskType, inSchema, outSchema);
   }

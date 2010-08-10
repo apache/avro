@@ -71,7 +71,7 @@ public class RandomData implements Iterable<Object> {
       return record;
     case ENUM:
       List<String> symbols = schema.getEnumSymbols();
-      return symbols.get(random.nextInt(symbols.size()));
+      return new GenericData.EnumSymbol(symbols.get(random.nextInt(symbols.size())));
     case ARRAY:
       int length = (random.nextInt(5)+2)-d;
       GenericArray<Object> array =

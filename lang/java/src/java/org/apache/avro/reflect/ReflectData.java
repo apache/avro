@@ -84,11 +84,6 @@ public class ReflectData extends SpecificData {
   }
 
   @Override
-  protected boolean isString(Object datum) {
-    return datum instanceof String;
-  }
-
-  @Override
   protected boolean isBytes(Object datum) {
     if (datum == null) return false;
     Class c = datum.getClass();
@@ -244,7 +239,7 @@ public class ReflectData extends SpecificData {
         setElement(result, component);
         return result;
       }
-      if (c == String.class)                                 // String
+      if (CharSequence.class.isAssignableFrom(c))            // String
         return Schema.create(Schema.Type.STRING);
       String fullName = c.getName();
       Schema schema = names.get(fullName);

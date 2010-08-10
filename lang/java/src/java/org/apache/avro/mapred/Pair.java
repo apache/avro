@@ -31,7 +31,6 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.specific.SpecificDatumReader.SchemaConstructable;
-import org.apache.avro.util.Utf8;
 
 /** A key/value pair. */
 public class Pair<K,V>
@@ -168,7 +167,7 @@ public class Pair<K,V>
     this((K)key, key.getSchema(), (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
-  public Pair(GenericContainer key, Utf8 value) {
+  public Pair(GenericContainer key, CharSequence value) {
     this((K)key, key.getSchema(), (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
@@ -196,35 +195,35 @@ public class Pair<K,V>
     this((K)key, key.getSchema(), (V)value, NULL_SCHEMA);
   }
   @SuppressWarnings("unchecked")
-  public Pair(Utf8 key, GenericContainer value) {
+  public Pair(CharSequence key, GenericContainer value) {
     this((K)key, STRING_SCHEMA, (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
-  public Pair(Utf8 key, Utf8 value) {
+  public Pair(CharSequence key, CharSequence value) {
     this((K)key, STRING_SCHEMA, (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
-  public Pair(Utf8 key, ByteBuffer value) {
+  public Pair(CharSequence key, ByteBuffer value) {
     this((K)key, STRING_SCHEMA, (V)value, BYTES_SCHEMA);
   }
   @SuppressWarnings("unchecked")
-  public Pair(Utf8 key, Integer value) {
+  public Pair(CharSequence key, Integer value) {
     this((K)key, STRING_SCHEMA, (V)value, INT_SCHEMA);
   }
   @SuppressWarnings("unchecked")
-  public Pair(Utf8 key, Long value) {
+  public Pair(CharSequence key, Long value) {
     this((K)key, STRING_SCHEMA, (V)value, LONG_SCHEMA);
   }
   @SuppressWarnings("unchecked")
-  public Pair(Utf8 key, Float value) {
+  public Pair(CharSequence key, Float value) {
     this((K)key, STRING_SCHEMA, (V)value, FLOAT_SCHEMA);
   }
   @SuppressWarnings("unchecked")
-  public Pair(Utf8 key, Double value) {
+  public Pair(CharSequence key, Double value) {
     this((K)key, STRING_SCHEMA, (V)value, DOUBLE_SCHEMA);
   }
   @SuppressWarnings("unchecked")
-  public Pair(Utf8 key, Void value) {
+  public Pair(CharSequence key, Void value) {
     this((K)key, STRING_SCHEMA, (V)value, NULL_SCHEMA);
   }
   @SuppressWarnings("unchecked")
@@ -232,7 +231,7 @@ public class Pair<K,V>
     this((K)key, BYTES_SCHEMA, (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
-  public Pair(ByteBuffer key, Utf8 value) {
+  public Pair(ByteBuffer key, CharSequence value) {
     this((K)key, BYTES_SCHEMA, (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
@@ -264,7 +263,7 @@ public class Pair<K,V>
     this((K)key, INT_SCHEMA, (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
-  public Pair(Integer key, Utf8 value) {
+  public Pair(Integer key, CharSequence value) {
     this((K)key, INT_SCHEMA, (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
@@ -296,7 +295,7 @@ public class Pair<K,V>
     this((K)key, LONG_SCHEMA, (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
-  public Pair(Long key, Utf8 value) {
+  public Pair(Long key, CharSequence value) {
     this((K)key, LONG_SCHEMA, (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
@@ -328,7 +327,7 @@ public class Pair<K,V>
     this((K)key, FLOAT_SCHEMA, (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
-  public Pair(Float key, Utf8 value) {
+  public Pair(Float key, CharSequence value) {
     this((K)key, FLOAT_SCHEMA, (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
@@ -360,7 +359,7 @@ public class Pair<K,V>
     this((K)key, DOUBLE_SCHEMA, (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
-  public Pair(Double key, Utf8 value) {
+  public Pair(Double key, CharSequence value) {
     this((K)key, DOUBLE_SCHEMA, (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
@@ -392,7 +391,7 @@ public class Pair<K,V>
     this((K)key, NULL_SCHEMA, (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
-  public Pair(Void key, Utf8 value) {
+  public Pair(Void key, CharSequence value) {
     this((K)key, NULL_SCHEMA, (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
@@ -422,7 +421,7 @@ public class Pair<K,V>
 
   // private static final String[][] TABLE = new String[][] {
   //   {"GenericContainer", "{0}.getSchema()"},
-  //   {"Utf8", "STRING_SCHEMA"},
+  //   {"CharSequence", "STRING_SCHEMA"},
   //   {"ByteBuffer", "BYTES_SCHEMA"},
   //   {"Integer", "INT_SCHEMA"},
   //   {"Long", "LONG_SCHEMA"},

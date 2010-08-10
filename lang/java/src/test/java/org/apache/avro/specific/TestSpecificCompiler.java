@@ -103,7 +103,7 @@ public class TestSpecificCompiler {
     assertTrue(errType.contains("public class finally$ extends org.apache.avro.specific.SpecificExceptionBase"));
     assertTrue(errType.contains("public boolean catch$;"));
 
-    assertTrue(protocol.contains("org.apache.avro.util.Utf8 goto$(org.apache.avro.util.Utf8 break$)"));
+    assertTrue(protocol.contains("java.lang.CharSequence goto$(java.lang.CharSequence break$)"));
     assertTrue(protocol.contains("public interface default$"));
     assertTrue(protocol.contains("throws org.apache.avro.ipc.AvroRemoteException, finally$"));
     
@@ -122,7 +122,7 @@ public class TestSpecificCompiler {
     assertEquals(1, c.size());
     String contents = c.iterator().next().contents;
 
-    assertTrue(contents.contains("public org.apache.avro.util.Utf8 package$;"));
+    assertTrue(contents.contains("public java.lang.CharSequence package$;"));
     assertTrue(contents.contains("class volatile$ extends"));
     assertTrue(contents.contains("volatile$ short$;"));
     

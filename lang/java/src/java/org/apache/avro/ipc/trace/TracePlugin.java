@@ -208,7 +208,7 @@ public class TracePlugin extends RPCPlugin {
   
   @Override
   public void serverConnecting(RPCContext context) {
-    Map<Utf8, ByteBuffer> meta = context.requestHandshakeMeta();
+    Map<CharSequence, ByteBuffer> meta = context.requestHandshakeMeta();
     // Are we being asked to propagate a trace?
     if (meta.containsKey(TRACE_ID_KEY) && enabled) {
       if (!(meta.containsKey(SPAN_ID_KEY))) {

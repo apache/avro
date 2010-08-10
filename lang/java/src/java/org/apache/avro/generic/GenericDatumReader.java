@@ -135,14 +135,16 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   }
   
   /** Called to read an enum value. May be overridden for alternate enum
-   * representations.  By default, returns the symbol as a String. */
+   * representations.  By default, returns a GenericEnumSymbol. */
   protected Object readEnum(Schema expected, Decoder in) throws IOException {
     return createEnum(expected.getEnumSymbols().get(in.readEnum()), expected);
   }
 
   /** Called to create an enum value. May be overridden for alternate enum
-   * representations.  By default, returns the symbol as a String. */
-  protected Object createEnum(String symbol, Schema schema) { return symbol; }
+   * representations.  By default, returns a GenericEnumSymbol. */
+  protected Object createEnum(String symbol, Schema schema) {
+    return new GenericData.EnumSymbol(symbol);
+  }
 
   /** Called to read an array instance.  May be overridden for alternate array
    * representations.*/
@@ -279,7 +281,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * string representation.  By default, this calls {@link
    * Decoder#readString(Utf8)}.*/
   protected Object readString(Object old, Decoder in) throws IOException {
-    return in.readString((Utf8)old);
+    return in.readString(old instanceof Utf8 ? (Utf8)old : null);
   }
 
   /** Called to create a string from a default value.  Subclasses may override

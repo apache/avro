@@ -26,7 +26,6 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.util.Utf8;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
@@ -95,11 +94,6 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     if (schema.getProp(ReflectData.CLASS_PROP) != null) // Stringable annotated
       datum = datum.toString();                         // call toString()
     writeString(datum, out);
-  }
-
-  @Override
-  protected void writeString(Object datum, Encoder out) throws IOException {
-    out.writeString(new Utf8((String)datum));
   }
 
   @Override

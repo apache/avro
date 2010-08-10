@@ -182,7 +182,7 @@ public class TestSchema {
 
   @Test
   public void testEnum() throws Exception {
-    check(BASIC_ENUM_SCHEMA, "\"B\"", "B", false);
+    check(BASIC_ENUM_SCHEMA, "\"B\"", new GenericData.EnumSymbol("B"), false);
     checkParseError("{\"type\":\"enum\"}");        // symbols required
     checkParseError("{\"type\":\"enum\",\"symbols\": [\"X\",\"X\"]}");
   }
@@ -242,7 +242,9 @@ public class TestSchema {
     checkJson(union,
               new GenericData.Fixed(new byte[]{(byte)'a'}),
               "{\"Bar\":\"a\"}");
-    checkJson(union, "X", "{\"Baz\":\"X\"}");
+    checkJson(union,
+              new GenericData.EnumSymbol("X"),
+              "{\"Baz\":\"X\"}");
   }
 
   @Test
@@ -518,13 +520,14 @@ public class TestSchema {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     DatumWriter<Object> writer = new GenericDatumWriter<Object>(actual);
     Encoder encoder = new BinaryEncoder(out);
-    writer.write("Y", encoder);
-    writer.write("X", encoder);
+    writer.write(new GenericData.EnumSymbol("Y"), encoder);
+    writer.write(new GenericData.EnumSymbol("X"), encoder);
     byte[] data = out.toByteArray();
     Decoder decoder = DecoderFactory.defaultFactory().createBinaryDecoder(
         data, null);
     DatumReader<String> in = new GenericDatumReader<String>(actual, expected);
-    assertEquals("Wrong value", "Y", in.read(null, decoder));
+    assertEquals("Wrong value", new GenericData.EnumSymbol("Y"),
+                 in.read(null, decoder));
     try {
       in.read(null, decoder);
       fail("Should have thrown exception.");
