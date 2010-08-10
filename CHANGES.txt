@@ -103,6 +103,9 @@ Avro 1.4.0 (unreleased)
     accepts both reader's and writer's schema.  Also improve javadoc
     for related constructors and setters.  (Stu Hood via cutting)
 
+    AVRO-557. Java: Cache ResolvingDecoder instances, speeding
+    DatumReader benchmarks by 5x to 9x.  (cutting & scotcarey)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

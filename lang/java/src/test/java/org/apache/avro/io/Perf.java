@@ -18,7 +18,6 @@
 package org.apache.avro.io;
 
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +60,7 @@ public class Perf {
       } else if (a.equals("-S")) {
         tests.add(new ResolverTest());
       } else if (a.equals("-M")) {
-        tests.add(new MigrationTest());
+        tests.add(new MigrationWithDefaultTest());
       } else if (a.equals("-G")) {
         tests.add(new GenericReaderTest());
       } else if (a.equals("-Gd")) {
@@ -70,6 +69,11 @@ public class Perf {
         tests.add(new GenericReaderWithOutOfOrderTest());
       } else if (a.equals("-Gp")) {
         tests.add(new GenericReaderWithPromotionTest());
+      } else if (a.equals("-GoneTimeUse")) {
+        tests.add(new GenericReaderTest());
+        tests.add(new GenericReaderOneTimeUseReaderTest());
+        tests.add(new GenericReaderOneTimeUseDecoderTest());
+        tests.add(new GenericReaderOneTimeUseTest());
       } else {
         usage();
         System.exit(1);
@@ -85,8 +89,12 @@ public class Perf {
           new ReadDouble(),
           new ReadBoolean(),
           new RepeaterTest(), new NestedRecordTest(),
-          new ResolverTest(), new MigrationTest(),
-          new GenericReaderTest(), new GenericReaderWithDefaultTest(),
+          new ResolverTest(), new MigrationWithDefaultTest(),
+          new GenericReaderTest(), 
+          new GenericReaderOneTimeUseReaderTest(),
+          new GenericReaderOneTimeUseDecoderTest(),
+          new GenericReaderOneTimeUseTest(),
+          new GenericReaderWithDefaultTest(),
           new GenericReaderWithOutOfOrderTest(),
           new GenericReaderWithPromotionTest()
       }));
@@ -144,10 +152,15 @@ public class Perf {
       this.count = count;
     }
     
-    protected void generateRepeaterData(Encoder e) throws IOException {
+    protected final void generateRepeaterDataArray(Encoder e) throws IOException {
       e.writeArrayStart();
       e.setItemCount(count);
       Random r = newRandom();
+      generateRepeatData(e, r, count);
+      e.writeArrayEnd();
+    }
+    
+    protected final void generateRepeatData(Encoder e, Random r, int count) throws IOException {
       for (int i = 0; i < count; i++) {
         e.writeDouble(r.nextDouble());
         e.writeDouble(r.nextDouble());
@@ -155,8 +168,7 @@ public class Perf {
         e.writeInt(r.nextInt());
         e.writeInt(r.nextInt());
         e.writeInt(r.nextInt());
-  }
-      e.writeArrayEnd();
+      }
     }
   }
   
@@ -339,16 +351,19 @@ public class Perf {
     }
   }
   
-  private static final String REPEATER_SCHEMA =
-    "{ \"type\": \"array\", \"items\":\n"
-    + "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
+  private static final String SCHEMA = 
+    "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f3\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f4\", \"type\": \"int\" },\n"
     + "{ \"name\": \"f5\", \"type\": \"int\" },\n"
     + "{ \"name\": \"f6\", \"type\": \"int\" }\n"
-    + "] } }";
+    + "] }";
+  
+  private static final String REPEATER_SCHEMA =
+    "{ \"type\": \"array\", \"items\":\n"
+    + SCHEMA + " }";
 
   private static class RepeaterTest extends DecoderTest {
     public RepeaterTest() throws IOException {
@@ -361,7 +376,8 @@ public class Perf {
     
     @Override
     protected void genData(Encoder e) throws IOException {
-      generateRepeaterData(e);
+      generateRepeaterDataArray(e);
+      e.flush();
     }
     
     @Override
@@ -395,8 +411,7 @@ public class Perf {
   }
 
   private static final String MIGRATION_SCHEMA_WITH_DEFAULT =
-    "{ \"type\": \"array\", \"items\":\n"
-    + "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
+    "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f3\", \"type\": \"double\" },\n"
@@ -407,39 +422,41 @@ public class Perf {
       + "\"default\": \"undefined\" },\n"
     + "{ \"name\": \"f8\", \"type\": \"string\","
       + "\"default\": \"undefined\" }\n"
-    + "] } }";
+    + "] }";
+  
+  private static final String MIGRATION_SCHEMA_WITH_DEFAULT_REPEATER = 
+    "{ \"type\": \"array\", \"items\":\n"
+    + MIGRATION_SCHEMA_WITH_DEFAULT + " }";
 
   private static final String MIGRATION_SCHEMA_WITH_OUT_OF_ORDER =
-    "{ \"type\": \"array\", \"items\":\n"
-    + "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
+    "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f3\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f5\", \"type\": \"int\" },\n"
     + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f4\", \"type\": \"int\" },\n"
     + "{ \"name\": \"f6\", \"type\": \"int\" }\n"
-    + "] } }";
+    + "] }";
 
   private static final String MIGRATION_SCHEMA_WITH_PROMOTION =
-    "{ \"type\": \"array\", \"items\":\n"
-    + "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
+    "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f3\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f4\", \"type\": \"long\" },\n"
     + "{ \"name\": \"f5\", \"type\": \"long\" },\n"
     + "{ \"name\": \"f6\", \"type\": \"long\" }\n"
-    + "] } }";
+    + "] }";
 
 
   /**
    * Tests the performance of introducing default values.
    */
-  private static class MigrationTest extends RepeaterTest {
+  private static class MigrationWithDefaultTest extends RepeaterTest {
     private final Schema readerSchema;
-    public MigrationTest() throws IOException {
-      super("MigrationTest");
-      readerSchema = Schema.parse(MIGRATION_SCHEMA_WITH_DEFAULT);
+    public MigrationWithDefaultTest() throws IOException {
+      super("MigrationWithDefaultTest");
+      readerSchema = Schema.parse(MIGRATION_SCHEMA_WITH_DEFAULT_REPEATER);
     }
     
     @Override
@@ -465,6 +482,8 @@ public class Perf {
   
   private static class GenericReaderTest extends Test {
     public final Schema writerSchema;
+    protected final GenericDatumReader<Object> r;
+    protected BinaryDecoder d;
 
     public GenericReaderTest() throws IOException {
       this("GenericReaderTest");
@@ -472,36 +491,97 @@ public class Perf {
 
     public GenericReaderTest(String name) throws IOException {
       super(name, CYCLES, COUNT/12);
-      this.writerSchema = Schema.parse(REPEATER_SCHEMA);
+      this.writerSchema = Schema.parse(SCHEMA);
       ByteArrayOutputStream bao = new ByteArrayOutputStream();
       Encoder e = new BinaryEncoder(bao);
-      generateRepeaterData(e);
+      genData(e);
       data = bao.toByteArray();
+      r = createReader();
+      d = null;
     }
 
     @Override
-    public final long read() throws IOException {
-      GenericDatumReader<Object> r = getReader();
+    public long read() throws IOException {
       long t = System.nanoTime();
-      Decoder d =
-        DecoderFactory.defaultFactory().createBinaryDecoder(data, null);
+      d = initDecoder(d);
       Object reuse = null;
-      for (; ;) {
-        try {
-          reuse = r.read(reuse, d);
-        } catch (EOFException e) {
-          break;
-        }
+        for (int i = 0; i < this.count; i++) {
+          try {
+                    GenericDatumReader<Object> reader = getReader();
+          Decoder decoder = getDecoder();
+          reuse = reader.read(reuse, decoder);
+          } catch (Exception e) {
+            System.out.println(i + " out of " + count + " " + name);
+            e.printStackTrace();
+            break;
+            }
       }
-      
       return (System.nanoTime() - t);
     }
     
-    protected GenericDatumReader<Object> getReader() throws IOException {
+    protected void genData(Encoder e) throws IOException {
+      generateRepeatData(e, new Random(), count);
+      e.flush();
+    }
+    
+    protected GenericDatumReader<Object> createReader() throws IOException {
       return new GenericDatumReader<Object>(writerSchema);
+    }
+    
+    protected GenericDatumReader<Object> getReader() throws IOException {
+      return r;
+    }
+    
+    protected BinaryDecoder initDecoder(BinaryDecoder reuse) {
+      return DecoderFactory.defaultFactory().createBinaryDecoder(data, reuse);
+    }
+    
+    protected Decoder getDecoder() {
+      return d;
     }
   }
 
+  private static class GenericReaderOneTimeUseReaderTest extends GenericReaderTest {
+    
+    public GenericReaderOneTimeUseReaderTest() throws IOException {
+      super("GenericReaderOneTimeUseReaderTest");
+    }
+
+    @Override
+    protected GenericDatumReader<Object> getReader() throws IOException {
+      return createReader();
+    }
+  }
+  
+
+  private static class GenericReaderOneTimeUseDecoderTest extends GenericReaderTest {
+    
+    public GenericReaderOneTimeUseDecoderTest() throws IOException {
+      super("GenericReaderOneTimeUseDecoderTest");
+    }
+
+    @Override
+    protected Decoder getDecoder() {
+      return initDecoder(null);
+    }
+  }
+  
+  private static class GenericReaderOneTimeUseTest extends GenericReaderTest {
+    public GenericReaderOneTimeUseTest() throws IOException {
+      super("GenericReaderOneTimeUseTest");
+    }
+
+    @Override
+    protected GenericDatumReader<Object> getReader() throws IOException {
+      return createReader();
+    }
+    
+    @Override
+    protected Decoder getDecoder() {
+      return initDecoder(null);
+    }
+  }
+  
   private static class GenericReaderWithMigrationTest extends GenericReaderTest {
     private final Schema readerSchema;
     protected GenericReaderWithMigrationTest(String name, String readerSchema)
@@ -552,6 +632,7 @@ public class Perf {
       return new ValidatingDecoder(schema, super.getDecoder());
     }
   }
+
 
   private static void usage() {
     System.out.println("Usage: Perf { -i | -ls | -l | -f | -d | -b | -R | -N " +

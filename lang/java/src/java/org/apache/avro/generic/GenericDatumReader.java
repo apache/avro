@@ -29,12 +29,13 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.Utf8;
+import org.apache.avro.util.WeakIdentityHashMap;
 
 /** {@link DatumReader} for generic Java objects. */
 public class GenericDatumReader<D> implements DatumReader<D> {
   private Schema actual;
   private Schema expected;
-  private Object resolver;
+  private ResolvingDecoder resolver;
 
   public GenericDatumReader() {}
 
@@ -64,14 +65,36 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     this.expected = reader;
   }
 
+  private static final ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>
+    RESOLVER_CACHE =
+    new ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>() {
+    protected Map<Schema,Map<Schema,ResolvingDecoder>> initialValue() {
+      return new WeakIdentityHashMap<Schema,Map<Schema,ResolvingDecoder>>();
+    }
+  };
+
+  private static ResolvingDecoder getResolver(Schema actual, Schema expected)
+    throws IOException {
+    Map<Schema,ResolvingDecoder> cache = RESOLVER_CACHE.get().get(actual);
+    if (cache == null) {
+      cache = new WeakIdentityHashMap<Schema,ResolvingDecoder>();
+      RESOLVER_CACHE.get().put(actual, cache);
+    }
+    ResolvingDecoder resolver = cache.get(expected);
+    if (resolver == null) {
+      resolver = new ResolvingDecoder(actual, expected, null);
+      cache.put(expected, resolver);
+    }
+    return resolver;
+  }
+
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
-    if (resolver == null) {
-      resolver = ResolvingDecoder.resolve(actual, expected);
-    }
-    ResolvingDecoder r = new ResolvingDecoder(resolver, in);
-    D result = (D) read(reuse, expected, r);
-    r.drain();
+    if (resolver == null)
+      resolver = getResolver(actual, expected);
+    resolver.init(in);
+    D result = (D) read(reuse, expected, resolver);
+    resolver.drain();
     return result;
   }
   

@@ -45,6 +45,12 @@ public class ValidatingDecoder extends ParsingDecoder
     this(new ValidatingGrammarGenerator().generate(schema), in);
   }
 
+  /** Re-initialize, reading from a new underlying Decoder. */
+  public void init(Decoder in) throws IOException {
+    parser.reset();
+    this.in = in;
+  }
+
   @Override
   public void init(InputStream in) throws IOException {
     parser.reset();
