@@ -19,6 +19,8 @@
 package org.apache.avro.mapred;
 
 import java.io.IOException;
+import java.util.Map;
+import java.net.URLDecoder;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.fs.FileSystem;
@@ -69,6 +71,17 @@ public class AvroOutputFormat <T>
     if (FileOutputFormat.getCompressOutput(job)) {
       int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
       writer.setCodec(CodecFactory.deflateCodec(level));
+    }
+
+    // copy metadata from job
+    for (Map.Entry<String,String> e : job) {
+      if (e.getKey().startsWith(AvroJob.TEXT_PREFIX))
+        writer.setMeta(e.getKey().substring(AvroJob.TEXT_PREFIX.length()),
+                       e.getValue());
+      if (e.getKey().startsWith(AvroJob.BINARY_PREFIX))
+        writer.setMeta(e.getKey().substring(AvroJob.BINARY_PREFIX.length()),
+                       URLDecoder.decode(e.getValue(), "ISO-8859-1")
+                       .getBytes("ISO-8859-1"));
     }
 
     Path path = FileOutputFormat.getTaskOutputPath(job, name+EXT);

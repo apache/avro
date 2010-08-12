@@ -26,11 +26,13 @@ import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.BufferedInputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.mapred.JobConf;
 
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
@@ -92,7 +94,7 @@ class WordCountUtil {
     out.close();
   }
 
-  public static void validateCountsFile() throws IOException {
+  public static void validateCountsFile() throws Exception {
     DatumReader<Pair<Utf8,Long>> reader
       = new SpecificDatumReader<Pair<Utf8,Long>>();
     InputStream in = new BufferedInputStream(new FileInputStream(COUNTS_FILE));
@@ -104,8 +106,31 @@ class WordCountUtil {
                    COUNTS.get(wc.key().toString()), wc.value());
       numWords++;
     }
+    checkMeta(counts);
     in.close();
     assertEquals(COUNTS.size(), numWords);
+  }
+
+  // metadata tests
+  private static final String STRING_KEY = "string-key";
+  private static final String LONG_KEY = "long-key";
+  private static final String BYTES_KEY = "bytes-key";
+  
+  private static final String STRING_META_VALUE = "value";
+  private static final long LONG_META_VALUE = 666;
+  private static final byte[] BYTES_META_VALUE
+    = new byte[] {(byte)0x00, (byte)0x80, (byte)0xff};
+
+  public static void setMeta(JobConf job) {
+    AvroJob.setOutputMeta(job, STRING_KEY, STRING_META_VALUE);
+    AvroJob.setOutputMeta(job, LONG_KEY, LONG_META_VALUE);
+    AvroJob.setOutputMeta(job, BYTES_KEY, BYTES_META_VALUE);
+  }
+
+  public static void checkMeta(DataFileStream<?> in) throws Exception {
+    assertEquals(STRING_META_VALUE, in.getMetaString(STRING_KEY));
+    assertEquals(LONG_META_VALUE, in.getMetaLong(LONG_KEY));
+    assertTrue(Arrays.equals(BYTES_META_VALUE, in.getMeta(BYTES_KEY)));
   }
 
 }

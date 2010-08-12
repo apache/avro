@@ -106,6 +106,9 @@ Avro 1.4.0 (unreleased)
     AVRO-557. Java: Cache ResolvingDecoder instances, speeding
     DatumReader benchmarks by 5x to 9x.  (cutting & scotcarey)
 
+    AVRO-586. Java: Permit specification of MapReduce output file
+    metadata properties. (Ken Krugler via cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

@@ -81,6 +81,8 @@ public class TestWordCount {
     FileOutputFormat.setOutputPath(job, outputPath);
     FileOutputFormat.setCompressOutput(job, true);
     
+    WordCountUtil.setMeta(job);
+
     JobClient.runJob(job);
     
     WordCountUtil.validateCountsFile();

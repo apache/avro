@@ -19,6 +19,8 @@
 package org.apache.avro.mapred;
 
 import java.util.Collection;
+import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
@@ -38,6 +40,10 @@ public class AvroJob {
   public static final String MAP_OUTPUT_SCHEMA = "avro.map.output.schema";
   /** The configuration key for a job's output schema. */
   public static final String OUTPUT_SCHEMA = "avro.output.schema";
+  /** The configuration key prefix for a text output metadata. */
+  public static final String TEXT_PREFIX = "avro.meta.text.";
+  /** The configuration key prefix for a binary output metadata. */
+  public static final String BINARY_PREFIX = "avro.meta.binary.";
 
   /** Configure a job's map input schema. */
   public static void setInputSchema(JobConf job, Schema s) {
@@ -68,6 +74,25 @@ public class AvroJob {
   public static void setOutputSchema(JobConf job, Schema s) {
     job.set(OUTPUT_SCHEMA, s.toString());
     configureAvroJob(job);
+  }
+
+  /** Add metadata to job output files.*/
+  public static void setOutputMeta(JobConf job, String key, String value) {
+    job.set(TEXT_PREFIX+key, value);
+  }
+  /** Add metadata to job output files.*/
+  public static void setOutputMeta(JobConf job, String key, long value) {
+    job.set(TEXT_PREFIX+key, Long.toString(value));
+  }
+  /** Add metadata to job output files.*/
+  public static void setOutputMeta(JobConf job, String key, byte[] value) {
+    try {
+      job.set(BINARY_PREFIX+key,
+              URLEncoder.encode(new String(value, "ISO-8859-1"),
+                                "ISO-8859-1"));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /** Return a job's output key schema. */
