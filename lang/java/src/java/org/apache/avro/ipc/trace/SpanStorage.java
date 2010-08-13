@@ -28,6 +28,10 @@ import java.util.List;
  *
  */
 public interface SpanStorage {
+  long DEFAULT_MAX_SPANS = 10000L;
+  long MILLIS_PER_SECOND = 1000L;
+  long NANOS_PER_SECOND = 1000000000L;
+  
   /**
    * Add a span. 
    * @param s
@@ -43,4 +47,11 @@ public interface SpanStorage {
    * Return a list of all spans currently stored. For testing.
    */
   List<Span> getAllSpans();
+
+  /**
+   * Return a list of all spans that fall within the time given range. 
+   * @param start UNIX time (in nanoseconds) as a long
+   * @param end UNIX time (in nanoseconds) as a long
+   */
+  List<Span> getSpansInRange(long start, long end);
 }

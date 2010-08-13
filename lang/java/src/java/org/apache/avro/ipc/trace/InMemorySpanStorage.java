@@ -30,7 +30,6 @@ import java.util.List;
  */
 public class InMemorySpanStorage implements SpanStorage {
   private static final long DEFAULT_MAX_SPANS = 10000;
-  
   protected LinkedList<Span> spans;
   private long maxSpans;
 
@@ -64,5 +63,16 @@ public class InMemorySpanStorage implements SpanStorage {
   @Override
   public List<Span> getAllSpans() {
     return (LinkedList<Span>) this.spans.clone();
+  }
+
+  @Override
+  public List<Span> getSpansInRange(long start, long end) {
+    List<Span> out = new LinkedList<Span>();
+    for (Span s: this.spans) {
+      if (Util.spanInRange(s, start, end)) {
+        out.add(s);
+      }
+    }
+    return out;
   }
 }

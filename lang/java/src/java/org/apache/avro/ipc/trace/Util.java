@@ -53,7 +53,6 @@ class Util {
     return foundEvents;
   }
   
-  
   /**
    * Get the size of an RPC payload.
    */
@@ -166,4 +165,25 @@ class Util {
     return Arrays.equals(a.bytes(), b.bytes());
   }
   
+  /**
+   * Tests if a span occurred between start and end.
+   */
+  public static boolean spanInRange(Span s, long start, long end) {
+    long startTime = 0;
+    long endTime = 0;
+    
+    for (TimestampedEvent e: s.events) {
+      if (e.event instanceof SpanEvent) {
+        SpanEvent ev = (SpanEvent) e.event;
+        switch (ev) {
+          case CLIENT_SEND: startTime = e.timeStamp;
+          case SERVER_RECV: startTime = e.timeStamp;
+          case CLIENT_RECV: endTime = e.timeStamp;
+          case SERVER_SEND: endTime = e.timeStamp;
+        }      
+      }
+    }
+    if (startTime > start && endTime < end) { return true; }
+    return false;
+  }
 }

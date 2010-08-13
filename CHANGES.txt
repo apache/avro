@@ -21,6 +21,9 @@ Avro 1.4.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-606. Add File-Based Span Storage to TracePlugin
+    (Patrick Wendell via philz)
+
     AVRO-595. Add Basic Trace Collection and Propagation.
     (Patrick Wendell via philz)
 

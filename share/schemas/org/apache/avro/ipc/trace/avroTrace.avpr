@@ -64,6 +64,19 @@
         "type" : "array",
         "items" : "Span"
       }
+    },
+    "getSpansInRange" : {
+      "request" : [ {
+        "name" : "start",
+        "type" : "long"
+      }, {
+        "name" : "end",
+        "type" : "long"
+      } ],
+      "response" : {
+        "type" : "array",
+        "items" : "Span"
+      }
     }
   }
 }

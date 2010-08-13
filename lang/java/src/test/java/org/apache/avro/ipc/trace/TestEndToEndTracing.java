@@ -37,6 +37,7 @@ import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.trace.SpanAggregator.SpanAggregationResults;
 import org.apache.avro.ipc.trace.SpanAggregator.TraceFormationResults;
+import org.apache.avro.ipc.trace.TracePlugin.StorageType;
 import org.junit.Test;
 
 /**
@@ -137,10 +138,23 @@ public class TestEndToEndTracing {
       return currentCount + 1;
     }
   }
-
+  
   @Test
-  public void testTraceAndCollection() throws Exception {
+  public void testTraceAndCollectionMemory() throws Exception {
     TracePluginConfiguration conf = new TracePluginConfiguration();
+    conf.storageType = StorageType.MEMORY;
+    testTraceAndCollection(conf);
+  }  
+  
+  @Test
+  public void testTraceAndCollectionDisk() throws Exception {
+    TracePluginConfiguration conf = new TracePluginConfiguration();
+    conf.storageType = StorageType.DISK;
+    conf.buffer = false;
+    testTraceAndCollection(conf);
+  }
+  
+  public void testTraceAndCollection(TracePluginConfiguration conf) throws Exception {
     conf.traceProb = 1.0;
     conf.port = 51010;
     conf.clientPort = 12346;
@@ -182,7 +196,7 @@ public class TestEndToEndTracing {
         advancedProtocol.getMessages().get("w").getRequest());
     params.put("req", 1);
     r.request("w", params);
-    
+    Thread.sleep(1000);
     ArrayList<Span> allSpans = new ArrayList<Span>();
     
     allSpans.addAll(aPlugin.storage.getAllSpans());

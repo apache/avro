@@ -30,6 +30,12 @@ public class TracePluginConfiguration {
   public StorageType storageType;  // How to store spans
   public long maxSpans;   // Max number of spans to store
   public boolean enabled; // Whether or not we are active
+  public boolean buffer;  // If disk storage, whether to buffer writes
+  public int compressionLevel; // If using file storage, what compression
+                               // level (0-9).
+  public int fileGranularitySeconds; // How many seconds of span data to store
+                                     // in each file.
+  public String spanStorageDir; // where to store span data, if file-based
   
   /**
    * Return a TracePluginConfiguration with default options.
@@ -41,5 +47,9 @@ public class TracePluginConfiguration {
     this.storageType = StorageType.MEMORY;
     this.maxSpans = 10000;
     this.enabled = true;
+    this.buffer = true;
+    this.compressionLevel = 9;
+    this.fileGranularitySeconds = 500;
+    this.spanStorageDir = "/tmp";
   }
 }

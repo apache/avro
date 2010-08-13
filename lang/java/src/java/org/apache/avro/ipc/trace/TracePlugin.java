@@ -84,12 +84,23 @@ public class TracePlugin extends RPCPlugin {
     public GenericArray<Span> getAllSpans() throws AvroRemoteException {
       List<Span> spans = this.spanStorage.getAllSpans();
       GenericData.Array<Span> out;
-      synchronized (spans) { 
-        out = new GenericData.Array<Span>(spans.size(), 
-          Schema.createArray(Span.SCHEMA$));
-        for (Span s: spans) {
-          out.add(s);
-        }
+      out = new GenericData.Array<Span>(spans.size(), 
+        Schema.createArray(Span.SCHEMA$));
+      for (Span s: spans) {
+        out.add(s);
+      }
+      return out;
+    }
+
+    @Override
+    public GenericArray<Span> getSpansInRange(long start, long end)
+        throws AvroRemoteException {
+      List<Span> spans = this.spanStorage.getSpansInRange(start, end);
+      GenericData.Array<Span> out;
+      out = new GenericData.Array<Span>(spans.size(), 
+        Schema.createArray(Span.SCHEMA$));
+      for (Span s: spans) {
+        out.add(s);
       }
       return out;
     }
@@ -139,8 +150,11 @@ public class TracePlugin extends RPCPlugin {
       }
     };
 
-    if (storageType.equals("MEMORY")) {
+    if (storageType == StorageType.MEMORY) {
       this.storage = new InMemorySpanStorage();
+    }
+    else if (storageType == StorageType.DISK) {
+      this.storage = new FileSpanStorage(false, conf);
     }
     else { // default
       this.storage = new InMemorySpanStorage();
@@ -285,6 +299,14 @@ public class TracePlugin extends RPCPlugin {
         Util.getPayloadSize(context.getResponsePayload());
       this.storage.addSpan(this.childSpan.get());
       this.childSpan.set(null);
+    }
+  }
+  
+  public void stopClientServer() {
+    try {
+      this.clientFacingServer.stop();
+    } catch (Exception e) {
+      // ignore
     }
   }
   

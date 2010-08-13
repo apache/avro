@@ -33,5 +33,14 @@ protocol AvroTrace {
     boolean complete; // Whether includes data from both sides
   }
 
+  /**
+   * Get all spans stored on this host.
+   */
   array<Span> getAllSpans();
+
+  /**
+   * Get spans occuring between start and end. Each is a unix timestamp
+   * in nanosecond units (for consistency with TimestampedEvent).
+   */
+  array<Span> getSpansInRange(long start, long end);
 }
