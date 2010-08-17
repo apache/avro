@@ -50,6 +50,9 @@ Avro 1.4.0 (unreleased)
     SpecificDatumReader and SpecificDatumWriter will now use generic
     types when no specific class is available.  (cutting)
 
+    AVRO-600. Add support for type and field name aliases,
+    facilitating schema migration. (cutting)
+
   IMPROVEMENTS
 
     AVRO-587. Add Charts and Templating to Stats View

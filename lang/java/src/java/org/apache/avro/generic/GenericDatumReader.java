@@ -82,7 +82,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
     ResolvingDecoder resolver = cache.get(expected);
     if (resolver == null) {
-      resolver = new ResolvingDecoder(actual, expected, null);
+      resolver = new ResolvingDecoder(Schema.applyAliases(actual, expected),
+                                      expected, null);
       cache.put(expected, resolver);
     }
     return resolver;

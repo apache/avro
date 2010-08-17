@@ -270,6 +270,16 @@ public abstract class Schema {
     throw new AvroRuntimeException("Not a named type: "+this);
   }
 
+  /** If this is a record, enum or fixed, add an alias. */
+  public void addAlias(String alias) {
+    throw new AvroRuntimeException("Not a named type: "+this);
+  }
+
+  /** If this is a record, enum or fixed, return its aliases, if any. */
+  public Set<String> getAliases() {
+    throw new AvroRuntimeException("Not a named type: "+this);
+  }
+
   /** Returns true if this record is an error type. */
   public boolean isError() {
     throw new AvroRuntimeException("Not a record: "+this);
@@ -360,6 +370,7 @@ public abstract class Schema {
     private final String doc;
     private final JsonNode defaultValue;
     private final Order order;
+    private Set<String> aliases;
     private final Props props = new Props(FIELD_RESERVED);
 
     public Field(String name, Schema schema, String doc,
@@ -442,11 +453,15 @@ public abstract class Schema {
           names.space(space);
       }
     }
+    public String getQualified(String defaultSpace) {
+      return (space == null || space.equals(defaultSpace)) ? name : full;
+    }
   }
 
   private static abstract class NamedSchema extends Schema {
-    private final Name name;
-    private final String doc;
+    final Name name;
+    final String doc;
+    Set<Name> aliases;
     public NamedSchema(Type type, Name name, String doc) {
       super(type);
       this.name = name;
@@ -459,13 +474,22 @@ public abstract class Schema {
     public String getDoc() { return doc; }
     public String getNamespace() { return name.space; }
     public String getFullName() { return name.full; }
+    public void addAlias(String alias) {
+      if (aliases == null)
+        this.aliases = new HashSet<Name>();
+      aliases.add(new Name(alias, name.space));
+    }
+    public Set<String> getAliases() {
+      Set<String> result = new HashSet<String>();
+      if (aliases != null)
+        for (Name alias : aliases)
+          result.add(alias.full);
+      return result;
+    }
     public boolean writeNameRef(Names names, JsonGenerator gen)
       throws IOException {
       if (this.equals(names.get(name))) {
-        if (name.space == null || name.space.equals(names.space()))
-          gen.writeString(name.name);             // in default namespace
-        else
-          gen.writeString(name.full);             // use fully-qualified name
+        gen.writeString(name.getQualified(names.space()));
         return true;
       } else if (name.name != null) {
         names.put(name, this);
@@ -481,6 +505,15 @@ public abstract class Schema {
     public int hashCode() {
       return getType().hashCode() + name.hashCode() + props.hashCode();
     }
+    public void aliasesToJson(JsonGenerator gen) throws IOException {
+      if (aliases == null) return;
+      gen.writeFieldName("aliases");
+      gen.writeStartArray();
+      for (Name alias : aliases)
+        gen.writeString(alias.getQualified(name.space));
+      gen.writeEndArray();
+    }
+
   }
 
   private static class SeenPair {
@@ -573,6 +606,7 @@ public abstract class Schema {
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
       props.write(gen);
+      aliasesToJson(gen);
       gen.writeEndObject();
     }
 
@@ -632,6 +666,7 @@ public abstract class Schema {
         gen.writeString(symbol);
       gen.writeEndArray();
       props.write(gen);
+      aliasesToJson(gen);
       gen.writeEndObject();
     }
   }
@@ -767,6 +802,7 @@ public abstract class Schema {
       writeName(names, gen);
       gen.writeNumberField("size", size);
       props.write(gen);
+      aliasesToJson(gen);
       gen.writeEndObject();
     }
   }
@@ -950,6 +986,7 @@ public abstract class Schema {
             if (!FIELD_RESERVED.contains(prop) && value != null)
               f.addProp(prop, value);
           }
+          f.aliases = parseAliases(field);
           fields.add(f);
         }
         result.setFields(fields);
@@ -989,6 +1026,12 @@ public abstract class Schema {
       }
       if (savedSpace != null)
         names.space(savedSpace);                  // restore space
+      if (result instanceof NamedSchema) {
+        Set<String> aliases = parseAliases(schema);
+        if (aliases != null)                      // add aliases
+          for (String alias : aliases)
+            result.addAlias(alias);
+      }
       return result;
     } else if (schema.isArray()) {                // union
       LockableArrayList<Schema> types =
@@ -999,6 +1042,21 @@ public abstract class Schema {
     } else {
       throw new SchemaParseException("Schema not yet supported: "+schema);
     }
+  }
+
+  private static Set<String> parseAliases(JsonNode node) {
+    JsonNode aliasesNode = node.get("aliases");
+    if (aliasesNode == null)
+      return null;
+    if (!aliasesNode.isArray())
+      throw new SchemaParseException("aliases not an array: "+node);
+    Set<String> aliases = new HashSet<String>();
+    for (JsonNode aliasNode : aliasesNode) {
+      if (!aliasNode.isTextual())
+        throw new SchemaParseException("alias not a string: "+aliasNode);
+      aliases.add(aliasNode.getTextValue());
+    }
+    return aliases;  
   }
 
   /** Extracts text value associated to key from the container JsonNode,
@@ -1032,6 +1090,135 @@ public abstract class Schema {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /** Rewrite a writer's schema using the aliases from a reader's schema.  This
+   * permits reading records, enums and fixed schemas whose names have changed,
+   * and records whose field names have changed.  The returned schema always
+   * contains the same data elements in the same order, but with possibly
+   * different names. */
+  public static Schema applyAliases(Schema writer, Schema reader) {
+    if (writer == reader) return writer;          // same schema
+
+    // create indexes of names
+    Map<Schema,Schema> seen = new IdentityHashMap<Schema,Schema>(1);
+    Map<Name,Name> aliases = new HashMap<Name, Name>(1);
+    Map<Name,Map<String,String>> fieldAliases =
+      new HashMap<Name, Map<String,String>>(1);
+    getAliases(reader, seen, aliases, fieldAliases);
+
+    if (aliases.size() == 0 && fieldAliases.size() == 0)
+      return writer;                              // no aliases
+    
+    seen.clear();
+    return applyAliases(writer, seen, aliases, fieldAliases);
+  }
+
+  private static Schema applyAliases(Schema s, Map<Schema,Schema> seen,
+                                     Map<Name,Name> aliases,
+                                     Map<Name,Map<String,String>> fieldAliases){
+
+    Name name = s instanceof NamedSchema ? ((NamedSchema)s).name : null;
+    Schema result = s;
+    switch (s.getType()) {
+    case RECORD:
+      if (seen.containsKey(s)) return seen.get(s); // break loops
+      if (aliases.containsKey(name))
+        name = aliases.get(name);
+      result = Schema.createRecord(name.full, s.getDoc(), null, s.isError());
+      seen.put(s, result);
+      List<Field> newFields = new ArrayList<Field>();
+      for (Field f : s.getFields()) {
+        Schema fSchema = applyAliases(f.schema, seen, aliases, fieldAliases);
+        String fName = getFieldAlias(name, f.name, fieldAliases);
+        Field newF = new Field(fName, fSchema, f.doc, f.defaultValue, f.order);
+        newF.props.putAll(f.props);               // copy props
+        newFields.add(newF);
+      }
+      result.setFields(newFields);
+      break;
+    case ENUM:
+      if (aliases.containsKey(name))
+        result = Schema.createEnum(aliases.get(name).full, s.getDoc(), null,
+                                   s.getEnumSymbols());
+      break;
+    case ARRAY:
+      Schema e = applyAliases(s.getElementType(), seen, aliases, fieldAliases);
+      if (e != s.getElementType())
+        result = Schema.createArray(e);
+      break;
+    case MAP:
+      Schema v = applyAliases(s.getValueType(), seen, aliases, fieldAliases);
+      if (v != s.getValueType())
+        result = Schema.createMap(v);
+      break;
+    case UNION:
+      List<Schema> types = new ArrayList<Schema>();
+      for (Schema branch : s.getTypes())
+        types.add(applyAliases(branch, seen, aliases, fieldAliases));
+      result = Schema.createUnion(types);
+      break;
+    case FIXED:
+      if (aliases.containsKey(name))
+        result = Schema.createFixed(aliases.get(name).full, s.getDoc(), null,
+                                    s.getFixedSize());
+      break;
+    }
+    if (result != s)
+      result.props.putAll(s.props);        // copy props
+    return result;
+  }
+
+
+  private static void getAliases(Schema schema,
+                                 Map<Schema,Schema> seen,
+                                 Map<Name,Name> aliases,
+                                 Map<Name,Map<String,String>> fieldAliases) {
+    if (schema instanceof NamedSchema) {
+      NamedSchema namedSchema = (NamedSchema)schema;
+      if (namedSchema.aliases != null)
+        for (Name alias : namedSchema.aliases)
+          aliases.put(alias, namedSchema.name);
+    }
+    switch (schema.getType()) {
+    case RECORD:
+      if (seen.containsKey(schema)) return;            // break loops
+      seen.put(schema, schema);
+      RecordSchema record = (RecordSchema)schema;
+      for (Field field : schema.getFields()) {
+        if (field.aliases != null)
+          for (String fieldAlias : field.aliases) {
+            Map<String,String> recordAliases = fieldAliases.get(record.name);
+            if (recordAliases == null)
+              fieldAliases.put(record.name,
+                               recordAliases = new HashMap<String,String>());
+            recordAliases.put(fieldAlias, field.name);
+          }
+        getAliases(field.schema, seen, aliases, fieldAliases);
+      }
+      if (record.aliases != null && fieldAliases.containsKey(record.name))
+        for (Name recordAlias : record.aliases)
+          fieldAliases.put(recordAlias, fieldAliases.get(record.name));
+      break;
+    case ARRAY:
+      getAliases(schema.getElementType(), seen, aliases, fieldAliases);
+      break;
+    case MAP:
+      getAliases(schema.getValueType(), seen, aliases, fieldAliases);
+      break;
+    case UNION:
+      for (Schema s : schema.getTypes())
+        getAliases(s, seen, aliases, fieldAliases);
+      break;
+    }
+  }
+
+  private static String getFieldAlias
+    (Name record, String field, Map<Name,Map<String,String>> fieldAliases) {
+    Map<String,String> recordAliases = fieldAliases.get(record);
+    if (recordAliases == null)
+      return field;
+    return recordAliases.get(field);
   }
 
   /**

@@ -93,6 +93,8 @@
 	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
 	    <li><code>doc</code>: a JSON string providing documentation to the
 	    user of this schema (optional).</li>
+	    <li><code>aliases:</code> a JSON array of strings, providing
+	      alternate names for this record (optional).</li>
 	    <li><code>fields</code>: a JSON array, listing fields (required).
 	    Each field is a JSON object with the following attributes:
 	      <ul>
@@ -134,6 +136,8 @@
 		  "descending", or "ignore".  For more details on how
 		  this is used, see the the <a href="#order">sort
 		  order</a> section below.</li>
+		<li><code>aliases:</code> a JSON array of strings, providing
+		  alternate names for this field (optional).</li>
 	      </ul>
 	    </li>
 	  </ul>
@@ -143,6 +147,7 @@
 {
   "type": "record", 
   "name": "LongList",
+  "aliases": ["LinkedLongs"],                      // old name for this
   "fields" : [
     {"name": "value", "type": "long"},             // each element has a long
     {"name": "next", "type": ["LongList", "null"]} // optional next element
@@ -160,6 +165,8 @@
 	    <li><code>name</code>: a JSON string providing the name
 	    of the enum (required).</li>
 	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
+	    <li><code>aliases:</code> a JSON array of strings, providing
+	      alternate names for this enum (optional).</li>
 	    <li><code>doc</code>: a JSON string providing documentation to the
 	    user of this schema (optional).</li>
 	    <li><code>symbols</code>: a JSON array, listing symbols,
@@ -221,6 +228,8 @@
 	  <ul>
 	    <li><code>name</code>: a string naming this fixed (required).</li>
 	    <li><em>namespace</em>, a string that qualifies the name;</li>
+	    <li><code>aliases:</code> a JSON array of strings, providing
+	      alternate names for this enum (optional).</li>
             <li><code>size</code>: an integer, specifying the number
             of bytes per value (required).</li>
 	  </ul>
@@ -271,6 +280,28 @@
 	not be defined in any namespace.  A schema may only contain
 	multiple definitions of a fullname if the definitions are
 	equivalent.</p>
+      </section>
+
+      <section>
+	<title>Aliases</title>
+	<p>Named types and fields may have aliases.  An implementation
+        may optionally use aliases to map a writer's schema to the
+        reader's.  This faciliates both schema evolution as well as
+        processing disparate datasets.</p>
+	<p>Aliases function by re-writing the writer's schema using
+        aliases from the reader's schema.  For example, if the
+        writer's schema was named "Foo" and the reader's schema is
+        named "Bar" and has an alias of "Foo", then the implementation
+        would act as though "Foo" were named "Bar" when reading.
+        Similarly, if data was written as a record with a field named
+        "x" and is read as a record with a field named "y" with alias
+        "x", then the implementation would act as though "x" were
+        named "y" when reading.</p>
+	<p>A type alias may be specified either as a fully
+        namespace-qualified, or relative to the namespace of the name
+        it is an alias for.  For example, if a type named "a.b" has
+        aliases of "c" and "x.y", then the fully qualified names of
+        its aliases are "a.c" and "x.y".</p>
       </section>
 
     </section> <!-- end schemas -->

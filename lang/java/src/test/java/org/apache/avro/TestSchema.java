@@ -372,6 +372,39 @@ public class TestSchema {
     assertEquals("Inner Union", schema.getField("inner_union").doc());
   }
 
+  @Test
+  public void testAliases() throws Exception {
+    String t1 = "{\"type\":\"record\",\"name\":\"a.b\","
+      +"\"fields\":[{\"name\":\"f\",\"type\":\"long\"}]}";
+    String t2 = "{\"type\":\"record\",\"name\":\"x.y\",\"aliases\":[\"a.b\"],"
+      +"\"fields\":[{\"name\":\"g\",\"type\":\"long\",\"aliases\":[\"f\"]}]}";
+    Schema s1 = Schema.parse(t1);
+    Schema s2 = Schema.parse(t2);
+    Schema s3 = Schema.applyAliases(s1,s2);
+    assertFalse(s2 == s3);
+    assertEquals(s2, s3);
+
+    t1 = "{\"type\":\"enum\",\"name\":\"a.b\","
+      +"\"symbols\":[\"x\"]}";
+    t2 = "{\"type\":\"enum\",\"name\":\"a.c\",\"aliases\":[\"b\"],"
+      +"\"symbols\":[\"x\"]}";
+    s1 = Schema.parse(t1);
+    s2 = Schema.parse(t2);
+    s3 = Schema.applyAliases(s1,s2);
+    assertFalse(s2 == s3);
+    assertEquals(s2, s3);
+
+    t1 = "{\"type\":\"fixed\",\"name\":\"a\","
+      +"\"size\": 5}";
+    t2 = "{\"type\":\"fixed\",\"name\":\"b\",\"aliases\":[\"a\"],"
+      +"\"size\": 5}";
+    s1 = Schema.parse(t1);
+    s2 = Schema.parse(t2);
+    s3 = Schema.applyAliases(s1,s2);
+    assertFalse(s2 == s3);
+    assertEquals(s2, s3);
+  }
+
   private static void check(String schemaJson, String defaultJson,
                             Object defaultValue) throws Exception {
     check(schemaJson, defaultJson, defaultValue, true);
