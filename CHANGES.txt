@@ -115,6 +115,9 @@ Avro 1.4.0 (unreleased)
     AVRO-586. Java: Permit specification of MapReduce output file
     metadata properties. (Ken Krugler via cutting)
 
+    AVRO-616. Java: Add comment to generated source files noting that
+    they should not be edited. (Patrick Wendell via cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.
