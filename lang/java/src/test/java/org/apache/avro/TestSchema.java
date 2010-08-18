@@ -373,6 +373,20 @@ public class TestSchema {
   }
 
   @Test
+  public void testFieldDocs() {
+    String schemaStr = "{\"name\": \"Rec\",\"type\": \"record\",\"fields\" : ["+
+      "{\"name\": \"f\", \"type\": \"int\", \"doc\": \"test\"}]}";
+
+    // check field doc is parsed correctly
+    Schema schema = Schema.parse(schemaStr);
+    assertEquals("test", schema.getField("f").doc());
+    
+    // check print/read cycle preserves field doc
+    schema = Schema.parse(schema.toString());
+    assertEquals("test", schema.getField("f").doc());
+  }
+
+  @Test
   public void testAliases() throws Exception {
     String t1 = "{\"type\":\"record\",\"name\":\"a.b\","
       +"\"fields\":[{\"name\":\"f\",\"type\":\"long\"}]}";

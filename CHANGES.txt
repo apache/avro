@@ -148,6 +148,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-609. Java: Fix JsonToBinaryFragmentTool to flush output. (cutting)
 
+    AVRO-612. Java: Preserve field documentation when writing schemas. (cutting)
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS

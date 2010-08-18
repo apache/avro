@@ -617,6 +617,8 @@ public abstract class Schema {
         gen.writeStringField("name", f.name());
         gen.writeFieldName("type");
         f.schema().toJson(names, gen);
+        if (f.doc() != null)
+          gen.writeStringField("doc", f.doc());
         if (f.defaultValue() != null) {
           gen.writeFieldName("default");
           gen.writeTree(f.defaultValue());
