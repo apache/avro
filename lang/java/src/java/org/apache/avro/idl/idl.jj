@@ -87,8 +87,15 @@ public class Idl
 {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
 
+  File inputDir = new File(".");
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
+
+  public Idl(File inputFile) throws IOException {
+    this(new FileInputStream(inputFile), "UTF-8");
+    this.inputDir = inputFile.getParentFile();
+  }
+
 }
 
 PARSER_END(Idl)
@@ -148,10 +155,13 @@ TOKEN :
 | < FALSE: "false" >
 | < FIXED: "fixed" >
 | < FLOAT: "float" >
+| < IDL: "idl" >
+| < IMPORT: "import" >
 | < INT: "int" >
 | < LONG: "long" >
 | < MAP: "map" >
 | < BYTES: "bytes" >
+| < SCHEMA: "schema" >
 | < STRING: "string" >
 | < NULL: "null" >
 | < PROTOCOL: "protocol" >
@@ -1042,29 +1052,77 @@ void ProtocolBody(Protocol p):
 {
   Schema schema;
   Message message;
-  List<Schema> schemata = new ArrayList<Schema>();
+  Protocol importProtocol;
 }
 {
-  "{"
-  (
-      schema = NamedSchemaDeclaration()
-      {
-        schemata.add(schema);
-      }
+  "{" 
+  (  
+   schema = NamedSchemaDeclaration()
 
-    | message = MessageDeclaration(p)
-      {
-        // TODO this is kind of sketch!!
-        p.getMessages().put(message.getName(), message);
-      }
+   | <IMPORT>
+   ((( importProtocol = ImportIdl() | importProtocol = ImportProtocol()) {
+       for (Schema s : importProtocol.getTypes())
+         names.put(s.getFullName(), s);
+       p.getMessages().putAll(importProtocol.getMessages());
+     })
+     | schema = ImportSchema()  {
+     names.put(schema.getFullName(), schema);
+   })
+      
+   | message = MessageDeclaration(p) {
+     p.getMessages().put(message.getName(), message);
+   }
   ) *
   "}"
 
   {
-    p.setTypes(schemata);
+    p.setTypes(names.values());
   }
 }
 
+
+Protocol ImportIdl() : {
+  String importFile;
+}
+{
+  <IDL> importFile = JsonString() ";"
+    {
+      try {
+        return new Idl(new File(inputDir, importFile)).CompilationUnit();
+      } catch (IOException e) {
+        throw new ParseException("Error importing "+importFile+": "+e);
+      }        
+    }
+}
+
+Protocol ImportProtocol() : {
+  String importFile;
+}
+{
+  <PROTOCOL> importFile = JsonString() ";"
+    {
+
+      try {
+        return Protocol.parse(new File(inputDir, importFile));
+      } catch (IOException e) {
+        throw new ParseException("Error importing "+importFile+": "+e);
+      }        
+    }
+}
+
+Schema ImportSchema() : {
+  String importFile;
+}
+{
+  <SCHEMA> importFile = JsonString() ";"
+    {
+      try {
+        return Schema.parse(new File(inputDir, importFile));
+      } catch (IOException e) {
+        throw new ParseException("Error importing "+importFile+": "+e);
+      }        
+    }
+}
 
 Schema FixedDeclaration():
 {

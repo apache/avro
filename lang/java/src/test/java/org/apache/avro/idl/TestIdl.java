@@ -121,7 +121,7 @@ public class TestIdl {
     }
 
     private String generate() throws Exception {
-      Idl parser = new Idl(new FileInputStream(in), "UTF-8");
+      Idl parser = new Idl(in);
       Protocol p = parser.CompilationUnit();
       return p.toString(true);
     }

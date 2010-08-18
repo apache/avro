@@ -1,0 +1,40 @@
+{
+  "protocol" : "Import",
+  "namespace" : "org.foo",
+  "types" : [ {
+    "type" : "record",
+    "name" : "Foo",
+    "fields" : [ {
+      "name" : "x",
+      "type" : "int"
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "Bar",
+    "fields" : [ {
+      "name" : "foo",
+      "type" : "Foo"
+    } ]
+  } ],
+  "messages" : {
+    "error" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "void" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "bar" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "barf" : {
+      "request" : [ {
+        "name" : "foo",
+        "type" : "Foo"
+      } ],
+      "response" : "Bar"
+    }
+  }
+}

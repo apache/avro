@@ -21,7 +21,7 @@ package org.apache.avro.tool;
 import org.apache.avro.Protocol;
 import org.apache.avro.idl.Idl;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -36,7 +36,6 @@ public class IdlTool implements Tool {
   public int run(InputStream in, PrintStream out, PrintStream err,
                   List<String> args) throws Exception {
 
-    InputStream parseIn = in;
     PrintStream parseOut = out;
 
     if (args.size() > 2 ||
@@ -52,15 +51,17 @@ public class IdlTool implements Tool {
       return -1;
     }
 
+    Idl parser;
     if (args.size() >= 1 && ! "-".equals(args.get(0))) {
-      parseIn = new FileInputStream(args.get(0));
+      parser = new Idl(new File(args.get(0)));
+    } else {
+      parser = new Idl(in);
     }
+    
     if (args.size() == 2 && ! "-".equals(args.get(1))) {
       parseOut = new PrintStream(new FileOutputStream(args.get(1)));
     }
 
-
-    Idl parser = new Idl(parseIn);
     Protocol p = parser.CompilationUnit();
     parseOut.print(p.toString(true));
     return 0;

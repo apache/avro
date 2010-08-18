@@ -53,6 +53,8 @@ Avro 1.4.0 (unreleased)
     AVRO-600. Add support for type and field name aliases,
     facilitating schema migration. (cutting)
 
+    AVRO-495. IDL: Add support for file includes. (cutting)
+
   IMPROVEMENTS
 
     AVRO-587. Add Charts and Templating to Stats View

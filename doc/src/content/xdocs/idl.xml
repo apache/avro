@@ -105,16 +105,35 @@ protocol MyProtocol {
 }
       </source>
       <p>
-3        This notation is used throughout Avro IDL as a way of specifying properties for the annotated element,
+        This notation is used throughout Avro IDL as a way of specifying properties for the annotated element,
         as will be described later in this document.
       </p>
       <p>
         Protocols in Avro IDL can contain the following items:
       </p>
         <ul>
+          <li>Imports of external protocol and schema files.</li>
           <li>Definitions of named schemata, including <em>record</em>s, <em>error</em>s, <em>enum</em>s, and <em>fixed</em>s.</li>
           <li>Definitions of RPC messages</li>
         </ul>
+    </section>
+    <section id="imports">
+      <title>Imports</title>
+      <p>Files may be imported in one of three formats: </p>
+      <ul>
+        <li>An IDL file may be imported with a statement like:
+	  <source>import idl "foo.avdl";</source>
+	</li>
+        <li>A JSON protocol file may be imported with a statement like:
+	  <source>import protocol "foo.avpr";</source>
+	</li>
+        <li>A JSON schema file may be imported with a statement like:
+	  <source>import schema "foo.avsc";</source>
+	</li>
+      </ul>
+      <p>Messages and types in the imported file are added to this
+	file's protocol.</p>
+      <p>Imported file names are resolved relative to the current IDL file.</p>
     </section>
     <section id="format_enums">
       <title>Defining an Enumeration</title>
