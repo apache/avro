@@ -160,6 +160,7 @@ TOKEN :
 | < INT: "int" >
 | < LONG: "long" >
 | < MAP: "map" >
+| < ONEWAY: "oneway" >
 | < BYTES: "bytes" >
 | < SCHEMA: "schema" >
 | < STRING: "string" >
@@ -1225,6 +1226,7 @@ Message MessageDeclaration(Protocol p):
   String name;
   Schema request;
   Schema response;
+  boolean oneWay = false;
   List<Schema> errorSchemata = new ArrayList<Schema>();
   errorSchemata.add(Protocol.SYSTEM_ERROR);
 }
@@ -1232,11 +1234,18 @@ Message MessageDeclaration(Protocol p):
   response = ResultType()
   name = Identifier()
   request = FormalParameters()
-  [ "throws" ErrorList(errorSchemata) ]
+  [ "oneway" {oneWay = true; } | "throws" ErrorList(errorSchemata) ]
   ";"
   {
     Schema errors = Schema.createUnion(errorSchemata);
-    return p.createMessage(name, null, request, response, errors);
+    if (oneWay && response.getType() != Type.NULL)
+      throw new ParseException("One-way message'" + name + "' must return void"
+                               + " at line " + token.beginLine + ", column " +
+                               token.beginColumn);
+    return oneWay
+    ? p.createMessage(name, null, request)
+    : p.createMessage(name, null, request, response, errors);
+    
   }
 }
 

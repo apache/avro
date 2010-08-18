@@ -288,6 +288,12 @@ void logMessage(string message);
       <source>
 void goKaboom() throws Kaboom;
       </source>
+      <p>To define a one-way message, use the
+      keyword <code>oneway</code> after the parameter list, for example:
+      </p>
+      <source>
+void fireAndForget(string message) oneway;
+      </source>
     </section> <!-- define messages -->
     <section id="minutiae">
       <title>Other Language Features</title>
@@ -386,6 +392,7 @@ protocol Simple {
   int add(int arg1, int arg2);
   bytes echoBytes(bytes data);
   void `error`() throws TestError;
+  void ping() oneway;
 }
       </source>
       <p>Additional examples may be found in the Avro source tree under the <code>src/test/idl/input</code> directory.</p>

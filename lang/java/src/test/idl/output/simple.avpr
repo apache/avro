@@ -78,6 +78,11 @@
       "request" : [ ],
       "response" : "null",
       "errors" : [ "TestError" ]
+    },
+    "ping" : {
+      "request" : [ ],
+      "response" : "null",
+      "one-way" : true
     }
   }
 }

@@ -50,4 +50,5 @@ protocol Simple {
   int add(int arg1, int arg2 = 0);
   bytes echoBytes(bytes data);
   void `error`() throws TestError;
+  void ping() oneway;
 }
