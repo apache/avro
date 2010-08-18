@@ -331,6 +331,21 @@ public class TestSchema {
     assertEquals("q.Z", ys.getField("f").schema().getFullName());
   }
 
+  @Test
+  public void testNullPointer() throws Exception {
+    String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
+      +"[{\"name\":\"x\", \"type\":\"string\"}]}";
+    Schema schema = Schema.parse(recordJson);
+    GenericData.Record record = new GenericData.Record(schema);
+    try {
+      checkBinary(schema, record,
+                  new GenericDatumWriter<Object>(),
+                  new GenericDatumReader<Object>());
+    } catch (NullPointerException e) {
+      assertEquals("null of string in field x of Test", e.getMessage());
+    }
+  }
+
   private static void checkParseError(String json) {
     try {
       Schema.parse(json);

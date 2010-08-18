@@ -122,6 +122,9 @@ Avro 1.4.0 (unreleased)
     AVRO-616. Java: Add comment to generated source files noting that
     they should not be edited. (Patrick Wendell via cutting)
 
+    AVRO-615. Java: Improve error message for NullPointerException
+    when writing data.  (cutting)
+
   BUG FIXES
 
     AVRO-502. Memory leak from parsing JSON schema.

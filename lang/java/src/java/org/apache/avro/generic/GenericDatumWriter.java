@@ -58,35 +58,50 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /** Called to write data.*/
   protected void write(Schema schema, Object datum, Encoder out)
     throws IOException {
-    switch (schema.getType()) {
-    case RECORD: writeRecord(schema, datum, out); break;
-    case ENUM:   writeEnum(schema, datum, out);   break;
-    case ARRAY:  writeArray(schema, datum, out);  break;
-    case MAP:    writeMap(schema, datum, out);    break;
-    case UNION:
-      int index = data.resolveUnion(schema, datum);
-      out.writeIndex(index);
-      write(schema.getTypes().get(index), datum, out);
-      break;
-    case FIXED:   writeFixed(schema, datum, out);   break;
-    case STRING:  writeString(schema, datum, out);  break;
-    case BYTES:   writeBytes(datum, out);           break;
-    case INT:     out.writeInt((Integer)datum);     break;
-    case LONG:    out.writeLong((Long)datum);       break;
-    case FLOAT:   out.writeFloat((Float)datum);     break;
-    case DOUBLE:  out.writeDouble((Double)datum);   break;
-    case BOOLEAN: out.writeBoolean((Boolean)datum); break;
-    case NULL:    out.writeNull();                  break;
-    default: error(schema,datum);
+    try {
+      switch (schema.getType()) {
+      case RECORD: writeRecord(schema, datum, out); break;
+      case ENUM:   writeEnum(schema, datum, out);   break;
+      case ARRAY:  writeArray(schema, datum, out);  break;
+      case MAP:    writeMap(schema, datum, out);    break;
+      case UNION:
+        int index = data.resolveUnion(schema, datum);
+        out.writeIndex(index);
+        write(schema.getTypes().get(index), datum, out);
+        break;
+      case FIXED:   writeFixed(schema, datum, out);   break;
+      case STRING:  writeString(schema, datum, out);  break;
+      case BYTES:   writeBytes(datum, out);           break;
+      case INT:     out.writeInt((Integer)datum);     break;
+      case LONG:    out.writeLong((Long)datum);       break;
+      case FLOAT:   out.writeFloat((Float)datum);     break;
+      case DOUBLE:  out.writeDouble((Double)datum);   break;
+      case BOOLEAN: out.writeBoolean((Boolean)datum); break;
+      case NULL:    out.writeNull();                  break;
+      default: error(schema,datum);
+      }
+    } catch (NullPointerException e) {
+      throw npe(e, " of "+schema.getName());
     }
+  }
+
+  private NullPointerException npe(NullPointerException e, String s) {
+    NullPointerException result = new NullPointerException(e.getMessage()+s);
+    result.initCause(e.getCause() == null ? e : e.getCause());
+    return result;
   }
 
   /** Called to write a record.  May be overridden for alternate record
    * representations.*/
   protected void writeRecord(Schema schema, Object datum, Encoder out)
     throws IOException {
-    for (Field field : schema.getFields()) {
-      write(field.schema(), getField(datum, field.name(), field.pos()), out);
+    for (Field f : schema.getFields()) {
+      Object value = getField(datum, f.name(), f.pos());
+      try {
+        write(f.schema(), value, out);
+      } catch (NullPointerException e) {
+        throw npe(e, " in field "+f.name());
+      }
     }
   }
   
