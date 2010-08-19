@@ -34,9 +34,9 @@ A schema may be one of:
   Null.
 """
 try:
-  import simplejson as json
-except ImportError:
   import json
+except ImportError:
+  import simplejson as json
 
 #
 # Constants
