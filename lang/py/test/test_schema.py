@@ -275,12 +275,19 @@ class TestSchema(unittest.TestCase):
     correct = 0
     for example in EXAMPLES:
       try:
-        schema.parse(example.schema_string)
-        if example.valid: correct += 1
-        debug_msg = "%s: PARSE SUCCESS" % example.name
-      except:
-        if not example.valid: correct += 1
-        debug_msg = "%s: PARSE FAILURE" % example.name
+        try:
+          schema.parse(example.schema_string)
+          if example.valid:
+            correct += 1
+          else:
+            self.fail("Invalid schema was parsed: " + example.schema_string)
+          debug_msg = "%s: PARSE SUCCESS" % example.name
+        except:
+          if not example.valid: 
+            correct += 1
+          else:
+            self.fail("Valid schema failed to parse: " + example.schema_string)
+          debug_msg = "%s: PARSE FAILURE" % example.name
       finally:
         print debug_msg
 
@@ -298,11 +305,12 @@ class TestSchema(unittest.TestCase):
     for example in VALID_EXAMPLES:
       schema_data = schema.parse(example.schema_string)
       try:
-        schema.parse(str(schema_data))
-        debug_msg = "%s: STRING CAST SUCCESS" % example.name
-        correct += 1
-      except:
-        debug_msg = "%s: STRING CAST FAILURE" % example.name
+        try:
+          schema.parse(str(schema_data))
+          debug_msg = "%s: STRING CAST SUCCESS" % example.name
+          correct += 1
+        except:
+          debug_msg = "%s: STRING CAST FAILURE" % example.name
       finally:
         print debug_msg
 
@@ -321,15 +329,16 @@ class TestSchema(unittest.TestCase):
     correct = 0
     for example in VALID_EXAMPLES:
       try:
-        original_schema = schema.parse(example.schema_string)
-        round_trip_schema = schema.parse(str(original_schema))
-        if original_schema == round_trip_schema:
-          correct += 1
-          debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
-        else:       
+        try:
+          original_schema = schema.parse(example.schema_string)
+          round_trip_schema = schema.parse(str(original_schema))
+          if original_schema == round_trip_schema:
+            correct += 1
+            debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
+          else:       
+            debug_msg = "%s: ROUND TRIP FAILURE" % example.name
+        except:
           debug_msg = "%s: ROUND TRIP FAILURE" % example.name
-      except:
-        debug_msg = "%s: ROUND TRIP FAILURE" % example.name
       finally:
         print debug_msg
 

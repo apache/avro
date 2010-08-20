@@ -17,7 +17,6 @@
 Read/Write Avro File Object Containers.
 """
 import zlib
-import uuid
 try:
   from cStringIO import StringIO
 except ImportError:
@@ -65,7 +64,7 @@ class DataFileException(schema.AvroException):
 class DataFileWriter(object):
   @staticmethod
   def generate_sync_marker():
-    return uuid.uuid4().bytes
+    return generate_sixteen_random_bytes()
 
   # TODO(hammer): make 'encoder' a metadata property
   def __init__(self, writer, datum_writer, writers_schema=None, codec='null'):
@@ -322,3 +321,11 @@ class DataFileReader(object):
   def close(self):
     """Close this reader."""
     self.reader.close()
+
+def generate_sixteen_random_bytes():
+  try:
+    import os
+    return os.urandom(16)
+  except:
+    import random
+    return [ chr(random.randrange(256)) for i in range(16) ]

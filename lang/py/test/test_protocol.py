@@ -318,12 +318,13 @@ class TestProtocol(unittest.TestCase):
     num_correct = 0
     for example in EXAMPLES:
       try:
-        protocol.parse(example.protocol_string)
-        if example.valid: num_correct += 1
-        debug_msg = "%s: PARSE SUCCESS" % example.name
-      except:
-        if not example.valid: num_correct += 1
-        debug_msg = "%s: PARSE FAILURE" % example.name
+        try:
+          protocol.parse(example.protocol_string)
+          if example.valid: num_correct += 1
+          debug_msg = "%s: PARSE SUCCESS" % example.name
+        except:
+          if not example.valid: num_correct += 1
+          debug_msg = "%s: PARSE FAILURE" % example.name
       finally:
         print debug_msg
 
@@ -345,11 +346,12 @@ class TestProtocol(unittest.TestCase):
     for example in VALID_EXAMPLES:
       protocol_data = protocol.parse(example.protocol_string)
       try:
-        protocol.parse(str(protocol_data))
-        debug_msg = "%s: STRING CAST SUCCESS" % example.name
-        num_correct += 1
-      except:
-        debug_msg = "%s: STRING CAST FAILURE" % example.name
+        try:
+          protocol.parse(str(protocol_data))
+          debug_msg = "%s: STRING CAST SUCCESS" % example.name
+          num_correct += 1
+        except:
+          debug_msg = "%s: STRING CAST FAILURE" % example.name
       finally:
         print debug_msg
 
@@ -372,16 +374,17 @@ class TestProtocol(unittest.TestCase):
     num_correct = 0
     for example in VALID_EXAMPLES:
       try:
-        original_protocol = protocol.parse(example.protocol_string)
-        round_trip_protocol = protocol.parse(str(original_protocol))
+        try:
+          original_protocol = protocol.parse(example.protocol_string)
+          round_trip_protocol = protocol.parse(str(original_protocol))
 
-        if original_protocol == round_trip_protocol:
-          num_correct += 1
-          debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
-        else:       
+          if original_protocol == round_trip_protocol:
+            num_correct += 1
+            debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
+          else:       
+            debug_msg = "%s: ROUND TRIP FAILURE" % example.name
+        except:
           debug_msg = "%s: ROUND TRIP FAILURE" % example.name
-      except:
-        debug_msg = "%s: ROUND TRIP FAILURE" % example.name
       finally:
         print debug_msg
 

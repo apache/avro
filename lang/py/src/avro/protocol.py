@@ -17,9 +17,9 @@
 Protocol implementation.
 """
 try:
-  import hashlib
+  from hashlib import md5
 except ImportError:
-  import md5
+  from md5 import md5
 try:
   import json
 except ImportError:
@@ -100,10 +100,7 @@ class Protocol(object):
       self.set_prop('types', self._parse_types(types, type_names))
     if messages is not None:
       self.set_prop('messages', self._parse_messages(messages, type_names))
-    if hashlib:
-      self._md5 = hashlib.md5(str(self)).digest()
-    else:
-      self._md5 = md5.new(str(self)).digest()
+    self._md5 = md5(str(self)).digest()
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))

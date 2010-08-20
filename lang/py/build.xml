@@ -28,6 +28,8 @@
   <property name="top.build" value="${basedir}/../../build"/>
   <property name="interop.data.dir" value="${top.build}/interop/data"/>
 
+  <property name="python" value="python"/>
+
   <!-- Python implementation directories -->
   <property name="build.dir" value="${basedir}/build"/>
   <property name="src.dir" value="${basedir}/src"/>
@@ -111,7 +113,7 @@
           depends="build">
     <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask"
 	     classpathref="java.classpath"/>
-    <py-test python="python" pythonpathref="test.path" >
+    <py-test python="${python}" pythonpathref="test.path" >
       <fileset dir="${build.dir}/test">
         <include name="test_*.py"/>
         <exclude name="test_datafile_interop.py"/>
@@ -125,7 +127,7 @@
           depends="build">
     <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask"
 	     classpathref="java.classpath"/>
-    <py-test python="python" pythonpathref="test.path" >
+    <py-test python="${python}" pythonpathref="test.path" >
       <fileset dir="${build.dir}/test">
         <include name="test_datafile_interop.py"/>
       </fileset>
@@ -137,7 +139,7 @@
           description="Generate Python interop data files."
           depends="build">
     <mkdir dir="${interop.data.dir}"/>
-    <exec executable="python">
+    <exec executable="${python}">
       <env key="PYTHONPATH" value="$PYTHONPATH:${build.dir}/src"/>
       <arg value="${build.dir}/test/gen_interop_data.py"/>
       <arg value="${share.dir}/test/schemas/interop.avsc"/>
@@ -150,7 +152,7 @@
           description="Build source distribution"
           depends="build">
     <mkdir dir="${dist.dir}"/>
-    <exec executable="python" failonerror="true">
+    <exec executable="${python}" failonerror="true">
       <arg value="${build.dir}/setup.py"/>
       <arg value="sdist"/>
       <arg value="--dist-dir=${dist.dir}"/>
