@@ -61,6 +61,7 @@ Avro 1.4.0 (unreleased)
     AVRO-611. IDL: Add support for one-way messages. (cutting)
 
   IMPROVEMENTS
+
     AVRO-629. Prefer the JSON module of python's stdlib over simplejson.
     (Harsh J Chouraria via philz)
 
@@ -147,7 +148,9 @@ Avro 1.4.0 (unreleased)
     AVRO-571. Fix how we handle out-of-bounds indexes for union and 
     enum parsing in Python (hammer)
 
-    AVRO-589. ClassCastException: org.apache.avro.io.parsing.Symbol$Alternative cannot be cast to org.apache.avro.io.parsing.Symbol$UnionAdjustAction (thiru)
+    AVRO-589. ClassCastException:
+    org.apache.avro.io.parsing.Symbol$Alternative cannot be cast to
+    org.apache.avro.io.parsing.Symbol$UnionAdjustAction (thiru)
 
     AVRO-573. Java: Fix various bugs with undeclared RPC exceptions. (cutting)
 
