@@ -228,6 +228,25 @@ public class TestSchema {
     check("[\"string\", \"long\"]", false);
     checkDefault("[\"double\", \"long\"]", "1.1", new Double(1.1));
 
+    // test that erroneous default values cause errors
+    for (String type : new String[]
+          {"int", "long", "float", "double", "string", "bytes", "boolean"}) {
+      boolean error = false;
+      try {
+        checkDefault("[\""+type+"\", \"null\"]", "null", 0);
+      } catch (AvroTypeException e) {
+        error = true;
+      }
+      assertTrue(error);
+      error = false;
+      try {
+        checkDefault("[\"null\", \""+type+"\"]", "0", null);
+      } catch (AvroTypeException e) {
+        error = true;
+      }
+      assertTrue(error);
+    }
+
     // check union json
     String record = "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[]}";
     String fixed = "{\"type\":\"fixed\",\"name\":\"Bar\",\"size\": 1}";

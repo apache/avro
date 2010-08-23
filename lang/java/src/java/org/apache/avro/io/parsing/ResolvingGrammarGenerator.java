@@ -341,6 +341,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       encode(e, s.getTypes().get(0), n);
       break;
     case FIXED:
+      if (!n.isTextual())
+        throw new AvroTypeException("Non-string default value for fixed: "+n);
       byte[] bb = n.getTextValue().getBytes("ISO-8859-1");
       if (bb.length != s.getFixedSize()) {
         bb = Arrays.copyOf(bb, s.getFixedSize());
@@ -348,27 +350,43 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       e.writeFixed(bb);
       break;
     case STRING:
+      if (!n.isTextual())
+        throw new AvroTypeException("Non-string default value for string: "+n);
       e.writeString(n.getTextValue());
       break;
     case BYTES:
+      if (!n.isTextual())
+        throw new AvroTypeException("Non-string default value for bytes: "+n);
       e.writeBytes(n.getTextValue().getBytes("ISO-8859-1"));
       break;
     case INT:
+      if (!n.isNumber())
+        throw new AvroTypeException("Non-numeric default value for int: "+n);
       e.writeInt(n.getIntValue());
       break;
     case LONG:
+      if (!n.isNumber())
+        throw new AvroTypeException("Non-numeric default value for long: "+n);
       e.writeLong(n.getLongValue());
       break;
     case FLOAT:
+      if (!n.isNumber())
+        throw new AvroTypeException("Non-numeric default value for float: "+n);
       e.writeFloat((float) n.getDoubleValue());
       break;
     case DOUBLE:
+      if (!n.isNumber())
+        throw new AvroTypeException("Non-numeric default value for double: "+n);
       e.writeDouble(n.getDoubleValue());
       break;
     case BOOLEAN:
+      if (!n.isBoolean())
+        throw new AvroTypeException("Non-boolean default for boolean: "+n);
       e.writeBoolean(n.getBooleanValue());
       break;
     case NULL:
+      if (!n.isNull())
+        throw new AvroTypeException("Non-null default value for null type: "+n);
       e.writeNull();
       break;
     }
