@@ -316,21 +316,23 @@ void `error`();
       </section>
       <section id="minutiae_annotations">
         <title>Annotations for Ordering and Namespaces</title>
-        <p>
-          Java-style annotations may be used to add additional properties to types throughout
-          Avro IDL. For example, to specify the sort order of a field within a record, one may use
-          the <code>@order</code> annotation as follows:
-        </p>
+        <p>Java-style annotations may be used to add additional
+          properties to types and fields throughout Avro IDL.</p>
+
+	<p>For example, to specify the sort order of a field within
+          a record, one may use the <code>@order</code> annotation
+          before the field name as follows:</p>
         <source>
 record MyRecord {
-  @order("ascending")
-  string myAscendingSortField;
-
-  @order("descending")
-  string myDescendingField;
-
-  @order("ignore")
-  string myIgnoredField;
+  string @order("ascending") myAscendingSortField;
+  string @order("descending")  myDescendingField;
+  string @order("ignore") myIgnoredField;
+}
+        </source>
+        <p>A field's type may also be preceded by annotations, e.g.: </p>
+        <source>
+record MyRecord {
+  @java-class("java.util.ArrayList") array string myStrings;
 }
         </source>
         <p>Similarly, a <code>@namespace</code> annotation may be used to modify the namespace

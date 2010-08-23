@@ -4,25 +4,24 @@
   "types" : [ {
     "type" : "enum",
     "name" : "Kind",
-    "symbols" : [ "FOO", "BAR", "BAZ" ],
-    "order" : "descending"
+    "symbols" : [ "FOO", "BAR", "BAZ" ]
   }, {
     "type" : "fixed",
     "name" : "MD5",
-    "size" : 16
+    "size" : 16,
+    "foo" : "bar"
   }, {
     "type" : "record",
     "name" : "TestRecord",
     "fields" : [ {
       "name" : "name",
-      "type" : {
-        "type" : "string",
-        "order" : "ignore"
-      },
-      "default" : "foo"
+      "type" : "string",
+      "default" : "foo",
+      "order" : "ignore"
     }, {
       "name" : "kind",
-      "type" : "Kind"
+      "type" : "Kind",
+      "order" : "descending"
     }, {
       "name" : "hash",
       "type" : "MD5"

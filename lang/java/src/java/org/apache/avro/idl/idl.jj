@@ -1209,14 +1209,25 @@ void VariableDeclarator(Schema type, List<Field> fields):
 {
   String name;
   JsonNode defaultValue = null;
+  Map<String, String> props = new HashMap<String, String>();
 }
 {
+    ( SchemaProperty(props) )*
+    
   name = Identifier()
 
     [ <EQUALS> defaultValue=Json() ]
     
   {
-    fields.add(new Field(name, type, null, defaultValue));
+    Field.Order order = Field.Order.ASCENDING;
+    for (Map.Entry<String, String> prop : props.entrySet())
+      if ("order".equals(prop.getKey()))
+        order = Field.Order.valueOf(prop.getValue().toUpperCase());
+    Field field = new Field(name, type, null, defaultValue, order);
+    for (Map.Entry<String, String> prop : props.entrySet())
+      if (!"order".equals(prop.getKey()))
+        field.addProp(prop.getKey(), prop.getValue());
+    fields.add(field);
   }
 }
 

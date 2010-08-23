@@ -30,13 +30,11 @@ protocol Simple {
   fixed MD5(16);
 
   record TestRecord {
-    @order("ignore")
-    string name = "foo";
+    string @order("ignore") name = "foo";
 
-    @order("descending")
-    Kind kind;
+    Kind @order("descending") kind;
 
-    MD5 hash;
+    @foo("bar") MD5 hash;
 
     union { MD5, null} nullableHash;
   }
