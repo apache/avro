@@ -31,6 +31,11 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 /**
  * Utility methods for aggregating spans together at various
  * points of trace analysis.
+ * 
+ * The general workflow of trace analysis is:
+ * 
+ * Partial {@link Span}'s --> Complete {@link Span}'s -->
+ * {@link Trace}'s --> {@link TraceCollection}'s
  */
 public class SpanAggregator {
   /**
@@ -110,9 +115,9 @@ public class SpanAggregator {
             for (TimestampedEvent event: other.events) {
               s.events.add(event);
             }
+            s.complete = true;
+            out.completeSpans.add(s);
           }
-          s.complete = true;
-          out.completeSpans.add(s);
         }
       }
     }
@@ -151,5 +156,22 @@ public class SpanAggregator {
        }
     } 
     return out;
+  }
+  
+  /**
+   * Given a list of Traces, group traces which share an execution pattern
+   * and return TraceCollection results for each one.
+   */
+  static List<TraceCollection> getTraceCollections(List<Trace> traces) {
+    HashMap<Integer, TraceCollection> collections = 
+      new HashMap<Integer, TraceCollection>();
+    for (Trace t: traces) {
+      if (!collections.containsKey(t.executionPathHash())) {
+        TraceCollection collection = new TraceCollection(t);
+        collections.put(t.executionPathHash(), collection);
+      }
+      collections.get(t.executionPathHash()).addTrace(t);
+    }
+    return new LinkedList<TraceCollection>(collections.values());
   }
 }

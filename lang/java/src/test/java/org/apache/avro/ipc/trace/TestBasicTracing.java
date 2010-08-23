@@ -23,9 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Random;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
@@ -39,7 +37,6 @@ import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.Responder;
 import org.junit.Test;
-import org.mortbay.log.Log;
 
 public class TestBasicTracing {
   Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", "
@@ -146,7 +143,7 @@ public class TestBasicTracing {
    *                       D: 21007
    */
   
-  Protocol advancedProtocol = Protocol.parse("{\"protocol\": \"Advanced\", "
+  static Protocol advancedProtocol = Protocol.parse("{\"protocol\": \"Advanced\", "
       + "\"messages\": { " 
       +  "\"w\": { \"request\": [{\"name\": \"req\", \"type\": \"int\"}], "
       + "   \"response\": \"int\"},"
@@ -200,6 +197,21 @@ public class TestBasicTracing {
        assertTrue(returnD.equals(currentCount + 4));
        
        return currentCount + 5;
+    }
+  }
+  
+  /** Alternative Middle Responder */
+  static class NonRecursingResponder extends GenericResponder {
+    public NonRecursingResponder(Protocol local) 
+    throws Exception {
+      super(local);
+    }
+
+    @Override
+    public Object respond(Message message, Object request)
+        throws IOException {
+       assertTrue("w".equals(message.getName()));
+      return 6;
     }
   }
   
@@ -358,42 +370,65 @@ public class TestBasicTracing {
    * @throws Exception
    */
   public static void main(String[] args) throws Exception {
-    if (args.length == 0) {
-      args = new String[] { "7002", "7003" };
-    }
-    Protocol protocol = Protocol.parse("{\"protocol\": \"sleepy\", "
-        + "\"messages\": { \"sleep\": {"
-        + "   \"request\": [{\"name\": \"millis\", \"type\": \"long\"}," +
-          "{\"name\": \"data\", \"type\": \"bytes\"}], "
-        + "   \"response\": \"null\"} } }");
-    Log.info("Using protocol: " + protocol.toString());
-    Responder r = new SleepyResponder(protocol);
-    TracePlugin p = new TracePlugin(new TracePluginConfiguration());
-    r.addRPCPlugin(p);
-
-    // Start Avro server
-    new HttpServer(r, Integer.parseInt(args[0]));
-
-    HttpTransceiver trans = new HttpTransceiver(
-        new URL("http://localhost:" + Integer.parseInt(args[0])));
-    GenericRequestor req = new GenericRequestor(protocol, trans); 
-    TracePluginConfiguration clientConf = new TracePluginConfiguration();
-    clientConf.clientPort = 12346;
-    clientConf.port = 12336;
-    clientConf.traceProb = 1.0;
-    req.addRPCPlugin(new TracePlugin(clientConf)); 
+    TracePluginConfiguration conf = new TracePluginConfiguration();
+    conf.traceProb = 1.0;
+    conf.port = 51010;
+    conf.clientPort = 12346;
+    TracePlugin aPlugin = new TracePlugin(conf);
+    conf.port = 51011;
+    conf.clientPort = 12347;
+    TracePlugin bPlugin = new TracePlugin(conf);
+    conf.port = 51012;
+    conf.clientPort = 12348;
+    TracePlugin cPlugin = new TracePlugin(conf);
+    conf.port = 51013;
+    conf.clientPort = 12349;
+    TracePlugin dPlugin = new TracePlugin(conf);
+    conf.port = 51014;
+    conf.clientPort = 12350;
+    TracePlugin ePlugin = new TracePlugin(conf);
+    conf.port = 51015;
+    conf.clientPort = 12351;
+    TracePlugin fPlugin = new TracePlugin(conf);
     
-    while(true) {
+    // Responders
+    Responder bRes = new RecursingResponder(advancedProtocol, bPlugin);
+    bRes.addRPCPlugin(bPlugin);
+    HttpServer server1 = new HttpServer(bRes, 21005);
+    server1.start();
+
+    Responder cRes = new EndpointResponder(advancedProtocol);
+    cRes.addRPCPlugin(cPlugin);
+    HttpServer server2 = new HttpServer(cRes, 21006);
+    server2.start();
+    
+    Responder dRes = new EndpointResponder(advancedProtocol);
+    dRes.addRPCPlugin(dPlugin);
+    HttpServer server3 = new HttpServer(dRes, 21007);
+    server3.start();
+    
+    
+    // Root requestors
+    HttpTransceiver trans1 = new HttpTransceiver(
+        new URL("http://localhost:21005")); // recurse
+    HttpTransceiver trans2 = new HttpTransceiver(
+        new URL("http://localhost:21007")); // no recurse
+    
+    
+    GenericRequestor r1 = new GenericRequestor(advancedProtocol, trans1);
+    r1.addRPCPlugin(aPlugin);
+    
+    GenericRequestor r2 = new GenericRequestor(advancedProtocol, trans2);
+    r2.addRPCPlugin(fPlugin);
+    
+    GenericRecord params = new GenericData.Record(
+        advancedProtocol.getMessages().get("w").getRequest());
+    params.put("req", 1);
+    
+    while (true){
+      r1.request("w", params);
+      r2.request("x", params);
       Thread.sleep(1000);
-      GenericRecord params = new GenericData.Record(protocol.getMessages().get(
-        "sleep").getRequest());
-      Random rand = new Random();
-      params.put("millis", Math.abs(rand.nextLong()) % 1000);
-      int payloadSize = Math.abs(rand.nextInt()) % 10000;
-      byte[] payload = new byte[payloadSize];
-      rand.nextBytes(payload);
-      params.put("data", ByteBuffer.wrap(payload));
-      req.request("sleep", params);
     }
   }
 }

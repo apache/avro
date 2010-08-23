@@ -23,7 +23,7 @@ import java.util.List;
  * A node of of an RPC {@link Trace}. Each node stores a {@link Span} object
  * and a list of zero or more child nodes.
  */
-class TraceNode {
+public class TraceNode {
   /**
    * The {@link Span} to which corresponds to this node in the call tree.
    */
@@ -37,10 +37,6 @@ class TraceNode {
   public TraceNode(Span span, List<TraceNode> children) {
     this.span = span;
     this.children = children;
-  }
-  
-  public TraceNode() {
-    
   }
  
   /** 
@@ -62,7 +58,7 @@ class TraceNode {
    * { @link SpanEvent.SERVER_RECV }. This may be negative or zero in the 
    * case of clock skew.
    */
-  public long getPreNetworkTime() {
+  public long getPreLinkTime() {
     long clientSend = extractEventTime(this, SpanEvent.CLIENT_SEND);
     long serverReceive = extractEventTime(this, SpanEvent.SERVER_RECV);
     
@@ -70,15 +66,29 @@ class TraceNode {
   }
   
   /**
+   * Return pre-link time as a string.
+   */
+  public String getPreLinkTimeString() {
+    return Util.printableTime(this.getPreLinkTime());
+  }
+  
+  /**
    * Return time delta between { @link SpanEvent.SERVER_SEND } and 
    * { @link SpanEvent.CLIENT_RECV }. This may be negative or zero in the 
    * case of clock skew.
    */
-  public long getPostNetworkTime() {
+  public long getPostLinkTime() {
     long serverSend = extractEventTime(this, SpanEvent.SERVER_SEND);
     long clientReceive = extractEventTime(this, SpanEvent.CLIENT_RECV);
     
     return clientReceive - serverSend;
+  }
+  
+  /**
+   * Return post-link time as a string.
+   */
+  public String getPostLinkTimeString() {
+    return Util.printableTime(this.getPreLinkTime());
   }
   
   /**
@@ -91,4 +101,39 @@ class TraceNode {
     
     return serverSend - serverReceive;
   } 
+  
+  /**
+   * Return cpu time as a string.
+   */
+  public String getProcessTimeString() {
+    return Util.printableTime(this.getProcessTime());
+  }
+  
+  /**
+   * Return the children of this node.
+   */
+  public List<TraceNode> getChildren() {
+    return this.children;
+  }
+  
+  // Span data getters for Velicty
+  public String getRequestPayloadSize() { 
+    return Util.printableBytes(this.span.requestPayloadSize);
+  }
+  public String getResponsePayloadSize() { 
+    return Util.printableBytes(this.span.responsePayloadSize);
+  }
+  public String getRequestorHostname() {
+    return this.span.requestorHostname.toString();
+  }
+  public String getResponderHostname() {
+    return this.span.responderHostname.toString();
+  }
+  public String getMessageName() {
+    return this.span.messageName.toString();
+  }
+  public String getLatencyTimeString() {
+    return Util.printableTime(this.getPreLinkTime() + 
+        this.getProcessTime() + this.getPostLinkTime());
+  }
 }

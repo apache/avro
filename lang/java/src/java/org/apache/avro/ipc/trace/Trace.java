@@ -228,9 +228,7 @@ public class Trace {
    */
   private static TraceNode getNode(
       Span s, HashMap<Long, Span> spanRef, HashMap<Long, List<Long>> children) {
-    TraceNode out = new TraceNode();
-    out.span = s;
-    out.children = new LinkedList<TraceNode>();
+    TraceNode out = new TraceNode(s, new LinkedList<TraceNode>());
     
     List<Long> kids = children.get(Util.longValue(s.spanID));
     if (kids == null) { return out; } // no children (base case) 

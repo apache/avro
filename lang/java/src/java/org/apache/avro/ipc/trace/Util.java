@@ -18,8 +18,6 @@
 
 package org.apache.avro.ipc.trace;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.util.Arrays;
@@ -29,7 +27,6 @@ import java.util.Random;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.util.Utf8;
 
 /**
  * Utility methods for common tasks in Avro tracing. Mostly consists of
@@ -38,7 +35,6 @@ import org.apache.avro.util.Utf8;
 class Util {
   final private static Random RANDOM = new Random();
   final private static int NANOS_PER_MILI = 1000000;
-  private static Utf8 hostname;
   
   /**
    * Get all SpanEvents contained in Span s.
@@ -102,15 +98,6 @@ class Util {
     
     span.events = new GenericData.Array<TimestampedEvent>(
         10, Schema.createArray(TimestampedEvent.SCHEMA$));
-    
-    if (hostname == null) {
-      try {
-        hostname = new Utf8(InetAddress.getLocalHost().toString());
-      } catch (UnknownHostException e) {
-        hostname = new Utf8("Unknown");
-      }
-    }
-    span.requestorHostname = hostname;
     return span;
   }
   
@@ -165,6 +152,30 @@ class Util {
     return Arrays.equals(a.bytes(), b.bytes());
   }
   
+  /**
+   * Convert a timeStamp (in nanoseconds) to a pretty string.
+   */
+  public static String printableTime(long stamp) {
+    String out = "";
+    double milliseconds = (double) stamp / (double) NANOS_PER_MILI;
+    return String.format("%.2fms", milliseconds);
+  }
+  
+  /**
+   * Convert a bytes count to a pretty string.
+   */
+  public static String printableBytes(long bytes) {
+    if (bytes < 1024) {
+      return Long.toString(bytes) + "b";
+    } else if (bytes < (1024 * 1024)) {
+      double kb = (double) bytes / 1024.0;
+      return String.format("%.2fkb", kb);
+    } else {
+      double mb = (double) bytes / (1024.0 * 1024.0);
+      return String.format("%.2fmb", mb);
+    }
+  }
+
   /**
    * Tests if a span occurred between start and end.
    */

@@ -20,6 +20,8 @@ package org.apache.avro.ipc.trace;
 
 import java.io.IOException;
 import java.net.BindException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +73,6 @@ public class TracePlugin extends RPCPlugin {
   private static final Utf8 TRACE_ID_KEY = new Utf8("traceID");
   private static final Utf8 SPAN_ID_KEY = new Utf8("spanID");
   private static final Utf8 PARENT_SPAN_ID_KEY = new Utf8("parentSpanID");
-  
 
   class TraceResponder implements AvroTrace {
     private SpanStorage spanStorage;
@@ -124,6 +125,8 @@ public class TracePlugin extends RPCPlugin {
   // Client interface
   protected Server clientFacingServer;
   
+  private CharSequence hostname;
+  
   public TracePlugin(TracePluginConfiguration conf) throws IOException {
     traceProb = conf.traceProb;
     port = conf.port;
@@ -138,6 +141,12 @@ public class TracePlugin extends RPCPlugin {
     if (!(clientPort > 0 && clientPort < 65535)) { clientPort = 51200; }
     if (maxSpans < 0) { maxSpans = 5000; }
     
+    try {
+      hostname = InetAddress.getLocalHost().toString();
+    } catch (UnknownHostException e) {
+      hostname = "Unknown";
+    }
+
     currentSpan = new ThreadLocal<Span>(){
       @Override protected Span initialValue(){
           return null;
@@ -172,6 +181,7 @@ public class TracePlugin extends RPCPlugin {
       // rather than die if port is taken, try to fail over to another port.
       try {
         httpServer = new HttpServer(responder, this.port);
+        httpServer.start();
         bound = true;
       } catch (AvroRuntimeException e) {
         if (e.getCause() instanceof BindException) {
@@ -197,6 +207,7 @@ public class TracePlugin extends RPCPlugin {
         (RANDOM.nextFloat() < this.traceProb) && enabled) {
       // Start new trace
       Span span = Util.createEventlessSpan(null, null, null);
+      span.requestorHostname = this.hostname;
       this.childSpan.set(span);
     }
     
@@ -204,6 +215,7 @@ public class TracePlugin extends RPCPlugin {
       Span currSpan = this.currentSpan.get();
       Span span = Util.createEventlessSpan(
           currSpan.traceID, null, currSpan.spanID);   
+      span.requestorHostname = this.hostname;
       this.childSpan.set(span);
     }
     
@@ -244,6 +256,7 @@ public class TracePlugin extends RPCPlugin {
       traceID.bytes(meta.get(TRACE_ID_KEY).array());
       
       Span span = Util.createEventlessSpan(traceID, spanID, parentSpanID);
+      span.responderHostname = this.hostname;
       
       span.events = new GenericData.Array<TimestampedEvent>(
           100, Schema.createArray(TimestampedEvent.SCHEMA$));
@@ -316,6 +329,8 @@ public class TracePlugin extends RPCPlugin {
    */
   protected void initializeClientServer() {
     clientFacingServer = new Server();
+    Context staticContext = new Context(clientFacingServer, "/static");
+    staticContext.addServlet(new ServletHolder(new StaticServlet()), "/");
     Context context = new Context(clientFacingServer, "/");
     context.addServlet(new ServletHolder(new TraceClientServlet()), "/");
     boolean connected = false;

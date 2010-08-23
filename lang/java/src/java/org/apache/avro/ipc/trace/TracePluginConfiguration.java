@@ -24,6 +24,9 @@ import org.apache.avro.ipc.trace.TracePlugin.StorageType;
  * a common configuration module, wrap this class with your own configuration. 
  */
 public class TracePluginConfiguration {
+  public static final int DEFAULT_CLIENT_PORT = 12345;
+  public static final int DEFAULT_PORT = 12335;
+  
   public double traceProb; // Probability of starting tracing
   public int port;         // Port to serve tracing data
   public int clientPort;   // Port to expose client HTTP interface
@@ -42,8 +45,8 @@ public class TracePluginConfiguration {
    */
   public TracePluginConfiguration() {
     this.traceProb = 0.0;
-    this.port = 12335;
-    this.clientPort = 12345;
+    this.port = DEFAULT_PORT;
+    this.clientPort = DEFAULT_CLIENT_PORT;
     this.storageType = StorageType.MEMORY;
     this.maxSpans = 10000;
     this.enabled = true;
