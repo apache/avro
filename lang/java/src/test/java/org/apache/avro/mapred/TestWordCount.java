@@ -21,7 +21,13 @@ package org.apache.avro.mapred;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
+import junit.framework.Assert;
+
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -86,6 +92,53 @@ public class TestWordCount {
     JobClient.runJob(job);
     
     WordCountUtil.validateCountsFile();
+  }
+  
+  @Test
+  @SuppressWarnings("deprecation")
+  public void testProjection() throws Exception {
+    JobConf job = new JobConf();
+    
+    Integer defaultRank = new Integer(-1);
+    
+    String jsonSchema = 
+      "{\"type\":\"record\"," +
+      "\"name\":\"org.apache.avro.mapred.Pair\","+
+      "\"fields\": [ " + 
+        "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," +
+        "{\"name\":\"value\", \"type\":\"long\"}" + 
+      "]}";
+    
+    Schema readerSchema = Schema.parse(jsonSchema);
+    
+    AvroJob.setInputSchema(job, readerSchema);
+    
+    String dir = System.getProperty("test.dir", ".") + "/mapred";
+    Path inputPath = new Path(dir + "/out" + "/part-00000" + AvroOutputFormat.EXT);
+    FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
+    FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
+    
+    AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<Pair<Integer, Long>>(job, fileSplit);
+    
+    AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<Pair<Integer, Long>>(null);
+    NullWritable ignore = NullWritable.get();
+    
+    long sumOfCounts = 0;
+    long numOfCounts = 0;
+    while(recordReader.next(inputPair, ignore)) {
+      Assert.assertEquals((Integer)inputPair.datum().get(0), defaultRank);
+      sumOfCounts += (Long) inputPair.datum().get(1);
+      numOfCounts++;
+    }
+    
+    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    
+    long actualSumOfCounts = 0;
+    for(Long count : WordCountUtil.COUNTS.values()) {
+      actualSumOfCounts += count;
+    }
+    
+    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
   }
 
 }

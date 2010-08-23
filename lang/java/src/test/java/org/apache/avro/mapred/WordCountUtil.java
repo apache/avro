@@ -60,7 +60,7 @@ class WordCountUtil {
     "the rain in spain falls mainly on the plains"
   };
 
-  private static final Map<String,Long> COUNTS =
+  public static final Map<String,Long> COUNTS =
     new TreeMap<String,Long>();
   static {
     for (String line : LINES) {

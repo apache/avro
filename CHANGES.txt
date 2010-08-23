@@ -131,6 +131,9 @@ Avro 1.4.0 (unreleased)
     AVRO-615. Java: Improve error message for NullPointerException
     when writing data.  (cutting)
 
+    AVRO-534. Java: Permit mapred jobs to specify a different input
+    schema from the input file.  (Harsh J Chouraria via cutting)
+
   BUG FIXES
 
     AVRO-618. Avro doesn't work with python 2.4 (philz)
