@@ -21,7 +21,6 @@ try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-import struct
 from avro import io
 from avro import protocol
 from avro import schema
@@ -54,7 +53,7 @@ SYSTEM_ERROR_SCHEMA = schema.parse('["string"]')
 REMOTE_HASHES = {}
 REMOTE_PROTOCOLS = {}
 
-BIG_ENDIAN_INT_STRUCT = struct.Struct('!I')
+BIG_ENDIAN_INT_STRUCT = io.struct_class('!I')
 BUFFER_HEADER_LENGTH = 4
 BUFFER_SIZE = 8192
 
