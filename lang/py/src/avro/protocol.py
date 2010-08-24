@@ -120,20 +120,23 @@ class Protocol(object):
   def set_prop(self, key, value):
     self.props[key] = value  
 
-  def __str__(self):
-    # until we implement a JSON encoder for Schema and Message objects,
-    # we'll have to go through and call str() by hand.
+  def to_json(self):
     to_dump = {}
     to_dump['protocol'] = self.name
-    if self.namespace: to_dump['namespace'] = self.namespace
+    names = schema.Names()
+    if self.namespace: 
+      to_dump['namespace'] = self.namespace
     if self.types:
-      to_dump['types'] = [json.loads(str(t)) for t in self.types]
+      to_dump['types'] = [ t.to_json(names) for t in self.types ]
     if self.messages:
       messages_dict = {}
       for name, body in self.messages.iteritems():
-        messages_dict[name] = json.loads(str(body))
+        messages_dict[name] = body.to_json(names)
       to_dump['messages'] = messages_dict
-    return json.dumps(to_dump)
+    return to_dump
+
+  def __str__(self):
+    return json.dumps(self.to_json())
 
   def __eq__(self, that):
     to_cmp = json.loads(str(self))
@@ -149,7 +152,6 @@ class Message(object):
   
   def _parse_response(self, response, names):
     if isinstance(response, basestring) and names.has_name(response, None):
-      self._response_from_names = True
       return names.get_name(response, None)
     else:
       return schema.make_avsc_object(response, names)
@@ -163,7 +165,6 @@ class Message(object):
 
   def __init__(self,  name, request, response, errors=None, names=None):
     self._name = name
-    self._response_from_names = False
 
     self._props = {}
     self.set_prop('request', self._parse_request(request, names))
@@ -173,7 +174,6 @@ class Message(object):
 
   # read-only properties
   name = property(lambda self: self._name)
-  response_from_names = property(lambda self: self._response_from_names)
   request = property(lambda self: self.get_prop('request'))
   response = property(lambda self: self.get_prop('response'))
   errors = property(lambda self: self.get_prop('errors'))
@@ -185,17 +185,16 @@ class Message(object):
   def set_prop(self, key, value):
     self.props[key] = value  
 
-  # TODO(hammer): allow schemas and fields to be JSON Encoded!
   def __str__(self):
+    return json.dumps(self.to_json(schema.Names()))
+
+  def to_json(self, names):
     to_dump = {}
-    to_dump['request'] = json.loads(str(self.request))
-    if self.response_from_names:
-      to_dump['response'] = self.response.fullname
-    else:
-      to_dump['response'] = json.loads(str(self.response))
+    to_dump['request'] = self.request.to_json(names)
+    to_dump['response'] = self.response.to_json(names)
     if self.errors:
-      to_dump['errors'] = json.loads(str(self.errors))
-    return json.dumps(to_dump)
+      to_dump['errors'] = self.errors.to_json(names)
+    return to_dump
 
   def __eq__(self, that):
     return self.name == that.name and self.props == that.props

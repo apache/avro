@@ -310,23 +310,19 @@ VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 
 class TestProtocol(unittest.TestCase):
   def test_parse(self):
-    print ''
-    print 'TEST PARSE'
-    print '=========='
-    print ''
-
     num_correct = 0
     for example in EXAMPLES:
       try:
-        try:
-          protocol.parse(example.protocol_string)
-          if example.valid: num_correct += 1
-          debug_msg = "%s: PARSE SUCCESS" % example.name
-        except:
-          if not example.valid: num_correct += 1
-          debug_msg = "%s: PARSE FAILURE" % example.name
-      finally:
-        print debug_msg
+        protocol.parse(example.protocol_string)
+        if example.valid: 
+          num_correct += 1
+        else:
+          self.fail("Parsed invalid protocol: %s" % (example.name,))
+      except Exception, e:
+        if not example.valid: 
+          num_correct += 1
+        else:
+          self.fail("Coudl not parse valid protocol: %s" % (example.name,))
 
     fail_msg = "Parse behavior correct on %d out of %d protocols." % \
       (num_correct, len(EXAMPLES))
@@ -373,20 +369,14 @@ class TestProtocol(unittest.TestCase):
 
     num_correct = 0
     for example in VALID_EXAMPLES:
-      try:
-        try:
-          original_protocol = protocol.parse(example.protocol_string)
-          round_trip_protocol = protocol.parse(str(original_protocol))
+      original_protocol = protocol.parse(example.protocol_string)
+      round_trip_protocol = protocol.parse(str(original_protocol))
 
-          if original_protocol == round_trip_protocol:
-            num_correct += 1
-            debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
-          else:       
-            debug_msg = "%s: ROUND TRIP FAILURE" % example.name
-        except:
-          debug_msg = "%s: ROUND TRIP FAILURE" % example.name
-      finally:
-        print debug_msg
+      if original_protocol == round_trip_protocol:
+        num_correct += 1
+        debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
+      else:       
+        self.fail("Round trip failure: %s %s %s", (example.name, example.protocol_string, str(original_protocol)))
 
     fail_msg = "Round trip success on %d out of %d protocols" % \
       (num_correct, len(VALID_EXAMPLES))

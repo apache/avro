@@ -270,26 +270,27 @@ VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 # TODO(hammer): show strack trace to user
 # TODO(hammer): use logging module?
 class TestSchema(unittest.TestCase):
+
+  def test_correct_recursive_extraction(self):
+    s = schema.parse('{"type": "record", "name": "X", "fields": [{"name": "y", "type": {"type": "record", "name": "Y", "fields": [{"name": "Z", "type": "X"}]}}]}')
+    t = schema.parse(str(s.fields[0].type))
+    # If we've made it this far, the subschema was reasonably stringified; it ccould be reparsed.
+    self.assertEqual("X", t.fields[0].type.name)
+
   def test_parse(self):
-    print_test_name('TEST PARSE')
     correct = 0
     for example in EXAMPLES:
       try:
-        try:
-          schema.parse(example.schema_string)
-          if example.valid:
-            correct += 1
-          else:
-            self.fail("Invalid schema was parsed: " + example.schema_string)
-          debug_msg = "%s: PARSE SUCCESS" % example.name
-        except:
-          if not example.valid: 
-            correct += 1
-          else:
-            self.fail("Valid schema failed to parse: " + example.schema_string)
-          debug_msg = "%s: PARSE FAILURE" % example.name
-      finally:
-        print debug_msg
+        schema.parse(example.schema_string)
+        if example.valid:
+          correct += 1
+        else:
+          self.fail("Invalid schema was parsed: " + example.schema_string)
+      except:
+        if not example.valid: 
+          correct += 1
+        else:
+          self.fail("Valid schema failed to parse: " + example.schema_string)
 
     fail_msg = "Parse behavior correct on %d out of %d schemas." % \
       (correct, len(EXAMPLES))
@@ -304,15 +305,8 @@ class TestSchema(unittest.TestCase):
     correct = 0
     for example in VALID_EXAMPLES:
       schema_data = schema.parse(example.schema_string)
-      try:
-        try:
-          schema.parse(str(schema_data))
-          debug_msg = "%s: STRING CAST SUCCESS" % example.name
-          correct += 1
-        except:
-          debug_msg = "%s: STRING CAST FAILURE" % example.name
-      finally:
-        print debug_msg
+      schema.parse(str(schema_data))
+      correct += 1
 
     fail_msg = "Cast to string success on %d out of %d schemas" % \
       (correct, len(VALID_EXAMPLES))
@@ -328,19 +322,14 @@ class TestSchema(unittest.TestCase):
     print_test_name('TEST ROUND TRIP')
     correct = 0
     for example in VALID_EXAMPLES:
-      try:
-        try:
-          original_schema = schema.parse(example.schema_string)
-          round_trip_schema = schema.parse(str(original_schema))
-          if original_schema == round_trip_schema:
-            correct += 1
-            debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
-          else:       
-            debug_msg = "%s: ROUND TRIP FAILURE" % example.name
-        except:
-          debug_msg = "%s: ROUND TRIP FAILURE" % example.name
-      finally:
-        print debug_msg
+      original_schema = schema.parse(example.schema_string)
+      round_trip_schema = schema.parse(str(original_schema))
+      if original_schema == round_trip_schema:
+        correct += 1
+        debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
+      else:       
+        debug_msg = "%s: ROUND TRIP FAILURE" % example.name
+        self.fail("Round trip failure: %s, %s, %s" % (example.name, original_schema, str(original_schema)))
 
     fail_msg = "Round trip success on %d out of %d schemas" % \
       (correct, len(VALID_EXAMPLES))
