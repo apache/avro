@@ -58,7 +58,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private DatumWriter<D> dout;
 
   private BufferedFileOutputStream out;
-  private Encoder vout;
+  private BinaryEncoder vout;
 
   private final Map<String,byte[]> meta = new HashMap<String,byte[]>();
 
@@ -292,40 +292,27 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     if (codec.equals(otherCodec) && !recompress) {
       // copy raw bytes
       while(otherFile.hasNextBlock()) {
-        nextBlockRaw = otherFile.nextBlock(nextBlockRaw);
-        writeRawBlock(nextBlockRaw);
+        nextBlockRaw = otherFile.nextRawBlock(nextBlockRaw);
+        nextBlockRaw.writeBlockTo(vout, sync);
       }
     } else {
       while(otherFile.hasNextBlock()) {
-        nextBlockRaw = otherFile.nextBlock(nextBlockRaw);
-        ByteBuffer uncompressedData = otherCodec.decompress(ByteBuffer.wrap(
-            nextBlockRaw.data, 0, nextBlockRaw.blockSize));
-        ByteBuffer compressed = codec.compress(uncompressedData);
-        nextBlockRaw.data = compressed.array();
-        nextBlockRaw.blockSize = compressed.remaining();
-        writeRawBlock(nextBlockRaw);
+        nextBlockRaw = otherFile.nextRawBlock(nextBlockRaw);
+        nextBlockRaw.decompressUsing(otherCodec);
+        nextBlockRaw.compressUsing(codec);
+        nextBlockRaw.writeBlockTo(vout, sync);
       }
     }
   }
   
-  private void writeRawBlock(DataBlock rawBlock) throws IOException {
-    vout.writeLong(rawBlock.numEntries);
-    vout.writeLong(rawBlock.blockSize);
-    vout.writeFixed(rawBlock.data, 0, rawBlock.blockSize);
-    vout.writeFixed(sync);
-  }
-  
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
-      vout.writeLong(blockCount);
       ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
-      ByteBuffer block = codec.compress(uncompressed);
-      vout.writeLong(block.remaining());
-      vout.writeFixed(block.array(), block.position() + block.arrayOffset(), 
-          block.remaining());
+      DataBlock block = new DataBlock(uncompressed, blockCount);
+      block.compressUsing(codec);
+      block.writeBlockTo(vout, sync);
       buffer.reset();
       blockCount = 0;
-      vout.writeFixed(sync);
     }
   }
 
@@ -371,7 +358,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     public long tell() { return position+count; }
   }
 
-  static class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
+  private static class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
     NonCopyingByteArrayOutputStream(int initialSize) {
       super(initialSize);
     }

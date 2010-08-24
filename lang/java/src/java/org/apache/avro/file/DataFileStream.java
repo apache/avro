@@ -31,6 +31,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
@@ -160,9 +161,9 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
           }
         }
         if (hasNextBlock()) {
-          block = nextBlock(block);
-          blockBuffer = ByteBuffer.wrap(block.data, 0, block.blockSize);
-          blockBuffer = codec.decompress(blockBuffer);
+          block = nextRawBlock(block);
+          block.decompressUsing(codec);
+          blockBuffer = block.getAsByteBuffer();
           datumIn = DecoderFactory.defaultFactory().createBinaryDecoder(
               blockBuffer.array(), blockBuffer.arrayOffset() +
               blockBuffer.position(), blockBuffer.remaining(), datumIn);
@@ -240,7 +241,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }
   }
 
-  DataBlock nextBlock(DataBlock reuse) throws IOException {
+  DataBlock nextRawBlock(DataBlock reuse) throws IOException {
     if (!hasNextBlock()) {
       throw new NoSuchElementException();
     }
@@ -252,15 +253,11 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }
     // throws if it can't read the size requested
     vin.readFixed(reuse.data, 0, reuse.blockSize);
-    skipSync();
-    availableBlock = false;
-    return reuse;
-  }
-
-  void skipSync() throws IOException {
     vin.readFixed(syncBuffer);
     if (!Arrays.equals(syncBuffer, sync))
       throw new IOException("Invalid sync!");
+    availableBlock = false;
+    return reuse;
   }
 
   /** Not supported. */
@@ -272,14 +269,58 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   }
 
   static class DataBlock {
-    byte[] data;
-    long numEntries;
-    int blockSize;
-    DataBlock(long numEntries, int blockSize) {
+    private byte[] data;
+    private long numEntries;
+    private int blockSize;
+    private int offset = 0;
+    private DataBlock(long numEntries, int blockSize) {
       this.data = new byte[blockSize];
       this.numEntries = numEntries;
       this.blockSize = blockSize;
     }
+    
+    DataBlock(ByteBuffer block, long numEntries) {
+      this.data = block.array();
+      this.blockSize = block.remaining();
+      this.offset = block.arrayOffset() + block.position();
+      this.numEntries = numEntries;
+    }
+    
+    byte[] getData() {
+      return data;
+    }
+    
+    long getNumEntries() {
+      return numEntries;
+    }
+    
+    int getBlockSize() {
+      return blockSize;
+    }
+    
+    ByteBuffer getAsByteBuffer() {
+      return ByteBuffer.wrap(data, offset, blockSize);
+    }
+    
+    void decompressUsing(Codec c) throws IOException {
+      ByteBuffer result = c.decompress(getAsByteBuffer());
+      data = result.array();
+      blockSize = result.remaining();
+    }
+    
+    void compressUsing(Codec c) throws IOException {
+      ByteBuffer result = c.compress(getAsByteBuffer());
+      data = result.array();
+      blockSize = result.remaining();
+    }
+    
+    void writeBlockTo(BinaryEncoder e, byte[] sync) throws IOException {
+      e.writeLong(this.numEntries);
+      e.writeLong(this.blockSize);
+      e.writeFixed(this.data, offset, this.blockSize);
+      e.writeFixed(sync);
+    }   
+    
   }
 
 }

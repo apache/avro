@@ -175,6 +175,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-590. IDL: Fix order specifications. (cutting)
 
+    AVRO-541. Java: Fix sporadic corruption when appending a
+    compressed file to an uncompressed file. (scottcarey via cutting)
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS

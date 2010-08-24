@@ -17,17 +17,14 @@
  */
 package org.apache.avro.file;
 
-import java.io.ByteArrayInputStream;
-import java.io.EOFException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
-import java.util.zip.InflaterInputStream;
-
-import org.apache.avro.file.DataFileWriter.NonCopyingByteArrayOutputStream;
+import java.util.zip.InflaterOutputStream;
 
 /** 
  * Implements DEFLATE (RFC1951) compression and decompression. 
@@ -44,7 +41,7 @@ class DeflateCodec extends Codec {
   static class Option extends CodecFactory {
     private int compressionLevel;
 
-    public Option(int compressionLevel) {
+    Option(int compressionLevel) {
       this.compressionLevel = compressionLevel;
     }
 
@@ -54,7 +51,7 @@ class DeflateCodec extends Codec {
     }
   }
 
-  NonCopyingByteArrayOutputStream compressionBuffer;
+  private ByteArrayOutputStream outputBuffer;
   private Deflater deflater;
   private Inflater inflater;
   //currently only do 'nowrap' -- RFC 1951, not zlib
@@ -72,57 +69,60 @@ class DeflateCodec extends Codec {
 
   @Override
   ByteBuffer compress(ByteBuffer data) throws IOException {
-    if (compressionBuffer == null) {
-      compressionBuffer = new NonCopyingByteArrayOutputStream(
-          data.remaining());
-    }
-    if (deflater == null) {
-      deflater = new Deflater(compressionLevel, nowrap);
-    }
-    // Pass output through deflate
-    DeflaterOutputStream deflaterStream = 
-      new DeflaterOutputStream(compressionBuffer, deflater);
-    deflaterStream.write(data.array(),
-        data.position() + data.arrayOffset(),
-        data.limit() + data.arrayOffset());
-    deflaterStream.finish();
-    ByteBuffer result = compressionBuffer.getByteArrayAsByteBuffer();
-    deflater.reset();
-    compressionBuffer.reset();
+    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    DeflaterOutputStream ios = new DeflaterOutputStream(baos, getDeflater());
+    writeAndClose(data, ios);
+    ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
     return result;
   }
 
   @Override
   ByteBuffer decompress(ByteBuffer data) throws IOException {
-    if (compressionBuffer == null) {
-      compressionBuffer = new NonCopyingByteArrayOutputStream(
-          data.remaining());
-    }
-    if (inflater == null) {
-      inflater = new Inflater(nowrap);
-    }
-    InputStream uncompressed = new InflaterInputStream(
-        new ByteArrayInputStream(data.array(),
-            data.position() + data.arrayOffset(),
-            data.remaining()), inflater);
-    int read;
-    byte[] buff = new byte[2048];
-    try {
-      while (true) {
-        read = uncompressed.read(buff);
-        if (read < 0) break;
-        compressionBuffer.write(buff, 0, read);
-      } 
-    } catch (EOFException e) {
-      // sometimes InflaterInputStream.read
-      // throws this instead of returning -1
-    }
-    ByteBuffer result = compressionBuffer.getByteArrayAsByteBuffer();
-    inflater.reset();
-    compressionBuffer.reset();
+    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    InflaterOutputStream ios = new InflaterOutputStream(baos, getInflater());
+    writeAndClose(data, ios);
+    ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
     return result;
   }
+  
+  private void writeAndClose(ByteBuffer data, OutputStream to) throws IOException {
+    byte[] input = data.array();
+    int offset = data.arrayOffset() + data.position();
+    int length = data.remaining();
+    try {
+      to.write(input, offset, length);
+    } finally {
+      to.close();
+    }
+  }
+  
+  // get and initialize the inflater for use.
+  private Inflater getInflater() {
+    if (null == inflater) {
+      inflater = new Inflater(nowrap);
+    }
+    inflater.reset();
+    return inflater;
+  }
 
+  // get and initialize the deflater for use.
+  private Deflater getDeflater() {
+    if (null == deflater) {
+      deflater = new Deflater(compressionLevel, nowrap);
+    }
+    deflater.reset();
+    return deflater;
+  }
+  
+  // get and initialize the output buffer for use.
+  private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
+    if (null == outputBuffer) {
+      outputBuffer = new ByteArrayOutputStream(suggestedLength);
+    }
+    outputBuffer.reset();
+    return outputBuffer;
+  }
+  
   @Override
   public int hashCode() {
     return nowrap ? 0 : 1;
