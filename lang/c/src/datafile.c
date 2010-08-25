@@ -65,6 +65,7 @@ static int write_header(avro_file_writer_t w)
 	avro_writer_t schema_writer;
 	char schema_buf[64 * 1024];
 	const avro_encoding_t *enc = &avro_binary_encoding;
+	int64_t schema_len;
 
 	/* Generate random sync */
 	generate_sync(w);
@@ -84,9 +85,10 @@ static int write_header(avro_file_writer_t w)
 		avro_writer_free(schema_writer);
 		return rval;
 	}
+	schema_len = avro_writer_tell(schema_writer);
+	avro_writer_free(schema_writer);
 	check(rval,
-	      enc->write_bytes(w->writer, schema_buf,
-			       avro_writer_tell(schema_writer)));
+	      enc->write_bytes(w->writer, schema_buf, schema_len));
 	check(rval, enc->write_long(w->writer, 0));
 	return write_sync(w);
 }
@@ -108,7 +110,9 @@ file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
 static int
 file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w)
 {
-	int rval = file_writer_init_fp(path, "wx", w);
+	int rval;
+	w->block_count = 0;
+	rval = file_writer_init_fp(path, "wx", w);
 	if (rval) {
 		check(rval, file_writer_init_fp(path, "w", w));
 	}
@@ -171,11 +175,12 @@ static int file_read_header(avro_reader_t reader,
 	if (rval) {
 		return EILSEQ;
 	}
+	avro_schema_decref(meta_schema);
 	check(rval, avro_map_get(meta, "avro.schema", &schema_bytes));
 	avro_bytes_get(schema_bytes, &p, &len);
 	check(rval,
 	      avro_schema_from_json(p, len, writers_schema, &schema_error));
-	avro_schema_decref(meta);
+	avro_datum_decref(meta);
 	return avro_read(reader, sync, synclen);
 }
 
@@ -324,7 +329,9 @@ int avro_file_writer_close(avro_file_writer_t w)
 {
 	int rval;
 	check(rval, avro_file_writer_flush(w));
+	avro_writer_free(w->datum_writer);
 	avro_writer_free(w->writer);
+	free(w);
 	return 0;
 }
 
@@ -357,6 +364,8 @@ int avro_file_reader_read(avro_file_reader_t r, avro_schema_t readers_schema,
 
 int avro_file_reader_close(avro_file_reader_t reader)
 {
+	avro_schema_decref(reader->writers_schema);
 	avro_reader_free(reader->reader);
+	free(reader);
 	return 0;
 }
