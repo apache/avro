@@ -178,6 +178,9 @@ Avro 1.4.0 (unreleased)
     AVRO-541. Java: Fix sporadic corruption when appending a
     compressed file to an uncompressed file. (scottcarey via cutting)
 
+    AVRO-86. Java: Fix NullPointerException when reflect API infers
+    schema for a class without a package. (cutting)
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS

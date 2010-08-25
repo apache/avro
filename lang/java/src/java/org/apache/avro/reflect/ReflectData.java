@@ -245,7 +245,7 @@ public class ReflectData extends SpecificData {
       Schema schema = names.get(fullName);
       if (schema == null) {
         String name = c.getSimpleName();
-        String space = c.getPackage().getName();
+        String space = c.getPackage() == null ? "" : c.getPackage().getName();
         if (c.getEnclosingClass() != null)                   // nested class
           space = c.getEnclosingClass().getName() + "$";
         Union union = c.getAnnotation(Union.class);
@@ -321,7 +321,8 @@ public class ReflectData extends SpecificData {
     Map<String,Field> fields = new LinkedHashMap<String,Field>();
     Class c = recordClass;
     do {
-      if (c.getPackage().getName().startsWith("java."))
+      if (c.getPackage() != null
+          && c.getPackage().getName().startsWith("java."))
         break;                                    // skip java built-in classes
       for (Field field : c.getDeclaredFields())
         if ((field.getModifiers() & (Modifier.TRANSIENT|Modifier.STATIC)) == 0)
@@ -348,7 +349,8 @@ public class ReflectData extends SpecificData {
   @Override
   public Protocol getProtocol(Class iface) {
     Protocol protocol =
-      new Protocol(iface.getSimpleName(), iface.getPackage().getName()); 
+      new Protocol(iface.getSimpleName(),
+                   iface.getPackage()==null?"":iface.getPackage().getName());
     Map<String,Schema> names = new LinkedHashMap<String,Schema>();
     Map<String,Message> messages = protocol.getMessages();
     for (Method method : iface.getMethods())

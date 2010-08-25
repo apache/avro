@@ -43,6 +43,7 @@ import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.reflect.Stringable;
 import org.apache.avro.reflect.Nullable;
 import org.apache.avro.reflect.Union;
+
 import org.junit.Test;
 
 public class TestReflect {
@@ -511,5 +512,14 @@ public class TestReflect {
     ReflectData.get().getProtocol(P3.class);
   }
 
+  @Test
+  public void testNoPackageSchema() throws Exception {
+    ReflectData.get().getSchema(Class.forName("NoPackage"));
+  }
+
+  @Test
+  public void testNoPackageProtocol() throws Exception {
+    ReflectData.get().getProtocol(Class.forName("NoPackage"));
+  }
 
 }
