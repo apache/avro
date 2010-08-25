@@ -479,6 +479,8 @@ public class GenericData {
     if (o1 == o2) return 0;
     switch (s.getType()) {
     case RECORD:
+      if (!(o1 instanceof IndexedRecord))
+        return ((Comparable)o1).compareTo(o2);
       IndexedRecord r1 = (IndexedRecord)o1;
       IndexedRecord r2 = (IndexedRecord)o2;
       for (Field f : s.getFields()) {

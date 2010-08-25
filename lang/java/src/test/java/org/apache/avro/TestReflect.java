@@ -37,6 +37,7 @@ import org.apache.avro.TestReflect.SampleRecord.AnotherSampleRecord;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
@@ -520,6 +521,34 @@ public class TestReflect {
   @Test
   public void testNoPackageProtocol() throws Exception {
     ReflectData.get().getProtocol(Class.forName("NoPackage"));
+  }
+
+  public static class Y implements Comparable {
+    int i;
+    @Override public boolean equals(Object o) { return ((Y)o).i == this.i; }
+    @Override public int compareTo(Object o) { return ((Y)o).i - this.i; }
+  }
+
+  @Test
+  /** Test nesting of reflect data within generic. */
+  public void testReflectWithinGeneric() throws Exception {
+    ReflectData data = ReflectData.get();
+    // define a record with a field that's a specific Y
+    Schema schema = Schema.createRecord("Foo", "", "x.y.z", false);
+    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    fields.add(new Schema.Field("f", data.getSchema(Y.class), "", null));
+    schema.setFields(fields);
+
+    // create a generic instance of this record
+    Y y = new Y();
+    y.i = 1;
+    GenericData.Record record = new GenericData.Record(schema);
+    record.put("f", y);
+
+    // test that this instance can be written & re-read
+    TestSchema.checkBinary(schema, record,
+                           new ReflectDatumWriter<Object>(),
+                           new ReflectDatumReader<Object>());
   }
 
 }

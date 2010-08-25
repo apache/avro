@@ -38,6 +38,7 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
+import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.FixedSize;
@@ -264,6 +265,8 @@ public class ReflectData extends SpecificData {
         } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed
           int size = c.getAnnotation(FixedSize.class).value();
           schema = Schema.createFixed(name, null /* doc */, space, size);
+        } else if (IndexedRecord.class.isAssignableFrom(c)) { // specific
+          return super.createSchema(type, names);
         } else {                                             // record
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
           boolean error = Throwable.class.isAssignableFrom(c);

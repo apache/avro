@@ -136,6 +136,9 @@ Avro 1.4.0 (unreleased)
 
     AVRO-617. Java: Detect erroneous default field values. (cutting)
 
+    AVRO-598. Java: Use generic data structures when reading with
+    reflect API and classes are not defined. (cutting)
+
   BUG FIXES
 
     AVRO-622. python avro.ipc doesn't work with python2.4 (philz)
