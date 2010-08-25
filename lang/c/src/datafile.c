@@ -17,7 +17,6 @@
 
 #include "avro_private.h"
 #include "encoding.h"
-#include "allocator.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -109,11 +108,7 @@ file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
 static int
 file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w)
 {
-#ifdef WIN32
-	int rval = file_writer_init_fp(path, "w", w);
-#else
 	int rval = file_writer_init_fp(path, "wx", w);
-#endif
 	if (rval) {
 		check(rval, file_writer_init_fp(path, "w", w));
 	}
@@ -138,13 +133,13 @@ avro_file_writer_create(const char *path, avro_schema_t schema,
 	if (!path || !is_avro_schema(schema) || !writer) {
 		return EINVAL;
 	}
-	w = g_avro_allocator.malloc(sizeof(struct avro_file_writer_t_));
+	w = malloc(sizeof(struct avro_file_writer_t_));
 	if (!w) {
 		return ENOMEM;
 	}
 	rval = file_writer_create(path, schema, w);
 	if (rval) {
-		g_avro_allocator.free(w);
+		free(w);
 		return rval;
 	}
 	*writer = w;
@@ -205,7 +200,7 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 	/* Position to end of file and get ready to write */
 	rval = file_writer_init_fp(path, "a", w);
 	if (rval) {
-		g_avro_allocator.free(w);
+		free(w);
 	}
 	return rval;
 }
@@ -217,13 +212,13 @@ int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 	if (!path || !writer) {
 		return EINVAL;
 	}
-	w = g_avro_allocator.malloc(sizeof(struct avro_file_writer_t_));
+	w = malloc(sizeof(struct avro_file_writer_t_));
 	if (!w) {
 		return ENOMEM;
 	}
 	rval = file_writer_open(path, w);
 	if (rval) {
-		g_avro_allocator.free(w);
+		free(w);
 		return rval;
 	}
 
@@ -245,7 +240,7 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 {
 	int rval;
 	FILE *fp;
-	avro_file_reader_t r = g_avro_allocator.malloc(sizeof(struct avro_file_reader_t_));
+	avro_file_reader_t r = malloc(sizeof(struct avro_file_reader_t_));
 	if (!r) {
 		return ENOMEM;
 	}

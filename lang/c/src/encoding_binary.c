@@ -16,13 +16,12 @@
  */
 
 #include "avro_private.h"
-#include "allocator.h"
 #include "encoding.h"
 #include <stdlib.h>
 #include <limits.h>
 #include <errno.h>
 #include <string.h>
-#include "types.h"
+#include <sys/types.h>
 
 #define MAX_VARINT_BUF_SIZE 10
 
@@ -78,6 +77,8 @@ static int write_long(avro_writer_t writer, int64_t l)
 
 static int64_t size_long(avro_writer_t writer, int64_t l)
 {
+	AVRO_UNUSED(writer);
+
 	int64_t len = 0;
 	uint64_t n = (l << 1) ^ (l >> 63);
 	while (n & ~0x7F) {
@@ -85,9 +86,6 @@ static int64_t size_long(avro_writer_t writer, int64_t l)
 		n >>= 7;
 	}
 	len++;
-
-	AVRO_UNUSED(writer);
-
 	return len;
 }
 
@@ -128,7 +126,7 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 	if (rval) {
 		return rval;
 	}
-	*bytes = g_avro_allocator.malloc(*len + 1);
+	*bytes = malloc(*len + 1);
 	if (!*bytes) {
 		return ENOMEM;
 	}
@@ -373,61 +371,61 @@ static int64_t size_null(avro_writer_t writer)
 }
 
 const avro_encoding_t avro_binary_encoding = {
-	"BINARY FORMAT",
+	.description = "BINARY FORMAT",
 	/*
 	 * string 
 	 */
-	read_string,
-	skip_string,
-	write_string,
-	size_string,
+	.read_string = read_string,
+	.skip_string = skip_string,
+	.write_string = write_string,
+	.size_string = size_string,
 	/*
 	 * bytes 
 	 */
-	read_bytes,
-	skip_bytes,
-	write_bytes,
-	size_bytes,
+	.read_bytes = read_bytes,
+	.skip_bytes = skip_bytes,
+	.write_bytes = write_bytes,
+	.size_bytes = size_bytes,
 	/*
 	 * int 
 	 */
-	read_int,
-	skip_int,
-	write_int,
-	size_int,
+	.read_int = read_int,
+	.skip_int = skip_int,
+	.write_int = write_int,
+	.size_int = size_int,
 	/*
 	 * long 
 	 */
-	read_long,
-	skip_long,
-	write_long,
-	size_long,
+	.read_long = read_long,
+	.skip_long = skip_long,
+	.write_long = write_long,
+	.size_long = size_long,
 	/*
 	 * float 
 	 */
-	read_float,
-	skip_float,
-	write_float,
-	size_float,
+	.read_float = read_float,
+	.skip_float = skip_float,
+	.write_float = write_float,
+	.size_float = size_float,
 	/*
 	 * double 
 	 */
-	read_double,
-	skip_double,
-	write_double,
-	size_double,
+	.read_double = read_double,
+	.skip_double = skip_double,
+	.write_double = write_double,
+	.size_double = size_double,
 	/*
 	 * boolean 
 	 */
-	read_boolean,
-	skip_boolean,
-	write_boolean,
-	size_boolean,
+	.read_boolean = read_boolean,
+	.skip_boolean = skip_boolean,
+	.write_boolean = write_boolean,
+	.size_boolean = size_boolean,
 	/*
 	 * null 
 	 */
-	read_skip_null,
-	read_skip_null,
-	write_null,
-	size_null
+	.read_null = read_skip_null,
+	.skip_null = read_skip_null,
+	.write_null = write_null,
+	.size_null = size_null
 };

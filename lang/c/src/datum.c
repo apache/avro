@@ -21,10 +21,7 @@
 #include <errno.h>
 #include "datum.h"
 #include "encoding.h"
-#include "allocator.h"
 
-#define DEFAULT_ARRAY_SIZE 10
-#define DEFAULT_FIELD_COUNT 10
 #define DEFAULT_TABLE_SIZE 32
 
 static void avro_datum_init(avro_datum_t datum, avro_type_t type)
@@ -38,7 +35,7 @@ static avro_datum_t avro_string_private(char *str,
 					void (*string_free) (void *ptr))
 {
 	struct avro_string_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_string_datum_t));
+	    malloc(sizeof(struct avro_string_datum_t));
 	if (!datum) {
 		return NULL;
 	}
@@ -51,16 +48,16 @@ static avro_datum_t avro_string_private(char *str,
 
 avro_datum_t avro_string(const char *str)
 {
-	char *p = avro_strdup(str);
+	char *p = strdup(str);
 	if (!p) {
 		return NULL;
 	}
-	return avro_string_private(p, g_avro_allocator.free);
+	return avro_string_private(p, free);
 }
 
 avro_datum_t avro_givestring(const char *str)
 {
-	return avro_string_private((char *)str, g_avro_allocator.free);
+	return avro_string_private((char *)str, free);
 }
 
 avro_datum_t avro_wrapstring(const char *str)
@@ -95,21 +92,21 @@ static int avro_string_set_private(avro_datum_t datum, const char *p,
 
 int avro_string_set(avro_datum_t datum, const char *p)
 {
-	char *string_copy = avro_strdup(p);
+	char *string_copy = strdup(p);
 	int rval;
 	if (!string_copy) {
 		return ENOMEM;
 	}
-	rval = avro_string_set_private(datum, p, g_avro_allocator.free);
+	rval = avro_string_set_private(datum, p, free);
 	if (rval) {
-		g_avro_allocator.free(string_copy);
+		free(string_copy);
 	}
 	return rval;
 }
 
 int avro_givestring_set(avro_datum_t datum, const char *p)
 {
-	return avro_string_set_private(datum, p, g_avro_allocator.free);
+	return avro_string_set_private(datum, p, free);
 }
 
 int avro_wrapstring_set(avro_datum_t datum, const char *p)
@@ -121,7 +118,7 @@ static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 				       void (*bytes_free) (void *ptr))
 {
 	struct avro_bytes_datum_t *datum;
-	datum = g_avro_allocator.malloc(sizeof(struct avro_bytes_datum_t));
+	datum = malloc(sizeof(struct avro_bytes_datum_t));
 	if (!datum) {
 		return NULL;
 	}
@@ -135,17 +132,17 @@ static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 
 avro_datum_t avro_bytes(const char *bytes, int64_t size)
 {
-	char *bytes_copy = g_avro_allocator.malloc(size);
+	char *bytes_copy = malloc(size);
 	if (!bytes_copy) {
 		return NULL;
 	}
 	memcpy(bytes_copy, bytes, size);
-	return avro_bytes_private(bytes_copy, size, g_avro_allocator.free);
+	return avro_bytes_private(bytes_copy, size, free);
 }
 
 avro_datum_t avro_givebytes(const char *bytes, int64_t size)
 {
-	return avro_bytes_private((char *)bytes, size, g_avro_allocator.free);
+	return avro_bytes_private((char *)bytes, size, free);
 }
 
 avro_datum_t avro_wrapbytes(const char *bytes, int64_t size)
@@ -178,14 +175,14 @@ static int avro_bytes_set_private(avro_datum_t datum, const char *bytes,
 int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 {
 	int rval;
-	char *bytes_copy = g_avro_allocator.malloc(size);
+	char *bytes_copy = malloc(size);
 	if (!bytes_copy) {
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
-	rval = avro_bytes_set_private(datum, bytes, size, g_avro_allocator.free);
+	rval = avro_bytes_set_private(datum, bytes, size, free);
 	if (rval) {
-		g_avro_allocator.free(bytes_copy);
+		free(bytes_copy);
 	}
 	return rval;
 }
@@ -193,7 +190,7 @@ int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 int avro_givebytes_set(avro_datum_t datum, const char *bytes,
 		       const int64_t size)
 {
-	return avro_bytes_set_private(datum, bytes, size, g_avro_allocator.free);
+	return avro_bytes_set_private(datum, bytes, size, free);
 }
 
 int avro_wrapbytes_set(avro_datum_t datum, const char *bytes,
@@ -215,7 +212,7 @@ int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size)
 avro_datum_t avro_int32(int32_t i)
 {
 	struct avro_int32_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_int32_datum_t));
+	    malloc(sizeof(struct avro_int32_datum_t));
 	if (!datum) {
 		return NULL;
 	}
@@ -248,7 +245,7 @@ int avro_int32_set(avro_datum_t datum, const int32_t i)
 avro_datum_t avro_int64(int64_t l)
 {
 	struct avro_int64_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_int64_datum_t));
+	    malloc(sizeof(struct avro_int64_datum_t));
 	if (!datum) {
 		return NULL;
 	}
@@ -281,7 +278,7 @@ int avro_int64_set(avro_datum_t datum, const int64_t l)
 avro_datum_t avro_float(float f)
 {
 	struct avro_float_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_float_datum_t));
+	    malloc(sizeof(struct avro_float_datum_t));
 	if (!datum) {
 		return NULL;
 	}
@@ -314,7 +311,7 @@ int avro_float_get(avro_datum_t datum, float *f)
 avro_datum_t avro_double(double d)
 {
 	struct avro_double_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_double_datum_t));
+	    malloc(sizeof(struct avro_double_datum_t));
 	if (!datum) {
 		return NULL;
 	}
@@ -347,7 +344,7 @@ int avro_double_get(avro_datum_t datum, double *d)
 avro_datum_t avro_boolean(int8_t i)
 {
 	struct avro_boolean_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_boolean_datum_t));
+	    malloc(sizeof(struct avro_boolean_datum_t));
 	if (!datum) {
 		return NULL;
 	}
@@ -379,9 +376,9 @@ int avro_boolean_get(avro_datum_t datum, int8_t * i)
 avro_datum_t avro_null(void)
 {
 	static struct avro_obj_t obj = {
-		AVRO_NULL,  // type
-		AVRO_DATUM, // class_type
-		1           // refcount
+		.type = AVRO_NULL,
+		.class_type = AVRO_DATUM,
+		.refcount = 1
 	};
 	return &obj;
 }
@@ -389,7 +386,7 @@ avro_datum_t avro_null(void)
 avro_datum_t avro_union(int64_t discriminant, avro_datum_t value)
 {
 	struct avro_union_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_union_datum_t));
+	    malloc(sizeof(struct avro_union_datum_t));
 	if (!datum) {
 		return NULL;
 	}
@@ -403,56 +400,54 @@ avro_datum_t avro_union(int64_t discriminant, avro_datum_t value)
 avro_datum_t avro_record(const char *name, const char *space)
 {
 	struct avro_record_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_record_datum_t));
+	    malloc(sizeof(struct avro_record_datum_t));
 	if (!datum) {
 		return NULL;
 	}
-	datum->name = avro_strdup(name);
+	datum->name = strdup(name);
 	if (!datum->name) {
-		g_avro_allocator.free(datum);
+		free(datum);
 		return NULL;
 	}
-	datum->space = space ? avro_strdup(space) : NULL;
+	datum->space = space ? strdup(space) : NULL;
 	if (space && !datum->space) {
-		g_avro_allocator.free((void *)datum->name);
-		g_avro_allocator.free((void *)datum);
+		free((void *)datum->name);
+		free((void *)datum);
 		return NULL;
 	}
-	datum->alloc_fields = DEFAULT_FIELD_COUNT;
-	datum->field_order = (avro_atom_t*)g_avro_allocator.malloc(datum->alloc_fields * sizeof(avro_atom_t));
+	datum->field_order = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->field_order) {
 		if (space) {
-			g_avro_allocator.free((void *)datum->space);
+			free((void *)datum->space);
 		}
-		g_avro_allocator.free((char *)datum->name);
-		g_avro_allocator.free(datum);
+		free((char *)datum->name);
+		free(datum);
 		return NULL;
 	}
-	datum->fields_byname = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	datum->fields_byname = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->fields_byname) {
-		g_avro_allocator.free(datum->field_order);
+		st_free_table(datum->field_order);
 		if (space) {
-			g_avro_allocator.free((void *)datum->space);
+			free((void *)datum->space);
 		}
-		g_avro_allocator.free((char *)datum->name);
-		g_avro_allocator.free(datum);
+		free((char *)datum->name);
+		free(datum);
 		return NULL;
 	}
-	datum->num_fields = 0;
 
 	avro_datum_init(&datum->obj, AVRO_RECORD);
 	return &datum->obj;
 }
 
 int
-avro_record_get(const avro_datum_t datum, avro_atom_t field_name,
+avro_record_get(const avro_datum_t datum, const char *field_name,
 		avro_datum_t * field)
 {
 	union {
 		avro_datum_t field;
 		st_data_t data;
 	} val;
-	if (is_avro_datum(datum) && is_avro_record(datum)) {
+	if (is_avro_datum(datum) && is_avro_record(datum) && field_name) {
 		if (st_lookup
 		    (avro_datum_to_record(datum)->fields_byname,
 		     (st_data_t) field_name, &(val.data))) {
@@ -464,11 +459,13 @@ avro_record_get(const avro_datum_t datum, avro_atom_t field_name,
 }
 
 int
-avro_record_set(const avro_datum_t datum, avro_atom_t field_name,
+avro_record_set(const avro_datum_t datum, const char *field_name,
 		const avro_datum_t field_value)
 {
+	char *key = (char *)field_name;
 	avro_datum_t old_field;
-	if (is_avro_datum(datum) && is_avro_record(datum)) {
+
+	if (is_avro_datum(datum) && is_avro_record(datum) && field_name) {
 		if (avro_record_get(datum, field_name, &old_field) == 0) {
 			/* Overriding old value */
 			avro_datum_decref(old_field);
@@ -476,18 +473,17 @@ avro_record_set(const avro_datum_t datum, avro_atom_t field_name,
 			/* Inserting new value */
 			struct avro_record_datum_t *record =
 			    avro_datum_to_record(datum);
-			if ((record->num_fields + 1) > record->alloc_fields) {
-				record->alloc_fields *= 2;
-				record->field_order = (avro_atom_t*)g_avro_allocator.realloc(record->field_order,
-				    (record->alloc_fields) * sizeof(avro_atom_t));
+			key = strdup(field_name);
+			if (!key) {
+				return ENOMEM;
 			}
-			avro_atom_incref(field_name);
-			record->field_order[record->num_fields++] = field_name;
+			st_insert(record->field_order,
+				  record->field_order->num_entries,
+				  (st_data_t) key);
 		}
 		avro_datum_incref(field_value);
-		avro_atom_incref(field_name);
 		st_insert(avro_datum_to_record(datum)->fields_byname,
-			  (st_data_t) field_name, (st_data_t) field_value);
+			  (st_data_t) key, (st_data_t) field_value);
 		return 0;
 	}
 	return EINVAL;
@@ -496,11 +492,11 @@ avro_record_set(const avro_datum_t datum, avro_atom_t field_name,
 avro_datum_t avro_enum(const char *name, int i)
 {
 	struct avro_enum_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_enum_datum_t));
+	    malloc(sizeof(struct avro_enum_datum_t));
 	if (!datum) {
 		return NULL;
 	}
-	datum->name = avro_strdup(name);
+	datum->name = strdup(name);
 	datum->value = i;
 
 	avro_datum_init(&datum->obj, AVRO_ENUM);
@@ -512,11 +508,11 @@ static avro_datum_t avro_fixed_private(const char *name, const char *bytes,
 				       void (*fixed_free) (void *ptr))
 {
 	struct avro_fixed_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_fixed_datum_t));
+	    malloc(sizeof(struct avro_fixed_datum_t));
 	if (!datum) {
 		return NULL;
 	}
-	datum->name = avro_strdup(name);
+	datum->name = strdup(name);
 	datum->size = size;
 	datum->bytes = (char *)bytes;
 	datum->free = fixed_free;
@@ -527,12 +523,12 @@ static avro_datum_t avro_fixed_private(const char *name, const char *bytes,
 
 avro_datum_t avro_fixed(const char *name, const char *bytes, const int64_t size)
 {
-	char *bytes_copy = g_avro_allocator.malloc(size);
+	char *bytes_copy = malloc(size);
 	if (!bytes_copy) {
 		return NULL;
 	}
 	memcpy(bytes_copy, bytes, size);
-	return avro_fixed_private(name, bytes, size, g_avro_allocator.free);
+	return avro_fixed_private(name, bytes, size, free);
 }
 
 avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
@@ -544,7 +540,7 @@ avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
 avro_datum_t avro_givefixed(const char *name, const char *bytes,
 			    const int64_t size)
 {
-	return avro_fixed_private(name, bytes, size, g_avro_allocator.free);
+	return avro_fixed_private(name, bytes, size, free);
 }
 
 static int avro_fixed_set_private(avro_datum_t datum, const char *bytes,
@@ -572,14 +568,14 @@ static int avro_fixed_set_private(avro_datum_t datum, const char *bytes,
 int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
 {
 	int rval;
-	char *bytes_copy = g_avro_allocator.malloc(size);
+	char *bytes_copy = malloc(size);
 	if (!bytes_copy) {
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
-	rval = avro_fixed_set_private(datum, bytes, size, g_avro_allocator.free);
+	rval = avro_fixed_set_private(datum, bytes, size, free);
 	if (rval) {
-		g_avro_allocator.free(bytes_copy);
+		free(bytes_copy);
 	}
 	return rval;
 }
@@ -587,7 +583,7 @@ int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
 int avro_givefixed_set(avro_datum_t datum, const char *bytes,
 		       const int64_t size)
 {
-	return avro_fixed_set_private(datum, bytes, size, g_avro_allocator.free);
+	return avro_fixed_set_private(datum, bytes, size, free);
 }
 
 int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
@@ -609,13 +605,13 @@ int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size)
 avro_datum_t avro_map(void)
 {
 	struct avro_map_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_map_datum_t));
+	    malloc(sizeof(struct avro_map_datum_t));
 	if (!datum) {
 		return NULL;
 	}
 	datum->map = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->map) {
-		g_avro_allocator.free(datum);
+		free(datum);
 		return NULL;
 	}
 
@@ -661,7 +657,7 @@ avro_map_set(const avro_datum_t datum, const char *key,
 		avro_datum_decref(old_datum);
 	} else {
 		/* Inserting a new value */
-		save_key = avro_strdup(key);
+		save_key = strdup(key);
 		if (!save_key) {
 			return ENOMEM;
 		}
@@ -675,17 +671,15 @@ avro_map_set(const avro_datum_t datum, const char *key,
 avro_datum_t avro_array(void)
 {
 	struct avro_array_datum_t *datum =
-	    g_avro_allocator.malloc(sizeof(struct avro_array_datum_t));
+	    malloc(sizeof(struct avro_array_datum_t));
 	if (!datum) {
 		return NULL;
 	}
-	datum->alloc_els = DEFAULT_ARRAY_SIZE;
- 	datum->els = g_avro_allocator.malloc(datum->alloc_els * sizeof(avro_datum_t));
+	datum->els = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->els) {
-		g_avro_allocator.free(datum);
+		free(datum);
 		return NULL;
 	}
- 	datum->num_els = 0;
 
 	avro_datum_init(&datum->obj, AVRO_ARRAY);
 	return &datum->obj;
@@ -694,14 +688,18 @@ avro_datum_t avro_array(void)
 int
 avro_array_get(const avro_datum_t array_datum, int64_t index, avro_datum_t * value)
 {
-	if (is_avro_datum(array_datum) && is_avro_array(array_datum) && (index >= 0)) {
-		const struct avro_array_datum_t * array = avro_datum_to_array(array_datum);
-		if ((index >= 0) && (index < array->num_els)) {
-			*value = array->els[index];
-			return 0;
-		}
-	}
-	return EINVAL;
+    union {
+        st_data_t data;
+        avro_datum_t datum;
+    } val;
+	if (is_avro_datum(array_datum) && is_avro_array(array_datum)) {
+        const struct avro_array_datum_t * array = avro_datum_to_array(array_datum);
+        if (st_lookup(array->els, index, &val.data)) {
+            *value = val.datum;
+            return 0;
+        }
+    }
+    return EINVAL;
 }
 
 int
@@ -714,22 +712,9 @@ avro_array_append_datum(const avro_datum_t array_datum,
 		return EINVAL;
 	}
 	array = avro_datum_to_array(array_datum);
-	if ((array->num_els + 1) > array->alloc_els) {
-		array->alloc_els *= 2;
-		array->els = (avro_datum_t *)g_avro_allocator.realloc(array->els,
-				    (array->alloc_els) * sizeof(avro_datum_t));
-	}
-	array->els[array->num_els++] = avro_datum_incref(datum);
+	st_insert(array->els, array->els->num_entries,
+		  (st_data_t) avro_datum_incref(datum));
 	return 0;
-}
-
-static int atom_datum_free_foreach(avro_atom_t key, avro_datum_t datum, void *arg)
-{
-	AVRO_UNUSED(arg);
-
-	avro_datum_decref(datum);
-	avro_atom_decref(key);
-	return ST_DELETE;
 }
 
 static int char_datum_free_foreach(char *key, avro_datum_t datum, void *arg)
@@ -737,7 +722,16 @@ static int char_datum_free_foreach(char *key, avro_datum_t datum, void *arg)
 	AVRO_UNUSED(arg);
 
 	avro_datum_decref(datum);
-	g_avro_allocator.free(key);
+	free(key);
+	return ST_DELETE;
+}
+
+static int array_free_foreach(int i, avro_datum_t datum, void *arg)
+{
+	AVRO_UNUSED(i);
+	AVRO_UNUSED(arg);
+
+	avro_datum_decref(datum);
 	return ST_DELETE;
 }
 
@@ -751,7 +745,7 @@ static void avro_datum_free(avro_datum_t datum)
 				if (string->free) {
 					string->free(string->s);
 				}
-				g_avro_allocator.free(string);
+				free(string);
 			}
 			break;
 		case AVRO_BYTES:{
@@ -760,37 +754,37 @@ static void avro_datum_free(avro_datum_t datum)
 				if (bytes->free) {
 					bytes->free(bytes->bytes);
 				}
-				g_avro_allocator.free(bytes);
+				free(bytes);
 			}
 			break;
 		case AVRO_INT32:{
 				struct avro_int32_datum_t *i;
 				i = avro_datum_to_int32(datum);
-				g_avro_allocator.free(i);
+				free(i);
 			}
 			break;
 		case AVRO_INT64:{
 				struct avro_int64_datum_t *l;
 				l = avro_datum_to_int64(datum);
-				g_avro_allocator.free(l);
+				free(l);
 			}
 			break;
 		case AVRO_FLOAT:{
 				struct avro_float_datum_t *f;
 				f = avro_datum_to_float(datum);
-				g_avro_allocator.free(f);
+				free(f);
 			}
 			break;
 		case AVRO_DOUBLE:{
 				struct avro_double_datum_t *d;
 				d = avro_datum_to_double(datum);
-				g_avro_allocator.free(d);
+				free(d);
 			}
 			break;
 		case AVRO_BOOLEAN:{
 				struct avro_boolean_datum_t *b;
 				b = avro_datum_to_boolean(datum);
-				g_avro_allocator.free(b);
+				free(b);
 			}
 			break;
 		case AVRO_NULL:
@@ -798,38 +792,34 @@ static void avro_datum_free(avro_datum_t datum)
 			break;
 
 		case AVRO_RECORD:{
-				int i;
 				struct avro_record_datum_t *record;
 				record = avro_datum_to_record(datum);
-				g_avro_allocator.free((void *)record->name);
+				free((void *)record->name);
 				if (record->space) {
-					g_avro_allocator.free((void *)record->space);
+					free((void *)record->space);
 				}
 				st_foreach(record->fields_byname,
-					   atom_datum_free_foreach, 0);
-				for (i = 0; i < record->num_fields; i++) {
-					avro_atom_decref(record->field_order[i]);
-				}
-				g_avro_allocator.free(record->field_order);
+					   char_datum_free_foreach, 0);
+				st_free_table(record->field_order);
 				st_free_table(record->fields_byname);
-				g_avro_allocator.free(record);
+				free(record);
 			}
 			break;
 		case AVRO_ENUM:{
 				struct avro_enum_datum_t *enump;
 				enump = avro_datum_to_enum(datum);
-				g_avro_allocator.free((void *)enump->name);
-				g_avro_allocator.free(enump);
+				free((void *)enump->name);
+				free(enump);
 			}
 			break;
 		case AVRO_FIXED:{
 				struct avro_fixed_datum_t *fixed;
 				fixed = avro_datum_to_fixed(datum);
-				g_avro_allocator.free((void *)fixed->name);
+				free((void *)fixed->name);
 				if (fixed->free) {
 					fixed->free((void *)fixed->bytes);
 				}
-				g_avro_allocator.free(fixed);
+				free(fixed);
 			}
 			break;
 		case AVRO_MAP:{
@@ -838,25 +828,22 @@ static void avro_datum_free(avro_datum_t datum)
 				st_foreach(map->map, char_datum_free_foreach,
 					   0);
 				st_free_table(map->map);
-				g_avro_allocator.free(map);
+				free(map);
 			}
 			break;
 		case AVRO_ARRAY:{
-				int i;
 				struct avro_array_datum_t *array;
 				array = avro_datum_to_array(datum);
-				for (i = 0; i < array->num_els; i++) {
-					avro_datum_decref(array->els[i]);
-				}
-				g_avro_allocator.free(array->els);
-				g_avro_allocator.free(array);
+				st_foreach(array->els, array_free_foreach, 0);
+				st_free_table(array->els);
+				free(array);
 			}
 			break;
 		case AVRO_UNION:{
 				struct avro_union_datum_t *unionp;
 				unionp = avro_datum_to_union(datum);
 				avro_datum_decref(unionp->value);
-				g_avro_allocator.free(unionp);
+				free(unionp);
 			}
 			break;
 		case AVRO_LINK:{

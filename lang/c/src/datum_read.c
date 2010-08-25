@@ -22,7 +22,6 @@
 #include "encoding.h"
 #include "schema.h"
 #include "datum.h"
-#include "allocator.h"
 
 int
 avro_schema_match(avro_schema_t writers_schema, avro_schema_t readers_schema)
@@ -198,16 +197,16 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 					   avro_schema_to_map(readers_schema)->
 					   values, &value);
 			if (rval) {
-				g_avro_allocator.free(key);
+				free(key);
 				return rval;
 			}
 			rval = avro_map_set(map, key, value);
 			if (rval) {
-				g_avro_allocator.free(key);
+				free(key);
 				return rval;
 			}
 			avro_datum_decref(value);
-			g_avro_allocator.free(key);
+			free(key);
 		}
 		rval = enc->read_long(reader, &block_count);
 		if (rval) {
@@ -393,7 +392,7 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			int64_t size =
 			    avro_schema_to_fixed(writers_schema)->size;
 
-			bytes = g_avro_allocator.malloc(size);
+			bytes = malloc(size);
 			if (!bytes) {
 				return ENOMEM;
 			}

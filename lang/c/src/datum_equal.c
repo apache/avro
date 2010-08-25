@@ -24,11 +24,17 @@ array_equal(struct avro_array_datum_t *a, struct avro_array_datum_t *b)
 {
 	long i;
 
-	if (a->num_els != b->num_els) {
+	if (a->els->num_entries != b->els->num_entries) {
 		return 0;
 	}
-	for (i = 0; i < a->num_els; i++) {
-		if (!avro_datum_equal(a->els[i], b->els[i])) {
+	for (i = 0; i < a->els->num_entries; i++) {
+		union {
+			st_data_t data;
+			avro_datum_t datum;
+		} ael, bel;
+		st_lookup(a->els, i, &ael.data);
+		st_lookup(b->els, i, &bel.data);
+		if (!avro_datum_equal(ael.datum, bel.datum)) {
 			return 0;
 		}
 	}
@@ -41,25 +47,7 @@ struct st_equal_args {
 };
 
 static int
-st_equal_map_foreach(char *key, avro_datum_t datum, struct st_equal_args *args)
-{
-	union {
-		avro_datum_t datum_other;
-		st_data_t data;
-	} val;
-	if (!st_lookup(args->st, (st_data_t) key, &(val.data))) {
-		args->rval = 0;
-		return ST_STOP;
-	}
-	if (!avro_datum_equal(datum, val.datum_other)) {
-		args->rval = 0;
-		return ST_STOP;
-	}
-	return ST_CONTINUE;
-}
-
-static int
-st_equal_record_foreach(avro_atom_t key, avro_datum_t datum, struct st_equal_args *args)
+st_equal_foreach(char *key, avro_datum_t datum, struct st_equal_args *args)
 {
 	union {
 		avro_datum_t datum_other;
@@ -82,7 +70,7 @@ static int map_equal(struct avro_map_datum_t *a, struct avro_map_datum_t *b)
 	if (a->map->num_entries != b->map->num_entries) {
 		return 0;
 	}
-	st_foreach(a->map, st_equal_map_foreach, (st_data_t) & args);
+	st_foreach(a->map, st_equal_foreach, (st_data_t) & args);
 	return args.rval;
 }
 
@@ -106,7 +94,7 @@ static int record_equal(struct avro_record_datum_t *a,
 	if (a->fields_byname->num_entries != b->fields_byname->num_entries) {
 		return 0;
 	}
-	st_foreach(a->fields_byname, st_equal_record_foreach, (st_data_t) & args);
+	st_foreach(a->fields_byname, st_equal_foreach, (st_data_t) & args);
 	return args.rval;
 }
 

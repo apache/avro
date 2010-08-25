@@ -10,7 +10,7 @@
 #ifndef ST_INCLUDED
 #define ST_INCLUDED
 
-#include "types.h"	/* for uintptr_t */
+#include <stdint.h>		/* for uintptr_t */
 
 typedef uintptr_t st_data_t;
 typedef struct st_table st_table;

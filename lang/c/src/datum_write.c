@@ -52,10 +52,14 @@ write_record(avro_writer_t writer, const avro_encoding_t * enc,
 		/* No schema.  Just write the record datum */
 		struct avro_record_datum_t *record =
 		    avro_datum_to_record(datum);
-		for (i = 0; i < record->num_fields; i++) {
-			avro_atom_t name = record->field_order[i];
+		for (i = 0; i < record->field_order->num_entries; i++) {
+			union {
+				st_data_t data;
+				char *name;
+			} val;
+			st_lookup(record->field_order, i, &val.data);
 			check(rval,
-			      avro_record_get(datum, name, &field_datum));
+			      avro_record_get(datum, val.name, &field_datum));
 			check(rval,
 			      write_datum(writer, enc, NULL, field_datum));
 		}
@@ -129,16 +133,21 @@ write_array(avro_writer_t writer, const avro_encoding_t * enc,
 	int rval;
 	long i;
 
-	if (array->num_els) {
-		rval = enc->write_long(writer, array->num_els);
+	if (array->els->num_entries) {
+		rval = enc->write_long(writer, array->els->num_entries);
 		if (rval) {
 			return rval;
 		}
-		for (i = 0; i < array->num_els; i++) {
+		for (i = 0; i < array->els->num_entries; i++) {
+			union {
+				st_data_t data;
+				avro_datum_t datum;
+			} val;
+			st_lookup(array->els, i, &val.data);
 			check(rval,
 			      write_datum(writer, enc,
 					  schema ? schema->items : NULL,
-					  array->els[i]));
+					  val.datum));
 		}
 	}
 	return enc->write_long(writer, 0);

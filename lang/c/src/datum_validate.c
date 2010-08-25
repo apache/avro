@@ -101,10 +101,15 @@ avro_schema_datum_validate(avro_schema_t expected_schema, avro_datum_t datum)
 			struct avro_array_datum_t *array =
 			    avro_datum_to_array(datum);
 
-			for (i = 0; i < array->num_els; i++) {
+			for (i = 0; i < array->els->num_entries; i++) {
+				union {
+					st_data_t data;
+					avro_datum_t datum;
+				} val;
+				st_lookup(array->els, i, &val.data);
 				if (!avro_schema_datum_validate
 				    ((avro_schema_to_array
-				      (expected_schema))->items, array->els[i])) {
+				      (expected_schema))->items, val.datum)) {
 					return 0;
 				}
 			}

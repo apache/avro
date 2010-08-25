@@ -36,8 +36,6 @@ add_subdirectory(src)
 add_subdirectory(examples)
 add_subdirectory(tests)
 
-if(NOT WIN32)
 add_custom_target(pretty
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake_pretty.cmake")
-endif()
 

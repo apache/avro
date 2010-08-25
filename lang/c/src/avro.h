@@ -24,9 +24,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-#include "types.h"
-
-typedef int32_t avro_atom_t;
+#include <stdint.h>
 
 enum avro_type_t {
 	AVRO_STRING,
@@ -96,12 +94,6 @@ typedef struct avro_reader_t_ *avro_reader_t;
 typedef struct avro_writer_t_ *avro_writer_t;
 
 /*
- * Initialize the underlying library and properly close things down
- */
-void avro_init(void);
-void avro_shutdown(void);
-
-/*
  * schema 
  */
 typedef struct avro_obj_t *avro_schema_t;
@@ -117,7 +109,7 @@ avro_schema_t avro_schema_null(void);
 
 avro_schema_t avro_schema_record(const char *name, const char *space);
 avro_schema_t avro_schema_record_field_get(const avro_schema_t
-					   record, avro_atom_t field_name);
+					   record, const char *field_name);
 int avro_schema_record_field_append(const avro_schema_t record,
 				    const char *field_name,
 				    const avro_schema_t type);
@@ -201,7 +193,7 @@ avro_datum_t avro_givefixed(const char *name, const char *bytes,
 			    const int64_t size);
 avro_datum_t avro_map(void);
 avro_datum_t avro_array(void);
-avro_datum_t avro_union(int64_t discriminant, avro_datum_t datum);
+avro_datum_t avro_union(int64_t discriminant, const avro_datum_t datum);
 
 /* getters */
 int avro_string_get(avro_datum_t datum, char **p);
@@ -213,7 +205,7 @@ int avro_double_get(avro_datum_t datum, double *d);
 int avro_boolean_get(avro_datum_t datum, int8_t * i);
 
 int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size);
-int avro_record_get(const avro_datum_t record, avro_atom_t field_name,
+int avro_record_get(const avro_datum_t record, const char *field_name,
 		    avro_datum_t * value);
 int avro_map_get(const avro_datum_t datum, const char *key,
 		 avro_datum_t * value);
@@ -242,7 +234,7 @@ int avro_givefixed_set(avro_datum_t datum, const char *bytes,
 int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
 		       const int64_t size);
 
-int avro_record_set(const avro_datum_t record, avro_atom_t field_name,
+int avro_record_set(const avro_datum_t record, const char *field_name,
 		    const avro_datum_t value);
 int avro_map_set(const avro_datum_t map, const char *key,
 		 const avro_datum_t value);
@@ -255,7 +247,7 @@ void avro_datum_decref(avro_datum_t value);
 
 void avro_datum_print(avro_datum_t value, FILE * fp);
 
-int avro_datum_equal(const avro_datum_t a, const avro_datum_t b);
+int avro_datum_equal(avro_datum_t a, avro_datum_t b);
 
 int avro_schema_match(avro_schema_t writers_schema,
 		      avro_schema_t readers_schema);
@@ -289,31 +281,6 @@ int avro_file_writer_close(avro_file_writer_t writer);
 int avro_file_reader_read(avro_file_reader_t reader,
 			  avro_schema_t readers_schema, avro_datum_t * datum);
 int avro_file_reader_close(avro_file_reader_t reader);
-
-/* Atom handling */
-typedef struct avro_atom_table_t_ *avro_atom_table_t;
-extern avro_atom_table_t g_avro_atom_table;
-
-avro_atom_table_t avro_atom_table_create(int32_t);
-void avro_atom_table_destroy(avro_atom_table_t table);
-void avro_atom_table_dump(avro_atom_table_t table);
-
-avro_atom_t avro_atom_table_add(avro_atom_table_t table, const char *s);
-avro_atom_t avro_atom_table_add_length(avro_atom_table_t table, const char *s, int32_t length);
-avro_atom_t avro_atom_table_lookup(avro_atom_table_t table, const char *s, int32_t length);
-int avro_atom_table_describe(avro_atom_table_t table, avro_atom_t atom, const char **s, int32_t *length);
-const char *avro_atom_table_to_string(avro_atom_table_t table, avro_atom_t atom);
-
-avro_atom_t avro_atom_table_incref(avro_atom_table_t table, avro_atom_t atom);
-void avro_atom_table_decref(avro_atom_table_t table, avro_atom_t atom);
-
-#define avro_atom_add(s) avro_atom_table_add(g_avro_atom_table, s)
-#define avro_atom_add_length(s, length) avro_atom_table_add_length(g_avro_atom_table, s, length)
-#define avro_atom_lookup(s, length) avro_atom_table_lookup(g_avro_atom_table, s, length)
-#define avro_atom_describe(atom, s, length) avro_atom_table_describe(g_avro_atom_table, atom, s, length)
-#define avro_atom_to_string(atom) avro_atom_table_to_string(g_avro_atom_table, atom)
-#define avro_atom_incref(atom) avro_atom_table_incref(g_avro_atom_table, atom)
-#define avro_atom_decref(atom) avro_atom_table_decref(g_avro_atom_table, atom)
 
 CLOSE_EXTERN
 #endif

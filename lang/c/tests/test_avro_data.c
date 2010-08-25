@@ -55,7 +55,6 @@ write_read_check(avro_schema_t writers_schema,
 {
 	avro_datum_t datum_out;
 	int validate;
-	int64_t size;
 
 	for (validate = 0; validate <= 1; validate++) {
 
@@ -69,7 +68,7 @@ write_read_check(avro_schema_t writers_schema,
 				type, validate);
 			exit(EXIT_FAILURE);
 		}
-		size =
+		int64_t size =
 		    avro_size_data(writer, validate ? writers_schema : NULL,
 				   datum);
 		if (size != avro_writer_tell(writer)) {
@@ -206,11 +205,7 @@ static int test_record(void)
 {
 	avro_schema_t schema = avro_schema_record("person", NULL);
 	avro_datum_t datum = avro_record("person", NULL);
-	avro_atom_t name_atom, age_atom;
 	avro_datum_t name_datum, age_datum;
-
-	name_atom = avro_atom_add("name");
-	age_atom = avro_atom_add("age");
 
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
@@ -218,8 +213,8 @@ static int test_record(void)
 	name_datum = avro_wrapstring("Joseph Campbell");
 	age_datum = avro_int32(83);
 
-	avro_record_set(datum, name_atom, name_datum);
-	avro_record_set(datum, age_atom, age_datum);
+	avro_record_set(datum, "name", name_datum);
+	avro_record_set(datum, "age", age_datum);
 
 	write_read_check(schema, NULL, datum, "record");
 
@@ -227,8 +222,6 @@ static int test_record(void)
 	avro_datum_decref(age_datum);
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
-	avro_atom_decref(name_atom);
-	avro_atom_decref(age_atom);
 	return 0;
 }
 
@@ -351,8 +344,6 @@ int main(void)
 		"union", test_union}
 	};
 
-	avro_init();
-
 	init_rand();
 	for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
 		struct avro_tests *test = tests + i;
@@ -361,8 +352,5 @@ int main(void)
 			return EXIT_FAILURE;
 		}
 	}
-
-	avro_shutdown();
-
 	return EXIT_SUCCESS;
 }

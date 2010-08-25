@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <string.h>
 #include "dump.h"
-#include "allocator.h"
 
 enum avro_io_type_t {
 	AVRO_FILE_IO,
@@ -90,7 +89,7 @@ static void writer_init(avro_writer_t writer, avro_io_type_t type)
 avro_reader_t avro_reader_file(FILE * fp)
 {
 	struct _avro_reader_file_t *file_reader =
-	    g_avro_allocator.malloc(sizeof(struct _avro_reader_file_t));
+	    malloc(sizeof(struct _avro_reader_file_t));
 	if (!file_reader) {
 		return NULL;
 	}
@@ -103,7 +102,7 @@ avro_reader_t avro_reader_file(FILE * fp)
 avro_writer_t avro_writer_file(FILE * fp)
 {
 	struct _avro_writer_file_t *file_writer =
-	    g_avro_allocator.malloc(sizeof(struct _avro_writer_file_t));
+	    malloc(sizeof(struct _avro_writer_file_t));
 	if (!file_writer) {
 		return NULL;
 	}
@@ -115,7 +114,7 @@ avro_writer_t avro_writer_file(FILE * fp)
 avro_reader_t avro_reader_memory(const char *buf, int64_t len)
 {
 	struct _avro_reader_memory_t *mem_reader =
-	    g_avro_allocator.malloc(sizeof(struct _avro_reader_memory_t));
+	    malloc(sizeof(struct _avro_reader_memory_t));
 	if (!mem_reader) {
 		return NULL;
 	}
@@ -129,7 +128,7 @@ avro_reader_t avro_reader_memory(const char *buf, int64_t len)
 avro_writer_t avro_writer_memory(const char *buf, int64_t len)
 {
 	struct _avro_writer_memory_t *mem_writer =
-	    g_avro_allocator.malloc(sizeof(struct _avro_writer_memory_t));
+	    malloc(sizeof(struct _avro_writer_memory_t));
 	if (!mem_writer) {
 		return NULL;
 	}
@@ -160,7 +159,7 @@ static int
 avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 {
 	int64_t needed = len;
-	char *p = buf;
+	void *p = buf;
 	int rval;
 
 	if (len == 0) {
@@ -347,19 +346,19 @@ void avro_reader_dump(avro_reader_t reader, FILE * fp)
 void avro_reader_free(avro_reader_t reader)
 {
 	if (is_memory_io(reader)) {
-		g_avro_allocator.free(avro_reader_to_memory(reader));
+		free(avro_reader_to_memory(reader));
 	} else if (is_file_io(reader)) {
 		fclose(avro_reader_to_file(reader)->fp);
-		g_avro_allocator.free(avro_reader_to_file(reader));
+		free(avro_reader_to_file(reader));
 	}
 }
 
 void avro_writer_free(avro_writer_t writer)
 {
 	if (is_memory_io(writer)) {
-		g_avro_allocator.free(avro_writer_to_memory(writer));
+		free(avro_writer_to_memory(writer));
 	} else if (is_file_io(writer)) {
 		fclose(avro_writer_to_file(writer)->fp);
-		g_avro_allocator.free(avro_writer_to_file(writer));
+		free(avro_writer_to_file(writer));
 	}
 }

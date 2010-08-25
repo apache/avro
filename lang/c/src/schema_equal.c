@@ -48,7 +48,7 @@ schema_record_equal(struct avro_record_schema_t *a,
 		if (!st_lookup(b->fields, i, &fb.data)) {
 			return 0;
 		}
-		if (fa.f->name != fb.f->name) {
+		if (strcmp(fa.f->name, fb.f->name)) {
 			/*
 			 * They have fields with different names 
 			 */

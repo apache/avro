@@ -18,15 +18,8 @@
 #
 
 set(AVRO_SRC
-    allocator.c
-    allocator.h
-    allocator_system.c
-    allocator_system.h
-    atom_table.c
-    avro.c
     avro.h
     avro_private.h
-    config.h
     datafile.c
     datum.c
     datum.h
@@ -46,7 +39,6 @@ set(AVRO_SRC
     schema_equal.c
     st.c
     st.h
-    types.h
 )
 
 set(JANSSON_SRC
@@ -69,24 +61,15 @@ source_group(Jansson FILES ${JANSSON_SRC})
 
 add_library(avro-static STATIC ${AVRO_SRC} ${JANSSON_SRC})
 set_target_properties(avro-static PROPERTIES OUTPUT_NAME avro)
-
 add_library(avro-shared SHARED ${AVRO_SRC} ${JANSSON_SRC})
 set_target_properties(avro-shared PROPERTIES
-    OUTPUT_NAME avro
-    SOVERSION ${AVRO_VERSION}
-)
+        OUTPUT_NAME avro
+        SOVERSION ${AVRO_VERSION})
 
-if(MSVC)
-    set_target_properties(avro-static avro-shared PROPERTIES
-        COMPILE_DEFINITIONS "_CRT_SECURE_NO_WARNINGS"
-    )
-endif()
-
-if(NOT WIN32)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/avro.h DESTINATION include)
 install(TARGETS avro-static avro-shared
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
 )
-endif()
+
