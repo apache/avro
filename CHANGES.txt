@@ -60,6 +60,8 @@ Avro 1.4.0 (unreleased)
 
     AVRO-611. IDL: Add support for one-way messages. (cutting)
 
+    AVRO-528. Python: Add support for Twisted.  (Esteve Fernandez via cutting)
+
   IMPROVEMENTS
 
     AVRO-629. Prefer the JSON module of python's stdlib over simplejson.

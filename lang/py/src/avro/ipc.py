@@ -75,7 +75,7 @@ class ConnectionClosedException(schema.AvroException):
 # Base IPC Classes (Requestor/Responder)
 #
 
-class Requestor(object):
+class BaseRequestor(object):
   """Base class for the client side of a protocol interaction."""
   def __init__(self, local_protocol, transceiver):
     self._local_protocol = local_protocol
@@ -116,15 +116,7 @@ class Requestor(object):
 
     # send the handshake and call request; block until call response
     call_request = buffer_writer.getvalue()
-    call_response = self.transceiver.transceive(call_request)
-
-    # process the handshake and call response
-    buffer_decoder = io.BinaryDecoder(StringIO(call_response))
-    call_response_exists = self.read_handshake_response(buffer_decoder)
-    if call_response_exists:
-      return self.read_call_response(message_name, buffer_decoder)
-    else:
-      return self.request(message_name, request_datum)
+    return self.issue_request(call_request, message_name, request_datum)
 
   def write_handshake_request(self, encoder):
     local_hash = self.local_protocol.md5
@@ -231,6 +223,19 @@ class Requestor(object):
   def read_error(self, writers_schema, readers_schema, decoder):
     datum_reader = io.DatumReader(writers_schema, readers_schema)
     return AvroRemoteException(datum_reader.read(decoder))
+
+class Requestor(BaseRequestor):
+
+  def issue_request(self, call_request, message_name, request_datum):
+    call_response = self.transceiver.transceive(call_request)
+
+    # process the handshake and call response
+    buffer_decoder = io.BinaryDecoder(StringIO(call_response))
+    call_response_exists = self.read_handshake_response(buffer_decoder)
+    if call_response_exists:
+      return self.read_call_response(message_name, buffer_decoder)
+    else:
+      return self.request(message_name, request_datum)
 
 class Responder(object):
   """Base class for the server side of a protocol interaction."""
