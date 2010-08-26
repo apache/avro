@@ -138,6 +138,7 @@ public abstract class Responder {
       } catch (Exception e) {
         error = e;
         context.setError(error);
+        LOG.warn("user error", e);
       }
       
       if (m.isOneWay() && wasConnected)           // no response data
