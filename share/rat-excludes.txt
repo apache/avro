@@ -3,6 +3,7 @@
 **/*.avsc
 **/*.gperf
 **/*.html
+**/*.json
 **/*.js
 **/*.la
 **/*.m4
