@@ -117,7 +117,6 @@ public abstract class Responder {
       
       Object request = readRequest(rm.getRequest(), in);
       
-      context.setRequestPayload(buffers);
       context.setMessage(rm);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.serverReceiveRequest(context);

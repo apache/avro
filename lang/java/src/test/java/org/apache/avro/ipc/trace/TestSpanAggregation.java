@@ -46,7 +46,12 @@ public class TestSpanAggregation {
   @Test
   public void testSpanCompletion1() {
     Span span1a = createClientSpan(idValue(1), idValue(1), null, new Utf8("a"));
+    span1a.requestPayloadSize = 10;
+    span1a.responsePayloadSize = 0;
+    
     Span span1b = createServerSpan(idValue(1), idValue(1), null, new Utf8("a"));
+    span1b.requestPayloadSize = 0;
+    span1b.responsePayloadSize = 11;
     
     List<Span> partials = new ArrayList<Span>();
     partials.add(span1a);
@@ -62,6 +67,8 @@ public class TestSpanAggregation {
     assertEquals(null, result.parentSpanID);
     assertTrue(idsEqual(idValue(1), result.spanID));
     assertEquals(4, result.events.size());
+    assertEquals(10, result.requestPayloadSize);
+    assertEquals(11, result.responsePayloadSize);
   }
   
   /**

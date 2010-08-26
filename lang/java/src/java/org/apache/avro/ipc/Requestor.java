@@ -121,7 +121,6 @@ public abstract class Requestor {
         return null;
       } else {                                    // two-way message
         List<ByteBuffer> response = t.transceive(requestBytes);
-        context.setResponsePayload(response);
         ByteBufferInputStream bbi = new ByteBufferInputStream(response);
         in = DecoderFactory.defaultFactory().createBinaryDecoder(bbi, in);
       }

@@ -139,6 +139,9 @@ Avro 1.4.0 (unreleased)
     AVRO-598. Java: Use generic data structures when reading with
     reflect API and classes are not defined. (cutting)
 
+    AVRO-631. Java: Make RPC plugin payload reporting consistent.
+    (Patrick Wendell via cutting)
+
   BUG FIXES
 
     AVRO-622. python avro.ipc doesn't work with python2.4 (philz)

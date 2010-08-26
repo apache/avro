@@ -169,18 +169,18 @@ public class RPCContext {
     this.requestPayload = payload;
   }
  
-  /** Returns the serialized payload of the request in this RPC. Will
-   * not include handshake or meta-data. If the request payload has not been
-   * set yet, returns null.
+  /** Returns the serialized payload of the request in this RPC. Will only be
+   * generated from a Requestor and will not include handshake or meta-data. 
+   * If the request payload has not been set yet, returns null.
    * 
    * @return this RPC's request payload.*/
   public List<ByteBuffer> getRequestPayload() {
     return this.requestPayload;
   }
   
-  /** Returns the serialized payload of the response in this RPC. Will
-   * not include handshake or meta-data. If the response payload has not been
-   * set yet, returns null.
+  /** Returns the serialized payload of the response in this RPC. Will only be
+   * generated from a Responder and will not include handshake or meta-data. 
+   * If the response payload has not been set yet, returns null.
    * 
    * @return this RPC's response payload.*/
   public List<ByteBuffer> getResponsePayload() {

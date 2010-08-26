@@ -115,6 +115,10 @@ public class SpanAggregator {
             for (TimestampedEvent event: other.events) {
               s.events.add(event);
             }
+            s.requestPayloadSize = Math.max(
+                s.requestPayloadSize, other.requestPayloadSize);
+            s.responsePayloadSize = Math.max(
+                s.responsePayloadSize, other.responsePayloadSize);
             s.complete = true;
             out.completeSpans.add(s);
           }

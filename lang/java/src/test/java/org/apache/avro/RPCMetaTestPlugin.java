@@ -111,7 +111,6 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     
     Assert.assertNotNull(meta);    
     Assert.assertNotNull(context.getMessage());
-    Assert.assertNotNull(context.getRequestPayload());
     Assert.assertNull(context.getResponsePayload());
     
     if (!meta.containsKey(key)) return;
@@ -134,7 +133,6 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNotNull(context.requestCallMeta());
     Assert.assertNotNull(context.responseCallMeta());
 
-    Assert.assertNotNull(context.getRequestPayload());
     Assert.assertNotNull(context.getResponsePayload());
     
     if (!context.requestCallMeta().containsKey(key)) return;
@@ -156,7 +154,6 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   public void clientReceiveResponse(RPCContext context) {
     Assert.assertNotNull(context.responseCallMeta());
     Assert.assertNotNull(context.getRequestPayload());
-    Assert.assertNotNull(context.getResponsePayload());
     
     if (!context.responseCallMeta().containsKey(key)) return;
     
