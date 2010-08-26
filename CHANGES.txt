@@ -193,6 +193,9 @@ Avro 1.4.0 (unreleased)
     AVRO-510. C: Fix some memory leaks in datafile reader &
     writer. (Robert G. Jakabosky via cutting)
 
+    AVRO-633. Ruby: Implement skip_union to correct issues with
+    updating protocols
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS

@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -232,6 +232,28 @@ EOS
     end
   end
 
+  def test_skip_union
+    ["hello", -1, 32, nil].each do |value_to_skip|
+      value_to_read = 6253
+
+      schema = Avro::Schema.parse('["int", "string", "null"]')
+      writer = StringIO.new
+      encoder = Avro::IO::BinaryEncoder.new(writer)
+      datum_writer = Avro::IO::DatumWriter.new(schema)
+      datum_writer.write(value_to_skip, encoder)
+      datum_writer.write(value_to_read, encoder)
+
+      reader = StringIO.new(writer.string)
+      decoder = Avro::IO::BinaryDecoder.new(reader)
+      datum_reader = Avro::IO::DatumReader.new(schema)
+      datum_reader.skip_data(schema, decoder)
+      read_value = datum_reader.read(decoder)
+
+      assert_equal value_to_read, read_value
+    end
+  end
+
+
   def test_schema_promotion
     promotable_schemas = ['"int"', '"long"', '"float"', '"double"']
     incorrect = 0
@@ -310,7 +332,7 @@ EOS
     count = 10
     random_data = RandomData.new(schm, seed)
 
-   
+
     f = File.open(DATAFILE, 'wb')
     dw = Avro::DataFile::Writer.new(f, datum_writer(schm), schm)
     count.times{ dw << random_data.next }

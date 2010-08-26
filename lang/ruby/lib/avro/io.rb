@@ -500,6 +500,11 @@ module Avro
         decoder.skip_int
       end
 
+      def skip_union(writers_schema, decoder)
+        index = decoder.read_long
+        skip_data(writers_schema.schemas[index], decoder)
+      end
+
       def skip_array(writers_schema, decoder)
         skip_blocks(decoder) { skip_data(writers_schema.items, decoder) }
       end
