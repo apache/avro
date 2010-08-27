@@ -203,6 +203,8 @@ Avro 1.4.0 (unreleased)
     AVRO-633. Ruby: Implement skip_union to correct issues with
     updating protocols
 
+    AVRO-640. Python: Fix path to sources in RPC interop test.  (cutting)
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS

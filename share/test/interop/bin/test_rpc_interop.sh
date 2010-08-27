@@ -26,13 +26,13 @@ VERSION=`cat share/VERSION.txt`
 java_client="java -jar lang/java/build/avro-tools-$VERSION.jar rpcsend"
 java_server="java -jar lang/java/build/avro-tools-$VERSION.jar rpcreceive"
 
-py_client="python lang/py/src/avro/tool.py rpcsend"
-py_server="python lang/py/src/avro/tool.py rpcreceive"
+py_client="python lang/py/build/src/avro/tool.py rpcsend"
+py_server="python lang/py/build/src/avro/tool.py rpcreceive"
 
 ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
 ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
 
-export PYTHONPATH=lang/py/src                     # path to avro Python module
+export PYTHONPATH=lang/py/build/src	  # path to avro Python module
 
 clients=("$java_client" "$py_client" "$ruby_client")
 servers=("$java_server" "$py_server" "$ruby_server")
@@ -58,7 +58,7 @@ do
 	    echo TEST: $c
 	    for client in "${clients[@]}"
 	    do
-		$server http://0.0.0.0:0/ $proto $msg -file $c/response.avro \
+		$server http://127.0.0.1:0/ $proto $msg -file $c/response.avro \
 		    > $portfile &
 		sleep 1				  # wait for server to start
 		read ignore port < $portfile
