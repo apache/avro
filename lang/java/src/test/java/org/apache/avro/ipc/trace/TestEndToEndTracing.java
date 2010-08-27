@@ -155,6 +155,7 @@ public class TestEndToEndTracing {
   }
   
   public void testTraceAndCollection(TracePluginConfiguration conf) throws Exception {
+    conf.storageType = StorageType.MEMORY;
     conf.traceProb = 1.0;
     conf.port = 51010;
     conf.clientPort = 12346;

@@ -36,6 +36,7 @@ import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.Responder;
+import org.apache.avro.ipc.trace.TracePlugin.StorageType;
 import org.junit.Test;
 
 public class TestBasicTracing {
@@ -62,6 +63,7 @@ public class TestBasicTracing {
   @Test
   public void testBasicTrace() throws Exception {
     TracePluginConfiguration conf = new TracePluginConfiguration();
+    conf.storageType = StorageType.MEMORY;
     conf.port = 51007;
     conf.clientPort = 12344;
     conf.traceProb = 1.0;
@@ -234,6 +236,7 @@ public class TestBasicTracing {
   @Test
   public void testRecursingTrace() throws Exception {
     TracePluginConfiguration conf = new TracePluginConfiguration();
+    conf.storageType = StorageType.MEMORY;
     conf.traceProb = 1.0;
     conf.port = 51010;
     conf.clientPort = 12346;
@@ -371,6 +374,7 @@ public class TestBasicTracing {
    */
   public static void main(String[] args) throws Exception {
     TracePluginConfiguration conf = new TracePluginConfiguration();
+    conf.storageType = StorageType.MEMORY;
     conf.traceProb = 1.0;
     conf.port = 51010;
     conf.clientPort = 12346;

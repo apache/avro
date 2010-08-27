@@ -62,6 +62,8 @@ public class TracePlugin extends RPCPlugin {
   final private static Random RANDOM = new Random();
   private static final Logger LOG = LoggerFactory.getLogger(TracePlugin.class);
   public static enum StorageType { MEMORY, DISK };
+  protected static TracePlugin singleton;
+  protected static TracePluginConfiguration singletonConf;
   
   /*
    * This plugin uses three key/value meta-data pairs. The value type for all
@@ -113,7 +115,8 @@ public class TracePlugin extends RPCPlugin {
   private StorageType storageType;  // How to store spans
   private long maxSpans; // Max number of spans to store
   private boolean enabled; // Whether to participate in tracing
-
+  protected TracePluginConfiguration config; // Init options
+  
   private ThreadLocal<Span> currentSpan; // span in which we are server
   private ThreadLocal<Span> childSpan;   // span in which we are client
   
@@ -124,10 +127,38 @@ public class TracePlugin extends RPCPlugin {
   
   // Client interface
   protected Server clientFacingServer;
-  
   private CharSequence hostname;
   
+  /**
+   * Get a singleton TracePlugin. This is useful if you want to persist a plugin
+   * across both a { @link Requestor } and { @link Responder }. This must be
+   * prefixed by at least one call of configureSingleton();
+   */
+  public static synchronized TracePlugin getSingleton()
+      throws IOException {
+    if (singletonConf == null) {
+      throw new RuntimeException("Singleton not configured yet.");
+    }
+    singleton = new TracePlugin(singletonConf);
+    return singleton;
+  }
+  
+  /**
+   * Configure a singleton instance for this TracePlugin. If a singleton
+   * has already been created according to a different configuration, throw
+   * a RuntimeException.
+   */
+  public static synchronized void configureSingleton(
+      TracePluginConfiguration conf) {
+    if (singleton != null && !(singleton.config.equals(conf))) {
+      throw new RuntimeException("Singleton already in use: " +
+        "can't reconfigure.");
+    }
+    singletonConf = conf;
+  }
+  
   public TracePlugin(TracePluginConfiguration conf) throws IOException {
+    config = conf;
     traceProb = conf.traceProb;
     port = conf.port;
     clientPort = conf.clientPort;

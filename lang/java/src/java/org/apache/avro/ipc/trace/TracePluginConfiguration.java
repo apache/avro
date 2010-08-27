@@ -47,12 +47,29 @@ public class TracePluginConfiguration {
     this.traceProb = 0.0;
     this.port = DEFAULT_PORT;
     this.clientPort = DEFAULT_CLIENT_PORT;
-    this.storageType = StorageType.MEMORY;
+    this.storageType = StorageType.DISK;
     this.maxSpans = 10000;
     this.enabled = true;
     this.buffer = true;
     this.compressionLevel = 9;
     this.fileGranularitySeconds = 500;
     this.spanStorageDir = "/tmp";
+  }
+  
+  @Override
+  public boolean equals(Object otherObj) {
+    if (!(otherObj instanceof TracePluginConfiguration)) { return false; }
+    TracePluginConfiguration other = (TracePluginConfiguration) otherObj;
+    return (
+      this.traceProb == other.traceProb &&
+      this.port == other.port &&
+      this.clientPort == other.clientPort &&
+      this.storageType == other.storageType &&
+      this.maxSpans == other.maxSpans &&
+      this.enabled == other.enabled &&
+      this.buffer == other.buffer &&
+      this.compressionLevel == other.compressionLevel &&
+      this.fileGranularitySeconds == other.fileGranularitySeconds &&
+      this.spanStorageDir == other.spanStorageDir);
   }
 }
