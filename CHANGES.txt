@@ -149,6 +149,9 @@ Avro 1.4.0 (unreleased)
     AVRO-632. Java: Change RPC responder to log stack traces for user
     exceptions. (cutting)
 
+    AVRO-639. Python: Use namespace-unqualified names for references
+    to schemas in the same namespace. (cutting)
+
   BUG FIXES
 
     AVRO-622. python avro.ipc doesn't work with python2.4 (philz)

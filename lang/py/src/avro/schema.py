@@ -271,6 +271,11 @@ class NamedSchema(Schema):
     # Store full name as calculated from name, namespace
     self._fullname = new_name.fullname
     
+  def name_ref(self, names):
+    if self.namespace == names.default_namespace:
+      return self.name
+    else:
+      return self.fullname
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
@@ -378,7 +383,7 @@ class FixedSchema(NamedSchema):
 
   def to_json(self, names):
     if self.fullname in names.names:
-      return self.fullname
+      return self.name_ref(names)
     else:
       names.names[self.fullname] = self
       return self.props
@@ -410,7 +415,7 @@ class EnumSchema(NamedSchema):
 
   def to_json(self, names):
     if self.fullname in names.names:
-      return self.fullname
+      return self.name_ref(names)
     else:
       names.names[self.fullname] = self
       return self.props
@@ -614,7 +619,7 @@ class RecordSchema(NamedSchema):
       return [ f.to_json(names) for f in self.fields ]
 
     if self.fullname in names.names:
-      return self.fullname
+      return self.name_ref(names)
     else:
       names.names[self.fullname] = self
 
