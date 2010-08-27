@@ -64,6 +64,8 @@ Avro 1.4.0 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-614. Improve Trace frontend UI. (Patrick Wendell via philz)
+
     AVRO-629. Prefer the JSON module of python's stdlib over simplejson.
     (Harsh J Chouraria via philz)
 

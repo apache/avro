@@ -428,7 +428,7 @@ public class TestBasicTracing {
     while (true){
       r1.request("w", params);
       r2.request("x", params);
-      Thread.sleep(1000);
+      Thread.sleep(100);
     }
   }
 }

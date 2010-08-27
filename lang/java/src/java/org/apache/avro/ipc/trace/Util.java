@@ -20,6 +20,7 @@ package org.apache.avro.ipc.trace;
 
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -196,5 +197,26 @@ class Util {
     }
     if (startTime > start && endTime < end) { return true; }
     return false;
+  }
+  
+  /**
+   * Return a copy of input that contains no more than maxEntries items.
+   * If the input list is more than maxEntries items long, the original list
+   * is uniformly sampled.
+   * 
+   * This uses a very simple sampling technique and may result in lists
+   * smaller than maxEntries.
+   */
+  public static <T> List<T> sampledList(List<T> input, int maxEntries) {
+    int timesTooLarge = (int) Math.ceil((double) input.size() / maxEntries);
+    if (timesTooLarge <= 1) { return new ArrayList<T>(input); }
+    
+    ArrayList<T> out = new ArrayList<T>();
+    for (int i = 0; i < input.size(); i++) {
+      if (i % timesTooLarge == 0) {
+        out.add(input.get(i));
+      }
+    } 
+    return out;
   }
 }

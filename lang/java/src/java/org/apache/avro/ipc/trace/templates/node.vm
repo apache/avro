@@ -32,8 +32,67 @@
   #printCollectionSummary( $collection )
   #if( $node )
     <h1>$node.getMessageName()</h1>	
+	<p>
+	<strong>Latency - ms (Time Ordered)</strong><br>
+	<script type="text/javascript">
+	var data = [
+	#set ($forCount = 0)
+	#foreach ( $tim in $node.getTraceTimings() )
+      {index: $forCount, prelink: $tim.PreLinkTime, cpu: $tim.ComputeTime, postlink: $tim.PostLinkTime},
+      #set ($forCount = $forCount + 1)
+	#end 
+	]
+	makeLatencyChart(data);
+	</script>
+  </p>
+  
+  <p>
+  <strong>Latency - ms (Sorted) </strong><br>
+  <script type="text/javascript">
+  var data = [
+  #set ($forCount = 0)
+  #foreach ( $tim in $node.getTraceTimingsSorted() )
+      {index: $forCount, prelink: $tim.PreLinkTime, cpu: $tim.ComputeTime, postlink: $tim.PostLinkTime},
+      #set ($forCount = $forCount + 1)
+  #end 
+  ]
+  makeLatencyChart(data);
+  </script>
+  </p>
+  
+  <p>
+  <strong>Request Payloads - bytes (Time Ordered)</strong><br>
+  <script>
+  var data = [
+  #set ($forCount = 0)
+  #foreach ( $payload in $node.getRequestPayloads() )
+      {x: $forCount, y: $payload},
+      #set ($forCount = $forCount + 1)
+  #end 
+  ]
+  makePayloadChart(data);
+  </script>
+  </p>
+  
+  <p>
+  <strong>Response Payloads - bytes (Time Ordered)</strong><br>
+  <script>
+  var data = [
+  #set ($forCount = 0)
+  #foreach ( $payload in $node.getResponsePayloads() )
+      {x: $forCount, y: $payload},
+      #set ($forCount = $forCount + 1)
+  #end 
+  ]
+  makePayloadChart(data);
+  </script>
+  </p>
+  
+  #else
+    <h1>Node not found</h1>
   #end
-  NOT IMPLEMENTED
+#else
+  <h1>Collection not Found</h2>
 #end
 </body>
 </html>

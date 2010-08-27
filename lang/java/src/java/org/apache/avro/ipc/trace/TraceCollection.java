@@ -18,11 +18,12 @@
 
 package org.apache.avro.ipc.trace;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.SortedSet;
 import java.util.TreeSet;
 
 
@@ -53,13 +54,19 @@ import java.util.TreeSet;
  */
 public class TraceCollection {
   
+  /** 
+   * To keep from overwhelming our browser charts, we cap the number of data
+   * points we display for any chart.
+   */
+  private static final int MAX_DATA_POINTS = 1000;
+  
   /**
    * Class to store the timing data associated with a particluar trace.
    */
   public class TraceTiming implements Comparable<TraceTiming> {
-    public long preLinkTime;
-    public long computeTime;
-    public long postLinkTime;
+    long preLinkTime;
+    long computeTime;
+    long postLinkTime;
     
     public TraceTiming(Long preLinkTime, Long computeTime, Long postLinkTime) {
       this.preLinkTime = preLinkTime;
@@ -74,6 +81,10 @@ public class TraceCollection {
     public int compareTo(TraceTiming other) {
       return this.getTotalTime().compareTo(other.getTotalTime());
     }
+    
+    public long getPreLinkTime() { return this.preLinkTime; }
+    public long getComputeTime() { return this.computeTime; }
+    public long getPostLinkTime() { return this.postLinkTime; }
   }
   
   /**
@@ -83,19 +94,17 @@ public class TraceCollection {
     CharSequence messageName;
     List<TraceNodeStats> children;
     
-    TreeSet<Long> requestPayloads;
-    TreeSet<Long> responsePayloads;
-    
-    // Time can be divided into three components
-    public TreeSet<TraceTiming> traceTimings;
+    List<Long> requestPayloads;
+    List<Long> responsePayloads;
+    List<TraceTiming> traceTimings;
     
     /**
      * Create a TraceNodeStats given a root TraceNode.
      */
     public TraceNodeStats(TraceNode root) {
-      this.requestPayloads = new TreeSet<Long>();
-      this.responsePayloads = new TreeSet<Long>();
-      this.traceTimings = new TreeSet<TraceTiming>();
+      this.requestPayloads = new ArrayList<Long>();
+      this.responsePayloads = new ArrayList<Long>();
+      this.traceTimings = new ArrayList<TraceTiming>();
      
       this.messageName = root.span.messageName;
       this.children = new LinkedList<TraceNodeStats>();
@@ -106,31 +115,47 @@ public class TraceCollection {
     }
     
     // Velocity requires getters
-    public SortedSet<Long> getRequestPayloads() { return this.requestPayloads; }
-    public SortedSet<Long> getResponsePayloads() { return this.responsePayloads; }
-    public SortedSet<TraceTiming> getTraceTimings() { return this.traceTimings; }
+    public List<Long> getRequestPayloads() {
+      return Util.sampledList(this.requestPayloads, MAX_DATA_POINTS);
+    }
+    public List<Long> getResponsePayloads() {
+      return Util.sampledList(this.responsePayloads, MAX_DATA_POINTS);
+    }
+    public List<TraceTiming> getTraceTimings() { 
+      return Util.sampledList(this.traceTimings, MAX_DATA_POINTS);
+    }
+    public List<TraceTiming> getTraceTimingsSorted() { 
+      List<TraceTiming> copy = Util.sampledList(this.traceTimings,
+          MAX_DATA_POINTS);
+      Collections.sort(copy);
+      return copy;
+    }
     public List<TraceNodeStats> getChildren() { return this.children; }
     public CharSequence getMessageName() { return this.messageName; } 
     
     // Convenience methods for templates
-    public String getAverageTime(SortedSet<TraceTiming> input) {
+    public String getAverageTime(List<TraceTiming> input) {
       return Util.printableTime(getTimingAverage(input));
     }
-    public String getMinTime(SortedSet<TraceTiming> input) {
-      return Util.printableTime(input.first().getTotalTime());
+    public String getMinTime(List<TraceTiming> input) {
+      TraceTiming min = (TraceTiming) Collections.min(input);
+      return Util.printableTime(min.getTotalTime());
     }
-    public String getMaxTime(SortedSet<TraceTiming> input) {
-      return Util.printableTime(input.last().getTotalTime());
+    public String getMaxTime(List<TraceTiming> input) {
+      TraceTiming max = (TraceTiming) Collections.max(input);
+      return Util.printableTime(max.getTotalTime());
     }
  
-    public String getAverageBytes(SortedSet<Long> input) {
+    public String getAverageBytes(List<Long> input) {
       return Util.printableBytes(getLongAverage(input));
     }
-    public String getMinBytes(SortedSet<Long> input) {
-      return Util.printableBytes(input.first());
+    public String getMinBytes(List<Long> input) {
+      Long min = (Long) Collections.min(input);
+      return Util.printableBytes(min);
     }
-    public String getMaxBytes(SortedSet<Long> input) {
-      return Util.printableBytes(input.last());
+    public String getMaxBytes(List<Long> input) {
+      Long max = (Long) Collections.max(input);
+      return Util.printableBytes(max);
     }
     
     public String printBrief() {
