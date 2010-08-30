@@ -36,6 +36,8 @@ Avro 1.4.0 (31 August 2010)
 
   NEW FEATURES
 
+    AVRO-627. Add PHP implementation. (Michael Glaesemann)
+
     AVRO-613. Create basic frontend to view trace results.
     (Patrick Wendell via philz)
 
