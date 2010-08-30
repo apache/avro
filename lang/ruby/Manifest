@@ -1,6 +1,7 @@
 CHANGELOG
 Manifest
 Rakefile
+avro.gemspec
 interop/test_interop.rb
 lib/avro.rb
 lib/avro/collect_hash.rb

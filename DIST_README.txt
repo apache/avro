@@ -9,6 +9,6 @@ This distribution contains the following files:
 
   - avro-doc-x.y.z.tar.gz contains Avro's pre-built documentation.
 
-  - the c/, cpp/, java/, py/, and ruby/ subdirectories contain
+  - the c/, cpp/, java/, php/, py/, and ruby/ subdirectories contain
     pre-built, language-specific binaries, bundles, etc. as
     conveniences.
