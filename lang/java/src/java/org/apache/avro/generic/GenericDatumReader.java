@@ -20,6 +20,7 @@ package org.apache.avro.generic;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collection;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroRuntimeException;
@@ -196,14 +197,16 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * GenericArray}.*/
   @SuppressWarnings("unchecked")
   protected Object peekArray(Object array) {
-    return ((GenericArray) array).peek();
+    return (array instanceof GenericArray)
+      ? ((GenericArray)array).peek()
+      : null;
   }
 
-  /** Called by the default implementation of {@link #readArray} to add a value.
-   * The default implementation is for {@link GenericArray}.*/
+  /** Called by the default implementation of {@link #readArray} to add a
+   * value.  The default implementation is for {@link Collection}.*/
   @SuppressWarnings("unchecked")
   protected void addToArray(Object array, long pos, Object e) {
-    ((GenericArray) array).add(e);
+    ((Collection) array).add(e);
   }
   
   /** Called to read a map instance.  May be overridden for alternate map
@@ -277,8 +280,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * GenericData.Array}.*/
   @SuppressWarnings("unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof GenericArray) {
-      ((GenericArray) old).clear();
+    if (old instanceof Collection) {
+      ((Collection) old).clear();
       return old;
     } else return new GenericData.Array(size, schema);
   }

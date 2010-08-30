@@ -26,11 +26,11 @@ A generic representation for Avro data.
 <p>Avro schemas are mapped to Java types as follows:
 <ul>
 <li>Schema records are implemented as {@link org.apache.avro.generic.GenericRecord}.
-<li>Schema enums are implemented as {@link java.lang.String}.
-<li>Schema arrays are implemented as {@link org.apache.avro.generic.GenericArray}.
+<li>Schema enums are implemented as {@link org.apache.avro.generic.GenericEnumSymbol}.
+<li>Schema arrays are implemented as {@link java.util.Collection}.
 <li>Schema maps are implemented as {@link java.util.Map}.
 <li>Schema fixed are implemented as {@link org.apache.avro.generic.GenericFixed}.
-<li>Schema strings are implemented as {@link org.apache.avro.util.Utf8}.
+<li>Schema strings are implemented as {@link java.lang.CharSequence}.
 <li>Schema bytes are implemented as {@link java.nio.ByteBuffer}.
 <li>Schema ints are implemented as {@link java.lang.Integer}.
 <li>Schema longs are implemented as {@link java.lang.Long}.

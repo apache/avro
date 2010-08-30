@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Collection;
+import java.util.AbstractList;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -79,10 +81,10 @@ public class GenericData {
     }
   }
 
-  /** Default implementation of {@link GenericArray}. */
+  /** Default implementation of an array. */
   @SuppressWarnings(value="unchecked")
-  public static class Array<T>
-    implements GenericArray<T>, Comparable<Array<T>> {
+  public static class Array<T> extends AbstractList<T>
+    implements GenericArray<T>, Comparable<GenericArray<T>> {
     private static final Object[] EMPTY = new Object[0];
     private final Schema schema;
     private int size;
@@ -95,9 +97,9 @@ public class GenericData {
         elements = new Object[capacity];
     }
     public Schema getSchema() { return schema; }
-    public long size() { return size; }
-    public void clear() { size = 0; }
-    public Iterator<T> iterator() {
+    @Override public int size() { return size; }
+    @Override public void clear() { size = 0; }
+    @Override public Iterator<T> iterator() {
       return new Iterator<T>() {
         private int position = 0;
         public boolean hasNext() { return position < size; }
@@ -105,13 +107,15 @@ public class GenericData {
         public void remove() { throw new UnsupportedOperationException(); }
       };
     }
-    public void add(T o) {
+    @Override public T get(int i) { return (T)elements[i]; }
+    @Override public boolean add(T o) {
       if (size == elements.length) {
         Object[] newElements = new Object[(size * 3)/2 + 1];
         System.arraycopy(elements, 0, newElements, 0, size);
         elements = newElements;
       }
       elements[size++] = o;
+      return true;
     }
     public T peek() {
       return (size < elements.length) ? (T)elements[size] : null;
@@ -127,7 +131,7 @@ public class GenericData {
         return false;                             // not the same schema
       return this.compareTo(that) == 0;
     }
-    public int compareTo(Array<T> that) {
+    public int compareTo(GenericArray<T> that) {
       return GenericData.get().compare(this, that, this.getSchema());
     }
     public void reverse() {
@@ -268,8 +272,8 @@ public class GenericData {
           buffer.append(", ");
       }
       buffer.append("}");
-    } else if (datum instanceof GenericArray) {
-      GenericArray array = (GenericArray)datum;
+    } else if (datum instanceof Collection) {
+      Collection array = (Collection)datum;
       buffer.append("[");
       long last = array.size()-1;
       int i = 0;
@@ -311,9 +315,9 @@ public class GenericData {
   public Schema induce(Object datum) {
     if (datum instanceof IndexedRecord) {
       return ((IndexedRecord)datum).getSchema();
-    } else if (datum instanceof GenericArray) {
+    } else if (datum instanceof Collection) {
       Schema elementType = null;
-      for (Object element : (GenericArray)datum) {
+      for (Object element : (Collection)datum) {
         if (elementType == null) {
           elementType = induce(element);
         } else if (!elementType.equals(induce(element))) {
@@ -394,7 +398,7 @@ public class GenericData {
 
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isArray(Object datum) {
-    return datum instanceof GenericArray;
+    return datum instanceof Collection;
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/

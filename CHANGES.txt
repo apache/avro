@@ -29,6 +29,11 @@ Avro 1.4.0 (31 August 2010)
     representation of enum symbols from java.lang.String to
     org.apache.avro.generic.GenericEnumSymbol.
 
+    AVRO-637. Java: Change GenericArray to implement List.  Also
+    incompatibly change generated array signatures to List.  The
+    runtime will now accept any Collection implementation for array
+    types.  (cutting)
+
   NEW FEATURES
 
     AVRO-613. Create basic frontend to view trace results.
