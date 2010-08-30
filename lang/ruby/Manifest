@@ -2,6 +2,7 @@ CHANGELOG
 Manifest
 Rakefile
 avro.gemspec
+data.avr
 interop/test_interop.rb
 lib/avro.rb
 lib/avro/collect_hash.rb
@@ -12,7 +13,13 @@ lib/avro/protocol.rb
 lib/avro/schema.rb
 test/random_data.rb
 test/sample_ipc_client.rb
+test/sample_ipc_http_client.rb
+test/sample_ipc_http_server.rb
 test/sample_ipc_server.rb
+test/test_datafile.rb
 test/test_help.rb
 test/test_io.rb
 test/test_protocol.rb
+test/test_socket_transport.rb
+test/tool.rb
+tmp/test.rb.avro
