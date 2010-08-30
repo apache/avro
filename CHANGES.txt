@@ -1,6 +1,16 @@
 Avro Change Log
 
-Avro 1.4.0 (unreleased)
+Avro 1.5.0 (unreleased)
+
+  INCOMPATIBLE CHANGES
+
+Avro 1.4.1 (unreleased)
+
+  IMPROVEMENTS
+
+  BUG FIXES
+
+Avro 1.4.0 (31 August 2010)
 
   INCOMPATIBLE CHANGES
 
@@ -1037,8 +1047,6 @@ Avro 1.1.0 (8 September 2009)
 
     AVRO-98. Fix C++ schema parser to permit JSON attributes in any
     order and to ignore extra attributes. (Scott Banachowski via cutting)
-
-  OPTIMIZATIONS
 
   BUG FIXES
 
