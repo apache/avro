@@ -53,7 +53,7 @@ SHARE = HERE + '/../../share'
 SCHEMAS = SHARE + '/test/schemas'
 BUILD = HERE + '/../../build'
 
-task :dist => [:manifest, :gem] do
+task :dist => [:gem] do
   mkdir_p "../../dist/ruby"
   cp "pkg/avro-#{VERSION}.gem", "../../dist/ruby"
 end
