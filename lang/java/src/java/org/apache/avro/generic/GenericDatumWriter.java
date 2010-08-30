@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Collection;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -135,18 +136,17 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   }
 
   /** Called by the default implementation of {@link #writeArray} to get the
-   * size of an array.  The default implementation is for {@link
-   * GenericArray}.*/
+   * size of an array.  The default implementation is for {@link Collection}.*/
   @SuppressWarnings("unchecked")
   protected long getArraySize(Object array) {
-    return ((GenericArray) array).size();
+    return ((Collection) array).size();
   }
 
   /** Called by the default implementation of {@link #writeArray} to enumerate
-   * array elements.  The default implementation is for {@link GenericArray}.*/
+   * array elements.  The default implementation is for {@link Collection}.*/
   @SuppressWarnings("unchecked")
   protected Iterator<? extends Object> getArrayElements(Object array) {
-    return ((GenericArray) array).iterator();
+    return ((Collection) array).iterator();
   }
   
   /** Called to write a map.  May be overridden for alternate map

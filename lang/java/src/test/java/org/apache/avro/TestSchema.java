@@ -32,9 +32,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Collection;
 
 import org.apache.avro.Schema.Type;
-import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -141,7 +141,10 @@ public class TestSchema {
   public void testArray() throws Exception {
     String json = "{\"type\":\"array\", \"items\": \"long\"}";
     Schema schema = Schema.parse(json);
-    GenericArray<Long> array = new GenericData.Array<Long>(1, schema);
+    Collection<Long> array = new GenericData.Array<Long>(1, schema);
+    array.add(1L);
+    check(json, "[1]", array);
+    array = new ArrayList<Long>(1);
     array.add(1L);
     check(json, "[1]", array);
     checkParseError("{\"type\":\"array\"}");      // items required

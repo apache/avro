@@ -18,6 +18,7 @@
 package org.apache.avro.specific;
 
 import java.util.Map;
+import java.util.Collection;
 import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +32,6 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericArray;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -70,7 +70,7 @@ public class SpecificData extends GenericData {
         classCache.put(name, c);
       }
       return c == NO_CLASS ? null : c;
-    case ARRAY:   return GenericArray.class;
+    case ARRAY:   return Collection.class;
     case MAP:     return Map.class;
     case UNION:
       List<Schema> types = schema.getTypes();     // elide unions with null
@@ -137,7 +137,7 @@ public class SpecificData extends GenericData {
       ParameterizedType ptype = (ParameterizedType)type;
       Class raw = (Class)ptype.getRawType();
       java.lang.reflect.Type[] params = ptype.getActualTypeArguments();
-      if (GenericArray.class.isAssignableFrom(raw)) { // array
+      if (Collection.class.isAssignableFrom(raw)) { // array
         if (params.length != 1)
           throw new AvroTypeException("No array type specified.");
         return Schema.createArray(createSchema(params[0], names));

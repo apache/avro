@@ -351,7 +351,7 @@ public class SpecificCompiler {
     case FIXED:
       return mangle(schema.getFullName());
     case ARRAY:
-      return "org.apache.avro.generic.GenericArray<"+type(schema.getElementType())+">";
+      return "java.util.List<"+type(schema.getElementType())+">";
     case MAP:
       return "java.util.Map<java.lang.CharSequence,"+type(schema.getValueType())+">";
     case UNION:

@@ -15,20 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.avro.generic;
 
+import java.util.List;
 
-/** An array of objects. */
-public interface GenericArray<T> extends Iterable<T>, GenericContainer {
-  /** The number of elements contained in this array. */
-  long size();
-
-  /** Reset the size of the array to zero. */
-  void clear();
-
-  /** Add an element to this array. */
-  void add(T element);
-
+/** Array that permits reuse of contained elements. */
+public interface GenericArray<T> extends List<T>, GenericContainer {
   /** The current content of the location where {@link #add(Object)} would next
    * store an element, if any.  This permits reuse of arrays and their elements
    * without allocating new objects. */
