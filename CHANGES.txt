@@ -36,7 +36,7 @@ Avro 1.4.0 (31 August 2010)
 
   NEW FEATURES
 
-    AVRO-627. Add PHP implementation. (Michael Glaesemann)
+    AVRO-627. Add PHP implementation. (Michael Glaesemann via cutting)
 
     AVRO-613. Create basic frontend to view trace results.
     (Patrick Wendell via philz)
@@ -171,6 +171,8 @@ Avro 1.4.0 (31 August 2010)
 
     AVRO-639. Python: Use namespace-unqualified names for references
     to schemas in the same namespace. (cutting)
+
+    AVRO-644: PHP: Add requirements to README. (Michael Glaesemann via cutting)
 
   BUG FIXES
 

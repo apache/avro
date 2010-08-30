@@ -64,6 +64,7 @@
   <property name="test.java.classes" value="${test.java.build.dir}/classes"/>
   <property name="test.java.generated.classes" value="${test.java.generated.build.dir}/classes"/>
   <property name="test.java.include" value="Test*"/>
+  <property name="test.java.exclude" value="ipc/trace/*"/>
 
   <property name="javadoc.link.java"
 	    value="http://java.sun.com/javase/6/docs/api/"/>
