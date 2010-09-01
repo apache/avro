@@ -70,7 +70,7 @@ public class SpecificData extends GenericData {
         classCache.put(name, c);
       }
       return c == NO_CLASS ? null : c;
-    case ARRAY:   return Collection.class;
+    case ARRAY:   return List.class;
     case MAP:     return Map.class;
     case UNION:
       List<Schema> types = schema.getTypes();     // elide unions with null
