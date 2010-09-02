@@ -152,6 +152,35 @@ public class TestDataFile {
   }
 
   @Test
+  public void testSyncDiscovery() throws IOException {
+    File file = makeFile();
+    DataFileReader<Object> reader =
+      new DataFileReader<Object>(file, new GenericDatumReader<Object>());
+    try {
+      // discover the sync points
+      ArrayList<Long> syncs = new ArrayList<Long>();
+      long previousSync = -1;
+      while (reader.hasNext()) {
+        if (reader.previousSync() != previousSync) {
+          previousSync = reader.previousSync();
+          syncs.add(previousSync);
+        }
+        reader.next();
+      }
+      // confirm that the first point is the one reached by sync(0)
+      reader.sync(0);
+      assertEquals((long)reader.previousSync(), (long)syncs.get(0));
+      // and confirm that all points are reachable
+      for (Long sync : syncs) {
+        reader.seek(sync);
+        assertNotNull(reader.next());
+      }
+    } finally {
+      reader.close();
+    }
+  }
+
+  @Test
   public void testGenericAppend() throws IOException {
     File file = makeFile();
     long start = file.length();
