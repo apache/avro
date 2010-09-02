@@ -44,6 +44,7 @@ public class DataFileReader<D> extends DataFileStream<D> {
     super(reader);
     this.sin = new SeekableInputStream(sin);
     initialize(this.sin);
+    blockFinished();
   }
 
   /** Move to a specific, known synchronization point, one returned from {@link
@@ -52,6 +53,7 @@ public class DataFileReader<D> extends DataFileStream<D> {
   public void seek(long position) throws IOException {
     sin.seek(position);
     vin = DecoderFactory.defaultFactory().createBinaryDecoder(this.sin, vin);
+    datumIn = null;
     blockRemaining = 0;
     blockStart = position;
   }
@@ -91,6 +93,11 @@ public class DataFileReader<D> extends DataFileStream<D> {
   @Override
   protected void blockFinished() throws IOException {
     blockStart = sin.tell() - vin.inputStream().available();
+  }
+
+  /** Return the last synchronization point before our current position. */
+  public long previousSync() {
+    return blockStart;
   }
 
   /** Return true if past the next synchronization point after a position. */ 
