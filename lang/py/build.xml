@@ -149,7 +149,7 @@
           description="Build source distribution"
           depends="build">
     <mkdir dir="${dist.dir}"/>
-    <exec executable="${python}" failonerror="true">
+    <exec executable="${python}" failonerror="true" dir="${build.dir}">
       <arg value="${build.dir}/setup.py"/>
       <arg value="sdist"/>
       <arg value="--dist-dir=${dist.dir}"/>

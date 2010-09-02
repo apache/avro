@@ -227,6 +227,9 @@ Avro 1.4.0 (31 August 2010)
 
     AVRO-640. Python: Fix path to sources in RPC interop test.  (cutting)
 
+    AVRO-653. Python: Fix so distribution contains correct files.
+    (Eric Evans via cutting)
+
 Avro 1.3.3 (7 June 2010)
 
   IMPROVEMENTS
