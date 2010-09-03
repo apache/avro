@@ -36,7 +36,6 @@ import org.apache.avro.util.WeakIdentityHashMap;
 public class GenericDatumReader<D> implements DatumReader<D> {
   private Schema actual;
   private Schema expected;
-  private ResolvingDecoder resolver;
 
   public GenericDatumReader() {}
 
@@ -58,13 +57,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (expected == null) {
       expected = actual;
     }
-    resolver = null;
+    threadResolver.set(null);
   }
 
   /** Set the reader's schema. */
   public void setExpected(Schema reader) throws IOException {
     this.expected = reader;
+    threadResolver.set(null);
   }
+
+  private final ThreadLocal<ResolvingDecoder> threadResolver =
+    new ThreadLocal<ResolvingDecoder>();
 
   private static final ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>
     RESOLVER_CACHE =
@@ -74,26 +77,30 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
   };
 
-  private static ResolvingDecoder getResolver(Schema actual, Schema expected)
+  private ResolvingDecoder getResolver(Schema actual, Schema expected)
     throws IOException {
+    ResolvingDecoder resolver = threadResolver.get();
+    if (resolver != null)
+      return resolver;
+
     Map<Schema,ResolvingDecoder> cache = RESOLVER_CACHE.get().get(actual);
     if (cache == null) {
       cache = new WeakIdentityHashMap<Schema,ResolvingDecoder>();
       RESOLVER_CACHE.get().put(actual, cache);
     }
-    ResolvingDecoder resolver = cache.get(expected);
+    resolver = cache.get(expected);
     if (resolver == null) {
       resolver = new ResolvingDecoder(Schema.applyAliases(actual, expected),
                                       expected, null);
       cache.put(expected, resolver);
     }
+    threadResolver.set(resolver);
     return resolver;
   }
 
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
-    if (resolver == null)
-      resolver = getResolver(actual, expected);
+    ResolvingDecoder resolver = getResolver(actual, expected);
     resolver.init(in);
     D result = (D) read(reuse, expected, resolver);
     resolver.drain();
