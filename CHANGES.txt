@@ -1,5 +1,11 @@
 Avro Change Log
 
+Avro 1.4.1 (unreleased)
+
+  IMPROVEMENTS
+
+  BUG FIXES
+
 Avro 1.4.0 (31 August 2010)
 
   INCOMPATIBLE CHANGES
