@@ -10,6 +10,9 @@ Avro 1.4.1 (unreleased)
 
   BUG FIXES
 
+    AVRO-666. Remove an extraneous pdb.set_trace() that crept into schema.py
+    (hammer)
+
 Avro 1.4.0 (31 August 2010)
 
   INCOMPATIBLE CHANGES

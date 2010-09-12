@@ -440,7 +440,6 @@ class ArraySchema(Schema):
         items_schema = make_avsc_object(items, names)
       except SchemaParseException, e:
         fail_msg = 'Items schema (%s) not a valid Avro schema: %s (known names: %s)' % (items, e, names.names.keys())
-        __import__("pdb").set_trace()
         raise SchemaParseException(fail_msg)
 
     self.set_prop('items', items_schema)
