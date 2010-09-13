@@ -96,6 +96,33 @@ public class Idl
     this.inputDir = inputFile.getParentFile();
   }
 
+  private ParseException error(String message, Token token) {
+    return new ParseException
+      (message+", at line "+token.beginLine+", column "+token.beginColumn);
+  }
+
+  private String getTextProp(String key, Map<String,JsonNode> props,
+                             Token token) throws ParseException {
+    JsonNode value = props.get(key);
+    if (value.isTextual())
+      return value.getTextValue();
+    throw error(key+" property must be textual: "+value, token);
+  }
+
+  private List<String> getTextProps(String key, Map<String,JsonNode> props,
+                             Token token) throws ParseException {
+    JsonNode value = props.get(key);
+    if (!value.isArray())
+      throw error(key+" property must be array: "+value, token);
+    List<String> values = new ArrayList<String>();
+    for (JsonNode n : value)
+      if (n.isTextual())
+        values.add(n.getTextValue());
+      else
+        throw error(key+" values must be textual: "+n, token);
+    return values;
+  }
+
 }
 
 PARSER_END(Idl)
@@ -941,15 +968,14 @@ Protocol CompilationUnit():
 Schema NamedSchemaDeclaration():
 {
   Schema s;
-  Map<String, String> props = new HashMap<String, String>();
+  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
   String savedSpace = this.namespace;
 }
 {
   ( SchemaProperty(props) )*
   {
-    if (props.containsKey("namespace")) {
-      this.namespace = props.get("namespace");
-    }
+    if (props.containsKey("namespace"))
+      this.namespace = getTextProp("namespace", props, token);
   }
  (
      s = FixedDeclaration()
@@ -958,6 +984,16 @@ Schema NamedSchemaDeclaration():
  )
  {
    this.namespace = savedSpace;
+
+   for (String key : props.keySet())
+     if ("namespace".equals(key)) {               // already handled: ignore
+     } else if ("aliases".equals(key)) {          // aliases
+       for (String alias : getTextProps("aliases", props, token))
+         s.addAlias(alias);
+     } else if (props.get(key).isTextual()) {     // ignore other non-textual
+       s.addProp(key, getTextProp(key, props, token));
+     }
+
    return s;
  }
 }
@@ -991,14 +1027,13 @@ Protocol ProtocolDeclaration():
 {
   String name;
   Protocol p;
-  Map<String, String> props = new HashMap<String, String>();
+  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
   ( SchemaProperty(props) )*
   {
-    if (props.containsKey("namespace")) {
-      namespace = props.get("namespace");
-    }
+    if (props.containsKey("namespace"))
+      namespace = getTextProp("namespace", props, token);
   }
  "protocol"
    name = Identifier()
@@ -1091,7 +1126,7 @@ Protocol ImportIdl() : {
       try {
         return new Idl(new File(inputDir, importFile)).CompilationUnit();
       } catch (IOException e) {
-        throw new ParseException("Error importing "+importFile+": "+e);
+        throw error("Error importing "+importFile+": "+e, token);
       }        
     }
 }
@@ -1106,7 +1141,7 @@ Protocol ImportProtocol() : {
       try {
         return Protocol.parse(new File(inputDir, importFile));
       } catch (IOException e) {
-        throw new ParseException("Error importing "+importFile+": "+e);
+        throw error("Error importing "+importFile+": "+e, token);
       }        
     }
 }
@@ -1120,7 +1155,7 @@ Schema ImportSchema() : {
       try {
         return Schema.parse(new File(inputDir, importFile));
       } catch (IOException e) {
-        throw new ParseException("Error importing "+importFile+": "+e);
+        throw error("Error importing "+importFile+": "+e, token);
       }        
     }
 }
@@ -1167,19 +1202,16 @@ Schema RecordDeclaration():
   }
 }
 
-void SchemaProperty(Map<String, String> properties):
+void SchemaProperty(Map<String, JsonNode> properties):
 {
   String key;
-  String val;
+  JsonNode val;
 }
 {
-  "@" key = Identifier() "(" val = JsonString() ")"
+  "@" key = Identifier() "(" val = Json() ")"
   {
-    if (properties.containsKey(key)) {
-      throw new ParseException("Property '" + key + "' already specified " +
-                               " at line " + token.beginLine + ", column " +
-                               token.beginColumn);
-    }
+    if (properties.containsKey(key))
+      throw error("Property '" + key + "' already specified", token);
     properties.put(key, val);
   }
 }
@@ -1188,7 +1220,7 @@ void SchemaProperty(Map<String, String> properties):
 void FieldDeclaration(List<Field> fields):
 {
   Schema type;
-  Map<String, String> props = new HashMap<String, String>();
+  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
   // TODO should we be able to specify properties on any Type?
@@ -1199,9 +1231,8 @@ void FieldDeclaration(List<Field> fields):
   VariableDeclarator(type, fields) ( "," VariableDeclarator(type, fields) )*
   ";"
   {
-    for (Map.Entry<String, String> propEntry : props.entrySet()) {
-      type.addProp(propEntry.getKey(), propEntry.getValue());
-    }
+    for (String key : props.keySet())
+      type.addProp(key, getTextProp(key, props, token));
   }
 }
 
@@ -1209,7 +1240,7 @@ void VariableDeclarator(Schema type, List<Field> fields):
 {
   String name;
   JsonNode defaultValue = null;
-  Map<String, String> props = new HashMap<String, String>();
+  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
     ( SchemaProperty(props) )*
@@ -1220,13 +1251,18 @@ void VariableDeclarator(Schema type, List<Field> fields):
     
   {
     Field.Order order = Field.Order.ASCENDING;
-    for (Map.Entry<String, String> prop : props.entrySet())
-      if ("order".equals(prop.getKey()))
-        order = Field.Order.valueOf(prop.getValue().toUpperCase());
+    for (String key : props.keySet())
+      if ("order".equals(key))
+        order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
     Field field = new Field(name, type, null, defaultValue, order);
-    for (Map.Entry<String, String> prop : props.entrySet())
-      if (!"order".equals(prop.getKey()))
-        field.addProp(prop.getKey(), prop.getValue());
+    for (String key : props.keySet())
+      if ("order".equals(key)) {                  // already handled: ignore
+      } else if ("aliases".equals(key)) {         // aliases
+        for (String alias : getTextProps("aliases", props, token))
+          field.addAlias(alias);
+      } else if (props.get(key).isTextual()) {    // ignore other non-textual
+        field.addProp(key, getTextProp(key, props, token));
+      }
     fields.add(field);
   }
 }
@@ -1250,9 +1286,7 @@ Message MessageDeclaration(Protocol p):
   {
     Schema errors = Schema.createUnion(errorSchemata);
     if (oneWay && response.getType() != Type.NULL)
-      throw new ParseException("One-way message'" + name + "' must return void"
-                               + " at line " + token.beginLine + ", column " +
-                               token.beginColumn);
+      throw error("One-way message'"+name+"' must return void", token);
     return oneWay
     ? p.createMessage(name, null, request)
     : p.createMessage(name, null, request, response, errors);
@@ -1349,11 +1383,8 @@ Schema ReferenceType():
     if ((name.indexOf('.') == -1) && namespace != null)
       name = namespace + "." + name;
     Schema type = names.get(name);
-    if (type == null) {
-      throw new ParseException("Undefined name '" + name + "'" +
-                               " at line " + token.beginLine + ", column " +
-                               token.beginColumn);
-    }
+    if (type == null)
+      throw error("Undefined name '" + name + "'", token);
     return type;
   }
 }
