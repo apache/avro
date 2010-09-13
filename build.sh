@@ -108,10 +108,11 @@ case "$target" in
 	stty echo
 
 	for f in $(find dist -type f \
-	    \! -name '*.sha1' \! -name '*.asc' \! -name '*.txt' );
+	    \! -name '*.md5' \! -name '*.sha1' \
+	    \! -name '*.asc' \! -name '*.txt' );
 	do
-	    md5sum $f > $f.md5
-	    sha1sum $f > $f.sha1
+	    (cd `dirname $f`; md5sum `basename $f`) > $f.md5
+	    (cd `dirname $f`; sha1sum `basename $f`) > $f.sha1
 	    gpg --passphrase $password --armor --output $f.asc --detach-sig $f
 	done
 
