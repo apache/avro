@@ -51,7 +51,7 @@ case "$1" in
 
     dist)
 	prepare_build
-	make -C $build_dir distcheck
+	make -C $build_dir dist
 	if [ ! -d $dist_dir ]; then 
            mkdir -p $dist_dir 
         fi

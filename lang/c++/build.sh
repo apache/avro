@@ -77,7 +77,6 @@ function do_configure {
 }
 
 function do_build {
-    (cd $build_dir && make)
     (cd $build_dir && make check)
 }
 
@@ -100,10 +99,8 @@ function do_tar_file {
 }
 
 function do_dist {
-    (cd $build_dir && make)
-    (cd $build_dir && make check)
-    do_docs
     do_tar_file
+    do_docs
 }
 
 function do_clean {

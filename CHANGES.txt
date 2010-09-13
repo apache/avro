@@ -8,6 +8,9 @@ Avro 1.4.1 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-655. Change build so that 'dist' target no longer also runs C
+    and C++ unit tests. (cutting)
+
   BUG FIXES
 
     AVRO-666. Remove an extraneous pdb.set_trace() that crept into schema.py
