@@ -21,6 +21,7 @@
  */
 @namespace("org.apache.avro.test")
 protocol Simple {
+  @aliases(["org.foo.KindOf"])
   enum Kind {
     FOO,
     BAR, // the bar enum value
@@ -36,7 +37,7 @@ protocol Simple {
 
     @foo("bar") MD5 hash;
 
-    union { MD5, null} nullableHash;
+    union { MD5, null} @aliases(["hash", "hsh"]) nullableHash;
   }
 
   error TestError {

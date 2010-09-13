@@ -4,7 +4,8 @@
   "types" : [ {
     "type" : "enum",
     "name" : "Kind",
-    "symbols" : [ "FOO", "BAR", "BAZ" ]
+    "symbols" : [ "FOO", "BAR", "BAZ" ],
+    "aliases" : [ "org.foo.KindOf" ]
   }, {
     "type" : "fixed",
     "name" : "MD5",
@@ -27,7 +28,8 @@
       "type" : "MD5"
     }, {
       "name" : "nullableHash",
-      "type" : [ "MD5", "null" ]
+      "type" : [ "MD5", "null" ],
+      "aliases" : [ "hash", "hsh" ]
     } ]
   }, {
     "type" : "error",

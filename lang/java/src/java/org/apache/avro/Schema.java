@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -400,6 +401,11 @@ public abstract class Schema {
     public synchronized void addProp(String name, String value) {
       props.add(name, value);
     }
+    public void addAlias(String alias) {
+      if (aliases == null)
+        this.aliases = new LinkedHashSet<String>();
+      aliases.add(alias);
+    }
     public boolean equals(Object other) {
       if (other == this) return true;
       if (!(other instanceof Field)) return false;
@@ -476,11 +482,11 @@ public abstract class Schema {
     public String getFullName() { return name.full; }
     public void addAlias(String alias) {
       if (aliases == null)
-        this.aliases = new HashSet<Name>();
+        this.aliases = new LinkedHashSet<Name>();
       aliases.add(new Name(alias, name.space));
     }
     public Set<String> getAliases() {
-      Set<String> result = new HashSet<String>();
+      Set<String> result = new LinkedHashSet<String>();
       if (aliases != null)
         for (Name alias : aliases)
           result.add(alias.full);
@@ -625,6 +631,13 @@ public abstract class Schema {
         }
         if (f.order() != Field.Order.ASCENDING)
           gen.writeStringField("order", f.order().name);
+        if (f.aliases != null) {
+          gen.writeFieldName("aliases");
+          gen.writeStartArray();
+          for (String alias : f.aliases)
+            gen.writeString(alias);
+          gen.writeEndArray();
+        }
         f.props.write(gen);
         gen.writeEndObject();
       }
@@ -1052,7 +1065,7 @@ public abstract class Schema {
       return null;
     if (!aliasesNode.isArray())
       throw new SchemaParseException("aliases not an array: "+node);
-    Set<String> aliases = new HashSet<String>();
+    Set<String> aliases = new LinkedHashSet<String>();
     for (JsonNode aliasNode : aliasesNode) {
       if (!aliasNode.isTextual())
         throw new SchemaParseException("alias not a string: "+aliasNode);

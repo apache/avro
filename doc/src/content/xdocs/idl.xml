@@ -352,6 +352,14 @@ protocol MyProto {
           defined in <code>someOtherNamespace</code> and <code>Bar</code> will be defined in <code>firstNamespace</code>
           as it inherits its default from its container.
         </p>
+	<p>Type and field aliases are specified with
+	the <code>@aliases</code> annotation as follows:</p>
+        <source>
+@aliases(["org.old.OldRecord", "org.ancient.AncientRecord"])
+record MyRecord {
+  string @aliases(["oldField", "ancientField"]) myNewField;
+}
+        </source>
       </section>
     </section>
     <section id="example">
@@ -363,6 +371,8 @@ protocol MyProto {
  */
 @namespace("org.apache.avro.test")
 protocol Simple {
+
+  @aliases(["org.foo.KindOf"])
   enum Kind {
     FOO,
     BAR, // the bar enum value
@@ -380,7 +390,7 @@ protocol Simple {
 
     MD5 hash;
 
-    union { MD5, null} nullableHash;
+    union { MD5, null} @aliases(["hash"]) nullableHash;
 
     array&lt;long&gt; arrayOfLongs;
   }
