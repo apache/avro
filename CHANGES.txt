@@ -4,7 +4,13 @@ Avro 1.4.1 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-655. Change build so that 'dist' target no longer also runs C
+    and C++ unit tests. (cutting)
+
   BUG FIXES
+
+    AVRO-657. Fix build so that md5 and sha1 checksum files contain
+    only the file's basename without any directories. (cutting)
 
 Avro 1.4.0 (31 August 2010)
 
