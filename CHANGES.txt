@@ -21,6 +21,8 @@ Avro 1.4.1 (unreleased)
     AVRO-657. Fix build so that md5 and sha1 checksum files contain
     only the file's basename without any directories. (cutting)
 
+    AVRO-664. Ruby server takes a long time to start in interop tests. (thiru)
+
 Avro 1.4.0 (31 August 2010)
 
   INCOMPATIBLE CHANGES
