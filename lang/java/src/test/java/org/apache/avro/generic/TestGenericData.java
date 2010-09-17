@@ -19,6 +19,8 @@ package org.apache.avro.generic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collection;
+import java.util.ArrayDeque;
 
 import static org.junit.Assert.*;
 
@@ -28,6 +30,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.util.Utf8;
 
 import org.junit.Test;
 
@@ -59,6 +62,43 @@ public class TestGenericData {
     GenericData.get().hashCode(null, Schema.create(Type.NULL));
     GenericData.get().hashCode(null, Schema.createUnion(
         Arrays.asList(Schema.create(Type.BOOLEAN), Schema.create(Type.STRING))));
+    List<CharSequence> stuff = new ArrayList<CharSequence>();
+    stuff.add("string");
+    Schema schema = recordSchema();
+    GenericRecord r = new GenericData.Record(schema);
+    r.put(0, stuff);
+    GenericData.get().hashCode(r, schema);
+  }
+  
+  @Test
+  public void testEquals() {
+    Schema s = recordSchema();
+    GenericRecord r0 = new GenericData.Record(s);
+    GenericRecord r1 = new GenericData.Record(s);
+    GenericRecord r2 = new GenericData.Record(s);
+    Collection<CharSequence> l0 = new ArrayDeque<CharSequence>();
+    List<CharSequence> l1 = new ArrayList<CharSequence>();
+    GenericArray<CharSequence> l2 = 
+      new GenericData.Array<CharSequence>(1,s.getFields().get(0).schema());
+    String foo = "foo";
+    l0.add(new StringBuffer(foo));
+    l1.add(foo);
+    l2.add(new Utf8(foo));
+    r0.put(0, l0);
+    r1.put(0, l1);
+    r2.put(0, l2);
+    assertEquals(r0, r1);
+    assertEquals(r0, r2);
+    assertEquals(r1, r2);
+  }
+  
+  private Schema recordSchema() {
+    List<Field> fields = new ArrayList<Field>();
+    fields.add(new Field("anArray", Schema.createArray(Schema.create(Type.STRING)), null, null));
+    Schema schema = Schema.createRecord("arrayFoo", "test", "mytest", false);
+    schema.setFields(fields);
+    
+    return schema;
   }
 
   @Test

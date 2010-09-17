@@ -18,11 +18,11 @@
 package org.apache.avro.generic;
 
 import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Collection;
 import java.util.AbstractList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -30,6 +30,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.io.BinaryData;
+import org.apache.avro.util.Utf8;
 
 /** Utilities for generic Java data. */
 public class GenericData {
@@ -120,9 +121,11 @@ public class GenericData {
     public T peek() {
       return (size < elements.length) ? (T)elements[size] : null;
     }
+    @Override
     public int hashCode() {
       return GenericData.get().hashCode(this, schema);
     }
+    @Override
     public boolean equals(Object o) {
       if (o == this) return true;                 // identical object
       if (!(o instanceof Array)) return false;    // not an array
@@ -147,6 +150,7 @@ public class GenericData {
         right--;
       }
     }
+    @Override
     public String toString() {
       StringBuffer buffer = new StringBuffer();
       buffer.append("[");
@@ -173,14 +177,17 @@ public class GenericData {
 
     public byte[] bytes() { return bytes; }
 
+    @Override
     public boolean equals(Object o) {
       if (o == this) return true;
       return o instanceof GenericFixed
         && Arrays.equals(bytes, ((GenericFixed)o).bytes());
     }
 
+    @Override
     public int hashCode() { return Arrays.hashCode(bytes); }
 
+    @Override
     public String toString() { return Arrays.toString(bytes); }
 
     public int compareTo(Fixed that) {
@@ -194,14 +201,17 @@ public class GenericData {
     private String symbol;
     public EnumSymbol(String symbol) { this.symbol = symbol; }
 
+    @Override
     public boolean equals(Object o) {
       if (o == this) return true;
       return o instanceof GenericEnumSymbol
         && symbol.equals(o.toString());
     }
 
+    @Override
     public int hashCode() { return symbol.hashCode(); }
 
+    @Override
     public String toString() { return symbol; }
   }
 
@@ -219,8 +229,8 @@ public class GenericData {
     case ENUM:
       return schema.getEnumSymbols().contains(datum.toString());
     case ARRAY:
-      if (!(datum instanceof GenericArray)) return false;
-      for (Object element : (GenericArray)datum)
+      if (!(datum instanceof Collection)) return false;
+      for (Object element : (Collection<?>)datum)
         if (!validate(schema.getElementType(), element))
           return false;
       return true;
@@ -273,7 +283,7 @@ public class GenericData {
       }
       buffer.append("}");
     } else if (datum instanceof Collection) {
-      Collection array = (Collection)datum;
+      Collection<?> array = (Collection<?>)datum;
       buffer.append("[");
       long last = array.size()-1;
       int i = 0;
@@ -317,7 +327,7 @@ public class GenericData {
       return ((IndexedRecord)datum).getSchema();
     } else if (datum instanceof Collection) {
       Schema elementType = null;
-      for (Object element : (Collection)datum) {
+      for (Object element : (Collection<?>)datum) {
         if (elementType == null) {
           elementType = induce(element);
         } else if (!elementType.equals(induce(element))) {
@@ -453,8 +463,8 @@ public class GenericData {
       }
       return hashCode;
     case ARRAY:
-      GenericArray a = (GenericArray)o;
-      Schema elementType = a.getSchema().getElementType();
+      Collection<?> a = (Collection<?>)o;
+      Schema elementType = s.getElementType();
       for (Object e : a)
         hashCode = hashCodeAdd(hashCode, e, elementType);
       return hashCode;
@@ -464,6 +474,8 @@ public class GenericData {
       return s.getEnumOrdinal(o.toString());
     case NULL:
       return 0;
+    case STRING:
+      return (o instanceof Utf8 ? o : new Utf8(o.toString())).hashCode();
     default:
       return o.hashCode();
     }
@@ -499,11 +511,11 @@ public class GenericData {
     case ENUM:
       return s.getEnumOrdinal(o1.toString()) - s.getEnumOrdinal(o2.toString());
     case ARRAY:
-      GenericArray a1 = (GenericArray)o1;
-      GenericArray a2 = (GenericArray)o2;
+      Collection a1 = (Collection)o1;
+      Collection a2 = (Collection)o2;
       Iterator e1 = a1.iterator();
       Iterator e2 = a2.iterator();
-      Schema elementType = a1.getSchema().getElementType();
+      Schema elementType = s.getElementType();
       while(e1.hasNext() && e2.hasNext()) {
         int compare = compare(e1.next(), e2.next(), elementType);
         if (compare != 0) return compare;
@@ -519,6 +531,10 @@ public class GenericData {
         : i1 - i2;
     case NULL:
       return 0;
+    case STRING:
+      Utf8 u1 = o1 instanceof Utf8 ? (Utf8)o1 : new Utf8(o1.toString());
+      Utf8 u2 = o2 instanceof Utf8 ? (Utf8)o2 : new Utf8(o2.toString());
+      return u1.compareTo(u2);
     default:
       return ((Comparable)o1).compareTo(o2);
     }
