@@ -25,7 +25,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.RecordReader;
 
-import org.apache.avro.Schema;
+import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.specific.SpecificDatumReader;
 
@@ -33,20 +33,23 @@ import org.apache.avro.specific.SpecificDatumReader;
 public class AvroRecordReader<T>
   implements RecordReader<AvroWrapper<T>, NullWritable> {
 
-  private FsInput in;
-  private DataFileReader<T> reader;
+  private FileReader<T> reader;
   private long start;
   private long end;
 
   public AvroRecordReader(JobConf job, FileSplit split)
     throws IOException {
-    this.in = new FsInput(split.getPath(), job);
+    this(new DataFileReader<T>
+         (new FsInput(split.getPath(), job),
+          new SpecificDatumReader<T>(AvroJob.getInputSchema(job))),
+         split);
+  }
 
-    Schema s = AvroJob.getInputSchema(job);
-    this.reader = new DataFileReader<T>(in, new SpecificDatumReader<T>(s));
-
+  protected AvroRecordReader(FileReader<T> reader, FileSplit split)
+    throws IOException {
+    this.reader = reader;
     reader.sync(split.getStart());                    // sync to start
-    this.start = in.tell();
+    this.start = reader.tell();
     this.end = split.getStart() + split.getLength();
   }
 
@@ -68,12 +71,12 @@ public class AvroRecordReader<T>
     if (end == start) {
       return 0.0f;
     } else {
-      return Math.min(1.0f, (in.tell() - start) / (float)(end - start));
+      return Math.min(1.0f, (getPos() - start) / (float)(end - start));
     }
   }
   
   public long getPos() throws IOException {
-    return in.tell();
+    return reader.tell();
   }
 
   public void close() throws IOException { reader.close(); }

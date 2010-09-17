@@ -10,6 +10,9 @@ Avro 1.4.1 (unreleased)
 
     AVRO-641. Java: Add SASL security for socket-based RPC. (cutting)
 
+    AVRO-634. Java: Add support for reading Hadoop sequence files as
+    Avro data to MapReduce API. (cutting)
+
   IMPROVEMENTS
 
     AVRO-655. Change build so that 'dist' target no longer also runs C

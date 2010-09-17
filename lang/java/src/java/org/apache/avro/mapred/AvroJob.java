@@ -95,6 +95,11 @@ public class AvroJob {
     }
   }
 
+  /** Indicate that a job's input files are in SequenceFile format.*/
+  public static void setInputSequenceFile(JobConf job) {
+    job.setInputFormat(SequenceFileInputFormat.class);
+  }
+
   /** Return a job's output key schema. */
   public static Schema getOutputSchema(Configuration job) {
     return Schema.parse(job.get(OUTPUT_SCHEMA));

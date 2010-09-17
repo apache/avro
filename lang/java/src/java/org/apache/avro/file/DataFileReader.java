@@ -29,7 +29,8 @@ import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
 /** Random access to files written with {@link DataFileWriter}.
  * @see DataFileWriter
  */
-public class DataFileReader<D> extends DataFileStream<D> {
+public class DataFileReader<D>
+  extends DataFileStream<D> implements FileReader<D> {
   private SeekableInputStream sin;
   private long blockStart;
 
@@ -104,6 +105,8 @@ public class DataFileReader<D> extends DataFileStream<D> {
   public boolean pastSync(long position) throws IOException {
     return ((blockStart >= position+SYNC_SIZE)||(blockStart >= sin.length()));
   }
+
+  @Override public long tell() throws IOException { return sin.tell(); }
 
   private static class SeekableInputStream extends InputStream 
   implements SeekableInput {
