@@ -6,6 +6,10 @@ Avro 1.5.0 (unreleased)
 
 Avro 1.4.1 (unreleased)
 
+  NEW FEATURES
+
+    AVRO-641. Java: Add SASL security for socket-based RPC. (cutting)
+
   IMPROVEMENTS
 
     AVRO-655. Change build so that 'dist' target no longer also runs C
