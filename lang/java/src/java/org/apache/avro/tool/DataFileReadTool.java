@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumReader;
@@ -55,7 +56,7 @@ public class DataFileReadTool implements Tool {
     }
 
     GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    DataFileReader<Object> fileReader =
+    FileReader<Object> fileReader =
       new DataFileReader<Object>(new File(args.get(0)), reader);
     try {
       Schema schema = fileReader.getSchema();
