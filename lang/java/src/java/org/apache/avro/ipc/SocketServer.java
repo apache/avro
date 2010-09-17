@@ -19,6 +19,7 @@
 package org.apache.avro.ipc;
 
 import java.io.IOException;
+import java.io.EOFException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
@@ -55,16 +56,22 @@ public class SocketServer extends Thread implements Server {
 
   public void run() {
     LOG.info("starting "+channel.socket().getInetAddress());
-    while (true) {
+    try {
+      while (true) {
+        try {
+          new Connection(channel.accept());
+        } catch (ClosedChannelException e) {
+          return;
+        } catch (IOException e) {
+          LOG.warn("unexpected error", e);
+          throw new RuntimeException(e);
+        }
+      }
+    } finally {
+      LOG.info("stopping "+channel.socket().getInetAddress());
       try {
-        new Connection(channel.accept());
-      } catch (ClosedChannelException e) {
-        return;
+        channel.close();
       } catch (IOException e) {
-        LOG.warn("unexpected error", e);
-        throw new RuntimeException(e);
-      } finally {
-        LOG.info("stopping "+channel.socket().getInetAddress());
       }
     }
   }
@@ -73,10 +80,20 @@ public class SocketServer extends Thread implements Server {
     group.interrupt();
   }
 
-  private class Connection extends SocketTransceiver implements Runnable {
+  /** Creates an appropriate {@link Transceiver} for this server.
+   * Returns a {@link SocketTransceiver} by default. */
+  protected Transceiver getTransceiver(SocketChannel channel)
+    throws IOException {
+    return new SocketTransceiver(channel);
+  }
+
+  private class Connection implements Runnable {
+
+    SocketChannel channel;
+    Transceiver xc;
 
     public Connection(SocketChannel channel) throws IOException {
-      super(channel);
+      this.channel = channel;
 
       Thread thread = new Thread(group, this);
       thread.setName("Connection to "+channel.socket().getRemoteSocketAddress());
@@ -87,13 +104,16 @@ public class SocketServer extends Thread implements Server {
     public void run() {
       try {
         try {
+          this.xc = getTransceiver(channel);
           while (true) {
-            writeBuffers(responder.respond(readBuffers(), this));
+            xc.writeBuffers(responder.respond(xc.readBuffers(), xc));
           }
+        } catch (EOFException e) {
+          return;
         } catch (ClosedChannelException e) {
           return;
         } finally {
-          close();
+          channel.close();
         }
       } catch (IOException e) {
         LOG.warn("unexpected error", e);
