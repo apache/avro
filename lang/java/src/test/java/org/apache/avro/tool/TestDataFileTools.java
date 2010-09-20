@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,12 +47,17 @@ public class TestDataFileTools {
   static File sampleFile;
   static String jsonData;
   static Schema schema;
+  static File schemaFile;
   
   @BeforeClass
   public static void writeSampleFile() throws IOException {
     sampleFile = AvroTestUtil.tempFile(
       TestDataFileTools.class.getName() + ".avro");
     schema = Schema.create(Type.INT);
+    schemaFile = File.createTempFile("schema-temp", "schema");
+    FileWriter fw = new FileWriter(schemaFile);
+    fw.append(schema.toString());
+    fw.close();
     
     DataFileWriter<Object> writer
       = new DataFileWriter<Object>(new GenericDatumWriter<Object>(schema))
@@ -108,12 +114,19 @@ public class TestDataFileTools {
   
   public void testWrite(String name, List<String> extra, String expectedCodec) 
       throws Exception {
+      testWrite(name, extra, expectedCodec, "-schema", schema.toString());
+      testWrite(name, extra, expectedCodec, "-schema-file", schemaFile.toString());
+  }
+  public void testWrite(String name, List<String> extra, String expectedCodec, String... extraArgs) 
+  throws Exception {
     File outFile = AvroTestUtil.tempFile(
         TestDataFileTools.class + ".testWrite." + name + ".avro");
     FileOutputStream fout = new FileOutputStream(outFile);
     PrintStream out = new PrintStream(fout);
     List<String> args = new ArrayList<String>();
-    args.add(schema.toString());
+    for (String arg : extraArgs) {
+        args.add(arg);
+    }
     args.add("-");
     args.addAll(extra);
     new DataFileWriteTool().run(
@@ -149,8 +162,8 @@ public class TestDataFileTools {
       new DataFileWriteTool().run(
           new StringInputStream("{"),
           new PrintStream(out), // stdout
-          null, // stderr
-          Arrays.asList("{ \"type\":\"record\", \"fields\":" +
+          null, // stderr          
+          Arrays.asList("-schema", "{ \"type\":\"record\", \"fields\":" +
                         "[{\"name\":\"foo\", \"type\":\"string\"}], " +
                         "\"name\":\"boring\" }", "-"));
       fail("Expected exception.");
@@ -196,7 +209,7 @@ public class TestDataFileTools {
         new StringInputStream(json),
         new PrintStream(out), // stdout
         null, // stderr
-        Arrays.asList(schema, "-"));
+        Arrays.asList("-schema", schema, "-"));
     out.close();
     fout.close();
     return outFile;

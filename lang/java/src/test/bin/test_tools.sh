@@ -73,7 +73,7 @@ echo '"The identity function"' \
   | $CMD fragtojson '"string"' - \
   | cmp -s - <(echo '"The identity function"')
 
-$CMD fromjson '"string"' <(echo '"foo"'; echo '"bar"') \
+$CMD fromjson --schema '"string"' <(echo '"foo"'; echo '"bar"') \
   > $TMPDIR/data_file_write.avro
 $CMD tojson $TMPDIR/data_file_write.avro \
   | cmp -s - <(echo '"foo"'; echo '"bar"')

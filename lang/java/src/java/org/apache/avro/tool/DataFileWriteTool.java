@@ -17,9 +17,11 @@
  */
 package org.apache.avro.tool;
 
-import java.io.EOFException;
-import java.io.InputStream;
 import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -30,9 +32,9 @@ import joptsimple.OptionSpec;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.io.DatumReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.JsonDecoder;
 
@@ -59,18 +61,37 @@ public class DataFileWriteTool implements Tool {
       .withRequiredArg()
       .defaultsTo("null")
       .ofType(String.class);
+    OptionSpec<String> file =
+        p.accepts("schema-file", "Schema File")
+        .withOptionalArg()
+        .ofType(String.class);
+    OptionSpec<String> inschema =
+        p.accepts("schema", "Schema")
+        .withOptionalArg()
+        .ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
 
-    if (opts.nonOptionArguments().size() != 2) {
-      err.println("Expected 2 args: schema input_file");
+    List<String> nargs = opts.nonOptionArguments();
+    if (nargs.size() != 1) {
+      err.println("Expected 1 arg: input_file");
       p.printHelpOn(err);
       return 1;
     }
-
-    Schema schema = Schema.parse(args.get(0));
+    String schemastr = inschema.value(opts);
+    String schemafile = file.value(opts);
+    if (schemastr == null && schemafile == null) {
+        err.println("Need an input schema file (--schema-file) or inline schema (--schema)");
+        p.printHelpOn(err);
+        return 1;
+    }
+    if (schemafile != null) {
+        schemastr = readSchemaFromFile(schemafile);
+    }
+    
+    Schema schema = Schema.parse(schemastr);
     DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
 
-    InputStream input = Util.fileOrStdin(args.get(1), stdin);
+    InputStream input = Util.fileOrStdin(nargs.get(0), stdin);
     try {
       DataInputStream din = new DataInputStream(input);
       DataFileWriter<Object> writer =
@@ -94,5 +115,23 @@ public class DataFileWriteTool implements Tool {
       }
     }
     return 0;
+  }
+
+  public static String readSchemaFromFile(String schemafile) throws IOException {
+    String schemastr;
+    StringBuilder b = new StringBuilder();
+    FileReader r = new FileReader(schemafile);
+    try {
+        char[] buf = new char[64*1024];
+        for(;;) {
+            int read = r.read(buf);
+            if (read==-1) break;
+            b.append(buf, 0, read);
+        }
+        schemastr = b.toString();
+    } finally {
+        r.close();
+    }
+    return schemastr;
   }
 }

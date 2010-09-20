@@ -4,6 +4,9 @@ Avro 1.5.0 (unreleased)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-670. Allow DataFileWriteTool to accept schema files as input with new
+    --schema-file and --schema command-line flags. (Ron Bodkin via philz)
+
 Avro 1.4.1 (unreleased)
 
   NEW FEATURES
