@@ -18,6 +18,7 @@
 package org.apache.avro.util;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 
 import org.apache.avro.io.BinaryData;
 
@@ -27,6 +28,10 @@ import org.apache.avro.io.BinaryData;
 public class Utf8 implements Comparable<Utf8>, CharSequence {
   private static final byte[] EMPTY = new byte[0];
 
+  private static final Charset UTF8_CS;
+  static {
+    UTF8_CS = Charset.forName("UTF-8");
+  }
   private byte[] bytes = EMPTY;
   private int length;
   private String string;
@@ -34,11 +39,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   public Utf8() {}
 
   public Utf8(String string) {
-    try {
-      this.bytes = string.getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    this.bytes = string.getBytes(UTF8_CS);
     this.length = bytes.length;
     this.string = string;
   }
@@ -79,6 +80,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     return this;
   }
 
+  @Override
   public String toString() {
     if (this.string == null)
       try {
@@ -89,6 +91,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     return this.string;
   }
 
+  @Override
   public boolean equals(Object o) {
     if (o == this) return true;
     if (!(o instanceof Utf8)) return false;
@@ -101,6 +104,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     return true;
   }
 
+  @Override
   public int hashCode() {
     int hash = 0;
     for (int i = 0; i < this.length; i++)
@@ -120,5 +124,9 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     return toString().subSequence(start, end);
   }
 
+  /** Gets the UTF-8 bytes for a String */
+  public static byte[] getBytesFor(String str) {
+    return str.getBytes(UTF8_CS);
+  }
 
 }

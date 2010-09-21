@@ -85,7 +85,7 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
        *  _containing_ this block must be in the {@link #OVERFLOW}
        *  state. */
      OVERFLOW
-    };
+    }
 
     /** The type of this blocked value (ARRAY or MAP). */
     public Schema.Type type;
@@ -313,9 +313,15 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
 
   @Override
   public void writeString(Utf8 utf8) throws IOException {
-    writeBytes(utf8.getBytes(), 0, utf8.getLength());
-
-    assert check();
+    writeBytes(utf8.getBytes(), 0, utf8.getByteLength());
+    // assert called in writeBytes
+  }
+  
+  @Override
+  public void writeString(String str) throws IOException {
+    byte[] utf8bytes = Utf8.getBytesFor(str);
+    writeBytes(utf8bytes, 0, utf8bytes.length);
+    // assert called in writeBytes
   }
 
   @Override

@@ -23,6 +23,9 @@ Avro 1.4.1 (unreleased)
 
     AVRO-634. IDL: Add support for aliases. (cutting)
 
+    AVRO-668. Java: Reduce object allocations while writing strings.
+    (scottcarey)
+
   BUG FIXES
 
     AVRO-666. Remove an extraneous pdb.set_trace() that crept into schema.py

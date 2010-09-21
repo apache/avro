@@ -109,12 +109,17 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
 
   @Override
   public void writeString(Utf8 utf8) throws IOException {
+    writeString(utf8.toString());
+  }
+  
+  @Override 
+  public void writeString(String str) throws IOException {
     parser.advance(Symbol.STRING);
     if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {
       parser.advance(Symbol.MAP_KEY_MARKER);
-      out.writeFieldName(utf8.toString());
+      out.writeFieldName(str);
     } else {
-      out.writeString(utf8.toString());
+      out.writeString(str);
     }
   }
 
