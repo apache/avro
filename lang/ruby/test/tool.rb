@@ -49,7 +49,7 @@ end
 def run_server(uri, proto, msg, datum)
   uri = URI.parse(uri)
   $responder = GenericResponder.new(proto, msg, datum)
-  server = WEBrick::HTTPServer.new(:Host => uri.host,
+  server = WEBrick::HTTPServer.new(:BindAddress => uri.host,
                                    :Port => uri.port,
                                    :Logger => Logger.new(StringIO.new))
   server.mount '/', GenericHandler

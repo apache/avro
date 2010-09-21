@@ -98,7 +98,9 @@ public abstract class Encoder implements Flushable {
   public abstract void writeString(Utf8 utf8) throws IOException;
 
   /**
-   * Write a Unicode character string.
+   * Write a Unicode character string.  The default implementation converts
+   * the String to a {@link org.apache.avro.util.Utf8}.  Some Encoder 
+   * implementations may want to do something different as a performance optimization.
    * @throws AvroTypeException If this is a stateful writer and a
    * char-string is not expected
    */
@@ -106,6 +108,20 @@ public abstract class Encoder implements Flushable {
     writeString(new Utf8(str));
   }
 
+  /**
+   * Write a Unicode character string.  If the CharSequence is an
+   * {@link org.apache.avro.util.Utf8} it writes this directly, otherwise
+   * the CharSequence is converted to a String via toString() and written.
+   * @throws AvroTypeException If this is a stateful writer and a
+   * char-string is not expected
+   */
+  public void writeString(CharSequence charSequence) throws IOException {
+    if (charSequence instanceof Utf8)
+      writeString((Utf8)charSequence);
+    else
+      writeString(charSequence.toString());
+  }
+  
   /**
    * Write a byte string.
    * @throws AvroTypeException If this is a stateful writer and a

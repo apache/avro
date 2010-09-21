@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Collection;
 
 import org.apache.avro.AvroTypeException;
@@ -29,7 +28,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.util.Utf8;
 
 /** {@link DatumWriter} for generic Java objects. */
 public class GenericDatumWriter<D> implements DatumWriter<D> {
@@ -188,9 +186,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
   protected void writeString(Object datum, Encoder out) throws IOException {
-    out.writeString(datum instanceof Utf8
-                    ? (Utf8)datum
-                    : new Utf8(datum.toString()));
+    out.writeString((CharSequence) datum);
   }
 
   /** Called to write a bytes.  May be overridden for alternate bytes

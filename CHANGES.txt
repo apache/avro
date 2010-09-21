@@ -16,10 +16,18 @@ Avro 1.4.1 (unreleased)
 
     AVRO-634. IDL: Add support for aliases. (cutting)
 
+    AVRO-668. Java: Reduce object allocations while writing strings.
+    (scottcarey)
+
   BUG FIXES
 
     AVRO-657. Fix build so that md5 and sha1 checksum files contain
     only the file's basename without any directories. (cutting)
+
+    AVRO-664. Ruby server takes a long time to start in interop tests. (thiru)
+
+    AVRO-667. GenericArray fails to compare with List. SpecificRecord
+    compare gets ClassCastException. (scottcarey & cutting)
 
 Avro 1.4.0 (31 August 2010)
 

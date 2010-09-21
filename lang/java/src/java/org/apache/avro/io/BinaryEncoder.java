@@ -130,10 +130,20 @@ public class BinaryEncoder extends Encoder {
 
   @Override
   public void writeString(Utf8 utf8) throws IOException {
-    encodeLong(utf8.getLength(), out);
-    out.write(utf8.getBytes(), 0, utf8.getLength());
+    encodeString(utf8.getBytes(), 0, utf8.getByteLength());
   }
-
+  
+  @Override
+  public void writeString(String string) throws IOException {
+    byte[] bytes = Utf8.getBytesFor(string);
+    encodeString(bytes, 0, bytes.length);
+  }
+  
+  private void encodeString(byte[] bytes, int offset, int length) throws IOException {
+    encodeLong(length, out);
+    out.write(bytes, offset, length);
+  }
+  
   @Override
   public void writeBytes(ByteBuffer bytes) throws IOException {
     byteWriter.write(bytes);
