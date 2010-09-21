@@ -33,7 +33,8 @@ Avro 1.4.1 (unreleased)
 
     AVRO-664. Ruby server takes a long time to start in interop tests. (thiru)
 
-    AVRO-667. GenericArray fails to compare with List. SpecificRecord compare gets ClassCastException. (scottcarey & cutting)
+    AVRO-667. GenericArray fails to compare with List. SpecificRecord
+    compare gets ClassCastException. (scottcarey & cutting)
 
 Avro 1.4.0 (31 August 2010)
 
