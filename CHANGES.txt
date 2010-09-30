@@ -11,6 +11,8 @@ Avro 1.4.1 (unreleased)
 
   NEW FEATURES
 
+    AVRO-674. Vim editor support for IDL files (Daniel Lundin via philz)
+
     AVRO-641. Java: Add SASL security for socket-based RPC. (cutting)
 
     AVRO-634. Java: Add support for reading Hadoop sequence files as
