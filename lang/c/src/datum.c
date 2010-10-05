@@ -169,6 +169,7 @@ static int avro_bytes_set_private(avro_datum_t datum, const char *bytes,
 
 	b->free = bytes_free;
 	b->bytes = (char *)bytes;
+	b->size = size;
 	return 0;
 }
 
@@ -562,6 +563,7 @@ static int avro_fixed_set_private(avro_datum_t datum, const char *bytes,
 
 	fixed->free = fixed_free;
 	fixed->bytes = (char *)bytes;
+	fixed->size = size;
 	return 0;
 }
 

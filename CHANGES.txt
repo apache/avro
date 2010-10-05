@@ -41,6 +41,10 @@ Avro 1.4.1 (unreleased)
     AVRO-667. GenericArray fails to compare with List. SpecificRecord
     compare gets ClassCastException. (scottcarey & cutting)
 
+    AVRO-675. Bytes and fixed setters don't update datum size.
+    (Douglas Creager via massie)
+
+
 Avro 1.4.0 (31 August 2010)
 
   INCOMPATIBLE CHANGES

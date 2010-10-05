@@ -119,11 +119,26 @@ static int test_bytes(void)
 {
 	char bytes[] = { 0xDE, 0xAD, 0xBE, 0xEF };
 	avro_schema_t writer_schema = avro_schema_bytes();
-	avro_datum_t datum = avro_wrapbytes(bytes, sizeof(bytes));
+	avro_datum_t datum;
+	avro_datum_t expected_datum;
 
+	datum = avro_wrapbytes(bytes, sizeof(bytes));
 	write_read_check(writer_schema, NULL, datum, "bytes");
 	avro_datum_decref(datum);
 	avro_schema_decref(writer_schema);
+
+	datum = avro_wrapbytes(NULL, 0);
+    avro_wrapbytes_set(datum, bytes, sizeof(bytes));
+	expected_datum = avro_wrapbytes(bytes, sizeof(bytes));
+	if (!avro_datum_equal(datum, expected_datum)) {
+		fprintf(stderr,
+		        "Expected equal bytes instances.\n");
+		exit(EXIT_FAILURE);
+	}
+	avro_datum_decref(datum);
+	avro_datum_decref(expected_datum);
+	avro_schema_decref(writer_schema);
+
 	return 0;
 }
 
@@ -313,10 +328,26 @@ static int test_fixed(void)
 {
 	char bytes[] = { 0xD, 0xA, 0xD, 0xA, 0xB, 0xA, 0xB, 0xA };
 	avro_schema_t schema = avro_schema_fixed("msg", sizeof(bytes));
-	avro_datum_t datum = avro_wrapfixed("msg", bytes, sizeof(bytes));
+	avro_datum_t datum;
+	avro_datum_t expected_datum;
+
+	datum = avro_wrapfixed("msg", bytes, sizeof(bytes));
 	write_read_check(schema, NULL, datum, "fixed");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
+
+	datum = avro_wrapfixed("msg", NULL, 0);
+    avro_wrapfixed_set(datum, bytes, sizeof(bytes));
+	expected_datum = avro_wrapfixed("msg", bytes, sizeof(bytes));
+	if (!avro_datum_equal(datum, expected_datum)) {
+		fprintf(stderr,
+		        "Expected equal fixed instances.\n");
+		exit(EXIT_FAILURE);
+	}
+	avro_datum_decref(datum);
+	avro_datum_decref(expected_datum);
+	avro_schema_decref(schema);
+
 	return 0;
 }
 
