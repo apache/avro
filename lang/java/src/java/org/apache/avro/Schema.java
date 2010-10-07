@@ -380,7 +380,7 @@ public abstract class Schema {
     }
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue, Order order) {
-      this.name = name;
+      this.name = validateName(name);
       this.schema = schema;
       this.doc = doc;
       this.defaultValue = defaultValue;
@@ -433,10 +433,10 @@ public abstract class Schema {
       int lastDot = name.lastIndexOf('.');
       if (lastDot < 0) {                          // unqualified name
         this.space = space;                       // use default space
-        this.name = name;
+        this.name = validateName(name);
       } else {                                    // qualified name
         this.space = name.substring(0, lastDot);  // get space from name
-        this.name = name.substring(lastDot+1, name.length());
+        this.name = validateName(name.substring(lastDot+1, name.length()));
       }
       this.full = (this.space == null) ? this.name : this.space+"."+this.name;
     }
@@ -655,7 +655,7 @@ public abstract class Schema {
       this.ordinals = new HashMap<String,Integer>();
       int i = 0;
       for (String symbol : symbols)
-        if (ordinals.put(symbol, i++) != null)
+        if (ordinals.put(validateName(symbol), i++) != null)
           throw new SchemaParseException("Duplicate enum symbol: "+symbol);
     }
     public List<String> getEnumSymbols() { return symbols; }
@@ -938,6 +938,21 @@ public abstract class Schema {
         throw new SchemaParseException("Can't redefine: "+name);
       return super.put(name, schema);
     }
+  }
+  
+  private static String validateName(String name) {
+    int length = name.length();
+    if (length == 0)
+      throw new SchemaParseException("Empty name");
+    char first = name.charAt(0);
+    if (!(Character.isLetter(first) || first == '_'))
+      throw new SchemaParseException("Illegal initial character: "+name);
+    for (int i = 1; i < length; i++) {
+      char c = name.charAt(i);
+      if (!(Character.isLetterOrDigit(c) || c == '_'))
+        throw new SchemaParseException("Illegal character in: "+name);
+    }
+    return name;
   }
 
   /** @see #parse(String) */

@@ -181,13 +181,29 @@ public class TestSchema {
                     +"[{\"name\":\"f\"}]}");       // no type
     checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":"
                     +"[{\"type\":\"long\"}]}");    // no name
+    // check invalid record names
+    checkParseError("{\"type\":\"record\",\"name\":\"1X\",\"fields\":[]}");
+    checkParseError("{\"type\":\"record\",\"name\":\"X$\",\"fields\":[]}");
+    // check invalid field names
+    checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":["
+                    +"{\"name\":\"1f\",\"type\":\"int\"}]}");
+    checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":["
+                    +"{\"name\":\"f$\",\"type\":\"int\"}]}");
+    checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":["
+                    +"{\"name\":\"f.g\",\"type\":\"int\"}]}");
   }
 
   @Test
   public void testEnum() throws Exception {
     check(BASIC_ENUM_SCHEMA, "\"B\"", new GenericData.EnumSymbol("B"), false);
     checkParseError("{\"type\":\"enum\"}");        // symbols required
-    checkParseError("{\"type\":\"enum\",\"symbols\": [\"X\",\"X\"]}");
+    checkParseError("{\"type\":\"enum\",\"symbols\": [\"X\"]}"); // name reqd
+    // check no duplicate symbols
+    checkParseError("{\"type\":\"enum\",\"name\":\"X\",\"symbols\":[\"X\",\"X\"]}");
+    // check no invalid symbols
+    checkParseError("{\"type\":\"enum\",\"name\":\"X\",\"symbols\":[\"1X\"]}");
+    checkParseError("{\"type\":\"enum\",\"name\":\"X\",\"symbols\":[\"X$\"]}");
+    checkParseError("{\"type\":\"enum\",\"name\":\"X\",\"symbols\":[\"X.Y\"]}");
   }
 
   @Test
