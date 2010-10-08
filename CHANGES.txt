@@ -31,6 +31,9 @@ Avro 1.4.1 (unreleased)
     AVRO-668. Java: Reduce object allocations while writing strings.
     (scottcarey)
 
+    AVRO-537. Ruby: Reuse client connection for multiple requests.
+    (Gabor Torok via cutting)
+
   BUG FIXES
 
     AVRO-666. Remove an extraneous pdb.set_trace() that crept into schema.py
