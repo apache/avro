@@ -21,6 +21,11 @@ Avro 1.4.1 (unreleased)
     AVRO-634. Java: Add support for reading Hadoop sequence files as
     Avro data to MapReduce API. (cutting)
 
+  OPTIMIZATIONS
+
+    AVRO-537. Python: Remove unneeded schema validations.
+    (Erik Frey via cutting)
+
   IMPROVEMENTS
 
     AVRO-655. Change build so that 'dist' target no longer also runs C
