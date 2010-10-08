@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require "net/http"
+
 module Avro::IPC
 
   class AvroRemoteError < Avro::AvroError; end
@@ -521,14 +523,13 @@ module Avro::IPC
     def initialize(host, port)
       @host, @port = host, port
       @remote_name = "#{host}:#{port}"
+      @conn = Net::HTTP.start host, port
     end
 
     def transceive(message)
       writer = FramedWriter.new(StringIO.new)
       writer.write_framed_message(message)
-      resp = Net::HTTP.start(host, port) do |http|
-        http.post('/', writer.to_s, {'Content-Type' => 'avro/binary'})
-      end
+      resp = @conn.post('/', writer.to_s, {'Content-Type' => 'avro/binary'})
       FramedReader.new(StringIO.new(resp.body)).read_framed_message
     end
   end
