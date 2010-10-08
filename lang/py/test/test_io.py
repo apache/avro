@@ -324,5 +324,14 @@ class TestIO(unittest.TestCase):
     print 'Datum Read: %s' % datum_read
     self.assertEquals(datum_to_read, datum_read)
 
+  def test_type_exception(self):
+    print_test_name('TEST TYPE EXCEPTION')
+    writers_schema = schema.parse("""\
+      {"type": "record", "name": "Test",
+       "fields": [{"name": "F", "type": "int"},
+                  {"name": "E", "type": "int"}]}""")
+    datum_to_write = {'E': 5, 'F': 'Bad'}
+    self.assertRaises(io.AvroTypeException, write_datum, datum_to_write, writers_schema)
+
 if __name__ == '__main__':
   unittest.main()

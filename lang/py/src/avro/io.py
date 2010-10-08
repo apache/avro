@@ -743,13 +743,13 @@ class DatumWriter(object):
                             set_writers_schema)
 
   def write(self, datum, encoder):
+    # validate datum
+    if not validate(self.writers_schema, datum):
+      raise AvroTypeException(self.writers_schema, datum)
+    
     self.write_data(self.writers_schema, datum, encoder)
 
   def write_data(self, writers_schema, datum, encoder):
-    # validate datum
-    if not validate(writers_schema, datum):
-      raise AvroTypeException(writers_schema, datum)
-    
     # function dispatch to write datum
     if writers_schema.type == 'null':
       encoder.write_null(datum)
