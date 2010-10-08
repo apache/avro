@@ -23,7 +23,7 @@ Avro 1.4.1 (unreleased)
 
   OPTIMIZATIONS
 
-    AVRO-537. Python: Remove unneeded schema validations.
+    AVRO-673. Python: Remove unneeded schema validations.
     (Erik Frey via cutting)
 
   IMPROVEMENTS
