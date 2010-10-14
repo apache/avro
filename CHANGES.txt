@@ -10,6 +10,11 @@ Avro 1.5.0 (unreleased)
     AVRO-671. Java: Check that type and field names conform to
     specified requirements. (cutting)
 
+  BUG FIXES
+
+    AVRO-675. Bytes and fixed setters don't update datum size.
+    (Douglas Creager via massie)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES
@@ -51,10 +56,6 @@ Avro 1.4.1 (13 October 2010)
 
     AVRO-667. GenericArray fails to compare with List. SpecificRecord
     compare gets ClassCastException. (scottcarey & cutting)
-
-    AVRO-675. Bytes and fixed setters don't update datum size.
-    (Douglas Creager via massie)
-
 
 Avro 1.4.0 (31 August 2010)
 
