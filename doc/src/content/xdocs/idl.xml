@@ -332,7 +332,7 @@ record MyRecord {
         <p>A field's type may also be preceded by annotations, e.g.: </p>
         <source>
 record MyRecord {
-  @java-class("java.util.ArrayList") array string myStrings;
+  @java_class("java.util.ArrayList") array&lt;string&gt; myStrings;
 }
         </source>
         <p>Similarly, a <code>@namespace</code> annotation may be used to modify the namespace

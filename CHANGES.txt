@@ -15,6 +15,9 @@ Avro 1.5.0 (unreleased)
     AVRO-675. C: Bytes and fixed setters don't update datum size.
     (Douglas Creager via massie)
 
+    AVRO-681. IDL: Fix documentation example with illegal syntax.
+    (Jingguo Yao via cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES
