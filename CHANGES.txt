@@ -12,7 +12,7 @@ Avro 1.5.0 (unreleased)
 
   BUG FIXES
 
-    AVRO-675. Bytes and fixed setters don't update datum size.
+    AVRO-675. C: Bytes and fixed setters don't update datum size.
     (Douglas Creager via massie)
 
 Avro 1.4.1 (13 October 2010)
