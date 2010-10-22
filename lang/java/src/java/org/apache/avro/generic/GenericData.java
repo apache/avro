@@ -370,6 +370,20 @@ public class GenericData {
     else throw new AvroTypeException("Can't create schema for: "+datum);
   }
 
+  /** Called by {@link GenericDatumReader#readRecord} to set a record fields
+   * value to a record instance.  The default implementation is for {@link
+   * IndexedRecord}.*/
+  public void setField(Object record, String name, int position, Object o) {
+    ((IndexedRecord)record).put(position, o);
+  }
+  
+  /** Called by {@link GenericDatumReader#readRecord} to retrieve a record
+   * field value from a reused instance.  The default implementation is for
+   * {@link IndexedRecord}.*/
+  public Object getField(Object record, String name, int position) {
+    return ((IndexedRecord)record).get(position);
+  }
+
   /** Return the index for a datum within a union.  Implemented with {@link
    * #instanceOf(Schema,Object)}.*/
   public int resolveUnion(Schema union, Object datum) {
@@ -495,15 +509,13 @@ public class GenericData {
     if (o1 == o2) return 0;
     switch (s.getType()) {
     case RECORD:
-      if (!(o1 instanceof IndexedRecord))
-        return ((Comparable)o1).compareTo(o2);
-      IndexedRecord r1 = (IndexedRecord)o1;
-      IndexedRecord r2 = (IndexedRecord)o2;
       for (Field f : s.getFields()) {
         if (f.order() == Field.Order.IGNORE)
           continue;                               // ignore this field
         int pos = f.pos();
-        int compare = compare(r1.get(pos), r2.get(pos), f.schema());
+        String name = f.name();
+        int compare =
+          compare(getField(o1, name, pos), getField(o2, name, pos), f.schema());
         if (compare != 0)                         // not equal
           return f.order() == Field.Order.DESCENDING ? -compare : compare;
       }

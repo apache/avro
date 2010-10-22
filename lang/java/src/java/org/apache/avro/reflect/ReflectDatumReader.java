@@ -26,7 +26,6 @@ import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.io.Decoder;
 
@@ -35,38 +34,26 @@ import org.apache.avro.io.Decoder;
  * Java reflection.
  */
 public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
-  public ReflectDatumReader() {}
+  public ReflectDatumReader() {
+    this(null, null, ReflectData.get());
+  }
 
   public ReflectDatumReader(Class<T> c) {
     this(ReflectData.get().getSchema(c));
   }
 
+  /** Construct where the writer's and reader's schemas are the same. */
   public ReflectDatumReader(Schema root) {
-    super(root);
+    this(root, root, ReflectData.get());
   }
 
-  @Override
-  protected void setField(Object record, String name, int position, Object o) {
-    if (record instanceof IndexedRecord) {
-      super.setField(record, name, position, o);
-      return;
-    }
-      try {
-      ReflectData.getField(record.getClass(), name).set(record, o);
-    } catch (IllegalAccessException e) {
-      throw new AvroRuntimeException(e);
-    }
+  /** Construct given writer's and reader's schema. */
+  public ReflectDatumReader(Schema writer, Schema reader) {
+    this(writer, reader, ReflectData.get());
   }
 
-  @Override
-  protected Object getField(Object record, String name, int position) {
-    if (record instanceof IndexedRecord)
-      return super.getField(record, name, position);
-    try {
-      return ReflectData.getField(record.getClass(), name).get(record);
-    } catch (IllegalAccessException e) {
-      throw new AvroRuntimeException(e);
-    }
+  protected ReflectDatumReader(Schema writer, Schema reader, ReflectData data){
+    super(writer, reader, data);
   }
 
   @Override

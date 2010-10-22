@@ -523,10 +523,8 @@ public class TestReflect {
     ReflectData.get().getProtocol(Class.forName("NoPackage"));
   }
 
-  public static class Y implements Comparable {
+  public static class Y {
     int i;
-    @Override public boolean equals(Object o) { return ((Y)o).i == this.i; }
-    @Override public int compareTo(Object o) { return ((Y)o).i - this.i; }
   }
 
   @Test
@@ -546,9 +544,24 @@ public class TestReflect {
     record.put("f", y);
 
     // test that this instance can be written & re-read
-    TestSchema.checkBinary(schema, record,
-                           new ReflectDatumWriter<Object>(),
-                           new ReflectDatumReader<Object>());
+    checkBinary(schema, record);
   }
+
+  public static void checkBinary(Schema schema, Object datum)
+    throws IOException {
+    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(schema);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    writer.write(datum, new BinaryEncoder(out));
+    byte[] data = out.toByteArray();
+
+    ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(schema);
+    Object decoded =
+      reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+          data, null));
+      
+    assertEquals(0, ReflectData.get().compare(datum, decoded, schema));
+  }
+
+
 
 }

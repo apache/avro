@@ -184,7 +184,7 @@ public class SpecificData extends GenericData {
   public int compare(Object o1, Object o2, Schema s) {
     switch (s.getType()) {
     case ENUM:
-      if (!(o1 instanceof String))                // not generic
+      if (o1 instanceof Enum)
         return ((Enum)o1).ordinal() - ((Enum)o2).ordinal();
     default:
       return super.compare(o1, o2, s);

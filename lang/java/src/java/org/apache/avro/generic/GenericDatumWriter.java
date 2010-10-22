@@ -95,20 +95,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected void writeRecord(Schema schema, Object datum, Encoder out)
     throws IOException {
     for (Field f : schema.getFields()) {
-      Object value = getField(datum, f.name(), f.pos());
+      Object value = data.getField(datum, f.name(), f.pos());
       try {
         write(f.schema(), value, out);
       } catch (NullPointerException e) {
         throw npe(e, " in field "+f.name());
       }
     }
-  }
-  
-  /** Called by the default implementation of {@link #writeRecord} to retrieve
-   * a record field value.  The default implementation is for {@link
-   * IndexedRecord}.*/
-  protected Object getField(Object record, String field, int position) {
-    return ((IndexedRecord) record).get(position);
   }
   
   /** Called to write an enum value.  May be overridden for alternate enum

@@ -26,7 +26,9 @@ import org.apache.avro.generic.GenericDatumReader;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Java classes. */
 public class SpecificDatumReader<T> extends GenericDatumReader<T> {
-  public SpecificDatumReader() {}
+  public SpecificDatumReader() {
+    this(null, null, SpecificData.get());
+  }
 
   public SpecificDatumReader(Class<T> c) {
     this(SpecificData.get().getSchema(c));
@@ -34,12 +36,17 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
 
   /** Construct where the writer's and reader's schemas are the same. */
   public SpecificDatumReader(Schema schema) {
-    super(schema);
+    this(schema, schema, SpecificData.get());
   }
 
   /** Construct given writer's and reader's schema. */
   public SpecificDatumReader(Schema writer, Schema reader) {
-    super(writer, reader);
+    this(writer, reader, SpecificData.get());
+  }
+
+  protected SpecificDatumReader(Schema writer, Schema reader,
+                                SpecificData data) {
+    super(writer, reader, data);
   }
 
   @Override

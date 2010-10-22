@@ -42,6 +42,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.FixedSize;
+import org.apache.avro.io.BinaryData;
 import org.apache.avro.ipc.AvroRemoteException;
 
 import com.thoughtworks.paranamer.CachingParanamer;
@@ -72,6 +73,30 @@ public class ReflectData extends SpecificData {
   
   /** Return the singleton instance. */
   public static ReflectData get() { return INSTANCE; }
+
+  @Override
+  public void setField(Object record, String name, int position, Object o) {
+    if (record instanceof IndexedRecord) {
+      super.setField(record, name, position, o);
+      return;
+    }
+    try {
+      getField(record.getClass(), name).set(record, o);
+    } catch (IllegalAccessException e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
+
+  @Override
+  public Object getField(Object record, String name, int position) {
+    if (record instanceof IndexedRecord)
+      return super.getField(record, name, position);
+    try {
+      return getField(record.getClass(), name).get(record);
+    } catch (IllegalAccessException e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
 
   @Override
   protected boolean isRecord(Object datum) {
@@ -137,7 +162,7 @@ public class ReflectData extends SpecificData {
 
   /** Return the named field of the provided class.  Implementation caches
    * values, since this is used at runtime to get and set fields. */
-  protected static Field getField(Class c, String name) {
+  private static Field getField(Class c, String name) {
     Map<String,Field> fields = FIELD_CACHE.get(c);
     if (fields == null) {
       fields = new ConcurrentHashMap<String,Field>();
@@ -424,7 +449,29 @@ public class ReflectData extends SpecificData {
 
   @Override
   public int compare(Object o1, Object o2, Schema s) {
-    throw new UnsupportedOperationException();
+    switch (s.getType()) {
+    case ARRAY:
+      if (!o1.getClass().isArray())
+        break;
+      Schema elementType = s.getElementType();
+      int l1 = java.lang.reflect.Array.getLength(o1);
+      int l2 = java.lang.reflect.Array.getLength(o2);
+      int l = Math.min(l1, l2);
+      for (int i = 0; i < l; i++) {
+        int compare = compare(java.lang.reflect.Array.get(o1, i),
+                              java.lang.reflect.Array.get(o2, i),
+                              elementType);
+        if (compare != 0) return compare;
+      }
+      return l1 - l2;
+    case BYTES:
+      if (!o1.getClass().isArray())
+        break;
+      byte[] b1 = (byte[])o1; 
+      byte[] b2 = (byte[])o2; 
+      return BinaryData.compareBytes(b1, 0, b1.length, b2, 0, b2.length);
+    }
+    return super.compare(o1, o2, s);
   }
 
 }

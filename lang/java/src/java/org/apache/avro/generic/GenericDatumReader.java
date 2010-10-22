@@ -34,21 +34,28 @@ import org.apache.avro.util.WeakIdentityHashMap;
 
 /** {@link DatumReader} for generic Java objects. */
 public class GenericDatumReader<D> implements DatumReader<D> {
+  private GenericData data;
   private Schema actual;
   private Schema expected;
 
-  public GenericDatumReader() {}
+  public GenericDatumReader() {
+    this(null, null, GenericData.get());
+  }
 
   /** Construct where the writer's and reader's schemas are the same. */
   public GenericDatumReader(Schema schema) {
-    this.actual = schema;
-    this.expected = schema;
+    this(schema, schema, GenericData.get());
   }
 
   /** Construct given writer's and reader's schema. */
   public GenericDatumReader(Schema writer, Schema reader) {
+    this(writer, reader, GenericData.get());
+  }
+
+  protected GenericDatumReader(Schema writer, Schema reader, GenericData data) {
     this.actual = writer;
     this.expected = reader;
+    this.data = data;
   }
 
   @Override
@@ -138,32 +145,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     for (Field f : in.readFieldOrder()) {
       int pos = f.pos();
       String name = f.name();
-      Object oldDatum = (old != null) ? getField(record, name, pos) : null;
-      setField(record, name, pos, read(oldDatum, f.schema(), in));
+      Object oldDatum = (old != null) ? data.getField(record, name, pos) : null;
+      data.setField(record, name, pos, read(oldDatum, f.schema(), in));
     }
 
     return record;
-  }
-
-  /** Called by the default implementation of {@link #readRecord} to set a
-   * record fields value to a record instance.  The default implementation is
-   * for {@link IndexedRecord}.*/
-  protected void setField(Object record, String name, int position, Object o) {
-    ((IndexedRecord)record).put(position, o);
-  }
-  
-  /** Called by the default implementation of {@link #readRecord} to retrieve a
-   * record field value from a reused instance.  The default implementation is
-   * for {@link IndexedRecord}.*/
-  protected Object getField(Object record, String name, int position) {
-    return ((IndexedRecord)record).get(position);
-  }
-
-  /** Called by the default implementation of {@link #readRecord} to remove a
-   * record field value from a reused instance.  The default implementation is
-   * for {@link GenericRecord}.*/
-  protected void removeField(Object record, String field, int position) {
-    ((GenericRecord)record).put(position, null);
   }
   
   /** Called to read an enum value. May be overridden for alternate enum

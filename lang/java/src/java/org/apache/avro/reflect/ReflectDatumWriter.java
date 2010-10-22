@@ -22,9 +22,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Collection;
 
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -55,17 +53,6 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   
   protected ReflectDatumWriter(ReflectData reflectData) {
     super(reflectData);
-  }
-  
-  @Override
-  protected Object getField(Object record, String name, int position) {
-    if (record instanceof IndexedRecord)
-      return super.getField(record, name, position);
-    try {
-      return ReflectData.getField(record.getClass(), name).get(record);
-    } catch (IllegalAccessException e) {
-      throw new AvroRuntimeException(e);
-    }
   }
   
   @Override
