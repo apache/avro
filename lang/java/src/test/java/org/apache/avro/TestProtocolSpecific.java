@@ -82,7 +82,7 @@ public class TestProtocolSpecific {
                               new InetSocketAddress(0));
     server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
+    proxy = SpecificRequestor.getClient(Simple.class, client);
   }
 
   @Test

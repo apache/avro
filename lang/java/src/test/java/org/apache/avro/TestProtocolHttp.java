@@ -36,7 +36,7 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     server.start();
     client =
       new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
-    proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
+    proxy = SpecificRequestor.getClient(Simple.class, client);
   }
 
 }

@@ -19,6 +19,9 @@ Avro 1.5.0 (unreleased)
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().
     (Harsh J Chouraria via cutting)
 
+    AVRO-683. Java: Fix RPC proxy factories to not require casting.
+    (Stephen Gargan via cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

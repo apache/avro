@@ -100,8 +100,7 @@ public abstract class TetherTask<IN,MID,OUT> {
     int clientPort = Integer.parseInt(clientPortString);
     this.clientTransceiver =
       new SocketTransceiver(new InetSocketAddress(clientPort));
-    this.outputClient = (OutputProtocol)
-      SpecificRequestor.getClient(OutputProtocol.class, clientTransceiver);
+    this.outputClient = SpecificRequestor.getClient(OutputProtocol.class, clientTransceiver);
 
     // send inputPort to parent
     outputClient.configure(inputPort);

@@ -54,7 +54,7 @@ public class TestNettyServer {
     // client
     Transceiver transceiver = new NettyTransceiver(new InetSocketAddress(
         serverPort));
-    Mail proxy = (Mail) SpecificRequestor.getClient(Mail.class, transceiver);
+    Mail proxy = SpecificRequestor.getClient(Mail.class, transceiver);
 
     Message msg = new Message();
     msg.to = new Utf8("wife");

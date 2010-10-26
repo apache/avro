@@ -42,6 +42,6 @@ public class TestProtocolSpecificMeta extends TestProtocolSpecific {
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);
     req.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     req.addRPCPlugin(new RPCMetaTestPlugin("key2"));
-    proxy = (Simple)SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
+    proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
   }
 }

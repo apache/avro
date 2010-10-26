@@ -59,7 +59,7 @@ public class TestNamespaceSpecific {
                               new InetSocketAddress(0));
     server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (TestNamespace)SpecificRequestor.getClient(TestNamespace.class, client);
+    proxy = SpecificRequestor.getClient(TestNamespace.class, client);
   }
 
   @Test

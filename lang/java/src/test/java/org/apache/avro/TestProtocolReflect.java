@@ -77,7 +77,7 @@ public class TestProtocolReflect {
                               new InetSocketAddress(0));
     server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (Simple)ReflectRequestor.getClient(Simple.class, client);
+    proxy = ReflectRequestor.getClient(Simple.class, client);
   }
 
   @Test

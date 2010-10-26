@@ -35,7 +35,7 @@ public class TestNamespaceReflect extends TestNamespaceSpecific {
                               new InetSocketAddress(0));
     server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = (TestNamespace)ReflectRequestor.getClient(TestNamespace.class, client);
+    proxy = ReflectRequestor.getClient(TestNamespace.class, client);
   }
 
 }

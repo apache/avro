@@ -84,25 +84,27 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, Transceiver transciever)
+  public static  <T> T getClient(Class<T> iface, Transceiver transciever)
     throws IOException {
     return getClient(iface, transciever, SpecificData.get());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, Transceiver transciever,
+  @SuppressWarnings("unchecked")
+  public static  <T> T getClient(Class<T> iface, Transceiver transciever,
                                  SpecificData specificData)
     throws IOException {
     Protocol protocol = specificData.getProtocol(iface);
-    return Proxy.newProxyInstance(iface.getClassLoader(),
+    return (T)Proxy.newProxyInstance(iface.getClassLoader(),
                                   new Class[] { iface },
                                   new SpecificRequestor(protocol, transciever));
   }
-  
+
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static Object getClient(Class<?> iface, SpecificRequestor requestor)
+  @SuppressWarnings("unchecked")
+  public static <T> T getClient(Class<T> iface, SpecificRequestor requestor)
     throws IOException {
-    return Proxy.newProxyInstance(iface.getClassLoader(),
+    return (T)Proxy.newProxyInstance(iface.getClassLoader(),
                                   new Class[] { iface }, requestor);
   }
 }

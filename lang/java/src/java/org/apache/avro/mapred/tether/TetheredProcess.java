@@ -71,7 +71,7 @@ class TetheredProcess  {
       // open client, connecting to sub-process
       this.clientTransceiver =
         new SocketTransceiver(new InetSocketAddress(outputService.inputPort()));
-      this.inputClient = (InputProtocol)
+      this.inputClient =
         SpecificRequestor.getClient(InputProtocol.class, clientTransceiver);
 
 

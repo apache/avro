@@ -41,7 +41,7 @@ public class TestProtocolReflectMeta extends TestProtocolReflect {
     ReflectRequestor requestor = new ReflectRequestor(Simple.class, client);
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key2"));
-    proxy = (Simple)ReflectRequestor.getClient(Simple.class, (ReflectRequestor)requestor);
+    proxy = ReflectRequestor.getClient(Simple.class, (ReflectRequestor)requestor);
   }
 
 }
