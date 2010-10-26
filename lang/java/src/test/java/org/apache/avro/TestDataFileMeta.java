@@ -18,6 +18,7 @@
 package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -49,6 +50,9 @@ public class TestDataFileMeta {
     w.close();
 
     DataFileStream<Void> r = new DataFileStream<Void>(new FileInputStream(f), new GenericDatumReader<Void>());
+
+    assertTrue(r.getMetaKeys().contains("hello"));
+
     assertEquals("bar", r.getMetaString("hello"));
   }
 

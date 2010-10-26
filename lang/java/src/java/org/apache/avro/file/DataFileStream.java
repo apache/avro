@@ -24,8 +24,11 @@ import java.io.Closeable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -54,6 +57,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   BinaryDecoder datumIn = null;
 
   Map<String,byte[]> meta = new HashMap<String,byte[]>();
+  List<String> metaKeyList = new ArrayList<String>();
 
   ByteBuffer blockBuffer;
   long blockCount;                              // # entries in block
@@ -99,9 +103,14 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
           byte[] bb = new byte[value.remaining()];
           value.get(bb);
           meta.put(key, bb);
+          metaKeyList.add(key);
         }
       } while ((l = vin.mapNext()) != 0);
     }
+    
+    // Make the meta keys list unmodifiable.
+    metaKeyList = Collections.unmodifiableList(metaKeyList);
+    
     vin.readFixed(sync);                          // read sync
 
     this.codec = resolveCodec();
@@ -121,6 +130,11 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /** Return the schema used in this file. */
   public Schema getSchema() { return schema; }
+
+  /** Return the list of keys in the metadata */
+  public List<String> getMetaKeys() {
+    return metaKeyList;
+  }
 
   /** Return the value of a metadata property. */
   public byte[] getMeta(String key) {
