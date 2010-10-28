@@ -587,21 +587,23 @@ public abstract class Schema {
       Set seen = SEEN_EQUALS.get();
       SeenPair here = new SeenPair(this, o);
       if (seen.contains(here)) return true;       // prevent stack overflow
+      boolean first = seen.isEmpty();
       try {
         seen.add(here);
         return fields.equals(((RecordSchema)o).fields);
       } finally {
-        seen.remove(here);
+        if (first) seen.clear();
       }
     }
     public int hashCode() {
       Map seen = SEEN_HASHCODE.get();
       if (seen.containsKey(this)) return 0;       // prevent stack overflow
+      boolean first = seen.isEmpty();
       try {
         seen.put(this, this);
         return super.hashCode() + fields.hashCode();
       } finally {
-        seen.remove(this);
+        if (first) seen.clear();
       }
     }
     void toJson(Names names, JsonGenerator gen) throws IOException {

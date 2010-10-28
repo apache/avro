@@ -30,6 +30,10 @@ Avro 1.5.0 (unreleased)
     AVRO-681. IDL: Fix documentation example with illegal syntax.
     (Jingguo Yao via cutting)
 
+    AVRO-685. Java: Fix Schema#equals() and hashCode() to not require
+    exponential time for some recursive schemas.
+    (Richard Ahrens via cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Collection;
 
 import org.apache.avro.Schema.Type;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -230,6 +231,33 @@ public class TestSchema {
     Schema s2 = Schema.parse(jsonSchema);
     assertEquals(s1, s2);
     s1.hashCode();                                // test no stackoverflow
+  }
+
+  @Test
+  /** Test that equals() and hashCode() don't require exponential time on
+   *  certain pathological schemas. */
+  public void testSchemaExplosion() throws Exception {
+    for (int i = 1; i < 15; i++) {                // 15 is big enough to trigger
+      // create a list of records, each with a single field whose type is a
+      // union of all of the records.
+      List<Schema> recs = new ArrayList<Schema>();
+      for (int j = 0; j < i; j++)
+        recs.add(Schema.createRecord(""+(char)('A'+j), null, null, false));
+      for (Schema s : recs) {
+        Schema union = Schema.createUnion(recs);
+        Field f = new Field("x", union, null, null);
+        List<Field> fields = new ArrayList<Field>();
+        fields.add(f);
+        s.setFields(fields);
+      }
+      // check that equals and hashcode are correct and complete in a
+      // reasonable amount of time
+      for (Schema s1 : recs) {
+        Schema s2 = Schema.parse(s1.toString());
+        assertEquals(s1.hashCode(), s2.hashCode()); 
+        assertEquals(s1, s2);
+      }
+    }                 
   }
 
   @Test
