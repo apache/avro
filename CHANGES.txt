@@ -22,6 +22,9 @@ Avro 1.5.0 (unreleased)
     AVRO-683. Java: Fix RPC proxy factories to not require casting.
     (Stephen Gargan via cutting)
 
+    AVRO-642. Java, Python: Pretty-print schemas in some validation
+    error messages.  (Harsh J Chouraria via cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

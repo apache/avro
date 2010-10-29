@@ -167,7 +167,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         throw new RuntimeException("Unexpected schema type: " + readerType);
       }
     }
-    return Symbol.error("Found " + writer + ", expecting " + reader);
+    return Symbol.error("Found " + writer.toString(true)
+                        + ", expecting " + reader.toString(true));
   }
 
   private Symbol resolveUnion(Schema writer, Schema reader,
@@ -216,7 +217,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         String fname = rf.name();
         if (writer.getField(fname) == null) {
           if (rf.defaultValue() == null) {
-            result = Symbol.error("Found " + writer + ", expecting " + reader);
+            result = Symbol.error("Found " + writer.toString(true)
+                                  + ", expecting " + reader.toString(true));
             seen.put(wsc, result);
             return result;
           } else {

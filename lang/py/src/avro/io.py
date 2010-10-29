@@ -40,6 +40,11 @@ import struct
 from avro import schema
 import sys
 
+try:
+	import json
+except ImportError:
+	import simplejson as json
+
 #
 # Constants
 #
@@ -74,14 +79,17 @@ STRUCT_DOUBLE = struct_class('!d')  # big-endian double
 class AvroTypeException(schema.AvroException):
   """Raised when datum is not an example of schema."""
   def __init__(self, expected_schema, datum):
+    pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
     fail_msg = "The datum %s is not an example of the schema %s"\
-               % (datum, expected_schema)
+               % (datum, pretty_expected)
     schema.AvroException.__init__(self, fail_msg)
 
 class SchemaResolutionException(schema.AvroException):
   def __init__(self, fail_msg, writers_schema=None, readers_schema=None):
-    if writers_schema: fail_msg += "\nWriter's Schema: %s" % writers_schema
-    if readers_schema: fail_msg += "\nReader's Schema: %s" % readers_schema
+    pretty_writers = json.dumps(json.loads(str(writers_schema)), indent=2)
+    pretty_readers = json.dumps(json.loads(str(readers_schema)), indent=2)
+    if writers_schema: fail_msg += "\nWriter's Schema: %s" % pretty_writers
+    if readers_schema: fail_msg += "\nReader's Schema: %s" % pretty_readers
     schema.AvroException.__init__(self, fail_msg)
 
 #
