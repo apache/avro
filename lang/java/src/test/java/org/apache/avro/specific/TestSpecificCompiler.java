@@ -43,9 +43,27 @@ import org.junit.Test;
 
 
 public class TestSpecificCompiler {
+  static final String PROTOCOL = "" +
+        "{ \"protocol\": \"default\",\n" +
+        "  \"types\":\n" +
+        "    [\n" +
+        "      {\n" +
+        "       \"name\": \"finally\",\n" +
+        "       \"type\": \"error\",\n" +
+        "       \"fields\": [{\"name\": \"catch\", \"type\": \"boolean\"}]\n" +
+        "      }\n" +
+        "    ],\n" +
+        "  \"messages\": { \"goto\":\n" +
+        "    { \"request\": [{\"name\": \"break\", \"type\": \"string\"}],\n" +
+        "      \"response\": \"string\",\n" +
+        "      \"errors\": [\"finally\"]\n" +
+        "    }" +
+        "   }\n" +
+        "}\n";
+
   @Test
   public void testEsc() {
-    assertEquals("\\\"", SpecificCompiler.esc("\""));
+    assertEquals("\\\"", new SpecificCompiler().javaEscape("\""));
   }
 
   @Test
@@ -77,23 +95,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testManglingForProtocols() throws IOException {
-    String protocolDef = "" +
-      "{ \"protocol\": \"default\",\n" +
-      "  \"types\":\n" +
-      "    [\n" +
-      "      {\n" +
-      "       \"name\": \"finally\",\n" +
-      "       \"type\": \"error\",\n" +
-      "       \"fields\": [{\"name\": \"catch\", \"type\": \"boolean\"}]\n" +
-      "      }\n" +
-      "    ],\n" +
-      "  \"messages\": { \"goto\":\n" +
-      "    { \"request\": [{\"name\": \"break\", \"type\": \"string\"}],\n" +
-      "      \"response\": \"string\",\n" +
-      "      \"errors\": [\"finally\"]\n" +
-      "    }" +
-      "   }\n" +
-      "}\n";
+    String protocolDef = PROTOCOL;
     Collection<OutputFile> c =
       new SpecificCompiler(Protocol.parse(protocolDef)).compile();
     Iterator<OutputFile> i = c.iterator();

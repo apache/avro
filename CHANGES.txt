@@ -25,6 +25,9 @@ Avro 1.5.0 (unreleased)
     AVRO-642. Java, Python: Pretty-print schemas in some validation
     error messages.  (Harsh J Chouraria via cutting)
 
+    AVRO-648. Java: Use Velocity templates to generate specific code.
+    (philz via cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

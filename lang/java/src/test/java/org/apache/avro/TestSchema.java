@@ -52,6 +52,12 @@ import org.apache.avro.util.Utf8;
 
 public class TestSchema {
 
+  public static final String LISP_SCHEMA = "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
+            +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
+            +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
+            +"{\"name\":\"car\", \"type\":\"Lisp\"},"
+            +"{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}";
+
   public static final String BASIC_ENUM_SCHEMA = "{\"type\":\"enum\", \"name\":\"Test\","
             +"\"symbols\": [\"A\", \"B\"]}";
 
@@ -262,12 +268,7 @@ public class TestSchema {
 
   @Test
   public void testLisp() throws Exception {
-    check("{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
-          +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
-          +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
-          +"{\"name\":\"car\", \"type\":\"Lisp\"},"
-          +"{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
-          false);
+    check(LISP_SCHEMA, false);
   }
 
   @Test

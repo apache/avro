@@ -42,6 +42,7 @@
   <property name="build.dir" value="${basedir}/build"/>
   <property name="lib.dir" value="${basedir}/lib"/>
   <property name="template.dir" value="${src.dir}/java/org/apache/avro/ipc/stats/templates"/>
+  <property name="specifictemplate.dir" value="${src.dir}/java/org/apache/avro/specific/templates"/>
   <property name="static.dir" value="${src.dir}/java/org/apache/avro/ipc/stats/static"/>
 
 
@@ -50,6 +51,7 @@
   <property name="build.javadoc" value="${build.doc}/api/java"/>
   <property name="build.javadoc.log" value="${build.dir}/javadoc.log"/>
   <property name="build.template.dir" value="${build.classes}/org/apache/avro/ipc/stats/templates"/>
+  <property name="build.specifictemplate.dir" value="${build.classes}/org/apache/avro/specific/templates"/>
   <property name="build.static.dir" value="${build.classes}/org/apache/avro/ipc/stats/static"/>
 
   <property name="test.count" value="100"/>
@@ -161,6 +163,9 @@
   </target>
 
   <target name="compile" depends="javacc,ivy-retrieve">
+    <copy todir="${build.specifictemplate.dir}">
+      <fileset dir="${specifictemplate.dir}" includes="**/**"/>
+    </copy>
     <property name="depends.on.generated"
 	      value="**/ipc/** **/*Requestor.java **/*Responder.java
 		     **/tool/** **/mapred/**"/>
@@ -246,6 +251,7 @@
 	 optimize="${javac.optimize}"
 	 target="${javac.version}"
 	 source="${javac.version}"
+	 includeantruntime="false"
 	 deprecation="${javac.deprecation}">
 	<compilerarg line="${javac.args} ${javac.args.warnings}" />
 	<classpath refid="@{classpath}"/>

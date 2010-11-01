@@ -22,18 +22,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.Protocol.Message;
 import org.apache.avro.tool.Tool;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
@@ -42,7 +44,9 @@ import org.apache.avro.tool.Tool;
  */
 public class SpecificCompiler {
   private final Set<Schema> queue = new HashSet<Schema>();
-  private final Protocol protocol;
+  private Protocol protocol;
+  private VelocityEngine velocityEngine;
+  private String templateDir;
 
   /* List of Java reserved words from
    * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
@@ -65,6 +69,7 @@ public class SpecificCompiler {
       " */\n";
   
   public SpecificCompiler(Protocol protocol) {
+    this();
     // enqueue all types
     for (Schema s : protocol.getTypes()) {
       enqueue(s);
@@ -73,8 +78,32 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
+    this();
     enqueue(schema);
     this.protocol = null;
+  }
+  
+  SpecificCompiler() {
+    this.templateDir =
+      System.getProperty("org.apache.avro.specific.templates",
+                         "org/apache/avro/specific/templates/java/classic/");
+    initializeVelocity();
+  }
+
+  /** Set the CLASSPATH resource directory where templates reside. */
+  public void setTemplateDir(String templateDir) {
+    this.templateDir = templateDir;
+  }
+
+  private void initializeVelocity() {
+    this.velocityEngine = new VelocityEngine();
+
+    // These two properties tell Velocity to use its own classpath-based
+    // loader
+    velocityEngine.addProperty("resource.loader", "class");
+    velocityEngine.addProperty("class.resource.loader.class",
+        "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+    velocityEngine.setProperty("runtime.references.strict", true);
   }
 
   /**
@@ -122,13 +151,6 @@ public class SpecificCompiler {
     compiler.compileToDestination(src, dest);
   }
 
-  static String mangle(String word) {
-    if (RESERVED_WORDS.contains(word)) {
-      return word + "$";
-    }
-    return word;
-  }
-
   /** Recursively enqueue schemas that need a class generated. */
   private void enqueue(Schema schema) {
     if (queue.contains(schema)) return;
@@ -173,10 +195,10 @@ public class SpecificCompiler {
     return out;
   }
 
-  private void compileToDestination(File src, File dst) throws IOException {
+  /** Generate output under dst, unless existing file is newer than src. */
+  public void compileToDestination(File src, File dst) throws IOException {
     for (Schema schema : queue) {
       OutputFile o = compile(schema);
-      File outputFile = new File(dst, o.path);
       o.writeToDestination(src, dst);
     }
     if (protocol != null) {
@@ -184,180 +206,91 @@ public class SpecificCompiler {
     }
   }
 
-  private OutputFile compileInterface(Protocol protocol) {
+  private String renderTemplate(String templateName, VelocityContext context) {
+    Template template;
+    try {
+      template = this.velocityEngine.getTemplate(templateName);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    StringWriter writer = new StringWriter();
+    try {
+      template.merge(context, writer);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return writer.toString();
+  }
+
+  OutputFile compileInterface(Protocol protocol) {
+    VelocityContext context = new VelocityContext();
+    context.put("protocol", protocol);
+    context.put("this", this);
+    String out = renderTemplate(templateDir+"protocol.vm", context);
+
     OutputFile outputFile = new OutputFile();
     String mangledName = mangle(protocol.getName());
     outputFile.path = makePath(mangledName, protocol.getNamespace());
-    StringBuilder out = new StringBuilder();
-    header(out, protocol.getNamespace());
-    doc(out, 1, protocol.getDoc());
-    line(out, 0, "public interface " + mangledName + " {");
-    line(out, 1, "public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse(\""
-           +esc(protocol)+"\");");
-    for (Map.Entry<String,Message> e : protocol.getMessages().entrySet()) {
-      String name = e.getKey();
-      Message message = e.getValue();
-      Schema request = message.getRequest();
-      String response = message.isOneWay() ? "void"
-        : unbox(message.getResponse());
-      doc(out, 1, e.getValue().getDoc());
-      line(out, 1, response+" "+ mangle(name)+"("+params(request)+")"
-           + (message.isOneWay() ? ""
-              : (" throws org.apache.avro.ipc.AvroRemoteException"
-                 +errors(message.getErrors())))
-           +";");
-    }
-    line(out, 0, "}");
-
-    outputFile.contents = out.toString();
+    outputFile.contents = out;
     return outputFile;
   }
-
 
   static String makePath(String name, String space) {
     if (space == null || space.isEmpty()) {
       return name + ".java";
     } else {
-      return space.replace('.', File.separatorChar) + File.separatorChar
-        + name + ".java";
+      return space.replace('.', File.separatorChar) + File.separatorChar + name
+          + ".java";
     }
   }
 
-  private void header(StringBuilder out, String namespace) {
-    if(namespace != null) {
-      line(out, 0, "package "+namespace+";\n");
-    }
-    line(out, 0, "@SuppressWarnings(\"all\")");
-  }
+  OutputFile compile(Schema schema) {
+    String output = "";
+    VelocityContext context = new VelocityContext();
+    context.put("this", this);
+    context.put("schema", schema);
 
-  private String params(Schema request) {
-    StringBuilder b = new StringBuilder();
-    int count = 0;
-    for (Schema.Field param : request.getFields()) {
-      String paramName = mangle(param.name());
-      b.append(unbox(param.schema()));
-      b.append(" ");
-      b.append(paramName);
-      if (++count < request.getFields().size())
-        b.append(", ");
-    }
-    return b.toString();
-  }
-
-  private String errors(Schema errs) {
-    StringBuilder b = new StringBuilder();
-    for (Schema error : errs.getTypes().subList(1, errs.getTypes().size())) {
-      b.append(", ");
-      b.append(mangle(error.getFullName()));
-    }
-    return b.toString();
-  }
-
-  private OutputFile compile(Schema schema) {
-    OutputFile outputFile = new OutputFile();
-    String name = mangle(schema.getName());
-    outputFile.path = makePath(name, schema.getNamespace());
-    StringBuilder out = new StringBuilder();
-    header(out, schema.getNamespace());
     switch (schema.getType()) {
     case RECORD:
-      doc(out, 0, schema.getDoc());
-      line(out, 0, "public class "+name+
-           (schema.isError()
-            ? " extends org.apache.avro.specific.SpecificExceptionBase"
-             : " extends org.apache.avro.specific.SpecificRecordBase")
-           +" implements org.apache.avro.specific.SpecificRecord {");
-      // schema definition
-      line(out, 1, "public static final org.apache.avro.Schema SCHEMA$ = org.apache.avro.Schema.parse(\""
-           +esc(schema)+"\");");
-      // field declations
-      for (Schema.Field field : schema.getFields()) {
-        doc(out, 1, field.doc());
-        line(out, 1, "public " + unbox(field.schema()) + " "
-             + mangle(field.name()) + ";");
-      }
-      // schema method
-      line(out, 1, "public org.apache.avro.Schema getSchema() { return SCHEMA$; }");
-      // get method
-      line(out, 1, "// Used by DatumWriter.  Applications should not call. ");
-      line(out, 1, "public java.lang.Object get(int field$) {");
-      line(out, 2, "switch (field$) {");
-      int i = 0;
-      for (Schema.Field field : schema.getFields())
-        line(out, 2, "case "+(i++)+": return "+mangle(field.name())+";");
-      line(out, 2, "default: throw new org.apache.avro.AvroRuntimeException(\"Bad index\");");
-      line(out, 2, "}");
-      line(out, 1, "}");
-      // put method
-      line(out, 1, "// Used by DatumReader.  Applications should not call. ");
-      line(out, 1, "@SuppressWarnings(value=\"unchecked\")");
-      line(out, 1, "public void put(int field$, java.lang.Object value$) {");
-      line(out, 2, "switch (field$) {");
-      i = 0;
-      for (Schema.Field field : schema.getFields())
-        line(out, 2, "case "+(i++)+": "+mangle(field.name())+" = ("+
-             type(field.schema())+")value$; break;");
-      line(out, 2, "default: throw new org.apache.avro.AvroRuntimeException(\"Bad index\");");
-      line(out, 2, "}");
-      line(out, 1, "}");
-      line(out, 0, "}");
+      output = renderTemplate(templateDir+"record.vm", context);
       break;
     case ENUM:
-      doc(out, 0, schema.getDoc());
-      line(out, 0, "public enum "+name+" { ");
-      StringBuilder b = new StringBuilder();
-      int count = 0;
-      for (String symbol : schema.getEnumSymbols()) {
-        b.append(mangle(symbol));
-        if (++count < schema.getEnumSymbols().size())
-          b.append(", ");
-      }
-      line(out, 1, b.toString());
-      line(out, 0, "}");
+      output = renderTemplate(templateDir+"enum.vm", context);
       break;
     case FIXED:
-      doc(out, 0, schema.getDoc());
-      line(out, 0, "@org.apache.avro.specific.FixedSize("+schema.getFixedSize()+")");
-      line(out, 0, "public class "+name+" extends org.apache.avro.specific.SpecificFixed {}");
+      output = renderTemplate(templateDir+"fixed.vm", context);
       break;
-    case MAP: case ARRAY: case UNION: case STRING: case BYTES:
-    case INT: case LONG: case FLOAT: case DOUBLE: case BOOLEAN: case NULL:
+    case BOOLEAN:
+    case NULL:
       break;
     default: throw new RuntimeException("Unknown type: "+schema);
     }
 
-    outputFile.contents = out.toString();
+    OutputFile outputFile = new OutputFile();
+    String name = mangle(schema.getName());
+    outputFile.path = makePath(name, schema.getNamespace());
+    outputFile.contents = output;
     return outputFile;
-  }
-
-  private void doc(StringBuilder out, int indent, String doc) {
-    if (doc != null) {
-      line(out, indent, "/** " + escapeForJavaDoc(doc) + " */");
-    }
-  }
-
-  /** Be sure that generated code will compile by replacing
-   * end-comment markers with the appropriate HTML entity. */
-  private String escapeForJavaDoc(String doc) {
-    return doc.replace("*/", "*&#47;");
   }
 
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
-  private String type(Schema schema) {
+  /** Utility for template use.  Returns the java type for a Schema. */
+  public static String javaType(Schema schema) {
     switch (schema.getType()) {
     case RECORD:
     case ENUM:
     case FIXED:
       return mangle(schema.getFullName());
     case ARRAY:
-      return "java.util.List<"+type(schema.getElementType())+">";
+      return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
-      return "java.util.Map<java.lang.CharSequence,"+type(schema.getValueType())+">";
+      return "java.util.Map<java.lang.CharSequence,"
+          + javaType(schema.getValueType()) + ">";
     case UNION:
-      List<Schema> types = schema.getTypes();     // elide unions with null
+      List<Schema> types = schema.getTypes(); // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
-        return type(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
+        return javaType(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "java.lang.Object";
     case STRING:  return "java.lang.CharSequence";
     case BYTES:   return "java.nio.ByteBuffer";
@@ -371,27 +304,39 @@ public class SpecificCompiler {
     }
   }
 
-  private String unbox(Schema schema) {
+  /** Utility for template use.  Returns the unboxed java type for a Schema. */
+  public static String javaUnbox(Schema schema) {
     switch (schema.getType()) {
     case INT:     return "int";
     case LONG:    return "long";
     case FLOAT:   return "float";
     case DOUBLE:  return "double";
     case BOOLEAN: return "boolean";
-    default:      return type(schema);
+    default:      return javaType(schema);
     }
   }
 
-  private void line(StringBuilder out, int indent, String text) {
-    for (int i = 0; i < indent; i ++) {
-      out.append("  ");
-    }
-    out.append(text);
-    out.append("\n");
-  }
-
-  static String esc(Object o) {
+  /** Utility for template use.  Escapes quotes in java strings. */
+  public static String javaEscape(Object o) {
     return o.toString().replace("\"", "\\\"");
+  }
+
+  /** Utility for template use.  Escapes comment end with HTML entities. */
+  public static String escapeForJavadoc(String s) {
+      return s.replace("*/", "*&#47;");
+  }
+  
+  /** Utility for template use.  Returns empty string for null. */
+  public static String nullToEmpty(String x) {
+    return x == null ? "" : x;
+  }
+
+  /** Utility for template use.  Adds a dollar sign to reserved words. */
+  public static String mangle(String word) {
+    if (RESERVED_WORDS.contains(word)) {
+      return word + "$";
+    }
+    return word;
   }
 
   public static void main(String[] args) throws Exception {
