@@ -40,6 +40,9 @@ Avro 1.5.0 (unreleased)
     exponential time for some recursive schemas.
     (Richard Ahrens via cutting)
 
+    AVRO-693. Java: Configure Velocity to use null logger, removing a
+    dependency that was breaking the build.  (Stephen Gargan via cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

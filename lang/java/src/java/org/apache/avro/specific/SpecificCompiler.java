@@ -104,6 +104,8 @@ public class SpecificCompiler {
     velocityEngine.addProperty("class.resource.loader.class",
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
     velocityEngine.setProperty("runtime.references.strict", true);
+    velocityEngine.setProperty("runtime.log.logsystem.class", 
+        "org.apache.velocity.runtime.log.NullLogChute");
   }
 
   /**
