@@ -14,6 +14,9 @@ Avro 1.5.0 (unreleased)
     moves some protected GenericDatumReader/Writer methods to
     GenericData, potentially breaking subclasses. (cutting)
 
+    AVRO-696. Java: Make DataFileWriter.setMetaInternal(String,String)
+    private. (Patrick Linehan via cutting)    
+
   IMPROVEMENTS
 
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().

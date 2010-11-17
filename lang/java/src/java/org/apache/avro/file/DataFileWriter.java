@@ -206,7 +206,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     return this;
   }
   
-  public DataFileWriter<D> setMetaInternal(String key, String value) {
+  private DataFileWriter<D> setMetaInternal(String key, String value) {
     try {
       return setMetaInternal(key, value.getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
