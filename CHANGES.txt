@@ -17,6 +17,11 @@ Avro 1.5.0 (unreleased)
     AVRO-696. Java: Make DataFileWriter.setMetaInternal(String,String)
     private. (Patrick Linehan via cutting)    
 
+  NEW FEATURES
+
+    AVRO-684. Java: Add command-line "recodec" tool to change file
+    compression codecs.  (Patrick Linehan via cutting)
+
   IMPROVEMENTS
 
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().

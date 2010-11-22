@@ -216,13 +216,13 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Set a metadata property. */
   public DataFileWriter<D> setMeta(String key, byte[] value) {
-    if (isReserved(key)) {
+    if (isReservedMeta(key)) {
       throw new AvroRuntimeException("Cannot set reserved meta key: " + key);
     }
     return setMetaInternal(key, value);
   }
   
-  private boolean isReserved(String key) {
+  public static boolean isReservedMeta(String key) {
     return key.startsWith("avro.");
   }
 

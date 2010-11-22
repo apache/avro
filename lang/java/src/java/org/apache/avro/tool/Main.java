@@ -47,6 +47,7 @@ public class Main {
         new DataFileWriteTool(),
         new DataFileGetSchemaTool(),
         new IdlTool(),
+        new RecodecTool(),
         new RpcReceiveTool(),
         new RpcSendTool(),
         new FromTextTool(),
