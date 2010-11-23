@@ -24,6 +24,8 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.lib.IdentityMapper;
+import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.avro.Schema;
 
 /** Setters to configure jobs for Avro data. */
@@ -48,7 +50,7 @@ public class AvroJob {
   /** Configure a job's map input schema. */
   public static void setInputSchema(JobConf job, Schema s) {
     job.set(INPUT_SCHEMA, s.toString());
-    configureAvroJob(job);
+    configureAvroInput(job);
   }
 
   /** Return a job's map input schema. */
@@ -61,7 +63,7 @@ public class AvroJob {
    * be a {@link Pair} schema. */
   public static void setMapOutputSchema(JobConf job, Schema s) {
     job.set(MAP_OUTPUT_SCHEMA, s.toString());
-    configureAvroJob(job);
+    configureAvroShuffle(job);
   }
 
   /** Return a job's map output key schema. */
@@ -73,7 +75,7 @@ public class AvroJob {
    * must be a {@link Pair} schema. */
   public static void setOutputSchema(JobConf job, Schema s) {
     job.set(OUTPUT_SCHEMA, s.toString());
-    configureAvroJob(job);
+    configureAvroOutput(job);
   }
 
   /** Add metadata to job output files.*/
@@ -105,20 +107,31 @@ public class AvroJob {
     return Schema.parse(job.get(OUTPUT_SCHEMA));
   }
 
-  private static void configureAvroJob(JobConf job) {
+  private static void configureAvroInput(JobConf job) {
     if (job.get("mapred.input.format.class") == null)
       job.setInputFormat(AvroInputFormat.class);
+
+    if (job.getMapperClass() == IdentityMapper.class)
+      job.setMapperClass(HadoopMapper.class);
+
+    configureAvroShuffle(job);
+  }
+
+  private static void configureAvroOutput(JobConf job) {
     if (job.get("mapred.output.format.class") == null)
       job.setOutputFormat(AvroOutputFormat.class);
 
+    if (job.getReducerClass() == IdentityReducer.class)
+      job.setReducerClass(HadoopReducer.class);
+
     job.setOutputKeyClass(AvroWrapper.class);
+    configureAvroShuffle(job);
+  }
+
+  private static void configureAvroShuffle(JobConf job) {
     job.setOutputKeyComparatorClass(AvroKeyComparator.class);
     job.setMapOutputKeyClass(AvroKey.class);
     job.setMapOutputValueClass(AvroValue.class);
-
-
-    job.setMapperClass(HadoopMapper.class);
-    job.setReducerClass(HadoopReducer.class);
 
     // add AvroSerialization to io.serializations
     Collection<String> serializations =

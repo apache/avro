@@ -56,7 +56,7 @@ public class TestWeather {
     job.setJobName("identity map weather");
     
     AvroJob.setInputSchema(job, Weather.SCHEMA$);
-    AvroJob.setMapOutputSchema(job, Weather.SCHEMA$);
+    AvroJob.setOutputSchema(job, Weather.SCHEMA$);
 
     FileInputFormat.setInputPaths(job, input);
     FileOutputFormat.setOutputPath(job, output);

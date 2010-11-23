@@ -36,6 +36,9 @@ Avro 1.5.0 (unreleased)
     AVRO-648. Java: Use Velocity templates to generate specific code.
     (philz via cutting)
 
+    AVRO-698. Java: Add MapReduce tests and documentation for jobs
+    that mix Avro and non-Avro data. (cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

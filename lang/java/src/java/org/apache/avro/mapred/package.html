@@ -23,10 +23,20 @@ Avro data, with map and reduce functions written in Java.
 
 <p>Avro data files do not contain key/value pairs as expected by
   Hadoop's MapReduce API, but rather just a sequence of values.  Thus
-  we provide here a layer on top of Hadoop's MapReduce API which
-  eliminates the key/value distinction.</p>
+  we provide here a layer on top of Hadoop's MapReduce API.</p>
 
-<p>To use this for jobs whose input and output are Avro data files:
+<p>In all cases, input and output paths are set and jobs are submitted
+  as with standard Hadoop jobs:
+ <ul>
+   <li>Specify input files with {@link
+   org.apache.hadoop.mapred.FileInputFormat#setInputPaths}</li>
+   <li>Specify an output directory with {@link
+   org.apache.hadoop.mapred.FileOutputFormat#setOutputPath}</li>
+   <li>Run your job with {@link org.apache.hadoop.mapred.JobClient#runJob}</li>
+ </ul>
+</p>
+
+<p>For jobs whose input and output are Avro data files:
  <ul>
    <li>Call {@link org.apache.avro.mapred.AvroJob#setInputSchema} and
    {@link org.apache.avro.mapred.AvroJob#setOutputSchema} with your
@@ -38,11 +48,53 @@ Avro data, with map and reduce functions written in Java.
    this as your job's reducer and perhaps combiner, with {@link
    org.apache.avro.mapred.AvroJob#setReducerClass} and {@link
    org.apache.avro.mapred.AvroJob#setCombinerClass}</li>
-   <li>Specify input files with {@link org.apache.hadoop.mapred.FileInputFormat#setInputPaths}</li>
-   <li>Specify an output directory with {@link
-   org.apache.hadoop.mapred.FileOutputFormat#setOutputPath}</li>
-   <li>Run your job with {@link org.apache.hadoop.mapred.JobClient#runJob}</li>
  </ul>
 </p>
+
+<p>For jobs whose input is an Avro data file and which use an {@link
+  org.apache.avro.mapred.AvroMapper}, but whose reducer is a non-Avro
+  {@link org.apache.hadoop.mapred.Reducer} and whose output is a
+  non-Avro format:
+ <ul>
+   <li>Call {@link org.apache.avro.mapred.AvroJob#setInputSchema} with your
+   job's input schema.</li>
+   <li>Subclass {@link org.apache.avro.mapred.AvroMapper} and specify
+   this as your job's mapper with {@link
+   org.apache.avro.mapred.AvroJob#setMapperClass}</li>
+   <li>Implement {@link org.apache.hadoop.mapred.Reducer} and specify
+   your job's reducer and combiner with {@link
+   org.apache.hadoop.mapred.JobConf#setReducerClass} and {@link
+   org.apache.hadoop.mapred.JobConf#setCombinerClass}.  The input key
+   and value types should be {@link org.apache.avro.mapred.AvroKey} and {@link
+   org.apache.avro.mapred.AvroValue}.</li>
+   <li>Specify your job's output key and value types {@link
+   org.apache.hadoop.mapred.JobConf#setOutputKeyClass} and {@link
+   org.apache.hadoop.mapred.JobConf#setOutputValueClass}.</li>
+   <li>Specify your job's output format {@link
+   org.apache.hadoop.mapred.JobConf#setOutputFormat}.</li>
+ </ul>
+</p>
+
+<p>For jobs whose input is non-Avro data file and which use a
+  non-Avro {@link org.apache.hadoop.mapred.Mapper}, but whose reducer
+  is an {@link org.apache.avro.mapred.AvroReducer} and whose output is
+  an Avro data file:
+ <ul>
+   <li>Set your input file format with {@link
+   org.apache.hadoop.mapred.JobConf#setInputFormat}.</li>
+   <li>Implement {@link org.apache.hadoop.mapred.Mapper} and specify
+   your job's mapper with {@link
+   org.apache.hadoop.mapred.JobConf#setMapperClass}.  The output key
+   and value type should be {@link org.apache.avro.mapred.AvroKey} and
+   {@link org.apache.avro.mapred.AvroValue}.</li>
+   <li>Subclass {@link org.apache.avro.mapred.AvroReducer} and specify
+   this as your job's reducer and perhaps combiner, with {@link
+   org.apache.avro.mapred.AvroJob#setReducerClass} and {@link
+   org.apache.avro.mapred.AvroJob#setCombinerClass}</li>
+   <li>Call {@link org.apache.avro.mapred.AvroJob#setOutputSchema} with your
+   job's output schema.</li>
+ </ul>
+</p>
+
 </body>
 </html>

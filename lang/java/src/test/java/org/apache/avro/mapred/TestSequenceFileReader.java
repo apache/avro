@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.io.File;
 import java.net.URI;
+import java.util.Iterator;
 
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.conf.Configuration;
@@ -33,11 +34,19 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapred.Reducer;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.util.Utf8;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -48,6 +57,10 @@ public class TestSequenceFileReader {
   private static final File DIR
     = new File(System.getProperty("test.dir", "/tmp"));
   private static final File FILE = new File(DIR, "test.seq");
+
+  private static final Schema SCHEMA
+    = Pair.getPairSchema(Schema.create(Schema.Type.LONG),
+                         Schema.create(Schema.Type.STRING));
 
   @BeforeClass
   public static void testWriteSequenceFile() throws IOException {
@@ -91,15 +104,16 @@ public class TestSequenceFileReader {
 
     output.getFileSystem(job).delete(output);
     
-    Schema schema = Pair.getPairSchema(Schema.create(Schema.Type.LONG),
-                                       Schema.create(Schema.Type.STRING));
-
+    // configure input for Avro from sequence file
     AvroJob.setInputSequenceFile(job);
-
-    AvroJob.setInputSchema(job, schema);
-    AvroJob.setOutputSchema(job, schema);
-
     FileInputFormat.setInputPaths(job, FILE.toURI().toString());
+    AvroJob.setInputSchema(job, SCHEMA);
+
+    // mapper is default, identity
+    // reducer is default, identity
+
+    // configure output for avro
+    AvroJob.setOutputSchema(job, SCHEMA);
     FileOutputFormat.setOutputPath(job, output);
     
     JobClient.runJob(job);
@@ -107,6 +121,90 @@ public class TestSequenceFileReader {
     checkFile(new DataFileReader<Pair<Long,CharSequence>>
               (new File(output.toString()+"/part-00000.avro"),
                new SpecificDatumReader<Pair<Long,CharSequence>>()));
+  }
+
+  private static class NonAvroMapper
+    extends MapReduceBase
+    implements Mapper<LongWritable,Text,AvroKey<Long>,AvroValue<Utf8>> {
+    
+    public void map(LongWritable key, Text value, 
+                  OutputCollector<AvroKey<Long>,AvroValue<Utf8>> out, 
+                  Reporter reporter) throws IOException {
+      out.collect(new AvroKey<Long>(key.get()),
+                  new AvroValue<Utf8>(new Utf8(value.toString())));
+    }
+  }
+
+  @Test
+  public void testNonAvroMapper() throws Exception {
+    JobConf job = new JobConf();
+    Path output = new Path(System.getProperty("test.dir",".")+"/seq-out");
+
+    output.getFileSystem(job).delete(output);
+    
+    // configure input for non-Avro sequence file
+    job.setInputFormat(SequenceFileInputFormat.class);
+    FileInputFormat.setInputPaths(job, FILE.toURI().toString());
+
+    // use a hadoop mapper that emits Avro output
+    job.setMapperClass(NonAvroMapper.class);
+
+    // reducer is default, identity
+
+    // configure output for avro
+    FileOutputFormat.setOutputPath(job, output);
+    AvroJob.setOutputSchema(job, SCHEMA);
+
+    JobClient.runJob(job);
+
+    checkFile(new DataFileReader<Pair<Long,CharSequence>>
+              (new File(output.toString()+"/part-00000.avro"),
+               new SpecificDatumReader<Pair<Long,CharSequence>>()));
+  }
+
+  private static class NonAvroReducer
+    extends MapReduceBase
+    implements Reducer<AvroKey<Long>,AvroValue<Utf8>,LongWritable,Text> {
+    
+    public void reduce(AvroKey<Long> key, Iterator<AvroValue<Utf8>> values,
+                       OutputCollector<LongWritable, Text> out, 
+                       Reporter reporter) throws IOException {
+      while (values.hasNext()) {
+        AvroValue<Utf8> value = values.next();
+        out.collect(new LongWritable(key.datum()),
+                    new Text(value.datum().toString()));
+      }
+    }
+  }
+
+  @Test
+  public void testNonAvroReducer() throws Exception {
+    JobConf job = new JobConf();
+    Path output = new Path(System.getProperty("test.dir",".")+"/seq-out");
+
+    output.getFileSystem(job).delete(output);
+    
+    // configure input for Avro from sequence file
+    AvroJob.setInputSequenceFile(job);
+    AvroJob.setInputSchema(job, SCHEMA);
+    FileInputFormat.setInputPaths(job, FILE.toURI().toString());
+
+    // mapper is default, identity
+
+    // use a hadoop reducer that consumes Avro input
+    AvroJob.setMapOutputSchema(job, SCHEMA);
+    job.setReducerClass(NonAvroReducer.class);
+
+    // configure output for non-Avro SequenceFile
+    job.setOutputFormat(SequenceFileOutputFormat.class);
+    FileOutputFormat.setOutputPath(job, output);
+
+    // output key/value classes are default, LongWritable/Text
+
+    JobClient.runJob(job);
+
+    checkFile(new SequenceFileReader<Long,CharSequence>
+              (new File(output.toString()+"/part-00000")));
   }
 
 }
