@@ -54,6 +54,8 @@ Avro 1.5.0 (unreleased)
     AVRO-693. Java: Configure Velocity to use null logger, removing a
     dependency that was breaking the build.  (Stephen Gargan via cutting)
 
+    AVRO-702. Java: Fix a bug printing nested record namespaces. (cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

@@ -608,14 +608,17 @@ public abstract class Schema {
     }
     void toJson(Names names, JsonGenerator gen) throws IOException {
       if (writeNameRef(names, gen)) return;
+      String savedSpace = names.space;            // save namespace
       gen.writeStartObject();
       gen.writeStringField("type", isError?"error":"record");
       writeName(names, gen);
+      names.space = name.space;                   // set default namespace
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
       props.write(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
+      names.space = savedSpace;                   // restore namespace
     }
 
     void fieldsToJson(Names names, JsonGenerator gen) throws IOException {

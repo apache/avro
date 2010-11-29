@@ -399,6 +399,18 @@ public class TestSchema {
   }
 
   @Test
+  public void testNamespaceNesting() throws Exception {
+    String y = "{\"type\":\"record\",\"name\":\"y.Y\",\"fields\":["
+      +"{\"name\":\"f\",\"type\":\"x.X\"}]}";
+    String x = "{\"type\":\"record\",\"name\":\"x.X\",\"fields\":["
+      +"{\"name\":\"f\",\"type\":"+y+"}"
+      +"]}";
+    Schema xs = Schema.parse(x);
+    System.out.println(xs);
+    assertEquals(xs, Schema.parse(xs.toString()));
+  }
+
+  @Test
   public void testNullPointer() throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
       +"[{\"name\":\"x\", \"type\":\"string\"}]}";
