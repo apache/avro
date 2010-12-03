@@ -124,12 +124,12 @@ public class TestResolvingIO {
   private static Object[][] testSchemas() {
     // The mnemonics are the same as {@link TestValidatingIO#testSchemas}
     return new Object[][] {
-        // { "\"int\"", "I", "\"float\"", "F" }, // makes sense?
+        { "\"int\"", "I", "\"float\"", "F" },
         { "\"int\"", "I", "\"double\"", "D" },
-        // { "\"long\"", "L", "\"float\"", "F" }, // And this?
+        { "\"int\"", "I", "\"long\"", "L" },
+        { "\"long\"", "L", "\"float\"", "F" },
         { "\"long\"", "L", "\"double\"", "D" },
         { "\"float\"", "F", "\"double\"", "D" },
-        { "\"double\"", "D", "\"long\"", "L" },
 
         { "{\"type\":\"array\", \"items\": \"int\"}", "[]",
           "{\"type\":\"array\", \"items\": \"long\"}", "[]", },

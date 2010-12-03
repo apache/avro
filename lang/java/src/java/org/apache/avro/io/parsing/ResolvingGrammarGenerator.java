@@ -130,9 +130,15 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       case LONG:
         switch (writerType) {
         case INT:
-        case DOUBLE:
-        case FLOAT:
           return Symbol.resolve(super.generate(writer, seen), Symbol.LONG);
+        }
+        break;
+  
+      case FLOAT:
+        switch (writerType) {
+        case INT:
+        case LONG:
+          return Symbol.resolve(super.generate(writer, seen), Symbol.FLOAT);
         }
         break;
   
@@ -156,7 +162,6 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       case BOOLEAN:
       case INT:
       case STRING:
-      case FLOAT:
       case BYTES:
       case ENUM:
       case ARRAY:

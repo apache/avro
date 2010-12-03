@@ -155,6 +155,19 @@ public class ResolvingDecoder extends ValidatingDecoder {
   }
 
   @Override
+  public float readFloat() throws IOException {
+    Symbol actual = parser.advance(Symbol.FLOAT);
+    if (actual == Symbol.INT) {
+      return (float) in.readInt();
+    } else if (actual == Symbol.LONG) {
+      return (float) in.readLong();
+    } else {
+      assert actual == Symbol.FLOAT;
+      return (float) in.readFloat();
+    }
+  }
+  
+  @Override
   public double readDouble() throws IOException {
     Symbol actual = parser.advance(Symbol.DOUBLE);
     if (actual == Symbol.INT) {

@@ -56,6 +56,8 @@ Avro 1.5.0 (unreleased)
 
     AVRO-702. Java: Fix a bug printing nested record namespaces. (cutting)
 
+    AVRO-706. Java: Type promotion not succeeding for long -> float. (thiru)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES
