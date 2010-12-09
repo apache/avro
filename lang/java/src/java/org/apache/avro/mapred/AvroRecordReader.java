@@ -39,7 +39,7 @@ public class AvroRecordReader<T>
 
   public AvroRecordReader(JobConf job, FileSplit split)
     throws IOException {
-    this(new DataFileReader<T>
+    this(DataFileReader.openReader
          (new FsInput(split.getPath(), job),
           new SpecificDatumReader<T>(AvroJob.getInputSchema(job))),
          split);

@@ -57,7 +57,7 @@ public class DataFileReadTool implements Tool {
 
     GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
     FileReader<Object> fileReader =
-      new DataFileReader<Object>(new File(args.get(0)), reader);
+      DataFileReader.openReader(new File(args.get(0)), reader);
     try {
       Schema schema = fileReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);

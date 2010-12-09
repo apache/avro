@@ -21,10 +21,12 @@ import java.io.IOException;
 import java.io.EOFException;
 import java.io.InputStream;
 import java.io.File;
+import java.util.Arrays;
 
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
+import static org.apache.avro.file.DataFileConstants.MAGIC;
 
 /** Random access to files written with {@link DataFileWriter}.
  * @see DataFileWriter
@@ -33,6 +35,33 @@ public class DataFileReader<D>
   extends DataFileStream<D> implements FileReader<D> {
   private SeekableInputStream sin;
   private long blockStart;
+
+  /** Open a reader for a file. */
+  public static <D> FileReader<D> openReader(File file, DatumReader<D> reader)
+    throws IOException {
+    return openReader(new SeekableFileInput(file), reader);
+  }
+
+  /** Open a reader for a file. */
+  public static <D> FileReader<D> openReader(SeekableInput in,
+                                             DatumReader<D> reader)
+    throws IOException {
+    if (in.length() < MAGIC.length)
+      throw new IOException("Not an Avro data file");
+
+    // read magic header
+    byte[] magic = new byte[MAGIC.length];
+    in.seek(0);
+    for (int c = 0; c < magic.length; c = in.read(magic, c, magic.length-c)) {}
+    in.seek(0);
+
+    if (Arrays.equals(MAGIC, magic))              // current format
+      return new DataFileReader<D>(in, reader);
+    if (Arrays.equals(DataFileReader12.MAGIC, magic)) // 1.2 format
+      return new DataFileReader12<D>(in, reader);
+    
+    throw new IOException("Not an Avro data file");
+  }
 
   /** Construct a reader for a file. */
   public DataFileReader(File file, DatumReader<D> reader) throws IOException {
@@ -108,7 +137,7 @@ public class DataFileReader<D>
 
   @Override public long tell() throws IOException { return sin.tell(); }
 
-  private static class SeekableInputStream extends InputStream 
+  static class SeekableInputStream extends InputStream 
   implements SeekableInput {
     private final byte[] oneByte = new byte[1];
     private SeekableInput in;

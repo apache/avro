@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
@@ -214,10 +215,14 @@ public class TestDataFile {
     }
   }  
 
+  @Test public void test12() throws IOException {
+    readFile(new File("../../share/test/data/test.avro12"),
+             new GenericDatumReader<Object>());
+  }
+
   protected void readFile(File f, DatumReader<Object> datumReader)
     throws IOException {
-    System.out.println("Reading "+ f.getName());
-    DataFileReader<Object> reader = new DataFileReader<Object>(f, datumReader);
+    FileReader<Object> reader = DataFileReader.openReader(f, datumReader);
     for (Object datum : reader) {
       assertNotNull(datum);
     }
