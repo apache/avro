@@ -35,7 +35,8 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericResponder;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.ipc.AvroRemoteException;
-import org.apache.avro.ipc.HttpServer;
+import org.apache.avro.ipc.Ipc;
+import org.apache.avro.ipc.Server;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -50,7 +51,7 @@ public class RpcReceiveTool implements Tool {
   /** Used to communicate between server thread (responder) and run() */
   private CountDownLatch latch;
   private Message expectedMessage;
-  HttpServer server;
+  Server server;
 
   @Override
   public String getName() {
@@ -59,7 +60,7 @@ public class RpcReceiveTool implements Tool {
 
   @Override
   public String getShortDescription() {
-    return "Opens an HTTP RPC Server and listens for one message.";
+    return "Opens an RPC Server and listens for one message.";
   }
   
   private class SinkResponder extends GenericResponder {
@@ -161,7 +162,7 @@ public class RpcReceiveTool implements Tool {
     this.out = out;
     
     latch = new CountDownLatch(1);
-    server = new HttpServer(new SinkResponder(protocol), uri.getPort());
+    server = Ipc.createServer(new SinkResponder(protocol), uri);
     server.start();
     out.println("Port: " + server.getPort());
     return 0;

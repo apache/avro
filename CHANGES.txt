@@ -43,6 +43,8 @@ Avro 1.5.0 (unreleased)
 
     AVRO-692. Java: Permit Avro 1.2 format files to be read. (cutting)
 
+    AVRO-707. Java: Promote SASL-based RPC. (cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

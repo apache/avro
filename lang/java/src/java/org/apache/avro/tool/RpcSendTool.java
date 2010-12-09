@@ -35,7 +35,8 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRequestor;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.JsonEncoder;
-import org.apache.avro.ipc.HttpTransceiver;
+import org.apache.avro.ipc.Ipc;
+
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -95,7 +96,8 @@ public class RpcSendTool implements Tool {
       return 1;
     }
 
-    GenericRequestor client = makeClient(protocol, uri);
+    GenericRequestor client =
+      new GenericRequestor(protocol, Ipc.createTransceiver(uri));
     Object response = client.request(message.getName(), datum);
     dumpJson(out, message.getResponse(), response);
     return 0;
@@ -113,11 +115,4 @@ public class RpcSendTool implements Tool {
     out.flush();
   }
 
-  private GenericRequestor makeClient(Protocol protocol, URI uri) 
-  throws IOException {
-    HttpTransceiver transceiver = 
-      new HttpTransceiver(uri.toURL());
-    GenericRequestor requestor = new GenericRequestor(protocol, transceiver);
-    return requestor;
-  }
 }

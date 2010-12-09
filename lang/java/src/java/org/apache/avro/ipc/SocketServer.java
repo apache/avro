@@ -30,7 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A socket-based server implementation. This uses a simple, non-standard wire
- * protocol and is not intended for production services. */
+ * protocol and is not intended for production services.
+ * @deprecated use {@link SaslSocketServer} instead.
+ */
 public class SocketServer extends Thread implements Server {
   private static final Logger LOG = LoggerFactory.getLogger(SocketServer.class);
 
