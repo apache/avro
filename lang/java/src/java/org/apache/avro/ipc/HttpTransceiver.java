@@ -34,8 +34,12 @@ public class HttpTransceiver extends Transceiver {
 
   private URL url;
   private HttpURLConnection connection;
+  private int timeout;
   
   public HttpTransceiver(URL url) { this.url = url; }
+
+  /** Set the connect and read timeouts, in milliseconds. */
+  public void setTimeout(int timeout) { this.timeout = timeout; }
 
   public String getRemoteName() { return this.url.toString(); }
     
@@ -51,6 +55,8 @@ public class HttpTransceiver extends Transceiver {
     connection.setRequestProperty("Content-Length",
                                   Integer.toString(getLength(buffers)));
     connection.setDoOutput(true);
+    connection.setReadTimeout(timeout);
+    connection.setConnectTimeout(timeout);
     writeBuffers(buffers, connection.getOutputStream());
   }
 

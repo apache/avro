@@ -22,6 +22,8 @@ Avro 1.5.0 (unreleased)
     AVRO-684. Java: Add command-line "recodec" tool to change file
     compression codecs.  (Patrick Linehan via cutting)
 
+    AVRO-689. Java: Permit setting timeout of HttpTransceiver. (cutting)
+
   IMPROVEMENTS
 
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().

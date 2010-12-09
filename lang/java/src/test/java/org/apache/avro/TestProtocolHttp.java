@@ -22,9 +22,14 @@ import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.specific.SpecificRequestor;
 import org.apache.avro.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
+
+import org.junit.Test;
 import org.junit.Before;
 
 import java.net.URL;
+import java.net.ServerSocket;
+import java.net.SocketTimeoutException;
+import java.lang.reflect.UndeclaredThrowableException;
 
 public class TestProtocolHttp extends TestProtocolSpecific {
 
@@ -37,6 +42,22 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     client =
       new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
     proxy = SpecificRequestor.getClient(Simple.class, client);
+  }
+
+  @Test(expected=SocketTimeoutException.class)
+  public void testTimeout() throws Throwable {
+    ServerSocket s = new ServerSocket(0);
+    HttpTransceiver client =
+      new HttpTransceiver(new URL("http://127.0.0.1:"+s.getLocalPort()+"/"));
+    client.setTimeout(100);
+    Simple proxy = SpecificRequestor.getClient(Simple.class, client);
+    try {
+      proxy.hello("foo");
+    } catch (UndeclaredThrowableException e) {
+      throw e.getCause();
+    } finally {
+      s.close();
+    }
   }
 
 }
