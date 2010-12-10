@@ -29,6 +29,10 @@ import java.nio.channels.SocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.Protocol.Message;
+import org.apache.avro.generic.GenericResponder;
+
 /** A socket-based server implementation. This uses a simple, non-standard wire
  * protocol and is not intended for production services.
  * @deprecated use {@link SaslSocketServer} instead.
@@ -115,7 +119,7 @@ public class SocketServer extends Thread implements Server {
         } catch (ClosedChannelException e) {
           return;
         } finally {
-          channel.close();
+          xc.close();
         }
       } catch (IOException e) {
         LOG.warn("unexpected error", e);
@@ -125,9 +129,16 @@ public class SocketServer extends Thread implements Server {
   }
   
   public static void main(String[] arg) throws Exception {
-    SocketServer server = new SocketServer(null, new InetSocketAddress(0));
-    System.out.println("started");
+    Responder responder =
+      new GenericResponder(Protocol.parse("{\"protocol\": \"X\"}")) {
+        public Object respond(Message message, Object request)
+          throws Exception {
+          throw new IOException("no messages!");
+        }
+      };
+    SocketServer server = new SocketServer(responder, new InetSocketAddress(0));
+    server.start();
+    System.out.println("server started on port: "+server.getPort());
     server.join();
   }
 }
-

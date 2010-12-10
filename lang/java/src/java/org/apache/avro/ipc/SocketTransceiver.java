@@ -21,6 +21,7 @@ package org.apache.avro.ipc;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.ClosedChannelException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +63,8 @@ public class SocketTransceiver extends Transceiver {
     while (true) {
       header.clear();
       while (header.hasRemaining()) {
-        channel.read(header);
+        if (channel.read(header) < 0)
+          throw new ClosedChannelException();
       }
       header.flip();
       int length = header.getInt();
@@ -71,7 +73,8 @@ public class SocketTransceiver extends Transceiver {
       }
       ByteBuffer buffer = ByteBuffer.allocate(length);
       while (buffer.hasRemaining()) {
-        channel.read(buffer);
+        if (channel.read(buffer) < 0)
+          throw new ClosedChannelException();
       }
       buffer.flip();
       buffers.add(buffer);
