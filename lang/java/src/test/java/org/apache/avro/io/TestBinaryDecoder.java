@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,6 +31,8 @@ import org.apache.avro.RandomData;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.ipc.ByteBufferInputStream;
+import org.apache.avro.ipc.ByteBufferOutputStream;
 import org.apache.avro.util.Utf8;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -119,6 +122,31 @@ public class TestBinaryDecoder {
   @Test(expected=EOFException.class)
   public void testEOFEnum() throws IOException {
     newDecoderWithNoData().readEnum();
+  }
+  
+  @Test
+  public void testReuse() throws IOException {
+    ByteBufferOutputStream bbo1 = new ByteBufferOutputStream();
+    ByteBufferOutputStream bbo2 = new ByteBufferOutputStream();
+    byte[] b1 = new byte[] { 1, 2 };
+    
+    BinaryEncoder e1 = new BinaryEncoder(bbo1);
+    e1.writeBytes(b1);
+    e1.flush();
+    
+    BinaryEncoder e2 = new BinaryEncoder(bbo2);
+    e2.writeBytes(b1);
+    e2.flush();
+    
+    DirectBinaryDecoder d = new DirectBinaryDecoder(
+        new ByteBufferInputStream(bbo1.getBufferList()));
+    ByteBuffer bb1 = d.readBytes(null);
+    Assert.assertEquals(b1.length, bb1.limit() - bb1.position());
+    
+    d.init(new ByteBufferInputStream(bbo2.getBufferList()));
+    ByteBuffer bb2 = d.readBytes(null);
+    Assert.assertEquals(b1.length, bb2.limit() - bb2.position());
+    
   }
   
   private static byte[] data = null;

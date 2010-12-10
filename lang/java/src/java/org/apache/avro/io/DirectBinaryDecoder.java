@@ -69,18 +69,18 @@ class DirectBinaryDecoder extends BinaryDecoder {
     
   }
 
-  private final ByteReader byteReader;
+  private ByteReader byteReader;
 
   DirectBinaryDecoder(InputStream in) {
     super();
-    this.in = in;
-    byteReader = (in instanceof ByteBufferInputStream) ?
-        new ReuseByteReader((ByteBufferInputStream) in) : new ByteReader();
+    init(in);
   }
 
   @Override
   public void init(InputStream in) {
     this.in = in;
+    byteReader = (in instanceof ByteBufferInputStream) ?
+            new ReuseByteReader((ByteBufferInputStream) in) : new ByteReader();
   }
 
   @Override

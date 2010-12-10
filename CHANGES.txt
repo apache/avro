@@ -67,6 +67,9 @@ Avro 1.5.0 (unreleased)
     AVRO-704. Java: Fix SocketServer connection threads to exit rather
     than busywait when client closes connection. (cutting)
 
+    AVRO-705. Java: Fix DirectBinaryDecoder to correctly reinitialize.
+    (thiru via cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES
