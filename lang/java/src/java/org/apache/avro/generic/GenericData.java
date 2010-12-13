@@ -108,7 +108,11 @@ public class GenericData {
         public void remove() { throw new UnsupportedOperationException(); }
       };
     }
-    @Override public T get(int i) { return (T)elements[i]; }
+    @Override public T get(int i) {
+      if (i >= size)
+        throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
+      return (T)elements[i];
+    }
     @Override public boolean add(T o) {
       if (size == elements.length) {
         Object[] newElements = new Object[(size * 3)/2 + 1];

@@ -123,5 +123,22 @@ public class TestGenericData {
       forward.reverse();
       assertTrue(forward.equals(backward));
   }
-    
+
+  @Test
+  public void testArrayListInterface() {
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
+    GenericArray<Integer> array = new GenericData.Array<Integer>(1, schema);
+    array.add(99);
+    assertEquals(new Integer(99), array.get(0));
+    try {
+      array.get(2);
+      fail("Expected IndexOutOfBoundsException getting index 2");
+    } catch (IndexOutOfBoundsException e) {}
+    array.clear();
+    assertEquals(0, array.size());
+    try {
+      array.get(0);
+      fail("Expected IndexOutOfBoundsException getting index 0 after clear()");
+    } catch (IndexOutOfBoundsException e) {}
+  }
 }
