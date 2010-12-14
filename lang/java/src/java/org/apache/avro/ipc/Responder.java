@@ -55,6 +55,9 @@ public abstract class Responder {
   private static final GenericDatumWriter<Map<CharSequence,ByteBuffer>>
     META_WRITER = new GenericDatumWriter<Map<CharSequence,ByteBuffer>>(META);
 
+  private static final ThreadLocal<Protocol> REMOTE =
+    new ThreadLocal<Protocol>();
+
   private Map<MD5,Protocol> protocols
     = Collections.synchronizedMap(new HashMap<MD5,Protocol>());
 
@@ -71,6 +74,11 @@ public abstract class Responder {
       Collections.synchronizedList(new ArrayList<RPCPlugin>());
   }
 
+  /** Return the remote protocol.  Accesses a {@link ThreadLocal} that's set
+   * around calls to {@link #respond(Protocol.Message, Object)}. */
+  public static Protocol getRemote() { return REMOTE.get(); }
+  
+  /** Return the local protocol. */
   public Protocol getLocal() { return local; }
   
   /**
@@ -133,12 +141,15 @@ public abstract class Responder {
       Object response = null;
       
       try {
+        REMOTE.set(remote);
         response = respond(m, request);
         context.setResponse(response);
       } catch (Exception e) {
         error = e;
         context.setError(error);
         LOG.warn("user error", e);
+      } finally {
+        REMOTE.set(null);
       }
       
       if (m.isOneWay() && wasConnected)           // no response data

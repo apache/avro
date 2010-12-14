@@ -24,6 +24,8 @@ Avro 1.5.0 (unreleased)
 
     AVRO-689. Java: Permit setting timeout of HttpTransceiver. (cutting)
 
+    AVRO-687. Java: Permit RPC applications to view remote protocol. (cutting)
+
   IMPROVEMENTS
 
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().

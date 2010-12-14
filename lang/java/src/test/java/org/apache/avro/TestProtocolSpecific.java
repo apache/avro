@@ -85,6 +85,10 @@ public class TestProtocolSpecific {
     proxy = SpecificRequestor.getClient(Simple.class, client);
   }
 
+  @Test public void testGetRemote() throws IOException {
+    assertEquals(Simple.PROTOCOL, SpecificRequestor.getRemote(proxy));
+  }
+
   @Test
   public void testHello() throws IOException {
     CharSequence response = proxy.hello(new Utf8("bob"));

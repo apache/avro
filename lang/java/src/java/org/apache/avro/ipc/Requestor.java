@@ -62,7 +62,6 @@ public abstract class Requestor {
   protected List<RPCPlugin> rpcMetaPlugins;
 
   public Protocol getLocal() { return local; }
-  public Protocol getRemote() { return remote; }
   public Transceiver getTransceiver() { return transceiver; }
 
   protected Requestor(Protocol local, Transceiver transceiver)
@@ -127,7 +126,7 @@ public abstract class Requestor {
     } while (!readHandshake(in));
 
     // use remote protocol to read response
-    Message rm = getRemote().getMessages().get(messageName);
+    Message rm = remote.getMessages().get(messageName);
     if (rm == null)
       throw new AvroRuntimeException("Not a remote message: "+messageName);
     if (m.isOneWay() != rm.isOneWay())
@@ -235,6 +234,28 @@ public abstract class Requestor {
     if (!REMOTE_PROTOCOLS.containsKey(remoteHash))
       REMOTE_PROTOCOLS.put(remoteHash, remote);
   }
+
+  /** Return the remote protocol.  Force a handshake if required. */
+  public synchronized Protocol getRemote() throws IOException {
+    MD5 remoteHash = REMOTE_HASHES.get(transceiver.getRemoteName());
+    remote = REMOTE_PROTOCOLS.get(remoteHash);
+    if (remote != null)
+      return remote;
+    // force handshake
+    ByteBufferOutputStream bbo = new ByteBufferOutputStream();
+    Encoder out = new BinaryEncoder(bbo);
+    writeHandshake(out);
+    out.writeLong(0);                             // empty metadata
+    out.writeString("");                          // bogus message name
+    List<ByteBuffer> response =
+      getTransceiver().transceive(bbo.getBufferList());
+    ByteBufferInputStream bbi = new ByteBufferInputStream(response);
+    BinaryDecoder in =
+      DecoderFactory.defaultFactory().createBinaryDecoder(bbi, null);
+    readHandshake(in);
+    return this.remote;
+  }
+
 
   /** Writes a request message. */
   public abstract void writeRequest(Schema schema, Object request,

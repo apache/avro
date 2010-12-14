@@ -107,5 +107,12 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     return (T)Proxy.newProxyInstance(iface.getClassLoader(),
                                   new Class[] { iface }, requestor);
   }
+
+  /** Return the remote protocol for a proxy. */
+  public static Protocol getRemote(Object proxy) throws IOException {
+    return ((Requestor)Proxy.getInvocationHandler(proxy)).getRemote();
+    
+  }
+
 }
 
