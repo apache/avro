@@ -26,7 +26,14 @@ Avro 1.5.0 (unreleased)
 
     AVRO-687. Java: Permit RPC applications to view remote protocol. (cutting)
 
+    AVRO-159 Java: Allow maven builds to use avro: avro-maven-plugin
+    (Hiram Chirino, Patrick Hunt via Scott Carey)
+
   IMPROVEMENTS
+
+    AVRO-647 Java: Break avro.jar up into multiple pieces: avro.jar,
+    avro-compiler.jar, avro-ipc.jar, avro-mapred.jar, avro-tools.jar, 
+    and avro-maven-plugin.jar (Scott Carey)
 
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().
     (Harsh J Chouraria via cutting)
