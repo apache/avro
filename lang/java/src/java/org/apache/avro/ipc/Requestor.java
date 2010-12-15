@@ -237,10 +237,10 @@ public abstract class Requestor {
 
   /** Return the remote protocol.  Force a handshake if required. */
   public synchronized Protocol getRemote() throws IOException {
+    if (remote != null) return remote;            // already have it
     MD5 remoteHash = REMOTE_HASHES.get(transceiver.getRemoteName());
     remote = REMOTE_PROTOCOLS.get(remoteHash);
-    if (remote != null)
-      return remote;
+    if (remote != null) return remote;            // already cached
     // force handshake
     ByteBufferOutputStream bbo = new ByteBufferOutputStream();
     Encoder out = new BinaryEncoder(bbo);
