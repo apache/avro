@@ -4,6 +4,26 @@ Avro 1.5.0 (unreleased)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-647 Java: Break avro.jar up into multiple pieces: avro.jar,
+    avro-compiler.jar, avro-ipc.jar, avro-mapred.jar, avro-tools.jar, 
+    and avro-maven-plugin.jar (Scott Carey)
+    
+    NOTE: Java users will likely need to choose which artifact(s) they require
+    Due to AVRO-647.
+    Summary of artifacts: 
+    * avro.jar Contains 'core' avro features:  Schema and Schema resolution,
+    AvroDataFiles, Specific, Generic, and Reflect APIs, serialization.
+    Dependencies: slf4j, Paranamer, Jackson.
+    * avro-ipc.jar Avro IPC library, contains Protocols, Trancievers, Requestor,
+    and Responder. Dependencies:  avro.jar, Jetty, Netty, and Velocity
+    * avro-compiler.jar Avro compiler.  Contains SpecificCompiler, and AvroIDL compiler
+    including Ant tasks.  Depends on avro.jar, commmons-lang, and Velocity.
+    * avro-maven-plugin.jar An avro-maven-plugin.  Depends on avro-compiler.jar
+    * avro-mapred.jar The Avro API for org.apache.hadoop.mapred.
+    Depends on avro-ipc.jar, hadoop-core, and jopt-simple.
+    * avro-tools.jar A jar containing command-line tools.  Embeds all avro 
+    components and dependencies.
+
     AVRO-670. Allow DataFileWriteTool to accept schema files as input with new
     --schema-file and --schema command-line flags. (Ron Bodkin via philz)
 
@@ -30,10 +50,6 @@ Avro 1.5.0 (unreleased)
     (Hiram Chirino, Patrick Hunt via Scott Carey)
 
   IMPROVEMENTS
-
-    AVRO-647 Java: Break avro.jar up into multiple pieces: avro.jar,
-    avro-compiler.jar, avro-ipc.jar, avro-mapred.jar, avro-tools.jar, 
-    and avro-maven-plugin.jar (Scott Carey)
 
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().
     (Harsh J Chouraria via cutting)
