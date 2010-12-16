@@ -17,6 +17,7 @@
  */
 package org.apache.avro.generic;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
@@ -31,6 +32,10 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.util.Utf8;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import org.junit.Test;
 
@@ -140,5 +145,25 @@ public class TestGenericData {
       array.get(0);
       fail("Expected IndexOutOfBoundsException getting index 0 after clear()");
     } catch (IndexOutOfBoundsException e) {}
+  }
+  
+  @Test
+  public void testToStringIsJson() throws JsonParseException, IOException {
+    Field stringField = new Field("string", Schema.create(Type.STRING), null, null);
+    Field enumField = new Field("enum", Schema.createEnum("my_enum", "doc", null, Arrays.asList("a", "b", "c")), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(stringField, enumField));
+    
+    GenericRecord r = new GenericData.Record(schema);
+    r.put(stringField.name(), "hello\nthere\"\tyou}");
+    r.put(enumField.name(), new GenericData.EnumSymbol("a"));
+    
+    String json = r.toString();
+    JsonFactory factory = new JsonFactory();
+    JsonParser parser = factory.createJsonParser(json);
+    ObjectMapper mapper = new ObjectMapper();
+    
+    // will throw exception if string is not parsable json
+    mapper.readTree(parser);
   }
 }

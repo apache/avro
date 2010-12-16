@@ -310,9 +310,10 @@ public class GenericData {
           buffer.append(", ");
       }
       buffer.append("}");
-    } else if (datum instanceof CharSequence) {
+    } else if (datum instanceof CharSequence
+               || datum instanceof GenericEnumSymbol) {
       buffer.append("\"");
-      buffer.append(datum);                       // TODO: properly escape!
+      writeEscapedString(datum.toString(), buffer);
       buffer.append("\"");
     } else if (datum instanceof ByteBuffer) {
       buffer.append("{\"bytes\": \"");
@@ -322,6 +323,50 @@ public class GenericData {
       buffer.append("\"}");
     } else {
       buffer.append(datum);
+    }
+  }
+  
+  /* Adapted from http://code.google.com/p/json-simple */
+  private void writeEscapedString(String string, StringBuilder builder) {
+    for(int i = 0; i < string.length(); i++){
+      char ch = string.charAt(i);
+      switch(ch){
+        case '"':
+          builder.append("\\\"");
+          break;
+        case '\\':
+          builder.append("\\\\");
+          break;
+        case '\b':
+          builder.append("\\b");
+          break;
+        case '\f':
+          builder.append("\\f");
+          break;
+        case '\n':
+          builder.append("\\n");
+          break;
+        case '\r':
+          builder.append("\\r");
+          break;
+        case '\t':
+          builder.append("\\t");
+          break;
+        case '/':
+          builder.append("\\/");
+          break;
+        default:
+          // Reference: http://www.unicode.org/versions/Unicode5.1.0/
+          if((ch>='\u0000' && ch<='\u001F') || (ch>='\u007F' && ch<='\u009F') || (ch>='\u2000' && ch<='\u20FF')){
+            String hex = Integer.toHexString(ch);
+            builder.append("\\u");
+            for(int j = 0; j < 4-builder.length(); j++)
+              builder.append('0');
+            builder.append(string.toUpperCase());
+          } else {
+            builder.append(ch);
+          }
+        }
     }
   }
 
