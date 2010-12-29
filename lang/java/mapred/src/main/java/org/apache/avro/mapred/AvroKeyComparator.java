@@ -24,7 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryData;
-import org.apache.avro.specific.SpecificData;
+import org.apache.avro.reflect.ReflectData;
 
 /** The {@link RawComparator} used by jobs configured with {@link AvroJob}. */
 public class AvroKeyComparator<T>
@@ -44,7 +44,7 @@ public class AvroKeyComparator<T>
   }
 
   public int compare(AvroWrapper<T> x, AvroWrapper<T> y) {
-    return SpecificData.get().compare(x.datum(), y.datum(), schema);
+    return ReflectData.get().compare(x.datum(), y.datum(), schema);
   }
 
 }

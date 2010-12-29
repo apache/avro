@@ -79,6 +79,9 @@ Avro 1.5.0 (unreleased)
 
     AVRO-714. Fix Forrest to work with Java 6. (Carl Steinbach via cutting)
 
+    AVRO-669. Java: Make MapReduce to work with reflection-based data.
+    (cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

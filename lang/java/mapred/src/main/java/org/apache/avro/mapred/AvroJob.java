@@ -46,6 +46,10 @@ public class AvroJob {
   public static final String TEXT_PREFIX = "avro.meta.text.";
   /** The configuration key prefix for a binary output metadata. */
   public static final String BINARY_PREFIX = "avro.meta.binary.";
+  /** The configuration key for reflection-based input representation. */
+  public static final String INPUT_IS_REFLECT = "avro.input.is.reflect";
+  /** The configuration key for reflection-based map output representation. */
+  public static final String MAP_OUTPUT_IS_REFLECT = "avro.map.output.is.reflect";
 
   /** Configure a job's map input schema. */
   public static void setInputSchema(JobConf job, Schema s) {
@@ -100,6 +104,22 @@ public class AvroJob {
   /** Indicate that a job's input files are in SequenceFile format.*/
   public static void setInputSequenceFile(JobConf job) {
     job.setInputFormat(SequenceFileInputFormat.class);
+  }
+
+  /** Indicate that all a job's data should use the reflect representation.*/
+  public static void setReflect(JobConf job) {
+    setInputReflect(job);
+    setMapOutputReflect(job);
+  }
+  
+  /** Indicate that a job's input data should use reflect representation.*/
+  public static void setInputReflect(JobConf job) {
+    job.setBoolean(INPUT_IS_REFLECT, true);
+  }
+  
+  /** Indicate that a job's map output data should use reflect representation.*/
+  public static void setMapOutputReflect(JobConf job) {
+    job.setBoolean(MAP_OUTPUT_IS_REFLECT, true);
   }
 
   /** Return a job's output key schema. */

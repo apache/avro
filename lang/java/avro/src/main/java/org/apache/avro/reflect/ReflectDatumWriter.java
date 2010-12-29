@@ -61,7 +61,6 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     if (array instanceof Collection)
       return ((Collection)array).size();
     return Array.getLength(array);
-        
   }
 
   @Override
@@ -88,7 +87,10 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
 
   @Override
   protected void writeBytes(Object datum, Encoder out) throws IOException {
-    out.writeBytes((byte[])datum);
+    if (datum instanceof byte[])
+      out.writeBytes((byte[])datum);
+    else
+      super.writeBytes(datum, out);
   }
 
   @Override

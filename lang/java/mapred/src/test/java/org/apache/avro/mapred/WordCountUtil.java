@@ -54,7 +54,7 @@ class WordCountUtil {
   private static final File COUNTS_FILE
     = new File(new File(DIR, "out"), "part-00000.avro");
 
-  private static final String[] LINES = new String[] {
+  public static final String[] LINES = new String[] {
     "the quick brown fox jumps over the lazy dog",
     "the cow jumps over the moon",
     "the rain in spain falls mainly on the plains"

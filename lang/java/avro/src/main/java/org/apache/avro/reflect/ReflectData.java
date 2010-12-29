@@ -112,6 +112,7 @@ public class ReflectData extends SpecificData {
   @Override
   protected boolean isBytes(Object datum) {
     if (datum == null) return false;
+    if (super.isBytes(datum)) return true;
     Class c = datum.getClass();
     return c.isArray() && c.getComponentType() == Byte.TYPE;
   }

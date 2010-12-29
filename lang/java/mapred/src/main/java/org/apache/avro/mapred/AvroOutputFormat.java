@@ -32,7 +32,7 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.util.Progressable;
 
 import org.apache.avro.Schema;
-import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.CodecFactory;
 
@@ -66,7 +66,7 @@ public class AvroOutputFormat <T>
       : AvroJob.getOutputSchema(job);
 
     final DataFileWriter<T> writer =
-      new DataFileWriter<T>(new SpecificDatumWriter<T>());
+      new DataFileWriter<T>(new ReflectDatumWriter<T>());
 
     if (FileOutputFormat.getCompressOutput(job)) {
       int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
