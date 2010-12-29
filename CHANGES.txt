@@ -77,6 +77,8 @@ Avro 1.5.0 (unreleased)
 
     AVRO-707. Java: Promote SASL-based RPC. (cutting)
 
+    AVRO-714. Fix Forrest to work with Java 6. (Carl Steinbach via cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.
