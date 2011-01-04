@@ -155,6 +155,9 @@ Avro 1.4.1 (13 October 2010)
     AVRO-667. GenericArray fails to compare with List. SpecificRecord
     compare gets ClassCastException. (scottcarey & cutting)
 
+    AVRO-717. Java: Fix SpecificDatumWriter default constructor to
+    correctly reference SpecificData.  (Joe Crobak via cutting)
+
 Avro 1.4.0 (31 August 2010)
 
   INCOMPATIBLE CHANGES

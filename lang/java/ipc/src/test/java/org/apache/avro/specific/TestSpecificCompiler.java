@@ -177,7 +177,7 @@ public class TestSpecificCompiler {
   public void testProtocolWithDocs() throws IOException {
     Protocol protocol = TestProtocolParsing.getSimpleProtocol();
     Collection<OutputFile> out = new SpecificCompiler(protocol).compile();
-    assertEquals(5, out.size());
+    assertEquals(6, out.size());
     int count = 0;
     for (OutputFile o : out) {
       if (o.path.endsWith("Simple.java")) {
