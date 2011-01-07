@@ -464,7 +464,7 @@ class MapSchema(Schema):
 
     # Add class members
     if isinstance(values, basestring) and names.has_name(values, None):
-      values_schema = names.get_name(values)
+      values_schema = names.get_name(values, None)
     else:
       try:
         values_schema = make_avsc_object(values, names)

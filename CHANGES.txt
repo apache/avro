@@ -127,6 +127,9 @@ Avro 1.5.0 (unreleased)
     AVRO-708. Java: Fix Netty-based RPC to keep connection open.
     (Stephen Gargan via cutting)
 
+    AVRO-694. Python: Fix schema parse error for maps of records.
+    (hammer via cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

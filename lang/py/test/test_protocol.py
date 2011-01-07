@@ -304,6 +304,42 @@ ExampleProtocol("""\
 
 }
     """, True),
+  ExampleProtocol("""\
+{
+  "protocol" : "API",
+  "namespace" : "xyz.api",
+  "types" : [ {
+    "type" : "enum",
+    "name" : "Symbology",
+    "namespace" : "xyz.api.product",
+    "symbols" : [ "OPRA", "CUSIP", "ISIN", "SEDOL" ]
+  }, {
+    "type" : "record",
+    "name" : "Symbol",
+    "namespace" : "xyz.api.product",
+    "fields" : [ {
+      "name" : "symbology",
+      "type" : "xyz.api.product.Symbology"
+    }, {
+      "name" : "symbol",
+      "type" : "string"
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "MultiSymbol",
+    "namespace" : "xyz.api.product",
+    "fields" : [ {
+      "name" : "symbols",
+      "type" : {
+        "type" : "map",
+        "values" : "xyz.api.product.Symbol"
+      }
+    } ]
+  } ],
+  "messages" : {
+  }
+}
+    """, True),
 ]
 
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
