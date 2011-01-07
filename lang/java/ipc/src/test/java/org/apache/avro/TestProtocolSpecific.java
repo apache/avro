@@ -38,6 +38,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertTrue;
 
 import static org.junit.Assert.*;
 
@@ -190,6 +191,7 @@ public class TestProtocolSpecific {
       this.throwUndeclaredError = false;
     }
     assertNotNull(error);
+    assertTrue(error.toString().contains("foo"));
   }
 
 

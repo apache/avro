@@ -82,6 +82,9 @@ Avro 1.5.0 (unreleased)
     AVRO-669. Java: Make MapReduce to work with reflection-based data.
     (cutting)
 
+    AVRO-723. Java: Pass error messages for unexpected RPC exceptions
+    through to client. (Stephen Gargan via cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

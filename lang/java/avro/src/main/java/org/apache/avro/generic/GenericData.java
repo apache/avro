@@ -29,6 +29,7 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.util.Utf8;
 
@@ -442,7 +443,7 @@ public class GenericData {
         return i;
       i++;
     }
-    throw new AvroRuntimeException("Not in union "+union+": "+datum);
+    throw new UnresolvedUnionException(union, datum);
   }
 
   /** Called by {@link #resolveUnion(Schema,Object)}.  May be overridden for

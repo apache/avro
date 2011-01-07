@@ -30,6 +30,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.util.Random;
@@ -134,6 +135,7 @@ public class TestProtocolReflect {
       this.throwUndeclaredError = false;
     }
     assertNotNull(error);
+    assertTrue(error.toString().contains("foo"));
   }
 
   @AfterClass

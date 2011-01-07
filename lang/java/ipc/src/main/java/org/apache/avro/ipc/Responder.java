@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
@@ -159,7 +160,11 @@ public abstract class Responder {
       if (error == null)
         writeResponse(m.getResponse(), response, out);
       else
-        writeError(m.getErrors(), error, out);
+        try {
+          writeError(m.getErrors(), error, out);
+        } catch (UnresolvedUnionException e) {    // unexpected error
+          throw error;
+        }
     } catch (Exception e) {                       // system error
       LOG.warn("system error", e);
       context.setError(e);
