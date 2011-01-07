@@ -115,6 +115,9 @@ Avro 1.5.0 (unreleased)
 
     AVRO-643. Java: Fix intermittent failures in TestTraceCollection. (cutting)
 
+    AVRO-722. Java: Fix ordering of calls to RPC plugins.
+    (Stephen Gargan via cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

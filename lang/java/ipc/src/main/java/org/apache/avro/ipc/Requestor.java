@@ -102,14 +102,15 @@ public abstract class Requestor {
       List<ByteBuffer> payload = bbo.getBufferList();
       
       writeHandshake(out);                       // prepend handshake if needed
-      META_WRITER.write(context.requestCallMeta(), out);
-      out.writeString(m.getName());               // write message name
       
       context.setRequestPayload(payload);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.clientSendRequest(context);        // get meta-data from plugins
       }
-      
+      META_WRITER.write(context.requestCallMeta(), out);
+
+      out.writeString(m.getName());               // write message name
+
       bbo.append(payload);
       
       List<ByteBuffer> requestBytes = bbo.getBufferList();
@@ -134,7 +135,7 @@ public abstract class Requestor {
 
     if (m.isOneWay() && t.isConnected()) return null; // one-way w/ handshake
         
-    context.setRequestCallMeta(META_READER.read(null, in));
+    context.setResponseCallMeta(META_READER.read(null, in));
     
     if (!in.readBoolean()) {                      // no error
       Object response = readResponse(rm.getResponse(), in);
