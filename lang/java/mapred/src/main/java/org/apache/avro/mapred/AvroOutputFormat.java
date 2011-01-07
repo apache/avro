@@ -35,6 +35,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.CodecFactory;
+import static org.apache.avro.file.DataFileConstants.DEFAULT_SYNC_INTERVAL;
 
 /** An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files. */
 public class AvroOutputFormat <T>
@@ -46,6 +47,9 @@ public class AvroOutputFormat <T>
   /** The configuration key for Avro deflate level. */
   public static final String DEFLATE_LEVEL_KEY = "avro.mapred.deflate.level";
 
+  /** The configuration key for Avro sync interval. */
+  public static final String SYNC_INTERVAL_KEY = "avro.mapred.sync.interval";
+
   /** The default deflate level. */
   public static final int DEFAULT_DEFLATE_LEVEL = 1;
 
@@ -55,6 +59,12 @@ public class AvroOutputFormat <T>
     job.setInt(DEFLATE_LEVEL_KEY, level);
   }
 
+  /** Set the sync interval to be used by the underlying {@link DataFileWriter}.*/
+  public static void setSyncInterval(JobConf job, int syncIntervalInBytes) {
+    job.setInt(SYNC_INTERVAL_KEY, syncIntervalInBytes);
+  }
+
+  @Override
   public RecordWriter<AvroWrapper<T>, NullWritable>
     getRecordWriter(FileSystem ignore, JobConf job,
                     String name, Progressable prog)
@@ -72,6 +82,8 @@ public class AvroOutputFormat <T>
       int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
       writer.setCodec(CodecFactory.deflateCodec(level));
     }
+
+    writer.setSyncInterval(job.getInt(SYNC_INTERVAL_KEY, DEFAULT_SYNC_INTERVAL));
 
     // copy metadata from job
     for (Map.Entry<String,String> e : job) {

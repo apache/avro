@@ -85,6 +85,9 @@ Avro 1.5.0 (unreleased)
     AVRO-723. Java: Pass error messages for unexpected RPC exceptions
     through to client. (Stephen Gargan via cutting)
 
+    AVRO-719. Java: Permit MapReduce programs to alter output file
+    sync interval.  (Joe Crobak via cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

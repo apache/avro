@@ -15,26 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.avro.mapred;
 
-package org.apache.avro.file;
+import junit.framework.TestCase;
 
-/**
- * Constants used in data files.
- */
-public class DataFileConstants {
-  private DataFileConstants() {}                  // no public ctor
+import org.apache.hadoop.mapred.JobConf;
+import org.junit.Test;
 
-  public static final byte VERSION = 1;
-  public static final byte[] MAGIC = new byte[] {
-    (byte)'O', (byte)'b', (byte)'j', VERSION
-  };
-  public static final long FOOTER_BLOCK = -1;
-  public static final int SYNC_SIZE = 16;
-  public static final int DEFAULT_SYNC_INTERVAL = 1000*SYNC_SIZE; 
+public class TestAvroOutputFormat extends TestCase {
+  @Test
+  public void testSetSyncInterval() {
+    JobConf jobConf = new JobConf();
+    int newSyncInterval = 100000;
+    AvroOutputFormat.setSyncInterval(jobConf, newSyncInterval);
 
-  public static final String SCHEMA = "avro.schema";
-  public static final String CODEC = "avro.codec";
-  public static final String NULL_CODEC = "null";
-  public static final String DEFLATE_CODEC = "deflate";
+    assertEquals(newSyncInterval, jobConf.getInt(
+        AvroOutputFormat.SYNC_INTERVAL_KEY, -1));
+  }
 
 }
