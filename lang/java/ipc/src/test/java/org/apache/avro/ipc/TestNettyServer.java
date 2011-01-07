@@ -62,11 +62,13 @@ public class TestNettyServer {
     msg.body = new Utf8("I love you!");
 
     try {
-      CharSequence result = proxy.send(msg);
-      System.out.println("Result: " + result);
-      Assert.assertEquals(
-          "Sent message to [wife] from [husband] with body [I love you!]",
-          result.toString());
+      for(int x = 0; x < 5; x++) {
+        CharSequence result = proxy.send(msg);
+        System.out.println("Result: " + result);
+        Assert.assertEquals(
+            "Sent message to [wife] from [husband] with body [I love you!]",
+            result.toString());
+      }
     } finally {
       transceiver.close();
       server.close();

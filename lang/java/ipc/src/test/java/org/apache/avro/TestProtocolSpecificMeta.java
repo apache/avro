@@ -19,29 +19,30 @@ package org.apache.avro;
 
 import java.net.InetSocketAddress;
 
+import org.apache.avro.ipc.Requestor;
 import org.apache.avro.ipc.Responder;
+import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
-import org.apache.avro.specific.SpecificRequestor;
-import org.apache.avro.specific.SpecificResponder;
-import org.apache.avro.test.Simple;
-import org.junit.Before;
+import org.apache.avro.ipc.Transceiver;
+
 
 public class TestProtocolSpecificMeta extends TestProtocolSpecific {
   
-  @Before @Override
-  public void testStartServer() throws Exception {
-    if (server != null) return;
-    Responder responder = new SpecificResponder(Simple.class, new TestImpl());
+  @Override
+  public Server createServer(Responder testResponder) throws Exception {
     responder.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     responder.addRPCPlugin(new RPCMetaTestPlugin("key2"));
-    server = new SocketServer(responder, new InetSocketAddress(0));
-    server.start();
-    
-    client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    SpecificRequestor req = new SpecificRequestor(Simple.class, client);
+    return new SocketServer(responder, new InetSocketAddress(0));
+  }
+  
+  @Override
+  public Transceiver createTransceiver() throws Exception {
+    return new SocketTransceiver(new InetSocketAddress(server.getPort()));
+  }
+  
+  public void addRpcPlugins(Requestor req){
     req.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     req.addRPCPlugin(new RPCMetaTestPlugin("key2"));
-    proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
   }
 }

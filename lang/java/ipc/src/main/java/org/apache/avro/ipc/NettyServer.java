@@ -109,6 +109,8 @@ public class NettyServer implements Server {
    */
   class NettyServerAvroHandler extends SimpleChannelUpstreamHandler {
 
+    private NettyTransceiver connectionMetadata = new NettyTransceiver();
+    
     @Override
     public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e)
         throws Exception {
@@ -130,13 +132,15 @@ public class NettyServer implements Server {
       try {
         NettyDataPack dataPack = (NettyDataPack) e.getMessage();
         List<ByteBuffer> req = dataPack.getDatas();
-        List<ByteBuffer> res = responder.respond(req);
+        List<ByteBuffer> res = responder.respond(req, connectionMetadata);
         dataPack.setDatas(res);
         e.getChannel().write(dataPack);
       } catch (IOException ex) {
         LOG.warn("unexpect error");
       } finally {
-        e.getChannel().close();
+        if(!connectionMetadata.isConnected()){
+          e.getChannel().close();
+        }
       }
     }
 

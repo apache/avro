@@ -17,14 +17,15 @@
  */
 package org.apache.avro;
 
+import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.specific.SpecificRequestor;
-import org.apache.avro.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
 
 import org.junit.Test;
-import org.junit.Before;
 
 import java.net.URL;
 import java.net.ServerSocket;
@@ -33,19 +34,22 @@ import java.lang.reflect.UndeclaredThrowableException;
 
 public class TestProtocolHttp extends TestProtocolSpecific {
 
-  @Before @Override
-  public void testStartServer() throws Exception {
-    if (server != null) return;
-    server =
-      new HttpServer(new SpecificResponder(Simple.class, new TestImpl()), 0);
-    server.start();
-    client =
-      new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
-    proxy = SpecificRequestor.getClient(Simple.class, client);
+  @Override
+  public Server createServer(Responder testResponder) throws Exception {
+    return new HttpServer(testResponder, 0);
+  }
+  
+  @Override
+  public Transceiver createTransceiver() throws Exception{
+    return new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
+  }
+ 
+  protected int getExpectedHandshakeCount() {
+    return REPEATING;
   }
 
   @Test(expected=SocketTimeoutException.class)
-  public void testTimeout() throws Throwable {
+    public void testTimeout() throws Throwable {
     ServerSocket s = new ServerSocket(0);
     HttpTransceiver client =
       new HttpTransceiver(new URL("http://127.0.0.1:"+s.getLocalPort()+"/"));

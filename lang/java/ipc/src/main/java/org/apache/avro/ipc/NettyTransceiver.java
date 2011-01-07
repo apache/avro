@@ -69,6 +69,8 @@ public class NettyTransceiver extends Transceiver {
     new ConcurrentHashMap<Integer, CallFuture>();
   
   private Protocol remote;
+
+  NettyTransceiver() {}
   
   public NettyTransceiver(InetSocketAddress addr) {
     // Set up.

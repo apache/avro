@@ -18,6 +18,10 @@
 package org.apache.avro;
 
 import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.ipc.RPCContext;
+import org.apache.avro.ipc.RPCPlugin;
+import org.apache.avro.ipc.Requestor;
+import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
@@ -30,11 +34,12 @@ import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestError;
 import org.apache.avro.test.TestRecord;
 import org.apache.avro.util.Utf8;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileReader;
@@ -48,6 +53,7 @@ import java.util.Random;
 
 public class TestProtocolSpecific {
 
+  protected static final int REPEATING = -1;
   protected static final File SERVER_PORTS_DIR
   = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
 
@@ -75,14 +81,35 @@ public class TestProtocolSpecific {
   protected static Transceiver client;
   protected static Simple proxy;
 
+  protected static SpecificResponder responder;
+
+  protected static HandshakeMonitor monitor;
+
   @Before
   public void testStartServer() throws Exception {
     if (server != null) return;
-    server = new SocketServer(new SpecificResponder(Simple.class, new TestImpl()),
-                              new InetSocketAddress(0));
+    responder = new SpecificResponder(Simple.class, new TestImpl());
+    server = createServer(responder);
     server.start();
-    client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    proxy = SpecificRequestor.getClient(Simple.class, client);
+    
+    client = createTransceiver();
+    SpecificRequestor req = new SpecificRequestor(Simple.class, client);
+    addRpcPlugins(req);
+    proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
+    
+    monitor = new HandshakeMonitor();
+    responder.addRPCPlugin(monitor);
+  }
+  
+  public void addRpcPlugins(Requestor requestor){}
+  
+  public Server createServer(Responder testResponder) throws Exception{
+    return server = new SocketServer(testResponder,
+                              new InetSocketAddress(0));   
+  }
+  
+  public Transceiver createTransceiver() throws Exception{
+    return new SocketTransceiver(new InetSocketAddress(server.getPort()));
   }
 
   @Test public void testGetRemote() throws IOException {
@@ -175,11 +202,49 @@ public class TestProtocolSpecific {
     try { Thread.sleep(100); } catch (InterruptedException e) {}
     assertEquals(2, ackCount);
   }
+  
+  @Test
+  public void testRepeatedAccess() throws Exception {
+    for (int x = 0; x < 1000; x++) {
+      proxy.hello("hi!");
+    }
+  }
+  
+  @After
+  public void testHandshakeOccursOnce() throws IOException{
+    monitor.assertHandshake();
+  }
 
   @AfterClass
   public static void testStopServer() throws IOException {
     client.close();
     server.close();
+    server = null;
+  }
+  
+  public class HandshakeMonitor extends RPCPlugin{
+    
+    private int handshakes;
+    
+    @Override
+    public void serverConnecting(RPCContext context) {
+      handshakes++;
+      int expected = getExpectedHandshakeCount();
+      if(expected > 0  && handshakes > expected){
+        throw new IllegalStateException("Expected number of Protocol negotiation handshakes exceeded expected "+expected+" was "+handshakes);
+      }
+    }
+    
+    public void assertHandshake(){
+      int expected = getExpectedHandshakeCount();
+      if(expected != REPEATING){
+        assertEquals("Expected number of handshakes did not take place.", expected, handshakes);
+      }
+    }
+  }
+  
+  protected int getExpectedHandshakeCount() {
+   return 1;
   }
 
   public static class InteropTest {

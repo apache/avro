@@ -118,6 +118,9 @@ Avro 1.5.0 (unreleased)
     AVRO-722. Java: Fix ordering of calls to RPC plugins.
     (Stephen Gargan via cutting)
 
+    AVRO-708. Java: Fix Netty-based RPC to keep connection open.
+    (Stephen Gargan via cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

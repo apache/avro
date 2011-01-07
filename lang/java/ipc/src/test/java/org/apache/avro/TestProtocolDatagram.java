@@ -17,28 +17,32 @@
  */
 package org.apache.avro;
 
+import java.net.InetSocketAddress;
 import java.util.Random;
+
 import org.apache.avro.ipc.DatagramServer;
 import org.apache.avro.ipc.DatagramTransceiver;
-import org.apache.avro.specific.SpecificRequestor;
+import org.apache.avro.ipc.Responder;
+import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
-import org.junit.Before;
-
-import java.net.InetSocketAddress;
 
 public class TestProtocolDatagram extends TestProtocolSpecific {
-
-  @Before @Override
-  public void testStartServer() throws Exception {
-    if (server != null) return;
-    server =
-      new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
-                         new InetSocketAddress("localhost",
-                                               new Random().nextInt(10000)+10000));
-    server.start();
-    client = new DatagramTransceiver(new InetSocketAddress("localhost", server.getPort()));
-    proxy = SpecificRequestor.getClient(Simple.class, client);
+  @Override
+  public Server createServer(Responder testResponder) throws Exception {
+    return  new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
+        new InetSocketAddress("localhost",
+            new Random().nextInt(10000)+10000));
+  }
+  
+  @Override
+  public Transceiver createTransceiver() throws Exception{
+    return new DatagramTransceiver(new InetSocketAddress("localhost", server.getPort()));
   }
 
+  @Override
+  protected int getExpectedHandshakeCount() {
+    return 0;
+  }
 }
