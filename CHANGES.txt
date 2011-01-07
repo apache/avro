@@ -113,6 +113,8 @@ Avro 1.5.0 (unreleased)
     AVRO-713. Java: Fix GenericData.Record#toString() to produce valid
     JSON for enum symbols. (Jay Kreps via cutting)    
 
+    AVRO-643. Java: Fix intermittent failures in TestTraceCollection. (cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

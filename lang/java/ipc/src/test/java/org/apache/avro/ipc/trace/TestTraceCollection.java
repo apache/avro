@@ -84,6 +84,18 @@ public class TestTraceCollection {
       r.request("w", params);  
     }
     
+    server1.close();
+    server2.close();
+    server3.close();
+    aPlugin.httpServer.close();
+    aPlugin.clientFacingServer.stop();
+    bPlugin.httpServer.close();
+    bPlugin.clientFacingServer.stop();
+    cPlugin.httpServer.close();
+    cPlugin.clientFacingServer.stop();
+    dPlugin.httpServer.close();
+    dPlugin.clientFacingServer.stop();
+
     List<Span> allSpans = new ArrayList<Span>();
     allSpans.addAll(aPlugin.storage.getAllSpans());
     allSpans.addAll(bPlugin.storage.getAllSpans()); 
@@ -101,16 +113,5 @@ public class TestTraceCollection {
     for (Trace t: traces) {
       collection.addTrace(t);
     }
-    server1.close();
-    server2.close();
-    server3.close();
-    aPlugin.httpServer.close();
-    aPlugin.clientFacingServer.stop();
-    bPlugin.httpServer.close();
-    bPlugin.clientFacingServer.stop();
-    cPlugin.httpServer.close();
-    cPlugin.clientFacingServer.stop();
-    dPlugin.httpServer.close();
-    dPlugin.clientFacingServer.stop();
   }
 }

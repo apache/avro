@@ -74,7 +74,6 @@
               <!-- exclude the generated classes under apache.avro.test, some of 
                 these match **/Test** and are not JUnit tests -->
               <exclude>**/apache/avro/test/**</exclude>
-              <exclude>**/apache/avro/ipc/trace/**</exclude>
             </excludes>
             <enableAssertions>false</enableAssertions>
             <!-- some IPC tests hang if not run in a separate JVM -->
