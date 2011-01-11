@@ -163,6 +163,7 @@ static void avro_schema_free(avro_schema_t schema)
 				st_foreach(unionp->branches, union_free_foreach,
 					   0);
 				st_free_table(unionp->branches);
+				st_free_table(unionp->branches_byname);
 				free(unionp);
 			}
 			break;
@@ -290,6 +291,11 @@ avro_schema_t avro_schema_fixed(const char *name, const int64_t size)
 	return &fixed->obj;
 }
 
+int64_t avro_schema_fixed_size(const avro_schema_t fixed)
+{
+	return avro_schema_to_fixed(fixed)->size;
+}
+
 avro_schema_t avro_schema_union(void)
 {
 	struct avro_union_schema_t *schema =
@@ -299,6 +305,13 @@ avro_schema_t avro_schema_union(void)
 	}
 	schema->branches = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!schema->branches) {
+		free(schema);
+		return NULL;
+	}
+	schema->branches_byname =
+	    st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!schema->branches_byname) {
+		st_free_table(schema->branches);
 		free(schema);
 		return NULL;
 	}
@@ -316,10 +329,44 @@ avro_schema_union_append(const avro_schema_t union_schema,
 		return EINVAL;
 	}
 	unionp = avro_schema_to_union(union_schema);
-	st_insert(unionp->branches, unionp->branches->num_entries,
-		  (st_data_t) schema);
+	int  new_index = unionp->branches->num_entries;
+	st_insert(unionp->branches, new_index, (st_data_t) schema);
+	const char *name = avro_schema_type_name(schema);
+	st_insert(unionp->branches_byname, (st_data_t) name,
+		  (st_data_t) new_index);
 	avro_schema_incref(schema);
 	return 0;
+}
+
+avro_schema_t avro_schema_union_branch(avro_schema_t unionp,
+				       int branch_index)
+{
+	union {
+		st_data_t data;
+		avro_schema_t schema;
+	} val;
+	st_lookup(avro_schema_to_union(unionp)->branches,
+		  branch_index, &val.data);
+	return val.schema;
+}
+
+avro_schema_t avro_schema_union_branch_by_name
+(avro_schema_t unionp, int *branch_index, const char *name)
+{
+	union {
+		st_data_t data;
+		int  branch_index;
+	} val;
+
+	if (!st_lookup(avro_schema_to_union(unionp)->branches_byname,
+		       (st_data_t) name, &val.data)) {
+		return NULL;
+	}
+
+	if (branch_index != NULL) {
+		*branch_index = val.branch_index;
+	}
+	return avro_schema_union_branch(unionp, val.branch_index);
 }
 
 avro_schema_t avro_schema_array(const avro_schema_t items)
@@ -334,6 +381,11 @@ avro_schema_t avro_schema_array(const avro_schema_t items)
 	return &array->obj;
 }
 
+avro_schema_t avro_schema_array_items(avro_schema_t array)
+{
+	return avro_schema_to_array(array)->items;
+}
+
 avro_schema_t avro_schema_map(const avro_schema_t values)
 {
 	struct avro_map_schema_t *map =
@@ -344,6 +396,11 @@ avro_schema_t avro_schema_map(const avro_schema_t values)
 	map->values = avro_schema_incref(values);
 	avro_schema_init(&map->obj, AVRO_MAP);
 	return &map->obj;
+}
+
+avro_schema_t avro_schema_map_values(avro_schema_t map)
+{
+	return avro_schema_to_map(map)->values;
 }
 
 avro_schema_t avro_schema_enum(const char *name)
@@ -377,6 +434,32 @@ avro_schema_t avro_schema_enum(const char *name)
 	}
 	avro_schema_init(&enump->obj, AVRO_ENUM);
 	return &enump->obj;
+}
+
+const char *avro_schema_enum_get(const avro_schema_t enump,
+				 int index)
+{
+	union {
+		st_data_t data;
+		char *sym;
+	} val;
+	st_lookup(avro_schema_to_enum(enump)->symbols, index, &val.data);
+	return val.sym;
+}
+
+int avro_schema_enum_get_by_name(const avro_schema_t enump,
+				 const char *symbol_name)
+{
+	union {
+		st_data_t data;
+		long idx;
+	} val;
+
+	return
+	    (st_lookup(avro_schema_to_enum(enump)->symbols_byname,
+		       (st_data_t) symbol_name, &val.data))?
+	    val.idx:
+	    -1;
 }
 
 int
@@ -466,6 +549,44 @@ avro_schema_t avro_schema_record(const char *name, const char *space)
 
 	avro_schema_init(&record->obj, AVRO_RECORD);
 	return &record->obj;
+}
+
+size_t avro_schema_record_size(const avro_schema_t record)
+{
+	return avro_schema_to_record(record)->fields->num_entries;
+}
+
+avro_schema_t avro_schema_record_field_get(const avro_schema_t
+					   record, const char *field_name)
+{
+	union {
+		st_data_t data;
+		struct avro_record_field_t *field;
+	} val;
+	st_lookup(avro_schema_to_record(record)->fields_byname,
+		  (st_data_t) field_name, &val.data);
+	return val.field->type;
+}
+
+const char *avro_schema_record_field_name(const avro_schema_t schema, int index)
+{
+	union {
+		st_data_t data;
+		struct avro_record_field_t *field;
+	} val;
+	st_lookup(avro_schema_to_record(schema)->fields, index, &val.data);
+	return val.field->name;
+}
+
+avro_schema_t avro_schema_record_field_get_by_index
+(const avro_schema_t record, int index)
+{
+	union {
+		st_data_t data;
+		struct avro_record_field_t *field;
+	} val;
+	st_lookup(avro_schema_to_record(record)->fields, index, &val.data);
+	return val.field->type;
 }
 
 static int
@@ -1127,6 +1248,98 @@ const char *avro_schema_type_name(const avro_schema_t schema)
    return "bytes";
  }
  return NULL;
+}
+
+avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
+{
+	if (!is_avro_schema(schema)) {
+		return NULL;
+	}
+
+	switch (avro_typeof(schema)) {
+		case AVRO_STRING:
+			return avro_wrapstring("");
+
+		case AVRO_BYTES:
+			return avro_wrapbytes("", 0);
+
+		case AVRO_INT32:
+			return avro_int32(0);
+
+		case AVRO_INT64:
+			return avro_int64(0);
+
+		case AVRO_FLOAT:
+			return avro_float(0);
+
+		case AVRO_DOUBLE:
+			return avro_double(0);
+
+		case AVRO_BOOLEAN:
+			return avro_boolean(0);
+
+		case AVRO_NULL:
+			return avro_null();
+
+		case AVRO_RECORD:
+			{
+				const struct avro_record_schema_t *record_schema =
+				    avro_schema_to_record(schema);
+
+				avro_datum_t  rec =
+				    avro_record(record_schema->name,
+						record_schema->space);
+
+				int  i;
+				for (i = 0; i < record_schema->fields->num_entries; i++) {
+					union {
+						st_data_t data;
+						struct avro_record_field_t *field;
+					} val;
+					st_lookup(record_schema->fields, i, &val.data);
+
+					avro_datum_t  field =
+					    avro_datum_from_schema(val.field->type);
+					avro_record_set(rec, val.field->name, field);
+					avro_datum_decref(field);
+				}
+
+				return rec;
+			}
+
+		case AVRO_ENUM:
+			{
+				const struct avro_enum_schema_t *enum_schema =
+				    avro_schema_to_enum(schema);
+				return avro_enum(enum_schema->name, 0);
+			}
+
+		case AVRO_FIXED:
+			{
+				const struct avro_fixed_schema_t *fixed_schema =
+				    avro_schema_to_fixed(schema);
+				return avro_wrapfixed(fixed_schema->name, "", 0);
+			}
+
+		case AVRO_MAP:
+			return avro_map();
+
+		case AVRO_ARRAY:
+			return avro_array();
+
+		case AVRO_UNION:
+			return avro_union(-1, NULL);
+
+		case AVRO_LINK:
+			{
+				const struct avro_link_schema_t *link_schema =
+				    avro_schema_to_link(schema);
+				return avro_datum_from_schema(link_schema->to);
+			}
+
+		default:
+			return NULL;
+	}
 }
 
 /* simple helper for writing strings */

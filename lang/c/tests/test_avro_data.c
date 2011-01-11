@@ -258,7 +258,34 @@ static int test_enum(void)
 	avro_schema_enum_symbol_append(schema, "Ruby");
 	avro_schema_enum_symbol_append(schema, "Java");
 
+	if (avro_enum_get(datum) != AVRO_C) {
+		fprintf(stderr, "Unexpected enum value AVRO_C\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (strcmp(avro_enum_get_name(datum, schema), "C") != 0) {
+		fprintf(stderr, "Unexpected enum value name C\n");
+		exit(EXIT_FAILURE);
+	}
+
 	write_read_check(schema, NULL, datum, "enum");
+
+	avro_enum_set(datum, AVRO_CPP);
+	if (strcmp(avro_enum_get_name(datum, schema), "C++") != 0) {
+		fprintf(stderr, "Unexpected enum value name C++\n");
+		exit(EXIT_FAILURE);
+	}
+
+	write_read_check(schema, NULL, datum, "enum");
+
+	avro_enum_set_name(datum, schema, "Python");
+	if (avro_enum_get(datum) != AVRO_PYTHON) {
+		fprintf(stderr, "Unexpected enum value AVRO_PYTHON\n");
+		exit(EXIT_FAILURE);
+	}
+
+	write_read_check(schema, NULL, datum, "enum");
+
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
 	return 0;
@@ -305,7 +332,19 @@ static int test_map(void)
 	}
 
 	if (avro_array_size(datum) != 7) {
-		fprintf(stderr, "Unexpected array size");
+		fprintf(stderr, "Unexpected map size\n");
+		exit(EXIT_FAILURE);
+	}
+
+	avro_datum_t value;
+	const char  *key;
+	avro_map_get_key(datum, 2, &key);
+	avro_map_get(datum, key, &value);
+	int64_t  val;
+	avro_int64_get(value, &val);
+
+	if (val != 2) {
+		fprintf(stderr, "Unexpected map value 2\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -320,6 +359,8 @@ static int test_union(void)
 	avro_schema_t schema = avro_schema_union();
 	avro_datum_t union_datum;
 	avro_datum_t datum;
+	avro_datum_t union_datum1;
+	avro_datum_t datum1;
 
 	avro_schema_union_append(schema, avro_schema_string());
 	avro_schema_union_append(schema, avro_schema_int());
@@ -328,9 +369,29 @@ static int test_union(void)
 	datum = avro_wrapstring("Follow your bliss.");
 	union_datum = avro_union(0, datum);
 
+	if (avro_union_discriminant(union_datum) != 0) {
+		fprintf(stderr, "Unexpected union discriminant\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (avro_union_current_branch(union_datum) != datum) {
+		fprintf(stderr, "Unexpected union branch datum\n");
+		exit(EXIT_FAILURE);
+	}
+
+	union_datum1 = avro_datum_from_schema(schema);
+	avro_union_set_discriminant(union_datum1, schema, 0, &datum1);
+	avro_wrapstring_set(datum1, "Follow your bliss.");
+
+	if (!avro_datum_equal(datum, datum1)) {
+		fprintf(stderr, "Union values should be equal\n");
+		exit(EXIT_FAILURE);
+	}
+
 	write_read_check(schema, NULL, union_datum, "union");
 	avro_datum_decref(union_datum);
 	avro_datum_decref(datum);
+	avro_datum_decref(union_datum1);
 	avro_schema_decref(schema);
 	return 0;
 }

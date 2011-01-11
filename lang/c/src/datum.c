@@ -398,6 +398,59 @@ avro_datum_t avro_union(int64_t discriminant, avro_datum_t value)
 	return &datum->obj;
 }
 
+int64_t avro_union_discriminant(const avro_datum_t datum)
+{
+	return avro_datum_to_union(datum)->discriminant;
+}
+
+avro_datum_t avro_union_current_branch(avro_datum_t datum)
+{
+	return avro_datum_to_union(datum)->value;
+}
+
+int avro_union_set_discriminant(avro_datum_t datum,
+				avro_schema_t schema,
+				int discriminant,
+				avro_datum_t *branch)
+{
+	if (!is_avro_union(datum) || !is_avro_union(schema)) {
+		return EINVAL;
+	}
+
+	struct avro_union_datum_t  *unionp =
+	    avro_datum_to_union(datum);
+
+	avro_schema_t  branch_schema =
+	    avro_schema_union_branch(schema, discriminant);
+
+	if (branch_schema == NULL) {
+		// That branch doesn't exist!
+		return EINVAL;
+	}
+
+	if (unionp->discriminant != discriminant) {
+		// If we're changing the branch, throw away any old
+		// branch value.
+		if (unionp->value != NULL) {
+			avro_datum_decref(unionp->value);
+			unionp->value = NULL;
+		}
+
+		unionp->discriminant = discriminant;
+	}
+
+	// Create a new branch value, if there isn't one already.
+	if (unionp->value == NULL) {
+		unionp->value = avro_datum_from_schema(branch_schema);
+	}
+
+	if (branch != NULL) {
+		*branch = unionp->value;
+	}
+
+	return 0;
+}
+
 avro_datum_t avro_record(const char *name, const char *space)
 {
 	struct avro_record_datum_t *datum =
@@ -460,7 +513,7 @@ avro_record_get(const avro_datum_t datum, const char *field_name,
 }
 
 int
-avro_record_set(const avro_datum_t datum, const char *field_name,
+avro_record_set(avro_datum_t datum, const char *field_name,
 		const avro_datum_t field_value)
 {
 	char *key = (char *)field_name;
@@ -502,6 +555,42 @@ avro_datum_t avro_enum(const char *name, int i)
 
 	avro_datum_init(&datum->obj, AVRO_ENUM);
 	return &datum->obj;
+}
+
+int avro_enum_get(const avro_datum_t datum)
+{
+	return avro_datum_to_enum(datum)->value;
+}
+
+const char *avro_enum_get_name(const avro_datum_t datum,
+			       const avro_schema_t schema)
+{
+	int  value = avro_enum_get(datum);
+	return avro_schema_enum_get(schema, value);
+}
+
+int avro_enum_set(avro_datum_t datum, const int symbol_value)
+{
+	if (!is_avro_enum(datum)) {
+		return EINVAL;
+	}
+
+	avro_datum_to_enum(datum)->value = symbol_value;
+	return 0;
+}
+
+int avro_enum_set_name(avro_datum_t datum, avro_schema_t schema,
+		       const char *symbol_name)
+{
+	if (!is_avro_enum(datum) || !is_avro_enum(schema)) {
+		return EINVAL;
+	}
+	int  symbol_value = avro_schema_enum_get_by_name(schema, symbol_name);
+	if (symbol_value == -1) {
+		return EINVAL;
+	}
+	avro_datum_to_enum(datum)->value = symbol_value;
+	return 0;
 }
 
 static avro_datum_t avro_fixed_private(const char *name, const char *bytes,
@@ -616,6 +705,12 @@ avro_datum_t avro_map(void)
 		free(datum);
 		return NULL;
 	}
+	datum->keys_by_index = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->keys_by_index) {
+		st_free_table(datum->map);
+		free(datum);
+		return NULL;
+	}
 
 	avro_datum_init(&datum->obj, AVRO_MAP);
 	return &datum->obj;
@@ -649,8 +744,30 @@ avro_map_get(const avro_datum_t datum, const char *key, avro_datum_t * value)
 	return EINVAL;
 }
 
+int avro_map_get_key(const avro_datum_t datum, int index,
+		     const char **key)
+{
+	if (!(is_avro_datum(datum) && is_avro_map(datum) &&
+	      index >= 0 && key)) {
+		return EINVAL;
+	}
+
+	union {
+		st_data_t data;
+		char *key;
+	} val;
+	struct avro_map_datum_t *map = avro_datum_to_map(datum);
+
+	if (st_lookup(map->keys_by_index, (st_data_t) index, &val.data)) {
+		*key = val.key;
+		return 0;
+	}
+
+	return EINVAL;
+}
+
 int
-avro_map_set(const avro_datum_t datum, const char *key,
+avro_map_set(avro_datum_t datum, const char *key,
 	     const avro_datum_t value)
 {
 	char *save_key = (char *)key;
@@ -661,6 +778,8 @@ avro_map_set(const avro_datum_t datum, const char *key,
 		return EINVAL;
 	}
 
+	struct avro_map_datum_t  *map = avro_datum_to_map(datum);
+
 	if (avro_map_get(datum, key, &old_datum) == 0) {
 		/* Overwriting an old value */
 		avro_datum_decref(old_datum);
@@ -670,10 +789,12 @@ avro_map_set(const avro_datum_t datum, const char *key,
 		if (!save_key) {
 			return ENOMEM;
 		}
+		int  new_index = map->map->num_entries;
+		st_insert(map->keys_by_index, (st_data_t) new_index,
+			  (st_data_t) save_key);
 	}
 	avro_datum_incref(value);
-	st_insert(avro_datum_to_map(datum)->map, (st_data_t) save_key,
-		  (st_data_t) value);
+	st_insert(map->map, (st_data_t) save_key, (st_data_t) value);
 	return 0;
 }
 
@@ -719,7 +840,7 @@ avro_array_size(const avro_datum_t datum)
 }
 
 int
-avro_array_append_datum(const avro_datum_t array_datum,
+avro_array_append_datum(avro_datum_t array_datum,
 			const avro_datum_t datum)
 {
 	struct avro_array_datum_t *array;
@@ -844,6 +965,7 @@ static void avro_datum_free(avro_datum_t datum)
 				st_foreach(map->map, char_datum_free_foreach,
 					   0);
 				st_free_table(map->map);
+				st_free_table(map->keys_by_index);
 				free(map);
 			}
 			break;

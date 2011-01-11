@@ -57,6 +57,7 @@ struct avro_map_schema_t {
 struct avro_union_schema_t {
 	struct avro_obj_t obj;
 	st_table *branches;
+	st_table *branches_byname;
 };
 
 struct avro_fixed_schema_t {

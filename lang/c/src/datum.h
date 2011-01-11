@@ -70,6 +70,7 @@ struct avro_fixed_datum_t {
 struct avro_map_datum_t {
 	struct avro_obj_t obj;
 	st_table *map;
+	st_table *keys_by_index;
 };
 
 struct avro_record_datum_t {

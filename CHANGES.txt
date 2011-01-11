@@ -94,6 +94,9 @@ Avro 1.5.0 (unreleased)
     AVRO-630. C: Add size accessors for map and list data. (Douglas Creager
     via brucem)
 
+    AVRO-727. C: Add many new accessor and mutator functions. (Douglas Creager
+    via brucem)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

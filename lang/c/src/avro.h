@@ -110,21 +110,38 @@ avro_schema_t avro_schema_null(void);
 avro_schema_t avro_schema_record(const char *name, const char *space);
 avro_schema_t avro_schema_record_field_get(const avro_schema_t
 					   record, const char *field_name);
+const char *avro_schema_record_field_name(const avro_schema_t schema, int index);
+avro_schema_t avro_schema_record_field_get_by_index
+(const avro_schema_t record, int index);
 int avro_schema_record_field_append(const avro_schema_t record,
 				    const char *field_name,
 				    const avro_schema_t type);
+size_t avro_schema_record_size(const avro_schema_t record);
 
 avro_schema_t avro_schema_enum(const char *name);
+const char *avro_schema_enum_get(const avro_schema_t enump,
+				 int index);
+int avro_schema_enum_get_by_name(const avro_schema_t enump,
+				 const char *symbol_name);
 int avro_schema_enum_symbol_append(const avro_schema_t
 				   enump, const char *symbol);
 
 avro_schema_t avro_schema_fixed(const char *name, const int64_t len);
+int64_t avro_schema_fixed_size(const avro_schema_t fixed);
+
 avro_schema_t avro_schema_map(const avro_schema_t values);
+avro_schema_t avro_schema_map_values(avro_schema_t map);
+
 avro_schema_t avro_schema_array(const avro_schema_t items);
+avro_schema_t avro_schema_array_items(avro_schema_t array);
 
 avro_schema_t avro_schema_union(void);
 int avro_schema_union_append(const avro_schema_t
 			     union_schema, const avro_schema_t schema);
+avro_schema_t avro_schema_union_branch(avro_schema_t union_schema,
+				       int branch_index);
+avro_schema_t avro_schema_union_branch_by_name
+(avro_schema_t union_schema, int *branch_index, const char *name);
 
 avro_schema_t avro_schema_link(avro_schema_t schema);
 
@@ -198,6 +215,13 @@ avro_datum_t avro_map(void);
 avro_datum_t avro_array(void);
 avro_datum_t avro_union(int64_t discriminant, const avro_datum_t datum);
 
+/*
+ * Constructs a new avro_datum_t instance that's appropriate for holding
+ * values of the given schema.
+ */
+
+avro_datum_t avro_datum_from_schema(const avro_schema_t schema);
+
 /* getters */
 int avro_string_get(avro_datum_t datum, char **p);
 int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size);
@@ -207,14 +231,33 @@ int avro_float_get(avro_datum_t datum, float *f);
 int avro_double_get(avro_datum_t datum, double *d);
 int avro_boolean_get(avro_datum_t datum, int8_t * i);
 
+int avro_enum_get(const avro_datum_t datum);
+const char *avro_enum_get_name(const avro_datum_t datum,
+			       const avro_schema_t schema);
 int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size);
 int avro_record_get(const avro_datum_t record, const char *field_name,
 		    avro_datum_t * value);
 int avro_map_get(const avro_datum_t datum, const char *key,
 		 avro_datum_t * value);
+/*
+ * For maps, the "index" for each entry is based on the order that they
+ * were added to the map.
+ */
+int avro_map_get_key(const avro_datum_t datum, int index,
+		     const char **key);
 size_t avro_map_size(const avro_datum_t datum);
 int avro_array_get(const avro_datum_t datum, int64_t index, avro_datum_t * value);
 size_t avro_array_size(const avro_datum_t datum);
+
+/*
+ * These accessors allow you to query the current branch of a union
+ * value, returning either the branch's discriminant value or the
+ * avro_datum_t of the branch.  A union value can be uninitialized, in
+ * which case the discriminant will be -1 and the datum NULL.
+ */
+
+int64_t avro_union_discriminant(const avro_datum_t datum);
+avro_datum_t avro_union_current_branch(avro_datum_t datum);
 
 /* setters */
 int avro_string_set(avro_datum_t datum, const char *p);
@@ -233,18 +276,37 @@ int avro_float_set(avro_datum_t datum, const float f);
 int avro_double_set(avro_datum_t datum, const double d);
 int avro_boolean_set(avro_datum_t datum, const int8_t i);
 
+int avro_enum_set(avro_datum_t datum, const int symbol_value);
+int avro_enum_set_name(avro_datum_t datum, avro_schema_t schema,
+		       const char *symbol_name);
 int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size);
 int avro_givefixed_set(avro_datum_t datum, const char *bytes,
 		       const int64_t size);
 int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
 		       const int64_t size);
 
-int avro_record_set(const avro_datum_t record, const char *field_name,
-		    const avro_datum_t value);
-int avro_map_set(const avro_datum_t map, const char *key,
-		 const avro_datum_t value);
-int avro_array_append_datum(const avro_datum_t array_datum,
-			    const avro_datum_t datum);
+int avro_record_set(avro_datum_t record, const char *field_name,
+		    avro_datum_t value);
+int avro_map_set(avro_datum_t map, const char *key,
+		 avro_datum_t value);
+int avro_array_append_datum(avro_datum_t array_datum,
+			    avro_datum_t datum);
+
+/*
+ * This function selects the active branch of a union value, and can be
+ * safely called on an existing union to change the current branch.  If
+ * the branch changes, we'll automatically construct a new avro_datum_t
+ * for the new branch's schema type.  If the desired branch is already
+ * the active branch of the union, we'll leave the existing datum
+ * instance as-is.  The branch datum will be placed into the "branch"
+ * parameter, regardless of whether we have to create a new datum
+ * instance or not.
+ */
+
+int avro_union_set_discriminant(avro_datum_t unionp,
+				avro_schema_t schema,
+				int discriminant,
+				avro_datum_t *branch);
 
 /* reference counting */
 avro_datum_t avro_datum_incref(avro_datum_t value);
