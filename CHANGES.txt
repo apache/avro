@@ -107,6 +107,9 @@ Avro 1.5.0 (unreleased)
 
     AVRO-729. C: Update to Jansson 1.3. (Douglas Creager via brucem)
 
+    AVRO-731. Documentation: Improve identification of Apache
+    trademarks. (cutting)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

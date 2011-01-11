@@ -22,14 +22,14 @@
 ]>
 <document>
   <header>
-    <title>Avro &AvroVersion; Specification</title>
+    <title>Apache Avro&#153; &AvroVersion; Specification</title>
   </header>
   <body>
 
     <section id="preamble">
       <title>Introduction</title>
 
-      <p>This document defines Avro.  It is intended to be the
+      <p>This document defines Apache Avro.  It is intended to be the
         authoritative specification. Implementations of Avro must
         adhere to this document.
       </p>
@@ -1117,5 +1117,9 @@
         the "doc" portion of a schema may be dropped at serialization.</p>
 
     </section>
+
+  <p><em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
+   trademarks of The Apache Software Foundation.</em></p>
+
   </body>
 </document>

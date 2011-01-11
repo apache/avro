@@ -15,10 +15,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
+   "http://forrest.apache.org/dtd/document-v20.dtd" [
+  <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
+	   "../../../../build/avro.ent">
+  %avro-entities;
+]>
 <document>
   <header>
-    <title>Avro SASL profile</title>
+    <title>Apache Avro&#153; &AvroVersion; SASL Profile</title>
   </header>
   <body>
     <section id="intro">
@@ -139,6 +144,9 @@
       COMPLETE or FAIL message can be piggybacked on the initial
       response.</p>
     </section>
+
+  <p><em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
+   trademarks of The Apache Software Foundation.</em></p>
 
   </body>
 </document>

@@ -67,14 +67,14 @@ which will be used to configure the chosen Forrest skin.
   <!-- project logo -->
   <project-name>Avro</project-name>
   <project-description>Serialization System</project-description>
-  <project-url>http://hadoop.apache.org/avro/</project-url>
+  <project-url>http://avro.apache.org/</project-url>
   <project-logo>images/avro-logo.png</project-logo>
 
   <!-- group logo -->
-  <group-name>Hadoop</group-name>
-  <group-description>Apache Hadoop</group-description>
-  <group-url>http://hadoop.apache.org/</group-url>
-  <group-logo>images/hadoop-logo.jpg</group-logo>
+  <group-name>Apache</group-name>
+  <group-description>The Apache Software Foundation</group-description>
+  <group-url>http://www.apache.org/</group-url>
+  <group-logo>images/apache_feather.gif</group-logo>
 
   <!-- optional host logo (e.g. sourceforge logo)
        default skin: renders it at the bottom-left corner -->
@@ -98,8 +98,8 @@ which will be used to configure the chosen Forrest skin.
   -->
   <trail>
     <link1 name="Apache" href="http://www.apache.org/"/>
-    <link2 name="Hadoop" href="http://hadoop.apache.org/"/>
-    <link3 name="Avro" href="http://hadoop.apache.org/avro/"/>
+    <link2 name="Avro" href="http://avro.apache.org/"/>
+    <link3 name="Avro" href="http://avro.apache.org/"/>
   </trail>
 
   <!-- Configure the TOC, i.e. the Table of Contents.

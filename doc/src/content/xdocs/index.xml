@@ -15,15 +15,20 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
+   "http://forrest.apache.org/dtd/document-v20.dtd" [
+  <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
+	   "../../../../build/avro.ent">
+  %avro-entities;
+]>
 <document>
   <header>
-    <title>Welcome to Avro!</title>
+    <title>Apache Avro&#153; &AvroVersion; Documentation</title>
   </header>
   <body>
     <section id="intro">
       <title>Introduction</title>
-      <p>Avro is a data serialization system.</p>
+      <p>Apache Avro&#153; is a data serialization system.</p>
       <p>Avro provides:</p>
 	<ul>
 	  <li>Rich data structures.</li>
@@ -83,5 +88,9 @@
 	  symbolically, using field names.</li>
       </ul>
     </section>
+
+  <p><em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
+   trademarks of The Apache Software Foundation.</em></p>
+
   </body>
 </document>

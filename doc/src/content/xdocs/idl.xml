@@ -22,7 +22,7 @@
 ]>
 <document>
   <header>
-    <title>Avro IDL &AvroVersion;</title>
+    <title>Apache Avro&#153; &AvroVersion; IDL</title>
   </header>
   <body>
 
@@ -409,5 +409,9 @@ protocol Simple {
       </source>
       <p>Additional examples may be found in the Avro source tree under the <code>src/test/idl/input</code> directory.</p>
     </section>
+
+  <p><em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
+   trademarks of The Apache Software Foundation.</em></p>
+
   </body>
 </document>
