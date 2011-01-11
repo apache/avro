@@ -59,6 +59,8 @@ Avro 1.5.0 (unreleased)
     AVRO-549. C: Route all memory allocations through an interface. (Douglas
     Creager via brucem)
 
+    AVRO-729. C: JSON encoded Avro values. (Douglas Creager via brucem)
+
   IMPROVEMENTS
 
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().

@@ -130,6 +130,18 @@ write_read_check(avro_schema_t writers_schema,
 	}
 }
 
+static void test_json(avro_datum_t datum, avro_schema_t schema,
+		      const char *expected)
+{
+	char  *json = NULL;
+	avro_datum_to_json(datum, schema, 1, &json);
+	if (strcmp(json, expected) != 0) {
+		fprintf(stderr, "Unexpected JSON encoding: %s\n", json);
+		exit(EXIT_FAILURE);
+	}
+	free(json);
+}
+
 static int test_string(void)
 {
 	unsigned int i;
@@ -144,6 +156,12 @@ static int test_string(void)
 		write_read_check(writer_schema, NULL, datum, "string");
 		avro_datum_decref(datum);
 	}
+
+	avro_datum_t  datum = avro_wrapstring(strings[0]);
+	test_json(datum, writer_schema,
+		  "\"Four score and seven years ago\"");
+	avro_datum_decref(datum);
+
 	avro_schema_decref(writer_schema);
 	return 0;
 }
@@ -157,6 +175,8 @@ static int test_bytes(void)
 
 	datum = avro_wrapbytes(bytes, sizeof(bytes));
 	write_read_check(writer_schema, NULL, datum, "bytes");
+	test_json(datum, writer_schema,
+		  "\"\\u00de\\u00ad\\u00be\\u00ef\"");
 	avro_datum_decref(datum);
 	avro_schema_decref(writer_schema);
 
@@ -184,6 +204,11 @@ static int test_int32(void)
 		write_read_check(writer_schema, NULL, datum, "int");
 		avro_datum_decref(datum);
 	}
+
+	avro_datum_t  datum = avro_int32(10000);
+	test_json(datum, writer_schema, "10000");
+	avro_datum_decref(datum);
+
 	avro_schema_decref(writer_schema);
 	return 0;
 }
@@ -197,6 +222,11 @@ static int test_int64(void)
 		write_read_check(writer_schema, NULL, datum, "long");
 		avro_datum_decref(datum);
 	}
+
+	avro_datum_t  datum = avro_int64(10000);
+	test_json(datum, writer_schema, "10000");
+	avro_datum_decref(datum);
+
 	avro_schema_decref(writer_schema);
 	return 0;
 }
@@ -210,6 +240,11 @@ static int test_double(void)
 		write_read_check(schema, NULL, datum, "double");
 		avro_datum_decref(datum);
 	}
+
+	avro_datum_t  datum = avro_double(2000.0);
+	test_json(datum, schema, "2000.0");
+	avro_datum_decref(datum);
+
 	avro_schema_decref(schema);
 	return 0;
 }
@@ -223,6 +258,11 @@ static int test_float(void)
 		write_read_check(schema, NULL, datum, "float");
 		avro_datum_decref(datum);
 	}
+
+	avro_datum_t  datum = avro_float(2000.0);
+	test_json(datum, schema, "2000.0");
+	avro_datum_decref(datum);
+
 	avro_schema_decref(schema);
 	return 0;
 }
@@ -230,10 +270,12 @@ static int test_float(void)
 static int test_boolean(void)
 {
 	int i;
+	const char  *expected_json[] = { "false", "true" };
 	avro_schema_t schema = avro_schema_boolean();
 	for (i = 0; i <= 1; i++) {
 		avro_datum_t datum = avro_boolean(i);
 		write_read_check(schema, NULL, datum, "boolean");
+		test_json(datum, schema, expected_json[i]);
 		avro_datum_decref(datum);
 	}
 	avro_schema_decref(schema);
@@ -245,6 +287,7 @@ static int test_null(void)
 	avro_schema_t schema = avro_schema_null();
 	avro_datum_t datum = avro_null();
 	write_read_check(schema, NULL, datum, "null");
+	test_json(datum, schema, "null");
 	avro_datum_decref(datum);
 	return 0;
 }
@@ -265,6 +308,8 @@ static int test_record(void)
 	avro_record_set(datum, "age", age_datum);
 
 	write_read_check(schema, NULL, datum, "record");
+	test_json(datum, schema,
+		  "{\"name\": \"Joseph Campbell\", \"age\": 83}");
 
 	avro_datum_decref(name_datum);
 	avro_datum_decref(age_datum);
@@ -302,6 +347,7 @@ static int test_enum(void)
 	}
 
 	write_read_check(schema, NULL, datum, "enum");
+	test_json(datum, schema, "\"C\"");
 
 	avro_enum_set(datum, AVRO_CPP);
 	if (strcmp(avro_enum_get_name(datum, schema), "C++") != 0) {
@@ -310,6 +356,7 @@ static int test_enum(void)
 	}
 
 	write_read_check(schema, NULL, datum, "enum");
+	test_json(datum, schema, "\"C++\"");
 
 	avro_enum_set_name(datum, schema, "Python");
 	if (avro_enum_get(datum) != AVRO_PYTHON) {
@@ -318,6 +365,7 @@ static int test_enum(void)
 	}
 
 	write_read_check(schema, NULL, datum, "enum");
+	test_json(datum, schema, "\"Python\"");
 
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
@@ -345,6 +393,7 @@ static int test_array(void)
 	}
 
 	write_read_check(schema, NULL, datum, "array");
+	test_json(datum, schema, "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
 	return 0;
@@ -382,6 +431,9 @@ static int test_map(void)
 	}
 
 	write_read_check(schema, NULL, datum, "map");
+	test_json(datum, schema,
+		  "{\"zero\": 0, \"one\": 1, \"two\": 2, \"three\": 3, "
+		  "\"four\": 4, \"five\": 5, \"six\": 6}");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
 	return 0;
@@ -422,6 +474,13 @@ static int test_union(void)
 	}
 
 	write_read_check(schema, NULL, union_datum, "union");
+	test_json(union_datum, schema,
+		  "{\"string\": \"Follow your bliss.\"}");
+
+	avro_datum_decref(datum);
+	avro_union_set_discriminant(union_datum, schema, 2, &datum);
+	test_json(union_datum, schema, "null");
+
 	avro_datum_decref(union_datum);
 	avro_datum_decref(datum);
 	avro_datum_decref(union_datum1);
@@ -438,6 +497,7 @@ static int test_fixed(void)
 
 	datum = avro_wrapfixed("msg", bytes, sizeof(bytes));
 	write_read_check(schema, NULL, datum, "fixed");
+	test_json(datum, schema, "\"\\r\\n\\r\\n\\u000b\\n\\u000b\\n\"");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
 

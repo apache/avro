@@ -338,6 +338,15 @@ void avro_datum_print(avro_datum_t value, FILE * fp);
 
 int avro_datum_equal(avro_datum_t a, avro_datum_t b);
 
+/*
+ * Returns a string containing the JSON encoding of an Avro value.  You
+ * must free this string when you're done with it, using the standard
+ * free() function.  (*Not* using the custom Avro allocator.)
+ */
+
+int avro_datum_to_json(const avro_datum_t datum, const avro_schema_t schema,
+		       int one_line, char **json_str);
+
 int avro_schema_match(avro_schema_t writers_schema,
 		      avro_schema_t readers_schema);
 

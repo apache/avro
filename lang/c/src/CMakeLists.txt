@@ -26,6 +26,7 @@ set(AVRO_SRC
     datum.c
     datum.h
     datum_equal.c
+    datum_json.c
     datum_read.c
     datum_size.c
     datum_skip.c
