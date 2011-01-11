@@ -103,6 +103,8 @@ Avro 1.5.0 (unreleased)
     AVRO-729. C: avro_schema_to_json can take const schema. (Douglas Creager
     via brucem)
 
+    AVRO-729. C: Update to Jansson 1.3. (Douglas Creager via brucem)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

@@ -34,7 +34,9 @@ Contents
 
    gettingstarted
    tutorial
+   conformance
    apiref
+   changes
 
 
 Indices and Tables

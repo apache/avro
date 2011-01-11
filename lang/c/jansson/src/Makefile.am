@@ -1,6 +1,6 @@
-noinst_HEADERS = jansson.h
+include_HEADERS = jansson.h
 
-noinst_LTLIBRARIES = libjansson.la
+lib_LTLIBRARIES = libjansson.la
 libjansson_la_SOURCES = \
 	dump.c \
 	hashtable.c \
@@ -15,6 +15,6 @@ libjansson_la_SOURCES = \
 	value.c
 libjansson_la_LDFLAGS = \
 	-export-symbols-regex '^json_' \
-	-version-info 1:2:1
+	-version-info 3:0:3
 
 AM_CFLAGS = -Wall -Wextra -Werror

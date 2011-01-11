@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2009 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
  */
 
 #include <string.h>
+#include "utf.h"
 
-int utf8_encode(int codepoint, char *buffer, int *size)
+int utf8_encode(int32_t codepoint, char *buffer, int *size)
 {
     if(codepoint < 0)
         return -1;
@@ -79,9 +80,10 @@ int utf8_check_first(char byte)
     }
 }
 
-int utf8_check_full(const char *buffer, int size)
+int utf8_check_full(const char *buffer, int size, int32_t *codepoint)
 {
-    int i, value = 0;
+    int i;
+    int32_t value = 0;
     unsigned char u = (unsigned char)buffer[0];
 
     if(size == 2)
@@ -128,7 +130,36 @@ int utf8_check_full(const char *buffer, int size)
         return 0;
     }
 
+    if(codepoint)
+        *codepoint = value;
+
     return 1;
+}
+
+const char *utf8_iterate(const char *buffer, int32_t *codepoint)
+{
+    int count;
+    int32_t value;
+
+    if(!*buffer)
+        return buffer;
+
+    count = utf8_check_first(buffer[0]);
+    if(count <= 0)
+        return NULL;
+
+    if(count == 1)
+        value = (unsigned char)buffer[0];
+    else
+    {
+        if(!utf8_check_full(buffer, count, &value))
+            return NULL;
+    }
+
+    if(codepoint)
+        *codepoint = value;
+
+    return buffer + count;
 }
 
 int utf8_check_string(const char *string, int length)
@@ -148,7 +179,7 @@ int utf8_check_string(const char *string, int length)
             if(i + count > length)
                 return 0;
 
-            if(!utf8_check_full(&string[i], count))
+            if(!utf8_check_full(&string[i], count, NULL))
                 return 0;
 
             i += count - 1;

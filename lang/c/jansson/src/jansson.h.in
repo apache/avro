@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 #ifndef __cplusplus
-#define JSON_INLINE inline
+#define JSON_INLINE @json_inline@
 #else
 #define JSON_INLINE inline
 extern "C" {

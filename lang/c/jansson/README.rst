@@ -36,8 +36,6 @@ To run the test suite, invoke::
 
    $ make check
 
-Python_ is required to run the tests.
-
 
 Documentation
 -------------
@@ -49,15 +47,13 @@ available at http://www.digip.org/jansson/doc/.
 
 To generate HTML documentation yourself, invoke::
 
-   cd doc/
-   sphinx-build . .build/html
+   make html
 
-... and point your browser to ``.build/html/index.html``. Sphinx_ is
+and point your browser to ``doc/_build/html/index.html``. Sphinx_ is
 required to generate the documentation.
 
 
 .. _Jansson: http://www.digip.org/jansson/
 .. _`MIT license`: http://www.opensource.org/licenses/mit-license.php
-.. _Python: http://www.python.org/
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 .. _Sphinx: http://sphinx.pocoo.org/

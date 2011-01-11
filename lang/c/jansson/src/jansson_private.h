@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
@@ -17,6 +17,7 @@
 typedef struct {
     json_t json;
     hashtable_t hashtable;
+    unsigned long serial;
     int visited;
 } json_object_t;
 
@@ -49,7 +50,11 @@ typedef struct {
 #define json_to_real(json_)   container_of(json_, json_real_t, json)
 #define json_to_integer(json_) container_of(json_, json_integer_t, json)
 
-int json_object_set_nocheck(json_t *json, const char *key, json_t *value);
-json_t *json_string_nocheck(const char *value);
+typedef struct {
+    unsigned long serial;
+    char key[];
+} object_key_t;
+
+const object_key_t *jsonp_object_iter_fullkey(void *iter);
 
 #endif

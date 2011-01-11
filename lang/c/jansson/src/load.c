@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
@@ -113,7 +113,8 @@ static void error_set(json_error_t *error, const lex_t *lex,
 
 /*** lexical analyzer ***/
 
-void stream_init(stream_t *stream, get_func get, eof_func eof, void *data)
+static void
+stream_init(stream_t *stream, get_func get, eof_func eof, void *data)
 {
     stream->get = get;
     stream->eof = eof;
@@ -148,7 +149,7 @@ static char stream_get(stream_t *stream, json_error_t *error)
             for(i = 1; i < count; i++)
                 stream->buffer[i] = stream->get(stream->data);
 
-            if(!utf8_check_full(stream->buffer, count))
+            if(!utf8_check_full(stream->buffer, count, NULL))
                 goto out;
 
             stream->stream_pos += count;
@@ -221,10 +222,10 @@ static void lex_save_cached(lex_t *lex)
 }
 
 /* assumes that str points to 'u' plus at least 4 valid hex digits */
-static int decode_unicode_escape(const char *str)
+static int32_t decode_unicode_escape(const char *str)
 {
     int i;
-    int value = 0;
+    int32_t value = 0;
 
     assert(str[0] == 'u');
 
@@ -325,7 +326,7 @@ static void lex_scan_string(lex_t *lex, json_error_t *error)
             if(*p == 'u') {
                 char buffer[4];
                 int length;
-                int value;
+                int32_t value;
 
                 value = decode_unicode_escape(p);
                 p += 5;
@@ -333,7 +334,7 @@ static void lex_scan_string(lex_t *lex, json_error_t *error)
                 if(0xD800 <= value && value <= 0xDBFF) {
                     /* surrogate pair */
                     if(*p == '\\' && *(p + 1) == 'u') {
-                        int value2 = decode_unicode_escape(++p);
+                        int32_t value2 = decode_unicode_escape(++p);
                         p += 5;
 
                         if(0xDC00 <= value2 && value2 <= 0xDFFF) {
@@ -483,14 +484,7 @@ static int lex_scan_number(lex_t *lex, char c, json_error_t *error)
     value = strtod(saved_text, &end);
     assert(end == saved_text + lex->saved_text.length);
 
-    if(value == 0 && errno == ERANGE) {
-        error_set(error, lex, "real number underflow");
-        goto out;
-    }
-
-    /* Cannot test for +/-HUGE_VAL because the HUGE_VAL constant is
-       only defined in C99 mode. So let's trust in sole errno. */
-    else if(errno == ERANGE) {
+    if(errno == ERANGE && value != 0) {
         error_set(error, lex, "real number overflow");
         goto out;
     }

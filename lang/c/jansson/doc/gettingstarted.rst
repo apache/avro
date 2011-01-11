@@ -31,9 +31,9 @@ the ``--prefix=DIR`` argument to ``./configure``. See ``./configure
 no options to customize the resulting Jansson binary.)
 
 The command ``make check`` runs the test suite distributed with
-Jansson. Python_ is required to run the tests. This step is not
-strictly necessary, but it may find possible problems that Jansson has
-on your platform. If any problems are found, please report them.
+Jansson. This step is not strictly necessary, but it may find possible
+problems that Jansson has on your platform. If any problems are found,
+please report them.
 
 If you obtained the source from a Git repository (or any other source
 control system), there's no ``./configure`` script as it's not kept in
@@ -44,12 +44,11 @@ to use ``autoreconf``::
     autoreconf -vi
 
 This command creates the ``./configure`` script, which can then be
-used as described in the previous section.
+used as described above.
 
 .. _autoconf: http://www.gnu.org/software/autoconf/
 .. _automake: http://www.gnu.org/software/automake/
 .. _libtool: http://www.gnu.org/software/libtool/
-.. _Python: http://www.python.org/
 
 
 Installing Prebuilt Binary Packages
@@ -76,18 +75,17 @@ Documentation is in the ``doc/`` subdirectory. It's written in
 reStructuredText_ with Sphinx_ annotations. To generate the HTML
 documentation, invoke::
 
-   cd doc/
-   sphinx-build . .build/html
+   make html
 
-... and point your browser to ``.build/html/index.html``. Sphinx_ is
+and point your browser to ``doc/_build/html/index.html``. Sphinx_ is
 required to generate the documentation.
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 .. _Sphinx: http://sphinx.pocoo.org/
 
 
-Compiling Programs Using Jansson
-================================
+Compiling Programs That Use Jansson
+===================================
 
 Jansson involves one C header file, :file:`jansson.h`, so it's enough
 to put the line
@@ -102,3 +100,9 @@ There's also just one library to link with, ``libjansson``. Compile and
 link the program as follows::
 
     cc -o prog prog.c -ljansson
+
+Starting from version 1.2, there's also support for pkg-config_::
+
+    cc -o prog prog.c `pkg-config --cflags --libs jansson`
+
+.. _pkg-config: http://pkg-config.freedesktop.org/

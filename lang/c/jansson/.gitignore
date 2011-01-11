@@ -4,3 +4,4 @@ depcomp
 install-sh
 ltmain.sh
 missing
+jansson.pc
