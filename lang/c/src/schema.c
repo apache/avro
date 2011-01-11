@@ -1025,6 +1025,64 @@ avro_schema_t avro_schema_copy(avro_schema_t schema)
 	return new_schema;
 }
 
+avro_schema_t avro_schema_get_subschema(const avro_schema_t schema,
+         const char *name)
+{
+ if (is_avro_record(schema)) {
+   const struct avro_record_schema_t *rschema =
+     avro_schema_to_record(schema);
+   union {
+     st_data_t data;
+     struct avro_record_field_t *field;
+   } field;
+
+   if (st_lookup(rschema->fields_byname,
+           (st_data_t) name, &field.data))
+   {
+     return field.field->type;
+   }
+
+   return NULL;
+ } else if (is_avro_union(schema)) {
+   const struct avro_union_schema_t *uschema =
+     avro_schema_to_union(schema);
+   long i;
+
+   for (i = 0; i < uschema->branches->num_entries; i++) {
+     union {
+       st_data_t data;
+       avro_schema_t schema;
+     } val;
+     st_lookup(uschema->branches, i, &val.data);
+     if (strcmp(avro_schema_type_name(val.schema),
+          name) == 0)
+     {
+       return val.schema;
+     }
+   }
+
+   return NULL;
+ } else if (is_avro_array(schema)) {
+   if (strcmp(name, "[]") == 0) {
+     const struct avro_array_schema_t *aschema =
+       avro_schema_to_array(schema);
+     return aschema->items;
+   }
+
+   return NULL;
+ } else if (is_avro_map(schema)) {
+   if (strcmp(name, "{}") == 0) {
+     const struct avro_map_schema_t *mschema =
+       avro_schema_to_map(schema);
+     return mschema->values;
+   }
+
+   return NULL;
+ }
+
+ return NULL;
+}
+
 const char *avro_schema_name(const avro_schema_t schema)
 {
 	if (is_avro_record(schema)) {
@@ -1035,6 +1093,40 @@ const char *avro_schema_name(const avro_schema_t schema)
 		return (avro_schema_to_fixed(schema))->name;
 	}
 	return NULL;
+}
+
+const char *avro_schema_type_name(const avro_schema_t schema)
+{
+ if (is_avro_record(schema)) {
+   return (avro_schema_to_record(schema))->name;
+ } else if (is_avro_enum(schema)) {
+   return (avro_schema_to_enum(schema))->name;
+ } else if (is_avro_fixed(schema)) {
+   return (avro_schema_to_fixed(schema))->name;
+ } else if (is_avro_union(schema)) {
+   return "union";
+ } else if (is_avro_array(schema)) {
+   return "array";
+ } else if (is_avro_map(schema)) {
+   return "map";
+ } else if (is_avro_int32(schema)) {
+   return "int32";
+ } else if (is_avro_int64(schema)) {
+   return "int64";
+ } else if (is_avro_float(schema)) {
+   return "float";
+ } else if (is_avro_double(schema)) {
+   return "double";
+ } else if (is_avro_boolean(schema)) {
+   return "boolean";
+ } else if (is_avro_null(schema)) {
+   return "null";
+ } else if (is_avro_string(schema)) {
+   return "string";
+ } else if (is_avro_bytes(schema)) {
+   return "bytes";
+ }
+ return NULL;
 }
 
 /* simple helper for writing strings */

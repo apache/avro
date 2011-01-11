@@ -136,7 +136,10 @@ int avro_schema_to_json(avro_schema_t schema, avro_writer_t out);
 
 int avro_schema_to_specific(avro_schema_t schema, const char *prefix);
 
+avro_schema_t avro_schema_get_subschema(const avro_schema_t schema,
+         const char *name);
 const char *avro_schema_name(const avro_schema_t schema);
+const char *avro_schema_type_name(const avro_schema_t schema);
 avro_schema_t avro_schema_copy(avro_schema_t schema);
 int avro_schema_equal(avro_schema_t a, avro_schema_t b);
 

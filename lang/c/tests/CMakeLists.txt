@@ -26,6 +26,10 @@ add_executable(test_avro_schema test_avro_schema.c)
 target_link_libraries(test_avro_schema avro-static)
 add_test(test_avro_schema ${CMAKE_COMMAND} -E chdir ${AvroC_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/test_avro_schema)
 
+add_executable(test_avro_schema_names test_avro_schema_names.c)
+target_link_libraries(test_avro_schema_names avro-static)
+add_test(test_avro_schema_names ${CMAKE_COMMAND} -E chdir ${AvroC_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/test_avro_schema_names)
+
 add_executable(test_avro_data test_avro_data.c)
 target_link_libraries(test_avro_data avro-static)
 add_test(test_avro_data ${CMAKE_COMMAND} -E chdir ${AvroC_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/test_avro_data)
