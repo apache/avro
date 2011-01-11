@@ -18,6 +18,7 @@
 #include "avro_private.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int test_cases = 0;
 avro_writer_t avro_stderr;
