@@ -212,7 +212,9 @@ int avro_record_get(const avro_datum_t record, const char *field_name,
 		    avro_datum_t * value);
 int avro_map_get(const avro_datum_t datum, const char *key,
 		 avro_datum_t * value);
+size_t avro_map_size(const avro_datum_t datum);
 int avro_array_get(const avro_datum_t datum, int64_t index, avro_datum_t * value);
+size_t avro_array_size(const avro_datum_t datum);
 
 /* setters */
 int avro_string_set(avro_datum_t datum, const char *p);

@@ -279,6 +279,11 @@ static int test_array(void)
 		}
 	}
 
+	if (avro_array_size(datum) != 10) {
+		fprintf(stderr, "Unexpected array size");
+		exit(EXIT_FAILURE);
+	}
+
 	write_read_check(schema, NULL, datum, "array");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
@@ -298,6 +303,12 @@ static int test_map(void)
 		avro_datum_decref(i_datum);
 		i++;
 	}
+
+	if (avro_array_size(datum) != 7) {
+		fprintf(stderr, "Unexpected array size");
+		exit(EXIT_FAILURE);
+	}
+
 	write_read_check(schema, NULL, datum, "map");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);

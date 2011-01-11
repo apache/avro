@@ -621,6 +621,13 @@ avro_datum_t avro_map(void)
 	return &datum->obj;
 }
 
+size_t
+avro_map_size(const avro_datum_t datum)
+{
+	const struct avro_map_datum_t  *map = avro_datum_to_map(datum);
+	return map->map->num_entries;
+}
+
 int
 avro_map_get(const avro_datum_t datum, const char *key, avro_datum_t * value)
 {
@@ -702,6 +709,13 @@ avro_array_get(const avro_datum_t array_datum, int64_t index, avro_datum_t * val
         }
     }
     return EINVAL;
+}
+
+size_t
+avro_array_size(const avro_datum_t datum)
+{
+	const struct avro_array_datum_t  *array = avro_datum_to_array(datum);
+	return array->els->num_entries;
 }
 
 int
