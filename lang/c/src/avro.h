@@ -171,7 +171,7 @@ typedef struct avro_schema_error_t_ *avro_schema_error_t;
 int avro_schema_from_json(const char *jsontext,
 			  const int32_t len,
 			  avro_schema_t * schema, avro_schema_error_t * error);
-int avro_schema_to_json(avro_schema_t schema, avro_writer_t out);
+int avro_schema_to_json(const avro_schema_t schema, avro_writer_t out);
 
 int avro_schema_to_specific(avro_schema_t schema, const char *prefix);
 

@@ -1352,7 +1352,7 @@ static int avro_write_str(avro_writer_t out, const char *str)
 	return avro_write(out, (char *)str, strlen(str));
 }
 
-static int write_field(avro_writer_t out, struct avro_record_field_t *field)
+static int write_field(avro_writer_t out, const struct avro_record_field_t *field)
 {
 	int rval;
 	check(rval, avro_write_str(out, "{\"name\":\""));
@@ -1362,7 +1362,7 @@ static int write_field(avro_writer_t out, struct avro_record_field_t *field)
 	return avro_write_str(out, "}");
 }
 
-static int write_record(avro_writer_t out, struct avro_record_schema_t *record)
+static int write_record(avro_writer_t out, const struct avro_record_schema_t *record)
 {
 	int rval;
 	long i;
@@ -1390,7 +1390,7 @@ static int write_record(avro_writer_t out, struct avro_record_schema_t *record)
 	return avro_write_str(out, "]}");
 }
 
-static int write_enum(avro_writer_t out, struct avro_enum_schema_t *enump)
+static int write_enum(avro_writer_t out, const struct avro_enum_schema_t *enump)
 {
 	int rval;
 	long i;
@@ -1413,7 +1413,7 @@ static int write_enum(avro_writer_t out, struct avro_enum_schema_t *enump)
 	}
 	return avro_write_str(out, "]}");
 }
-static int write_fixed(avro_writer_t out, struct avro_fixed_schema_t *fixed)
+static int write_fixed(avro_writer_t out, const struct avro_fixed_schema_t *fixed)
 {
 	int rval;
 	char size[16];
@@ -1424,21 +1424,21 @@ static int write_fixed(avro_writer_t out, struct avro_fixed_schema_t *fixed)
 	check(rval, avro_write_str(out, size));
 	return avro_write_str(out, "}");
 }
-static int write_map(avro_writer_t out, struct avro_map_schema_t *map)
+static int write_map(avro_writer_t out, const struct avro_map_schema_t *map)
 {
 	int rval;
 	check(rval, avro_write_str(out, "{\"type\":\"map\",\"values\":"));
 	check(rval, avro_schema_to_json(map->values, out));
 	return avro_write_str(out, "}");
 }
-static int write_array(avro_writer_t out, struct avro_array_schema_t *array)
+static int write_array(avro_writer_t out, const struct avro_array_schema_t *array)
 {
 	int rval;
 	check(rval, avro_write_str(out, "{\"type\":\"array\",\"items\":"));
 	check(rval, avro_schema_to_json(array->items, out));
 	return avro_write_str(out, "}");
 }
-static int write_union(avro_writer_t out, struct avro_union_schema_t *unionp)
+static int write_union(avro_writer_t out, const struct avro_union_schema_t *unionp)
 {
 	int rval;
 	long i;
@@ -1457,7 +1457,7 @@ static int write_union(avro_writer_t out, struct avro_union_schema_t *unionp)
 	}
 	return avro_write_str(out, "]");
 }
-static int write_link(avro_writer_t out, struct avro_link_schema_t *link)
+static int write_link(avro_writer_t out, const struct avro_link_schema_t *link)
 {
 	int rval;
 	check(rval, avro_write_str(out, "\""));
@@ -1465,7 +1465,7 @@ static int write_link(avro_writer_t out, struct avro_link_schema_t *link)
 	return avro_write_str(out, "\"");
 }
 
-int avro_schema_to_json(avro_schema_t schema, avro_writer_t out)
+int avro_schema_to_json(const avro_schema_t schema, avro_writer_t out)
 {
 	int rval;
 
