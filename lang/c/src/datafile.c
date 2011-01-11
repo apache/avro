@@ -16,6 +16,7 @@
  */
 
 #include "avro_private.h"
+#include "allocation.h"
 #include "encoding.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -137,13 +138,13 @@ avro_file_writer_create(const char *path, avro_schema_t schema,
 	if (!path || !is_avro_schema(schema) || !writer) {
 		return EINVAL;
 	}
-	w = malloc(sizeof(struct avro_file_writer_t_));
+	w = avro_new(struct avro_file_writer_t_);
 	if (!w) {
 		return ENOMEM;
 	}
 	rval = file_writer_create(path, schema, w);
 	if (rval) {
-		free(w);
+		avro_freet(struct avro_file_writer_t_, w);
 		return rval;
 	}
 	*writer = w;
@@ -205,7 +206,7 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 	/* Position to end of file and get ready to write */
 	rval = file_writer_init_fp(path, "a", w);
 	if (rval) {
-		free(w);
+		avro_freet(struct avro_file_writer_t_, w);
 	}
 	return rval;
 }
@@ -217,13 +218,13 @@ int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 	if (!path || !writer) {
 		return EINVAL;
 	}
-	w = malloc(sizeof(struct avro_file_writer_t_));
+	w = avro_new(struct avro_file_writer_t_);
 	if (!w) {
 		return ENOMEM;
 	}
 	rval = file_writer_open(path, w);
 	if (rval) {
-		free(w);
+		avro_freet(struct avro_file_writer_t_, w);
 		return rval;
 	}
 
@@ -245,7 +246,7 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 {
 	int rval;
 	FILE *fp;
-	avro_file_reader_t r = malloc(sizeof(struct avro_file_reader_t_));
+	avro_file_reader_t r = avro_new(struct avro_file_reader_t_);
 	if (!r) {
 		return ENOMEM;
 	}
@@ -331,7 +332,7 @@ int avro_file_writer_close(avro_file_writer_t w)
 	check(rval, avro_file_writer_flush(w));
 	avro_writer_free(w->datum_writer);
 	avro_writer_free(w->writer);
-	free(w);
+	avro_freet(struct avro_file_writer_t_, w);
 	return 0;
 }
 
@@ -366,6 +367,6 @@ int avro_file_reader_close(avro_file_reader_t reader)
 {
 	avro_schema_decref(reader->writers_schema);
 	avro_reader_free(reader->reader);
-	free(reader);
+	avro_freet(struct avro_file_reader_t_, reader);
 	return 0;
 }

@@ -28,6 +28,39 @@ avro_writer_t writer;
 
 typedef int (*avro_test) (void);
 
+/*
+ * Use a custom allocator that verifies that the size that we use to
+ * free an object matches the size that we use to allocate it.
+ */
+
+static void *
+test_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
+{
+	AVRO_UNUSED(ud);
+	AVRO_UNUSED(osize);
+
+	if (nsize == 0) {
+		size_t  *size = ((size_t *) ptr) - 1;
+		if (osize != *size) {
+			fprintf(stderr,
+				"Error freeing %p:\n"
+				"Size passed to avro_free (%zu) "
+				"doesn't match size passed to "
+				"avro_malloc (%zu)\n",
+				ptr, osize, *size);
+			exit(EXIT_FAILURE);
+		}
+		free(size);
+		return NULL;
+	} else {
+		size_t  real_size = nsize + sizeof(size_t);
+		size_t  *old_size = ptr? ((size_t *) ptr)-1: NULL;
+		size_t  *size = realloc(old_size, real_size);
+		*size = nsize;
+		return (size + 1);
+	}
+}
+
 void init_rand(void)
 {
 	srand(time(NULL));
@@ -425,6 +458,8 @@ static int test_fixed(void)
 
 int main(void)
 {
+	avro_set_allocator(test_allocator, NULL);
+
 	unsigned int i;
 	struct avro_tests {
 		char *name;

@@ -18,6 +18,8 @@
 #
 
 set(AVRO_SRC
+    allocation.h
+    allocation.c
     avro.h
     avro_private.h
     datafile.c

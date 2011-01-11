@@ -26,7 +26,7 @@ struct avro_encoding_t {
 	/*
 	 * string 
 	 */
-	int (*read_string) (avro_reader_t reader, char **s);
+	int (*read_string) (avro_reader_t reader, char **s, int64_t *len);
 	int (*skip_string) (avro_reader_t reader);
 	int (*write_string) (avro_writer_t writer, const char *s);
 	 int64_t(*size_string) (avro_writer_t writer, const char *s);

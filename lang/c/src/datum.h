@@ -21,17 +21,21 @@
 #include "avro_private.h"
 #include "st.h"
 
+typedef void
+(*avro_free_func_t)(void *ptr, size_t sz);
+
 struct avro_string_datum_t {
 	struct avro_obj_t obj;
 	char *s;
-	void (*free) (void *ptr);
+	int64_t size;
+	avro_free_func_t  free;
 };
 
 struct avro_bytes_datum_t {
 	struct avro_obj_t obj;
 	char *bytes;
 	int64_t size;
-	void (*free) (void *ptr);
+	avro_free_func_t  free;
 };
 
 struct avro_int32_datum_t {
@@ -64,7 +68,7 @@ struct avro_fixed_datum_t {
 	char *name;
 	char *bytes;
 	int64_t size;
-	void (*free) (void *ptr);
+	avro_free_func_t  free;
 };
 
 struct avro_map_datum_t {

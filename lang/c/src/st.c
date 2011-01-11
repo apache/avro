@@ -8,6 +8,7 @@
  */
 
 #include "avro_private.h"
+#include "allocation.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,8 +59,10 @@ static void rehash(st_table *);
 #define calloc xcalloc
 #endif
 
-#define alloc(type) (type*)malloc((unsigned)sizeof(type))
-#define Calloc(n,s) (char*)calloc((n),(s))
+#define Calloc(n,s) (char*)avro_calloc((n),(s))
+
+#define free_bins(tbl)  \
+	avro_free(tbl->bins, tbl->num_bins * sizeof(st_table_entry *))
 
 #define EQUAL(table,x,y) ((x)==(y) || (*table->type->compare)((x),(y)) == 0)
 
@@ -160,7 +163,7 @@ int size;
 
 	size = new_size(size);	/* round up to prime number */
 
-	tbl = alloc(st_table);
+	tbl = avro_new(st_table);
 	tbl->type = type;
 	tbl->num_entries = 0;
 	tbl->num_bins = size;
@@ -207,12 +210,12 @@ st_table *table;
 		ptr = table->bins[i];
 		while (ptr != 0) {
 			next = ptr->next;
-			free(ptr);
+			avro_freet(st_table_entry, ptr);
 			ptr = next;
 		}
 	}
-	free(table->bins);
-	free(table);
+	free_bins(table);
+	avro_freet(st_table, table);
 }
 
 #define PTR_NOT_EQUAL(table, ptr, hash_val, key) \
@@ -264,7 +267,7 @@ do {\
         bin_pos = hash_val % table->num_bins;\
     }\
     \
-    entry = alloc(st_table_entry);\
+    entry = avro_new(st_table_entry);\
     \
     entry->hash = hash_val;\
     entry->key = key;\
@@ -327,7 +330,7 @@ register st_table *table;
 			ptr = next;
 		}
 	}
-	free(table->bins);
+	free_bins(table);
 	table->num_bins = new_num_bins;
 	table->bins = new_bins;
 }
@@ -339,7 +342,7 @@ st_table *old_table;
 	st_table_entry *ptr, *entry;
 	int i, num_bins = old_table->num_bins;
 
-	new_table = alloc(st_table);
+	new_table = avro_new(st_table);
 	if (new_table == 0) {
 		return 0;
 	}
@@ -349,7 +352,7 @@ st_table *old_table;
 	    Calloc((unsigned)num_bins, sizeof(st_table_entry *));
 
 	if (new_table->bins == 0) {
-		free(new_table);
+		avro_freet(st_table, new_table);
 		return 0;
 	}
 
@@ -357,10 +360,10 @@ st_table *old_table;
 		new_table->bins[i] = 0;
 		ptr = old_table->bins[i];
 		while (ptr != 0) {
-			entry = alloc(st_table_entry);
+			entry = avro_new(st_table_entry);
 			if (entry == 0) {
-				free(new_table->bins);
-				free(new_table);
+				free_bins(new_table);
+				avro_freet(st_table, new_table);
 				return 0;
 			}
 			*entry = *ptr;
@@ -396,7 +399,7 @@ st_data_t *value;
 		if (value != 0)
 			*value = ptr->record;
 		*key = ptr->key;
-		free(ptr);
+		avro_freet(st_table_entry, ptr);
 		return 1;
 	}
 
@@ -408,7 +411,7 @@ st_data_t *value;
 			if (value != 0)
 				*value = tmp->record;
 			*key = tmp->key;
-			free(tmp);
+			avro_freet(st_table_entry, tmp);
 			return 1;
 		}
 	}
@@ -515,7 +518,7 @@ st_data_t arg;
 					last->next = ptr->next;
 				}
 				ptr = ptr->next;
-				free(tmp);
+				avro_freet(st_table_entry, tmp);
 				table->num_entries--;
 			}
 		}

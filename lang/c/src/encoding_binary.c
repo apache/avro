@@ -16,6 +16,7 @@
  */
 
 #include "avro_private.h"
+#include "allocation.h"
 #include "encoding.h"
 #include <stdlib.h>
 #include <limits.h>
@@ -126,11 +127,10 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 	if (rval) {
 		return rval;
 	}
-	*bytes = malloc(*len + 1);
+	*bytes = avro_malloc(*len);
 	if (!*bytes) {
 		return ENOMEM;
 	}
-	(*bytes)[*len] = '\0';
 	AVRO_READ(reader, *bytes, *len);
 	return 0;
 }
@@ -169,10 +169,21 @@ size_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 	return size_long(writer, len) + len;
 }
 
-static int read_string(avro_reader_t reader, char **s)
+static int read_string(avro_reader_t reader, char **s, int64_t *len)
 {
-	int64_t len;
-	return read_bytes(reader, s, &len);
+	int64_t  str_len;
+	int rval = read_long(reader, &str_len);
+	if (rval) {
+		return rval;
+	}
+	*len = str_len + 1;
+	*s = avro_malloc(*len);
+	if (!*s) {
+		return ENOMEM;
+	}
+	(*s)[str_len] = '\0';
+	AVRO_READ(reader, *s, str_len);
+	return 0;
 }
 
 static int skip_string(avro_reader_t reader)

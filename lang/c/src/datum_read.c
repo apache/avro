@@ -16,6 +16,7 @@
  */
 
 #include "avro_private.h"
+#include "allocation.h"
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -185,8 +186,9 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 		}
 		for (i = 0; i < block_count; i++) {
 			char *key;
+			int64_t key_size;
 			avro_datum_t value;
-			rval = enc->read_string(reader, &key);
+			rval = enc->read_string(reader, &key, &key_size);
 			if (rval) {
 				return rval;
 			}
@@ -197,16 +199,16 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 					   avro_schema_to_map(readers_schema)->
 					   values, &value);
 			if (rval) {
-				free(key);
+				avro_free(key, key_size);
 				return rval;
 			}
 			rval = avro_map_set(map, key, value);
 			if (rval) {
-				free(key);
+				avro_free(key, key_size);
 				return rval;
 			}
 			avro_datum_decref(value);
-			free(key);
+			avro_free(key, key_size);
 		}
 		rval = enc->read_long(reader, &block_count);
 		if (rval) {
@@ -326,8 +328,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 
 	case AVRO_STRING:
 		{
+			int64_t len;
 			char *s;
-			rval = enc->read_string(reader, &s);
+			rval = enc->read_string(reader, &s, &len);
 			if (!rval) {
 				*datum = avro_givestring(s);
 			}
@@ -392,7 +395,7 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			int64_t size =
 			    avro_schema_to_fixed(writers_schema)->size;
 
-			bytes = malloc(size);
+			bytes = avro_malloc(size);
 			if (!bytes) {
 				return ENOMEM;
 			}

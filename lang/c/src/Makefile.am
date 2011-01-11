@@ -9,6 +9,7 @@ lib_LTLIBRARIES = libavro.la
 libavro_la_SOURCES = st.c st.h schema.c schema.h schema_equal.c \
 datum.c datum_equal.c datum_validate.c datum_read.c datum_skip.c datum_write.c datum_size.c datum.h \
 io.c dump.c dump.h encoding_binary.c \
+allocation.h allocation.c \
 avro_private.h encoding.h datafile.c
 libavro_la_LIBADD = $(top_builddir)/jansson/src/.libs/libjansson.a
 libavro_la_LDFLAGS = \
