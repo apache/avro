@@ -110,6 +110,8 @@ Avro 1.5.0 (unreleased)
     AVRO-731. Documentation: Improve identification of Apache
     trademarks. (cutting)
 
+    AVRO-734. Java: Update maven build plugin versions.
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.
