@@ -23,7 +23,6 @@ import java.util.TreeMap;
 
 import java.io.InputStream;
 
-import org.apache.avro.mapred.tether.TetherJob;
 import org.apache.avro.reflect.InduceSchemaTool;
 import org.apache.avro.specific.SpecificCompiler.SpecificCompilerTool;
 
@@ -52,7 +51,7 @@ public class Main {
         new RpcSendTool(),
         new FromTextTool(),
         new ToTextTool(),
-        new TetherJob()
+        new TetherTool()
         }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {

@@ -26,7 +26,8 @@ Avro 1.5.0 (unreleased)
       API for Hadoop MapReduce with Avro data.
       Dependencies: avro-ipc.jar, hadoop-core, and jopt-simple.
     * avro-tools.jar
-      Avro command-line tools.
+      Avro command-line tools stand-alone jar.
+      Dependencies are contained within the jar.
       Dependencies: all of the above.
 
     (scottcarey)

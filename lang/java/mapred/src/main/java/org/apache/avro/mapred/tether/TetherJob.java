@@ -19,10 +19,6 @@
 package org.apache.avro.mapred.tether;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.File;
-import java.util.List;
 import java.util.Collection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,24 +26,14 @@ import java.net.URISyntaxException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
-import org.apache.avro.Schema;
-import org.apache.avro.tool.Tool;
-import org.apache.avro.mapred.AvroJob;
-
-/** Constructs and submits tether jobs. This may either be used as a
- * commandline-based or API-based method to launch tether jobs. */
-public class TetherJob extends Configured implements Tool {
+/** Constructs and submits tether jobs. This may be used as an API-based
+ *  method to launch tether jobs. */
+@SuppressWarnings("deprecation")
+public class TetherJob extends Configured {
 
   /** Get the URI of the application's executable. */
   public static URI getExecutable(JobConf job) {
@@ -100,57 +86,6 @@ public class TetherJob extends Configured implements Tool {
     }
     
     DistributedCache.addCacheFile(getExecutable(job), job);
-  }
-
-  // Tool methods
-
-  @Override
-  public String getName() { return "tether"; }
-
-  @Override
-  public String getShortDescription() {return "Run a tethered mapreduce job.";}
-
-  @Override
-  public int run(InputStream ins, PrintStream outs, PrintStream err,
-                 List<String> args) throws Exception {
-
-    OptionParser p = new OptionParser();
-    OptionSpec<URI> exec =
-      p.accepts("program", "executable program, usually in HDFS")
-      .withRequiredArg().ofType(URI.class);
-    OptionSpec<String> in = p.accepts("in", "comma-separated input paths")
-      .withRequiredArg().ofType(String.class);
-    OptionSpec<Path> out = p.accepts("out", "output directory")
-      .withRequiredArg().ofType(Path.class);
-    OptionSpec<File> outSchema = p.accepts("outschema", "output schema file")
-      .withRequiredArg().ofType(File.class);
-    OptionSpec<File> mapOutSchema =
-      p.accepts("outschemamap", "map output schema file, if different")
-      .withOptionalArg().ofType(File.class);
-    OptionSpec<Integer> reduces = p.accepts("reduces", "number of reduces")
-      .withOptionalArg().ofType(Integer.class);
-
-    JobConf job = new JobConf();
-      
-    try {
-      OptionSet opts = p.parse(args.toArray(new String[0]));
-      FileInputFormat.addInputPaths(job, in.value(opts));
-      FileOutputFormat.setOutputPath(job, out.value(opts));
-      TetherJob.setExecutable(job, exec.value(opts));
-      job.set(AvroJob.OUTPUT_SCHEMA,
-              Schema.parse(outSchema.value(opts)).toString());
-      if (opts.hasArgument(mapOutSchema))
-        job.set(AvroJob.MAP_OUTPUT_SCHEMA,
-                Schema.parse(mapOutSchema.value(opts)).toString());
-      if (opts.hasArgument(reduces))
-        job.setNumReduceTasks(reduces.value(opts));
-    } catch (Exception e) {
-      p.printHelpOn(err);
-      return -1;
-    }
-
-    runJob(job);
-    return 0;
   }
 
 }

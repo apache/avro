@@ -23,9 +23,10 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.FileWriter;
+import java.io.StringBufferInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,10 +39,10 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.tools.ant.filters.StringInputStream;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class TestDataFileTools {
   static final int COUNT = 10;
   static File sampleFile;
@@ -130,7 +131,7 @@ public class TestDataFileTools {
     args.add("-");
     args.addAll(extra);
     new DataFileWriteTool().run(
-        new StringInputStream(jsonData),
+        new StringBufferInputStream(jsonData),
         new PrintStream(out), // stdout
         null, // stderr
         args);
@@ -160,7 +161,7 @@ public class TestDataFileTools {
     PrintStream out = new PrintStream(baos);
     try {
       new DataFileWriteTool().run(
-          new StringInputStream("{"),
+          new StringBufferInputStream("{"),
           new PrintStream(out), // stdout
           null, // stderr          
           Arrays.asList("-schema", "{ \"type\":\"record\", \"fields\":" +
@@ -206,7 +207,7 @@ public class TestDataFileTools {
     FileOutputStream fout = new FileOutputStream(outFile);
     PrintStream out = new PrintStream(fout);
     new DataFileWriteTool().run(
-        new StringInputStream(json),
+        new StringBufferInputStream(json),
         new PrintStream(out), // stdout
         null, // stderr
         Arrays.asList("-schema", schema, "-"));
