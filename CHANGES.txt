@@ -155,6 +155,9 @@ Avro 1.5.0 (unreleased)
     AVRO-694. Python: Fix schema parse error for maps of records.
     (hammer via cutting)
 
+    AVRO-663. Java: avro-tools.jar does not meet maven2 layout standard.
+    (scottcarey)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES
