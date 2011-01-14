@@ -26,7 +26,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
