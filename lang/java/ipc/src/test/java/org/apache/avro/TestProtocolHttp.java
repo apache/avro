@@ -17,11 +17,15 @@
  */
 package org.apache.avro;
 
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRequestor;
 import org.apache.avro.specific.SpecificRequestor;
 import org.apache.avro.test.Simple;
 
@@ -31,6 +35,7 @@ import java.net.URL;
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.ArrayList;
 
 public class TestProtocolHttp extends TestProtocolSpecific {
 
@@ -62,6 +67,22 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     } finally {
       s.close();
     }
+  }
+
+  /** Test that Responder ignores one-way with stateless transport. */
+  @Test public void testStatelessOneway() throws Exception {
+    // a version of the Simple protocol that doesn't declare "ack" one-way
+    Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
+    Protocol.Message message =
+      protocol.createMessage("ack", null,
+                             Schema.createRecord(new ArrayList<Field>()),
+                             Schema.create(Schema.Type.NULL),
+                             Schema.createUnion(new ArrayList<Schema>()));
+    protocol.getMessages().put("ack", message);
+
+    // call a server over a stateless protocol that has a one-way "ack"
+    new GenericRequestor(protocol, createTransceiver())
+      .request("ack", new GenericData.Record(message.getRequest()));
   }
 
 }

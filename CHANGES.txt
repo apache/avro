@@ -159,6 +159,10 @@ Avro 1.5.0 (unreleased)
     AVRO-663. Java: avro-tools.jar does not meet maven2 layout standard.
     (scottcarey)
 
+    AVRO-688. Java: Only require that one-way'ness of messages match
+    over stateful connections, permitting interoperability with
+    Python and Ruby, which drop the one-way message attribute. (cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

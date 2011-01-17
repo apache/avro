@@ -136,7 +136,7 @@ public abstract class Responder {
       if (m == null)
         throw new AvroRuntimeException("No message named "+messageName
                                        +" in "+getLocal());
-      if (m.isOneWay() != rm.isOneWay())
+      if ((m.isOneWay() != rm.isOneWay()) && wasConnected)
         throw new AvroRuntimeException("Not both one-way: "+messageName);
 
       Object response = null;

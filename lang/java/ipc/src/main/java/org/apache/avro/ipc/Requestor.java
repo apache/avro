@@ -130,7 +130,8 @@ public abstract class Requestor {
     Message rm = remote.getMessages().get(messageName);
     if (rm == null)
       throw new AvroRuntimeException("Not a remote message: "+messageName);
-    if (m.isOneWay() != rm.isOneWay())
+
+    if ((m.isOneWay() != rm.isOneWay()) && t.isConnected())
       throw new AvroRuntimeException("Not both one-way messages: "+messageName);
 
     if (m.isOneWay() && t.isConnected()) return null; // one-way w/ handshake
