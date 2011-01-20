@@ -499,7 +499,6 @@ static int test_fixed(void)
 	write_read_check(schema, NULL, datum, "fixed");
 	test_json(datum, schema, "\"\\r\\n\\r\\n\\u000b\\n\\u000b\\n\"");
 	avro_datum_decref(datum);
-	avro_schema_decref(schema);
 
 	datum = avro_wrapfixed("msg", NULL, 0);
     avro_wrapfixed_set(datum, bytes, sizeof(bytes));
