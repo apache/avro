@@ -203,7 +203,7 @@ avro_schema_t avro_schema_string(void)
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_schema_incref(&obj);
 }
 
 avro_schema_t avro_schema_bytes(void)
@@ -213,7 +213,7 @@ avro_schema_t avro_schema_bytes(void)
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_schema_incref(&obj);
 }
 
 avro_schema_t avro_schema_int(void)
@@ -223,7 +223,7 @@ avro_schema_t avro_schema_int(void)
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_schema_incref(&obj);
 }
 
 avro_schema_t avro_schema_long(void)
@@ -233,7 +233,7 @@ avro_schema_t avro_schema_long(void)
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_schema_incref(&obj);
 }
 
 avro_schema_t avro_schema_float(void)
@@ -243,7 +243,7 @@ avro_schema_t avro_schema_float(void)
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_schema_incref(&obj);
 }
 
 avro_schema_t avro_schema_double(void)
@@ -253,7 +253,7 @@ avro_schema_t avro_schema_double(void)
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_schema_incref(&obj);
 }
 
 avro_schema_t avro_schema_boolean(void)
@@ -263,7 +263,7 @@ avro_schema_t avro_schema_boolean(void)
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_schema_incref(&obj);
 }
 
 avro_schema_t avro_schema_null(void)
@@ -273,7 +273,7 @@ avro_schema_t avro_schema_null(void)
 		.class_type = AVRO_SCHEMA,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_schema_incref(&obj);
 }
 
 avro_schema_t avro_schema_fixed(const char *name, const int64_t size)

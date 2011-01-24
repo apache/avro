@@ -406,7 +406,7 @@ avro_datum_t avro_null(void)
 		.class_type = AVRO_DATUM,
 		.refcount = 1
 	};
-	return &obj;
+	return avro_datum_incref(&obj);
 }
 
 avro_datum_t avro_union(int64_t discriminant, avro_datum_t value)
