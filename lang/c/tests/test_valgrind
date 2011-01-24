@@ -22,7 +22,7 @@ if ! which valgrind; then
 	exit 77
 fi
 
-../libtool execute valgrind --leak-check=full --show-reachable=yes -q test_avro_data 2>&1 |\
+../libtool execute valgrind --leak-check=full -q test_avro_data 2>&1 |\
 grep -E '^==[0-9]+== '
 if [ $? -eq 0 ]; then
 	# Expression found. Test failed.
