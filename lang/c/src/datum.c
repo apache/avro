@@ -118,7 +118,8 @@ int avro_string_set(avro_datum_t datum, const char *p)
 	if (!string_copy) {
 		return ENOMEM;
 	}
-	rval = avro_string_set_private(datum, p, 0, avro_str_free_wrapper);
+	rval = avro_string_set_private(datum, string_copy, 0,
+				       avro_str_free_wrapper);
 	if (rval) {
 		avro_str_free(string_copy);
 	}
@@ -206,7 +207,7 @@ int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
-	rval = avro_bytes_set_private(datum, bytes, size, avro_free_wrapper);
+	rval = avro_bytes_set_private(datum, bytes_copy, size, avro_free_wrapper);
 	if (rval) {
 		avro_free(bytes_copy, size);
 	}
@@ -643,7 +644,7 @@ avro_datum_t avro_fixed(const char *name, const char *bytes, const int64_t size)
 		return NULL;
 	}
 	memcpy(bytes_copy, bytes, size);
-	return avro_fixed_private(name, bytes, size, avro_free_wrapper);
+	return avro_fixed_private(name, bytes_copy, size, avro_free_wrapper);
 }
 
 avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
@@ -689,7 +690,7 @@ int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
-	rval = avro_fixed_set_private(datum, bytes, size, avro_free_wrapper);
+	rval = avro_fixed_set_private(datum, bytes_copy, size, avro_free_wrapper);
 	if (rval) {
 		avro_free(bytes_copy, size);
 	}

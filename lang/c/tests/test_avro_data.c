@@ -162,6 +162,13 @@ static int test_string(void)
 		  "\"Four score and seven years ago\"");
 	avro_datum_decref(datum);
 
+	// The following should bork if we don't copy the string value
+	// correctly (since we'll try to free a static string).
+
+	datum = avro_string("this should be copied");
+	avro_string_set(datum, "also this");
+	avro_datum_decref(datum);
+
 	avro_schema_decref(writer_schema);
 	return 0;
 }
@@ -190,8 +197,15 @@ static int test_bytes(void)
 	}
 	avro_datum_decref(datum);
 	avro_datum_decref(expected_datum);
-	avro_schema_decref(writer_schema);
 
+	// The following should bork if we don't copy the bytes value
+	// correctly (since we'll try to free a static string).
+
+	datum = avro_bytes("original", 8);
+	avro_bytes_set(datum, "alsothis", 8);
+	avro_datum_decref(datum);
+
+	avro_schema_decref(writer_schema);
 	return 0;
 }
 
@@ -510,8 +524,15 @@ static int test_fixed(void)
 	}
 	avro_datum_decref(datum);
 	avro_datum_decref(expected_datum);
-	avro_schema_decref(schema);
 
+	// The following should bork if we don't copy the fixed value
+	// correctly (since we'll try to free a static string).
+
+	datum = avro_fixed("msg", "original", 8);
+	avro_fixed_set(datum, "alsothis", 8);
+	avro_datum_decref(datum);
+
+	avro_schema_decref(schema);
 	return 0;
 }
 
