@@ -45,6 +45,8 @@ Avro 1.5.0 (unreleased)
     AVRO-696. Java: Make DataFileWriter.setMetaInternal(String,String)
     private. (Patrick Linehan via cutting)    
 
+    AVRO-741. C: Minor API change to handling of bytes data. (Douglas Creager via brucem)
+
   NEW FEATURES
 
     AVRO-684. Java: Add command-line "recodec" tool to change file

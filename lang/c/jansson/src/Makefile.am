@@ -1,6 +1,6 @@
 include_HEADERS = jansson.h
 
-lib_LTLIBRARIES = libjansson.la
+noinst_LTLIBRARIES = libjansson.la
 libjansson_la_SOURCES = \
 	dump.c \
 	hashtable.c \

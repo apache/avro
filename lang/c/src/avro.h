@@ -211,14 +211,30 @@ void avro_writer_free(avro_writer_t writer);
  * datum 
  */
 
+/**
+ * A function used to free a bytes, string, or fixed buffer once it is
+ * no longer needed by the datum that wraps it.
+ */
+
+typedef void
+(*avro_free_func_t)(void *ptr, size_t sz);
+
+/**
+ * An avro_free_func_t that frees the buffer using the custom allocator
+ * provided to avro_set_allocator.
+ */
+
+void
+avro_alloc_free(void *ptr, size_t sz);
+
 /* constructors */
 typedef struct avro_obj_t *avro_datum_t;
 avro_datum_t avro_string(const char *str);
-avro_datum_t avro_wrapstring(const char *str);
-avro_datum_t avro_givestring(const char *str);
+avro_datum_t avro_givestring(const char *str,
+			     avro_free_func_t free);
 avro_datum_t avro_bytes(const char *buf, int64_t len);
-avro_datum_t avro_wrapbytes(const char *buf, int64_t len);
-avro_datum_t avro_givebytes(const char *buf, int64_t len);
+avro_datum_t avro_givebytes(const char *buf, int64_t len,
+			    avro_free_func_t free);
 avro_datum_t avro_int32(int32_t i);
 avro_datum_t avro_int64(int64_t l);
 avro_datum_t avro_float(float f);
@@ -229,10 +245,9 @@ avro_datum_t avro_record(const char *name, const char *space);
 avro_datum_t avro_enum(const char *name, int i);
 avro_datum_t avro_fixed(const char *name, const char *bytes,
 			const int64_t size);
-avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
-			    const int64_t size);
 avro_datum_t avro_givefixed(const char *name, const char *bytes,
-			    const int64_t size);
+			    const int64_t size,
+			    avro_free_func_t free);
 avro_datum_t avro_map(void);
 avro_datum_t avro_array(void);
 avro_datum_t avro_union(int64_t discriminant, const avro_datum_t datum);
@@ -283,14 +298,13 @@ avro_datum_t avro_union_current_branch(avro_datum_t datum);
 
 /* setters */
 int avro_string_set(avro_datum_t datum, const char *p);
-int avro_givestring_set(avro_datum_t datum, const char *p);
-int avro_wrapstring_set(avro_datum_t datum, const char *p);
+int avro_givestring_set(avro_datum_t datum, const char *p,
+			avro_free_func_t free);
 
 int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size);
 int avro_givebytes_set(avro_datum_t datum, const char *bytes,
-		       const int64_t size);
-int avro_wrapbytes_set(avro_datum_t datum, const char *bytes,
-		       const int64_t size);
+		       const int64_t size,
+		       avro_free_func_t free);
 
 int avro_int32_set(avro_datum_t datum, const int32_t i);
 int avro_int64_set(avro_datum_t datum, const int64_t l);
@@ -303,9 +317,8 @@ int avro_enum_set_name(avro_datum_t datum, avro_schema_t schema,
 		       const char *symbol_name);
 int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size);
 int avro_givefixed_set(avro_datum_t datum, const char *bytes,
-		       const int64_t size);
-int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
-		       const int64_t size);
+		       const int64_t size,
+		       avro_free_func_t free);
 
 int avro_record_set(avro_datum_t record, const char *field_name,
 		    avro_datum_t value);

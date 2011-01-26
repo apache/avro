@@ -21,9 +21,6 @@
 #include "avro_private.h"
 #include "st.h"
 
-typedef void
-(*avro_free_func_t)(void *ptr, size_t sz);
-
 struct avro_string_datum_t {
 	struct avro_obj_t obj;
 	char *s;

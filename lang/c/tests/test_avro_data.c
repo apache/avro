@@ -152,12 +152,12 @@ static int test_string(void)
 	};
 	avro_schema_t writer_schema = avro_schema_string();
 	for (i = 0; i < sizeof(strings) / sizeof(strings[0]); i++) {
-		avro_datum_t datum = avro_wrapstring(strings[i]);
+		avro_datum_t datum = avro_givestring(strings[i], NULL);
 		write_read_check(writer_schema, NULL, datum, "string");
 		avro_datum_decref(datum);
 	}
 
-	avro_datum_t  datum = avro_wrapstring(strings[0]);
+	avro_datum_t  datum = avro_givestring(strings[0], NULL);
 	test_json(datum, writer_schema,
 		  "\"Four score and seven years ago\"");
 	avro_datum_decref(datum);
@@ -180,16 +180,16 @@ static int test_bytes(void)
 	avro_datum_t datum;
 	avro_datum_t expected_datum;
 
-	datum = avro_wrapbytes(bytes, sizeof(bytes));
+	datum = avro_givebytes(bytes, sizeof(bytes), NULL);
 	write_read_check(writer_schema, NULL, datum, "bytes");
 	test_json(datum, writer_schema,
 		  "\"\\u00de\\u00ad\\u00be\\u00ef\"");
 	avro_datum_decref(datum);
 	avro_schema_decref(writer_schema);
 
-	datum = avro_wrapbytes(NULL, 0);
-    avro_wrapbytes_set(datum, bytes, sizeof(bytes));
-	expected_datum = avro_wrapbytes(bytes, sizeof(bytes));
+	datum = avro_givebytes(NULL, 0, NULL);
+	avro_givebytes_set(datum, bytes, sizeof(bytes), NULL);
+	expected_datum = avro_givebytes(bytes, sizeof(bytes), NULL);
 	if (!avro_datum_equal(datum, expected_datum)) {
 		fprintf(stderr,
 		        "Expected equal bytes instances.\n");
@@ -315,7 +315,7 @@ static int test_record(void)
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
 
-	name_datum = avro_wrapstring("Joseph Campbell");
+	name_datum = avro_givestring("Joseph Campbell", NULL);
 	age_datum = avro_int32(83);
 
 	avro_record_set(datum, "name", name_datum);
@@ -465,7 +465,7 @@ static int test_union(void)
 	avro_schema_union_append(schema, avro_schema_int());
 	avro_schema_union_append(schema, avro_schema_null());
 
-	datum = avro_wrapstring("Follow your bliss.");
+	datum = avro_givestring("Follow your bliss.", NULL);
 	union_datum = avro_union(0, datum);
 
 	if (avro_union_discriminant(union_datum) != 0) {
@@ -480,7 +480,7 @@ static int test_union(void)
 
 	union_datum1 = avro_datum_from_schema(schema);
 	avro_union_set_discriminant(union_datum1, schema, 0, &datum1);
-	avro_wrapstring_set(datum1, "Follow your bliss.");
+	avro_givestring_set(datum1, "Follow your bliss.", NULL);
 
 	if (!avro_datum_equal(datum, datum1)) {
 		fprintf(stderr, "Union values should be equal\n");
@@ -509,14 +509,14 @@ static int test_fixed(void)
 	avro_datum_t datum;
 	avro_datum_t expected_datum;
 
-	datum = avro_wrapfixed("msg", bytes, sizeof(bytes));
+	datum = avro_givefixed("msg", bytes, sizeof(bytes), NULL);
 	write_read_check(schema, NULL, datum, "fixed");
 	test_json(datum, schema, "\"\\r\\n\\r\\n\\u000b\\n\\u000b\\n\"");
 	avro_datum_decref(datum);
 
-	datum = avro_wrapfixed("msg", NULL, 0);
-    avro_wrapfixed_set(datum, bytes, sizeof(bytes));
-	expected_datum = avro_wrapfixed("msg", bytes, sizeof(bytes));
+	datum = avro_givefixed("msg", NULL, 0, NULL);
+	avro_givefixed_set(datum, bytes, sizeof(bytes), NULL);
+	expected_datum = avro_givefixed("msg", bytes, sizeof(bytes), NULL);
 	if (!avro_datum_equal(datum, expected_datum)) {
 		fprintf(stderr,
 		        "Expected equal fixed instances.\n");

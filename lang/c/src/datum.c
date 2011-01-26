@@ -32,18 +32,10 @@ static void avro_datum_init(avro_datum_t datum, avro_type_t type)
 	datum->refcount = 1;
 }
 
-/* need this since avro_free is a macro */
-static void
-avro_free_wrapper(void *ptr, size_t sz)
-{
-	avro_free(ptr, sz);
-}
-
 static void
 avro_str_free_wrapper(void *ptr, size_t sz)
 {
-	// don't need this, since the size is stored in the string
-	// buffer
+	// don't need sz, since the size is stored in the string buffer
 	AVRO_UNUSED(sz);
 	avro_str_free(ptr);
 }
@@ -73,15 +65,11 @@ avro_datum_t avro_string(const char *str)
 	return avro_string_private(p, 0, avro_str_free_wrapper);
 }
 
-avro_datum_t avro_givestring(const char *str)
+avro_datum_t avro_givestring(const char *str,
+			     avro_free_func_t free)
 {
 	int64_t  sz = strlen(str)+1;
-	return avro_string_private((char *)str, sz, avro_free_wrapper);
-}
-
-avro_datum_t avro_wrapstring(const char *str)
-{
-	return avro_string_private((char *)str, 0, NULL);
+	return avro_string_private((char *)str, sz, free);
 }
 
 int avro_string_get(avro_datum_t datum, char **p)
@@ -126,15 +114,11 @@ int avro_string_set(avro_datum_t datum, const char *p)
 	return rval;
 }
 
-int avro_givestring_set(avro_datum_t datum, const char *p)
+int avro_givestring_set(avro_datum_t datum, const char *p,
+			avro_free_func_t free)
 {
 	int64_t  size = strlen(p)+1;
-	return avro_string_set_private(datum, p, size, avro_free_wrapper);
-}
-
-int avro_wrapstring_set(avro_datum_t datum, const char *p)
-{
-	return avro_string_set_private(datum, p, 0, NULL);
+	return avro_string_set_private(datum, p, size, free);
 }
 
 static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
@@ -161,21 +145,17 @@ avro_datum_t avro_bytes(const char *bytes, int64_t size)
 	}
 	memcpy(bytes_copy, bytes, size);
 	avro_datum_t  result =
-		avro_bytes_private(bytes_copy, size, avro_free_wrapper);
+		avro_bytes_private(bytes_copy, size, avro_alloc_free);
 	if (result == NULL) {
 		avro_free(bytes_copy, size);
 	}
 	return result;
 }
 
-avro_datum_t avro_givebytes(const char *bytes, int64_t size)
+avro_datum_t avro_givebytes(const char *bytes, int64_t size,
+			    avro_free_func_t free)
 {
-	return avro_bytes_private((char *)bytes, size, avro_free_wrapper);
-}
-
-avro_datum_t avro_wrapbytes(const char *bytes, int64_t size)
-{
-	return avro_bytes_private((char *)bytes, size, NULL);
+	return avro_bytes_private((char *)bytes, size, free);
 }
 
 static int avro_bytes_set_private(avro_datum_t datum, const char *bytes,
@@ -207,7 +187,7 @@ int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
-	rval = avro_bytes_set_private(datum, bytes_copy, size, avro_free_wrapper);
+	rval = avro_bytes_set_private(datum, bytes_copy, size, avro_alloc_free);
 	if (rval) {
 		avro_free(bytes_copy, size);
 	}
@@ -215,15 +195,9 @@ int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 }
 
 int avro_givebytes_set(avro_datum_t datum, const char *bytes,
-		       const int64_t size)
+		       const int64_t size, avro_free_func_t free)
 {
-	return avro_bytes_set_private(datum, bytes, size, avro_free_wrapper);
-}
-
-int avro_wrapbytes_set(avro_datum_t datum, const char *bytes,
-		       const int64_t size)
-{
-	return avro_bytes_set_private(datum, bytes, size, NULL);
+	return avro_bytes_set_private(datum, bytes, size, free);
 }
 
 int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size)
@@ -644,19 +618,13 @@ avro_datum_t avro_fixed(const char *name, const char *bytes, const int64_t size)
 		return NULL;
 	}
 	memcpy(bytes_copy, bytes, size);
-	return avro_fixed_private(name, bytes_copy, size, avro_free_wrapper);
-}
-
-avro_datum_t avro_wrapfixed(const char *name, const char *bytes,
-			    const int64_t size)
-{
-	return avro_fixed_private(name, bytes, size, NULL);
+	return avro_fixed_private(name, bytes_copy, size, avro_alloc_free);
 }
 
 avro_datum_t avro_givefixed(const char *name, const char *bytes,
-			    const int64_t size)
+			    const int64_t size, avro_free_func_t free)
 {
-	return avro_fixed_private(name, bytes, size, avro_free_wrapper);
+	return avro_fixed_private(name, bytes, size, free);
 }
 
 static int avro_fixed_set_private(avro_datum_t datum, const char *bytes,
@@ -690,7 +658,7 @@ int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
-	rval = avro_fixed_set_private(datum, bytes_copy, size, avro_free_wrapper);
+	rval = avro_fixed_set_private(datum, bytes_copy, size, avro_alloc_free);
 	if (rval) {
 		avro_free(bytes_copy, size);
 	}
@@ -698,15 +666,9 @@ int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
 }
 
 int avro_givefixed_set(avro_datum_t datum, const char *bytes,
-		       const int64_t size)
+		       const int64_t size, avro_free_func_t free)
 {
-	return avro_fixed_set_private(datum, bytes, size, avro_free_wrapper);
-}
-
-int avro_wrapfixed_set(avro_datum_t datum, const char *bytes,
-		       const int64_t size)
-{
-	return avro_fixed_set_private(datum, bytes, size, NULL);
+	return avro_fixed_set_private(datum, bytes, size, free);
 }
 
 int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size)

@@ -291,6 +291,14 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 	return 0;
 }
 
+static void
+free_bytes(void *ptr, size_t sz)
+{
+	// The binary encoder class allocates bytes values with an extra
+	// byte, so that they're NUL terminated.
+	avro_free(ptr, sz+1);
+}
+
 int
 avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 	       avro_schema_t readers_schema, avro_datum_t * datum)
@@ -332,7 +340,7 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			char *s;
 			rval = enc->read_string(reader, &s, &len);
 			if (!rval) {
-				*datum = avro_givestring(s);
+				*datum = avro_givestring(s, avro_alloc_free);
 			}
 		}
 		break;
@@ -383,7 +391,7 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			int64_t len;
 			rval = enc->read_bytes(reader, &bytes, &len);
 			if (!rval) {
-				*datum = avro_givebytes(bytes, len);
+				*datum = avro_givebytes(bytes, len, free_bytes);
 			}
 		}
 		break;
@@ -401,7 +409,8 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			}
 			rval = avro_read(reader, bytes, size);
 			if (!rval) {
-				*datum = avro_givefixed(name, bytes, size);
+				*datum = avro_givefixed(name, bytes, size,
+							avro_alloc_free);
 			}
 		}
 		break;

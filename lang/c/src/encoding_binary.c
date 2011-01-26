@@ -127,11 +127,12 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 	if (rval) {
 		return rval;
 	}
-	*bytes = avro_malloc(*len);
+	*bytes = avro_malloc(*len + 1);
 	if (!*bytes) {
 		return ENOMEM;
 	}
 	AVRO_READ(reader, *bytes, *len);
+	(*bytes)[*len] = '\0';
 	return 0;
 }
 

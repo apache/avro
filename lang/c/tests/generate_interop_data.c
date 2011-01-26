@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	avro_record_set(interop, "intField", avro_int32(42));
 	avro_record_set(interop, "longField", avro_int64(4242));
 	avro_record_set(interop, "stringField",
-			avro_wrapstring("Follow your bliss."));
+			avro_givestring("Follow your bliss.", NULL));
 	avro_record_set(interop, "boolField", avro_boolean(1));
 	avro_record_set(interop, "floatField", avro_float(3.14159265));
 	avro_record_set(interop, "doubleField", avro_double(2.71828183));
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 	node_datum = avro_record("Node", NULL);
 	avro_record_set(node_datum, "label",
-			avro_wrapstring("If you label me, you negate me."));
+			avro_givestring("If you label me, you negate me.", NULL));
 	avro_record_set(node_datum, "children", avro_array());
 	avro_record_set(interop, "recordField", node_datum);
 

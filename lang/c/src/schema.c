@@ -1262,10 +1262,10 @@ avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 
 	switch (avro_typeof(schema)) {
 		case AVRO_STRING:
-			return avro_wrapstring("");
+			return avro_givestring("", NULL);
 
 		case AVRO_BYTES:
-			return avro_wrapbytes("", 0);
+			return avro_givebytes("", 0, NULL);
 
 		case AVRO_INT32:
 			return avro_int32(0);
@@ -1322,7 +1322,8 @@ avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 			{
 				const struct avro_fixed_schema_t *fixed_schema =
 				    avro_schema_to_fixed(schema);
-				return avro_wrapfixed(fixed_schema->name, "", 0);
+				return avro_givefixed(fixed_schema->name,
+						      "", 0, NULL);
 			}
 
 		case AVRO_MAP:

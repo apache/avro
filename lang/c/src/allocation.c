@@ -85,3 +85,10 @@ void avro_str_free(char *str)
 	//fprintf(stderr, "--- free %zu %p %s\n", *size, str, str);
 	avro_free(size, *size);
 }
+
+
+void
+avro_alloc_free(void *ptr, size_t sz)
+{
+	avro_free(ptr, sz);
+}
