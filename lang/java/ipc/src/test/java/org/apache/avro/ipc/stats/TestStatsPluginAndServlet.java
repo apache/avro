@@ -28,19 +28,19 @@ import java.util.Random;
 
 import javax.servlet.UnavailableException;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.GenericRequestor;
-import org.apache.avro.generic.GenericResponder;
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.LocalTransceiver;
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.generic.GenericRequestor;
+import org.apache.avro.ipc.generic.GenericResponder;
 import org.junit.Test;
 import org.mortbay.log.Log;
 

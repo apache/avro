@@ -36,8 +36,8 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRequestor;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.TestProtocolGeneric;
 import org.apache.avro.util.Utf8;
 

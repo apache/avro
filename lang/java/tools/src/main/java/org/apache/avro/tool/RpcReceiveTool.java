@@ -29,14 +29,14 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.GenericResponder;
 import org.apache.avro.io.JsonEncoder;
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.Ipc;
 import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.generic.GenericResponder;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -96,6 +96,7 @@ public class RpcReceiveTool implements Tool {
       }
       out.println();
       new Thread() {
+        @Override
         public void run() {
           try {
             Thread.sleep(1000);

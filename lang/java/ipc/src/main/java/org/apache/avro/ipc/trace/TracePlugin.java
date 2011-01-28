@@ -27,14 +27,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.RPCPlugin;
-import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.util.Utf8;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
 public class TracePlugin extends RPCPlugin {
   final private static Random RANDOM = new Random();
   private static final Logger LOG = LoggerFactory.getLogger(TracePlugin.class);
-  public static enum StorageType { MEMORY, DISK };
+  public static enum StorageType { MEMORY, DISK }
   protected static TracePlugin singleton;
   protected static TracePluginConfiguration singletonConf;
   

@@ -32,10 +32,10 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.GenericRequestor;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.ipc.Ipc;
+import org.apache.avro.ipc.generic.GenericRequestor;
 
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;

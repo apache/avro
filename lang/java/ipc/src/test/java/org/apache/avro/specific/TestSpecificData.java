@@ -20,8 +20,6 @@ package org.apache.avro.specific;
 import java.util.List;
 import java.util.ArrayList;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import org.apache.avro.Schema;

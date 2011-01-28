@@ -22,9 +22,9 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.avro.Protocol;
-import org.apache.avro.idl.Idl;
-import org.apache.avro.idl.ParseException;
-import org.apache.avro.specific.SpecificCompiler;
+import org.apache.avro.compiler.idl.Idl;
+import org.apache.avro.compiler.idl.ParseException;
+import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
  * Compile an Avro schema file.

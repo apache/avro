@@ -17,12 +17,12 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.specific.SpecificRequestor;
-import org.apache.avro.specific.SpecificResponder;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.apache.avro.ipc.specific.SpecificResponder;
 
 import org.junit.AfterClass;
 import org.junit.Assert;

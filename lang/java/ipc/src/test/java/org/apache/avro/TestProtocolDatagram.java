@@ -25,7 +25,7 @@ import org.apache.avro.ipc.DatagramTransceiver;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
 
 public class TestProtocolDatagram extends TestProtocolSpecific {

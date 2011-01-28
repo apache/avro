@@ -18,8 +18,8 @@
 
 package org.apache.avro.specific;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Schema;
-import org.apache.avro.ipc.AvroRemoteException;
 
 /** Base class for specific exceptions. */
 public abstract class SpecificExceptionBase extends AvroRemoteException

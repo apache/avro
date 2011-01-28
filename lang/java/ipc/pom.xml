@@ -77,6 +77,9 @@
               <goal>idl-protocol</goal>
             </goals>
             <configuration>
+              <excludes>
+                <exclude>**/mapred/tether/**</exclude>
+              </excludes>
               <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
               <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
               <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>

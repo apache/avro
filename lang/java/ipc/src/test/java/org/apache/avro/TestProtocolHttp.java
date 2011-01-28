@@ -24,9 +24,9 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
+import org.apache.avro.ipc.generic.GenericRequestor;
+import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRequestor;
-import org.apache.avro.specific.SpecificRequestor;
 import org.apache.avro.test.Simple;
 
 import org.junit.Test;

@@ -32,6 +32,27 @@ Avro 1.5.0 (unreleased)
 
     (scottcarey)
 
+    AVRO-716. Java: Improve correlation between packages and modules.
+    Each module introduced by AVRO-647 now exclusively provides 
+    different java packages.  This required moving several classes
+    around into new packages and will therefore require users to
+    change their package imports when upgrading to Avro 1.5.0.
+    Summary of changes:
+    * AvroRemoteException has moved to org.apache.avro
+    * ByteBufferInputStream and ByteBufferInputStream have moved 
+      to org.apache.avro.util
+    * InduceSchemaTool has moved to org.apache.avro.tools
+    * SpecificCompiler, SchemaTask, and ProtocolTask have moved 
+      to org.apache.avro.compiler.specific
+    * The Idl compiler has moved to org.apache.avro.compiler.idl
+    * ReflectRequestor and ReflectResponder have moved to
+      org.apache.avro.ipc.reflect
+    * GenericRequestor and GenericResponder have moved to
+      org.apache.avro.ipc.generic
+    * SpecificRequestor and SpecificResponder have moved to
+      org.apache.avro.ipc.specific
+    (scottcarey)
+
     AVRO-670. Allow DataFileWriteTool to accept schema files as input with new
     --schema-file and --schema command-line flags. (Ron Bodkin via philz)
 

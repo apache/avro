@@ -34,6 +34,7 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslServer;
 
 import org.apache.avro.Protocol;
+import org.apache.avro.util.ByteBufferOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

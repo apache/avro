@@ -21,8 +21,8 @@ import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
-import org.apache.avro.reflect.ReflectRequestor;
-import org.apache.avro.reflect.ReflectResponder;
+import org.apache.avro.ipc.reflect.ReflectRequestor;
+import org.apache.avro.ipc.reflect.ReflectResponder;
 
 import org.junit.AfterClass;
 import org.junit.Before;

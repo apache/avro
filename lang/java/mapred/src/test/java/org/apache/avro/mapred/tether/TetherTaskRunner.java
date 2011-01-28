@@ -25,8 +25,8 @@ import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.avro.ipc.SocketServer;
-import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.ipc.SaslSocketServer;
+import org.apache.avro.ipc.specific.SpecificResponder;
 
 /** Java implementation of a tether executable.  Useless except for testing,
  * since it's already possible to write Java MapReduce programs without
@@ -35,14 +35,14 @@ import org.apache.avro.specific.SpecificResponder;
 public class TetherTaskRunner implements InputProtocol {
   static final Logger LOG = LoggerFactory.getLogger(TetherTaskRunner.class);
 
-  private SocketServer inputServer;
+  private SaslSocketServer inputServer;
   private TetherTask task;
 
   public TetherTaskRunner(TetherTask task) throws IOException {
     this.task = task;
 
     // start input server
-    this.inputServer = new SocketServer
+    this.inputServer = new SaslSocketServer
       (new SpecificResponder(InputProtocol.class, this),
        new InetSocketAddress(0));
     inputServer.start();

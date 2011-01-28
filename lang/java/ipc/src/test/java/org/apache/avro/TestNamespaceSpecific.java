@@ -17,12 +17,11 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.specific.SpecificRequestor;
-import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.namespace.TestNamespace;
 import org.apache.avro.test.util.MD5;
 import org.apache.avro.test.errors.TestError;

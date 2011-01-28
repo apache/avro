@@ -21,12 +21,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.GenericRequestor;
-import org.apache.avro.generic.GenericResponder;
+import org.apache.avro.ipc.generic.GenericRequestor;
+import org.apache.avro.ipc.generic.GenericResponder;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
 

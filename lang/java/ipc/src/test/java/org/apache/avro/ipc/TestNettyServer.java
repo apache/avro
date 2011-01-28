@@ -22,8 +22,8 @@ import java.net.InetSocketAddress;
 
 import junit.framework.Assert;
 
-import org.apache.avro.specific.SpecificRequestor;
-import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
 import org.apache.avro.util.Utf8;

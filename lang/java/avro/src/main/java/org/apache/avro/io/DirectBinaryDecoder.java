@@ -22,7 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.avro.ipc.ByteBufferInputStream;
+import org.apache.avro.util.ByteBufferInputStream;
+
 
 /**
  *  A non-buffering version of {@link BinaryDecoder}.

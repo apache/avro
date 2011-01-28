@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.generic.GenericResponder;
+import org.apache.avro.ipc.generic.GenericResponder;
 
 /** A socket-based server implementation. This uses a simple, non-standard wire
  * protocol and is not intended for production services.

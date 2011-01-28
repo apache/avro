@@ -19,8 +19,8 @@ package org.apache.avro;
 
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
-import org.apache.avro.reflect.ReflectRequestor;
-import org.apache.avro.reflect.ReflectResponder;
+import org.apache.avro.ipc.reflect.ReflectRequestor;
+import org.apache.avro.ipc.reflect.ReflectResponder;
 import org.apache.avro.test.Simple;
 import org.junit.Before;
 

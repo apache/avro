@@ -47,7 +47,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.io.JsonEncoder;
-import org.apache.avro.specific.TestSpecificCompiler;
+import org.apache.avro.compiler.specific.TestSpecificCompiler;
 import org.apache.avro.util.Utf8;
 
 public class TestSchema {

@@ -20,15 +20,15 @@ package org.apache.avro.ipc.stats;
 import java.io.IOException;
 import java.net.URL;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.generic.GenericRequestor;
-import org.apache.avro.generic.GenericResponder;
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.generic.GenericRequestor;
+import org.apache.avro.ipc.generic.GenericResponder;
 
 /**
  * Naively measures overhead of using the stats plugin.

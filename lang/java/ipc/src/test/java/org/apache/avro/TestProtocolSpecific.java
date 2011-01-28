@@ -17,7 +17,6 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.Requestor;
@@ -26,8 +25,8 @@ import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.specific.SpecificRequestor;
-import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
 import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;

@@ -22,7 +22,7 @@ package org.apache.avro.ipc;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import org.apache.avro.generic.GenericRequestor;
+import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.TestProtocolGeneric;
 
 import org.slf4j.Logger;

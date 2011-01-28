@@ -23,9 +23,6 @@ import java.util.TreeMap;
 
 import java.io.InputStream;
 
-import org.apache.avro.reflect.InduceSchemaTool;
-import org.apache.avro.specific.SpecificCompiler.SpecificCompilerTool;
-
 /** Command-line driver.*/
 public class Main {
   /**

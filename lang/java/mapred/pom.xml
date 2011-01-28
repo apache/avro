@@ -56,7 +56,7 @@
         <version>${project.version}</version>
         <executions>
           <execution>
-            <id>schemas</id>
+            <id>test-schemas</id>
             <phase>generate-sources</phase>
             <goals>
               <goal>schema</goal>
@@ -67,6 +67,20 @@
               <sourceDirectory></sourceDirectory>
               <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>
               <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <id>mapred-schema</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>protocol</goal>
+            </goals>
+            <configuration>  
+              <includes>
+                <include>**/mapred/tether/*.avpr</include>
+              </includes>
+              <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>a
             </configuration>
           </execution>
         </executions>

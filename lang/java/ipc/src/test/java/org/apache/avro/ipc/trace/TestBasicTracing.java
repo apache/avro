@@ -25,17 +25,17 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.GenericRequestor;
-import org.apache.avro.generic.GenericResponder;
-import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.Responder;
+import org.apache.avro.ipc.generic.GenericRequestor;
+import org.apache.avro.ipc.generic.GenericResponder;
 import org.apache.avro.ipc.trace.TracePlugin.StorageType;
 import org.junit.Test;
 

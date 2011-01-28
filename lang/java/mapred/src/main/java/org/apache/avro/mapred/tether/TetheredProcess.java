@@ -41,8 +41,8 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.SocketServer;
-import org.apache.avro.specific.SpecificRequestor;
-import org.apache.avro.specific.SpecificResponder;
+import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.apache.avro.ipc.specific.SpecificResponder;
 
 class TetheredProcess  {
 

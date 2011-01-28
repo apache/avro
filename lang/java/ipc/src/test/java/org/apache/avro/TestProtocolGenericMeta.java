@@ -19,10 +19,10 @@ package org.apache.avro;
 
 import java.net.InetSocketAddress;
 
-import org.apache.avro.generic.GenericRequestor;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
+import org.apache.avro.ipc.generic.GenericRequestor;
 import org.junit.Before;
 
 public class TestProtocolGenericMeta extends TestProtocolGeneric {

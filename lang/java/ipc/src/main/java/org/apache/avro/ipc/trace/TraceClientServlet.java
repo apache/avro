@@ -32,8 +32,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.avro.ipc.HttpTransceiver;
+import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.trace.TraceCollection.TraceNodeStats;
-import org.apache.avro.specific.SpecificRequestor;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -70,12 +70,12 @@ public class TraceClientServlet extends HttpServlet {
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
   }
   
+  @Override
   public void doPost(HttpServletRequest request, 
     HttpServletResponse response)
     throws ServletException, IOException {
     response.setContentType("text/html");
-    VelocityContext context = new VelocityContext();
-    
+       
     PrintWriter out = response.getWriter();
     String servers = request.getParameter("servers");
 
@@ -155,6 +155,7 @@ public class TraceClientServlet extends HttpServlet {
    *   /collection/[p_id]                  Show details for pattern with [p_id]
    *   /collection/[p_id]/[n_id]/          Show trace node with [n_id] 
    */
+  @Override
   public void doGet(HttpServletRequest request, 
       HttpServletResponse response) throws IOException {
     response.setContentType("text/html");

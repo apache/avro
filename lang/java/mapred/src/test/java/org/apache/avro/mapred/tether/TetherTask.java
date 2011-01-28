@@ -29,13 +29,13 @@ import org.slf4j.LoggerFactory;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.ipc.SocketTransceiver;
+import org.apache.avro.ipc.SaslSocketTransceiver;
+import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.avro.specific.SpecificRequestor;
 
 /** Base class for Java tether mapreduce programs.  Useless except for testing,
  * since it's already possible to write Java MapReduce programs without
@@ -99,7 +99,7 @@ public abstract class TetherTask<IN,MID,OUT> {
       throw new RuntimeException("AVRO_TETHER_OUTPUT_PORT env var is null");
     int clientPort = Integer.parseInt(clientPortString);
     this.clientTransceiver =
-      new SocketTransceiver(new InetSocketAddress(clientPort));
+      new SaslSocketTransceiver(new InetSocketAddress(clientPort));
     this.outputClient = SpecificRequestor.getClient(OutputProtocol.class, clientTransceiver);
 
     // send inputPort to parent

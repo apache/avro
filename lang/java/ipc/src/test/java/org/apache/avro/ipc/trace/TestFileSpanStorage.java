@@ -42,7 +42,7 @@ public class TestFileSpanStorage {
     s.messageName = new Utf8("message");
     test.addSpan(s);
     try {
-      Thread.sleep(100);
+      Thread.sleep(1000);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

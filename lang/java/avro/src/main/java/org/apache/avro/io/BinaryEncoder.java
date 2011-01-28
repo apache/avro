@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.avro.ipc.ByteBufferOutputStream;
+import org.apache.avro.util.ByteBufferOutputStream;
 import org.apache.avro.util.Utf8;
 
 /**

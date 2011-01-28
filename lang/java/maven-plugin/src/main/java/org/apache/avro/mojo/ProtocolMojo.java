@@ -21,7 +21,7 @@ package org.apache.avro.mojo;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.avro.specific.SpecificCompiler;
+import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
  * Compile an Avro protocol schema file.

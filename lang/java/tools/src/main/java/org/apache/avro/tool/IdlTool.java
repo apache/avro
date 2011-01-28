@@ -19,7 +19,7 @@
 package org.apache.avro.tool;
 
 import org.apache.avro.Protocol;
-import org.apache.avro.idl.Idl;
+import org.apache.avro.compiler.idl.Idl;
 
 import java.io.File;
 import java.io.FileOutputStream;
