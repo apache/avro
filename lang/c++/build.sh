@@ -27,110 +27,68 @@ then
   usage
 fi
 
-cd `dirname "$0"` # connect to root
-
+if [ -f VERSION.txt ]
+then
+VERSION=`cat VERSION.txt`
+else
 VERSION=`cat ../../share/VERSION.txt`
+fi
 
-root_dir=$(pwd)
-build_dir="../../build/avro-cpp-$VERSION"
-dist_dir="../../dist/cpp"
-doc_dir="../../build/avro-doc-$VERSION/api/cpp/html"
+BUILD=../../build
+AVRO_CPP=avro-cpp-$VERSION
+AVRO_DOC=avro-doc-$VERSION
+BUILD_DIR=../../build
+BUILD_CPP=$BUILD/$AVRO_CPP
+DIST_DIR=../../dist/$AVRO_CPP
+DOC_CPP=$BUILD/$AVRO_DOC/api/cpp
+DIST_DIR=../../dist/cpp
+TARFILE=../dist/cpp/$AVRO_CPP.tar.gz 
 
-tarfile=avro-cpp-$VERSION.tar.gz
-
-set -x # echo commands
-
+cmake -G "Unix Makefiles"
 for target in "$@"
 do
 
-function do_autoreconf {
-    if [ ! -f configure ]; then
-        autoreconf -f -i
-    fi
-    if [ ! -f configure ]; then
+function do_doc() {
+    doxygen
+    if [ -d doc ]
+    then
+        mkdir -p $DOC_CPP
+        cp -R doc/* $DOC_CPP
+    else
         exit 1
     fi
 }
-
-function check_dir {
-    if [ ! -d $1 ]; then
-        mkdir -p $1
-    fi
-    if [ ! -d $1 ]; then
+function do_dist() {
+    rm -rf $BUILD_CPP/
+    mkdir -p $BUILD_CPP
+    cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
+        COPYING impl jsonschemas NEWS parser README scripts test \
+        $BUILD_CPP
+    find $BUILD_CPP -name '.svn' | xargs rm -rf
+    cp ../../share/VERSION.txt $BUILD_CPP
+    mkdir -p $DIST_DIR
+    (cd $BUILD_DIR; tar cvzf $TARFILE $AVRO_CPP && cp $TARFILE $AVRO_CPP )
+    if [ ! -f $DIST_FILE ]
+    then
         exit 1
     fi
-}
-
-function do_configure {
-
-    do_autoreconf
-
-    check_dir $build_dir
-
-    if [ ! -f $build_dir/Makefile ]; then
-        (cd $build_dir && ../../lang/c++/configure)
-    fi
-
-    if [ ! -f $build_dir/Makefile ]; then
-        exit 1
-    fi
-}
-
-function do_build {
-    (cd $build_dir && make check)
-}
-
-function do_docs {
-    check_dir $doc_dir
-    (cd $build_dir && make doc)
-    if [ ! -f $build_dir/doc/html/index.html ]; then
-        exit 1
-    fi
-    cp -rf $build_dir/doc/html/* $doc_dir/
-}
-
-function do_tar_file {
-    check_dir $dist_dir
-    (cd $build_dir && make dist)
-    if [ ! -f $build_dir/$tarfile ]; then
-        exit 1
-    fi
-    cp -f $build_dir/$tarfile $dist_dir/$tarfile
-}
-
-function do_dist {
-    do_tar_file
-    do_docs
-}
-
-function do_clean {
-
-    if [ -d $build_dir ]; then
-        rm -rf $build_dir
-    fi
-    if [ -d $doc_dir ]; then
-        rm -rf $doc_dir
-    fi
-    rm -rf $dist_dir/$tarfile
-    rm -rf $dist_dir/$tarfile.md5
-
 }
 
 case "$target" in
-
-
     test)
-    do_configure
-    do_build
+    make
+    ./build/buffertest
+    ./build/unittest
+    ./build/testgentest
 	;;
 
     dist)
-    do_configure
-    do_dist
+        do_dist
+        do_doc
     ;;
 
     clean)
-    do_clean 
+    make clean
 	;;
 
     *)

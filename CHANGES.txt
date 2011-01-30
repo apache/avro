@@ -137,6 +137,7 @@ Avro 1.5.0 (unreleased)
     AVRO-734. Java: Update maven build plugin versions. (Holger Hoffstätte
     via scottcarey)
 
+    AVRO-700. Change C++ build system to CMake (thiru)
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.

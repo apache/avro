@@ -22,7 +22,7 @@
 #define EOF (-1)
 #endif
 
-#include "AvroYacc.h"
+#include "AvroYacc.hh"
 
 // this undef is a hack for my mac implementation
 #undef yyFlexLexer

@@ -16,20 +16,30 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
+#include <fstream>
 
 #include "Compiler.hh"
 #include "ValidSchema.hh"
 
-int main()
+int main(int argc, char** argv)
 {
     int ret = 0;
     try {
         avro::ValidSchema schema;
-        avro::compileJsonSchema(std::cin, schema);
+        if (argc > 1) {
+            std::ifstream in(argv[1]);
+            avro::compileJsonSchema(in, schema);
+        } else {
+            avro::compileJsonSchema(std::cin, schema);
+        }
 
-        schema.toFlatList(std::cout);
+        if (argc > 2) {
+            std::ofstream out(argv[2]);
+            schema.toFlatList(out);
+        } else {
+            schema.toFlatList(std::cout);
+        }
     }
     catch (std::exception &e) {
         std::cerr << "Failed to parse or compile schema: " << e.what() << std::endl;
