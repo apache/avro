@@ -138,6 +138,10 @@ Avro 1.5.0 (unreleased)
     via scottcarey)
 
     AVRO-700. Change C++ build system to CMake (thiru)
+
+    AVRO-749. Don't install Jansson build artifacts. (Douglas Creager via
+    brucem)
+
   BUG FIXES
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.
