@@ -19,197 +19,29 @@ package org.apache.avro.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.util.Utf8;
 
 /**
  * Performance tests for various low level operations of
  * Avro encoding and decoding.
  */
 public class Perf {
-  private static final int COUNT = 100000; // needs to be a multiple of 4
+  private static final int COUNT = 160000; // needs to be a multiple of 4
   private static final int CYCLES = 500;
-  
-  public static void main(String[] args) throws IOException {
-    List<Test> tests = new ArrayList<Test>();
-    ReadInt readIntTest = null;
-    for (String a : args) {
-      if (a.equals("-i")) {
-        readIntTest = new ReadInt();
-        tests.add(readIntTest);
-      } else if (a.equals("-f")) {
-        tests.add(new ReadFloat());
-      } else if (a.equals("-d")) {
-        tests.add(new ReadDouble());
-      } else if (a.equals("-l")) {
-        tests.add(new ReadLong());
-      } else if (a.equals("-ls")) {
-        tests.add(new ReadLongSmall(readIntTest));
-      } else if (a.equals("-b")) {
-        tests.add(new ReadBoolean());
-      } else if (a.equals("-R")) {
-        tests.add(new RepeaterTest());
-      } else if (a.equals("-N")) {
-        tests.add(new NestedRecordTest());
-      } else if (a.equals("-S")) {
-        tests.add(new ResolverTest());
-      } else if (a.equals("-M")) {
-        tests.add(new MigrationWithDefaultTest());
-      } else if (a.equals("-G")) {
-        tests.add(new GenericReaderTest());
-      } else if (a.equals("-Gd")) {
-        tests.add(new GenericReaderWithDefaultTest());
-      } else if (a.equals("-Go")) {
-        tests.add(new GenericReaderWithOutOfOrderTest());
-      } else if (a.equals("-Gp")) {
-        tests.add(new GenericReaderWithPromotionTest());
-      } else if (a.equals("-GoneTimeUse")) {
-        tests.add(new GenericReaderTest());
-        tests.add(new GenericReaderOneTimeUseReaderTest());
-        tests.add(new GenericReaderOneTimeUseDecoderTest());
-        tests.add(new GenericReaderOneTimeUseTest());
-      } else {
-        usage();
-        System.exit(1);
-      }
-    }
-    if (tests.isEmpty()) {
-      readIntTest = new ReadInt();
-      tests.addAll(Arrays.asList(new Test[] {
-          readIntTest, 
-          new ReadLongSmall(readIntTest), 
-          new ReadLong(),
-          new ReadFloat(), 
-          new ReadDouble(),
-          new ReadBoolean(),
-          new RepeaterTest(), new NestedRecordTest(),
-          new ResolverTest(), new MigrationWithDefaultTest(),
-          new GenericReaderTest(), 
-          new GenericReaderOneTimeUseReaderTest(),
-          new GenericReaderOneTimeUseDecoderTest(),
-          new GenericReaderOneTimeUseTest(),
-          new GenericReaderWithDefaultTest(),
-          new GenericReaderWithOutOfOrderTest(),
-          new GenericReaderWithPromotionTest()
-      }));
-    }
-    
-    for (int k = 0; k < tests.size(); k++) {
-      Test t = tests.get(k);
-      // get everything to compile once 
-      t.read();
-    }
-    for (int k = 0; k < tests.size(); k++) {
-      Test t = tests.get(k);
-      // warmup JVM 
-      for (int i = 0; i < t.cycles; i++) {
-        t.read();
-    }
-    // test
-    long s = 0;
-    for (int i = 0; i < t.cycles; i++) {
-      long l = t.read();
-      // System.out.println("** " + l);
-      s += l;
-    }
-    s /= 1000;
-    double entries = (t.cycles * (double) t.count);
-    double bytes = t.cycles * (double) t.data.length;
-    System.out.println(t.name + ": " + (s / 1000) + " ms, "
-        +  (entries / s) + " million entries/sec.  "
-        +  (bytes / s) + " million bytes/sec" );
-    tests.set(k, null);
-    }
-  }
-  
-  private abstract static class Test {
-
-    /**
-     * Name of the test.
-     */
-    public final String name;
-    public final int count;
-    public final int cycles;
-    protected byte[] data;
-    protected static DecoderFactory factory = new DecoderFactory();
-    
-    /**
-     * Reads the contents and returns the time taken in nanoseconds.
-     * @return  The time taken to complete the operation.
-     * @throws IOException
-     */
-    abstract long read() throws IOException;
-    
-    public Test(String name, int cycles, int count) {
-      this.name = name;
-      this.cycles = cycles;
-      this.count = count;
-    }
-    
-    protected final void generateRepeaterDataArray(Encoder e) throws IOException {
-      e.writeArrayStart();
-      e.setItemCount(count);
-      Random r = newRandom();
-      generateRepeatData(e, r, count);
-      e.writeArrayEnd();
-    }
-    
-    protected final void generateRepeatData(Encoder e, Random r, int count) throws IOException {
-      for (int i = 0; i < count; i++) {
-        e.writeDouble(r.nextDouble());
-        e.writeDouble(r.nextDouble());
-        e.writeDouble(r.nextDouble());
-        e.writeInt(r.nextInt());
-        e.writeInt(r.nextInt());
-        e.writeInt(r.nextInt());
-      }
-    }
-  }
-  
-  private static abstract class DecoderTest extends Test {
-    public final Schema schema;
-    public DecoderTest(String name, String json) throws IOException {
-      this(name, json, 1);
-    }
-    public DecoderTest(String name, String json, int factor) throws IOException {
-      super(name, CYCLES, COUNT/factor);
-      this.schema = Schema.parse(json);
-      ByteArrayOutputStream bao = new ByteArrayOutputStream();
-      Encoder e = new BinaryEncoder(bao);
-      genData(e);
-      e.flush();
-      data = bao.toByteArray();
-    }
-
-    @Override
-    public final long read() throws IOException {
-      Decoder d = getDecoder();
-      long t = System.nanoTime();
-      for (long l = d.readArrayStart(); l > 0; l = d.arrayNext()) {
-        for (int j = 0; j < l; j++) {
-          readInternal(d);
-        }
-      }
-      return (System.nanoTime() - t);
-    }
-    
-    protected Decoder getDecoder() throws IOException {
-      return newDecoder(data);
-    }
-
-    protected static Decoder newDecoder(byte[] data) {
-      return factory.createBinaryDecoder(data, null);
-    }
-
-    abstract void genData(Encoder e) throws IOException;
-    abstract void readInternal(Decoder d) throws IOException;
-  }
   
   /**
    * Use a fixed value seed for random number generation
@@ -220,138 +52,639 @@ public class Perf {
   protected static Random newRandom() {
     return new Random(SEED);
   }
-
-  private static class ReadInt extends DecoderTest {
-    public ReadInt() throws IOException {
-      this("ReadInt", "{ \"type\": \"array\", \"items\": \"int\"} ");
+  
+  private static class TestDescriptor {
+    Class<? extends Test> test;
+    String param;
+    TestDescriptor(Class<? extends Test> test, String param) {
+      this.test = test;
+      this.param = param;
     }
-
-    public ReadInt(String name, String schema) throws IOException {
-      super(name, schema);
+    void add(List<TestDescriptor> typeList) {
+      ALL_TESTS.put(param, this);
+      typeList.add(this);
     }
-
-    @Override void genData(Encoder e) throws IOException {
-      e.writeArrayStart();
-      e.setItemCount((count/4) * 4); //next lowest multiple of 4  
-      Random r = newRandom();
-      for (int i = 0; i < count/4; i++) {
-        e.writeInt(r.nextInt(50)); // fits in 1 byte
-        e.writeInt(r.nextInt(5000)); // fits in 2 bytes
-        e.writeInt(r.nextInt(500000)); // fits in 3 bytes
-        e.writeInt(r.nextInt(150000000)); // most in 4, some in 5
+  }
+  
+  private static final List<TestDescriptor> BASIC = new ArrayList<TestDescriptor>();
+  private static final List<TestDescriptor> RECORD = new ArrayList<TestDescriptor>();
+  private static final List<TestDescriptor> GENERIC = new ArrayList<TestDescriptor>();
+  private static final List<TestDescriptor> GENERIC_ONETIME = new ArrayList<TestDescriptor>();
+  private static final LinkedHashMap<String, TestDescriptor> ALL_TESTS;
+  private static final LinkedHashMap<String, List<TestDescriptor>> BATCHES;
+  static {
+    ALL_TESTS = new LinkedHashMap<String, TestDescriptor>();
+    BATCHES = new LinkedHashMap<String, List<TestDescriptor>>();
+    BATCHES.put("-basic", BASIC);
+    new TestDescriptor(IntTest.class, "-i").add(BASIC);
+    new TestDescriptor(SmallLongTest.class, "-ls").add(BASIC);
+    new TestDescriptor(LongTest.class, "-l").add(BASIC);
+    new TestDescriptor(FloatTest.class, "-f").add(BASIC);
+    new TestDescriptor(DoubleTest.class, "-d").add(BASIC);
+    new TestDescriptor(BoolTest.class, "-b").add(BASIC);
+    new TestDescriptor(BytesTest.class, "-by").add(BASIC);
+    new TestDescriptor(StringTest.class, "-s").add(BASIC);
+    BATCHES.put("-record", RECORD);
+    new TestDescriptor(RecordTest.class, "-R").add(RECORD);
+    new TestDescriptor(ValidatingRecord.class, "-Rv").add(RECORD);
+    new TestDescriptor(ResolvingRecord.class, "-Rr").add(RECORD);
+    new TestDescriptor(RecordWithDefault.class, "-Rd").add(RECORD);
+    new TestDescriptor(RecordWithOutOfOrder.class, "-Ro").add(RECORD);
+    new TestDescriptor(RecordWithPromotion.class, "-Rp").add(RECORD);
+    BATCHES.put("-generic", GENERIC);
+    new TestDescriptor(GenericTest.class, "-G").add(GENERIC);
+    new TestDescriptor(GenericNested.class, "-Gn").add(GENERIC);
+    new TestDescriptor(GenericWithDefault.class, "-Gd").add(GENERIC);
+    new TestDescriptor(GenericWithOutOfOrder.class, "-Go").add(GENERIC);
+    new TestDescriptor(GenericWithPromotion.class, "-Gp").add(GENERIC);
+    BATCHES.put("-generic-onetime", GENERIC_ONETIME);
+    new TestDescriptor(GenericOneTimeDecoderUse.class, "-Gotd").add(GENERIC_ONETIME);
+    new TestDescriptor(GenericOneTimeReaderUse.class, "-Gotr").add(GENERIC_ONETIME);
+    new TestDescriptor(GenericOneTimeUse.class, "-Got").add(GENERIC_ONETIME);
+  }
+  
+  private static void usage() {
+    StringBuilder usage = new StringBuilder("Usage: Perf { -nowrite | -noread | ");
+    StringBuilder details = new StringBuilder();
+    details.append(" -nowrite   (do not execute write tests)\n");
+    details.append(" -noread   (do not execute write tests)\n");
+    for (Map.Entry<String, List<TestDescriptor>> entry : BATCHES.entrySet()) {
+      List<TestDescriptor> lt = entry.getValue();
+      String param = entry.getKey();
+      String paramName = param.substring(1);
+      usage.append(param).append(" | ");
+      details.append(" ").append(param).append("   (executes all ").append(paramName).append(" tests):\n");
+      for (TestDescriptor t : lt) {
+        usage.append(t.param).append(" | ");
+        details.append("      ").append(t.param).append("  (").append(t.test.getSimpleName()).append(")\n");
       }
-      e.writeArrayEnd();
+    }
+    usage.setLength(usage.length() - 2);
+    usage.append("}\n");
+    System.out.println(usage.toString());
+    System.out.print(details.toString());
+  }
+  
+  public static void main(String[] args) throws Exception {
+    List<Test> tests = new ArrayList<Test>();
+    boolean writeTests = true;
+    boolean readTests = true;
+    for (String a : args) {
+      TestDescriptor t = ALL_TESTS.get(a);
+      if (null != t) {
+        tests.add(t.test.newInstance());
+        continue;
+      }
+      List<TestDescriptor> lt = BATCHES.get(a);
+      if (null != lt) {
+        for(TestDescriptor td : lt) {
+          tests.add(td.test.newInstance());
+        }
+        continue;
+      }
+      if ("-nowrite".equals(a)) {
+        writeTests = false;
+        continue;
+      }
+      if ("-noread".equals(a)) {
+        readTests = false;
+        continue;
+      }
+      usage();
+      System.exit(1);
+    }
+    if (tests.isEmpty()) {
+      for (Map.Entry<String, TestDescriptor> entry : ALL_TESTS.entrySet()) {
+        TestDescriptor t = entry.getValue();
+        Test test = t.test.newInstance();
+        tests.add(test);
+      }
+    }
+    System.out.println("Executing tests: \n" + tests +
+        "\n readTests=" + readTests + " writeTests=" + writeTests + "\n");
+    
+    for (int k = 0; k < tests.size(); k++) {
+      Test t = tests.get(k);
+      try {
+        // get everything to compile once
+        t.init();
+        if (t.isReadTest() && readTests) {
+          t.readTest();
+        }
+        if (t.isWriteTest() && writeTests) {
+          t.writeTest();
+        }
+        t.reset();
+      } catch (Exception e) {
+        System.out.println("Failed to execute test: " + t.getClass().getSimpleName());
+        throw e;
+      }
+    }
+
+    for (int k = 0; k < tests.size(); k++) {
+      Test t = tests.get(k);
+      // warmup JVM
+      t.init();
+      if (t.isReadTest() && readTests) {
+        for (int i = 0; i < t.cycles; i++) {
+          t.readTest();
+        }
+      }
+      if (t.isWriteTest() && writeTests) {
+        for (int i = 0; i < t.cycles; i++) {
+          t.writeTest();
+        }
+      }
+      t.reset();
+      // test
+      long s = 0;
+      System.gc();
+      t.init();
+      if (t.isReadTest() && readTests) {
+        for (int i = 0; i < t.cycles; i++) {
+          s += t.readTest();
+        }
+        printResult(s, t, t.name + "Read");
+      }
+      s = 0;
+      if (t.isWriteTest() && writeTests) {
+        for (int i = 0; i < t.cycles; i++) {
+          s += t.writeTest();
+        }
+        printResult(s, t, t.name + "Write");
+      }
+      t.reset();
+    }
+  }
+  
+  private static final void printResult(long s, Test t, String name) {
+    s /= 1000;
+    double entries = (t.cycles * (double) t.count);
+    double bytes = t.cycles * (double) t.encodedSize;
+    StringBuilder result = new StringBuilder();
+    result.append(String.format("%29s:  ", name));
+    result.append(String.format("%4d ms,  ", (s / 1000)));
+    result.append(String.format("%9.3f million entries/sec.  ", (entries / s)));
+    result.append(String.format("%9.3f million bytes/sec", (bytes/ s)));
+    System.out.println(result.toString());
+  }
+  
+  private abstract static class Test {
+
+    /**
+     * Name of the test.
+     */
+    public final String name;
+    public final int count;
+    public final int cycles;
+    public long encodedSize = 0;
+    protected boolean isReadTest = true;
+    protected boolean isWriteTest = true;
+    static DecoderFactory factory = new DecoderFactory();
+    
+    public Test(String name, int cycles, int count) {
+      this.name = name;
+      this.cycles = cycles;
+      this.count = count;
+    }
+
+    /**
+     * Reads data from a Decoder and returns the time taken in nanoseconds.
+     */
+    abstract long readTest() throws IOException;
+    
+    /**
+     * Writes data to an Encoder and returns the time taken in nanoseconds.
+     */
+    abstract long writeTest() throws IOException;
+    
+    final boolean isWriteTest() {
+      return isWriteTest;
+    }
+    
+    final boolean isReadTest() {
+      return isReadTest;
+    }
+ 
+    /** initializes data for read and write tests **/
+    abstract void init() throws IOException;
+
+    /** clears generated data arrays and other large objects created during initialization **/
+    abstract void reset();
+    
+    @Override
+    public String toString() {
+      return this.getClass().getSimpleName();
+    }
+       
+  }
+  
+  /** the basic test writes a simple schema directly to an encoder or
+   * reads from an array.  It does not use GenericDatumReader or any
+   * higher level constructs, just manual serialization.
+   */
+  private static abstract class BasicTest extends Test {
+    protected final Schema schema;
+    protected byte[] data;
+    BasicTest(String name, String json) throws IOException {
+      this(name, json, 1);
+    }
+    BasicTest(String name, String json, int factor) throws IOException {
+      super(name, CYCLES, COUNT/factor);
+      this.schema = Schema.parse(json);
     }
 
     @Override
+    public final long readTest() throws IOException {
+      long t = System.nanoTime();
+      Decoder d = getDecoder();
+      readInternal(d);
+      return (System.nanoTime() - t);
+    }
+    
+    @Override
+    public final long writeTest() throws IOException {
+      long t = System.nanoTime();
+      Encoder e = getEncoder();
+      writeInternal(e);
+      e.flush();
+      return (System.nanoTime() - t);
+    }
+    
+    protected Decoder getDecoder() throws IOException {
+      return newDecoder();
+    }
+    
+    protected Encoder getEncoder() throws IOException {
+      return newEncoder();
+    }
+
+    protected Decoder newDecoder() {
+      return factory.createBinaryDecoder(data, null);
+    }
+    
+    protected Encoder newEncoder() {
+      OutputStream out = new ByteArrayOutputStream((int)(encodedSize > 0 ? encodedSize : count));
+      return new BinaryEncoder(out);
+    }
+    
+    @Override
+    void init() throws IOException {
+      genSourceData();
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      Encoder e = new BinaryEncoder(baos);
+      writeInternal(e);
+      e.flush();
+      data = baos.toByteArray();
+      encodedSize = data.length;
+    }
+
+    abstract void genSourceData();
+    abstract void readInternal(Decoder d) throws IOException;
+    abstract void writeInternal(Encoder e) throws IOException;
+  }
+    
+  static class IntTest extends BasicTest {
+    protected int[] sourceData = null;
+    public IntTest() throws IOException {
+      this("Int", "{ \"type\": \"int\"} ");
+    }
+
+    private IntTest(String name, String schema) throws IOException {
+      super(name, schema);
+    }
+
+    @Override
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new int[count];
+      for (int i = 0; i < sourceData.length; i+=4) {
+        sourceData[i] = r.nextInt(50); // fits in 1 byte
+        sourceData[i+1] = r.nextInt(5000); // fits in 2 bytes
+        sourceData[i+2] = r.nextInt(500000); // fits in 3 bytes
+        sourceData[i+3] = r.nextInt(150000000); // most in 4, some in 5
+      }
+    }
+   
+    @Override
     void readInternal(Decoder d) throws IOException {
-       d.readInt();
+      for (int i = 0; i < count/4; i++) {
+        d.readInt();
+        d.readInt();
+        d.readInt();
+        d.readInt();
+      }
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length; i+=4) {
+        e.writeInt(sourceData[i]);
+        e.writeInt(sourceData[i+1]);
+        e.writeInt(sourceData[i+2]);
+        e.writeInt(sourceData[i+3]);
+      }
+    }
+  
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
     }
   }
 
   // This is the same data as ReadInt, but using readLong.
-  private static class ReadLongSmall extends DecoderTest {
-    public ReadLongSmall(ReadInt dataFrom) throws IOException {
-      super("ReadLongSmall", "{ \"type\": \"array\", \"items\": \"long\"} ");
-      data = dataFrom.data;
+  static class SmallLongTest extends IntTest {
+    public SmallLongTest() throws IOException {
+      super("SmallLong", "{ \"type\": \"long\"} ");
     }
-    @Override void genData(Encoder e) throws IOException {
-    }
+
     @Override
     void readInternal(Decoder d) throws IOException {
-       d.readLong();
+      for (int i = 0; i < count/4; i++) {
+        d.readLong();
+        d.readLong();
+        d.readLong();
+        d.readLong();
+      }
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length; i+=4) {
+        e.writeLong(sourceData[i]);
+        e.writeLong(sourceData[i+1]);
+        e.writeLong(sourceData[i+2]);
+        e.writeLong(sourceData[i+3]);
+      }
     }
   }
  
   // this tests reading Longs that are sometimes very large
-  private static class ReadLong extends DecoderTest {
-    public ReadLong() throws IOException {
-      super("ReadLong", "{ \"type\": \"array\", \"items\": \"long\"} ");
+  static class LongTest extends BasicTest {
+    private long[] sourceData = null;
+    public LongTest() throws IOException {
+      super("Long", "{ \"type\": \"long\"} ");
     }
     
     @Override
-    void genData(Encoder e) throws IOException {
-      e.writeArrayStart();
-      e.setItemCount((count / 4) *4);
+    void genSourceData() {
       Random r = newRandom();
-      for (int i = 0; i < count /4; i++) {
-        e.writeLong(r.nextLong() % 0x7FL); // half fit in 1, half in 2 
-        e.writeLong(r.nextLong() % 0x1FFFFFL); // half fit in <=3, half in 4
-        e.writeLong(r.nextLong() % 0x3FFFFFFFFL); // half in <=5, half in 6
-        e.writeLong(r.nextLong() % 0x1FFFFFFFFFFFFL); // half in <=8, half in 9 
+      sourceData = new long[count];
+      for (int i = 0; i < sourceData.length; i+=4) {
+        sourceData[i] = r.nextLong() % 0x7FL; // half fit in 1, half in 2 
+        sourceData[i+1] = r.nextLong() % 0x1FFFFFL; // half fit in <=3, half in 4
+        sourceData[i+2] = r.nextLong() % 0x3FFFFFFFFL; // half in <=5, half in 6
+        sourceData[i+3] = r.nextLong() % 0x1FFFFFFFFFFFFL; // half in <=8, half in 9 
       }
-      e.writeArrayEnd();
+    }
+   
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      for (int i = 0; i < count/4; i++) {
+        d.readLong();
+        d.readLong();
+        d.readLong();
+        d.readLong();
+      }
     }
 
     @Override
-    void readInternal(Decoder d) throws IOException {
-       d.readLong();
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length;i+=4) {
+        e.writeLong(sourceData[i]);
+        e.writeLong(sourceData[i+1]);
+        e.writeLong(sourceData[i+2]);
+        e.writeLong(sourceData[i+3]);
+      }
+    }
+  
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
     }
   }
   
-  private static class ReadFloat extends DecoderTest {
-    public ReadFloat() throws IOException {
-      super("ReadFloat", "{ \"type\": \"array\", \"items\": \"float\"} ");
+  static class FloatTest extends BasicTest {
+    float[] sourceData = null;
+    public FloatTest() throws IOException {
+      super("Float", "{ \"type\": \"float\"} ");
     }
 
     @Override
-    void genData(Encoder e) throws IOException {
-      e.writeArrayStart();
-      e.setItemCount(count);
+    void genSourceData() {
       Random r = newRandom();
-      for (int i = 0; i < count; i++) {
-        e.writeFloat(r.nextFloat());
+      sourceData = new float[count];
+      for (int i = 0; i < sourceData.length;) {
+        sourceData[i++] = r.nextFloat(); 
       }
-      e.writeArrayEnd();
     }
-
+   
     @Override
     void readInternal(Decoder d) throws IOException {
-      d.readFloat();
+      for (int i = 0; i < count/4; i++) {
+        d.readFloat();
+        d.readFloat();
+        d.readFloat();
+        d.readFloat();
+      }
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length;i+=4) {
+        e.writeFloat(sourceData[i]);
+        e.writeFloat(sourceData[i+1]);
+        e.writeFloat(sourceData[i+2]);
+        e.writeFloat(sourceData[i+3]);
+      }
+    }
+  
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
     }
   }
 
-  private static class ReadBoolean extends DecoderTest {
-    public ReadBoolean() throws IOException {
-      super("ReadBoolean", "{ \"type\": \"array\", \"items\": \"boolean\"} ");
-    }
-    @Override void genData(Encoder e) throws IOException {
-       e.writeArrayStart();
-      e.setItemCount(count);
-      Random r = newRandom();
-      for (int i = 0; i < count; i++) {
-        e.writeBoolean(r.nextBoolean());
-      }
-      e.writeArrayEnd();
-    }
-    @Override
-    void readInternal(Decoder d) throws IOException {
-      d.readBoolean();
-    }
-  }
-
-  private static class ReadDouble extends DecoderTest {
-    public ReadDouble() throws IOException {
-      super("ReadDouble", "{ \"type\": \"array\", \"items\": \"double\"} ");
+  static class DoubleTest extends BasicTest {
+    double[] sourceData = null;
+    public DoubleTest() throws IOException {
+      super("Double", "{ \"type\": \"double\"} ");
     }
     
     @Override
-    void genData(Encoder e) throws IOException {
-      e.writeArrayStart();
-      e.setItemCount(count);
+    void genSourceData() {
       Random r = newRandom();
-      for (int i = 0; i < count; i++) {
-        e.writeDouble(r.nextFloat());
+      sourceData = new double[count];
+      for (int i = 0; i < sourceData.length;) {
+        sourceData[i++] = r.nextDouble(); 
       }
-      e.writeArrayEnd();
     }
+   
     @Override
     void readInternal(Decoder d) throws IOException {
-      d.readDouble();
+      for (int i = 0; i < count/4; i++) {
+        d.readDouble();
+        d.readDouble();
+        d.readDouble();
+        d.readDouble();
+      }
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length;i+=4) {
+        e.writeDouble(sourceData[i]);
+        e.writeDouble(sourceData[i+1]);
+        e.writeDouble(sourceData[i+2]);
+        e.writeDouble(sourceData[i+3]);
+      }
+    }
+  
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
     }
   }
   
-  private static final String SCHEMA = 
+  static class BoolTest extends BasicTest {
+    boolean[] sourceData = null;
+    public BoolTest() throws IOException {
+      super("Boolean", "{ \"type\": \"boolean\"} ");
+    }
+    
+    @Override
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new boolean[count];
+      for (int i = 0; i < sourceData.length;) {
+        sourceData[i++] = r.nextBoolean(); 
+      }
+    }
+   
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      for (int i = 0; i < count/4; i++) {
+        d.readBoolean();
+        d.readBoolean();
+        d.readBoolean();
+        d.readBoolean();
+      }
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length;i+=4) {
+        e.writeBoolean(sourceData[i]);
+        e.writeBoolean(sourceData[i+1]);
+        e.writeBoolean(sourceData[i+2]);
+        e.writeBoolean(sourceData[i+3]);
+      }
+    }
+  
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
+    }
+  }
+  
+  static class BytesTest extends BasicTest {
+    byte[][] sourceData = null;
+    public BytesTest() throws IOException {
+      super("Bytes", "{ \"type\": \"bytes\"} ", 5);
+    }
+    
+    @Override
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new byte[count][];
+      for (int i = 0; i < sourceData.length;) {
+        byte[] data = new byte[r.nextInt(70)];
+        r.nextBytes(data);
+        sourceData[i++] = data; 
+      }
+    }
+   
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      ByteBuffer bb = ByteBuffer.allocate(70);
+      for (int i = 0; i < count/4; i++) {
+        d.readBytes(bb);
+        d.readBytes(bb);
+        d.readBytes(bb);
+        d.readBytes(bb);
+      }
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length;i+=4) {
+        e.writeBytes(sourceData[i]);
+        e.writeBytes(sourceData[i+1]);
+        e.writeBytes(sourceData[i+2]);
+        e.writeBytes(sourceData[i+3]);
+      }
+    }
+  
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
+    }
+  }
+  
+  static class StringTest extends BasicTest {
+    String[] sourceData = null;
+    public StringTest() throws IOException {
+      super("String", "{ \"type\": \"string\"} ", 5);
+    }
+    
+    @Override
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new String[count];
+      for (int i = 0; i < sourceData.length;) {
+        char[] data = new char[r.nextInt(70)];
+        for (int j = 0; j < data.length; j++) {
+          data[j] = (char)('a' + r.nextInt('z'-'a'));
+        }
+        sourceData[i++] = new String(data); 
+      }
+    }
+   
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      Utf8 utf = new Utf8();
+      for (int i = 0; i < count/4; i++) {
+        d.readString(utf).toString();
+        d.readString(utf).toString();
+        d.readString(utf).toString();
+        d.readString(utf).toString();
+      }
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length;i+=4) {
+        e.writeString(sourceData[i]);
+        e.writeString(sourceData[i+1]);
+        e.writeString(sourceData[i+2]);
+        e.writeString(sourceData[i+3]);
+      }
+    }
+  
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
+    }
+  }
+  
+  private static final String RECORD_SCHEMA = 
     "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
@@ -361,56 +694,108 @@ public class Perf {
     + "{ \"name\": \"f6\", \"type\": \"int\" }\n"
     + "] }";
   
-  private static final String REPEATER_SCHEMA =
-    "{ \"type\": \"array\", \"items\":\n"
-    + SCHEMA + " }";
+  private static final String NESTED_RECORD_SCHEMA =
+    "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
+    + "{ \"name\": \"f1\", \"type\": \n" +
+    		"{ \"type\": \"record\", \"name\": \"D\", \"fields\": [\n" +
+    		  "{\"name\": \"dbl\", \"type\": \"double\" }]\n" +
+        "} },\n"
+    + "{ \"name\": \"f2\", \"type\": \"D\" },\n"
+    + "{ \"name\": \"f3\", \"type\": \"D\" },\n"
+    + "{ \"name\": \"f4\", \"type\": \"int\" },\n"
+    + "{ \"name\": \"f5\", \"type\": \"int\" },\n"
+    + "{ \"name\": \"f6\", \"type\": \"int\" }\n"
+    + "] }";
+  
+  private static class Rec {
+    double f1;
+    double f2;
+    double f3;
+    int f4;
+    int f5;
+    int f6;
+    Rec(Random r) {
+      f1 = r.nextDouble();
+      f2 = r.nextDouble();
+      f3 = r.nextDouble();
+      f4 = r.nextInt();
+      f5 = r.nextInt();
+      f6 = r.nextInt();
+    }
+  }
 
-  private static class RepeaterTest extends DecoderTest {
-    public RepeaterTest() throws IOException {
-      this("RepeaterTest");
+  static class RecordTest extends BasicTest {
+    Rec[] sourceData = null;
+    public RecordTest() throws IOException {
+      this("Record");
     }
-    
-    public RepeaterTest(String name) throws IOException {
-      super(name, REPEATER_SCHEMA, 6);
+    public RecordTest(String name) throws IOException {
+      super(name, RECORD_SCHEMA, 6);
     }
-    
     @Override
-    protected void genData(Encoder e) throws IOException {
-      generateRepeaterDataArray(e);
-      e.flush();
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new Rec[count];
+      for (int i = 0; i < sourceData.length; i++) {
+        sourceData[i] = new Rec(r); 
+      }
     }
-    
     @Override
-    protected void readInternal(Decoder d) throws IOException {
-      d.readDouble();
-      d.readDouble();
-      d.readDouble();
-      d.readInt();
-      d.readInt();
-      d.readInt();
+    void readInternal(Decoder d) throws IOException {
+      for (int i = 0; i < count; i++) {
+        d.readDouble();
+        d.readDouble();
+        d.readDouble();
+        d.readInt();
+        d.readInt();
+        d.readInt();
+      }
     }
-    
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length; i++) {
+        Rec r = sourceData[i];
+        e.writeDouble(r.f1);
+        e.writeDouble(r.f2);
+        e.writeDouble(r.f3);
+        e.writeInt(r.f4);
+        e.writeInt(r.f5);
+        e.writeInt(r.f6);
+      }
+    }
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
+    }
+  }
+  
+  static class ValidatingRecord extends RecordTest {
+    ValidatingRecord() throws IOException {
+      super("ValidatingRecord");
+    }
     @Override
     protected Decoder getDecoder() throws IOException {
       return new ValidatingDecoder(schema, super.getDecoder());
     }
-    
+    @Override
+    protected Encoder getEncoder() throws IOException {
+      return new ValidatingEncoder(schema, super.getEncoder());  
+    }
   }
   
-  private static class ResolverTest extends RepeaterTest {
-
-    public ResolverTest() throws IOException {
-      super("ResolverTest");
+  static class ResolvingRecord extends RecordTest {
+    public ResolvingRecord() throws IOException {
+      super("ResolvingRecord");
+      isWriteTest = false;
     }
-    
     @Override
     protected Decoder getDecoder() throws IOException {
-      return new ResolvingDecoder(schema, schema, newDecoder(data));
+      return new ResolvingDecoder(schema, schema, super.getDecoder());
     }
-    
   }
 
-  private static final String MIGRATION_SCHEMA_WITH_DEFAULT =
+  private static final String RECORD_SCHEMA_WITH_DEFAULT =
     "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
@@ -424,11 +809,7 @@ public class Perf {
       + "\"default\": \"undefined\" }\n"
     + "] }";
   
-  private static final String MIGRATION_SCHEMA_WITH_DEFAULT_REPEATER = 
-    "{ \"type\": \"array\", \"items\":\n"
-    + MIGRATION_SCHEMA_WITH_DEFAULT + " }";
-
-  private static final String MIGRATION_SCHEMA_WITH_OUT_OF_ORDER =
+  private static final String RECORD_SCHEMA_WITH_OUT_OF_ORDER =
     "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f3\", \"type\": \"double\" },\n"
@@ -438,7 +819,7 @@ public class Perf {
     + "{ \"name\": \"f6\", \"type\": \"int\" }\n"
     + "] }";
 
-  private static final String MIGRATION_SCHEMA_WITH_PROMOTION =
+  private static final String RECORD_SCHEMA_WITH_PROMOTION =
     "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
     + "{ \"name\": \"f2\", \"type\": \"double\" },\n"
@@ -452,204 +833,283 @@ public class Perf {
   /**
    * Tests the performance of introducing default values.
    */
-  private static class MigrationWithDefaultTest extends RepeaterTest {
+  static class RecordWithDefault extends RecordTest {
     private final Schema readerSchema;
-    public MigrationWithDefaultTest() throws IOException {
-      super("MigrationWithDefaultTest");
-      readerSchema = Schema.parse(MIGRATION_SCHEMA_WITH_DEFAULT_REPEATER);
+    public RecordWithDefault() throws IOException {
+      super("RecordWithDefault");
+      readerSchema = Schema.parse(RECORD_SCHEMA_WITH_DEFAULT);
+      isWriteTest = false;
     }
-    
     @Override
     protected Decoder getDecoder() throws IOException {
-      return new ResolvingDecoder(schema, readerSchema, newDecoder(data));
+      return new ResolvingDecoder(schema, readerSchema, super.getDecoder());
     }
-    
     @Override
     protected void readInternal(Decoder d) throws IOException {
       ResolvingDecoder r = (ResolvingDecoder) d;
       Field[] ff = r.readFieldOrder();
-      for (Field f : ff) {
-        if (f.pos() < 3) {
-          r.readDouble();
-        } else if (f.pos() < 6) {
-          r.readInt();
-        } else {
-          r.readString(null);
+      for (int i = 0; i < count; i++) {
+        for (int j = 0; j < ff.length; j++) {
+          Field f = ff[j];
+          switch (f.pos()) {
+          case 0:
+          case 1:
+          case 2:
+            r.readDouble();
+            break;
+          case 3:
+          case 4:
+          case 5:
+            r.readInt();
+            break;
+          case 6:
+          case 7:
+            r.readString(null);
+            break;
+          }
         }
       }
     }
   }
   
-  private static class GenericReaderTest extends Test {
-    public final Schema writerSchema;
-    protected final GenericDatumReader<Object> r;
-    protected BinaryDecoder d;
-
-    public GenericReaderTest() throws IOException {
-      this("GenericReaderTest");
-    }
-
-    public GenericReaderTest(String name) throws IOException {
-      super(name, CYCLES, COUNT/12);
-      this.writerSchema = Schema.parse(SCHEMA);
-      ByteArrayOutputStream bao = new ByteArrayOutputStream();
-      Encoder e = new BinaryEncoder(bao);
-      genData(e);
-      data = bao.toByteArray();
-      r = createReader();
-      d = null;
-    }
-
-    @Override
-    public long read() throws IOException {
-      long t = System.nanoTime();
-      d = initDecoder(d);
-      Object reuse = null;
-        for (int i = 0; i < this.count; i++) {
-          try {
-                    GenericDatumReader<Object> reader = getReader();
-          Decoder decoder = getDecoder();
-          reuse = reader.read(reuse, decoder);
-          } catch (Exception e) {
-            System.out.println(i + " out of " + count + " " + name);
-            e.printStackTrace();
-            break;
-            }
-      }
-      return (System.nanoTime() - t);
-    }
-    
-    protected void genData(Encoder e) throws IOException {
-      generateRepeatData(e, new Random(), count);
-      e.flush();
-    }
-    
-    protected GenericDatumReader<Object> createReader() throws IOException {
-      return new GenericDatumReader<Object>(writerSchema);
-    }
-    
-    protected GenericDatumReader<Object> getReader() throws IOException {
-      return r;
-    }
-    
-    protected BinaryDecoder initDecoder(BinaryDecoder reuse) {
-      return DecoderFactory.defaultFactory().createBinaryDecoder(data, reuse);
-    }
-    
-    protected Decoder getDecoder() {
-      return d;
-    }
-  }
-
-  private static class GenericReaderOneTimeUseReaderTest extends GenericReaderTest {
-    
-    public GenericReaderOneTimeUseReaderTest() throws IOException {
-      super("GenericReaderOneTimeUseReaderTest");
-    }
-
-    @Override
-    protected GenericDatumReader<Object> getReader() throws IOException {
-      return createReader();
-    }
-  }
-  
-
-  private static class GenericReaderOneTimeUseDecoderTest extends GenericReaderTest {
-    
-    public GenericReaderOneTimeUseDecoderTest() throws IOException {
-      super("GenericReaderOneTimeUseDecoderTest");
-    }
-
-    @Override
-    protected Decoder getDecoder() {
-      return initDecoder(null);
-    }
-  }
-  
-  private static class GenericReaderOneTimeUseTest extends GenericReaderTest {
-    public GenericReaderOneTimeUseTest() throws IOException {
-      super("GenericReaderOneTimeUseTest");
-    }
-
-    @Override
-    protected GenericDatumReader<Object> getReader() throws IOException {
-      return createReader();
-    }
-    
-    @Override
-    protected Decoder getDecoder() {
-      return initDecoder(null);
-    }
-  }
-  
-  private static class GenericReaderWithMigrationTest extends GenericReaderTest {
+  /**
+   * Tests the performance of resolving a change in field order.
+   */
+  static class RecordWithOutOfOrder extends RecordTest {
     private final Schema readerSchema;
-    protected GenericReaderWithMigrationTest(String name, String readerSchema)
-      throws IOException {
-      super(name);
-      this.readerSchema = Schema.parse(readerSchema);
+    public RecordWithOutOfOrder() throws IOException {
+      super("RecordWithOutOfOrder");
+      readerSchema = Schema.parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
+      isWriteTest = false;
     }
-    
-    protected GenericDatumReader<Object> getReader() throws IOException {
-      return new GenericDatumReader<Object>(writerSchema, readerSchema);
-    }
-  }
-
-  private static class GenericReaderWithDefaultTest extends
-    GenericReaderWithMigrationTest {
-    public GenericReaderWithDefaultTest() throws IOException {
-      super("GenericReaderTestWithDefaultTest", MIGRATION_SCHEMA_WITH_DEFAULT);
-    }
-  }
-
-  private static class GenericReaderWithOutOfOrderTest extends
-    GenericReaderWithMigrationTest {
-    public GenericReaderWithOutOfOrderTest() throws IOException {
-      super("GenericReaderTestWithOutOfOrderTest",
-          MIGRATION_SCHEMA_WITH_OUT_OF_ORDER);
-    }
-  }
-
-  private static class GenericReaderWithPromotionTest extends
-    GenericReaderWithMigrationTest {
-    public GenericReaderWithPromotionTest() throws IOException {
-      super("GenericReaderTestWithPromotionTest",
-          MIGRATION_SCHEMA_WITH_PROMOTION);
-    }
-  }
-
-  private static class NestedRecordTest extends ReadInt {
-    public NestedRecordTest() throws IOException {
-      super("NestedRecordTest",
-        "{ \"type\": \"array\", \"items\": \n"
-        + "{ \"type\": \"record\", \"name\": \"r1\", \n"
-        + "\"fields\": \n"
-        + "[ { \"name\": \"f1\", \"type\": \"int\" } ] } } ");
-    }
-
     @Override
-    public Decoder getDecoder() throws IOException {
-      return new ValidatingDecoder(schema, super.getDecoder());
+    protected Decoder getDecoder() throws IOException {
+      return new ResolvingDecoder(schema, readerSchema, super.getDecoder());
+    }
+    @Override
+    protected void readInternal(Decoder d) throws IOException {
+      ResolvingDecoder r = (ResolvingDecoder) d;
+      Field[] ff = r.readFieldOrder();
+      for (int i = 0; i < count; i++) {
+        for (int j = 0; j < ff.length; j++) {
+          Field f = ff[j];
+          switch (f.pos()) {
+          case 0:
+          case 1:
+          case 3:
+            r.readDouble();
+            break;
+          case 2:
+          case 4:
+          case 5:
+            r.readInt();
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  /**
+   * Tests the performance of resolving a type promotion.
+   */
+  static class RecordWithPromotion extends RecordTest {
+    private final Schema readerSchema;
+    public RecordWithPromotion() throws IOException {
+      super("RecordWithPromotion");
+      readerSchema = Schema.parse(RECORD_SCHEMA_WITH_PROMOTION);
+      isWriteTest = false;
+    }
+    @Override
+    protected Decoder getDecoder() throws IOException {
+      return new ResolvingDecoder(schema, readerSchema, super.getDecoder());
+    }
+    @Override
+    protected void readInternal(Decoder d) throws IOException {
+      ResolvingDecoder r = (ResolvingDecoder) d;
+      Field[] ff = r.readFieldOrder();
+      for (int i = 0; i < count; i++) {
+        for (int j = 0; j < ff.length; j++) {
+          Field f = ff[j];
+          switch (f.pos()) {
+          case 0:
+          case 1:
+          case 2:
+            r.readDouble();
+            break;
+          case 3:
+          case 4:
+          case 5:
+            r.readLong();
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  static class GenericTest extends BasicTest {
+    GenericRecord[] sourceData = null;
+    protected final GenericDatumReader<Object> reader;
+    public GenericTest() throws IOException {
+      this("Generic");
+    }
+    protected GenericTest(String name) throws IOException {
+      this(name, RECORD_SCHEMA);
+    }
+    protected GenericTest(String name, String writerSchema) throws IOException {
+      super(name, writerSchema, 12);
+      reader = newReader();
+    }
+    protected GenericDatumReader<Object> getReader() {
+      return reader;
+    }
+    protected GenericDatumReader<Object> newReader() {
+      return new GenericDatumReader<Object>(schema);
+    }
+    @Override
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new GenericRecord[count];
+      for (int i = 0; i < sourceData.length; i++) {
+        GenericRecord rec = new GenericData.Record(schema);
+        rec.put(0, r.nextDouble());
+        rec.put(1, r.nextDouble());
+        rec.put(2, r.nextDouble());
+        rec.put(3, r.nextInt());
+        rec.put(4, r.nextInt());
+        rec.put(5, r.nextInt());
+        sourceData[i] = rec; 
+      }
+    }
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      for (int i = 0; i < count; i++) {
+        getReader().read(null, d);
+      }
+    }
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+      for (int i = 0; i < sourceData.length; i++) {
+        GenericRecord rec = sourceData[i];
+        writer.write(rec, e);
+      }
+    }
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
+    }
+  }
+  
+  static class GenericNested extends GenericTest {
+    public GenericNested() throws IOException {
+      super("GenericNested_", NESTED_RECORD_SCHEMA);
+    }
+    @Override
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new GenericRecord[count];
+      Schema doubleSchema = schema.getFields().get(0).schema();
+      for (int i = 0; i < sourceData.length; i++) {
+        GenericRecord rec = new GenericData.Record(schema);
+        GenericRecord inner;
+        inner = new GenericData.Record(doubleSchema);
+        inner.put(0, r.nextDouble());
+        rec.put(0, inner);
+        inner = new GenericData.Record(doubleSchema);
+        inner.put(0, r.nextDouble());
+        rec.put(1, inner);
+        inner = new GenericData.Record(doubleSchema);
+        inner.put(0, r.nextDouble());
+        rec.put(2, inner);
+        rec.put(3, r.nextInt());
+        rec.put(4, r.nextInt());
+        rec.put(5, r.nextInt());
+        sourceData[i] = rec; 
+      }
     }
   }
 
-
-  private static void usage() {
-    System.out.println("Usage: Perf { -i | -ls | -l | -f | -d | -b | -R | -N " +
-      "| -S | -M | -G | -Gd | -Go | Gp }");
-    System.out.println("  -i readInt()");
-    System.out.println("  -ls readLongSmall()");
-    System.out.println("  -l readLong()");
-    System.out.println("  -f readFloat()");
-    System.out.println("  -d readDouble()");
-    System.out.println("  -b readBoolean()");
-    System.out.println("  -R repeater in validating decoder");
-    System.out.println("  -N nested record in validating decoder");
-    System.out.println("  -S resolving decoder");
-    System.out.println("  -M resolving decoder (with default fields)");
-    System.out.println("  -G GenericDatumReader");
-    System.out.println("  -Gd GenericDatumReader (with default fields)");
-    System.out.println("  -Go GenericDatumReader (with out-of-order fields)");
-    System.out.println("  -Gp GenericDatumReader (with promotion fields)");
+  private static abstract class GenericResolving extends GenericTest {
+    protected GenericResolving(String name)
+    throws IOException {
+      super(name);
+      isWriteTest = false;
+    }
+    @Override
+    protected GenericDatumReader<Object> newReader() {
+      return new GenericDatumReader<Object>(schema, getReaderSchema());
+    }
+    protected abstract Schema getReaderSchema();
   }
+
+  static class GenericWithDefault extends GenericResolving {
+    GenericWithDefault() throws IOException {
+      super("GenericWithDefault_");
+    }
+    @Override
+    protected Schema getReaderSchema() {
+      return  Schema.parse(RECORD_SCHEMA_WITH_DEFAULT);
+    }
+  }
+
+  static class GenericWithOutOfOrder extends GenericResolving {
+    GenericWithOutOfOrder() throws IOException {
+      super("GenericWithOutOfOrder_");
+    }
+    @Override
+    protected Schema getReaderSchema() {
+      return Schema.parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
+    }
+  }
+
+  static class GenericWithPromotion extends GenericResolving {
+    GenericWithPromotion() throws IOException {
+      super("GenericWithPromotion_");
+    }
+    @Override
+    protected Schema getReaderSchema() {
+      return Schema.parse(RECORD_SCHEMA_WITH_PROMOTION);
+    }
+  }
+  
+  static class GenericOneTimeDecoderUse extends GenericTest {
+    public GenericOneTimeDecoderUse() throws IOException {
+      super("GenericOneTimeDecoderUse_");
+      isWriteTest = false;
+    }
+    @Override
+    protected Decoder getDecoder() {
+      return newDecoder();
+    }
+  }
+
+  static class GenericOneTimeReaderUse extends GenericTest {
+    public GenericOneTimeReaderUse() throws IOException {
+      super("GenericOneTimeReaderUse_");
+      isWriteTest = false;
+    }
+    @Override
+    protected GenericDatumReader<Object> getReader() {
+      return newReader();
+    }
+  }
+
+  static class GenericOneTimeUse extends GenericTest {
+    public GenericOneTimeUse() throws IOException {
+      super("GenericOneTimeUse_");
+      isWriteTest = false;
+    }
+    @Override
+    protected GenericDatumReader<Object> getReader() {
+      return newReader();
+    }
+    @Override
+    protected Decoder getDecoder() {
+      return newDecoder();
+    }
+  }
+  
 }

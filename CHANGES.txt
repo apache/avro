@@ -87,6 +87,9 @@ Avro 1.5.0 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-752. Java: Enhanced Performance Test Suite
+    (scottcarey)
+
     AVRO-682. Java: Add method DataFileStream.getMetaKeys().
     (Harsh J Chouraria via cutting)
 
