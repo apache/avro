@@ -33,7 +33,6 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.specific.SpecificDatumReader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -68,8 +67,6 @@ public class TestDataFile {
   private static final boolean VALIDATE =
     !"false".equals(System.getProperty("test.validate", "true"));
   private static final File DIR
-    = new File(System.getProperty("test.dir", "/tmp"));
-  private static final File DATAFILE_DIR
     = new File(System.getProperty("test.dir", "/tmp"));
   private static final long SEED = System.currentTimeMillis();
   private static final String SCHEMA_JSON =
@@ -220,9 +217,9 @@ public class TestDataFile {
              new GenericDatumReader<Object>());
   }
 
-  protected void readFile(File f, DatumReader<Object> datumReader)
+  static void readFile(File f, DatumReader<? extends Object> datumReader)
     throws IOException {
-    FileReader<Object> reader = DataFileReader.openReader(f, datumReader);
+    FileReader<? extends Object> reader = DataFileReader.openReader(f, datumReader);
     for (Object datum : reader) {
       assertNotNull(datum);
     }
@@ -233,42 +230,10 @@ public class TestDataFile {
     Schema projection = null;
     if (args.length > 1)
       projection = Schema.parse(new File(args[1]));
-    TestDataFile tester = new TestDataFile(null);
-    tester.readFile(input, new GenericDatumReader<Object>(null, projection));
+    TestDataFile.readFile(input, new GenericDatumReader<Object>(null, projection));
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)
-      tester.readFile(input, new GenericDatumReader<Object>(null, projection));
+      TestDataFile.readFile(input, new GenericDatumReader<Object>(null, projection));
     System.out.println("Time: "+(System.currentTimeMillis()-start));
-  }
-
-  public static class InteropTest {
-
-  @Test
-    public void testGeneratedGeneric() throws IOException {
-      System.out.println("Reading with generic:");
-      readFiles(new GenericDatumReader<Object>());
-    }
-
-  @Test
-    public void testGeneratedSpecific() throws IOException {
-      System.out.println("Reading with specific:");
-      readFiles(new SpecificDatumReader<Object>());
-    }
-
-  // Can't use same Interop.java as specific for reflect, since its stringField
-  // has type Utf8, which reflect would try to assign a String to.  We could
-  // fix this by defining a reflect-specific version of Interop.java, but we'd
-  // need to put it on a different classpath than the specific one.
-
-  // @Test
-  //   public void testGeneratedReflect() throws IOException {
-  //     readFiles(new ReflectDatumReader(Interop.class));
-  //   }
-
-    private void readFiles(DatumReader<Object> datumReader) throws IOException {
-      TestDataFile test = new TestDataFile(null);
-      for (File f : DATAFILE_DIR.listFiles())
-        test.readFile(f, datumReader);
-    }
   }
 }

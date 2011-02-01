@@ -64,5 +64,31 @@
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>interop-data-generate</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>exec-maven-plugin</artifactId>
+              <!-- default configuration is to generate random data for interop tests -->
+              <configuration>
+                <mainClass>org.apache.avro.RandomData</mainClass>
+                <classpathScope>test</classpathScope>
+                <arguments>
+                  <argument>../../../share/test/schemas/interop.avsc</argument>
+                  <argument>../../../build/interop/data/java.avro</argument>
+                  <argument>100</argument>
+                </arguments>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
 

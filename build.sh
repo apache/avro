@@ -40,7 +40,7 @@ case "$target" in
 
     test)
 	# run lang-specific tests
-	(cd lang/java; ant test)
+        (cd lang/java; mvn test)
 	(cd lang/py; ant test)
 	(cd lang/c; ./build.sh test)
 	(cd lang/c++; ./build.sh test)
@@ -48,7 +48,8 @@ case "$target" in
 	(cd lang/php; ./build.sh test)
 
 	# create interop test data
-	(cd lang/java; ant interop-data-generate)
+        mkdir -p build/interop/data
+	(cd lang/java/avro; mvn exec:java -P interop-data-generate)
 	(cd lang/py; ant interop-data-generate)
 	(cd lang/c; ./build.sh interop-data-generate)
 	#(cd lang/c++; make interop-data-generate)
@@ -56,30 +57,41 @@ case "$target" in
 	(cd lang/php; ./build.sh interop-data-generate)
 
 	# run interop data tests
-	(cd lang/java; ant interop-data-test)
+	(cd lang/java; mvn test -P interop-data-test)
 	(cd lang/py; ant interop-data-test)
 	(cd lang/c; ./build.sh interop-data-test)
 	#(cd lang/c++; make interop-data-test)
 	(cd lang/ruby; rake interop)
 	(cd lang/php; ./build.sh test-interop)
 
-	# run interop rpc tests
-	/bin/bash share/test/interop/bin/test_rpc_interop.sh
+	# java needs to package the jars for the interop rpc tests
+        (cd lang/java; mvn package -DskipTests)
+	# run interop rpc test
+        /bin/bash share/test/interop/bin/test_rpc_interop.sh
 
 	;;
 
     dist)
+        # ensure version matches
+        mvn enforcer:enforce -Davro.version=$VERSION
+        
 	# build source tarball
-	mkdir -p build
-	rm -rf build/avro-src-$VERSION
-	svn export --force . build/avro-src-$VERSION
-	(cd lang/java; ant rat)
+        mkdir -p build
+
+        SRC_DIR=avro-src-$VERSION
+
+	rm -rf build/${SRC_DIR}
+	svn export --force . build/${SRC_DIR}
+	#runs RAT on artifacts
+        mvn -P rat antrun:run
 
 	mkdir -p dist
-        (cd build; tar czf ../dist/avro-src-$VERSION.tar.gz avro-src-$VERSION)
+        (cd build; tar czf ../dist/${SRC_DIR}.tar.gz ${SRC_DIR})
 
 	# build lang-specific artifacts
-	(cd lang/java; ant dist)
+        
+	(cd lang/java; mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate) 
+        (mvn -P copy-artifacts antrun:run) 
 
 	(cd lang/py; ant dist)
 
@@ -123,7 +135,8 @@ case "$target" in
 	rm -rf build dist
 	(cd doc; ant clean)
 
-	(cd lang/java; ant clean)
+	(cd lang/java; mvn clean)
+        (mvn clean)         
 
 	(cd lang/py; ant clean)
 

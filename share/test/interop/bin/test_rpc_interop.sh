@@ -23,8 +23,8 @@ VERSION=`cat share/VERSION.txt`
 
 #set -x						  # echo commands
 
-java_client="java -jar lang/java/build/avro-tools-$VERSION.jar rpcsend"
-java_server="java -jar lang/java/build/avro-tools-$VERSION.jar rpcreceive"
+java_client="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcsend"
+java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive"
 
 py_client="python lang/py/build/src/avro/tool.py rpcsend"
 py_server="python lang/py/build/src/avro/tool.py rpcreceive"

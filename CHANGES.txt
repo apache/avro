@@ -87,6 +87,9 @@ Avro 1.5.0 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-716. Java: integrate AVRO-647 changes with top level build
+    (scottcarey)
+
     AVRO-752. Java: Enhanced Performance Test Suite
     (scottcarey)
 
