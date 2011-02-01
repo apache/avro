@@ -32,7 +32,7 @@ Avro 1.5.0 (unreleased)
 
     (scottcarey)
 
-    AVRO-716. Java: Improve correlation between packages and modules.
+    AVRO-737. Java: Improve correlation between packages and modules.
     Each module introduced by AVRO-647 now exclusively provides 
     different java packages.  This required moving several classes
     around into new packages and will therefore require users to
