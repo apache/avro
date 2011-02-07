@@ -37,6 +37,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private GenericData data;
   private Schema actual;
   private Schema expected;
+  
+  private ResolvingDecoder creatorResolver = null;
+  private final Thread creator;
 
   public GenericDatumReader() {
     this(null, null, GenericData.get());
@@ -56,6 +59,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     this.actual = writer;
     this.expected = reader;
     this.data = data;
+    this.creator = Thread.currentThread();
   }
 
   @Override
@@ -64,17 +68,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (expected == null) {
       expected = actual;
     }
-    threadResolver.set(null);
+    creatorResolver = null;
   }
 
   /** Set the reader's schema. */
   public void setExpected(Schema reader) throws IOException {
     this.expected = reader;
-    threadResolver.set(null);
+    creatorResolver = null;
   }
-
-  private final ThreadLocal<ResolvingDecoder> threadResolver =
-    new ThreadLocal<ResolvingDecoder>();
 
   private static final ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>
     RESOLVER_CACHE =
@@ -86,9 +87,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   private ResolvingDecoder getResolver(Schema actual, Schema expected)
     throws IOException {
-    ResolvingDecoder resolver = threadResolver.get();
-    if (resolver != null)
-      return resolver;
+    Thread currThread = Thread.currentThread();
+    ResolvingDecoder resolver;
+    if (currThread == creator && creatorResolver != null) {
+      return creatorResolver;
+    } 
 
     Map<Schema,ResolvingDecoder> cache = RESOLVER_CACHE.get().get(actual);
     if (cache == null) {
@@ -101,7 +104,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
                                       expected, null);
       cache.put(expected, resolver);
     }
-    threadResolver.set(resolver);
+    
+    if (currThread == creator){
+      creatorResolver = resolver;
+    }
+
     return resolver;
   }
 

@@ -150,6 +150,9 @@ Avro 1.5.0 (unreleased)
 
   BUG FIXES
 
+    AVRO-743. Java: Performance Regression and memory pressure with 
+    GenericDatumReader. (scottcarey)
+
     AVRO-675. C: Bytes and fixed setters don't update datum size.
     (Douglas Creager via massie)
 
