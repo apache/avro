@@ -29,7 +29,9 @@ import java.util.Random;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
@@ -211,6 +213,28 @@ public class TestDataFile {
       reader.close();
     }
   }  
+
+  @Test
+  public void testReadWithHeader() throws IOException {
+    File file = makeFile();
+    DataFileReader<Object> reader =
+      new DataFileReader<Object>(file, new GenericDatumReader<Object>());
+    // get a header for this file
+    DataFileStream.Header header = reader.getHeader();
+    // re-open to an arbitrary position near the middle, with sync == true
+    SeekableFileInput sin = new SeekableFileInput(file);
+    sin.seek(sin.length() / 2);
+    reader = DataFileReader.<Object>openReader(sin, new GenericDatumReader<Object>(),
+        header, true);
+    assertNotNull("Should be able to reopen from arbitrary point", reader.next());
+    long validPos = reader.previousSync();
+    // post sync, we know of a valid sync point: re-open with seek (sync == false)
+    sin.seek(validPos);
+    reader = DataFileReader.<Object>openReader(sin, new GenericDatumReader<Object>(),
+        header, false);
+    assertEquals("Should not move from sync point on reopen", validPos, sin.tell());
+    assertNotNull("Should be able to reopen at sync point", reader.next());
+  }
 
   @Test public void test12() throws IOException {
     readFile(new File("../../../share/test/data/test.avro12"),

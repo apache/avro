@@ -45,10 +45,22 @@ import org.apache.avro.io.DatumReader;
  */
 public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
-  private Schema schema;
+  /**
+   * A handle that can be used to reopen a DataFile without re-reading the
+   * header of the stream.
+   */
+  public static final class Header {
+    Schema schema;
+    Map<String,byte[]> meta = new HashMap<String,byte[]>();
+    private transient List<String> metaKeyList = new ArrayList<String>();
+    byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
+    private Header() {}
+  }
+
   private DatumReader<D> reader;
   private long blockSize;
   private boolean availableBlock = false;
+  private Header header;
 
   /** Decoder on raw input stream.  (Used for metadata.) */
   BinaryDecoder vin;
@@ -56,13 +68,9 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
    *  (Different than vin for block segments.) */
   BinaryDecoder datumIn = null;
 
-  Map<String,byte[]> meta = new HashMap<String,byte[]>();
-  List<String> metaKeyList = new ArrayList<String>();
-
   ByteBuffer blockBuffer;
   long blockCount;                              // # entries in block
   long blockRemaining;                          // # entries remaining in block
-  byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
   byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
   private Codec codec;
 
@@ -83,7 +91,9 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     this.reader = reader;
   }
   
+  /** Initialize the stream by reading from its head. */
   void initialize(InputStream in) throws IOException {
+    this.header = new Header();
     this.vin = DecoderFactory.defaultFactory().createBinaryDecoder(in, vin);
     byte[] magic = new byte[DataFileConstants.MAGIC.length];
     try {
@@ -102,21 +112,25 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
           ByteBuffer value = vin.readBytes(null);
           byte[] bb = new byte[value.remaining()];
           value.get(bb);
-          meta.put(key, bb);
-          metaKeyList.add(key);
+          header.meta.put(key, bb);
+          header.metaKeyList.add(key);
         }
       } while ((l = vin.mapNext()) != 0);
     }
+    vin.readFixed(header.sync);                          // read sync
     
-    // Make the meta keys list unmodifiable.
-    metaKeyList = Collections.unmodifiableList(metaKeyList);
-    
-    vin.readFixed(sync);                          // read sync
-
+    // finalize the header
+    header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
+    header.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA));
     this.codec = resolveCodec();
-    this.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA));
+    reader.setSchema(header.schema);
+  }
 
-    reader.setSchema(schema);
+  /** Initialize the stream without reading from it. */
+  void initialize(InputStream in, Header header) throws IOException {
+    this.header = header;
+    this.codec = resolveCodec();
+    reader.setSchema(header.schema);
   }
 
   Codec resolveCodec() {
@@ -128,17 +142,21 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }
   }
 
+  /** A handle that can be used to reopen this stream without rereading the
+   * head. */
+  public Header getHeader() { return header; }
+
   /** Return the schema used in this file. */
-  public Schema getSchema() { return schema; }
+  public Schema getSchema() { return header.schema; }
 
   /** Return the list of keys in the metadata */
   public List<String> getMetaKeys() {
-    return metaKeyList;
+    return header.metaKeyList;
   }
 
   /** Return the value of a metadata property. */
   public byte[] getMeta(String key) {
-    return meta.get(key);
+    return header.meta.get(key);
   }
   /** Return the value of a metadata property. */
   public String getMetaString(String key) {
@@ -268,7 +286,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     // throws if it can't read the size requested
     vin.readFixed(reuse.data, 0, reuse.blockSize);
     vin.readFixed(syncBuffer);
-    if (!Arrays.equals(syncBuffer, sync))
+    if (!Arrays.equals(syncBuffer, header.sync))
       throw new IOException("Invalid sync!");
     availableBlock = false;
     return reuse;
@@ -336,6 +354,5 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }   
     
   }
-
 }
 

@@ -160,8 +160,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       new DataFileReader<D>(new SeekableFileInput(fd),
                             new GenericDatumReader<D>());
     this.schema = reader.getSchema();
-    this.sync = reader.sync;
-    this.meta.putAll(reader.meta);
+    this.sync = reader.getHeader().sync;
+    this.meta.putAll(reader.getHeader().meta);
     byte[] codecBytes = this.meta.get(DataFileConstants.CODEC);
     if (codecBytes != null) {
       String strCodec = new String(codecBytes, "UTF-8");

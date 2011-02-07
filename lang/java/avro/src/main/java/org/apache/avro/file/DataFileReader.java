@@ -63,6 +63,27 @@ public class DataFileReader<D>
     throw new IOException("Not an Avro data file");
   }
 
+  /**
+   * Construct a reader for a file at the current position of the input,
+   * without reading the header.
+   * @param sync True to read forward to the next sync point after opening,
+   *             false to assume that the input is already at a valid sync
+   *             point.
+   */
+  public static <D> DataFileReader<D> openReader(SeekableInput in,
+                                                 DatumReader<D> reader,
+                                                 Header header,
+                                                 boolean sync)
+      throws IOException {
+    DataFileReader<D> dreader = new DataFileReader(in, reader, header);
+    // seek/sync to an (assumed) valid position
+    if (sync)
+      dreader.sync(in.tell());
+    else
+      dreader.seek(in.tell());
+    return dreader;
+  }
+
   /** Construct a reader for a file. */
   public DataFileReader(File file, DatumReader<D> reader) throws IOException {
     this(new SeekableFileInput(file), reader);
@@ -77,9 +98,18 @@ public class DataFileReader<D>
     blockFinished();
   }
 
+  /** Construct using a {@link DataFileStream.Header}.  Does not call {@link
+      #sync(long)} or {@link #seek(long)}. */
+  protected DataFileReader(SeekableInput sin, DatumReader<D> reader,
+                           Header header) throws IOException {
+    super(reader);
+    this.sin = new SeekableInputStream(sin);
+    initialize(this.sin, header);
+  }
+
   /** Move to a specific, known synchronization point, one returned from {@link
    * DataFileWriter#sync()} while writing.  If synchronization points were not
-   * saved while writing a file, use {#sync(long)} instead. */
+   * saved while writing a file, use {@link #sync(long)} instead. */
   public void seek(long position) throws IOException {
     sin.seek(position);
     vin = DecoderFactory.defaultFactory().createBinaryDecoder(this.sin, vin);
@@ -101,7 +131,7 @@ public class DataFileReader<D>
     do {
       int j = 0;
       for (; j < SYNC_SIZE; j++) {
-        if (sync[j] != syncBuffer[(i+j)%SYNC_SIZE])
+        if (getHeader().sync[j] != syncBuffer[(i+j)%SYNC_SIZE])
           break;
       }
       if (j == SYNC_SIZE) {                       // matched a complete sync
@@ -180,7 +210,7 @@ public class DataFileReader<D>
         return oneByte[0] & 0xff;
       } else {
         return n;
-    }
+      }
     };
 
     @Override
