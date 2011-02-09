@@ -34,14 +34,17 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
+import org.codehaus.jackson.JsonEncoding;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
 
 /**
  * Performance tests for various low level operations of
  * Avro encoding and decoding.
  */
 public class Perf {
-  private static final int COUNT = 160000; // needs to be a multiple of 4
-  private static final int CYCLES = 500;
+  private static final int COUNT = 250000; // needs to be a multiple of 4
+  private static final int CYCLES = 800;
   
   /**
    * Use a fixed value seed for random number generation
@@ -160,8 +163,8 @@ public class Perf {
         tests.add(test);
       }
     }
-    System.out.println("Executing tests: \n" + tests +
-        "\n readTests=" + readTests + " writeTests=" + writeTests + "\n");
+    System.out.println("Executing tests: \n" + tests +  "\n readTests:" +
+        readTests + "\n writeTests:" + writeTests + "\n cycles=" + CYCLES);
     
     for (int k = 0; k < tests.size(); k++) {
       Test t = tests.get(k);
@@ -180,6 +183,8 @@ public class Perf {
         throw e;
       }
     }
+    
+    printHeader();
 
     for (int k = 0; k < tests.size(); k++) {
       Test t = tests.get(k);
@@ -217,15 +222,21 @@ public class Perf {
     }
   }
   
+  private static final void printHeader() {
+    String header = String.format(
+        "%29s     time    M entries/sec   M bytes/sec  bytes/cycle",
+        "test name");
+    System.out.println(header.toString());
+  }
+  
   private static final void printResult(long s, Test t, String name) {
     s /= 1000;
     double entries = (t.cycles * (double) t.count);
     double bytes = t.cycles * (double) t.encodedSize;
     StringBuilder result = new StringBuilder();
-    result.append(String.format("%29s:  ", name));
-    result.append(String.format("%4d ms,  ", (s / 1000)));
-    result.append(String.format("%9.3f million entries/sec.  ", (entries / s)));
-    result.append(String.format("%9.3f million bytes/sec", (bytes/ s)));
+    result.append(String.format("%29s: %6d ms  ", name, (s/1000)));
+    result.append(String.format("%10.3f   %11.3f   %11d", 
+        (entries / s), (bytes/ s),  t.encodedSize));
     System.out.println(result.toString());
   }
   
