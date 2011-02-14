@@ -152,65 +152,41 @@ public class BinaryDecoder extends Decoder {
           if (b > 0x7f) {
             b = buf[pos + len++] & 0xff;
             n ^= (b & 0x7f) << 28;
-          }
-          if (b > 0x7f) {
-            throw new IOException("Invalid int encoding");
+            if (b > 0x7f) {
+              throw new IOException("Invalid int encoding");
+            }
           }
         }
       }
     }
-    if (pos + len > limit) {
+    pos += len;
+    if (pos > limit) {
       throw new EOFException();
     }
-    pos += len;
     return (n >>> 1) ^ -(n & 1); // back to two's-complement
   }
 
   @Override
   public long readLong() throws IOException {
     ensureBounds(10);
-    int len = 1;
-    int b = buf[pos] & 0xff;
+    int b = buf[pos++] & 0xff;
     int n = b & 0x7f;
     long l;
     if (b > 0x7f) {
-      b = buf[pos + len++] & 0xff;
+      b = buf[pos++] & 0xff;
       n ^= (b & 0x7f) << 7;
       if (b > 0x7f) {
-        b = buf[pos + len++] & 0xff;
+        b = buf[pos++] & 0xff;
         n ^= (b & 0x7f) << 14;
         if (b > 0x7f) {
-          b = buf[pos + len++] & 0xff;
+          b = buf[pos++] & 0xff;
           n ^= (b & 0x7f) << 21;
-          // only the low 28 bits can be set, so this won't carry
-          // the sign bit to the long
-          l = n;
           if (b > 0x7f) {
-            b = buf[pos + len++] & 0xff;
-            l ^= (b & 0x7fL) << 28;
-            if (b > 0x7f) {
-              b = buf[pos + len++] & 0xff;
-              l ^= (b & 0x7fL) << 35;
-              if (b > 0x7f) {
-                b = buf[pos + len++] & 0xff;
-                l ^= (b & 0x7fL) << 42;
-                if (b > 0x7f) {
-                  b = buf[pos + len++] & 0xff;
-                  l ^= (b & 0x7fL) << 49;
-                  if (b > 0x7f) {
-                    b = buf[pos + len++] & 0xff;
-                    l ^= (b & 0x7fL) << 56;
-                    if (b > 0x7f) {
-                      b = buf[pos + len++] & 0xff;
-                      l ^= (b & 0x7fL) << 63;
-                    }
-                    if (b > 0x7f) {
-                      throw new IOException("Invalid long encoding");
-                    }
-                  }
-                }
-              }
-            }
+            // only the low 28 bits can be set, so this won't carry
+            // the sign bit to the long
+            l = innerLongDecode((long)n);
+          } else {
+            l = n;
           }
         } else {
           l = n;
@@ -221,11 +197,43 @@ public class BinaryDecoder extends Decoder {
     } else {
       l = n;
     }
-    if (pos + len > limit) {
+    if (pos > limit) {
       throw new EOFException();
     }
-    pos += len;
     return (l >>> 1) ^ -(l & 1); // back to two's-complement
+  }
+  
+  // splitting readLong up makes it faster because of the JVM does more
+  // optimizations on small methods
+  private long innerLongDecode(long l) throws IOException {
+    int len = 1;
+    int b = buf[pos] & 0xff;
+    l ^= (b & 0x7fL) << 28;
+    if (b > 0x7f) {
+      b = buf[pos + len++] & 0xff;
+      l ^= (b & 0x7fL) << 35;
+      if (b > 0x7f) {
+        b = buf[pos + len++] & 0xff;
+        l ^= (b & 0x7fL) << 42;
+        if (b > 0x7f) {
+          b = buf[pos + len++] & 0xff;
+          l ^= (b & 0x7fL) << 49;
+          if (b > 0x7f) {
+            b = buf[pos + len++] & 0xff;
+            l ^= (b & 0x7fL) << 56;
+            if (b > 0x7f) {
+              b = buf[pos + len++] & 0xff;
+              l ^= (b & 0x7fL) << 63;
+              if (b > 0x7f) {
+                throw new IOException("Invalid long encoding");
+              }
+            }
+          }
+        }
+      }
+    }
+    pos += len;
+    return l;
   }
 
   @Override
@@ -261,11 +269,13 @@ public class BinaryDecoder extends Decoder {
   public Utf8 readString(Utf8 old) throws IOException {
     int length = readInt();
     Utf8 result = (old != null ? old : new Utf8());
-    result.setLength(length);
-    doReadBytes(result.getBytes(), 0, length);
+    result.setByteLength(length);
+    if (0 != length) {
+      doReadBytes(result.getBytes(), 0, length);
+    }
     return result;
   }
-
+  
   @Override
   public void skipString() throws IOException {
     doSkipBytes(readInt());
