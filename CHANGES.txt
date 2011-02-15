@@ -88,6 +88,9 @@ Avro 1.5.0 (unreleased)
     AVRO-757. Java: Permit data files to be re-opened without
     re-reading the header. (Stu Hood via cutting)
 
+    AVRO-750. C: Install a pkg-config file
+    (dcreager)
+
   IMPROVEMENTS
 
     AVRO-765. Java: Improvement to BinaryDecoder readLong performance

@@ -33,6 +33,7 @@ AC_CONFIG_FILES([
    docs/Makefile
    src/Makefile
    examples/Makefile
+   src/avro-c.pc
 ])
 AC_CONFIG_SUBDIRS([jansson])
 AC_OUTPUT

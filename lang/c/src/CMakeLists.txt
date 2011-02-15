@@ -76,3 +76,10 @@ install(TARGETS avro-static avro-shared
         ARCHIVE DESTINATION lib
 )
 
+# Install pkg-config file
+
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(VERSION ${AVRO_VERSION})
+configure_file(avro-c.pc.in avro-c.pc)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/avro-c.pc
+        DESTINATION lib/pkgconfig)

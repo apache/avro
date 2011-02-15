@@ -3,6 +3,9 @@ AM_CPPFLAGS=-I$(top_srcdir)/jansson/src
 AM_CFLAGS=-Wall -Wextra -Wunused-parameter
 ACLOCAL_AMFLAGS=-I m4
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = avro-c.pc
+
 include_HEADERS = avro.h
 
 lib_LTLIBRARIES = libavro.la
