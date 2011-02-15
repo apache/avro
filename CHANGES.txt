@@ -157,6 +157,9 @@ Avro 1.5.0 (unreleased)
     AVRO-749. Don't install Jansson build artifacts. (Douglas Creager via
     brucem)
 
+    AVRO-744. C: Helper macros for extracting and setting record field
+    values (dcreager)
+
   BUG FIXES
 
     AVRO-743. Java: Performance Regression and memory pressure with 

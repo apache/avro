@@ -274,6 +274,21 @@ const char *avro_enum_get_name(const avro_datum_t datum,
 int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size);
 int avro_record_get(const avro_datum_t record, const char *field_name,
 		    avro_datum_t * value);
+
+/*
+ * A helper macro that extracts the value of the given field of a
+ * record.
+ */
+
+#define avro_record_get_field_value(rc, rec, typ, fname, ...)	\
+	do {							\
+		avro_datum_t  field = NULL;			\
+		(rc) = avro_record_get((rec), (fname), &field);	\
+		if (rc) break;					\
+		(rc) = avro_##typ##_get(field, __VA_ARGS__);	\
+	} while (0)
+
+
 int avro_map_get(const avro_datum_t datum, const char *key,
 		 avro_datum_t * value);
 /*
@@ -322,6 +337,19 @@ int avro_givefixed_set(avro_datum_t datum, const char *bytes,
 
 int avro_record_set(avro_datum_t record, const char *field_name,
 		    avro_datum_t value);
+
+/*
+ * A helper macro that sets the value of the given field of a record.
+ */
+
+#define avro_record_set_field_value(rc, rec, typ, fname, ...)	\
+	do {							\
+		avro_datum_t  field = NULL;			\
+		(rc) = avro_record_get((rec), (fname), &field);	\
+		if (rc) break;					\
+		(rc) = avro_##typ##_set(field, __VA_ARGS__);	\
+	} while (0)
+
 int avro_map_set(avro_datum_t map, const char *key,
 		 avro_datum_t value);
 int avro_array_append_datum(avro_datum_t array_datum,

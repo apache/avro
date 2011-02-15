@@ -325,6 +325,16 @@ static int test_record(void)
 	test_json(datum, schema,
 		  "{\"name\": \"Joseph Campbell\", \"age\": 83}");
 
+	int  rc;
+	avro_record_set_field_value(rc, datum, int32, "age", 104);
+
+	int32_t  age = 0;
+	avro_record_get_field_value(rc, datum, int32, "age", &age);
+	if (age != 104) {
+		fprintf(stderr, "Incorrect age value\n");
+		exit(EXIT_FAILURE);
+	}
+
 	avro_datum_decref(name_datum);
 	avro_datum_decref(age_datum);
 	avro_datum_decref(datum);
