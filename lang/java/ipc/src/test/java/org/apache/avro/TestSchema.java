@@ -482,10 +482,12 @@ public class TestSchema {
 
   @Test
   public void testAliases() throws Exception {
-    String t1 = "{\"type\":\"record\",\"name\":\"a.b\","
-      +"\"fields\":[{\"name\":\"f\",\"type\":\"long\"}]}";
+    String t1 = "{\"type\":\"record\",\"name\":\"a.b\",\"fields\":["
+      +"{\"name\":\"f\",\"type\":\"long\"},"
+      +"{\"name\":\"h\",\"type\":\"int\"}]}";
     String t2 = "{\"type\":\"record\",\"name\":\"x.y\",\"aliases\":[\"a.b\"],"
-      +"\"fields\":[{\"name\":\"g\",\"type\":\"long\",\"aliases\":[\"f\"]}]}";
+      +"\"fields\":[{\"name\":\"g\",\"type\":\"long\",\"aliases\":[\"f\"]},"
+      +"{\"name\":\"h\",\"type\":\"int\"}]}";
     Schema s1 = Schema.parse(t1);
     Schema s2 = Schema.parse(t2);
     Schema s3 = Schema.applyAliases(s1,s2);

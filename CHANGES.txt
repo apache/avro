@@ -212,6 +212,9 @@ Avro 1.5.0 (unreleased)
     over stateful connections, permitting interoperability with
     Python and Ruby, which drop the one-way message attribute. (cutting)
 
+    AVRO-759. Java: Fix NullPointerException when some but not all
+    fields are aliased. (Xiaolu Ye via cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

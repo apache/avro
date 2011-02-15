@@ -1253,7 +1253,10 @@ public abstract class Schema {
     Map<String,String> recordAliases = fieldAliases.get(record);
     if (recordAliases == null)
       return field;
-    return recordAliases.get(field);
+    String alias = recordAliases.get(field);
+    if (alias == null)
+      return field;
+    return alias;
   }
 
   /**
