@@ -17,6 +17,7 @@
  */
 package org.apache.avro.generic;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,9 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.io.BinaryData;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParseException;
@@ -165,5 +169,47 @@ public class TestGenericData {
     
     // will throw exception if string is not parsable json
     mapper.readTree(parser);
+  }
+
+  @Test
+  public void testCompare() {
+    // Prepare a schema for testing.
+    Field integerField = new Field("test", Schema.create(Type.INT), null, null);
+    List<Field> fields = new ArrayList<Field>();
+    fields.add(integerField);
+    Schema record = Schema.createRecord("test", null, null, false);
+    record.setFields(fields);
+    
+    ByteArrayOutputStream b1 = new ByteArrayOutputStream(5);
+    ByteArrayOutputStream b2 = new ByteArrayOutputStream(5);
+    BinaryEncoder b1Enc = new BinaryEncoder(b1);
+    BinaryEncoder b2Enc = new BinaryEncoder(b2);
+    // Prepare two different datums
+    Record testDatum1 = new Record(record);
+    testDatum1.put(0, 1);
+    Record testDatum2 = new Record(record);
+    testDatum2.put(0, 2);
+    GenericDatumWriter<Record> gWriter = new GenericDatumWriter<Record>(record);
+    Integer start1 = 0, start2 = 0;
+    try {
+      // Write two datums in each stream
+      // and get the offset length after the first write in each.
+      gWriter.write(testDatum1, b1Enc);
+      b1Enc.flush();
+      start1 = b1.size();
+      gWriter.write(testDatum1, b1Enc);
+      b1Enc.flush();
+      b1.close();
+      gWriter.write(testDatum2, b2Enc);
+      b2Enc.flush();
+      start2 = b2.size();
+      gWriter.write(testDatum2, b2Enc);
+      b2Enc.flush();
+      b2.close();
+      // Compare to check if offset-based compare works right.
+      assertEquals(-1, BinaryData.compare(b1.toByteArray(), start1, b2.toByteArray(), start2, record));
+    } catch (IOException e) {
+      fail("IOException while writing records to output stream.");
+    }
   }
 }

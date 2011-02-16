@@ -57,8 +57,17 @@ public class BinaryData {
   public static int compare(byte[] b1, int s1,
                             byte[] b2, int s2,
                             Schema schema) {
+    return compare(b1, s1, b1.length - s1, b2, s2, b2.length - s2, schema);
+  }
+
+  /** Compare binary encoded data.  If equal, return zero.  If greater-than,
+   * return 1, if less than return -1. Order is consistent with that of {@link
+   * org.apache.avro.generic.GenericData#compare(Object, Object, Schema)}.*/
+  public static int compare(byte[] b1, int s1, int l1,
+                            byte[] b2, int s2, int l2,
+                            Schema schema) {
     Decoders decoders = DECODERS.get();
-    decoders.set(b1, s1, b1.length, b2, s2, b2.length);
+    decoders.set(b1, s1, l1, b2, s2, l2);
     try {
       return compare(decoders, schema);
     } catch (IOException e) {

@@ -43,8 +43,8 @@ class TetherKeyComparator
 
   @Override
   public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-    int diff = BinaryData.compare(b1, BinaryData.skipLong(b1, s1),
-                                  b2, BinaryData.skipLong(b2, s2),
+    int diff = BinaryData.compare(b1, BinaryData.skipLong(b1, s1), l1,
+                                  b2, BinaryData.skipLong(b2, s2), l2,
                                   schema);
     return diff == 0 ? -1 : diff;
   }
