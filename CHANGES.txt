@@ -163,6 +163,7 @@ Avro 1.5.0 (unreleased)
   BUG FIXES
 
     AVRO-764. Java: Bug in BinaryData.compare() with offset comparison.
+    (Harsh J Chouraria via scottcarey)
 
     AVRO-743. Java: Performance Regression and memory pressure with 
     GenericDatumReader. (scottcarey)
