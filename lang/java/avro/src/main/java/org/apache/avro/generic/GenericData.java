@@ -123,6 +123,22 @@ public class GenericData {
       elements[size++] = o;
       return true;
     }
+    @Override public T set(int i, T o) {
+      if (i >= size)
+        throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
+      T response = (T)elements[i];
+      elements[i] = o;
+      return response;
+    }
+    @Override public T remove(int i) {
+      if (i >= size)
+        throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
+      T result = (T)elements[i];
+      --size;
+      System.arraycopy(elements, i+1, elements, i, (size-i));
+      elements[size] = null;
+      return result;
+    }
     public T peek() {
       return (size < elements.length) ? (T)elements[size] : null;
     }

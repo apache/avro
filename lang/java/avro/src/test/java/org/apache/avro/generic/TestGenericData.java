@@ -149,6 +149,64 @@ public class TestGenericData {
       array.get(0);
       fail("Expected IndexOutOfBoundsException getting index 0 after clear()");
     } catch (IndexOutOfBoundsException e) {}
+
+  }
+  @Test
+  public void testArrayRemove()
+  {
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
+    GenericArray<Integer> array = new GenericData.Array<Integer>(10, schema);
+    array.clear();
+    for(int i=0; i<10; ++i)
+      array.add(i);
+    assertEquals(10, array.size());
+    assertEquals(new Integer(0), array.get(0));
+    assertEquals(new Integer(9), array.get(9));
+
+    array.remove(0);
+    assertEquals(9, array.size());
+    assertEquals(new Integer(1), array.get(0));
+    assertEquals(new Integer(2), array.get(1));
+    assertEquals(new Integer(9), array.get(8));
+
+    // Test boundary errors.
+    try {
+      array.get(9);
+      fail("Expected IndexOutOfBoundsException after removing an element");
+    } catch (IndexOutOfBoundsException e){}
+    try {
+      array.set(9, 99);
+      fail("Expected IndexOutOfBoundsException after removing an element");
+    } catch (IndexOutOfBoundsException e){}
+    try {
+      array.remove(9);
+      fail("Expected IndexOutOfBoundsException after removing an element");
+    } catch (IndexOutOfBoundsException e){}
+
+    // Test that we can still remove for properly sized arrays, and the rval
+    assertEquals(new Integer(9), array.remove(8));
+    assertEquals(8, array.size());
+
+
+    // Test insertion after remove
+    array.add(88);
+    assertEquals(new Integer(88), array.get(8));
+  }
+  @Test
+  public void testArraySet()
+  {
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
+    GenericArray<Integer> array = new GenericData.Array<Integer>(10, schema);
+    array.clear();
+    for(int i=0; i<10; ++i)
+      array.add(i);
+    assertEquals(10, array.size());
+    assertEquals(new Integer(0), array.get(0));
+    assertEquals(new Integer(5), array.get(5));
+
+    assertEquals(new Integer(5), array.set(5, 55));
+    assertEquals(10, array.size());
+    assertEquals(new Integer(55), array.get(5));
   }
   
   @Test
