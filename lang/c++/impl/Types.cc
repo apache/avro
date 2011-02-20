@@ -50,6 +50,16 @@ BOOST_STATIC_ASSERT( (sizeof(typeToString)/sizeof(std::string)) == (AVRO_NUM_TYP
 // and it would be a problem for this flag if we ever supported more than 32 types
 BOOST_STATIC_ASSERT( AVRO_NUM_TYPES < 32 );
 
+const std::string& toString(Type type)
+{
+    static std::string undefinedType = "Undefined type";
+    if (isAvroTypeOrPseudoType(type)) {
+        return strings::typeToString[type];
+    } else {
+        return undefinedType;
+    }
+}
+
 std::ostream &operator<< (std::ostream &os, Type type)
 {
     if(isAvroTypeOrPseudoType(type)) {

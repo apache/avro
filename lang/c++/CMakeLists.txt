@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.6)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt)
     file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt" AVRO_VERSION)
@@ -33,23 +33,29 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
 
 project (Avro-cpp)
+
+find_package (Boost 1.38 COMPONENTS regex filesystem system)
+
 include_directories (api ${BUILD_DIRECTORY})
 add_library (avrocpp SHARED impl/Compiler.cc
         impl/Compiler.cc impl/CompilerNode.cc impl/Node.cc
         impl/NodeImpl.cc impl/Resolver.cc impl/ResolverSchema.cc impl/Schema.cc
         impl/Types.cc impl/Validator.cc impl/ValidSchema.cc impl/Zigzag.cc
+        impl/BinaryEncoder.cc impl/BinaryDecoder.cc
+        impl/Stream.cc impl/FileStream.cc
+        impl/parsing/Symbol.cc
+        impl/parsing/ValidatingCodec.cc
+        impl/parsing/JsonCodec.cc
+        impl/parsing/ResolvingDecoder.cc
         ${BUILD_DIRECTORY}/AvroYacc.cc ${BUILD_DIRECTORY}/AvroLex.cc)
-target_link_libraries (avrocpp boost_regex-mt)
+
+target_link_libraries (avrocpp ${Boost_LIBRARIES})
 
 add_executable (precompile test/precompile.cc)
 
 add_dependencies(avrocpp parser lexer)
 
-target_link_libraries (precompile avrocpp boost_regex-mt)
-
-find_package(BISON)
-
-find_package(FLEX)
+target_link_libraries (precompile avrocpp ${Boost_LIBRARIES})
 
 add_custom_command (OUTPUT ${BUILD_DIRECTORY}/bigrecord
     COMMAND precompile jsonschemas/bigrecord ${BUILD_DIRECTORY}/bigrecord
@@ -71,9 +77,13 @@ add_custom_target (testgen2
     WORKING_DIRECTORY ${BUILD_DIRECTORY}
     DEPENDS ${BUILD_DIRECTORY}/bigrecord2)
 
-BISON_TARGET (parser parser/AvroYacc.yy ${BUILD_DIRECTORY}/AvroYacc.cc)
-FLEX_TARGET (lexer parser/AvroLex.ll ${BUILD_DIRECTORY}/AvroLex.cc)
-
+add_custom_command (OUTPUT ${BUILD_DIRECTORY}/AvroYacc.cc
+    COMMAND bison --defines=AvroYacc.hh -o AvroYacc.cc ../parser/AvroYacc.yy
+    WORKING_DIRECTORY ${BUILD_DIRECTORY})
+add_custom_command (OUTPUT ${BUILD_DIRECTORY}/AvroLex.cc
+    COMMAND flex -oAvroLex.cc ../parser/AvroLex.ll
+    WORKING_DIRECTORY ${BUILD_DIRECTORY})
+    
 macro (test name)
     add_executable (${name} test/${name}.cc)
     target_link_libraries (${name} avrocpp boost_regex-mt)
@@ -81,6 +91,12 @@ endmacro (test)
 
 test(buffertest)
 test(unittest)
+
+add_executable (CodecTests test/CodecTests.cc)
+target_link_libraries (CodecTests avrocpp ${Boost_LIBRARIES})
+
+add_executable (StreamTests test/StreamTests.cc)
+target_link_libraries (StreamTests avrocpp ${Boost_LIBRARIES})
 
 add_executable (testgentest test/testgen.cc)
 add_dependencies (testgentest testgen testgen2)
@@ -93,9 +109,12 @@ set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 include (CPack)
 
 install(TARGETS avrocpp
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION lib)
+    LIBRARY DESTINATION local/lib
+    ARCHIVE DESTINATION local/lib
+    RUNTIME DESTINATION local/lib)
 
-install(DIRECTORY api/ DESTINATION include/avro
+install(DIRECTORY api/ DESTINATION local/include/avro
     FILES_MATCHING PATTERN *.hh)
+
+set (CMAKE_BUILD_TYPE Release)
+

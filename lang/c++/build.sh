@@ -80,6 +80,8 @@ case "$target" in
     ./build/buffertest
     ./build/unittest
     ./build/testgentest
+    ./build/CodecTests
+    ./build/StreamTests
 	;;
 
     dist)

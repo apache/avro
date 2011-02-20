@@ -94,6 +94,8 @@ Avro 1.5.0 (unreleased)
     AVRO-730. Java: Add set() and remove() methods to GenericData.Array.
     (Chase Bradford via cutting)
 
+    AVRO-711. JSON encoder and decoder for C++.
+
   IMPROVEMENTS
 
     AVRO-765. Java: Improvement to BinaryDecoder readLong performance

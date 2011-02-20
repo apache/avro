@@ -23,6 +23,7 @@
 #include <boost/shared_array.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/function.hpp>
+#include <boost/utility.hpp>
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio/buffer.hpp>
 #endif

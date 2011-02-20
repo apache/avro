@@ -42,7 +42,7 @@ class ValidSchema
   public:
 
     explicit ValidSchema(const Schema &schema);
-    explicit ValidSchema(const ValidSchema &schema);
+    ValidSchema(const ValidSchema &schema);
     ValidSchema();
 
     void setSchema(const Schema &schema);

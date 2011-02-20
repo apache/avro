@@ -67,6 +67,8 @@ inline bool isAvroTypeOrPseudoType(Type t) {
 }
 
 
+const std::string& toString(Type type);
+
 std::ostream &operator<< (std::ostream &os, avro::Type type);
 
 /// define a type to identify Null in template functions

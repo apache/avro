@@ -45,6 +45,8 @@ If the Makefile is configured correctly, then you can make and run tests:
     ./build/unittest
     ./build/buffertest
     ./build/testgentest
+    ./build/CodecTests
+    ./build/StreamTests
 
 To install
 

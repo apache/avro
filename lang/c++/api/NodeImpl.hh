@@ -342,7 +342,7 @@ class NodeUnion : public NodeImplUnion
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
-        return (leafAttributes_.size() > 1);
+        return (leafAttributes_.size() >= 1);
     }
 };
 
