@@ -36,14 +36,14 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit-version>4.8.1</junit-version>
+    <junit-version>4.8.2</junit-version>
     <paranamer-version>2.3</paranamer-version>
-    <slf4j-version>1.5.11</slf4j-version>
-    <jackson-version>1.4.2</jackson-version>
+    <slf4j-version>1.6.1</slf4j-version>
+    <jackson-version>1.7.3</jackson-version>
     <hadoop-version>0.20.2</hadoop-version>
     <velocity-version>1.6.4</velocity-version>
-    <jetty-version>6.1.22</jetty-version>
-    <netty-version>3.2.1.Final</netty-version> 
+    <jetty-version>6.1.26</jetty-version>
+    <netty-version>3.2.4.Final</netty-version> 
     <jopt-simple-version>3.2</jopt-simple-version>
   </properties>
 
@@ -83,7 +83,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.7.1</version>
+          <version>2.7.2</version>
           <configuration>
             <includes>
               <!-- Avro naming convention for JUnit tests -->
@@ -177,7 +177,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>1.1</version>
+          <version>1.2</version>
         </plugin>
       </plugins>
     </pluginManagement>

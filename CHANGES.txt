@@ -98,6 +98,9 @@ Avro 1.5.0 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-771. Java: Update dependency versions
+    (scottcarey)
+
     AVRO-765. Java: Improvement to BinaryDecoder readLong performance
     (scottcarey)
   
