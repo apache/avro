@@ -27,6 +27,8 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.ipc.Responder;
 
 /** {@link Responder} implementation for generic Java data. */
@@ -36,15 +38,24 @@ public abstract class GenericResponder extends Responder {
     super(local);
   }
 
+  protected DatumWriter<Object> getDatumWriter(Schema schema) {
+    return new GenericDatumWriter<Object>(schema);
+  }
+
+  protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
+    return new GenericDatumReader<Object>(actual, expected);
+  }
+
   @Override
-  public Object readRequest(Schema schema, Decoder in) throws IOException {
-    return new GenericDatumReader<Object>(schema).read(null, in);
+  public Object readRequest(Schema actual, Schema expected, Decoder in)
+    throws IOException {
+    return getDatumReader(actual, expected).read(null, in);
   }
 
   @Override
   public void writeResponse(Schema schema, Object response, Encoder out)
     throws IOException {
-    new GenericDatumWriter<Object>(schema).write(response, out);
+    getDatumWriter(schema).write(response, out);
   }
 
   @Override
@@ -52,7 +63,7 @@ public abstract class GenericResponder extends Responder {
                          Encoder out) throws IOException {
     if (error instanceof AvroRemoteException)
       error = ((AvroRemoteException)error).getValue();
-    new GenericDatumWriter<Object>(schema).write(error, out);
+    getDatumWriter(schema).write(error, out);
   }
 
 }

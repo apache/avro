@@ -46,8 +46,8 @@ public class ReflectResponder extends SpecificResponder {
   }
 
   @Override
-  protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new ReflectDatumReader<Object>(schema);
+  protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
+    return new ReflectDatumReader<Object>(actual, expected);
   }
 
   @Override

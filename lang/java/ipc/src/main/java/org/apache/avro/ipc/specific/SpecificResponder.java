@@ -28,15 +28,15 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.ipc.Responder;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.ipc.generic.GenericResponder;
 
 /** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
-public class SpecificResponder extends Responder {
+public class SpecificResponder extends GenericResponder {
   private Object impl;
   private SpecificData data;
 
@@ -55,27 +55,14 @@ public class SpecificResponder extends Responder {
     this.data = data;
   }
 
+  @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
     return new SpecificDatumWriter<Object>(schema);
   }
 
-  protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new SpecificDatumReader<Object>(schema);
-  }
-
   @Override
-  public Object readRequest(Schema schema, Decoder in) throws IOException {
-    Object[] args = new Object[schema.getFields().size()];
-    int i = 0;
-    for (Schema.Field param : schema.getFields())
-      args[i++] = getDatumReader(param.schema()).read(null, in);
-    return args;
-  }
-
-  @Override
-  public void writeResponse(Schema schema, Object response, Encoder out)
-    throws IOException {
-    getDatumWriter(schema).write(response, out);
+  protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
+    return new SpecificDatumReader<Object>(actual, expected);
   }
 
   @Override
@@ -86,14 +73,19 @@ public class SpecificResponder extends Responder {
 
   @Override
   public Object respond(Message message, Object request) throws Exception {
-    Class[] paramTypes = new Class[message.getRequest().getFields().size()];
+    int numParams = message.getRequest().getFields().size();
+    Object[] params = new Object[numParams];
+    Class[] paramTypes = new Class[numParams];
     int i = 0;
     try {
-      for (Schema.Field param: message.getRequest().getFields())
-        paramTypes[i++] = data.getClass(param.schema());
+      for (Schema.Field param: message.getRequest().getFields()) {
+        params[i] = ((GenericRecord)request).get(param.name());
+        paramTypes[i] = data.getClass(param.schema());
+        i++;
+      }
       Method method = impl.getClass().getMethod(message.getName(), paramTypes);
       method.setAccessible(true);
-      return method.invoke(impl, (Object[])request);
+      return method.invoke(impl, params);
     } catch (InvocationTargetException e) {
       throw (Exception)e.getTargetException();
     } catch (NoSuchMethodException e) {

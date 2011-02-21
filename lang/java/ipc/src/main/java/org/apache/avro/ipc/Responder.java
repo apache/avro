@@ -125,8 +125,12 @@ public abstract class Responder {
       Message rm = remote.getMessages().get(messageName);
       if (rm == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
-      
-      Object request = readRequest(rm.getRequest(), in);
+      Message m = getLocal().getMessages().get(messageName);
+      if (m == null)
+        throw new AvroRuntimeException("No message named "+messageName
+                                       +" in "+getLocal());
+
+      Object request = readRequest(rm.getRequest(), m.getRequest(), in);
       
       context.setMessage(rm);
       for (RPCPlugin plugin : rpcMetaPlugins) {
@@ -134,10 +138,6 @@ public abstract class Responder {
       }
 
       // create response using local protocol specification
-      Message m = getLocal().getMessages().get(messageName);
-      if (m == null)
-        throw new AvroRuntimeException("No message named "+messageName
-                                       +" in "+getLocal());
       if ((m.isOneWay() != rm.isOneWay()) && wasConnected)
         throw new AvroRuntimeException("Not both one-way: "+messageName);
 
@@ -241,7 +241,7 @@ public abstract class Responder {
     throws Exception;
 
   /** Reads a request message. */
-  public abstract Object readRequest(Schema schema, Decoder in)
+  public abstract Object readRequest(Schema actual, Schema expected, Decoder in)
     throws IOException;
 
   /** Writes a response message. */

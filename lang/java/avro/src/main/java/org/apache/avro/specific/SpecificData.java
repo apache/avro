@@ -60,6 +60,7 @@ public class SpecificData extends GenericData {
     case RECORD:
     case ENUM:
       String name = schema.getFullName();
+      if (name == null) return null;
       Class c = classCache.get(name);
       if (c == null) {
         try {

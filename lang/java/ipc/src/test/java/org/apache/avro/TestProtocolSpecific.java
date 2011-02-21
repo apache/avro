@@ -27,6 +27,9 @@ import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.test.Simple;
 import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
@@ -49,6 +52,8 @@ import java.io.LineNumberReader;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Random;
+import java.util.List;
+import java.util.ArrayList;
 
 
 public class TestProtocolSpecific {
@@ -210,9 +215,41 @@ public class TestProtocolSpecific {
       proxy.hello("hi!");
     }
   }
-  
-  @After
-  public void testHandshakeOccursOnce() throws IOException{
+
+  @Test
+  /** Construct and use a protocol whose "hello" method has an extra
+      argument to check that schema is sent to parse request. */
+  public void testParamVariation() throws Exception {
+    Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
+    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN),
+                   null, null));
+    fields.add(new Schema.Field("greeting", Schema.create(Schema.Type.STRING),
+                   null, null));
+    Protocol.Message message =
+      protocol.createMessage("hello",
+                             null /* doc */,
+                             Schema.createRecord(fields),
+                             Schema.create(Schema.Type.STRING),
+                             Schema.createUnion(new ArrayList<Schema>()));
+    protocol.getMessages().put("hello", message);
+    Transceiver t = createTransceiver();
+    try {
+      GenericRequestor r = new GenericRequestor(protocol, t);
+      addRpcPlugins(r);
+      GenericRecord params = new GenericData.Record(message.getRequest());
+      params.put("extra", Boolean.TRUE);
+      params.put("greeting", new Utf8("bob"));
+      Utf8 response = (Utf8)r.request("hello", params);
+      assertEquals(new Utf8("goodbye"), response);
+    } finally {
+      t.close();
+      server.close();
+    }
+  }
+
+  @AfterClass
+  public static void testHandshakeCount() throws IOException {
     monitor.assertHandshake();
   }
 
@@ -245,7 +282,7 @@ public class TestProtocolSpecific {
   }
   
   protected int getExpectedHandshakeCount() {
-   return 1;
+   return 3;
   }
 
   public static class InteropTest {
