@@ -22,6 +22,8 @@ import java.io.IOException;
 
 import org.apache.avro.AvroRuntimeException;
 
+import org.mortbay.jetty.Connector;
+import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.jetty.servlet.Context;
 import org.mortbay.jetty.servlet.ServletHolder;
 
@@ -31,13 +33,49 @@ public class HttpServer implements Server {
 
   /** Constructs a server to run on the named port. */
   public HttpServer(Responder responder, int port) throws IOException {
-    this(new ResponderServlet(responder), port);
+    this(new ResponderServlet(responder), null, port);
   }
 
   /** Constructs a server to run on the named port. */
   public HttpServer(ResponderServlet servlet, int port) throws IOException {
-    this.server = new org.mortbay.jetty.Server(port);
+    this(servlet, null, port);
+  }
+
+  /** Constructs a server to run on the named port on the specified address. */
+  public HttpServer(Responder responder, String bindAddress, int port) throws IOException {
+    this(new ResponderServlet(responder), bindAddress, port);
+  }
+
+  /** Constructs a server to run on the named port on the specified address. */
+  public HttpServer(ResponderServlet servlet, String bindAddress, int port) throws IOException {
+    this.server = new org.mortbay.jetty.Server();
+    SelectChannelConnector connector = new SelectChannelConnector();
+    connector.setLowResourceMaxIdleTime(10000);
+    connector.setAcceptQueueSize(128);
+    connector.setResolveNames(false);
+    connector.setUseDirectBuffers(false);
+    if (bindAddress != null) {
+      connector.setHost(bindAddress);
+    }
+    connector.setPort(port);
+    server.addConnector(connector);
     new Context(server, "/").addServlet(new ServletHolder(servlet), "/*");
+  }
+
+  /** Constructs a server to run with the given connector. */
+  public HttpServer(Responder responder, Connector connector) throws IOException {
+    this(new ResponderServlet(responder), connector);
+  }
+
+  /** Constructs a server to run with the given connector. */
+  public HttpServer(ResponderServlet servlet, Connector connector) throws IOException {
+    this.server = new org.mortbay.jetty.Server();
+    server.addConnector(connector);
+    new Context(server, "/").addServlet(new ServletHolder(servlet), "/*");
+  }
+
+  public void addConnector(Connector connector) {
+    server.addConnector(connector);
   }
 
   @Override
