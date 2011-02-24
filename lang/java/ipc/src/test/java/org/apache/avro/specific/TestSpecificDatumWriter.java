@@ -46,8 +46,8 @@ public class TestSpecificDatumWriter {
     out.close();
 
     String expectedJson = String.format(
-        "{'kind':{'Kind':'%s'},'value':{'string':'%s'}}", c.kind.toString(),
-        c.value).replace('\'', '"');
+        "{'kind':{'org.apache.avro.test.Kind':'%s'},'value':{'string':'%s'}}",
+        c.kind.toString(), c.value).replace('\'', '"');
 
     assertEquals(expectedJson, out.toString("UTF-8"));
   }

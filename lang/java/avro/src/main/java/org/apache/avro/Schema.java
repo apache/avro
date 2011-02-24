@@ -266,9 +266,9 @@ public abstract class Schema {
   }
 
   /** If this is a record, enum or fixed, returns its namespace-qualified name,
-   * if any. */
+   * otherwise returns the name of the primitive type. */
   public String getFullName() {
-    throw new AvroRuntimeException("Not a named type: "+this);
+    return getName();
   }
 
   /** If this is a record, enum or fixed, add an alias. */

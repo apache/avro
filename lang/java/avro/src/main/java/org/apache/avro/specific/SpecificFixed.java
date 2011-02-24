@@ -22,7 +22,7 @@ import org.apache.avro.generic.GenericData;
 /** Base class for generated fixed-sized data classes. */
 public abstract class SpecificFixed extends GenericData.Fixed {
   public SpecificFixed() {
-    bytes(new byte[getClass().getAnnotation(FixedSize.class).value()]);
+    setSchema(SpecificData.get().getSchema(getClass()));
   }
 }
 

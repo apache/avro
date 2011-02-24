@@ -188,12 +188,25 @@ public class GenericData {
 
   /** Default implementation of {@link GenericFixed}. */
   public static class Fixed implements GenericFixed, Comparable<Fixed> {
+    private Schema schema;
     private byte[] bytes;
 
-    public Fixed(Schema schema) { bytes(new byte[schema.getFixedSize()]); }
-    public Fixed(byte[] bytes) { bytes(bytes); }
+    public Fixed(Schema schema) { setSchema(schema); }
+
+    public Fixed(Schema schema, byte[] bytes) {
+      this.schema = schema;
+      this.bytes = bytes;
+    }
 
     protected Fixed() {}
+
+    protected void setSchema(Schema schema) {
+      this.schema = schema;
+      this.bytes = new byte[schema.getFixedSize()];
+    }
+
+    @Override public Schema getSchema() { return schema; }
+
     public void bytes(byte[] bytes) { this.bytes = bytes; }
 
     public byte[] bytes() { return bytes; }
@@ -219,8 +232,15 @@ public class GenericData {
 
   /** Default implementation of {@link GenericEnumSymbol}. */
   public static class EnumSymbol implements GenericEnumSymbol {
+    private Schema schema;
     private String symbol;
-    public EnumSymbol(String symbol) { this.symbol = symbol; }
+
+    public EnumSymbol(Schema schema, String symbol) {
+      this.schema = schema;
+      this.symbol = symbol;
+    }
+
+    @Override public Schema getSchema() { return schema; }
 
     @Override
     public boolean equals(Object o) {
@@ -468,12 +488,17 @@ public class GenericData {
     switch (schema.getType()) {
     case RECORD:
       if (!isRecord(datum)) return false;
-      return (schema.getName() == null) ||
-        schema.getName().equals(getRecordSchema(datum).getName());
-    case ENUM:    return isEnum(datum);
+      return (schema.getFullName() == null)
+        ? getRecordSchema(datum).getFullName() == null
+        : schema.getFullName().equals(getRecordSchema(datum).getFullName());
+    case ENUM:
+      if (!isEnum(datum)) return false;
+      return schema.getFullName().equals(getEnumSchema(datum).getFullName());
     case ARRAY:   return isArray(datum);
     case MAP:     return isMap(datum);
-    case FIXED:   return isFixed(datum);
+    case FIXED:
+      if (!isFixed(datum)) return false;
+      return schema.getFullName().equals(getFixedSchema(datum).getFullName());
     case STRING:  return isString(datum);
     case BYTES:   return isBytes(datum);
     case INT:     return datum instanceof Integer;
@@ -508,6 +533,13 @@ public class GenericData {
     return datum instanceof GenericEnumSymbol;
   }
   
+  /** Called to obtain the schema of a enum.  By default calls
+   * {GenericContainer#getSchema().  May be overridden for alternate enum
+   * representations. */
+  protected Schema getEnumSchema(Object enu) {
+    return ((GenericContainer)enu).getSchema();
+  }
+
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isMap(Object datum) {
     return datum instanceof Map;
@@ -516,6 +548,13 @@ public class GenericData {
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isFixed(Object datum) {
     return datum instanceof GenericFixed;
+  }
+
+  /** Called to obtain the schema of a fixed.  By default calls
+   * {GenericContainer#getSchema().  May be overridden for alternate fixed
+   * representations. */
+  protected Schema getFixedSchema(Object fixed) {
+    return ((GenericContainer)fixed).getSchema();
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/

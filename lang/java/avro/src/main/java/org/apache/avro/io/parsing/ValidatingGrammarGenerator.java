@@ -105,7 +105,7 @@ public class ValidatingGrammarGenerator {
       int i = 0;
       for (Schema b : sc.getTypes()) {
         symbols[i] = generate(b, seen);
-        labels[i] = b.getName();
+        labels[i] = b.getFullName();
         i++;
       }
       return Symbol.seq(Symbol.alt(symbols, labels), Symbol.UNION);

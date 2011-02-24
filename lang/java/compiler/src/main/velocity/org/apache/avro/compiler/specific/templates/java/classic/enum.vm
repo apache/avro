@@ -24,5 +24,6 @@ package $schema.getNamespace();
 #end
 public enum ${this.mangle($schema.getName())} { 
   #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($velocityHasNext), #end#end
-
+  ;
+  public static final org.apache.avro.Schema SCHEMA$ = org.apache.avro.Schema.parse("${this.javaEscape($schema.toString())}");
 }

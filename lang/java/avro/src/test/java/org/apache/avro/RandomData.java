@@ -71,7 +71,8 @@ public class RandomData implements Iterable<Object> {
       return record;
     case ENUM:
       List<String> symbols = schema.getEnumSymbols();
-      return new GenericData.EnumSymbol(symbols.get(random.nextInt(symbols.size())));
+      return new GenericData.EnumSymbol
+        (schema, symbols.get(random.nextInt(symbols.size())));
     case ARRAY:
       int length = (random.nextInt(5)+2)-d;
       GenericArray<Object> array =
@@ -93,7 +94,7 @@ public class RandomData implements Iterable<Object> {
     case FIXED:
       byte[] bytes = new byte[schema.getFixedSize()];
       random.nextBytes(bytes);
-      return new GenericData.Fixed(bytes);
+      return new GenericData.Fixed(schema, bytes);
     case STRING:  return randomUtf8(random, 40);
     case BYTES:   return randomBytes(random, 40);
     case INT:     return random.nextInt();

@@ -80,7 +80,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       default: error(schema,datum);
       }
     } catch (NullPointerException e) {
-      throw npe(e, " of "+schema.getName());
+      throw npe(e, " of "+schema.getFullName());
     }
   }
 

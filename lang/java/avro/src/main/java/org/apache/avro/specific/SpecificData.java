@@ -48,6 +48,13 @@ public class SpecificData extends GenericData {
     return datum instanceof Enum || super.isEnum(datum);
   }
 
+  @Override
+  protected Schema getEnumSchema(Object datum) {
+    return (datum instanceof Enum)
+      ? getSchema(datum.getClass())
+      : super.getEnumSchema(datum);
+  }
+
   private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
 
   private static final Class NO_CLASS = new Object(){}.getClass();

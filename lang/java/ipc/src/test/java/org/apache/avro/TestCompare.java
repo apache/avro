@@ -148,9 +148,11 @@ public class TestCompare {
 
   @Test
   public void testFixed() throws Exception {
-    check("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}",
-          new GenericData.Fixed(new byte[]{(byte)'a'}),
-          new GenericData.Fixed(new byte[]{(byte)'b'}));
+    String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
+    Schema schema = Schema.parse(json);
+    check(json,
+          new GenericData.Fixed(schema, new byte[]{(byte)'a'}),
+          new GenericData.Fixed(schema, new byte[]{(byte)'b'}));
   }
 
   @Test

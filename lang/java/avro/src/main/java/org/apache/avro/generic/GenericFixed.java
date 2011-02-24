@@ -18,7 +18,7 @@
 package org.apache.avro.generic;
 
 /** Fixed-size data. */
-public interface GenericFixed {
+public interface GenericFixed extends GenericContainer {
   /** Return the data. */
   byte[] bytes();
 }

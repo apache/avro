@@ -123,9 +123,11 @@ public class TestProtocolGeneric {
     GenericRecord record =
       new GenericData.Record(PROTOCOL.getType("TestRecord"));
     record.put("name", new Utf8("foo"));
-    record.put("kind", new GenericData.EnumSymbol("BAR"));
+    record.put("kind", new GenericData.EnumSymbol
+               (PROTOCOL.getType("Kind"), "BAR"));
     record.put("hash", new GenericData.Fixed
-               (new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+               (PROTOCOL.getType("MD5"),
+                new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
     GenericRecord params =
       new GenericData.Record(PROTOCOL.getMessages().get("echo").getRequest());
     params.put("record", record);

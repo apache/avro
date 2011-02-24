@@ -88,7 +88,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       case BYTES:
         return Symbol.BYTES;
       case FIXED:
-        if (writer.getName().equals(reader.getName())
+        if (writer.getFullName().equals(reader.getFullName())
             && writer.getFixedSize() == reader.getFixedSize()) {
           return Symbol.seq(new Symbol.IntCheckAction(writer.getFixedSize()),
               Symbol.FIXED);
@@ -96,8 +96,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         break;
 
       case ENUM:
-        if (writer.getName() == null
-                || writer.getName().equals(reader.getName())) {
+        if (writer.getFullName() == null
+                || writer.getFullName().equals(reader.getFullName())) {
           return Symbol.seq(mkEnumAdjust(writer.getEnumSymbols(),
                   reader.getEnumSymbols()), Symbol.ENUM);
         }
@@ -190,7 +190,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     int i = 0;
     for (Schema w : alts) {
       symbols[i] = generate(w, reader, seen);
-      labels[i] = w.getName();
+      labels[i] = w.getFullName();
       i++;
     }
     return Symbol.seq(Symbol.alt(symbols, labels),
@@ -416,9 +416,12 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       int j = 0;
       for (Schema b : r.getTypes()) {
         if (vt == b.getType())
-          if (vt == Schema.Type.RECORD) {
-            String vname = w.getName();
-            if (vname == null || vname.equals(b.getName()))
+          if (vt == Schema.Type.RECORD || vt == Schema.Type.ENUM || 
+              vt == Schema.Type.FIXED) {
+            String vname = w.getFullName();
+            String bname = b.getFullName();
+            if ((vname != null && vname.equals(bname))
+                || vname == bname && vt == Schema.Type.RECORD)
               return j;
           } else
             return j;

@@ -202,7 +202,9 @@ public class TestSchema {
 
   @Test
   public void testEnum() throws Exception {
-    check(BASIC_ENUM_SCHEMA, "\"B\"", new GenericData.EnumSymbol("B"), false);
+    check(BASIC_ENUM_SCHEMA, "\"B\"",
+          new GenericData.EnumSymbol(Schema.parse(BASIC_ENUM_SCHEMA), "B"),
+          false);
     checkParseError("{\"type\":\"enum\"}");        // symbols required
     checkParseError("{\"type\":\"enum\",\"symbols\": [\"X\"]}"); // name reqd
     // check no duplicate symbols
@@ -215,8 +217,10 @@ public class TestSchema {
 
   @Test
   public void testFixed() throws Exception {
-    check("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}", "\"a\"",
-          new GenericData.Fixed(new byte[]{(byte)'a'}), false);
+    String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
+    Schema schema = Schema.parse(json);
+    check(json, "\"a\"",
+          new GenericData.Fixed(schema, new byte[]{(byte)'a'}), false);
     checkParseError("{\"type\":\"fixed\"}");        // size required
   }
 
@@ -307,10 +311,10 @@ public class TestSchema {
               new GenericData.Record(Schema.parse(record)),
               "{\"Foo\":{}}");
     checkJson(union,
-              new GenericData.Fixed(new byte[]{(byte)'a'}),
+              new GenericData.Fixed(Schema.parse(fixed), new byte[]{(byte)'a'}),
               "{\"Bar\":\"a\"}");
     checkJson(union,
-              new GenericData.EnumSymbol("X"),
+              new GenericData.EnumSymbol(Schema.parse(enu), "X"),
               "{\"Baz\":\"X\"}");
   }
 
@@ -349,13 +353,24 @@ public class TestSchema {
     symbols.add("NOTHING");
     
     // succeed with two branches of the same named type, if different names
-    buildUnion(new Schema[] {Schema.createRecord("Foo", null, "org.test", false),
-        Schema.createRecord("Foo2", null, "org.test", false)});
-    buildUnion(new Schema[] {Schema.createEnum("Bar", null, "org.test", symbols),
-        Schema.createEnum("Bar2", null, "org.test", symbols)});
-    buildUnion(new Schema[] {Schema.createFixed("Baz", null, "org.test", 2),
-        Schema.createFixed("Baz2", null, "org.test", 1)});
+    Schema u;
+    u = buildUnion(new Schema[] {
+        Schema.parse("{\"type\":\"record\",\"name\":\"x.A\",\"fields\":[]}"),
+        Schema.parse("{\"type\":\"record\",\"name\":\"y.A\",\"fields\":[]}")});
+    check(u.toString(), false);
 
+    u = buildUnion(new Schema[] {
+        Schema.parse
+        ("{\"type\":\"enum\",\"name\":\"x.A\",\"symbols\":[\"X\"]}"),
+        Schema.parse
+        ("{\"type\":\"enum\",\"name\":\"y.A\",\"symbols\":[\"Y\"]}")});
+    check(u.toString(), false);
+    
+    u = buildUnion(new Schema[] {
+        Schema.parse("{\"type\":\"fixed\",\"name\":\"x.A\",\"size\":4}"),
+        Schema.parse("{\"type\":\"fixed\",\"name\":\"y.A\",\"size\":8}")});
+    check(u.toString(), false);
+    
     // fail with two branches of the same named type, but same names
     checkUnionError(new Schema[] {Schema.createRecord("Foo", null, "org.test", false),
         Schema.createRecord("Foo", null, "org.test", false)});
@@ -663,13 +678,13 @@ public class TestSchema {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     DatumWriter<Object> writer = new GenericDatumWriter<Object>(actual);
     Encoder encoder = new BinaryEncoder(out);
-    writer.write(new GenericData.EnumSymbol("Y"), encoder);
-    writer.write(new GenericData.EnumSymbol("X"), encoder);
+    writer.write(new GenericData.EnumSymbol(actual, "Y"), encoder);
+    writer.write(new GenericData.EnumSymbol(actual, "X"), encoder);
     byte[] data = out.toByteArray();
     Decoder decoder = DecoderFactory.defaultFactory().createBinaryDecoder(
         data, null);
     DatumReader<String> in = new GenericDatumReader<String>(actual, expected);
-    assertEquals("Wrong value", new GenericData.EnumSymbol("Y"),
+    assertEquals("Wrong value", new GenericData.EnumSymbol(expected, "Y"),
                  in.read(null, decoder));
     try {
       in.read(null, decoder);

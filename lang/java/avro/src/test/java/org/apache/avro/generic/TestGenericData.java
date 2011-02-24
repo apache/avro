@@ -218,7 +218,7 @@ public class TestGenericData {
     
     GenericRecord r = new GenericData.Record(schema);
     r.put(stringField.name(), "hello\nthere\"\tyou}");
-    r.put(enumField.name(), new GenericData.EnumSymbol("a"));
+    r.put(enumField.name(), new GenericData.EnumSymbol(enumField.schema(),"a"));
     
     String json = r.toString();
     JsonFactory factory = new JsonFactory();

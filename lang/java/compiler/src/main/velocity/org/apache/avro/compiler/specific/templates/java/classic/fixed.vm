@@ -23,4 +23,6 @@ package $schema.getNamespace();
 /** $schema.getDoc() */
 #end
 @org.apache.avro.specific.FixedSize($schema.getFixedSize())
-public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.SpecificFixed {}
+public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.SpecificFixed {
+  public static final org.apache.avro.Schema SCHEMA$ = org.apache.avro.Schema.parse("${this.javaEscape($schema.toString())}");
+}
