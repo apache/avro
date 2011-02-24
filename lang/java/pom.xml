@@ -354,14 +354,6 @@
 
   <repositories>
     <repository>
-      <id>central</id>
-      <name>Maven Repository Switchboard</name>
-      <url>http://repo1.maven.org/maven2</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
       <id>apache.snapshots</id>
       <name>Apache Snapshot Repository</name>
       <url>http://repository.apache.org/snapshots</url>
@@ -371,10 +363,9 @@
     </repository>
     <!-- JBoss repo needed for netty -->
     <repository>
-      <id>jboss-public-repository</id>
-      <name>JBoss Public Maven Repository</name>
-      <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-      <layout>default</layout>
+      <id>jboss-release-repository</id>
+      <name>JBoss Release Repository</name>
+      <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>

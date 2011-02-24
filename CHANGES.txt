@@ -180,6 +180,8 @@ Avro 1.5.0 (unreleased)
     AVRO-773. Java: Add no-arg constructor to AvroWrapper.
     (Jan Prach via cutting)
 
+    AVRO-774. Java: Clean up repositories in pom.xml. (Lars Francke via cutting)
+
   BUG FIXES
 
     AVRO-764. Java: Bug in BinaryData.compare() with offset comparison.
