@@ -182,6 +182,9 @@ Avro 1.5.0 (unreleased)
 
     AVRO-774. Java: Clean up repositories in pom.xml. (Lars Francke via cutting)
 
+    AVRO-754. Java: Permit passing custom channel factory to NettyTransceiver.
+    (Bruno Dumon via cutting)
+
   BUG FIXES
 
     AVRO-764. Java: Bug in BinaryData.compare() with offset comparison.

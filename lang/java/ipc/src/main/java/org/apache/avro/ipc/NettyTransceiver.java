@@ -73,9 +73,13 @@ public class NettyTransceiver extends Transceiver {
   NettyTransceiver() {}
   
   public NettyTransceiver(InetSocketAddress addr) {
+    this(addr, new NioClientSocketChannelFactory(Executors.
+        newCachedThreadPool(), Executors.newCachedThreadPool()));
+  }
+
+  public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory) {
     // Set up.
-    channelFactory = new NioClientSocketChannelFactory(Executors
-        .newCachedThreadPool(), Executors.newCachedThreadPool());
+    this.channelFactory = channelFactory;
     ClientBootstrap bootstrap = new ClientBootstrap(channelFactory);
 
     // Configure the event pipeline factory.
