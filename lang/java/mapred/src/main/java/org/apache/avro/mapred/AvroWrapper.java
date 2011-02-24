@@ -22,6 +22,9 @@ package org.apache.avro.mapred;
 public class AvroWrapper<T> {
   private T datum;
 
+  /** Wrap null. Construct {@link AvroWrapper} wrapping no datum. */
+  public AvroWrapper() { this(null); }
+
   /** Wrap a datum. */
   public AvroWrapper(T datum) { this.datum = datum; }
 

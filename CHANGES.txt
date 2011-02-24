@@ -177,6 +177,9 @@ Avro 1.5.0 (unreleased)
     AVRO-744. C: Helper macros for extracting and setting record field
     values (dcreager)
 
+    AVRO-773. Java: Add no-arg constructor to AvroWrapper.
+    (Jan Prach via cutting)
+
   BUG FIXES
 
     AVRO-764. Java: Bug in BinaryData.compare() with offset comparison.

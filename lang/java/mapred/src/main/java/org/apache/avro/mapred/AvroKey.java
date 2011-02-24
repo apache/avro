@@ -20,6 +20,9 @@ package org.apache.avro.mapred;
 
 /** The wrapper of keys for jobs configured with {@link AvroJob} . */
 public class AvroKey<T> extends AvroWrapper<T> {
+  /** Wrap null. Construct {@link AvroKey} wrapping no key. */
+  public AvroKey() { this(null); }
+
   /** Wrap a key. */
   public AvroKey(T datum) { super(datum); }
 }
