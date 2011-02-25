@@ -382,6 +382,48 @@ static int test_record(void)
 	return 0;
 }
 
+static int test_nested_record(void)
+{
+	const char  *json =
+		"{"
+		"  \"type\": \"record\","
+		"  \"name\": \"list\","
+		"  \"fields\": ["
+		"    { \"name\": \"x\", \"type\": \"int\" },"
+		"    { \"name\": \"y\", \"type\": \"int\" },"
+		"    { \"name\": \"next\", \"type\": [\"null\",\"list\"]}"
+		"  ]"
+		"}";
+
+	int  rval;
+
+	avro_schema_t schema = NULL;
+	avro_schema_error_t error;
+	avro_schema_from_json(json, strlen(json), &schema, &error);
+
+	avro_datum_t  head = avro_datum_from_schema(schema);
+	avro_record_set_field_value(rval, head, int32, "x", 10);
+	avro_record_set_field_value(rval, head, int32, "y", 10);
+
+	avro_datum_t  next = NULL;
+	avro_datum_t  tail = NULL;
+
+	avro_record_get(head, "next", &next);
+	avro_union_set_discriminant(next, 1, &tail);
+	avro_record_set_field_value(rval, tail, int32, "x", 20);
+	avro_record_set_field_value(rval, tail, int32, "y", 20);
+
+	avro_record_get(tail, "next", &next);
+	avro_union_set_discriminant(next, 0, NULL);
+
+	write_read_check(schema, head, NULL, NULL, "nested record");
+
+	avro_schema_decref(schema);
+	avro_datum_decref(head);
+
+	return 0;
+}
+
 static int test_enum(void)
 {
 	enum avro_languages {
@@ -604,6 +646,7 @@ int main(void)
 		"boolean", test_boolean}, {
 		"null", test_null}, {
 		"record", test_record}, {
+		"nested_record", test_nested_record}, {
 		"enum", test_enum}, {
 		"array", test_array}, {
 		"map", test_map}, {

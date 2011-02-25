@@ -19,7 +19,5 @@
 
 void avro_consumer_free(avro_consumer_t *consumer)
 {
-	if (consumer->free) {
-		consumer->free(consumer);
-	}
+	consumer->free(consumer);
 }

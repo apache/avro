@@ -177,6 +177,7 @@ avro_schema_t avro_schema_union_branch_by_name
 (avro_schema_t union_schema, int *branch_index, const char *name);
 
 avro_schema_t avro_schema_link(avro_schema_t schema);
+avro_schema_t avro_schema_link_target(avro_schema_t schema);
 
 typedef struct avro_schema_error_t_ *avro_schema_error_t;
 int avro_schema_from_json(const char *jsontext,

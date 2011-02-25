@@ -695,6 +695,15 @@ avro_schema_t avro_schema_link(avro_schema_t to)
 	return &link->obj;
 }
 
+avro_schema_t avro_schema_link_target(avro_schema_t schema)
+{
+	check_param(NULL, is_avro_schema(schema), "schema");
+	check_param(NULL, is_avro_link(schema), "schema");
+
+	struct avro_link_schema_t *link = avro_schema_to_link(schema);
+	return link->to;
+}
+
 static int
 avro_type_from_json_t(json_t * json, avro_type_t * type,
 		      avro_schema_error_t * error, avro_schema_t * named_type)
@@ -1320,37 +1329,40 @@ const char *avro_schema_name(const avro_schema_t schema)
 
 const char *avro_schema_type_name(const avro_schema_t schema)
 {
- if (is_avro_record(schema)) {
-   return (avro_schema_to_record(schema))->name;
- } else if (is_avro_enum(schema)) {
-   return (avro_schema_to_enum(schema))->name;
- } else if (is_avro_fixed(schema)) {
-   return (avro_schema_to_fixed(schema))->name;
- } else if (is_avro_union(schema)) {
-   return "union";
- } else if (is_avro_array(schema)) {
-   return "array";
- } else if (is_avro_map(schema)) {
-   return "map";
- } else if (is_avro_int32(schema)) {
-   return "int";
- } else if (is_avro_int64(schema)) {
-   return "long";
- } else if (is_avro_float(schema)) {
-   return "float";
- } else if (is_avro_double(schema)) {
-   return "double";
- } else if (is_avro_boolean(schema)) {
-   return "boolean";
- } else if (is_avro_null(schema)) {
-   return "null";
- } else if (is_avro_string(schema)) {
-   return "string";
- } else if (is_avro_bytes(schema)) {
-   return "bytes";
- }
- avro_set_error("Unknown schema type");
- return NULL;
+	if (is_avro_record(schema)) {
+		return (avro_schema_to_record(schema))->name;
+	} else if (is_avro_enum(schema)) {
+		return (avro_schema_to_enum(schema))->name;
+	} else if (is_avro_fixed(schema)) {
+		return (avro_schema_to_fixed(schema))->name;
+	} else if (is_avro_union(schema)) {
+		return "union";
+	} else if (is_avro_array(schema)) {
+		return "array";
+	} else if (is_avro_map(schema)) {
+		return "map";
+	} else if (is_avro_int32(schema)) {
+		return "int";
+	} else if (is_avro_int64(schema)) {
+		return "long";
+	} else if (is_avro_float(schema)) {
+		return "float";
+	} else if (is_avro_double(schema)) {
+		return "double";
+	} else if (is_avro_boolean(schema)) {
+		return "boolean";
+	} else if (is_avro_null(schema)) {
+		return "null";
+	} else if (is_avro_string(schema)) {
+		return "string";
+	} else if (is_avro_bytes(schema)) {
+		return "bytes";
+	} else if (is_avro_link(schema)) {
+		avro_schema_t  target = avro_schema_link_target(schema);
+		return avro_schema_type_name(target);
+	}
+	avro_set_error("Unknown schema type");
+	return NULL;
 }
 
 avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
