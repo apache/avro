@@ -4,6 +4,11 @@ Avro 1.5.0 (unreleased)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-751. C: Each avro_datum_t instance now contains a reference to
+    the schema that the datum is an instance of.  As a result, the
+    signatures of several of the functions that operate on avro_datum_t
+    instances have changed.
+
     AVRO-647. Java: Break avro.jar up into multiple parts: avro.jar,
     avro-compiler.jar, avro-ipc.jar, avro-mapred.jar, avro-tools.jar,
     and avro-maven-plugin.jar.

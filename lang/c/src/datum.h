@@ -62,7 +62,7 @@ struct avro_boolean_datum_t {
 
 struct avro_fixed_datum_t {
 	struct avro_obj_t obj;
-	char *name;
+	avro_schema_t schema;
 	char *bytes;
 	int64_t size;
 	avro_free_func_t  free;
@@ -70,31 +70,33 @@ struct avro_fixed_datum_t {
 
 struct avro_map_datum_t {
 	struct avro_obj_t obj;
+	avro_schema_t schema;
 	st_table *map;
 	st_table *keys_by_index;
 };
 
 struct avro_record_datum_t {
 	struct avro_obj_t obj;
-	const char *name;
-	const char *space;
+	avro_schema_t schema;
 	st_table *field_order;
 	st_table *fields_byname;
 };
 
 struct avro_enum_datum_t {
 	struct avro_obj_t obj;
-	const char *name;
+	avro_schema_t schema;
 	int value;
 };
 
 struct avro_array_datum_t {
 	struct avro_obj_t obj;
+	avro_schema_t schema;
 	st_table *els;
 };
 
 struct avro_union_datum_t {
 	struct avro_obj_t obj;
+	avro_schema_t schema;
 	int64_t discriminant;
 	avro_datum_t value;
 };

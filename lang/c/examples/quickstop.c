@@ -51,7 +51,7 @@ void
 add_person(avro_file_writer_t db, const char *first, const char *last,
 	   const char *phone, int32_t age)
 {
-	avro_datum_t person = avro_record("Person", NULL);
+	avro_datum_t person = avro_record(person_schema);
 
 	avro_datum_t id_datum = avro_int64(++id);
 	avro_datum_t first_datum = avro_string(first);

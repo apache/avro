@@ -1290,9 +1290,7 @@ avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 				const struct avro_record_schema_t *record_schema =
 				    avro_schema_to_record(schema);
 
-				avro_datum_t  rec =
-				    avro_record(record_schema->name,
-						record_schema->space);
+				avro_datum_t  rec = avro_record(schema);
 
 				int  i;
 				for (i = 0; i < record_schema->fields->num_entries; i++) {
@@ -1312,28 +1310,19 @@ avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 			}
 
 		case AVRO_ENUM:
-			{
-				const struct avro_enum_schema_t *enum_schema =
-				    avro_schema_to_enum(schema);
-				return avro_enum(enum_schema->name, 0);
-			}
+			return avro_enum(schema, 0);
 
 		case AVRO_FIXED:
-			{
-				const struct avro_fixed_schema_t *fixed_schema =
-				    avro_schema_to_fixed(schema);
-				return avro_givefixed(fixed_schema->name,
-						      "", 0, NULL);
-			}
+			return avro_givefixed(schema, "", 0, NULL);
 
 		case AVRO_MAP:
-			return avro_map();
+			return avro_map(schema);
 
 		case AVRO_ARRAY:
-			return avro_array();
+			return avro_array(schema);
 
 		case AVRO_UNION:
-			return avro_union(-1, NULL);
+			return avro_union(schema, -1, NULL);
 
 		case AVRO_LINK:
 			{

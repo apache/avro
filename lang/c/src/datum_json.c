@@ -80,7 +80,7 @@ encode_utf8_bytes(const void *src, size_t src_len,
 }
 
 static json_t *
-avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
+avro_datum_to_json_t(const avro_datum_t datum)
 {
 	switch (avro_typeof(datum)) {
 		case AVRO_BOOLEAN:
@@ -131,7 +131,6 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 					return NULL;
 				}
 
-				avro_schema_t  element_schema = avro_schema_array_items(schema);
 				int  num_elements = avro_array_size(datum);
 				int  i;
 				for (i = 0; i < num_elements; i++) {
@@ -141,8 +140,7 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 						return NULL;
 					}
 
-					json_t  *element_json =
-					    avro_datum_to_json_t(element, element_schema);
+					json_t  *element_json = avro_datum_to_json_t(element);
 					if (!element_json) {
 						json_decref(result);
 						return NULL;
@@ -158,7 +156,7 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 			}
 
 		case AVRO_ENUM:
-			return json_string(avro_enum_get_name(datum, schema));
+			return json_string(avro_enum_get_name(datum));
 
 		case AVRO_FIXED:
 			{
@@ -185,7 +183,6 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 					return NULL;
 				}
 
-				avro_schema_t  element_schema = avro_schema_map_values(schema);
 				int  num_elements = avro_map_size(datum);
 				int  i;
 				for (i = 0; i < num_elements; i++) {
@@ -201,8 +198,7 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 						return NULL;
 					}
 
-					json_t  *element_json =
-					    avro_datum_to_json_t(element, element_schema);
+					json_t  *element_json = avro_datum_to_json_t(element);
 					if (!element_json) {
 						json_decref(result);
 						return NULL;
@@ -224,14 +220,12 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 					return NULL;
 				}
 
+				avro_schema_t  schema = avro_datum_to_record(datum)->schema;
 				int  num_fields = avro_schema_record_size(schema);
 				int  i;
 				for (i = 0; i < num_fields; i++) {
 					const char  *field_name =
 					    avro_schema_record_field_name(schema, i);
-
-					avro_schema_t  field_schema =
-					    avro_schema_record_field_get(schema, field_name);
 
 					avro_datum_t  field = NULL;
 					if (avro_record_get(datum, field_name, &field)) {
@@ -239,8 +233,7 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 						return NULL;
 					}
 
-					json_t  *field_json =
-					    avro_datum_to_json_t(field, field_schema);
+					json_t  *field_json = avro_datum_to_json_t(field);
 					if (!field_json) {
 						json_decref(result);
 						return NULL;
@@ -259,6 +252,8 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 			{
 				int64_t  discriminant = avro_union_discriminant(datum);
 				avro_datum_t  branch = avro_union_current_branch(datum);
+
+				avro_schema_t  schema = avro_datum_to_union(datum)->schema;
 				avro_schema_t  branch_schema =
 				    avro_schema_union_branch(schema, discriminant);
 
@@ -271,7 +266,7 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 					return NULL;
 				}
 
-				json_t  *branch_json = avro_datum_to_json_t(branch, branch_schema);
+				json_t  *branch_json = avro_datum_to_json_t(branch);
 				if (!branch_json) {
 					json_decref(result);
 					return NULL;
@@ -291,14 +286,14 @@ avro_datum_to_json_t(const avro_datum_t datum, const avro_schema_t schema)
 	}
 }
 
-int avro_datum_to_json(const avro_datum_t datum, const avro_schema_t schema,
+int avro_datum_to_json(const avro_datum_t datum,
 		       int one_line, char **json_str)
 {
-	if (!is_avro_datum(datum) || !is_avro_schema(schema) || !json_str) {
+	if (!is_avro_datum(datum) || !json_str) {
 		return EINVAL;
 	}
 
-	json_t  *json = avro_datum_to_json_t(datum, schema);
+	json_t  *json = avro_datum_to_json_t(datum);
 	if (!json) {
 		return ENOMEM;
 	}

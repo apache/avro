@@ -130,11 +130,10 @@ write_read_check(avro_schema_t writers_schema,
 	}
 }
 
-static void test_json(avro_datum_t datum, avro_schema_t schema,
-		      const char *expected)
+static void test_json(avro_datum_t datum, const char *expected)
 {
 	char  *json = NULL;
-	avro_datum_to_json(datum, schema, 1, &json);
+	avro_datum_to_json(datum, 1, &json);
 	if (strcmp(json, expected) != 0) {
 		fprintf(stderr, "Unexpected JSON encoding: %s\n", json);
 		exit(EXIT_FAILURE);
@@ -158,8 +157,7 @@ static int test_string(void)
 	}
 
 	avro_datum_t  datum = avro_givestring(strings[0], NULL);
-	test_json(datum, writer_schema,
-		  "\"Four score and seven years ago\"");
+	test_json(datum, "\"Four score and seven years ago\"");
 	avro_datum_decref(datum);
 
 	// The following should bork if we don't copy the string value
@@ -182,8 +180,7 @@ static int test_bytes(void)
 
 	datum = avro_givebytes(bytes, sizeof(bytes), NULL);
 	write_read_check(writer_schema, NULL, datum, "bytes");
-	test_json(datum, writer_schema,
-		  "\"\\u00de\\u00ad\\u00be\\u00ef\"");
+	test_json(datum, "\"\\u00de\\u00ad\\u00be\\u00ef\"");
 	avro_datum_decref(datum);
 	avro_schema_decref(writer_schema);
 
@@ -220,7 +217,7 @@ static int test_int32(void)
 	}
 
 	avro_datum_t  datum = avro_int32(10000);
-	test_json(datum, writer_schema, "10000");
+	test_json(datum, "10000");
 	avro_datum_decref(datum);
 
 	avro_schema_decref(writer_schema);
@@ -238,7 +235,7 @@ static int test_int64(void)
 	}
 
 	avro_datum_t  datum = avro_int64(10000);
-	test_json(datum, writer_schema, "10000");
+	test_json(datum, "10000");
 	avro_datum_decref(datum);
 
 	avro_schema_decref(writer_schema);
@@ -256,7 +253,7 @@ static int test_double(void)
 	}
 
 	avro_datum_t  datum = avro_double(2000.0);
-	test_json(datum, schema, "2000.0");
+	test_json(datum, "2000.0");
 	avro_datum_decref(datum);
 
 	avro_schema_decref(schema);
@@ -274,7 +271,7 @@ static int test_float(void)
 	}
 
 	avro_datum_t  datum = avro_float(2000.0);
-	test_json(datum, schema, "2000.0");
+	test_json(datum, "2000.0");
 	avro_datum_decref(datum);
 
 	avro_schema_decref(schema);
@@ -289,7 +286,7 @@ static int test_boolean(void)
 	for (i = 0; i <= 1; i++) {
 		avro_datum_t datum = avro_boolean(i);
 		write_read_check(schema, NULL, datum, "boolean");
-		test_json(datum, schema, expected_json[i]);
+		test_json(datum, expected_json[i]);
 		avro_datum_decref(datum);
 	}
 	avro_schema_decref(schema);
@@ -301,7 +298,7 @@ static int test_null(void)
 	avro_schema_t schema = avro_schema_null();
 	avro_datum_t datum = avro_null();
 	write_read_check(schema, NULL, datum, "null");
-	test_json(datum, schema, "null");
+	test_json(datum, "null");
 	avro_datum_decref(datum);
 	return 0;
 }
@@ -309,7 +306,7 @@ static int test_null(void)
 static int test_record(void)
 {
 	avro_schema_t schema = avro_schema_record("person", NULL);
-	avro_datum_t datum = avro_record("person", NULL);
+	avro_datum_t datum = avro_record(schema);
 	avro_datum_t name_datum, age_datum;
 
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
@@ -322,8 +319,7 @@ static int test_record(void)
 	avro_record_set(datum, "age", age_datum);
 
 	write_read_check(schema, NULL, datum, "record");
-	test_json(datum, schema,
-		  "{\"name\": \"Joseph Campbell\", \"age\": 83}");
+	test_json(datum, "{\"name\": \"Joseph Campbell\", \"age\": 83}");
 
 	int  rc;
 	avro_record_set_field_value(rc, datum, int32, "age", 104);
@@ -352,7 +348,7 @@ static int test_enum(void)
 		AVRO_JAVA
 	};
 	avro_schema_t schema = avro_schema_enum("language");
-	avro_datum_t datum = avro_enum("language", AVRO_C);
+	avro_datum_t datum = avro_enum(schema, AVRO_C);
 
 	avro_schema_enum_symbol_append(schema, "C");
 	avro_schema_enum_symbol_append(schema, "C++");
@@ -365,31 +361,31 @@ static int test_enum(void)
 		exit(EXIT_FAILURE);
 	}
 
-	if (strcmp(avro_enum_get_name(datum, schema), "C") != 0) {
+	if (strcmp(avro_enum_get_name(datum), "C") != 0) {
 		fprintf(stderr, "Unexpected enum value name C\n");
 		exit(EXIT_FAILURE);
 	}
 
 	write_read_check(schema, NULL, datum, "enum");
-	test_json(datum, schema, "\"C\"");
+	test_json(datum, "\"C\"");
 
 	avro_enum_set(datum, AVRO_CPP);
-	if (strcmp(avro_enum_get_name(datum, schema), "C++") != 0) {
+	if (strcmp(avro_enum_get_name(datum), "C++") != 0) {
 		fprintf(stderr, "Unexpected enum value name C++\n");
 		exit(EXIT_FAILURE);
 	}
 
 	write_read_check(schema, NULL, datum, "enum");
-	test_json(datum, schema, "\"C++\"");
+	test_json(datum, "\"C++\"");
 
-	avro_enum_set_name(datum, schema, "Python");
+	avro_enum_set_name(datum, "Python");
 	if (avro_enum_get(datum) != AVRO_PYTHON) {
 		fprintf(stderr, "Unexpected enum value AVRO_PYTHON\n");
 		exit(EXIT_FAILURE);
 	}
 
 	write_read_check(schema, NULL, datum, "enum");
-	test_json(datum, schema, "\"Python\"");
+	test_json(datum, "\"Python\"");
 
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
@@ -400,7 +396,7 @@ static int test_array(void)
 {
 	int i, rval;
 	avro_schema_t schema = avro_schema_array(avro_schema_int());
-	avro_datum_t datum = avro_array();
+	avro_datum_t datum = avro_array(schema);
 
 	for (i = 0; i < 10; i++) {
 		avro_datum_t i32_datum = avro_int32(i);
@@ -417,7 +413,7 @@ static int test_array(void)
 	}
 
 	write_read_check(schema, NULL, datum, "array");
-	test_json(datum, schema, "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]");
+	test_json(datum, "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
 	return 0;
@@ -426,7 +422,7 @@ static int test_array(void)
 static int test_map(void)
 {
 	avro_schema_t schema = avro_schema_map(avro_schema_long());
-	avro_datum_t datum = avro_map();
+	avro_datum_t datum = avro_map(schema);
 	int64_t i = 0;
 	char *nums[] =
 	    { "zero", "one", "two", "three", "four", "five", "six", NULL };
@@ -455,7 +451,7 @@ static int test_map(void)
 	}
 
 	write_read_check(schema, NULL, datum, "map");
-	test_json(datum, schema,
+	test_json(datum,
 		  "{\"zero\": 0, \"one\": 1, \"two\": 2, \"three\": 3, "
 		  "\"four\": 4, \"five\": 5, \"six\": 6}");
 	avro_datum_decref(datum);
@@ -476,7 +472,7 @@ static int test_union(void)
 	avro_schema_union_append(schema, avro_schema_null());
 
 	datum = avro_givestring("Follow your bliss.", NULL);
-	union_datum = avro_union(0, datum);
+	union_datum = avro_union(schema, 0, datum);
 
 	if (avro_union_discriminant(union_datum) != 0) {
 		fprintf(stderr, "Unexpected union discriminant\n");
@@ -489,7 +485,7 @@ static int test_union(void)
 	}
 
 	union_datum1 = avro_datum_from_schema(schema);
-	avro_union_set_discriminant(union_datum1, schema, 0, &datum1);
+	avro_union_set_discriminant(union_datum1, 0, &datum1);
 	avro_givestring_set(datum1, "Follow your bliss.", NULL);
 
 	if (!avro_datum_equal(datum, datum1)) {
@@ -498,12 +494,11 @@ static int test_union(void)
 	}
 
 	write_read_check(schema, NULL, union_datum, "union");
-	test_json(union_datum, schema,
-		  "{\"string\": \"Follow your bliss.\"}");
+	test_json(union_datum, "{\"string\": \"Follow your bliss.\"}");
 
 	avro_datum_decref(datum);
-	avro_union_set_discriminant(union_datum, schema, 2, &datum);
-	test_json(union_datum, schema, "null");
+	avro_union_set_discriminant(union_datum, 2, &datum);
+	test_json(union_datum, "null");
 
 	avro_datum_decref(union_datum);
 	avro_datum_decref(datum);
@@ -519,14 +514,14 @@ static int test_fixed(void)
 	avro_datum_t datum;
 	avro_datum_t expected_datum;
 
-	datum = avro_givefixed("msg", bytes, sizeof(bytes), NULL);
+	datum = avro_givefixed(schema, bytes, sizeof(bytes), NULL);
 	write_read_check(schema, NULL, datum, "fixed");
-	test_json(datum, schema, "\"\\r\\n\\r\\n\\u000b\\n\\u000b\\n\"");
+	test_json(datum, "\"\\r\\n\\r\\n\\u000b\\n\\u000b\\n\"");
 	avro_datum_decref(datum);
 
-	datum = avro_givefixed("msg", NULL, 0, NULL);
+	datum = avro_givefixed(schema, NULL, 0, NULL);
 	avro_givefixed_set(datum, bytes, sizeof(bytes), NULL);
-	expected_datum = avro_givefixed("msg", bytes, sizeof(bytes), NULL);
+	expected_datum = avro_givefixed(schema, bytes, sizeof(bytes), NULL);
 	if (!avro_datum_equal(datum, expected_datum)) {
 		fprintf(stderr,
 		        "Expected equal fixed instances.\n");
@@ -538,7 +533,7 @@ static int test_fixed(void)
 	// The following should bork if we don't copy the fixed value
 	// correctly (since we'll try to free a static string).
 
-	datum = avro_fixed("msg", "original", 8);
+	datum = avro_fixed(schema, "original", 8);
 	avro_fixed_set(datum, "alsothis", 8);
 	avro_datum_decref(datum);
 

@@ -103,10 +103,10 @@ read_enum(avro_reader_t reader, const avro_encoding_t * enc,
 	int rval;
 	int64_t index;
 
-	AVRO_UNUSED(readers_schema);
+	AVRO_UNUSED(writers_schema);
 
 	check(rval, enc->read_long(reader, &index));
-	*datum = avro_enum(writers_schema->name, index);
+	*datum = avro_enum(&readers_schema->obj, index);
 	return 0;
 }
 
@@ -126,7 +126,7 @@ read_array(avro_reader_t reader, const avro_encoding_t * enc,
 		return rval;
 	}
 
-	array_datum = avro_array();
+	array_datum = avro_array(&readers_schema->obj);
 	while (block_count != 0) {
 		if (block_count < 0) {
 			block_count = block_count * -1;
@@ -169,7 +169,7 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 {
 	int rval;
 	int64_t i, block_count;
-	avro_datum_t map = avro_map();
+	avro_datum_t map = avro_map(&readers_schema->obj);
 
 	rval = enc->read_long(reader, &block_count);
 	if (rval) {
@@ -239,7 +239,7 @@ read_union(avro_reader_t reader, const avro_encoding_t * enc,
 		return EILSEQ;
 	}
 	check(rval, avro_read_data(reader, val.schema, NULL, &value));
-	*datum = avro_union(discriminant, value);
+	*datum = avro_union(&readers_schema->obj, discriminant, value);
 	avro_datum_decref(value);
 	return 0;
 }
@@ -257,8 +257,7 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 
 	AVRO_UNUSED(enc);
 
-	record = *datum =
-	    avro_record(writers_schema->name, writers_schema->space);
+	record = *datum = avro_record(&readers_schema->obj);
 	for (i = 0; i < writers_schema->fields->num_entries; i++) {
 		union {
 			st_data_t data;
@@ -398,8 +397,6 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 
 	case AVRO_FIXED:{
 			char *bytes;
-			const char *name =
-			    avro_schema_to_fixed(writers_schema)->name;
 			int64_t size =
 			    avro_schema_to_fixed(writers_schema)->size;
 
@@ -409,7 +406,7 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			}
 			rval = avro_read(reader, bytes, size);
 			if (!rval) {
-				*datum = avro_givefixed(name, bytes, size,
+				*datum = avro_givefixed(readers_schema, bytes, size,
 							avro_alloc_free);
 			}
 		}

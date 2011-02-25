@@ -384,13 +384,19 @@ avro_datum_t avro_null(void)
 	return avro_datum_incref(&obj);
 }
 
-avro_datum_t avro_union(int64_t discriminant, avro_datum_t value)
+avro_datum_t avro_union(avro_schema_t schema,
+			int64_t discriminant, avro_datum_t value)
 {
+	if (!is_avro_schema(schema)) {
+		return NULL;
+	}
+
 	struct avro_union_datum_t *datum =
 	    avro_new(struct avro_union_datum_t);
 	if (!datum) {
 		return NULL;
 	}
+	datum->schema = avro_schema_incref(schema);
 	datum->discriminant = discriminant;
 	datum->value = avro_datum_incref(value);
 
@@ -409,17 +415,17 @@ avro_datum_t avro_union_current_branch(avro_datum_t datum)
 }
 
 int avro_union_set_discriminant(avro_datum_t datum,
-				avro_schema_t schema,
 				int discriminant,
 				avro_datum_t *branch)
 {
-	if (!is_avro_union(datum) || !is_avro_union(schema)) {
+	if (!is_avro_union(datum)) {
 		return EINVAL;
 	}
 
 	struct avro_union_datum_t  *unionp =
 	    avro_datum_to_union(datum);
 
+	avro_schema_t  schema = unionp->schema;
 	avro_schema_t  branch_schema =
 	    avro_schema_union_branch(schema, discriminant);
 
@@ -451,44 +457,30 @@ int avro_union_set_discriminant(avro_datum_t datum,
 	return 0;
 }
 
-avro_datum_t avro_record(const char *name, const char *space)
+avro_datum_t avro_record(avro_schema_t schema)
 {
+	if (!is_avro_schema(schema)) {
+		return NULL;
+	}
+
 	struct avro_record_datum_t *datum =
 	    avro_new(struct avro_record_datum_t);
 	if (!datum) {
 		return NULL;
 	}
-	datum->name = avro_strdup(name);
-	if (!datum->name) {
-		avro_freet(struct avro_record_datum_t, datum);
-		return NULL;
-	}
-	datum->space = space ? avro_strdup(space) : NULL;
-	if (space && !datum->space) {
-		avro_str_free((char *) datum->name);
-		avro_freet(struct avro_record_datum_t, datum);
-		return NULL;
-	}
 	datum->field_order = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->field_order) {
-		if (space) {
-			avro_str_free((char *) datum->space);
-		}
-		avro_str_free((char *) datum->name);
 		avro_freet(struct avro_record_datum_t, datum);
 		return NULL;
 	}
 	datum->fields_byname = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->fields_byname) {
 		st_free_table(datum->field_order);
-		if (space) {
-			avro_str_free((char *) datum->space);
-		}
-		avro_str_free((char *) datum->name);
 		avro_freet(struct avro_record_datum_t, datum);
 		return NULL;
 	}
 
+	datum->schema = avro_schema_incref(schema);
 	avro_datum_init(&datum->obj, AVRO_RECORD);
 	return &datum->obj;
 }
@@ -543,14 +535,18 @@ avro_record_set(avro_datum_t datum, const char *field_name,
 	return EINVAL;
 }
 
-avro_datum_t avro_enum(const char *name, int i)
+avro_datum_t avro_enum(avro_schema_t schema, int i)
 {
+	if (!is_avro_schema(schema)) {
+		return NULL;
+	}
+
 	struct avro_enum_datum_t *datum =
 	    avro_new(struct avro_enum_datum_t);
 	if (!datum) {
 		return NULL;
 	}
-	datum->name = avro_strdup(name);
+	datum->schema = avro_schema_incref(schema);
 	datum->value = i;
 
 	avro_datum_init(&datum->obj, AVRO_ENUM);
@@ -562,10 +558,10 @@ int avro_enum_get(const avro_datum_t datum)
 	return avro_datum_to_enum(datum)->value;
 }
 
-const char *avro_enum_get_name(const avro_datum_t datum,
-			       const avro_schema_t schema)
+const char *avro_enum_get_name(const avro_datum_t datum)
 {
 	int  value = avro_enum_get(datum);
+	avro_schema_t  schema = avro_datum_to_enum(datum)->schema;
 	return avro_schema_enum_get(schema, value);
 }
 
@@ -579,12 +575,12 @@ int avro_enum_set(avro_datum_t datum, const int symbol_value)
 	return 0;
 }
 
-int avro_enum_set_name(avro_datum_t datum, avro_schema_t schema,
-		       const char *symbol_name)
+int avro_enum_set_name(avro_datum_t datum, const char *symbol_name)
 {
-	if (!is_avro_enum(datum) || !is_avro_enum(schema)) {
+	if (!is_avro_enum(datum)) {
 		return EINVAL;
 	}
+	avro_schema_t  schema = avro_datum_to_enum(datum)->schema;
 	int  symbol_value = avro_schema_enum_get_by_name(schema, symbol_name);
 	if (symbol_value == -1) {
 		return EINVAL;
@@ -593,16 +589,20 @@ int avro_enum_set_name(avro_datum_t datum, avro_schema_t schema,
 	return 0;
 }
 
-static avro_datum_t avro_fixed_private(const char *name, const char *bytes,
-				       const int64_t size,
+static avro_datum_t avro_fixed_private(avro_schema_t schema,
+				       const char *bytes, const int64_t size,
 				       avro_free_func_t fixed_free)
 {
+	if (!is_avro_schema(schema)) {
+		return NULL;
+	}
+
 	struct avro_fixed_datum_t *datum =
 	    avro_new(struct avro_fixed_datum_t);
 	if (!datum) {
 		return NULL;
 	}
-	datum->name = avro_strdup(name);
+	datum->schema = avro_schema_incref(schema);
 	datum->size = size;
 	datum->bytes = (char *)bytes;
 	datum->free = fixed_free;
@@ -611,24 +611,26 @@ static avro_datum_t avro_fixed_private(const char *name, const char *bytes,
 	return &datum->obj;
 }
 
-avro_datum_t avro_fixed(const char *name, const char *bytes, const int64_t size)
+avro_datum_t avro_fixed(avro_schema_t schema,
+			const char *bytes, const int64_t size)
 {
 	char *bytes_copy = avro_malloc(size);
 	if (!bytes_copy) {
 		return NULL;
 	}
 	memcpy(bytes_copy, bytes, size);
-	return avro_fixed_private(name, bytes_copy, size, avro_alloc_free);
+	return avro_fixed_private(schema, bytes_copy, size, avro_alloc_free);
 }
 
-avro_datum_t avro_givefixed(const char *name, const char *bytes,
-			    const int64_t size, avro_free_func_t free)
+avro_datum_t avro_givefixed(avro_schema_t schema,
+			    const char *bytes, const int64_t size,
+			    avro_free_func_t free)
 {
-	return avro_fixed_private(name, bytes, size, free);
+	return avro_fixed_private(schema, bytes, size, free);
 }
 
-static int avro_fixed_set_private(avro_datum_t datum, const char *bytes,
-				  const int64_t size,
+static int avro_fixed_set_private(avro_datum_t datum,
+				  const char *bytes, const int64_t size,
 				  avro_free_func_t fixed_free)
 {
 	struct avro_fixed_datum_t *fixed;
@@ -681,8 +683,12 @@ int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size)
 	return 0;
 }
 
-avro_datum_t avro_map(void)
+avro_datum_t avro_map(avro_schema_t schema)
 {
+	if (!is_avro_schema(schema)) {
+		return NULL;
+	}
+
 	struct avro_map_datum_t *datum =
 	    avro_new(struct avro_map_datum_t);
 	if (!datum) {
@@ -700,6 +706,7 @@ avro_datum_t avro_map(void)
 		return NULL;
 	}
 
+	datum->schema = avro_schema_incref(schema);
 	avro_datum_init(&datum->obj, AVRO_MAP);
 	return &datum->obj;
 }
@@ -786,8 +793,12 @@ avro_map_set(avro_datum_t datum, const char *key,
 	return 0;
 }
 
-avro_datum_t avro_array(void)
+avro_datum_t avro_array(avro_schema_t schema)
 {
+	if (!is_avro_schema(schema)) {
+		return NULL;
+	}
+
 	struct avro_array_datum_t *datum =
 	    avro_new(struct avro_array_datum_t);
 	if (!datum) {
@@ -799,6 +810,7 @@ avro_datum_t avro_array(void)
 		return NULL;
 	}
 
+	datum->schema = avro_schema_incref(schema);
 	avro_datum_init(&datum->obj, AVRO_ARRAY);
 	return &datum->obj;
 }
@@ -860,6 +872,91 @@ static int array_free_foreach(int i, avro_datum_t datum, void *arg)
 	return ST_DELETE;
 }
 
+avro_schema_t avro_datum_get_schema(const avro_datum_t datum)
+{
+	if (!is_avro_datum(datum)) {
+		return NULL;
+	}
+
+	switch (avro_typeof(datum)) {
+		/*
+		 * For the primitive types, which don't store an
+		 * explicit reference to their schema, we decref the
+		 * schema before returning.  This maintains the
+		 * invariant that this function doesn't add any
+		 * additional references to the schema.  The primitive
+		 * schemas won't be freed, because there's always at
+		 * least 1 reference for their initial static
+		 * initializers.
+		 */
+
+		case AVRO_STRING:
+			{
+				avro_schema_t  result = avro_schema_string();
+				avro_schema_decref(result);
+				return result;
+			}
+		case AVRO_BYTES:
+			{
+				avro_schema_t  result = avro_schema_bytes();
+				avro_schema_decref(result);
+				return result;
+			}
+		case AVRO_INT32:
+			{
+				avro_schema_t  result = avro_schema_int();
+				avro_schema_decref(result);
+				return result;
+			}
+		case AVRO_INT64:
+			{
+				avro_schema_t  result = avro_schema_long();
+				avro_schema_decref(result);
+				return result;
+			}
+		case AVRO_FLOAT:
+			{
+				avro_schema_t  result = avro_schema_float();
+				avro_schema_decref(result);
+				return result;
+			}
+		case AVRO_DOUBLE:
+			{
+				avro_schema_t  result = avro_schema_double();
+				avro_schema_decref(result);
+				return result;
+			}
+		case AVRO_BOOLEAN:
+			{
+				avro_schema_t  result = avro_schema_boolean();
+				avro_schema_decref(result);
+				return result;
+			}
+		case AVRO_NULL:
+			{
+				avro_schema_t  result = avro_schema_null();
+				avro_schema_decref(result);
+				return result;
+			}
+
+		case AVRO_RECORD:
+			return avro_datum_to_record(datum)->schema;
+		case AVRO_ENUM:
+			return avro_datum_to_enum(datum)->schema;
+		case AVRO_FIXED:
+			return avro_datum_to_fixed(datum)->schema;
+		case AVRO_MAP:
+			return avro_datum_to_map(datum)->schema;
+		case AVRO_ARRAY:
+			return avro_datum_to_array(datum)->schema;
+		case AVRO_UNION:
+			return avro_datum_to_union(datum)->schema;
+
+		default:
+			return NULL;
+	}
+}
+
 static void avro_datum_free(avro_datum_t datum)
 {
 	if (is_avro_datum(datum)) {
@@ -909,10 +1006,7 @@ static void avro_datum_free(avro_datum_t datum)
 		case AVRO_RECORD:{
 				struct avro_record_datum_t *record;
 				record = avro_datum_to_record(datum);
-				avro_str_free((char *) record->name);
-				if (record->space) {
-					avro_str_free((char *) record->space);
-				}
+				avro_schema_decref(record->schema);
 				st_foreach(record->fields_byname,
 					   char_datum_free_foreach, 0);
 				st_free_table(record->field_order);
@@ -923,14 +1017,14 @@ static void avro_datum_free(avro_datum_t datum)
 		case AVRO_ENUM:{
 				struct avro_enum_datum_t *enump;
 				enump = avro_datum_to_enum(datum);
-				avro_str_free((char *) enump->name);
+				avro_schema_decref(enump->schema);
 				avro_freet(struct avro_enum_datum_t, enump);
 			}
 			break;
 		case AVRO_FIXED:{
 				struct avro_fixed_datum_t *fixed;
 				fixed = avro_datum_to_fixed(datum);
-				avro_str_free((char *) fixed->name);
+				avro_schema_decref(fixed->schema);
 				if (fixed->free) {
 					fixed->free((void *)fixed->bytes,
 						    fixed->size);
@@ -941,6 +1035,7 @@ static void avro_datum_free(avro_datum_t datum)
 		case AVRO_MAP:{
 				struct avro_map_datum_t *map;
 				map = avro_datum_to_map(datum);
+				avro_schema_decref(map->schema);
 				st_foreach(map->map, char_datum_free_foreach,
 					   0);
 				st_free_table(map->map);
@@ -951,6 +1046,7 @@ static void avro_datum_free(avro_datum_t datum)
 		case AVRO_ARRAY:{
 				struct avro_array_datum_t *array;
 				array = avro_datum_to_array(datum);
+				avro_schema_decref(array->schema);
 				st_foreach(array->els, array_free_foreach, 0);
 				st_free_table(array->els);
 				avro_freet(struct avro_array_datum_t, array);
@@ -959,6 +1055,7 @@ static void avro_datum_free(avro_datum_t datum)
 		case AVRO_UNION:{
 				struct avro_union_datum_t *unionp;
 				unionp = avro_datum_to_union(datum);
+				avro_schema_decref(unionp->schema);
 				avro_datum_decref(unionp->value);
 				avro_freet(struct avro_union_datum_t, unionp);
 			}

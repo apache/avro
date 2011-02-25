@@ -22,6 +22,10 @@
 static int
 array_equal(struct avro_array_datum_t *a, struct avro_array_datum_t *b)
 {
+	if (!avro_schema_equal(a->schema, b->schema)) {
+		return 0;
+	}
+
 	long i;
 
 	if (a->els->num_entries != b->els->num_entries) {
@@ -66,6 +70,10 @@ st_equal_foreach(char *key, avro_datum_t datum, struct st_equal_args *args)
 
 static int map_equal(struct avro_map_datum_t *a, struct avro_map_datum_t *b)
 {
+	if (!avro_schema_equal(a->schema, b->schema)) {
+		return 0;
+	}
+
 	struct st_equal_args args = { 1, b->map };
 	if (a->map->num_entries != b->map->num_entries) {
 		return 0;
@@ -77,20 +85,11 @@ static int map_equal(struct avro_map_datum_t *a, struct avro_map_datum_t *b)
 static int record_equal(struct avro_record_datum_t *a,
 			struct avro_record_datum_t *b)
 {
+	if (!avro_schema_equal(a->schema, b->schema)) {
+		return 0;
+	}
+
 	struct st_equal_args args = { 1, b->fields_byname };
-	if (strcmp(a->name, b->name)) {
-		/* This have different names */
-		return 0;
-	}
-	if (a->space && b->space) {
-		/* They have different namespaces */
-		if (strcmp(a->space, b->space)) {
-			return 0;
-		}
-	} else if (a->space || b->space) {
-		/* One has a namespace, one doesn't */
-		return 0;
-	}
 	if (a->fields_byname->num_entries != b->fields_byname->num_entries) {
 		return 0;
 	}
@@ -100,20 +99,27 @@ static int record_equal(struct avro_record_datum_t *a,
 
 static int enum_equal(struct avro_enum_datum_t *a, struct avro_enum_datum_t *b)
 {
-	return strcmp(a->name, b->name) == 0 && a->value == b->value;
+	return avro_schema_equal(a->schema, b->schema) && a->value == b->value;
 }
 
 static int fixed_equal(struct avro_fixed_datum_t *a,
 		       struct avro_fixed_datum_t *b)
 {
+	if (!avro_schema_equal(a->schema, b->schema)) {
+		return 0;
+	}
+
 	return a->size == b->size && memcmp(a->bytes, b->bytes, a->size) == 0;
 }
 
 static int union_equal(struct avro_union_datum_t *a,
 		       struct avro_union_datum_t *b)
 {
-	/* XXX: not sure. a->discriminant == b->discriminant important? */
-	return avro_datum_equal(a->value, b->value);
+	if (!avro_schema_equal(a->schema, b->schema)) {
+		return 0;
+	}
+
+	return a->discriminant == b->discriminant && avro_datum_equal(a->value, b->value);
 }
 
 int avro_datum_equal(const avro_datum_t a, const avro_datum_t b)

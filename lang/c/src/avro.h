@@ -227,7 +227,14 @@ typedef void
 void
 avro_alloc_free(void *ptr, size_t sz);
 
-/* constructors */
+/*
+ * Datum constructors.  Each datum stores a reference to the schema that
+ * the datum is an instance of.  The primitive datum constructors don't
+ * need to take in an explicit avro_schema_t parameter, since there's
+ * only one schema that they could be an instance of.  The complex
+ * constructors do need an explicit schema parameter.
+ */
+
 typedef struct avro_obj_t *avro_datum_t;
 avro_datum_t avro_string(const char *str);
 avro_datum_t avro_givestring(const char *str,
@@ -241,16 +248,23 @@ avro_datum_t avro_float(float f);
 avro_datum_t avro_double(double d);
 avro_datum_t avro_boolean(int8_t i);
 avro_datum_t avro_null(void);
-avro_datum_t avro_record(const char *name, const char *space);
-avro_datum_t avro_enum(const char *name, int i);
-avro_datum_t avro_fixed(const char *name, const char *bytes,
-			const int64_t size);
-avro_datum_t avro_givefixed(const char *name, const char *bytes,
-			    const int64_t size,
+avro_datum_t avro_record(avro_schema_t schema);
+avro_datum_t avro_enum(avro_schema_t schema, int i);
+avro_datum_t avro_fixed(avro_schema_t schema,
+			const char *bytes, const int64_t size);
+avro_datum_t avro_givefixed(avro_schema_t schema,
+			    const char *bytes, const int64_t size,
 			    avro_free_func_t free);
-avro_datum_t avro_map(void);
-avro_datum_t avro_array(void);
-avro_datum_t avro_union(int64_t discriminant, const avro_datum_t datum);
+avro_datum_t avro_map(avro_schema_t schema);
+avro_datum_t avro_array(avro_schema_t schema);
+avro_datum_t avro_union(avro_schema_t schema,
+			int64_t discriminant, const avro_datum_t datum);
+
+/**
+ * Returns the schema that the datum is an instance of.
+ */
+
+avro_schema_t avro_datum_get_schema(const avro_datum_t datum);
 
 /*
  * Constructs a new avro_datum_t instance that's appropriate for holding
@@ -269,8 +283,7 @@ int avro_double_get(avro_datum_t datum, double *d);
 int avro_boolean_get(avro_datum_t datum, int8_t * i);
 
 int avro_enum_get(const avro_datum_t datum);
-const char *avro_enum_get_name(const avro_datum_t datum,
-			       const avro_schema_t schema);
+const char *avro_enum_get_name(const avro_datum_t datum);
 int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size);
 int avro_record_get(const avro_datum_t record, const char *field_name,
 		    avro_datum_t * value);
@@ -328,8 +341,7 @@ int avro_double_set(avro_datum_t datum, const double d);
 int avro_boolean_set(avro_datum_t datum, const int8_t i);
 
 int avro_enum_set(avro_datum_t datum, const int symbol_value);
-int avro_enum_set_name(avro_datum_t datum, avro_schema_t schema,
-		       const char *symbol_name);
+int avro_enum_set_name(avro_datum_t datum, const char *symbol_name);
 int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size);
 int avro_givefixed_set(avro_datum_t datum, const char *bytes,
 		       const int64_t size,
@@ -367,7 +379,6 @@ int avro_array_append_datum(avro_datum_t array_datum,
  */
 
 int avro_union_set_discriminant(avro_datum_t unionp,
-				avro_schema_t schema,
 				int discriminant,
 				avro_datum_t *branch);
 
@@ -385,7 +396,7 @@ int avro_datum_equal(avro_datum_t a, avro_datum_t b);
  * free() function.  (*Not* using the custom Avro allocator.)
  */
 
-int avro_datum_to_json(const avro_datum_t datum, const avro_schema_t schema,
+int avro_datum_to_json(const avro_datum_t datum,
 		       int one_line, char **json_str);
 
 int avro_schema_match(avro_schema_t writers_schema,

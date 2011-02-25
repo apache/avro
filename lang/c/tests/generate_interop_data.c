@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 	check(rval, avro_file_writer_create(outpath, schema, &file_writer));
 
 	/* TODO: create a method for generating random data from schema */
-	interop = avro_record("Interop", "org.apache.avro");
+	interop = avro_record(schema);
 	avro_record_set(interop, "intField", avro_int32(42));
 	avro_record_set(interop, "longField", avro_int64(4242));
 	avro_record_set(interop, "stringField",
@@ -67,23 +67,33 @@ int main(int argc, char *argv[])
 	avro_record_set(interop, "bytesField", avro_bytes("abcd", 4));
 	avro_record_set(interop, "nullField", avro_null());
 
-	array_datum = avro_array();
+	avro_schema_t  array_schema = avro_schema_get_subschema(schema, "arrayField");
+	array_datum = avro_array(array_schema);
 	avro_array_append_datum(array_datum, avro_double(1.0));
 	avro_array_append_datum(array_datum, avro_double(2.0));
 	avro_array_append_datum(array_datum, avro_double(3.0));
 	avro_record_set(interop, "arrayField", array_datum);
 
-	avro_record_set(interop, "mapField", avro_map());
-	union_datum = avro_union(1, avro_double(1.61803399));
-	avro_record_set(interop, "unionField", union_datum);
-	avro_record_set(interop, "enumField", avro_enum("Kind", KIND_A));
-	avro_record_set(interop, "fixedField",
-			avro_fixed("MD5", "1234567890123456", 16));
+	avro_schema_t  map_schema = avro_schema_get_subschema(schema, "mapField");
+	avro_record_set(interop, "mapField", avro_map(map_schema));
 
-	node_datum = avro_record("Node", NULL);
+	avro_schema_t  union_schema = avro_schema_get_subschema(schema, "unionField");
+	union_datum = avro_union(union_schema, 1, avro_double(1.61803399));
+	avro_record_set(interop, "unionField", union_datum);
+
+	avro_schema_t  enum_schema = avro_schema_get_subschema(schema, "enumField");
+	avro_record_set(interop, "enumField", avro_enum(enum_schema, KIND_A));
+
+	avro_schema_t  fixed_schema = avro_schema_get_subschema(schema, "fixedField");
+	avro_record_set(interop, "fixedField",
+			avro_fixed(fixed_schema, "1234567890123456", 16));
+
+	avro_schema_t  node_schema = avro_schema_get_subschema(schema, "recordField");
+	node_datum = avro_record(node_schema);
 	avro_record_set(node_datum, "label",
 			avro_givestring("If you label me, you negate me.", NULL));
-	avro_record_set(node_datum, "children", avro_array());
+	avro_schema_t  children_schema = avro_schema_get_subschema(node_schema, "children");
+	avro_record_set(node_datum, "children", avro_array(children_schema));
 	avro_record_set(interop, "recordField", node_datum);
 
 	rval = avro_file_writer_append(file_writer, interop);
