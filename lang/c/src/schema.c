@@ -1333,9 +1333,9 @@ const char *avro_schema_type_name(const avro_schema_t schema)
  } else if (is_avro_map(schema)) {
    return "map";
  } else if (is_avro_int32(schema)) {
-   return "int32";
+   return "int";
  } else if (is_avro_int64(schema)) {
-   return "int64";
+   return "long";
  } else if (is_avro_float(schema)) {
    return "float";
  } else if (is_avro_double(schema)) {

@@ -154,7 +154,7 @@ avro_resolver_get_real_dest(avro_resolver_t *resolver, avro_datum_t dest)
  */
 
 #define check_non_union(wschema, rschema, check_func)		\
-{								\
+do {								\
 	avro_resolver_t  *self = NULL;				\
 	int  rc = check_func(&self, wschema, rschema,		\
 			     rschema);				\
@@ -171,7 +171,7 @@ avro_resolver_get_real_dest(avro_resolver_t *resolver, avro_datum_t dest)
         if (rc) {						\
 		return NULL;					\
 	}							\
-    }
+} while (0)
 
 
 /**
@@ -183,7 +183,7 @@ avro_resolver_get_real_dest(avro_resolver_t *resolver, avro_datum_t dest)
  */
 
 #define check_reader_union(wschema, rschema, check_func)		\
-{									\
+do {									\
 	if (!is_avro_union(rschema)) {					\
 		break;							\
 	}								\
@@ -213,7 +213,7 @@ avro_resolver_get_real_dest(avro_resolver_t *resolver, avro_datum_t dest)
 	}								\
 									\
 	debug("No reader union branches match");			\
-}
+} while (0)
 
 /**
  * A helper macro that defines wraps together check_non_union and
@@ -221,16 +221,16 @@ avro_resolver_get_real_dest(avro_resolver_t *resolver, avro_datum_t dest)
  */
 
 #define check_simple_writer(wschema, rschema, type_name)		\
-{									\
+do {									\
 	check_non_union(wschema, rschema, try_##type_name);		\
 	check_reader_union(wschema, rschema, try_##type_name);		\
 	debug("Writer %s doesn't match reader %s",			\
 	      avro_schema_type_name(wschema),				\
 	      avro_schema_type_name(rschema));				\
-	avro_set_error("Cannot store a " #type_name " into schema %s",	\
+	avro_set_error("Cannot store " #type_name " into %s",		\
 		       avro_schema_type_name(rschema));			\
 	return NULL;							\
-}
+} while (0)
 
 
 /*-----------------------------------------------------------------------
@@ -332,6 +332,17 @@ avro_resolver_float_value(avro_consumer_t *consumer, float value,
 }
 
 static int
+avro_resolver_float_double_value(avro_consumer_t *consumer, float value,
+				 void *user_data)
+{
+	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
+	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
+	debug("Storing %e into %p (promoting float to double)", value, dest);
+	return avro_double_set(dest, value);
+}
+
+static int
 try_float(avro_resolver_t **resolver,
 	  avro_schema_t wschema, avro_schema_t rschema,
 	  avro_schema_t root_rschema)
@@ -339,6 +350,10 @@ try_float(avro_resolver_t **resolver,
 	if (is_avro_float(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
 		(*resolver)->parent.float_value = avro_resolver_float_value;
+	}
+	else if (is_avro_double(rschema)) {
+		*resolver = avro_resolver_create(wschema, root_rschema);
+		(*resolver)->parent.float_value = avro_resolver_float_double_value;
 	}
 	return 0;
 }
@@ -356,6 +371,39 @@ avro_resolver_int_value(avro_consumer_t *consumer, int32_t value,
 }
 
 static int
+avro_resolver_int_long_value(avro_consumer_t *consumer, int32_t value,
+			     void *user_data)
+{
+	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
+	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
+	debug("Storing %" PRId32 " into %p (promoting int to long)", value, dest);
+	return avro_int64_set(dest, value);
+}
+
+static int
+avro_resolver_int_double_value(avro_consumer_t *consumer, int32_t value,
+			       void *user_data)
+{
+	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
+	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
+	debug("Storing %" PRId32 " into %p (promoting int to double)", value, dest);
+	return avro_double_set(dest, value);
+}
+
+static int
+avro_resolver_int_float_value(avro_consumer_t *consumer, int32_t value,
+			      void *user_data)
+{
+	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
+	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
+	debug("Storing %" PRId32 " into %p (promoting int to float)", value, dest);
+	return avro_float_set(dest, value);
+}
+
+static int
 try_int(avro_resolver_t **resolver,
 	avro_schema_t wschema, avro_schema_t rschema,
 	avro_schema_t root_rschema)
@@ -363,6 +411,18 @@ try_int(avro_resolver_t **resolver,
 	if (is_avro_int32(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
 		(*resolver)->parent.int_value = avro_resolver_int_value;
+	}
+	else if (is_avro_int64(rschema)) {
+		*resolver = avro_resolver_create(wschema, root_rschema);
+		(*resolver)->parent.int_value = avro_resolver_int_long_value;
+	}
+	else if (is_avro_double(rschema)) {
+		*resolver = avro_resolver_create(wschema, root_rschema);
+		(*resolver)->parent.int_value = avro_resolver_int_double_value;
+	}
+	else if (is_avro_float(rschema)) {
+		*resolver = avro_resolver_create(wschema, root_rschema);
+		(*resolver)->parent.int_value = avro_resolver_int_float_value;
 	}
 	return 0;
 }
@@ -380,6 +440,28 @@ avro_resolver_long_value(avro_consumer_t *consumer, int64_t value,
 }
 
 static int
+avro_resolver_long_float_value(avro_consumer_t *consumer, int64_t value,
+			       void *user_data)
+{
+	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
+	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
+	debug("Storing %" PRId64 " into %p (promoting long to float)", value, dest);
+	return avro_float_set(dest, value);
+}
+
+static int
+avro_resolver_long_double_value(avro_consumer_t *consumer, int64_t value,
+				void *user_data)
+{
+	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
+	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
+	debug("Storing %" PRId64 " into %p (promoting long to double)", value, dest);
+	return avro_double_set(dest, value);
+}
+
+static int
 try_long(avro_resolver_t **resolver,
 	 avro_schema_t wschema, avro_schema_t rschema,
 	 avro_schema_t root_rschema)
@@ -387,6 +469,14 @@ try_long(avro_resolver_t **resolver,
 	if (is_avro_int64(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
 		(*resolver)->parent.long_value = avro_resolver_long_value;
+	}
+	else if (is_avro_double(rschema)) {
+		*resolver = avro_resolver_create(wschema, root_rschema);
+		(*resolver)->parent.long_value = avro_resolver_long_double_value;
+	}
+	else if (is_avro_float(rschema)) {
+		*resolver = avro_resolver_create(wschema, root_rschema);
+		(*resolver)->parent.long_value = avro_resolver_long_float_value;
 	}
 	return 0;
 }

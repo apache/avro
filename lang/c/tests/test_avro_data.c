@@ -83,8 +83,8 @@ int32_t rand_int32(void)
 }
 
 void
-write_read_check(avro_schema_t writers_schema,
-		 avro_schema_t readers_schema, avro_datum_t datum, char *type)
+write_read_check(avro_schema_t writers_schema, avro_datum_t datum,
+		 avro_schema_t readers_schema, avro_datum_t expected, char *type)
 {
 	avro_datum_t datum_out;
 	int validate;
@@ -93,6 +93,10 @@ write_read_check(avro_schema_t writers_schema,
 
 		reader = avro_reader_memory(buf, sizeof(buf));
 		writer = avro_writer_memory(buf, sizeof(buf));
+
+		if (!expected) {
+			expected = datum;
+		}
 
 		/* Validating read/write */
 		if (avro_write_data
@@ -117,7 +121,7 @@ write_read_check(avro_schema_t writers_schema,
 			fprintf(stderr, "  %s\n", avro_strerror());
 			exit(EXIT_FAILURE);
 		}
-		if (!avro_datum_equal(datum, datum_out)) {
+		if (!avro_datum_equal(expected, datum_out)) {
 			fprintf(stderr,
 				"Unable to encode/decode %s validate=%d\n",
 				type, validate);
@@ -153,7 +157,7 @@ static int test_string(void)
 	avro_schema_t writer_schema = avro_schema_string();
 	for (i = 0; i < sizeof(strings) / sizeof(strings[0]); i++) {
 		avro_datum_t datum = avro_givestring(strings[i], NULL);
-		write_read_check(writer_schema, NULL, datum, "string");
+		write_read_check(writer_schema, datum, NULL, NULL, "string");
 		avro_datum_decref(datum);
 	}
 
@@ -180,7 +184,7 @@ static int test_bytes(void)
 	avro_datum_t expected_datum;
 
 	datum = avro_givebytes(bytes, sizeof(bytes), NULL);
-	write_read_check(writer_schema, NULL, datum, "bytes");
+	write_read_check(writer_schema, datum, NULL, NULL, "bytes");
 	test_json(datum, "\"\\u00de\\u00ad\\u00be\\u00ef\"");
 	avro_datum_decref(datum);
 	avro_schema_decref(writer_schema);
@@ -211,10 +215,26 @@ static int test_int32(void)
 {
 	int i;
 	avro_schema_t writer_schema = avro_schema_int();
+	avro_schema_t long_schema = avro_schema_long();
+	avro_schema_t float_schema = avro_schema_float();
+	avro_schema_t double_schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
-		avro_datum_t datum = avro_int32(rand_int32());
-		write_read_check(writer_schema, NULL, datum, "int");
+		int32_t  value = rand_int32();
+		avro_datum_t datum = avro_int32(value);
+		avro_datum_t long_datum = avro_int64(value);
+		avro_datum_t float_datum = avro_float(value);
+		avro_datum_t double_datum = avro_double(value);
+		write_read_check(writer_schema, datum, NULL, NULL, "int");
+		write_read_check(writer_schema, datum,
+				 long_schema, long_datum, "int->long");
+		write_read_check(writer_schema, datum,
+				 float_schema, float_datum, "int->float");
+		write_read_check(writer_schema, datum,
+				 double_schema, double_datum, "int->double");
 		avro_datum_decref(datum);
+		avro_datum_decref(long_datum);
+		avro_datum_decref(float_datum);
+		avro_datum_decref(double_datum);
 	}
 
 	avro_datum_t  datum = avro_int32(10000);
@@ -222,6 +242,9 @@ static int test_int32(void)
 	avro_datum_decref(datum);
 
 	avro_schema_decref(writer_schema);
+	avro_schema_decref(long_schema);
+	avro_schema_decref(float_schema);
+	avro_schema_decref(double_schema);
 	return 0;
 }
 
@@ -229,10 +252,21 @@ static int test_int64(void)
 {
 	int i;
 	avro_schema_t writer_schema = avro_schema_long();
+	avro_schema_t float_schema = avro_schema_float();
+	avro_schema_t double_schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
-		avro_datum_t datum = avro_int64(rand_int64());
-		write_read_check(writer_schema, NULL, datum, "long");
+		int64_t  value = rand_int64();
+		avro_datum_t datum = avro_int64(value);
+		avro_datum_t float_datum = avro_float(value);
+		avro_datum_t double_datum = avro_double(value);
+		write_read_check(writer_schema, datum, NULL, NULL, "long");
+		write_read_check(writer_schema, datum,
+				 float_schema, float_datum, "long->float");
+		write_read_check(writer_schema, datum,
+				 double_schema, double_datum, "long->double");
 		avro_datum_decref(datum);
+		avro_datum_decref(float_datum);
+		avro_datum_decref(double_datum);
 	}
 
 	avro_datum_t  datum = avro_int64(10000);
@@ -240,6 +274,8 @@ static int test_int64(void)
 	avro_datum_decref(datum);
 
 	avro_schema_decref(writer_schema);
+	avro_schema_decref(float_schema);
+	avro_schema_decref(double_schema);
 	return 0;
 }
 
@@ -249,7 +285,7 @@ static int test_double(void)
 	avro_schema_t schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
 		avro_datum_t datum = avro_double(rand_number(-1.0E10, 1.0E10));
-		write_read_check(schema, NULL, datum, "double");
+		write_read_check(schema, datum, NULL, NULL, "double");
 		avro_datum_decref(datum);
 	}
 
@@ -265,10 +301,16 @@ static int test_float(void)
 {
 	int i;
 	avro_schema_t schema = avro_schema_float();
+	avro_schema_t double_schema = avro_schema_double();
 	for (i = 0; i < 100; i++) {
-		avro_datum_t datum = avro_float(rand_number(-1.0E10, 1.0E10));
-		write_read_check(schema, NULL, datum, "float");
+		float  value = rand_number(-1.0E10, 1.0E10);
+		avro_datum_t datum = avro_float(value);
+		avro_datum_t double_datum = avro_double(value);
+		write_read_check(schema, datum, NULL, NULL, "float");
+		write_read_check(schema, datum,
+				 double_schema, double_datum, "float->double");
 		avro_datum_decref(datum);
+		avro_datum_decref(double_datum);
 	}
 
 	avro_datum_t  datum = avro_float(2000.0);
@@ -276,6 +318,7 @@ static int test_float(void)
 	avro_datum_decref(datum);
 
 	avro_schema_decref(schema);
+	avro_schema_decref(double_schema);
 	return 0;
 }
 
@@ -286,7 +329,7 @@ static int test_boolean(void)
 	avro_schema_t schema = avro_schema_boolean();
 	for (i = 0; i <= 1; i++) {
 		avro_datum_t datum = avro_boolean(i);
-		write_read_check(schema, NULL, datum, "boolean");
+		write_read_check(schema, datum, NULL, NULL, "boolean");
 		test_json(datum, expected_json[i]);
 		avro_datum_decref(datum);
 	}
@@ -298,7 +341,7 @@ static int test_null(void)
 {
 	avro_schema_t schema = avro_schema_null();
 	avro_datum_t datum = avro_null();
-	write_read_check(schema, NULL, datum, "null");
+	write_read_check(schema, datum, NULL, NULL, "null");
 	test_json(datum, "null");
 	avro_datum_decref(datum);
 	return 0;
@@ -319,7 +362,7 @@ static int test_record(void)
 	avro_record_set(datum, "name", name_datum);
 	avro_record_set(datum, "age", age_datum);
 
-	write_read_check(schema, NULL, datum, "record");
+	write_read_check(schema, datum, NULL, NULL, "record");
 	test_json(datum, "{\"name\": \"Joseph Campbell\", \"age\": 83}");
 
 	int  rc;
@@ -367,7 +410,7 @@ static int test_enum(void)
 		exit(EXIT_FAILURE);
 	}
 
-	write_read_check(schema, NULL, datum, "enum");
+	write_read_check(schema, datum, NULL, NULL, "enum");
 	test_json(datum, "\"C\"");
 
 	avro_enum_set(datum, AVRO_CPP);
@@ -376,7 +419,7 @@ static int test_enum(void)
 		exit(EXIT_FAILURE);
 	}
 
-	write_read_check(schema, NULL, datum, "enum");
+	write_read_check(schema, datum, NULL, NULL, "enum");
 	test_json(datum, "\"C++\"");
 
 	avro_enum_set_name(datum, "Python");
@@ -385,7 +428,7 @@ static int test_enum(void)
 		exit(EXIT_FAILURE);
 	}
 
-	write_read_check(schema, NULL, datum, "enum");
+	write_read_check(schema, datum, NULL, NULL, "enum");
 	test_json(datum, "\"Python\"");
 
 	avro_datum_decref(datum);
@@ -413,7 +456,7 @@ static int test_array(void)
 		exit(EXIT_FAILURE);
 	}
 
-	write_read_check(schema, NULL, datum, "array");
+	write_read_check(schema, datum, NULL, NULL, "array");
 	test_json(datum, "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]");
 	avro_datum_decref(datum);
 	avro_schema_decref(schema);
@@ -451,7 +494,7 @@ static int test_map(void)
 		exit(EXIT_FAILURE);
 	}
 
-	write_read_check(schema, NULL, datum, "map");
+	write_read_check(schema, datum, NULL, NULL, "map");
 	test_json(datum,
 		  "{\"zero\": 0, \"one\": 1, \"two\": 2, \"three\": 3, "
 		  "\"four\": 4, \"five\": 5, \"six\": 6}");
@@ -494,7 +537,7 @@ static int test_union(void)
 		exit(EXIT_FAILURE);
 	}
 
-	write_read_check(schema, NULL, union_datum, "union");
+	write_read_check(schema, union_datum, NULL, NULL, "union");
 	test_json(union_datum, "{\"string\": \"Follow your bliss.\"}");
 
 	avro_datum_decref(datum);
@@ -516,7 +559,7 @@ static int test_fixed(void)
 	avro_datum_t expected_datum;
 
 	datum = avro_givefixed(schema, bytes, sizeof(bytes), NULL);
-	write_read_check(schema, NULL, datum, "fixed");
+	write_read_check(schema, datum, NULL, NULL, "fixed");
 	test_json(datum, "\"\\r\\n\\r\\n\\u000b\\n\\u000b\\n\"");
 	avro_datum_decref(datum);
 
