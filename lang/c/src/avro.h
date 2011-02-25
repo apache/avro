@@ -141,6 +141,8 @@ avro_schema_t avro_schema_record(const char *name, const char *space);
 avro_schema_t avro_schema_record_field_get(const avro_schema_t
 					   record, const char *field_name);
 const char *avro_schema_record_field_name(const avro_schema_t schema, int index);
+int avro_schema_record_field_get_index(const avro_schema_t schema,
+				       const char *field_name);
 avro_schema_t avro_schema_record_field_get_by_index
 (const avro_schema_t record, int index);
 int avro_schema_record_field_append(const avro_schema_t record,
@@ -166,6 +168,7 @@ avro_schema_t avro_schema_array(const avro_schema_t items);
 avro_schema_t avro_schema_array_items(avro_schema_t array);
 
 avro_schema_t avro_schema_union(void);
+size_t avro_schema_union_size(const avro_schema_t union_schema);
 int avro_schema_union_append(const avro_schema_t
 			     union_schema, const avro_schema_t schema);
 avro_schema_t avro_schema_union_branch(avro_schema_t union_schema,

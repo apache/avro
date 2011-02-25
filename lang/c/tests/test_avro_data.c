@@ -114,6 +114,7 @@ write_read_check(avro_schema_t writers_schema,
 		    (reader, writers_schema, readers_schema, &datum_out)) {
 			fprintf(stderr, "Unable to read %s validate=%d\n", type,
 				validate);
+			fprintf(stderr, "  %s\n", avro_strerror());
 			exit(EXIT_FAILURE);
 		}
 		if (!avro_datum_equal(datum, datum_out)) {
@@ -263,9 +264,9 @@ static int test_double(void)
 static int test_float(void)
 {
 	int i;
-	avro_schema_t schema = avro_schema_double();
+	avro_schema_t schema = avro_schema_float();
 	for (i = 0; i < 100; i++) {
-		avro_datum_t datum = avro_double(rand_number(-1.0E10, 1.0E10));
+		avro_datum_t datum = avro_float(rand_number(-1.0E10, 1.0E10));
 		write_read_check(schema, NULL, datum, "float");
 		avro_datum_decref(datum);
 	}
@@ -306,11 +307,11 @@ static int test_null(void)
 static int test_record(void)
 {
 	avro_schema_t schema = avro_schema_record("person", NULL);
-	avro_datum_t datum = avro_record(schema);
-	avro_datum_t name_datum, age_datum;
-
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
+
+	avro_datum_t datum = avro_record(schema);
+	avro_datum_t name_datum, age_datum;
 
 	name_datum = avro_givestring("Joseph Campbell", NULL);
 	age_datum = avro_int32(83);

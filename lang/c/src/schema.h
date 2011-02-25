@@ -22,6 +22,7 @@
 #include "st.h"
 
 struct avro_record_field_t {
+	int index;
 	char *name;
 	avro_schema_t type;
 	/*

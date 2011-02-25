@@ -91,6 +91,13 @@ Avro 1.5.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-762. C: New and improved schema resolution API.  The new API
+    correctly handles all of the schema resolution rules listed in the
+    spec.  It performs resolution against two schemas separately from
+    reading in any data, so that we don't have to re-resolve for each
+    data record.  Please see the avro/consumer.h header file for
+    details. (dcreager)
+
     AVRO-463. C: Error message API.  The new avro_strerror() function
     can be used to get a textual description of the error codes returned
     by the other C API functions.  In particular, this includes any JSON

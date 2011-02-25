@@ -140,7 +140,7 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 
 static int skip_bytes(avro_reader_t reader)
 {
-	int64_t len;
+	int64_t len = 0;
 	int rval;
 	check_prefix(rval, read_long(reader, &len),
 		     "Cannot read bytes length: ");
@@ -172,7 +172,7 @@ size_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 
 static int read_string(avro_reader_t reader, char **s, int64_t *len)
 {
-	int64_t  str_len;
+	int64_t  str_len = 0;
 	int rval;
 	check_prefix(rval, read_long(reader, &str_len),
 		     "Cannot read string length: ");

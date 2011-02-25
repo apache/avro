@@ -180,6 +180,16 @@ static int test_record(void)
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
 
+	if (avro_schema_record_field_get_index(schema, "name") != 0) {
+		fprintf(stderr, "Incorrect index for \"name\" field\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (avro_schema_record_field_get_index(schema, "unknown") != -1) {
+		fprintf(stderr, "Incorrect index for \"unknown\" field\n");
+		exit(EXIT_FAILURE);
+	}
+
 	avro_schema_t  name_field =
 		avro_schema_record_field_get(schema, "name");
 	if (!avro_schema_equal(name_field, avro_schema_string())) {

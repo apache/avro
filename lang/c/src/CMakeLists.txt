@@ -21,8 +21,10 @@ set(AVRO_SRC
     allocation.h
     allocation.c
     avro.h
+    avro/consumer.h
     avro_errors.h
     avro_private.h
+    consumer.c
     datafile.c
     datum.c
     datum.h
@@ -39,6 +41,7 @@ set(AVRO_SRC
     encoding_binary.c
     errors.c
     io.c
+    resolver.c
     schema.c
     schema.h
     schema_equal.c
@@ -71,7 +74,12 @@ set_target_properties(avro-shared PROPERTIES
         OUTPUT_NAME avro
         SOVERSION ${AVRO_VERSION})
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/avro.h DESTINATION include)
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/avro.h
+        DESTINATION include)
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/avro/consumer.h
+        DESTINATION include/avro)
 install(TARGETS avro-static avro-shared
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib

@@ -346,6 +346,14 @@ avro_schema_union_append(const avro_schema_t union_schema,
 	return 0;
 }
 
+size_t avro_schema_union_size(const avro_schema_t union_schema)
+{
+	check_param(EINVAL, is_avro_schema(union_schema), "union schema");
+	check_param(EINVAL, is_avro_union(union_schema), "union schema");
+	struct avro_union_schema_t *unionp = avro_schema_to_union(union_schema);
+	return unionp->branches->num_entries;
+}
+
 avro_schema_t avro_schema_union_branch(avro_schema_t unionp,
 				       int branch_index)
 {
@@ -532,6 +540,7 @@ avro_schema_record_field_append(const avro_schema_t record_schema,
 		avro_set_error("Cannot allocate new record field");
 		return ENOMEM;
 	}
+	new_field->index = record->fields->num_entries;
 	new_field->name = avro_strdup(field_name);
 	new_field->type = avro_schema_incref(field_schema);
 	st_insert(record->fields, record->fields->num_entries,
@@ -607,6 +616,22 @@ avro_schema_t avro_schema_record_field_get(const avro_schema_t
 	st_lookup(avro_schema_to_record(record)->fields_byname,
 		  (st_data_t) field_name, &val.data);
 	return val.field->type;
+}
+
+int avro_schema_record_field_get_index(const avro_schema_t schema,
+				       const char *field_name)
+{
+	union {
+		st_data_t data;
+		struct avro_record_field_t *field;
+	} val;
+	if (st_lookup(avro_schema_to_record(schema)->fields_byname,
+		      (st_data_t) field_name, &val.data)) {
+		return val.field->index;
+	}
+
+	avro_set_error("No field named %s in record", field_name);
+	return -1;
 }
 
 const char *avro_schema_record_field_name(const avro_schema_t schema, int index)
