@@ -599,7 +599,7 @@ public class TestSchema {
     reader.setSchema(schema);
         
     Object decoded =
-      reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+      reader.read(null, DecoderFactory.get().binaryDecoder(
           data, null));
       
     assertEquals("Decoded data does not match.", datum, decoded);
@@ -617,8 +617,8 @@ public class TestSchema {
 
     reader.setSchema(schema);
 
-    Object decoded = reader.read(null, DecoderFactory.defaultFactory()
-        .createBinaryDecoder(data, null));
+    Object decoded = reader.read(null, DecoderFactory.get()
+        .binaryDecoder(data, null));
 
     assertEquals("Decoded data does not match.", datum, decoded);
   }
@@ -635,8 +635,8 @@ public class TestSchema {
 
     reader.setSchema(schema);
 
-    Object decoded = reader.read(null, DecoderFactory.defaultFactory()
-        .createBinaryDecoder(data, null));
+    Object decoded = reader.read(null, DecoderFactory.get()
+        .binaryDecoder(data, null));
 
     assertEquals("Decoded data does not match.", datum, decoded);
   }
@@ -654,7 +654,8 @@ public class TestSchema {
     byte[] data = out.toByteArray();
 
     reader.setSchema(schema);
-    Decoder decoder = new JsonDecoder(schema, new ByteArrayInputStream(data));
+    Decoder decoder = DecoderFactory.get().jsonDecoder(schema,
+        new ByteArrayInputStream(data));
     Object decoded = reader.read(null, decoder);
     assertEquals("Decoded data does not match.", datum, decoded);
 
@@ -677,8 +678,8 @@ public class TestSchema {
 
     DatumReader<Object> reader = new GenericDatumReader<Object>();
     reader.setSchema(schema);
-    Object decoded =
-      reader.read(null, new JsonDecoder(schema,new ByteArrayInputStream(data)));
+    Object decoded = reader.read(null, DecoderFactory.get()
+        .jsonDecoder(schema, new ByteArrayInputStream(data)));
       
     assertEquals("Decoded data does not match.", datum, decoded);
   }
@@ -695,7 +696,7 @@ public class TestSchema {
     Schema expected = Schema.parse(recordJson);
     DatumReader<Object> in = new GenericDatumReader<Object>(ACTUAL, expected);
     GenericData.Record record = (GenericData.Record)
-      in.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+      in.read(null, DecoderFactory.get().binaryDecoder(
           new byte[0], null));
     assertEquals("Wrong default.", defaultValue, record.get("f"));
     assertEquals("Wrong toString", expected, Schema.parse(expected.toString()));
@@ -707,7 +708,7 @@ public class TestSchema {
       Schema.parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":"+
                    "[{\"name\":\"f\", \"type\": \"string\"}]}");
     DatumReader<Object> in = new GenericDatumReader<Object>(ACTUAL, expected);
-    in.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+    in.read(null, DecoderFactory.get().binaryDecoder(
         new ByteArrayInputStream(new byte[0]), null));
   }
 
@@ -724,7 +725,7 @@ public class TestSchema {
     writer.write(new GenericData.EnumSymbol(actual, "X"), encoder);
     encoder.flush();
     byte[] data = out.toByteArray();
-    Decoder decoder = DecoderFactory.defaultFactory().createBinaryDecoder(
+    Decoder decoder = DecoderFactory.get().binaryDecoder(
         data, null);
     DatumReader<String> in = new GenericDatumReader<String>(actual, expected);
     assertEquals("Wrong value", new GenericData.EnumSymbol(expected, "Y"),

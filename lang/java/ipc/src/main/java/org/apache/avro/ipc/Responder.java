@@ -105,7 +105,7 @@ public abstract class Responder {
    * track handshake status of connection. */
   public List<ByteBuffer> respond(List<ByteBuffer> buffers,
                                   Transceiver connection) throws IOException {
-    Decoder in = DecoderFactory.defaultFactory().createBinaryDecoder(
+    Decoder in = DecoderFactory.get().binaryDecoder(
         new ByteBufferInputStream(buffers), null);
     ByteBufferOutputStream bbo = new ByteBufferOutputStream();
     BinaryEncoder out = EncoderFactory.get().binaryEncoder(bbo, null);

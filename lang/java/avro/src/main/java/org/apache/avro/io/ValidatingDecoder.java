@@ -18,7 +18,6 @@
 package org.apache.avro.io;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroTypeException;
@@ -38,23 +37,25 @@ public class ValidatingDecoder extends ParsingDecoder
 
   ValidatingDecoder(Symbol root, Decoder in) throws IOException {
     super(root);
-    this.in = in;
+    this.configure(in);
   }
 
-  public ValidatingDecoder(Schema schema, Decoder in) throws IOException {
-    this(new ValidatingGrammarGenerator().generate(schema), in);
+  ValidatingDecoder(Schema schema, Decoder in) throws IOException {
+    this(getSymbol(schema), in);
+  }
+  
+  private static Symbol getSymbol(Schema schema) {
+    if (null == schema) {
+      throw new NullPointerException("Schema cannot be null");
+    }
+    return new ValidatingGrammarGenerator().generate(schema);
   }
 
   /** Re-initialize, reading from a new underlying Decoder. */
-  public void init(Decoder in) throws IOException {
-    parser.reset();
+  public ValidatingDecoder configure(Decoder in) throws IOException {
+    this.parser.reset();
     this.in = in;
-  }
-
-  @Override
-  public void init(InputStream in) throws IOException {
-    parser.reset();
-    this.in.init(in);
+    return this;
   }
 
   @Override
@@ -139,6 +140,7 @@ public class ValidatingDecoder extends ParsingDecoder
     in.skipFixed(length);
   }
 
+  @Override
   protected void skipFixed() throws IOException {
     parser.advance(Symbol.FIXED);
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
@@ -231,6 +233,7 @@ public class ValidatingDecoder extends ParsingDecoder
     return result;
   }
   
+  @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     return null;
   }

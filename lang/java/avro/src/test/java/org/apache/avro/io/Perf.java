@@ -332,7 +332,7 @@ public class Perf {
     }
 
     protected Decoder newDecoder() {
-      return decoder_factory.createBinaryDecoder(data, null);
+      return decoder_factory.binaryDecoder(data, null);
     }
     
     protected Encoder newEncoder() {

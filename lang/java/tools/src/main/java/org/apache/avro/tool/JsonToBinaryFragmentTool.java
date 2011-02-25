@@ -27,7 +27,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonDecoder;
+import org.apache.avro.io.DecoderFactory;
 
 /** Tool to convert JSON data into the binary form. */
 public class JsonToBinaryFragmentTool implements Tool {
@@ -53,7 +53,8 @@ public class JsonToBinaryFragmentTool implements Tool {
     try {
     GenericDatumReader<Object> reader = 
         new GenericDatumReader<Object>(schema);
-    Object datum = reader.read(null, new JsonDecoder(schema, input));
+      Object datum = reader.read(null,
+          DecoderFactory.get().jsonDecoder(schema, input));
     
     GenericDatumWriter<Object> writer = 
         new GenericDatumWriter<Object>(schema);

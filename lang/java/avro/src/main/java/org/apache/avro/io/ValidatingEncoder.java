@@ -60,7 +60,7 @@ public class ValidatingEncoder extends ParsingEncoder
 
   /**
    * Reconfigures this ValidatingEncoder to wrap the encoder provided.
-   * @param in
+   * @param encoder
    *   The Encoder to wrap for validation.
    */
   public void configure(Encoder encoder) {

@@ -68,6 +68,14 @@ Avro 1.5.0 (unreleased)
       does not buffer output. 
     (scottcarey)
 
+    AVRO-769. Java: Align Decoder/Encoder APIs for consistency and long term
+    stability.  Avro's Decoder and Encoder APIs are aligned and now consist of 
+    only read and write operations.  EncoderFactory and DecoderFactory handle
+    all construction and common configuration.  Some specialized implementations
+    have separate configuration APIs. 
+     
+    (scottcarey)
+
     AVRO-670. Allow DataFileWriteTool to accept schema files as input with new
     --schema-file and --schema command-line flags. (Ron Bodkin via philz)
 

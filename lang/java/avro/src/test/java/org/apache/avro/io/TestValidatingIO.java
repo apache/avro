@@ -303,7 +303,7 @@ public class TestValidatingIO {
     switch (encoding) {
     case BINARY:
     case BLOCKING_BINARY:
-      bvi = DecoderFactory.defaultFactory().createBinaryDecoder(bytes, null);
+      bvi = DecoderFactory.get().binaryDecoder(bytes, null);
       break;
     case JSON:
       InputStream in = new ByteArrayInputStream(bytes);

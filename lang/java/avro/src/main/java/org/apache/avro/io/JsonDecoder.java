@@ -40,24 +40,73 @@ public class JsonDecoder extends ParsingDecoder
   
   static final String CHARSET = "ISO-8859-1";
 
-  JsonDecoder(Symbol root, InputStream in) throws IOException {
+  private JsonDecoder(Symbol root, InputStream in) throws IOException {
     super(root);
-    init(in);
+    configure(in);
   }
   
-  JsonDecoder(Symbol root, String in) throws IOException {
+  private JsonDecoder(Symbol root, String in) throws IOException {
     super(root);
-    init(in);
+    configure(in);
   }
 
-  /** Creates a new JsonDecoder based on an InputStream. */
-  public JsonDecoder(Schema schema, InputStream in) throws IOException {
-    this(new JsonGrammarGenerator().generate(schema), in);
+  JsonDecoder(Schema schema, InputStream in) throws IOException {
+    this(getSymbol(schema), in);
   }
   
-  /** Creates a new JsonDecoder based on a String input. */
-  public JsonDecoder(Schema schema, String in) throws IOException {
-    this(new JsonGrammarGenerator().generate(schema), in);
+  JsonDecoder(Schema schema, String in) throws IOException {
+    this(getSymbol(schema), in);
+  }
+  
+  private static Symbol getSymbol(Schema schema) {
+    if (null == schema) {
+      throw new NullPointerException("Schema cannot be null!");
+    }
+    return new JsonGrammarGenerator().generate(schema);
+  }
+
+  /**
+   * Reconfigures this JsonDecoder to use the InputStream provided.
+   * <p/>
+   * If the InputStream provided is null, a NullPointerException is thrown.
+   * <p/>
+   * Otherwise, this JsonDecoder will reset its state and then
+   * reconfigure its input.
+   * @param in
+   *   The IntputStream to read from. Cannot be null.
+   * @throws IOException
+   * @return this JsonDecoder
+   */
+  public JsonDecoder configure(InputStream in) throws IOException {
+    if (null == in) {
+      throw new NullPointerException("InputStream to read from cannot be null!");
+    }
+    parser.reset();
+    this.in = jsonFactory.createJsonParser(in);
+    this.in.nextToken();
+    return this;
+  }
+  
+  /**
+   * Reconfigures this JsonDecoder to use the String provided for input.
+   * <p/>
+   * If the String provided is null, a NullPointerException is thrown.
+   * <p/>
+   * Otherwise, this JsonDecoder will reset its state and then
+   * reconfigure its input.
+   * @param in
+   *   The String to read from. Cannot be null.
+   * @throws IOException
+   * @return this JsonDecoder
+   */
+  public JsonDecoder configure(String in) throws IOException {
+    if (null == in) {
+      throw new NullPointerException("String to read from cannot be null!");
+    }
+    parser.reset();
+    this.in = new JsonFactory().createJsonParser(in);
+    this.in.nextToken();
+    return this;
   }
 
   private void advance(Symbol symbol) throws IOException {
@@ -65,20 +114,6 @@ public class JsonDecoder extends ParsingDecoder
     if (in.getCurrentToken() == null && this.parser.depth() == 1)
       throw new EOFException();
     parser.advance(symbol);
-  }
-
-  @Override
-  public void init(InputStream in) throws IOException {
-    parser.reset();
-    this.in = jsonFactory.createJsonParser(in);
-    this.in.nextToken();
-  }
-  
-  /** Re-initializes to start reading from a new String input. */
-  public void init(String in) throws IOException {
-    parser.reset();
-    this.in = new JsonFactory().createJsonParser(in);
-    this.in.nextToken();
   }
 
   @Override
@@ -384,6 +419,7 @@ public class JsonDecoder extends ParsingDecoder
     return n;
   }
 
+  @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldAdjustAction) {
       Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
@@ -420,7 +456,5 @@ public class JsonDecoder extends ParsingDecoder
         ". Got " + in.getCurrentToken());
   }
 
-  public void setItemCount(long itemCount) throws IOException {
-  }
 }
 

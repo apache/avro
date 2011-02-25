@@ -70,7 +70,7 @@ public class TestBlockingIO {
       
       byte[] bb = os.toByteArray();
       // dump(bb);
-      this.input = DecoderFactory.defaultFactory().createBinaryDecoder(bb, null);
+      this.input = DecoderFactory.get().binaryDecoder(bb, null);
       this.parser =  f.createJsonParser(new ByteArrayInputStream(in));
     }
     

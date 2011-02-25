@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonDecoder;
@@ -46,7 +47,7 @@ public class TestGenericDatumWriter {
     e.flush();
     
     Object o = new GenericDatumReader<GenericRecord>(s).read(null,
-        new JsonDecoder(s, new ByteArrayInputStream(bao.toByteArray())));
+        DecoderFactory.get().jsonDecoder(s, new ByteArrayInputStream(bao.toByteArray())));
     assertEquals(r, o);
   }
 }

@@ -53,7 +53,7 @@ public class TestBlockingIO2 {
     
     byte[] bb = os.toByteArray();
     
-    decoder = DecoderFactory.defaultFactory().createBinaryDecoder(bb, null);
+    decoder = DecoderFactory.get().binaryDecoder(bb, null);
     this.calls = calls;
   }
     

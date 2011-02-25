@@ -41,7 +41,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
 
   private Decoder backup;
   
-  public ResolvingDecoder(Schema writer, Schema reader, Decoder in)
+  ResolvingDecoder(Schema writer, Schema reader, Decoder in)
     throws IOException {
     this(resolve(writer, reader), in);
   }
@@ -54,7 +54,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * @param in  The underlying decoder.
    * @throws IOException
    */
-  public ResolvingDecoder(Object resolver, Decoder in)
+  private ResolvingDecoder(Object resolver, Decoder in)
     throws IOException {
     super((Symbol) resolver, in);
   }
@@ -66,13 +66,19 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * in many ResolvingDecoders. This method is reasonably expensive, the
    * users are encouraged to cache the result.
    * 
-   * @param writer  The writer's schema.
-   * @param reader  The reader's schema.
+   * @param writer  The writer's schema. Cannot be null.
+   * @param reader  The reader's schema. Cannot be null.
    * @return  The opaque reolver.
    * @throws IOException
    */
   public static Object resolve(Schema writer, Schema reader)
     throws IOException {
+    if (null == writer) {
+      throw new NullPointerException("writer cannot be null!");
+    }
+    if (null == reader) {
+      throw new NullPointerException("reader cannot be null!");
+    }
     return new ResolvingGrammarGenerator().generate(writer, reader);
   }
 
@@ -226,8 +232,8 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else if (top instanceof Symbol.DefaultStartAction) {
       Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
       backup = in;
-      in = DecoderFactory.defaultFactory()
-        .createBinaryDecoder(dsa.contents, null);
+      in = DecoderFactory.get()
+        .binaryDecoder(dsa.contents, null);
     } else if (top == Symbol.DEFAULT_END_ACTION) {
       in = backup;
     } else {
@@ -251,8 +257,8 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else if (top instanceof Symbol.DefaultStartAction) {
       Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
       backup = in;
-      in = DecoderFactory.defaultFactory()
-        .createBinaryDecoder(dsa.contents, null);
+      in = DecoderFactory.get()
+        .binaryDecoder(dsa.contents, null);
     } else if (top == Symbol.DEFAULT_END_ACTION) {
       in = backup;
     }

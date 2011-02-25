@@ -33,7 +33,7 @@ import org.apache.avro.AvroRuntimeException;
  * is acceptable.
  * <p/>
  * To construct or reconfigure, use
- * {@link EncoderFactory#bufferedBinaryEncoder(OutputStream, BinaryEncoder)}.
+ * {@link EncoderFactory#binaryEncoder(OutputStream, BinaryEncoder)}.
  * <p/>
  * To change the buffer size, configure the factory instance used to 
  * create instances with {@link EncoderFactory#configureBufferSize(int)}

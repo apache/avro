@@ -29,8 +29,7 @@ import org.apache.avro.util.Utf8;
  * Instances are created using {@link DecoderFactory}.
  * <p/>
  * This class may read-ahead and buffer bytes from the source beyond what is
- * required to serve its read methods.  See {@link #inputStream} and 
- * {@link DecoderFactory#configureDirectDecoder(boolean)}.
+ * required to serve its read methods.
  * The number of unused bytes in the buffer can be accessed by
  * inputStream().remaining(), if the BinaryDecoder is not 'direct'.
  * 
@@ -59,43 +58,25 @@ public class BinaryDecoder extends Decoder {
   protected BinaryDecoder() {
   }
 
-  /**
-   * @deprecated Use {@link DecoderFactory} to create BinaryDecoder instances and
-   *             reinitialize them
-   */
-  @Deprecated
-  public BinaryDecoder(InputStream in) {
+  BinaryDecoder(InputStream in, int bufferSize) {
     super();
-    init(in);
-  }
-
-  BinaryDecoder(int bufferSize, InputStream in) {
-    super();
-    init(bufferSize, in);
+    configure(in, bufferSize);
   }
 
   BinaryDecoder(byte[] data, int offset, int length) {
     super();
-    init(data, offset, length);
+    configure(data, offset, length);
   }
 
-  /**
-   * @deprecated Use {@link DecoderFactory} to create BinaryDecoder instances and
-   *             reinitialize them
-   */
-  @Override
-  @Deprecated
-  public void init(InputStream in) {
-    init(DecoderFactory.DEFAULT_BUFFER_SIZE, in);
-  }
-
-  void init(int bufferSize, InputStream in) {
+  BinaryDecoder configure(InputStream in, int bufferSize) {
     configureSource(bufferSize, new InputStreamByteSource(in));
+    return this;
   }
 
-  void init(byte[] data, int offset, int length) {
+  BinaryDecoder configure(byte[] data, int offset, int length) {
     configureSource(DecoderFactory.DEFAULT_BUFFER_SIZE, new ByteArrayByteSource(
         data, offset, length));
+    return this;
   }
 
   /**
@@ -479,8 +460,6 @@ public class BinaryDecoder extends Decoder {
    * Avro data with other reads must access this InputStream to do so unless
    * the implementation is 'direct' and does not read beyond the minimum bytes
    * necessary from the source.  
-   * <p>
-   * See {@link DecoderFactory#configureDirectDecoder(boolean)}
    */
   public InputStream inputStream() {
     return source;

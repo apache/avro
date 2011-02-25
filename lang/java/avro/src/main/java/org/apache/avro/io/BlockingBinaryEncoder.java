@@ -30,7 +30,7 @@ import org.apache.avro.Schema;
  * exhausting memory. Values are buffered until the specified block size would
  * be exceeded, minimizing block overhead.
  * <p/>
- * Use {@link EncoderFactory#blockingBinaryEncoder(OutputStream, BinaryEncoder)
+ * Use {@link EncoderFactory#blockingBinaryEncoder(OutputStream, BinaryEncoder)}
  * to construct and configure.
  * <p/>
  * BlockingBinaryEncoder buffers writes, data may not appear on the output until

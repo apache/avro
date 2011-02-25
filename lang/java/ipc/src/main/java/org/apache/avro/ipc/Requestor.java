@@ -133,7 +133,7 @@ public abstract class Requestor {
       } else {                                    // two-way message
         List<ByteBuffer> response = t.transceive(requestBytes);
         ByteBufferInputStream bbi = new ByteBufferInputStream(response);
-        in = DecoderFactory.defaultFactory().createBinaryDecoder(bbi, in);
+        in = DecoderFactory.get().binaryDecoder(bbi, in);
       }
     } while (!readHandshake(in));
 
@@ -265,7 +265,7 @@ public abstract class Requestor {
       getTransceiver().transceive(bbo.getBufferList());
     ByteBufferInputStream bbi = new ByteBufferInputStream(response);
     BinaryDecoder in =
-      DecoderFactory.defaultFactory().createBinaryDecoder(bbi, null);
+      DecoderFactory.get().binaryDecoder(bbi, null);
     readHandshake(in);
     return this.remote;
   }

@@ -86,7 +86,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    * @param out
    *          The OutputStream to direct output to. Cannot be null.
    * @throws IOException
-   * @return
+   * @return this JsonEncoder
    */
   public JsonEncoder configure(OutputStream out) throws IOException {
     this.configure(getJsonGenerator(out));
@@ -104,14 +104,16 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    * @param generator
    *          The JsonGenerator to direct output to. Cannot be null.
    * @throws IOException
+   * @return this JsonEncoder
    */
-  public void configure(JsonGenerator generator) throws IOException {
+  public JsonEncoder configure(JsonGenerator generator) throws IOException {
     if (null == generator)
       throw new NullPointerException("JsonGenerator cannot be null");
     if (null != parser) {
       flush();
     }
     this.out = generator;
+    return this;
   }
 
   @Override

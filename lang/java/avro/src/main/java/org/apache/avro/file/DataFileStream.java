@@ -94,7 +94,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Initialize the stream by reading from its head. */
   void initialize(InputStream in) throws IOException {
     this.header = new Header();
-    this.vin = DecoderFactory.defaultFactory().createBinaryDecoder(in, vin);
+    this.vin = DecoderFactory.get().binaryDecoder(in, vin);
     byte[] magic = new byte[DataFileConstants.MAGIC.length];
     try {
       vin.readFixed(magic);                         // read magic
@@ -198,7 +198,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
           block = nextRawBlock(block);
           block.decompressUsing(codec);
           blockBuffer = block.getAsByteBuffer();
-          datumIn = DecoderFactory.defaultFactory().createBinaryDecoder(
+          datumIn = DecoderFactory.get().binaryDecoder(
               blockBuffer.array(), blockBuffer.arrayOffset() +
               blockBuffer.position(), blockBuffer.remaining(), datumIn);
         }

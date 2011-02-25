@@ -361,7 +361,7 @@ public class TestReflect {
     writer.write(object, factory.directBinaryEncoder(out, null));
     ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(s);
     Object after =
-      reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+      reader.read(null, DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
     assertEquals(object, after);
   }
@@ -401,7 +401,7 @@ public class TestReflect {
     ReflectDatumReader<SampleRecord> reader = 
       new ReflectDatumReader<SampleRecord>(schm);
     SampleRecord decoded =
-      reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+      reader.read(null, DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
     assertEquals(record, decoded);
   }
@@ -423,7 +423,7 @@ public class TestReflect {
     ReflectDatumReader<AnotherSampleRecord> reader = 
       new ReflectDatumReader<AnotherSampleRecord>(schm);
     ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-    Decoder d = DecoderFactory.defaultFactory().createBinaryDecoder(in, null);
+    Decoder d = DecoderFactory.get().binaryDecoder(in, null);
     AnotherSampleRecord decoded = reader.read(null, d);
     assertEquals(a, decoded);
     decoded = reader.read(null, d);
@@ -559,7 +559,7 @@ public class TestReflect {
 
     ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(schema);
     Object decoded =
-      reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
+      reader.read(null, DecoderFactory.get().binaryDecoder(
           data, null));
       
     assertEquals(0, ReflectData.get().compare(datum, decoded, schema));

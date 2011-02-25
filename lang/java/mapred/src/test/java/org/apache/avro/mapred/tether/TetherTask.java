@@ -51,7 +51,7 @@ public abstract class TetherTask<IN,MID,OUT> {
   private TaskType taskType;
   private int partitions;
 
-  private DecoderFactory decoderFactory = DecoderFactory.defaultFactory();
+  private DecoderFactory decoderFactory = DecoderFactory.get();
   private BinaryDecoder decoder;
 
   private SpecificDatumReader<IN> inReader;
@@ -137,7 +137,7 @@ public abstract class TetherTask<IN,MID,OUT> {
 
   void input(ByteBuffer data, long count) {
     try {
-      decoder = decoderFactory.createBinaryDecoder(data.array(), decoder);
+      decoder = decoderFactory.binaryDecoder(data.array(), decoder);
       for (long i = 0; i < count; i++) {
         switch (taskType) {
         case MAP:

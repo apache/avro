@@ -30,7 +30,7 @@ import java.net.URI;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.JsonDecoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -97,10 +97,11 @@ class Util {
    * This is inefficient (creates extra objects), so should be used 
    * sparingly.
    */
-  static Object jsonToGenericDatum(Schema schema, String jsonData) throws IOException {
-    GenericDatumReader<Object> reader = 
-      new GenericDatumReader<Object>(schema);
-    Object datum = reader.read(null, new JsonDecoder(schema, jsonData));
+  static Object jsonToGenericDatum(Schema schema, String jsonData)
+      throws IOException {
+    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    Object datum = reader.read(null,
+        DecoderFactory.get().jsonDecoder(schema, jsonData));
     return datum;
   }
 

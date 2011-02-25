@@ -18,7 +18,6 @@
 package org.apache.avro.io;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.util.Utf8;
@@ -29,28 +28,18 @@ import org.apache.avro.util.Utf8;
  *  This class has two types of methods.  One type of methods support
  *  the reading of leaf values (for example, {@link #readLong} and
  *  {@link #readString}).
- *
+ *  <p/>
  *  The other type of methods support the reading of maps and arrays.
  *  These methods are {@link #readArrayStart}, {@link #arrayNext},
  *  and similar methods for maps).  See {@link #readArrayStart} for
  *  details on these methods.)
- *
+ *  <p/>
+ *  {@link DecoderFactory} is used to create and configure Decoder instances.
+ *  @see DecoderFactory
  *  @see Encoder
  */
 
 public abstract class Decoder {
-  
-  /** Start reading against a different input stream.  Stateful
-    * subclasses will reset their states to their initial state. 
-    * <p/>
-    * A Decoder may read ahead beyond the minimum bytes necessary,
-    * similar to a BufferedInputStream.
-    * In order to interleave reads on this stream's data between
-    * Decoder and another reader, the other reader must use the
-    * buffer-aware input stream returned by the Decoder implementation,
-    * if applicable.
-   * @throws IOException */
-  public abstract void init(InputStream in) throws IOException;
 
   /**
    * "Reads" a null value.  (Doesn't actually read anything, but

@@ -30,16 +30,18 @@ public abstract class ParsingDecoder extends Decoder
   implements ActionHandler, SkipHandler {
   protected final SkipParser parser;
 
-  public ParsingDecoder(Symbol root) throws IOException {
+  protected ParsingDecoder(Symbol root) throws IOException {
     this.parser = new SkipParser(root, this, this);
   }
 
   protected abstract void skipFixed() throws IOException;
   
+  @Override
   public void skipAction() throws IOException {
     parser.popSymbol();
   }
 
+  @Override
   public void skipTopSymbol() throws IOException {
     Symbol top = parser.topSymbol();
     if (top == Symbol.NULL) {

@@ -44,14 +44,13 @@ class TetherKeySerialization
     return new TetherDataDeserializer();
   }
   
-  private static final DecoderFactory FACTORY = new DecoderFactory();
-  static { FACTORY.configureDirectDecoder(true); }
+  private static final DecoderFactory FACTORY = DecoderFactory.get();
 
   private class TetherDataDeserializer implements Deserializer<TetherData> {
     private BinaryDecoder decoder;
     
     public void open(InputStream in) {
-      this.decoder = FACTORY.createBinaryDecoder(in, decoder);
+      this.decoder = FACTORY.directBinaryDecoder(in, decoder);
     }
     
     public TetherData deserialize(TetherData datum) throws IOException {

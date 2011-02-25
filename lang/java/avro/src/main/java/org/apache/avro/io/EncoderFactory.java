@@ -25,7 +25,7 @@ import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonGenerator;
 
 /**
- * A factory for creating and configuring {@link Encoders}s.
+ * A factory for creating and configuring {@link Encoder} instances.
  * <p/>
  * Factory methods that create Encoder instances are thread-safe.
  * Multiple instances with different configurations can be cached
@@ -91,6 +91,7 @@ public class EncoderFactory {
    * Returns this factory's configured default buffer size.  Used when creating
    * Encoder instances that buffer writes.
    * @see #configureBufferSize(int)
+   * @see #binaryEncoder(OutputStream, BinaryEncoder)
    * @return The preferred buffer size, in bytes.
    */
   public int getBufferSize() {
@@ -124,12 +125,13 @@ public class EncoderFactory {
 
   /**
    * Returns this factory's configured default block buffer size.  
-   * {@link BlockingBinaryEncoder} instances created by this factory will
-   * have block buffers of this size.
+   * {@link BinaryEncoder} instances created with
+   * #blockingBinaryEncoder(OutputStream, BinaryEncoder)
+   * will have block buffers of this size.
    * <p/>
-   * @see #configureBlockBufferSize
-   * @see BlockingBinaryEncoder
-   * @return The preferred buffer size, in bytes.
+   * @see #configureBlockSize(int)
+   * @see #blockingBinaryEncoder(OutputStream, BinaryEncoder)
+   * @return The preferred block size, in bytes.
    */
   public int getBlockSize() {
     return this.binaryBlockSize;
@@ -143,8 +145,8 @@ public class EncoderFactory {
    * <p/>
    * The {@link BinaryEncoder} implementation returned may buffer its output.
    * Data may not appear on the underlying OutputStream until
-   * {@link Encoder.flush()} is called.  The buffer size is configured with
-   * {@link #configureBufferSize(int).
+   * {@link Encoder#flush()} is called.  The buffer size is configured with
+   * {@link #configureBufferSize(int)}.
    * </p>  If buffering is not desired, and lower performance is acceptable, use 
    * {@link #directBinaryEncoder(OutputStream, BinaryEncoder)}
    * <p/>
@@ -180,7 +182,7 @@ public class EncoderFactory {
    * new instance, but this is not guaranteed, a new instance may be returned.
    * <p/>
    * The {@link BinaryEncoder} implementation returned does not buffer its
-   * output, calling {@link Encoder.flush()} will simply cause the wrapped
+   * output, calling {@link Encoder#flush()} will simply cause the wrapped
    * OutputStream to be flushed.
    * <p/>
    * Performance of unbuffered writes can be significantly slower than buffered
@@ -221,7 +223,7 @@ public class EncoderFactory {
    * new instance, but this is not guaranteed, a new instance may be returned.
    * <p/>
    * The {@link BinaryEncoder} implementation returned buffers its output,
-   * calling {@link Encoder.flush()} is required for output to appear on the underlying
+   * calling {@link Encoder#flush()} is required for output to appear on the underlying
    * OutputStream.
    * <p/>
    * The returned BinaryEncoder implements the Avro binary encoding using blocks
@@ -260,7 +262,7 @@ public class EncoderFactory {
    * data conforming to the Schema provided.
    * <p/>
    * {@link JsonEncoder} buffers its output. Data may not appear on the
-   * underlying OutputStream until {@link Encoder.flush()} is called.
+   * underlying OutputStream until {@link Encoder#flush()} is called.
    * <p/>
    * {@link JsonEncoder} is not thread-safe.
    * 
@@ -281,7 +283,7 @@ public class EncoderFactory {
    * output of data conforming to the Schema provided.
    * <p/>
    * {@link JsonEncoder} buffers its output. Data may not appear on the
-   * underlying output until {@link Encoder.flush()} is called.
+   * underlying output until {@link Encoder#flush()} is called.
    * <p/>
    * {@link JsonEncoder} is not thread-safe.
    * 
@@ -303,7 +305,7 @@ public class EncoderFactory {
    * to the schema provided.
    * <p/>
    * Many {@link Encoder}s buffer their output. Data may not appear on the
-   * underlying output until {@link Encoder.flush()} is called.
+   * underlying output until {@link Encoder#flush()} is called.
    * <p/>
    * {@link ValidatingEncoder} is not thread-safe.
    * 

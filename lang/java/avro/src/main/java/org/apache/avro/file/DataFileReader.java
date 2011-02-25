@@ -75,7 +75,7 @@ public class DataFileReader<D>
                                                  Header header,
                                                  boolean sync)
       throws IOException {
-    DataFileReader<D> dreader = new DataFileReader(in, reader, header);
+    DataFileReader<D> dreader = new DataFileReader<D>(in, reader, header);
     // seek/sync to an (assumed) valid position
     if (sync)
       dreader.sync(in.tell());
@@ -112,7 +112,7 @@ public class DataFileReader<D>
    * saved while writing a file, use {@link #sync(long)} instead. */
   public void seek(long position) throws IOException {
     sin.seek(position);
-    vin = DecoderFactory.defaultFactory().createBinaryDecoder(this.sin, vin);
+    vin = DecoderFactory.get().binaryDecoder(this.sin, vin);
     datumIn = null;
     blockRemaining = 0;
     blockStart = position;
@@ -122,6 +122,7 @@ public class DataFileReader<D>
    * range of file entires, call this with the starting position, then check
    * {@link #pastSync(long)} with the end point before each call to {@link
    * #next()}. */
+  @Override
   public void sync(long position) throws IOException {
     seek(position);
     try {
@@ -161,6 +162,7 @@ public class DataFileReader<D>
   }
 
   /** Return true if past the next synchronization point after a position. */ 
+  @Override
   public boolean pastSync(long position) throws IOException {
     return ((blockStart >= position+SYNC_SIZE)||(blockStart >= sin.length()));
   }
@@ -211,7 +213,7 @@ public class DataFileReader<D>
       } else {
         return n;
       }
-    };
+    }
 
     @Override
     public long skip(long skip) throws IOException {

@@ -123,6 +123,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
   }
 
   /** Return the schema used in this file. */
+  @Override
   public Schema getSchema() { return schema; }
 
   // Iterator and Iterable implementation
@@ -149,6 +150,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
   @Override public void remove() { throw new UnsupportedOperationException(); }
 
   /** Return the next datum in the file. */
+  @Override
   public synchronized D next(D reuse) throws IOException {
     while (blockCount == 0) {                     // at start of block
 
@@ -179,10 +181,11 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     in.seek(position);
     blockCount = 0;
     blockStart = position;
-    vin = DecoderFactory.defaultFactory().createBinaryDecoder(in, vin);
+    vin = DecoderFactory.get().binaryDecoder(in, vin);
   }
 
   /** Move to the next synchronization point after a position. */
+  @Override
   public synchronized void sync(long position) throws IOException {
     if (in.tell()+SYNC_SIZE >= in.length()) {
       seek(in.length());
@@ -206,14 +209,17 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
   }
 
   /** Return true if past the next synchronization point after a position. */ 
+  @Override
   public boolean pastSync(long position) throws IOException {
     return ((blockStart >= position+SYNC_SIZE)||(blockStart >= in.length()));
   }
 
   /** Return the current position in the input. */
+  @Override
   public long tell() throws IOException { return in.tell(); }
 
   /** Close this reader. */
+  @Override
   public synchronized void close() throws IOException {
     in.close();
   }

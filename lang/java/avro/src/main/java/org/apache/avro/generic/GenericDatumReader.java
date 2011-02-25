@@ -28,6 +28,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.WeakIdentityHashMap;
@@ -100,8 +101,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
     resolver = cache.get(expected);
     if (resolver == null) {
-      resolver = new ResolvingDecoder(Schema.applyAliases(actual, expected),
-                                      expected, null);
+      resolver = DecoderFactory.get().resolvingDecoder(
+          Schema.applyAliases(actual, expected), expected, null);
       cache.put(expected, resolver);
     }
     
@@ -112,10 +113,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return resolver;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
     ResolvingDecoder resolver = getResolver(actual, expected);
-    resolver.init(in);
+    resolver.configure(in);
     D result = (D) read(reuse, expected, resolver);
     resolver.drain();
     return result;

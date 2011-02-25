@@ -56,7 +56,7 @@ public class BinaryFragmentToJsonTool implements Tool {
     try {
       DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
       Object datum = reader.read(null,
-          DecoderFactory.defaultFactory().createBinaryDecoder(input, null));
+          DecoderFactory.get().binaryDecoder(input, null));
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
       JsonGenerator g =
         new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);

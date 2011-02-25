@@ -63,8 +63,7 @@ public class AvroSerialization<T> extends Configured
     return new AvroWrapperDeserializer(datumReader, isKey);
   }
   
-  private static final DecoderFactory FACTORY = new DecoderFactory();
-  static { FACTORY.configureDirectDecoder(true); }
+  private static final DecoderFactory FACTORY = DecoderFactory.get();
 
   private class AvroWrapperDeserializer
     implements Deserializer<AvroWrapper<T>> {
@@ -79,7 +78,7 @@ public class AvroSerialization<T> extends Configured
     }
     
     public void open(InputStream in) {
-      this.decoder = FACTORY.createBinaryDecoder(in, decoder);
+      this.decoder = FACTORY.directBinaryDecoder(in, decoder);
     }
     
     public AvroWrapper<T> deserialize(AvroWrapper<T> wrapper)

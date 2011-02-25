@@ -45,11 +45,11 @@ import org.junit.runners.Parameterized.Parameters;
 public class TestBinaryDecoder {
   // prime number buffer size so that looping tests hit the buffer edge
   // at different points in the loop.
-  DecoderFactory factory;
+  DecoderFactory factory = new DecoderFactory().configureDecoderBufferSize(521);
+  private boolean useDirect = false;
   static EncoderFactory e_factory = EncoderFactory.get();
   public TestBinaryDecoder(boolean useDirect) {
-    factory = new DecoderFactory().configureDecoderBufferSize(521);
-    factory.configureDirectDecoder(useDirect);
+    this.useDirect = useDirect;
   }
   
   @Parameters
@@ -66,16 +66,20 @@ public class TestBinaryDecoder {
 
   private Decoder newDecoder(byte[] bytes, int start, int len)
     throws IOException {
-    return factory.createBinaryDecoder(bytes, start, len, null);
+    return factory.binaryDecoder(bytes, start, len, null);
     
   }
 
   private Decoder newDecoder(InputStream in) {
-    return factory.createBinaryDecoder(in, null);
+    if (useDirect) {
+      return factory.directBinaryDecoder(in, null);
+    } else {
+      return factory.binaryDecoder(in, null);
+    }
   }
 
   private Decoder newDecoder(byte[] bytes) throws IOException {
-    return factory.createBinaryDecoder(bytes, null);
+    return factory.binaryDecoder(bytes, null);
   }
 
   /** Verify EOFException throw at EOF */
@@ -144,7 +148,7 @@ public class TestBinaryDecoder {
     ByteBuffer bb1 = d.readBytes(null);
     Assert.assertEquals(b1.length, bb1.limit() - bb1.position());
     
-    d.init(new ByteBufferInputStream(bbo2.getBufferList()));
+    d.configure(new ByteBufferInputStream(bbo2.getBufferList()));
     ByteBuffer bb2 = d.readBytes(null);
     Assert.assertEquals(b1.length, bb2.limit() - bb2.position());
     
@@ -202,11 +206,11 @@ public class TestBinaryDecoder {
 
     Decoder fromOffsetArray = newDecoder(data2, 15, data.length);
 
-    BinaryDecoder initOnInputStream = factory.createBinaryDecoder(
+    BinaryDecoder initOnInputStream = factory.binaryDecoder(
         new byte[50], 0, 30, null);
-    initOnInputStream = factory.createBinaryDecoder(is2, initOnInputStream);
-    BinaryDecoder initOnArray = factory.createBinaryDecoder(is3, null);
-    initOnArray = factory.createBinaryDecoder(
+    initOnInputStream = factory.binaryDecoder(is2, initOnInputStream);
+    BinaryDecoder initOnArray = factory.binaryDecoder(is3, null);
+    initOnArray = factory.binaryDecoder(
         data, 0, data.length, initOnArray);
     
     for (Object datum : records) {
@@ -236,16 +240,16 @@ public class TestBinaryDecoder {
       InputStream test = bd.inputStream();
       InputStream check = new ByteArrayInputStream(data);
       validateInputStreamReads(test, check);
-      bd = factory.createBinaryDecoder(data, bd);
+      bd = factory.binaryDecoder(data, bd);
       test = bd.inputStream();
       check = new ByteArrayInputStream(data);
       validateInputStreamSkips(test, check);
       // with input stream sources
-      bd = factory.createBinaryDecoder(new ByteArrayInputStream(data), bd);
+      bd = factory.binaryDecoder(new ByteArrayInputStream(data), bd);
       test = bd.inputStream();
       check = new ByteArrayInputStream(data);
       validateInputStreamReads(test, check);
-      bd = factory.createBinaryDecoder(new ByteArrayInputStream(data), bd);
+      bd = factory.binaryDecoder(new ByteArrayInputStream(data), bd);
       test = bd.inputStream();
       check = new ByteArrayInputStream(data);
       validateInputStreamSkips(test, check);
@@ -260,7 +264,7 @@ public class TestBinaryDecoder {
       InputStream test = bd.inputStream();
       InputStream check = new ByteArrayInputStream(data);
       // detach input stream and decoder from old source
-      factory.createBinaryDecoder(new byte[56], null);
+      factory.binaryDecoder(new byte[56], null);
       InputStream bad = bd.inputStream();
       InputStream check2 = new ByteArrayInputStream(data);
       validateInputStreamReads(test, check);
@@ -270,7 +274,7 @@ public class TestBinaryDecoder {
   
   @Test
   public void testInputStreamPartiallyUsed() throws IOException {
-    BinaryDecoder bd = factory.createBinaryDecoder(
+    BinaryDecoder bd = factory.binaryDecoder(
         new ByteArrayInputStream(data), null);
     InputStream test = bd.inputStream();
     InputStream check = new ByteArrayInputStream(data);
@@ -328,7 +332,7 @@ public class TestBinaryDecoder {
   public void testBadIntEncoding() throws IOException {
     byte[] badint = new byte[5];
     Arrays.fill(badint, (byte)0xff);
-    Decoder bd = factory.createBinaryDecoder(badint, null);
+    Decoder bd = factory.binaryDecoder(badint, null);
     String message = "";
     try {
       bd.readInt();
@@ -342,7 +346,7 @@ public class TestBinaryDecoder {
   public void testBadLongEncoding() throws IOException {
     byte[] badint = new byte[10];
     Arrays.fill(badint, (byte)0xff);
-    Decoder bd = factory.createBinaryDecoder(badint, null);
+    Decoder bd = factory.binaryDecoder(badint, null);
     String message = "";
     try {
       bd.readLong();
@@ -394,7 +398,7 @@ public class TestBinaryDecoder {
           throw e;
         }
       }
-      bd = factory.createBinaryDecoder(new ByteArrayInputStream(data), bd);
+      bd = factory.binaryDecoder(new ByteArrayInputStream(data), bd);
       skipGenerated(bd);
       try {
         Assert.assertTrue(bd.isEnd());

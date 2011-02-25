@@ -41,8 +41,8 @@ public class BinaryData {
     }
      public void set(byte[] data1, int off1, int len1, 
          byte[] data2, int off2, int len2) {
-       this.d1.init(data1, off1, len1);
-       this.d2.init(data2, off2, len2);
+       this.d1.configure(data1, off1, len1);
+       this.d2.configure(data2, off2, len2);
   }
   }                     // no public ctor
 
@@ -201,7 +201,7 @@ public class BinaryData {
       this.bytes = decoder.getBufferAccessor();
     }
     public void set(byte[] bytes, int start, int len) {
-      this.decoder.init(bytes, start, len);
+      this.decoder.configure(bytes, start, len);
     }
   }
 
