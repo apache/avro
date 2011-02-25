@@ -26,9 +26,9 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.JsonEncoder;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -61,7 +61,7 @@ public class BinaryFragmentToJsonTool implements Tool {
       JsonGenerator g =
         new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
       g.useDefaultPrettyPrinter();
-      writer.write(datum, new JsonEncoder(schema, g));
+      writer.write(datum, EncoderFactory.get().jsonEncoder(schema, g));
       g.flush();
       out.println();
       out.flush();

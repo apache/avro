@@ -44,6 +44,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
@@ -98,7 +99,7 @@ public abstract class Responder {
   public List<ByteBuffer> respond(List<ByteBuffer> buffers) throws IOException {
     return respond(buffers, null);
   }
-
+  
   /** Called by a server to deserialize a request, compute and serialize a
    * response or error.  Transciever is used by connection-based servers to
    * track handshake status of connection. */
@@ -107,7 +108,7 @@ public abstract class Responder {
     Decoder in = DecoderFactory.defaultFactory().createBinaryDecoder(
         new ByteBufferInputStream(buffers), null);
     ByteBufferOutputStream bbo = new ByteBufferOutputStream();
-    BinaryEncoder out = new BinaryEncoder(bbo);
+    BinaryEncoder out = EncoderFactory.get().binaryEncoder(bbo, null);
     Exception error = null;
     RPCContext context = new RPCContext();
     List<ByteBuffer> payload = null;
@@ -115,6 +116,7 @@ public abstract class Responder {
     boolean wasConnected = connection != null && connection.isConnected();
     try {
       Protocol remote = handshake(in, out, connection);
+      out.flush();
       if (remote == null)                        // handshake failed
         return bbo.getBufferList();
       handshake = bbo.getBufferList();
@@ -171,11 +173,14 @@ public abstract class Responder {
       LOG.warn("system error", e);
       context.setError(e);
       bbo = new ByteBufferOutputStream();
-      out = new BinaryEncoder(bbo);
+      out = EncoderFactory.get().binaryEncoder(bbo, null);
       out.writeBoolean(true);
       writeError(Protocol.SYSTEM_ERRORS, new Utf8(e.toString()), out);
+      if (null == handshake) {
+        handshake = new ByteBufferOutputStream().getBufferList();
+      }
     }
-
+    out.flush();
     payload = bbo.getBufferList();
     
     // Grab meta-data from plugins
@@ -184,7 +189,7 @@ public abstract class Responder {
       plugin.serverSendResponse(context);
     }
     META_WRITER.write(context.responseCallMeta(), out);
-    
+    out.flush();
     // Prepend handshake and append payload
     bbo.prepend(handshake);
     bbo.append(payload);

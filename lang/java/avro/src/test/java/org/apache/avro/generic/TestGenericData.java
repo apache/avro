@@ -34,6 +34,7 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.JsonFactory;
@@ -240,8 +241,8 @@ public class TestGenericData {
     
     ByteArrayOutputStream b1 = new ByteArrayOutputStream(5);
     ByteArrayOutputStream b2 = new ByteArrayOutputStream(5);
-    BinaryEncoder b1Enc = new BinaryEncoder(b1);
-    BinaryEncoder b2Enc = new BinaryEncoder(b2);
+    BinaryEncoder b1Enc = EncoderFactory.get().binaryEncoder(b1, null);
+    BinaryEncoder b2Enc = EncoderFactory.get().binaryEncoder(b2, null);
     // Prepare two different datums
     Record testDatum1 = new Record(record);
     testDatum1.put(0, 1);

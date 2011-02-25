@@ -19,7 +19,6 @@ package org.apache.avro.io;
 
 import java.io.Flushable;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.util.Utf8;
@@ -43,9 +42,6 @@ import org.apache.avro.util.Utf8;
  *  @see Decoder
  */
 public abstract class Encoder implements Flushable {
-
-  /** Redirect output (and reset the parser state if we're checking). */
-  public abstract void init(OutputStream out) throws IOException;
 
   /**
    * "Writes" a null value.  (Doesn't actually write anything, but

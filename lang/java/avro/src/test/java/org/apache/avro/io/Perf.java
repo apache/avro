@@ -34,9 +34,6 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
 
 /**
  * Performance tests for various low level operations of
@@ -87,6 +84,8 @@ public class Perf {
     new TestDescriptor(BoolTest.class, "-b").add(BASIC);
     new TestDescriptor(BytesTest.class, "-by").add(BASIC);
     new TestDescriptor(StringTest.class, "-s").add(BASIC);
+    new TestDescriptor(ArrayTest.class, "-a").add(BASIC);
+    new TestDescriptor(MapTest.class, "-m").add(BASIC);
     BATCHES.put("-record", RECORD);
     new TestDescriptor(RecordTest.class, "-R").add(RECORD);
     new TestDescriptor(ValidatingRecord.class, "-Rv").add(RECORD);
@@ -97,6 +96,7 @@ public class Perf {
     BATCHES.put("-generic", GENERIC);
     new TestDescriptor(GenericTest.class, "-G").add(GENERIC);
     new TestDescriptor(GenericNested.class, "-Gn").add(GENERIC);
+    new TestDescriptor(GenericNestedFake.class, "-Gf").add(GENERIC);
     new TestDescriptor(GenericWithDefault.class, "-Gd").add(GENERIC);
     new TestDescriptor(GenericWithOutOfOrder.class, "-Go").add(GENERIC);
     new TestDescriptor(GenericWithPromotion.class, "-Gp").add(GENERIC);
@@ -171,10 +171,10 @@ public class Perf {
       try {
         // get everything to compile once
         t.init();
-        if (t.isReadTest() && readTests) {
+        if (t.isReadTest()) {
           t.readTest();
         }
-        if (t.isWriteTest() && writeTests) {
+        if (t.isWriteTest()) {
           t.writeTest();
         }
         t.reset();
@@ -191,12 +191,12 @@ public class Perf {
       // warmup JVM
       t.init();
       if (t.isReadTest() && readTests) {
-        for (int i = 0; i < t.cycles; i++) {
+        for (int i = 0; i < t.cycles/2; i++) {
           t.readTest();
         }
       }
       if (t.isWriteTest() && writeTests) {
-        for (int i = 0; i < t.cycles; i++) {
+        for (int i = 0; i < t.cycles/2; i++) {
           t.writeTest();
         }
       }
@@ -251,7 +251,8 @@ public class Perf {
     public long encodedSize = 0;
     protected boolean isReadTest = true;
     protected boolean isWriteTest = true;
-    static DecoderFactory factory = new DecoderFactory();
+    static DecoderFactory decoder_factory = new DecoderFactory();
+    static EncoderFactory encoder_factory = new EncoderFactory();
     
     public Test(String name, int cycles, int count) {
       this.name = name;
@@ -331,30 +332,39 @@ public class Perf {
     }
 
     protected Decoder newDecoder() {
-      return factory.createBinaryDecoder(data, null);
+      return decoder_factory.createBinaryDecoder(data, null);
     }
     
     protected Encoder newEncoder() {
       OutputStream out = new ByteArrayOutputStream((int)(encodedSize > 0 ? encodedSize : count));
-      return new BinaryEncoder(out);
+      return newEncoder(out);
+    }
+    // switch out what is returned to test different encoders.
+    private Encoder newEncoder(OutputStream out) {
+      Encoder e = encoder_factory.binaryEncoder(out, null);
+//      Encoder e = encoder_factory.directBinaryEncoder(out, null);
+//      Encoder e = encoder_factory.blockingBinaryEncoder(out, null);
+//      Encoder e = new LegacyBinaryEncoder(out);
+      return e;
     }
     
     @Override
     void init() throws IOException {
       genSourceData();
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      Encoder e = new BinaryEncoder(baos);
+      Encoder e = newEncoder(baos);
       writeInternal(e);
       e.flush();
       data = baos.toByteArray();
       encodedSize = data.length;
+      //System.out.println(this.getClass().getSimpleName() + " encodedSize=" + encodedSize);
     }
 
     abstract void genSourceData();
     abstract void readInternal(Decoder d) throws IOException;
     abstract void writeInternal(Encoder e) throws IOException;
   }
-    
+  
   static class IntTest extends BasicTest {
     protected int[] sourceData = null;
     public IntTest() throws IOException {
@@ -448,6 +458,10 @@ public class Perf {
         sourceData[i+2] = r.nextLong() % 0x3FFFFFFFFL; // half in <=5, half in 6
         sourceData[i+3] = r.nextLong() % 0x1FFFFFFFFFFFFL; // half in <=8, half in 9 
       }
+      // last 16, make full size
+      for (int i = sourceData.length - 16; i < sourceData.length; i ++) {
+        sourceData[i] = r.nextLong();
+      }
     }
    
     @Override
@@ -480,7 +494,10 @@ public class Perf {
   static class FloatTest extends BasicTest {
     float[] sourceData = null;
     public FloatTest() throws IOException {
-      super("Float", "{ \"type\": \"float\"} ");
+      this("Float", "{ \"type\": \"float\"} ");
+    }
+    public FloatTest(String name, String schema) throws IOException {
+      super(name, schema);
     }
 
     @Override
@@ -695,6 +712,100 @@ public class Perf {
     }
   }
   
+  static class ArrayTest extends FloatTest {
+    public ArrayTest() throws IOException {
+      super("Array",
+          "{ \"type\": \"array\", \"items\": " +
+          " { \"type\": \"record\", \"name\":\"Foo\", \"fields\": " +
+          "  [{\"name\":\"bar\", \"type\":" +
+          "    {\"type\": \"array\", \"items\": " +
+          "     { \"type\": \"record\", \"name\":\"Vals\", \"fields\": [" +
+          "      {\"name\":\"f1\", \"type\":\"float\"}," +
+          "      {\"name\":\"f2\", \"type\":\"float\"}," +
+          "      {\"name\":\"f3\", \"type\":\"float\"}," +
+          "      {\"name\":\"f4\", \"type\":\"float\"}]" +
+          "     }" +
+          "    }" +
+          "   }]}}");
+    }
+   
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      d.readArrayStart();
+      for(long i = d.readArrayStart(); i != 0; i = d.arrayNext()) {
+        for (long j = 0; j < i; j++) {
+          d.readFloat();
+          d.readFloat();
+          d.readFloat();
+          d.readFloat();
+        }
+      }
+      d.arrayNext();
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      int items = sourceData.length/4;
+      e.writeArrayStart();
+      e.setItemCount(1);
+      e.startItem();
+      e.writeArrayStart();
+      e.setItemCount(items);
+      for (int i = 0; i < sourceData.length;i+=4) {
+        e.startItem();
+        e.writeFloat(sourceData[i]);
+        e.writeFloat(sourceData[i+1]);
+        e.writeFloat(sourceData[i+2]);
+        e.writeFloat(sourceData[i+3]);
+      }
+      e.writeArrayEnd();
+      e.writeArrayEnd();
+    }
+  }
+  
+  static class MapTest extends FloatTest {
+    public MapTest() throws IOException {
+      super("Map", "{ \"type\": \"map\", \"values\": " +
+      		"  { \"type\": \"record\", \"name\":\"Vals\", \"fields\": [" +
+          "   {\"name\":\"f1\", \"type\":\"float\"}," +
+          "   {\"name\":\"f2\", \"type\":\"float\"}," +
+          "   {\"name\":\"f3\", \"type\":\"float\"}," +
+          "   {\"name\":\"f4\", \"type\":\"float\"}]" +
+          "  }} ");
+    }
+   
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      Utf8 key = new Utf8();
+      for(long i = d.readMapStart(); i != 0; i = d.mapNext()) {
+        for (long j = 0; j < i; j++) {
+          key = d.readString(key);
+          d.readFloat();
+          d.readFloat();
+          d.readFloat();
+          d.readFloat();
+        }
+      }
+    }
+
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      int items = sourceData.length/4;
+      e.writeMapStart();
+      e.setItemCount(items);
+      Utf8 foo = new Utf8("foo");
+      for (int i = 0, j = 0; i < sourceData.length;i+=4, j++) {
+        e.startItem();
+        e.writeString(foo);
+        e.writeFloat(sourceData[i]);
+        e.writeFloat(sourceData[i+1]);
+        e.writeFloat(sourceData[i+2]);
+        e.writeFloat(sourceData[i+3]);
+      }
+      e.writeMapEnd();
+    }
+  }
+  
   private static final String RECORD_SCHEMA = 
     "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
     + "{ \"name\": \"f1\", \"type\": \"double\" },\n"
@@ -791,7 +902,7 @@ public class Perf {
     }
     @Override
     protected Encoder getEncoder() throws IOException {
-      return new ValidatingEncoder(schema, super.getEncoder());  
+      return encoder_factory.validatingEncoder(schema, super.getEncoder());  
     }
   }
   
@@ -1020,27 +1131,86 @@ public class Perf {
     }
     @Override
     void genSourceData() {
-      Random r = newRandom();
-      sourceData = new GenericRecord[count];
+      sourceData = generateGenericNested(schema, count);
+    }
+  }
+  static GenericRecord[] generateGenericNested(Schema schema, int count) {
+    Random r = newRandom();
+    GenericRecord[] sourceData = new GenericRecord[count];
+    Schema doubleSchema = schema.getFields().get(0).schema();
+    for (int i = 0; i < sourceData.length; i++) {
+      GenericRecord rec = new GenericData.Record(schema);
+      GenericRecord inner;
+      inner = new GenericData.Record(doubleSchema);
+      inner.put(0, r.nextDouble());
+      rec.put(0, inner);
+      inner = new GenericData.Record(doubleSchema);
+      inner.put(0, r.nextDouble());
+      rec.put(1, inner);
+      inner = new GenericData.Record(doubleSchema);
+      inner.put(0, r.nextDouble());
+      rec.put(2, inner);
+      rec.put(3, r.nextInt());
+      rec.put(4, r.nextInt());
+      rec.put(5, r.nextInt());
+      sourceData[i] = rec; 
+    }
+    return sourceData;
+  }
+  
+  static class GenericNestedFake extends BasicTest {
+    //reads and writes generic data, but not using
+    //GenericDatumReader or GenericDatumWriter
+    GenericRecord[] sourceData = null;
+    public GenericNestedFake() throws IOException {
+      super("GenericNestedFake_", NESTED_RECORD_SCHEMA, 12);
+    }
+    @Override
+    void readInternal(Decoder d) throws IOException {
       Schema doubleSchema = schema.getFields().get(0).schema();
-      for (int i = 0; i < sourceData.length; i++) {
+      for (int i = 0; i < count; i++) {
         GenericRecord rec = new GenericData.Record(schema);
         GenericRecord inner;
         inner = new GenericData.Record(doubleSchema);
-        inner.put(0, r.nextDouble());
+        inner.put(0, d.readDouble());
         rec.put(0, inner);
         inner = new GenericData.Record(doubleSchema);
-        inner.put(0, r.nextDouble());
+        inner.put(0, d.readDouble());
         rec.put(1, inner);
         inner = new GenericData.Record(doubleSchema);
-        inner.put(0, r.nextDouble());
+        inner.put(0, d.readDouble());
         rec.put(2, inner);
-        rec.put(3, r.nextInt());
-        rec.put(4, r.nextInt());
-        rec.put(5, r.nextInt());
-        sourceData[i] = rec; 
+        rec.put(3, d.readInt());
+        rec.put(4, d.readInt());
+        rec.put(5, d.readInt());
       }
     }
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length; i++) {
+        GenericRecord rec = sourceData[i];
+        GenericRecord inner;
+        inner = (GenericRecord)rec.get(0);
+        e.writeDouble((Double)inner.get(0));
+        inner = (GenericRecord)rec.get(1);
+        e.writeDouble((Double)inner.get(0));
+        inner = (GenericRecord)rec.get(2);
+        e.writeDouble((Double)inner.get(0));
+        e.writeInt((Integer)rec.get(3));
+        e.writeInt((Integer)rec.get(4));
+        e.writeInt((Integer)rec.get(5));
+      }
+    }
+    @Override
+    void genSourceData() {
+      sourceData = generateGenericNested(schema, count);
+    }
+    @Override
+    void reset() {
+      data = null;
+      sourceData = null;
+    }
+    
   }
 
   private static abstract class GenericResolving extends GenericTest {

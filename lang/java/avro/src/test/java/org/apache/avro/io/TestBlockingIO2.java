@@ -43,7 +43,9 @@ public class TestBlockingIO2 {
     throws IOException {
 
     ByteArrayOutputStream os = new ByteArrayOutputStream();
-    Encoder encoder = new BlockingBinaryEncoder(os, bufferSize);
+    EncoderFactory factory = new EncoderFactory()
+        .configureBlockSize(bufferSize);
+    Encoder encoder = factory.blockingBinaryEncoder(os, null);
     this.values = TestValidatingIO.randomValues(calls);
 
     TestValidatingIO.generate(encoder, calls, values);

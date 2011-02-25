@@ -30,6 +30,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
 
 /** A {@link Serialization} for {@link TetherData}. */
 class TetherKeySerialization
@@ -75,7 +76,7 @@ class TetherKeySerialization
     
     public void open(OutputStream out) {
       this.out = out;
-      this.encoder = new BinaryEncoder(out);
+      this.encoder = EncoderFactory.get().binaryEncoder(out, null);
     }
 
     public void serialize(TetherData datum) throws IOException {
@@ -83,6 +84,7 @@ class TetherKeySerialization
     }
 
     public void close() throws IOException {
+      encoder.flush();
       out.close();
     }
 

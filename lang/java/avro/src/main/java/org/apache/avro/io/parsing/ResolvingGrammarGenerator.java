@@ -28,8 +28,8 @@ import java.util.Map;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.codehaus.jackson.JsonNode;
 
 /**
@@ -278,6 +278,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     return result;
   }
 
+  private static EncoderFactory factory = new EncoderFactory().configureBufferSize(32);
   /**
    * Returns the Avro binary encoded version of <tt>n</tt> according to
    * the schema <tt>s</tt>.
@@ -288,8 +289,9 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    */
   private static byte[] getBinary(Schema s, JsonNode n) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    Encoder e = new BinaryEncoder(out);
+    Encoder e = factory.binaryEncoder(out, null);
     encode(e, s, n);
+    e.flush();
     return out.toByteArray();
   }
   

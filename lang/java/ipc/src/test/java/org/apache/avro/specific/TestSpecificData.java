@@ -70,7 +70,14 @@ public class TestSpecificData {
                            new SpecificDatumWriter<Object>(),
                            new SpecificDatumReader<Object>());
 
-  }
+    TestSchema.checkDirectBinary(schema, record,
+        new SpecificDatumWriter<Object>(),
+        new SpecificDatumReader<Object>());
+
+    TestSchema.checkBlockingBinary(schema, record,
+        new SpecificDatumWriter<Object>(),
+        new SpecificDatumReader<Object>());
+}
 
 
 

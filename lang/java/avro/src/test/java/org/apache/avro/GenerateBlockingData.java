@@ -18,10 +18,10 @@
 package org.apache.avro;
 
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.BlockingBinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,7 +40,9 @@ public class GenerateBlockingData {
   private static ByteArrayOutputStream buffer =
                       new ByteArrayOutputStream(2*SYNC_INTERVAL);
   
-  private static Encoder bufOut = new BlockingBinaryEncoder(buffer);
+  private static EncoderFactory factory = EncoderFactory.get();
+  private static Encoder bufOut = EncoderFactory.get().blockingBinaryEncoder(
+      buffer, null);
   private static int blockCount;
 
   private static void writeBlock(Encoder vout, FileOutputStream out)
@@ -66,7 +68,7 @@ public class GenerateBlockingData {
     FileOutputStream out = new FileOutputStream(outputFile, false);
     DatumWriter<Object> dout = new GenericDatumWriter<Object>();
     dout.setSchema(sch);
-    Encoder vout = new BinaryEncoder(out);
+    Encoder vout = factory.directBinaryEncoder(out, null);
     vout.writeLong(numObjects); // metadata:the count of objects in the file
     
     for (Object datum : new RandomData(sch, numObjects)) {

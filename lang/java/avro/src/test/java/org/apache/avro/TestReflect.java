@@ -35,8 +35,9 @@ import java.util.Map;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.TestReflect.SampleRecord.AnotherSampleRecord;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
@@ -48,7 +49,9 @@ import org.apache.avro.reflect.Union;
 import org.junit.Test;
 
 public class TestReflect {
-
+  
+  EncoderFactory factory = new EncoderFactory();
+  
   // test primitive type inference
   @Test public void testVoid() {
     check(Void.TYPE, "\"null\"");
@@ -355,7 +358,7 @@ public class TestReflect {
   void checkReadWrite(Object object, Schema s) throws Exception {
     ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(s);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    writer.write(object, new BinaryEncoder(out));
+    writer.write(object, factory.directBinaryEncoder(out, null));
     ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(s);
     Object after =
       reader.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
@@ -394,7 +397,7 @@ public class TestReflect {
     SampleRecord record = new SampleRecord();
     record.x = 5;
     record.y = 10;
-    writer.write(record, new BinaryEncoder(out));
+    writer.write(record, factory.directBinaryEncoder(out, null));
     ReflectDatumReader<SampleRecord> reader = 
       new ReflectDatumReader<SampleRecord>(schm);
     SampleRecord decoded =
@@ -411,7 +414,7 @@ public class TestReflect {
       new ReflectDatumWriter<AnotherSampleRecord>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     // keep record.a null and see if that works
-    BinaryEncoder e = new BinaryEncoder(out);
+    Encoder e = factory.directBinaryEncoder(out, null);
     AnotherSampleRecord a = new AnotherSampleRecord();
     writer.write(a, e);
     AnotherSampleRecord b = new AnotherSampleRecord(10);
@@ -551,7 +554,7 @@ public class TestReflect {
     throws IOException {
     ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(schema);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    writer.write(datum, new BinaryEncoder(out));
+    writer.write(datum, EncoderFactory.get().directBinaryEncoder(out, null));
     byte[] data = out.toByteArray();
 
     ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(schema);

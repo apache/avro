@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.test.Kind;
 import org.apache.avro.test.TestRecordWithUnion;
@@ -34,7 +35,7 @@ public class TestSpecificDatumWriter {
     final SpecificDatumWriter<TestRecordWithUnion> writer = new SpecificDatumWriter<TestRecordWithUnion>();
     Schema schema = TestRecordWithUnion.SCHEMA$;
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    JsonEncoder encoder = new JsonEncoder(schema, out);
+    JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
 
     writer.setSchema(schema);
 

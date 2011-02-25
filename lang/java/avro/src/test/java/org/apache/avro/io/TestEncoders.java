@@ -22,34 +22,80 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
+import org.codehaus.jackson.JsonEncoding;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestEncoders {
+  private static EncoderFactory factory = EncoderFactory.get();
+
   @Test
   public void testBinaryEncoderInit() throws IOException {
-    OutputStream out = null;
-    new BinaryEncoder(out).init(new ByteArrayOutputStream());
+    OutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder enc = factory.binaryEncoder(out, null);
+    Assert.assertTrue(enc == factory.binaryEncoder(out, enc));
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testBadBinaryEncoderInit() {
+    factory.binaryEncoder(null, null);
   }
 
   @Test
   public void testBlockingBinaryEncoderInit() throws IOException {
-    OutputStream out = null;
-    new BlockingBinaryEncoder(out).init(new ByteArrayOutputStream());
+    OutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder reuse = null;
+    reuse = factory.blockingBinaryEncoder(out, reuse);
+    Assert.assertTrue(reuse == factory.blockingBinaryEncoder(out, reuse));
+    // comparison 
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testBadBlockintBinaryEncoderInit() {
+    factory.binaryEncoder(null, null);
+  }
+  
+  @Test
+  public void testDirectBinaryEncoderInit() throws IOException {
+    OutputStream out = new ByteArrayOutputStream();
+    BinaryEncoder enc = factory.directBinaryEncoder(out, null);
+    Assert.assertTrue(enc ==  factory.directBinaryEncoder(out, enc));
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testBadDirectBinaryEncoderInit() {
+    factory.directBinaryEncoder(null, null);
   }
 
   @Test
   public void testJsonEncoderInit() throws IOException {
     Schema s = Schema.parse("\"int\"");
-    OutputStream out = null;
-    new JsonEncoder(s, out).init(new ByteArrayOutputStream());
+    OutputStream out = new ByteArrayOutputStream();
+    factory.jsonEncoder(s, out);
+    JsonEncoder enc = factory.jsonEncoder(s,
+        new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8));
+    enc.configure(out);
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testBadJsonEncoderInitOS() throws IOException {
+    factory.jsonEncoder(Schema.create(Type.INT), (OutputStream)null);
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testBadJsonEncoderInit() throws IOException {
+    factory.jsonEncoder(Schema.create(Type.INT), (JsonGenerator)null);
   }
 
   @Test
   public void testValidatingEncoderInit() throws IOException {
     Schema s = Schema.parse("\"int\"");
-    OutputStream out = null;
-    Encoder e = new BinaryEncoder(out);
-    new ValidatingEncoder(s, e).init(new ByteArrayOutputStream());
+    OutputStream out = new ByteArrayOutputStream();
+    Encoder e = factory.directBinaryEncoder(out, null);
+    factory.validatingEncoder(s, e).configure(e);
   }
 
 }

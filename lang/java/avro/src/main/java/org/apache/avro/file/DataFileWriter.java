@@ -43,7 +43,7 @@ import org.apache.avro.file.DataFileStream.DataBlock;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 
 /** Stores in a file a sequence of data conforming to a schema.  The schema is
  * stored in the file with the data.  Each datum in a file is of the same
@@ -65,7 +65,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private long blockCount;                       // # entries in current block
 
   private NonCopyingByteArrayOutputStream buffer;
-  private Encoder bufOut;
+  private BinaryEncoder bufOut;
 
   private byte[] sync;                          // 16 random bytes
   private int syncInterval = DataFileConstants.DEFAULT_SYNC_INTERVAL;
@@ -132,7 +132,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
     init(outs);
 
-    out.write(DataFileConstants.MAGIC);           // write magic
+    vout.writeFixed(DataFileConstants.MAGIC);           // write magic
 
     vout.writeMapStart();                         // write metadata
     vout.setItemCount(meta.size());
@@ -142,10 +142,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       vout.writeBytes(entry.getValue());
     }
     vout.writeMapEnd();
+    vout.writeFixed(sync);                       // write initial sync
     vout.flush(); //vout may be buffered, flush before writing to out
-
-    out.write(sync);                              // write initial sync
-
     return this;
   }
 
@@ -178,11 +176,12 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private void init(OutputStream outs) throws IOException {
     this.out = new BufferedFileOutputStream(outs);
-    this.vout = new BinaryEncoder(out);
+    EncoderFactory efactory = new EncoderFactory();
+    this.vout = efactory.binaryEncoder(out, null);
     dout.setSchema(schema);
     buffer = new NonCopyingByteArrayOutputStream(
         Math.min((int)(syncInterval * 1.25), Integer.MAX_VALUE/2 -1));
-    this.bufOut = new BinaryEncoder(buffer);
+    this.bufOut = efactory.binaryEncoder(buffer, null);
     if (this.codec == null) {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
@@ -244,8 +243,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     assertOpen();
     dout.write(datum, bufOut);
     blockCount++;
-    if (buffer.size() >= syncInterval)
-      writeBlock();
+    writeIfBlockFull();
   }
 
   /** Expert: Append a pre-encoded datum to the file.  No validation is
@@ -254,9 +252,13 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   public void appendEncoded(ByteBuffer datum) throws IOException {
     assertOpen();
     int start = datum.position();
-    buffer.write(datum.array(), start, datum.limit()-start);
+    bufOut.writeFixed(datum.array(), start, datum.limit()-start);
     blockCount++;
-    if (buffer.size() >= syncInterval)
+    writeIfBlockFull();
+  }
+
+  private void writeIfBlockFull() throws IOException {
+    if ((buffer.size() + bufOut.bytesBuffered()) >= syncInterval)
       writeBlock();
   }
 
@@ -307,6 +309,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
+      bufOut.flush();
       ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
       DataBlock block = new DataBlock(uncompressed, blockCount);
       block.compressUsing(codec);
@@ -326,13 +329,14 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   /** Flush the current state of the file. */
+  @Override
   public void flush() throws IOException {
     sync();
     vout.flush();
-    out.flush();
   }
 
   /** Close the file. */
+  @Override
   public void close() throws IOException {
     flush();
     out.close();
@@ -344,6 +348,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
     private class PositionFilter extends FilterOutputStream {
       public PositionFilter(OutputStream out) throws IOException { super(out); }
+      @Override
       public void write(byte[] b, int off, int len) throws IOException {
         out.write(b, off, len);
         position += len;                           // update on write

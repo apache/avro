@@ -25,8 +25,8 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonDecoder;
-import org.apache.avro.io.JsonEncoder;
 import org.junit.Test;
 
 public class TestGenericDatumWriter {
@@ -41,7 +41,7 @@ public class TestGenericDatumWriter {
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     GenericDatumWriter<GenericRecord> w =
       new GenericDatumWriter<GenericRecord>(s);
-    Encoder e = new JsonEncoder(s, bao);
+    Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
     w.write(r, e);
     e.flush();
     

@@ -34,6 +34,7 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
@@ -71,7 +72,8 @@ public abstract class TetherTask<IN,MID,OUT> {
   public class Collector<T> {
     private SpecificDatumWriter<T> writer;
     private Buffer buffer = new Buffer();
-    private BinaryEncoder encoder = new BinaryEncoder(buffer);
+    private BinaryEncoder encoder = new EncoderFactory()
+        .configureBlockSize(512).binaryEncoder(buffer, null);
     
     private Collector(Schema schema) {
       this.writer = new SpecificDatumWriter<T>(schema);
@@ -81,6 +83,7 @@ public abstract class TetherTask<IN,MID,OUT> {
     public void collect(T record) throws IOException {
       buffer.reset();
       writer.write(record, encoder);
+      encoder.flush();
       outputClient.output(buffer.data());
     }
     
@@ -88,6 +91,7 @@ public abstract class TetherTask<IN,MID,OUT> {
     public void collect(T record, int partition) throws IOException {
       buffer.reset();
       writer.write(record, encoder);
+      encoder.flush();
       outputClient.outputPartitioned(partition, buffer.data());
     }
   }

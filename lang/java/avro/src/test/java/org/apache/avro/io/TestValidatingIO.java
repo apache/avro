@@ -77,21 +77,22 @@ public class TestValidatingIO {
 
   public static byte[] make(Schema sc, String calls,
       Object[] values, Encoding encoding) throws IOException {
+    EncoderFactory factory = EncoderFactory.get();
     ByteArrayOutputStream ba = new ByteArrayOutputStream();
     Encoder bvo = null;
     switch (encoding) {
     case BINARY:
-      bvo = new BinaryEncoder(ba);
+      bvo = factory.binaryEncoder(ba, null);
       break;
     case BLOCKING_BINARY:
-      bvo = new BlockingBinaryEncoder(ba);
+      bvo = factory.blockingBinaryEncoder(ba, null);
       break;
     case JSON:
-      bvo = new JsonEncoder(sc, ba);
+      bvo = factory.jsonEncoder(sc, ba);
       break;
     }
         
-    Encoder vo = new ValidatingEncoder(sc, bvo);
+    Encoder vo = factory.validatingEncoder(sc, bvo);
     generate(vo, calls, values);
     vo.flush();
     return ba.toByteArray();

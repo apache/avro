@@ -24,9 +24,8 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.avro.Schema;
-import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.io.ValidatingEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -51,9 +50,12 @@ public class TestResolvingGrammarGenerator {
   @Test
   public void test() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    Encoder e = new ValidatingEncoder(schema, new BinaryEncoder(baos));
+    EncoderFactory factory = EncoderFactory.get();
+    Encoder e = factory.validatingEncoder(schema, 
+        factory.binaryEncoder(baos, null));
     
     ResolvingGrammarGenerator.encode(e, schema, data);
+    e.flush();
   }
   
   @Parameterized.Parameters

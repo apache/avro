@@ -28,9 +28,8 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
-import org.codehaus.jackson.JsonGenerator;
 
 /** Reads a data file and dumps to JSON */
 public class DataFileReadTool implements Tool {
@@ -61,10 +60,9 @@ public class DataFileReadTool implements Tool {
     try {
       Schema schema = fileReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
-      Encoder encoder = new JsonEncoder(schema, (JsonGenerator)null);
+      JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
       for (Object datum : fileReader) {
-        // init() recreates the internal Jackson JsonGenerator
-        encoder.init(out);
+        encoder.configure(out); //reinitializes state
         writer.write(datum, encoder);
         encoder.flush();
         out.println();

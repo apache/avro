@@ -44,9 +44,8 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonDecoder;
-import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.compiler.specific.TestSpecificCompiler;
 import org.apache.avro.util.Utf8;
 
@@ -558,6 +557,12 @@ public class TestSchema {
       checkBinary(schema, datum,
                   new GenericDatumWriter<Object>(),
                   new GenericDatumReader<Object>());
+      checkDirectBinary(schema, datum,
+                  new GenericDatumWriter<Object>(),
+                  new GenericDatumReader<Object>());
+      checkBlockingBinary(schema, datum,
+                  new GenericDatumWriter<Object>(),
+                  new GenericDatumReader<Object>());
       checkJson(schema, datum,
                   new GenericDatumWriter<Object>(),
                   new GenericDatumReader<Object>());
@@ -579,14 +584,16 @@ public class TestSchema {
     assertEquals(s1, s2);
     assertFalse(s0.equals(s2));
   }
-
+  
   public static void checkBinary(Schema schema, Object datum,
                                  DatumWriter<Object> writer,
                                  DatumReader<Object> reader)
     throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);
-    writer.write(datum, new BinaryEncoder(out));
+    Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+    writer.write(datum, encoder);
+    encoder.flush();
     byte[] data = out.toByteArray();
 
     reader.setSchema(schema);
@@ -598,12 +605,48 @@ public class TestSchema {
     assertEquals("Decoded data does not match.", datum, decoded);
   }
 
+  public static void checkDirectBinary(Schema schema, Object datum,
+      DatumWriter<Object> writer, DatumReader<Object> reader)
+      throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    writer.setSchema(schema);
+    Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
+    writer.write(datum, encoder);
+    // no flush for direct
+    byte[] data = out.toByteArray();
+
+    reader.setSchema(schema);
+
+    Object decoded = reader.read(null, DecoderFactory.defaultFactory()
+        .createBinaryDecoder(data, null));
+
+    assertEquals("Decoded data does not match.", datum, decoded);
+  }
+
+  public static void checkBlockingBinary(Schema schema, Object datum,
+      DatumWriter<Object> writer, DatumReader<Object> reader)
+      throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    writer.setSchema(schema);
+    Encoder encoder = EncoderFactory.get().blockingBinaryEncoder(out, null);
+    writer.write(datum, encoder);
+    encoder.flush();
+    byte[] data = out.toByteArray();
+
+    reader.setSchema(schema);
+
+    Object decoded = reader.read(null, DecoderFactory.defaultFactory()
+        .createBinaryDecoder(data, null));
+
+    assertEquals("Decoded data does not match.", datum, decoded);
+  }
+
   private static void checkJson(Schema schema, Object datum,
                                 DatumWriter<Object> writer,
                                 DatumReader<Object> reader)
     throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    Encoder encoder = new JsonEncoder(schema, out);
+    Encoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
     writer.setSchema(schema);
     writer.write(datum, encoder);
     writer.write(datum, encoder);
@@ -622,7 +665,7 @@ public class TestSchema {
   private static void checkJson(Schema schema, Object datum,
                                 String json) throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    Encoder encoder = new JsonEncoder(schema, out);
+    Encoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
     DatumWriter<Object> writer = new GenericDatumWriter<Object>();
     writer.setSchema(schema);
     writer.write(datum, encoder);
@@ -643,7 +686,6 @@ public class TestSchema {
   private static final Schema ACTUAL =            // an empty record schema
     Schema.parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[]}");
 
-  @SuppressWarnings(value="unchecked")
   private static void checkDefault(String schemaJson, String defaultJson,
                                    Object defaultValue) throws Exception {
     String recordJson =
@@ -651,7 +693,7 @@ public class TestSchema {
     +"\"type\":"+schemaJson+", "
     +"\"default\":"+defaultJson+"}]}";
     Schema expected = Schema.parse(recordJson);
-    DatumReader in = new GenericDatumReader(ACTUAL, expected);
+    DatumReader<Object> in = new GenericDatumReader<Object>(ACTUAL, expected);
     GenericData.Record record = (GenericData.Record)
       in.read(null, DecoderFactory.defaultFactory().createBinaryDecoder(
           new byte[0], null));
@@ -677,9 +719,10 @@ public class TestSchema {
       ("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"Y\",\"Z\"]}");
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     DatumWriter<Object> writer = new GenericDatumWriter<Object>(actual);
-    Encoder encoder = new BinaryEncoder(out);
+    Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
     writer.write(new GenericData.EnumSymbol(actual, "Y"), encoder);
     writer.write(new GenericData.EnumSymbol(actual, "X"), encoder);
+    encoder.flush();
     byte[] data = out.toByteArray();
     Decoder decoder = DecoderFactory.defaultFactory().createBinaryDecoder(
         data, null);

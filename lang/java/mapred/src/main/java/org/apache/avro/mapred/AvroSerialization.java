@@ -33,6 +33,7 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
@@ -123,11 +124,16 @@ public class AvroSerialization<T> extends Configured
 
     public void open(OutputStream out) {
       this.out = out;
-      this.encoder = new BinaryEncoder(out);
+      this.encoder = new EncoderFactory().configureBlockSize(512)
+          .binaryEncoder(out, null);
     }
 
     public void serialize(AvroWrapper<T> wrapper) throws IOException {
       writer.write(wrapper.datum(), encoder);
+      // would be a lot faster if the Serializer interface had a flush()
+      // method and the Hadoop framework called it when needed rather
+      // than for every record.
+      encoder.flush();
     }
 
     public void close() throws IOException {

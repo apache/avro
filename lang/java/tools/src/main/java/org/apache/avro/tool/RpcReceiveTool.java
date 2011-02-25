@@ -33,6 +33,7 @@ import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.ipc.Ipc;
 import org.apache.avro.ipc.Server;
@@ -83,7 +84,7 @@ public class RpcReceiveTool implements Tool {
       try {
         JsonGenerator jsonGenerator = new JsonFactory().createJsonGenerator(
             out, JsonEncoding.UTF8);
-        JsonEncoder jsonEncoder = new JsonEncoder(message.getRequest(), jsonGenerator);
+        JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(message.getRequest(), jsonGenerator);
 
         GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>(
             message.getRequest());

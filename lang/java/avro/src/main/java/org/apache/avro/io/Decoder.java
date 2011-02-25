@@ -190,7 +190,7 @@ public abstract class Decoder {
   public abstract long readArrayStart() throws IOException;
 
   /**
-   * Processes the next block of an array andreturns the number of items in
+   * Processes the next block of an array and returns the number of items in
    * the block and let's the caller
    * read those items.
    * @throws AvroTypeException When called outside of an

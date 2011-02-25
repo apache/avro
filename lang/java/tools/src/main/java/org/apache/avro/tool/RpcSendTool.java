@@ -33,7 +33,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.ipc.Ipc;
 import org.apache.avro.ipc.generic.GenericRequestor;
 
@@ -109,7 +109,7 @@ public class RpcSendTool implements Tool {
     JsonGenerator g =
       new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
     g.useDefaultPrettyPrinter();
-    writer.write(datum, new JsonEncoder(schema, g));
+    writer.write(datum, EncoderFactory.get().jsonEncoder(schema, g));
     g.flush();
     out.println();
     out.flush();

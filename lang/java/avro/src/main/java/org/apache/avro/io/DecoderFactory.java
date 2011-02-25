@@ -56,7 +56,7 @@ public class DecoderFactory {
    * 32000 bytes.
    * 
    * @param size The preferred buffer size. Valid values are in the range [32,
-   *          16*1024*1024]. Values outide this range are rounded to the nearest
+   *          16*1024*1024]. Values outside this range are rounded to the nearest
    *          value in the range. Values less than 512 or greater than 1024*1024
    *          are not recommended.
    * @return This factory, to enable method chaining:

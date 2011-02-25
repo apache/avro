@@ -53,6 +53,16 @@ Avro 1.5.0 (unreleased)
       org.apache.avro.ipc.specific
     (scottcarey)
 
+    AVRO-753. Java: Improve BinaryEncoder Performance.
+    The Encoder API has several resulting changes:
+    * Construction and configuration is handled by EncoderFactory.  All 
+      Constructors are hidden, and Encoder.init(OutputStream) is removed.
+    * Some Encoders previously did not buffer output.  Users must call
+      Encoder.flush() to ensure output is written unless the EncoderFactory
+      method used to construct an instance explicitly states that the Encoder
+      does not buffer output. 
+    (scottcarey)
+
     AVRO-670. Allow DataFileWriteTool to accept schema files as input with new
     --schema-file and --schema command-line flags. (Ron Bodkin via philz)
 

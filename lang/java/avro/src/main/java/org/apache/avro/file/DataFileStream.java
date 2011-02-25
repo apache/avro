@@ -178,10 +178,12 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Returns an iterator over entries in this file.  Note that this iterator
    * is shared with other users of the file: it does not contain a separate
    * pointer into the file. */
+  @Override
   public Iterator<D> iterator() { return this; }
 
   private DataBlock block = null;
   /** True if more entries remain in this file. */
+  @Override
   public boolean hasNext() {
     try {
       if (blockRemaining == 0) {
@@ -212,6 +214,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Read the next datum in the file.
    * @throws NoSuchElementException if no more remain in the file.
    */
+  @Override
   public D next() {
     try {
       return next(null);
@@ -293,9 +296,11 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   }
 
   /** Not supported. */
+  @Override
   public void remove() { throw new UnsupportedOperationException(); }
 
   /** Close this reader. */
+  @Override
   public void close() throws IOException {
     vin.inputStream().close();
   }
@@ -351,6 +356,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       e.writeLong(this.blockSize);
       e.writeFixed(this.data, offset, this.blockSize);
       e.writeFixed(sync);
+      e.flush();
     }   
     
   }

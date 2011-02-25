@@ -32,7 +32,15 @@ import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 
-/** An {@link Encoder} for Avro's JSON data encoding. */
+/** An {@link Encoder} for Avro's JSON data encoding. 
+ * </p>
+ * Construct using {@link EncoderFactory}.
+ * </p>
+ * JsonEncoder buffers output, and data may not appear on the output
+ * until {@link Encoder#flush()} is called.
+ * </p>
+ * JsonEncoder is not thread-safe.
+ * */
 public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler {
   final Parser parser;
   private JsonGenerator out;
@@ -41,12 +49,12 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    */
   protected BitSet isEmpty = new BitSet();
 
-  public JsonEncoder(Schema sc, OutputStream out) throws IOException {
+  JsonEncoder(Schema sc, OutputStream out) throws IOException {
     this(sc, getJsonGenerator(out));
   }
 
-  public JsonEncoder(Schema sc, JsonGenerator out) throws IOException {
-    this.out = out;
+  JsonEncoder(Schema sc, JsonGenerator out) throws IOException {
+    configure(out);
     this.parser =
       new Parser(new JsonGrammarGenerator().generate(sc), this);
   }
@@ -59,16 +67,51 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     }
   }
 
-  @Override
-  public void init(OutputStream out) throws IOException {
-    flush();
-    this.out = getJsonGenerator(out);
-  }
-
   private static JsonGenerator getJsonGenerator(OutputStream out)
-    throws IOException {
-    return out == null ? null :
-      new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
+      throws IOException {
+    if (null == out)
+      throw new NullPointerException("OutputStream cannot be null"); 
+    return new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
+  }
+  
+  /**
+   * Reconfigures this JsonEncoder to use the output stream provided.
+   * <p/>
+   * If the OutputStream provided is null, a NullPointerException is thrown.
+   * <p/>
+   * Otherwise, this JsonEncoder will flush its current output and then
+   * reconfigure its output to use a default UTF8 JsonGenerator that writes
+   * to the provided OutputStream.
+   * 
+   * @param out
+   *          The OutputStream to direct output to. Cannot be null.
+   * @throws IOException
+   * @return
+   */
+  public JsonEncoder configure(OutputStream out) throws IOException {
+    this.configure(getJsonGenerator(out));
+    return this;
+  }
+  
+  /**
+   * Reconfigures this JsonEncoder to output to the JsonGenerator provided.
+   * <p/>
+   * If the JsonGenerator provided is null, a NullPointerException is thrown.
+   * <p/>
+   * Otherwise, this JsonEncoder will flush its current output and then
+   * reconfigure its output to use the provided JsonGenerator.
+   * 
+   * @param generator
+   *          The JsonGenerator to direct output to. Cannot be null.
+   * @throws IOException
+   */
+  public void configure(JsonGenerator generator) throws IOException {
+    if (null == generator)
+      throw new NullPointerException("JsonGenerator cannot be null");
+    if (null != parser) {
+      flush();
+    }
+    this.out = generator;
   }
 
   @Override

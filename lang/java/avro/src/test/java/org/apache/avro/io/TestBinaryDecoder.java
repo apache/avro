@@ -46,6 +46,7 @@ public class TestBinaryDecoder {
   // prime number buffer size so that looping tests hit the buffer edge
   // at different points in the loop.
   DecoderFactory factory;
+  static EncoderFactory e_factory = EncoderFactory.get();
   public TestBinaryDecoder(boolean useDirect) {
     factory = new DecoderFactory().configureDecoderBufferSize(521);
     factory.configureDirectDecoder(useDirect);
@@ -130,11 +131,11 @@ public class TestBinaryDecoder {
     ByteBufferOutputStream bbo2 = new ByteBufferOutputStream();
     byte[] b1 = new byte[] { 1, 2 };
     
-    BinaryEncoder e1 = new BinaryEncoder(bbo1);
+    BinaryEncoder e1 = e_factory.binaryEncoder(bbo1, null);
     e1.writeBytes(b1);
     e1.flush();
     
-    BinaryEncoder e2 = new BinaryEncoder(bbo2);
+    BinaryEncoder e2 = e_factory.binaryEncoder(bbo2, null);
     e2.writeBytes(b1);
     e2.flush();
     
@@ -173,12 +174,13 @@ public class TestBinaryDecoder {
     GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>();
     writer.setSchema(schema);
     ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
-    BinaryEncoder encoder = new BinaryEncoder(baos);
+    BinaryEncoder encoder = e_factory.binaryEncoder(baos, null);
     
     for (Object datum : new RandomData(schema, count, seed)) {
       writer.write(datum, encoder);
       records.add(datum);
     }
+    encoder.flush();
     data = baos.toByteArray();
   }
 

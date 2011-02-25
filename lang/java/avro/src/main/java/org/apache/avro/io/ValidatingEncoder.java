@@ -19,9 +19,7 @@
 package org.apache.avro.io;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.BitSet;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -31,24 +29,27 @@ import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
 
 /**
- * An implementation of {@link Encoder} that ensures that the sequence
- * of operations conforms to a schema.
+ * An implementation of {@link Encoder} that wraps another Encoder and
+ * ensures that the sequence of operations conforms to the provided schema.
+ * <p/>
+ * Use {@link EncoderFactory#validatingEncoder(Schema, Encoder)} to construct
+ * and configure.
+ * <p/>
+ * ValidatingEncoder is not thread-safe.
+ * @see Encoder
+ * @see EncoderFactory
  */
 public class ValidatingEncoder extends ParsingEncoder 
   implements Parser.ActionHandler {
-  protected final Encoder out;
+  protected Encoder out;
   protected final Parser parser;
-  /**
-   * Has anything been written into the collections?
-   */
-  protected BitSet isEmpty = new BitSet();
 
   ValidatingEncoder(Symbol root, Encoder out) throws IOException {
     this.out = out;
     this.parser = new Parser(root, this);
   }
 
-  public ValidatingEncoder(Schema schema, Encoder in) throws IOException {
+  ValidatingEncoder(Schema schema, Encoder in) throws IOException {
     this(new ValidatingGrammarGenerator().generate(schema), in);
   }
 
@@ -57,13 +58,16 @@ public class ValidatingEncoder extends ParsingEncoder
     out.flush();
   }
 
-  @Override
-  public void init(OutputStream out) throws IOException {
-    flush();
-    parser.reset();
-    this.out.init(out);
+  /**
+   * Reconfigures this ValidatingEncoder to wrap the encoder provided.
+   * @param in
+   *   The Encoder to wrap for validation.
+   */
+  public void configure(Encoder encoder) {
+    this.parser.reset();
+    this.out = encoder;
   }
-
+  
   @Override
   public void writeNull() throws IOException {
     parser.advance(Symbol.NULL);
@@ -207,9 +211,5 @@ public class ValidatingEncoder extends ParsingEncoder
     return null;
   }
 
-  /** Have we written at least one item into the current collection? */
-  protected final boolean isTopEmpty() {
-    return isEmpty.get(pos);
-  }
 }
 

@@ -17,24 +17,32 @@
  */
 package org.apache.avro.io;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
-import org.apache.avro.util.Utf8;
 
-/** A {@link Encoder} that writes large arrays and maps as a sequence of
- * blocks.  So long as individual primitive values fit in memory, arbitrarily
- * long arrays and maps may be written and subsequently read without exhausting
- * memory.  Values are buffered until the specified block size would be
- * exceeded, minimizing block overhead.
+/** A {@link BinaryEncoder} implementation that writes large arrays and maps as a
+ * sequence of blocks. So long as individual primitive values fit in memory,
+ * arbitrarily long arrays and maps may be written and subsequently read without
+ * exhausting memory. Values are buffered until the specified block size would
+ * be exceeded, minimizing block overhead.
+ * <p/>
+ * Use {@link EncoderFactory#blockingBinaryEncoder(OutputStream, BinaryEncoder)
+ * to construct and configure.
+ * <p/>
+ * BlockingBinaryEncoder buffers writes, data may not appear on the output until
+ * {@link #flush()} is called.
+ * <p/>
+ * BlockingBinaryEncoder is not thread-safe
+ * 
+ * @see BinaryEncoder
+ * @see EncoderFactory
  * @see Encoder
  */
-public class BlockingBinaryEncoder extends BinaryEncoder {
+public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
 
  /* Implementation note:
   *
@@ -172,22 +180,12 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
   private int stackTop = -1;
   private static final int STACK_STEP = 10;
 
-  private static final class EncoderBuffer extends ByteArrayOutputStream {
-    public byte[] buffer() {
-      return buf;
-    }
-    
-    public int length() {
-      return count;
-    }
-  }
-  
-  private EncoderBuffer encoderBuffer = new EncoderBuffer();
+  //buffer large enough for up to two ints for a block header
+  //rounded up to a multiple of 4 bytes.
+  private byte[] headerBuffer = new byte[12];
 
   private boolean check() {
-    assert out != null;
     assert buf != null;
-    assert MIN_BUFFER_SIZE <= buf.length;
     assert 0 <= pos;
     assert pos <= buf.length : pos + " " + buf.length;
 
@@ -201,19 +199,10 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
     return true;
   }
 
-  private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
-  private static final int MIN_BUFFER_SIZE = 64;
-
-  public BlockingBinaryEncoder(OutputStream out) {
-    this(out, DEFAULT_BUFFER_SIZE);
-  }
-
-  public BlockingBinaryEncoder(OutputStream out, int bufferSize) {
-    super(out);
-    if (bufferSize < MIN_BUFFER_SIZE) {
-      throw new IllegalArgumentException("Buffer size too smll.");
-    }
-    this.buf = new byte[bufferSize];
+  BlockingBinaryEncoder(OutputStream out,
+      int blockBufferSize, int binaryEncoderBufferSize) {
+    super(out, binaryEncoderBufferSize);
+    this.buf = new byte[blockBufferSize];
     this.pos = 0;
     blockStack = new BlockedValue[0];
     expandStack();
@@ -235,123 +224,74 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
     }
   }
 
-  /** Redirect output (and reset the parser state if we're checking). */
-  @Override
-  public void init(OutputStream out) throws IOException {
-    super.init(out);
-    this.pos = 0;
-    this.stackTop = 0;
-
+  BlockingBinaryEncoder configure(OutputStream out, int blockBufferSize,
+      int binaryEncoderBufferSize) {
+    super.configure(out, binaryEncoderBufferSize);
+    pos = 0;
+    stackTop = 0;
+    if (null == buf || buf.length != blockBufferSize) {
+      buf = new byte[blockBufferSize];
+    }
+    
     assert check();
+    return this;
   }
-
+  
   @Override
   public void flush() throws IOException {
-    if (out != null) {
       BlockedValue bv = blockStack[stackTop];
       if (bv.state == BlockedValue.State.ROOT) {
-        out.write(buf, 0, pos);
+        super.writeFixed(buf, 0, pos);
         pos = 0;
       } else {
         while (bv.state != BlockedValue.State.OVERFLOW) {
           compact();
         }
       }
-      out.flush();
-    }
+      super.flush();
 
     assert check();
   }
 
   @Override
   public void writeBoolean(boolean b) throws IOException {
-    if (buf.length < (pos + 1)) ensure(1);
-    buf[pos++] = (byte)(b ? 1 : 0);
-
-    assert check();
+    ensureBounds(1);
+    pos += BinaryData.encodeBoolean(b, buf, pos);
   }
 
   @Override
   public void writeInt(int n) throws IOException {
-    if (pos + 5 > buf.length) {
-      ensure(5);
-    }
-    pos = encodeLong(n, buf, pos);
-
-    assert check();
+    ensureBounds(5);
+    pos += BinaryData.encodeInt(n, buf, pos);
   }
 
   @Override
   public void writeLong(long n) throws IOException {
-    if (pos + 10 > buf.length) {
-      ensure(10);
-    }
-    pos = encodeLong(n, buf, pos);
-
-    assert check();
+    ensureBounds(10);
+    pos += BinaryData.encodeLong(n, buf, pos);
   }
     
   @Override
   public void writeFloat(float f) throws IOException {
-    if (pos + 4 > buf.length) {
-      ensure(4);
-    }
-    pos = encodeFloat(f, buf, pos);
-
-    assert check();
+    ensureBounds(4);
+    pos += BinaryData.encodeFloat(f, buf, pos);
   }
 
   @Override
   public void writeDouble(double d) throws IOException {
-    if (pos + 8 > buf.length) {
-      ensure(8);
-    }
-    pos = encodeDouble(d, buf, pos);
-
-    assert check();
+    ensureBounds(8);
+    pos += BinaryData.encodeDouble(d, buf, pos);
   }
 
-  @Override
-  public void writeString(Utf8 utf8) throws IOException {
-    writeBytes(utf8.getBytes(), 0, utf8.getByteLength());
-    // assert called in writeBytes
-  }
-  
-  @Override
-  public void writeString(String str) throws IOException {
-    byte[] utf8bytes = Utf8.getBytesFor(str);
-    writeBytes(utf8bytes, 0, utf8bytes.length);
-    // assert called in writeBytes
-  }
-
-  @Override
-  public void writeBytes(ByteBuffer bytes) throws IOException {
-    writeBytes(bytes.array(), bytes.position(), bytes.remaining());
-
-    assert check();
-  }
-  
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
     doWriteBytes(bytes, start, len);
-
-    assert check();
   }
   
   @Override
-  public void writeEnum(int e) throws IOException {
-    writeInt(e);
-  }
-
-  @Override
-  public void writeBytes(byte[] bytes, int start, int len) throws IOException {
-    if (pos + 5 > buf.length) {
-      ensure(5);
-    }
-    pos = encodeLong(len, buf, pos);
-    doWriteBytes(bytes, start, len);
-
-    assert check();
+  protected void writeZero() throws IOException {
+    ensureBounds(1);
+    buf[pos++] = (byte) 0;
   }
 
   @Override
@@ -437,14 +377,15 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
 
   @Override
   public void writeIndex(int unionIndex) throws IOException {
-    if (pos + 5 > buf.length) {
-      ensure(5);
-    }
-    pos = encodeLong(unionIndex, buf, pos);
-
-    assert check();
+    ensureBounds(5);
+    pos += BinaryData.encodeInt(unionIndex, buf, pos);
   }
 
+  @Override
+  public int bytesBuffered() {
+    return pos + super.bytesBuffered();
+  }
+  
   private void endBlockedValue() throws IOException {
     for (; ;) {
       assert check();
@@ -459,27 +400,25 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
         if (t.start == 0 &&
           blockStack[stackTop - 1].state
             != BlockedValue.State.REGULAR) { // Lucky us -- don't have to move
-          encodeLong(-t.items, out);
-          encodeLong(byteCount, out);
+          super.writeInt(-t.items);
+          super.writeInt(byteCount);
         } else {
-          encodeLong(-t.items, encoderBuffer);
-          encodeLong(byteCount, encoderBuffer);
-          final int headerSize = encoderBuffer.length();
+          int headerSize = 0;
+          headerSize += BinaryData.encodeInt(-t.items, headerBuffer, headerSize);
+          headerSize += BinaryData.encodeInt(byteCount, headerBuffer, headerSize);
           if (buf.length >= pos + headerSize) {
             pos += headerSize;
             final int m = t.start;
             System.arraycopy(buf, m, buf, m + headerSize, byteCount);
-            System.arraycopy(encoderBuffer.buffer(), 0, buf, m, headerSize);
-            encoderBuffer.reset();
+            System.arraycopy(headerBuffer, 0, buf, m, headerSize);
           } else {
-            encoderBuffer.reset();
             compact();
             continue;
           }
         }
       }
       stackTop--;
-      if (buf.length < (pos + 1)) ensure(1);
+      ensureBounds(1);
       buf[pos++] = 0;   // Sentinel for last block in a blocked value
       assert check();
       if (blockStack[stackTop].state == BlockedValue.State.ROOT) {
@@ -503,7 +442,7 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
     assert check();
 
     // Flush any remaining data for this block
-    out.write(buf, 0, pos);
+    super.writeFixed(buf, 0, pos);
     pos = 0;
 
     // Reset top of stack to be in REGULAR mode
@@ -513,15 +452,12 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
     assert check();
   }
 
-  private void ensure(int l) throws IOException {
-    if (buf.length < l) {
-      throw new IllegalArgumentException("Too big: " + l);
-    }
+  private void ensureBounds(int l) throws IOException {
     while (buf.length < (pos + l)) {
       if (blockStack[stackTop].state == BlockedValue.State.REGULAR) {
         compact();
       } else {
-        out.write(buf, 0, pos);
+        super.writeFixed(buf, 0, pos);
         pos = 0;
       }
     }
@@ -530,39 +466,38 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
   private void doWriteBytes(byte[] bytes, int start, int len)
     throws IOException {
     if (len < buf.length) {
-      ensure(len);
+      ensureBounds(len);
       System.arraycopy(bytes, start, buf, pos, len);
       pos += len;
     } else {
-      ensure(buf.length);
+      ensureBounds(buf.length);
       assert blockStack[stackTop].state == BlockedValue.State.ROOT ||
         blockStack[stackTop].state == BlockedValue.State.OVERFLOW;
       write(bytes, start, len);
     }
-    assert check();
   }
 
   private void write(byte[] b, int off, int len) throws IOException {
     if (blockStack[stackTop].state == BlockedValue.State.ROOT) {
-      out.write(b, off, len);
+      super.writeFixed(b, off, len);
     } else {
       assert check();
       while (buf.length < (pos + len)) {
         if (blockStack[stackTop].state == BlockedValue.State.REGULAR) {
           compact();
         } else {
-          out.write(buf, 0, pos);
+          super.writeFixed(buf, 0, pos);
           pos = 0;
           if (buf.length <= len) {
-            out.write(b, off, len);
+            super.writeFixed(b, off, len);
             len = 0;
           }
         }
       }
       System.arraycopy(b, off, buf, pos, len);
       pos += len;
-      assert check();
     }
+    assert check();
   }
 
   /** Only call if you're there are REGULAR-state values on the stack. */
@@ -587,26 +522,26 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
     // blocked values).
 
     // Flush any bytes prios to "s"
-    out.write(buf, 0, s.start);
+    super.writeFixed(buf, 0, s.start);
 
     // Write any full items of "s"
     if (1 < s.items) {
-      encodeLong(-(s.items - 1), out);
-      encodeLong(s.lastFullItem - s.start, out);
-      out.write(buf, s.start, s.lastFullItem - s.start);
+      super.writeInt(-(s.items - 1));
+      super.writeInt(s.lastFullItem - s.start);
+      super.writeFixed(buf, s.start, s.lastFullItem - s.start);
       s.start = s.lastFullItem;
       s.items = 1;
     }
 
     // Start an overflow block for s
-    encodeLong(1, out);
+    super.writeInt(1);
 
     // Write any remaining bytes for "s", up to the next-most
     // deeply-nested value
     BlockedValue n = ((i + 1) <= stackTop ?
         blockStack[i + 1] : null);
     int end = (n == null ? pos : n.start);
-    out.write(buf, s.lastFullItem, end - s.lastFullItem);
+    super.writeFixed(buf, s.lastFullItem, end - s.lastFullItem);
 
     // Move over any bytes that remain (and adjust indices)
     System.arraycopy(buf, end, buf, 0, pos - end);
@@ -623,5 +558,5 @@ public class BlockingBinaryEncoder extends BinaryEncoder {
 
     assert check();
   }
-}
 
+}

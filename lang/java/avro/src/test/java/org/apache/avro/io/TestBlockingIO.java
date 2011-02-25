@@ -62,7 +62,9 @@ public class TestBlockingIO {
           new ByteArrayInputStream(input.getBytes("UTF-8")));
       
       ByteArrayOutputStream os = new ByteArrayOutputStream();
-      Encoder cos = new BlockingBinaryEncoder(os, bufferSize);
+      EncoderFactory factory = new EncoderFactory()
+          .configureBlockSize(bufferSize);
+      Encoder cos = factory.blockingBinaryEncoder(os, null);
       serialize(cos, p, os);
       cos.flush();
       

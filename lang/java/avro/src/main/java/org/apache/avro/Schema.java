@@ -419,6 +419,11 @@ public abstract class Schema {
         props.equals(that.props);
     }
     public int hashCode() { return name.hashCode() + schema.hashCode(); }
+    
+    @Override
+    public String toString() {
+      return name + " type:" + schema.type + " pos:" + position;
+    }
   }
 
   private static class Name {

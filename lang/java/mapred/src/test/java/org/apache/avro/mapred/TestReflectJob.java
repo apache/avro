@@ -99,7 +99,7 @@ public class TestReflectJob {
   @SuppressWarnings("deprecation")
   public void testJob() throws Exception {
     JobConf job = new JobConf();
-    String dir = System.getProperty("test.dir", ".") + "/mapred-reflect";
+    String dir = System.getProperty("test.dir", ".") + "target/testReflectJob";
     Path inputPath = new Path(dir + "/in");
     Path outputPath = new Path(dir + "/out");
 

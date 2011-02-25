@@ -37,6 +37,7 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.ByteBufferInputStream;
@@ -83,6 +84,10 @@ public abstract class Requestor {
     rpcMetaPlugins.add(plugin);
   }
 
+  private static final EncoderFactory ENCODER_FACTORY = new EncoderFactory();
+  private BinaryEncoder encoder = 
+    ENCODER_FACTORY.binaryEncoder(new ByteBufferOutputStream(), null);
+  
   /** Writes a request message and reads a response or error message. */
   public synchronized Object request(String messageName, Object request)
     throws Exception {
@@ -92,7 +97,8 @@ public abstract class Requestor {
     RPCContext context = new RPCContext();
     do {
       ByteBufferOutputStream bbo = new ByteBufferOutputStream();
-      Encoder out = new BinaryEncoder(bbo);
+      //safe to use encoder because this is synchronized
+      BinaryEncoder out = ENCODER_FACTORY.binaryEncoder(bbo, encoder);
       
       // use local protocol to write request
       m = getLocal().getMessages().get(messageName);
@@ -101,6 +107,8 @@ public abstract class Requestor {
       context.setMessage(m);
     
       writeRequest(m.getRequest(), request, out); // write request payload
+      
+      out.flush();
       List<ByteBuffer> payload = bbo.getBufferList();
       
       writeHandshake(out);                       // prepend handshake if needed
@@ -113,6 +121,7 @@ public abstract class Requestor {
 
       out.writeString(m.getName());               // write message name
 
+      out.flush();
       bbo.append(payload);
       
       List<ByteBuffer> requestBytes = bbo.getBufferList();
@@ -247,9 +256,10 @@ public abstract class Requestor {
     if (remote != null) return remote;            // already cached
     // force handshake
     ByteBufferOutputStream bbo = new ByteBufferOutputStream();
-    Encoder out = new BinaryEncoder(bbo);
+    // direct because the payload is tiny.
+    Encoder out = ENCODER_FACTORY.directBinaryEncoder(bbo, null);
     writeHandshake(out);
-    out.writeLong(0);                             // empty metadata
+    out.writeInt(0);                              // empty metadata
     out.writeString("");                          // bogus message name
     List<ByteBuffer> response =
       getTransceiver().transceive(bbo.getBufferList());

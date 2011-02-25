@@ -31,7 +31,8 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
 
 import org.apache.avro.test.TestRecord;
@@ -244,7 +245,7 @@ public class TestCompare {
   private static int compare(Object o1, Object o2, Schema schema,
                              boolean comparable, GenericData comparator) {
     return comparable
-      ? ((Comparable)o1).compareTo(o2)
+      ? ((Comparable<Object>)o1).compareTo(o2)
       : comparator.compare(o1, o2, schema);
   }
 
@@ -253,7 +254,9 @@ public class TestCompare {
     throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);
-    writer.write(datum, new BinaryEncoder(out));
+    Encoder enc = new EncoderFactory().directBinaryEncoder(out, null);
+    writer.write(datum, enc);
+    enc.flush();
     return out.toByteArray();
   }
 }
