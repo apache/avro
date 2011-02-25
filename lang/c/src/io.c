@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_errors.h"
 #include "avro_private.h"
 #include "allocation.h"
 #include <stdio.h>
@@ -92,6 +93,7 @@ avro_reader_t avro_reader_file(FILE * fp)
 	struct _avro_reader_file_t *file_reader =
 	    avro_new(struct _avro_reader_file_t);
 	if (!file_reader) {
+		avro_set_error("Cannot allocate new file reader");
 		return NULL;
 	}
 	memset(file_reader, 0, sizeof(struct _avro_reader_file_t));
@@ -105,6 +107,7 @@ avro_writer_t avro_writer_file(FILE * fp)
 	struct _avro_writer_file_t *file_writer =
 	    avro_new(struct _avro_writer_file_t);
 	if (!file_writer) {
+		avro_set_error("Cannot allocate new file writer");
 		return NULL;
 	}
 	file_writer->fp = fp;
@@ -117,6 +120,7 @@ avro_reader_t avro_reader_memory(const char *buf, int64_t len)
 	struct _avro_reader_memory_t *mem_reader =
 	    avro_new(struct _avro_reader_memory_t);
 	if (!mem_reader) {
+		avro_set_error("Cannot allocate new memory reader");
 		return NULL;
 	}
 	mem_reader->buf = buf;
@@ -131,6 +135,7 @@ avro_writer_t avro_writer_memory(const char *buf, int64_t len)
 	struct _avro_writer_memory_t *mem_writer =
 	    avro_new(struct _avro_writer_memory_t);
 	if (!mem_writer) {
+		avro_set_error("Cannot allocate new memory writer");
 		return NULL;
 	}
 	mem_writer->buf = buf;
@@ -145,6 +150,8 @@ avro_read_memory(struct _avro_reader_memory_t *reader, void *buf, int64_t len)
 {
 	if (len > 0) {
 		if ((reader->len - reader->read) < len) {
+			avro_prefix_error("Cannot read %zu bytes from memory buffer",
+					  (size_t) len);
 			return ENOSPC;
 		}
 		memcpy(buf, reader->buf + reader->read, len);
@@ -176,6 +183,8 @@ avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 		}
 		rval = fread(p, 1, needed, reader->fp);
 		if (rval != needed) {
+			avro_set_error("Cannot read %zu bytes from file",
+				       (size_t) needed);
 			return -1;
 		}
 		return 0;
@@ -192,18 +201,24 @@ avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 		    fread(reader->buffer, 1, sizeof(reader->buffer),
 			  reader->fp);
 		if (rval == 0) {
+			avro_set_error("Cannot read %zu bytes from file",
+				       (size_t) needed);
 			return -1;
 		}
 		reader->cur = reader->buffer;
 		reader->end = reader->cur + rval;
 
 		if (bytes_available(reader) < needed) {
+			avro_set_error("Cannot read %zu bytes from file",
+				       (size_t) needed);
 			return -1;
 		}
 		memcpy(p, reader->cur, needed);
 		reader->cur += needed;
 		return 0;
 	}
+	avro_set_error("Cannot read %zu bytes from file",
+		       (size_t) needed);
 	return -1;
 }
 
@@ -225,6 +240,8 @@ static int avro_skip_memory(struct _avro_reader_memory_t *reader, int64_t len)
 {
 	if (len > 0) {
 		if ((reader->len - reader->read) < len) {
+			avro_set_error("Cannot skip %zu bytes in memory buffer",
+				       (size_t) len);
 			return ENOSPC;
 		}
 		reader->read += len;
@@ -247,6 +264,8 @@ static int avro_skip_file(struct _avro_reader_file_t *reader, int64_t len)
 		buffer_reset(reader);
 		rval = fseek(reader->fp, needed, SEEK_CUR);
 		if (rval < 0) {
+			avro_set_error("Cannot skip %zu bytes in file",
+				       (size_t) len);
 			return rval;
 		}
 	}
@@ -271,6 +290,8 @@ avro_write_memory(struct _avro_writer_memory_t *writer, void *buf, int64_t len)
 {
 	if (len) {
 		if ((writer->len - writer->written) < len) {
+			avro_set_error("Cannot write %zu bytes in memory buffer",
+				       (size_t) len);
 			return ENOSPC;
 		}
 		memcpy((void *)(writer->buf + writer->written), buf, len);

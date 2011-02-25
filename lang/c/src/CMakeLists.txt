@@ -21,6 +21,7 @@ set(AVRO_SRC
     allocation.h
     allocation.c
     avro.h
+    avro_errors.h
     avro_private.h
     datafile.c
     datum.c
@@ -36,6 +37,7 @@ set(AVRO_SRC
     dump.h
     encoding.h
     encoding_binary.c
+    errors.c
     io.c
     schema.c
     schema.h

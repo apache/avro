@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_errors.h"
 #include "avro_private.h"
 #include <errno.h>
 #include <assert.h>
@@ -174,15 +175,11 @@ size_union(avro_writer_t writer, const avro_encoding_t * enc,
 	size = 0;
 	size_accum(rval, size, enc->size_long(writer, unionp->discriminant));
 	if (schema) {
-		union {
-			st_data_t data;
-			avro_schema_t schema;
-		} val;
-		if (!st_lookup
-		    (schema->branches, unionp->discriminant, &val.data)) {
+		write_schema =
+		    avro_schema_union_branch(&schema->obj, unionp->discriminant);
+		if (!write_schema) {
 			return -EINVAL;
 		}
-		write_schema = val.schema;
 	}
 	size_accum(rval, size,
 		   size_datum(writer, enc, write_schema, unionp->value));
@@ -283,12 +280,12 @@ static int64_t size_datum(avro_writer_t writer, const avro_encoding_t * enc,
 int64_t avro_size_data(avro_writer_t writer, avro_schema_t writers_schema,
 		       avro_datum_t datum)
 {
-	if (!writer || !is_avro_datum(datum)) {
-		return -EINVAL;
-	}
+	check_param(-EINVAL, writer, "writer");
+	check_param(-EINVAL, is_avro_datum(datum), "datum");
 	/* Only validate datum if a writer's schema is provided */
 	if (is_avro_schema(writers_schema)
 	    && !avro_schema_datum_validate(writers_schema, datum)) {
+		avro_set_error("Datum doesn't validate against schema");
 		return -EINVAL;
 	}
 	return size_datum(writer, &avro_binary_encoding, writers_schema, datum);

@@ -519,7 +519,7 @@ static int test_fixed(void)
 	test_json(datum, "\"\\r\\n\\r\\n\\u000b\\n\\u000b\\n\"");
 	avro_datum_decref(datum);
 
-	datum = avro_givefixed(schema, NULL, 0, NULL);
+	datum = avro_givefixed(schema, NULL, sizeof(bytes), NULL);
 	avro_givefixed_set(datum, bytes, sizeof(bytes), NULL);
 	expected_datum = avro_givefixed(schema, bytes, sizeof(bytes), NULL);
 	if (!avro_datum_equal(datum, expected_datum)) {

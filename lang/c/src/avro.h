@@ -48,6 +48,14 @@ typedef void *
 
 void avro_set_allocator(avro_allocator_t alloc, void *user_data);
 
+/*
+ * Returns a textual description of the last error condition returned by
+ * an Avro function.
+ */
+
+const char *avro_strerror(void);
+
+
 enum avro_type_t {
 	AVRO_STRING,
 	AVRO_BYTES,

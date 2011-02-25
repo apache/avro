@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_errors.h"
 #include "avro_private.h"
 #include <errno.h>
 #include <assert.h>
@@ -109,20 +110,17 @@ write_map(avro_writer_t writer, const avro_encoding_t * enc,
 	    { 0, writer, enc, writers_schema ? writers_schema->values : NULL };
 
 	if (datum->map->num_entries) {
-		rval = enc->write_long(writer, datum->map->num_entries);
-		if (rval) {
-			return rval;
-		}
+		check_prefix(rval, enc->write_long(writer, datum->map->num_entries),
+			     "Cannot write map block count: ");
 		st_foreach(datum->map, write_map_foreach, (st_data_t) & args);
 	}
-	if (!args.rval) {
-		rval = enc->write_long(writer, 0);
-		if (rval) {
-			return rval;
-		}
-		return 0;
+	if (args.rval) {
+		return args.rval;
 	}
-	return args.rval;
+
+	check_prefix(rval, enc->write_long(writer, 0),
+		     "Cannot write map block count: ");
+	return 0;
 }
 
 static int
@@ -134,10 +132,8 @@ write_array(avro_writer_t writer, const avro_encoding_t * enc,
 	long i;
 
 	if (array->els->num_entries) {
-		rval = enc->write_long(writer, array->els->num_entries);
-		if (rval) {
-			return rval;
-		}
+		check_prefix(rval, enc->write_long(writer, array->els->num_entries),
+			     "Cannot write array block count: ");
 		for (i = 0; i < array->els->num_entries; i++) {
 			union {
 				st_data_t data;
@@ -150,7 +146,9 @@ write_array(avro_writer_t writer, const avro_encoding_t * enc,
 					  val.datum));
 		}
 	}
-	return enc->write_long(writer, 0);
+	check_prefix(rval, enc->write_long(writer, 0),
+		     "Cannot write array block count: ");
+	return 0;
 }
 
 static int
@@ -161,17 +159,14 @@ write_union(avro_writer_t writer, const avro_encoding_t * enc,
 	int rval;
 	avro_schema_t write_schema = NULL;
 
-	check(rval, enc->write_long(writer, unionp->discriminant));
+	check_prefix(rval, enc->write_long(writer, unionp->discriminant),
+		     "Cannot write union discriminant: ");
 	if (schema) {
-		union {
-			st_data_t data;
-			avro_schema_t schema;
-		} val;
-		if (!st_lookup
-		    (schema->branches, unionp->discriminant, &val.data)) {
+		write_schema =
+		    avro_schema_union_branch(&schema->obj, unionp->discriminant);
+		if (!write_schema) {
 			return EINVAL;
 		}
-		write_schema = val.schema;
 	}
 	return write_datum(writer, enc, write_schema, unionp->value);
 }
@@ -274,12 +269,12 @@ static int write_datum(avro_writer_t writer, const avro_encoding_t * enc,
 int avro_write_data(avro_writer_t writer, avro_schema_t writers_schema,
 		    avro_datum_t datum)
 {
-	if (!writer || !is_avro_datum(datum)) {
-		return EINVAL;
-	}
+	check_param(EINVAL, writer, "writer");
+	check_param(EINVAL, is_avro_datum(datum), "datum");
 	/* Only validate datum if a writer's schema is provided */
 	if (is_avro_schema(writers_schema)
 	    && !avro_schema_datum_validate(writers_schema, datum)) {
+		avro_set_error("Datum doesn't validate against schema");
 		return EINVAL;
 	}
 	return write_datum(writer, &avro_binary_encoding,

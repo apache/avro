@@ -17,6 +17,8 @@
 #ifndef AVRO_PRIVATE_H
 #define AVRO_PRIVATE_H
 
+#include <errno.h>
+
 #include "avro.h"
 
 #ifdef HAVE_CONFIG_H
@@ -25,6 +27,31 @@
 #endif
 
 #define check(rval, call) { rval = call; if(rval) return rval; }
+
+#define check_set(rval, call, ...)			\
+	{						\
+		rval = call;				\
+		if (rval) {				\
+			avro_set_error(__VA_ARGS__);	\
+		}					\
+	}
+
+#define check_prefix(rval, call, ...)			\
+	{						\
+		rval = call;				\
+		if (rval) {				\
+			avro_prefix_error(__VA_ARGS__);	\
+		}					\
+	}
+
+#define check_param(result, test, name)					\
+	{								\
+		if (!(test)) {						\
+			avro_set_error("Invalid " name " in %s",	\
+				       __func__);			\
+			return result;					\
+		}							\
+	}
 
 #define AVRO_UNUSED(var) (void)var;
 

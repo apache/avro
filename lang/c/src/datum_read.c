@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_errors.h"
 #include "avro_private.h"
 #include "allocation.h"
 #include <stdlib.h>
@@ -105,7 +106,8 @@ read_enum(avro_reader_t reader, const avro_encoding_t * enc,
 
 	AVRO_UNUSED(writers_schema);
 
-	check(rval, enc->read_long(reader, &index));
+	check_prefix(rval, enc->read_long(reader, &index),
+		     "Cannot read enum value: ");
 	*datum = avro_enum(&readers_schema->obj, index);
 	return 0;
 }
@@ -121,19 +123,15 @@ read_array(avro_reader_t reader, const avro_encoding_t * enc,
 	int64_t block_size;
 	avro_datum_t array_datum;
 
-	rval = enc->read_long(reader, &block_count);
-	if (rval) {
-		return rval;
-	}
+	check_prefix(rval, enc->read_long(reader, &block_count),
+		     "Cannot read array block count: ");
 
 	array_datum = avro_array(&readers_schema->obj);
 	while (block_count != 0) {
 		if (block_count < 0) {
 			block_count = block_count * -1;
-			rval = enc->read_long(reader, &block_size);
-			if (rval) {
-				return rval;
-			}
+			check_prefix(rval, enc->read_long(reader, &block_size),
+				     "Cannot read array block size: ");
 		}
 
 		for (i = 0; i < block_count; i++) {
@@ -143,10 +141,12 @@ read_array(avro_reader_t reader, const avro_encoding_t * enc,
 			    avro_read_data(reader, writers_schema->items,
 					   readers_schema->items, &datum);
 			if (rval) {
+				avro_datum_decref(array_datum);
 				return rval;
 			}
 			rval = avro_array_append_datum(array_datum, datum);
 			if (rval) {
+				avro_set_error("Cannot append element to array");
 				avro_datum_decref(array_datum);
 				return rval;
 			}
@@ -155,6 +155,8 @@ read_array(avro_reader_t reader, const avro_encoding_t * enc,
 
 		rval = enc->read_long(reader, &block_count);
 		if (rval) {
+			avro_prefix_error("Cannot read array block count: ");
+			avro_datum_decref(array_datum);
 			return rval;
 		}
 	}
@@ -173,6 +175,8 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 
 	rval = enc->read_long(reader, &block_count);
 	if (rval) {
+		avro_prefix_error("Cannot read map block count: ");
+		avro_datum_decref(map);
 		return rval;
 	}
 	while (block_count != 0) {
@@ -181,6 +185,8 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 			block_count = block_count * -1;
 			rval = enc->read_long(reader, &block_size);
 			if (rval) {
+				avro_prefix_error("Cannot read map block size: ");
+				avro_datum_decref(map);
 				return rval;
 			}
 		}
@@ -190,6 +196,8 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 			avro_datum_t value;
 			rval = enc->read_string(reader, &key, &key_size);
 			if (rval) {
+				avro_prefix_error("Cannot read map key: ");
+				avro_datum_decref(map);
 				return rval;
 			}
 			rval =
@@ -204,7 +212,9 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 			}
 			rval = avro_map_set(map, key, value);
 			if (rval) {
+				avro_set_error("Cannot append element to map");
 				avro_free(key, key_size);
+				avro_datum_decref(map);
 				return rval;
 			}
 			avro_datum_decref(value);
@@ -212,6 +222,8 @@ read_map(avro_reader_t reader, const avro_encoding_t * enc,
 		}
 		rval = enc->read_long(reader, &block_count);
 		if (rval) {
+			avro_prefix_error("Cannot read map block count: ");
+			avro_datum_decref(map);
 			return rval;
 		}
 	}
@@ -234,8 +246,10 @@ read_union(avro_reader_t reader, const avro_encoding_t * enc,
 
 	AVRO_UNUSED(readers_schema);
 
-	check(rval, enc->read_long(reader, &discriminant));
+	check_prefix(rval, enc->read_long(reader, &discriminant),
+		     "Cannot read union discriminant: ");
 	if (!st_lookup(writers_schema->branches, discriminant, &val.data)) {
+		avro_set_error("Union doesn't have branch %ld", (long) discriminant);
 		return EILSEQ;
 	}
 	check(rval, avro_read_data(reader, val.schema, NULL, &value));
@@ -277,6 +291,7 @@ read_record(avro_reader_t reader, const avro_encoding_t * enc,
 			    avro_record_set(record, wfield.field->name,
 					    field_datum);
 			if (rval) {
+				avro_set_error("Cannot append field to record");
 				return rval;
 			}
 			avro_datum_decref(field_datum);
@@ -305,20 +320,23 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 	int rval = EINVAL;
 	const avro_encoding_t *enc = &avro_binary_encoding;
 
-	if (!reader || !is_avro_schema(writers_schema) || !datum) {
-		return EINVAL;
-	}
+	check_param(EINVAL, reader, "reader");
+	check_param(EINVAL, is_avro_schema(writers_schema), "writer schema");
+	check_param(EINVAL, datum, "datum pointer");
 
 	if (readers_schema == NULL) {
 		readers_schema = writers_schema;
 	} else if (!avro_schema_match(writers_schema, readers_schema)) {
+		avro_set_error("Reader and writer schemas aren't compatible");
 		return EINVAL;
 	}
 
 	switch (avro_typeof(writers_schema)) {
 	case AVRO_NULL:
 		rval = enc->read_null(reader);
-		if (!rval) {
+		if (rval) {
+			avro_prefix_error("Cannot read null value: ");
+		} else {
 			*datum = avro_null();
 		}
 		break;
@@ -327,7 +345,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			int8_t b;
 			rval = enc->read_boolean(reader, &b);
-			if (!rval) {
+			if (rval) {
+				avro_prefix_error("Cannot read boolean value: ");
+			} else {
 				*datum = avro_boolean(b);
 			}
 		}
@@ -338,7 +358,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			int64_t len;
 			char *s;
 			rval = enc->read_string(reader, &s, &len);
-			if (!rval) {
+			if (rval) {
+				avro_prefix_error("Cannot read string value: ");
+			} else {
 				*datum = avro_givestring(s, avro_alloc_free);
 			}
 		}
@@ -348,7 +370,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			int32_t i;
 			rval = enc->read_int(reader, &i);
-			if (!rval) {
+			if (rval) {
+				avro_prefix_error("Cannot read int value: ");
+			} else {
 				*datum = avro_int32(i);
 			}
 		}
@@ -358,7 +382,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			int64_t l;
 			rval = enc->read_long(reader, &l);
-			if (!rval) {
+			if (rval) {
+				avro_prefix_error("Cannot read long value: ");
+			} else {
 				*datum = avro_int64(l);
 			}
 		}
@@ -368,7 +394,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			float f;
 			rval = enc->read_float(reader, &f);
-			if (!rval) {
+			if (rval) {
+				avro_prefix_error("Cannot read float value: ");
+			} else {
 				*datum = avro_float(f);
 			}
 		}
@@ -378,7 +406,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 		{
 			double d;
 			rval = enc->read_double(reader, &d);
-			if (!rval) {
+			if (rval) {
+				avro_prefix_error("Cannot read double value: ");
+			} else {
 				*datum = avro_double(d);
 			}
 		}
@@ -389,7 +419,9 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 			char *bytes;
 			int64_t len;
 			rval = enc->read_bytes(reader, &bytes, &len);
-			if (!rval) {
+			if (rval) {
+				avro_prefix_error("Cannot read bytes value: ");
+			} else {
 				*datum = avro_givebytes(bytes, len, free_bytes);
 			}
 		}
@@ -402,10 +434,13 @@ avro_read_data(avro_reader_t reader, avro_schema_t writers_schema,
 
 			bytes = avro_malloc(size);
 			if (!bytes) {
+				avro_prefix_error("Cannot allocate new fixed value");
 				return ENOMEM;
 			}
 			rval = avro_read(reader, bytes, size);
-			if (!rval) {
+			if (rval) {
+				avro_prefix_error("Cannot read fixed value: ");
+			} else {
 				*datum = avro_givefixed(readers_schema, bytes, size,
 							avro_alloc_free);
 			}

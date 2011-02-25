@@ -91,6 +91,11 @@ Avro 1.5.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-463. C: Error message API.  The new avro_strerror() function
+    can be used to get a textual description of the error codes returned
+    by the other C API functions.  In particular, this includes any JSON
+    parse errors that occur while trying to load a schema. (dcreager)
+
     AVRO-684. Java: Add command-line "recodec" tool to change file
     compression codecs.  (Patrick Linehan via cutting)
 

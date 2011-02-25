@@ -15,12 +15,14 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_errors.h"
 #include "avro_private.h"
 #include "allocation.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include "datum.h"
+#include "schema.h"
 #include "encoding.h"
 
 #define DEFAULT_TABLE_SIZE 32
@@ -46,6 +48,7 @@ static avro_datum_t avro_string_private(char *str, int64_t size,
 	struct avro_string_datum_t *datum =
 	    avro_new(struct avro_string_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new string datum");
 		return NULL;
 	}
 	datum->s = str;
@@ -60,6 +63,7 @@ avro_datum_t avro_string(const char *str)
 {
 	char *p = avro_strdup(str);
 	if (!p) {
+		avro_set_error("Cannot copy string content");
 		return NULL;
 	}
 	return avro_string_private(p, 0, avro_str_free_wrapper);
@@ -74,9 +78,10 @@ avro_datum_t avro_givestring(const char *str,
 
 int avro_string_get(avro_datum_t datum, char **p)
 {
-	if (!(is_avro_datum(datum) && is_avro_string(datum)) || !p) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_string(datum), "string datum");
+	check_param(EINVAL, p, "string buffer");
+
 	*p = avro_datum_to_string(datum)->s;
 	return 0;
 }
@@ -85,11 +90,11 @@ static int avro_string_set_private(avro_datum_t datum,
 	       			   const char *p, int64_t size,
 				   avro_free_func_t string_free)
 {
-	struct avro_string_datum_t *string;
-	if (!(is_avro_datum(datum) && is_avro_string(datum)) || !p) {
-		return EINVAL;
-	}
-	string = avro_datum_to_string(datum);
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_string(datum), "string datum");
+	check_param(EINVAL, p, "string content");
+
+	struct avro_string_datum_t *string = avro_datum_to_string(datum);
 	if (string->free) {
 		string->free(string->s, string->size);
 	}
@@ -104,6 +109,7 @@ int avro_string_set(avro_datum_t datum, const char *p)
 	char *string_copy = avro_strdup(p);
 	int rval;
 	if (!string_copy) {
+		avro_set_error("Cannot copy string content");
 		return ENOMEM;
 	}
 	rval = avro_string_set_private(datum, string_copy, 0,
@@ -127,6 +133,7 @@ static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 	struct avro_bytes_datum_t *datum;
 	datum = avro_new(struct avro_bytes_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new bytes datum");
 		return NULL;
 	}
 	datum->bytes = bytes;
@@ -141,6 +148,7 @@ avro_datum_t avro_bytes(const char *bytes, int64_t size)
 {
 	char *bytes_copy = avro_malloc(size);
 	if (!bytes_copy) {
+		avro_set_error("Cannot copy bytes content");
 		return NULL;
 	}
 	memcpy(bytes_copy, bytes, size);
@@ -162,13 +170,10 @@ static int avro_bytes_set_private(avro_datum_t datum, const char *bytes,
 				  const int64_t size,
 				  avro_free_func_t bytes_free)
 {
-	struct avro_bytes_datum_t *b;
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_bytes(datum), "bytes datum");
 
-	if (!(is_avro_datum(datum) && is_avro_bytes(datum))) {
-		return EINVAL;
-	}
-
-	b = avro_datum_to_bytes(datum);
+	struct avro_bytes_datum_t *b = avro_datum_to_bytes(datum);
 	if (b->free) {
 		b->free(b->bytes, b->size);
 	}
@@ -184,6 +189,7 @@ int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 	int rval;
 	char *bytes_copy = avro_malloc(size);
 	if (!bytes_copy) {
+		avro_set_error("Cannot copy bytes content");
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
@@ -202,9 +208,11 @@ int avro_givebytes_set(avro_datum_t datum, const char *bytes,
 
 int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size)
 {
-	if (!(is_avro_datum(datum) && is_avro_bytes(datum)) || !bytes || !size) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_bytes(datum), "bytes datum");
+	check_param(EINVAL, bytes, "bytes");
+	check_param(EINVAL, size, "size");
+
 	*bytes = avro_datum_to_bytes(datum)->bytes;
 	*size = avro_datum_to_bytes(datum)->size;
 	return 0;
@@ -215,6 +223,7 @@ avro_datum_t avro_int32(int32_t i)
 	struct avro_int32_datum_t *datum =
 	    avro_new(struct avro_int32_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new int datum");
 		return NULL;
 	}
 	datum->i32 = i;
@@ -225,21 +234,20 @@ avro_datum_t avro_int32(int32_t i)
 
 int avro_int32_get(avro_datum_t datum, int32_t * i)
 {
-	if (!(is_avro_datum(datum) && is_avro_int32(datum)) || !i) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_int32(datum), "int datum");
+	check_param(EINVAL, i, "value pointer");
+
 	*i = avro_datum_to_int32(datum)->i32;
 	return 0;
 }
 
 int avro_int32_set(avro_datum_t datum, const int32_t i)
 {
-	struct avro_int32_datum_t *intp;
-	if (!(is_avro_datum(datum) && is_avro_int32(datum))) {
-		return EINVAL;
-	}
-	intp = avro_datum_to_int32(datum);
-	intp->i32 = i;
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_int32(datum), "int datum");
+
+	avro_datum_to_int32(datum)->i32 = i;
 	return 0;
 }
 
@@ -248,6 +256,7 @@ avro_datum_t avro_int64(int64_t l)
 	struct avro_int64_datum_t *datum =
 	    avro_new(struct avro_int64_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new long datum");
 		return NULL;
 	}
 	datum->i64 = l;
@@ -258,21 +267,20 @@ avro_datum_t avro_int64(int64_t l)
 
 int avro_int64_get(avro_datum_t datum, int64_t * l)
 {
-	if (!(is_avro_datum(datum) && is_avro_int64(datum)) || !l) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_int64(datum), "long datum");
+	check_param(EINVAL, l, "value pointer");
+
 	*l = avro_datum_to_int64(datum)->i64;
 	return 0;
 }
 
 int avro_int64_set(avro_datum_t datum, const int64_t l)
 {
-	struct avro_int64_datum_t *longp;
-	if (!(is_avro_datum(datum) && is_avro_int64(datum))) {
-		return EINVAL;
-	}
-	longp = avro_datum_to_int64(datum);
-	longp->i64 = l;
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_int64(datum), "long datum");
+
+	avro_datum_to_int64(datum)->i64 = l;
 	return 0;
 }
 
@@ -281,6 +289,7 @@ avro_datum_t avro_float(float f)
 	struct avro_float_datum_t *datum =
 	    avro_new(struct avro_float_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new float datum");
 		return NULL;
 	}
 	datum->f = f;
@@ -291,20 +300,19 @@ avro_datum_t avro_float(float f)
 
 int avro_float_set(avro_datum_t datum, const float f)
 {
-	struct avro_float_datum_t *floatp;
-	if (!(is_avro_datum(datum) && is_avro_float(datum))) {
-		return EINVAL;
-	}
-	floatp = avro_datum_to_float(datum);
-	floatp->f = f;
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_float(datum), "float datum");
+
+	avro_datum_to_float(datum)->f = f;
 	return 0;
 }
 
 int avro_float_get(avro_datum_t datum, float *f)
 {
-	if (!(is_avro_datum(datum) && is_avro_float(datum)) || !f) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_float(datum), "float datum");
+	check_param(EINVAL, f, "value pointer");
+
 	*f = avro_datum_to_float(datum)->f;
 	return 0;
 }
@@ -314,6 +322,7 @@ avro_datum_t avro_double(double d)
 	struct avro_double_datum_t *datum =
 	    avro_new(struct avro_double_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new double atom");
 		return NULL;
 	}
 	datum->d = d;
@@ -324,20 +333,19 @@ avro_datum_t avro_double(double d)
 
 int avro_double_set(avro_datum_t datum, const double d)
 {
-	struct avro_double_datum_t *doublep;
-	if (!(is_avro_datum(datum) && is_avro_double(datum))) {
-		return EINVAL;
-	}
-	doublep = avro_datum_to_double(datum);
-	doublep->d = d;
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_double(datum), "double datum");
+
+	avro_datum_to_double(datum)->d = d;
 	return 0;
 }
 
 int avro_double_get(avro_datum_t datum, double *d)
 {
-	if (!(is_avro_datum(datum) && is_avro_double(datum)) || !d) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_double(datum), "double datum");
+	check_param(EINVAL, d, "value pointer");
+
 	*d = avro_datum_to_double(datum)->d;
 	return 0;
 }
@@ -347,6 +355,7 @@ avro_datum_t avro_boolean(int8_t i)
 	struct avro_boolean_datum_t *datum =
 	    avro_new(struct avro_boolean_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new boolean datum");
 		return NULL;
 	}
 	datum->i = i;
@@ -356,20 +365,19 @@ avro_datum_t avro_boolean(int8_t i)
 
 int avro_boolean_set(avro_datum_t datum, const int8_t i)
 {
-	struct avro_boolean_datum_t *booleanp;
-	if (!(is_avro_datum(datum) && is_avro_boolean(datum))) {
-		return EINVAL;
-	}
-	booleanp = avro_datum_to_boolean(datum);
-	booleanp->i = i;
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_boolean(datum), "boolean datum");
+
+	avro_datum_to_boolean(datum)->i = i;
 	return 0;
 }
 
 int avro_boolean_get(avro_datum_t datum, int8_t * i)
 {
-	if (!(is_avro_datum(datum) && is_avro_boolean(datum)) || !i) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_boolean(datum), "boolean datum");
+	check_param(EINVAL, i, "value pointer");
+
 	*i = avro_datum_to_boolean(datum)->i;
 	return 0;
 }
@@ -387,13 +395,12 @@ avro_datum_t avro_null(void)
 avro_datum_t avro_union(avro_schema_t schema,
 			int64_t discriminant, avro_datum_t value)
 {
-	if (!is_avro_schema(schema)) {
-		return NULL;
-	}
+	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_union_datum_t *datum =
 	    avro_new(struct avro_union_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new union datum");
 		return NULL;
 	}
 	datum->schema = avro_schema_incref(schema);
@@ -418,12 +425,10 @@ int avro_union_set_discriminant(avro_datum_t datum,
 				int discriminant,
 				avro_datum_t *branch)
 {
-	if (!is_avro_union(datum)) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_union(datum), "union datum");
 
-	struct avro_union_datum_t  *unionp =
-	    avro_datum_to_union(datum);
+	struct avro_union_datum_t  *unionp = avro_datum_to_union(datum);
 
 	avro_schema_t  schema = unionp->schema;
 	avro_schema_t  branch_schema =
@@ -431,6 +436,7 @@ int avro_union_set_discriminant(avro_datum_t datum,
 
 	if (branch_schema == NULL) {
 		// That branch doesn't exist!
+		avro_set_error("Branch %d doesn't exist", discriminant);
 		return EINVAL;
 	}
 
@@ -459,22 +465,23 @@ int avro_union_set_discriminant(avro_datum_t datum,
 
 avro_datum_t avro_record(avro_schema_t schema)
 {
-	if (!is_avro_schema(schema)) {
-		return NULL;
-	}
+	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_record_datum_t *datum =
 	    avro_new(struct avro_record_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new record datum");
 		return NULL;
 	}
 	datum->field_order = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->field_order) {
+		avro_set_error("Cannot create new record datum");
 		avro_freet(struct avro_record_datum_t, datum);
 		return NULL;
 	}
 	datum->fields_byname = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->fields_byname) {
+		avro_set_error("Cannot create new record datum");
 		st_free_table(datum->field_order);
 		avro_freet(struct avro_record_datum_t, datum);
 		return NULL;
@@ -501,6 +508,7 @@ avro_record_get(const avro_datum_t datum, const char *field_name,
 			return 0;
 		}
 	}
+	avro_set_error("No field named %s", field_name);
 	return EINVAL;
 }
 
@@ -508,42 +516,43 @@ int
 avro_record_set(avro_datum_t datum, const char *field_name,
 		const avro_datum_t field_value)
 {
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_record(datum), "record datum");
+	check_param(EINVAL, field_name, "field_name");
+
 	char *key = (char *)field_name;
 	avro_datum_t old_field;
 
-	if (is_avro_datum(datum) && is_avro_record(datum) && field_name) {
-		if (avro_record_get(datum, field_name, &old_field) == 0) {
-			/* Overriding old value */
-			avro_datum_decref(old_field);
-		} else {
-			/* Inserting new value */
-			struct avro_record_datum_t *record =
-			    avro_datum_to_record(datum);
-			key = avro_strdup(field_name);
-			if (!key) {
-				return ENOMEM;
-			}
-			st_insert(record->field_order,
-				  record->field_order->num_entries,
-				  (st_data_t) key);
+	if (avro_record_get(datum, field_name, &old_field) == 0) {
+		/* Overriding old value */
+		avro_datum_decref(old_field);
+	} else {
+		/* Inserting new value */
+		struct avro_record_datum_t *record =
+		    avro_datum_to_record(datum);
+		key = avro_strdup(field_name);
+		if (!key) {
+			avro_set_error("Cannot copy field name");
+			return ENOMEM;
 		}
-		avro_datum_incref(field_value);
-		st_insert(avro_datum_to_record(datum)->fields_byname,
-			  (st_data_t) key, (st_data_t) field_value);
-		return 0;
+		st_insert(record->field_order,
+			  record->field_order->num_entries,
+			  (st_data_t) key);
 	}
-	return EINVAL;
+	avro_datum_incref(field_value);
+	st_insert(avro_datum_to_record(datum)->fields_byname,
+		  (st_data_t) key, (st_data_t) field_value);
+	return 0;
 }
 
 avro_datum_t avro_enum(avro_schema_t schema, int i)
 {
-	if (!is_avro_schema(schema)) {
-		return NULL;
-	}
+	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_enum_datum_t *datum =
 	    avro_new(struct avro_enum_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new enum datum");
 		return NULL;
 	}
 	datum->schema = avro_schema_incref(schema);
@@ -567,9 +576,8 @@ const char *avro_enum_get_name(const avro_datum_t datum)
 
 int avro_enum_set(avro_datum_t datum, const int symbol_value)
 {
-	if (!is_avro_enum(datum)) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_enum(datum), "enum datum");
 
 	avro_datum_to_enum(datum)->value = symbol_value;
 	return 0;
@@ -577,12 +585,14 @@ int avro_enum_set(avro_datum_t datum, const int symbol_value)
 
 int avro_enum_set_name(avro_datum_t datum, const char *symbol_name)
 {
-	if (!is_avro_enum(datum)) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_enum(datum), "enum datum");
+	check_param(EINVAL, symbol_name, "symbol name");
+
 	avro_schema_t  schema = avro_datum_to_enum(datum)->schema;
 	int  symbol_value = avro_schema_enum_get_by_name(schema, symbol_name);
 	if (symbol_value == -1) {
+		avro_set_error("No symbol named %s", symbol_name);
 		return EINVAL;
 	}
 	avro_datum_to_enum(datum)->value = symbol_value;
@@ -593,13 +603,18 @@ static avro_datum_t avro_fixed_private(avro_schema_t schema,
 				       const char *bytes, const int64_t size,
 				       avro_free_func_t fixed_free)
 {
-	if (!is_avro_schema(schema)) {
+	check_param(NULL, is_avro_schema(schema), "schema");
+	struct avro_fixed_schema_t *fschema = avro_schema_to_fixed(schema);
+	if (size != fschema->size) {
+		avro_set_error("Fixed size (%zu) doesn't match schema (%zu)",
+			       (size_t) size, (size_t) fschema->size);
 		return NULL;
 	}
 
 	struct avro_fixed_datum_t *datum =
 	    avro_new(struct avro_fixed_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new fixed datum");
 		return NULL;
 	}
 	datum->schema = avro_schema_incref(schema);
@@ -616,6 +631,7 @@ avro_datum_t avro_fixed(avro_schema_t schema,
 {
 	char *bytes_copy = avro_malloc(size);
 	if (!bytes_copy) {
+		avro_set_error("Cannot copy fixed content");
 		return NULL;
 	}
 	memcpy(bytes_copy, bytes, size);
@@ -633,15 +649,16 @@ static int avro_fixed_set_private(avro_datum_t datum,
 				  const char *bytes, const int64_t size,
 				  avro_free_func_t fixed_free)
 {
-	struct avro_fixed_datum_t *fixed;
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_fixed(datum), "fixed datum");
 
-	AVRO_UNUSED(size);
-
-	if (!(is_avro_datum(datum) && is_avro_fixed(datum))) {
+	struct avro_fixed_datum_t *fixed = avro_datum_to_fixed(datum);
+	struct avro_fixed_schema_t *schema = avro_schema_to_fixed(fixed->schema);
+	if (size != schema->size) {
+		avro_set_error("Fixed size doesn't match schema");
 		return EINVAL;
 	}
 
-	fixed = avro_datum_to_fixed(datum);
 	if (fixed->free) {
 		fixed->free(fixed->bytes, fixed->size);
 	}
@@ -657,6 +674,7 @@ int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
 	int rval;
 	char *bytes_copy = avro_malloc(size);
 	if (!bytes_copy) {
+		avro_set_error("Cannot copy fixed content");
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
@@ -675,9 +693,11 @@ int avro_givefixed_set(avro_datum_t datum, const char *bytes,
 
 int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size)
 {
-	if (!(is_avro_datum(datum) && is_avro_fixed(datum)) || !bytes || !size) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_fixed(datum), "fixed datum");
+	check_param(EINVAL, bytes, "bytes");
+	check_param(EINVAL, size, "size");
+
 	*bytes = avro_datum_to_fixed(datum)->bytes;
 	*size = avro_datum_to_fixed(datum)->size;
 	return 0;
@@ -685,22 +705,23 @@ int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size)
 
 avro_datum_t avro_map(avro_schema_t schema)
 {
-	if (!is_avro_schema(schema)) {
-		return NULL;
-	}
+	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_map_datum_t *datum =
 	    avro_new(struct avro_map_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new map datum");
 		return NULL;
 	}
 	datum->map = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->map) {
+		avro_set_error("Cannot create new map datum");
 		avro_freet(struct avro_map_datum_t, datum);
 		return NULL;
 	}
 	datum->keys_by_index = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->keys_by_index) {
+		avro_set_error("Cannot create new map datum");
 		st_free_table(datum->map);
 		avro_freet(struct avro_map_datum_t, datum);
 		return NULL;
@@ -721,43 +742,46 @@ avro_map_size(const avro_datum_t datum)
 int
 avro_map_get(const avro_datum_t datum, const char *key, avro_datum_t * value)
 {
-	struct avro_map_datum_t *map;
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_map(datum), "map datum");
+	check_param(EINVAL, key, "key");
+	check_param(EINVAL, value, "value");
+
 	union {
 		avro_datum_t datum;
 		st_data_t data;
 	} val;
 
-	if (!(is_avro_datum(datum) && is_avro_map(datum) && key && value)) {
-		return EINVAL;
-	}
-
-	map = avro_datum_to_map(datum);
+	struct avro_map_datum_t *map = avro_datum_to_map(datum);
 	if (st_lookup(map->map, (st_data_t) key, &(val.data))) {
 		*value = val.datum;
 		return 0;
 	}
+
+	avro_set_error("No map element named %s", key);
 	return EINVAL;
 }
 
 int avro_map_get_key(const avro_datum_t datum, int index,
 		     const char **key)
 {
-	if (!(is_avro_datum(datum) && is_avro_map(datum) &&
-	      index >= 0 && key)) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_map(datum), "map datum");
+	check_param(EINVAL, index >= 0, "index");
+	check_param(EINVAL, key, "key");
 
 	union {
 		st_data_t data;
 		char *key;
 	} val;
-	struct avro_map_datum_t *map = avro_datum_to_map(datum);
 
+	struct avro_map_datum_t *map = avro_datum_to_map(datum);
 	if (st_lookup(map->keys_by_index, (st_data_t) index, &val.data)) {
 		*key = val.key;
 		return 0;
 	}
 
+	avro_set_error("No map element with index %d", index);
 	return EINVAL;
 }
 
@@ -765,13 +789,13 @@ int
 avro_map_set(avro_datum_t datum, const char *key,
 	     const avro_datum_t value)
 {
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_map(datum), "map datum");
+	check_param(EINVAL, key, "key");
+	check_param(EINVAL, is_avro_datum(value), "value");
+
 	char *save_key = (char *)key;
 	avro_datum_t old_datum;
-
-	if (!is_avro_datum(datum) || !is_avro_map(datum) || !key
-	    || !is_avro_datum(value)) {
-		return EINVAL;
-	}
 
 	struct avro_map_datum_t  *map = avro_datum_to_map(datum);
 
@@ -782,6 +806,7 @@ avro_map_set(avro_datum_t datum, const char *key,
 		/* Inserting a new value */
 		save_key = avro_strdup(key);
 		if (!save_key) {
+			avro_set_error("Cannot copy map key");
 			return ENOMEM;
 		}
 		int  new_index = map->map->num_entries;
@@ -795,17 +820,17 @@ avro_map_set(avro_datum_t datum, const char *key,
 
 avro_datum_t avro_array(avro_schema_t schema)
 {
-	if (!is_avro_schema(schema)) {
-		return NULL;
-	}
+	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_array_datum_t *datum =
 	    avro_new(struct avro_array_datum_t);
 	if (!datum) {
+		avro_set_error("Cannot create new array datum");
 		return NULL;
 	}
 	datum->els = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
 	if (!datum->els) {
+		avro_set_error("Cannot create new array datum");
 		avro_freet(struct avro_array_datum_t, datum);
 		return NULL;
 	}
@@ -818,18 +843,23 @@ avro_datum_t avro_array(avro_schema_t schema)
 int
 avro_array_get(const avro_datum_t array_datum, int64_t index, avro_datum_t * value)
 {
-    union {
-        st_data_t data;
-        avro_datum_t datum;
-    } val;
-	if (is_avro_datum(array_datum) && is_avro_array(array_datum)) {
+	check_param(EINVAL, is_avro_datum(array_datum), "datum");
+	check_param(EINVAL, is_avro_array(array_datum), "array datum");
+	check_param(EINVAL, value, "value pointer");
+
+	union {
+		st_data_t data;
+		avro_datum_t datum;
+	} val;
+
         const struct avro_array_datum_t * array = avro_datum_to_array(array_datum);
-        if (st_lookup(array->els, index, &val.data)) {
-            *value = val.datum;
-            return 0;
-        }
-    }
-    return EINVAL;
+	if (st_lookup(array->els, index, &val.data)) {
+		*value = val.datum;
+		return 0;
+	}
+
+	avro_set_error("No array element with index %ld", (long) index);
+	return EINVAL;
 }
 
 size_t
@@ -843,12 +873,11 @@ int
 avro_array_append_datum(avro_datum_t array_datum,
 			const avro_datum_t datum)
 {
-	struct avro_array_datum_t *array;
-	if (!is_avro_datum(array_datum) || !is_avro_array(array_datum)
-	    || !is_avro_datum(datum)) {
-		return EINVAL;
-	}
-	array = avro_datum_to_array(array_datum);
+	check_param(EINVAL, is_avro_datum(array_datum), "datum");
+	check_param(EINVAL, is_avro_array(array_datum), "array datum");
+	check_param(EINVAL, is_avro_datum(datum), "element datum");
+
+	struct avro_array_datum_t *array = avro_datum_to_array(array_datum);
 	st_insert(array->els, array->els->num_entries,
 		  (st_data_t) avro_datum_incref(datum));
 	return 0;
@@ -874,9 +903,7 @@ static int array_free_foreach(int i, avro_datum_t datum, void *arg)
 
 avro_schema_t avro_datum_get_schema(const avro_datum_t datum)
 {
-	if (!is_avro_datum(datum)) {
-		return NULL;
-	}
+	check_param(NULL, is_avro_datum(datum), "datum");
 
 	switch (avro_typeof(datum)) {
 		/*

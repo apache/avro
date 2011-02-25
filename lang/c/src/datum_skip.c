@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_errors.h"
 #include "avro_private.h"
 #include <stdlib.h>
 #include <errno.h>
@@ -30,31 +31,23 @@ static int skip_array(avro_reader_t reader, const avro_encoding_t * enc,
 	int64_t block_count;
 	int64_t block_size;
 
-	rval = enc->read_long(reader, &block_count);
-	if (rval) {
-		return rval;
-	}
+	check_prefix(rval, enc->read_long(reader, &block_count),
+		     "Cannot read array block count: ");
 
 	while (block_count != 0) {
 		if (block_count < 0) {
 			block_count = block_count * -1;
-			rval = enc->read_long(reader, &block_size);
-			if (rval) {
-				return rval;
-			}
+			check_prefix(rval, enc->read_long(reader, &block_size),
+				     "Cannot read array block size: ");
 		}
 
 		for (i = 0; i < block_count; i++) {
-			rval = avro_skip_data(reader, writers_schema->items);
-			if (rval) {
-				return rval;
-			}
+			check_prefix(rval, avro_skip_data(reader, writers_schema->items),
+				     "Cannot skip array element: ");
 		}
 
-		rval = enc->read_long(reader, &block_count);
-		if (rval) {
-			return rval;
-		}
+		check_prefix(rval, enc->read_long(reader, &block_count),
+			     "Cannot read array block count: ");
 	}
 	return 0;
 }
@@ -65,36 +58,26 @@ static int skip_map(avro_reader_t reader, const avro_encoding_t * enc,
 	int rval;
 	int64_t i, block_count;
 
-	rval = enc->read_long(reader, &block_count);
-	if (rval) {
-		return rval;
-	}
+	check_prefix(rval, enc->read_long(reader, &block_count),
+		     "Cannot read map block count: ");
 	while (block_count != 0) {
 		int64_t block_size;
 		if (block_count < 0) {
 			block_count = block_count * -1;
-			rval = enc->read_long(reader, &block_size);
-			if (rval) {
-				return rval;
-			}
+			check_prefix(rval, enc->read_long(reader, &block_size),
+				     "Cannot read map block size: ");
 		}
 		for (i = 0; i < block_count; i++) {
-			rval = enc->skip_string(reader);
-			if (rval) {
-				return rval;
-			}
-			rval =
-			    avro_skip_data(reader,
-					   avro_schema_to_map(writers_schema)->
-					   values);
-			if (rval) {
-				return rval;
-			}
+			check_prefix(rval, enc->skip_string(reader),
+				     "Cannot skip map key: ");
+			check_prefix(rval,
+				     avro_skip_data(reader,
+						    avro_schema_to_map(writers_schema)->
+						    values),
+				     "Cannot skip map value: ");
 		}
-		rval = enc->read_long(reader, &block_count);
-		if (rval) {
-			return rval;
-		}
+		check_prefix(rval, enc->read_long(reader, &block_count),
+			     "Cannot read map block count: ");
 	}
 	return 0;
 }
@@ -104,19 +87,15 @@ static int skip_union(avro_reader_t reader, const avro_encoding_t * enc,
 {
 	int rval;
 	int64_t index;
-	union {
-		st_data_t data;
-		avro_schema_t schema;
-	} val;
+	avro_schema_t branch_schema;
 
-	rval = enc->read_long(reader, &index);
-	if (rval) {
-		return rval;
-	}
-	if (!st_lookup(writers_schema->branches, index, &val.data)) {
+	check_prefix(rval, enc->read_long(reader, &index),
+		     "Cannot read union discriminant: ");
+	branch_schema = avro_schema_union_branch(&writers_schema->obj, index);
+	if (!branch_schema) {
 		return EILSEQ;
 	}
-	return avro_skip_data(reader, val.schema);
+	return avro_skip_data(reader, branch_schema);
 }
 
 static int skip_record(avro_reader_t reader, const avro_encoding_t * enc,
@@ -128,27 +107,23 @@ static int skip_record(avro_reader_t reader, const avro_encoding_t * enc,
 	AVRO_UNUSED(enc);
 
 	for (i = 0; i < writers_schema->fields->num_entries; i++) {
-		union {
-			st_data_t data;
-			struct avro_record_field_t *field;
-		} val;
-		st_lookup(writers_schema->fields, i, &val.data);
-		rval = avro_skip_data(reader, val.field->type);
-		if (rval) {
-			return rval;
-		}
+		avro_schema_t  field_schema;
+
+		field_schema = avro_schema_record_field_get_by_index
+		    (&writers_schema->obj, i);
+		check_prefix(rval, avro_skip_data(reader, field_schema),
+			     "Cannot skip record field: ");
 	}
 	return 0;
 }
 
 int avro_skip_data(avro_reader_t reader, avro_schema_t writers_schema)
 {
+	check_param(EINVAL, reader, "reader");
+	check_param(EINVAL, is_avro_schema(writers_schema), "writer schema");
+
 	int rval = EINVAL;
 	const avro_encoding_t *enc = &avro_binary_encoding;
-
-	if (!reader || !is_avro_schema(writers_schema)) {
-		return EINVAL;
-	}
 
 	switch (avro_typeof(writers_schema)) {
 	case AVRO_NULL:

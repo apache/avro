@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro_errors.h"
 #include "avro_private.h"
 #include "allocation.h"
 #include "encoding.h"
@@ -36,6 +37,7 @@ static int read_long(avro_reader_t reader, int64_t * l)
 			/*
 			 * illegal byte sequence 
 			 */
+			avro_set_error("Varint too long");
 			return EILSEQ;
 		}
 		AVRO_READ(reader, &b, 1);
@@ -53,6 +55,7 @@ static int skip_long(avro_reader_t reader)
 	int offset = 0;
 	do {
 		if (offset == MAX_VARINT_BUF_SIZE) {
+			avro_set_error("Varint too long");
 			return EILSEQ;
 		}
 		AVRO_READ(reader, &b, 1);
@@ -93,11 +96,10 @@ static int64_t size_long(avro_writer_t writer, int64_t l)
 static int read_int(avro_reader_t reader, int32_t * i)
 {
 	int64_t l;
-	int rval = read_long(reader, &l);
-	if (rval) {
-		return rval;
-	}
+	int rval;
+	check(rval, read_long(reader, &l));
 	if (!(INT_MIN <= l && l <= INT_MAX)) {
+		avro_set_error("Varint out of range for int type");
 		return ERANGE;
 	}
 	*i = l;
@@ -123,12 +125,12 @@ static int64_t size_int(avro_writer_t writer, const int32_t i)
 
 static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 {
-	int rval = read_long(reader, len);
-	if (rval) {
-		return rval;
-	}
+	int rval;
+	check_prefix(rval, read_long(reader, len),
+		     "Cannot read bytes length: ");
 	*bytes = avro_malloc(*len + 1);
 	if (!*bytes) {
+		avro_set_error("Cannot allocate buffer for bytes value");
 		return ENOMEM;
 	}
 	AVRO_READ(reader, *bytes, *len);
@@ -139,10 +141,9 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 static int skip_bytes(avro_reader_t reader)
 {
 	int64_t len;
-	int rval = read_long(reader, &len);
-	if (rval) {
-		return rval;
-	}
+	int rval;
+	check_prefix(rval, read_long(reader, &len),
+		     "Cannot read bytes length: ");
 	AVRO_SKIP(reader, len);
 	return 0;
 }
@@ -152,12 +153,11 @@ write_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 {
 	int rval;
 	if (len < 0) {
+		avro_set_error("Invalid bytes value length");
 		return EINVAL;
 	}
-	rval = write_long(writer, len);
-	if (rval) {
-		return rval;
-	}
+	check_prefix(rval, write_long(writer, len),
+		     "Cannot write bytes length: ");
 	AVRO_WRITE(writer, (char *)bytes, len);
 	return 0;
 }
@@ -173,13 +173,13 @@ size_bytes(avro_writer_t writer, const char *bytes, const int64_t len)
 static int read_string(avro_reader_t reader, char **s, int64_t *len)
 {
 	int64_t  str_len;
-	int rval = read_long(reader, &str_len);
-	if (rval) {
-		return rval;
-	}
+	int rval;
+	check_prefix(rval, read_long(reader, &str_len),
+		     "Cannot read string length: ");
 	*len = str_len + 1;
 	*s = avro_malloc(*len);
 	if (!*s) {
+		avro_set_error("Cannot allocate buffer for string value");
 		return ENOMEM;
 	}
 	(*s)[str_len] = '\0';

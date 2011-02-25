@@ -20,6 +20,8 @@
 #include <string.h>
 
 #include "avro.h"
+#include "avro_errors.h"
+#include "avro_private.h"
 #include "allocation.h"
 #include "datum.h"
 #include "jansson.h"
@@ -38,9 +40,9 @@ static int
 encode_utf8_bytes(const void *src, size_t src_len,
 		  void **dest, size_t *dest_len)
 {
-	if (!src || !dest || !dest_len) {
-		return EINVAL;
-	}
+	check_param(EINVAL, src, "source");
+	check_param(EINVAL, dest, "dest");
+	check_param(EINVAL, dest_len, "dest_len");
 
 	// First, determine the size of the resulting UTF-8 buffer.
 	// Bytes in the range 0x00..0x7f will take up one byte; bytes in
@@ -58,6 +60,7 @@ encode_utf8_bytes(const void *src, size_t src_len,
 	// Allocate a new buffer for the UTF-8 string and fill it in.
 	uint8_t  *dest8 = avro_malloc(utf8_len);
 	if (dest8 == NULL) {
+		avro_set_error("Cannot allocate JSON bytes buffer");
 		return ENOMEM;
 	}
 
@@ -79,14 +82,24 @@ encode_utf8_bytes(const void *src, size_t src_len,
 	return 0;
 }
 
+#define return_json(type, exp)						\
+	{								\
+		json_t  *result = exp;					\
+		if (result == NULL) {					\
+			avro_set_error("Cannot allocate JSON " type);	\
+		}							\
+		return result;						\
+	}
+
 static json_t *
 avro_datum_to_json_t(const avro_datum_t datum)
 {
 	switch (avro_typeof(datum)) {
 		case AVRO_BOOLEAN:
-			return avro_datum_to_boolean(datum)->i?
-			    json_true():
-			    json_false();
+			return_json("boolean",
+				    avro_datum_to_boolean(datum)->i?
+				    json_true():
+				    json_false());
 
 		case AVRO_BYTES:
 			{
@@ -103,31 +116,35 @@ avro_datum_to_json_t(const avro_datum_t datum)
 
 				json_t  *result = json_string_nocheck(encoded);
 				avro_free(encoded, encoded_size);
+				if (result == NULL) {
+					avro_set_error("Cannot allocate JSON bytes");
+				}
 				return result;
 			}
 
 		case AVRO_DOUBLE:
-			return json_real(avro_datum_to_double(datum)->d);
+			return_json("double", json_real(avro_datum_to_double(datum)->d));
 
 		case AVRO_FLOAT:
-			return json_real(avro_datum_to_float(datum)->f);
+			return_json("float", json_real(avro_datum_to_float(datum)->f));
 
 		case AVRO_INT32:
-			return json_integer(avro_datum_to_int32(datum)->i32);
+			return_json("int", json_integer(avro_datum_to_int32(datum)->i32));
 
 		case AVRO_INT64:
-			return json_integer(avro_datum_to_int64(datum)->i64);
+			return_json("long", json_integer(avro_datum_to_int64(datum)->i64));
 
 		case AVRO_NULL:
-			return json_null();
+			return_json("null", json_null());
 
 		case AVRO_STRING:
-			return json_string(avro_datum_to_string(datum)->s);
+			return_json("string", json_string(avro_datum_to_string(datum)->s));
 
 		case AVRO_ARRAY:
 			{
 				json_t  *result = json_array();
 				if (!result) {
+					avro_set_error("Cannot allocate JSON array");
 					return NULL;
 				}
 
@@ -147,6 +164,7 @@ avro_datum_to_json_t(const avro_datum_t datum)
 					}
 
 					if (json_array_append_new(result, element_json)) {
+						avro_set_error("Cannot append element to array");
 						json_decref(result);
 						return NULL;
 					}
@@ -156,7 +174,7 @@ avro_datum_to_json_t(const avro_datum_t datum)
 			}
 
 		case AVRO_ENUM:
-			return json_string(avro_enum_get_name(datum));
+			return_json("enum", json_string(avro_enum_get_name(datum)));
 
 		case AVRO_FIXED:
 			{
@@ -173,6 +191,9 @@ avro_datum_to_json_t(const avro_datum_t datum)
 
 				json_t  *result = json_string_nocheck(encoded);
 				avro_free(encoded, encoded_size);
+				if (result == NULL) {
+					avro_set_error("Cannot allocate JSON fixed");
+				}
 				return result;
 			}
 
@@ -180,6 +201,7 @@ avro_datum_to_json_t(const avro_datum_t datum)
 			{
 				json_t  *result = json_object();
 				if (!result) {
+					avro_set_error("Cannot allocate JSON map");
 					return NULL;
 				}
 
@@ -205,6 +227,7 @@ avro_datum_to_json_t(const avro_datum_t datum)
 					}
 
 					if (json_object_set_new(result, key, element_json)) {
+						avro_set_error("Cannot append element to map");
 						json_decref(result);
 						return NULL;
 					}
@@ -217,6 +240,7 @@ avro_datum_to_json_t(const avro_datum_t datum)
 			{
 				json_t  *result = json_object();
 				if (!result) {
+					avro_set_error("Cannot allocate new JSON record");
 					return NULL;
 				}
 
@@ -240,6 +264,7 @@ avro_datum_to_json_t(const avro_datum_t datum)
 					}
 
 					if (json_object_set_new(result, field_name, field_json)) {
+						avro_set_error("Cannot append field to record");
 						json_decref(result);
 						return NULL;
 					}
@@ -258,11 +283,12 @@ avro_datum_to_json_t(const avro_datum_t datum)
 				    avro_schema_union_branch(schema, discriminant);
 
 				if (is_avro_null(branch_schema)) {
-					return json_null();
+					return_json("null", json_null());
 				}
 
 				json_t  *result = json_object();
 				if (!result) {
+					avro_set_error("Cannot allocate JSON union");
 					return NULL;
 				}
 
@@ -274,6 +300,7 @@ avro_datum_to_json_t(const avro_datum_t datum)
 
 				const char  *branch_name = avro_schema_type_name(branch_schema);
 				if (json_object_set_new(result, branch_name, branch_json)) {
+					avro_set_error("Cannot append branch to union");
 					json_decref(result);
 					return NULL;
 				}
@@ -289,9 +316,8 @@ avro_datum_to_json_t(const avro_datum_t datum)
 int avro_datum_to_json(const avro_datum_t datum,
 		       int one_line, char **json_str)
 {
-	if (!is_avro_datum(datum) || !json_str) {
-		return EINVAL;
-	}
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, json_str, "string buffer");
 
 	json_t  *json = avro_datum_to_json_t(datum);
 	if (!json) {
