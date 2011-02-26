@@ -23,6 +23,7 @@ lang/c/config**
 lang/c++/config**
 lang/c/docs/**
 lang/c/json/**
+lang/c/src/avro-c.pc.in
 lang/c/tests/**
 lang/c/version.sh
 lang/ruby/Manifest
