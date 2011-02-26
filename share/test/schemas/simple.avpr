@@ -18,6 +18,13 @@
      {"name": "TestError", "type": "error", "fields": [
          {"name": "message", "type": "string"}
       ]
+     },
+
+     {"name": "TestRecordWithUnion", "type": "record",
+      "fields": [
+          {"name": "kind", "type": ["null", "Kind"]},
+          {"name": "value", "type": ["null", "string"]}
+      ]
      }
 
  ],

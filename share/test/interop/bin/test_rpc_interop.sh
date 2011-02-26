@@ -23,8 +23,8 @@ VERSION=`cat share/VERSION.txt`
 
 #set -x						  # echo commands
 
-java_client="java -jar lang/java/build/avro-tools-$VERSION.jar rpcsend"
-java_server="java -jar lang/java/build/avro-tools-$VERSION.jar rpcreceive"
+java_client="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcsend"
+java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive"
 
 py_client="python lang/py/build/src/avro/tool.py rpcsend"
 py_server="python lang/py/build/src/avro/tool.py rpcreceive"
@@ -58,9 +58,20 @@ do
 	    echo TEST: $c
 	    for client in "${clients[@]}"
 	    do
+        rm -rf $portfile
 		$server http://127.0.0.1:0/ $proto $msg -file $c/response.avro \
 		    > $portfile &
-		sleep 1				  # wait for server to start
+        count=0
+        while [ ! -s $portfile ]
+        do
+            sleep 1
+            if [ $count -ge 10 ]
+            then
+                echo $server did not start.
+                exit 1
+            fi
+            count=`expr $count + 1`
+        done
 		read ignore port < $portfile
 	    	$client http://127.0.0.1:$port $proto $msg -file $c/request.avro
 		wait
