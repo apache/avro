@@ -25,12 +25,12 @@ import org.apache.avro.util.Utf8;
 
 /**
  * Low-level support for serializing Avro values.
- *
+ * <p/>
  * This class has two types of methods.  One type of methods support
  * the writing of leaf values (for example, {@link #writeLong} and
  * {@link #writeString}).  These methods have analogs in {@link
  * Decoder}.
- *
+ * <p/>
  * The other type of methods support the writing of maps and arrays.
  * These methods are {@link #writeArrayStart}, {@link
  * #startItem}, and {@link #writeArrayEnd} (and similar methods for
@@ -38,7 +38,10 @@ import org.apache.avro.util.Utf8;
  * buffering required to break large maps and arrays into blocks,
  * which is necessary for applications that want to do streaming.
  * (See {@link #writeArrayStart} for details on these methods.)
- *
+ * <p/>
+ * {@link EncoderFactory} contains Encoder construction and configuration
+ * facilities.  
+ *  @see EncoderFactory
  *  @see Decoder
  */
 public abstract class Encoder implements Flushable {

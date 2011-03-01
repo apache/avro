@@ -24,7 +24,7 @@ import org.apache.avro.util.Utf8;
 
 /**
  * Low-level support for de-serializing Avro values.
- * <p>
+ * <p/>
  *  This class has two types of methods.  One type of methods support
  *  the reading of leaf values (for example, {@link #readLong} and
  *  {@link #readString}).
@@ -34,7 +34,8 @@ import org.apache.avro.util.Utf8;
  *  and similar methods for maps).  See {@link #readArrayStart} for
  *  details on these methods.)
  *  <p/>
- *  {@link DecoderFactory} is used to create and configure Decoder instances.
+ *  {@link DecoderFactory} contains Decoder construction and configuration
+ *  facilities.
  *  @see DecoderFactory
  *  @see Encoder
  */

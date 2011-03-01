@@ -62,10 +62,13 @@ public class ValidatingEncoder extends ParsingEncoder
    * Reconfigures this ValidatingEncoder to wrap the encoder provided.
    * @param encoder
    *   The Encoder to wrap for validation.
+   * @return
+   *   This ValidatingEncoder.
    */
-  public void configure(Encoder encoder) {
+  public ValidatingEncoder configure(Encoder encoder) {
     this.parser.reset();
     this.out = encoder;
+    return this;
   }
   
   @Override

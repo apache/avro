@@ -138,7 +138,7 @@ public class EncoderFactory {
   }
   
   /**
-   * Creates or reinitializes a {@link BinaryEncoder} to use the OutputStream
+   * Creates or reinitializes a {@link BinaryEncoder} with the OutputStream
    * provided as the destination for written data. If <i>reuse</i> is provided,
    * an attempt will be made to reconfigure <i>reuse</i> rather than construct a
    * new instance, but this is not guaranteed, a new instance may be returned.
@@ -162,7 +162,7 @@ public class EncoderFactory {
    * @return A BinaryEncoder that uses <i>out</i> as its data output. If
    *         <i>reuse</i> is null, this will be a new instance. If <i>reuse</i>
    *         is not null, then the returned instance may be a new instance or
-   *         <i>reuse</i> reconfigured to use <i>out</>.
+   *         <i>reuse</i> reconfigured to use <i>out</i>.
    * @throws IOException 
    * @see BufferedBinaryEncoder
    * @see Encoder
@@ -204,7 +204,7 @@ public class EncoderFactory {
    * @return A BinaryEncoder that uses <i>out</i> as its data output. If
    *         <i>reuse</i> is null, this will be a new instance. If <i>reuse</i>
    *         is not null, then the returned instance may be a new instance or
-   *         <i>reuse</i> reconfigured to use <i>out</>.
+   *         <i>reuse</i> reconfigured to use <i>out</i>.
    * @see DirectBinaryEncoder
    * @see Encoder
    */
@@ -244,7 +244,7 @@ public class EncoderFactory {
    * @return A BinaryEncoder that uses <i>out</i> as its data output. If
    *         <i>reuse</i> is null, this will be a new instance. If <i>reuse</i>
    *         is not null, then the returned instance may be a new instance or
-   *         <i>reuse</i> reconfigured to use <i>out</>.
+   *         <i>reuse</i> reconfigured to use <i>out</i>.
    * @throws IOException
    * @see BlockingBinaryEncoder
    * @see Encoder

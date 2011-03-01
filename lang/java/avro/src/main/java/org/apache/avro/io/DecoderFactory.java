@@ -219,10 +219,10 @@ public class DecoderFactory {
   }
 
   /** @deprecated use {@link #binaryDecoder(byte[], BinaryDecoder)} instead */
-//  @Deprecated
-//  public BinaryDecoder createBinaryDecoder(byte[] bytes, BinaryDecoder reuse) {
-//    return binaryDecoder(bytes, 0, bytes.length, reuse);
-//  }
+  @Deprecated
+  public BinaryDecoder createBinaryDecoder(byte[] bytes, BinaryDecoder reuse) {
+    return binaryDecoder(bytes, 0, bytes.length, reuse);
+  }
   
   /**
    * This method is shorthand for
