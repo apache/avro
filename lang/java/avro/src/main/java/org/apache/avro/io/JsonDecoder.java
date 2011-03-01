@@ -32,7 +32,12 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 
-/** A {@link Decoder} for Avro's JSON data encoding. */
+/** A {@link Decoder} for Avro's JSON data encoding. 
+ * </p>
+ * Construct using {@link DecoderFactory}.
+ * </p>
+ * JsonDecoder is not thread-safe.
+ * */
 public class JsonDecoder extends ParsingDecoder
   implements Parser.ActionHandler {
   private JsonParser in;
