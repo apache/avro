@@ -48,6 +48,9 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     setSchema(root);
   }
 
+  /** Return the {@link GenericData} implementation. */
+  public GenericData getData() { return data; }
+
   public void setSchema(Schema root) { this.root = root; }
 
   public void write(D datum, Encoder out) throws IOException {
@@ -84,7 +87,8 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     }
   }
 
-  private NullPointerException npe(NullPointerException e, String s) {
+  /** Helper method for adding a message to an NPE. */
+  protected NullPointerException npe(NullPointerException e, String s) {
     NullPointerException result = new NullPointerException(e.getMessage()+s);
     result.initCause(e.getCause() == null ? e : e.getCause());
     return result;

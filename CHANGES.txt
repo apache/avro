@@ -159,6 +159,9 @@ Avro 1.5.0 (4 March 2011)
     AVRO-771. Java: Update dependency versions
     (scottcarey)
 
+    AVRO-726. Java: Make GenericDatum{Reader,Writer} easier to extend.
+    (scottcarey)
+
     AVRO-765. Java: Improvement to BinaryDecoder readLong performance
     (scottcarey)
   
