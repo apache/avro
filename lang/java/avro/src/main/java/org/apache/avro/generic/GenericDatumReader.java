@@ -35,7 +35,7 @@ import org.apache.avro.util.WeakIdentityHashMap;
 
 /** {@link DatumReader} for generic Java objects. */
 public class GenericDatumReader<D> implements DatumReader<D> {
-  private GenericData data;
+  private final GenericData data;
   private Schema actual;
   private Schema expected;
   
@@ -63,6 +63,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     this.creator = Thread.currentThread();
   }
 
+  /** Return the {@link GenericData} implementation. */
+  public GenericData getData() { return data; }
+
   @Override
   public void setSchema(Schema writer) {
     this.actual = writer;
@@ -86,7 +89,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
   };
 
-  private ResolvingDecoder getResolver(Schema actual, Schema expected)
+  /** Gets a resolving decoder for use by this GenericDatumReader.
+   *  Unstable API.
+   *  Currently uses a thread local cache to prevent constructing the
+   *  resolvers too often, because that is very expensive.
+   */
+  protected final ResolvingDecoder getResolver(Schema actual, Schema expected)
     throws IOException {
     Thread currThread = Thread.currentThread();
     ResolvingDecoder resolver;
