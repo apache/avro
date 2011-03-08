@@ -14,7 +14,7 @@ Avro 1.5.1 (unreleased)
 
   BUG FIXES
 
-Avro 1.5.0 (4 March 2011)
+Avro 1.5.0 (10 March 2011)
 
   INCOMPATIBLE CHANGES
 
