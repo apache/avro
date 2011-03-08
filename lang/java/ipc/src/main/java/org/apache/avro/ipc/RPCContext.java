@@ -35,7 +35,9 @@ import org.apache.avro.Protocol.Message;
  */
 public class RPCContext {
   
-  protected Map<CharSequence,ByteBuffer> requestHandshakeMeta, responseHandshakeMeta;
+  private HandshakeRequest handshakeRequest;
+  private HandshakeResponse handshakeResponse;
+
   protected Map<CharSequence,ByteBuffer> requestCallMeta, responseCallMeta;
   
   protected Object response;
@@ -44,6 +46,26 @@ public class RPCContext {
   List<ByteBuffer> requestPayload;
   List<ByteBuffer> responsePayload;
   
+  /** Set the handshake request of this RPC. */
+  public void setHandshakeRequest(HandshakeRequest handshakeRequest) {
+    this.handshakeRequest = handshakeRequest;
+  }
+  
+  /** Get the handshake request of this RPC. */
+  public HandshakeRequest getHandshakeRequest() {
+    return this.handshakeRequest;
+  }
+  
+  /** Set the handshake response of this RPC. */
+  public void setHandshakeResponse(HandshakeResponse handshakeResponse) {
+    this.handshakeResponse = handshakeResponse;
+  }
+  
+  /** Get the handshake response of this RPC. */
+  public HandshakeResponse getHandshakeResponse() {
+    return this.handshakeResponse;
+  }
+
   /**
    * This is an access method for the handshake state
    * provided by the client to the server.
@@ -51,14 +73,13 @@ public class RPCContext {
    * the client to the server
    */
   public Map<CharSequence,ByteBuffer> requestHandshakeMeta() {
-    if (requestHandshakeMeta == null) {
-      requestHandshakeMeta = new HashMap<CharSequence,ByteBuffer>();
-    }
-    return requestHandshakeMeta;
+    if (handshakeRequest.meta == null)
+      handshakeRequest.meta = new HashMap<CharSequence,ByteBuffer>();
+    return handshakeRequest.meta;
   }
   
   void setRequestHandshakeMeta(Map<CharSequence,ByteBuffer> newmeta) {
-    requestHandshakeMeta = newmeta;
+    handshakeRequest.meta = newmeta;
   }
   
   /**
@@ -68,14 +89,13 @@ public class RPCContext {
    * the server to the client
    */
   public Map<CharSequence,ByteBuffer> responseHandshakeMeta() {
-    if (responseHandshakeMeta == null) {
-      responseHandshakeMeta = new HashMap<CharSequence,ByteBuffer>();
-    }
-    return responseHandshakeMeta;
+    if (handshakeResponse.meta == null)
+      handshakeResponse.meta = new HashMap<CharSequence,ByteBuffer>();
+    return handshakeResponse.meta;
   }
   
   void setResponseHandshakeMeta(Map<CharSequence,ByteBuffer> newmeta) {
-    responseHandshakeMeta = newmeta;
+    handshakeResponse.meta = newmeta;
   }
   
   /**

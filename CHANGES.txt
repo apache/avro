@@ -300,6 +300,10 @@ Avro 1.5.0 (4 March 2011)
 
     AVRO-775. Java: Fix a file handle leak in DataFileReader. (cutting)
 
+    AVRO-761. Java: Fix Requestor to not send client's protocol on
+    each handshake with stateless (HTTP) transport when protocol
+    differs from server's. (cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

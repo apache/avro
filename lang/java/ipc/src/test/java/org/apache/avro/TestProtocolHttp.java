@@ -81,8 +81,12 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     protocol.getMessages().put("ack", message);
 
     // call a server over a stateless protocol that has a one-way "ack"
-    new GenericRequestor(protocol, createTransceiver())
-      .request("ack", new GenericData.Record(message.getRequest()));
+    GenericRequestor requestor =
+      new GenericRequestor(protocol, createTransceiver());
+    requestor.request("ack", new GenericData.Record(message.getRequest()));
+
+    // make the request again, to better test handshakes w/ differing protocols
+    requestor.request("ack", new GenericData.Record(message.getRequest()));
   }
 
 }
