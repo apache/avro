@@ -298,6 +298,8 @@ Avro 1.5.0 (4 March 2011)
     AVRO-755. Java: Fix SpecificResponder to correctly handle message
     parameter lists that differ between client and server.  (cutting)
 
+    AVRO-775. Java: Fix a file handle leak in DataFileReader. (cutting)
+
 Avro 1.4.1 (13 October 2010)
 
   NEW FEATURES

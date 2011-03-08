@@ -18,9 +18,10 @@
 package org.apache.avro.file;
 
 import java.io.IOException;
+import java.io.Closeable;
 
 /** An InputStream that supports seek and tell. */
-public interface SeekableInput {
+public interface SeekableInput extends Closeable {
 
   /** Set the position for the next {@link java.io.InputStream#read(byte[],int,int) read()}. */
   void seek(long p) throws IOException;
