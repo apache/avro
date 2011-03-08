@@ -1,6 +1,6 @@
 Avro Change Log
 
-Avro 1.5.0 (4 March 2011)
+Avro 1.5.0 (10 March 2011)
 
   INCOMPATIBLE CHANGES
 
