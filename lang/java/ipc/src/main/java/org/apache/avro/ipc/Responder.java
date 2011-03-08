@@ -226,13 +226,11 @@ public abstract class Responder {
     }
     
     RPCContext context = new RPCContext();
-    context.setRequestHandshakeMeta((Map<CharSequence, ByteBuffer>) request.meta);
-    
+    context.setHandshakeRequest(request);
+    context.setHandshakeResponse(response);
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.serverConnecting(context);
     }
-    response.meta = context.responseHandshakeMeta();
-    
     handshakeWriter.write(response, out);
 
     if (connection != null && response.match != HandshakeMatch.NONE)

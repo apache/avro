@@ -54,6 +54,7 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 public class TestProtocolSpecific {
@@ -263,6 +264,7 @@ public class TestProtocolSpecific {
   public class HandshakeMonitor extends RPCPlugin{
     
     private int handshakes;
+    private HashSet<CharSequence> seenProtocols = new HashSet<CharSequence>();
     
     @Override
     public void serverConnecting(RPCContext context) {
@@ -270,6 +272,14 @@ public class TestProtocolSpecific {
       int expected = getExpectedHandshakeCount();
       if(expected > 0  && handshakes > expected){
         throw new IllegalStateException("Expected number of Protocol negotiation handshakes exceeded expected "+expected+" was "+handshakes);
+      }
+
+      // check that a given client protocol is only sent once
+      CharSequence clientProtocol =
+        context.getHandshakeRequest().clientProtocol;
+      if (clientProtocol != null) {
+        assertFalse(seenProtocols.contains(clientProtocol));
+        seenProtocols.add(clientProtocol);
       }
     }
     

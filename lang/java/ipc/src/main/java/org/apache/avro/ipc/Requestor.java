@@ -197,6 +197,7 @@ public abstract class Requestor {
       handshake.clientProtocol = new Utf8(local.toString());
     
     RPCContext context = new RPCContext();
+    context.setHandshakeRequest(handshake);
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.clientStartConnect(context);
     }
@@ -212,11 +213,13 @@ public abstract class Requestor {
     switch (handshake.match) {
     case BOTH:
       established = true;
+      sendLocalText = false;
       break;
     case CLIENT:
       LOG.debug("Handshake match = CLIENT");
       setRemote(handshake);
       established = true;
+      sendLocalText = false;
       break;
     case NONE:
       LOG.debug("Handshake match = NONE");
@@ -228,10 +231,7 @@ public abstract class Requestor {
     }
     
     RPCContext context = new RPCContext();
-    if (handshake.meta != null) {
-      context.setResponseHandshakeMeta((Map<CharSequence, ByteBuffer>) handshake.meta);
-    }
-      
+    context.setHandshakeResponse(handshake);
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.clientFinishConnect(context);
     }
