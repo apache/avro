@@ -230,6 +230,12 @@ public class DataFileReader<D>
   }
 
     @Override
+    public void close() throws IOException {
+        in.close();
+        super.close();
+    }
+
+    @Override
     public int available() throws IOException {
       long remaining = (in.length() - in.tell());
       return (remaining > Integer.MAX_VALUE) ? Integer.MAX_VALUE
