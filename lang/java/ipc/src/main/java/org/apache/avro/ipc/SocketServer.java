@@ -83,7 +83,7 @@ public class SocketServer extends Thread implements Server {
   }
 
   public void close() {
-    this.interrupt();
+    this.interrupt(); 
     group.interrupt();
   }
 
