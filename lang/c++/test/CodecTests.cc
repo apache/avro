@@ -22,6 +22,7 @@
 #include "Decoder.hh"
 #include "Compiler.hh"
 #include "ValidSchema.hh"
+#include "Generic.hh"
 
 #include <stdint.h>
 #include <vector>
@@ -52,6 +53,14 @@ static const unsigned int count = 10;
  * 
  * To test Json encoder and decoder, we use the same technqiue with only
  * one difference - we use JsonEncoder and JsonDecoder.
+ *
+ * We also use the same infrastructure to test GenericReader and GenericWriter.
+ * In this case, avro binary is generated in the standard way. It is read
+ * into a GenericDatum, which in turn is written out. This newly serialized
+ * data is decoded in the standard way to check that it is what is written. The
+ * last step won't work if there is schema for reading is different from
+ * that for writing. This is because any reordering of fields would have
+ * got fixed by the GenericDatum's decoding and encoding step.
  *
  * For most tests, the data is generated at random.
  */
@@ -611,7 +620,7 @@ void testCodec(const TestData& td) {
                 << " schema: " << td.schema
                 << " calls: " << td.calls
                 << " skip-level: " << skipLevel << std::endl;
-            */
+                */
             BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
                 << " schema: " << td.schema
                 << " calls: " << td.calls
@@ -735,6 +744,128 @@ void testWriterFail(const TestData2& td) {
     BOOST_CHECK_THROW(testEncoder(CodecFactory::newEncoder(vs),
         td.incorrectCalls, v, p), Exception);
 }
+
+template<typename CodecFactory>
+void testGeneric(const TestData& td) {
+    static int testNo = 0;
+    testNo++;
+
+    ValidSchema vs = makeValidSchema(td.schema);
+
+    for (unsigned int i = 0; i < count; ++i) {
+        vector<string> v;
+        auto_ptr<OutputStream> p;
+        testEncoder(CodecFactory::newEncoder(vs), td.calls, v, p);
+        // dump(*p);
+        DecoderPtr d1 = CodecFactory::newDecoder(vs);
+        auto_ptr<InputStream> in1 = memoryInputStream(*p);
+        d1->init(*in1);
+        GenericReader gr(vs, d1);
+        GenericDatum datum;
+        gr.read(datum);
+
+        EncoderPtr e2 = CodecFactory::newEncoder(vs);
+        auto_ptr<OutputStream> ob = memoryOutputStream();
+        e2->init(*ob);
+
+        GenericWriter gw(vs, e2);
+        gw.write(datum);
+        e2->flush();
+
+        BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
+            << " schema: " << td.schema
+            << " calls: " << td.calls);
+        auto_ptr<InputStream> in2 = memoryInputStream(*ob);
+        testDecoder(CodecFactory::newDecoder(vs), v, *in2,
+            td.calls, td.depth);
+    }
+}
+
+template<typename CodecFactory>
+void testGenericResolving(const TestData3& td) {
+    static int testNo = 0;
+    testNo++;
+
+    BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
+        << " writer schema: " << td.writerSchema
+        << " writer calls: " << td.writerCalls
+        << " reader schema: " << td.readerSchema
+        << " reader calls: " << td.readerCalls);
+
+    ValidSchema wvs = makeValidSchema(td.writerSchema);
+    ValidSchema rvs = makeValidSchema(td.readerSchema);
+
+    for (unsigned int i = 0; i < count; ++i) {
+        vector<string> v;
+        auto_ptr<OutputStream> p;
+        testEncoder(CodecFactory::newEncoder(wvs), td.writerCalls, v, p);
+        // dump(*p);
+        DecoderPtr d1 = CodecFactory::newDecoder(wvs);
+        auto_ptr<InputStream> in1 = memoryInputStream(*p);
+        d1->init(*in1);
+
+        GenericReader gr(wvs, rvs, d1);
+        GenericDatum datum;
+        gr.read(datum);
+
+        EncoderPtr e2 = CodecFactory::newEncoder(rvs);
+        auto_ptr<OutputStream> ob = memoryOutputStream();
+        e2->init(*ob);
+
+        GenericWriter gw(rvs, e2);
+        gw.write(datum);
+        e2->flush();
+
+        BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
+            << " writer-schemai " << td.writerSchema
+            << " writer-calls: " << td.writerCalls 
+            << " reader-schema: " << td.readerSchema
+            << " calls: " << td.readerCalls);
+        auto_ptr<InputStream> in2 = memoryInputStream(*ob);
+        testDecoder(CodecFactory::newDecoder(rvs), v, *in2,
+            td.readerCalls, td.depth);
+    }
+}
+
+template<typename CodecFactory>
+void testGenericResolving2(const TestData4& td) {
+    static int testNo = 0;
+    testNo++;
+
+    BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
+        << " writer schema: " << td.writerSchema
+        << " writer calls: " << td.writerCalls
+        << " reader schema: " << td.readerSchema
+        << " reader calls: " << td.readerCalls);
+
+    ValidSchema wvs = makeValidSchema(td.writerSchema);
+    ValidSchema rvs = makeValidSchema(td.readerSchema);
+
+    const vector<string> wd = mkValues(td.writerValues);
+
+    auto_ptr<OutputStream> p = generate(*CodecFactory::newEncoder(wvs),
+        td.writerCalls, wd);
+    // dump(*p);
+    DecoderPtr d1 = CodecFactory::newDecoder(wvs);
+    auto_ptr<InputStream> in1 = memoryInputStream(*p);
+    d1->init(*in1);
+
+    GenericReader gr(wvs, rvs, d1);
+    GenericDatum datum;
+    gr.read(datum);
+
+    EncoderPtr e2 = CodecFactory::newEncoder(rvs);
+    auto_ptr<OutputStream> ob = memoryOutputStream();
+    e2->init(*ob);
+
+    GenericWriter gw(rvs, e2);
+    gw.write(datum);
+    e2->flush();
+    // We cannot verify with the reader calls because they are for
+    // the resolving decoder and hence could be in a different order than
+    // the "normal" data.
+}
+
 
 static const TestData data[] = {
     { "\"null\"", "N", 1 },
@@ -1262,6 +1393,10 @@ void add_tests(boost::unit_test::test_suite& ts)
         testCodecResolving2, data4);
     ADD_TESTS(ts, ValidatingEncoderResolvingDecoderFactory,
         testCodecResolving2, data4);
+
+    ADD_TESTS(ts, ValidatingCodecFactory, testGeneric, data);
+    ADD_TESTS(ts, ValidatingCodecFactory, testGenericResolving, data3);
+    ADD_TESTS(ts, ValidatingCodecFactory, testGenericResolving2, data4);
 }
 
 }   // namespace parsing

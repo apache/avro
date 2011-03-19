@@ -237,6 +237,8 @@ Avro 1.5.0 (10 March 2011)
     AVRO-754. Java: Permit passing custom channel factory to NettyTransceiver.
     (Bruno Dumon via cutting)
 
+    AVRO-781. Generic data support in C++. (thiru)
+
   BUG FIXES
 
     AVRO-764. Java: Bug in BinaryData.compare() with offset comparison.

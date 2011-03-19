@@ -37,12 +37,14 @@ project (Avro-cpp)
 find_package (Boost 1.38 COMPONENTS regex filesystem system)
 
 include_directories (api ${BUILD_DIRECTORY})
-add_library (avrocpp SHARED impl/Compiler.cc
+
+add_library (avrocpp SHARED
         impl/Compiler.cc impl/CompilerNode.cc impl/Node.cc
         impl/NodeImpl.cc impl/Resolver.cc impl/ResolverSchema.cc impl/Schema.cc
         impl/Types.cc impl/Validator.cc impl/ValidSchema.cc impl/Zigzag.cc
         impl/BinaryEncoder.cc impl/BinaryDecoder.cc
         impl/Stream.cc impl/FileStream.cc
+        impl/Generic.cc
         impl/parsing/Symbol.cc
         impl/parsing/ValidatingCodec.cc
         impl/parsing/JsonCodec.cc
@@ -86,7 +88,7 @@ add_custom_command (OUTPUT ${BUILD_DIRECTORY}/AvroLex.cc
     
 macro (test name)
     add_executable (${name} test/${name}.cc)
-    target_link_libraries (${name} avrocpp boost_regex-mt)
+    target_link_libraries (${name} avrocpp ${Boost_LIBRARIES})
 endmacro (test)
 
 test(buffertest)
@@ -100,7 +102,7 @@ target_link_libraries (StreamTests avrocpp ${Boost_LIBRARIES})
 
 add_executable (testgentest test/testgen.cc)
 add_dependencies (testgentest testgen testgen2)
-target_link_libraries (testgentest avrocpp boost_regex-mt)
+target_link_libraries (testgentest avrocpp ${Boost_LIBRARIES})
 
 include (InstallRequiredSystemLibraries)
 

@@ -109,7 +109,7 @@ anytext .*
 <READFIELD>\"name\"{delim}\"    yy_push_state(READFIELDNAME); 
 <READFIELD>\}                   yy_pop_state(); return AVRO_LEX_FIELD_END;
 <READFIELD>,                    return yytext[0];
-<READFIELD>{avrotext}+{delim}      yy_push_state(READMETADATA); return AVRO_LEX_METADATA;
+<READFIELD>\"{avrotext}\"+{delim}      yy_push_state(READMETADATA); return AVRO_LEX_METADATA;
 <READFIELD>{ws}                 ;
 
 <READFIELDS>\{                  yy_push_state(READFIELD); return AVRO_LEX_FIELD;
@@ -158,7 +158,7 @@ anytext .*
 <INOBJECT>\"symbols\"{delim}\[  yy_push_state(READSYMBOLS); return AVRO_LEX_SYMBOLS;
 <INOBJECT>,                     return yytext[0];
 <INOBJECT>\}                    yy_pop_state(); return yytext[0];
-<INOBJECT>{avrotext}+{delim}       yy_push_state(READMETADATA); return AVRO_LEX_METADATA;
+<INOBJECT>\"{avrotext}+\"{delim}       yy_push_state(READMETADATA); return AVRO_LEX_METADATA;
 <INOBJECT>{ws}                  ;
 
 <STARTTYPE>\"                   yy_pop_state(); yy_push_state(READTYPE); 
