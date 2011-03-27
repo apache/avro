@@ -23,8 +23,8 @@
 #include <map>
 #include <string>
 
-#include <boost/utility.hpp>
 #include <boost/any.hpp>
+#include <boost/utility.hpp>
 
 #include "Node.hh"
 #include "Types.hh"
@@ -237,6 +237,11 @@ public:
         const ValidSchema& readerSchema, const DecoderPtr& decoder);
 
     void read(GenericDatum& datum) const;
+
+    /**
+     * Reads a generic datum from the stream, using the given schema.
+     */
+    static void read(Decoder& d, GenericDatum& g, const ValidSchema& s);
 };
 
 
@@ -249,6 +254,24 @@ public:
     GenericWriter(const ValidSchema& s, const EncoderPtr& encoder);
 
     void write(const GenericDatum& datum) const;
+
+    /**
+     * Writes a generic datum on to the stream, using the given schema.
+     */
+    static void write(Encoder& e, const GenericDatum& g, const ValidSchema& s);
+};
+
+template <typename T> struct codec_traits;
+
+template <> struct codec_traits<std::pair<ValidSchema, GenericDatum> > {
+    static void encode(Encoder& e,
+        const std::pair<ValidSchema, GenericDatum>& p) {
+        GenericWriter::write(e, p.second, p.first);
+    }
+
+    static void decode(Decoder& d, std::pair<ValidSchema, GenericDatum>& p) {
+        GenericReader::read(d, p.second, p.first);
+    }
 };
 }   // namespace avro
 #endif

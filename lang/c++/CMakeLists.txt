@@ -34,7 +34,7 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
 
 project (Avro-cpp)
 
-find_package (Boost 1.38 COMPONENTS regex filesystem system)
+find_package (Boost 1.38 COMPONENTS regex filesystem system program_options)
 
 include_directories (api ${BUILD_DIRECTORY})
 
@@ -82,10 +82,31 @@ add_custom_target (testgen2
 add_custom_command (OUTPUT ${BUILD_DIRECTORY}/AvroYacc.cc
     COMMAND bison --defines=AvroYacc.hh -o AvroYacc.cc ../parser/AvroYacc.yy
     WORKING_DIRECTORY ${BUILD_DIRECTORY})
+
 add_custom_command (OUTPUT ${BUILD_DIRECTORY}/AvroLex.cc
     COMMAND flex -oAvroLex.cc ../parser/AvroLex.ll
     WORKING_DIRECTORY ${BUILD_DIRECTORY})
     
+add_custom_target (bigrecord_hh
+    COMMAND avrogencpp -i jsonschemas/bigrecord
+        -o ${BUILD_DIRECTORY}/bigrecord.hh -n testgen
+    DEPENDS avrogencpp)
+
+add_custom_target (bigrecord2_hh
+    COMMAND avrogencpp -i jsonschemas/bigrecord2
+        -o ${BUILD_DIRECTORY}/bigrecord2.hh -n testgen2
+    DEPENDS avrogencpp)
+
+add_custom_target (union_array_union_hh
+    COMMAND avrogencpp -i jsonschemas/union_array_union
+        -o ${BUILD_DIRECTORY}/union_array_union.hh -n uau
+    DEPENDS avrogencpp)
+
+add_custom_target (union_map_union_hh
+    COMMAND avrogencpp -i jsonschemas/union_map_union
+        -o ${BUILD_DIRECTORY}/union_map_union.hh -n umu
+    DEPENDS avrogencpp)
+
 macro (test name)
     add_executable (${name} test/${name}.cc)
     target_link_libraries (${name} avrocpp ${Boost_LIBRARIES})
@@ -100,9 +121,20 @@ target_link_libraries (CodecTests avrocpp ${Boost_LIBRARIES})
 add_executable (StreamTests test/StreamTests.cc)
 target_link_libraries (StreamTests avrocpp ${Boost_LIBRARIES})
 
+add_executable (SpecificTests test/SpecificTests.cc)
+target_link_libraries (SpecificTests avrocpp ${Boost_LIBRARIES})
+
+add_executable (avrogencpp impl/avrogencpp.cc)
+target_link_libraries (avrogencpp avrocpp ${Boost_LIBRARIES})
+
 add_executable (testgentest test/testgen.cc)
 add_dependencies (testgentest testgen testgen2)
 target_link_libraries (testgentest avrocpp ${Boost_LIBRARIES})
+
+add_executable (AvrogencppTests test/AvrogencppTests.cc)
+add_dependencies (AvrogencppTests bigrecord_hh bigrecord2_hh
+    union_array_union_hh union_map_union_hh)
+target_link_libraries (AvrogencppTests avrocpp ${BOOST_LIBRARIES})
 
 include (InstallRequiredSystemLibraries)
 

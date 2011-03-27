@@ -239,6 +239,8 @@ Avro 1.5.0 (10 March 2011)
 
     AVRO-781. Generic data support in C++. (thiru)
 
+    AVRO-783. Specifc object support in C++. (thiru)
+
   BUG FIXES
 
     AVRO-764. Java: Bug in BinaryData.compare() with offset comparison.

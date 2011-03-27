@@ -93,7 +93,8 @@ GenericRecord::GenericRecord(const NodePtr& schema) : GenericContainer(schema) {
 }
 
 GenericReader::GenericReader(const ValidSchema& s, const DecoderPtr& decoder) :
-    schema_(s), isResolving_(false), decoder_(decoder)
+    schema_(s), isResolving_(dynamic_cast<ResolvingDecoder*>(&(*decoder)) != 0),
+    decoder_(decoder)
 {
 }
 
@@ -243,6 +244,11 @@ void GenericReader::read(GenericDatum& datum, const NodePtr& n, Decoder& d,
     default:
         throw Exception("Unknown schema type");
     }
+}
+
+void GenericReader::read(Decoder& d, GenericDatum& g, const ValidSchema& s)
+{
+    read(g, s.root(), d, dynamic_cast<ResolvingDecoder*>(&d) != 0);
 }
 
 static void typeMismatch(Type t, Type u)
@@ -420,6 +426,12 @@ void GenericWriter::write(const GenericDatum& datum,
     default:
         throw Exception("Unknown schema type");
     }
+}
+
+void GenericWriter::write(Encoder& e, const GenericDatum& g,
+    const ValidSchema& s)
+{
+    write(g, s.root(), e);
 }
 
 }   // namespace avro
