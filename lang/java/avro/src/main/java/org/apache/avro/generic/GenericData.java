@@ -70,7 +70,7 @@ public class GenericData {
       Record that = (Record)o;
       if (!schema.getFullName().equals(that.schema.getFullName()))
         return false;                             // not the same schema
-      return this.compareTo(that) == 0;
+      return GenericData.get().compare(this, that, schema, true) == 0;
     }
     @Override public int hashCode() {
       return GenericData.get().hashCode(this, schema);
@@ -609,8 +609,14 @@ public class GenericData {
    * greater-than, return 1, if less than return -1.  Order is consistent with
    * that of {@link BinaryData#compare(byte[], int, byte[], int, Schema)}.
    */
-  @SuppressWarnings(value="unchecked")
   public int compare(Object o1, Object o2, Schema s) {
+    return compare(o1, o2, s, false);
+  }
+
+  /** Comparison implementation.  When equals is true, only checks for equality,
+   * not for order. */
+  @SuppressWarnings(value="unchecked")
+  protected int compare(Object o1, Object o2, Schema s, boolean equals) {
     if (o1 == o2) return 0;
     switch (s.getType()) {
     case RECORD:
@@ -620,7 +626,8 @@ public class GenericData {
         int pos = f.pos();
         String name = f.name();
         int compare =
-          compare(getField(o1, name, pos), getField(o2, name, pos), f.schema());
+          compare(getField(o1, name, pos), getField(o2, name, pos),
+                  f.schema(), equals);
         if (compare != 0)                         // not equal
           return f.order() == Field.Order.DESCENDING ? -compare : compare;
       }
@@ -634,17 +641,19 @@ public class GenericData {
       Iterator e2 = a2.iterator();
       Schema elementType = s.getElementType();
       while(e1.hasNext() && e2.hasNext()) {
-        int compare = compare(e1.next(), e2.next(), elementType);
+        int compare = compare(e1.next(), e2.next(), elementType, equals);
         if (compare != 0) return compare;
       }
       return e1.hasNext() ? 1 : (e2.hasNext() ? -1 : 0);
     case MAP:
+      if (equals)
+        return ((Map)o1).equals(o2) ? 0 : 1;
       throw new AvroRuntimeException("Can't compare maps!");
     case UNION:
       int i1 = resolveUnion(s, o1);
       int i2 = resolveUnion(s, o2);
       return (i1 == i2)
-        ? compare(o1, o2, s.getTypes().get(i1))
+        ? compare(o1, o2, s.getTypes().get(i1), equals)
         : i1 - i2;
     case NULL:
       return 0;

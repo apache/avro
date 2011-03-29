@@ -189,13 +189,13 @@ public class SpecificData extends GenericData {
   }
 
   @Override
-  public int compare(Object o1, Object o2, Schema s) {
+  protected int compare(Object o1, Object o2, Schema s, boolean eq) {
     switch (s.getType()) {
     case ENUM:
       if (o1 instanceof Enum)
         return ((Enum)o1).ordinal() - ((Enum)o2).ordinal();
     default:
-      return super.compare(o1, o2, s);
+      return super.compare(o1, o2, s, eq);
     }
   }
 
