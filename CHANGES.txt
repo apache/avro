@@ -12,6 +12,11 @@ Avro 1.6.0 (unreleased)
 
 Avro 1.5.1 (unreleased)
 
+  IMPROVEMENTS
+
+    AVRO-785. Java: Squash a Velocity warning by upgrading to Velocity 1.7.
+    (cutting)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)
