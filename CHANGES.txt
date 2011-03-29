@@ -14,6 +14,8 @@ Avro 1.5.1 (unreleased)
 
   BUG FIXES
 
+    AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)
+
 Avro 1.5.0 (10 March 2011)
 
   INCOMPATIBLE CHANGES

@@ -200,6 +200,20 @@ public class TestSchema {
   }
 
   @Test
+  public void testMapInRecord() throws Exception {
+    String json = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
+      +"[{\"name\":\"f\", \"type\": {\"type\":\"map\", \"values\":\"long\"}}]}";
+    Schema schema = Schema.parse(json);
+
+    HashMap<Utf8,Long> map = new HashMap<Utf8,Long>();
+    map.put(new Utf8("a"), 1L);
+    GenericData.Record record = new GenericData.Record(schema);
+    record.put("f", map);
+    check(json, "{\"f\":{\"a\":1}}", record, false);
+  }
+
+
+  @Test
   public void testEnum() throws Exception {
     check(BASIC_ENUM_SCHEMA, "\"B\"",
           new GenericData.EnumSymbol(Schema.parse(BASIC_ENUM_SCHEMA), "B"),
