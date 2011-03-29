@@ -41,7 +41,7 @@
     <slf4j-version>1.6.1</slf4j-version>
     <jackson-version>1.7.3</jackson-version>
     <hadoop-version>0.20.2</hadoop-version>
-    <velocity-version>1.6.4</velocity-version>
+    <velocity-version>1.7</velocity-version>
     <jetty-version>6.1.26</jetty-version>
     <netty-version>3.2.4.Final</netty-version> 
     <jopt-simple-version>3.2</jopt-simple-version>
