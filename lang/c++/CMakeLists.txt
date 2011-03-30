@@ -45,6 +45,7 @@ add_library (avrocpp SHARED
         impl/BinaryEncoder.cc impl/BinaryDecoder.cc
         impl/Stream.cc impl/FileStream.cc
         impl/Generic.cc
+        impl/DataFile.cc
         impl/parsing/Symbol.cc
         impl/parsing/ValidatingCodec.cc
         impl/parsing/JsonCodec.cc
@@ -135,6 +136,9 @@ add_executable (AvrogencppTests test/AvrogencppTests.cc)
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord2_hh
     union_array_union_hh union_map_union_hh)
 target_link_libraries (AvrogencppTests avrocpp ${BOOST_LIBRARIES})
+
+add_executable (DataFileTests test/DataFileTests.cc)
+target_link_libraries (DataFileTests avrocpp ${Boost_LIBRARIES})
 
 include (InstallRequiredSystemLibraries)
 

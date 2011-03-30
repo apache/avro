@@ -84,6 +84,7 @@ case "$target" in
     ./build/StreamTests
     ./build/SpecificTests
     ./build/AvrogencppTests
+    ./build/DataFileTests
 	;;
 
     dist)

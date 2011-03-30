@@ -113,16 +113,17 @@ class FileOutputStream : public OutputStream {
     size_t available_;
     size_t byteCount_;
 
+    // Invaiant: byteCount_ == byteswritten + bufferSize_ - available_;
     bool next(uint8_t** data, size_t* len) {
         if (available_ == 0) {
             flush();
         }
         *data = next_;
         *len = available_;
-        byteCount_ += available_;
         next_ += available_;
         byteCount_ += available_;
         available_ = 0;
+        return true;
     }
 
     void backup(size_t len) {
@@ -150,7 +151,7 @@ public:
         buffer_(new uint8_t[bufferSize]),
         out_(::open(filename, O_WRONLY | O_CREAT | O_BINARY, 0644)),
         next_(buffer_),
-        available_(bufferSize_) { }
+        available_(bufferSize_), byteCount_(0) { }
 
     ~FileOutputStream() {
         if (out_ >= 0) {
