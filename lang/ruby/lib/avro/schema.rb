@@ -102,7 +102,7 @@ module Avro
       when 'array'
         datum.is_a?(Array) &&
           datum.all?{|d| validate(expected_schema.items, d) }
-      when 'map':
+      when 'map'
           datum.keys.all?{|k| k.is_a? String } &&
           datum.values.all?{|v| validate(expected_schema.values, v) }
       when 'union'
