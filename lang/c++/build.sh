@@ -82,6 +82,9 @@ case "$target" in
     ./build/testgentest
     ./build/CodecTests
     ./build/StreamTests
+    ./build/SpecificTests
+    ./build/AvrogencppTests
+    ./build/DataFileTests
 	;;
 
     dist)
