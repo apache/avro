@@ -145,7 +145,7 @@ EOS
     bytes = []
     current_byte = reader.read(1)
     bytes << hexlify(current_byte)
-    while (current_byte[0] & 0x80) != 0
+    while (current_byte.unpack('C').first & 0x80) != 0
       current_byte = reader.read(1)
       bytes << hexlify(current_byte)
     end
@@ -153,7 +153,7 @@ EOS
   end
 
   def hexlify(msg)
-    msg.split("").collect { |c| c[0].to_s(16).rjust(2, '0') }.join
+    msg.unpack("H*")
   end
 
   def test_binary_int_encoding

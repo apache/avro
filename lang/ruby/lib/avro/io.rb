@@ -43,9 +43,9 @@ module Avro
       end
 
       def byte!
-        @reader.read(1)[0]
+        @reader.read(1).unpack('C').first
       end
-
+      
       def read_null
         # null is written as zero byte's
         nil

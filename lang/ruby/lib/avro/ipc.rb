@@ -399,7 +399,7 @@ module Avro::IPC
       message_length = message.size
       total_bytes_sent = 0
       while message_length - total_bytes_sent > 0
-        if message_length - total_bytes_sent > BUFFER_SIZE:
+        if message_length - total_bytes_sent > BUFFER_SIZE
           buffer_length = BUFFER_SIZE
         else
           buffer_length = message_length - total_bytes_sent

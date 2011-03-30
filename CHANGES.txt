@@ -19,9 +19,11 @@ Avro 1.5.1 (unreleased)
 
     AVRO-781. Generic data support in C++. (thiru)
 
-    AVRO-783. Specifc object support in C++. (thiru)
+    AVRO-783. Specific object support in C++. (thiru)
 
     AVRO-789. Datafile support in C++. (thiru)
+
+    AVRO-787. Ruby: Make compatible with Ruby 1.9. (Michael L. Artz via cutting)
 
   BUG FIXES
 
