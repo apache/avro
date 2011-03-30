@@ -550,6 +550,14 @@ public class TestReflect {
     checkBinary(schema, record);
   }
 
+  /** Test union of null and an array. */
+  @Test
+  public void testNullArray() throws Exception {
+    String json = "[{\"type\":\"array\", \"items\": \"long\"}, \"null\"]";
+    Schema schema = Schema.parse(json);
+    checkBinary(schema, null);
+  }
+
   public static void checkBinary(Schema schema, Object datum)
     throws IOException {
     ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(schema);

@@ -103,7 +103,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     } catch (NullPointerException e) {            // improve error message
       NullPointerException result =
         new NullPointerException("in "+schema.getFullName()+" "+e.getMessage());
-      result.initCause(e);
+      result.initCause(e.getCause() == null ? e : e.getCause());
       throw result;
     }
   }

@@ -106,6 +106,7 @@ public class ReflectData extends SpecificData {
 
   @Override
   protected boolean isArray(Object datum) {
+    if (datum == null) return false;
     return (datum instanceof Collection) || datum.getClass().isArray();
   }
 
