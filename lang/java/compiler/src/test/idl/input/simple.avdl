@@ -21,6 +21,7 @@
  */
 @namespace("org.apache.avro.test")
 protocol Simple {
+  /** A kind of record. */
   @aliases(["org.foo.KindOf"])
   enum Kind {
     FOO,
@@ -28,11 +29,14 @@ protocol Simple {
     BAZ
   }
 
+  /** An MD5 hash. */
   fixed MD5(16);
 
+  /** A TestRecord. */
   record TestRecord {
     string @order("ignore") name = "foo";
 
+    /** The kind of record. */
     Kind @order("descending") kind;
 
     @foo("bar") MD5 hash;

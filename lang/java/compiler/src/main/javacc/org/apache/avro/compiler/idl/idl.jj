@@ -91,6 +91,14 @@ public class Idl
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
 
+  private static final ThreadLocal<String> DOC = new ThreadLocal<String>();
+  static void setDoc(String doc) { DOC.set(doc.trim()); }
+  static String getDoc() {
+    String doc = DOC.get();
+    DOC.set(null);
+    return doc;
+  }
+
   public Idl(File inputFile) throws IOException {
     this(new FileInputStream(inputFile), "UTF-8");
     this.inputDir = inputFile.getParentFile();
@@ -140,34 +148,34 @@ SKIP :
 
 /* COMMENTS */
 
-MORE :
-{
-  <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
-|
-  "/*" : IN_MULTI_LINE_COMMENT
-}
-
-SPECIAL_TOKEN :
+SKIP :
 {
   <SINGLE_LINE_COMMENT: "//" (~["\n", "\r"])* ("\n" | "\r" | "\r\n")?>
 }
 
-<IN_FORMAL_COMMENT>
-SPECIAL_TOKEN :
+SKIP :
 {
-  <FORMAL_COMMENT: "*/" > : DEFAULT
+  <"/**" ~["/"]> { input_stream.backup(1); } : DOC_COMMENT
+|
+  "/*" : MULTI_LINE_COMMENT
 }
 
-<IN_MULTI_LINE_COMMENT>
-SPECIAL_TOKEN :
-{
-  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
-}
-
-<IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+<DOC_COMMENT,MULTI_LINE_COMMENT>
 MORE :
 {
   < ~[] >
+}
+
+<DOC_COMMENT>
+SPECIAL_TOKEN :
+{
+  <"*/" > {Idl.setDoc(image.substring(0, image.length()-2));} : DEFAULT
+}
+
+<MULTI_LINE_COMMENT>
+SKIP :
+{
+  <"*/" > : DEFAULT
 }
 
 /* RESERVED WORDS AND LITERALS */
@@ -1038,6 +1046,7 @@ Protocol ProtocolDeclaration():
  "protocol"
    name = Identifier()
  {
+   getDoc();                                      // consume doc
    p = new Protocol(name, namespace);
  }
  ProtocolBody(p)
@@ -1057,7 +1066,7 @@ Schema EnumDeclaration():
   name = Identifier()
   symbols = EnumBody()
   {
-    Schema s = Schema.createEnum(name, null, this.namespace, symbols);
+    Schema s = Schema.createEnum(name, getDoc(), this.namespace, symbols);
     names.put(s.getFullName(), s);
     return s;
   }
@@ -1169,7 +1178,7 @@ Schema FixedDeclaration():
   "fixed" name = Identifier() "(" sizeTok = <INTEGER_LITERAL> ")"
   ";"
   {
-    Schema s = Schema.createFixed(name, null, this.namespace,
+    Schema s = Schema.createFixed(name, getDoc(), this.namespace,
                                   Integer.parseInt(sizeTok.image));
     names.put(s.getFullName(), s);
     return s;
@@ -1190,7 +1199,7 @@ Schema RecordDeclaration():
   name = Identifier()
   {
     Schema result = Schema.createRecord(
-      name, null, this.namespace, isError);
+      name, getDoc(), this.namespace, isError);
     names.put(result.getFullName(), result);
   }
   "{"
@@ -1254,7 +1263,7 @@ void VariableDeclarator(Schema type, List<Field> fields):
     for (String key : props.keySet())
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
-    Field field = new Field(name, type, null, defaultValue, order);
+    Field field = new Field(name, type, getDoc(), defaultValue, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
