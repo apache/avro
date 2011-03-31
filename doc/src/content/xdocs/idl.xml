@@ -302,6 +302,9 @@ void fireAndForget(string message) oneway;
         <p>All Java-style comments are supported within a Avro IDL file. Any text following
         <code>//</code> on a line is ignored, as is any text between <code>/*</code> and
         <code>*/</code>, possibly spanning multiple lines.</p>
+        <p>Comments that begin with <code>/**</code> are used as the
+        documentation string for the type or field definition that
+        follows the comment.</p>
       </section>
       <section id="minutiae_escaping">
         <title>Escaping Identifiers</title>

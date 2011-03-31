@@ -30,6 +30,9 @@ Avro 1.5.1 (unreleased)
 
     AVRO-787. Ruby: Make compatible with Ruby 1.9. (Michael L. Artz via cutting)
 
+    AVRO-296. IDL: Use double-asterisk comments for schema documentation.
+    (cutting)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)

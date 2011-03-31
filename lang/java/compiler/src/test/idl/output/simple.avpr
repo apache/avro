@@ -4,16 +4,19 @@
   "types" : [ {
     "type" : "enum",
     "name" : "Kind",
+    "doc" : "A kind of record.",
     "symbols" : [ "FOO", "BAR", "BAZ" ],
     "aliases" : [ "org.foo.KindOf" ]
   }, {
     "type" : "fixed",
     "name" : "MD5",
+    "doc" : "An MD5 hash.",
     "size" : 16,
     "foo" : "bar"
   }, {
     "type" : "record",
     "name" : "TestRecord",
+    "doc" : "A TestRecord.",
     "fields" : [ {
       "name" : "name",
       "type" : "string",
@@ -22,6 +25,7 @@
     }, {
       "name" : "kind",
       "type" : "Kind",
+      "doc" : "The kind of record.",
       "order" : "descending"
     }, {
       "name" : "hash",
