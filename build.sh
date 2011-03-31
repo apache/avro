@@ -44,6 +44,7 @@ case "$target" in
 	(cd lang/py; ant test)
 	(cd lang/c; ./build.sh test)
 	(cd lang/c++; ./build.sh test)
+	(cd lang/csharp; ./build.sh test)
 	(cd lang/ruby; rake test)
 	(cd lang/php; ./build.sh test)
 
@@ -143,6 +144,8 @@ case "$target" in
 	(cd lang/c; ./build.sh clean)
 
 	(cd lang/c++; ./build.sh clean)
+
+	(cd lang/csharp; ./build.sh clean)
 
 	(cd lang/ruby; rake clean)
 
