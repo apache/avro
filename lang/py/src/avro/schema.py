@@ -113,18 +113,18 @@ class Schema(object):
     # add members
     if not hasattr(self, '_props'): self._props = {}
     self.set_prop('type', type)
+    self.type = type
 
   # Read-only properties dict. Printing schemas
   # creates JSON properties directly from this dict. 
   props = property(lambda self: self._props)
-  type = property(lambda self: self.get_prop('type'))
 
   # utility functions to manipulate properties dict
   def get_prop(self, key):
-    return self.props.get(key)
+    return self._props.get(key)
 
   def set_prop(self, key, value):
-    self.props[key] = value
+    self._props[key] = value
 
   def __str__(self):
     names = Names()
@@ -310,13 +310,13 @@ class Field(object):
         raise SchemaParseException(fail_msg)
     self.set_prop('type', type_schema)
     self.set_prop('name', name)
+    self.type = type_schema
+    self.name = name
     # TODO(hammer): check to ensure default is valid
     if has_default: self.set_prop('default', default)
     if order is not None: self.set_prop('order', order)
 
   # read-only properties
-  type = property(lambda self: self.get_prop('type'))
-  name = property(lambda self: self.get_prop('name'))
   default = property(lambda self: self.get_prop('default'))
   has_default = property(lambda self: self._has_default)
   order = property(lambda self: self.get_prop('order'))
@@ -324,9 +324,9 @@ class Field(object):
 
   # utility functions to manipulate properties dict
   def get_prop(self, key):
-    return self.props.get(key)
+    return self._props.get(key)
   def set_prop(self, key, value):
-    self.props[key] = value
+    self._props[key] = value
 
   def to_json(self, names):
     to_dump = self.props.copy()

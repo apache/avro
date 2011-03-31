@@ -33,6 +33,8 @@ Avro 1.5.1 (unreleased)
     AVRO-296. IDL: Use double-asterisk comments for schema documentation.
     (cutting)
 
+    AVRO-709. Python: Optimize property lookup. (Justin Azoff via cutting)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)
