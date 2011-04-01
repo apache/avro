@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-lang/csharp/Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.main", "src\apache\main\Avro.main.csproj", "{A0A5CA3C-F58C-4D07-98B0-2C7B62AB20F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.main", "src\apache\main\Avro.main.csproj", "{A0A5CA3C-F58C-4D07-98B0-2C7B62AB20F0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.test", "src\apache\test\Avro.test.csproj", "{911D56AB-587B-4E5F-B5EA-D47D8A46F1FA}"
 EndProject
