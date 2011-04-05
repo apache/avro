@@ -33,6 +33,7 @@ using std::pair;
 using std::vector;
 using std::map;
 using std::istringstream;
+using std::ostringstream;
 
 using boost::array;
 using boost::shared_ptr;
@@ -55,14 +56,16 @@ struct Integer {
     int64_t re;
     Integer() : re(0) { }
     Integer(int64_t r) : re(r) { }
-
-    bool operator==(const Integer& oth) const {
-        return re == oth.re;
-    }
 };
 
 typedef Complex<int64_t> ComplexInteger;
 typedef Complex<double> ComplexDouble;
+
+struct Double {
+    double re;
+    Double() : re(0) { }
+    Double(double r) : re(r) { }
+};
 
 namespace avro {
 
@@ -80,6 +83,12 @@ template <typename T> struct codec_traits<Complex<T> > {
 
 template <> struct codec_traits<Integer> {
     static void decode(Decoder& d, Integer& c) {
+        avro::decode(d, c.re);
+    }
+};
+
+template <> struct codec_traits<Double> {
+    static void decode(Decoder& d, Double& c) {
         avro::decode(d, c.re);
     }
 };
@@ -108,6 +117,18 @@ static const char dsch[] = "{\"type\": \"record\","
         "{\"name\":\"re\", \"type\":\"double\"},"
         "{\"name\":\"im\", \"type\":\"double\"}"
     "]}";
+static const char dblsch[] = "{\"type\": \"record\","
+    "\"name\":\"ComplexDouble\", \"fields\": ["
+        "{\"name\":\"re\", \"type\":\"double\"}"
+    "]}";
+
+
+string toString(const ValidSchema& s)
+{
+    ostringstream oss;
+    s.toJson(oss);
+    return oss.str();
+}
 
 class DataFileTest {
     const char* filename;
@@ -263,6 +284,52 @@ public:
         BOOST_CHECK_EQUAL(i, 1000);
     }
 
+    /**
+     * Constructs the DataFileReader in two steps.
+     */
+    void testReadDoubleTwoStep() {
+        auto_ptr<avro::DataFileReaderBase>
+            base(new avro::DataFileReaderBase(filename));
+        avro::DataFileReader<ComplexDouble> df(base);
+        BOOST_CHECK_EQUAL(toString(writerSchema), toString(df.readerSchema()));
+        BOOST_CHECK_EQUAL(toString(writerSchema), toString(df.dataSchema()));
+        int i = 0;
+        ComplexDouble ci;
+        double re = 3.0;
+        double im = 5.0;
+        while (df.read(ci)) {
+            BOOST_CHECK_CLOSE(ci.re, re, 0.0001);
+            BOOST_CHECK_CLOSE(ci.im, im, 0.0001);
+            re += (im - 0.7);
+            im += 3.1;
+            ++i;
+        }
+        BOOST_CHECK_EQUAL(i, 1000);
+    }
+
+    /**
+     * Constructs the DataFileReader in two steps using a different
+     * reader schema.
+     */
+    void testReadDoubleTwoStepProject() {
+        auto_ptr<avro::DataFileReaderBase>
+            base(new avro::DataFileReaderBase(filename));
+        avro::DataFileReader<Double> df(base, readerSchema);
+
+        BOOST_CHECK_EQUAL(toString(readerSchema), toString(df.readerSchema()));
+        BOOST_CHECK_EQUAL(toString(writerSchema), toString(df.dataSchema()));
+        int i = 0;
+        Double ci;
+        double re = 3.0;
+        double im = 5.0;
+        while (df.read(ci)) {
+            BOOST_CHECK_CLOSE(ci.re, re, 0.0001);
+            re += (im - 0.7);
+            im += 3.1;
+            ++i;
+        }
+        BOOST_CHECK_EQUAL(i, 1000);
+    }
 };
 
 void addReaderTests(test_suite* ts, const shared_ptr<DataFileTest>& t)
@@ -288,9 +355,12 @@ init_unit_test_suite( int argc, char* argv[] )
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGeneric, t2));
     addReaderTests(ts, t2);
 
-    shared_ptr<DataFileTest> t3(new DataFileTest("test3.df", dsch, dsch));
+    shared_ptr<DataFileTest> t3(new DataFileTest("test3.df", dsch, dblsch));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteDouble, t3));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDouble, t3));
+    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDoubleTwoStep, t3));
+    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDoubleTwoStepProject,
+        t3));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t3));
     return ts;
 }

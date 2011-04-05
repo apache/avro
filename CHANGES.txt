@@ -37,6 +37,8 @@ Avro 1.5.1 (unreleased)
 
     AVRO-794. Makefile.am is no longer required in C++. (thiru)
 
+    AVRO-795. C++ Datafile reader makes it hard to build adaptive clients. (thiru)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)
