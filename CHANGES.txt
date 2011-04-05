@@ -35,6 +35,8 @@ Avro 1.5.1 (unreleased)
 
     AVRO-709. Python: Optimize property lookup. (Justin Azoff via cutting)
 
+    AVRO-794. Makefile.am is no longer required in C++. (thiru)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)
