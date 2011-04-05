@@ -67,7 +67,7 @@ class DataFileWriterBase : boost::noncopyable {
      */
     void sync();
 
-protected:
+public:
     Encoder& encoder() const { return *encoderPtr_; }
     
     void syncIfNeeded();
@@ -75,7 +75,6 @@ protected:
     void incr() {
         ++objectCount_;
     }
-public:
     /**
      * Constructs a data file writer with the given sync interval and name.
      */
@@ -104,23 +103,40 @@ public:
  *  An Avro datafile that can store objects of type T.
  */
 template <typename T>
-class DataFileWriter : public DataFileWriterBase {
+class DataFileWriter : boost::noncopyable {
+    std::auto_ptr<DataFileWriterBase> base_;
 public:
     /**
      * Constructs a new data file.
      */
     DataFileWriter(const char* filename, const ValidSchema& schema,
         size_t syncInterval = 16 * 1024) :
-        DataFileWriterBase(filename, schema, syncInterval) { }
+        base_(new DataFileWriterBase(filename, schema, syncInterval)) { }
 
     /**
      * Writes the given piece of data into the file.
      */
     void write(const T& datum) {
-        syncIfNeeded();
-        avro::encode(encoder(), datum);
-        incr();
+        base_->syncIfNeeded();
+        avro::encode(base_->encoder(), datum);
+        base_->incr();
     }
+
+    /**
+     * Closes the current file. Once closed this datafile object cannot be
+     * used for writing any more.
+     */
+    void close() { base_->close(); }
+
+    /**
+     * Returns the schema for this data file.
+     */
+    const ValidSchema& schema() const { return base_->schema(); }
+
+    /**
+     * Flushes any unwritten data into the file.
+     */
+    void flush() { base_->flush(); }
 };
 
 class DataFileReaderBase : boost::noncopyable {
@@ -140,7 +156,8 @@ class DataFileReaderBase : boost::noncopyable {
 
     void readHeader();
 
-protected:
+    bool readDataBlock();
+public:
     Decoder& decoder() { return *dataDecoder_; }
 
     /**
@@ -149,20 +166,29 @@ protected:
     bool hasMore();
 
     void decr() { --objectCount_; }
-    bool readDataBlock();
-
-public:
-    /**
-     * Constructs the reader for the given file and the reader is
-     * expected to use the given schema.
-     */
-    DataFileReaderBase(const char* filename, const ValidSchema& readerSchema);
 
     /**
      * Constructs the reader for the given file and the reader is
      * expected to use the schema that is used with data.
+     * This function should be called exactly once after constructing
+     * the DataFileReaderBase object.
      */
     DataFileReaderBase(const char* filename);
+
+    /**
+     * Initializes the reader so that the reader and writer schemas
+     * are the same.
+     */
+    void init();
+
+    /**
+     * Initializes the reader to read objects according to the given
+     * schema. This gives an opportinity for the reader to see the schema
+     * in the data file before deciding the right schema to use for reading.
+     * This must be called exactly once after constructing the
+     * DataFileReaderBase object.
+     */
+    void init(const ValidSchema& readerSchema);
 
     /**
      * Returns the schema for this object.
@@ -181,29 +207,78 @@ public:
 };
 
 template <typename T>
-class DataFileReader : public DataFileReaderBase {
+class DataFileReader : boost::noncopyable {
+    std::auto_ptr<DataFileReaderBase> base_;
 public:
     /**
      * Constructs the reader for the given file and the reader is
      * expected to use the given schema.
      */
     DataFileReader(const char* filename, const ValidSchema& readerSchema) :
-        DataFileReaderBase(filename, readerSchema) { }
+        base_(new DataFileReaderBase(filename)) {
+        base_->init(readerSchema);
+    }
 
     /**
      * Constructs the reader for the given file and the reader is
      * expected to use the schema that is used with data.
      */
-    DataFileReader(const char* filename) : DataFileReaderBase(filename) { }
+    DataFileReader(const char* filename) :
+        base_(new DataFileReaderBase(filename)) {
+        base_->init();
+    }
+
+
+    /**
+     * Constructs a reader using the reader base. This form of constructor
+     * allows the user to examine the schema of a given file and then
+     * decide to use the right type of data to be desrialize. Without this
+     * the user must know the type of data for the template _before_
+     * he knows the schema within the file.
+     * The schema present in the data file will be used for reading
+     * from this reader.
+     */
+    DataFileReader(std::auto_ptr<DataFileReaderBase> base) : base_(base) {
+        base_->init();
+    }
+
+    /**
+     * Constructs a reader using the reader base. This form of constructor
+     * allows the user to examine the schema of a given file and then
+     * decide to use the right type of data to be desrialize. Without this
+     * the user must know the type of data for the template _before_
+     * he knows the schema within the file.
+     * The argument readerSchema will be used for reading
+     * from this reader.
+     */
+    DataFileReader(std::auto_ptr<DataFileReaderBase> base,
+        const ValidSchema& readerSchema) : base_(base) {
+        base_->init(readerSchema);
+    }
 
     bool read(T& datum) {
-        if (hasMore()) {
-            decr();
-            avro::decode(decoder(), datum);
+        if (base_->hasMore()) {
+            base_->decr();
+            avro::decode(base_->decoder(), datum);
             return true;
         }
         return false;
     }
+
+    /**
+     * Returns the schema for this object.
+     */
+    const ValidSchema& readerSchema() { return base_->readerSchema(); }
+
+    /**
+     * Returns the schema stored with the data file.
+     */
+    const ValidSchema& dataSchema() { return base_->dataSchema(); }
+
+    /**
+     * Closes the reader. No further operation is possible on this reader.
+     */
+    void close() { return base_->close(); }
 };
 
 }   // namespace avro

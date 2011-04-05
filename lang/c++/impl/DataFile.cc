@@ -149,19 +149,27 @@ void DataFileWriterBase::setMetadata(const string& key, const string& value)
     metadata_[key] = v;
 }
 
-DataFileReaderBase::DataFileReaderBase(const char* filename,
-    const ValidSchema& schema) :
-    filename_(filename), stream_(fileInputStream(filename)),
-    decoder_(binaryDecoder()), objectCount_(0), readerSchema_(schema)
-{
-    readHeader();
-}
-
 DataFileReaderBase::DataFileReaderBase(const char* filename) :
     filename_(filename), stream_(fileInputStream(filename)),
     decoder_(binaryDecoder()), objectCount_(0)
 {
     readHeader();
+}
+
+void DataFileReaderBase::init()
+{
+    readerSchema_ = dataSchema_;
+    dataDecoder_  = binaryDecoder();
+    readDataBlock();
+}
+
+void DataFileReaderBase::init(const ValidSchema& readerSchema)
+{
+    readerSchema_ = readerSchema;
+    dataDecoder_  = (toString(readerSchema_) != toString(dataSchema_)) ?
+        resolvingDecoder(dataSchema_, readerSchema_, binaryDecoder()) :
+        binaryDecoder();
+    readDataBlock();
 }
 
 static void drain(InputStream& in)
@@ -310,12 +318,7 @@ void DataFileReaderBase::readHeader()
         throw Exception("Unknown codec in data file: " + toString(it->second));
     }
 
-    dataDecoder_  = (toString(readerSchema_) != toString(dataSchema_)) ?
-        resolvingDecoder(dataSchema_, readerSchema_, binaryDecoder()) :
-        binaryDecoder();
-        
     avro::decode(*decoder_, sync_);
-    readDataBlock();
 }
 
 }   // namespace avro
