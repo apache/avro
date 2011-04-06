@@ -17,6 +17,9 @@ Avro 1.5.1 (unreleased)
     AVRO-533. Add a C# implementation.
     (Jeremy Custenborder, Dona Alvarez and thiru)
 
+    AVRO-788. Java: Add Snappy compression for data files, including
+    MapReduce API support. (cutting)
+
   IMPROVEMENTS
 
     AVRO-785. Java: Squash a Velocity warning by upgrading to Velocity 1.7.

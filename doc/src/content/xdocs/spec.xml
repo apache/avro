@@ -695,7 +695,15 @@
         </p>
         </section>
       </section>
-
+      <section>
+	<title>Optional Codecs</title>
+        <section>
+          <title>snappy</title>
+          <p>The "snappy" codec uses
+            Google's <a href="http://code.google.com/p/snappy/">Snappy</a>
+            compression library.</p>
+        </section>
+      </section>
     </section>
 
     <section>

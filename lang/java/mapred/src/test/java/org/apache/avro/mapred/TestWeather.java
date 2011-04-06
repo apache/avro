@@ -33,6 +33,7 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.file.DataFileReader;
+import static org.apache.avro.file.DataFileConstants.SNAPPY_CODEC;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -123,6 +124,7 @@ public class TestWeather {
     FileInputFormat.setInputPaths(job, input);
     FileOutputFormat.setOutputPath(job, output);
     FileOutputFormat.setCompressOutput(job, true);
+    AvroJob.setOutputCodec(job, SNAPPY_CODEC);
     
     JobClient.runJob(job);
 

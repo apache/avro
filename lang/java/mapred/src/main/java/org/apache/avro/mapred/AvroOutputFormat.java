@@ -36,6 +36,7 @@ import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.CodecFactory;
 import static org.apache.avro.file.DataFileConstants.DEFAULT_SYNC_INTERVAL;
+import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 
 /** An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files. */
 public class AvroOutputFormat <T>
@@ -80,7 +81,11 @@ public class AvroOutputFormat <T>
 
     if (FileOutputFormat.getCompressOutput(job)) {
       int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
-      writer.setCodec(CodecFactory.deflateCodec(level));
+      String codecName = job.get(AvroJob.OUTPUT_CODEC, DEFLATE_CODEC);
+      CodecFactory factory = codecName.equals(DEFLATE_CODEC)
+        ? CodecFactory.deflateCodec(level)
+        : CodecFactory.fromString(codecName);
+      writer.setCodec(factory);
     }
 
     writer.setSyncInterval(job.getInt(SYNC_INTERVAL_KEY, DEFAULT_SYNC_INTERVAL));
