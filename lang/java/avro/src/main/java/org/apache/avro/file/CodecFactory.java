@@ -36,6 +36,11 @@ public abstract class CodecFactory {
     return new DeflateCodec.Option(compressionLevel); 
   };
   
+  /** Snappy codec.*/
+  public static CodecFactory snappyCodec() { 
+    return new SnappyCodec.Option(); 
+  };
+  
   /** Creates internal Codec. */
   protected abstract Codec createInstance();
   
@@ -50,6 +55,7 @@ public abstract class CodecFactory {
   static {
     addCodec("null", nullCodec());
     addCodec("deflate", deflateCodec(DEFAULT_DEFLATE_LEVEL));
+    addCodec("snappy", snappyCodec());
   }
 
   /** Maps a codec name into a CodecOption. */

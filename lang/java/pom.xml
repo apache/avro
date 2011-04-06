@@ -45,6 +45,7 @@
     <jetty-version>6.1.26</jetty-version>
     <netty-version>3.2.4.Final</netty-version> 
     <jopt-simple-version>3.2</jopt-simple-version>
+    <snappy-version>1.0.1-rc3</snappy-version>
   </properties>
 
   <issueManagement>
@@ -338,6 +339,13 @@
         <artifactId>hadoop-core</artifactId>
         <version>${hadoop-version}</version>
         <scope>compile</scope>
+      </dependency>
+      <dependency>
+	<groupId>org.xerial.snappy</groupId>
+	<artifactId>snappy-java</artifactId>
+	<version>${snappy-version}</version>
+	<type>jar</type>
+	<scope>compile</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

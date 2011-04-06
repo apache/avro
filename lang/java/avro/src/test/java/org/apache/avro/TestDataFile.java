@@ -61,6 +61,7 @@ public class TestDataFile {
     r.add(new Object[] { CodecFactory.deflateCodec(1) });
     r.add(new Object[] { CodecFactory.deflateCodec(9) });
     r.add(new Object[] { CodecFactory.nullCodec() });
+    r.add(new Object[] { CodecFactory.snappyCodec() });
     return r;
   }
 
