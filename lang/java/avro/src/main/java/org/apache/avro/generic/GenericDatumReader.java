@@ -330,7 +330,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * byte array representation.  By default, this calls {@link
    * Decoder#readBytes(ByteBuffer)}.*/
   protected Object readBytes(Object old, Decoder in) throws IOException {
-    return in.readBytes((ByteBuffer)old);
+    return in.readBytes(old instanceof ByteBuffer ? (ByteBuffer) old : null);
   }
 
   /** Called to read integers.  Subclasses may override to use a different

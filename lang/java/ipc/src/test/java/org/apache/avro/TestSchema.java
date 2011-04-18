@@ -45,7 +45,6 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.compiler.specific.TestSpecificCompiler;
 import org.apache.avro.util.Utf8;
 
@@ -79,7 +78,7 @@ public class TestSchema {
       + "      \"name\": \"inner_union\" }\n" + "  ]\n" + "}\n";
 
   private static final int COUNT =
-    Integer.parseInt(System.getProperty("test.count", "10"));
+    Integer.parseInt(System.getProperty("test.count", "30"));
 
   @Test
   public void testNull() throws Exception {
@@ -162,6 +161,18 @@ public class TestSchema {
     map.put(new Utf8("a"), 1L);
     check("{\"type\":\"map\", \"values\":\"long\"}", "{\"a\":1}", map);
     checkParseError("{\"type\":\"map\"}");        // values required
+  }
+  
+  @Test
+  public void testUnionMap() throws Exception {
+    String unionMapSchema = "{\"name\":\"foo\", \"type\":\"record\"," +
+    		" \"fields\":[ {\"name\":\"mymap\", \"type\":" +
+    		"   [{\"type\":\"map\", \"values\":" +
+    		"      [\"int\",\"long\",\"float\",\"string\"]}," +
+    		"    \"null\"]" +
+    		"   }]" +
+    		" }";
+    check(unionMapSchema, true);
   }
 
   @Test
@@ -558,6 +569,7 @@ public class TestSchema {
     throws Exception {
     Schema schema = Schema.parse(jsonSchema);
     checkProp(schema);
+    Object reuse = null;
     for (Object datum : new RandomData(schema, COUNT)) {
 
       if (induce) {
@@ -570,7 +582,10 @@ public class TestSchema {
 
       checkBinary(schema, datum,
                   new GenericDatumWriter<Object>(),
-                  new GenericDatumReader<Object>());
+                  new GenericDatumReader<Object>(), null);
+      reuse = checkBinary(schema, datum,
+          new GenericDatumWriter<Object>(),
+          new GenericDatumReader<Object>(), reuse);
       checkDirectBinary(schema, datum,
                   new GenericDatumWriter<Object>(),
                   new GenericDatumReader<Object>());
@@ -603,6 +618,14 @@ public class TestSchema {
                                  DatumWriter<Object> writer,
                                  DatumReader<Object> reader)
     throws IOException {
+    checkBinary(schema, datum, writer, reader, null);
+  }
+  
+  public static Object checkBinary(Schema schema, Object datum,
+                                 DatumWriter<Object> writer,
+                                 DatumReader<Object> reader,
+                                 Object reuse)
+    throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);
     Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
@@ -613,10 +636,11 @@ public class TestSchema {
     reader.setSchema(schema);
         
     Object decoded =
-      reader.read(null, DecoderFactory.get().binaryDecoder(
+      reader.read(reuse, DecoderFactory.get().binaryDecoder(
           data, null));
       
     assertEquals("Decoded data does not match.", datum, decoded);
+    return decoded;
   }
 
   public static void checkDirectBinary(Schema schema, Object datum,
