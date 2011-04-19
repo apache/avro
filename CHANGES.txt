@@ -46,6 +46,10 @@ Avro 1.5.1 (unreleased)
     AVRO-802. Java: Add documentation for non-Avro input, map-only
     jobs. (cutting)
 
+    AVRO-799. Java: Add support for --codec parameter to the
+    'fromtext' command.  Also made some performance improvements, bug
+    fixes and added tests for this command. (cutting)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)
