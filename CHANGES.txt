@@ -50,6 +50,8 @@ Avro 1.5.1 (unreleased)
     'fromtext' command.  Also made some performance improvements, bug
     fixes and added tests for this command. (cutting)
 
+    AVRO-798. Add checksum to Snappy compressed blocks. (cutting)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)
