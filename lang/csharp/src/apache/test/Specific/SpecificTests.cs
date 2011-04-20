@@ -166,7 +166,7 @@ namespace Avro.Test
                 Assert.IsTrue(compres.Errors.Count == 0);
 
             // create record
-            SpecificRecord rec = compres.CompiledAssembly.CreateInstance((string)result[1]) as SpecificRecord;
+            ISpecificRecord rec = compres.CompiledAssembly.CreateInstance((string)result[1]) as ISpecificRecord;
             Assert.IsFalse(rec == null);
 
             // serialize
@@ -179,7 +179,7 @@ namespace Avro.Test
             stream.Position = 0;
             var decoder = new BinaryDecoder(stream);
             var reader = new SpecificDefaultReader(rec.Schema, rec.Schema);
-            var rec2 = (SpecificRecord)reader.Read(null, rec.Schema, rec.Schema, decoder);
+            var rec2 = (ISpecificRecord)reader.Read(null, rec.Schema, rec.Schema, decoder);
             Assert.IsFalse(rec2 == null);
         }
     }

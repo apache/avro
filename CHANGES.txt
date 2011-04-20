@@ -55,6 +55,10 @@ Avro 1.5.1 (unreleased)
     AVRO-763. Java MapReduce API: add support for configure() and
     close() methods to mappers and reducers. (Marshall Pierce via cutting)
 
+    AVRO-807. C#: Some improvements and bugfixes, including making AvroGen
+    extensible and changing ISpecificRecord to an interface.
+    (Dona Alvarez via cutting)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)

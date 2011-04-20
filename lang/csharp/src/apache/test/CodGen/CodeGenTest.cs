@@ -96,7 +96,7 @@ namespace Avro.Test
                 Assert.AreEqual(0, compres.Errors.Count);
 
             // instantiate object
-            SpecificRecord rec = compres.CompiledAssembly.CreateInstance((string)result[0]) as SpecificRecord;
+            ISpecificRecord rec = compres.CompiledAssembly.CreateInstance((string)result[0]) as ISpecificRecord;
             Assert.IsNotNull(rec);
 
             // test type of each fields

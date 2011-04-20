@@ -19,11 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Avro.codegen;
 
-namespace Avro.codegen
+namespace Avro
 {
-    class Program
+    class AvroGen
     {
         static void Main(string[] args)
         {
@@ -45,7 +44,6 @@ namespace Avro.codegen
             Console.WriteLine("Usage:\navrogen -p <protocolfile> <outputdir>\navrogen -s <schemafile> <outputdir>");
             return;
         }
-
         static void GenProtocol(string infile, string outdir)
         {
             try
@@ -64,7 +62,6 @@ namespace Avro.codegen
                 Console.WriteLine("Exception occurred. " + ex.Message);
             }
         }
-
         static void GenSchema(string infile, string outdir)
         {
             try
@@ -83,6 +80,5 @@ namespace Avro.codegen
                 Console.WriteLine("Exception occurred. " + ex.Message);
             }
         }
-
     }
 }

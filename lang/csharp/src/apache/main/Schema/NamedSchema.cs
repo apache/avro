@@ -62,17 +62,6 @@ namespace Avro
         /// </summary>
         private readonly IList<SchemaName> aliases;
 
-        /*
-        /// <summary>
-        /// Returns the SchemaName object of the named schema
-        /// </summary>
-        /// <returns></returns>
-        public SchemaName GetName()
-        {
-            return schemaName;
-        }
-         */
-
         /// <summary>
         /// Static function to return a new instance of the named schema
         /// </summary>
@@ -112,14 +101,8 @@ namespace Avro
         {
             this.SchemaName = name;
             this.aliases = aliases;
-            try
-            {
-                names.Add(name, this);
-            }
-            catch (Exception ex)
-            {
-                throw new AvroException("Could not add " + name.Fullname + ". " + ex.Message);
-            }
+            if (!names.Add(name, this))
+                throw new AvroException("Duplicate schema name " + name.Fullname);
         }
 
         /// <summary>

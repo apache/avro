@@ -82,7 +82,7 @@
     <Compile Include="CodeGen\AvroRuntimeException.cs" />
     <Compile Include="CodeGen\CodeGen.cs" />
     <Compile Include="CodeGen\CodeGenException.cs" />
-    <Compile Include="CodeGen\CodeGenExt.cs" />
+    <Compile Include="CodeGen\CodeGenUtil.cs" />
     <Compile Include="Generic\DatumReader.cs" />
     <Compile Include="Generic\DatumWriter.cs" />
     <Compile Include="Generic\GenericEnum.cs" />

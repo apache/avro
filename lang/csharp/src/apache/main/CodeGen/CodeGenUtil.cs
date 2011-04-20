@@ -26,18 +26,19 @@ namespace Avro
     /// <summary>
     /// A singleton class containing data used by codegen
     /// </summary>
-    public sealed class CodeGenExt
+    public sealed class CodeGenUtil
     {
-        private static readonly CodeGenExt instance = new CodeGenExt();
-        public static CodeGenExt Instance { get { return instance; } }
+        private static readonly CodeGenUtil instance = new CodeGenUtil();
+        public static CodeGenUtil Instance { get { return instance; } }
 
         public CodeNamespaceImport[] NamespaceImports { get; private set; }
         public CodeCommentStatement FileComment { get; private set; }
         public HashSet<string> ReservedKeywords { get; private set; }
-        private const char AT = '@';
-        private const char DOT = '.';
+        private const char At = '@';
+        private const char Dot = '.';
+        public const string Object = "System.Object";
 
-        private CodeGenExt()
+        private CodeGenUtil()
         {
             NamespaceImports = new CodeNamespaceImport[] {
                 new CodeNamespaceImport("System"),
@@ -75,13 +76,13 @@ namespace Avro
         public string Mangle(string name)
         {
             var builder = new StringBuilder();
-            string[] names = name.Split(DOT);
+            string[] names = name.Split(Dot);
             for (int i = 0; i < names.Length; ++i)
             {
                 if (ReservedKeywords.Contains(names[i]))
-                    builder.Append(AT);
+                    builder.Append(At);
                 builder.Append(names[i]);
-                builder.Append(DOT);
+                builder.Append(Dot);
             }
             builder.Remove(builder.Length - 1, 1);
             return builder.ToString();
@@ -96,7 +97,7 @@ namespace Avro
         {
             var builder = new StringBuilder(name.Length);
             for (int i = 0; i < name.Length; ++i)
-                if (name[i] != AT)
+                if (name[i] != At)
                     builder.Append(name[i]);
             return builder.ToString();
         }

@@ -45,7 +45,7 @@ namespace Avro.Specific
         private readonly Type[] margs;
         private readonly Type[] largs;
 
-        private delegate object CtorDelegate();
+        public delegate object CtorDelegate();
         private Type ctorType = typeof(CtorDelegate);
         Dictionary<NameCtorKey, CtorDelegate> ctors;
 
@@ -104,6 +104,74 @@ namespace Avro.Specific
         }
 
         /// <summary>
+        /// Gets the type of the specified type name
+        /// </summary>
+        /// <param name="name">name of the object to get type of</param>
+        /// <param name="schemaType">schema type for the object</param>
+        /// <returns>Type</returns>
+        public Type GetType(string name, Schema.Type schemaType)
+        {
+            Type type;
+            if (diffAssembly)
+            {
+                // entry assembly different from current assembly, try entry assembly first
+                type = entryAssembly.GetType(name);
+                if (type == null)   // now try current assembly and mscorlib
+                    type = Type.GetType(name);
+            }
+            else
+                type = Type.GetType(name);
+
+            if (type == null) // type is still not found, need to loop through all loaded assemblies
+            {
+                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                foreach (Assembly assembly in assemblies)
+                {
+                    type = assembly.GetType(name);
+                    if (type != null)
+                        break;
+                }
+            }
+            if (type == null)
+                throw new AvroException("Unable to find type " + name + " in all loaded assemblies");
+
+            if (schemaType == Schema.Type.Map)
+            {
+                margs[1] = type;
+                type = GenericMapType.MakeGenericType(margs);
+            }
+            else if (schemaType == Schema.Type.Array)
+            {
+                largs[0] = type;
+                type = GenericListType.MakeGenericType(largs);
+            }
+
+            return type;
+        }
+
+        /// <summary>
+        /// Gets the default constructor for the specified type
+        /// </summary>
+        /// <param name="name">name of object for the type</param>
+        /// <param name="schemaType">schema type for the object</param>
+        /// <param name="type">type of the object</param>
+        /// <returns>Default constructor for the type</returns>
+        public CtorDelegate GetConstructor(string name, Schema.Type schemaType, Type type)
+        {
+            ConstructorInfo ctorInfo = type.GetConstructor(Type.EmptyTypes);
+            if (ctorInfo == null)
+                throw new AvroException("Class " + name + " has no default constructor");
+
+            DynamicMethod dynMethod = new DynamicMethod("DM$OBJ_FACTORY_" + name, typeof(object), null, type, true);
+            ILGenerator ilGen = dynMethod.GetILGenerator();
+            ilGen.Emit(OpCodes.Nop);
+            ilGen.Emit(OpCodes.Newobj, ctorInfo);
+            ilGen.Emit(OpCodes.Ret);
+
+            return (CtorDelegate)dynMethod.CreateDelegate(ctorType);
+        }
+
+        /// <summary>
         /// Creates new instance of the given type
         /// </summary>
         /// <param name="name">fully qualified name of the type</param>
@@ -112,51 +180,13 @@ namespace Avro.Specific
         public object New(string name, Schema.Type schemaType)
         {
             NameCtorKey key = new NameCtorKey(name, schemaType);
+            
             CtorDelegate ctor;
             if (!ctors.TryGetValue(key, out ctor))
             {
-                Type type;
-                if (diffAssembly)
-                {
-                    // entry assembly different from current assembly, try entry assembly first
-                    type = entryAssembly.GetType(name);
-                    if (type == null)   // now try current assembly and mscorlib
-                        type = Type.GetType(name);
-                }
-                else
-                    type = Type.GetType(name);
+                Type type = GetType(name, schemaType);
+                ctor = GetConstructor(name, schemaType, type);
 
-                if (type == null) // type is still not found, need to loop through all loaded assemblies
-                {
-                    Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                    foreach (Assembly assembly in assemblies)
-                    {
-                        type = assembly.GetType(name);
-                        if (type != null)
-                            break;
-                    }
-                }
-                if (type == null)
-                    throw new AvroException("Unable to find type " + name + " in all loaded assemblies");
-
-                if (schemaType == Schema.Type.Map)
-                {
-                    margs[1] = type;
-                    type = GenericMapType.MakeGenericType(margs);
-                }
-                else if (schemaType == Schema.Type.Array)
-                {
-                    largs[0] = type;
-                    type = GenericListType.MakeGenericType(largs);
-                }
-
-                DynamicMethod dynMethod = new DynamicMethod("DM$OBJ_FACTORY_" + name, typeof(object), null, type, true); 
-                ILGenerator ilGen = dynMethod.GetILGenerator(); 
-                ilGen.Emit(OpCodes.Nop);
-                ilGen.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
-                ilGen.Emit(OpCodes.Ret);
-
-                ctor = (CtorDelegate)dynMethod.CreateDelegate(ctorType);
                 ctors.Add(key, ctor);
             }
             return ctor();
