@@ -23,12 +23,12 @@ using System.Text;
 namespace Avro.Specific
 {
     /// <summary>
-    /// Base class for generated classes
+    /// Interface class for generated classes
     /// </summary>
-    public abstract class SpecificRecord
+    public interface ISpecificRecord
     {
-        public abstract Schema Schema { get; }
-        public abstract object Get(int fieldPos);
-        public abstract void Put(int fieldPos, object fieldValue);
+        Schema Schema { get; }
+        object Get(int fieldPos);
+        void Put(int fieldPos, object fieldValue);
     }
 }

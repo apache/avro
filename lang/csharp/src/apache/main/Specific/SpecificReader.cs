@@ -38,6 +38,16 @@ namespace Avro.Specific
         private readonly SpecificDefaultReader reader;
 
         /// <summary>
+        /// Schema for the writer class
+        /// </summary>
+        public Schema WriterSchema { get { return reader.WriterSchema; } }
+
+        /// <summary>
+        /// Schema for the reader class
+        /// </summary>
+        public Schema ReaderSchema { get { return reader.ReaderSchema; } }
+
+        /// <summary>
         /// Constructs a generic reader for the given schemas using the DefaultReader. If the
         /// reader's and writer's schemas are different this class performs the resolution.
         /// </summary>
@@ -48,15 +58,10 @@ namespace Avro.Specific
             reader = new SpecificDefaultReader(writerSchema, readerSchema);
         }
 
-        /// <summary>
-        /// Schema for the writer class
-        /// </summary>
-        public Schema WriterSchema { get { return reader.WriterSchema; } }
-
-        /// <summary>
-        /// Schema for the reader class
-        /// </summary>
-        public Schema ReaderSchema { get { return reader.ReaderSchema; } }
+        public SpecificReader(SpecificDefaultReader reader)
+        {
+            this.reader = reader;
+        }
 
         /// <summary>
         /// Generic read function
@@ -102,7 +107,7 @@ namespace Avro.Specific
         {
             RecordSchema rs = (RecordSchema)readerSchema;
 
-            SpecificRecord rec = (reuse != null ? reuse : ObjectCreator.Instance.New(rs.Fullname, Schema.Type.Record)) as SpecificRecord;
+            ISpecificRecord rec = (reuse != null ? reuse : ObjectCreator.Instance.New(rs.Fullname, Schema.Type.Record)) as ISpecificRecord;
             object obj;
             foreach (Field wf in writerSchema)
             {
@@ -252,7 +257,7 @@ namespace Avro.Specific
         /// <param name="schema">schema containing the type to be determined</param>
         /// <param name="nullible">used for union schema</param>
         /// <returns></returns>
-        private string getTargetType(Schema schema)
+        protected virtual string getTargetType(Schema schema)
         {
             bool nEnum = false;
             string type = Avro.CodeGen.getType(schema, false, ref nEnum);
