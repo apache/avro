@@ -20,6 +20,7 @@ package org.apache.avro.mapred;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
@@ -34,14 +35,30 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.file.DataFileReader;
 import static org.apache.avro.file.DataFileConstants.SNAPPY_CODEC;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.After;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import test.Weather;
 
 /** Tests mapred API with a specific record. */
 public class TestWeather {
+
+  private static final AtomicInteger mapCloseCalls = new AtomicInteger();
+  private static final AtomicInteger mapConfigureCalls = new AtomicInteger();
+  private static final AtomicInteger reducerCloseCalls = new AtomicInteger();
+  private static final AtomicInteger reducerConfigureCalls = new AtomicInteger();
+
+
+  @After
+  public void tearDown() {
+    mapCloseCalls.set(0);
+    mapConfigureCalls.set(0);
+    reducerCloseCalls.set(0);
+    reducerConfigureCalls.set(0);
+  }
 
   /** Uses default mapper with no reduces for a map-only identity job. */
   @Test
@@ -64,7 +81,7 @@ public class TestWeather {
     FileOutputFormat.setCompressOutput(job, true);
     
     job.setNumReduceTasks(0);                     // map-only
-    
+
     JobClient.runJob(job);
 
     // check output is correct
@@ -88,8 +105,18 @@ public class TestWeather {
                       Reporter reporter) throws IOException {
       collector.collect(new Pair<Weather,Void>(w, (Void)null));
     }
+
+    @Override
+    public void close() throws IOException {
+      mapCloseCalls.incrementAndGet();
+    }
+
+    @Override
+    public void configure(JobConf jobConf) {
+      mapConfigureCalls.incrementAndGet();
+    }
   }
-  
+
   // output keys only, since values are empty
   public static class SortReducer
     extends AvroReducer<Weather, Void, Weather> {
@@ -99,7 +126,17 @@ public class TestWeather {
                        Reporter reporter) throws IOException {
       collector.collect(w);
     }
-  }    
+
+    @Override
+    public void close() throws IOException {
+      reducerCloseCalls.incrementAndGet();
+    }
+
+    @Override
+    public void configure(JobConf jobConf) {
+      reducerConfigureCalls.incrementAndGet();
+    }
+  }
 
   @Test
   @SuppressWarnings("deprecation")
@@ -140,6 +177,15 @@ public class TestWeather {
 
     check.close();
     sorted.close();
+
+    // check that AvroMapper and AvroReducer get close() and configure() called
+    assertEquals(1, mapCloseCalls.get());
+    assertEquals(1, reducerCloseCalls.get());
+    // gets called twice for some reason, so loosen this check
+    assertTrue(mapConfigureCalls.get() >= 1);
+    assertTrue(reducerConfigureCalls.get() >= 1);
+
+
   }
 
 

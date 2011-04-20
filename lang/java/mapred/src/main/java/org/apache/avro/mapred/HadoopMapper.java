@@ -21,11 +21,11 @@ package org.apache.avro.mapred;
 import java.io.IOException;
 
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /** Bridge between a {@link org.apache.hadoop.mapred.Mapper} and an {@link
@@ -45,6 +45,7 @@ class HadoopMapper<IN,OUT,K,V,KO,VO> extends MapReduceBase
       (conf.getClass(AvroJob.MAPPER, AvroMapper.class, AvroMapper.class),
        conf);
     this.isMapOnly = conf.getNumReduceTasks() == 0;
+    this.mapper.configure(conf);
   }
 
   @SuppressWarnings("unchecked")
@@ -78,6 +79,11 @@ class HadoopMapper<IN,OUT,K,V,KO,VO> extends MapReduceBase
     if (this.out == null)
       this.out = new MapCollector(collector);
     mapper.map(wrapper.datum(), out, reporter);
+  }
+
+  @Override
+  public void close() throws IOException {
+    this.mapper.close();
   }
 
 }
