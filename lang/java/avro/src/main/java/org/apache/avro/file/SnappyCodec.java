@@ -19,19 +19,19 @@ package org.apache.avro.file;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.zip.CRC32;
 
 import org.xerial.snappy.Snappy;
 import org.xerial.snappy.SnappyException;
 
 /** * Implements Snappy compression and decompression. */
 class SnappyCodec extends Codec {
-
-  private static final SnappyCodec INSTANCE = new SnappyCodec();
+  private CRC32 crc32 = new CRC32();
 
   static class Option extends CodecFactory {
     @Override
     protected Codec createInstance() {
-      return INSTANCE;
+      return new SnappyCodec();
     }
   }
 
@@ -43,10 +43,15 @@ class SnappyCodec extends Codec {
   ByteBuffer compress(ByteBuffer in) throws IOException {
     try { 
       ByteBuffer out =
-        ByteBuffer.allocate(Snappy.maxCompressedLength(in.remaining()));
+        ByteBuffer.allocate(Snappy.maxCompressedLength(in.remaining())+4);
       int size = Snappy.compress(in.array(), in.position(), in.remaining(),
                                  out.array(), 0);
-      out.limit(size);
+      crc32.reset();
+      crc32.update(in.array(), in.position(), in.remaining());
+      out.putInt(size, (int)crc32.getValue());
+
+      out.limit(size+4);
+
       return out;
     } catch (SnappyException e) {
       throw new IOException(e);
@@ -57,10 +62,16 @@ class SnappyCodec extends Codec {
   ByteBuffer decompress(ByteBuffer in) throws IOException {
     try { 
       ByteBuffer out = ByteBuffer.allocate
-        (Snappy.uncompressedLength(in.array(), in.position(), in.remaining()));
-      int size = Snappy.uncompress(in.array(), in.position(), in.remaining(),
+        (Snappy.uncompressedLength(in.array(),in.position(),in.remaining()-4));
+      int size = Snappy.uncompress(in.array(),in.position(),in.remaining()-4,
                                    out.array(), 0);
       out.limit(size);
+
+      crc32.reset();
+      crc32.update(out.array(), 0, size);
+      if (in.getInt(in.limit()-4) != (int)crc32.getValue())
+        throw new IOException("Checksum failure");
+
       return out;
     } catch (SnappyException e) {
       throw new IOException(e);

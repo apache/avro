@@ -30,6 +30,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -55,7 +56,7 @@ public class TestSequenceFileReader {
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
   private static final File DIR
-    = new File(System.getProperty("test.dir", "/tmp"));
+    = new File(System.getProperty("test.dir", "."));
   private static final File FILE = new File(DIR, "test.seq");
 
   private static final Schema SCHEMA
@@ -152,6 +153,45 @@ public class TestSequenceFileReader {
     // reducer is default, identity
 
     // configure output for avro
+    FileOutputFormat.setOutputPath(job, output);
+    AvroJob.setOutputSchema(job, SCHEMA);
+
+    JobClient.runJob(job);
+
+    checkFile(new DataFileReader<Pair<Long,CharSequence>>
+              (new File(output.toString()+"/part-00000.avro"),
+               new SpecificDatumReader<Pair<Long,CharSequence>>()));
+  }
+
+  private static class NonAvroOnlyMapper
+    extends MapReduceBase
+    implements Mapper<LongWritable,Text,AvroWrapper<Pair<Long,Utf8>>,NullWritable> {
+    
+    public void map(LongWritable key, Text value, 
+                    OutputCollector<AvroWrapper<Pair<Long,Utf8>>,NullWritable> out, 
+                    Reporter reporter) throws IOException {
+      out.collect(new AvroWrapper<Pair<Long,Utf8>>(new Pair<Long,Utf8>(key.get(), new Utf8(value.toString()))),
+                  NullWritable.get());
+    }
+  }
+
+  @Test
+  public void testNonAvroMapOnly() throws Exception {
+    JobConf job = new JobConf();
+    Path output = new Path(System.getProperty("test.dir",".")+"/seq-out");
+
+    output.getFileSystem(job).delete(output);
+    
+
+    // configure input for non-Avro sequence file
+    job.setInputFormat(SequenceFileInputFormat.class);
+    FileInputFormat.setInputPaths(job, FILE.toURI().toString());
+
+    // use a hadoop mapper that emits Avro output
+    job.setMapperClass(NonAvroOnlyMapper.class);
+
+    // configure output for avro
+    job.setNumReduceTasks(0);                     // map-only
     FileOutputFormat.setOutputPath(job, output);
     AvroJob.setOutputSchema(job, SCHEMA);
 

@@ -96,5 +96,23 @@ Avro data, with map and reduce functions written in Java.
  </ul>
 </p>
 
+<p>For jobs whose input is non-Avro data file and which use a
+  non-Avro {@link org.apache.hadoop.mapred.Mapper} and no reducer,
+  i.e., a <i>map-only</i> job:
+ <ul>
+   <li>Set your input file format with {@link
+   org.apache.hadoop.mapred.JobConf#setInputFormat}.</li>
+   <li>Implement {@link org.apache.hadoop.mapred.Mapper} and specify
+   your job's mapper with {@link
+   org.apache.hadoop.mapred.JobConf#setMapperClass}.  The output key
+   and value type should be {@link org.apache.avro.mapred.AvroWrapper} and
+   {@link org.apache.hadoop.io.NullWritable}.</li>
+   <li>Call {@link
+   org.apache.hadoop.mapred.JobConf#setNumReduceTasks(int)} with zero.
+   <li>Call {@link org.apache.avro.mapred.AvroJob#setOutputSchema} with your
+   job's output schema.</li>
+ </ul>
+</p>
+
 </body>
 </html>

@@ -35,7 +35,7 @@ import org.apache.avro.generic.GenericDatumReader;
 public class ToTextTool implements Tool {
   private static final String TEXT_FILE_SCHEMA = 
         "\"bytes\"";
-  private static final byte[] LINE_SEPERATOR = 
+  private static final byte[] LINE_SEPARATOR = 
         System.getProperty("line.separator").getBytes();
     
   @Override
@@ -45,7 +45,7 @@ public class ToTextTool implements Tool {
 
   @Override
   public String getShortDescription() {
-    return "Converts and avro file to a text file.";
+    return "Converts an Avro data file to a text file.";
   }
 
   @Override
@@ -77,7 +77,7 @@ public class ToTextTool implements Tool {
     while (fileReader.hasNext()) {
       ByteBuffer outBuff = (ByteBuffer) fileReader.next();
       outStream.write(outBuff.array());
-      outStream.write(LINE_SEPERATOR);
+      outStream.write(LINE_SEPARATOR);
     }
     
     outStream.close();
