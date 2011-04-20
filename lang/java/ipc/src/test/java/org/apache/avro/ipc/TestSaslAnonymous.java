@@ -24,11 +24,14 @@ import java.net.InetSocketAddress;
 
 import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.TestProtocolGeneric;
+import org.apache.avro.ipc.reflect.ReflectRequestor;
+import org.apache.avro.ipc.reflect.ReflectResponder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.junit.Before;
+import org.junit.Test;
 
 public class TestSaslAnonymous extends TestProtocolGeneric {
 
@@ -45,5 +48,28 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
   }
 
   @Override public void testHandshake() throws IOException {}
+
+  public interface ProtoInterface {
+    byte[] test(byte[] b);
+  }
+
+  // test big enough to fill socket output buffer
+  @Test
+  public void test64kRequest() throws Exception {
+    SaslSocketServer s = new SaslSocketServer
+      (new ReflectResponder(ProtoInterface.class, new ProtoInterface() {
+        public byte[] test(byte[] b) { return b; }
+      }), new InetSocketAddress(0));
+    s.start();
+    SaslSocketTransceiver client =
+      new SaslSocketTransceiver(new InetSocketAddress(s.getPort()));
+    ProtoInterface proxy =
+      (ProtoInterface)ReflectRequestor.getClient(ProtoInterface.class, client);
+    
+    byte[] result = proxy.test(new byte[64*1024]);
+    
+    client.close();
+    s.close();
+  }
 
 }
