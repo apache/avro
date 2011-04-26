@@ -20,13 +20,19 @@ package org.apache.avro.mapred;
 
 import static org.junit.Assert.*;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.BufferedInputStream;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Map;
 import java.util.TreeMap;
@@ -53,6 +59,8 @@ class WordCountUtil {
     = new File(new File(DIR, "in"), "lines.txt");
   private static final File COUNTS_FILE
     = new File(new File(DIR, "out"), "part-00000.avro");
+  private static final File SORTED_FILE
+    = new File(new File(DIR, "out"), "part-00000");
 
   public static final String[] LINES = new String[] {
     "the quick brown fox jumps over the lazy dog",
@@ -84,6 +92,17 @@ class WordCountUtil {
       out.append(new Utf8(line));
     out.close();
   }
+
+  public static void writeLinesBytesFile() throws IOException {
+    FileUtil.fullyDelete(DIR);
+    DatumWriter<ByteBuffer> writer = new GenericDatumWriter<ByteBuffer>();
+    DataFileWriter<ByteBuffer> out = new DataFileWriter<ByteBuffer>(writer);
+    LINES_FILE.getParentFile().mkdirs();
+    out.create(Schema.create(Schema.Type.BYTES), LINES_FILE);
+    for (String line : LINES)
+      out.append(ByteBuffer.wrap(line.getBytes("UTF-8")));
+    out.close();
+  }
   
   public static void writeLinesTextFile() throws IOException {
     FileUtil.fullyDelete(DIR);
@@ -109,6 +128,19 @@ class WordCountUtil {
     checkMeta(counts);
     in.close();
     assertEquals(COUNTS.size(), numWords);
+  }
+  
+  public static void validateSortedFile() throws Exception {
+    BufferedReader reader = new BufferedReader(new FileReader(SORTED_FILE));
+    List<String> sortedLines = new ArrayList<String>();
+    for (String line : LINES) {
+      sortedLines.add(line);
+    }
+    Collections.sort(sortedLines);
+    for (String expectedLine : sortedLines) {
+      assertEquals(expectedLine, reader.readLine().trim());
+    }
+    assertNull(reader.readLine());
   }
 
   // metadata tests
