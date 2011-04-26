@@ -20,6 +20,9 @@ Avro 1.5.1 (unreleased)
     AVRO-788. Java: Add Snappy compression for data files, including
     MapReduce API support. (cutting)
 
+    AVRO-808. Java: Add AvroAsTextInputFormat for use with streaming.
+    (Tom White via cutting)
+
   IMPROVEMENTS
 
     AVRO-785. Java: Squash a Velocity warning by upgrading to Velocity 1.7.
