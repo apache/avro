@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
- * Compile an Avro protocol schema file.
+ * Generate Java classes and interfaces from Avro protocol files (.avpr)
  * 
  * @goal protocol
  * @phase generate-sources

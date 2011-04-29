@@ -27,7 +27,7 @@ import org.apache.avro.compiler.idl.ParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
- * Compile an Avro schema file.
+ * Generate Java classes and interfaces from AvroIDL files (.avdl)
  * 
  * @goal idl-protocol
  * @phase generate-sources
