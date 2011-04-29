@@ -62,6 +62,9 @@ Avro 1.5.1 (unreleased)
     extensible and changing ISpecificRecord to an interface.
     (Dona Alvarez via cutting)
 
+    AVRO-791. Java: Add avro-tools-nodeps jar.  Also change 'mvn
+    install' to not GPG sign things by default.  (scottcarey via cutting)
+
   BUG FIXES
 
     AVRO-786. Java: Fix equals() to work on objects containing maps. (cutting)
