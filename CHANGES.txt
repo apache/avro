@@ -75,6 +75,9 @@ Avro 1.5.1 (unreleased)
     AVRO-801. Java: Fix a bug in SaslSocketTransceiver where large
     messages were truncated on write. (cutting)
 
+    AVRO-793. Java: Fix a bug in the resolver when skipping an array
+    within a record. (thiru via cutting)
+
 Avro 1.5.0 (10 March 2011)
 
   INCOMPATIBLE CHANGES
