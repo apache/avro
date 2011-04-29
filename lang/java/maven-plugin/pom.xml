@@ -27,7 +27,7 @@
   </parent>
   <artifactId>avro-maven-plugin</artifactId>
   <name>Apache Avro Maven Plugin</name>
-  <description>Maven plulgin for Avro IDL and Specific API Compilers</description>
+  <description>Maven plugin for Avro IDL and Specific API Compilers</description>
   <packaging>maven-plugin</packaging>
   
   <properties>
@@ -39,6 +39,21 @@
   </prerequisites>
 
   <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>generated-helpmojo</id>
+            <goals>
+              <goal>helpmojo</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
   <dependencies>
