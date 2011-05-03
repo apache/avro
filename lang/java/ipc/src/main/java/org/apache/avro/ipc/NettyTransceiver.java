@@ -144,7 +144,7 @@ public class NettyTransceiver extends Transceiver {
 
   @Override
   public void writeBuffers(List<ByteBuffer> buffers) throws IOException {
-    throw new UnsupportedOperationException();
+    channel.write(new NettyDataPack(serialGenerator.incrementAndGet(), buffers));
   }
 
   @Override

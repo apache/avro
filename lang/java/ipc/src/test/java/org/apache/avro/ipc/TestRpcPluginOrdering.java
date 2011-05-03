@@ -94,5 +94,7 @@ public class TestRpcPluginOrdering {
     public CharSequence send(Message message) throws AvroRemoteException {
       return new Utf8("Received");
     }
+    public void fireandforget(Message message) {
+    }
   }
 }
