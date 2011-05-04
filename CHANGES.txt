@@ -9,6 +9,10 @@ Avro 1.6.0 (unreleased)
   IMPROVEMENTS
 
   BUG FIXES
+    
+    AVRO-815. Java: Netty Transceiver fails processing one-way messages.
+    Implemented writeBuffers for the NettyTransceiver to allow it to
+    process one-way messages.
 
 Avro 1.5.1 (unreleased)
 
