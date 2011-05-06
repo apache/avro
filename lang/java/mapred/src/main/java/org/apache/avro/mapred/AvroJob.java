@@ -42,8 +42,6 @@ public class AvroJob {
   public static final String MAP_OUTPUT_SCHEMA = "avro.map.output.schema";
   /** The configuration key for a job's output schema. */
   public static final String OUTPUT_SCHEMA = "avro.output.schema";
-  /** The configuration key for a job's output compression codec. */
-  public static final String OUTPUT_CODEC = "avro.output.codec";
   /** The configuration key prefix for a text output metadata. */
   public static final String TEXT_PREFIX = "avro.meta.text.";
   /** The configuration key prefix for a binary output metadata. */
@@ -82,11 +80,6 @@ public class AvroJob {
   public static void setOutputSchema(JobConf job, Schema s) {
     job.set(OUTPUT_SCHEMA, s.toString());
     configureAvroOutput(job);
-  }
-
-  /** Configure a job's output compression codec. */
-  public static void setOutputCodec(JobConf job, String codec) {
-    job.set(OUTPUT_CODEC, codec);
   }
 
   /** Add metadata to job output files.*/

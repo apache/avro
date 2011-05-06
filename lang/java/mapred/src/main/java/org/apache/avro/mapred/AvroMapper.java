@@ -18,20 +18,17 @@
 
 package org.apache.avro.mapred;
 
-import java.io.Closeable;
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.conf.Configured;
 
 /** A mapper for Avro data.
  *
  * <p>Applications subclass this class and pass their subclass to {@link
- * AvroJob#setMapperClass(JobConf, Class)}, overriding {@link #map(Object, AvroCollector, Reporter)}.
+ * AvroJob#setMapperClass}, overriding {@link #map}.
  */
-public class AvroMapper<IN, OUT> extends Configured implements JobConfigurable, Closeable {
+public class AvroMapper<IN,OUT> extends Configured {
 
   /** Called with each map input datum.  By default, collects inputs. */
   @SuppressWarnings("unchecked")
@@ -41,15 +38,4 @@ public class AvroMapper<IN, OUT> extends Configured implements JobConfigurable, 
   }
 
 
-  /** Subclasses can override this as desired. */
-  @Override
-  public void close() throws IOException {
-    // no op
-  }
-
-  /** Subclasses can override this as desired. */
-  @Override
-  public void configure(JobConf jobConf) {
-    // no op
-  }
 }

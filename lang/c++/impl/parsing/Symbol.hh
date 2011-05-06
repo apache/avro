@@ -693,12 +693,6 @@ public:
         parsingStack.push(s);
     }
 
-    void reset() {
-        while (parsingStack.size() > 1) {
-            parsingStack.pop();
-        }
-    }
-
 };
 
 }   // namespace parsing

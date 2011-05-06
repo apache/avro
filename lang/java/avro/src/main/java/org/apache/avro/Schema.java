@@ -618,8 +618,6 @@ public abstract class Schema {
       gen.writeStringField("type", isError?"error":"record");
       writeName(names, gen);
       names.space = name.space;                   // set default namespace
-      if (getDoc() != null)
-        gen.writeStringField("doc", getDoc());
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
       props.write(gen);
@@ -688,8 +686,6 @@ public abstract class Schema {
       gen.writeStartObject();
       gen.writeStringField("type", "enum");
       writeName(names, gen);
-      if (getDoc() != null)
-        gen.writeStringField("doc", getDoc());
       gen.writeArrayFieldStart("symbols");
       for (String symbol : symbols)
         gen.writeString(symbol);
@@ -829,8 +825,6 @@ public abstract class Schema {
       gen.writeStartObject();
       gen.writeStringField("type", "fixed");
       writeName(names, gen);
-      if (getDoc() != null)
-        gen.writeStringField("doc", getDoc());
       gen.writeNumberField("size", size);
       props.write(gen);
       aliasesToJson(gen);

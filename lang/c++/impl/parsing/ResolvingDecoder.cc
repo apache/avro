@@ -450,7 +450,6 @@ template <typename P>
 void ResolvingDecoderImpl<P>::init(InputStream& is)
 {
     base_->init(is);
-    parser_.reset();
 }
 
 template <typename P>
