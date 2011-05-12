@@ -40,6 +40,7 @@ struct avro_file_writer_t_ {
 	avro_writer_t writer;
 	char sync[16];
 	int block_count;
+	size_t block_size;
 	avro_writer_t datum_writer;
 	char datum_buffer[16 * 1024];
 };
@@ -315,15 +316,14 @@ static int file_write_block(avro_file_writer_t w)
 	int rval;
 
 	if (w->block_count) {
-		int64_t blocklen = avro_writer_tell(w->datum_writer);
 		/* Write the block count */
 		check_prefix(rval, enc->write_long(w->writer, w->block_count),
 			     "Cannot write file block count: ");
 		/* Write the block length */
-		check_prefix(rval, enc->write_long(w->writer, blocklen),
+		check_prefix(rval, enc->write_long(w->writer, w->block_size),
 			     "Cannot write file block size: ");
 		/* Write the block */
-		check_prefix(rval, avro_write(w->writer, w->datum_buffer, blocklen),
+		check_prefix(rval, avro_write(w->writer, w->datum_buffer, w->block_size),
 			     "Cannot write file block: ");
 		/* Write the sync marker */
 		check_prefix(rval, write_sync(w),
@@ -331,6 +331,7 @@ static int file_write_block(avro_file_writer_t w)
 		/* Reset the datum writer */
 		avro_writer_reset(w->datum_writer);
 		w->block_count = 0;
+		w->block_size = 0;
 	}
 	return 0;
 }
@@ -354,6 +355,7 @@ int avro_file_writer_append(avro_file_writer_t w, avro_datum_t datum)
 		}
 	}
 	w->block_count++;
+	w->block_size = avro_writer_tell(w->datum_writer);
 	return 0;
 }
 

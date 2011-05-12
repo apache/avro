@@ -82,7 +82,7 @@ add_person(avro_file_writer_t db, const char *first, const char *last,
 	avro_datum_decref(phone_datum);
 	avro_datum_decref(person);
 
-	fprintf(stdout, "Successfully added %s, %s id=%"PRId64"\n", last, first, id);
+	//fprintf(stdout, "Successfully added %s, %s id=%"PRId64"\n", last, first, id);
 }
 
 int print_person(avro_file_reader_t db, avro_schema_t reader_schema)
@@ -134,6 +134,7 @@ int main(void)
 	avro_schema_t projection_schema, first_name_schema, phone_schema;
 	int64_t i;
 	const char *dbname = "quickstop.db";
+	char number[15] = {0};
 
 	/* Initialize the schema structure from JSON */
 	init_schema();
@@ -146,13 +147,18 @@ int main(void)
 		fprintf(stderr, "There was an error creating %s\n", dbname);
 		exit(EXIT_FAILURE);
 	}
-	/* Add people to the database */
-	add_person(db, "Dante", "Hicks", "(555) 123-4567", 32);
-	add_person(db, "Randal", "Graves", "(555) 123-5678", 30);
-	add_person(db, "Veronica", "Loughran", "(555) 123-0987", 28);
-	add_person(db, "Caitlin", "Bree", "(555) 123-2323", 27);
-	add_person(db, "Bob", "Silent", "(555) 123-6422", 29);
-	add_person(db, "Jay", "???", "(555) 123-9182", 26);
+
+	/* Add lots of people to the database */
+	for (i = 0; i < 1000; i++)
+	{
+		sprintf(number, "(%d)", (int)i);
+		add_person(db, "Dante", "Hicks", number, 32);
+		add_person(db, "Randal", "Graves", "(555) 123-5678", 30);
+		add_person(db, "Veronica", "Loughran", "(555) 123-0987", 28);
+		add_person(db, "Caitlin", "Bree", "(555) 123-2323", 27);
+		add_person(db, "Bob", "Silent", "(555) 123-6422", 29);
+		add_person(db, "Jay", "???", number, 26);
+	}
 	avro_file_writer_close(db);
 
 	fprintf(stdout, "\nNow let's read all the records back out\n");

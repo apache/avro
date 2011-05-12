@@ -1,5 +1,15 @@
 Avro Change Log
 
+Avro 1.5.2 (unreleased)
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+  BUG FIXES
+
+    AVRO-818. C: Fix data file corruption bug in C library (dcreager)
+
 Avro 1.5.1 (3 May 2011)
 
   NEW FEATURES
