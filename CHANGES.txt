@@ -14,6 +14,8 @@ Avro 1.6.0 (unreleased)
     Implemented writeBuffers for the NettyTransceiver to allow it to
     process one-way messages.
 
+    AVRO-818. C: Fix data file corruption bug in C library (dcreager)
+
 Avro 1.5.1 (unreleased)
 
   NEW FEATURES

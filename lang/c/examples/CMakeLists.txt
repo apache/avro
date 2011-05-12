@@ -20,3 +20,6 @@
 add_executable(quickstop quickstop.c)
 target_link_libraries(quickstop avro-static)
 
+add_test(quickstop
+    ${CMAKE_COMMAND} -E chdir ${AvroC_SOURCE_DIR}/examples
+    ${CMAKE_CURRENT_BINARY_DIR}/quickstop)
