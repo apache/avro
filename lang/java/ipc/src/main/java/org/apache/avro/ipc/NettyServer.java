@@ -133,7 +133,7 @@ public class NettyServer implements Server {
         NettyDataPack dataPack = (NettyDataPack) e.getMessage();
         List<ByteBuffer> req = dataPack.getDatas();
         List<ByteBuffer> res = responder.respond(req, connectionMetadata);
-		// response will be null for oneway messages.
+        // response will be null for oneway messages.
         if(res != null) {
           dataPack.setDatas(res);
           e.getChannel().write(dataPack);          
