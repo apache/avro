@@ -28,6 +28,8 @@ Avro 1.5.2 (unreleased)
 
     AVRO-819. C: Fix file reader EOF detection (dcreager)
 
+    AVRO-809. Java: Fix reflect for classes that have no package. (cutting)
+
 Avro 1.5.1 (unreleased)
 
   NEW FEATURES

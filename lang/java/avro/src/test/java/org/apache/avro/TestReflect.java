@@ -352,6 +352,12 @@ public class TestReflect {
     assertEquals(e1, response.getTypes().get(1));
   }
 
+  @Test public void testNoPackage() throws Exception {
+    Class noPackage = Class.forName("NoPackage");
+    Schema s = ReflectData.get().getSchema(noPackage);
+    assertEquals(noPackage.getName(), ReflectData.get().getClassName(s));
+  }
+
   void checkReadWrite(Object object) throws Exception {
     checkReadWrite(object, ReflectData.get().getSchema(object.getClass()));
   }
