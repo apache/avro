@@ -101,7 +101,7 @@ public class SpecificData extends GenericData {
   public String getClassName(Schema schema) {
     String namespace = schema.getNamespace();
     String name = schema.getName();
-    if (namespace == null)
+    if (namespace == null || "".equals(namespace))
       return name;
     String dot = namespace.endsWith("$") ? "" : ".";
     return namespace + dot + name;
