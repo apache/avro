@@ -16,8 +16,6 @@ Avro 1.6.0 (unreleased)
 
 Avro 1.5.2 (unreleased)
 
-  INCOMPATIBLE CHANGES
-
   NEW FEATURES
 
   IMPROVEMENTS
