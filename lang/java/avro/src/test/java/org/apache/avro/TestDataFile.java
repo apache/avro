@@ -26,12 +26,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import junit.framework.Assert;
+
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.SeekableFileInput;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
@@ -97,6 +100,20 @@ public class TestDataFile {
         writer.append(datum);
         if (++count%(COUNT/3) == 0)
           writer.sync();                          // force some syncs mid-file
+        if (count == 5) {
+          // force a write of an invalid record
+          boolean threwProperly = false;
+          try {
+            GenericData.Record record = (GenericData.Record) datum;
+            record.put(1, null);
+            threwProperly = true;
+            writer.append(record);
+            threwProperly = false;
+          } catch (DataFileWriter.AppendWriteException e) {
+            System.out.println("Ignoring: "+e);
+          }
+          Assert.assertTrue("failed to throw when expected", threwProperly);
+        }
       }
     } finally {
       writer.close();
