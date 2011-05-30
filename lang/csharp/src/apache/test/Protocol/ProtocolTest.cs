@@ -180,5 +180,266 @@ namespace Avro.Test
 
             Assert.AreEqual(json,json2);
         }
+
+        // Protocols match
+        [TestCase(
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}", 
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+  true,true)]
+        // Protocols match, order of schemas in 'types' are different
+        [TestCase(
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+  false,true)]
+        // Name of protocol is different
+        [TestCase(
+@"{
+  ""protocol"": ""TestProtocol1"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+  false,false)]
+        // Name of a message request is different: 'hi'
+        [TestCase(
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hi"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+  false,false)]
+        // Name of a type is different : Curse1
+        [TestCase(
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse1"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse1""]
+    }
+  }
+}",
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hi"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+  false,false)]
+        // Name of a record field is different: 'mymessage'
+        [TestCase(
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hello"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+@"{
+  ""protocol"": ""TestProtocol"",
+  ""namespace"": ""com.acme"",
+
+  ""types"": [
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""mymessage"", ""type"": ""string""}]}
+  ],
+
+  ""messages"": {
+    ""hi"": {
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
+      ""response"": ""Greeting"",
+      ""errors"": [""Curse""]
+    }
+  }
+}",
+  false,false)]
+        public static void TestProtocolHash(string str1, string str2, bool md5_equal, bool hash_equal)
+        {
+            Protocol protocol1 = Protocol.Parse(str1);
+            Protocol protocol2 = Protocol.Parse(str2);
+
+            byte[] md51 = protocol1.MD5;
+            byte[] md52 = protocol2.MD5;
+
+            int hash1 = protocol1.GetHashCode();
+            int hash2 = protocol2.GetHashCode();
+
+            Assert.AreEqual(md5_equal, md51.SequenceEqual(md52));
+            Assert.AreEqual(hash_equal, hash1 == hash2);
+        }
     }
 }

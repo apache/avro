@@ -28,6 +28,9 @@ Avro 1.5.2 (unreleased)
     while writing data to a file and then continue writing to that
     file.  (scottcarey & cutting)
 
+    AVRO-826. C#: Add MD5 and hashcode functions to Protocol.
+    (Dona Alvarez via cutting)
+
   BUG FIXES
 
     AVRO-818. C: Fix data file corruption bug in C library (dcreager)
