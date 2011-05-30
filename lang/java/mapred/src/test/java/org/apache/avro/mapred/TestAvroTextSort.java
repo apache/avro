@@ -18,26 +18,20 @@
 
 package org.apache.avro.mapred;
 
-import java.io.IOException;
-
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.TextOutputFormat;
-
 import org.junit.Test;
-import static org.junit.Assert.*;
 
-public class TestAvroAsTextInputFormat {
+public class TestAvroTextSort {
   
   @Test
   /**
    * Run the identity job on a "bytes" Avro file using AvroAsTextInputFormat
-   * and check the output is a sorted text file.
+   * and AvroTextOutputFormat to produce a sorted "bytes" Avro file.
    */
   public void testSort() throws Exception {
     JobConf job = new JobConf();
@@ -48,6 +42,7 @@ public class TestAvroAsTextInputFormat {
     WordCountUtil.writeLinesBytesFile();
     
     job.setInputFormat(AvroAsTextInputFormat.class);
+    job.setOutputFormat(AvroTextOutputFormat.class);
     job.setOutputKeyClass(Text.class);
     
     FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
