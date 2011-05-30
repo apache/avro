@@ -44,6 +44,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.file.DataFileWriter;
@@ -60,7 +61,7 @@ class WordCountUtil {
   private static final File COUNTS_FILE
     = new File(new File(DIR, "out"), "part-00000.avro");
   private static final File SORTED_FILE
-    = new File(new File(DIR, "out"), "part-00000");
+    = new File(new File(DIR, "out"), "part-00000.avro");
 
   public static final String[] LINES = new String[] {
     "the quick brown fox jumps over the lazy dog",
@@ -131,18 +132,25 @@ class WordCountUtil {
   }
   
   public static void validateSortedFile() throws Exception {
-    BufferedReader reader = new BufferedReader(new FileReader(SORTED_FILE));
+    DatumReader<ByteBuffer> reader = new GenericDatumReader<ByteBuffer>();
+    InputStream in = new BufferedInputStream(
+        new FileInputStream(SORTED_FILE));
+    DataFileStream<ByteBuffer> lines =
+        new DataFileStream<ByteBuffer>(in,reader);
     List<String> sortedLines = new ArrayList<String>();
     for (String line : LINES) {
       sortedLines.add(line);
     }
     Collections.sort(sortedLines);
     for (String expectedLine : sortedLines) {
-      assertEquals(expectedLine, reader.readLine().trim());
+      ByteBuffer buf = lines.next();
+      byte[] b = new byte[buf.remaining()];
+      buf.get(b);
+      assertEquals(expectedLine, new String(b, "UTF-8").trim());
     }
-    assertNull(reader.readLine());
+    assertFalse(lines.hasNext());
   }
-
+  
   // metadata tests
   private static final String STRING_KEY = "string-key";
   private static final String LONG_KEY = "long-key";

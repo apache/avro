@@ -18,6 +18,10 @@ Avro 1.5.2 (unreleased)
 
   NEW FEATURES
 
+    AVRO-830. Java: Add AvroTextOutputFormat to permit Hadoop
+    streaming jobs to easily write Avro format output with "bytes" as
+    schema.  (Tom White via cutting)
+
   IMPROVEMENTS
 
     AVRO-820. Java: Permit applications to catch exceptions thrown
