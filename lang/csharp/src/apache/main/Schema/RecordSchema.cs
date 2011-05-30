@@ -249,13 +249,13 @@ namespace Avro
         /// <returns></returns>
         public override int GetHashCode()
         {
-            return protect(() =>
+            return protect(() => 0, () =>
             {
                 int result = SchemaName.GetHashCode();
                 foreach (Field f in Fields) result += 29 * f.GetHashCode();
                 result += getHashCode(Props);
                 return result;
-            }, () => 0, this);
+            }, this);
         }
 
         /// <summary>

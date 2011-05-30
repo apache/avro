@@ -51,6 +51,24 @@ namespace Avro
         /// </summary>
         public IDictionary<string,Message> Messages { get; set; }
 
+        private byte[] md5;
+        public byte[] MD5
+        {
+            get 
+            {
+                try
+                {
+                    if (md5 == null)
+                        md5 = System.Security.Cryptography.MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(ToString()));
+                }
+                catch (Exception ex)
+                {
+                    throw new AvroRuntimeException("MD5 get exception", ex);
+                }
+                return md5; 
+            }
+        }
+
         /// <summary>
         /// Constructor for Protocol class
         /// </summary>
@@ -186,6 +204,91 @@ namespace Avro
 
             writer.WriteEndObject();
             writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Tests equality of this protocol object with the passed object
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return true;
+            if (!(obj is Protocol)) return false;
+
+            Protocol that = obj as Protocol;
+
+            return this.Name.Equals(that.Name) && this.Namespace.Equals(that.Namespace) && 
+                    TypesEquals(that.Types) && MessagesEquals(that.Messages);
+        }
+
+        /// <summary>
+        /// Test equality of this protocols Types list with the passed Types list.
+        /// Order of schemas does not matter, as long as all types in this protocol
+        /// are also defined in the passed protocol
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        private bool TypesEquals(IList<Schema> that)
+        {
+            if (Types.Count != that.Count) return false;
+            foreach (Schema schema in Types)
+                if (!that.Contains(schema)) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Test equality of this protocols Message map with the passed Message map
+        /// Order of messages does not matter, as long as all messages in this protocol
+        /// are also defined in the passed protocol
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        private bool MessagesEquals(IDictionary<string, Message> that)
+        {
+            if (Messages.Count != that.Count) return false;
+            foreach (KeyValuePair<string, Message> pair in Messages) 
+            { 
+                if (!that.ContainsKey(pair.Key))
+                    return false;
+                if (!pair.Value.Equals(that[pair.Key]))
+                    return false; 
+            } 
+            return true;
+        }
+
+        /// <summary>
+        /// Returns the hash code of this protocol object
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode() + Namespace.GetHashCode() +
+                   GetTypesHashCode() + GetMessagesHashCode();
+        }
+
+        /// <summary>
+        /// Returns the hash code of the Types list
+        /// </summary>
+        /// <returns></returns>
+        private int GetTypesHashCode()
+        {
+            int hash = Types.Count;
+            foreach (Schema schema in Types)
+                hash += schema.GetHashCode();
+            return hash;
+        }
+
+        /// <summary>
+        /// Returns the hash code of the Messages map
+        /// </summary>
+        /// <returns></returns>
+        private int GetMessagesHashCode()
+        {
+            int hash = Messages.Count;
+            foreach (KeyValuePair<string, Message> pair in Messages)
+                hash += (pair.Key.GetHashCode() + pair.Value.GetHashCode());
+            return hash;
         }
     }
 }
