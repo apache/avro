@@ -24,6 +24,9 @@ Avro 1.5.2 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-469. C: Set library's libtool-style soversion when using CMake
+    build scripts. (dcreager)
+
     AVRO-470. C: Build asciidoc documentation when using CMake build
     scripts. (Daniel Lundin via dcreager)
 
