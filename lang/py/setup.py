@@ -20,6 +20,12 @@ try:
 except ImportError:
   from distutils.core import setup
 
+from sys import version_info
+if (version_info.major, version_info.minor) > (2, 5):
+    install_requires = []
+else:
+    install_requires = ['simplejson >= 2.0.9']
+
 setup(
   name = 'avro',
   version = '@AVRO_VERSION@',
@@ -28,7 +34,7 @@ setup(
 
   # Project uses simplejson, so ensure that it gets installed or upgraded
   # on the target machine
-  install_requires = ['simplejson >= 2.0.9'],
+  install_requires = install_requires,
 
   # metadata for upload to PyPI
   author = 'Apache Avro',
