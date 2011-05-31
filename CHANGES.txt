@@ -24,6 +24,9 @@ Avro 1.5.2 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-470. C: Build asciidoc documentation when using CMake build
+    scripts. (Daniel Lundin via dcreager)
+
     AVRO-820. Java: Permit applications to catch exceptions thrown
     while writing data to a file and then continue writing to that
     file.  (scottcarey & cutting)
