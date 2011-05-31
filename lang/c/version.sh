@@ -18,7 +18,7 @@
 #         libavro_binary_age = 0
 #         libavro_interface_age = 0
 #
-libavro_micro_version=21
+libavro_micro_version=22
 libavro_interface_age=0
 libavro_binary_age=0
 

@@ -67,12 +67,17 @@ set(JANSSON_SRC
 source_group(Avro FILES ${AVRO_SRC})
 source_group(Jansson FILES ${JANSSON_SRC})
 
+# The version.sh script gives us a SOVERSION that uses colon as a
+# separator; we need periods.
+
+string(REPLACE ":" "." LIBAVRO_DOT_VERSION ${LIBAVRO_VERSION})
+
 add_library(avro-static STATIC ${AVRO_SRC} ${JANSSON_SRC})
 set_target_properties(avro-static PROPERTIES OUTPUT_NAME avro)
 add_library(avro-shared SHARED ${AVRO_SRC} ${JANSSON_SRC})
 set_target_properties(avro-shared PROPERTIES
         OUTPUT_NAME avro
-        SOVERSION ${AVRO_VERSION})
+        SOVERSION ${LIBAVRO_DOT_VERSION})
 
 install(FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/avro.h
