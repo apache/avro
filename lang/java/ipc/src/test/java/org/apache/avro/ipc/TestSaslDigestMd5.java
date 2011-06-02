@@ -163,5 +163,6 @@ public class TestSaslDigestMd5 extends TestProtocolGeneric {
   }
 
   @Override public void testHandshake() throws IOException {}
+  @Override public void testResponseChange() throws IOException {}
 
 }

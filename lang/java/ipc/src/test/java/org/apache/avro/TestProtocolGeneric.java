@@ -44,6 +44,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.codehaus.jackson.node.BooleanNode;
+
 public class TestProtocolGeneric {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolGeneric.class);
@@ -206,6 +208,50 @@ public class TestProtocolGeneric {
       params.put("greeting", new Utf8("bob"));
       Utf8 response = (Utf8)r.request("hello", params);
       assertEquals(new Utf8("goodbye"), response);
+    } finally {
+      t.close();
+    }
+  }
+
+  @Test
+  /** Construct and use a different protocol whose "echo" response has an extra
+      field to check that correct schema is used to parse response. */
+  public void testResponseChange() throws IOException {
+
+    List<Field> fields = new ArrayList<Field>();
+    for (Field f : PROTOCOL.getType("TestRecord").getFields())
+      fields.add(new Field(f.name(), f.schema(), null, null));
+    fields.add(new Field("extra", Schema.create(Schema.Type.BOOLEAN),
+                         null, BooleanNode.TRUE));
+    Schema record =
+      Schema.createRecord("TestRecord", null, "org.apache.avro.test", false);
+    record.setFields(fields);
+
+    Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
+    List<Field> params = new ArrayList<Field>();
+    params.add(new Field("record", record, null, null));
+
+    Protocol.Message message =
+      protocol.createMessage("echo", null, Schema.createRecord(params),
+                             record,
+                             Schema.createUnion(new ArrayList<Schema>()));
+    protocol.getMessages().put("echo", message);
+    Transceiver t
+      = new SocketTransceiver(new InetSocketAddress(server.getPort()));
+    try {
+      GenericRequestor r = new GenericRequestor(protocol, t);
+      GenericRecord args = new GenericData.Record(message.getRequest());
+      GenericRecord rec = new GenericData.Record(record);
+      rec.put("name", new Utf8("foo"));
+      rec.put("kind", new GenericData.EnumSymbol
+              (PROTOCOL.getType("Kind"), "BAR"));
+      rec.put("hash", new GenericData.Fixed
+              (PROTOCOL.getType("MD5"),
+               new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+      rec.put("extra", Boolean.TRUE);
+      args.put("record", rec);
+      GenericRecord response = (GenericRecord)r.request("echo", args);
+      assertEquals(rec, response);
     } finally {
       t.close();
     }

@@ -48,6 +48,9 @@ Avro 1.5.2 (unreleased)
 
     AVRO-809. Java: Fix reflect for classes that have no package. (cutting)
 
+    AVRO-832. Java: Fix RPC client to correctly perform schema
+    resolution on message responses.  (cutting)
+
 Avro 1.5.1 (unreleased)
 
   NEW FEATURES

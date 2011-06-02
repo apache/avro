@@ -50,8 +50,8 @@ public class ReflectRequestor extends SpecificRequestor {
   }
 
   @Override
-  protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new ReflectDatumReader<Object>(schema);
+  protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
+    return new ReflectDatumReader<Object>(writer, reader);
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

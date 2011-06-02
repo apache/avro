@@ -59,14 +59,15 @@ public class GenericRequestor extends Requestor {
   }
 
   @Override
-  public Object readResponse(Schema schema, Decoder in) throws IOException {
-    return new GenericDatumReader<Object>(schema).read(null, in);
+  public Object readResponse(Schema writer, Schema reader, Decoder in)
+    throws IOException {
+    return new GenericDatumReader<Object>(writer, reader).read(null, in);
   }
 
   @Override
-  public Exception readError(Schema schema, Decoder in)
+  public Exception readError(Schema writer, Schema reader, Decoder in)
     throws IOException {
-    Object error = new GenericDatumReader<Object>(schema).read(null,in);
+    Object error = new GenericDatumReader<Object>(writer, reader).read(null,in);
     if (error instanceof CharSequence)
       return new AvroRuntimeException(error.toString()); // system error
     return new AvroRemoteException(error);
