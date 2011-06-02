@@ -59,8 +59,13 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     return new SpecificDatumWriter<Object>(schema);
   }
 
+  @Deprecated                                     // for compatibility in 1.5
   protected DatumReader<Object> getDatumReader(Schema schema) {
-    return new SpecificDatumReader<Object>(schema);
+    return getDatumReader(schema, schema);
+  }
+
+  protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
+    return new SpecificDatumReader<Object>(writer, reader);
   }
 
   @Override
@@ -73,14 +78,15 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
     
   @Override
-  public Object readResponse(Schema schema, Decoder in) throws IOException {
-    return getDatumReader(schema).read(null, in);
+  public Object readResponse(Schema writer, Schema reader, Decoder in)
+    throws IOException {
+    return getDatumReader(writer, reader).read(null, in);
   }
 
   @Override
-  public Exception readError(Schema schema, Decoder in)
+  public Exception readError(Schema writer, Schema reader, Decoder in)
     throws IOException {
-    Object value = getDatumReader(schema).read(null, in);
+    Object value = getDatumReader(writer, reader).read(null, in);
     if (value instanceof Exception)
       return (Exception)value;
     return new AvroRuntimeException(value.toString());

@@ -48,6 +48,7 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
   }
 
   @Override public void testHandshake() throws IOException {}
+  @Override public void testResponseChange() throws IOException {}
 
   public interface ProtoInterface {
     byte[] test(byte[] b);

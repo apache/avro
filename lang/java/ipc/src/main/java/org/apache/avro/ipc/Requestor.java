@@ -150,7 +150,7 @@ public abstract class Requestor {
     context.setResponseCallMeta(META_READER.read(null, in));
     
     if (!in.readBoolean()) {                      // no error
-      Object response = readResponse(rm.getResponse(), in);
+      Object response = readResponse(rm.getResponse(), m.getResponse(), in);
       context.setResponse(response);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.clientReceiveResponse(context);
@@ -158,7 +158,7 @@ public abstract class Requestor {
       return response;
       
     } else {
-      Exception error = readError(rm.getErrors(), in);
+      Exception error = readError(rm.getErrors(), m.getErrors(), in);
       context.setError(error);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.clientReceiveResponse(context);
@@ -275,12 +275,22 @@ public abstract class Requestor {
   public abstract void writeRequest(Schema schema, Object request,
                                     Encoder out) throws IOException;
 
+  @Deprecated                                     // for compatibility in 1.5
+  public Object readResponse(Schema schema, Decoder in) throws IOException {
+    return readResponse(schema, schema, in);
+  }
+
   /** Reads a response message. */
-  public abstract Object readResponse(Schema schema, Decoder in)
+  public abstract Object readResponse(Schema writer, Schema reader, Decoder in)
     throws IOException;
 
+  @Deprecated                                     // for compatibility in 1.5
+  public Object readError(Schema schema, Decoder in) throws IOException {
+    return readError(schema, schema, in);
+  }
+
   /** Reads an error message. */
-  public abstract Exception readError(Schema schema, Decoder in)
+  public abstract Exception readError(Schema writer, Schema reader, Decoder in)
     throws IOException;
 }
 
