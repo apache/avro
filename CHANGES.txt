@@ -6,6 +6,9 @@ Avro 1.6.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-539. Java: Add asynchronous RPC support, through either
+    callbacks or futures.  (James Baldassari via cutting)
+
   IMPROVEMENTS
 
     AVRO-833. Don't require simplejson for python >= 2.6.

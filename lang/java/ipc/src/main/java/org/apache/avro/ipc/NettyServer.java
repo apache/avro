@@ -54,13 +54,13 @@ public class NettyServer implements Server {
   private static final Logger LOG = LoggerFactory.getLogger(NettyServer.class
       .getName());
 
-  private Responder responder;
+  private final Responder responder;
 
-  private Channel serverChannel;
-  private ChannelGroup allChannels = new DefaultChannelGroup(
+  private final Channel serverChannel;
+  private final ChannelGroup allChannels = new DefaultChannelGroup(
       "avro-netty-server");
-  private ChannelFactory channelFactory;
-  private CountDownLatch closed = new CountDownLatch(1);
+  private final ChannelFactory channelFactory;
+  private final CountDownLatch closed = new CountDownLatch(1);
   
   public NettyServer(Responder responder, InetSocketAddress addr) {
     this.responder = responder;
@@ -140,10 +140,6 @@ public class NettyServer implements Server {
         }
       } catch (IOException ex) {
         LOG.warn("unexpect error");
-      } finally {
-        if(!connectionMetadata.isConnected()){
-          e.getChannel().close();
-        }
       }
     }
 

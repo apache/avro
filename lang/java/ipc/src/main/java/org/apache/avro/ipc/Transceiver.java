@@ -22,21 +22,58 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.avro.Protocol;
 
 /** Base transport class used by {@link Requestor}. */
 public abstract class Transceiver implements Closeable {
+  private final ReentrantLock channelLock = new ReentrantLock();
 
   public abstract String getRemoteName();
+  
+  /**
+   * Acquires an exclusive lock on the transceiver's channel.
+   */
+  public void lockChannel() {
+    channelLock.lock();
+  }
+  
+  /**
+   * Releases the lock on the transceiver's channel if held by the calling thread.
+   */
+  public void unlockChannel() {
+    if (channelLock.isHeldByCurrentThread()) {
+      channelLock.unlock();
+    }
+  }
 
   /** Called by {@link Requestor#request(String,Object)} for two-way messages.
    * By default calls {@link #writeBuffers(List)} followed by
    * {@link #readBuffers()}. */
-  public synchronized List<ByteBuffer> transceive(List<ByteBuffer> request)
+  public List<ByteBuffer> transceive(List<ByteBuffer> request)
     throws IOException {
-    writeBuffers(request);
-    return readBuffers();
+    lockChannel();
+    try {
+      writeBuffers(request);
+      return readBuffers();
+    } finally {
+      unlockChannel();
+    }
+  }
+  
+  /** 
+   * Called by {@link Requestor#request(String,Object,Callback)} for two-way messages using callbacks.
+   */
+  public void transceive(List<ByteBuffer> request, Callback<List<ByteBuffer>> callback)
+    throws IOException {
+    // The default implementation works synchronously
+    try {
+      List<ByteBuffer> response = transceive(request);
+      callback.handleResult(response);
+    } catch (IOException e) {
+      callback.handleError(e);
+    }
   }
 
   /** Called by the default definition of {@link #transceive(List)}.*/
