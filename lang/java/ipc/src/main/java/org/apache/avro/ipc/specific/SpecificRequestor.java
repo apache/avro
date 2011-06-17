@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Type;
+import java.util.Arrays;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -32,6 +34,7 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.Requestor;
+import org.apache.avro.ipc.Callback;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
@@ -52,7 +55,20 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args)
     throws Throwable {
-    return request(method.getName(), args);
+    // Check if this is a callback-based RPC:
+    Type[] parameterTypes = method.getParameterTypes();
+    if ((parameterTypes.length > 0) &&
+        (parameterTypes[parameterTypes.length - 1] instanceof Class) &&
+        Callback.class.isAssignableFrom(((Class<?>)parameterTypes[parameterTypes.length - 1]))) {
+      // Extract the Callback from the end of of the argument list
+      Object[] finalArgs = Arrays.copyOf(args, args.length - 1);
+      Callback<?> callback = (Callback<?>)args[args.length - 1];
+      request(method.getName(), finalArgs, callback);
+      return null;
+    }
+    else {
+      return request(method.getName(), args);
+    }
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {

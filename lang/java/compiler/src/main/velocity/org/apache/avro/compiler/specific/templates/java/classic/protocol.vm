@@ -21,7 +21,7 @@ package $protocol.getNamespace();
 
 @SuppressWarnings("all")
 #if ($protocol.getDoc())
-  /** $protocol.getDoc() */
+/** $protocol.getDoc() */
 #end
 public interface $this.mangle($protocol.getName()) {
   public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("${this.javaEscape($protocol.toString())}");
@@ -46,4 +46,31 @@ public interface $this.mangle($protocol.getName()) {
 #end##    (one way)
 ;
 #end## (requests)
-}
+
+## Generate nested callback API
+  @SuppressWarnings("all")
+#if ($protocol.getDoc())
+  /** $protocol.getDoc() */
+#end
+  public interface Callback extends $this.mangle($protocol.getName()) {
+    public static final org.apache.avro.Protocol PROTOCOL = #if ($protocol.getNamespace())$protocol.getNamespace().#end${this.mangle($protocol.getName())}.PROTOCOL;
+#foreach ($e in $protocol.getMessages().entrySet())
+#set ($name = $e.getKey())
+#set ($message = $e.getValue())
+#set ($response = $message.getResponse())
+## Generate callback method if the message is not one-way:
+#if (! $message.isOneWay())
+#if ($message.getDoc())
+    /** $this.escapeForJavadoc($message.getDoc()) */
+#end
+    void ${this.mangle($name)}(##
+#foreach ($p in $message.getRequest().getFields())##
+#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($velocityHasNext), #end
+#end
+#if ($message.getRequest().getFields().size() > 0), #end
+org.apache.avro.ipc.Callback<${this.javaType($response)}> callback) throws java.io.IOException;
+#end## (generate callback method)
+#end## (requests)
+  }## End of Callback interface
+
+}## End of protocol interface
