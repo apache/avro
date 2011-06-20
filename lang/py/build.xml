@@ -98,6 +98,20 @@
       </filterset>
     </copy>
 
+     <!-- Inline the Avro version -->
+     <copy file="${basedir}/scripts/avro"
+           toFile="${build.dir}/scripts/avro"
+           overwrite="true">
+       <filterset>
+         <filter token="AVRO_VERSION" value="${avro.version}"/>
+       </filterset>
+     </copy>
+     <!-- Make executable (Ant does not preseve executable bit) -->
+     <exec executable="chmod">
+         <arg value="a+x" />
+         <arg value="${build.dir}/scripts/avro" />
+     </exec>
+
     <!-- Inline the interop data directory -->
     <copy file="${test.dir}/test_datafile_interop.py"
           toFile="${build.dir}/test/test_datafile_interop.py"
