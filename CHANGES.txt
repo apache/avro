@@ -14,6 +14,9 @@ Avro 1.6.0 (unreleased)
     AVRO-833. Don't require simplejson for python >= 2.6.
     (Miki Tebeka via philz)
 
+    AVRO-841. Java: Implement insertion in GenericData.Array.
+    (Nick Palmer via cutting)
+
   BUG FIXES
     
 Avro 1.5.2 (unreleased)

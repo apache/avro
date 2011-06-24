@@ -153,6 +153,35 @@ public class TestGenericData {
 
   }
   @Test
+  public void testArrayAddAtLocation()
+  {
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
+    GenericArray<Integer> array = new GenericData.Array<Integer>(6, schema);
+    array.clear();
+    for(int i=0; i<5; ++i)
+      array.add(i);
+    assertEquals(5, array.size());
+    array.add(0, 6);
+    assertEquals(new Integer(6), array.get(0));
+    assertEquals(6, array.size());
+    assertEquals(new Integer(0), array.get(1));
+    assertEquals(new Integer(4), array.get(5));
+    array.add(6, 7);
+    assertEquals(new Integer(7), array.get(6));
+    assertEquals(7, array.size());
+    assertEquals(new Integer(6), array.get(0));
+    assertEquals(new Integer(4), array.get(5));
+    array.add(1, 8);
+    assertEquals(new Integer(8), array.get(1));
+    assertEquals(new Integer(0), array.get(2));
+    assertEquals(new Integer(6), array.get(0));
+    assertEquals(8, array.size());
+    try {
+	array.get(9);
+	fail("Expected IndexOutOfBoundsException after adding elements");
+    } catch (IndexOutOfBoundsException e){}
+  }
+  @Test
   public void testArrayRemove()
   {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));

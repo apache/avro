@@ -123,6 +123,19 @@ public class GenericData {
       elements[size++] = o;
       return true;
     }
+    @Override public void add(int location, T o) {
+      if (location > size || location < 0) {
+        throw new IndexOutOfBoundsException("Index " + location + " out of bounds.");
+      }
+      if (size == elements.length) {
+        Object[] newElements = new Object[(size * 3)/2 + 1];
+        System.arraycopy(elements, 0, newElements, 0, size);
+        elements = newElements;
+      }
+      System.arraycopy(elements, location, elements, location + 1, size - location);
+      elements[location] = o;
+      size++;
+    }
     @Override public T set(int i, T o) {
       if (i >= size)
         throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
