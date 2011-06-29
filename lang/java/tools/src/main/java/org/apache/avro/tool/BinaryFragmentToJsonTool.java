@@ -39,7 +39,7 @@ public class BinaryFragmentToJsonTool implements Tool {
   public int run(InputStream stdin, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
     if (args.size() != 2) {
-      err.println("Expected 1 arguments: schema binary_data_file");
+      err.println("Expected 2 arguments: schema binary_data_file");
       err.println("Use '-' as binary_data_file for stdin.");
       return 1;
     }

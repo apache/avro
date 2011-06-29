@@ -19,6 +19,9 @@ Avro 1.6.0 (unreleased)
 
   BUG FIXES
     
+    AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
+    (Jakob Homan via cutting)
+
 Avro 1.5.2 (unreleased)
 
   NEW FEATURES
