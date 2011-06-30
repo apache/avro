@@ -51,6 +51,10 @@ Avro 1.5.2 (unreleased)
     AVRO-826. C#: Add MD5 and hashcode functions to Protocol.
     (Dona Alvarez via cutting)
 
+    AVRO-838. Java: Permit invalid characters in record and field
+    names of schemas read from data files, for compatibility with
+    1.4. (cutting)
+
   BUG FIXES
 
     AVRO-818. C: Fix data file corruption bug in C library (dcreager)
