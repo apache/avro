@@ -909,6 +909,19 @@ public abstract class Schema {
     return parse(parseJson(jsonSchema), new Names());
   }
 
+  /** Construct a schema from <a href="http://json.org/">JSON</a> text.
+   * @param validate true if names should be validated, false if not.
+   */
+  public static Schema parse(String jsonSchema, boolean validate) {
+    boolean saved = validateNames.get();
+    try {
+      validateNames.set(validate);
+      return parse(jsonSchema);
+    } finally {
+      validateNames.set(saved);
+    }
+  }
+
   static final Map<String,Type> PRIMITIVES = new HashMap<String,Type>();
   static {
     PRIMITIVES.put("string",  Type.STRING);
@@ -956,7 +969,15 @@ public abstract class Schema {
     }
   }
   
+  private static ThreadLocal<Boolean> validateNames
+    = new ThreadLocal<Boolean>() {
+    @Override protected Boolean initialValue() {
+      return true;
+    }
+  };
+    
   private static String validateName(String name) {
+    if (!validateNames.get()) return name;        // not validating names
     int length = name.length();
     if (length == 0)
       throw new SchemaParseException("Empty name");

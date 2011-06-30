@@ -121,7 +121,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA));
+    header.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA),false);
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
   }

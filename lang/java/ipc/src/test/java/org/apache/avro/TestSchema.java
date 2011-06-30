@@ -210,6 +210,12 @@ public class TestSchema {
                     +"{\"name\":\"f.g\",\"type\":\"int\"}]}");
   }
 
+  @Test public void testInvalidNameTolerance() {
+    Schema.parse("{\"type\":\"record\",\"name\":\"1X\",\"fields\":[]}", false);
+    Schema.parse("{\"type\":\"record\",\"name\":\"X-\",\"fields\":[]}", false);
+    Schema.parse("{\"type\":\"record\",\"name\":\"X$\",\"fields\":[]}", false);
+  }
+
   @Test
   public void testMapInRecord() throws Exception {
     String json = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
