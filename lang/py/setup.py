@@ -21,7 +21,7 @@ except ImportError:
   from distutils.core import setup
 
 from sys import version_info
-if (version_info.major, version_info.minor) > (2, 5):
+if version_info[:2] > (2, 5):
     install_requires = []
 else:
     install_requires = ['simplejson >= 2.0.9']

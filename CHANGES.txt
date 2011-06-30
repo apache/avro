@@ -18,7 +18,10 @@ Avro 1.6.0 (unreleased)
     (Nick Palmer via cutting)
 
   BUG FIXES
-    
+
+    AVRO-845. setup.py uses Python2.7+ specific code
+    (Miki Tebeka via philz)
+
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
     (Jakob Homan via cutting)
 
