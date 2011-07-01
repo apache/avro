@@ -50,7 +50,7 @@ public class WordCountTask
     sum = 0;
   }
 
-  public static void main(String... args) throws Exception {
+  public static void main(String[] args) throws Exception {
     new TetherTaskRunner(new WordCountTask()).join();
   }
 

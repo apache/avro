@@ -38,13 +38,18 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileUtil;
 
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Server;
-import org.apache.avro.ipc.SocketServer;
+import org.apache.avro.ipc.SaslSocketServer;
+import org.apache.avro.ipc.SaslSocketTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 class TetheredProcess  {
+
+  static final Logger LOG = LoggerFactory.getLogger(TetherMapRunner.class);
 
   private JobConf job;
 
@@ -60,17 +65,28 @@ class TetheredProcess  {
     try {
       // start server
       this.outputService = new TetherOutputService(collector, reporter);
-      this.outputServer = new SocketServer
+      this.outputServer = new SaslSocketServer
         (new SpecificResponder(OutputProtocol.class, outputService),
          new InetSocketAddress(0));
       outputServer.start();
       
       // start sub-process, connecting back to server
       this.subprocess = startSubprocess(job);
-      
-      // open client, connecting to sub-process
-      this.clientTransceiver =
-        new SocketTransceiver(new InetSocketAddress(outputService.inputPort()));
+
+      // check if the process has exited -- is there a better way to do this?
+      boolean hasexited = false;
+      try {
+        // exitValue throws an exception if process hasn't exited
+        this.subprocess.exitValue();
+        hasexited = true;
+      } catch (IllegalThreadStateException e) {
+      }
+      if (hasexited) {
+        LOG.error("Could not start subprocess");
+        throw new RuntimeException("Could not start subprocess");
+      }
+      this.clientTransceiver
+        = new SaslSocketTransceiver(new InetSocketAddress(outputService.inputPort()));
       this.inputClient =
         SpecificRequestor.getClient(InputProtocol.class, clientTransceiver);
 
@@ -96,14 +112,38 @@ class TetheredProcess  {
     throws IOException, InterruptedException {
     // get the executable command
     List<String> command = new ArrayList<String>();
-    Path[] localFiles = DistributedCache.getLocalCacheFiles(job);
-    if (localFiles == null) {                     // until MAPREDUCE-476
-      URI[] files = DistributedCache.getCacheFiles(job);
-      localFiles = new Path[] { new Path(files[0].toString()) };
+
+    String executable="";
+    if (job.getBoolean(TetherJob.TETHER_EXEC_CACHED,false)){
+      //we want to use the cached executable
+      Path[] localFiles = DistributedCache.getLocalCacheFiles(job);
+      if (localFiles == null) {                     // until MAPREDUCE-476
+        URI[] files = DistributedCache.getCacheFiles(job);
+        localFiles = new Path[] { new Path(files[0].toString()) };
+      }
+      executable=localFiles[0].toString();
+      FileUtil.chmod(executable.toString(), "a+x");
     }
-    String executable = localFiles[0].toString();
-    FileUtil.chmod(executable, "a+x");
+    else {
+      executable=job.get(TetherJob.TETHER_EXEC);
+    }
+
     command.add(executable);
+
+    // Add the executable arguments. We assume the arguments are separated by
+    // spaces so we split the argument string based on spaces and add each
+    // token to command We need to do it this way because
+    // TaskLog.captureOutAndError will put quote marks around each argument so
+    // if we pass a single string containing all arguments we get quoted
+    // incorrectly
+    String args=job.get(TetherJob.TETHER_EXEC_ARGS);
+    String[] aparams=args.split(" ");
+    for (int i=0;i<aparams.length; i++){            
+      aparams[i]=aparams[i].trim();
+      if (aparams[i].length()>0){
+        command.add(aparams[i]);
+      }
+    }
 
     if (System.getProperty("hadoop.log.dir") == null
         && System.getenv("HADOOP_LOG_DIR") != null)

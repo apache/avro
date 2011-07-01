@@ -75,7 +75,7 @@ class TetherKeySerialization
     
     public void open(OutputStream out) {
       this.out = out;
-      this.encoder = EncoderFactory.get().binaryEncoder(out, null);
+      this.encoder = EncoderFactory.get().directBinaryEncoder(out, encoder);
     }
 
     public void serialize(TetherData datum) throws IOException {

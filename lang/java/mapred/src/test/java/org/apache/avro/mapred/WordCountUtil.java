@@ -50,15 +50,15 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.DataFileStream;
 
-class WordCountUtil {
+public class WordCountUtil {
 
   private static final File DIR
     = new File(System.getProperty("test.dir", ".") + "/mapred");
-  private static final File LINES_FILE
+  public static final File LINES_FILE
     = new File(new File(DIR, "in"), "lines.avro");
   private static final File LINES_TEXT_FILE
     = new File(new File(DIR, "in"), "lines.txt");
-  private static final File COUNTS_FILE
+  public static final File COUNTS_FILE
     = new File(new File(DIR, "out"), "part-00000.avro");
   private static final File SORTED_FILE
     = new File(new File(DIR, "out"), "part-00000.avro");

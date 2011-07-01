@@ -35,6 +35,10 @@ import org.apache.hadoop.mapred.RunningJob;
 @SuppressWarnings("deprecation")
 public class TetherJob extends Configured {
 
+  public static final String TETHER_EXEC="avro.tether.executable";
+  public static final String TETHER_EXEC_ARGS="avro.tether.executable_args";
+  public static final String TETHER_EXEC_CACHED="avro.tether.executable_cached";
+  
   /** Get the URI of the application's executable. */
   public static URI getExecutable(JobConf job) {
     try {
@@ -46,7 +50,23 @@ public class TetherJob extends Configured {
   
   /** Set the URI for the application's executable. Normally this in HDFS. */
   public static void setExecutable(JobConf job, URI executable) {
-    job.set("avro.tether.executable", executable.toString());
+    setExecutable(job,executable,"",false);
+  }
+  
+  /**
+   * Set the URI for the application's executable (i.e the program to run in a subprocess 
+   * and provides the mapper/reducer). 
+   * @param job - Job
+   * @param executable - The URI of the executable
+   * @param argstr - A string of additional arguments
+   * @param cached - If true, the executable URI is cached using DistributedCache
+   *               - if false its not cached. I.e if the file is already stored on each local file system
+   *                or if its on a NFS share
+   */
+  public static void setExecutable(JobConf job, URI executable,String argstr,boolean cached) {
+        job.set(TETHER_EXEC, executable.toString());
+        job.set(TETHER_EXEC_ARGS, argstr);
+        job.set(TETHER_EXEC_CACHED,  (new Boolean(cached)).toString());
   }
 
   /** Submit a job to the map/reduce cluster. All of the necessary
@@ -76,6 +96,9 @@ public class TetherJob extends Configured {
     job.setOutputKeyComparatorClass(TetherKeyComparator.class);
     job.setMapOutputValueClass(NullWritable.class);
 
+    // set the map output key class to TetherData
+    job.setMapOutputKeyClass(TetherData.class);
+    
     // add TetherKeySerialization to io.serializations
     Collection<String> serializations =
       job.getStringCollection("io.serializations");
@@ -84,8 +107,11 @@ public class TetherJob extends Configured {
       job.setStrings("io.serializations",
                      serializations.toArray(new String[0]));
     }
-    
-    DistributedCache.addCacheFile(getExecutable(job), job);
+
+    // determine whether the executable should be added to the cache.
+    if (job.getBoolean(TETHER_EXEC_CACHED,false)){
+      DistributedCache.addCacheFile(getExecutable(job), job);
+    }
   }
 
 }
