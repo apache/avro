@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
@@ -55,19 +56,36 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args)
     throws Throwable {
-    // Check if this is a callback-based RPC:
-    Type[] parameterTypes = method.getParameterTypes();
-    if ((parameterTypes.length > 0) &&
-        (parameterTypes[parameterTypes.length - 1] instanceof Class) &&
-        Callback.class.isAssignableFrom(((Class<?>)parameterTypes[parameterTypes.length - 1]))) {
-      // Extract the Callback from the end of of the argument list
-      Object[] finalArgs = Arrays.copyOf(args, args.length - 1);
-      Callback<?> callback = (Callback<?>)args[args.length - 1];
-      request(method.getName(), finalArgs, callback);
-      return null;
-    }
-    else {
-      return request(method.getName(), args);
+    try {
+      // Check if this is a callback-based RPC:
+      Type[] parameterTypes = method.getParameterTypes();
+      if ((parameterTypes.length > 0) &&
+          (parameterTypes[parameterTypes.length - 1] instanceof Class) &&
+          Callback.class.isAssignableFrom(((Class<?>)parameterTypes[parameterTypes.length - 1]))) {
+        // Extract the Callback from the end of of the argument list
+        Object[] finalArgs = Arrays.copyOf(args, args.length - 1);
+        Callback<?> callback = (Callback<?>)args[args.length - 1];
+        request(method.getName(), finalArgs, callback);
+        return null;
+      }
+      else {
+        return request(method.getName(), args);
+      }
+    } catch (Exception e) {
+      // Check if this is a declared Exception:
+      for (Class<?> exceptionClass : method.getExceptionTypes()) {
+        if (exceptionClass.isAssignableFrom(e.getClass())) {
+          throw e;
+        }
+      }
+      
+      // Next, check for RuntimeExceptions:
+      if (e instanceof RuntimeException) {
+        throw e;
+      }
+      
+      // Not an expected Exception, so wrap it in AvroRemoteException:
+      throw new AvroRemoteException(e);
     }
   }
 

@@ -74,6 +74,10 @@ Avro 1.5.2 (unreleased)
 
     AVRO-776. Java: Fix SocketServer to close socket. (scottcarey)
 
+    AVRO-842. Java: Fix Netty-based IPC client to provide better
+    errors when attempting to use a closed connection.
+    (James Baldassari via cutting)
+
 Avro 1.5.1 (3 May 2011)
 
   NEW FEATURES
