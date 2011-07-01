@@ -108,6 +108,21 @@ add_custom_target (union_map_union_hh
         -o ${BUILD_DIRECTORY}/union_map_union.hh -n umu
     DEPENDS avrogencpp)
 
+add_custom_target (recursive_hh
+    COMMAND avrogencpp -i jsonschemas/recursive
+        -o ${BUILD_DIRECTORY}/recursive.hh -n rec
+    DEPENDS avrogencpp)
+
+add_custom_target (reuse_hh
+    COMMAND avrogencpp -i jsonschemas/reuse
+        -o ${BUILD_DIRECTORY}/reuse.hh -n reu
+    DEPENDS avrogencpp)
+
+add_custom_target (circulardep_hh
+    COMMAND avrogencpp -i jsonschemas/circulardep
+        -o ${BUILD_DIRECTORY}/circulardep.hh -n reu
+    DEPENDS avrogencpp)
+
 macro (test name)
     add_executable (${name} test/${name}.cc)
     target_link_libraries (${name} avrocpp ${Boost_LIBRARIES})
@@ -134,7 +149,8 @@ target_link_libraries (testgentest avrocpp ${Boost_LIBRARIES})
 
 add_executable (AvrogencppTests test/AvrogencppTests.cc)
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord2_hh
-    union_array_union_hh union_map_union_hh)
+    union_array_union_hh union_map_union_hh recursive_hh reuse_hh
+    circulardep_hh)
 target_link_libraries (AvrogencppTests avrocpp ${BOOST_LIBRARIES})
 
 add_executable (DataFileTests test/DataFileTests.cc)
