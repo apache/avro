@@ -1,6 +1,6 @@
 Avro Change Log
 
-Avro 1.5.2 (unreleased)
+Avro 1.5.2 (4 July 2011)
 
   NEW FEATURES
 
