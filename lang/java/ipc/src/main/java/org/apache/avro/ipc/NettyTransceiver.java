@@ -73,7 +73,6 @@ public class NettyTransceiver extends Transceiver {
    * Write lock must be acquired whenever modifying state.
    */
   private final ReadWriteLock stateLock = new ReentrantReadWriteLock();
-  private boolean open = false;  // Synchronized on stateLock
   private Channel channel;       // Synchronized on stateLock
   private Protocol remote;       // Synchronized on stateLock
 
@@ -83,12 +82,27 @@ public class NettyTransceiver extends Transceiver {
     remoteAddr = null;
   }
 
-  public NettyTransceiver(InetSocketAddress addr) {
+  /**
+   * Creates a NettyTransceiver, and attempts to connect to the given address.
+   * @param addr the address to connect to.
+   * @throws IOException if an error occurs connecting to the given address.
+   */
+  public NettyTransceiver(InetSocketAddress addr) throws IOException {
     this(addr, new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), 
         Executors.newCachedThreadPool()));
   }
 
-  public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory) {
+  /**
+   * Creates a NettyTransceiver, and attempts to connect to the given address.
+   * @param addr the address to connect to.
+   * @param channelFactory the factory to use to create a new Netty Channel.
+   * @throws IOException if an error occurs connecting to the given address.
+   */
+  public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory) throws IOException {
+    if (channelFactory == null) {
+      throw new NullPointerException("channelFactory is null");
+    }
+    
     // Set up.
     this.channelFactory = channelFactory;
     bootstrap = new ClientBootstrap(channelFactory);
@@ -109,43 +123,71 @@ public class NettyTransceiver extends Transceiver {
     bootstrap.setOption("tcpNoDelay", true);
 
     // Make a new connection.
-    connect();
+    stateLock.readLock().lock();
+    try {
+      getChannel();
+    } finally {
+      stateLock.readLock().unlock();
+    }
   }
   
   /**
-   * Connects to the remote peer if not already connected.
+   * Tests whether the given channel is ready for writing.
+   * @return true if the channel is open and ready; false otherwise.
    */
-  private void connect() {
-    stateLock.writeLock().lock();
-    try {
-      if (!open || (channel == null) || !channel.isOpen() || !channel.isBound() || !channel.isConnected()) {
+  private static boolean isChannelReady(Channel channel) {
+    return (channel != null) && 
+      channel.isOpen() && channel.isBound() && channel.isConnected();
+  }
+  
+  /**
+   * Gets the Netty channel.  If the channel is not connected, first attempts 
+   * to connect.
+   * NOTE: The stateLock read lock *must* be acquired before calling this 
+   * method.
+   * @return the Netty channel
+   * @throws IOException if an error occurs connecting the channel.
+   */
+  private Channel getChannel() throws IOException {
+    if (!isChannelReady(channel)) {
+      // Need to reconnect
+      // Upgrade to write lock
+      stateLock.readLock().unlock();
+      stateLock.writeLock().lock();
+      try {
         LOG.info("Connecting to " + remoteAddr);
         ChannelFuture channelFuture = bootstrap.connect(remoteAddr);
         channelFuture.awaitUninterruptibly();
         if (!channelFuture.isSuccess()) {
           channelFuture.getCause().printStackTrace();
-          throw new RuntimeException(channelFuture.getCause());
+          throw new IOException("Error connecting to " + remoteAddr, 
+              channelFuture.getCause());
         }
         channel = channelFuture.getChannel();
-        open = true;
+      } finally {
+        // Downgrade to read lock:
+        stateLock.readLock().lock();
+        stateLock.writeLock().unlock();
       }
-    } finally {
-      stateLock.writeLock().unlock();
     }
+    return channel;
   }
   
   /**
    * Closes the connection to the remote peer if connected.
    */
   private void disconnect() {
-    disconnect(false);
+    disconnect(false, false);
   }
   
   /**
    * Closes the connection to the remote peer if connected.
    * @param awaitCompletion if true, will block until the close has completed.
+   * @param cancelPendingRequests if true, will drain the requests map and 
+   * send an IOException to all Callbacks.
    */
-  private void disconnect(boolean awaitCompletion) {
+  private void disconnect(boolean awaitCompletion, boolean cancelPendingRequests) {
+    Map<Integer, Callback<List<ByteBuffer>>> requestsToCancel = null;
     stateLock.writeLock().lock();
     try {
       if (channel != null) {
@@ -156,10 +198,24 @@ public class NettyTransceiver extends Transceiver {
         }
         channel = null;
         remote = null;
-        open = false;
+        if (cancelPendingRequests) {
+          // Remove all pending requests (will be canceled after relinquishing 
+          // write lock).
+          requestsToCancel = 
+            new ConcurrentHashMap<Integer, Callback<List<ByteBuffer>>>(requests);
+          requests.clear();
+        }
       }
     } finally {
       stateLock.writeLock().unlock();
+    }
+    
+    if ((requestsToCancel != null) && !requestsToCancel.isEmpty()) {
+      LOG.warn("Removing " + requestsToCancel.size() + " pending request(s).");
+      for (Callback<List<ByteBuffer>> request : requestsToCancel.values()) {
+        request.handleError(
+            new IOException(getClass().getSimpleName() + " closed"));
+      }
     }
   }
   
@@ -182,22 +238,20 @@ public class NettyTransceiver extends Transceiver {
   }
 
   public void close() {
-    stateLock.writeLock().lock();
     try {
-      // Close the connection.
-      disconnect(true);
+      // Close the connection:
+      disconnect(true, true);
+    } finally {
       // Shut down all thread pools to exit.
       channelFactory.releaseExternalResources();
-    } finally {
-      stateLock.writeLock().unlock();
     }
   }
 
   @Override
-  public String getRemoteName() {
+  public String getRemoteName() throws IOException {
     stateLock.readLock().lock();
     try {
-      return channel.getRemoteAddress().toString();
+      return getChannel().getRemoteAddress().toString();
     } finally {
       stateLock.readLock().unlock();
     }
@@ -207,7 +261,8 @@ public class NettyTransceiver extends Transceiver {
    * Override as non-synchronized method because the method is thread safe.
    */
   @Override
-  public List<ByteBuffer> transceive(List<ByteBuffer> request) {
+  public List<ByteBuffer> transceive(List<ByteBuffer> request) 
+    throws IOException {
     try {
       CallFuture<List<ByteBuffer>> transceiverFuture = new CallFuture<List<ByteBuffer>>();
       transceive(request, transceiverFuture);
@@ -222,7 +277,8 @@ public class NettyTransceiver extends Transceiver {
   }
   
   @Override
-  public void transceive(List<ByteBuffer> request, Callback<List<ByteBuffer>> callback) {
+  public void transceive(List<ByteBuffer> request, 
+      Callback<List<ByteBuffer>> callback) throws IOException {
     stateLock.readLock().lock();
     try {
       int serial = serialGenerator.incrementAndGet();
@@ -242,24 +298,12 @@ public class NettyTransceiver extends Transceiver {
   /**
    * Writes a NettyDataPack, reconnecting to the remote peer if necessary.
    * @param dataPack the data pack to write.
+   * @throws IOException if an error occurs connecting to the remote peer.
    */
-  private void writeDataPack(NettyDataPack dataPack) {
+  private void writeDataPack(NettyDataPack dataPack) throws IOException {
     stateLock.readLock().lock();
     try {
-      while ((channel == null) || !channel.isOpen() || !channel.isBound() || !channel.isConnected()) {
-        // Need to reconnect
-        // Upgrade to write lock
-        stateLock.readLock().unlock();
-        stateLock.writeLock().lock();
-        try {
-          connect();
-        } finally {
-          // Downgrade to read lock:
-          stateLock.readLock().lock();
-          stateLock.writeLock().unlock();
-        }
-      }
-      channel.write(dataPack);
+      getChannel().write(dataPack);
     } finally {
       stateLock.readLock().unlock();
     }
@@ -314,28 +358,7 @@ public class NettyTransceiver extends Transceiver {
         if ((cse.getState() == ChannelState.OPEN) && (Boolean.FALSE.equals(cse.getValue()))) {
           // Server closed connection; disconnect client side
           LOG.info("Remote peer " + remoteAddr + " closed connection.");
-          stateLock.readLock().lock();
-          boolean readLockAcquired = true;
-          try {
-            // Only disconnect if open to prevent deadlock on close()
-            if (open) {
-              // Upgrade to write lock:
-              stateLock.readLock().unlock();
-              readLockAcquired = false;
-              stateLock.writeLock().lock();
-              try {
-                if (open) {
-                  disconnect();
-                }
-              } finally {
-                stateLock.writeLock().unlock();
-              }
-            }
-          } finally {
-            if (readLockAcquired) {
-              stateLock.readLock().unlock();
-            }
-          }
+          disconnect();
         }
       }
       super.handleUpstream(ctx, e);

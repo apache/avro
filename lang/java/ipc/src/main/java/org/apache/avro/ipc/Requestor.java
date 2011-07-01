@@ -28,6 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -108,7 +109,7 @@ public abstract class Requestor {
       if (e.getCause() instanceof Exception) {
         throw (Exception)e.getCause();
       } else {
-        throw new RuntimeException(e.getCause());
+        throw new AvroRemoteException(e.getCause());
       }
     }
   }
@@ -247,7 +248,7 @@ public abstract class Requestor {
     return established;
   }
 
-  private void setRemote(HandshakeResponse handshake) {
+  private void setRemote(HandshakeResponse handshake) throws IOException {
     remote = Protocol.parse(handshake.serverProtocol.toString());
     MD5 remoteHash = (MD5)handshake.serverHash;
     REMOTE_HASHES.put(transceiver.getRemoteName(), remoteHash);

@@ -30,7 +30,7 @@ import org.apache.avro.Protocol;
 public abstract class Transceiver implements Closeable {
   private final ReentrantLock channelLock = new ReentrantLock();
 
-  public abstract String getRemoteName();
+  public abstract String getRemoteName() throws IOException;
   
   /**
    * Acquires an exclusive lock on the transceiver's channel.

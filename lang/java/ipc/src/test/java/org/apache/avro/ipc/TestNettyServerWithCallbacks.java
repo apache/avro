@@ -25,6 +25,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -256,6 +257,119 @@ public class TestNettyServerWithCallbacks {
     Assert.assertFalse("Expected ack flag to be cleared", ackFlag.get());
   }
   
+  @Test
+  public void testSendAfterChannelClose() throws Exception {
+    // Start up a second server so that closing the server doesn't 
+    // interfere with the other unit tests:
+    Server server2 = new NettyServer(new SpecificResponder(Simple.class, simpleService), 
+        new InetSocketAddress(0));
+    server2.start();
+    try {
+      int serverPort = server2.getPort();
+      System.out.println("server2 port : " + serverPort);
+
+      Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
+          serverPort));
+      try {
+        Simple.Callback simpleClient2 = 
+          SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
+
+        // Verify that connection works:
+        Assert.assertEquals(3, simpleClient2.add(1, 2));
+        
+        // Try again with callbacks:
+        CallFuture<Integer> addFuture = new CallFuture<Integer>();
+        simpleClient2.add(1, 2, addFuture);
+        Assert.assertEquals(new Integer(3), addFuture.get());
+
+        // Shut down server:
+        server2.close();
+
+        // Send a new RPC, and verify that it throws an Exception that 
+        // can be detected by the client:
+        boolean ioeCaught = false;
+        try {
+          simpleClient2.add(1, 2);
+          Assert.fail("Send after server close should have thrown Exception");
+        } catch (AvroRemoteException e) {
+          ioeCaught = e.getCause() instanceof IOException;
+          Assert.assertTrue("Expected IOException", ioeCaught);
+        } catch (Exception e) {
+          e.printStackTrace();
+          throw e;
+        }
+        Assert.assertTrue("Expected IOException", ioeCaught);
+        
+        // Send a new RPC with callback, and verify that the correct Exception 
+        // is thrown:
+        ioeCaught = false;
+        try {
+          addFuture = new CallFuture<Integer>();
+          simpleClient2.add(1, 2, addFuture);
+          addFuture.get();
+          Assert.fail("Send after server close should have thrown Exception");
+        } catch (IOException e) {
+          ioeCaught = true;
+        } catch (Exception e) {
+          e.printStackTrace();
+          throw e;
+        }
+        Assert.assertTrue("Expected IOException", ioeCaught);
+      } finally {
+        transceiver2.close();
+      }
+    } finally {
+      server2.close();
+    }
+  }
+  
+  @Test
+  public void cancelPendingRequestsOnTransceiverClose() throws Exception {
+    // Start up a second server so that closing the server doesn't 
+    // interfere with the other unit tests:
+    BlockingSimpleImpl blockingSimpleImpl = new BlockingSimpleImpl();
+    Server server2 = new NettyServer(new SpecificResponder(Simple.class, 
+        blockingSimpleImpl), new InetSocketAddress(0));
+    server2.start();
+    try {
+      int serverPort = server2.getPort();
+      System.out.println("server2 port : " + serverPort);
+
+      CallFuture<Integer> addFuture = new CallFuture<Integer>();
+      Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
+          serverPort));
+      try {        
+        Simple.Callback simpleClient2 = 
+          SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
+        
+        // The first call has to block for the handshake:
+        Assert.assertEquals(3, simpleClient2.add(1, 2));
+        
+        // Now acquire the semaphore so that the server will block:
+        blockingSimpleImpl.acquirePermit();
+        simpleClient2.add(1, 2, addFuture);
+      } finally {
+        // When the transceiver is closed, the CallFuture should get 
+        // an IOException
+        transceiver2.close();
+      }
+      boolean ioeThrown = false;
+      try {
+        addFuture.get();
+      } catch (ExecutionException e) {
+        ioeThrown = e.getCause() instanceof IOException;
+        Assert.assertTrue(e.getCause() instanceof IOException);
+      } catch (Exception e) {
+        e.printStackTrace();
+        Assert.fail("Unexpected Exception: " + e.toString());
+      }
+      Assert.assertTrue("Expected IOException to be thrown", ioeThrown);
+    } finally {
+      blockingSimpleImpl.releasePermit();
+      server2.close();
+    }
+  }
+  
   @Ignore
   @Test
   public void performanceTest() throws Exception {
@@ -340,6 +454,94 @@ public class TestNettyServerWithCallbacks {
     synchronized public void ack() {
       ackFlag.set(!ackFlag.get());
       ackLatch.get().countDown();
+    }
+  }
+  
+  /**
+   * A SimpleImpl that requires a semaphore permit before executing any method.
+   */
+  private static class BlockingSimpleImpl extends SimpleImpl {
+    private final Semaphore semaphore = new Semaphore(1);
+    
+    /**
+     * Creates a BlockingSimpleImpl.
+     */
+    public BlockingSimpleImpl() {
+      super(new AtomicBoolean());
+    }
+    
+    @Override
+    public CharSequence hello(CharSequence greeting) throws AvroRemoteException {
+      acquirePermit();
+      try {
+        return super.hello(greeting);
+      } finally {
+        releasePermit();
+      }
+    }
+
+    @Override
+    public TestRecord echo(TestRecord record) throws AvroRemoteException {
+      acquirePermit();
+      try {
+        return super.echo(record);
+      } finally {
+        releasePermit();
+      }
+    }
+
+    @Override
+    public int add(int arg1, int arg2) throws AvroRemoteException {
+      acquirePermit();
+      try {
+        return super.add(arg1, arg2);
+      } finally {
+        releasePermit();
+      }
+    }
+
+    @Override
+    public ByteBuffer echoBytes(ByteBuffer data) throws AvroRemoteException {
+      acquirePermit();
+      try {
+        return super.echoBytes(data);
+      } finally {
+        releasePermit();
+      }
+    }
+
+    @Override
+    public Void error() throws AvroRemoteException, TestError {
+      acquirePermit();
+      try {
+        return super.error();
+      } finally {
+        releasePermit();
+      }
+    }
+
+    @Override
+    public void ack() {
+      acquirePermit();
+      try {
+        super.ack();
+      } finally {
+        releasePermit();
+      }
+    }
+    
+    /**
+     * Acquires a single permit from the semaphore.
+     */
+    public void acquirePermit() {
+      semaphore.acquireUninterruptibly();
+    }
+    
+    /**
+     * Releases a single permit to the semaphore.
+     */
+    public void releasePermit() {
+      semaphore.release();
     }
   }
 }
