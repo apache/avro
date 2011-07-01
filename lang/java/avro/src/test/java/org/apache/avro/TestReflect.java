@@ -352,12 +352,6 @@ public class TestReflect {
     assertEquals(e1, response.getTypes().get(1));
   }
 
-  @Test public void testNoPackage() throws Exception {
-    Class noPackage = Class.forName("NoPackage");
-    Schema s = ReflectData.get().getSchema(noPackage);
-    assertEquals(noPackage.getName(), ReflectData.get().getClassName(s));
-  }
-
   void checkReadWrite(Object object) throws Exception {
     checkReadWrite(object, ReflectData.get().getSchema(object.getClass()));
   }
@@ -554,14 +548,6 @@ public class TestReflect {
 
     // test that this instance can be written & re-read
     checkBinary(schema, record);
-  }
-
-  /** Test union of null and an array. */
-  @Test
-  public void testNullArray() throws Exception {
-    String json = "[{\"type\":\"array\", \"items\": \"long\"}, \"null\"]";
-    Schema schema = Schema.parse(json);
-    checkBinary(schema, null);
   }
 
   public static void checkBinary(Schema schema, Object datum)

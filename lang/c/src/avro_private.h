@@ -33,7 +33,6 @@
 		rval = call;				\
 		if (rval) {				\
 			avro_set_error(__VA_ARGS__);	\
-			return rval;			\
 		}					\
 	}
 
@@ -42,7 +41,6 @@
 		rval = call;				\
 		if (rval) {				\
 			avro_prefix_error(__VA_ARGS__);	\
-			return rval;			\
 		}					\
 	}
 

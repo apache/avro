@@ -256,7 +256,7 @@ public class SaslSocketTransceiver extends Transceiver {
     zeroHeader.flip();                            // zero-terminate
     writes.add(zeroHeader);
 
-    writeFully(writes.toArray(new ByteBuffer[writes.size()]));
+    channel.write(writes.toArray(new ByteBuffer[writes.size()]));
   }
 
   private void write(Status status, String prefix, ByteBuffer response)
@@ -275,7 +275,7 @@ public class SaslSocketTransceiver extends Transceiver {
     ByteBuffer statusBuffer = ByteBuffer.allocate(1);
     statusBuffer.clear();
     statusBuffer.put((byte)(status.ordinal())).flip();
-    writeFully(statusBuffer);
+    channel.write(statusBuffer);
     write(response);
   }
 
@@ -283,20 +283,7 @@ public class SaslSocketTransceiver extends Transceiver {
     LOG.debug("writing: {}", response.remaining());
     writeHeader.clear();
     writeHeader.putInt(response.remaining()).flip();
-    writeFully(writeHeader, response);
-  }
-
-  private void writeFully(ByteBuffer... buffers) throws IOException {
-    int length = buffers.length;
-    int start = 0;
-    do {
-      channel.write(buffers, start, length-start);
-      while (buffers[start].remaining() == 0) {
-        start++;
-        if (start == length)
-          return;
-      }
-    } while (true);
+    channel.write(new ByteBuffer[] { writeHeader, response });
   }
 
   @Override public void close() throws IOException {

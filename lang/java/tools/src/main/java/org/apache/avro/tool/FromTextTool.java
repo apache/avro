@@ -19,7 +19,9 @@ package org.apache.avro.tool;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -32,7 +34,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
-import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 
 /** Reads a text file into an Avro data file.
  * 
@@ -60,68 +61,36 @@ public class FromTextTool implements Tool {
     OptionSpec<Integer> level = p.accepts("level", "compression level")
     .withOptionalArg().ofType(Integer.class);
 
-    OptionSpec<String> codec = p.accepts("codec", "compression codec")
-    .withOptionalArg().ofType(String.class);
-
     OptionSet opts = p.parse(args.toArray(new String[0]));
 
-    List<String> nargs = opts.nonOptionArguments();
-    if (nargs.size() != 2) {
+    if (opts.nonOptionArguments().size() != 2) {
       err.println("Expected 2 args: from_file to_file (local filenames," +
           " Hadoop URI's, or '-' for stdin/stdout");
       p.printHelpOn(err);
       return 1;
     }
  
+    BufferedInputStream inStream = Util.fileOrStdin(args.get(0), stdin);
+    BufferedOutputStream outStream = Util.fileOrStdout(args.get(1), out);
+    
     int compressionLevel = 1; // Default compression level
     if (opts.hasArgument(level)) {
       compressionLevel = level.value(opts);
     }
   
-    String codecName = opts.hasArgument(codec)
-      ? codec.value(opts)
-      : DEFLATE_CODEC;
-    CodecFactory codecFactory = codecName.equals(DEFLATE_CODEC)
-      ? CodecFactory.deflateCodec(compressionLevel)
-      : CodecFactory.fromString(codecName);
-
-    BufferedInputStream inStream = Util.fileOrStdin(nargs.get(0), stdin);
-    BufferedOutputStream outStream = Util.fileOrStdout(nargs.get(1), out);
-    
+    BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
     DataFileWriter<ByteBuffer> writer =
         new DataFileWriter<ByteBuffer>(new GenericDatumWriter<ByteBuffer>());
-    writer.setCodec(codecFactory);
+    writer.setCodec(CodecFactory.deflateCodec(compressionLevel));
     writer.create(Schema.parse(TEXT_FILE_SCHEMA), outStream);
 
-    ByteBuffer line = ByteBuffer.allocate(128);
-    boolean returnSeen = false;
-    byte[] buf = new byte[8192];
-    for (int end = inStream.read(buf); end != -1; end = inStream.read(buf)) {
-      for (int i = 0; i < end; i++) {
-        int b = buf[i] & 0xFF;
-        if (b == '\n') {                          // newline
-          System.out.println("Writing line = "+line.position());
-          line.flip();
-          writer.append(line);
-          line.clear();
-          returnSeen = false;
-        } else if (b == '\r') {                   // return
-          line.flip();
-          writer.append(line);
-          line.clear();
-          returnSeen = true;
-        } else {
-          if (line.position() == line.limit()) {    // reallocate longer line
-            ByteBuffer tempLine = ByteBuffer.allocate(line.limit()*2);
-            line.flip();
-            tempLine.put(line);
-            line = tempLine;
-          }
-          line.put((byte)b);
-          returnSeen = false;
-        }
-      }
+    String line;
+    while((line = reader.readLine()) != null) {
+      ByteBuffer buff = ByteBuffer.wrap(line.getBytes());
+      writer.append(buff);
     }
+    
+    writer.flush();
     writer.close();
     inStream.close();
     return 0;

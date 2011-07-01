@@ -136,7 +136,6 @@ struct StreamReader {
     const uint8_t* end_;
 
     StreamReader() : in_(0), next_(0), end_(0) { }
-    StreamReader(InputStream& in) : in_(0), next_(0), end_(0) { reset(in); }
 
     void reset(InputStream& is) {
         if (in_ != 0) {
@@ -210,7 +209,6 @@ struct StreamWriter {
     uint8_t* end_;
 
     StreamWriter() : out_(0), next_(0), end_(0) { }
-    StreamWriter(OutputStream& out) : out_(0), next_(0), end_(0) { reset(out); }
 
     void reset(OutputStream& os) {
         if (out_ != 0) {
@@ -262,22 +260,6 @@ struct StreamWriter {
         out_->flush();
     }
 };
-
-/**
- * A convenience function to copy all the contents of an input stream into
- * an output stream.
- */
-inline void copy(InputStream& in, OutputStream& out)
-{
-    const uint8_t *p = 0;
-    size_t n = 0;
-    StreamWriter w(out);
-    while (in.next(&p, &n)) {
-        w.writeBytes(p, n);
-    }
-    w.flush();
-}
-
 }   // namespace avro
 #endif
 

@@ -34,6 +34,7 @@ import org.junit.Test;
 import java.net.URL;
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 
 public class TestProtocolHttp extends TestProtocolSpecific {
@@ -61,7 +62,7 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     Simple proxy = SpecificRequestor.getClient(Simple.class, client);
     try {
       proxy.hello("foo");
-    } catch (AvroRemoteException e) {
+    } catch (UndeclaredThrowableException e) {
       throw e.getCause();
     } finally {
       s.close();

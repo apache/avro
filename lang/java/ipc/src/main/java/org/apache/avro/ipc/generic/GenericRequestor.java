@@ -28,7 +28,6 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.ipc.Callback;
 import org.apache.avro.ipc.Requestor;
 import org.apache.avro.ipc.Transceiver;
 
@@ -54,35 +53,20 @@ public class GenericRequestor extends Requestor {
   }
 
   @Override
-  public <T> void request(String messageName, Object request, Callback<T> callback)
-    throws IOException {
-    try {
-      super.request(messageName, request, callback);
-    } catch (Exception e) {
-      if (e instanceof RuntimeException)
-        throw (RuntimeException)e;
-      if (e instanceof IOException)
-        throw (IOException)e;
-      throw new AvroRemoteException(e);
-    }
-  }
-
-  @Override
   public void writeRequest(Schema schema, Object request, Encoder out)
     throws IOException {
     new GenericDatumWriter<Object>(schema).write(request, out);
   }
 
   @Override
-  public Object readResponse(Schema writer, Schema reader, Decoder in)
-    throws IOException {
-    return new GenericDatumReader<Object>(writer, reader).read(null, in);
+  public Object readResponse(Schema schema, Decoder in) throws IOException {
+    return new GenericDatumReader<Object>(schema).read(null, in);
   }
 
   @Override
-  public Exception readError(Schema writer, Schema reader, Decoder in)
+  public Exception readError(Schema schema, Decoder in)
     throws IOException {
-    Object error = new GenericDatumReader<Object>(writer, reader).read(null,in);
+    Object error = new GenericDatumReader<Object>(schema).read(null,in);
     if (error instanceof CharSequence)
       return new AvroRuntimeException(error.toString()); // system error
     return new AvroRemoteException(error);

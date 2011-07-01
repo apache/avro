@@ -238,40 +238,12 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     return setMeta(key, Long.toString(value));
   }
 
-  /** Thrown by {@link #append(Object)} when an exception occurs while writing a
-   * datum to the buffer.  When this is thrown, the file is unaltered and may
-   * continue to be appended to. */
-  public static class AppendWriteException extends RuntimeException {
-    public AppendWriteException(Exception e) { super(e); }
-  }
-
-  /** Append a datum to the file.
-   * @see AppendWriteException
-   */
+  /** Append a datum to the file. */
   public void append(D datum) throws IOException {
     assertOpen();
-    int usedBuffer = bufferInUse();
-    try {
-      dout.write(datum, bufOut);
-    } catch (IOException e) {
-      resetBufferTo(usedBuffer);
-      throw new AppendWriteException(e);
-    } catch (RuntimeException re) {
-      resetBufferTo(usedBuffer);
-      throw new AppendWriteException(re);
-    }
+    dout.write(datum, bufOut);
     blockCount++;
     writeIfBlockFull();
-  }
-  
-  // if there is an error encoding, flush the encoder and then
-  // reset the buffer position to contain size bytes, discarding the rest.
-  // Otherwise the file will be corrupt with a partial record.
-  private void resetBufferTo(int size) throws IOException {
-    bufOut.flush();
-    byte[] data = buffer.toByteArray();
-    buffer.reset();
-    buffer.write(data, 0, size);
   }
 
   /** Expert: Append a pre-encoded datum to the file.  No validation is
@@ -284,13 +256,9 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     blockCount++;
     writeIfBlockFull();
   }
-  
-  private int bufferInUse() {
-    return (buffer.size() + bufOut.bytesBuffered());
-  }
 
   private void writeIfBlockFull() throws IOException {
-    if (bufferInUse() >= syncInterval)
+    if ((buffer.size() + bufOut.bytesBuffered()) >= syncInterval)
       writeBlock();
   }
 

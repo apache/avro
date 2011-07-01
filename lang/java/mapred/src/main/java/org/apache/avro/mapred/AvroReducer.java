@@ -18,22 +18,19 @@
 
 package org.apache.avro.mapred;
 
-import java.io.Closeable;
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.conf.Configured;
 
 /** A reducer for Avro data.
  *
  * <p>Applications should subclass this class and pass their subclass to {@link
- * AvroJob#setReducerClass(JobConf, Class)} and perhaps {@link AvroJob#setCombinerClass(JobConf, Class)}.
- * Subclasses override {@link #reduce(Object, Iterable, AvroCollector, Reporter)}.
+ * AvroJob#setReducerClass} and perhaps {@link AvroJob#setCombinerClass}.
+ * Subclasses override {@link #reduce}.
  */
 
-public class AvroReducer<K,V,OUT> extends Configured implements JobConfigurable, Closeable {
+public class AvroReducer<K,V,OUT> extends Configured {
 
   private Pair<K,V> outputPair;
 
@@ -51,15 +48,4 @@ public class AvroReducer<K,V,OUT> extends Configured implements JobConfigurable,
     }
   }
 
-  /** Subclasses can override this as desired. */
-  @Override
-  public void close() throws IOException {
-    // no op
-  }
-
-  /** Subclasses can override this as desired. */
-  @Override
-  public void configure(JobConf jobConf) {
-    // no op
-  }
 }

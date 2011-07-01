@@ -106,7 +106,6 @@ public class ReflectData extends SpecificData {
 
   @Override
   protected boolean isArray(Object datum) {
-    if (datum == null) return false;
     return (datum instanceof Collection) || datum.getClass().isArray();
   }
 
@@ -450,7 +449,7 @@ public class ReflectData extends SpecificData {
   }
 
   @Override
-  protected int compare(Object o1, Object o2, Schema s, boolean equals) {
+  public int compare(Object o1, Object o2, Schema s) {
     switch (s.getType()) {
     case ARRAY:
       if (!o1.getClass().isArray())
@@ -462,7 +461,7 @@ public class ReflectData extends SpecificData {
       for (int i = 0; i < l; i++) {
         int compare = compare(java.lang.reflect.Array.get(o1, i),
                               java.lang.reflect.Array.get(o2, i),
-                              elementType, equals);
+                              elementType);
         if (compare != 0) return compare;
       }
       return l1 - l2;
@@ -473,7 +472,7 @@ public class ReflectData extends SpecificData {
       byte[] b2 = (byte[])o2; 
       return BinaryData.compareBytes(b1, 0, b1.length, b2, 0, b2.length);
     }
-    return super.compare(o1, o2, s, equals);
+    return super.compare(o1, o2, s);
   }
 
 }

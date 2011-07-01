@@ -15,12 +15,6 @@
      "send": {
          "request": [{"name": "message", "type": "Message"}],
          "response": "string"
-     },
-     "fireandforget": {
-         "request": [{"name": "message", "type": "Message"}],
-         "response": "null",
-         "one-way": true
      }
-
  }
 }

@@ -22,10 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Type;
-import java.util.Arrays;
 
-import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
@@ -35,7 +32,6 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.Requestor;
-import org.apache.avro.ipc.Callback;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
@@ -56,50 +52,15 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args)
     throws Throwable {
-    try {
-      // Check if this is a callback-based RPC:
-      Type[] parameterTypes = method.getParameterTypes();
-      if ((parameterTypes.length > 0) &&
-          (parameterTypes[parameterTypes.length - 1] instanceof Class) &&
-          Callback.class.isAssignableFrom(((Class<?>)parameterTypes[parameterTypes.length - 1]))) {
-        // Extract the Callback from the end of of the argument list
-        Object[] finalArgs = Arrays.copyOf(args, args.length - 1);
-        Callback<?> callback = (Callback<?>)args[args.length - 1];
-        request(method.getName(), finalArgs, callback);
-        return null;
-      }
-      else {
-        return request(method.getName(), args);
-      }
-    } catch (Exception e) {
-      // Check if this is a declared Exception:
-      for (Class<?> exceptionClass : method.getExceptionTypes()) {
-        if (exceptionClass.isAssignableFrom(e.getClass())) {
-          throw e;
-        }
-      }
-      
-      // Next, check for RuntimeExceptions:
-      if (e instanceof RuntimeException) {
-        throw e;
-      }
-      
-      // Not an expected Exception, so wrap it in AvroRemoteException:
-      throw new AvroRemoteException(e);
-    }
+    return request(method.getName(), args);
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
     return new SpecificDatumWriter<Object>(schema);
   }
 
-  @Deprecated                                     // for compatibility in 1.5
   protected DatumReader<Object> getDatumReader(Schema schema) {
-    return getDatumReader(schema, schema);
-  }
-
-  protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new SpecificDatumReader<Object>(writer, reader);
+    return new SpecificDatumReader<Object>(schema);
   }
 
   @Override
@@ -112,15 +73,14 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
     
   @Override
-  public Object readResponse(Schema writer, Schema reader, Decoder in)
-    throws IOException {
-    return getDatumReader(writer, reader).read(null, in);
+  public Object readResponse(Schema schema, Decoder in) throws IOException {
+    return getDatumReader(schema).read(null, in);
   }
 
   @Override
-  public Exception readError(Schema writer, Schema reader, Decoder in)
+  public Exception readError(Schema schema, Decoder in)
     throws IOException {
-    Object value = getDatumReader(writer, reader).read(null, in);
+    Object value = getDatumReader(schema).read(null, in);
     if (value instanceof Exception)
       return (Exception)value;
     return new AvroRuntimeException(value.toString());

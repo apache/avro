@@ -19,28 +19,7 @@
 cmake_minimum_required(VERSION 2.4)
 project(AvroC)
 enable_testing()
-
-#-----------------------------------------------------------------------
-# Retrieve the current version number
-
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/version.sh project
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    RESULT_VARIABLE AVRO_VERSION_RESULT
-    OUTPUT_VARIABLE AVRO_VERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-if(AVRO_VERSION_RESULT)
-    message(FATAL_ERROR "Cannot determine Avro version number")
-endif(AVRO_VERSION_RESULT)
-
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/version.sh libtool
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    RESULT_VARIABLE LIBAVRO_VERSION_RESULT
-    OUTPUT_VARIABLE LIBAVRO_VERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-if(LIBAVRO_VERSION_RESULT)
-    message(FATAL_ERROR "Cannot determine libavro version number")
-endif(LIBAVRO_VERSION_RESULT)
-
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../../share/VERSION.txt" AVRO_VERSION)
 
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "ppc;i386;x86_64" CACHE STRING "Build architectures for Mac OS X" FORCE) 
@@ -56,7 +35,6 @@ include_directories(${AvroC_SOURCE_DIR}/jansson/src)
 add_subdirectory(src)
 add_subdirectory(examples)
 add_subdirectory(tests)
-add_subdirectory(docs)
 
 add_custom_target(pretty
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake_pretty.cmake")

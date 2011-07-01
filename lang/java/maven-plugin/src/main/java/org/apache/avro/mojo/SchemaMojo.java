@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
- * Generate Java classes from Avro schema files (.avsc)
+ * Compile an Avro schema file.
  * 
  * @goal schema
  * @phase generate-sources

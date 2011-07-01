@@ -21,8 +21,9 @@ package org.apache.avro.ipc;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,12 +62,12 @@ public abstract class Responder {
   private static final ThreadLocal<Protocol> REMOTE =
     new ThreadLocal<Protocol>();
 
-  private final Map<MD5,Protocol> protocols
-    = new ConcurrentHashMap<MD5,Protocol>();
+  private Map<MD5,Protocol> protocols
+    = Collections.synchronizedMap(new HashMap<MD5,Protocol>());
 
-  private final Protocol local;
-  private final MD5 localHash;
-  protected final List<RPCPlugin> rpcMetaPlugins;
+  private Protocol local;
+  private MD5 localHash;
+  protected List<RPCPlugin> rpcMetaPlugins;
 
   protected Responder(Protocol local) {
     this.local = local;
@@ -74,7 +75,7 @@ public abstract class Responder {
     localHash.bytes(local.getMD5());
     protocols.put(localHash, local);
     this.rpcMetaPlugins =
-      new CopyOnWriteArrayList<RPCPlugin>();
+      Collections.synchronizedList(new ArrayList<RPCPlugin>());
   }
 
   /** Return the remote protocol.  Accesses a {@link ThreadLocal} that's set

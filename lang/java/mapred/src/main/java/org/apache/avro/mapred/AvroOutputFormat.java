@@ -19,7 +19,6 @@
 package org.apache.avro.mapred;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.net.URLDecoder;
 
@@ -37,7 +36,6 @@ import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.CodecFactory;
 import static org.apache.avro.file.DataFileConstants.DEFAULT_SYNC_INTERVAL;
-import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 
 /** An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files. */
 public class AvroOutputFormat <T>
@@ -65,31 +63,6 @@ public class AvroOutputFormat <T>
   public static void setSyncInterval(JobConf job, int syncIntervalInBytes) {
     job.setInt(SYNC_INTERVAL_KEY, syncIntervalInBytes);
   }
-  
-  static <T> void configureDataFileWriter(DataFileWriter<T> writer,
-      JobConf job) throws UnsupportedEncodingException {
-    if (FileOutputFormat.getCompressOutput(job)) {
-      int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
-      String codecName = job.get(AvroJob.OUTPUT_CODEC, DEFLATE_CODEC);
-      CodecFactory factory = codecName.equals(DEFLATE_CODEC)
-        ? CodecFactory.deflateCodec(level)
-        : CodecFactory.fromString(codecName);
-      writer.setCodec(factory);
-    }
-    
-    writer.setSyncInterval(job.getInt(SYNC_INTERVAL_KEY, DEFAULT_SYNC_INTERVAL));
-
-    // copy metadata from job
-    for (Map.Entry<String,String> e : job) {
-      if (e.getKey().startsWith(AvroJob.TEXT_PREFIX))
-        writer.setMeta(e.getKey().substring(AvroJob.TEXT_PREFIX.length()),
-                       e.getValue());
-      if (e.getKey().startsWith(AvroJob.BINARY_PREFIX))
-        writer.setMeta(e.getKey().substring(AvroJob.BINARY_PREFIX.length()),
-                       URLDecoder.decode(e.getValue(), "ISO-8859-1")
-                       .getBytes("ISO-8859-1"));
-    }
-  }
 
   @Override
   public RecordWriter<AvroWrapper<T>, NullWritable>
@@ -104,8 +77,24 @@ public class AvroOutputFormat <T>
 
     final DataFileWriter<T> writer =
       new DataFileWriter<T>(new ReflectDatumWriter<T>());
-    
-    configureDataFileWriter(writer, job);
+
+    if (FileOutputFormat.getCompressOutput(job)) {
+      int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
+      writer.setCodec(CodecFactory.deflateCodec(level));
+    }
+
+    writer.setSyncInterval(job.getInt(SYNC_INTERVAL_KEY, DEFAULT_SYNC_INTERVAL));
+
+    // copy metadata from job
+    for (Map.Entry<String,String> e : job) {
+      if (e.getKey().startsWith(AvroJob.TEXT_PREFIX))
+        writer.setMeta(e.getKey().substring(AvroJob.TEXT_PREFIX.length()),
+                       e.getValue());
+      if (e.getKey().startsWith(AvroJob.BINARY_PREFIX))
+        writer.setMeta(e.getKey().substring(AvroJob.BINARY_PREFIX.length()),
+                       URLDecoder.decode(e.getValue(), "ISO-8859-1")
+                       .getBytes("ISO-8859-1"));
+    }
 
     Path path = FileOutputFormat.getTaskOutputPath(job, name+EXT);
     writer.create(schema, path.getFileSystem(job).create(path));
