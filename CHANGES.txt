@@ -60,6 +60,8 @@ Avro 1.5.2 (unreleased)
     names of schemas read from data files, for compatibility with
     1.4. (cutting)
 
+    AVRO-810: C#: Add strong naming to assemblies. (Eric Hauser)
+
   BUG FIXES
 
     AVRO-818. C: Fix data file corruption bug in C library (dcreager)
