@@ -19,6 +19,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-847. Java: Add a unit test for Java MapReduce tether. (Jeremy Lewi)
 
+    AVRO-844. Java: Provide better errors for null or missing record fields.
+    (Bill Graham via cutting)
+
   BUG FIXES
 
     AVRO-845. setup.py uses Python2.7+ specific code

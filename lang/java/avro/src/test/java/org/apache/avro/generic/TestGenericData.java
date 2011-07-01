@@ -65,6 +65,34 @@ public class TestGenericData {
     public void testArrayConstructorWrongSchema() throws Exception {
     new GenericData.Array<Object>(1, Schema.create(Schema.Type.INT));
   }
+
+  @Test(expected=AvroRuntimeException.class)
+  public void testRecordCreateEmptySchema() throws Exception {
+    Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
+    Record r = new GenericData.Record(s);
+  }
+
+  @Test(expected=AvroRuntimeException.class)
+  public void testGetEmptySchemaFields() throws Exception {
+    Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
+    s.getFields();
+  }
+
+  @Test(expected=AvroRuntimeException.class)
+  public void testGetEmptySchemaField() throws Exception {
+    Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
+    s.getField("foo");
+  }
+
+  @Test(expected=AvroRuntimeException.class)
+  public void testRecordPutInvalidField() throws Exception {
+    Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
+    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    fields.add(new Schema.Field("someFieldName", s, "docs", null));
+    s.setFields(fields);
+    Record r = new GenericData.Record(s);
+    r.put("invalidFieldName", "someValue");
+  }
   
   @Test
   /** Make sure that even with nulls, hashCode() doesn't throw NPE. */

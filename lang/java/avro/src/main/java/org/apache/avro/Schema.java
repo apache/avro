@@ -558,11 +558,15 @@ public abstract class Schema {
 
     @Override
     public Field getField(String fieldname) {
+      if (fieldMap == null)
+        throw new AvroRuntimeException("Schema fields not set yet");
       return fieldMap.get(fieldname);
     }
 
     @Override
     public List<Field> getFields() {
+      if (fields == null)
+        throw new AvroRuntimeException("Schema fields not set yet");
       return fields;
     }
 
