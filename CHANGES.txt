@@ -81,6 +81,8 @@ Avro 1.5.2 (unreleased)
     errors when attempting to use a closed connection.
     (James Baldassari via cutting)
 
+    AVRO-825: C++: Fix bugs in codegen with recursive schemas. (thiru)
+
 Avro 1.5.1 (3 May 2011)
 
   NEW FEATURES
