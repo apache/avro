@@ -24,6 +24,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-856. Java: Update Snappy to 1.0.3-rc4. (cutting)
 
+    AVRO-746. C: Atomic reference counts. (dcreager)
+
   BUG FIXES
 
     AVRO-845. setup.py uses Python2.7+ specific code
