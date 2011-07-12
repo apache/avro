@@ -84,7 +84,7 @@ typedef enum avro_class_t avro_class_t;
 struct avro_obj_t {
 	avro_type_t type;
 	avro_class_t class_type;
-	unsigned long refcount;
+	volatile int  refcount;
 };
 
 #define avro_classof(obj)     ((obj)->class_type)

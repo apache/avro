@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro/refcount.h"
 #include "avro_errors.h"
 #include "avro_private.h"
 #include "allocation.h"
@@ -32,12 +33,12 @@ typedef enum avro_io_type_t avro_io_type_t;
 
 struct avro_reader_t_ {
 	avro_io_type_t type;
-	unsigned long refcount;
+	volatile int  refcount;
 };
 
 struct avro_writer_t_ {
 	avro_io_type_t type;
-	unsigned long refcount;
+	volatile int  refcount;
 };
 
 struct _avro_reader_file_t {
@@ -79,13 +80,13 @@ struct _avro_writer_memory_t {
 static void reader_init(avro_reader_t reader, avro_io_type_t type)
 {
 	reader->type = type;
-	reader->refcount = 1;
+	avro_refcount_set(&reader->refcount, 1);
 }
 
 static void writer_init(avro_writer_t writer, avro_io_type_t type)
 {
 	writer->type = type;
-	writer->refcount = 1;
+	avro_refcount_set(&writer->refcount, 1);
 }
 
 avro_reader_t avro_reader_file(FILE * fp)

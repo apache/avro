@@ -6,7 +6,9 @@ ACLOCAL_AMFLAGS=-I m4
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = avro-c.pc
 
-nobase_include_HEADERS = avro.h avro/consumer.h
+nobase_include_HEADERS = avro.h \
+avro/consumer.h \
+avro/refcount.h
 
 lib_LTLIBRARIES = libavro.la
 libavro_la_SOURCES = st.c st.h schema.c schema.h schema_equal.c \

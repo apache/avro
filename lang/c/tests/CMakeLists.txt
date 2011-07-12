@@ -19,6 +19,10 @@
 
 add_executable(generate_interop_data generate_interop_data.c)
 target_link_libraries(generate_interop_data avro-static)
+
+add_executable(performance performance.c)
+target_link_libraries(performance avro-static)
+
 add_executable(test_interop_data test_interop_data.c)
 target_link_libraries(test_interop_data avro-static)
 

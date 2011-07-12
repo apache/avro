@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro/refcount.h"
 #include "avro_errors.h"
 #include "avro_private.h"
 #include "allocation.h"
@@ -39,7 +40,7 @@ static void avro_schema_init(avro_schema_t schema, avro_type_t type)
 {
 	schema->type = type;
 	schema->class_type = AVRO_SCHEMA;
-	schema->refcount = 1;
+	avro_refcount_set(&schema->refcount, 1);
 }
 
 static int is_avro_id(const char *name)
@@ -183,16 +184,15 @@ static void avro_schema_free(avro_schema_t schema)
 
 avro_schema_t avro_schema_incref(avro_schema_t schema)
 {
-	if (schema && schema->refcount != (unsigned int)-1) {
-		++schema->refcount;
+	if (schema) {
+		avro_refcount_inc(&schema->refcount);
 	}
 	return schema;
 }
 
 void avro_schema_decref(avro_schema_t schema)
 {
-	if (schema && schema->refcount != (unsigned int)-1
-	    && --schema->refcount == 0) {
+	if (schema && avro_refcount_dec(&schema->refcount)) {
 		avro_schema_free(schema);
 	}
 }
@@ -200,9 +200,9 @@ void avro_schema_decref(avro_schema_t schema)
 avro_schema_t avro_schema_string(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_STRING,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_STRING,
+		AVRO_SCHEMA,
+		1
 	};
 	return avro_schema_incref(&obj);
 }
@@ -210,9 +210,9 @@ avro_schema_t avro_schema_string(void)
 avro_schema_t avro_schema_bytes(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_BYTES,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_BYTES,
+		AVRO_SCHEMA,
+		1
 	};
 	return avro_schema_incref(&obj);
 }
@@ -220,9 +220,9 @@ avro_schema_t avro_schema_bytes(void)
 avro_schema_t avro_schema_int(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_INT32,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_INT32,
+		AVRO_SCHEMA,
+		1
 	};
 	return avro_schema_incref(&obj);
 }
@@ -230,9 +230,9 @@ avro_schema_t avro_schema_int(void)
 avro_schema_t avro_schema_long(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_INT64,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_INT64,
+		AVRO_SCHEMA,
+		1
 	};
 	return avro_schema_incref(&obj);
 }
@@ -240,9 +240,9 @@ avro_schema_t avro_schema_long(void)
 avro_schema_t avro_schema_float(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_FLOAT,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_FLOAT,
+		AVRO_SCHEMA,
+		1
 	};
 	return avro_schema_incref(&obj);
 }
@@ -250,9 +250,9 @@ avro_schema_t avro_schema_float(void)
 avro_schema_t avro_schema_double(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_DOUBLE,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_DOUBLE,
+		AVRO_SCHEMA,
+		1
 	};
 	return avro_schema_incref(&obj);
 }
@@ -260,9 +260,9 @@ avro_schema_t avro_schema_double(void)
 avro_schema_t avro_schema_boolean(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_BOOLEAN,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_BOOLEAN,
+		AVRO_SCHEMA,
+		1
 	};
 	return avro_schema_incref(&obj);
 }
@@ -270,9 +270,9 @@ avro_schema_t avro_schema_boolean(void)
 avro_schema_t avro_schema_null(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_NULL,
-		.class_type = AVRO_SCHEMA,
-		.refcount = 1
+		AVRO_NULL,
+		AVRO_SCHEMA,
+		1
 	};
 	return avro_schema_incref(&obj);
 }

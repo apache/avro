@@ -22,6 +22,7 @@ set(AVRO_SRC
     allocation.c
     avro.h
     avro/consumer.h
+    avro/refcount.h
     avro_errors.h
     avro_private.h
     consumer.c
@@ -82,9 +83,10 @@ set_target_properties(avro-shared PROPERTIES
 install(FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/avro.h
         DESTINATION include)
-install(FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/avro/consumer.h
-        DESTINATION include/avro)
+install(DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}/avro
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h")
 install(TARGETS avro-static avro-shared
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib

@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro/refcount.h"
 #include "avro_errors.h"
 #include "avro_private.h"
 #include "allocation.h"
@@ -31,7 +32,7 @@ static void avro_datum_init(avro_datum_t datum, avro_type_t type)
 {
 	datum->type = type;
 	datum->class_type = AVRO_DATUM;
-	datum->refcount = 1;
+	avro_refcount_set(&datum->refcount, 1);
 }
 
 static void
@@ -385,9 +386,9 @@ int avro_boolean_get(avro_datum_t datum, int8_t * i)
 avro_datum_t avro_null(void)
 {
 	static struct avro_obj_t obj = {
-		.type = AVRO_NULL,
-		.class_type = AVRO_DATUM,
-		.refcount = 1
+		AVRO_NULL,
+		AVRO_DATUM,
+		1
 	};
 	return avro_datum_incref(&obj);
 }
@@ -1097,16 +1098,15 @@ static void avro_datum_free(avro_datum_t datum)
 
 avro_datum_t avro_datum_incref(avro_datum_t datum)
 {
-	if (datum && datum->refcount != (unsigned int)-1) {
-		++datum->refcount;
+	if (datum) {
+		avro_refcount_inc(&datum->refcount);
 	}
 	return datum;
 }
 
 void avro_datum_decref(avro_datum_t datum)
 {
-	if (datum && datum->refcount != (unsigned int)-1
-	    && --datum->refcount == 0) {
+	if (datum && avro_refcount_dec(&datum->refcount)) {
 		avro_datum_free(datum);
 	}
 }
