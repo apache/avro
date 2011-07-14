@@ -26,6 +26,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-746. C: Atomic reference counts. (dcreager)
 
+    AVRO-837. C: New Avro value interface. (dcreager)
+    Documented in lang/c/docs/index.html.
+
   BUG FIXES
 
     AVRO-845. setup.py uses Python2.7+ specific code
