@@ -28,7 +28,7 @@
  */
 
 typedef void
-(*test_func_t)(void);
+(*test_func_t)(unsigned long);
 
 
 void init_rand(void)
@@ -60,13 +60,12 @@ int32_t rand_int32(void)
  */
 
 static void
-test_refcount(void)
+test_refcount(unsigned long num_tests)
 {
-	const unsigned long  NUM_TESTS = 100000000;
 	unsigned long  i;
 
 	avro_datum_t  datum = avro_int32(42);
-	for (i = 0; i < NUM_TESTS; i++) {
+	for (i = 0; i < num_tests; i++) {
 		avro_datum_incref(datum);
 		avro_datum_decref(datum);
 	}
@@ -76,11 +75,11 @@ test_refcount(void)
 
 /**
  * Tests the performance of serializing and deserializing a somewhat
- * complex record type.
+ * complex record type using the legacy datum API.
  */
 
 static void
-test_nested_record(void)
+test_nested_record_datum(unsigned long num_tests)
 {
 	static const char  *schema_json =
 		"{"
@@ -123,12 +122,11 @@ test_nested_record(void)
 	avro_schema_from_json(schema_json, strlen(schema_json),
 			      &schema, &error);
 
-	const unsigned long  NUM_TESTS = 100000;
 	unsigned long  i;
 
 	avro_datum_t  in = avro_datum_from_schema(schema);
 
-	for (i = 0; i < NUM_TESTS; i++) {
+	for (i = 0; i < num_tests; i++) {
 		avro_record_set_field_value(rc, in, int32, "i", rand_int32());
 		avro_record_set_field_value(rc, in, int64, "l", rand_int64());
 		avro_record_set_field_value(rc, in, givestring, "s",
@@ -154,6 +152,207 @@ test_nested_record(void)
 	}
 
 	avro_datum_decref(in);
+	avro_schema_decref(schema);
+}
+
+
+/**
+ * Tests the performance of serializing and deserializing a somewhat
+ * complex record type using the new value API, retrieving record fields
+ * by index.
+ */
+
+static void
+test_nested_record_value_by_index(unsigned long num_tests)
+{
+	static const char  *schema_json =
+		"{"
+		"  \"type\": \"record\","
+		"  \"name\": \"test\","
+		"  \"fields\": ["
+		"    { \"name\": \"i\", \"type\": \"int\" },"
+		"    { \"name\": \"l\", \"type\": \"long\" },"
+		"    { \"name\": \"s\", \"type\": \"string\" },"
+		"    {"
+		"      \"name\": \"subrec\","
+		"      \"type\": {"
+		"        \"type\": \"record\","
+		"        \"name\": \"sub\","
+		"        \"fields\": ["
+		"          { \"name\": \"f\", \"type\": \"float\" },"
+		"          { \"name\": \"d\", \"type\": \"double\" }"
+		"        ]"
+		"      }"
+		"    }"
+		"  ]"
+		"}";
+
+	static char *strings[] = {
+		"Four score and seven years ago",
+		"our father brought forth on this continent",
+		"a new nation", "conceived in Liberty",
+		"and dedicated to the proposition that all men are created equal."
+	};
+	static const unsigned int  NUM_STRINGS =
+	    sizeof(strings) / sizeof(strings[0]);
+
+	static char  buf[4096];
+	avro_reader_t  reader;
+	avro_writer_t  writer;
+
+	avro_schema_t  schema = NULL;
+	avro_schema_error_t  error = NULL;
+	avro_schema_from_json(schema_json, strlen(schema_json),
+			      &schema, &error);
+
+	unsigned long  i;
+
+	avro_value_iface_t  *iface = avro_generic_class_from_schema(schema);
+
+	avro_value_t  val;
+	avro_value_new(iface, &val);
+
+	avro_value_t  out;
+	avro_value_new(iface, &out);
+
+	for (i = 0; i < num_tests; i++) {
+		avro_value_t  field;
+
+		avro_value_get_by_index(&val, 0, &field, NULL);
+		avro_value_set_int(&field, rand_int32());
+
+		avro_value_get_by_index(&val, 1, &field, NULL);
+		avro_value_set_long(&field, rand_int64());
+
+		avro_wrapped_buffer_t  wbuf;
+		avro_wrapped_buffer_new_string(&wbuf, strings[i % NUM_STRINGS]);
+		avro_value_get_by_index(&val, 2, &field, NULL);
+		avro_value_give_string_len(&field, &wbuf);
+
+		avro_value_t  subrec;
+		avro_value_get_by_index(&val, 3, &subrec, NULL);
+
+		avro_value_get_by_index(&subrec, 0, &field, NULL);
+		avro_value_set_float(&field, rand_number(-1e10, 1e10));
+
+		avro_value_get_by_index(&subrec, 1, &field, NULL);
+		avro_value_set_double(&field, rand_number(-1e10, 1e10));
+
+		writer = avro_writer_memory(buf, sizeof(buf));
+		avro_value_write(writer, &val);
+		avro_writer_free(writer);
+
+		reader = avro_reader_memory(buf, sizeof(buf));
+		avro_value_read(reader, &out);
+		avro_reader_free(reader);
+
+		avro_value_equal_fast(&val, &out);
+	}
+
+	avro_value_free(&val);
+	avro_value_free(&out);
+	avro_value_iface_decref(iface);
+	avro_schema_decref(schema);
+}
+
+
+/**
+ * Tests the performance of serializing and deserializing a somewhat
+ * complex record type using the new value API, retrieving record fields
+ * by name.
+ */
+
+static void
+test_nested_record_value_by_name(unsigned long num_tests)
+{
+	static const char  *schema_json =
+		"{"
+		"  \"type\": \"record\","
+		"  \"name\": \"test\","
+		"  \"fields\": ["
+		"    { \"name\": \"i\", \"type\": \"int\" },"
+		"    { \"name\": \"l\", \"type\": \"long\" },"
+		"    { \"name\": \"s\", \"type\": \"string\" },"
+		"    {"
+		"      \"name\": \"subrec\","
+		"      \"type\": {"
+		"        \"type\": \"record\","
+		"        \"name\": \"sub\","
+		"        \"fields\": ["
+		"          { \"name\": \"f\", \"type\": \"float\" },"
+		"          { \"name\": \"d\", \"type\": \"double\" }"
+		"        ]"
+		"      }"
+		"    }"
+		"  ]"
+		"}";
+
+	static char *strings[] = {
+		"Four score and seven years ago",
+		"our father brought forth on this continent",
+		"a new nation", "conceived in Liberty",
+		"and dedicated to the proposition that all men are created equal."
+	};
+	static const unsigned int  NUM_STRINGS =
+	    sizeof(strings) / sizeof(strings[0]);
+
+	static char  buf[4096];
+	avro_reader_t  reader;
+	avro_writer_t  writer;
+
+	avro_schema_t  schema = NULL;
+	avro_schema_error_t  error = NULL;
+	avro_schema_from_json(schema_json, strlen(schema_json),
+			      &schema, &error);
+
+	unsigned long  i;
+
+	avro_value_iface_t  *iface = avro_generic_class_from_schema(schema);
+
+	avro_value_t  val;
+	avro_value_new(iface, &val);
+
+	avro_value_t  out;
+	avro_value_new(iface, &out);
+
+	for (i = 0; i < num_tests; i++) {
+		avro_value_t  field;
+
+		avro_value_get_by_name(&val, "i", &field, NULL);
+		avro_value_set_int(&field, rand_int32());
+
+		avro_value_get_by_name(&val, "l", &field, NULL);
+		avro_value_set_long(&field, rand_int64());
+
+		avro_wrapped_buffer_t  wbuf;
+		avro_wrapped_buffer_new_string(&wbuf, strings[i % NUM_STRINGS]);
+		avro_value_get_by_name(&val, "s", &field, NULL);
+		avro_value_give_string_len(&field, &wbuf);
+
+		avro_value_t  subrec;
+		avro_value_get_by_name(&val, "subrec", &subrec, NULL);
+
+		avro_value_get_by_name(&subrec, "f", &field, NULL);
+		avro_value_set_float(&field, rand_number(-1e10, 1e10));
+
+		avro_value_get_by_name(&subrec, "d", &field, NULL);
+		avro_value_set_double(&field, rand_number(-1e10, 1e10));
+
+		writer = avro_writer_memory(buf, sizeof(buf));
+		avro_value_write(writer, &val);
+		avro_writer_free(writer);
+
+		reader = avro_reader_memory(buf, sizeof(buf));
+		avro_value_read(reader, &out);
+		avro_reader_free(reader);
+
+		avro_value_equal_fast(&val, &out);
+	}
+
+	avro_value_free(&val);
+	avro_value_free(&out);
+	avro_value_iface_decref(iface);
+	avro_schema_decref(schema);
 }
 
 
@@ -174,14 +373,22 @@ main(int argc, char **argv)
 	unsigned int  i;
 	struct avro_tests {
 		const char  *name;
+		unsigned long  num_tests;
 		test_func_t  func;
 	} tests[] = {
-		{ "refcount", test_refcount },
-		{ "nested record", test_nested_record }
+		{ "refcount", 100000000,
+		  test_refcount },
+		{ "nested record (legacy)", 100000,
+		  test_nested_record_datum },
+		{ "nested record (value by index)", 1000000,
+		  test_nested_record_value_by_index },
+		{ "nested record (value by name)", 1000000,
+		  test_nested_record_value_by_name },
 	};
 
 	for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
-		fprintf(stderr, "**** Running %s ****\n", tests[i].name);
+		fprintf(stderr, "**** Running %s ****\n  %lu tests per run\n",
+			tests[i].name, tests[i].num_tests);
 		unsigned int  run;
 
 		double  sum = 0.0;
@@ -190,13 +397,15 @@ main(int argc, char **argv)
 			fprintf(stderr, "  Run %u\n", run);
 
 			clock_t  before = clock();
-			tests[i].func();
+			tests[i].func(tests[i].num_tests);
 			clock_t  after = clock();
 			double  secs = ((double) after-before) / CLOCKS_PER_SEC;
 			sum += secs;
 		}
 
-		fprintf(stderr, "  Average time: %.03lf seconds\n", sum / NUM_RUNS);
+		fprintf(stderr, "  Average time: %.03lfs\n", sum / NUM_RUNS);
+		fprintf(stderr, "  Tests/sec:    %.0lf\n",
+			tests[i].num_tests / (sum / NUM_RUNS));
 	}
 
 	return EXIT_SUCCESS;

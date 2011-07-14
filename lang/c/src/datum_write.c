@@ -15,14 +15,23 @@
  * permissions and limitations under the License. 
  */
 
-#include "avro_errors.h"
-#include "avro_private.h"
-#include <errno.h>
 #include <assert.h>
+#include <errno.h>
 #include <string.h>
-#include "schema.h"
+
+#include "avro/errors.h"
+#include "avro/legacy.h"
+#include "avro/schema.h"
+#include "avro/value.h"
+#include "avro_private.h"
 #include "datum.h"
 #include "encoding.h"
+#include "schema.h"
+
+/*
+ * Oof, we have to leave this legacy implementation in place for when
+ * you write to write with a different schema.
+ */
 
 static int write_datum(avro_writer_t writer, const avro_encoding_t * enc,
 		       avro_schema_t writers_schema, avro_datum_t datum);
@@ -271,12 +280,24 @@ int avro_write_data(avro_writer_t writer, avro_schema_t writers_schema,
 {
 	check_param(EINVAL, writer, "writer");
 	check_param(EINVAL, is_avro_datum(datum), "datum");
+
 	/* Only validate datum if a writer's schema is provided */
-	if (is_avro_schema(writers_schema)
-	    && !avro_schema_datum_validate(writers_schema, datum)) {
+	if (is_avro_schema(writers_schema)) {
+	    if (!avro_schema_datum_validate(writers_schema, datum)) {
 		avro_set_error("Datum doesn't validate against schema");
 		return EINVAL;
+	    }
+	    return write_datum(writer, &avro_binary_encoding,
+			       writers_schema, datum);
 	}
-	return write_datum(writer, &avro_binary_encoding,
-			   writers_schema, datum);
+
+	/* If we're writing using the datum's actual schema, use the new
+	 * value implementation. */
+
+	int  rval;
+	avro_value_t  value;
+	check(rval, avro_datum_as_value(&value, datum));
+	check(rval, avro_value_write(writer, &value));
+	avro_value_done(&value);
+	return 0;
 }

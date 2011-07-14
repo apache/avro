@@ -8,7 +8,7 @@
  */
 
 #include "avro_private.h"
-#include "allocation.h"
+#include "avro/allocation.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

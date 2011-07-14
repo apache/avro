@@ -19,11 +19,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "avro.h"
+#include "avro/allocation.h"
 #include "avro/consumer.h"
-#include "avro_errors.h"
+#include "avro/data.h"
+#include "avro/errors.h"
+#include "avro/legacy.h"
+#include "avro/schema.h"
 #include "avro_private.h"
-#include "allocation.h"
 #include "st.h"
 
 
@@ -175,55 +177,8 @@ avro_resolver_get_real_dest(avro_resolver_t *resolver, avro_datum_t dest)
  * Memoized resolvers
  */
 
-static int
-avro_resolver_cmp(avro_resolver_t *a, avro_resolver_t *b)
-{
-	return (a->parent.schema != b->parent.schema) || (a->rschema != b->rschema);
-}
-
-static int
-avro_resolver_hash(avro_resolver_t *a)
-{
-	return ((uintptr_t) a->parent.schema) ^ ((uintptr_t) a->rschema);
-}
-
-static struct st_hash_type  avro_resolver_hash_type = {
-	avro_resolver_cmp,
-	avro_resolver_hash
-};
-
-static void
-save_resolver(st_table *resolvers, avro_resolver_t *resolver)
-{
-	st_insert(resolvers, (st_data_t) resolver, (st_data_t) resolver);
-}
-
-static void
-delete_resolver(st_table *resolvers, avro_resolver_t *resolver)
-{
-	st_delete(resolvers, (st_data_t *) &resolver, (st_data_t *) &resolver);
-}
-
-static avro_resolver_t *
-find_resolver(st_table *resolvers, avro_schema_t wschema, avro_schema_t rschema)
-{
-	avro_resolver_t  dummy;
-	dummy.parent.schema = wschema;
-	dummy.rschema = rschema;
-	union {
-		st_data_t  data;
-		avro_resolver_t  *resolver;
-	} val;
-	if (st_lookup(resolvers, (st_data_t) &dummy, &val.data)) {
-		return val.resolver;
-	} else {
-		return NULL;
-	}
-}
-
-
 static avro_consumer_t *
-avro_resolver_new_memoized(st_table *resolvers,
+avro_resolver_new_memoized(avro_memoize_t *mem,
 			   avro_schema_t wschema, avro_schema_t rschema);
 
 
@@ -347,13 +302,13 @@ avro_resolver_boolean_value(avro_consumer_t *consumer, int value,
 }
 
 static int
-try_boolean(st_table *resolvers, avro_resolver_t **resolver,
+try_boolean(avro_memoize_t *mem, avro_resolver_t **resolver,
 	    avro_schema_t wschema, avro_schema_t rschema,
 	    avro_schema_t root_rschema)
 {
 	if (is_avro_boolean(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.boolean_value = avro_resolver_boolean_value;
 	}
 	return 0;
@@ -383,13 +338,13 @@ avro_resolver_bytes_value(avro_consumer_t *consumer,
 }
 
 static int
-try_bytes(st_table *resolvers, avro_resolver_t **resolver,
+try_bytes(avro_memoize_t *mem, avro_resolver_t **resolver,
 	  avro_schema_t wschema, avro_schema_t rschema,
 	  avro_schema_t root_rschema)
 {
 	if (is_avro_bytes(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.bytes_value = avro_resolver_bytes_value;
 	}
 	return 0;
@@ -408,13 +363,13 @@ avro_resolver_double_value(avro_consumer_t *consumer, double value,
 }
 
 static int
-try_double(st_table *resolvers, avro_resolver_t **resolver,
+try_double(avro_memoize_t *mem, avro_resolver_t **resolver,
 	   avro_schema_t wschema, avro_schema_t rschema,
 	   avro_schema_t root_rschema)
 {
 	if (is_avro_double(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.double_value = avro_resolver_double_value;
 	}
 	return 0;
@@ -444,18 +399,18 @@ avro_resolver_float_double_value(avro_consumer_t *consumer, float value,
 }
 
 static int
-try_float(st_table *resolvers, avro_resolver_t **resolver,
+try_float(avro_memoize_t *mem, avro_resolver_t **resolver,
 	  avro_schema_t wschema, avro_schema_t rschema,
 	  avro_schema_t root_rschema)
 {
 	if (is_avro_float(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.float_value = avro_resolver_float_value;
 	}
 	else if (is_avro_double(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.float_value = avro_resolver_float_double_value;
 	}
 	return 0;
@@ -507,28 +462,28 @@ avro_resolver_int_float_value(avro_consumer_t *consumer, int32_t value,
 }
 
 static int
-try_int(st_table *resolvers, avro_resolver_t **resolver,
+try_int(avro_memoize_t *mem, avro_resolver_t **resolver,
 	avro_schema_t wschema, avro_schema_t rschema,
 	avro_schema_t root_rschema)
 {
 	if (is_avro_int32(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.int_value = avro_resolver_int_value;
 	}
 	else if (is_avro_int64(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.int_value = avro_resolver_int_long_value;
 	}
 	else if (is_avro_double(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.int_value = avro_resolver_int_double_value;
 	}
 	else if (is_avro_float(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.int_value = avro_resolver_int_float_value;
 	}
 	return 0;
@@ -569,23 +524,23 @@ avro_resolver_long_double_value(avro_consumer_t *consumer, int64_t value,
 }
 
 static int
-try_long(st_table *resolvers, avro_resolver_t **resolver,
+try_long(avro_memoize_t *mem, avro_resolver_t **resolver,
 	 avro_schema_t wschema, avro_schema_t rschema,
 	 avro_schema_t root_rschema)
 {
 	if (is_avro_int64(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.long_value = avro_resolver_long_value;
 	}
 	else if (is_avro_double(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.long_value = avro_resolver_long_double_value;
 	}
 	else if (is_avro_float(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.long_value = avro_resolver_long_float_value;
 	}
 	return 0;
@@ -605,13 +560,13 @@ avro_resolver_null_value(avro_consumer_t *consumer, void *user_data)
 }
 
 static int
-try_null(st_table *resolvers, avro_resolver_t **resolver,
+try_null(avro_memoize_t *mem, avro_resolver_t **resolver,
 	 avro_schema_t wschema, avro_schema_t rschema,
 	 avro_schema_t root_rschema)
 {
 	if (is_avro_null(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.null_value = avro_resolver_null_value;
 	}
 	return 0;
@@ -628,17 +583,17 @@ avro_resolver_string_value(avro_consumer_t *consumer,
 	avro_datum_t  ud_dest = user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing \"%s\" into %p", (const char *) value, dest);
-	return avro_givestring_set(dest, value, avro_alloc_free);
+	return avro_givestring_set(dest, value, avro_alloc_free_func);
 }
 
 static int
-try_string(st_table *resolvers, avro_resolver_t **resolver,
+try_string(avro_memoize_t *mem, avro_resolver_t **resolver,
 	   avro_schema_t wschema, avro_schema_t rschema,
 	   avro_schema_t root_rschema)
 {
 	if (is_avro_string(rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.string_value = avro_resolver_string_value;
 	}
 	return 0;
@@ -703,7 +658,7 @@ avro_resolver_array_element(avro_consumer_t *consumer,
 }
 
 static int
-try_array(st_table *resolvers, avro_resolver_t **resolver,
+try_array(avro_memoize_t *mem, avro_resolver_t **resolver,
 	  avro_schema_t wschema, avro_schema_t rschema,
 	  avro_schema_t root_rschema)
 {
@@ -722,15 +677,15 @@ try_array(st_table *resolvers, avro_resolver_t **resolver,
 	 */
 
 	*resolver = avro_resolver_create(wschema, root_rschema);
-	save_resolver(resolvers, *resolver);
+	avro_memoize_set(mem, wschema, root_rschema, *resolver);
 
 	avro_schema_t  witems = avro_schema_array_items(wschema);
 	avro_schema_t  ritems = avro_schema_array_items(rschema);
 
 	avro_consumer_t  *item_consumer =
-	    avro_resolver_new_memoized(resolvers, witems, ritems);
+	    avro_resolver_new_memoized(mem, witems, ritems);
 	if (!item_consumer) {
-		delete_resolver(resolvers, *resolver);
+		avro_memoize_delete(mem, wschema, root_rschema);
 		avro_consumer_free(&(*resolver)->parent);
 		avro_prefix_error("Array values aren't compatible: ");
 		return EINVAL;
@@ -772,7 +727,7 @@ avro_resolver_enum_value(avro_consumer_t *consumer, int value,
 }
 
 static int
-try_enum(st_table *resolvers, avro_resolver_t **resolver,
+try_enum(avro_memoize_t *mem, avro_resolver_t **resolver,
 	 avro_schema_t wschema, avro_schema_t rschema,
 	 avro_schema_t root_rschema)
 {
@@ -787,7 +742,7 @@ try_enum(st_table *resolvers, avro_resolver_t **resolver,
 
 		if (!strcmp(wname, rname)) {
 			*resolver = avro_resolver_create(wschema, root_rschema);
-			save_resolver(resolvers, *resolver);
+			avro_memoize_set(mem, wschema, root_rschema, *resolver);
 			(*resolver)->parent.enum_value = avro_resolver_enum_value;
 		}
 	}
@@ -808,11 +763,11 @@ avro_resolver_fixed_value(avro_consumer_t *consumer,
 	avro_datum_t  ud_dest = user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing (fixed) %zu bytes into %p", value_len, dest);
-	return avro_givefixed_set(dest, value, value_len, avro_alloc_free);
+	return avro_givefixed_set(dest, value, value_len, avro_alloc_free_func);
 }
 
 static int
-try_fixed(st_table *resolvers, avro_resolver_t **resolver,
+try_fixed(avro_memoize_t *mem, avro_resolver_t **resolver,
 	  avro_schema_t wschema, avro_schema_t rschema,
 	  avro_schema_t root_rschema)
 {
@@ -822,7 +777,7 @@ try_fixed(st_table *resolvers, avro_resolver_t **resolver,
 
 	if (avro_schema_equal(wschema, rschema)) {
 		*resolver = avro_resolver_create(wschema, root_rschema);
-		save_resolver(resolvers, *resolver);
+		avro_memoize_set(mem, wschema, root_rschema, *resolver);
 		(*resolver)->parent.fixed_value = avro_resolver_fixed_value;
 	}
 	return 0;
@@ -888,7 +843,7 @@ avro_resolver_map_element(avro_consumer_t *consumer,
 }
 
 static int
-try_map(st_table *resolvers, avro_resolver_t **resolver,
+try_map(avro_memoize_t *mem, avro_resolver_t **resolver,
 	avro_schema_t wschema, avro_schema_t rschema,
 	avro_schema_t root_rschema)
 {
@@ -907,15 +862,15 @@ try_map(st_table *resolvers, avro_resolver_t **resolver,
 	 */
 
 	*resolver = avro_resolver_create(wschema, root_rschema);
-	save_resolver(resolvers, *resolver);
+	avro_memoize_set(mem, wschema, root_rschema, *resolver);
 
 	avro_schema_t  wvalues = avro_schema_map_values(wschema);
 	avro_schema_t  rvalues = avro_schema_map_values(rschema);
 
 	avro_consumer_t  *value_consumer =
-	    avro_resolver_new_memoized(resolvers, wvalues, rvalues);
+	    avro_resolver_new_memoized(mem, wvalues, rvalues);
 	if (!value_consumer) {
-		delete_resolver(resolvers, *resolver);
+		avro_memoize_delete(mem, wschema, root_rschema);
 		avro_consumer_free(&(*resolver)->parent);
 		avro_prefix_error("Map values aren't compatible: ");
 		return EINVAL;
@@ -1002,7 +957,7 @@ avro_resolver_record_field(avro_consumer_t *consumer,
 }
 
 static int
-try_record(st_table *resolvers, avro_resolver_t **resolver,
+try_record(avro_memoize_t *mem, avro_resolver_t **resolver,
 	   avro_schema_t wschema, avro_schema_t rschema,
 	   avro_schema_t root_rschema)
 {
@@ -1042,7 +997,7 @@ try_record(st_table *resolvers, avro_resolver_t **resolver,
 	 */
 
 	*resolver = avro_resolver_create(wschema, root_rschema);
-	save_resolver(resolvers, *resolver);
+	avro_memoize_set(mem, wschema, root_rschema, *resolver);
 
 	size_t  wfields = avro_schema_record_size(wschema);
 	size_t  rfields = avro_schema_record_size(rschema);
@@ -1089,7 +1044,7 @@ try_record(st_table *resolvers, avro_resolver_t **resolver,
 		avro_schema_t  wfield =
 		    avro_schema_record_field_get_by_index(wschema, wi);
 		avro_consumer_t  *field_resolver =
-		    avro_resolver_new_memoized(resolvers, wfield, rfield);
+		    avro_resolver_new_memoized(mem, wfield, rfield);
 
 		if (!field_resolver) {
 			avro_prefix_error("Field %s isn't compatible: ", field_name);
@@ -1123,7 +1078,7 @@ error:
 	 * Clean up any consumer we might have already created.
 	 */
 
-	delete_resolver(resolvers, *resolver);
+	avro_memoize_delete(mem, wschema, root_rschema);
 	avro_consumer_free(&(*resolver)->parent);
 
 	{
@@ -1178,7 +1133,7 @@ avro_resolver_union_branch(avro_consumer_t *consumer,
 }
 
 static avro_consumer_t *
-try_union(st_table *resolvers, avro_schema_t wschema, avro_schema_t rschema)
+try_union(avro_memoize_t *mem, avro_schema_t wschema, avro_schema_t rschema)
 {
 	/*
 	 * For a writer union, we recursively try to resolve each branch
@@ -1204,7 +1159,7 @@ try_union(st_table *resolvers, avro_schema_t wschema, avro_schema_t rschema)
 	debug("Checking %zu-branch writer union schema", num_branches);
 
 	avro_resolver_t  *resolver = avro_resolver_create(wschema, rschema);
-	save_resolver(resolvers, resolver);
+	avro_memoize_set(mem, wschema, rschema, resolver);
 
 	avro_consumer_t  **child_resolvers =
 	    avro_calloc(num_branches, sizeof(avro_consumer_t *));
@@ -1227,7 +1182,7 @@ try_union(st_table *resolvers, avro_schema_t wschema, avro_schema_t rschema)
 		 */
 
 		child_resolvers[i] =
-		    avro_resolver_new_memoized(resolvers, branch_schema, rschema);
+		    avro_resolver_new_memoized(mem, branch_schema, rschema);
 		if (child_resolvers[i]) {
 			debug("Found match for writer union branch %u", i);
 			some_branch_compatible = 1;
@@ -1260,7 +1215,7 @@ error:
 	 * Clean up any consumer we might have already created.
 	 */
 
-	delete_resolver(resolvers, resolver);
+	avro_memoize_delete(mem, wschema, rschema);
 	avro_consumer_free(&resolver->parent);
 
 	for (i = 0; i < num_branches; i++) {
@@ -1279,7 +1234,7 @@ error:
  */
 
 static avro_consumer_t *
-avro_resolver_new_memoized(st_table *resolvers,
+avro_resolver_new_memoized(avro_memoize_t *mem,
 			   avro_schema_t wschema, avro_schema_t rschema)
 {
 	check_param(NULL, is_avro_schema(wschema), "writer schema");
@@ -1293,8 +1248,8 @@ avro_resolver_new_memoized(st_table *resolvers,
 	 * just return that resolver.
 	 */
 
-	avro_resolver_t  *saved = find_resolver(resolvers, wschema, rschema);
-	if (saved) {
+	avro_resolver_t  *saved = NULL;
+	if (avro_memoize_get(mem, wschema, rschema, (void **) &saved)) {
 		debug("Already resolved %s and %s",
 		      avro_schema_type_name(wschema),
 		      avro_schema_type_name(rschema));
@@ -1308,59 +1263,59 @@ avro_resolver_new_memoized(st_table *resolvers,
 	switch (avro_typeof(wschema))
 	{
 		case AVRO_BOOLEAN:
-			check_simple_writer(resolvers, wschema, rschema, boolean);
+			check_simple_writer(mem, wschema, rschema, boolean);
 			return NULL;
 
 		case AVRO_BYTES:
-			check_simple_writer(resolvers, wschema, rschema, bytes);
+			check_simple_writer(mem, wschema, rschema, bytes);
 			return NULL;
 
 		case AVRO_DOUBLE:
-			check_simple_writer(resolvers, wschema, rschema, double);
+			check_simple_writer(mem, wschema, rschema, double);
 			return NULL;
 
 		case AVRO_FLOAT:
-			check_simple_writer(resolvers, wschema, rschema, float);
+			check_simple_writer(mem, wschema, rschema, float);
 			return NULL;
 
 		case AVRO_INT32:
-			check_simple_writer(resolvers, wschema, rschema, int);
+			check_simple_writer(mem, wschema, rschema, int);
 			return NULL;
 
 		case AVRO_INT64:
-			check_simple_writer(resolvers, wschema, rschema, long);
+			check_simple_writer(mem, wschema, rschema, long);
 			return NULL;
 
 		case AVRO_NULL:
-			check_simple_writer(resolvers, wschema, rschema, null);
+			check_simple_writer(mem, wschema, rschema, null);
 			return NULL;
 
 		case AVRO_STRING:
-			check_simple_writer(resolvers, wschema, rschema, string);
+			check_simple_writer(mem, wschema, rschema, string);
 			return NULL;
 
 		case AVRO_ARRAY:
-			check_simple_writer(resolvers, wschema, rschema, array);
+			check_simple_writer(mem, wschema, rschema, array);
 			return NULL;
 
 		case AVRO_ENUM:
-			check_simple_writer(resolvers, wschema, rschema, enum);
+			check_simple_writer(mem, wschema, rschema, enum);
 			return NULL;
 
 		case AVRO_FIXED:
-			check_simple_writer(resolvers, wschema, rschema, fixed);
+			check_simple_writer(mem, wschema, rschema, fixed);
 			return NULL;
 
 		case AVRO_MAP:
-			check_simple_writer(resolvers, wschema, rschema, map);
+			check_simple_writer(mem, wschema, rschema, map);
 			return NULL;
 
 		case AVRO_RECORD:
-			check_simple_writer(resolvers, wschema, rschema, record);
+			check_simple_writer(mem, wschema, rschema, record);
 			return NULL;
 
 		case AVRO_UNION:
-			return try_union(resolvers, wschema, rschema);
+			return try_union(mem, wschema, rschema);
 
 		default:
 			avro_set_error("Unknown schema type");
@@ -1374,9 +1329,10 @@ avro_resolver_new_memoized(st_table *resolvers,
 avro_consumer_t *
 avro_resolver_new(avro_schema_t wschema, avro_schema_t rschema)
 {
-	st_table  *resolvers = st_init_table(&avro_resolver_hash_type);
+	avro_memoize_t  mem;
+	avro_memoize_init(&mem);
 	avro_consumer_t  *result =
-	    avro_resolver_new_memoized(resolvers, wschema, rschema);
-	st_free_table(resolvers);
+	    avro_resolver_new_memoized(&mem, wschema, rschema);
+	avro_memoize_done(&mem);
 	return result;
 }

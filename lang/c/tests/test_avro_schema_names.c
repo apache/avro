@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro.h"
 #include "avro_private.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -129,6 +130,8 @@ int main(int argc, char *argv[])
  test_map_schema_01();
 
  test_record_schema_01();
+
+ test_union_schema_01();
 
  return EXIT_SUCCESS;
 }

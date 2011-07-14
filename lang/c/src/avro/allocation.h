@@ -18,14 +18,35 @@
 #ifndef AVRO_ALLOCATION_H
 #define AVRO_ALLOCATION_H
 #include <stdlib.h>
-#include "avro.h"		/* for avro_schema_t */
 
-struct allocator_state {
+/*
+ * Allocation interface.  You can provide a custom allocator for the
+ * library, should you wish.  The allocator is provided as a single
+ * generic function, which can emulate the standard malloc, realloc, and
+ * free functions.  The design of this allocation interface is inspired
+ * by the implementation of the Lua interpreter.
+ *
+ * The ptr parameter will be the location of any existing memory
+ * buffer.  The osize parameter will be the size of this existing
+ * buffer.  If ptr is NULL, then osize will be 0.  The nsize parameter
+ * will be the size of the new buffer, or 0 if the new buffer should be
+ * freed.
+ *
+ * If nsize is 0, then the allocation function must return NULL.  If
+ * nsize is not 0, then it should return NULL if the allocation fails.
+ */
+
+typedef void *
+(*avro_allocator_t)(void *user_data, void *ptr, size_t osize, size_t nsize);
+
+void avro_set_allocator(avro_allocator_t alloc, void *user_data);
+
+struct avro_allocator_state {
 	avro_allocator_t  alloc;
 	void  *user_data;
 };
 
-extern struct allocator_state  AVRO_CURRENT_ALLOCATOR;
+extern struct avro_allocator_state  AVRO_CURRENT_ALLOCATOR;
 
 #define avro_realloc(ptr, osz, nsz)          \
 	(AVRO_CURRENT_ALLOCATOR.alloc        \

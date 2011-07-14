@@ -18,7 +18,12 @@
 #ifndef AVRO_ERRORS_H
 #define AVRO_ERRORS_H
 
-#include "avro.h"
+/*
+ * Returns a textual description of the last error condition returned by
+ * an Avro function.
+ */
+
+const char *avro_strerror(void);
 
 void
 avro_set_error(const char *fmt, ...);

@@ -18,12 +18,20 @@
 #
 
 set(AVRO_SRC
-    allocation.h
     allocation.c
+    array.c
     avro.h
+    avro/allocation.h
+    avro/basics.h
     avro/consumer.h
+    avro/data.h
+    avro/errors.h
+    avro/generic.h
+    avro/io.h
+    avro/legacy.h
     avro/refcount.h
-    avro_errors.h
+    avro/schema.h
+    avro/value.h
     avro_private.h
     consumer.c
     datafile.c
@@ -35,19 +43,36 @@ set(AVRO_SRC
     datum_size.c
     datum_skip.c
     datum_validate.c
+    datum_value.c
     datum_write.c
     dump.c
     dump.h
     encoding.h
     encoding_binary.c
     errors.c
+    generic.c
+    generic-array.c
+    generic-enum.c
+    generic-fixed.c
+    generic-map.c
+    generic-primitives.c
+    generic-record.c
+    generic-union.c
     io.c
+    map.c
+    memoize.c
     resolver.c
     schema.c
     schema.h
     schema_equal.c
     st.c
     st.h
+    string.c
+    value.c
+    value-read.c
+    value-sizeof.c
+    value-write.c
+    wrapped-buffer.c
 )
 
 set(JANSSON_SRC

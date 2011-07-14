@@ -15,10 +15,11 @@
  * permissions and limitations under the License. 
  */
 
+#include <ctype.h>
+#include <stdint.h>
+#include <string.h>
 #include "avro_private.h"
 #include "dump.h"
-#include <ctype.h>
-#include <string.h>
 
 static void dump_line(FILE * out, const caddr_t addr, const long len)
 {

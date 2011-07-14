@@ -17,7 +17,11 @@
 
 #ifndef AVRO_DATUM_H
 #define AVRO_DATUM_H
-#include "avro.h"		/* for avro_schema_t */
+#include <stdint.h>
+#include "avro/basics.h"
+#include "avro/data.h"
+#include "avro/legacy.h"
+#include "avro/schema.h"
 #include "avro_private.h"
 #include "st.h"
 
@@ -72,6 +76,7 @@ struct avro_map_datum_t {
 	struct avro_obj_t obj;
 	avro_schema_t schema;
 	st_table *map;
+	st_table *indices_by_key;
 	st_table *keys_by_index;
 };
 

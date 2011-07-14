@@ -14,10 +14,12 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License. 
  */
-#ifndef AVRO_SCHEMA_H
-#define AVRO_SCHEMA_H
+#ifndef AVRO_SCHEMA_PRIV_H
+#define AVRO_SCHEMA_PRIV_H
 
-#include "avro.h"
+#include <stdint.h>
+#include "avro/basics.h"
+#include "avro/schema.h"
 #include "avro_private.h"
 #include "st.h"
 

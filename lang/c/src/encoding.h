@@ -16,7 +16,8 @@
  */
 #ifndef AVRO_ENCODING_H
 #define AVRO_ENCODING_H
-#include "avro.h"
+#include <stdint.h>
+#include "avro/io.h"
 
 /*
  * TODO: this will need more functions when JSON encoding is added 

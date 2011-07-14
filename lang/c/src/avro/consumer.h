@@ -24,7 +24,11 @@ extern "C" {
 #define CLOSE_EXTERN
 #endif
 
-#include <avro.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include <avro/io.h>
+#include <avro/schema.h>
 
 
 /*---------------------------------------------------------------------

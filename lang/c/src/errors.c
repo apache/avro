@@ -16,10 +16,10 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 
-#include "avro.h"
-#include "avro_errors.h"
+#include "avro/errors.h"
 
 /* 4K should be enough, right? */
 #define AVRO_ERROR_SIZE 4096

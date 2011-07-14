@@ -15,10 +15,13 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro/allocation.h"
+#include "avro/basics.h"
+#include "avro/errors.h"
+#include "avro/legacy.h"
 #include "avro/refcount.h"
-#include "avro_errors.h"
+#include "avro/schema.h"
 #include "avro_private.h"
-#include "allocation.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -154,7 +157,7 @@ avro_datum_t avro_bytes(const char *bytes, int64_t size)
 	}
 	memcpy(bytes_copy, bytes, size);
 	avro_datum_t  result =
-		avro_bytes_private(bytes_copy, size, avro_alloc_free);
+		avro_bytes_private(bytes_copy, size, avro_alloc_free_func);
 	if (result == NULL) {
 		avro_free(bytes_copy, size);
 	}
@@ -194,7 +197,7 @@ int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
-	rval = avro_bytes_set_private(datum, bytes_copy, size, avro_alloc_free);
+	rval = avro_bytes_set_private(datum, bytes_copy, size, avro_alloc_free_func);
 	if (rval) {
 		avro_free(bytes_copy, size);
 	}
@@ -636,7 +639,7 @@ avro_datum_t avro_fixed(avro_schema_t schema,
 		return NULL;
 	}
 	memcpy(bytes_copy, bytes, size);
-	return avro_fixed_private(schema, bytes_copy, size, avro_alloc_free);
+	return avro_fixed_private(schema, bytes_copy, size, avro_alloc_free_func);
 }
 
 avro_datum_t avro_givefixed(avro_schema_t schema,
@@ -679,7 +682,7 @@ int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
 		return ENOMEM;
 	}
 	memcpy(bytes_copy, bytes, size);
-	rval = avro_fixed_set_private(datum, bytes_copy, size, avro_alloc_free);
+	rval = avro_fixed_set_private(datum, bytes_copy, size, avro_alloc_free_func);
 	if (rval) {
 		avro_free(bytes_copy, size);
 	}
@@ -704,6 +707,30 @@ int avro_fixed_get(avro_datum_t datum, char **bytes, int64_t * size)
 	return 0;
 }
 
+static int
+avro_init_map(struct avro_map_datum_t *datum)
+{
+	datum->map = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->map) {
+		avro_set_error("Cannot create new map datum");
+		return ENOMEM;
+	}
+	datum->indices_by_key = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->indices_by_key) {
+		avro_set_error("Cannot create new map datum");
+		st_free_table(datum->map);
+		return ENOMEM;
+	}
+	datum->keys_by_index = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->keys_by_index) {
+		avro_set_error("Cannot create new map datum");
+		st_free_table(datum->indices_by_key);
+		st_free_table(datum->map);
+		return ENOMEM;
+	}
+	return 0;
+}
+
 avro_datum_t avro_map(avro_schema_t schema)
 {
 	check_param(NULL, is_avro_schema(schema), "schema");
@@ -714,16 +741,8 @@ avro_datum_t avro_map(avro_schema_t schema)
 		avro_set_error("Cannot create new map datum");
 		return NULL;
 	}
-	datum->map = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
-	if (!datum->map) {
-		avro_set_error("Cannot create new map datum");
-		avro_freet(struct avro_map_datum_t, datum);
-		return NULL;
-	}
-	datum->keys_by_index = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
-	if (!datum->keys_by_index) {
-		avro_set_error("Cannot create new map datum");
-		st_free_table(datum->map);
+
+	if (avro_init_map(datum) != 0) {
 		avro_freet(struct avro_map_datum_t, datum);
 		return NULL;
 	}
@@ -786,6 +805,26 @@ int avro_map_get_key(const avro_datum_t datum, int index,
 	return EINVAL;
 }
 
+int avro_map_get_index(const avro_datum_t datum, const char *key,
+		       int *index)
+{
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	check_param(EINVAL, is_avro_map(datum), "map datum");
+	check_param(EINVAL, key, "key");
+	check_param(EINVAL, index, "index");
+
+	st_data_t  data;
+
+	struct avro_map_datum_t *map = avro_datum_to_map(datum);
+	if (st_lookup(map->indices_by_key, (st_data_t) key, &data)) {
+		*index = (int) data;
+		return 0;
+	}
+
+	avro_set_error("No map element with key %s", key);
+	return EINVAL;
+}
+
 int
 avro_map_set(avro_datum_t datum, const char *key,
 	     const avro_datum_t value)
@@ -811,11 +850,24 @@ avro_map_set(avro_datum_t datum, const char *key,
 			return ENOMEM;
 		}
 		int  new_index = map->map->num_entries;
+		st_insert(map->indices_by_key, (st_data_t) save_key,
+			  (st_data_t) new_index);
 		st_insert(map->keys_by_index, (st_data_t) new_index,
 			  (st_data_t) save_key);
 	}
 	avro_datum_incref(value);
 	st_insert(map->map, (st_data_t) save_key, (st_data_t) value);
+	return 0;
+}
+
+static int
+avro_init_array(struct avro_array_datum_t *datum)
+{
+	datum->els = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!datum->els) {
+		avro_set_error("Cannot create new array datum");
+		return ENOMEM;
+	}
 	return 0;
 }
 
@@ -829,9 +881,8 @@ avro_datum_t avro_array(avro_schema_t schema)
 		avro_set_error("Cannot create new array datum");
 		return NULL;
 	}
-	datum->els = st_init_numtable_with_size(DEFAULT_TABLE_SIZE);
-	if (!datum->els) {
-		avro_set_error("Cannot create new array datum");
+
+	if (avro_init_array(datum) != 0) {
 		avro_freet(struct avro_array_datum_t, datum);
 		return NULL;
 	}
@@ -1067,6 +1118,7 @@ static void avro_datum_free(avro_datum_t datum)
 				st_foreach(map->map, char_datum_free_foreach,
 					   0);
 				st_free_table(map->map);
+				st_free_table(map->indices_by_key);
 				st_free_table(map->keys_by_index);
 				avro_freet(struct avro_map_datum_t, map);
 			}
@@ -1093,6 +1145,84 @@ static void avro_datum_free(avro_datum_t datum)
 			}
 			break;
 		}
+	}
+}
+
+static int
+datum_reset_foreach(int i, avro_datum_t datum, void *arg)
+{
+	AVRO_UNUSED(i);
+	int  rval;
+	int  *result = arg;
+
+	rval = avro_datum_reset(datum);
+	if (rval == 0) {
+		return ST_CONTINUE;
+	} else {
+		*result = rval;
+		return ST_STOP;
+	}
+}
+
+int
+avro_datum_reset(avro_datum_t datum)
+{
+	check_param(EINVAL, is_avro_datum(datum), "datum");
+	int  rval;
+
+	switch (avro_typeof(datum)) {
+		case AVRO_ARRAY:
+		{
+			struct avro_array_datum_t *array;
+			array = avro_datum_to_array(datum);
+			st_foreach(array->els, array_free_foreach, 0);
+			st_free_table(array->els);
+
+			rval = avro_init_array(array);
+			if (rval != 0) {
+				avro_freet(struct avro_array_datum_t, array);
+				return rval;
+			}
+			return 0;
+		}
+
+		case AVRO_MAP:
+		{
+			struct avro_map_datum_t *map;
+			map = avro_datum_to_map(datum);
+			st_foreach(map->map, char_datum_free_foreach, 0);
+			st_free_table(map->map);
+			st_free_table(map->indices_by_key);
+			st_free_table(map->keys_by_index);
+
+			rval = avro_init_map(map);
+			if (rval != 0) {
+				avro_freet(struct avro_map_datum_t, map);
+				return rval;
+			}
+			return 0;
+		}
+
+		case AVRO_RECORD:
+		{
+			struct avro_record_datum_t *record;
+			record = avro_datum_to_record(datum);
+			rval = 0;
+			st_foreach(record->fields_byname,
+				   datum_reset_foreach, (st_data_t) &rval);
+			return rval;
+		}
+
+		case AVRO_UNION:
+		{
+			struct avro_union_datum_t *unionp;
+			unionp = avro_datum_to_union(datum);
+			return (unionp->value == NULL)? 0:
+			    avro_datum_reset(unionp->value);
+		}
+
+		default:
+			return 0;
 	}
 }
 

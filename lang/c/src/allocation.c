@@ -15,11 +15,12 @@
  * permissions and limitations under the License. 
  */
 
+#include <stdlib.h>
 #include <string.h>
 
-#include "avro.h"
 #include "avro_private.h"
-#include "allocation.h"
+#include "avro/allocation.h"
+#include "avro/data.h"
 
 static void *
 avro_default_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
@@ -35,7 +36,7 @@ avro_default_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
 	}
 }
 
-struct allocator_state  AVRO_CURRENT_ALLOCATOR = {
+struct avro_allocator_state  AVRO_CURRENT_ALLOCATOR = {
 	avro_default_allocator,
 	NULL
 };
@@ -88,7 +89,7 @@ void avro_str_free(char *str)
 
 
 void
-avro_alloc_free(void *ptr, size_t sz)
+avro_alloc_free_func(void *ptr, size_t sz)
 {
 	avro_free(ptr, sz);
 }

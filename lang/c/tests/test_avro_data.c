@@ -15,6 +15,7 @@
  * permissions and limitations under the License. 
  */
 
+#include "avro.h"
 #include "avro_private.h"
 #include <inttypes.h>
 #include <limits.h>
@@ -101,8 +102,8 @@ write_read_check(avro_schema_t writers_schema, avro_datum_t datum,
 		/* Validating read/write */
 		if (avro_write_data
 		    (writer, validate ? writers_schema : NULL, datum)) {
-			fprintf(stderr, "Unable to write %s validate=%d\n",
-				type, validate);
+			fprintf(stderr, "Unable to write %s validate=%d\n  %s\n",
+				type, validate, avro_strerror());
 			exit(EXIT_FAILURE);
 		}
 		int64_t size =
@@ -110,21 +111,23 @@ write_read_check(avro_schema_t writers_schema, avro_datum_t datum,
 				   datum);
 		if (size != avro_writer_tell(writer)) {
 			fprintf(stderr,
-				"Unable to calculate size %s validate=%d (%"PRId64" != %"PRId64")\n",
-				type, validate, size, avro_writer_tell(writer));
+				"Unable to calculate size %s validate=%d "
+				"(%"PRId64" != %"PRId64")\n  %s\n",
+				type, validate, size, avro_writer_tell(writer),
+				avro_strerror());
 			exit(EXIT_FAILURE);
 		}
 		if (avro_read_data
 		    (reader, writers_schema, readers_schema, &datum_out)) {
-			fprintf(stderr, "Unable to read %s validate=%d\n", type,
-				validate);
+			fprintf(stderr, "Unable to read %s validate=%d\n  %s\n",
+				type, validate, avro_strerror());
 			fprintf(stderr, "  %s\n", avro_strerror());
 			exit(EXIT_FAILURE);
 		}
 		if (!avro_datum_equal(expected, datum_out)) {
 			fprintf(stderr,
-				"Unable to encode/decode %s validate=%d\n",
-				type, validate);
+				"Unable to encode/decode %s validate=%d\n  %s\n",
+				type, validate, avro_strerror());
 			exit(EXIT_FAILURE);
 		}
 
@@ -533,6 +536,21 @@ static int test_map(void)
 
 	if (val != 2) {
 		fprintf(stderr, "Unexpected map value 2\n");
+		exit(EXIT_FAILURE);
+	}
+
+	int  index;
+	if (avro_map_get_index(datum, "two", &index)) {
+		fprintf(stderr, "Can't get index for key \"two\": %s\n",
+			avro_strerror());
+		exit(EXIT_FAILURE);
+	}
+	if (index != 2) {
+		fprintf(stderr, "Unexpected index for key \"two\"\n");
+		exit(EXIT_FAILURE);
+	}
+	if (!avro_map_get_index(datum, "foobar", &index)) {
+		fprintf(stderr, "Unexpected index for key \"foobar\"\n");
 		exit(EXIT_FAILURE);
 	}
 

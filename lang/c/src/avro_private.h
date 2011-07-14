@@ -19,7 +19,7 @@
 
 #include <errno.h>
 
-#include "avro.h"
+#include "avro/errors.h"
 
 #ifdef HAVE_CONFIG_H
 /* This is only true for now in the autotools build */

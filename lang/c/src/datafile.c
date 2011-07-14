@@ -15,9 +15,9 @@
  * permissions and limitations under the License. 
  */
 
-#include "avro_errors.h"
 #include "avro_private.h"
-#include "allocation.h"
+#include "avro/allocation.h"
+#include "avro/errors.h"
 #include "encoding.h"
 #include <stdio.h>
 #include <stdlib.h>

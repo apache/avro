@@ -3,5 +3,7 @@ performance
 test_avro_data
 test_avro_schema
 test_avro_schema_names
+test_avro_values
 test_cpp
+test_data_structures
 test_interop_data
