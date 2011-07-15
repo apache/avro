@@ -3,6 +3,8 @@ AM_CPPFLAGS=-I$(top_srcdir)/jansson/src
 AM_CFLAGS=-Wall -Wextra -Wunused-parameter
 ACLOCAL_AMFLAGS=-I m4
 
+bin_PROGRAMS =
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = avro-c.pc
 
@@ -39,3 +41,11 @@ libavro_la_LDFLAGS = \
         -version-info $(LIBAVRO_VERSION) \
         -release $(VERSION) \
         -export-dynamic
+
+bin_PROGRAMS += avrocat
+avrocat_SOURCES = avrocat.c
+avrocat_LDADD = libavro.la
+
+bin_PROGRAMS += avropipe
+avropipe_SOURCES = avropipe.c
+avropipe_LDADD = libavro.la

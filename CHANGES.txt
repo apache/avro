@@ -31,6 +31,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-861. C: Remove dependency on stdbool.h. (dcreager)
 
+    AVRO-396. C: avrocat and avropipe commands (dcreager)
+
   BUG FIXES
 
     AVRO-845. setup.py uses Python2.7+ specific code
