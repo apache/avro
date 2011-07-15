@@ -19,7 +19,6 @@
 #include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -223,7 +222,7 @@ process_value(const char *prefix, avro_value_t *value)
 	switch (type) {
 		case AVRO_BOOLEAN:
 		{
-			bool  val;
+			int  val;
 			avro_value_get_boolean(value, &val);
 			printf("%s\t%s\n", prefix, val? "true": "false");
 			return;
