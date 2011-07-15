@@ -16,7 +16,6 @@
  */
 
 #include <errno.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -82,7 +81,7 @@ avro_generic_boolean_get_schema(const avro_value_iface_t *iface, const void *vse
 
 static int
 avro_generic_boolean_get(const avro_value_iface_t *iface,
-			 const void *vself, bool *out)
+			 const void *vself, int *out)
 {
 	AVRO_UNUSED(iface);
 	const int  *self = vself;
@@ -92,7 +91,7 @@ avro_generic_boolean_get(const avro_value_iface_t *iface,
 
 static int
 avro_generic_boolean_set(const avro_value_iface_t *iface,
-			 void *vself, bool val)
+			 void *vself, int val)
 {
 	AVRO_UNUSED(iface);
 	int  *self = vself;
@@ -158,7 +157,7 @@ avro_value_iface_t *avro_generic_boolean_class(void)
 	return &AVRO_GENERIC_BOOLEAN_CLASS;
 }
 
-int avro_generic_boolean_new(avro_value_t *value, bool val)
+int avro_generic_boolean_new(avro_value_t *value, int val)
 {
 	int  rval;
 	check(rval, avro_value_new(&AVRO_GENERIC_BOOLEAN_CLASS, value));

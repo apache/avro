@@ -15,7 +15,6 @@
  * permissions and limitations under the License.
  */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -121,7 +120,7 @@ sizeof_value(avro_value_t *src, size_t *size)
 	switch (avro_value_get_type(src)) {
 		case AVRO_BOOLEAN:
 		{
-			bool  val;
+			int  val;
 			check(rval, avro_value_get_boolean(src, &val));
 			*size += avro_binary_encoding.size_boolean(NULL, val);
 			return 0;

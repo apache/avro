@@ -185,7 +185,7 @@ avro_generic_map_get_by_name(const avro_value_iface_t *viface,
 static int
 avro_generic_map_add(const avro_value_iface_t *viface,
 		     void *vself, const char *key,
-		     avro_value_t *child, size_t *index, bool *is_new)
+		     avro_value_t *child, size_t *index, int *is_new)
 {
 	const avro_generic_map_value_iface_t  *iface =
 	    (const avro_generic_map_value_iface_t *) viface;

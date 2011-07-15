@@ -15,7 +15,6 @@
  * permissions and limitations under the License.
  */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,7 +66,7 @@ avro_datum_value_get_schema(const avro_value_iface_t *iface, const void *vself)
 
 static int
 avro_datum_value_get_boolean(const avro_value_iface_t *iface,
-			     const void *vself, bool *out)
+			     const void *vself, int *out)
 {
 	AVRO_UNUSED(iface);
 	const avro_datum_t  self = (const avro_datum_t) vself;
@@ -279,7 +278,7 @@ avro_datum_value_grab_fixed(const avro_value_iface_t *iface,
 
 static int
 avro_datum_value_set_boolean(const avro_value_iface_t *iface,
-			     void *vself, bool val)
+			     void *vself, int val)
 {
 	AVRO_UNUSED(iface);
 	avro_datum_t  self = vself;
@@ -614,7 +613,7 @@ avro_datum_value_append(const avro_value_iface_t *iface,
 static int
 avro_datum_value_add(const avro_value_iface_t *iface,
 		     void *vself, const char *key,
-		     avro_value_t *child, size_t *index, bool *is_new)
+		     avro_value_t *child, size_t *index, int *is_new)
 {
 	AVRO_UNUSED(iface);
 	avro_datum_t  self = vself;
@@ -631,7 +630,7 @@ avro_datum_value_add(const avro_value_iface_t *iface,
 	if (avro_map_get(self, key, &child_datum) == 0) {
 		/* key already exists */
 		if (is_new != NULL) {
-			*is_new = false;
+			*is_new = 0;
 		}
 		if (index != NULL) {
 			int  real_index;
@@ -652,7 +651,7 @@ avro_datum_value_add(const avro_value_iface_t *iface,
 
 	check(rval, avro_map_set(self, key, child_datum));
 	if (is_new != NULL) {
-		*is_new = true;
+		*is_new = 0;
 	}
 	if (index != NULL) {
 		*index = avro_map_size(self) - 1;

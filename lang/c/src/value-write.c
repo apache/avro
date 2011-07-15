@@ -15,7 +15,6 @@
  * permissions and limitations under the License.
  */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -117,7 +116,7 @@ avro_value_write(avro_writer_t writer, avro_value_t *src)
 	switch (avro_value_get_type(src)) {
 		case AVRO_BOOLEAN:
 		{
-			bool  val;
+			int  val;
 			check(rval, avro_value_get_boolean(src, &val));
 			return avro_binary_encoding.write_boolean(writer, val);
 		}

@@ -15,7 +15,6 @@
  * permissions and limitations under the License.
  */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -138,7 +137,7 @@ avro_generic_link_get_schema(const avro_value_iface_t *viface, const void *vself
 
 static int
 avro_generic_link_get_boolean(const avro_value_iface_t *iface,
-			      const void *vself, bool *out)
+			      const void *vself, int *out)
 {
 	AVRO_UNUSED(iface);
 	const avro_value_t  *self = vself;
@@ -254,7 +253,7 @@ avro_generic_link_grab_fixed(const avro_value_iface_t *iface,
 
 static int
 avro_generic_link_set_boolean(const avro_value_iface_t *iface,
-			      void *vself, bool val)
+			      void *vself, int val)
 {
 	AVRO_UNUSED(iface);
 	avro_value_t  *self = vself;
@@ -437,7 +436,7 @@ avro_generic_link_append(const avro_value_iface_t *iface,
 static int
 avro_generic_link_add(const avro_value_iface_t *iface,
 		      void *vself, const char *key,
-		      avro_value_t *child, size_t *index, bool *is_new)
+		      avro_value_t *child, size_t *index, int *is_new)
 {
 	AVRO_UNUSED(iface);
 	avro_value_t  *self = vself;

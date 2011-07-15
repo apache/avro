@@ -24,7 +24,6 @@ extern "C" {
 #define CLOSE_EXTERN
 #endif
 
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 

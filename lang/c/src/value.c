@@ -70,22 +70,22 @@ avro_value_free(avro_value_t *val)
 		if (rval != 0) { return (retval); } \
 	} while (0)
 
-bool
+int
 avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 {
 	avro_type_t  type1 = avro_value_get_type(val1);
 	avro_type_t  type2 = avro_value_get_type(val2);
 	if (type1 != type2) {
-		return false;
+		return 0;
 	}
 
 	switch (type1) {
 		case AVRO_BOOLEAN:
 		{
-			bool  v1;
-			bool  v2;
-			check_return(false, avro_value_get_boolean(val1, &v1));
-			check_return(false, avro_value_get_boolean(val2, &v2));
+			int  v1;
+			int  v2;
+			check_return(0, avro_value_get_boolean(val1, &v1));
+			check_return(0, avro_value_get_boolean(val2, &v2));
 			return (v1 == v2);
 		}
 
@@ -95,10 +95,10 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 			const void  *buf2;
 			size_t  size1;
 			size_t  size2;
-			check_return(false, avro_value_get_bytes(val1, &buf1, &size1));
-			check_return(false, avro_value_get_bytes(val2, &buf2, &size2));
+			check_return(0, avro_value_get_bytes(val1, &buf1, &size1));
+			check_return(0, avro_value_get_bytes(val2, &buf2, &size2));
 			if (size1 != size2) {
-				return false;
+				return 0;
 			}
 			return (memcmp(buf1, buf2, size1) == 0);
 		}
@@ -107,8 +107,8 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 		{
 			double  v1;
 			double  v2;
-			check_return(false, avro_value_get_double(val1, &v1));
-			check_return(false, avro_value_get_double(val2, &v2));
+			check_return(0, avro_value_get_double(val1, &v1));
+			check_return(0, avro_value_get_double(val2, &v2));
 			return (v1 == v2);
 		}
 
@@ -116,8 +116,8 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 		{
 			float  v1;
 			float  v2;
-			check_return(false, avro_value_get_float(val1, &v1));
-			check_return(false, avro_value_get_float(val2, &v2));
+			check_return(0, avro_value_get_float(val1, &v1));
+			check_return(0, avro_value_get_float(val2, &v2));
 			return (v1 == v2);
 		}
 
@@ -125,8 +125,8 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 		{
 			int32_t  v1;
 			int32_t  v2;
-			check_return(false, avro_value_get_int(val1, &v1));
-			check_return(false, avro_value_get_int(val2, &v2));
+			check_return(0, avro_value_get_int(val1, &v1));
+			check_return(0, avro_value_get_int(val2, &v2));
 			return (v1 == v2);
 		}
 
@@ -134,16 +134,16 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 		{
 			int64_t  v1;
 			int64_t  v2;
-			check_return(false, avro_value_get_long(val1, &v1));
-			check_return(false, avro_value_get_long(val2, &v2));
+			check_return(0, avro_value_get_long(val1, &v1));
+			check_return(0, avro_value_get_long(val2, &v2));
 			return (v1 == v2);
 		}
 
 		case AVRO_NULL:
 		{
-			check_return(false, avro_value_get_null(val1));
-			check_return(false, avro_value_get_null(val2));
-			return true;
+			check_return(0, avro_value_get_null(val1));
+			check_return(0, avro_value_get_null(val2));
+			return 1;
 		}
 
 		case AVRO_STRING:
@@ -152,10 +152,10 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 			const char  *buf2;
 			size_t  size1;
 			size_t  size2;
-			check_return(false, avro_value_get_string(val1, &buf1, &size1));
-			check_return(false, avro_value_get_string(val2, &buf2, &size2));
+			check_return(0, avro_value_get_string(val1, &buf1, &size1));
+			check_return(0, avro_value_get_string(val2, &buf2, &size2));
 			if (size1 != size2) {
-				return false;
+				return 0;
 			}
 			return (memcmp(buf1, buf2, size1) == 0);
 		}
@@ -164,34 +164,34 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 		{
 			size_t  count1;
 			size_t  count2;
-			check_return(false, avro_value_get_size(val1, &count1));
-			check_return(false, avro_value_get_size(val2, &count2));
+			check_return(0, avro_value_get_size(val1, &count1));
+			check_return(0, avro_value_get_size(val2, &count2));
 			if (count1 != count2) {
-				return false;
+				return 0;
 			}
 
 			size_t  i;
 			for (i = 0; i < count1; i++) {
 				avro_value_t  child1;
 				avro_value_t  child2;
-				check_return(false, avro_value_get_by_index
+				check_return(0, avro_value_get_by_index
 					     (val1, i, &child1, NULL));
-				check_return(false, avro_value_get_by_index
+				check_return(0, avro_value_get_by_index
 					     (val2, i, &child2, NULL));
 				if (!avro_value_equal_fast(&child1, &child2)) {
-					return false;
+					return 0;
 				}
 			}
 
-			return true;
+			return 1;
 		}
 
 		case AVRO_ENUM:
 		{
 			int  v1;
 			int  v2;
-			check_return(false, avro_value_get_enum(val1, &v1));
-			check_return(false, avro_value_get_enum(val2, &v2));
+			check_return(0, avro_value_get_enum(val1, &v1));
+			check_return(0, avro_value_get_enum(val2, &v2));
 			return (v1 == v2);
 		}
 
@@ -201,10 +201,10 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 			const void  *buf2;
 			size_t  size1;
 			size_t  size2;
-			check_return(false, avro_value_get_fixed(val1, &buf1, &size1));
-			check_return(false, avro_value_get_fixed(val2, &buf2, &size2));
+			check_return(0, avro_value_get_fixed(val1, &buf1, &size1));
+			check_return(0, avro_value_get_fixed(val2, &buf2, &size2));
 			if (size1 != size2) {
-				return false;
+				return 0;
 			}
 			return (memcmp(buf1, buf2, size1) == 0);
 		}
@@ -213,10 +213,10 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 		{
 			size_t  count1;
 			size_t  count2;
-			check_return(false, avro_value_get_size(val1, &count1));
-			check_return(false, avro_value_get_size(val2, &count2));
+			check_return(0, avro_value_get_size(val1, &count1));
+			check_return(0, avro_value_get_size(val2, &count2));
 			if (count1 != count2) {
-				return false;
+				return 0;
 			}
 
 			size_t  i;
@@ -224,68 +224,68 @@ avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)
 				avro_value_t  child1;
 				avro_value_t  child2;
 				const char  *key1;
-				check_return(false, avro_value_get_by_index
+				check_return(0, avro_value_get_by_index
 					     (val1, i, &child1, &key1));
-				check_return(false, avro_value_get_by_name
+				check_return(0, avro_value_get_by_name
 					     (val2, key1, &child2, NULL));
 				if (!avro_value_equal_fast(&child1, &child2)) {
-					return false;
+					return 0;
 				}
 			}
 
-			return true;
+			return 1;
 		}
 
 		case AVRO_RECORD:
 		{
 			size_t  count1;
-			check_return(false, avro_value_get_size(val1, &count1));
+			check_return(0, avro_value_get_size(val1, &count1));
 
 			size_t  i;
 			for (i = 0; i < count1; i++) {
 				avro_value_t  child1;
 				avro_value_t  child2;
-				check_return(false, avro_value_get_by_index
+				check_return(0, avro_value_get_by_index
 					     (val1, i, &child1, NULL));
-				check_return(false, avro_value_get_by_index
+				check_return(0, avro_value_get_by_index
 					     (val2, i, &child2, NULL));
 				if (!avro_value_equal_fast(&child1, &child2)) {
-					return false;
+					return 0;
 				}
 			}
 
-			return true;
+			return 1;
 		}
 
 		case AVRO_UNION:
 		{
 			int  disc1;
 			int  disc2;
-			check_return(false, avro_value_get_discriminant(val1, &disc1));
-			check_return(false, avro_value_get_discriminant(val2, &disc2));
+			check_return(0, avro_value_get_discriminant(val1, &disc1));
+			check_return(0, avro_value_get_discriminant(val2, &disc2));
 			if (disc1 != disc2) {
-				return false;
+				return 0;
 			}
 
 			avro_value_t  branch1;
 			avro_value_t  branch2;
-			check_return(false, avro_value_get_current_branch(val1, &branch1));
-			check_return(false, avro_value_get_current_branch(val2, &branch2));
+			check_return(0, avro_value_get_current_branch(val1, &branch1));
+			check_return(0, avro_value_get_current_branch(val2, &branch2));
 			return avro_value_equal_fast(&branch1, &branch2);
 		}
 
 		default:
-			return false;
+			return 0;
 	}
 }
 
-bool
+int
 avro_value_equal(avro_value_t *val1, avro_value_t *val2)
 {
 	avro_schema_t  schema1 = avro_value_get_schema(val1);
 	avro_schema_t  schema2 = avro_value_get_schema(val2);
 	if (!avro_schema_equal(schema1, schema2)) {
-		return false;
+		return 0;
 	}
 
 	return avro_value_equal_fast(val1, val2);
@@ -298,7 +298,7 @@ avro_value_copy_fast(avro_value_t *dest, const avro_value_t *src)
 	avro_type_t  dest_type = avro_value_get_type(dest);
 	avro_type_t  src_type = avro_value_get_type(src);
 	if (dest_type != src_type) {
-		return false;
+		return 0;
 	}
 
 	int  rval;
@@ -307,7 +307,7 @@ avro_value_copy_fast(avro_value_t *dest, const avro_value_t *src)
 	switch (dest_type) {
 		case AVRO_BOOLEAN:
 		{
-			bool  val;
+			int  val;
 			check(rval, avro_value_get_boolean(src, &val));
 			return avro_value_set_boolean(dest, val);
 		}

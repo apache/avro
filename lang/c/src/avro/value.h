@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 #include <errno.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -117,7 +116,7 @@ struct avro_value_iface {
 	 * Primitive value getters
 	 */
 	int (*get_boolean)(const avro_value_iface_t *iface,
-			   const void *self, bool *out);
+			   const void *self, int *out);
 	int (*get_bytes)(const avro_value_iface_t *iface,
 			 const void *self, const void **buf, size_t *size);
 	int (*grab_bytes)(const avro_value_iface_t *iface,
@@ -170,7 +169,7 @@ struct avro_value_iface {
 	 */
 
 	int (*set_boolean)(const avro_value_iface_t *iface,
-			   void *self, bool val);
+			   void *self, int val);
 	int (*set_bytes)(const avro_value_iface_t *iface,
 			 void *self, void *buf, size_t size);
 	int (*give_bytes)(const avro_value_iface_t *iface,
@@ -256,7 +255,7 @@ struct avro_value_iface {
 	/* Creates a new map element, or returns an existing one. */
 	int (*add)(const avro_value_iface_t *iface,
 		   void *self, const char *key,
-		   avro_value_t *child, size_t *index, bool *is_new);
+		   avro_value_t *child, size_t *index, int *is_new);
 
 	/* Select a union branch. */
 	int (*set_branch)(const avro_value_iface_t *iface,
@@ -287,7 +286,7 @@ avro_value_free(avro_value_t *val);
  * avro_value_equal_fast.
  */
 
-bool
+int
 avro_value_equal(avro_value_t *val1, avro_value_t *val2);
 
 /**
@@ -299,7 +298,7 @@ avro_value_equal(avro_value_t *val1, avro_value_t *val2);
  * values.
  */
 
-bool
+int
 avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2);
 
 /**

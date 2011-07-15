@@ -140,7 +140,7 @@ _check_invalid_methods(const char *name, avro_value_t *val)
 	} while (0)
 
 	if (type != AVRO_BOOLEAN) {
-		bool  dummy = 0;
+		int  dummy = 0;
 		check_bad(get_boolean, val, &dummy);
 		check_bad(set_boolean, val, dummy);
 	}
@@ -232,7 +232,7 @@ _check_invalid_methods(const char *name, avro_value_t *val)
 		const char  *key = NULL;
 		avro_value_t  child;
 		size_t  index = 0;
-		bool  is_new = false;
+		int  is_new = 0;
 		check_bad(add, val, key, &child, &index, &is_new);
 	}
 
@@ -391,7 +391,7 @@ test_boolean(void)
 
 		/* Start with the wrong value to make sure _get does
 		 * something. */
-		bool  actual = (bool) 23;
+		int  actual = (int) 23;
 		try(avro_value_get_boolean(&val, &actual),
 		    "Cannot get boolean value");
 
@@ -988,7 +988,7 @@ test_map(void)
 		for (j = 0; j < count; j++) {
 			avro_value_t  element;
 			size_t  new_index;
-			bool  is_new = false;
+			int  is_new = 0;
 
 			char  key[64];
 			snprintf(key, 64, "%zu", j);
@@ -1137,7 +1137,7 @@ test_record(void)
 
 	try(avro_value_get_by_index(&val, 0, &field, NULL),
 	    "Cannot get field 0");
-	try(avro_value_set_boolean(&field, true),
+	try(avro_value_set_boolean(&field, 1),
 	    "Cannot set field 0");
 
 	try(avro_value_get_by_index(&val, 1, &field, &name),
@@ -1193,7 +1193,7 @@ test_record(void)
 	try(avro_value_reset(&val),
 	    "Cannot reset record");
 
-	bool  bval;
+	int  bval;
 	try(avro_value_get_by_index(&val, 0, &field, NULL),
 	    "Cannot get field 0");
 	try(avro_value_get_boolean(&field, &bval),

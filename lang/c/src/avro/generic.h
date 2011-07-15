@@ -24,7 +24,6 @@ extern "C" {
 #define CLOSE_EXTERN
 #endif
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -66,7 +65,7 @@ avro_value_iface_t *avro_generic_fixed_class(avro_schema_t schema);
  * These functions instantiate a new generic scalar value.
  */
 
-int avro_generic_boolean_new(avro_value_t *value, bool val);
+int avro_generic_boolean_new(avro_value_t *value, int val);
 int avro_generic_bytes_new(avro_value_t *value, void *buf, size_t size);
 int avro_generic_double_new(avro_value_t *value, double val);
 int avro_generic_float_new(avro_value_t *value, float val);
@@ -75,6 +74,7 @@ int avro_generic_long_new(avro_value_t *value, int64_t val);
 int avro_generic_null_new(avro_value_t *value);
 int avro_generic_string_new(avro_value_t *value, char *val);
 int avro_generic_string_new_length(avro_value_t *value, char *val, size_t size);
+int avro_generic_enum_new(avro_value_t *value, int val);
 
 
 /*

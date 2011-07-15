@@ -202,7 +202,7 @@ avro_value_iface_t *avro_generic_enum_class(avro_schema_t schema)
 	return &iface->iface;
 }
 
-int avro_generic_enum_new(avro_value_t *value, bool val)
+int avro_generic_enum_new(avro_value_t *value, int val)
 {
 	int  rval;
 	check(rval, avro_value_new(&AVRO_GENERIC_ENUM_CLASS, value));

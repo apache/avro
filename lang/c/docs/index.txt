@@ -128,14 +128,13 @@ regardless of which Avro schema it's an instance of:
 
 [source,c]
 ----
-#include <stdbool.h>
 #include <avro.h>
 
 avro_type_t avro_value_get_type(const avro_value_t *value);
 avro_schema_t avro_value_get_schema(const avro_value_t *value);
 
-bool avro_value_equal(const avro_value_t *v1, const avro_value_t *v2);
-bool avro_value_equal_fast(const avro_value_t *v1, const avro_value_t *v2);
+int avro_value_equal(const avro_value_t *v1, const avro_value_t *v2);
+int avro_value_equal_fast(const avro_value_t *v1, const avro_value_t *v2);
 
 int avro_value_copy(avro_value_t *dest, const avro_value_t *src);
 int avro_value_copy_fast(avro_value_t *dest, const avro_value_t *src);
@@ -184,12 +183,11 @@ _getter_ methods:
 
 [source,c]
 ----
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <avro.h>
 
-int avro_value_get_boolean(const avro_value_t *value, bool *dest);
+int avro_value_get_boolean(const avro_value_t *value, int *dest);
 int avro_value_get_bytes(const avro_value_t *value,
                          const void **dest, size_t *size);
 int avro_value_get_double(const avro_value_t *value, double *dest);
@@ -228,12 +226,11 @@ methods:
 
 [source,c]
 ----
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <avro.h>
 
-int avro_value_set_boolean(avro_value_t *value, bool src);
+int avro_value_set_boolean(avro_value_t *value, int src);
 int avro_value_set_bytes(avro_value_t *value,
                          void *buf, size_t size);
 int avro_value_set_double(avro_value_t *value, double src);
@@ -265,7 +262,6 @@ If you don't want to copy the contents of a +bytes+, +string+, or
 
 [source,c]
 ----
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <avro.h>
@@ -402,7 +398,7 @@ int avro_value_get_by_index(const avro_value_t *map, size_t index,
                             avro_value_t *element, const char **key);
 int avro_value_add(avro_value_t *map,
                    const char *key, avro_value_t *element,
-                   size_t *index, bool *is_new);
+                   size_t *index, int *is_new);
 ----
 
 The +get_size+ method returns the number of elements currently in the
