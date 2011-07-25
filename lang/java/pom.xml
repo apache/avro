@@ -48,11 +48,6 @@
     <snappy-version>1.0.3-rc4</snappy-version>
   </properties>
 
-  <issueManagement>
-    <system>jira</system>
-    <url>https://issues.apache.org/jira/browse/AVRO</url>
-  </issueManagement>
-
   <build>
     <!-- defines the default plugin configuration that all child projects inherit 
       from. Like dependencyManagement, this provides configuration, version, and other 

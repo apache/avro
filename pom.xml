@@ -44,6 +44,47 @@
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>    
   </properties>
 
+  <modules>
+    <module>lang/java</module>
+  </modules>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/avro/trunk</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/avro/trunk</developerConnection>
+    <url>http://svn.apache.org/viewvc/avro/trunk</url>
+  </scm>
+
+  <issueManagement>
+    <system>jira</system>
+    <url>http://issues.apache.org/jira/browse/AVRO</url>
+  </issueManagement>
+
+  <inceptionYear>2009</inceptionYear>
+
+  <mailingLists>
+    <mailingList>
+      <name>Avro Developer List</name>
+      <subscribe>dev-subscribe@avro.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@avro.apache.org</unsubscribe>
+      <post>dev@avro.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/avro-dev/</archive>
+    </mailingList>
+    <mailingList>
+      <name>Avro Users List</name>
+      <subscribe>users-subscribe@avro.apache.org</subscribe>
+      <unsubscribe>users-unsubscribe@avro.apache.org</unsubscribe>
+      <post>users@avro.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/avro-users/</archive>
+    </mailingList>
+    <mailingList>
+      <name>Avro Commits List</name>
+      <subscribe>commits-subscribe@avro.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@avro.apache.org</unsubscribe>
+      <post>commits@avro.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/avro-commits/</archive>
+    </mailingList>
+  </mailingLists>
+
   <build>
     <plugins>
       <plugin>
