@@ -41,6 +41,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.generic.GenericFixed;
+import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.io.BinaryData;
@@ -101,6 +102,7 @@ public class ReflectData extends SpecificData {
   @Override
   protected boolean isRecord(Object datum) {
     if (datum == null) return false;
+    if (super.isRecord(datum)) return true;
     return getSchema(datum.getClass()).getType() == Schema.Type.RECORD;
   }
 
@@ -120,6 +122,8 @@ public class ReflectData extends SpecificData {
 
   @Override
   protected Schema getRecordSchema(Object record) {
+    if (record instanceof GenericContainer)
+      return super.getRecordSchema(record);
     return getSchema(record.getClass());
   }
 

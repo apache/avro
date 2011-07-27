@@ -45,6 +45,9 @@ Avro 1.6.0 (unreleased)
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
     (Jakob Homan via cutting)
 
+    AVRO-864. Java: Fix reflect to be able to write unions containing
+    generic and/or specific records.  (Isabel Drost & cutting)
+
 Avro 1.5.2 (unreleased)
 
   NEW FEATURES
