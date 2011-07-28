@@ -11,9 +11,6 @@ Avro 1.6.0 (unreleased)
     AVRO-836. Python "avro" commandline utility to display and write Avro files.
     (Miki Tebeka via philz)
 
-    AVRO-833. Don't require simplejson for python >= 2.6.
-    (Miki Tebeka via philz)
-
     AVRO-841. Java: Implement insertion in GenericData.Array.
     (Nick Palmer via cutting)
 
@@ -21,8 +18,6 @@ Avro 1.6.0 (unreleased)
 
     AVRO-844. Java: Provide better errors for null or missing record fields.
     (Bill Graham via cutting)
-
-    AVRO-856. Java: Update Snappy to 1.0.3-rc4. (cutting)
 
     AVRO-746. C: Atomic reference counts. (dcreager)
 
@@ -39,14 +34,8 @@ Avro 1.6.0 (unreleased)
 
   BUG FIXES
 
-    AVRO-845. setup.py uses Python2.7+ specific code
-    (Miki Tebeka via philz)
-
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
     (Jakob Homan via cutting)
-
-    AVRO-864. Java: Fix reflect to be able to write unions containing
-    generic and/or specific records.  (Isabel Drost & cutting)
 
 Avro 1.5.2 (unreleased)
 
@@ -80,6 +69,14 @@ Avro 1.5.2 (unreleased)
 
     AVRO-810: C#: Add strong naming to assemblies. (Eric Hauser)
 
+    AVRO-833. Python: Don't require simplejson for python >= 2.6.
+    (Miki Tebeka via philz)
+
+    AVRO-845. Python: setup.py uses Python2.7+ specific code
+    (Miki Tebeka via philz)
+
+    AVRO-856. Java: Update Snappy to 1.0.3-rc4. (cutting)
+
   BUG FIXES
 
     AVRO-818. C: Fix data file corruption bug in C library (dcreager)
@@ -102,6 +99,9 @@ Avro 1.5.2 (unreleased)
     (James Baldassari via cutting)
 
     AVRO-825: C++: Fix bugs in codegen with recursive schemas. (thiru)
+
+    AVRO-864. Java: Fix reflect to be able to write unions containing
+    generic and/or specific records.  (Isabel Drost & cutting)
 
 Avro 1.5.1 (3 May 2011)
 
