@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.zip.CRC32;
 
 import org.xerial.snappy.Snappy;
-import org.xerial.snappy.SnappyException;
 
 /** * Implements Snappy compression and decompression. */
 class SnappyCodec extends Codec {
@@ -41,41 +40,33 @@ class SnappyCodec extends Codec {
 
   @Override
   ByteBuffer compress(ByteBuffer in) throws IOException {
-    try { 
-      ByteBuffer out =
-        ByteBuffer.allocate(Snappy.maxCompressedLength(in.remaining())+4);
-      int size = Snappy.compress(in.array(), in.position(), in.remaining(),
-                                 out.array(), 0);
-      crc32.reset();
-      crc32.update(in.array(), in.position(), in.remaining());
-      out.putInt(size, (int)crc32.getValue());
+    ByteBuffer out =
+      ByteBuffer.allocate(Snappy.maxCompressedLength(in.remaining())+4);
+    int size = Snappy.compress(in.array(), in.position(), in.remaining(),
+                               out.array(), 0);
+    crc32.reset();
+    crc32.update(in.array(), in.position(), in.remaining());
+    out.putInt(size, (int)crc32.getValue());
 
-      out.limit(size+4);
+    out.limit(size+4);
 
-      return out;
-    } catch (SnappyException e) {
-      throw new IOException(e);
-    }
+    return out;
   }
 
   @Override
   ByteBuffer decompress(ByteBuffer in) throws IOException {
-    try { 
-      ByteBuffer out = ByteBuffer.allocate
-        (Snappy.uncompressedLength(in.array(),in.position(),in.remaining()-4));
-      int size = Snappy.uncompress(in.array(),in.position(),in.remaining()-4,
-                                   out.array(), 0);
-      out.limit(size);
-
-      crc32.reset();
-      crc32.update(out.array(), 0, size);
-      if (in.getInt(in.limit()-4) != (int)crc32.getValue())
-        throw new IOException("Checksum failure");
-
-      return out;
-    } catch (SnappyException e) {
-      throw new IOException(e);
-    }
+    ByteBuffer out = ByteBuffer.allocate
+      (Snappy.uncompressedLength(in.array(),in.position(),in.remaining()-4));
+    int size = Snappy.uncompress(in.array(),in.position(),in.remaining()-4,
+                                 out.array(), 0);
+    out.limit(size);
+    
+    crc32.reset();
+    crc32.update(out.array(), 0, size);
+    if (in.getInt(in.limit()-4) != (int)crc32.getValue())
+      throw new IOException("Checksum failure");
+    
+    return out;
   }
   
   @Override public int hashCode() { return getName().hashCode(); }
