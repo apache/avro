@@ -44,14 +44,19 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     this(writer, reader, SpecificData.get());
   }
 
-  protected SpecificDatumReader(Schema writer, Schema reader,
-                                SpecificData data) {
+  /** Construct given writer's schema, reader's schema, and a {@link
+   * SpecificData}. */
+  public SpecificDatumReader(Schema writer, Schema reader,
+                             SpecificData data) {
     super(writer, reader, data);
   }
 
+  /** Return the contained {@link SpecificData}. */
+  public SpecificData getSpecificData() { return (SpecificData)getData(); }
+
   @Override
   protected Object newRecord(Object old, Schema schema) {
-    Class c = SpecificData.get().getClass(schema);
+    Class c = getSpecificData().getClass(schema);
     if (c == null) return super.newRecord(old, schema); // punt to generic
     return (c.isInstance(old) ? old : newInstance(c, schema));
   }
@@ -59,14 +64,14 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   @Override
   @SuppressWarnings("unchecked")
   protected Object createEnum(String symbol, Schema schema) {
-    Class c = SpecificData.get().getClass(schema);
+    Class c = getSpecificData().getClass(schema);
     if (c == null) return super.createEnum(symbol, schema); // punt to generic
     return Enum.valueOf(c, symbol);
   }
 
   @Override
   protected Object createFixed(Object old, Schema schema) {
-    Class c = SpecificData.get().getClass(schema);
+    Class c = getSpecificData().getClass(schema);
     if (c == null) return super.createFixed(old, schema); // punt to generic
     return c.isInstance(old) ? old : newInstance(c, schema);
   }
