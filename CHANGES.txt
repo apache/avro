@@ -6,6 +6,10 @@ Avro 1.6.0 (unreleased)
 
   NEW FEATURES
 
+  OPTIMIZATIONS
+
+    AVRO-853: Java: Cache Schema hash codes. (cutting)
+
   IMPROVEMENTS
 
     AVRO-836. Python "avro" commandline utility to display and write Avro files.
