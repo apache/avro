@@ -1,0 +1,5 @@
+@namespace("avro.examples.baseball")
+protocol Baseball {
+   import schema "position.avsc";
+   import schema "player.avsc";
+}

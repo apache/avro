@@ -874,6 +874,73 @@ public abstract class Schema {
     public NullSchema() { super(Type.NULL); }
   }
 
+  /** A parser for JSON-format schemas.  Each named schema parsed with a parser
+   * is added to the names known to the parser so that subsequently parsed
+   * schemas may refer to it by name. */
+  public static class Parser {
+    private Names names = new Names();
+    private boolean validate = true;
+
+    /** Adds the provided types to the set of defined, named types known to
+     * this parser. */
+    public Parser addTypes(Map<String,Schema> types) {
+      for (Schema s : types.values())
+        names.add(s);
+      return this;
+    }
+
+    /** Returns the set of defined, named types known to this parser. */
+    public Map<String,Schema> getTypes() {
+      Map<String,Schema> result = new LinkedHashMap<String,Schema>();
+      for (Schema s : names.values())
+        result.put(s.getFullName(), s);
+      return result;
+    }
+
+    /** Enable or disable name validation. */
+    public Parser setValidate(boolean validate) {
+      this.validate = validate;
+      return this;
+    }
+
+    /** True iff names are validated.  True by default. */
+    public boolean getValidate() { return this.validate; }
+
+    /** Parse a schema from the provided file.
+     * If named, the schema is added to the names known to this parser. */
+    public Schema parse(File file) throws IOException {
+      return parse(FACTORY.createJsonParser(file));
+    }
+
+    /** Parse a schema from the provided stream.
+     * If named, the schema is added to the names known to this parser. */
+    public Schema parse(InputStream in) throws IOException {
+      return parse(FACTORY.createJsonParser(in));
+    }
+
+    /** Parse a schema from the provided string.
+     * If named, the schema is added to the names known to this parser. */
+    public Schema parse(String s) {
+      try {
+        return parse(FACTORY.createJsonParser(new StringReader(s)));
+      } catch (IOException e) {
+        throw new SchemaParseException(e);
+      }
+    }
+
+    private Schema parse(JsonParser parser) throws IOException {
+      boolean saved = validateNames.get();
+      try {
+        validateNames.set(validate);
+        return Schema.parse(MAPPER.readTree(parser), names);
+      } catch (JsonParseException e) {
+        throw new SchemaParseException(e);
+      } finally {
+        validateNames.set(saved);
+      }
+    }
+  }
+
   /**
    * Constructs a Schema object from JSON schema file <tt>file</tt>.
    * The contents of <tt>file</tt> is expected to be in UTF-8 format.
@@ -881,14 +948,10 @@ public abstract class Schema {
    * @return  The freshly built Schema.
    * @throws IOException if there was trouble reading the contents
    * @throws JsonParseException if the contents are invalid
+   * @deprecated use {@link Schema.Parser} instead.
    */
   public static Schema parse(File file) throws IOException {
-    JsonParser parser = FACTORY.createJsonParser(file);
-    try {
-      return Schema.parse(MAPPER.readTree(parser), new Names());
-    } catch (JsonParseException e) {
-      throw new SchemaParseException(e);
-    }
+    return new Parser().parse(file);
   }
 
   /**
@@ -898,32 +961,25 @@ public abstract class Schema {
    * @return  The freshly built Schema.
    * @throws IOException if there was trouble reading the contents
    * @throws JsonParseException if the contents are invalid
+   * @deprecated use {@link Schema.Parser} instead.
    */
   public static Schema parse(InputStream in) throws IOException {
-    JsonParser parser = FACTORY.createJsonParser(in);
-    try {
-      return Schema.parse(MAPPER.readTree(parser), new Names());
-    } catch (JsonParseException e) {
-      throw new SchemaParseException(e);
-    }
+    return new Parser().parse(in);
   }
 
-  /** Construct a schema from <a href="http://json.org/">JSON</a> text. */
+  /** Construct a schema from <a href="http://json.org/">JSON</a> text.
+   * @deprecated use {@link Schema.Parser} instead.
+   */
   public static Schema parse(String jsonSchema) {
-    return parse(parseJson(jsonSchema), new Names());
+    return new Parser().parse(jsonSchema);
   }
 
   /** Construct a schema from <a href="http://json.org/">JSON</a> text.
    * @param validate true if names should be validated, false if not.
+   * @deprecated use {@link Schema.Parser} instead.
    */
   public static Schema parse(String jsonSchema, boolean validate) {
-    boolean saved = validateNames.get();
-    try {
-      validateNames.set(validate);
-      return parse(jsonSchema);
-    } finally {
-      validateNames.set(saved);
-    }
+    return new Parser().setValidate(validate).parse(jsonSchema);
   }
 
   static final Map<String,Type> PRIMITIVES = new HashMap<String,Type>();

@@ -1110,9 +1110,8 @@ void ProtocolBody(Protocol p):
          names.put(s.getFullName(), s);
        p.getMessages().putAll(importProtocol.getMessages());
      })
-     | schema = ImportSchema()  {
-     names.put(schema.getFullName(), schema);
-   })
+     | schema = ImportSchema()
+     )
       
    | message = MessageDeclaration(p) {
      p.getMessages().put(message.getName(), message);
@@ -1162,7 +1161,11 @@ Schema ImportSchema() : {
   <SCHEMA> importFile = JsonString() ";"
     {
       try {
-        return Schema.parse(new File(inputDir, importFile));
+        Parser parser = new Schema.Parser();
+        parser.addTypes(names);                   // inherit names
+        Schema value = parser.parse(new File(inputDir, importFile));
+        names = parser.getTypes();                // update names
+        return value;
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
       }        
