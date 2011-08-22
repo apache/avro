@@ -105,7 +105,7 @@
                  rather than the console. -->
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <systemPropertyVariables>
-              <test.dir>target/</test.dir>
+              <test.dir>${project.basedir}/target/</test.dir>
             </systemPropertyVariables>
           </configuration>
         </plugin>
