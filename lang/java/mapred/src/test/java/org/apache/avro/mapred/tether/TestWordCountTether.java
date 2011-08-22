@@ -86,7 +86,8 @@ public class TestWordCountTether {
     // create the input file
     WordCountUtil.writeLinesFile();
 
-    java.net.URI exec= new java.net.URI("java");
+    java.net.URI exec =
+      new java.net.URI(System.getProperty("java.home")+"/bin/java");
 
     //input path
     String in=dir+"/in";
