@@ -153,16 +153,36 @@ public class SpecificCompiler {
    * @param dest the directory to place generated files in
    */
   public static void compileProtocol(File src, File dest) throws IOException {
-    Protocol protocol = Protocol.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(protocol);
-    compiler.compileToDestination(src, dest);
+    compileProtocol(new File[] {src}, dest);
+  }
+
+  /**
+   * Generates Java interface and classes for a number of protocol files.
+   * @param srcFiles the source Avro protocol files
+   * @param dest the directory to place generated files in
+   */
+  public static void compileProtocol(File[] srcFiles, File dest) throws IOException {
+    for (File src : srcFiles) {
+      Protocol protocol = Protocol.parse(src);
+      SpecificCompiler compiler = new SpecificCompiler(protocol);
+      compiler.compileToDestination(src, dest);
+    }
   }
 
   /** Generates Java classes for a schema. */
   public static void compileSchema(File src, File dest) throws IOException {
-    Schema schema = Schema.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(schema);
-    compiler.compileToDestination(src, dest);
+    compileSchema(new File[] {src}, dest);
+  }
+
+  /** Generates Java classes for a number of schema files. */
+  public static void compileSchema(File[] srcFiles, File dest) throws IOException {
+    Schema.Parser parser = new Schema.Parser();
+
+    for (File src : srcFiles) {
+      Schema schema = parser.parse(src);
+      SpecificCompiler compiler = new SpecificCompiler(schema);
+      compiler.compileToDestination(src, dest);
+    }
   }
 
   /** Recursively enqueue schemas that need a class generated. */
