@@ -36,4 +36,5 @@ lang/csharp/Avro.sln
 lang/csharp/Avro.nunit
 lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/*.js
 lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/*.css
+lang/java/tools/src/test/compiler/output/*.java
 share/test/data/test.avro12
