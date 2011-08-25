@@ -18,8 +18,12 @@
 package org.apache.avro.tool;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
@@ -33,18 +37,27 @@ public class SpecificCompilerTool implements Tool {
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
-    if (args.size() != 3) {
+    if (args.size() < 3) {
       System.err
-          .println("Expected 3 arguments: (schema|protocol) inputfile outputdir");
+          .println("Need at least 3 arguments: (schema|protocol) input... outputdir");
+      System.err
+          .println(" input - input files or directories");
+      System.err
+          .println(" outputdir - directory to write generated java");
       return 1;
     }
     String method = args.get(0);
-    File input = new File(args.get(1));
-    File output = new File(args.get(2));
+    List<File> inputs = new ArrayList<File>();
+    File output = new File(args.get(args.size() - 1));
+
+    for (int i = 1; i < args.size() - 1; i++) {
+      inputs.add(new File(args.get(i)));
+    }
+
     if ("schema".equals(method)) {
-      SpecificCompiler.compileSchema(input, output);
+      SpecificCompiler.compileSchema(determineInputs(inputs, SCHEMA_FILTER), output);
     } else if ("protocol".equals(method)) {
-      SpecificCompiler.compileProtocol(input, output);
+      SpecificCompiler.compileProtocol(determineInputs(inputs, PROTOCOL_FILTER), output);
     } else {
       System.err.println("Expected \"schema\" or \"protocol\".");
       return 1;
@@ -60,5 +73,60 @@ public class SpecificCompilerTool implements Tool {
   @Override
   public String getShortDescription() {
     return "Generates Java code for the given schema.";
+  }
+
+  /**
+   * For a List of files or directories, returns a File[] containing each file
+   * passed as well as each file with a matching extension found in the directory.
+   *
+   * @param inputs List of File objects that are files or directories
+   * @param filter File extension filter to match on when fetching files from a directory
+   * @return Unique array of files
+   */
+  private static File[] determineInputs(List<File> inputs, FilenameFilter filter) {
+    Set<File> fileSet = new LinkedHashSet<File>(); // preserve order and uniqueness
+
+    for (File file : inputs) {
+      // if directory, look at contents to see what files match extension
+      if (file.isDirectory()) {
+        for (File f : file.listFiles(filter)) {
+          fileSet.add(f);
+        }
+      }
+      // otherwise, just add the file.
+      else {
+        fileSet.add(file);
+      }
+    }
+
+    if (fileSet.size() > 0) {
+      System.err.println("Input files to compile:");
+      for (File file : fileSet) {
+        System.err.println("  " + file);
+      }
+    }
+    else {
+      System.err.println("No input files found.");
+    }
+
+    return fileSet.toArray((new File[fileSet.size()]));
+  }
+
+  private static final FileExtensionFilter SCHEMA_FILTER =
+    new FileExtensionFilter("avsc");
+  private static final FileExtensionFilter PROTOCOL_FILTER =
+    new FileExtensionFilter("avpr");
+
+  private static class FileExtensionFilter implements FilenameFilter {
+    private String extension;
+
+    private FileExtensionFilter(String extension) {
+      this.extension = extension;
+    }
+
+    @Override
+    public boolean accept(File dir, String name) {
+      return name.endsWith(this.extension);
+    }
   }
 }
