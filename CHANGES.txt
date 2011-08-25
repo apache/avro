@@ -1,6 +1,6 @@
 Avro Change Log
 
-Avro 1.5.3 (unreleased)
+Avro 1.5.3 (25 August 2011)
 
   IMPROVEMENTS
 
@@ -12,8 +12,6 @@ Avro 1.5.3 (unreleased)
 
     AVRO-880. Java: Upgrade snappy-java to 1.0.3.2.
     (Alejandro Abdelnur via cutting)
-
-  BUG FIXES
 
 Avro 1.5.2 (12 August 2011)
 
