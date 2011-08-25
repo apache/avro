@@ -39,9 +39,6 @@ Avro 1.6.0 (unreleased)
     AVRO-873. Java: Permit passing classloader to SpecificDatumReader.
     (Michael Armbrust via cutting)
 
-    AVRO-874. Java: Improved Schema parsing API and permit IDL imports
-    to depend on names defined in prior imports. (cutting)
-
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
@@ -50,6 +47,9 @@ Avro 1.6.0 (unreleased)
 Avro 1.5.3 (unreleased)
 
   IMPROVEMENTS
+
+    AVRO-874. Java: Improved Schema parsing API and permit IDL imports
+    to depend on names defined in prior imports. (cutting)
 
   BUG FIXES
 
