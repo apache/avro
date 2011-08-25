@@ -4,6 +4,9 @@ Avro 1.5.3 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-874. Java: Improved Schema parsing API and permit IDL imports
+    to depend on names defined in prior imports. (cutting)
+
   BUG FIXES
 
 Avro 1.5.2 (12 August 2011)

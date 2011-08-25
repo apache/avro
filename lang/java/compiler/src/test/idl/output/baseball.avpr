@@ -1,0 +1,30 @@
+{
+  "protocol" : "Baseball",
+  "namespace" : "avro.examples.baseball",
+  "types" : [ {
+    "type" : "enum",
+    "name" : "Position",
+    "symbols" : [ "P", "C", "B1", "B2", "B3", "SS", "LF", "CF", "RF", "DH" ]
+  }, {
+    "type" : "record",
+    "name" : "Player",
+    "fields" : [ {
+      "name" : "number",
+      "type" : "int"
+    }, {
+      "name" : "first_name",
+      "type" : "string"
+    }, {
+      "name" : "last_name",
+      "type" : "string"
+    }, {
+      "name" : "position",
+      "type" : {
+        "type" : "array",
+        "items" : "Position"
+      }
+    } ]
+  } ],
+  "messages" : {
+  }
+}
