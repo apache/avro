@@ -45,7 +45,7 @@
     <jetty-version>6.1.26</jetty-version>
     <netty-version>3.2.4.Final</netty-version> 
     <jopt-simple-version>3.2</jopt-simple-version>
-    <snappy-version>1.0.3-rc4</snappy-version>
+    <snappy-version>1.0.3.2</snappy-version>
   </properties>
 
   <build>
