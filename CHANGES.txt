@@ -6,6 +6,12 @@ Avro 1.6.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-839. Java: Add accessor methods and builders to generated
+    Java classes.  Builders use default values from schemas for fields
+    that are not explicitly set.  Direct use of public fields is now
+    deprecated and may be removed in a future release.  (James
+    Baldassari via cutting)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)

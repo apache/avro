@@ -304,7 +304,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    * @throws IOException
    */
   
-  static void encode(Encoder e, Schema s, JsonNode n)
+  public static void encode(Encoder e, Schema s, JsonNode n)
     throws IOException {
     switch (s.getType()) {
     case RECORD:

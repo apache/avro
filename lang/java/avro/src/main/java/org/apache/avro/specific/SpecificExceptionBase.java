@@ -25,6 +25,22 @@ import org.apache.avro.Schema;
 public abstract class SpecificExceptionBase extends AvroRemoteException
   implements SpecificRecord {
 
+  public SpecificExceptionBase() {
+    super();
+  }
+  
+  public SpecificExceptionBase(Throwable value) {
+    super(value);
+  }
+
+  public SpecificExceptionBase(Object value) {
+    super(value);
+  }
+  
+  public SpecificExceptionBase(Object value, Throwable cause) {
+    super(value, cause);
+  }
+
   public abstract Schema getSchema();
   public abstract Object get(int field);
   public abstract void put(int field, Object value);

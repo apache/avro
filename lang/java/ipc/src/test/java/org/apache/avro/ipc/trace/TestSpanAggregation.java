@@ -45,12 +45,12 @@ public class TestSpanAggregation {
   @Test
   public void testSpanCompletion1() {
     Span span1a = createClientSpan(idValue(1), idValue(1), null, new Utf8("a"));
-    span1a.requestPayloadSize = 10;
-    span1a.responsePayloadSize = 0;
+    span1a.setRequestPayloadSize(10L);
+    span1a.setResponsePayloadSize(0L);
     
     Span span1b = createServerSpan(idValue(1), idValue(1), null, new Utf8("a"));
-    span1b.requestPayloadSize = 0;
-    span1b.responsePayloadSize = 11;
+    span1b.setRequestPayloadSize(0L);
+    span1b.setResponsePayloadSize(11L);
     
     List<Span> partials = new ArrayList<Span>();
     partials.add(span1a);
@@ -63,11 +63,11 @@ public class TestSpanAggregation {
     assertTrue(results.completeSpans.size() == 1);
     
     Span result = results.completeSpans.get(0);
-    assertEquals(null, result.parentSpanID);
-    assertTrue(idsEqual(idValue(1), result.spanID));
-    assertEquals(4, result.events.size());
-    assertEquals(10, result.requestPayloadSize);
-    assertEquals(11, result.responsePayloadSize);
+    assertEquals(null, result.getParentSpanID());
+    assertTrue(idsEqual(idValue(1), result.getSpanID()));
+    assertEquals(4, result.getEvents().size());
+    assertEquals(new Long(10), result.getRequestPayloadSize());
+    assertEquals(new Long(11), result.getResponsePayloadSize());
   }
   
   /**
@@ -112,12 +112,12 @@ public class TestSpanAggregation {
     
     assertTrue(results.completeSpans.size() == 1);
     Span result = results.completeSpans.get(0);
-    assertTrue(result.complete);
-    assertTrue(idsEqual(idValue(1), result.spanID));
-    assertEquals(new Utf8("requestorHostname"), result.requestorHostname);
-    assertEquals(new Utf8("responderHostname"), result.responderHostname);
-    assertNull(result.parentSpanID);
-    assertEquals(new Utf8("a"), result.messageName);
+    assertTrue(result.getComplete());
+    assertTrue(idsEqual(idValue(1), result.getSpanID()));
+    assertEquals(new Utf8("requestorHostname"), result.getRequestorHostname());
+    assertEquals(new Utf8("responderHostname"), result.getResponderHostname());
+    assertNull(result.getParentSpanID());
+    assertEquals(new Utf8("a"), result.getMessageName());
   }
   
   /**
@@ -151,8 +151,8 @@ public class TestSpanAggregation {
     
     assertEquals(5, merged.size());
     for (Span s: merged) {
-      assertEquals(new Utf8("requestorHostname"), s.requestorHostname);
-      assertEquals(new Utf8("responderHostname"), s.responderHostname);
+      assertEquals(new Utf8("requestorHostname"), s.getRequestorHostname());
+      assertEquals(new Utf8("responderHostname"), s.getResponderHostname());
     }
     
     List<Trace> traces = SpanAggregator.getTraces(merged).traces;
@@ -167,28 +167,28 @@ public class TestSpanAggregation {
    */
   public Span createClientSpan(ID traceID, ID spanID, ID parentID, Utf8 msgName) {
     Span out = new Span();
-    out.spanID = spanID;
-    out.traceID = traceID;
-    out.requestorHostname = new Utf8("requestorHostname");
+    out.setSpanID(spanID);
+    out.setTraceID(traceID);
+    out.setRequestorHostname(new Utf8("requestorHostname"));
     
     if (parentID != null) {
-      out.parentSpanID = parentID;
+      out.setParentSpanID(parentID);
     }
-    out.messageName = msgName;
-    out.complete = false;
+    out.setMessageName(msgName);
+    out.setComplete(false);
     
     TimestampedEvent event1 = new TimestampedEvent();
-    event1.event = SpanEvent.CLIENT_SEND;
-    event1.timeStamp = System.currentTimeMillis() * 1000000;
+    event1.setEvent(SpanEvent.CLIENT_SEND);
+    event1.setTimeStamp(System.currentTimeMillis() * 1000000);
     
     TimestampedEvent event2 = new TimestampedEvent();
-    event2.event = SpanEvent.CLIENT_RECV;
-    event2.timeStamp = System.currentTimeMillis() * 1000000;
+    event2.setEvent(SpanEvent.CLIENT_RECV);
+    event2.setTimeStamp(System.currentTimeMillis() * 1000000);
     
-    out.events = new GenericData.Array<TimestampedEvent>(
-        2, Schema.createArray(TimestampedEvent.SCHEMA$));
-    out.events.add(event1);
-    out.events.add(event2);
+    out.setEvents(new GenericData.Array<TimestampedEvent>(
+        2, Schema.createArray(TimestampedEvent.SCHEMA$)));
+    out.getEvents().add(event1);
+    out.getEvents().add(event2);
     
     return out;
   }
@@ -198,28 +198,28 @@ public class TestSpanAggregation {
    */
   public Span createServerSpan(ID traceID, ID spanID, ID parentID, Utf8 msgName) {
     Span out = new Span();
-    out.spanID = spanID;
-    out.traceID = traceID;
-    out.responderHostname = new Utf8("responderHostname");
+    out.setSpanID(spanID);
+    out.setTraceID(traceID);
+    out.setResponderHostname(new Utf8("responderHostname"));
     
     if (parentID != null) {
-      out.parentSpanID = parentID;
+      out.setParentSpanID(parentID);
     }
-    out.messageName = msgName;
-    out.complete = false;
+    out.setMessageName(msgName);
+    out.setComplete(false);
     
     TimestampedEvent event1 = new TimestampedEvent();
-    event1.event = SpanEvent.SERVER_RECV;
-    event1.timeStamp = System.currentTimeMillis();
+    event1.setEvent(SpanEvent.SERVER_RECV);
+    event1.setTimeStamp(System.currentTimeMillis());
     
     TimestampedEvent event2 = new TimestampedEvent();
-    event2.event = SpanEvent.SERVER_SEND;
-    event2.timeStamp = System.currentTimeMillis();
+    event2.setEvent(SpanEvent.SERVER_SEND);
+    event2.setTimeStamp(System.currentTimeMillis());
     
-    out.events = new GenericData.Array<TimestampedEvent>(
-        2, Schema.createArray(TimestampedEvent.SCHEMA$));
-    out.events.add(event1);
-    out.events.add(event2);
+    out.setEvents(new GenericData.Array<TimestampedEvent>(
+        2, Schema.createArray(TimestampedEvent.SCHEMA$)));
+    out.getEvents().add(event1);
+    out.getEvents().add(event2);
     
     return out;
   }

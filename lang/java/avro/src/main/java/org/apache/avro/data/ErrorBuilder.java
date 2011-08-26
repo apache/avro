@@ -15,32 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.avro.data;
 
-package org.apache.avro;
-
-import java.io.IOException;
-
-/** Base class for exceptions thrown to client by server. */
-public class AvroRemoteException extends IOException {
-  private Object value;
-
-  protected AvroRemoteException() {}
-
-  public AvroRemoteException(Throwable value) {
-    this(value.toString());
-    initCause(value);
-  }
-
-  public AvroRemoteException(Object value) {
-    super(value != null ? value.toString() : null);
-    this.value = value;
-  }
+/** Interface for error builders */
+public interface ErrorBuilder<T> extends RecordBuilder<T> {
   
-  public AvroRemoteException(Object value, Throwable cause) {
-    super(value != null ? value.toString() : null, cause);
-    this.value = value;
-  }
+  /** Gets the value */
+  Object getValue();
   
-  public Object getValue() { return value; }
+  /** Sets the value */
+  ErrorBuilder<T> setValue(Object value);
+  
+  /** Checks whether the value has been set */
+  boolean hasValue();
+  
+  /** Clears the value */
+  ErrorBuilder<T> clearValue();
+  
+  /** Gets the error cause */
+  Throwable getCause();
+  
+  /** Sets the error cause */
+  ErrorBuilder<T> setCause(Throwable cause);
+  
+  /** Checks whether the cause has been set */
+  boolean hasCause();
+  
+  /** Clears the cause */
+  ErrorBuilder<T> clearCause();
+
 }
-

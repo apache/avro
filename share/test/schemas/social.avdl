@@ -16,31 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.avro;
-
-import java.io.IOException;
-
-/** Base class for exceptions thrown to client by server. */
-public class AvroRemoteException extends IOException {
-  private Object value;
-
-  protected AvroRemoteException() {}
-
-  public AvroRemoteException(Throwable value) {
-    this(value.toString());
-    initCause(value);
+@namespace("org.apache.avro.ipc.specific")
+protocol Social {
+  record Person {
+    string name;
+    int year_of_birth;
+    string country = "US";
+    string state;
+    array<Person> friends = [];
+    array<string> languages = [ "English" , "Java" ];
   }
-
-  public AvroRemoteException(Object value) {
-    super(value != null ? value.toString() : null);
-    this.value = value;
-  }
-  
-  public AvroRemoteException(Object value, Throwable cause) {
-    super(value != null ? value.toString() : null, cause);
-    this.value = value;
-  }
-  
-  public Object getValue() { return value; }
-}
-
+} 

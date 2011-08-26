@@ -21,7 +21,9 @@ import java.nio.ByteBuffer;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
@@ -52,6 +54,19 @@ public class GenericData {
         throw new AvroRuntimeException("Not a record schema: "+schema);
       this.schema = schema;
       this.values = new Object[schema.getFields().size()];
+    }
+    public Record(Record other, boolean deepCopy) {
+      schema = other.schema;
+      values = new Object[schema.getFields().size()];
+      if (deepCopy) {
+        for (int ii = 0; ii < values.length; ii++) {
+          values[ii] = INSTANCE.deepCopy(
+              schema.getFields().get(ii).schema(), other.values[ii]);
+        }
+      }
+      else {
+        System.arraycopy(other.values, 0, values, 0, other.values.length);
+      }
     }
     @Override public Schema getSchema() { return schema; }
     @Override public void put(String key, Object value) {
@@ -101,6 +116,15 @@ public class GenericData {
       this.schema = schema;
       if (capacity != 0)
         elements = new Object[capacity];
+    }
+    public Array(Schema schema, Collection<T> c) {
+      if (schema == null || !Type.ARRAY.equals(schema.getType()))
+        throw new AvroRuntimeException("Not an array schema: "+schema);
+      this.schema = schema;
+      if (c != null) {
+        elements = new Object[c.size()];
+        addAll(c);
+      }
     }
     public Schema getSchema() { return schema; }
     @Override public int size() { return size; }
@@ -683,4 +707,129 @@ public class GenericData {
     }
   }
 
+  /**
+   * Makes a deep copy of a value given its schema.
+   * @param schema the schema of the value to deep copy.
+   * @param value the value to deep copy.
+   * @return a deep copy of the given value.
+   */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  public Object deepCopy(Schema schema, Object value) {
+    if (value == null) {
+      return null;
+    }
+    switch (schema.getType()) {
+      case ARRAY:
+        List<Object> arrayValue = (List) value;
+        List<Object> arrayCopy = new GenericData.Array<Object>(
+            arrayValue.size(), schema);
+        for (Object obj : arrayValue) {
+          arrayCopy.add(deepCopy(schema.getElementType(), obj));
+        }
+        return arrayCopy;
+      case BOOLEAN:
+        return new Boolean((Boolean)value);
+      case BYTES:
+        ByteBuffer byteBufferValue = (ByteBuffer) value;
+        byte[] bytesCopy = new byte[byteBufferValue.capacity()];
+        byteBufferValue.rewind();
+        byteBufferValue.get(bytesCopy);
+        byteBufferValue.rewind();
+        return ByteBuffer.wrap(bytesCopy);
+      case DOUBLE:
+        return new Double((Double)value);
+      case ENUM:
+        // Enums are immutable; shallow copy will suffice
+        return value;
+      case FIXED:
+        return createFixed(null, ((GenericFixed) value).bytes(), schema);
+      case FLOAT:
+        return new Float((Float)value);
+      case INT:
+        return new Integer((Integer)value);
+      case LONG:
+        return new Long((Long)value);
+      case MAP:
+        Map<CharSequence, Object> mapValue = (Map) value;
+        Map<CharSequence, Object> mapCopy = 
+          new HashMap<CharSequence, Object>(mapValue.size());
+        for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
+          mapCopy.put(new Utf8(entry.getKey().toString()), 
+              deepCopy(schema.getValueType(), entry.getValue()));
+        }
+        return mapCopy;
+      case NULL:
+        return null;
+      case RECORD:
+        IndexedRecord recordValue = (IndexedRecord) value;
+        IndexedRecord recordCopy = (IndexedRecord) newRecord(null, schema);
+        for (Field field : schema.getFields()) {
+          recordCopy.put(field.pos(), 
+              deepCopy(field.schema(), recordValue.get(field.pos())));
+        }
+        return recordCopy;
+      case STRING:
+        // Strings are immutable
+        if (value instanceof String) {
+          return value;
+        }
+        
+        // Some CharSequence subclasses are mutable, so we still need to make 
+        // a copy
+        else if (value instanceof Utf8) {
+          // Utf8 copy constructor is more efficient than converting 
+          // to string and then back to Utf8
+          return new Utf8((Utf8)value);
+        }
+        return new Utf8(value.toString());
+      case UNION:
+        for (Schema type : schema.getTypes()) {
+          if (GenericData.get().validate(type, value)) {
+            return deepCopy(type, value);
+          }
+        }
+        throw new AvroRuntimeException(
+            "Deep copy failed for schema \"" + schema + "\" and value \"" +
+            value + "\"");
+      default:
+        throw new AvroRuntimeException(
+            "Deep copy failed for schema \"" + schema + "\" and value \"" +
+            value + "\"");
+    }
+  }
+  
+  /** Called to create an fixed value. May be overridden for alternate fixed
+   * representations.  By default, returns {@link GenericFixed}. */
+  public Object createFixed(Object old, Schema schema) {
+    if ((old instanceof GenericFixed)
+        && ((GenericFixed)old).bytes().length == schema.getFixedSize())
+      return old;
+    return new GenericData.Fixed(schema);
+  }
+  
+  /** Called to create an fixed value. May be overridden for alternate fixed
+   * representations.  By default, returns {@link GenericFixed}. */
+  public Object createFixed(Object old, byte[] bytes, Schema schema) {
+    GenericFixed fixed = (GenericFixed)createFixed(old, schema);
+    System.arraycopy(bytes, 0, fixed.bytes(), 0, schema.getFixedSize());
+    return fixed;
+  }
+  
+  /**
+   * Called to create new record instances. Subclasses may override to use a
+   * different record implementation. The returned instance must conform to the
+   * schema provided. If the old object contains fields not present in the
+   * schema, they should either be removed from the old object, or it should
+   * create a new instance that conforms to the schema. By default, this returns
+   * a {@link GenericData.Record}.
+   */
+  public Object newRecord(Object old, Schema schema) {
+    if (old instanceof IndexedRecord) {
+      IndexedRecord record = (IndexedRecord)old;
+      if (record.getSchema() == schema)
+        return record;
+    }
+    return new GenericData.Record(schema);
+  }
+  
 }

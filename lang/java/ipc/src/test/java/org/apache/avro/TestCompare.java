@@ -167,19 +167,17 @@ public class TestCompare {
   public void testSpecificRecord() throws Exception {
     TestRecord s1 = new TestRecord();
     TestRecord s2 = new TestRecord();
-    s1.name = new Utf8("foo");
-    s1.kind = Kind.BAZ;
-    s1.hash = new MD5();
-    s1.hash.bytes(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5});
-    s2.name = new Utf8("bar");
-    s2.kind = Kind.BAR;
-    s2.hash = new MD5();
-    s2.hash.bytes(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,6});
+    s1.setName(new Utf8("foo"));
+    s1.setKind(Kind.BAZ);
+    s1.setHash(new MD5(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    s2.setName(new Utf8("bar"));
+    s2.setKind(Kind.BAR);
+    s2.setHash(new MD5(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,6}));
     Schema schema = SpecificData.get().getSchema(TestRecord.class);
 
     check(schema, s1, s2, true, new SpecificDatumWriter<TestRecord>(schema),
           SpecificData.get());
-    s2.kind = Kind.BAZ;
+    s2.setKind(Kind.BAZ);
     check(schema, s1, s2, true, new SpecificDatumWriter<TestRecord>(schema),
           SpecificData.get());
   }  

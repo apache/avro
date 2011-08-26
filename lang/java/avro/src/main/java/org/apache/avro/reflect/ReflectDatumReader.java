@@ -68,7 +68,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       }
       if (collectionClass.isAssignableFrom(ArrayList.class))
         return new ArrayList();
-      return newInstance(collectionClass, schema);
+      return data.newInstance(collectionClass, schema);
     }
     Class elementClass = ReflectData.getClassProp(schema, ReflectData.ELEMENT_PROP);
     if (elementClass == null)

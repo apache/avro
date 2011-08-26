@@ -157,7 +157,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representations.*/
   protected Object readRecord(Object old, Schema expected, 
       ResolvingDecoder in) throws IOException {
-    Object record = newRecord(old, expected);
+    Object record = data.newRecord(old, expected);
     
     for (Field f : in.readFieldOrder()) {
       int pos = f.pos();
@@ -247,42 +247,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representations.  By default, returns {@link GenericFixed}. */
   protected Object readFixed(Object old, Schema expected, Decoder in)
     throws IOException {
-    GenericFixed fixed = (GenericFixed)createFixed(old, expected);
+    GenericFixed fixed = (GenericFixed)data.createFixed(old, expected);
     in.readFixed(fixed.bytes(), 0, expected.getFixedSize());
     return fixed;
-  }
-
-  /** Called to create an fixed value. May be overridden for alternate fixed
-   * representations.  By default, returns {@link GenericFixed}. */
-  protected Object createFixed(Object old, Schema schema) {
-    if ((old instanceof GenericFixed)
-        && ((GenericFixed)old).bytes().length == schema.getFixedSize())
-      return old;
-    return new GenericData.Fixed(schema);
-  }
-
-  /** Called to create an fixed value. May be overridden for alternate fixed
-   * representations.  By default, returns {@link GenericFixed}. */
-  protected Object createFixed(Object old, byte[] bytes, Schema schema) {
-    GenericFixed fixed = (GenericFixed)createFixed(old, schema);
-    System.arraycopy(bytes, 0, fixed.bytes(), 0, schema.getFixedSize());
-    return fixed;
-  }
-  /**
-   * Called to create new record instances. Subclasses may override to use a
-   * different record implementation. The returned instance must conform to the
-   * schema provided. If the old object contains fields not present in the
-   * schema, they should either be removed from the old object, or it should
-   * create a new instance that conforms to the schema. By default, this returns
-   * a {@link GenericData.Record}.
-   */
-  protected Object newRecord(Object old, Schema schema) {
-    if (old instanceof IndexedRecord) {
-      IndexedRecord record = (IndexedRecord)old;
-      if (record.getSchema() == schema)
-        return record;
-    }
-    return new GenericData.Record(schema);
   }
 
   /** Called to create new array instances.  Subclasses may override to use a

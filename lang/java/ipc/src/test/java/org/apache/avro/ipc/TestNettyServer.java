@@ -48,9 +48,9 @@ public class TestNettyServer {
     
     // in this simple example just return details of the message
     public CharSequence send(Message message) {
-      return new Utf8("Sent message to [" + message.to.toString() + "] from ["
-          + message.from.toString() + "] with body [" + message.body.toString()
-          + "]");
+      return new Utf8("Sent message to [" + message.getTo().toString() + 
+          "] from [" + message.getFrom().toString() + "] with body [" + 
+          message.getBody().toString() + "]");
     }
     
     public void fireandforget(Message message) {
@@ -129,10 +129,11 @@ public class TestNettyServer {
   }
 
   private Message createMessage() {
-    Message msg = new Message();
-    msg.to = new Utf8("wife");
-    msg.from = new Utf8("husband");
-    msg.body = new Utf8("I love you!");
+    Message msg = Message.newBuilder().
+      setTo(new Utf8("wife")).
+      setFrom(new Utf8("husband")).
+      setBody(new Utf8("I love you!")).
+      build();
     return msg;
   }
 

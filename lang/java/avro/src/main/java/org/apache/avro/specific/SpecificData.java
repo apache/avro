@@ -24,6 +24,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.nio.ByteBuffer;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 
 import org.apache.avro.Schema;
@@ -37,8 +38,13 @@ import org.apache.avro.generic.GenericData;
 public class SpecificData extends GenericData {
 
   private static final SpecificData INSTANCE = new SpecificData();
-
+  
   private final ClassLoader classLoader;
+  
+  private static final Class<?>[] NO_ARG = new Class[]{};
+  private static final Class<?>[] SCHEMA_ARG = new Class[]{Schema.class};
+  private static final Map<Class,Constructor> CTOR_CACHE =
+    new ConcurrentHashMap<Class,Constructor>();
 
   /** For subclasses.  Applications normally use {@link SpecificData#get()}. */
   protected SpecificData() { this(SpecificData.class.getClassLoader()); }
@@ -206,5 +212,46 @@ public class SpecificData extends GenericData {
       return super.compare(o1, o2, s, eq);
     }
   }
+  
+  /** Create an instance of a class.  If the class implements {@link
+   * SchemaConstructable}, call a constructor with a {@link
+   * org.apache.avro.Schema} parameter, otherwise use a no-arg constructor. */
+  @SuppressWarnings("unchecked")
+  public static Object newInstance(Class c, Schema s) {
+    boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
+    Object result;
+    try {
+      Constructor meth = (Constructor)CTOR_CACHE.get(c);
+      if (meth == null) {
+        meth = c.getDeclaredConstructor(useSchema ? SCHEMA_ARG : NO_ARG);
+        meth.setAccessible(true);
+        CTOR_CACHE.put(c, meth);
+      }
+      result = meth.newInstance(useSchema ? new Object[]{s} : (Object[])null);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return result;
+  }
+  
+  @Override
+  public Object createFixed(Object old, Schema schema) {
+    Class c = SpecificData.get().getClass(schema);
+    if (c == null) return super.createFixed(old, schema); // punt to generic
+    return c.isInstance(old) ? old : newInstance(c, schema);
+  }
+  
+  @Override
+  public Object newRecord(Object old, Schema schema) {
+    Class c = SpecificData.get().getClass(schema);
+    if (c == null) return super.newRecord(old, schema); // punt to generic
+    return (c.isInstance(old) ? old : newInstance(c, schema));
+  }
 
+  /** Tag interface that indicates that a class has a one-argument constructor
+   * that accepts a Schema.
+   * @see SpecificDatumReader#newInstance
+   */
+  public interface SchemaConstructable {}
+  
 }

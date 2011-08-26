@@ -100,17 +100,18 @@ public class TestBasicTracing {
       Span requestorSpan = requestorSpans.get(0);
       
       // Check meta propagation     
-      assertEquals(null, requestorSpan.parentSpanID);
-      assertEquals(responderSpan.parentSpanID, requestorSpan.parentSpanID);
-      assertEquals(responderSpan.traceID, requestorSpan.traceID);
+      assertEquals(null, requestorSpan.getParentSpanID());
+      assertEquals(responderSpan.getParentSpanID(), 
+          requestorSpan.getParentSpanID());
+      assertEquals(responderSpan.getTraceID(), requestorSpan.getTraceID());
       
       // Check other data
-      assertEquals(2, requestorSpan.events.size());
-      assertEquals(2, responderSpan.events.size());
-      assertTrue("m".equals(requestorSpan.messageName.toString()));
-      assertTrue("m".equals(responderSpan.messageName.toString()));
-      assertFalse(requestorSpan.complete);
-      assertFalse(responderSpan.complete);
+      assertEquals(2, requestorSpan.getEvents().size());
+      assertEquals(2, responderSpan.getEvents().size());
+      assertTrue("m".equals(requestorSpan.getMessageName().toString()));
+      assertTrue("m".equals(responderSpan.getMessageName().toString()));
+      assertFalse(requestorSpan.getComplete());
+      assertFalse(responderSpan.getComplete());
     }
     
     server.close();
@@ -285,48 +286,48 @@ public class TestBasicTracing {
     assertEquals(1, cPlugin.storage.getAllSpans().size());
     assertEquals(1, dPlugin.storage.getAllSpans().size());
     
-    ID traceID = aPlugin.storage.getAllSpans().get(0).traceID;
+    ID traceID = aPlugin.storage.getAllSpans().get(0).getTraceID();
     ID rootSpanID = null;
     
     // Verify event counts and trace ID propagation
     for (Span s: aPlugin.storage.getAllSpans()) {
-      assertEquals(2, s.events.size());
-      assertTrue(Util.idsEqual(traceID, s.traceID));
-      assertFalse(s.complete);
-      rootSpanID = s.spanID;
+      assertEquals(2, s.getEvents().size());
+      assertTrue(Util.idsEqual(traceID, s.getTraceID()));
+      assertFalse(s.getComplete());
+      rootSpanID = s.getSpanID();
     }
     
     for (Span s: bPlugin.storage.getAllSpans()) {
-      assertEquals(2, s.events.size());
-      assertEquals(traceID, s.traceID);
-      assertFalse(s.complete);
+      assertEquals(2, s.getEvents().size());
+      assertEquals(traceID, s.getTraceID());
+      assertFalse(s.getComplete());
     }
     
     for (Span s: cPlugin.storage.getAllSpans()) {
-      assertEquals(2, s.events.size());
-      assertEquals(traceID, s.traceID);
-      assertFalse(s.complete);
+      assertEquals(2, s.getEvents().size());
+      assertEquals(traceID, s.getTraceID());
+      assertFalse(s.getComplete());
     }
     for (Span s: dPlugin.storage.getAllSpans()) {
-      assertEquals(2, s.events.size());
-      assertEquals(traceID, s.traceID);
-      assertFalse(s.complete);
+      assertEquals(2, s.getEvents().size());
+      assertEquals(traceID, s.getTraceID());
+      assertFalse(s.getComplete());
     }
     
     // Verify span propagation.
-    ID firstSpanID = aPlugin.storage.getAllSpans().get(0).spanID;
-    ID secondSpanID = cPlugin.storage.getAllSpans().get(0).spanID;
-    ID thirdSpanID = dPlugin.storage.getAllSpans().get(0).spanID;
+    ID firstSpanID = aPlugin.storage.getAllSpans().get(0).getSpanID();
+    ID secondSpanID = cPlugin.storage.getAllSpans().get(0).getSpanID();
+    ID thirdSpanID = dPlugin.storage.getAllSpans().get(0).getSpanID();
     
     boolean firstFound = false, secondFound = false, thirdFound = false;
     for (Span s: bPlugin.storage.getAllSpans()) {
-      if (Util.idsEqual(s.spanID, firstSpanID)) {
+      if (Util.idsEqual(s.getSpanID(), firstSpanID)) {
         firstFound = true;
       }
-      else if (Util.idsEqual(s.spanID, secondSpanID)) {
+      else if (Util.idsEqual(s.getSpanID(), secondSpanID)) {
         secondFound = true;
       }
-      else if (Util.idsEqual(s.spanID, thirdSpanID)) {
+      else if (Util.idsEqual(s.getSpanID(), thirdSpanID)) {
         thirdFound = true;
       }
     }

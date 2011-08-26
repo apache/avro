@@ -41,9 +41,7 @@ public class TestNamespaceSpecific {
   public static class TestImpl implements TestNamespace {
     public TestRecord echo(TestRecord record) { return record; }
     public Void error() throws AvroRemoteException {
-      TestError error = new TestError();
-      error.message = new Utf8("an error");
-      throw error;
+      throw TestError.newBuilder().setMessage$(new Utf8("an error")).build();
     }
   }
 
@@ -64,9 +62,7 @@ public class TestNamespaceSpecific {
   @Test
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
-    record.hash = new MD5();
-    System.arraycopy(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}, 0,
-                     record.hash.bytes(), 0, 16);
+    record.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
     TestRecord echoed = proxy.echo(record);
     assertEquals(record, echoed);
     assertEquals(record.hashCode(), echoed.hashCode());
@@ -81,7 +77,7 @@ public class TestNamespaceSpecific {
       error = e;
     }
     assertNotNull(error);
-    assertEquals("an error", error.message.toString());
+    assertEquals("an error", error.getMessage$().toString());
   }
 
   @AfterClass

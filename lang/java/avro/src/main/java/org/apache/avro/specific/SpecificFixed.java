@@ -24,5 +24,10 @@ public abstract class SpecificFixed extends GenericData.Fixed {
   public SpecificFixed() {
     setSchema(SpecificData.get().getSchema(getClass()));
   }
+  
+  public SpecificFixed(byte[] bytes) {
+    this();
+    bytes(bytes); 
+  }
 }
 

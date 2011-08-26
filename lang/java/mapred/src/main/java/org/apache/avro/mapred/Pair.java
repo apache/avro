@@ -30,7 +30,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.specific.SpecificDatumReader.SchemaConstructable;
+import org.apache.avro.specific.SpecificData.SchemaConstructable;
 import org.apache.avro.reflect.ReflectData;
 
 /** A key/value pair. */

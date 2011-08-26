@@ -111,11 +111,11 @@ public class TestNettyServerWithCallbacks {
   
   @Test
   public void echo() throws Exception {
-    TestRecord record = new TestRecord();
-    record.hash = new org.apache.avro.test.MD5();
-    record.hash.bytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 } );
-    record.kind = org.apache.avro.test.Kind.FOO;
-    record.name = "My Record";
+    TestRecord record = TestRecord.newBuilder().setHash(
+        new org.apache.avro.test.MD5(
+            new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 })).
+        setKind(org.apache.avro.test.Kind.FOO).
+        setName("My Record").build();
     
     // Test synchronous RPC:
     Assert.assertEquals(record, simpleClient.echo(record));
@@ -284,6 +284,7 @@ public class TestNettyServerWithCallbacks {
 
         // Shut down server:
         server2.close();
+        Thread.sleep(1000L);
 
         // Send a new RPC, and verify that it throws an Exception that 
         // can be detected by the client:
@@ -445,9 +446,7 @@ public class TestNettyServerWithCallbacks {
 
     @Override
     public Void error() throws AvroRemoteException, TestError {
-      TestError error = new TestError();
-      error.message = "Test Message";
-      throw error;
+      throw TestError.newBuilder().setMessage$("Test Message").build();
     }
 
     @Override

@@ -36,24 +36,24 @@ public class TestSpanTraceFormation {
   @Test
   public void testSpanEquality() {
     Span root = new Span();
-    root.spanID = Util.idValue(10);
-    root.parentSpanID = null;
-    root.messageName = new Utf8("startCall");
+    root.setSpanID(Util.idValue(10));
+    root.setParentSpanID(null);
+    root.setMessageName(new Utf8("startCall"));
     
     Span a = new Span();
-    a.spanID = Util.idValue(11);
-    a.parentSpanID = Util.idValue(10);
-    a.messageName = new Utf8("childCall1");
+    a.setSpanID(Util.idValue(11));
+    a.setParentSpanID(Util.idValue(10));
+    a.setMessageName(new Utf8("childCall1"));
     
     Span b = new Span();
-    b.spanID = Util.idValue(12);
-    b.parentSpanID = Util.idValue(10);
-    b.messageName = new Utf8("childCall2");
+    b.setSpanID(Util.idValue(12));
+    b.setParentSpanID(Util.idValue(10));
+    b.setMessageName(new Utf8("childCall2"));
     
     Span c = new Span();
-    c.spanID = Util.idValue(13);
-    c.parentSpanID = Util.idValue(10);
-    c.messageName = new Utf8("childCall3");
+    c.setSpanID(Util.idValue(13));
+    c.setParentSpanID(Util.idValue(10));
+    c.setMessageName(new Utf8("childCall3"));
     
     List<Span> spans = new LinkedList<Span>();
     spans.add(root);
@@ -63,19 +63,19 @@ public class TestSpanTraceFormation {
     Trace trace1 = Trace.extractTrace(spans);
     
     Span d = new Span();
-    d.spanID = Util.idValue(11);
-    d.parentSpanID = Util.idValue(10);
-    d.messageName = new Utf8("childCall1");
+    d.setSpanID(Util.idValue(11));
+    d.setParentSpanID(Util.idValue(10));
+    d.setMessageName(new Utf8("childCall1"));
     
     Span e = new Span();
-    e.spanID = Util.idValue(12);
-    e.parentSpanID = Util.idValue(10);
-    e.messageName = new Utf8("childCall2");
+    e.setSpanID(Util.idValue(12));
+    e.setParentSpanID(Util.idValue(10));
+    e.setMessageName(new Utf8("childCall2"));
     
     Span f = new Span();
-    f.spanID = Util.idValue(13);
-    f.parentSpanID = Util.idValue(10);
-    f.messageName = new Utf8("childCall3");
+    f.setSpanID(Util.idValue(13));
+    f.setParentSpanID(Util.idValue(10));
+    f.setMessageName(new Utf8("childCall3"));
     
     spans.clear();
     spans.add(d);
@@ -91,24 +91,24 @@ public class TestSpanTraceFormation {
   @Test
   public void testSpanEquality2() {
     Span root = new Span();
-    root.spanID = Util.idValue(10);
-    root.parentSpanID = null;
-    root.messageName = new Utf8("startCall");
+    root.setSpanID(Util.idValue(10));
+    root.setParentSpanID(null);
+    root.setMessageName(new Utf8("startCall"));
     
     Span a = new Span();
-    a.spanID = Util.idValue(11);
-    a.parentSpanID = Util.idValue(10);
-    a.messageName = new Utf8("childCall1");
+    a.setSpanID(Util.idValue(11));
+    a.setParentSpanID(Util.idValue(10));
+    a.setMessageName(new Utf8("childCall1"));
     
     Span b = new Span();
-    b.spanID = Util.idValue(12);
-    b.parentSpanID = Util.idValue(10);
-    b.messageName = new Utf8("childCall2");
+    b.setSpanID(Util.idValue(12));
+    b.setParentSpanID(Util.idValue(10));
+    b.setMessageName(new Utf8("childCall2"));
     
     Span c = new Span();
-    c.spanID = Util.idValue(13);
-    c.parentSpanID = Util.idValue(10);
-    c.messageName = new Utf8("childCall3");
+    c.setSpanID(Util.idValue(13));
+    c.setParentSpanID(Util.idValue(10));
+    c.setMessageName(new Utf8("childCall3"));
     
     List<Span> spans = new LinkedList<Span>();
     spans.add(root);
@@ -118,24 +118,24 @@ public class TestSpanTraceFormation {
     Trace trace1 = Trace.extractTrace(spans);
     
     Span d = new Span();
-    d.spanID = Util.idValue(11);
-    d.parentSpanID = Util.idValue(10);
-    d.messageName = new Utf8("childCall1");
+    d.setSpanID(Util.idValue(11));
+    d.setParentSpanID(Util.idValue(10));
+    d.setMessageName(new Utf8("childCall1"));
     
     Span e = new Span();
-    e.spanID = Util.idValue(12);
-    e.parentSpanID = Util.idValue(10);
-    e.messageName = new Utf8("childCall2");
+    e.setSpanID(Util.idValue(12));
+    e.setParentSpanID(Util.idValue(10));
+    e.setMessageName(new Utf8("childCall2"));
     
     Span f = new Span();
-    f.spanID = Util.idValue(13);
-    f.parentSpanID = Util.idValue(10);
-    f.messageName = new Utf8("childCall3");
+    f.setSpanID(Util.idValue(13));
+    f.setParentSpanID(Util.idValue(10));
+    f.setMessageName(new Utf8("childCall3"));
     
     Span g = new Span();
-    g.spanID = Util.idValue(14);
-    g.parentSpanID = Util.idValue(13);
-    g.messageName = new Utf8("childCall4");
+    g.setSpanID(Util.idValue(14));
+    g.setParentSpanID(Util.idValue(13));
+    g.setMessageName(new Utf8("childCall4"));
     
     spans.clear();
     spans.add(d);
@@ -151,23 +151,23 @@ public class TestSpanTraceFormation {
   /** Create a span with bogus timing events. */
   public static Span createFullSpan(Long id, Long parentID, String messageName) {
     Span out = new Span();
-    out.spanID = Util.idValue(id);
+    out.setSpanID(Util.idValue(id));
     if (parentID != null) {
-      out.parentSpanID = Util.idValue(parentID);
+      out.setParentSpanID(Util.idValue(parentID));
     }
-    out.messageName = new Utf8(messageName);
+    out.setMessageName(new Utf8(messageName));
     
-    out.events = new GenericData.Array<TimestampedEvent>(
-        4, Schema.createArray(TimestampedEvent.SCHEMA$));
+    out.setEvents(new GenericData.Array<TimestampedEvent>(
+        4, Schema.createArray(TimestampedEvent.SCHEMA$)));
     
     for (SpanEvent ev: SpanEvent.values()) {
       TimestampedEvent newEvent = new TimestampedEvent();
-      newEvent.timeStamp = System.currentTimeMillis() * 1000000;
-      newEvent.event = ev;
-      out.events.add(newEvent);
+      newEvent.setTimeStamp(System.currentTimeMillis() * 1000000);
+      newEvent.setEvent(ev);
+      out.getEvents().add(newEvent);
     }
     
-    out.complete = true;
+    out.setComplete(true);
     
     return out;
   }
@@ -225,24 +225,24 @@ public class TestSpanTraceFormation {
   @Test
   public void testBasicTraceFormation() {
     Span root = new Span();
-    root.spanID = Util.idValue(10);
-    root.parentSpanID = null;
-    root.messageName = new Utf8("startCall");
+    root.setSpanID(Util.idValue(10));
+    root.setParentSpanID(null);
+    root.setMessageName(new Utf8("startCall"));
     
     Span a = new Span();
-    a.spanID = Util.idValue(11);
-    a.parentSpanID = Util.idValue(10);
-    a.messageName = new Utf8("childCall1");
+    a.setSpanID(Util.idValue(11));
+    a.setParentSpanID(Util.idValue(10));
+    a.setMessageName(new Utf8("childCall1"));
     
     Span b = new Span();
-    b.spanID = Util.idValue(12);
-    b.parentSpanID = Util.idValue(10);
-    b.messageName = new Utf8("childCall2");
+    b.setSpanID(Util.idValue(12));
+    b.setParentSpanID(Util.idValue(10));
+    b.setMessageName(new Utf8("childCall2"));
     
     Span c = new Span();
-    c.spanID = Util.idValue(13);
-    c.parentSpanID = Util.idValue(10);
-    c.messageName = new Utf8("childCall3");
+    c.setSpanID(Util.idValue(13));
+    c.setParentSpanID(Util.idValue(10));
+    c.setMessageName(new Utf8("childCall3"));
     
     List<Span> spans = new LinkedList<Span>();
     spans.add(root);
@@ -254,19 +254,19 @@ public class TestSpanTraceFormation {
     assertNotNull(trace);
     
     TraceNode rootNode = trace.getRoot();
-    assertEquals(rootNode.span.messageName, new Utf8("startCall"));
+    assertEquals(rootNode.span.getMessageName(), new Utf8("startCall"));
     assertEquals(3, rootNode.children.size());
     boolean found1, found2, found3;
     found1 = found2 = found3 = false;
     
     for (TraceNode tn: rootNode.children) {
-      if (tn.span.messageName.equals(new Utf8("childCall1"))) {
+      if (tn.span.getMessageName().equals(new Utf8("childCall1"))) {
         found1 = true;
       }
-      if (tn.span.messageName.equals(new Utf8("childCall2"))) {
+      if (tn.span.getMessageName().equals(new Utf8("childCall2"))) {
         found2 = true;
       }
-      if (tn.span.messageName.equals(new Utf8("childCall3"))) {
+      if (tn.span.getMessageName().equals(new Utf8("childCall3"))) {
         found3 = true;
       }
       assertNotNull(tn.children);

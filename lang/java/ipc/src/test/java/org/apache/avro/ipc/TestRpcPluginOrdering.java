@@ -83,10 +83,11 @@ public class TestRpcPluginOrdering {
   }
 
   private Message createTestMessage() {
-    Message message = new Message();
-    message.to = new Utf8("me@test.com");
-    message.from = new Utf8("you@test.com");
-    message.body = new Utf8("plugin testing");
+    Message message = Message.newBuilder().
+      setTo(new Utf8("me@test.com")).
+      setFrom(new Utf8("you@test.com")).
+      setBody(new Utf8("plugin testing")).
+      build();
     return message;
   }
   
