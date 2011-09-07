@@ -51,7 +51,7 @@ SCHEMAS_TO_VALIDATE = (
 )
 
 FILENAME = 'test_datafile.out'
-CODECS_TO_VALIDATE = ('null', 'deflate')
+CODECS_TO_VALIDATE = ('null', 'deflate', 'snappy')
 
 # TODO(hammer): clean up written files with ant, not os.remove
 class TestDataFile(unittest.TestCase):
@@ -63,6 +63,13 @@ class TestDataFile(unittest.TestCase):
     correct = 0
     for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
       for codec in CODECS_TO_VALIDATE:
+        if (codec == 'snappy'):
+          try:
+            import snappy
+          except:
+            print 'Snappy not present. Skipping.'
+            correct += 1
+            continue
         print ''
         print 'SCHEMA NUMBER %d' % (i + 1)
         print '================'
@@ -105,6 +112,13 @@ class TestDataFile(unittest.TestCase):
     correct = 0
     for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
       for codec in CODECS_TO_VALIDATE:
+        if (codec == 'snappy'):
+          try:
+            import snappy
+          except:
+            print 'Snappy not present. Skipping.'
+            correct += 1
+            continue
         print ''
         print 'SCHEMA NUMBER %d' % (i + 1)
         print '================'

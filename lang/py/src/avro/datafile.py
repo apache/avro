@@ -23,7 +23,10 @@ except ImportError:
   from StringIO import StringIO
 from avro import schema
 from avro import io
-
+try:
+  import snappy
+except:
+  pass # fail later if snappy is used
 #
 # Constants
 #
@@ -40,7 +43,7 @@ META_SCHEMA = schema.parse("""\
    {"name": "meta", "type": {"type": "map", "values": "bytes"}},
    {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": %d}}]}
 """ % (MAGIC_SIZE, SYNC_SIZE))
-VALID_CODECS = ['null', 'deflate']
+VALID_CODECS = ['null', 'deflate', 'snappy']
 VALID_ENCODINGS = ['binary'] # not used yet
 
 CODEC_KEY = "avro.codec"
@@ -142,19 +145,28 @@ class DataFileWriter(object):
       uncompressed_data = self.buffer_writer.getvalue()
       if self.get_meta(CODEC_KEY) == 'null':
         compressed_data = uncompressed_data
+        compressed_data_length = len(compressed_data)
       elif self.get_meta(CODEC_KEY) == 'deflate':
         # The first two characters and last character are zlib
         # wrappers around deflate data.
         compressed_data = zlib.compress(uncompressed_data)[2:-1]
+        compressed_data_length = len(compressed_data)
+      elif self.get_meta(CODEC_KEY) == 'snappy':
+        compressed_data = snappy.compress(uncompressed_data)
+        compressed_data_length = len(compressed_data) + 4 # crc32
       else:
         fail_msg = '"%s" codec is not supported.' % self.get_meta(CODEC_KEY)
         raise DataFileException(fail_msg)
 
       # Write length of block
-      self.encoder.write_long(len(compressed_data))
+      self.encoder.write_long(compressed_data_length)
 
       # Write block
       self.writer.write(compressed_data)
+      
+      # Write CRC32 checksum for Snappy
+      if self.get_meta(CODEC_KEY) == 'snappy':
+        self.encoder.write_crc32(uncompressed_data)
 
       # write sync marker
       self.writer.write(self.sync_marker)
@@ -280,7 +292,7 @@ class DataFileReader(object):
       # Skip a long; we don't need to use the length.
       self.raw_decoder.skip_long()
       self._datum_decoder = self._raw_decoder
-    else:
+    elif self.codec == 'deflate':
       # Compressed data is stored as (length, data), which
       # corresponds to how the "bytes" type is encoded.
       data = self.raw_decoder.read_bytes()
@@ -288,6 +300,15 @@ class DataFileReader(object):
       # "raw" (no zlib headers) decompression.  See zlib.h.
       uncompressed = zlib.decompress(data, -15)
       self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
+    elif self.codec == 'snappy':
+      # Compressed data includes a 4-byte CRC32 checksum
+      length = self.raw_decoder.read_long()
+      data = self.raw_decoder.read(length - 4)
+      uncompressed = snappy.decompress(data)
+      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
+      self.raw_decoder.check_crc32(uncompressed);
+    else:
+      raise DataFileException("Unknown codec: %r" % self.codec)
 
   def _skip_sync(self):
     """
