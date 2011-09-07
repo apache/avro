@@ -1,5 +1,12 @@
 Avro Change Log
 
+Avro 1.5.4 (unreleased)
+
+  BUG FIXES
+
+    AVRO-884.  Java: Fix a regression in RPC so that one-way messages
+    fail when the transciever cannot connect. (Tom White via cutting)
+
 Avro 1.5.3 (25 August 2011)
 
   IMPROVEMENTS

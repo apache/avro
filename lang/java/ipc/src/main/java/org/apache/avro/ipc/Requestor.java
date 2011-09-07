@@ -149,6 +149,16 @@ public abstract class Requestor {
                        new TransceiverCallback<T>(request, callFuture));
           // Block until handshake complete
           callFuture.await();
+          if (request.getMessage().isOneWay()) {
+            Throwable error = callFuture.getError();
+            if (error != null) {
+              if (error instanceof Exception) {
+                throw (Exception) error;
+              } else {
+                throw new AvroRemoteException(error);
+              }
+            }
+          }
           return;
         }
       } finally{
