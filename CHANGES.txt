@@ -50,7 +50,7 @@ Avro 1.6.0 (unreleased)
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
     (Jakob Homan via cutting)
 
-Avro 1.5.4 (unreleased)
+Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
 
