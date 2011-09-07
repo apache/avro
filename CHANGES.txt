@@ -52,6 +52,11 @@ Avro 1.6.0 (unreleased)
 
 Avro 1.5.4 (unreleased)
 
+  IMPROVEMENTS
+
+    AVRO-866. Python: Add support for snappy compression codec.
+    (Tom White via cutting)
+
   BUG FIXES
 
     AVRO-884.  Java: Fix a regression in RPC so that one-way messages

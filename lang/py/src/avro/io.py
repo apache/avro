@@ -39,6 +39,7 @@ uses the following mapping:
 import struct
 from avro import schema
 import sys
+from binascii import crc32
 
 try:
 	import json
@@ -71,6 +72,7 @@ STRUCT_INT = struct_class('!I')     # big-endian unsigned int
 STRUCT_LONG = struct_class('!Q')    # big-endian unsigned long long
 STRUCT_FLOAT = struct_class('!f')   # big-endian float
 STRUCT_DOUBLE = struct_class('!d')  # big-endian double
+STRUCT_CRC32 = struct_class('>I')   # big-endian unsigned int
 
 #
 # Exceptions
@@ -230,6 +232,11 @@ class BinaryDecoder(object):
     """
     return unicode(self.read_bytes(), "utf-8")
 
+  def check_crc32(self, bytes):
+    checksum = STRUCT_CRC32.unpack(self.read(4))[0];
+    if crc32(bytes) & 0xffffffff != checksum:
+      raise schema.AvroException("Checksum failure")
+
   def skip_null(self):
     pass
 
@@ -348,6 +355,12 @@ class BinaryEncoder(object):
     """
     datum = datum.encode("utf-8")
     self.write_bytes(datum)
+
+  def write_crc32(self, bytes):
+    """
+    A 4-byte, big-endian CRC32 checksum
+    """
+    self.write(STRUCT_CRC32.pack(crc32(bytes)));
 
 #
 # DatumReader/Writer
