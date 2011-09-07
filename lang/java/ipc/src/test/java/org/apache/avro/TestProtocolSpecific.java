@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.Requestor;
@@ -50,6 +51,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.List;
@@ -211,6 +213,15 @@ public class TestProtocolSpecific {
     for (int x = 0; x < 1000; x++) {
       proxy.hello("hi!");
     }
+  }
+  
+  @Test(expected = Exception.class)
+  public void testConnectionRefusedOneWay() throws IOException {
+    Transceiver client = new HttpTransceiver(new URL("http://localhost:4444"));
+    SpecificRequestor req = new SpecificRequestor(Simple.class, client);
+    addRpcPlugins(req);
+    Simple proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
+    proxy.ack();
   }
 
   @Test

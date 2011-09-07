@@ -50,6 +50,13 @@ Avro 1.6.0 (unreleased)
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
     (Jakob Homan via cutting)
 
+Avro 1.5.4 (unreleased)
+
+  BUG FIXES
+
+    AVRO-884.  Java: Fix a regression in RPC so that one-way messages
+    fail when the transciever cannot connect. (Tom White via cutting)
+
 Avro 1.5.3 (25 August 2011)
 
   IMPROVEMENTS
