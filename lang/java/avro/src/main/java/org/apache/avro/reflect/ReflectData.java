@@ -130,34 +130,15 @@ public class ReflectData extends SpecificData {
   @Override
   public boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
-    case RECORD:
-      if (datum == null) return false;
-      Class c = datum.getClass(); 
-      for (Schema.Field f : schema.getFields()) {
-        try {
-          if (!validate(f.schema(),
-                        getField(c, f.name()).get(datum)))
-          return false;
-        } catch (IllegalAccessException e) {
-          throw new AvroRuntimeException(e);
-        }
-      }
-      return true;
     case ARRAY:
-      if (datum instanceof Collection) {          // collection
-        for (Object element : (Collection)datum)
-          if (!validate(schema.getElementType(), element))
-            return false;
-        return true;
-      } else if (datum.getClass().isArray()) {    // array
-        int length = java.lang.reflect.Array.getLength(datum);
-        for (int i = 0; i < length; i++)
-          if (!validate(schema.getElementType(),
-                        java.lang.reflect.Array.get(datum, i)))
-            return false;
-        return true;
-      }
-      return false;
+      if (!datum.getClass().isArray())
+        return super.validate(schema, datum);
+      int length = java.lang.reflect.Array.getLength(datum);
+      for (int i = 0; i < length; i++)
+        if (!validate(schema.getElementType(),
+                      java.lang.reflect.Array.get(datum, i)))
+          return false;
+      return true;
     default:
       return super.validate(schema, datum);
     }

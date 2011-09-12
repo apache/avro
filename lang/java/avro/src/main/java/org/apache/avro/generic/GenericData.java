@@ -301,10 +301,9 @@ public class GenericData {
   public boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
     case RECORD:
-      if (!(datum instanceof IndexedRecord)) return false;
-      IndexedRecord fields = (IndexedRecord)datum;
+      if (!isRecord(datum)) return false;
       for (Field f : schema.getFields()) {
-        if (!validate(f.schema(), fields.get(f.pos())))
+        if (!validate(f.schema(), getField(datum, f.name(), f.pos())))
           return false;
       }
       return true;
@@ -352,15 +351,15 @@ public class GenericData {
   }
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
   protected void toString(Object datum, StringBuilder buffer) {
-    if (datum instanceof IndexedRecord) {
+    if (isRecord(datum)) {
       buffer.append("{");
       int count = 0;
-      IndexedRecord record = (IndexedRecord)datum;
-      for (Field f : record.getSchema().getFields()) {
+      Schema schema = getRecordSchema(datum);
+      for (Field f : schema.getFields()) {
         toString(f.name(), buffer);
         buffer.append(": ");
-        toString(record.get(f.pos()), buffer);
-        if (++count < record.getSchema().getFields().size())
+        toString(getField(datum, f.name(), f.pos()), buffer);
+        if (++count < schema.getFields().size())
           buffer.append(", ");
       }
       buffer.append("}");
@@ -450,8 +449,8 @@ public class GenericData {
 
   /** Create a schema given an example datum. */
   public Schema induce(Object datum) {
-    if (datum instanceof IndexedRecord) {
-      return ((IndexedRecord)datum).getSchema();
+    if (isRecord(datum)) {
+      return getRecordSchema(datum);
     } else if (datum instanceof Collection) {
       Schema elementType = null;
       for (Object element : (Collection<?>)datum) {
@@ -615,11 +614,11 @@ public class GenericData {
     int hashCode = 1;
     switch (s.getType()) {
     case RECORD:
-      IndexedRecord r = (IndexedRecord)o;
       for (Field f : s.getFields()) {
         if (f.order() == Field.Order.IGNORE)
           continue;
-        hashCode = hashCodeAdd(hashCode, r.get(f.pos()), f.schema());
+        hashCode = hashCodeAdd(hashCode,
+                               getField(o, f.name(), f.pos()), f.schema());
       }
       return hashCode;
     case ARRAY:

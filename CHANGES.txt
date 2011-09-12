@@ -12,6 +12,11 @@ Avro 1.6.0 (unreleased)
     deprecated and may be removed in a future release.  (James
     Baldassari via cutting)
 
+    AVRO-805: Java: Add support for reading and writing instances of
+    Protocol Buffer (protobuf) generated classes.  This permits
+    protobuf-defined data structures to be written and read from
+    Avro-format data files.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)

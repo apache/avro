@@ -1,0 +1,35 @@
+package pb;
+
+message Foo {
+  // all the primitive types
+  required    int32 int32    =  1;
+  optional    int64 int64    =  2;
+  optional   uint32 uint32   =  3;
+  optional   uint64 uint64   =  4;
+  optional   sint32 sint32   =  5;
+  optional   sint64 sint64   =  6;
+  optional  fixed32 fixed32  =  7;
+  optional  fixed64 fixed64  =  8;
+  optional sfixed32 sfixed32 =  9;
+  optional sfixed64 sfixed64 = 10;
+  optional    float float    = 11;
+  optional   double double   = 12;
+  optional     bool bool     = 13;
+  optional   string string   = 14;
+  optional    bytes bytes    = 15;
+  optional        A enum     = 16;
+
+  // a repeated type
+  repeated    int32 intArray = 17;
+
+  // a recursive type
+  optional     Foo  foo      = 18;
+
+}
+
+// an enum
+enum A {
+  X = 1;
+  Y = 2;
+  Z = 3;
+}

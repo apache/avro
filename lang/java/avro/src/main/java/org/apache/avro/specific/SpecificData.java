@@ -112,7 +112,7 @@ public class SpecificData extends GenericData {
   }
 
   /** Returns the Java class name indicated by a schema's name and namespace. */
-  public String getClassName(Schema schema) {
+  public static String getClassName(Schema schema) {
     String namespace = schema.getNamespace();
     String name = schema.getName();
     if (namespace == null || "".equals(namespace))
