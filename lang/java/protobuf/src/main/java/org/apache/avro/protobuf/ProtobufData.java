@@ -33,8 +33,8 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificData;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
-import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -79,23 +79,23 @@ public class ProtobufData extends GenericData {
 
   @Override
   public Object getField(Object record, String name, int position) {
-    MessageOrBuilder b = (MessageOrBuilder)record;
-    FieldDescriptor f = getFieldDescriptor(b.getDescriptorForType(), position);
+    Message m = (Message)record;
+    FieldDescriptor f = getFieldDescriptor(m.getDescriptorForType(), position);
     switch (f.getType()) {
     case ENUM:
       Schema s = getSchema(f);
       try {
         Class c = Class.forName(SpecificData.getClassName(s));
-        EnumValueDescriptor symbol = (EnumValueDescriptor)b.getField(f);
+        EnumValueDescriptor symbol = (EnumValueDescriptor)m.getField(f);
         return Enum.valueOf(c, symbol.getName());
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
     case MESSAGE:
-      if (!b.hasField(f))
+      if (!m.hasField(f))
         return null;
     default:
-      return b.getField(f);
+      return m.getField(f);
     }
   }    
 
@@ -116,7 +116,7 @@ public class ProtobufData extends GenericData {
 
   @Override
   protected boolean isRecord(Object datum) {
-    return datum instanceof MessageOrBuilder;
+    return datum instanceof Message;
   }
 
   @Override
@@ -146,7 +146,7 @@ public class ProtobufData extends GenericData {
 
   @Override
   protected Schema getRecordSchema(Object record) {
-    return getSchema(((MessageOrBuilder)record).getDescriptorForType());
+    return getSchema(((Message)record).getDescriptorForType());
   }
 
   private final Map<Class,Schema> schemaCache

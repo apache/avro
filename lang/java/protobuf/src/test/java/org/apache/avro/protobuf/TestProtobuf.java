@@ -55,6 +55,8 @@ public class TestProtobuf {
     builder.setEnum(A.X);
     builder.addIntArray(27);
     Foo fooInner = builder.build();
+
+    builder = Foo.newBuilder(fooInner);
     builder.setFoo(fooInner);
     Foo foo = builder.build();
 
