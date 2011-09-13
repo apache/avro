@@ -46,7 +46,7 @@
     <netty-version>3.2.4.Final</netty-version> 
     <jopt-simple-version>3.2</jopt-simple-version>
     <snappy-version>1.0.3.2</snappy-version>
-    <protobuf-version>2.3.0</protobuf-version>
+    <protobuf-version>2.4.1</protobuf-version>
   </properties>
 
   <build>

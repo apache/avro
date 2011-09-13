@@ -75,7 +75,7 @@ public class ProtobufDatumReader<T> extends GenericDatumReader<T> {
 
   @Override
   protected Object readBytes(Object old, Decoder in) throws IOException {
-    return ByteString.copyFrom((ByteBuffer)super.readBytes(old, in));
+    return ByteString.copyFrom(((ByteBuffer)super.readBytes(old, in)).array());
   }    
 
   @Override
