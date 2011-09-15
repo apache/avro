@@ -21,40 +21,23 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 /** A {@link SeekableInput} backed data in a byte array. */
-public class SeekableByteArrayInput implements SeekableInput {
-	private final ByteArrayInputStream stream;
-	private final long length;
-	private long pos = 0;
+public class SeekableByteArrayInput extends ByteArrayInputStream implements SeekableInput {
 
 	public SeekableByteArrayInput(byte[] data) {
-		this.stream = new ByteArrayInputStream(data);
-		this.length = data.length;
+		super(data);
 	}
 
 	public long length() throws IOException {
-		return this.length;
+		return this.count;
 	}
 
 	public void seek(long p) throws IOException {
 		if (p < this.pos)
 			throw new IOException("Cannot seek to a previously read part of the input.");
-		this.stream.skip(p - this.pos);
-		this.pos = p;
+		this.skip(p - this.pos);
 	}
 
 	public long tell() throws IOException {
 		return this.pos;
-	}
-
-	public int read(byte[] b, int off, int len) throws IOException {
-		int bytesRead = this.stream.read(b, off, len);
-		if (bytesRead > -1) {
-			pos += bytesRead;
-		}
-		return bytesRead;
-	}
-
-	public void close() throws IOException {
-		this.stream.close();
 	}
 }
