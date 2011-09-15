@@ -20,7 +20,7 @@ package org.apache.avro.file;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-/** A {@link SeekableInput} backed data in a byte array. */
+/** A {@link SeekableInput} backed with data in a byte array. */
 public class SeekableByteArrayInput extends ByteArrayInputStream implements SeekableInput {
 
 	public SeekableByteArrayInput(byte[] data) {
@@ -32,9 +32,8 @@ public class SeekableByteArrayInput extends ByteArrayInputStream implements Seek
 	}
 
 	public void seek(long p) throws IOException {
-		if (p < this.pos)
-			throw new IOException("Cannot seek to a previously read part of the input.");
-		this.skip(p - this.pos);
+		this.reset();
+		this.skip(p);
 	}
 
 	public long tell() throws IOException {
