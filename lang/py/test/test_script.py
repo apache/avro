@@ -151,6 +151,24 @@ class TestCat(unittest.TestCase):
         out = self._run(self.avro_file)
         assert len(out) == 2 * NUM_RECORDS
 
+    def test_fields(self):
+        # One field selection (no comma)
+        out = self._run('--fields', 'last')
+        assert json.loads(out[0]) == {'last': 'duck'}
+
+        # Field selection (with comma and space)
+        out = self._run('--fields', 'first, last')
+        assert json.loads(out[0]) == {'first': 'daffy', 'last': 'duck'}
+
+        # Empty fields should get all
+        out = self._run('--fields', '')
+        assert json.loads(out[0]) == \
+                {'first': 'daffy', 'last': 'duck', 'type': 'duck'}
+
+        # Non existing fields are ignored
+        out = self._run('--fields', 'first,last,age')
+        assert json.loads(out[0]) == {'first': 'daffy', 'last': 'duck'}
+
 class TestWrite(unittest.TestCase):
     def setUp(self):
         self.json_file = tempfile() + ".json"

@@ -62,6 +62,19 @@ def select_printer(format):
 def record_match(expr, record):
     return eval(expr, None, {"r" : record})
 
+def parse_fields(fields):
+    fields = fields or ''
+    if not fields.strip():
+        return None
+
+    return [field.strip() for field in fields.split(',') if field.strip()]
+
+def field_selector(fields):
+    fields = set(fields)
+    def keys_filter(obj):
+        return dict((k, obj[k]) for k in (set(obj) & fields))
+    return keys_filter
+
 def print_avro(avro, opts):
     if opts.header and (opts.format != "csv"):
         raise AvroError("--header applies only to CSV format")
@@ -75,6 +88,10 @@ def print_avro(avro, opts):
             next(avro)
         except StopIteration:
             return
+
+    fields = parse_fields(opts.fields)
+    if fields:
+        avro = imap(field_selector(fields), avro)
 
     printer = select_printer(opts.format)
     for i, record in enumerate(avro):
@@ -210,6 +227,8 @@ def main(argv=None):
                     default=None)
     cat_options.add_option("--print-schema", help="print schema",
                       action="store_true", default=False)
+    cat_options.add_option('--fields', default=None,
+                help='fields to show, comma separated (show all by default)')
     parser.add_option_group(cat_options)
 
     # write options

@@ -54,6 +54,9 @@ Avro 1.6.0 (unreleased)
     top-level pom.xml as parent, permitting use of Maven versions
     plugin.  (cutting)
 
+    AVRO-858. Python: Add --fields option to 'avro cat' command.
+    (Miki Tebeka via cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
