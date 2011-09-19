@@ -50,6 +50,10 @@ Avro 1.6.0 (unreleased)
     AVRO-873. Java: Permit passing classloader to SpecificDatumReader.
     (Michael Armbrust via cutting)
 
+    AVRO-889. Java: Change lang/java/pom.xml to use project's
+    top-level pom.xml as parent, permitting use of Maven versions
+    plugin.  (cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

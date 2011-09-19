@@ -20,9 +20,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.apache</groupId>
-    <artifactId>apache</artifactId>
-    <version>8</version>
+    <groupId>org.apache.avro</groupId>
+    <artifactId>avro-toplevel</artifactId>
+    <version>1.6.0-SNAPSHOT</version>
+    <relativePath>../../</relativePath>
   </parent>
 
   <groupId>org.apache.avro</groupId>
