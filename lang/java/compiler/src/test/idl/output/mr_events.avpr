@@ -1,6 +1,7 @@
 {
   "protocol" : "Events",
   "namespace" : "org.apache.hadoop.mapreduce.jobhistory",
+  "doc" : "* Genavro format for a particular protocol found in Hadoop MapReduce.\n * Used as a test case/example to show that we can express real-world stuff more\n * succinctly.",
   "types" : [ {
     "type" : "record",
     "name" : "JhCounter",

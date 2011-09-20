@@ -99,6 +99,8 @@ public class Protocol {
     void toJson(JsonGenerator gen) throws IOException {
       gen.writeStartObject();
 
+      if (doc != null) gen.writeStringField("doc", doc);
+
       gen.writeFieldName("request");
       request.fieldsToJson(types, gen);
 
@@ -190,9 +192,13 @@ public class Protocol {
 
   private Protocol() {}
 
-  public Protocol(String name, String namespace) {
+  public Protocol(String name, String doc, String namespace) {
     this.name = name;
+    this.doc = doc;
     this.namespace = namespace;
+  }
+  public Protocol(String name, String namespace) {
+    this(name, null, namespace);
   }
 
   /** The name of this protocol. */
@@ -271,6 +277,8 @@ public class Protocol {
     gen.writeStartObject();
     gen.writeStringField("protocol", name);
     gen.writeStringField("namespace", namespace);
+
+    if (doc != null) gen.writeStringField("doc", doc);
     
     gen.writeArrayFieldStart("types");
     Schema.Names resolved = new Schema.Names(namespace);
@@ -379,6 +387,8 @@ public class Protocol {
   }
 
   private Message parseMessage(String messageName, JsonNode json) {
+    String doc = parseDocNode(json);
+
     JsonNode requestNode = json.get("request");
     if (requestNode == null || !requestNode.isArray())
       throw new SchemaParseException("No request specified: "+json);
@@ -437,7 +447,7 @@ public class Protocol {
         errs.add(schema);
       }
     }
-    String doc = parseDocNode(json);
+
     return new TwoWayMessage(messageName, doc, request, response,
                              Schema.createUnion(errs));
   }

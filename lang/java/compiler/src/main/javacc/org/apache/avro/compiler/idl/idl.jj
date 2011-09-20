@@ -1046,8 +1046,7 @@ Protocol ProtocolDeclaration():
  "protocol"
    name = Identifier()
  {
-   getDoc();                                      // consume doc
-   p = new Protocol(name, namespace);
+   p = new Protocol(name, getDoc(), namespace);
  }
  ProtocolBody(p)
  {
@@ -1280,8 +1279,18 @@ void VariableDeclarator(Schema type, List<Field> fields):
 }
 
 
+String MessageDocumentation():
+{}
+{
+   // Don't parse anything, just return the doc string
+   {
+       return getDoc();
+   }
+}
+
 Message MessageDeclaration(Protocol p):
 {
+  String msgDoc;
   String name;
   Schema request;
   Schema response;
@@ -1290,6 +1299,7 @@ Message MessageDeclaration(Protocol p):
   errorSchemata.add(Protocol.SYSTEM_ERROR);
 }
 {
+  msgDoc = MessageDocumentation()
   response = ResultType()
   name = Identifier()
   request = FormalParameters()
@@ -1300,8 +1310,8 @@ Message MessageDeclaration(Protocol p):
     if (oneWay && response.getType() != Type.NULL)
       throw error("One-way message'"+name+"' must return void", token);
     return oneWay
-    ? p.createMessage(name, null, request)
-    : p.createMessage(name, null, request, response, errors);
+    ? p.createMessage(name, msgDoc, request)
+    : p.createMessage(name, msgDoc, request, response, errors);
     
   }
 }

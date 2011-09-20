@@ -57,6 +57,9 @@ Avro 1.6.0 (unreleased)
     AVRO-858. Python: Add --fields option to 'avro cat' command.
     (Miki Tebeka via cutting)
 
+    AVRO-866. Java: Add support in IDL for documentation in protocols
+    and messages.  (George Fletcher via cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

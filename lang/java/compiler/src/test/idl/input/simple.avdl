@@ -48,8 +48,10 @@ protocol Simple {
     string message;
   }
 
+  /** method 'hello' takes @parameter 'greeting' */
   string hello(string greeting);
   TestRecord echo(TestRecord `record` = {"name": "bar"});
+  /** method 'add' takes @parameter 'arg1' @parameter 'arg2' */
   int add(int arg1, int arg2 = 0);
   bytes echoBytes(bytes data);
   void `error`() throws TestError;

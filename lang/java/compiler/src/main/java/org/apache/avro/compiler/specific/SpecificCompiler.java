@@ -368,9 +368,9 @@ public class SpecificCompiler {
     }
   }
 
-  /** Utility for template use.  Escapes quotes in java strings. */
+  /** Utility for template use.  Escapes quotes and backslashes. */
   public static String javaEscape(Object o) {
-    return o.toString().replace("\"", "\\\"");
+      return o.toString().replace("\\","\\\\").replace("\"", "\\\"");
   }
 
   /** Utility for template use.  Escapes comment end with HTML entities. */

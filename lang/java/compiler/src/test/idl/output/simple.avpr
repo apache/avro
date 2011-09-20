@@ -1,6 +1,7 @@
 {
   "protocol" : "Simple",
   "namespace" : "org.apache.avro.test",
+  "doc" : "* A simple test case.",
   "types" : [ {
     "type" : "enum",
     "name" : "Kind",
@@ -45,6 +46,7 @@
   } ],
   "messages" : {
     "hello" : {
+      "doc" : "method 'hello' takes @parameter 'greeting'",
       "request" : [ {
         "name" : "greeting",
         "type" : "string"
@@ -62,6 +64,7 @@
       "response" : "TestRecord"
     },
     "add" : {
+      "doc" : "method 'add' takes @parameter 'arg1' @parameter 'arg2'",
       "request" : [ {
         "name" : "arg1",
         "type" : "int"

@@ -36,6 +36,10 @@ protocol AvroTrace {
     union { SpanEvent, string} event;
   }
 
+  /**
+   * An individual span is the basic unit of testing.
+   * The record is used by both \"client\" and \"server\".
+   */
   record Span {
     ID  traceID;  // ID shared by all Spans in a given trace
     ID spanID;    // Random ID for this Span

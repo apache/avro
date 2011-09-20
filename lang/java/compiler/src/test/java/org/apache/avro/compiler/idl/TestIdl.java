@@ -90,6 +90,7 @@ public class TestIdl {
         passed++;
       } catch (Exception e) {
         failed++;
+        System.err.println("Failed: " + t.testName());
         e.printStackTrace(System.err);
       }
     }
@@ -124,6 +125,10 @@ public class TestIdl {
       Idl parser = new Idl(in);
       Protocol p = parser.CompilationUnit();
       return p.toString(true);
+    }
+
+    public String testName() {
+        return this.in.getName();
     }
 
     public void run() throws Exception {
