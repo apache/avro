@@ -63,6 +63,9 @@ Avro 1.6.0 (unreleased)
     AVRO-888. Java: Add SeekableByteArrayInput, a utility to permit
     use of memory-based AvroDataFiles.  (Saleem Shafi via cutting)
 
+    AVRO-887. Java: Improve reflection error message when a field is
+    not found in a class.  (cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

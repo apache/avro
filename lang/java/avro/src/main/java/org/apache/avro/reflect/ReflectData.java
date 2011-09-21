@@ -163,7 +163,8 @@ public class ReflectData extends SpecificData {
     return f;
   }
 
-  private static Field findField(Class c, String name) {
+  private static Field findField(Class original, String name) {
+    Class c = original;
     do {
       try {
         Field f = c.getDeclaredField(name);
@@ -172,7 +173,7 @@ public class ReflectData extends SpecificData {
       } catch (NoSuchFieldException e) {}
       c = c.getSuperclass();
     } while (c != null);
-    throw new AvroRuntimeException("No field named "+name+" in: "+c);
+    throw new AvroRuntimeException("No field named "+name+" in: "+original);
   }
 
   static final String CLASS_PROP = "java-class";

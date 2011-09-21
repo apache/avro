@@ -579,6 +579,16 @@ public class TestReflect {
     assertEquals(0, ReflectData.get().compare(datum, decoded, schema));
   }
 
+  /** Test that the error message contains the name of the class. */
+  @Test
+  public void testReflectFieldError() throws Exception {
+    Object datum = "";
+    try {
+      ReflectData.get().getField(datum, "notAFieldOfString", 0);
+    } catch (AvroRuntimeException e) {
+      assertTrue(e.getMessage().contains(datum.getClass().getName()));
+    }
+  }
 
 
 }
