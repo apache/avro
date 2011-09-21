@@ -29,14 +29,9 @@
     <section id="preamble">
       <title>Introduction</title>
 
-      <p>This document defines Avro IDL, an experimental higher-level language for authoring Avro schemata.
+      <p>This document defines Avro IDL, a higher-level language for authoring Avro schemata.
       Before reading this document, you should have familiarity with the concepts of schemata and protocols,
       as well as the various primitive and complex types available in Avro.
-      </p>
-      <p>
-        <strong>N.B.</strong> This feature is considered experimental in the current version of Avro and the language
-        has not been finalized. Although major changes are unlikely, some syntax may change in future
-        versions of Avro.
       </p>
     </section>
 
