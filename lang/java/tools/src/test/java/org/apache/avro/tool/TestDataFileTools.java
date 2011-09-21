@@ -18,6 +18,7 @@
 package org.apache.avro.tool;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
@@ -50,6 +51,9 @@ public class TestDataFileTools {
   static Schema schema;
   static File schemaFile;
   
+  private static final String KEY_NEEDING_ESCAPES = "trn\\\r\t\n";
+  private static final String ESCAPED_KEY = "trn\\\\\\r\\t\\n";
+
   @BeforeClass
   public static void writeSampleFile() throws IOException {
     sampleFile = AvroTestUtil.tempFile(
@@ -62,6 +66,7 @@ public class TestDataFileTools {
     
     DataFileWriter<Object> writer
       = new DataFileWriter<Object>(new GenericDatumWriter<Object>(schema))
+      .setMeta(KEY_NEEDING_ESCAPES, "")
       .create(schema, sampleFile);
     StringBuilder builder = new StringBuilder();
 
@@ -77,30 +82,41 @@ public class TestDataFileTools {
     jsonData = builder.toString();
   }
   
-  @Test
-  public void testRead() throws Exception {
+  private String run(Tool tool, String... args) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(baos);
-    new DataFileReadTool().run(
+    tool.run(
         null, // stdin
         p, // stdout
         null, // stderr
-        Arrays.asList(sampleFile.getPath()));
-    assertEquals(jsonData.toString(), baos.toString("UTF-8").
-        replace("\r", ""));
+        Arrays.asList(args));
+    return baos.toString("UTF-8").replace("\r", "");
+  }
+  
+  @Test
+  public void testRead() throws Exception {
+    assertEquals(jsonData.toString(),
+        run(new DataFileReadTool(), sampleFile.getPath()));
+  }
+  
+  @Test
+  public void testGetMeta() throws Exception {
+    String output = run(new DataFileGetMetaTool(), sampleFile.getPath());
+    assertTrue(output, output.contains("avro.schema\t"+schema.toString()+"\n"));
+    assertTrue(output, output.contains(ESCAPED_KEY+"\t\n"));
+  }
+  
+  @Test
+  public void testGetMetaForSingleKey() throws Exception {
+    assertEquals(schema.toString() + "\n",
+        run(new DataFileGetMetaTool(), sampleFile.getPath(), "--key",
+            "avro.schema"));
   }
   
   @Test
   public void testGetSchema() throws Exception {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream p = new PrintStream(baos);
-    new DataFileGetSchemaTool().run(
-        null, // stdin
-        p, // stdout
-        null, // stderr
-        Arrays.asList(sampleFile.getPath()));
     assertEquals(schema.toString() + "\n",
-        baos.toString("UTF-8").replace("\r", ""));
+        run(new DataFileGetSchemaTool(), sampleFile.getPath()));
   }
   
   @Test

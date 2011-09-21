@@ -41,6 +41,7 @@ public class Main {
         new BinaryFragmentToJsonTool(),
         new DataFileReadTool(),
         new DataFileWriteTool(),
+        new DataFileGetMetaTool(),
         new DataFileGetSchemaTool(),
         new IdlTool(),
         new RecodecTool(),

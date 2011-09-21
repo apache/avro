@@ -17,6 +17,9 @@ Avro 1.6.0 (unreleased)
     protobuf-defined data structures to be written and read from
     Avro-format data files.  (cutting)
 
+    AVRO-881. Java: Add a 'getmeta' tool that lists a file's metadata.
+    (Tom White via cutting)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)
