@@ -360,7 +360,7 @@ class BinaryEncoder(object):
     """
     A 4-byte, big-endian CRC32 checksum
     """
-    self.write(STRUCT_CRC32.pack(crc32(bytes)));
+    self.write(STRUCT_CRC32.pack(crc32(bytes) & 0xffffffff));
 
 #
 # DatumReader/Writer

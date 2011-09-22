@@ -91,6 +91,9 @@ Avro 1.5.4 (12 September 2011)
     AVRO-884.  Java: Fix a regression in RPC so that one-way messages
     fail when the transciever cannot connect. (Tom White via cutting)
 
+    AVRO-892. Python: Fix an "integer out of range" error with snappy
+    compression.  (Michael Cooper via cutting)
+
 Avro 1.5.3 (25 August 2011)
 
   IMPROVEMENTS
