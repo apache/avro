@@ -66,6 +66,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Return the {@link GenericData} implementation. */
   public GenericData getData() { return data; }
 
+  /** Return the writer's schema. */
+  public Schema getSchema() { return actual; }
+
   @Override
   public void setSchema(Schema writer) {
     this.actual = writer;
@@ -75,8 +78,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     creatorResolver = null;
   }
 
+  /** Get the reader's schema. */
+  public Schema getExpected() { return expected; }
+
   /** Set the reader's schema. */
-  public void setExpected(Schema reader) throws IOException {
+  public void setExpected(Schema reader) {
     this.expected = reader;
     creatorResolver = null;
   }

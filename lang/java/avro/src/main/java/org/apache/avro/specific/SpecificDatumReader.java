@@ -51,6 +51,20 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   public SpecificData getSpecificData() { return (SpecificData)getData(); }
 
   @Override
+  public void setSchema(Schema actual) {
+    // if expected is unset and actual is a specific record,
+    // then default expected to schema of currently loaded class
+    if (getExpected() == null && actual != null
+        && actual.getType() == Schema.Type.RECORD) {
+      SpecificData data = getSpecificData();
+      Class c = data.getClass(actual);
+      if (c != null && SpecificRecord.class.isAssignableFrom(c))
+        setExpected(data.getSchema(c));
+    }
+    super.setSchema(actual);
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   protected Object createEnum(String symbol, Schema schema) {
     Class c = getSpecificData().getClass(schema);
