@@ -1093,7 +1093,7 @@ avro_schema_from_json(const char *jsontext, const int32_t len,
 		return ENOMEM;
 	}
 
-	root = json_loads(jsontext, &error->json_error);
+	root = json_loads(jsontext, 0, &error->json_error);
 	if (!root) {
 		avro_set_error("Error parsing JSON: %s", error->json_error.text);
 		st_free_table(error->named_schemas);

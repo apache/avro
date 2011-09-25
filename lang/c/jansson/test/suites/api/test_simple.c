@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009-2011 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
@@ -152,33 +152,33 @@ int main()
 
     /* Test reference counting on singletons (true, false, null) */
     value = json_true();
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting true works incorrectly");
     json_decref(value);
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting true works incorrectly");
     json_incref(value);
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting true works incorrectly");
 
     value = json_false();
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting false works incorrectly");
     json_decref(value);
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting false works incorrectly");
     json_incref(value);
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting false works incorrectly");
 
     value = json_null();
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting null works incorrectly");
     json_decref(value);
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting null works incorrectly");
     json_incref(value);
-    if(value->refcount != (unsigned int)-1)
+    if(value->refcount != (size_t)-1)
       fail("refcounting null works incorrectly");
 
     return 0;

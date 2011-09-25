@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
+# Copyright (c) 2009-2011 Petri Lehtinen <petri@digip.org>
 #
 # Jansson is free software; you can redistribute it and/or modify
 # it under the terms of the MIT license. See LICENSE for details.
@@ -12,6 +12,7 @@ suite_log=$logdir/$suite_name
 
 
 [ -z "$VERBOSE" ] && VERBOSE=0
+[ -z "$STOP" ] && STOP=0
 
 . $scriptdir/valgrind.sh
 
@@ -29,29 +30,46 @@ for test_path in $suite_srcdir/*; do
     rm -rf $test_log
     mkdir -p $test_log
     if [ $VERBOSE -eq 1 ]; then
-        echo -n "$test_name... "
+        printf '%s... ' "$test_name"
     fi
 
-    if run_test; then
-        # Success
-        if [ $VERBOSE -eq 1 ]; then
-            echo "ok"
-        else
-            echo -n "."
-        fi
-        rm -rf $test_log
-    else
-        # Failure
-        if [ $VERBOSE -eq 1 ]; then
-            echo "FAILED"
-        else
-            echo -n "F"
-        fi
-    fi
+    run_test
+    case $? in
+        0)
+            # Success
+            if [ $VERBOSE -eq 1 ]; then
+                printf 'ok\n'
+            else
+                printf '.'
+            fi
+            rm -rf $test_log
+            ;;
+
+        77)
+            # Skip
+            if [ $VERBOSE -eq 1 ]; then
+                printf 'skipped\n'
+            else
+                printf 'S'
+            fi
+            rm -rf $test_log
+            ;;
+
+        *)
+            # Failure
+            if [ $VERBOSE -eq 1 ]; then
+                printf 'FAILED\n'
+            else
+                printf 'F'
+            fi
+
+            [ $STOP -eq 1 ] && break
+            ;;
+    esac
 done
 
 if [ $VERBOSE -eq 0 ]; then
-    echo
+    printf '\n'
 fi
 
 if [ -n "$(ls -A $suite_log)" ]; then

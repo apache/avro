@@ -77,16 +77,18 @@ set(AVRO_SRC
 
 set(JANSSON_SRC
     ../jansson/src/dump.c
+    ../jansson/src/error.c
     ../jansson/src/hashtable.c
     ../jansson/src/hashtable.h
     ../jansson/src/jansson.h
     ../jansson/src/jansson_private.h
     ../jansson/src/load.c
+    ../jansson/src/memory.c
+    ../jansson/src/pack_unpack.c
     ../jansson/src/strbuffer.c
     ../jansson/src/strbuffer.h
     ../jansson/src/utf.c
     ../jansson/src/utf.h
-    ../jansson/src/util.h
     ../jansson/src/value.c
 )
 

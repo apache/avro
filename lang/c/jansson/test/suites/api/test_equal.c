@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009-2011 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
@@ -167,8 +167,8 @@ static void test_equal_complex()
 "    \"array\": [\"foo\", false, null, 1.234]"
 "}";
 
-    value1 = json_loads(complex_json, NULL);
-    value2 = json_loads(complex_json, NULL);
+    value1 = json_loads(complex_json, 0, NULL);
+    value2 = json_loads(complex_json, 0, NULL);
     if(!value1 || !value2)
         fail("unable to parse JSON");
     if(!json_equal(value1, value2))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009-2011 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
@@ -8,8 +8,8 @@
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <string.h>
+#include "jansson_private.h"
 #include "strbuffer.h"
-#include "util.h"
 
 #define STRBUFFER_MIN_SIZE  16
 #define STRBUFFER_FACTOR    2
@@ -19,7 +19,7 @@ int strbuffer_init(strbuffer_t *strbuff)
     strbuff->size = STRBUFFER_MIN_SIZE;
     strbuff->length = 0;
 
-    strbuff->value = malloc(strbuff->size);
+    strbuff->value = jsonp_malloc(strbuff->size);
     if(!strbuff->value)
         return -1;
 
@@ -30,7 +30,7 @@ int strbuffer_init(strbuffer_t *strbuff)
 
 void strbuffer_close(strbuffer_t *strbuff)
 {
-    free(strbuff->value);
+    jsonp_free(strbuff->value);
     strbuff->size = 0;
     strbuff->length = 0;
     strbuff->value = NULL;
@@ -68,12 +68,21 @@ int strbuffer_append_bytes(strbuffer_t *strbuff, const char *data, int size)
 {
     if(strbuff->length + size >= strbuff->size)
     {
-        strbuff->size = max(strbuff->size * STRBUFFER_FACTOR,
-                            strbuff->length + size + 1);
+        size_t new_size;
+        char *new_value;
 
-        strbuff->value = realloc(strbuff->value, strbuff->size);
-        if(!strbuff->value)
+        new_size = max(strbuff->size * STRBUFFER_FACTOR,
+                       strbuff->length + size + 1);
+
+        new_value = jsonp_malloc(new_size);
+        if(!new_value)
             return -1;
+
+        memcpy(new_value, strbuff->value, strbuff->length);
+
+        jsonp_free(strbuff->value);
+        strbuff->value = new_value;
+        strbuff->size = new_size;
     }
 
     memcpy(strbuff->value + strbuff->length, data, size);

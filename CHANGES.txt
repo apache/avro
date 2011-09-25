@@ -74,6 +74,8 @@ Avro 1.6.0 (unreleased)
     AVRO-891. Java: In SpecificDatumReader, when no reader schema is
     specified, use schema of currently loaded class.  (cutting) 
 
+    AVRO-865. C: Upgrade Jansson to 2.1. (dcreager)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

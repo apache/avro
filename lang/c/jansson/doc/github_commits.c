@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009-2011 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
@@ -96,7 +96,7 @@ static char *request(const char *url)
 
 int main(int argc, char *argv[])
 {
-    unsigned int i;
+    size_t i;
     char *text;
     char url[URL_SIZE];
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     if(!text)
         return 1;
 
-    root = json_loads(text, &error);
+    root = json_loads(text, 0, &error);
     free(text);
 
     if(!root)

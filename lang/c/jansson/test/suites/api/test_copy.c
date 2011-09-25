@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009-2011 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
@@ -174,9 +174,9 @@ static void test_copy_array(void)
     const char *json_array_text = "[1, \"foo\", 3.141592, {\"foo\": \"bar\"}]";
 
     json_t *array, *copy;
-    unsigned int i;
+    size_t i;
 
-    array = json_loads(json_array_text, NULL);
+    array = json_loads(json_array_text, 0, NULL);
     if(!array)
         fail("unable to parse an array");
 
@@ -203,9 +203,9 @@ static void test_deep_copy_array(void)
     const char *json_array_text = "[1, \"foo\", 3.141592, {\"foo\": \"bar\"}]";
 
     json_t *array, *copy;
-    unsigned int i;
+    size_t i;
 
-    array = json_loads(json_array_text, NULL);
+    array = json_loads(json_array_text, 0, NULL);
     if(!array)
         fail("unable to parse an array");
 
@@ -235,7 +235,7 @@ static void test_copy_object(void)
     json_t *object, *copy;
     void *iter;
 
-    object = json_loads(json_object_text, NULL);
+    object = json_loads(json_object_text, 0, NULL);
     if(!object)
         fail("unable to parse an object");
 
@@ -275,7 +275,7 @@ static void test_deep_copy_object(void)
     json_t *object, *copy;
     void *iter;
 
-    object = json_loads(json_object_text, NULL);
+    object = json_loads(json_object_text, 0, NULL);
     if(!object)
         fail("unable to parse an object");
 
