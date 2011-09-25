@@ -79,6 +79,8 @@ Avro 1.6.0 (unreleased)
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
     (Jakob Homan via cutting)
 
+    AVRO-894. C: cmake build now works on Mac OS X Lion. (dcreager)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
@@ -93,8 +95,6 @@ Avro 1.5.4 (12 September 2011)
 
     AVRO-892. Python: Fix an "integer out of range" error with snappy
     compression.  (Michael Cooper via cutting)
-
-    AVRO-894. C: cmake build now works on Mac OS X Lion. (dcreager)
 
 Avro 1.5.3 (25 August 2011)
 
