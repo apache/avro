@@ -316,7 +316,7 @@ _check_write_read(avro_value_t *val)
 	}
 
 	avro_value_t  val_in;
-	if (avro_value_new(val->iface, &val_in)) {
+	if (avro_generic_value_new(val->iface, &val_in)) {
 		fprintf(stderr, "Cannot allocate new value instance:\n  %s\n",
 			avro_strerror());
 		return EXIT_FAILURE;
@@ -333,7 +333,7 @@ _check_write_read(avro_value_t *val)
 		exit(EXIT_FAILURE);
 	}
 
-	avro_value_free(&val_in);
+	avro_value_decref(&val_in);
 	avro_reader_free(reader);
 	avro_writer_free(writer);
 
@@ -344,10 +344,25 @@ _check_write_read(avro_value_t *val)
 	check_(_check_write_read(val))
 
 static int
+_check_hash(avro_value_t *val1, avro_value_t *val2)
+{
+	uint32_t  hash1 = avro_value_hash(val1);
+	uint32_t  hash2 = avro_value_hash(val2);
+	if (hash1 != hash2) {
+		fprintf(stderr, "Copied hashed not equal\n");
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+
+#define check_hash(val1, val2) \
+	check_(_check_hash(val1, val2))
+
+static int
 _check_copy(avro_value_t *val)
 {
 	avro_value_t  copied_val;
-	if (avro_value_new(val->iface, &copied_val)) {
+	if (avro_generic_value_new(val->iface, &copied_val)) {
 		fprintf(stderr, "Cannot allocate new value instance:\n  %s\n",
 			avro_strerror());
 		return EXIT_FAILURE;
@@ -361,10 +376,12 @@ _check_copy(avro_value_t *val)
 
 	if (!avro_value_equal(val, &copied_val)) {
 		fprintf(stderr, "Copied values not equal\n");
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
-	avro_value_free(&copied_val);
+	check_hash(val, &copied_val);
+
+	avro_value_decref(&copied_val);
 	return EXIT_SUCCESS;
 }
 
@@ -403,7 +420,7 @@ test_boolean(void)
 		check_invalid_methods("boolean", &val);
 		check_write_read(&val);
 		check_copy(&val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
 	}
 	return 0;
 }
@@ -460,7 +477,7 @@ test_bytes(void)
 	check_invalid_methods("bytes", &val);
 	check_write_read(&val);
 	check_copy(&val);
-	avro_value_free(&val);
+	avro_value_decref(&val);
 	return 0;
 }
 
@@ -495,7 +512,7 @@ test_double(void)
 		check_invalid_methods("double", &val);
 		check_write_read(&val);
 		check_copy(&val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
 	}
 	return 0;
 }
@@ -531,7 +548,7 @@ test_float(void)
 		check_invalid_methods("float", &val);
 		check_write_read(&val);
 		check_copy(&val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
 	}
 	return 0;
 }
@@ -567,7 +584,7 @@ test_int(void)
 		check_invalid_methods("int", &val);
 		check_write_read(&val);
 		check_copy(&val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
 	}
 	return 0;
 }
@@ -603,7 +620,7 @@ test_long(void)
 		check_invalid_methods("long", &val);
 		check_write_read(&val);
 		check_copy(&val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
 	}
 	return 0;
 }
@@ -629,7 +646,7 @@ test_null(void)
 	check_invalid_methods("null", &val);
 	check_write_read(&val);
 	check_copy(&val);
-	avro_value_free(&val);
+	avro_value_decref(&val);
 	return 0;
 }
 
@@ -735,7 +752,7 @@ test_string(void)
 		check_invalid_methods("string", &val);
 		check_write_read(&val);
 		check_copy(&val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
 	}
 
 	return 0;
@@ -757,7 +774,7 @@ test_array(void)
 		size_t  count = rand_count();
 
 		avro_value_t  val;
-		try(avro_value_new(array_class, &val),
+		try(avro_generic_value_new(array_class, &val),
 		    "Cannot create array");
 		check(rval, check_type_and_schema
 			    ("array", &val, AVRO_ARRAY,
@@ -813,7 +830,7 @@ test_array(void)
 		}
 
 		check_invalid_methods("array", &val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
 	}
 
 	avro_schema_decref(double_schema);
@@ -842,7 +859,7 @@ test_enum(void)
 	}
 
 	avro_value_iface_t  *enum_class =
-	    avro_generic_enum_class(enum_schema);
+	    avro_generic_class_from_schema(enum_schema);
 
 	int  rval;
 
@@ -850,7 +867,7 @@ test_enum(void)
 	for (i = 0; i < 4; i++) {
 		int  expected = i;
 		avro_value_t  val;
-		try(avro_value_new(enum_class, &val),
+		try(avro_generic_value_new(enum_class, &val),
 		    "Cannot create enum");
 		check(rval, check_type_and_schema
 			    ("enum", &val, AVRO_ENUM,
@@ -872,7 +889,7 @@ test_enum(void)
 		check_invalid_methods("enum", &val);
 		check_write_read(&val);
 		check_copy(&val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
 	}
 
 	avro_schema_decref(enum_schema);
@@ -900,14 +917,14 @@ test_fixed(void)
 	}
 
 	avro_value_iface_t  *fixed_class =
-	    avro_generic_fixed_class(fixed_schema);
+	    avro_generic_class_from_schema(fixed_schema);
 
 	int  rval;
 
 	char fixed[] = { 0xDE, 0xAD, 0xBE, 0xEF };
 
 	avro_value_t  val;
-	try(avro_value_new(fixed_class, &val),
+	try(avro_generic_value_new(fixed_class, &val),
 	    "Cannot create fixed");
 	check(rval, check_type_and_schema
 		    ("fixed", &val, AVRO_FIXED,
@@ -956,7 +973,7 @@ test_fixed(void)
 	check_invalid_methods("fixed", &val);
 	check_write_read(&val);
 	check_copy(&val);
-	avro_value_free(&val);
+	avro_value_decref(&val);
 	avro_schema_decref(fixed_schema);
 	avro_value_iface_decref(fixed_class);
 	return 0;
@@ -978,7 +995,7 @@ test_map(void)
 		size_t  count = rand_count();
 
 		avro_value_t  val;
-		try(avro_value_new(map_class, &val),
+		try(avro_generic_value_new(map_class, &val),
 		    "Cannot create map");
 		check(rval, check_type_and_schema
 			    ("map", &val, AVRO_MAP,
@@ -1048,6 +1065,38 @@ test_map(void)
 			return EXIT_FAILURE;
 		}
 
+		/*
+		 * Create a reversed copy of the map to ensure that the
+		 * element ordering doesn't affect the hash value.
+		 */
+
+		avro_value_t  reversed;
+		try(avro_generic_value_new(map_class, &reversed),
+		    "Cannot create map");
+
+		for (j = count; j-- > 0; ) {
+			avro_value_t  element;
+			const char  *key = NULL;
+			double  element_value = 0.0;
+			try(avro_value_get_by_index(&val, j, &element, &key),
+			    "Cannot get from map");
+			try(avro_value_get_double(&element, &element_value),
+			    "Cannot get double value");
+
+			try(avro_value_add(&reversed, key, &element, NULL, NULL),
+			    "Cannot add to map");
+			try(avro_value_set_double(&element, element_value),
+			    "Cannot set double");
+		}
+
+		check_hash(&val, &reversed);
+		if (!avro_value_equal(&val, &reversed)) {
+			fprintf(stderr, "Reversed values not equal\n");
+			return EXIT_FAILURE;
+		}
+
+		/* Final tests and cleanup */
+
 		check_write_read(&val);
 		check_copy(&val);
 
@@ -1062,7 +1111,8 @@ test_map(void)
 		}
 
 		check_invalid_methods("map", &val);
-		avro_value_free(&val);
+		avro_value_decref(&val);
+		avro_value_decref(&reversed);
 	}
 
 	avro_schema_decref(double_schema);
@@ -1113,7 +1163,7 @@ test_record(void)
 	int  rval;
 
 	avro_value_t  val;
-	try(avro_value_new(record_class, &val),
+	try(avro_generic_value_new(record_class, &val),
 	    "Cannot create record");
 	check(rval, check_type_and_schema
 		    ("record", &val, AVRO_RECORD,
@@ -1214,7 +1264,7 @@ test_record(void)
 	}
 
 	check_invalid_methods("record", &val);
-	avro_value_free(&val);
+	avro_value_decref(&val);
 	avro_value_iface_decref(record_class);
 	avro_schema_decref(record_schema);
 	return EXIT_SUCCESS;
@@ -1246,7 +1296,7 @@ test_union(void)
 	int  rval;
 
 	avro_value_t  val;
-	try(avro_value_new(union_class, &val),
+	try(avro_generic_value_new(union_class, &val),
 	    "Cannot create union");
 	check(rval, check_type_and_schema
 		    ("union", &val, AVRO_UNION,
@@ -1294,7 +1344,7 @@ test_union(void)
 	check_invalid_methods("union", &val);
 	check_write_read(&val);
 	check_copy(&val);
-	avro_value_free(&val);
+	avro_value_decref(&val);
 
 	avro_schema_decref(union_schema);
 	avro_value_iface_decref(union_class);

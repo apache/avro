@@ -20,6 +20,8 @@ Avro 1.6.0 (unreleased)
     AVRO-881. Java: Add a 'getmeta' tool that lists a file's metadata.
     (Tom White via cutting)
 
+    AVRO-863. C: Schema resolution using new value interface. (dcreager)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)

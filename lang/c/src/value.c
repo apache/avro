@@ -25,50 +25,47 @@
 #include "avro/value.h"
 #include "avro_private.h"
 
-int
-avro_value_new(const avro_value_iface_t *cls, avro_value_t *val)
-{
-	int  rval;
-
-	val->iface = cls;
-
-	size_t  instance_size = avro_value_instance_size(cls);
-	if (instance_size == 0) {
-		val->iface = NULL;
-		avro_set_error("Value class doesn't declare instance_size");
-		return EINVAL;
-	}
-
-	val->self = avro_malloc(instance_size);
-	if (val->self == NULL) {
-		avro_set_error(strerror(ENOMEM));
-		return ENOMEM;
-	}
-
-	rval = avro_value_init(cls, val->self);
-	if (rval) {
-		avro_free(val->self, instance_size);
-		val->self = NULL;
-		return rval;
-	}
-
-	return 0;
-}
-
-void
-avro_value_free(avro_value_t *val)
-{
-	if (val->self != NULL) {
-		avro_value_done(val);
-		avro_free(val->self, avro_value_instance_size(val->iface));
-	}
-}
 
 #define check_return(retval, call) \
 	do { \
 		int  rval = call; \
 		if (rval != 0) { return (retval); } \
 	} while (0)
+
+
+void
+avro_value_incref(avro_value_t *value)
+{
+	value->iface->incref(value);
+}
+
+void
+avro_value_decref(avro_value_t *value)
+{
+	value->iface->decref(value);
+	avro_value_iface_decref(value->iface);
+	value->iface = NULL;
+	value->self = NULL;
+}
+
+void
+avro_value_copy_ref(avro_value_t *dest, const avro_value_t *src)
+{
+	dest->iface = src->iface;
+	dest->self = src->self;
+	avro_value_iface_incref(dest->iface);
+	dest->iface->incref(dest);
+}
+
+void
+avro_value_move_ref(avro_value_t *dest, avro_value_t *src)
+{
+	dest->iface = src->iface;
+	dest->self = src->self;
+	src->iface = NULL;
+	src->self = NULL;
+}
+
 
 int
 avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2)

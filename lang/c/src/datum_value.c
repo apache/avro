@@ -28,11 +28,41 @@
 #include "avro/value.h"
 #include "avro_private.h"
 
-static void
-avro_datum_value_done(const avro_value_iface_t *iface, void *vself)
+static avro_value_iface_t  AVRO_DATUM_VALUE_CLASS;
+
+avro_value_iface_t *
+avro_datum_class(void)
 {
-	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	return &AVRO_DATUM_VALUE_CLASS;
+}
+
+int
+avro_datum_as_value(avro_value_t *value, avro_datum_t src)
+{
+	value->iface = &AVRO_DATUM_VALUE_CLASS;
+	value->self = avro_datum_incref(src);
+	return 0;
+}
+
+static int
+avro_datum_as_child_value(avro_value_t *value, avro_datum_t src)
+{
+	value->iface = &AVRO_DATUM_VALUE_CLASS;
+	value->self = src;
+	return 0;
+}
+
+static void
+avro_datum_value_incref(avro_value_t *value)
+{
+	avro_datum_t  self = value->self;
+	avro_datum_incref(self);
+}
+
+static void
+avro_datum_value_decref(avro_value_t *value)
+{
+	avro_datum_t  self = value->self;
 	avro_datum_decref(self);
 }
 
@@ -459,7 +489,7 @@ avro_datum_value_get_size(const avro_value_iface_t *iface,
 		return 0;
 	}
 
-	avro_set_error("Can only get size of array or map");
+	avro_set_error("Can only get size of array, map, or record, %d", avro_typeof(self));
 	return EINVAL;
 }
 
@@ -477,7 +507,7 @@ avro_datum_value_get_by_index(const avro_value_iface_t *iface,
 
 	if (is_avro_array(self)) {
 		check(rval, avro_array_get(self, index, &child_datum));
-		return avro_datum_as_value(child, child_datum);
+		return avro_datum_as_child_value(child, child_datum);
 	}
 
 	if (is_avro_map(self)) {
@@ -487,7 +517,7 @@ avro_datum_value_get_by_index(const avro_value_iface_t *iface,
 			*name = real_key;
 		}
 		check(rval, avro_map_get(self, real_key, &child_datum));
-		return avro_datum_as_value(child, child_datum);
+		return avro_datum_as_child_value(child, child_datum);
 	}
 
 	if (is_avro_record(self)) {
@@ -501,7 +531,7 @@ avro_datum_value_get_by_index(const avro_value_iface_t *iface,
 			*name = field_name;
 		}
 		check(rval, avro_record_get(self, field_name, &child_datum));
-		return avro_datum_as_value(child, child_datum);
+		return avro_datum_as_child_value(child, child_datum);
 	}
 
 	avro_set_error("Can only get by index from array, map, or record");
@@ -528,7 +558,7 @@ avro_datum_value_get_by_name(const avro_value_iface_t *iface,
 		}
 
 		check(rval, avro_map_get(self, name, &child_datum));
-		return avro_datum_as_value(child, child_datum);
+		return avro_datum_as_child_value(child, child_datum);
 	}
 
 	if (is_avro_record(self)) {
@@ -538,7 +568,7 @@ avro_datum_value_get_by_name(const avro_value_iface_t *iface,
 		}
 
 		check(rval, avro_record_get(self, name, &child_datum));
-		return avro_datum_as_value(child, child_datum);
+		return avro_datum_as_child_value(child, child_datum);
 	}
 
 	avro_set_error("Can only get by name from map or record");
@@ -576,7 +606,7 @@ avro_datum_value_get_current_branch(const avro_value_iface_t *iface,
 	}
 
 	avro_datum_t  child_datum = avro_union_current_branch(self);
-	return avro_datum_as_value(branch, child_datum);
+	return avro_datum_as_child_value(branch, child_datum);
 }
 
 
@@ -602,12 +632,16 @@ avro_datum_value_append(const avro_value_iface_t *iface,
 		return ENOMEM;
 	}
 
-	check(rval, avro_array_append_datum(self, child_datum));
+	rval = avro_array_append_datum(self, child_datum);
 	avro_datum_decref(child_datum);
+	if (rval != 0) {
+		return rval;
+	}
+
 	if (new_index != NULL) {
 		*new_index = avro_array_size(self) - 1;
 	}
-	return avro_datum_as_value(child_out, child_datum);
+	return avro_datum_as_child_value(child_out, child_datum);
 }
 
 static int
@@ -637,7 +671,7 @@ avro_datum_value_add(const avro_value_iface_t *iface,
 			avro_map_get_index(self, key, &real_index);
 			*index = real_index;
 		}
-		return avro_datum_as_value(child, child_datum);
+		return avro_datum_as_child_value(child, child_datum);
 	}
 
 	/* key is new */
@@ -647,17 +681,21 @@ avro_datum_value_add(const avro_value_iface_t *iface,
 	if (child_datum == NULL) {
 		return ENOMEM;
 	}
-	avro_datum_decref(child_datum);
 
-	check(rval, avro_map_set(self, key, child_datum));
+	rval = avro_map_set(self, key, child_datum);
+	avro_datum_decref(child_datum);
+	if (rval != 0) {
+		return rval;
+	}
+
 	if (is_new != NULL) {
-		*is_new = 0;
+		*is_new = 1;
 	}
 	if (index != NULL) {
 		*index = avro_map_size(self) - 1;
 	}
 
-	return avro_datum_as_value(child, child_datum);
+	return avro_datum_as_child_value(child, child_datum);
 }
 
 static int
@@ -677,7 +715,7 @@ avro_datum_value_set_branch(const avro_value_iface_t *iface,
 	int  rval;
 	avro_datum_t  child_datum;
 	check(rval, avro_union_set_discriminant(self, discriminant, &child_datum));
-	return avro_datum_as_value(branch, child_datum);
+	return avro_datum_as_child_value(branch, child_datum);
 }
 
 
@@ -686,10 +724,9 @@ static avro_value_iface_t  AVRO_DATUM_VALUE_CLASS =
 	/* "class" methods */
 	NULL, /* incref */
 	NULL, /* decref */
-	NULL, /* instance_size */
 	/* general "instance" methods */
-	NULL, /* init */
-	avro_datum_value_done,
+	avro_datum_value_incref,
+	avro_datum_value_decref,
 	avro_datum_value_reset,
 	avro_datum_value_get_type,
 	avro_datum_value_get_schema,
@@ -733,18 +770,3 @@ static avro_value_iface_t  AVRO_DATUM_VALUE_CLASS =
 	avro_datum_value_add,
 	avro_datum_value_set_branch
 };
-
-avro_value_iface_t *
-avro_datum_class(void)
-{
-	return &AVRO_DATUM_VALUE_CLASS;
-}
-
-
-int
-avro_datum_as_value(avro_value_t *value, avro_datum_t src)
-{
-	value->iface = &AVRO_DATUM_VALUE_CLASS;
-	value->self = avro_datum_incref(src);
-	return 0;
-}

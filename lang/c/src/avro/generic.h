@@ -36,17 +36,27 @@ extern "C" {
  */
 
 
-/*
+/**
  * Return a generic avro_value_iface_t implementation for the given
  * schema, regardless of what type it is.
  */
 
-avro_value_iface_t *avro_generic_class_from_schema(avro_schema_t schema);
+avro_value_iface_t *
+avro_generic_class_from_schema(avro_schema_t schema);
+
+/**
+ * Allocate a new instance of the given generic value class.  @a iface
+ * must have been created by @ref avro_generic_class_from_schema.
+ */
+
+int
+avro_generic_value_new(avro_value_iface_t *iface, avro_value_t *dest);
 
 
 /*
  * These functions return an avro_value_iface_t implementation for each
- * scalar schema type.
+ * primitive schema type.  (For enum, fixed, and the compound types, you
+ * must use the @ref avro_generic_class_from_schema function.)
  */
 
 avro_value_iface_t *avro_generic_boolean_class(void);
@@ -58,11 +68,9 @@ avro_value_iface_t *avro_generic_long_class(void);
 avro_value_iface_t *avro_generic_null_class(void);
 avro_value_iface_t *avro_generic_string_class(void);
 
-avro_value_iface_t *avro_generic_enum_class(avro_schema_t schema);
-avro_value_iface_t *avro_generic_fixed_class(avro_schema_t schema);
 
 /*
- * These functions instantiate a new generic scalar value.
+ * These functions instantiate a new generic primitive value.
  */
 
 int avro_generic_boolean_new(avro_value_t *value, int val);
@@ -74,42 +82,6 @@ int avro_generic_long_new(avro_value_t *value, int64_t val);
 int avro_generic_null_new(avro_value_t *value);
 int avro_generic_string_new(avro_value_t *value, char *val);
 int avro_generic_string_new_length(avro_value_t *value, char *val, size_t size);
-int avro_generic_enum_new(avro_value_t *value, int val);
-
-
-/*
- * These functions return an avro_value_iface_t implementation for each
- * compound schema type.
- */
-
-/*
- * The generic classes for compound schemas work with any avro_value_t
- * implementation for their subschemas.  They'll use the given function
- * pointer to instantiate a value implementation for each child schema.
- */
-
-typedef avro_value_iface_t *
-(*avro_value_iface_creator_t)(avro_schema_t schema, void *user_data);
-
-avro_value_iface_t *
-avro_generic_array_class(avro_schema_t schema,
-			 avro_value_iface_creator_t creator,
-			 void *user_data);
-
-avro_value_iface_t *
-avro_generic_map_class(avro_schema_t schema,
-		       avro_value_iface_creator_t creator,
-		       void *user_data);
-
-avro_value_iface_t *
-avro_generic_record_class(avro_schema_t schema,
-			  avro_value_iface_creator_t creator,
-			  void *user_data);
-
-avro_value_iface_t *
-avro_generic_union_class(avro_schema_t schema,
-			 avro_value_iface_creator_t creator,
-			 void *user_data);
 
 
 CLOSE_EXTERN

@@ -210,10 +210,10 @@ test_nested_record_value_by_index(unsigned long num_tests)
 	avro_value_iface_t  *iface = avro_generic_class_from_schema(schema);
 
 	avro_value_t  val;
-	avro_value_new(iface, &val);
+	avro_generic_value_new(iface, &val);
 
 	avro_value_t  out;
-	avro_value_new(iface, &out);
+	avro_generic_value_new(iface, &out);
 
 	for (i = 0; i < num_tests; i++) {
 		avro_value_t  field;
@@ -249,8 +249,8 @@ test_nested_record_value_by_index(unsigned long num_tests)
 		avro_value_equal_fast(&val, &out);
 	}
 
-	avro_value_free(&val);
-	avro_value_free(&out);
+	avro_value_decref(&val);
+	avro_value_decref(&out);
 	avro_value_iface_decref(iface);
 	avro_schema_decref(schema);
 }
@@ -310,10 +310,10 @@ test_nested_record_value_by_name(unsigned long num_tests)
 	avro_value_iface_t  *iface = avro_generic_class_from_schema(schema);
 
 	avro_value_t  val;
-	avro_value_new(iface, &val);
+	avro_generic_value_new(iface, &val);
 
 	avro_value_t  out;
-	avro_value_new(iface, &out);
+	avro_generic_value_new(iface, &out);
 
 	for (i = 0; i < num_tests; i++) {
 		avro_value_t  field;
@@ -349,8 +349,8 @@ test_nested_record_value_by_name(unsigned long num_tests)
 		avro_value_equal_fast(&val, &out);
 	}
 
-	avro_value_free(&val);
-	avro_value_free(&out);
+	avro_value_decref(&val);
+	avro_value_decref(&out);
 	avro_value_iface_decref(iface);
 	avro_schema_decref(schema);
 }

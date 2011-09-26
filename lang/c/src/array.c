@@ -22,6 +22,7 @@
 #include "avro/allocation.h"
 #include "avro/data.h"
 #include "avro/errors.h"
+#include "avro_private.h"
 
 
 void avro_raw_array_init(avro_raw_array_t *array, size_t element_size)
@@ -69,6 +70,10 @@ avro_raw_array_ensure_size(avro_raw_array_t *array, size_t desired_count)
 		new_size = array->allocated_size * 2;
 	}
 
+	if (required_size > new_size) {
+		new_size = required_size;
+	}
+
 	array->data = avro_realloc(array->data, array->allocated_size, new_size);
 	if (array->data == NULL) {
 		avro_set_error("Cannot allocate space in array for %zu elements",
@@ -76,6 +81,23 @@ avro_raw_array_ensure_size(avro_raw_array_t *array, size_t desired_count)
 		return ENOMEM;
 	}
 	array->allocated_size = new_size;
+
+	return 0;
+}
+
+
+int
+avro_raw_array_ensure_size0(avro_raw_array_t *array, size_t desired_count)
+{
+	int  rval;
+	size_t  old_allocated_size = array->allocated_size;
+	check(rval, avro_raw_array_ensure_size(array, desired_count));
+
+	if (array->allocated_size > old_allocated_size) {
+		size_t  extra_space = array->allocated_size - old_allocated_size;
+		void  *buf = array->data;
+		memset(buf + old_allocated_size, 0, extra_space);
+	}
 
 	return 0;
 }

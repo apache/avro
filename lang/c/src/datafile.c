@@ -17,7 +17,9 @@
 
 #include "avro_private.h"
 #include "avro/allocation.h"
+#include "avro/generic.h"
 #include "avro/errors.h"
+#include "avro/value.h"
 #include "encoding.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -165,11 +167,12 @@ static int file_read_header(avro_reader_t reader,
 	int rval;
 	avro_schema_t meta_schema;
 	avro_schema_t meta_values_schema;
-	avro_datum_t meta;
+	avro_value_iface_t *meta_iface;
+	avro_value_t meta;
 	char magic[4];
-	avro_datum_t schema_bytes;
-	char *p;
-	int64_t len;
+	avro_value_t schema_bytes;
+	const void *p;
+	size_t len;
 	avro_schema_error_t schema_error;
 
 	check(rval, avro_read(reader, magic, sizeof(magic)));
@@ -181,29 +184,35 @@ static int file_read_header(avro_reader_t reader,
 
 	meta_values_schema = avro_schema_bytes();
 	meta_schema = avro_schema_map(meta_values_schema);
-	rval = avro_read_data(reader, meta_schema, NULL, &meta);
+	meta_iface = avro_generic_class_from_schema(meta_schema);
+	if (meta_iface == NULL) {
+		return EILSEQ;
+	}
+	check(rval, avro_generic_value_new(meta_iface, &meta));
+	rval = avro_value_read(reader, &meta);
 	if (rval) {
 		avro_prefix_error("Cannot read file header: ");
 		return EILSEQ;
 	}
 	avro_schema_decref(meta_schema);
 
-	rval = avro_map_get(meta, "avro.schema", &schema_bytes);
+	rval = avro_value_get_by_name(&meta, "avro.schema", &schema_bytes, NULL);
 	if (rval) {
 		avro_set_error("File header doesn't contain a schema");
-		avro_datum_decref(meta);
+		avro_value_decref(&meta);
 		return rval;
 	}
 
-	avro_bytes_get(schema_bytes, &p, &len);
+	avro_value_get_bytes(&schema_bytes, &p, &len);
 	rval = avro_schema_from_json(p, len, writers_schema, &schema_error);
 	if (rval) {
 		avro_prefix_error("Cannot parse file header: ");
-		avro_datum_decref(meta);
+		avro_value_decref(&meta);
 		return rval;
 	}
 
-	avro_datum_decref(meta);
+	avro_value_decref(&meta);
+	avro_value_iface_decref(meta_iface);
 	return avro_read(reader, sync, synclen);
 }
 

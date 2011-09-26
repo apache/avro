@@ -355,7 +355,6 @@ process_file(const char *filename)
 		avro_datum_as_value(&value, datum);
 		create_array_prefix(&prefix, "", record_number);
 		process_value(avro_raw_string_get(&prefix), &value);
-		avro_value_done(&value);
 	}
 
 	avro_raw_string_done(&prefix);

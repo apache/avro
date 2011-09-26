@@ -164,7 +164,10 @@ int main(void)
 	fprintf(stdout, "\nNow let's read all the records back out\n");
 
 	/* Read all the records and print them */
-	avro_file_reader(dbname, &dbreader);
+	if (avro_file_reader(dbname, &dbreader)) {
+		fprintf(stderr, "Error opening file: %s\n", avro_strerror());
+		exit(EXIT_FAILURE);
+	}
 	for (i = 0; i < id; i++) {
 		if (print_person(dbreader, NULL)) {
 			fprintf(stderr, "Error printing person\n");
@@ -188,10 +191,14 @@ int main(void)
 	/* Read only the record you're interested in */
 	fprintf(stdout,
 		"\n\nUse projection to print only the First name and phone numbers\n");
-	avro_file_reader(dbname, &dbreader);
+	if (avro_file_reader(dbname, &dbreader)) {
+		fprintf(stderr, "Error opening file: %s\n", avro_strerror());
+		exit(EXIT_FAILURE);
+	}
 	for (i = 0; i < id; i++) {
 		if (print_person(dbreader, projection_schema)) {
-			fprintf(stderr, "Error printing person\n");
+			fprintf(stderr, "Error printing person: %s\n",
+				avro_strerror());
 			exit(EXIT_FAILURE);
 		}
 	}

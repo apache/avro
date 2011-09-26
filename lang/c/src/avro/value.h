@@ -41,7 +41,7 @@ extern "C" {
 typedef struct avro_value_iface  avro_value_iface_t;
 
 typedef struct avro_value {
-	const avro_value_iface_t  *iface;
+	avro_value_iface_t  *iface;
 	void  *self;
 } avro_value_t;
 
@@ -56,7 +56,7 @@ struct avro_value_iface {
 	 * reference counts.
 	 */
 	avro_value_iface_t *
-	(*incref)(avro_value_iface_t *iface);
+	(*incref_iface)(avro_value_iface_t *iface);
 
 	/**
 	 * Decrement the reference count of the interface struct.  If
@@ -65,32 +65,28 @@ struct avro_value_iface {
 	 * counts.
 	 */
 	void
-	(*decref)(avro_value_iface_t *iface);
-
-	/**
-	 * Return the size of an instance of this value type.  If this
-	 * returns 0, then this value type can't be used with any
-	 * function or type (like avro_value_new) that expects to
-	 * allocate space for the value itself.
-	 */
-	size_t
-	(*instance_size)(const avro_value_iface_t *iface);
+	(*decref_iface)(avro_value_iface_t *iface);
 
 	/*-------------------------------------------------------------
 	 * General "instance" methods
 	 */
 
 	/**
-	 * Initialize a new value instance.
+	 * Increments the reference count of a value.
 	 */
-	int
-	(*init)(const avro_value_iface_t *iface, void *self);
+
+	void
+	(*incref)(avro_value_t *value);
 
 	/**
-	 * Finalize a value instance.
+	 * Decrements the reference count of a value, and frees the
+	 * value if the reference count drops to 0.  After calling this
+	 * method, your value instance is undefined, and cannot be used
+	 * anymore.
 	 */
+
 	void
-	(*done)(const avro_value_iface_t *iface, void *self);
+	(*decref)(avro_value_t *value);
 
 	/**
 	 * Reset the instance to its "empty", default value.  You don't
@@ -263,20 +259,47 @@ struct avro_value_iface {
 			  avro_value_t *branch);
 };
 
-/**
- * Allocate a new instance of the given value class, storing the result
- * into val.
- */
-
-int
-avro_value_new(const avro_value_iface_t *cls, avro_value_t *val);
 
 /**
- * Finalize and deallocate a value instance.
+ * Increments the reference count of a value instance.  Normally you
+ * don't need to call this directly; you'll have a reference whenever
+ * you create the value, and @ref avro_value_copy and @ref
+ * avro_value_move update the reference counts correctly for you.
  */
 
 void
-avro_value_free(avro_value_t *val);
+avro_value_incref(avro_value_t *value);
+
+/**
+ * Decremenets the reference count of a value instance, freeing it if
+ * its reference count drops to 0.
+ */
+
+void
+avro_value_decref(avro_value_t *value);
+
+/**
+ * Copies a reference to a value.  This does not copy any of the data
+ * in the value; you get two avro_value_t references that point at the
+ * same underlying value instance.
+ */
+
+void
+avro_value_copy_ref(avro_value_t *dest, const avro_value_t *src);
+
+/**
+ * Moves a reference to a value.  This does not copy any of the data in
+ * the value.  The @ref src value is invalidated by this function; its
+ * equivalent to the following:
+ *
+ * <code>
+ * avro_value_copy_ref(dest, src);
+ * avro_value_decref(src);
+ * </code>
+ */
+
+void
+avro_value_move_ref(avro_value_t *dest, avro_value_t *src);
 
 /**
  * Compares two values for equality.  The two values don't need to have
@@ -324,6 +347,13 @@ avro_value_copy(avro_value_t *dest, const avro_value_t *src);
 int
 avro_value_copy_fast(avro_value_t *dest, const avro_value_t *src);
 
+/**
+ * Returns a hash value for a given Avro value.
+ */
+
+uint32_t
+avro_value_hash(avro_value_t *value);
+
 
 /**
  * A helper macro for calling a given method in a value instance, if
@@ -342,16 +372,9 @@ avro_value_copy_fast(avro_value_t *dest, const avro_value_t *src);
 
 
 #define avro_value_iface_incref(cls) \
-    ((cls)->incref == NULL? (cls): (cls)->incref((cls)))
+    ((cls)->incref_iface == NULL? (cls): (cls)->incref_iface((cls)))
 #define avro_value_iface_decref(cls) \
-    ((cls)->decref == NULL? (void) 0: (cls)->decref((cls)))
-
-#define avro_value_instance_size(cls) \
-    ((cls)->instance_size == NULL? 0: (cls)->instance_size((cls)))
-#define avro_value_init(cls, self) \
-    ((cls)->init == NULL? EINVAL: (cls)->init((cls), (self)))
-#define avro_value_done(value) \
-    avro_value_call0(value, done, (void) 0)
+    ((cls)->decref_iface == NULL? (void) 0: (cls)->decref_iface((cls)))
 
 #define avro_value_reset(value) \
     avro_value_call0(value, reset, EINVAL)

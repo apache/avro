@@ -49,7 +49,8 @@ test_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
 				"doesn't match size passed to "
 				"avro_malloc (%zu)\n",
 				ptr, osize, *size);
-			exit(EXIT_FAILURE);
+			abort();
+			//exit(EXIT_FAILURE);
 		}
 		free(size);
 		return NULL;

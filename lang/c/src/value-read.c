@@ -141,8 +141,8 @@ read_record_value(avro_reader_t reader, avro_value_t *dest)
 	for (i = 0; i < field_count; i++) {
 		avro_value_t  field;
 
-		rval = avro_value_get_by_index(dest, i, &field, NULL);
-		if (rval == 0) {
+		check(rval, avro_value_get_by_index(dest, i, &field, NULL));
+		if (field.iface != NULL) {
 			check(rval, read_value(reader, &field));
 		} else {
 			avro_schema_t  field_schema =

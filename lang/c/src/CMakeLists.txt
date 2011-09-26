@@ -30,10 +30,13 @@ set(AVRO_SRC
     avro/io.h
     avro/legacy.h
     avro/refcount.h
+    avro/resolver.h
     avro/schema.h
     avro/value.h
+    avro_generic_internal.h
     avro_private.h
     consumer.c
+    consume-binary.c
     datafile.c
     datum.c
     datum.h
@@ -51,16 +54,11 @@ set(AVRO_SRC
     encoding_binary.c
     errors.c
     generic.c
-    generic-array.c
-    generic-enum.c
-    generic-fixed.c
-    generic-map.c
-    generic-primitives.c
-    generic-record.c
-    generic-union.c
     io.c
     map.c
     memoize.c
+    resolved-reader.c
+    resolved-writer.c
     resolver.c
     schema.c
     schema.h
@@ -69,6 +67,7 @@ set(AVRO_SRC
     st.h
     string.c
     value.c
+    value-hash.c
     value-read.c
     value-sizeof.c
     value-write.c

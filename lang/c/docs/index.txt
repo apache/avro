@@ -128,6 +128,7 @@ regardless of which Avro schema it's an instance of:
 
 [source,c]
 ----
+#include <stdint.h>
 #include <avro.h>
 
 avro_type_t avro_value_get_type(const avro_value_t *value);
@@ -138,6 +139,8 @@ int avro_value_equal_fast(const avro_value_t *v1, const avro_value_t *v2);
 
 int avro_value_copy(avro_value_t *dest, const avro_value_t *src);
 int avro_value_copy_fast(avro_value_t *dest, const avro_value_t *src);
+
+uint32_t avro_value_hash(avro_value_t *value);
 
 int avro_value_reset(avro_value_t *value);
 ----
@@ -160,6 +163,16 @@ content of a +bytes+, +string+, or +fixed+ value, using the
 +avro_wrapped_buffer_t+ functions described in the next section.)  Like
 +equal+, the two values must have the same schema; +copy+ checks this,
 while +copy_fast+ assumes it.
+
+The +hash+ method returns a hash value for the given Avro value.  This
+can be used to construct hash tables that use Avro values as keys.  The
+function works correctly even with maps; it produces a hash that doesn't
+depend on the ordering of the elements of the map.  Hash values are only
+meaningful for comparing values of exactly the same schema.  Hash values
+are _not_ guaranteed to be consistent across different platforms, or
+different versions of the Avro library.  That means that it's really
+only safe to use these hash values internally within the context of a
+single execution of a single application.
 
 The +reset+ method “clears out” an +avro_value_t instance, making sure
 that it's ready to accept the contents of a new value.  For scalars,
@@ -473,21 +486,23 @@ current.)
 === Creating value instances
 
 Okay, so we've described how to interact with a value that you already
-have a pointer to, but how do you create one in the first place?  Since
-there can be many implementations of the value interface, this requires
-a couple of steps:
+have a pointer to, but how do you create one in the first place?  Each
+implementation of the value interface must provide its own functions for
+creating +avro_value_t+ instances for that class.  The 10,000-foot view
+is to:
 
 1. Get an _implementation struct_ for the value implementation that you
    want to use.  (This is represented by an +avro_value_iface_t+
    pointer.)
 
-2. Use +avro_value_new+ to allocate instances of that value
-   implementation on the heap.
+2. Use the implementation's constructor function to allocate instances
+   of that value implementation.
 
-3. Do whatever you need to the value (using the methods described in the
-   previous section).
+3. Do whatever you need to the value (using the +avro_value_t+ methods
+   described in the previous section).
 
-4. Free the value instance using +avro_value_free+.
+4. Free the value instance, if necessary, using the implementation's
+   destructor function.
 
 5. Free the implementation struct when you're done creating value
    instances.
@@ -500,9 +515,6 @@ These steps use the following functions:
 
 avro_value_iface_t *avro_value_iface_incref(avro_value_iface_t *iface);
 void avro_value_iface_decref(avro_value_iface_t *iface);
-
-int avro_value_new(const avro_value_iface_t *iface, avro_value_t *value);
-void avro_value_free(avro_value_t *val);
 ----
 
 Note that for most value implementations, it's fine to reuse a single
@@ -511,17 +523,27 @@ Note that for most value implementations, it's fine to reuse a single
 value.  (This helps reduce the number of +malloc+ and +free+ calls that
 your application will make.)
 
+We provide a “generic” value implementation that will work (efficiently)
+for any Avro schema.
+
+
 For most applications, you won't need to write your own value
 implementation; the Avro C library provides an efficient “generic”
-implementation, which supports the full range of Avro schema types.  You
-can use the following function to create an implementation struct for a
-particular schema:
+implementation, which supports the full range of Avro schema types.
+There's a good chance that you just want to use this implementation,
+rather than rolling your own.  (The primary reason for rolling your own
+would be if you want to access the elements of a compound value using C
+syntax — for instance, translating an Avro record into a C struct.) You
+can use the following functions to create and work with a generic value
+implementation for a particular schema:
 
 [source,c]
 ----
 #include <avro.h>
 
 avro_value_iface_t *avro_generic_class_from_schema(avro_schema_t schema);
+int avro_generic_value_new(const avro_value_iface_t *iface, avro_value_t *dest);
+void avro_generic_value_free(avro_value_t *self);
 ----
 
 Combining all of this together, you might have the following snippet of
@@ -533,7 +555,7 @@ avro_schema_t  schema = avro_schema_long();
 avro_value_iface_t  *iface = avro_generic_class_from_schema(schema);
 
 avro_value_t  val;
-avro_value_new(iface, &val);
+avro_generic_value_new(iface, &val);
 
 /* Generate Avro longs from 0-499 */
 int  i;
@@ -543,7 +565,7 @@ for (i = 0; i < 500; i++) {
     /* do something with the value */
 }
 
-avro_value_free(&val);
+avro_generic_value_free(&val);
 avro_value_iface_decref(iface);
 avro_schema_decref(schema);
 ----

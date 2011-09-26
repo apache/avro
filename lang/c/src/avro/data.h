@@ -78,6 +78,17 @@ int
 avro_raw_array_ensure_size(avro_raw_array_t *array, size_t desired_count);
 
 /**
+ * Ensures that there is enough allocated space to store the given
+ * number of elements in an avro_raw_array_t.  If the array grows as a
+ * result of this operation, we will fill in any newly allocated space
+ * with 0 bytes.  If we can't allocate that much space, we return
+ * ENOMEM.
+ */
+
+int
+avro_raw_array_ensure_size0(avro_raw_array_t *array, size_t desired_count);
+
+/**
  * Returns the number of elements in an avro_raw_array_t.
  */
 

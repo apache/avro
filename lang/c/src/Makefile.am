@@ -18,19 +18,20 @@ avro/generic.h \
 avro/io.h \
 avro/legacy.h \
 avro/refcount.h \
+avro/resolver.h \
 avro/schema.h \
 avro/value.h
 
 lib_LTLIBRARIES = libavro.la
 libavro_la_SOURCES = st.c st.h schema.c schema.h schema_equal.c \
-value.c generic.c value-read.c value-sizeof.c value-write.c \
-generic-array.c generic-enum.c generic-fixed.c generic-map.c \
-generic-primitives.c generic-record.c generic-union.c \
+value.c value-hash.c value-read.c value-sizeof.c value-write.c \
+avro_generic_internal.h generic.c \
 datum.c datum_equal.c datum_validate.c datum_read.c datum_skip.c datum_write.c datum_size.c datum.h \
 datum_json.c \
 datum_value.c \
 array.c map.c memoize.c string.c \
-consumer.c resolver.c \
+consumer.c consume-binary.c resolver.c \
+resolved-reader.c resolved-writer.c \
 io.c dump.c dump.h encoding_binary.c \
 allocation.c \
 wrapped-buffer.c \
