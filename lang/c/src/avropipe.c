@@ -347,17 +347,21 @@ process_file(const char *filename)
 	avro_raw_string_t  prefix;
 	avro_raw_string_init(&prefix);
 
-	avro_datum_t  datum;
+	avro_schema_t  wschema = avro_file_reader_get_writer_schema(reader);
+	avro_value_iface_t  *iface = avro_generic_class_from_schema(wschema);
+	avro_value_t  value;
+	avro_generic_value_new(iface, &value);
+
 	size_t  record_number = 0;
 
-	for (; avro_file_reader_read(reader, NULL, &datum) == 0; record_number++) {
-		avro_value_t  value;
-		avro_datum_as_value(&value, datum);
+	for (; avro_file_reader_read_value(reader, &value) == 0; record_number++) {
 		create_array_prefix(&prefix, "", record_number);
 		process_value(avro_raw_string_get(&prefix), &value);
 	}
 
 	avro_raw_string_done(&prefix);
+	avro_value_decref(&value);
+	avro_value_iface_decref(iface);
 	avro_file_reader_close(reader);
 }
 

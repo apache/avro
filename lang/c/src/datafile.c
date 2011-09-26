@@ -319,6 +319,13 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 	return rval;
 }
 
+avro_schema_t
+avro_file_reader_get_writer_schema(avro_file_reader_t r)
+{
+	check_param(NULL, r, "reader");
+	return r->writers_schema;
+}
+
 static int file_write_block(avro_file_writer_t w)
 {
 	const avro_encoding_t *enc = &avro_binary_encoding;
@@ -368,6 +375,29 @@ int avro_file_writer_append(avro_file_writer_t w, avro_datum_t datum)
 	return 0;
 }
 
+int
+avro_file_writer_append_value(avro_file_writer_t w, avro_value_t *value)
+{
+	int rval;
+	check_param(EINVAL, w, "writer");
+	check_param(EINVAL, value, "value");
+
+	rval = avro_value_write(w->datum_writer, value);
+	if (rval) {
+		check(rval, file_write_block(w));
+		rval = avro_value_write(w->datum_writer, value);
+		if (rval) {
+			avro_set_error("Value too large for file block size");
+			/* TODO: if the value encoder larger than our buffer,
+			   just write a single large datum */
+			return rval;
+		}
+	}
+	w->block_count++;
+	w->block_size = avro_writer_tell(w->datum_writer);
+	return 0;
+}
+
 int avro_file_writer_sync(avro_file_writer_t w)
 {
 	return file_write_block(w);
@@ -403,6 +433,31 @@ int avro_file_reader_read(avro_file_reader_t r, avro_schema_t readers_schema,
 	check(rval,
 	      avro_read_data(r->reader, r->writers_schema, readers_schema,
 			     datum));
+	r->blocks_read++;
+
+	if (r->blocks_read == r->blocks_total) {
+		check(rval, avro_read(r->reader, sync, sizeof(sync)));
+		if (memcmp(r->sync, sync, sizeof(r->sync)) != 0) {
+			/* wrong sync bytes */
+			avro_set_error("Incorrect sync bytes");
+			return EILSEQ;
+		}
+		/* For now, ignore errors (e.g. EOF) */
+		file_read_block_count(r);
+	}
+	return 0;
+}
+
+int
+avro_file_reader_read_value(avro_file_reader_t r, avro_value_t *value)
+{
+	int rval;
+	char sync[16];
+
+	check_param(EINVAL, r, "reader");
+	check_param(EINVAL, value, "value");
+
+	check(rval, avro_value_read(r->reader, value));
 	r->blocks_read++;
 
 	if (r->blocks_read == r->blocks_total) {

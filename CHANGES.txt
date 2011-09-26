@@ -22,6 +22,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-863. C: Schema resolution using new value interface. (dcreager)
 
+    AVRO-893. C: Avro data file functions using new value interface.
+    (dcreager)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)

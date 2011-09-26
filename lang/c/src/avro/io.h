@@ -92,11 +92,20 @@ int avro_file_writer_create(const char *path, avro_schema_t schema,
 int avro_file_writer_open(const char *path, avro_file_writer_t * writer);
 int avro_file_reader(const char *path, avro_file_reader_t * reader);
 
+avro_schema_t
+avro_file_reader_get_writer_schema(avro_file_reader_t reader);
+
 int avro_file_writer_sync(avro_file_writer_t writer);
 int avro_file_writer_flush(avro_file_writer_t writer);
 int avro_file_writer_close(avro_file_writer_t writer);
 
 int avro_file_reader_close(avro_file_reader_t reader);
+
+int
+avro_file_reader_read_value(avro_file_reader_t reader, avro_value_t *dest);
+
+int
+avro_file_writer_append_value(avro_file_writer_t writer, avro_value_t *src);
 
 /*
  * Legacy avro_datum_t API
