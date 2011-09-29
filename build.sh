@@ -100,6 +100,8 @@ case "$target" in
 
 	(cd lang/c++; ./build.sh dist)
 
+	(cd lang/csharp; ./build.sh dist)
+
 	(cd lang/ruby; rake dist)
 
 	(cd lang/php; ./build.sh dist)

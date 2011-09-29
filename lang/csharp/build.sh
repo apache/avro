@@ -18,11 +18,31 @@
 set -e						  # exit on error
 set -x		
 
+cd `dirname "$0"`				  # connect to root
+
+ROOT=../..
+VERSION=`cat $ROOT/share/VERSION.txt`
+
+export CONFIGURATION=Release
+export TARGETFRAMEWORKVERSION=3.5
+
 case "$1" in
 
     test)
-	CONFIGURATION=Release TARGETFRAMEWORKVERSION=3.5 xbuild
+	xbuild
 	nunit-console Avro.nunit
+	;;
+
+    dist)
+        # build binary tarball
+	xbuild
+	mkdir -p $ROOT/dist
+        (cd build; tar czf $ROOT/../dist/avro-csharp-$VERSION.tar.gz main codegen)
+
+        # build documentation
+        doxygen Avro.dox
+	mkdir -p $ROOT/build/avro-doc-$VERSION/api/csharp
+        cp -pr build/doc/* $ROOT/build/avro-doc-$VERSION/api/csharp
 	;;
 
     clean)

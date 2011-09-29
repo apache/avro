@@ -84,6 +84,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-865. C: Upgrade Jansson to 2.1. (dcreager)
 
+    AVRO-899. C#: Include binary artifacts and documentation in
+    releases.  (cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

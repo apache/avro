@@ -45,6 +45,7 @@ See http://forrest.apache.org/docs/linking.html for more info
     <java-api   label="Java API"          href="ext:api/java/index" />
     <c-api      label="C API"             href="ext:api/c/index" />
     <cpp-api    label="C++ API"           href="ext:api/cpp/index" />
+    <csharp-api label="C# API"            href="ext:api/csharp/index" />
     <idl        label="IDL language"      href="idl.html" />
     <sasl       label="SASL profile"      href="sasl.html" />
     <wiki       label="Wiki"              href="ext:wiki" />
@@ -71,6 +72,9 @@ See http://forrest.apache.org/docs/linking.html for more info
       <cpp href="cpp/">
 	<index href="html/index.html" />
       </cpp>
+      <csharp href="csharp/">
+	<index href="index.html" />
+      </csharp>
       <java href="java/">
 	<index href="index.html" />
       </java>
