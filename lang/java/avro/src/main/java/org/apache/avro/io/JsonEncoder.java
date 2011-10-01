@@ -286,7 +286,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
       out.writeStartObject();
     } else if (top == Symbol.RECORD_END || top == Symbol.UNION_END) {
       out.writeEndObject();
-    } else {
+    } else if (top != Symbol.FIELD_END) {
       throw new AvroTypeException("Unknown action symbol " + top);
     }
     return null;

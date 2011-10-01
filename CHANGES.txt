@@ -94,6 +94,7 @@ Avro 1.6.0 (unreleased)
 
     AVRO-894. C: cmake build now works on Mac OS X Lion. (dcreager)
 
+    AVRO-895. JsonDecoder does not tolerate JSON records with different field order (thiru)
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS

@@ -76,7 +76,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
       LitS wsc = new LitS(sc);
       Symbol rresult = seen.get(wsc);
       if (rresult == null) {
-        Symbol[] production = new Symbol[sc.getFields().size() * 2 + 2];
+        Symbol[] production = new Symbol[sc.getFields().size() * 3 + 2];
         rresult = Symbol.seq(production);
         seen.put(wsc, rresult);
 
@@ -86,6 +86,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
         for (Field f : sc.getFields()) {
           production[--i] = new Symbol.FieldAdjustAction(n, f.name());
           production[--i] = generate(f.schema(), seen);
+          production[--i] = Symbol.FIELD_END;
           n++;
         }
         production[--i] = Symbol.RECORD_END;
