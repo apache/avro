@@ -87,6 +87,9 @@ Avro 1.6.0 (unreleased)
     AVRO-899. C#: Include binary artifacts and documentation in
     releases.  (cutting)
 
+    AVRO-898. Java: Extend NettyServer to support SSL.
+    (Vadim Tsarik via cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

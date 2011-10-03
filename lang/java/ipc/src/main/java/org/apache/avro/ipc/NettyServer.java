@@ -63,9 +63,14 @@ public class NettyServer implements Server {
   private final CountDownLatch closed = new CountDownLatch(1);
   
   public NettyServer(Responder responder, InetSocketAddress addr) {
+    this(responder, addr, new NioServerSocketChannelFactory
+         (Executors .newCachedThreadPool(), Executors.newCachedThreadPool()));
+  }
+  
+  public NettyServer(Responder responder, InetSocketAddress addr,
+                     ChannelFactory channelFactory) {
     this.responder = responder;
-    channelFactory = new NioServerSocketChannelFactory(Executors
-        .newCachedThreadPool(), Executors.newCachedThreadPool());
+    this.channelFactory = channelFactory;
     ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
     bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
       @Override
