@@ -74,7 +74,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       case FIXED:   writeFixed(schema, datum, out);   break;
       case STRING:  writeString(schema, datum, out);  break;
       case BYTES:   writeBytes(datum, out);           break;
-      case INT:     out.writeInt((Integer)datum);     break;
+      case INT:     out.writeInt(((Number)datum).intValue()); break;
       case LONG:    out.writeLong((Long)datum);       break;
       case FLOAT:   out.writeFloat((Float)datum);     break;
       case DOUBLE:  out.writeDouble((Double)datum);   break;
@@ -98,8 +98,9 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.*/
   protected void writeRecord(Schema schema, Object datum, Encoder out)
     throws IOException {
+    Object state = data.getRecordState(schema);
     for (Field f : schema.getFields()) {
-      Object value = data.getField(datum, f.name(), f.pos());
+      Object value = data.getField(datum, f.name(), f.pos(), state);
       try {
         write(f.schema(), value, out);
       } catch (NullPointerException e) {

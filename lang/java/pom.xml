@@ -405,6 +405,7 @@
     <module>tools</module>
     <module>mapred</module>
     <module>protobuf</module>
+    <module>thrift</module>
     <module>archetypes</module>
   </modules>
 

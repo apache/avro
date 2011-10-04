@@ -163,16 +163,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representations.*/
   protected Object readRecord(Object old, Schema expected, 
       ResolvingDecoder in) throws IOException {
-    Object record = data.newRecord(old, expected);
+    Object r = data.newRecord(old, expected);
+    Object state = data.getRecordState(expected);
     
     for (Field f : in.readFieldOrder()) {
       int pos = f.pos();
       String name = f.name();
-      Object oldDatum = (old != null) ? data.getField(record, name, pos) : null;
-      data.setField(record, name, pos, read(oldDatum, f.schema(), in));
+      Object oldDatum = (old!=null) ? data.getField(r, name, pos, state) : null;
+      data.setField(r, name, pos, read(oldDatum, f.schema(), in), state);
     }
 
-    return record;
+    return r;
   }
   
   /** Called to read an enum value. May be overridden for alternate enum

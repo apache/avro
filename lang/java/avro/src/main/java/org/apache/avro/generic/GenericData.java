@@ -510,6 +510,21 @@ public class GenericData {
     return ((IndexedRecord)record).get(position);
   }
 
+  /** Produce state for repeated calls to {@link
+   * #getField(Object,String,int,Object)} and {@link
+   * #setField(Object,String,int,Object,Object)} on the same record.*/
+  protected Object getRecordState(Schema schema) { return null; }
+
+  /** Version of {@link #setField} that has state. */
+  protected void setField(Object r, String n, int p, Object o, Object state) {
+    setField(r, n, p, o);
+  }
+  
+  /** Version of {@link #getField} that has state. */
+  protected Object getField(Object record, String name, int pos, Object state) {
+    return getField(record, name, pos);
+  }
+
   /** Return the index for a datum within a union.  Implemented with {@link
    * #instanceOf(Schema,Object)}.*/
   public int resolveUnion(Schema union, Object datum) {

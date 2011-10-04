@@ -28,6 +28,11 @@ Avro 1.6.0 (unreleased)
     AVRO-890: Java: Add Maven archetype for creating Avro service
     projects.  (Stephen Gargan via cutting)
 
+    AVRO-804. Java: Add support for reading and writing instances of
+    Thrift generated classes.  This permits Thrift-defined data
+    structures to be written and read from Avro-format data files.
+    (cutting)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)
