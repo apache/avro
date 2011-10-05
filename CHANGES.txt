@@ -95,6 +95,9 @@ Avro 1.6.0 (unreleased)
     AVRO-898. Java: Extend NettyServer to support SSL.
     (Vadim Tsarik via cutting)
 
+    AVRO-905. Java: Change JsonEncoder to write objects on separate
+    lines.  (cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

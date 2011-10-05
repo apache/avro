@@ -25,6 +25,7 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -90,6 +91,19 @@ public class TestEncoders {
   @Test(expected=NullPointerException.class)
   public void testBadJsonEncoderInit() throws IOException {
     factory.jsonEncoder(Schema.create(Type.INT), (JsonGenerator)null);
+  }
+
+  @Test
+  public void testJsonEncoderNewlineDelimited() throws IOException {
+    OutputStream out = new ByteArrayOutputStream();
+    Schema ints = Schema.create(Type.INT);
+    Encoder e = factory.jsonEncoder(ints, out);
+    String separator = System.getProperty("line.separator");
+    GenericDatumWriter<Integer> writer = new GenericDatumWriter<Integer>(ints);
+    writer.write(1, e);
+    writer.write(2, e);
+    e.flush();
+    Assert.assertEquals("1"+separator+"2", out.toString());
   }
 
   @Test

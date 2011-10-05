@@ -31,6 +31,7 @@ import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.util.MinimalPrettyPrinter;
 
 /** An {@link Encoder} for Avro's JSON data encoding. 
  * </p>
@@ -67,11 +68,17 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     }
   }
 
+  // by default, one object per line
   private static JsonGenerator getJsonGenerator(OutputStream out)
       throws IOException {
     if (null == out)
       throw new NullPointerException("OutputStream cannot be null"); 
-    return new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
+    JsonGenerator g
+      = new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
+    MinimalPrettyPrinter pp = new MinimalPrettyPrinter();
+    pp.setRootValueSeparator(System.getProperty("line.separator"));
+    g.setPrettyPrinter(pp);
+    return g;
   }
   
   /**

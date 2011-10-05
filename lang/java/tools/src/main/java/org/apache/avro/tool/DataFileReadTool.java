@@ -61,12 +61,10 @@ public class DataFileReadTool implements Tool {
       Schema schema = fileReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
-      for (Object datum : fileReader) {
-        encoder.configure(out); //reinitializes state
+      for (Object datum : fileReader)
         writer.write(datum, encoder);
-        encoder.flush();
-        out.println();
-      }
+      encoder.flush();
+      out.println();
       out.flush();
     } finally {
       fileReader.close();
