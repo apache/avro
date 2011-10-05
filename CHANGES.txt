@@ -113,6 +113,7 @@ Avro 1.6.0 (unreleased)
     AVRO-906. Java: Fix so that ordering of schema properties is
     consistent. (cutting)
 
+    AVRO-901, Java tools unit tests fail in Windows due to line termination and filenaming conventions. (thiru)
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
