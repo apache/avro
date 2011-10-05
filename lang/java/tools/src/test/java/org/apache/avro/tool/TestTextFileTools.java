@@ -52,6 +52,7 @@ public class TestTextFileTools {
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
 
+  private static final byte[] LINE_SEP = System.getProperty("line.separator").getBytes();
   static File linesFile;
   static ByteBuffer[] lines;
   static Schema schema;
@@ -76,7 +77,7 @@ public class TestTextFileTools {
         line[i] = (byte)b;
       }
       out.write(line);
-      out.write('\n');
+      out.write(LINE_SEP);
       lines[j] = ByteBuffer.wrap(line);
     }
     out.close();

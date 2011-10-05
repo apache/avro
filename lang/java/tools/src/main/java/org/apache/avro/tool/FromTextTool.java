@@ -100,11 +100,14 @@ public class FromTextTool implements Tool {
       for (int i = 0; i < end; i++) {
         int b = buf[i] & 0xFF;
         if (b == '\n') {                          // newline
-          System.out.println("Writing line = "+line.position());
-          line.flip();
-          writer.append(line);
-          line.clear();
-          returnSeen = false;
+          if (!returnSeen) {
+            System.out.println("Writing line = "+line.position());
+            line.flip();
+            writer.append(line);
+            line.clear();
+          } else {
+            returnSeen = false;
+          }
         } else if (b == '\r') {                   // return
           line.flip();
           writer.append(line);

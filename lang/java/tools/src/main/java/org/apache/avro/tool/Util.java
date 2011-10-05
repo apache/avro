@@ -21,7 +21,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,9 +28,9 @@ import java.io.OutputStream;
 import java.net.URI;
 
 import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.file.DataFileReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -50,16 +49,12 @@ class Util {
     } 
     else {
       String[] parts = filename.split(":");
-      if (parts.length == 1) {
-        return new BufferedInputStream(new FileInputStream(new File(filename)));
-      }
-      else if (parts[0].equals("hdfs")) {
+      if (parts.length > 1 && parts[0].equals("hdfs")) {
         FileSystem fs = FileSystem.get(
             URI.create(filename), new Configuration());
         return new BufferedInputStream(fs.open(new Path(filename)));
-      }
-      else {
-        throw new FileNotFoundException();
+      } else {
+        return new BufferedInputStream(new FileInputStream(new File(filename)));
       }
     }
   }
@@ -76,17 +71,13 @@ class Util {
     } 
     else {
       String[] parts = filename.split(":");
-      if (parts.length == 1) {
+      if (parts.length > 1 && parts[0].equals("hdfs")) {
+        FileSystem fs = FileSystem.get(
+          URI.create(filename), new Configuration());
+        return new BufferedOutputStream(fs.create(new Path(filename)));
+      } else {
         return new BufferedOutputStream(
             new FileOutputStream(new File(filename)));
-      }
-      else if (parts[0].equals("hdfs")) {
-        FileSystem fs = FileSystem.get(
-            URI.create(filename), new Configuration());
-        return new BufferedOutputStream(fs.create(new Path(filename)));
-      }
-      else {
-        throw new FileNotFoundException();
       }
     }
   }
