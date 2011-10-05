@@ -421,6 +421,12 @@ public class TestSchema {
     assertEquals(null, s.getProp("foo"));
   }
   
+  @Test public void testPropOrdering() throws Exception {
+    String json = "{\"type\":\"int\",\"z\":\"c\",\"yy\":\"b\",\"x\":\"a\"}";
+    Schema s = Schema.parse(json);
+    assertEquals(json, s.toString());
+  }
+
   @Test
   public void testParseInputStream() throws IOException {
     Schema s = Schema.parse(
