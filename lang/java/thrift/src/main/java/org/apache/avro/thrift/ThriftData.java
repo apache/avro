@@ -54,16 +54,13 @@ public class ThriftData extends GenericData {
 
   @Override
   public void setField(Object r, String n, int pos, Object o) {
-    setField(r, n, pos, o, getRecordState(getSchema(r.getClass())));
+    setField(r, n, pos, o, getRecordState(r, getSchema(r.getClass())));
   }
 
   @Override
   public Object getField(Object r, String name, int pos) {
-    return getField(r, name, pos, getRecordState(getSchema(r.getClass())));
+    return getField(r, name, pos, getRecordState(r, getSchema(r.getClass())));
   }
-
-  @Override
-  protected Object getRecordState(Schema schema) { return getFieldIds(schema); }
 
   @Override
   protected void setField(Object r, String n, int pos, Object v, Object state) {
@@ -78,18 +75,16 @@ public class ThriftData extends GenericData {
   private final Map<Schema,TFieldIdEnum[]> fieldCache =
     new ConcurrentHashMap<Schema,TFieldIdEnum[]>();
 
-  public TFieldIdEnum[] getFieldIds(Schema s) {
+  @Override
+  protected Object getRecordState(Object r, Schema s) {
     TFieldIdEnum[] fields = fieldCache.get(s);
-    if (fields == null)
-      try {                                       // cache miss
-        fields = new TFieldIdEnum[s.getFields().size()];
-        Class c = Class.forName(SpecificData.getClassName(s));
-        for (TFieldIdEnum f : FieldMetaData.getStructMetaDataMap(c).keySet())
-          fields[s.getField(f.getFieldName()).pos()] = f;
-        fieldCache.put(s, fields);                  // update cache
-      } catch (ClassNotFoundException e) {
-        throw new AvroRuntimeException(e);
-      }
+    if (fields == null) {                           // cache miss
+      fields = new TFieldIdEnum[s.getFields().size()];
+      Class c = r.getClass();
+      for (TFieldIdEnum f : FieldMetaData.getStructMetaDataMap(c).keySet())
+        fields[s.getField(f.getFieldName()).pos()] = f;
+      fieldCache.put(s, fields);                  // update cache
+    }
     return fields;
   }
 

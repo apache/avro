@@ -35,6 +35,7 @@ import org.apache.avro.specific.SpecificData;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
+import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -60,9 +61,19 @@ public class ProtobufData extends GenericData {
   public static ProtobufData get() { return INSTANCE; }
 
   @Override
-  public void setField(Object record, String name, int position, Object o) {
-    Builder b = (Builder)record;
-    FieldDescriptor f = getFieldDescriptor(b.getDescriptorForType(), position);
+  public void setField(Object r, String n, int pos, Object o) {
+    setField(r, n, pos, o, getRecordState(r, getSchema(r.getClass())));
+  }
+
+  @Override
+  public Object getField(Object r, String name, int pos) {
+    return getField(r, name, pos, getRecordState(r, getSchema(r.getClass())));
+  }
+
+  @Override
+  protected void setField(Object r, String n, int pos, Object o, Object state) {
+    Builder b = (Builder)r;
+    FieldDescriptor f = ((FieldDescriptor[])state)[pos];
     switch (f.getType()) {
     case ENUM:
       b.setField(f, ((ProtocolMessageEnum)o).getValueDescriptor());
@@ -78,9 +89,9 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  public Object getField(Object record, String name, int position) {
+  protected Object getField(Object record, String name, int pos, Object state) {
     Message m = (Message)record;
-    FieldDescriptor f = getFieldDescriptor(m.getDescriptorForType(), position);
+    FieldDescriptor f = ((FieldDescriptor[])state)[pos];
     switch (f.getType()) {
     case ENUM:
       Schema s = getSchema(f);
@@ -102,16 +113,17 @@ public class ProtobufData extends GenericData {
   private final Map<Descriptor,FieldDescriptor[]> fieldCache =
     new ConcurrentHashMap<Descriptor,FieldDescriptor[]>();
 
-  private FieldDescriptor getFieldDescriptor(Descriptor d, int pos) {
+  @Override
+  protected Object getRecordState(Object r, Schema s) {
+    Descriptor d = ((MessageOrBuilder)r).getDescriptorForType();
     FieldDescriptor[] fields = fieldCache.get(d);
     if (fields == null) {                         // cache miss
-      Schema s = getSchema(d);
       fields = new FieldDescriptor[s.getFields().size()];
       for (Field f : s.getFields())
         fields[f.pos()] = d.findFieldByName(f.name());
       fieldCache.put(d, fields);                  // update cache
     }
-    return fields[pos];
+    return fields;
   }
 
   @Override

@@ -513,7 +513,7 @@ public class GenericData {
   /** Produce state for repeated calls to {@link
    * #getField(Object,String,int,Object)} and {@link
    * #setField(Object,String,int,Object,Object)} on the same record.*/
-  protected Object getRecordState(Schema schema) { return null; }
+  protected Object getRecordState(Object record, Schema schema) { return null; }
 
   /** Version of {@link #setField} that has state. */
   protected void setField(Object r, String n, int p, Object o, Object state) {
