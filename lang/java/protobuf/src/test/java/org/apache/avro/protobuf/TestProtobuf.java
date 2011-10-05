@@ -29,8 +29,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.protobuf.ByteString;
 
-import pb.Test.Foo;
-import pb.Test.A;
+import org.apache.avro.protobuf.Test.Foo;
+import org.apache.avro.protobuf.Test.A;
 
 public class TestProtobuf {
   @Test public void testMessage() throws Exception {

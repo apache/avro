@@ -100,6 +100,8 @@ Avro 1.6.0 (unreleased)
     AVRO-905. Java: Change JsonEncoder to write objects on separate
     lines.  (cutting)
 
+    AVRO-910. Java: Add generated protobuf test code to subversion.  (cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
