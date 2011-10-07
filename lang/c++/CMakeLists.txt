@@ -34,7 +34,8 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
 
 project (Avro-cpp)
 
-find_package (Boost 1.38 COMPONENTS regex filesystem system program_options)
+find_package (Boost 1.38 REQUIRED
+    COMPONENTS regex filesystem system program_options)
 
 include_directories (api ${BUILD_DIRECTORY} ${Boost_INCLUDE_DIRS})
 
