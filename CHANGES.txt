@@ -119,6 +119,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-900. On slower machines Java unit test TestFileSpanStorage fails. (thiru)
 
+    AVRO-912. Mapreduce tether test fails on Windows. (thiru)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS

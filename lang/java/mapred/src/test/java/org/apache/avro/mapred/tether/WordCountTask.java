@@ -21,8 +21,8 @@ package org.apache.avro.mapred.tether;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-import org.apache.avro.util.Utf8;
 import org.apache.avro.mapred.Pair;
+import org.apache.avro.util.Utf8;
 
 /** Example Java tethered mapreduce executable.  Implements map and reduce
  * functions for word count. */

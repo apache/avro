@@ -137,7 +137,7 @@ class TetheredProcess  {
     // if we pass a single string containing all arguments we get quoted
     // incorrectly
     String args=job.get(TetherJob.TETHER_EXEC_ARGS);
-    String[] aparams=args.split(" ");
+    String[] aparams=args.split("\n");
     for (int i=0;i<aparams.length; i++){            
       aparams[i]=aparams[i].trim();
       if (aparams[i].length()>0){
@@ -165,6 +165,7 @@ class TetheredProcess  {
 
     // start child process
     ProcessBuilder builder = new ProcessBuilder(command);
+    System.out.println(command);
     builder.environment().putAll(env);
     return builder.start();
   }

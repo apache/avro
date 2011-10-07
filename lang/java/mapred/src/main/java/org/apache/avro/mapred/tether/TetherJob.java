@@ -18,8 +18,11 @@
 
 package org.apache.avro.mapred.tether;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -49,8 +52,8 @@ public class TetherJob extends Configured {
   }
   
   /** Set the URI for the application's executable. Normally this in HDFS. */
-  public static void setExecutable(JobConf job, URI executable) {
-    setExecutable(job,executable,"",false);
+  public static void setExecutable(JobConf job, File executable) {
+    setExecutable(job,executable, new ArrayList<String>(),false);
   }
   
   /**
@@ -63,9 +66,14 @@ public class TetherJob extends Configured {
    *               - if false its not cached. I.e if the file is already stored on each local file system
    *                or if its on a NFS share
    */
-  public static void setExecutable(JobConf job, URI executable,String argstr,boolean cached) {
+  public static void setExecutable(JobConf job, File executable, List<String> args, boolean cached) {
         job.set(TETHER_EXEC, executable.toString());
-        job.set(TETHER_EXEC_ARGS, argstr);
+        StringBuilder sb = new StringBuilder();
+        for (String a : args) {
+          sb.append(a);
+          sb.append('\n');
+        }
+        job.set(TETHER_EXEC_ARGS, sb.toString());
         job.set(TETHER_EXEC_CACHED,  (new Boolean(cached)).toString());
   }
 

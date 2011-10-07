@@ -20,7 +20,6 @@ package org.apache.avro.tool;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.URI;
 import java.util.List;
 
 import joptsimple.OptionParser;
@@ -54,9 +53,9 @@ public class TetherTool implements Tool {
       List<String> args) throws Exception {
 
     OptionParser p = new OptionParser();
-    OptionSpec<URI> exec = p
+    OptionSpec<File> exec = p
         .accepts("program", "executable program, usually in HDFS")
-        .withRequiredArg().ofType(URI.class);
+        .withRequiredArg().ofType(File.class);
     OptionSpec<String> in = p.accepts("in", "comma-separated input paths")
         .withRequiredArg().ofType(String.class);
     OptionSpec<Path> out = p.accepts("out", "output directory")

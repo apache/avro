@@ -72,7 +72,7 @@ import org.apache.avro.file.DataFileStream;
 public class TestWordCountTether {
 
 
-  @Test
+    @Test
     @SuppressWarnings("deprecation")
     public void testJob() throws Exception {
 
@@ -86,19 +86,21 @@ public class TestWordCountTether {
     // create the input file
     WordCountUtil.writeLinesFile();
 
-    java.net.URI exec =
-      new java.net.URI(System.getProperty("java.home")+"/bin/java");
+    File exec =
+      new File(System.getProperty("java.home")+"/bin/java");
 
     //input path
     String in=dir+"/in";
 
     //create a string of the arguments
-    String execargs="-classpath " + System.getProperty("java.class.path");
-    execargs+= " org.apache.avro.mapred.tether.WordCountTask";
+    List<String> execargs = new ArrayList<String>();
+    execargs.add("-classpath");
+    execargs.add(System.getProperty("java.class.path"));
+    execargs.add("org.apache.avro.mapred.tether.WordCountTask");
 
     FileInputFormat.addInputPaths(job, in);
     FileOutputFormat.setOutputPath(job, outputPath);
-    TetherJob.setExecutable(job, exec,execargs,false);
+    TetherJob.setExecutable(job, exec, execargs, false);
 
     Schema outscheme= new Pair<Utf8,Long>(new Utf8(""), 0L).getSchema();
     AvroJob.setInputSchema(job, Schema.create(Schema.Type.STRING));
