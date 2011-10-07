@@ -246,7 +246,8 @@
           a <em>fullname</em> that is composed of two parts;
           a <em>name</em> and a <em>namespace</em>.  Equality of names
           is defined on the fullname.</p>
-	<p>The name portion of a fullname, and record field names must:</p>
+	<p>The name portion of a fullname, record field names, and
+	  enum symbols must:</p>
 	<ul>
           <li>start with <code>[A-Za-z_]</code></li>
           <li>subsequently contain only <code>[A-Za-z0-9_]</code></li>
