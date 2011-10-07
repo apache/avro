@@ -87,7 +87,11 @@ public class SpecificResponder extends GenericResponder {
       method.setAccessible(true);
       return method.invoke(impl, params);
     } catch (InvocationTargetException e) {
-      throw (Exception)e.getTargetException();
+      if (e.getTargetException() instanceof Exception) {
+        throw (Exception) e.getTargetException();
+      } else {
+        throw new Exception(e.getTargetException());
+      }
     } catch (NoSuchMethodException e) {
       throw new AvroRuntimeException(e);
     } catch (IllegalAccessException e) {

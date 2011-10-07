@@ -132,6 +132,9 @@ Avro 1.6.0 (unreleased)
     AVRO-902. C++/CMake installs into /usr/local/local/.  (Nebojsa
     Sabovic via thiru)
 
+    AVRO-914. Java: Fix SpecificResponder to better handle
+    non-Exception Throwables. (philz via cutting)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
