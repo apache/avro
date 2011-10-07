@@ -36,7 +36,7 @@ project (Avro-cpp)
 
 find_package (Boost 1.38 COMPONENTS regex filesystem system program_options)
 
-include_directories (api ${BUILD_DIRECTORY})
+include_directories (api ${BUILD_DIRECTORY} ${Boost_INCLUDE_DIRS})
 
 add_library (avrocpp SHARED
         impl/Compiler.cc impl/CompilerNode.cc impl/Node.cc

@@ -121,6 +121,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-912. Mapreduce tether test fails on Windows. (thiru)
 
+    AVRO-903. C++/Cmake build fails to find Boost libraries. (Nebojsa Sabovic via thiru)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
