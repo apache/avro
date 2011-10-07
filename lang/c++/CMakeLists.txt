@@ -164,11 +164,11 @@ set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 include (CPack)
 
 install(TARGETS avrocpp
-    LIBRARY DESTINATION local/lib
-    ARCHIVE DESTINATION local/lib
-    RUNTIME DESTINATION local/lib)
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION lib)
 
-install(DIRECTORY api/ DESTINATION local/include/avro
+install(DIRECTORY api/ DESTINATION include/avro
     FILES_MATCHING PATTERN *.hh)
 
 set (CMAKE_BUILD_TYPE Release)

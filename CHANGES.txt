@@ -125,6 +125,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-904. C++/CMake build should fail if Boost libraries are not present. (Nebojsa Sabovic via thiru)
 
+    AVRO-902. C++/CMake installs into /usr/local/local/.  (Nebojsa Sabovic via thiru)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
