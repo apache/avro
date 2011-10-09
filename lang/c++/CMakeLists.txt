@@ -39,7 +39,7 @@ find_package (Boost 1.38 REQUIRED
 
 include_directories (api ${BUILD_DIRECTORY} ${Boost_INCLUDE_DIRS})
 
-add_library (avrocpp SHARED
+set (SOURCE_FILES
         impl/Compiler.cc impl/CompilerNode.cc impl/Node.cc
         impl/NodeImpl.cc impl/Resolver.cc impl/ResolverSchema.cc impl/Schema.cc
         impl/Types.cc impl/Validator.cc impl/ValidSchema.cc impl/Zigzag.cc
@@ -52,6 +52,10 @@ add_library (avrocpp SHARED
         impl/parsing/JsonCodec.cc
         impl/parsing/ResolvingDecoder.cc
         ${BUILD_DIRECTORY}/AvroYacc.cc ${BUILD_DIRECTORY}/AvroLex.cc)
+
+add_library (avrocpp SHARED ${SOURCE_FILES})
+
+add_library (avrocpp_s ${SOURCE_FILES})
 
 target_link_libraries (avrocpp ${Boost_LIBRARIES})
 
@@ -163,7 +167,7 @@ set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 
 include (CPack)
 
-install(TARGETS avrocpp
+install(TARGETS avrocpp avrocpp_s
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION lib)

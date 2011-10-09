@@ -33,6 +33,8 @@ Avro 1.6.0 (unreleased)
     structures to be written and read from Avro-format data files.
     (cutting)
 
+    AVRO-908. Add an option to build avrocpp as a static library. (Nebojsa Sabovic via thiru)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)
