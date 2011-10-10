@@ -55,7 +55,7 @@ set (SOURCE_FILES
 
 add_library (avrocpp SHARED ${SOURCE_FILES})
 
-add_library (avrocpp_s ${SOURCE_FILES})
+add_library (avrocpp_s STATIC ${SOURCE_FILES})
 
 target_link_libraries (avrocpp ${Boost_LIBRARIES})
 
