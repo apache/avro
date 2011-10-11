@@ -38,7 +38,6 @@ import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
 import org.apache.avro.test.TestError;
 import org.apache.avro.test.TestRecord;
-import org.apache.avro.util.Utf8;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -85,19 +84,19 @@ public class TestNettyServerWithCallbacks {
   @Test
   public void greeting() throws Exception {
     // Test synchronous RPC:
-    Assert.assertEquals(new Utf8("Hello, how are you?"), simpleClient.hello("how are you?"));
+    Assert.assertEquals("Hello, how are you?", simpleClient.hello("how are you?"));
     
     // Test asynchronous RPC (future):
-    CallFuture<CharSequence> future1 = new CallFuture<CharSequence>();
+    CallFuture<String> future1 = new CallFuture<String>();
     simpleClient.hello("World!", future1);
-    Assert.assertEquals(new Utf8("Hello, World!"), future1.get(2, TimeUnit.SECONDS));
+    Assert.assertEquals("Hello, World!", future1.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future1.getError());
     
     // Test asynchronous RPC (callback):
-    final CallFuture<CharSequence> future2 = new CallFuture<CharSequence>();
-    simpleClient.hello("what's up?", new Callback<CharSequence>() {
+    final CallFuture<String> future2 = new CallFuture<String>();
+    simpleClient.hello("what's up?", new Callback<String>() {
       @Override
-      public void handleResult(CharSequence result) {
+      public void handleResult(String result) {
         future2.handleResult(result);
       }
       @Override
@@ -105,7 +104,7 @@ public class TestNettyServerWithCallbacks {
         future2.handleError(error);
       }
     });
-    Assert.assertEquals(new Utf8("Hello, what's up?"), future2.get(2, TimeUnit.SECONDS));
+    Assert.assertEquals("Hello, what's up?", future2.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future2.getError());
   }
   
@@ -391,7 +390,7 @@ public class TestNettyServerWithCallbacks {
             startLatch.await(2, TimeUnit.SECONDS);
             while (runFlag.get()) {
               rpcCount.incrementAndGet();
-              Assert.assertEquals(new Utf8("Hello, World!"), simpleClient.hello("World!"));
+              Assert.assertEquals("Hello, World!", simpleClient.hello("World!"));
             }
           } catch (Exception e) {
             e.printStackTrace();
@@ -425,7 +424,7 @@ public class TestNettyServerWithCallbacks {
     }
     
     @Override
-    public CharSequence hello(CharSequence greeting) throws AvroRemoteException {
+    public String hello(String greeting) throws AvroRemoteException {
       return "Hello, " + greeting;
     }
 
@@ -470,7 +469,7 @@ public class TestNettyServerWithCallbacks {
     }
     
     @Override
-    public CharSequence hello(CharSequence greeting) throws AvroRemoteException {
+    public String hello(String greeting) throws AvroRemoteException {
       acquirePermit();
       try {
         return super.hello(greeting);

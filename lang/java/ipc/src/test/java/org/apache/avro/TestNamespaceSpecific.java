@@ -26,7 +26,6 @@ import org.apache.avro.test.namespace.TestNamespace;
 import org.apache.avro.test.util.MD5;
 import org.apache.avro.test.errors.TestError;
 import org.apache.avro.test.namespace.TestRecord;
-import org.apache.avro.util.Utf8;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +40,7 @@ public class TestNamespaceSpecific {
   public static class TestImpl implements TestNamespace {
     public TestRecord echo(TestRecord record) { return record; }
     public Void error() throws AvroRemoteException {
-      throw TestError.newBuilder().setMessage$(new Utf8("an error")).build();
+      throw TestError.newBuilder().setMessage$("an error").build();
     }
   }
 

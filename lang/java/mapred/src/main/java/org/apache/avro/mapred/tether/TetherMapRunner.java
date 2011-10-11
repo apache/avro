@@ -31,7 +31,6 @@ import org.apache.hadoop.mapred.Counters.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.avro.util.Utf8;
 import org.apache.avro.mapred.AvroJob;
 
 class TetherMapRunner
@@ -57,8 +56,8 @@ class TetherMapRunner
       // configure it
       process.inputClient.configure
         (TaskType.MAP, 
-         new Utf8(job.get(AvroJob.INPUT_SCHEMA)),
-         new Utf8(AvroJob.getMapOutputSchema(job).toString()));
+         job.get(AvroJob.INPUT_SCHEMA),
+         AvroJob.getMapOutputSchema(job).toString());
          
       process.inputClient.partitions(job.getNumReduceTasks());
 

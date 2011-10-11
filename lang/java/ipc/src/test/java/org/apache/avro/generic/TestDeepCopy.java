@@ -35,7 +35,6 @@ import org.apache.avro.Node;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificData;
-import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
 /** Unit test for performing a deep copy of an object with a schema */
@@ -56,21 +55,20 @@ public class TestDeepCopy {
     interopBuilder.setIntField(32);
     interopBuilder.setLongField(64L);
     
-    Map<java.lang.CharSequence,org.apache.avro.Foo> map = 
-      new HashMap<java.lang.CharSequence,org.apache.avro.Foo>(1);
-    map.put(new Utf8("foo"), 
-        Foo.newBuilder().setLabel(new Utf8("bar")).build());
+    Map<java.lang.String,org.apache.avro.Foo> map = 
+      new HashMap<java.lang.String,org.apache.avro.Foo>(1);
+    map.put("foo", Foo.newBuilder().setLabel("bar").build());
     interopBuilder.setMapField(map);
     
     interopBuilder.setNullField(null);
     
-    Node.Builder rootBuilder = Node.newBuilder().setLabel(new Utf8("/"));
-    Node.Builder homeBuilder = Node.newBuilder().setLabel(new Utf8("home"));
+    Node.Builder rootBuilder = Node.newBuilder().setLabel("/");
+    Node.Builder homeBuilder = Node.newBuilder().setLabel("home");
     homeBuilder.setChildren(new ArrayList<Node>(0));
     rootBuilder.setChildren(Arrays.asList(new Node[] { homeBuilder.build() }));
     interopBuilder.setRecordField(rootBuilder.build());
     
-    interopBuilder.setStringField(new Utf8("Hello"));
+    interopBuilder.setStringField("Hello");
     interopBuilder.setUnionField(true);
     
     Interop interop = interopBuilder.build();
@@ -90,8 +88,9 @@ public class TestDeepCopy {
       }
       
       // Original field and deep copy should be different instances:
-      if ((field.schema().getType() != Type.ENUM) && 
-          (field.schema().getType() != Type.NULL)) {
+      if ((field.schema().getType() != Type.ENUM)
+           && (field.schema().getType() != Type.NULL)
+           && (field.schema().getType() != Type.STRING)) {
         assertFalse("Field " + field.name() + " is same instance in deep copy",
             interop.get(field.pos()) == 
               GenericData.get().deepCopy(

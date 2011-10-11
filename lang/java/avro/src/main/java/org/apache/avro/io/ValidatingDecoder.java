@@ -108,6 +108,12 @@ public class ValidatingDecoder extends ParsingDecoder
   }
 
   @Override
+  public String readString() throws IOException {
+    parser.advance(Symbol.STRING);
+    return in.readString();
+  }
+
+  @Override
   public void skipString() throws IOException {
     parser.advance(Symbol.STRING);
     in.skipString();

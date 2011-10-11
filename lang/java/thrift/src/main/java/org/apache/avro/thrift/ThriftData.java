@@ -172,7 +172,9 @@ public class ThriftData extends GenericData {
       MapMetaData mapMeta = (MapMetaData)f;
       if (mapMeta.keyMetaData.type != TType.STRING)
         throw new AvroRuntimeException("Map keys must be strings: "+f);
-      return Schema.createMap(getSchema(mapMeta.valueMetaData));
+      Schema map = Schema.createMap(getSchema(mapMeta.valueMetaData));
+      GenericData.setStringType(map, GenericData.StringType.String);
+      return map;
     case TType.SET:
       SetMetaData setMeta = (SetMetaData)f;
       Schema set = Schema.createArray(getSchema(setMeta.elemMetaData));
@@ -181,8 +183,9 @@ public class ThriftData extends GenericData {
     case TType.STRING:
       if (f.isBinary())
         return Schema.create(Schema.Type.BYTES);
-      else
-        return Schema.create(Schema.Type.STRING);
+      Schema string = Schema.create(Schema.Type.STRING);
+      GenericData.setStringType(string, GenericData.StringType.String);
+      return string;
     case TType.STRUCT:
       StructMetaData structMeta = (StructMetaData)f;
       Schema record = getSchema(structMeta.structClass);

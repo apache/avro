@@ -30,7 +30,6 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
-import org.apache.avro.util.Utf8;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,10 +46,10 @@ public class TestNettyServer {
     private CountDownLatch allMessages = new CountDownLatch(5);
     
     // in this simple example just return details of the message
-    public CharSequence send(Message message) {
-      return new Utf8("Sent message to [" + message.getTo().toString() + 
+    public String send(Message message) {
+      return "Sent message to ["+ message.getTo().toString() + 
           "] from [" + message.getFrom().toString() + "] with body [" + 
-          message.getBody().toString() + "]");
+          message.getBody().toString() + "]";
     }
     
     public void fireandforget(Message message) {
@@ -100,7 +99,7 @@ public class TestNettyServer {
       }
   }
 
-  private void verifyResponse(CharSequence result) {
+  private void verifyResponse(String result) {
     Assert.assertEquals(
         "Sent message to [wife] from [husband] with body [I love you!]",
         result.toString());
@@ -130,9 +129,9 @@ public class TestNettyServer {
 
   private Message createMessage() {
     Message msg = Message.newBuilder().
-      setTo(new Utf8("wife")).
-      setFrom(new Utf8("husband")).
-      setBody(new Utf8("I love you!")).
+      setTo("wife").
+      setFrom("husband").
+      setBody("I love you!").
       build();
     return msg;
   }

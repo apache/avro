@@ -52,8 +52,8 @@ public class TetherTaskRunner implements InputProtocol {
   }
 
   @Override public void configure(TaskType taskType,
-                                  CharSequence inSchema,
-                                  CharSequence outSchema) {
+                                  String inSchema,
+                                  String outSchema) {
     LOG.info("got configure");
     task.configure(taskType, inSchema, outSchema);
   }

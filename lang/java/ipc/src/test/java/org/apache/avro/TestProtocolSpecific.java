@@ -36,7 +36,6 @@ import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestError;
 import org.apache.avro.test.TestRecord;
-import org.apache.avro.util.Utf8;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.Before;
@@ -70,15 +69,13 @@ public class TestProtocolSpecific {
   private static boolean throwUndeclaredError;
 
   public static class TestImpl implements Simple {
-    public CharSequence hello(CharSequence greeting) {
-      return new Utf8("goodbye");
-    }
+    public String hello(String greeting) { return "goodbye"; }
     public int add(int arg1, int arg2) { return arg1 + arg2; }
     public TestRecord echo(TestRecord record) { return record; }
     public ByteBuffer echoBytes(ByteBuffer data) { return data; }
     public Void error() throws AvroRemoteException {
       if (throwUndeclaredError) throw new RuntimeException("foo");
-      throw TestError.newBuilder().setMessage$(new Utf8("an error")).build();
+      throw TestError.newBuilder().setMessage$("an error").build();
     }
     public void ack() { ackCount++; }
   }
@@ -124,8 +121,8 @@ public class TestProtocolSpecific {
 
   @Test
   public void testHello() throws IOException {
-    CharSequence response = proxy.hello(new Utf8("bob"));
-    assertEquals(new Utf8("goodbye"), response);
+    String response = proxy.hello("bob");
+    assertEquals("goodbye", response);
   }
 
   @Test
@@ -137,7 +134,7 @@ public class TestProtocolSpecific {
   @Test
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
-    record.setName(new Utf8("foo"));
+    record.setName("foo");
     record.setKind(Kind.BAR);
     record.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
     TestRecord echoed = proxy.echo(record);
@@ -202,7 +199,7 @@ public class TestProtocolSpecific {
   public void testOneWay() throws IOException {
     ackCount = 0;
     proxy.ack();
-    proxy.hello(new Utf8("foo"));                 // intermix normal req
+    proxy.hello("foo");                           // intermix normal req
     proxy.ack();
     try { Thread.sleep(100); } catch (InterruptedException e) {}
     assertEquals(2, ackCount);
@@ -247,9 +244,9 @@ public class TestProtocolSpecific {
       addRpcPlugins(r);
       GenericRecord params = new GenericData.Record(message.getRequest());
       params.put("extra", Boolean.TRUE);
-      params.put("greeting", new Utf8("bob"));
-      Utf8 response = (Utf8)r.request("hello", params);
-      assertEquals(new Utf8("goodbye"), response);
+      params.put("greeting", "bob");
+      String response = r.request("hello", params).toString();
+      assertEquals("goodbye", response);
     } finally {
       t.close();
       server.close();
@@ -271,7 +268,7 @@ public class TestProtocolSpecific {
   public class HandshakeMonitor extends RPCPlugin{
     
     private int handshakes;
-    private HashSet<CharSequence> seenProtocols = new HashSet<CharSequence>();
+    private HashSet<String> seenProtocols = new HashSet<String>();
     
     @Override
     public void serverConnecting(RPCContext context) {
@@ -282,7 +279,7 @@ public class TestProtocolSpecific {
       }
 
       // check that a given client protocol is only sent once
-      CharSequence clientProtocol =
+      String clientProtocol =
         context.getHandshakeRequest().clientProtocol;
       if (clientProtocol != null) {
         assertFalse(seenProtocols.contains(clientProtocol));

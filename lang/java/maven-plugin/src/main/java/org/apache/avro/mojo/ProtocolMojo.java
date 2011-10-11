@@ -21,6 +21,7 @@ package org.apache.avro.mojo;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.avro.Protocol;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
@@ -50,8 +51,11 @@ public class ProtocolMojo extends AbstractAvroMojo {
   
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
-    SpecificCompiler.compileProtocol(new File(sourceDirectory, filename),
-        outputDirectory);
+    File src = new File(sourceDirectory, filename);
+    Protocol protocol = Protocol.parse(src);
+    SpecificCompiler compiler = new SpecificCompiler(protocol);
+    compiler.setStringType(stringType);
+    compiler.compileToDestination(src, outputDirectory);
   }
 
   @Override

@@ -97,6 +97,13 @@ public abstract class Decoder {
   public abstract Utf8 readString(Utf8 old) throws IOException;
     
   /**
+   * Reads a char-string written by {@link Encoder#writeString}.
+   * @throws AvroTypeException If this is a stateful reader and
+   * char-string is not the type of the next value to be read
+   */
+  public abstract String readString() throws IOException;
+
+  /**
    * Discards a char-string written by {@link Encoder#writeString}.
    *  @throws AvroTypeException If this is a stateful reader and
    *          char-string is not the type of the next value to be read

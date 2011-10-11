@@ -236,7 +236,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (l > 0) {
       do {
         for (int i = 0; i < l; i++) {
-          addToMap(map, readString(null, in), read(null, eValue, in));
+          addToMap(map, readString(null, expected, in), read(null, eValue, in));
         }
       } while ((l = in.mapNext()) > 0);
     }
@@ -286,8 +286,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * #readString(Object,Decoder)}.*/
   protected Object readString(Object old, Schema expected,
                               Decoder in) throws IOException {
-    return readString(old, in);
-  }
+    if (data.STRING_TYPE_STRING.equals(expected.getProp(data.STRING_PROP)))
+      return in.readString();
+    else
+      return readString(old, in);
+  }                  
+
   /** Called to read strings.  Subclasses may override to use a different
    * string representation.  By default, this calls {@link
    * Decoder#readString(Utf8)}.*/

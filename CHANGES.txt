@@ -35,6 +35,11 @@ Avro 1.6.0 (unreleased)
 
     AVRO-908. Add an option to build avrocpp as a static library. (Nebojsa Sabovic via thiru)
 
+    AVRO-803. Java: Optionally change string types in generated code
+    to java.lang.String instead of java.lang.CharSequence.  This is
+    achived by specifying <stringType>String</stringType> in
+    avro-maven-plugin's pom.xml configuration. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)

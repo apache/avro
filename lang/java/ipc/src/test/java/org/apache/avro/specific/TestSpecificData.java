@@ -57,7 +57,7 @@ public class TestSpecificData {
 
     // create a generic instance of this record
     TestRecord nested = new TestRecord();
-    nested.setName(new Utf8("foo"));
+    nested.setName("foo");
     nested.setKind(Kind.BAR);
     nested.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
     GenericData.Record record = new GenericData.Record(schema);

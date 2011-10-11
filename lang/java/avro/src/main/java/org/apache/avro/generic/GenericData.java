@@ -40,6 +40,21 @@ public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
   
+  /** Used to specify the Java type for a string schema. */
+  public enum StringType { CharSequence, String, Utf8 };
+
+  protected static final String STRING_PROP = "avro.java.string";
+  protected static final String STRING_TYPE_STRING = "String";
+
+  /** Set the Java type to be used when reading this schema.  Meaningful only
+   * only string schemas and map schemas (for the keys). */
+  public static void setStringType(Schema s, StringType stringType) {
+    // Utf8 is the default and implements CharSequence, so we only need to add
+    // a property when the type is String
+    if (stringType == StringType.String)
+      s.addProp(GenericData.STRING_PROP, GenericData.STRING_TYPE_STRING);
+  }
+
   /** Return the singleton instance. */
   public static GenericData get() { return INSTANCE; }
 
@@ -721,6 +736,8 @@ public class GenericData {
     }
   }
 
+  private static final Schema STRINGS = Schema.create(Type.STRING);
+
   /**
    * Makes a deep copy of a value given its schema.
    * @param schema the schema of the value to deep copy.
@@ -768,7 +785,7 @@ public class GenericData {
         Map<CharSequence, Object> mapCopy = 
           new HashMap<CharSequence, Object>(mapValue.size());
         for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
-          mapCopy.put(new Utf8(entry.getKey().toString()), 
+          mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
               deepCopy(schema.getValueType(), entry.getValue()));
         }
         return mapCopy;

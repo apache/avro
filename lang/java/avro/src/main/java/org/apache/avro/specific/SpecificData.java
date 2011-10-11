@@ -99,7 +99,10 @@ public class SpecificData extends GenericData {
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
         return getClass(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return Object.class;
-    case STRING:  return CharSequence.class;
+    case STRING:
+      if (STRING_TYPE_STRING.equals(schema.getProp(STRING_PROP)))
+        return String.class;
+      return CharSequence.class;
     case BYTES:   return ByteBuffer.class;
     case INT:     return Integer.TYPE;
     case LONG:    return Long.TYPE;

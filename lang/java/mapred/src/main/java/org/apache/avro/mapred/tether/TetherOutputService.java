@@ -67,14 +67,14 @@ class TetherOutputService implements OutputProtocol {
     output(datum);
   }
 
-  public void status(CharSequence message) { reporter.setStatus(message.toString());  }
+  public void status(String message) { reporter.setStatus(message.toString());  }
 
 
-  public void count(CharSequence group, CharSequence name, long amount) {
+  public void count(String group, String name, long amount) {
     reporter.getCounter(group.toString(), name.toString()).increment(amount);
   }
 
-  public synchronized void fail(CharSequence message) {
+  public synchronized void fail(String message) {
     TetherMapRunner.LOG.warn("Failing: "+message);
     error = message.toString();
     notify();

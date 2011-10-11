@@ -76,6 +76,7 @@
               <goal>protocol</goal>
             </goals>
             <configuration>  
+              <stringType>String</stringType>
               <includes>
                 <include>**/mapred/tether/*.avpr</include>
               </includes>

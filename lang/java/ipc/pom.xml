@@ -80,6 +80,7 @@
               <excludes>
                 <exclude>**/mapred/tether/**</exclude>
               </excludes>
+              <stringType>String</stringType>
               <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
               <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
               <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>

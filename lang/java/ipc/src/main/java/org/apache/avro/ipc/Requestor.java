@@ -45,7 +45,6 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.ByteBufferInputStream;
 import org.apache.avro.util.ByteBufferOutputStream;
-import org.apache.avro.util.Utf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,10 +54,10 @@ public abstract class Requestor {
 
   private static final Schema META =
     Schema.createMap(Schema.create(Schema.Type.BYTES));
-  private static final GenericDatumReader<Map<CharSequence,ByteBuffer>>
-    META_READER = new GenericDatumReader<Map<CharSequence,ByteBuffer>>(META);
-  private static final GenericDatumWriter<Map<CharSequence,ByteBuffer>>
-    META_WRITER = new GenericDatumWriter<Map<CharSequence,ByteBuffer>>(META);
+  private static final GenericDatumReader<Map<String,ByteBuffer>>
+    META_READER = new GenericDatumReader<Map<String,ByteBuffer>>(META);
+  private static final GenericDatumWriter<Map<String,ByteBuffer>>
+    META_WRITER = new GenericDatumWriter<Map<String,ByteBuffer>>(META);
 
   private final Protocol local;
   private volatile Protocol remote;
@@ -212,7 +211,7 @@ public abstract class Requestor {
     handshake.clientHash = localHash;
     handshake.serverHash = remoteHash;
     if (sendLocalText)
-      handshake.clientProtocol = new Utf8(local.toString());
+      handshake.clientProtocol = local.toString();
     
     RPCContext context = new RPCContext();
     context.setHandshakeRequest(handshake);

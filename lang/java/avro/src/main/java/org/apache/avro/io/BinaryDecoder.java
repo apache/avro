@@ -257,6 +257,13 @@ public class BinaryDecoder extends Decoder {
     return result;
   }
   
+  private final Utf8 scratchUtf8 = new Utf8();
+
+  @Override
+  public String readString() throws IOException {
+    return readString(scratchUtf8).toString();
+  }
+
   @Override
   public void skipString() throws IOException {
     doSkipBytes(readInt());

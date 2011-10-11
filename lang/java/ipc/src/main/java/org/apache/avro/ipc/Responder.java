@@ -53,10 +53,10 @@ public abstract class Responder {
 
   private static final Schema META =
     Schema.createMap(Schema.create(Schema.Type.BYTES));
-  private static final GenericDatumReader<Map<CharSequence,ByteBuffer>>
-    META_READER = new GenericDatumReader<Map<CharSequence,ByteBuffer>>(META);
-  private static final GenericDatumWriter<Map<CharSequence,ByteBuffer>>
-    META_WRITER = new GenericDatumWriter<Map<CharSequence,ByteBuffer>>(META);
+  private static final GenericDatumReader<Map<String,ByteBuffer>>
+    META_READER = new GenericDatumReader<Map<String,ByteBuffer>>(META);
+  private static final GenericDatumWriter<Map<String,ByteBuffer>>
+    META_WRITER = new GenericDatumWriter<Map<String,ByteBuffer>>(META);
 
   private static final ThreadLocal<Protocol> REMOTE =
     new ThreadLocal<Protocol>();
@@ -220,7 +220,7 @@ public abstract class Responder {
         remote == null ? HandshakeMatch.NONE : HandshakeMatch.CLIENT;
     }
     if (response.match != HandshakeMatch.BOTH) {
-      response.serverProtocol = new Utf8(local.toString());
+      response.serverProtocol = local.toString();
       response.serverHash = localHash;
     }
     

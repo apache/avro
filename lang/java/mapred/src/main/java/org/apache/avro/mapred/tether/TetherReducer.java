@@ -27,7 +27,6 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
-import org.apache.avro.util.Utf8;
 import org.apache.avro.mapred.AvroJob;
 
 class TetherReducer
@@ -49,8 +48,8 @@ class TetherReducer
         process = new TetheredProcess(job, collector, reporter);
         process.inputClient.configure
           (TaskType.REDUCE,
-           new Utf8(AvroJob.getMapOutputSchema(job).toString()),
-           new Utf8(AvroJob.getOutputSchema(job).toString()));
+           AvroJob.getMapOutputSchema(job).toString(),
+           AvroJob.getOutputSchema(job).toString());
       }
       process.inputClient.input(datum.buffer(), datum.count());
     } catch (IOException e) {

@@ -30,7 +30,6 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
-import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
 public class TestRpcPluginOrdering {
@@ -84,16 +83,16 @@ public class TestRpcPluginOrdering {
 
   private Message createTestMessage() {
     Message message = Message.newBuilder().
-      setTo(new Utf8("me@test.com")).
-      setFrom(new Utf8("you@test.com")).
-      setBody(new Utf8("plugin testing")).
+      setTo("me@test.com").
+      setFrom("you@test.com").
+      setBody("plugin testing").
       build();
     return message;
   }
   
   private static class TestMailImpl implements Mail{
-    public CharSequence send(Message message) throws AvroRemoteException {
-      return new Utf8("Received");
+    public String send(Message message) throws AvroRemoteException {
+      return "Received";
     }
     public void fireandforget(Message message) {
     }

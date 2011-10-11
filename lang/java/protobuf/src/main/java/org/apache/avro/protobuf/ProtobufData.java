@@ -255,7 +255,9 @@ public class ProtobufData extends GenericData {
     case DOUBLE:
       return Schema.create(Schema.Type.DOUBLE);
     case STRING:
-      return Schema.create(Schema.Type.STRING);
+      Schema s = Schema.create(Schema.Type.STRING);
+      GenericData.setStringType(s, GenericData.StringType.String);
+      return s;
     case BYTES:
       return Schema.create(Schema.Type.BYTES);
     case INT32: case UINT32: case SINT32: case FIXED32: case SFIXED32:

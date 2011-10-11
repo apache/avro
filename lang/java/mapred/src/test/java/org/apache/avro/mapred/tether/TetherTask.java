@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.avro.Schema;
-import org.apache.avro.util.Utf8;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.SaslSocketTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
@@ -183,17 +182,17 @@ public abstract class TetherTask<IN,MID,OUT> {
 
   /** Call to update task status. */
   public void status(String message) {
-    outputClient.status(new Utf8(message));
+    outputClient.status(message);
   }
 
   /** Call to increment a counter. */
   public void count(String group, String name, long amount) {
-    outputClient.count(new Utf8(group), new Utf8(name), amount);
+    outputClient.count(group, name, amount);
   }
 
   /** Call to fail the task. */
   public void fail(String message) {
-    outputClient.fail(new Utf8(message));
+    outputClient.fail(message);
     close();
   }
 

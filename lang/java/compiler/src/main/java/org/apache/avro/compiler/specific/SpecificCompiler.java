@@ -24,13 +24,19 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.avro.Protocol;
+import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericData.StringType;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -275,6 +281,7 @@ public class SpecificCompiler {
   }
 
   OutputFile compileInterface(Protocol protocol) {
+    protocol = addStringType(protocol);           // annotate protocol as needed
     VelocityContext context = new VelocityContext();
     context.put("protocol", protocol);
     context.put("this", this);
@@ -297,6 +304,7 @@ public class SpecificCompiler {
   }
 
   OutputFile compile(Schema schema) {
+    schema = addStringType(schema);               // annotate schema as needed
     String output = "";
     VelocityContext context = new VelocityContext();
     context.put("this", this);
@@ -325,10 +333,103 @@ public class SpecificCompiler {
     return outputFile;
   }
 
+  private StringType stringType = StringType.CharSequence;
+
+  /** Set the Java type to be emitted for string schemas. */
+  public void setStringType(StringType t) { this.stringType = t; }
+
+  // annotate map and string schemas with string type
+  private Protocol addStringType(Protocol p) {
+    if (stringType != StringType.String)
+      return p;
+
+    Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
+    Map<Schema,Schema> types = new LinkedHashMap<Schema,Schema>();
+
+    // annotate types
+    Collection<Schema> namedTypes = new LinkedHashSet<Schema>();
+    for (Schema s : p.getTypes())
+      namedTypes.add(addStringType(s, types));
+    newP.setTypes(namedTypes);
+
+    // annotate messages
+    Map<String,Message> newM = newP.getMessages();
+    for (Message m : p.getMessages().values())
+      newM.put(m.getName(), m.isOneWay()
+               ? newP.createMessage(m.getName(), m.getDoc(),
+                                    addStringType(m.getRequest(), types))
+               : newP.createMessage(m.getName(), m.getDoc(),
+                                    addStringType(m.getRequest(), types),
+                                    addStringType(m.getResponse(), types),
+                                    addStringType(m.getErrors(), types)));
+    return newP;
+  }
+
+  private Schema addStringType(Schema s) {
+    if (stringType != StringType.String)
+      return s;
+    return addStringType(s, new LinkedHashMap<Schema,Schema>());
+  }
+
+  // annotate map and string schemas with string type
+  private Schema addStringType(Schema s, Map<Schema,Schema> seen) {
+    if (seen.containsKey(s)) return seen.get(s); // break loops
+    Schema result = s;
+    switch (s.getType()) {
+    case STRING:
+      result = Schema.create(Schema.Type.STRING);
+      GenericData.setStringType(result, stringType);
+      break;
+    case RECORD:
+      result =
+        Schema.createRecord(s.getFullName(), s.getDoc(), null, s.isError());
+      seen.put(s, result);
+      List<Field> newFields = new ArrayList<Field>();
+      for (Field f : s.getFields()) {
+        Schema fSchema = addStringType(f.schema(), seen);
+        Field newF =
+          new Field(f.name(), fSchema, f.doc(), f.defaultValue(), f.order());
+        for (Map.Entry<String,String> p : f.props().entrySet())
+          newF.addProp(p.getKey(), p.getValue()); // copy props
+        newFields.add(newF);
+      }
+      result.setFields(newFields);
+      break;
+    case ARRAY:
+      Schema e = addStringType(s.getElementType(), seen);
+      result = Schema.createArray(e);
+      break;
+    case MAP:
+      Schema v = addStringType(s.getValueType(), seen);
+      result = Schema.createMap(v);
+      GenericData.setStringType(result, stringType);
+      break;
+    case UNION:
+      List<Schema> types = new ArrayList<Schema>();
+      for (Schema branch : s.getTypes())
+        types.add(addStringType(branch, seen));
+      result = Schema.createUnion(types);
+      break;
+    }
+    for (Map.Entry<String,String> p : s.getProps().entrySet())
+      result.addProp(p.getKey(), p.getValue());   // copy props
+    seen.put(s, result);
+    return result;
+  }
+
+  private String getStringType() {
+    switch (stringType) {
+    case String:        return "java.lang.String";
+    case Utf8:          return "org.apache.avro.util.Utf8";
+    case CharSequence:  return "java.lang.CharSequence";
+    default: throw new RuntimeException("Unknown string type: "+stringType);
+   }
+  }
+ 
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
   /** Utility for template use.  Returns the java type for a Schema. */
-  public static String javaType(Schema schema) {
+  public String javaType(Schema schema) {
     switch (schema.getType()) {
     case RECORD:
     case ENUM:
@@ -337,14 +438,14 @@ public class SpecificCompiler {
     case ARRAY:
       return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
-      return "java.util.Map<java.lang.CharSequence,"
+      return "java.util.Map<"+getStringType()+","
           + javaType(schema.getValueType()) + ">";
     case UNION:
       List<Schema> types = schema.getTypes(); // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
         return javaType(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "java.lang.Object";
-    case STRING:  return "java.lang.CharSequence";
+    case STRING:  return getStringType();
     case BYTES:   return "java.nio.ByteBuffer";
     case INT:     return "java.lang.Integer";
     case LONG:    return "java.lang.Long";
@@ -357,7 +458,7 @@ public class SpecificCompiler {
   }
 
   /** Utility for template use.  Returns the unboxed java type for a Schema. */
-  public static String javaUnbox(Schema schema) {
+  public String javaUnbox(Schema schema) {
     switch (schema.getType()) {
     case INT:     return "int";
     case LONG:    return "long";

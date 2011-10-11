@@ -35,7 +35,6 @@ import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.specific.SpecificResponder;
-import org.apache.avro.util.Utf8;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.servlet.Context;
@@ -71,9 +70,9 @@ public class TracePlugin extends RPCPlugin {
    * signals that tracing is in progress. The optional PARENT_SPAN_ID_KEY
    * signals that this message has a parent node in the RPC call tree. 
    */
-  private static final Utf8 TRACE_ID_KEY = new Utf8("traceID");
-  private static final Utf8 SPAN_ID_KEY = new Utf8("spanID");
-  private static final Utf8 PARENT_SPAN_ID_KEY = new Utf8("parentSpanID");
+  private static final String TRACE_ID_KEY = "traceID";
+  private static final String SPAN_ID_KEY = "spanID";
+  private static final String PARENT_SPAN_ID_KEY = "parentSpanID";
 
   class TraceResponder implements AvroTrace {
     private SpanStorage spanStorage;
@@ -112,7 +111,7 @@ public class TracePlugin extends RPCPlugin {
   
   // Client interface
   protected Server clientFacingServer;
-  private CharSequence hostname;
+  private String hostname;
   
   /**
    * Get a singleton TracePlugin. This is useful if you want to persist a plugin
@@ -250,7 +249,7 @@ public class TracePlugin extends RPCPlugin {
   
   @Override
   public void serverConnecting(RPCContext context) {
-    Map<CharSequence, ByteBuffer> meta = context.requestHandshakeMeta();
+    Map<String, ByteBuffer> meta = context.requestHandshakeMeta();
     // Are we being asked to propagate a trace?
     if (meta.containsKey(TRACE_ID_KEY) && enabled) {
       if (!(meta.containsKey(SPAN_ID_KEY))) {
@@ -288,8 +287,7 @@ public class TracePlugin extends RPCPlugin {
     if (this.childSpan.get() != null) {
       Span child = this.childSpan.get();
       Util.addEvent(child, SpanEvent.CLIENT_SEND);
-      child.messageName = new Utf8(
-          context.getMessage().getName());
+      child.messageName = context.getMessage().getName();
       child.requestPayloadSize = Util.getPayloadSize(
           context.getRequestPayload());
     }
@@ -300,8 +298,7 @@ public class TracePlugin extends RPCPlugin {
     if (this.currentSpan.get() != null) {
       Span current = this.currentSpan.get();
       Util.addEvent(current, SpanEvent.SERVER_RECV);
-      current.messageName = new Utf8(
-          context.getMessage().getName());
+      current.messageName = context.getMessage().getName();
       current.requestPayloadSize = Util.getPayloadSize(
           context.getRequestPayload());
     }

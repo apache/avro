@@ -24,7 +24,6 @@ import junit.framework.Assert;
 
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.RPCPlugin;
-import org.apache.avro.util.Utf8;
 
 /**
  * An implementation of an RPC metadata plugin API designed for unit testing.
@@ -36,10 +35,10 @@ import org.apache.avro.util.Utf8;
  */
 public final class RPCMetaTestPlugin extends RPCPlugin {
   
-  protected final CharSequence key;
+  protected final String key;
   
   public RPCMetaTestPlugin(String keyname) {
-    key = new Utf8(keyname);
+    key = keyname;
   }
   
   @Override
@@ -73,7 +72,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   
   @Override
   public void clientFinishConnect(RPCContext context) {
-    Map<CharSequence,ByteBuffer> handshakeMeta = context.responseHandshakeMeta();
+    Map<String,ByteBuffer> handshakeMeta = context.responseHandshakeMeta();
     
     Assert.assertNull(context.getRequestPayload());
     Assert.assertNull(context.getResponsePayload());
@@ -107,7 +106,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   
   @Override
   public void serverReceiveRequest(RPCContext context) {
-    Map<CharSequence,ByteBuffer> meta = context.requestCallMeta();
+    Map<String,ByteBuffer> meta = context.requestCallMeta();
     
     Assert.assertNotNull(meta);    
     Assert.assertNotNull(context.getMessage());
@@ -172,7 +171,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     checkRPCMetaMap(context.responseCallMeta());
   }
   
-  protected void checkRPCMetaMap(Map<CharSequence,ByteBuffer> rpcMeta) {
+  protected void checkRPCMetaMap(Map<String,ByteBuffer> rpcMeta) {
     Assert.assertNotNull(rpcMeta);
     Assert.assertTrue("key not present in map", rpcMeta.containsKey(key));
     

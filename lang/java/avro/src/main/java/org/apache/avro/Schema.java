@@ -170,6 +170,11 @@ public abstract class Schema {
     hashCode = NO_HASHCODE;
   }
 
+  /** Return the defined properties as an unmodifieable Map. */
+  public Map<String,String> getProps() {
+    return Collections.unmodifiableMap(props);
+  }
+
   /** Create an anonymous record schema. */
   public static Schema createRecord(List<Field> fields) {
     Schema result = createRecord(null, null, null, false);
@@ -416,6 +421,10 @@ public abstract class Schema {
     /** Add a property with the given name to this field. */
     public synchronized void addProp(String name, String value) {
       props.add(name, value);
+    }
+    /** Return the defined properties as an unmodifieable Map. */
+    public Map<String,String> props() {
+      return Collections.unmodifiableMap(props);
     }
     public void addAlias(String alias) {
       if (aliases == null)

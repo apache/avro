@@ -76,11 +76,6 @@ public class ThriftDatumReader<T> extends GenericDatumReader<T> {
   }
 
   @Override
-  protected Object readString(Object old, Decoder in) throws IOException {
-    return super.readString(old, in).toString();
-  }    
-
-  @Override
   protected Object newArray(Object old, int size, Schema schema) {
     if ("set".equals(schema.getProp(ThriftData.THRIFT_PROP))) {
       if (old instanceof Set) {

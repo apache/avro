@@ -167,10 +167,10 @@ public class TestCompare {
   public void testSpecificRecord() throws Exception {
     TestRecord s1 = new TestRecord();
     TestRecord s2 = new TestRecord();
-    s1.setName(new Utf8("foo"));
+    s1.setName("foo");
     s1.setKind(Kind.BAZ);
     s1.setHash(new MD5(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
-    s2.setName(new Utf8("bar"));
+    s2.setName("bar");
     s2.setKind(Kind.BAR);
     s2.setHash(new MD5(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,6}));
     Schema schema = SpecificData.get().getSchema(TestRecord.class);

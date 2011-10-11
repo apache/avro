@@ -21,6 +21,8 @@ package org.apache.avro.mojo;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.avro.generic.GenericData.StringType;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -72,6 +74,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter
    */
   protected String[] testExcludes = new String[0];
+
+  /**  The Java type to use for Avro strings.  May be one of CharSequence,
+   * String or Utf8.  CharSequence by default.
+   *
+   * @parameter expression="${stringType}"
+   */
+  protected StringType stringType = StringType.CharSequence;
+
 
   /**
    * The current Maven project.

@@ -211,6 +211,11 @@ public class JsonDecoder extends ParsingDecoder
     
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
+    return new Utf8(readString());
+  }
+
+  @Override
+  public String readString() throws IOException {
     advance(Symbol.STRING);
     if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {
       parser.advance(Symbol.MAP_KEY_MARKER);
@@ -224,7 +229,7 @@ public class JsonDecoder extends ParsingDecoder
     }
     String result = in.getText();
     in.nextToken();
-    return new Utf8(result);
+    return result;
   }
 
   @Override

@@ -20,11 +20,17 @@ package org.apache.avro.compiler.specific;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.avro.Schema;
+
 /** Ant task to generate Java interface and classes for a protocol. */
 public class SchemaTask extends ProtocolTask {
   @Override
   protected void doCompile(File src, File dest) throws IOException {
-    SpecificCompiler.compileSchema(src, dest);
+    Schema.Parser parser = new Schema.Parser();
+    Schema schema = parser.parse(src);
+    SpecificCompiler compiler = new SpecificCompiler(schema);
+    compiler.setStringType(getStringType());
+    compiler.compileToDestination(src, dest);
   }
 }
 
