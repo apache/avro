@@ -139,7 +139,7 @@ struct StreamReader {
     StreamReader(InputStream& in) : in_(0), next_(0), end_(0) { reset(in); }
 
     void reset(InputStream& is) {
-        if (in_ != 0) {
+        if (in_ != 0 && end_ != next_) {
             in_->backup(end_ - next_);
         }
         in_ = &is;
@@ -213,7 +213,7 @@ struct StreamWriter {
     StreamWriter(OutputStream& out) : out_(0), next_(0), end_(0) { reset(out); }
 
     void reset(OutputStream& os) {
-        if (out_ != 0) {
+        if (out_ != 0 && end_ != next_) {
             out_->backup(end_ - next_);
         }
         out_ = &os;

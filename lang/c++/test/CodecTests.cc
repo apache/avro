@@ -1400,6 +1400,27 @@ void add_tests(boost::unit_test::test_suite& ts)
 }
 
 }   // namespace parsing
+
+static void testStreamLifetimes()
+{
+    EncoderPtr e = binaryEncoder();
+    {
+        std::auto_ptr<OutputStream> s1 = memoryOutputStream();
+        e->init(*s1);
+        e->encodeInt(100);
+        e->encodeDouble(4.73);
+        e->flush();
+    }
+
+    {
+        std::auto_ptr<OutputStream> s2 = memoryOutputStream();
+        e->init(*s2);
+        e->encodeDouble(3.14);
+        e->flush();
+    }
+
+}
+
 }   // namespace avro
 
 boost::unit_test::test_suite*
@@ -1407,8 +1428,9 @@ init_unit_test_suite( int argc, char* argv[] )
 {
     using namespace boost::unit_test;
 
-    test_suite* ts= BOOST_TEST_SUITE("Avro C++ unit test suite");
+    test_suite* ts= BOOST_TEST_SUITE("Avro C++ unit tests for codecs");
     avro::parsing::add_tests(*ts);
+    ts->add(BOOST_TEST_CASE(avro::testStreamLifetimes));
 
     return ts;
 }
