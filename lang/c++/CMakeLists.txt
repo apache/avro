@@ -29,10 +29,6 @@ endif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt)
 
 set (AVRO_VERSION_MAJOR ${AVRO_VERSION})
 set (AVRO_VERSION_MINOR "0")
-set (BUILD_DIRECTORY build)
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
-set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
 
 project (Avro-cpp)
 
@@ -43,7 +39,7 @@ endif ()
 find_package (Boost 1.38 REQUIRED
     COMPONENTS regex filesystem system program_options)
 
-include_directories (api ${BUILD_DIRECTORY} ${Boost_INCLUDE_DIRS})
+include_directories (api ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
 
 set (SOURCE_FILES
         impl/Compiler.cc impl/CompilerNode.cc impl/Node.cc
@@ -57,11 +53,17 @@ set (SOURCE_FILES
         impl/parsing/ValidatingCodec.cc
         impl/parsing/JsonCodec.cc
         impl/parsing/ResolvingDecoder.cc
-        ${BUILD_DIRECTORY}/AvroYacc.cc ${BUILD_DIRECTORY}/AvroLex.cc)
+        ${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.cc ${CMAKE_CURRENT_BINARY_DIR}/AvroLex.cc)
 
 add_library (avrocpp SHARED ${SOURCE_FILES})
 
 add_library (avrocpp_s STATIC ${SOURCE_FILES})
+
+set_target_properties (avrocpp PROPERTIES
+    VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR})
+
+set_target_properties (avrocpp_s PROPERTIES
+    VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR})
 
 target_link_libraries (avrocpp ${Boost_LIBRARIES})
 
@@ -71,72 +73,80 @@ add_dependencies(avrocpp parser lexer)
 
 target_link_libraries (precompile avrocpp ${Boost_LIBRARIES})
 
-add_custom_command (OUTPUT ${BUILD_DIRECTORY}/bigrecord
-    COMMAND precompile jsonschemas/bigrecord ${BUILD_DIRECTORY}/bigrecord
+add_custom_command (OUTPUT bigrecord
+    COMMAND precompile ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord
+        bigrecord
     DEPENDS precompile)
 
 add_custom_target (testgen
-    COMMAND python ../scripts/gen-cppcode.py -n testgen
-    -i bigrecord -o testgen.hh
-    WORKING_DIRECTORY ${BUILD_DIRECTORY}
-    DEPENDS ${BUILD_DIRECTORY}/bigrecord)
+    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen-cppcode.py
+        -n testgen -i bigrecord -o testgen.hh
+    DEPENDS bigrecord)
 
-add_custom_command (OUTPUT ${BUILD_DIRECTORY}/bigrecord2
-    COMMAND precompile jsonschemas/bigrecord2 ${BUILD_DIRECTORY}/bigrecord2
+add_custom_command (OUTPUT bigrecord2
+    COMMAND precompile ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord2
+        bigrecord2
     DEPENDS precompile)
 
 add_custom_target (testgen2
-    COMMAND python ../scripts/gen-cppcode.py -n testgen2
-    -i bigrecord2 -o testgen2.hh
-    WORKING_DIRECTORY ${BUILD_DIRECTORY}
-    DEPENDS ${BUILD_DIRECTORY}/bigrecord2)
+    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen-cppcode.py
+        -n testgen2 -i bigrecord2 -o testgen2.hh
+    DEPENDS bigrecord2)
 
-add_custom_command (OUTPUT ${BUILD_DIRECTORY}/AvroYacc.cc
-    COMMAND bison --defines=AvroYacc.hh -o AvroYacc.cc ../parser/AvroYacc.yy
-    WORKING_DIRECTORY ${BUILD_DIRECTORY})
+add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.cc
+    COMMAND bison --defines=${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.hh -o ${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/parser/AvroYacc.yy)
 
-add_custom_command (OUTPUT ${BUILD_DIRECTORY}/AvroLex.cc
-    COMMAND flex -oAvroLex.cc ../parser/AvroLex.ll
-    WORKING_DIRECTORY ${BUILD_DIRECTORY})
+add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/AvroLex.cc
+    COMMAND flex -oAvroLex.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/parser/AvroLex.ll)
     
 add_custom_target (bigrecord_hh
-    COMMAND avrogencpp -i jsonschemas/bigrecord
-        -o ${BUILD_DIRECTORY}/bigrecord.hh -n testgen
+    COMMAND avrogencpp
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord
+        -o bigrecord.hh -n testgen
     DEPENDS avrogencpp)
 
 add_custom_target (bigrecord2_hh
-    COMMAND avrogencpp -i jsonschemas/bigrecord2
-        -o ${BUILD_DIRECTORY}/bigrecord2.hh -n testgen2
+    COMMAND avrogencpp
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord2
+        -o bigrecord2.hh -n testgen2
     DEPENDS avrogencpp)
 
 add_custom_target (union_array_union_hh
-    COMMAND avrogencpp -i jsonschemas/union_array_union
-        -o ${BUILD_DIRECTORY}/union_array_union.hh -n uau
+    COMMAND avrogencpp
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_array_union
+        -o union_array_union.hh -n uau
     DEPENDS avrogencpp)
 
 add_custom_target (union_map_union_hh
-    COMMAND avrogencpp -i jsonschemas/union_map_union
-        -o ${BUILD_DIRECTORY}/union_map_union.hh -n umu
+    COMMAND avrogencpp
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_map_union
+        -o union_map_union.hh -n umu
     DEPENDS avrogencpp)
 
 add_custom_target (union_conflict_hh
-    COMMAND avrogencpp -i jsonschemas/union_conflict
-        -o ${BUILD_DIRECTORY}/union_conflict.hh -n uc -U
+    COMMAND avrogencpp
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_conflict
+        -o union_conflict.hh -n uc -U
     DEPENDS avrogencpp)
 
 add_custom_target (recursive_hh
-    COMMAND avrogencpp -i jsonschemas/recursive
-        -o ${BUILD_DIRECTORY}/recursive.hh -n rec
+    COMMAND avrogencpp
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/recursive
+        -o recursive.hh -n rec
     DEPENDS avrogencpp)
 
 add_custom_target (reuse_hh
-    COMMAND avrogencpp -i jsonschemas/reuse
-        -o ${BUILD_DIRECTORY}/reuse.hh -n reu
+    COMMAND avrogencpp
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/reuse
+        -o reuse.hh -n reu
     DEPENDS avrogencpp)
 
 add_custom_target (circulardep_hh
-    COMMAND avrogencpp -i jsonschemas/circulardep
-        -o ${BUILD_DIRECTORY}/circulardep.hh -n reu
+    COMMAND avrogencpp
+        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/circulardep
+        -o circulardep.hh -n reu
     DEPENDS avrogencpp)
 
 macro (test name)

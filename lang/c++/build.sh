@@ -44,7 +44,7 @@ DOC_CPP=$BUILD/$AVRO_DOC/api/cpp
 DIST_DIR=../../dist/cpp
 TARFILE=../dist/cpp/$AVRO_CPP.tar.gz 
 
-cmake -G "Unix Makefiles"
+(mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
 for target in "$@"
 do
 
@@ -76,15 +76,15 @@ function do_dist() {
 
 case "$target" in
     test)
-    make
-    ./build/buffertest
-    ./build/unittest
-    ./build/testgentest
-    ./build/CodecTests
-    ./build/StreamTests
-    ./build/SpecificTests
-    ./build/AvrogencppTests
-    ./build/DataFileTests
+    (cd build && make && cd ..
+        ./build/buffertest
+        ./build/unittest
+        ./build/testgentest
+        ./build/CodecTests
+        ./build/StreamTests
+        ./build/SpecificTests
+        ./build/AvrogencppTests
+        ./build/DataFileTests)
 	;;
 
     dist)
@@ -93,7 +93,7 @@ case "$target" in
     ;;
 
     clean)
-    make clean
+    (cd build && make clean)
 	;;
 
     *)
