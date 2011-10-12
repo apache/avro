@@ -109,6 +109,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-910. Java: Add generated protobuf test code to subversion.  (cutting)
 
+    AVRO-917. Avrogencpp does not insert avro prefix for avro headers in the generated files. (thiru)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

@@ -75,6 +75,7 @@ class CodeGen {
     const std::string ns_;
     const std::string headerFile_;
     const std::string schemaFile_;
+    const std::string includePrefix_;
     boost::mt19937 random_;
 
     vector<PendingSetterGetter> pendingGettersAndSetters;
@@ -99,10 +100,12 @@ class CodeGen {
     void generateUnionTraits(const NodePtr& n);
     void emitCopyright();
 public:
-    CodeGen(std::ostream& os, std::string& ns,
-        std::string& schemaFile, std::string& headerFile) :
+    CodeGen(std::ostream& os, const std::string& ns,
+        const std::string& schemaFile, const std::string& headerFile,
+        const std::string& includePrefix) :
         unionNumber_(0), os_(os), inNamespace_(false), ns_(ns),
         schemaFile_(schemaFile), headerFile_(headerFile),
+        includePrefix_(includePrefix),
         random_(::time(0)) { }
     void generate(const ValidSchema& schema);
 };
@@ -580,9 +583,10 @@ void CodeGen::generate(const ValidSchema& schema)
     os_ << "#define " << h << "\n\n\n";
 
     os_ << "#include \"boost/any.hpp\"\n"
-        << "#include \"Specific.hh\"\n"
-        << "#include \"Encoder.hh\"\n"
-        << "#include \"Decoder.hh\"\n";
+        << "#include \"" << includePrefix_ << "Specific.hh\"\n"
+        << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
+        << "#include \"" << includePrefix_ << "Decoder.hh\"\n"
+        << "\n";
 
     if (! ns_.empty()) {
         os_ << "namespace " << ns_ << " {\n";
@@ -626,15 +630,18 @@ void CodeGen::generate(const ValidSchema& schema)
 
 namespace po = boost::program_options;
 
-string NS("namespace");
-string OUT("output");
-string IN("input");
+static const string NS("namespace");
+static const string OUT("output");
+static const string IN("input");
+static const string INCLUDE_PREFIX("include-prefix");
 
 int main(int argc, char** argv)
 {
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "produce help message")
+        ("include-prefix,p", po::value<string>()->default_value("avro"),
+            "prefix for include headers, - for none, default: avro")
         ("namespace,n", po::value<string>(), "set namespace for generated code")
         ("input,i", po::value<string>(), "input file")
         ("output,o", po::value<string>(), "output file to generate");
@@ -650,8 +657,15 @@ int main(int argc, char** argv)
     }
 
     string ns = vm.count(NS) > 0 ? vm[NS].as<string>() : string();
-    string outf = vm[OUT].as<string>();
-    string inf = vm[IN].as<string>();
+    string outf = vm.count(OUT) > 0 ? vm[OUT].as<string>() : string();
+    string inf = vm.count(IN) > 0 ? vm[IN].as<string>() : string();
+    string incPrefix = vm[INCLUDE_PREFIX].as<string>();
+    if (incPrefix == "-") {
+        incPrefix.clear();
+    } else if (*incPrefix.rbegin() != '/') {
+        incPrefix += "/";
+    }
+
     try {
         ValidSchema schema;
 
@@ -664,9 +678,9 @@ int main(int argc, char** argv)
 
         if (! outf.empty()) {
             ofstream out(outf.c_str());
-            CodeGen(out, ns, inf, outf).generate(schema);
+            CodeGen(out, ns, inf, outf, incPrefix).generate(schema);
         } else {
-            CodeGen(std::cout, ns, inf, outf).generate(schema);
+            CodeGen(std::cout, ns, inf, outf, incPrefix).generate(schema);
         }
         return 0;
     } catch (std::exception &e) {
