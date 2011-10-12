@@ -111,6 +111,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-917. Avrogencpp does not insert avro prefix for avro headers in the generated files. (thiru)
 
+    AVRO-840. C++ generate nullable types for optional fields int the schema. (thiru)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

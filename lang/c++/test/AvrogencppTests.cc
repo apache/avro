@@ -20,6 +20,7 @@
 #include "bigrecord2.hh"
 #include "union_array_union.hh"
 #include "union_map_union.hh"
+#include "union_conflict.hh"
 #include "recursive.hh"
 #include "circulardep.hh"
 #include "reuse.hh"

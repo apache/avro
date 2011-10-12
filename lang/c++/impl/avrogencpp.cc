@@ -76,6 +76,7 @@ class CodeGen {
     const std::string headerFile_;
     const std::string schemaFile_;
     const std::string includePrefix_;
+    const bool noUnion_;
     boost::mt19937 random_;
 
     vector<PendingSetterGetter> pendingGettersAndSetters;
@@ -102,10 +103,10 @@ class CodeGen {
 public:
     CodeGen(std::ostream& os, const std::string& ns,
         const std::string& schemaFile, const std::string& headerFile,
-        const std::string& includePrefix) :
+        const std::string& includePrefix, bool noUnion) :
         unionNumber_(0), os_(os), inNamespace_(false), ns_(ns),
         schemaFile_(schemaFile), headerFile_(headerFile),
-        includePrefix_(includePrefix),
+        includePrefix_(includePrefix), noUnion_(noUnion),
         random_(::time(0)) { }
     void generate(const ValidSchema& schema);
 };
@@ -208,9 +209,21 @@ string CodeGen::generateRecordType(const NodePtr& n)
     }
 
     os_ << "struct " << n->name() << " {\n";
+    if (! noUnion_) {
+        for (int i = 0; i < c; ++i) {
+            if (n->leafAt(i)->type() == avro::AVRO_UNION) {
+                os_ << "    typedef " << types[i]
+                    << ' ' << n->nameAt(i) << "_t;\n";
+            }
+        }
+    }
     for (int i = 0; i < c; ++i) {
-        os_ << "    " << types[i]
-            << " " << n->nameAt(i) << ";\n";
+        if (! noUnion_ && n->leafAt(i)->type() == avro::AVRO_UNION) {
+            os_ << "    " << n->nameAt(i) << "_t";
+        } else {
+            os_ << "    " << types[i];
+        }
+        os_ << ' ' << n->nameAt(i) << ";\n";
     }
     os_ << "};\n\n";
     return n->name();
@@ -318,7 +331,10 @@ string CodeGen::generateUnionType(const NodePtr& n)
     for (size_t i = 0; i < c; ++i) {
         const NodePtr& nn = n->leafAt(i);
         if (nn->type() == avro::AVRO_NULL) {
-            os_ << "    void set_null() {\n"
+            os_ << "    bool is_null() const {\n"
+                << "        return (idx_ == " << i << ");\n"
+                << "    }\n"
+                << "    void set_null() {\n"
                 << "        idx_ = " << i << ";\n"
                 << "        value_ = boost::any();\n"
                 << "    }\n";
@@ -634,6 +650,7 @@ static const string NS("namespace");
 static const string OUT("output");
 static const string IN("input");
 static const string INCLUDE_PREFIX("include-prefix");
+static const string NO_UNION_TYPEDEF("no-union-typedef");
 
 int main(int argc, char** argv)
 {
@@ -642,6 +659,7 @@ int main(int argc, char** argv)
         ("help,h", "produce help message")
         ("include-prefix,p", po::value<string>()->default_value("avro"),
             "prefix for include headers, - for none, default: avro")
+        ("no-union-typedef,U", "do not generate typedefs for unions in records")
         ("namespace,n", po::value<string>(), "set namespace for generated code")
         ("input,i", po::value<string>(), "input file")
         ("output,o", po::value<string>(), "output file to generate");
@@ -660,6 +678,7 @@ int main(int argc, char** argv)
     string outf = vm.count(OUT) > 0 ? vm[OUT].as<string>() : string();
     string inf = vm.count(IN) > 0 ? vm[IN].as<string>() : string();
     string incPrefix = vm[INCLUDE_PREFIX].as<string>();
+    bool noUnion = vm.count(NO_UNION_TYPEDEF) != 0;
     if (incPrefix == "-") {
         incPrefix.clear();
     } else if (*incPrefix.rbegin() != '/') {
@@ -678,9 +697,10 @@ int main(int argc, char** argv)
 
         if (! outf.empty()) {
             ofstream out(outf.c_str());
-            CodeGen(out, ns, inf, outf, incPrefix).generate(schema);
+            CodeGen(out, ns, inf, outf, incPrefix, noUnion).generate(schema);
         } else {
-            CodeGen(std::cout, ns, inf, outf, incPrefix).generate(schema);
+            CodeGen(std::cout, ns, inf, outf, incPrefix, noUnion).
+                generate(schema);
         }
         return 0;
     } catch (std::exception &e) {
