@@ -138,6 +138,8 @@ int ResolvingGrammarGenerator::bestBranch(const NodePtr& writer,
                 return j;
             }
             break;
+        default:
+            break;
         }
     }
     return -1;
@@ -401,8 +403,9 @@ public:
         switch (s.kind()) {
         case Symbol::sWriterUnion:
             return base_.decodeUnionIndex();
+        default:
+            return 0;
         }
-        return 0;
     }
 };
 

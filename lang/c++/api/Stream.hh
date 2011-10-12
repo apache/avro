@@ -170,7 +170,7 @@ struct StreamReader {
     }
 
     void skipBytes(size_t n) {
-        if (n > (end_ - next_)) {
+        if (n > static_cast<size_t>(end_ - next_)) {
             n -= end_ - next_;
             next_ = end_;
             in_->skip(n);

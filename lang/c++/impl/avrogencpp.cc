@@ -73,8 +73,8 @@ class CodeGen {
     std::ostream& os_;
     bool inNamespace_;
     const std::string ns_;
-    const std::string headerFile_;
     const std::string schemaFile_;
+    const std::string headerFile_;
     const std::string includePrefix_;
     const bool noUnion_;
     boost::mt19937 random_;
@@ -120,7 +120,7 @@ string CodeGen::generateEnumType(const NodePtr& n)
 {
     os_ << "enum " << n->name() << " {\n";
     size_t c = n->names();
-    for (int i = 0; i < c; ++i) {
+    for (size_t i = 0; i < c; ++i) {
         os_ << "    " << n->nameAt(i) << ",\n";
     }
     os_ << "};\n\n";
@@ -199,7 +199,7 @@ string CodeGen::generateRecordType(const NodePtr& n)
 {
     size_t c = n->leaves();
     vector<string> types;
-    for (int i = 0; i < c; ++i) {
+    for (size_t i = 0; i < c; ++i) {
         types.push_back(generateType(n->leafAt(i)));
     }
 
@@ -210,14 +210,14 @@ string CodeGen::generateRecordType(const NodePtr& n)
 
     os_ << "struct " << n->name() << " {\n";
     if (! noUnion_) {
-        for (int i = 0; i < c; ++i) {
+        for (size_t i = 0; i < c; ++i) {
             if (n->leafAt(i)->type() == avro::AVRO_UNION) {
                 os_ << "    typedef " << types[i]
                     << ' ' << n->nameAt(i) << "_t;\n";
             }
         }
     }
-    for (int i = 0; i < c; ++i) {
+    for (size_t i = 0; i < c; ++i) {
         if (! noUnion_ && n->leafAt(i)->type() == avro::AVRO_UNION) {
             os_ << "    " << n->nameAt(i) << "_t";
         } else {
@@ -395,6 +395,8 @@ string CodeGen::doGenerateType(const NodePtr& n)
         return generateEnumType(n);
     case avro::AVRO_UNION:
         return generateUnionType(n);
+    default:
+        break;
     }
     return "$Undefuned$";
 }
@@ -426,6 +428,8 @@ string CodeGen::generateDeclaration(const NodePtr& n)
     case avro::AVRO_UNION:
         // FIXME: When can this happen?
         return generateUnionType(nn);
+    default:
+        break;
     }
     return "$Undefuned$";
 }
@@ -446,7 +450,7 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 void CodeGen::generateRecordTraits(const NodePtr& n)
 {
     size_t c = n->leaves();
-    for (int i = 0; i < c; ++i) {
+    for (size_t i = 0; i < c; ++i) {
         generateTraits(n->leafAt(i));
     }
 
@@ -552,6 +556,8 @@ void CodeGen::generateTraits(const NodePtr& n)
         generateUnionTraits(n);
         break;
     case avro::AVRO_FIXED:
+        break;
+    default:
         break;
     }
 }

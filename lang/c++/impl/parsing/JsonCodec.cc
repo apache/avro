@@ -114,7 +114,7 @@ Production JsonGrammarGenerator::doGenerate(const NodePtr& n,
             vector<string> nn;
             size_t c = n->names();
             nn.reserve(c);
-            for (int i = 0; i < c; ++i) {
+            for (size_t i = 0; i < c; ++i) {
                 nn.push_back(n->nameAt(i));
             }
             Symbol r[] = {
@@ -543,7 +543,7 @@ JsonParser::Token JsonParser::tryLiteral(const char exp[], size_t n, Token tk)
 {
     char c[100];
     in_.readBytes(reinterpret_cast<uint8_t*>(c), n);
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         if (c[i] != exp[i]) {
             unexpected(c[i]);
         }
@@ -586,6 +586,8 @@ public:
             if (s.extra<string>() != in_.stringValue()) {
                 throw Exception("Incorrect field");
             }
+            break;
+        default:
             break;
         }
         return 0;
@@ -1070,6 +1072,8 @@ public:
             break;
         case Symbol::sField:
             generator_.encodeString(s.extra<string>());
+            break;
+        default:
             break;
         }
         return 0;

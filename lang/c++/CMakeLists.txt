@@ -18,6 +18,8 @@
 #
 cmake_minimum_required (VERSION 2.6)
 
+set (CMAKE_LEGACY_CYGWIN_WIN32 0)
+
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt)
     file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt" AVRO_VERSION)
 else (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt)
@@ -33,6 +35,10 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_DIRECTORY})
 
 project (Avro-cpp)
+
+if (CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-Wall")
+endif ()
 
 find_package (Boost 1.38 REQUIRED
     COMPONENTS regex filesystem system program_options)

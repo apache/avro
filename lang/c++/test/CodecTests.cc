@@ -341,6 +341,7 @@ static vector<string>::const_iterator skipCalls(Scanner& sc, Decoder& d,
         }
     }
     BOOST_FAIL("End reached while trying to skip");
+    throw 0;    // Just to keep the compiler happy.
 }
 
 static void check(Decoder& d, unsigned int skipLevel,

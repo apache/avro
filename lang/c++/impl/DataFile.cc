@@ -131,7 +131,7 @@ DataFileSync DataFileWriterBase::makeSync()
 }
 
 typedef array<uint8_t, 4> Magic;
-static Magic magic = { 'O', 'b', 'j', '\x01' };
+static Magic magic = { { 'O', 'b', 'j', '\x01' } };
 
 void DataFileWriterBase::writeHeader()
 {

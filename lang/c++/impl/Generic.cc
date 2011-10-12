@@ -286,20 +286,12 @@ static void assertType(const GenericDatum& datum, const NodePtr& n)
         case AVRO_ENUM:
             assertSameType<GenericEnum>(datum, n);
             return;
-        case AVRO_NULL:
-        case AVRO_BOOL:
-        case AVRO_INT:
-        case AVRO_LONG:
-        case AVRO_FLOAT:
-        case AVRO_DOUBLE:
-        case AVRO_STRING:
-        case AVRO_BYTES:
-        case AVRO_ARRAY:
-        case AVRO_MAP:
+        default:
             return;
         }
+    } else {
+        typeMismatch(datum.type(), n->type());
     }
-    typeMismatch(datum.type(), n->type());
 }
 
 GenericWriter::GenericWriter(const ValidSchema& s, const EncoderPtr& encoder) :

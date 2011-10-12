@@ -144,7 +144,7 @@ void testBytes()
 
 void testFixed()
 {
-    array<uint8_t, 5> n = { 1, 7, 23, 47, 83 };
+    array<uint8_t, 5> n = { { 1, 7, 23, 47, 83 } };
     array<uint8_t, 5> b = encodeAndDecode(n);
     BOOST_CHECK_EQUAL_COLLECTIONS(b.begin(), b.end(), n.begin(), n.end());
 }

@@ -319,6 +319,8 @@ void fixup(Symbol& s, const std::map<T, boost::shared_ptr<Production> > &m)
     case Symbol::sUnionAdjust:
         fixup(s.extrap<std::pair<size_t, Production> >()->second, m);
         break;
+    default:
+        break;
     }
 }
 

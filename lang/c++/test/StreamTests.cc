@@ -50,7 +50,7 @@ struct Fill1 {
     void operator()(OutputStream& os, size_t len) {
         StreamWriter w;
         w.reset(os);
-        for (int i = 0; i < len; ++i) {
+        for (size_t i = 0; i < len; ++i) {
             w.write(i % 10 + '0');
         }
         w.flush();
@@ -59,7 +59,7 @@ struct Fill1 {
 
 struct Fill2 {
     void operator()(OutputStream& os, size_t len) {
-        for (int i = 0; i < len;) {
+        for (size_t i = 0; i < len;) {
             uint8_t *b;
             size_t n;
             os.next(&b, &n);
@@ -79,7 +79,7 @@ struct Verify1 {
     void operator()(InputStream& is, size_t dataSize) {
         StreamReader r;
         r.reset(is);
-        for (int i = 0; i < dataSize; ++i) {
+        for (size_t i = 0; i < dataSize; ++i) {
             BOOST_CHECK_EQUAL(i % 10 + '0', r.read());
         }
         BOOST_CHECK_THROW(r.read(), Exception);
@@ -91,7 +91,7 @@ struct Verify2 {
         const uint8_t *b;
         size_t n;
 
-        for (int i = 0; i < len;) {
+        for (size_t i = 0; i < len;) {
             BOOST_REQUIRE(is.next(&b, &n));
             size_t j = 0;
             for (; i < len && j < n; ++j, ++i, ++b) {
@@ -122,7 +122,7 @@ void testNonEmpty_memoryStream(const TestData& td)
 
 void testNonEmpty2(const TestData& td) {
     std::vector<uint8_t> v;
-    for (int i = 0; i < td.dataSize; ++i) {
+    for (size_t i = 0; i < td.dataSize; ++i) {
         v.push_back(i % 10 + '0');
     }
 

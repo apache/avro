@@ -113,6 +113,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-840. C++ generate nullable types for optional fields int the schema. (thiru)
 
+    AVRO-915. Large number of warnings in C++ builds. (thiru)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

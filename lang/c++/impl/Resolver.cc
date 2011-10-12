@@ -555,7 +555,7 @@ class ResolverFactory : private boost::noncopyable {
     Resolver*
     constructPrimitive(const NodePtr &writer, const NodePtr &reader, const Layout &offset)
     {
-        Resolver *instruction;
+        Resolver *instruction = 0;
 
         SchemaResolution match = writer->resolve(*reader);
 
@@ -839,8 +839,10 @@ NonUnionToUnionParser::NonUnionToUnionParser(ResolverFactory &factory, const Nod
     choiceOffset_(offsets.at(0).offset()),
     setFuncOffset_(offsets.at(1).offset())
 {
-
-    SchemaResolution bestMatch = checkUnionMatch(writer, reader, choice_);
+#ifndef NDEBUG
+    SchemaResolution bestMatch =
+#endif
+    checkUnionMatch(writer, reader, choice_);
     assert(bestMatch != RESOLVE_NO_MATCH);
     resolver_.reset(factory.construct(writer, reader->leafAt(choice_), offsets.at(choice_+2)));
 }
