@@ -234,7 +234,7 @@ class istreambuf : public std::streambuf {
         if(iter_ != buffer_.end()) {
             char *loc = const_cast <char *> (iter_->data()) ;
             setg(loc, loc, loc + iter_->size());
-            ret = *gptr();
+            ret = std::char_traits<char>::to_int_type(*gptr());
         }
         else {
             setg(0,0,0);

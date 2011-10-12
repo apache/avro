@@ -147,6 +147,8 @@ Avro 1.6.0 (unreleased)
     AVRO-871. Fix specification to state that enum symbol names must
     follow the same rules as record and field names.  (cutting)
 
+    AVRO-916. 0xff in binary stream is interpreted as end-of-stream. (thiru)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
