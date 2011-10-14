@@ -196,5 +196,9 @@ install(TARGETS avrocpp avrocpp_s
 install(DIRECTORY api/ DESTINATION include/avro
     FILES_MATCHING PATTERN *.hh)
 
-set (CMAKE_BUILD_TYPE Release)
+if (NOT CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
 

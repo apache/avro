@@ -115,7 +115,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-915. Large number of warnings in C++ builds. (thiru)
 
-    AVRO-913. CMake/C++ build should work for out-of-tree builds.  (Nebojsa Sabovic via thiru)
+    AVRO-913. CMake/C++ build should work for out-of-tree builds. (Nebojsa Sabovic via thiru)
+
+    AVRO-925. CMake/C++ Unable to build debug version of libavrocpp. (Nebojsa Sabovic via thiru)
 
   BUG FIXES
 
