@@ -41,6 +41,35 @@ if(LIBAVRO_VERSION_RESULT)
     message(FATAL_ERROR "Cannot determine libavro version number")
 endif(LIBAVRO_VERSION_RESULT)
 
+#-----------------------------------------------------------------------
+# Extract major.minor.patch from version number
+
+string(REGEX REPLACE "([0-9]+)\\..*"
+    "\\1"
+    AVRO_MAJOR_VERSION
+    ${AVRO_VERSION}
+)
+string(REGEX REPLACE ".*\\.([0-9]+)\\..*"
+    "\\1"
+    AVRO_MINOR_VERSION
+    ${AVRO_VERSION}
+)
+string(REGEX REPLACE ".*\\..*\\.([0-9]+).*"
+    "\\1"
+    AVRO_PATCH_VERSION
+    ${AVRO_VERSION}
+)
+string(REGEX REPLACE ".*\\..*\\.[0-9]+(.*)"
+    "\\1"
+    AVRO_VERSION_EXTENSION
+    ${AVRO_VERSION}
+)
+
+#-----------------------------------------------------------------------
+# Source package support
+
+include(CPackConfig.txt)
+
 
 if(APPLE)
     if (NOT CMAKE_OSX_ARCHITECTURES)
