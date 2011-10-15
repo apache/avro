@@ -22,8 +22,10 @@
 #include "avro_private.h"
 #include "avro/allocation.h"
 #include "avro/data.h"
+#include "avro/refcount.h"
 
 struct avro_wrapped_copy {
+	volatile int  refcount;
 	size_t  allocated_size;
 };
 
@@ -31,7 +33,25 @@ static void
 avro_wrapped_copy_free(avro_wrapped_buffer_t *self)
 {
 	struct avro_wrapped_copy  *copy = self->user_data;
-	avro_free(copy, copy->allocated_size);
+	if (avro_refcount_dec(&copy->refcount)) {
+		avro_free(copy, copy->allocated_size);
+	}
+}
+
+static int
+avro_wrapped_copy_copy(avro_wrapped_buffer_t *dest,
+		       const avro_wrapped_buffer_t *src,
+		       size_t offset, size_t length)
+{
+	struct avro_wrapped_copy  *copy = src->user_data;
+	avro_refcount_inc(&copy->refcount);
+	dest->buf = src->buf + offset;
+	dest->size = length;
+	dest->user_data = copy;
+	dest->free = avro_wrapped_copy_free;
+	dest->copy = avro_wrapped_copy_copy;
+	dest->slice = NULL;
+	return 0;
 }
 
 int
@@ -48,9 +68,10 @@ avro_wrapped_buffer_new_copy(avro_wrapped_buffer_t *dest,
 	dest->size = length;
 	dest->user_data = copy;
 	dest->free = avro_wrapped_copy_free;
-	dest->copy = NULL;
+	dest->copy = avro_wrapped_copy_copy;
 	dest->slice = NULL;
 
+	avro_refcount_set(&copy->refcount, 1);
 	copy->allocated_size = allocated_size;
 	memcpy((void *) dest->buf, buf, length);
 	return 0;
@@ -83,7 +104,7 @@ avro_wrapped_buffer_copy(avro_wrapped_buffer_t *dest,
 			 const avro_wrapped_buffer_t *src,
 			 size_t offset, size_t length)
 {
-	if (offset >= src->size) {
+	if (offset > src->size) {
 		avro_set_error("Invalid offset when slicing buffer");
 		return EINVAL;
 	}
@@ -104,7 +125,7 @@ int
 avro_wrapped_buffer_slice(avro_wrapped_buffer_t *self,
 			  size_t offset, size_t length)
 {
-	if (offset >= self->size) {
+	if (offset > self->size) {
 		avro_set_error("Invalid offset when slicing buffer");
 		return EINVAL;
 	}

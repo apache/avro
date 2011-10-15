@@ -30,6 +30,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-920. C: Memory readers and writers are now reusable. (dcreager)
 
+    AVRO-921. C: Default wrapped buffer implementation is zero-copy.
+    (dcreager)
+
     AVRO-890: Java: Add Maven archetype for creating Avro service
     projects.  (Stephen Gargan via cutting)
 

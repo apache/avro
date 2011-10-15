@@ -329,8 +329,11 @@ avro_wrapped_buffer_slice(avro_wrapped_buffer_t *self,
 			  size_t offset, size_t length);
 
 /**
- * Creates a new wrapped buffer wrapping the given memory region.  The
- * wrapped buffer's copy method will create an actual copy.
+ * Creates a new wrapped buffer wrapping the given memory region.  You
+ * have to ensure that buf stays around for as long as you need to new
+ * wrapped buffer.  If you copy the wrapped buffer (using
+ * avro_wrapped_buffer_copy), this will create a copy of the data.
+ * Additional copies will reuse this new copy.
  */
 
 int
@@ -346,7 +349,9 @@ avro_wrapped_buffer_new(avro_wrapped_buffer_t *dest,
 
 /**
  * Creates a new wrapped buffer containing a copy of the given memory
- * region.  The wrapped buffer's copy method will create further copies.
+ * region.  This new copy will be reference counted; if you copy it
+ * further (using avro_wrapped_buffer_copy), the new copies will share a
+ * single underlying buffer.
  */
 
 int
