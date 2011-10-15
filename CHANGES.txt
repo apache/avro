@@ -33,6 +33,8 @@ Avro 1.6.0 (unreleased)
     AVRO-921. C: Default wrapped buffer implementation is zero-copy.
     (dcreager)
 
+    AVRO-922. C: Comparison function for new value interface. (dcreager)
+
     AVRO-890: Java: Add Maven archetype for creating Avro service
     projects.  (Stephen Gargan via cutting)
 

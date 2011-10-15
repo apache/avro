@@ -422,6 +422,28 @@ test_boolean(void)
 		check_copy(&val);
 		avro_value_decref(&val);
 	}
+
+	avro_value_t  val1;
+	avro_value_t  val2;
+	try(avro_generic_boolean_new(&val1, 0),
+	    "Cannot create boolean");
+	try(avro_generic_boolean_new(&val2, 1),
+	    "Cannot create boolean");
+	if (avro_value_cmp_fast(&val1, &val2) != -1) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	if (avro_value_cmp_fast(&val2, &val1) != 1) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	if (avro_value_cmp_fast(&val1, &val1) != 0) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	avro_value_decref(&val1);
+	avro_value_decref(&val2);
+
 	return 0;
 }
 
@@ -478,6 +500,36 @@ test_bytes(void)
 	check_write_read(&val);
 	check_copy(&val);
 	avro_value_decref(&val);
+
+	avro_value_t  val1;
+	avro_value_t  val2;
+	avro_value_t  val3;
+	try(avro_generic_bytes_new(&val1, "abcd", 4),
+	    "Cannot create bytes");
+	try(avro_generic_bytes_new(&val2, "abcde", 5),
+	    "Cannot create bytes");
+	try(avro_generic_bytes_new(&val3, "abce", 4),
+	    "Cannot create bytes");
+	if (avro_value_cmp_fast(&val1, &val2) != -1) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	if (avro_value_cmp_fast(&val2, &val1) != 1) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	if (avro_value_cmp_fast(&val1, &val3) != -1) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	if (avro_value_cmp_fast(&val1, &val1) != 0) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	avro_value_decref(&val1);
+	avro_value_decref(&val2);
+	avro_value_decref(&val3);
+
 	return 0;
 }
 
@@ -586,6 +638,28 @@ test_int(void)
 		check_copy(&val);
 		avro_value_decref(&val);
 	}
+
+	avro_value_t  val1;
+	avro_value_t  val2;
+	try(avro_generic_int_new(&val1, -10),
+	    "Cannot create int");
+	try(avro_generic_int_new(&val2, 42),
+	    "Cannot create int");
+	if (avro_value_cmp_fast(&val1, &val2) != -1) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	if (avro_value_cmp_fast(&val2, &val1) != 1) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	if (avro_value_cmp_fast(&val1, &val1) != 0) {
+		fprintf(stderr, "Incorrect sort order\n");
+		return EXIT_FAILURE;
+	}
+	avro_value_decref(&val1);
+	avro_value_decref(&val2);
+
 	return 0;
 }
 

@@ -325,6 +325,33 @@ int
 avro_value_equal_fast(avro_value_t *val1, avro_value_t *val2);
 
 /**
+ * Compares two values using the sort order defined in the Avro
+ * specification.  The two values don't need to have the same
+ * implementation of the value interface, but they do need to represent
+ * Avro values of the same schema.  This function ensures that the
+ * schemas match; if you want to skip this check, use
+ * avro_value_cmp_fast.
+ */
+
+int
+avro_value_cmp(avro_value_t *val1, avro_value_t *val2);
+
+/**
+ * Compares two values using the sort order defined in the Avro
+ * specification.  The two values don't need to have the same
+ * implementation of the value interface, but they do need to represent
+ * Avro values of the same schema.  This function assumes that the
+ * schemas match; if you can't guarantee this, you should use
+ * avro_value_cmp, which compares the schemas before comparing the
+ * values.
+ */
+
+int
+avro_value_cmp_fast(avro_value_t *val1, avro_value_t *val2);
+
+
+
+/**
  * Copies the contents of src into dest.  The two values don't need to
  * have the same implementation of the value interface, but they do need
  * to represent Avro values of the same schema.  This function ensures
