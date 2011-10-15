@@ -35,6 +35,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-922. C: Comparison function for new value interface. (dcreager)
 
+    AVRO-929. C: Set install_name in shared library on Mac OS OX.
+    (dcreager)
+
     AVRO-474. C: Added source package target to CMake build scripts.
     (dcreager)
 
