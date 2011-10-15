@@ -159,6 +159,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-869. Lifetimes of streams and encoder/decoders not managed propertly. (thiru)
 
+    AVRO-928. Debug statement no longer reports garbage value from
+    stack. (Vivek Nadkarni via dcreager)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS

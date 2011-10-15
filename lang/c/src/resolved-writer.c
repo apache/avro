@@ -2233,7 +2233,7 @@ avro_resolved_record_writer_get_by_index(const avro_value_iface_t *viface,
 	const avro_resolved_record_value_t  *self = vself;
 	avro_value_t  dest;
 
-	DEBUG("Getting writer field %zu from record %p", index, dest.self);
+	DEBUG("Getting writer field %zu from record %p", index, self);
 	if (riface->field_resolvers[index] == NULL) {
 		DEBUG("Reader doesn't have field, skipping");
 		child->iface = NULL;
