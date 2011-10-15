@@ -41,7 +41,6 @@ set(AVRO_SRC
     datum.c
     datum.h
     datum_equal.c
-    datum_json.c
     datum_read.c
     datum_size.c
     datum_skip.c
@@ -68,6 +67,7 @@ set(AVRO_SRC
     string.c
     value.c
     value-hash.c
+    value-json.c
     value-read.c
     value-sizeof.c
     value-write.c

@@ -25,6 +25,9 @@ Avro 1.6.0 (unreleased)
     AVRO-893. C: Avro data file functions using new value interface.
     (dcreager)
 
+    AVRO-919. C: Produce JSON encoding of Avro values using new value
+    interface. (dcreager)
+
     AVRO-890: Java: Add Maven archetype for creating Avro service
     projects.  (Stephen Gargan via cutting)
 

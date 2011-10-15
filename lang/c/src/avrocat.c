@@ -37,16 +37,25 @@ process_file(const char *filename)
 		exit(1);
 	}
 
-	avro_datum_t  datum;
+	avro_schema_t  wschema;
+	avro_value_iface_t  *iface;
+	avro_value_t  value;
 
-	while (avro_file_reader_read(reader, NULL, &datum) == 0) {
+	wschema = avro_file_reader_get_writer_schema(reader);
+	iface = avro_generic_class_from_schema(wschema);
+	avro_generic_value_new(iface, &value);
+
+	while (avro_file_reader_read_value(reader, &value) == 0) {
 		char  *json;
-		avro_datum_to_json(datum, 1, &json);
+		avro_value_to_json(&value, 1, &json);
 		printf("%s\n", json);
 		free(json);
+		avro_value_reset(&value);
 	}
 
 	avro_file_reader_close(reader);
+	avro_value_decref(&value);
+	avro_value_iface_decref(iface);
 }
 
 

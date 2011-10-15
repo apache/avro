@@ -24,10 +24,9 @@ avro/value.h
 
 lib_LTLIBRARIES = libavro.la
 libavro_la_SOURCES = st.c st.h schema.c schema.h schema_equal.c \
-value.c value-hash.c value-read.c value-sizeof.c value-write.c \
+value.c value-hash.c value-json.c value-read.c value-sizeof.c value-write.c \
 avro_generic_internal.h generic.c \
 datum.c datum_equal.c datum_validate.c datum_read.c datum_skip.c datum_write.c datum_size.c datum.h \
-datum_json.c \
 datum_value.c \
 array.c map.c memoize.c string.c \
 consumer.c consume-binary.c resolver.c \

@@ -357,6 +357,7 @@ process_file(const char *filename)
 	for (; avro_file_reader_read_value(reader, &value) == 0; record_number++) {
 		create_array_prefix(&prefix, "", record_number);
 		process_value(avro_raw_string_get(&prefix), &value);
+		avro_value_reset(&value);
 	}
 
 	avro_raw_string_done(&prefix);

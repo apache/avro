@@ -354,6 +354,16 @@ avro_value_copy_fast(avro_value_t *dest, const avro_value_t *src);
 uint32_t
 avro_value_hash(avro_value_t *value);
 
+/*
+ * Returns a string containing the JSON encoding of an Avro value.  You
+ * must free this string when you're done with it, using the standard
+ * free() function.  (*Not* using the custom Avro allocator.)
+ */
+
+int
+avro_value_to_json(const avro_value_t *value,
+		   int one_line, char **json_str);
+
 
 /**
  * A helper macro for calling a given method in a value instance, if
