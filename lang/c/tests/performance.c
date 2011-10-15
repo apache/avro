@@ -114,8 +114,8 @@ test_nested_record_datum(unsigned long num_tests)
 
 	int  rc;
 	static char  buf[4096];
-	avro_reader_t  reader;
-	avro_writer_t  writer;
+	avro_reader_t  reader = avro_reader_memory(buf, sizeof(buf));
+	avro_writer_t  writer = avro_writer_memory(buf, sizeof(buf));
 
 	avro_schema_t  schema = NULL;
 	avro_schema_error_t  error = NULL;
@@ -137,15 +137,13 @@ test_nested_record_datum(unsigned long num_tests)
 		avro_record_set_field_value(rc, in, float, "f", rand_number(-1e10, 1e10));
 		avro_record_set_field_value(rc, in, double, "d", rand_number(-1e10, 1e10));
 
-		writer = avro_writer_memory(buf, sizeof(buf));
+		avro_writer_reset(writer);
 		avro_write_data(writer, schema, in);
-		avro_writer_free(writer);
 
 		avro_datum_t  out = NULL;
 
-		reader = avro_reader_memory(buf, sizeof(buf));
+		avro_reader_reset(reader);
 		avro_read_data(reader, schema, schema, &out);
-		avro_reader_free(reader);
 
 		avro_datum_equal(in, out);
 		avro_datum_decref(out);
@@ -153,6 +151,8 @@ test_nested_record_datum(unsigned long num_tests)
 
 	avro_datum_decref(in);
 	avro_schema_decref(schema);
+	avro_writer_free(writer);
+	avro_reader_free(reader);
 }
 
 
@@ -197,8 +197,8 @@ test_nested_record_value_by_index(unsigned long num_tests)
 	    sizeof(strings) / sizeof(strings[0]);
 
 	static char  buf[4096];
-	avro_reader_t  reader;
-	avro_writer_t  writer;
+	avro_reader_t  reader = avro_reader_memory(buf, sizeof(buf));
+	avro_writer_t  writer = avro_writer_memory(buf, sizeof(buf));
 
 	avro_schema_t  schema = NULL;
 	avro_schema_error_t  error = NULL;
@@ -238,13 +238,11 @@ test_nested_record_value_by_index(unsigned long num_tests)
 		avro_value_get_by_index(&subrec, 1, &field, NULL);
 		avro_value_set_double(&field, rand_number(-1e10, 1e10));
 
-		writer = avro_writer_memory(buf, sizeof(buf));
+		avro_writer_reset(writer);
 		avro_value_write(writer, &val);
-		avro_writer_free(writer);
 
-		reader = avro_reader_memory(buf, sizeof(buf));
+		avro_reader_reset(reader);
 		avro_value_read(reader, &out);
-		avro_reader_free(reader);
 
 		avro_value_equal_fast(&val, &out);
 	}
@@ -253,6 +251,8 @@ test_nested_record_value_by_index(unsigned long num_tests)
 	avro_value_decref(&out);
 	avro_value_iface_decref(iface);
 	avro_schema_decref(schema);
+	avro_writer_free(writer);
+	avro_reader_free(reader);
 }
 
 
@@ -297,8 +297,8 @@ test_nested_record_value_by_name(unsigned long num_tests)
 	    sizeof(strings) / sizeof(strings[0]);
 
 	static char  buf[4096];
-	avro_reader_t  reader;
-	avro_writer_t  writer;
+	avro_reader_t  reader = avro_reader_memory(buf, sizeof(buf));
+	avro_writer_t  writer = avro_writer_memory(buf, sizeof(buf));
 
 	avro_schema_t  schema = NULL;
 	avro_schema_error_t  error = NULL;
@@ -338,13 +338,11 @@ test_nested_record_value_by_name(unsigned long num_tests)
 		avro_value_get_by_name(&subrec, "d", &field, NULL);
 		avro_value_set_double(&field, rand_number(-1e10, 1e10));
 
-		writer = avro_writer_memory(buf, sizeof(buf));
+		avro_writer_reset(writer);
 		avro_value_write(writer, &val);
-		avro_writer_free(writer);
 
-		reader = avro_reader_memory(buf, sizeof(buf));
+		avro_reader_reset(reader);
 		avro_value_read(reader, &out);
-		avro_reader_free(reader);
 
 		avro_value_equal_fast(&val, &out);
 	}
@@ -353,6 +351,8 @@ test_nested_record_value_by_name(unsigned long num_tests)
 	avro_value_decref(&out);
 	avro_value_iface_decref(iface);
 	avro_schema_decref(schema);
+	avro_writer_free(writer);
+	avro_reader_free(reader);
 }
 
 

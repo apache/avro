@@ -28,6 +28,8 @@ Avro 1.6.0 (unreleased)
     AVRO-919. C: Produce JSON encoding of Avro values using new value
     interface. (dcreager)
 
+    AVRO-920. C: Memory readers and writers are now reusable. (dcreager)
+
     AVRO-890: Java: Add Maven archetype for creating Avro service
     projects.  (Stephen Gargan via cutting)
 
