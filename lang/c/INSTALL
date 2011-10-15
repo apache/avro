@@ -1,0 +1,41 @@
+Installation instructions
+=========================
+
+The Avro library is written in ANSI C.  It uses cmake as its build
+manager.
+
+
+Prerequisites
+-------------
+
+Avro doesn't have any prerequisite libraries, but you need asciidoc [1]
+and source-highlight [2] installed to build Avro's documentation.  The
+build scripts will automatically detect whether these tools are
+installed, and will skip the documentation if they're not.
+
+[1] http://www.methods.co.nz/asciidoc
+[2] http://www.gnu.org/software/src-highlite/
+
+
+Building from source
+--------------------
+
+The swanson language uses cmake as its build manager.  In most cases,
+you should be able to build the source code using the following:
+
+    $ mkdir build
+    $ cd build
+    $ cmake .. \
+        -DCMAKE_INSTALL_PREFIX=$PREFIX \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    $ make
+    $ make test
+    $ make install
+
+You might have to run the last command using sudo, if you need
+administrative privileges to write to the $PREFIX directory.
+
+The "RelWithDebInfo" build type will build an optimized copy of the
+library, including debugging symbols.  Use the "Release" build type if
+you don't want debugging symbols.  Use the "Debug" build type if you
+want a non-optimized library, with debugging symbols.

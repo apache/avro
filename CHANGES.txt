@@ -38,6 +38,8 @@ Avro 1.6.0 (unreleased)
     AVRO-929. C: Set install_name in shared library on Mac OS OX.
     (dcreager)
 
+    AVRO-468. C: Document CMake build scripts. (dcreager)
+
     AVRO-474. C: Added source package target to CMake build scripts.
     (dcreager)
 
