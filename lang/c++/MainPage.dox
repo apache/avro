@@ -62,6 +62,19 @@ In order to build Avro C++, one needs the following:
     <li>Python. If not already present, please consult your platform-specific documentation on how to install Python on your system.
 </ul>
 
+For Ubuntu Linux, for example, you can have these by doing
+<tt>apt-get install</tt> for the following packages:
+\ul
+\li cmake
+\li g++
+\li libboost-dev
+\li libboost-regex-dev
+\li libboost-filesystem-dev
+\li libboost-system-dev
+\li libboost-program-options-dev
+\li flex
+\li bison
+
 <h3>Installing Avro C++</h3>
 <ol>
     <li>Download the latest Avro distribution. Avro distribution is a compressed tarball.
