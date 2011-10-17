@@ -139,6 +139,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-932. C++ build.sh should have an option to install the built software. (thiru)
 
+    AVRO-931. Avro C++ "make install" does not install the code generator. (thiru)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
