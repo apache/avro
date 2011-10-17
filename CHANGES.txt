@@ -186,6 +186,8 @@ Avro 1.6.0 (unreleased)
     AVRO-928. Debug statement no longer reports garbage value from
     stack. (Vivek Nadkarni via dcreager)
 
+    AVRO-933. On latest Ubuntu AvrogencppTests.cc does not compile. (thiru)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS

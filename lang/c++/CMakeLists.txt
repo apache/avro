@@ -103,48 +103,56 @@ add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/AvroLex.cc
     
 add_custom_target (bigrecord_hh
     COMMAND avrogencpp
+        -p -
         -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord
         -o bigrecord.hh -n testgen
     DEPENDS avrogencpp)
 
 add_custom_target (bigrecord2_hh
     COMMAND avrogencpp
+        -p -
         -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord2
         -o bigrecord2.hh -n testgen2
     DEPENDS avrogencpp)
 
 add_custom_target (union_array_union_hh
     COMMAND avrogencpp
+        -p -
         -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_array_union
         -o union_array_union.hh -n uau
     DEPENDS avrogencpp)
 
 add_custom_target (union_map_union_hh
     COMMAND avrogencpp
+        -p -
         -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_map_union
         -o union_map_union.hh -n umu
     DEPENDS avrogencpp)
 
 add_custom_target (union_conflict_hh
     COMMAND avrogencpp
+        -p -
         -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_conflict
         -o union_conflict.hh -n uc -U
     DEPENDS avrogencpp)
 
 add_custom_target (recursive_hh
     COMMAND avrogencpp
+        -p -
         -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/recursive
         -o recursive.hh -n rec
     DEPENDS avrogencpp)
 
 add_custom_target (reuse_hh
     COMMAND avrogencpp
+        -p -
         -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/reuse
         -o reuse.hh -n reu
     DEPENDS avrogencpp)
 
 add_custom_target (circulardep_hh
     COMMAND avrogencpp
+        -p -
         -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/circulardep
         -o circulardep.hh -n reu
     DEPENDS avrogencpp)
