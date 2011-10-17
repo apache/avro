@@ -201,7 +201,9 @@ class AvroStringIO extends AvroIO
   public function read($len)
   {
     $this->check_closed();
-    $read = array_slice($this->buffer, $this->current_index, $len);
+    $read=array();
+    for($i=$this->current_index; $i<($this->current_index+$len); $i++) 
+      $read []=$this->buffer[$i];
     if (count($read) < $len)
       $this->current_index = $this->length();
     else

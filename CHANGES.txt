@@ -67,6 +67,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-907. Java: Optimize access to protobuf message fields. (cutting)
 
+    AVRO-934. PHP: Remove quadratic performance bug. (abawany via cutting)
+
   IMPROVEMENTS
 
     AVRO-836. Python "avro" commandline utility to display and write Avro files.
