@@ -96,6 +96,10 @@ case "$target" in
     (cd build && make clean)
 	;;
 
+    install)
+    (cd build && make install)
+    ;;
+
     *)
         usage
 esac

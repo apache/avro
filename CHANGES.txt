@@ -137,6 +137,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-925. CMake/C++ Unable to build debug version of libavrocpp. (Nebojsa Sabovic via thiru)
 
+    AVRO-932. C++ build.sh should have an option to install the built software. (thiru)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
