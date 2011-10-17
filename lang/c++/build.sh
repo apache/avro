@@ -62,7 +62,7 @@ function do_dist() {
     rm -rf $BUILD_CPP/
     mkdir -p $BUILD_CPP
     cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
-        COPYING impl jsonschemas NEWS parser README scripts test \
+        COPYING impl jsonschemas NEWS parser README scripts test examples \
         $BUILD_CPP
     find $BUILD_CPP -name '.svn' | xargs rm -rf
     cp ../../share/VERSION.txt $BUILD_CPP

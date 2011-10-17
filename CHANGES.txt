@@ -141,6 +141,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-931. Avro C++ "make install" does not install the code generator. (thiru)
 
+    AVRO-918. Avro C++ documentation is very old. (thiru)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

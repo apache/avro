@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,6 +41,10 @@
 
 namespace avro {
 
+/**
+ * Decoder is an interface implemented by every decoder capable
+ * of decoding Avro data.
+ */
 class Decoder {
 public:
     /// All future decoding will come from is, which should be valid
@@ -95,13 +99,24 @@ public:
     /// Skips bytes on the current stream.
     virtual void skipBytes() = 0;
 
-    /// Decodes fixed length binary from the current stream.
+    /**
+     * Decodes fixed length binary from the current stream.
+     * \param[in] n The size (byte count) of the fixed being read.
+     * \return The fixed data that has been read. The size of the returned
+     * vector is guaranteed to be equal to \p n.
+     */
     std::vector<uint8_t> decodeFixed(size_t n) {
         std::vector<uint8_t> result;
         decodeFixed(n, result);
         return result;
     }
 
+    /**
+     * Decodes a fixed from the current stream.
+     * \param[in] n The size (byte count) of the fixed being read.
+     * \param[out] value The value that receives the fixed. The vector will
+     * be size-adjusted based on the fixed's size.
+     */
     virtual void decodeFixed(size_t n, std::vector<uint8_t>& value) = 0;
 
     /// Skips fixed length binary on the current stream.
@@ -138,8 +153,15 @@ public:
     virtual size_t decodeUnionIndex() = 0;
 };
 
+/**
+ * Shared pointer to Decoder.
+ */
 typedef boost::shared_ptr<Decoder> DecoderPtr;
 
+/**
+ * ResolvingDecoder is derived from \ref Decoder, with an additional
+ * function to obtain the field ordering of fiedls within a record.
+ */
 class ResolvingDecoder : public Decoder {
 public:
     /// Returns the order of fields for records.
@@ -150,6 +172,9 @@ public:
     virtual const std::vector<size_t>& fieldOrder() = 0;
 };
 
+/**
+ * Shared pointer to ResolvingDecoder.
+ */
 typedef boost::shared_ptr<ResolvingDecoder> ResolvingDecoderPtr;
 /**
  *  Returns an decoder that can decode binary Avro standard.

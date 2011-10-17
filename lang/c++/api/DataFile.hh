@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,6 +34,9 @@
 
 namespace avro {
 
+/**
+ * The sync value.
+ */
 typedef boost::array<uint8_t, 16> DataFileSync;
 
 /**
@@ -68,10 +71,20 @@ class DataFileWriterBase : boost::noncopyable {
     void sync();
 
 public:
+    /**
+     * Returns the current encoder for this writer.
+     */
     Encoder& encoder() const { return *encoderPtr_; }
     
+    /**
+     * Returns true if the buffer has sufficient data for a sync to be
+     * inserted.
+     */
     void syncIfNeeded();
 
+    /**
+     * Increments the object count.
+     */
     void incr() {
         ++objectCount_;
     }
@@ -139,6 +152,9 @@ public:
     void flush() { base_->flush(); }
 };
 
+/**
+ * The type independent portion of rader.
+ */
 class DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
     const std::auto_ptr<InputStream> stream_;
@@ -158,6 +174,9 @@ class DataFileReaderBase : boost::noncopyable {
 
     bool readDataBlock();
 public:
+    /**
+     * Returns the current decoder for this reader.
+     */
     Decoder& decoder() { return *dataDecoder_; }
 
     /**
@@ -165,6 +184,9 @@ public:
      */
     bool hasMore();
 
+    /**
+     * Decrements the number of objects yet to read.
+     */
     void decr() { --objectCount_; }
 
     /**
@@ -206,6 +228,9 @@ public:
     void close();
 };
 
+/**
+ * Reads the contents of data file one after another.
+ */
 template <typename T>
 class DataFileReader : boost::noncopyable {
     std::auto_ptr<DataFileReaderBase> base_;
@@ -256,6 +281,11 @@ public:
         base_->init(readerSchema);
     }
 
+    /**
+     * Reads the next entry from the data file.
+     * \return true if an object has been successfully read into \p datum and
+     * false if there are no more entries in the file.
+     */
     bool read(T& datum) {
         if (base_->hasMore()) {
             base_->decr();

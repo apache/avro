@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,9 +26,22 @@
 #include "Exception.hh"
 
 namespace avro {
+
+/**
+ * A no-copy input stream.
+ */
 class InputStream : boost::noncopyable {
-public:
+protected:
+
+    /**
+     * An empty constuctor.
+     */
     InputStream() { }
+
+public:
+    /**
+     * Destructor.
+     */
     virtual ~InputStream() { }
 
     /**
@@ -59,9 +72,21 @@ public:
     virtual size_t byteCount() const = 0;
 };
 
+/**
+ * A no-copy output stream.
+ */
 class OutputStream : boost::noncopyable {
-public:
+protected:
+
+    /**
+     * An empty constuctor.
+     */
     OutputStream() { }
+public:
+
+    /**
+     * Destructor.
+     */
     virtual ~OutputStream() { }
 
     /**
@@ -131,13 +156,35 @@ std::auto_ptr<InputStream> fileInputStream(const char* filename,
 
 /** A convenience class for reading from an InputStream */
 struct StreamReader {
+    /**
+     * The underlying input stream.
+     */
     InputStream* in_;
+
+    /**
+     * The next location to read from.
+     */
     const uint8_t* next_;
+
+    /**
+     * One past the last valid location.
+     */
     const uint8_t* end_;
 
+    /**
+     * Constructs an empty reader.
+     */
     StreamReader() : in_(0), next_(0), end_(0) { }
+
+    /**
+     * Constructs a reader with the given underlying stream.
+     */
     StreamReader(InputStream& in) : in_(0), next_(0), end_(0) { reset(in); }
 
+    /**
+     * Replaces the current input stream with the given one after backing up
+     * the original one if required.
+     */
     void reset(InputStream& is) {
         if (in_ != 0 && end_ != next_) {
             in_->backup(end_ - next_);
@@ -146,6 +193,10 @@ struct StreamReader {
         next_ = end_ = 0;
     }
 
+    /**
+     * Read just one byte from the underlying stream. If there are no
+     * more data, throws an exception.
+     */
     uint8_t read() {
         if (next_ == end_) {
             more();
@@ -153,6 +204,10 @@ struct StreamReader {
         return *next_++;
     }
 
+    /**
+     * Reads the given number of bytes from the underlying stream.
+     * If there are not that many bytes, throws an exception.
+     */
     void readBytes(uint8_t* b, size_t n) {
         while (n > 0) {
             if (next_ == end_) {
@@ -169,6 +224,10 @@ struct StreamReader {
         }
     }
 
+    /**
+     * Skips the given number of bytes. Of there are not so that many
+     * bytes, throws an exception.
+     */
     void skipBytes(size_t n) {
         if (n > static_cast<size_t>(end_ - next_)) {
             n -= end_ - next_;
@@ -179,6 +238,12 @@ struct StreamReader {
         }
     }
 
+    /**
+     * Get as many byes from the underlying stream as possible in a single
+     * chunk.
+     * \return true if some data could be obtained. False is no more
+     * data is available on the stream.
+     */
     bool fill() {
         size_t n = 0;
         while (in_->next(&next_, &n)) {
@@ -190,12 +255,18 @@ struct StreamReader {
         return false;
     }
 
+    /**
+     * Tries to get more data and if it cannot, throws an exception.
+     */
     void more() {
         if (! fill()) {
             throw Exception("EOF reached");
         }
     }
 
+    /**
+     * Returns true if and only if the end of stream is not reached.
+     */
     bool hasMore() {
         return (next_ == end_) ? fill() : true;
     }
@@ -205,13 +276,35 @@ struct StreamReader {
  * A convinience class to write data into an OutputStream.
  */
 struct StreamWriter {
+    /**
+     * The underlying output stream for this writer.
+     */
     OutputStream* out_;
+
+    /**
+     * The next location to write to.
+     */
     uint8_t* next_;
+    
+    /**
+     * One past the last location one can write to.
+     */
     uint8_t* end_;
 
+    /**
+     * Constructs a writer with no underlying stream.
+     */
     StreamWriter() : out_(0), next_(0), end_(0) { }
+
+    /**
+     * Constructs a new writer with the given underlying stream.
+     */
     StreamWriter(OutputStream& out) : out_(0), next_(0), end_(0) { reset(out); }
 
+    /**
+     * Replaces the current underlying stream with a new one.
+     * If required, it backs up unused bytes in the previous stream.
+     */
     void reset(OutputStream& os) {
         if (out_ != 0 && end_ != next_) {
             out_->backup(end_ - next_);
@@ -220,6 +313,9 @@ struct StreamWriter {
         next_ = end_;
     }
 
+    /**
+     * Writes a single byte.
+     */
     void write(uint8_t c) {
         if (next_ == end_) {
             more();
@@ -227,6 +323,9 @@ struct StreamWriter {
         *next_++ = c;
     }
 
+    /**
+     * Writes the specified number of bytes starting at \p b.
+     */
     void writeBytes(const uint8_t* b, size_t n) {
         while (n > 0) {
             if (next_ == end_) {
@@ -243,6 +342,21 @@ struct StreamWriter {
         }
     }
 
+    /**
+     * backs up upto the currently written data and flushes the
+     * underlying stream.
+     */
+    void flush() {
+        if (next_ != end_) {
+            out_->backup(end_ - next_);
+            next_ = end_;
+        }
+        out_->flush();
+    }
+
+    /**
+     * Gets more space to write to. Throws an exception it cannot.
+     */
     void more() {
         size_t n = 0;
         while (out_->next(&next_, &n)) {
@@ -254,13 +368,6 @@ struct StreamWriter {
         throw Exception("EOF reached");
     }
 
-    void flush() {
-        if (next_ != end_) {
-            out_->backup(end_ - next_);
-            next_ = end_;
-        }
-        out_->flush();
-    }
 };
 
 /**

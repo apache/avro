@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,40 +16,34 @@
  * limitations under the License.
  */
 
-#ifndef avro_ResolverSchema_hh__
-#define avro_ResolverSchema_hh__
 
-#include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <stdint.h>
-#include "Boost.hh"
-#include "Reader.hh"
+#ifndef CPX_HH_1278398428__H_
+#define CPX_HH_1278398428__H_
 
-/// \file ResolverSchema.hh
-///
 
-namespace avro {
-    
-class ValidSchema;
-class Layout;
-class Resolver;
+#include "boost/any.hpp"
+#include "avro/Specific.hh"
+#include "avro/Encoder.hh"
+#include "avro/Decoder.hh"
 
-class ResolverSchema {
-
-  public:
-
-    ResolverSchema(const ValidSchema &writer, const ValidSchema &reader, const Layout &readerLayout);
-
-  private:
-
-    friend class ResolvingReader;
-
-    void parse(Reader &reader, uint8_t *address); 
-
-    boost::shared_ptr<Resolver> resolver_;
-
+namespace c {
+struct cpx {
+    double re;
+    double im;
 };
 
-} // namespace avro
+}
+namespace avro {
+template<> struct codec_traits<c::cpx> {
+    static void encode(Encoder& e, const c::cpx& v) {
+        avro::encode(e, v.re);
+        avro::encode(e, v.im);
+    }
+    static void decode(Decoder& d, c::cpx& v) {
+        avro::decode(d, v.re);
+        avro::decode(d, v.im);
+    }
+};
 
+}
 #endif

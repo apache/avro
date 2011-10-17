@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,342 +19,289 @@
 /*!
 \mainpage
 
-\htmlonly
+<h2>Introduction to Avro C++</h2>
 
-<H2>Introduction to Avro C++</H2>
+<p>Avro is a data serialization system. See
+<a href="http://hadoop.apache.org/avro/docs/current/">http://avro.apache.org/docs/current/</a>
+for background information.</p>
+<p>Avro C++ is a C++ library which implementats parts of the <a href="http://avro.apache.org/docs/current/spec.html"> Avro Specification</a>. The library includes the following functionality:</p>
+<ul>
+	<li>Assembling schemas programmatically.
+    <li>A schema parser, which can parse Avro schema (written in JSON) into a Schema object.
+    <li>Encoders and decoders to encode data into Avro format and decode it back using primitive functions. There are multiple implementations of encoders and decoders.
+    <ul>
+        <li>A binary encoder, which encodes into binary Avro data.
+        <li>A JSON encoder, which encodes into JSON Avro data.
+        <li>A validating encoder, an encoder proxy, which validates the call sequence to the encoder before sending the calls to another encoder.
+        <li>A binary decoder, which decodes binay Avro data.
+        <li>A JSON decoder, which decodes JSON Avro data.
+        <li>A validating decoder, a decoder proxy, which validates the call sequence to the decoder before sending the calls to another decoder.
+        <li>A resolving decoder, which accepts calls for according to a reader's schema but decodes data corresponding to a different (writer's) schema doing schema resolution according to resolution rules in the Avro specification.
+    </ul>
+    <li>Streams for storing and reading data, which Encoders and Decoders use.
+    <li>Support for Avro DataFile.
+    <li>A code generator, which generates C++ classes fnd functions to encode and decode them. The code generator produces a C++ header file from a given schema file.
+</ul>
+Presently there is no support for the following specified in Avro specification.
+<ul>
+    <li>Avro RPC
+</ul>
 
-<P>Avro is a data serialization system. See
-<A HREF="http://hadoop.apache.org/avro/docs/current/">h</A><A HREF="http://hadoop.apache.org/avro/docs/current/">ttp://hadoop.apache.org/avro/docs/current/</A>
-for background information.</P>
-<P>This is the documentation for a C++ implementation of Avro. The
-library includes:</P>
-<UL>
-	<LI><P>objects for assembling schemas programmatically 
-	</P>
-	<LI><P>objects for reading and writing data, that may be used to
-	build custom serializers and parsers</P>
-	<LI><P>an object that validates the data against a schema during
-	serialization (used primarily for debugging)</P>
-	<LI><P>an object that reads a schema during parsing, and notifies
-	the reader which type (and name or other attributes) to expect next,
-	used for debugging or for building dynamic parsers that don't know a
-	priori which data to expect</P>
-	<LI><P>a code generation tool that creates C++ objects from a
-	schema, and the code to convert back and forth between the
-	serialized data and the object</P>
-	<LI><P>a parser that can convert data written in one schema to a C++
-	object with a different schema</P>
-</UL>
+<b>Note:</b> Prior to Avro release 1.5, some of the functionality mentioned above was avilable through a somewhat different API and set tools. They are partially incompatible to the present ones. They continue to be available but will be deprecated and discontinued sometime in the future. The documentation on that API can be found at <a href="http://avro.apache.org/docs/1.4.0/api/cpp/html/index.html">http://avro.apache.org/docs/1.4.0/api/cpp/html/index.html</a> 
 
-<H2>Getting started with Avro C++</H2>
+<h2>Installing Avro C++</h2>
+<h3>Supported platforms and pre-requisites</h3>
+One should be able to build Avro C++ on any UNIX flavor including cygwin for Windows. We have tested it on Linux systems and Cygwin.
 
-<P>Although Avro does not require use of code generation, the easiest
-way to get started with the Avro C++ library is to use the code
-generation tool. The code generator reads a schema, and outputs a C++
-object to represent the data for the schema. It also creates the code
-to serialize this object, and to deserialize it... all the heavy
-coding is done for you. Even if you wish to write custom serializers
-or parsers using the core C++ libraries, the generated code can serve
-as an example of how to use these libraries.</P>
-<P>Let's walk through an example, using a simple schema. Use the
-schema that represents an imaginary number:</P>
-<PRE>{
-  &quot;type&quot;: &quot;record&quot;, 
-  &quot;name&quot;: &quot;complex&quot;,
-  &quot;fields&quot; : [
-    {&quot;name&quot;: &quot;real&quot;, &quot;type&quot;: &quot;double&quot;},    
-    {&quot;name&quot;: &quot;imaginary&quot;, &quot;type&quot; : &quot;double&quot;}
-  ]
-}</PRE><P>
+In order to build Avro C++, one needs the following:
+<ul>
+    <li>A C++ compiler and runtime libraries.
+    <li>Boost library version 1.38 or later. Please see <a href="http://www.boost.org/">http://www.boost.org</a> or your platform's documentation for details on how to set up Boost for your platform.
+    <li>CMake build tool version 2.6 or later. Please see <a href="http://www.cmake.org">http://www.cmake.org</a> or your platform's documentation for details on how to set up CMake for your system.
+    <li>Flex and Bison. For many Linux systems, Flex and Bison are pre-installed. If your platforms does not have Flex or Bison, please install them.
+    <li>Python. If not already present, please consult your platform-specific documentation on how to install Python on your system.
+</ul>
+
+<h3>Installing Avro C++</h3>
+<ol>
+    <li>Download the latest Avro distribution. Avro distribution is a compressed tarball.
+Please see the main documentation if you want to build anything more than Avro C++. 
+    <li>Expand the tarball into a directory.
+    <li>Change to <tt>lang/c++</tt> subdirectory.
+    <li>Type <tt>./build.sh test</tt>. This builds Avro C++ and runs tests on it.
+    <li>Type <tt>./build.sh install</tt>. This installs Avro C++ under /usr/local on your system.
+</ol>
+
+
+<h2>Getting started with Avro C++</h2>
+
+<p>Although Avro does not require use of code generation, that is the easiest
+way to get started with the Avro C++ library.
+The code generator reads a schema, and generates a C++
+header file that defines one or more C++ <tt>struct</tt>s to represent
+the data for the schema and functions to encode and decode those
+<tt>struct</tt>s. Even if you wish to write custom code to encode and decode
+your objects using the core functionality of Avro C++, the generated code
+can serve as an example of how to use the code functionality.
+
+<p>
+Let's walk through an example, using a simple schema. Use the
+schema that represents an complex number:</p>
+
+<b>File: cpx.json</b>
+
+\includelineno cpx.json
+<p>
+<b>Note:</b> All the example code given here can be found under
+<tt>examples</tt> directory of the distribution.
+
+<p>
 Assume this JSON representation of the schema is stored in a file
-called imaginary. To generate the code is a two step process:</P>
-<PRE>precompile &lt; imaginary &gt; imaginary.flat</PRE><P>
-The precompile step converts the schema into an intermediate format
-that is used by the code generator. This intermediate file is just a
-text-based representation of the schema, flattened by a
-depth-first-traverse of the tree structure of the schema types.</P>
-<PRE>python scripts/gen-cppcode.py --input=example.flat --output=example.hh –-namespace=Math</PRE><P>
-This tells the code generator to read your flattened schema as its
-input, and generate a C++ header file in example.hh. The optional
-argument namespace will put the objects in that namespace (if you
-don't specify a namespace, you will still get a default namespace of
-avrouser).</P>
-<P>Here's the start of the generated code:</P>
-<PRE>namespace Math {
+called <tt>cpx.json</tt>. To generate the code issue the command:.
+<pre>
+avrogencpp -i cpx.json -o cpx.hh -n c
+</pre>
+The <tt>-i</tt> flag specifies the input schema file and <tt>-o</tt> flag
+specifies the output header file to generate. The generated C++ code will be
+in the namespace specifed with <tt>-n</tt> flag.
 
-struct complex {
+<p>
+The generated file, among other things will have the following:
 
-    complex () :
-        real(),
-        imaginary()
-    { } 
+<pre>
 
-    double real;
-    double imaginary;
-};</PRE><P>
-This is the C++ representation of the schema. It creates a structure
-for the record, a default constructor, and a member for each field of
-the record.</P>
-<P>There is some other output that we can ignore for now. Let's look
-at an example of serializing this data:</P>
-<PRE>void serializeMyData()
-{
-    Math::complex c;
-    c.real = 10.0;
-    c.imaginary = 20.0;
+...
+namespace c {
+...
 
-    // Writer is the object that will do the actual I/O and buffer the results
-    avro::Writer writer;
+struct cpx {
+    double re;
+    double im;
+};
 
-    // This will invoke the writer on my object
-    avro::serialize(writer, c);
 
-    // At this point, the writer stores the serialized data in a buffer,
-    // which can be extracted to an immutable buffer
-    InputBuffer buffer = writer.buffer();
-}</PRE><P>
-Using the generated code, all that is required to serialize the data
-is to call avro::serialize() on the object.</P>
-The data may be be accessed by requesting an avro::InputBuffer 
-object.  From there, it can be sent to a file, over the network, etc.</P>
-<P>Now let's do the inverse, and read the serialized data into our
-object:</P>
-<PRE>void parseMyData(const avro::InputBuffer &amp;myData)
-{
-    Math::complex c;
+...
 
-    // Reader is the object that will do the actual I/O
-    avro::Reader reader(myData);
-
-    // This will invoke the reader on my object
-    avro::parse(reader, c);
-
-    // At this point, c is populated with the deserialized data!
-}</PRE><P>
-In case you're wondering how avro::serialize() and avro::parse()
-handled the custom data type, the answer is in the generated code. It
-created the following functions:</P>
-<PRE>template &lt;typename Serializer&gt;
-inline void serialize(Serializer &amp;s, const complex &amp;val, const boost::true_type &amp;) {
-    s.writeRecord();
-    serialize(s, val.real);
-    serialize(s, val.imaginary);
-    s.writeRecordEnd();
 }
 
-template &lt;typename Parser&gt;
-inline void parse(Parser &amp;p, complex &amp;val, const boost::true_type &amp;) {
-    p.readRecord();
-    parse(p, val.real);
-    parse(p, val.imaginary);
-    p.readRecordEnd();
-}</PRE><P>
-It also adds the following to the avro namespace:</P>
-<PRE>template &lt;&gt; struct is_serializable&lt;Math::complex&gt; : public boost::true_type{};</PRE><P>
-This sets up a type trait for the complex structure, telling Avro
-that this object has serialize and parse functions available.</P>
+</pre>
+<tt>cpx</tt> is a C++ representation of the Avro schema <tt>cpx</tt>.
 
-<H2>Reading a Json schema</H2>
+Now let's see how we can use the code generated to encode data into avro and decode it back.
 
-<P>The above section demonstrated pretty much all that's needed to
+<b>File: generated.cc</b>
+
+\includelineno generated.cc
+
+In line 9, we construct a memory output stream. By this we indicate that we
+want to send the encoded Avro data into memory. In line 10, we construct a
+binary encoder, whereby we mean the output should be encoded using the Avro
+binary standard. In line 11, we attach the output stream to the encoder. At any given time an incoder can write to only one output stream.
+<p>
+In line 14, we write the contents of c1 into the output stream using the
+encoder. Now the output stream contains the binary representation of
+the object. The rest of the code verifies that the data is indeed in the stream.
+<p>
+In line 17, we construct a memory input stream from the contents of the
+output stream. Thus the input stream has the binary representation of the
+object. In line 18 and 19, we construct a binary decoder and attach the
+input stream to it. Line 22 decodes the contents of the stream into another
+object c2. Now c1 and c2 should have identical contents, which one can readily
+verify from the output of the program, which should be:
+
+<pre>
+(1, 2.13)
+</pre>
+
+Now, if you want to encode the data using Avro JSON encoding, you should use
+avro::jsonEncoder() instead of avro::binaryEncoder() in line 10
+and avro::jsonDecoder() instead of avro::binaryDecoder() in line 18.
+<p>
+
+On the other hand, if you want to write the contents to a file instead of
+memory, you should use avro::fileOutputStream() instead of
+avro::memoryOutputStream() in ine 9 and avro::fileInputStream()
+instead of avro::memoryInputStream() in line 17.
+<p>
+
+<h2>Reading a JSON schema</h2>
+
+<p>The section above demonstrated pretty much all that's needed to
 know to get started reading and writing objects using the Avro C++
 code generator. The following sections will cover some more
-information.</P>
-<P>The library provides some utilities to read a schema that is
-stored in a JSON file or string. Take a look:</P>
-<PRE>void readSchema()
-{
-    // My schema is stored in a file called “example”
-    std::ifstream in(“example”);
+information.</p>
+<p>The library provides some utilities to read a schema that is
+stored in a JSON file:</p>
 
-    avro::ValidSchema mySchema;
-    avro::compileJsonSchema(in, mySchema);
-}
- </PRE><P>
-This reads the file, and parses the JSON schema into an object of
-type avro::ValidSchema. If, for some reason, the schema is not valid,
-the ValidSchema object will not be set, and an exception will be
+<b>File: schemaload.cc</b>
+
+\includelineno schemaload.cc
+
+<p>
+This reads the file, and parses the JSON schema into an in-meory schema
+object of type avro::ValidSchema. If, for some reason, the schema is not valid,
+the <tt>cpxSchema</tt> object will not be set, and an exception will be
 thrown. 
-</P>
+</p>
+If you always use code Avro generator you don't really need the in-memory
+schema objects. But if you use custom objects and routines to encode or decode
+avro data, you will need the schema objects. Other uses of schema objects
+are generic data objects and schema resolution described in the following
+sections.
 
-<H2>To validate or not to validate</H2>
+<h2>Custom encoding and decoding</h2>
 
-<P>The last section showed how to create a ValidSchema object from a
-schema stored in JSON. You may wonder, what can I use the ValidSchema
-for?</P>
-<P>One use is to ensure that the writer is actually writing the types
-that match what the schema expects. Let's revisit the serialize
-function from above, but this time checking against our schema.</P>
-<PRE>void serializeMyData(const ValidSchema &amp;mySchema)
-{
-    Math::complex c;
-    c.real = 10.0;
-    c.imaginary = 20.0;
+Suppose you want to encode objects of type std::complex<double> from
+C++ standard library using the schema defined in cpx.json.
+Since std::complex<double> was not generated by Avro, it does't know how to encode or decode objects of that
+type. You have to tell Avro how to do that.
 
-    // ValidatingWriter will make sure our serializer is writing the correct types
-    avro::ValidatingWriter writer(mySchema);
+The recommended way to tell Avro how to encode or decode is to specialize
+Avro's codec_traits template. For std::complex<double>, here is what you'd do:
 
-    try {
-        avro::serialize(writer, c);
-        // At this point, the ostringstream “os” stores the serialized data!
-    } 
-    catch (avro::Exception &amp;e) {
-        std::cerr &lt;&lt; “ValidatingWriter encountered an error: “ &lt;&lt; e.what();
-    }  
-}</PRE><P>
-The difference between this code and the previous version is that the
-Writer object was replaced with a ValidatingWriter. If the serializer
-function mistakenly writes a type that does not match the schema, the
-ValidatingWriter will throw an exception. 
-</P>
-<P>The ValidatingWriter will incur more processing overhead while
-writing your data. For the generated code, it's not necessary to use
-validation, because (hopefully!) the mechanically generated code will
-match the schema. Nevertheless it is nice while debugging to have the
-added safety of validation, especially when writing and testing your
-own serializing code.</P>
-<P>The ValidSchema may also be used when parsing data. In addition to
-making sure that the parser reads types that match the schema, it
-provides an interface to query the next type to expect, and the
-field's name if it is a member of a record.</P>
-<P>The following code is not very flexible, but it does demonstrate
-the API:</P>
-<PRE>void parseMyData(const avro::InputBuffer &amp;myData, const avro::ValidSchema &amp;mySchema)
-{
-    // Manually parse data, the Parser object binds the data to the schema
-    avro::Parser&lt;ValidatingReader&gt; parser(mySchema, myData);
+<b>File: custom.cc</b>
 
-    assert( nextType(parser) == avro::AVRO_RECORD);
-    
-    // Begin parsing
-    parser.readRecord();
-   
-    Math::complex c;
+\includelineno custom.cc
 
-    std::string recordName;
-    assert( currentRecordName(parser, recordName) == true);
-    assert( recordName == “complex”);
-    std::string fieldName;
-    for(int i=0; i &lt; 2; ++i) {
-        assert( nextType(parser) == avro::AVRO_DOUBLE);
-        assert( nextFieldName(parser, fieldName) == true);
-        if(fieldName == “real”) {
-            c.real = parser.readDouble();
-        } 
-        else if (fieldName == “imaginary”) {
-            c.imaginary = parser.readDouble();
-        } 
-        else {
-            std::cout &lt;&lt; “I did not expect that!\n”;
-        }
-    }
+Please notice that the main function is pretty much similar to that we used
+for the generated class. Once <tt>codec_traits</tt> for a specific type is
+supplied, you do not really need to do anything special for your custom types.
 
-    parser.readRecordEnd();
-}</PRE><P>
-The above code shows that if you don't know the schema at compile
-time, you can still write code that parses the data, by reading the
-schema at runtime and querying the ValidatingReader to discover what
-is in the serialized data.</P>
+<p>
 
-<H2>Programmatically creating schemas</H2>
+But wait, how does Avro know that complex<double> represents the data for
+the schema in <tt>cpx.json</tt>? It doesn't. In fact, if you have used
+<tt>std::complex<float></tt> instead of <tt>std::complex<double></tt> program
+would have worked. But the data in the memory would not have been corresponding
+to the schema in <tt>cpx.json</tt>.
 
-<P>You can use objects to create schemas in your code. There are
-schema objects for each primitive and compound type, and they all
-share a common base class called Schema.</P>
-<P>Here's an example, of creating a schema for an array of records of
-complex data types:</P>
-<PRE>void createMySchema()
-{
-    // First construct our complex data type:
-    avro::RecordSchema myRecord(“complex”);
-   
-    // Now populate my record with fields (each field is another schema):
-    myRecord.addField(“real”, avro::DoubleSchema());
-    myRecord.addField(“imaginary”, avro::DoubleSchema());
+<p>
 
-    // The complex record is the same as used above, let's make a schema 
-    // for an array of these record
-  
-    avro::ArraySchema complexArray(myRecord); </PRE><P>
-The above code created our schema, but at this point it is possible
-that a schema is not valid (a record may not have any fields, or some
-field names may not be unique, etc.) In order to use the schema, you
-need to convert it to the ValidSchema object:</P>
-<PRE>   // this will throw if the schema is invalid!
-   avro::ValidSchema validComplexArray(complexArray);
+In order to ensure that you indeed use the correct type, you can use
+the validating encoders and decoder. Here is how:
 
-   // now that I have my schema, what does it look like in JSON?
-   // print it to the screen
-   validComplexArray.toJson(std::cout);
-}</PRE><P>
-When the above code executes, it prints:</P>
-<PRE>{
-    &quot;type&quot;: &quot;array&quot;,
-    &quot;items&quot;: {
-        &quot;type&quot;: &quot;record&quot;,
-        &quot;name&quot;: &quot;complex&quot;,
-        &quot;fields&quot;: [
-            {
-                &quot;name&quot;: &quot;real&quot;,
-                &quot;type&quot;: &quot;double&quot; 
-            },
-            {
-                &quot;name&quot;: &quot;imaginary&quot;,
-                &quot;type&quot;: &quot;double&quot; 
-            } 
-        ]
-    }
-}
-</PRE>
+<b>File: validating.cc</b>
 
-<H2>Converting from one schema to another</H2>
+\includelineno validating.cc
 
-<P>The Avro spec provides rules for dealing with schemas that are not
-exactly the same (for example, the schema may evolve over time, and
-the data my program now expects may differ than the data stored
-previously with the older version).</P>
-<P>The code generation tool may help again in this case.  For each
-structure it generates, it creates a special indexing structure that
-may be used to read the data, even if the data was written with a
-different schema.</P>
-<P>In example.hh, this indexing structure looks like:</P>
-<PRE>class complex_Layout : public avro::CompoundOffset {
-  public:
-    complex_Layout(size_t offset) :
-        CompoundOffset(offset)
-    {
-        add(new avro::Offset(offset + offsetof(complex, real)));
-        add(new avro::Offset(offset + offsetof(complex, imaginary)));
-    }
-}; 
-</PRE>
-<P>Let's say my data was previously written with floats instead of
-doubles.  According the schema resolution rules, the schemas are
-compatible, because floats are promotable to doubles.  As long as
-both the old and the new schemas are available, a dynamic parser may
-be created that reads the data to the code generated structure.</P>
-<PRE>void dynamicParse(const avro::ValidSchema &amp;writerSchema, 
-                  const avro::ValidSchema &amp;readerSchema) {
+Here, instead of using the plain binary encoder, you use a validating encoder
+backed by a binary encoder. Similarly, instead of using the plain binary
+decoder, you use a validating decoder backed by a binary decoder. Now,
+if you use <tt>std::complex<float></tt> intead of <tt>std::complex<double></tt>
+the validating encoder and decoder will throw exception stating that
+you are trying to encode or decode <tt>float</tt> instead of <tt>double</tt>.
+<p>
+You can use any encoder behind the validating encoder and any decoder
+behind the validating decoder. But in practice, only the binary encoder
+and the binary decoder have no knowledge of the underlying schema.
+All other encoders (JSON encoder) and decoders (JSON decoder,
+resolving decoder) do know about the schema and they validate internally. So,
+fronting them with a validating encoder or validating decoder is wasteful.
 
-    // Instantiate the Layout object
-    Math::complex_Layout layout;
+<h2>Generic data objects</h2>
 
-    // Create a schema parser that is aware of my type's layout, and both schemas
-    avro::ResolverSchema resolverSchema(writerSchema, readerSchema, layout);
+A third way to encode and decode data is to use Avro's generic datum.
+Avro's generic datum allows you to read any arbitray data corresponding to
+an arbitrary schema into a generic object. One need not know anything
+about the schema or data at complie time. 
 
-    // Setup the reader
-    avro::ResolvingReader reader(resolverSchema, data);
+Here is an example how one can use the generic datum.
 
-    Math::complex c;
-    
-    // Do the parse
-    avro::parse(reader, c);
+<b>File: generic.cc</b>
 
-    // At this point, c is populated with the deserialized data!
-}
-</PRE>
+\includelineno generic.cc
 
-\endhtmlonly
+In this example, we encode the data using generated code and decode it with
+generic datum. Then we examine the contents of the generic datum and extract
+them. Please see \ref avro::GenericDatum for more details on how to use it.
 
+<h2>Reading data with a schema different from that of the writer</h2>
+It is possible to read the data written according to one schema
+using a different schema, provided the reader's schema and the writer's
+schema are compatible according to the Avro's Schema resolution rules. 
+<p>
+For example, you have a reader which is interested only in the imaginary part
+of a complex number while the writer writes both the real and imaginary parts.
+It is possible to do automatic schema resolution between the writer's schema
+and schema as shown below.
+
+<b>File: imaginary.json</b>
+
+\includelineno imaginary.json
+
+<pre>
+avrogencpp -i imaginary.json -o imaginary.hh -n i
+</pre>
+
+<b>File: resolving.cc</b>
+
+\includelineno resolving.cc
+
+In this example, writer and reader deal with different schemas,
+both are recornd with the same name cpx. The writer schema has two fields and
+the reader's has just one. We generated code for writer's schema in a namespace
+<tt>c</tt> and the reader's in <tt>i</tt>.
+
+<p>
+Please notice how the reading part of the example at line 42 reads as if
+the stream contains the data corresponding to its schema. The schema resolution
+is automatically done by the resolving decoder.
+
+<p>
+In this example, we have used a simple (somewhat artificial) projection (where the set of fields in
+the reader's schema is a subset of set of fields in the writer's). But more
+complex resolutions are allowed by Avro specification.
+
+<h2>Using Avro data files</h2>
+Avro specification specifies a format for data files. Avro C++ implements
+the sepcification. The code below demonstrates how one can use the
+Avro data file to store and retrieve a collection of objects
+corresponding to a given schema.
+
+<b>File: datafile.cc</b>
+
+\includelineno datafile.cc
+
+Please see DataFile.hh for more details.
 */
 

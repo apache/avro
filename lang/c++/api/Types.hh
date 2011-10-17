@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,57 +23,87 @@
 
 namespace avro {
 
+/**
+ * The "type" for the schema.
+ */
 enum Type {
 
-    AVRO_STRING,
-    AVRO_BYTES,
-    AVRO_INT,
-    AVRO_LONG,
-    AVRO_FLOAT,
-    AVRO_DOUBLE,
-    AVRO_BOOL,
-    AVRO_NULL,
+    AVRO_STRING,    /*!< String */
+    AVRO_BYTES,     /*!< Sequence of variable length bytes data */
+    AVRO_INT,       /*!< 32-bit integer */
+    AVRO_LONG,      /*!< 64-bit integer */
+    AVRO_FLOAT,     /*!< Floating point number */
+    AVRO_DOUBLE,    /*!< Double precision floating point number */
+    AVRO_BOOL,      /*!< Boolean value */
+    AVRO_NULL,      /*!< Null */
 
-    AVRO_RECORD,
-    AVRO_ENUM,
-    AVRO_ARRAY,
-    AVRO_MAP,
-    AVRO_UNION,
-    AVRO_FIXED,
+    AVRO_RECORD,    /*!< Record, a sequence of fields */
+    AVRO_ENUM,      /*!< Enumeration */
+    AVRO_ARRAY,     /*!< Homogeneous array of some specific type */
+    AVRO_MAP,       /*!< Homogeneous map from string to some specific type */
+    AVRO_UNION,     /*!< Union of one or more types */
+    AVRO_FIXED,     /*!< Fixed number of bytes */
 
-    AVRO_NUM_TYPES, // marker
+    AVRO_NUM_TYPES, /*!< Marker */
     
     // The following is a pseudo-type used in implementation
     
-    AVRO_SYMBOLIC = AVRO_NUM_TYPES,
-    AVRO_UNKNOWN  = -1
+    AVRO_SYMBOLIC = AVRO_NUM_TYPES, /*!< User internally to avoid circular references. */
+    AVRO_UNKNOWN  = -1 /*!< Used internally. */
 
 };
 
+/**
+ * Returns true if and only if the given type is a primitive.
+ * Primitive types are: string, bytes, int, long, float, double, boolean
+ * and null
+ */
 inline bool isPrimitive(Type t) {
     return (t >= AVRO_STRING) && (t < AVRO_RECORD);
 }
 
+/**
+ * Returns true if and only if the given type is a non primitive valid type.
+ * Primitive types are: string, bytes, int, long, float, double, boolean
+ * and null
+ */
 inline bool isCompound(Type t) {
     return (t>= AVRO_RECORD) && (t < AVRO_NUM_TYPES);
 }
 
+/**
+ * Returns true if and only if the given type is a valid avro type.
+ */
 inline bool isAvroType(Type t) {
     return (t >= AVRO_STRING) && (t < AVRO_NUM_TYPES);
 }
 
+/**
+ * Returns true if and only if the given type is within the valid range
+ * of enumeration.
+ */
 inline bool isAvroTypeOrPseudoType(Type t) {
     return (t >= AVRO_STRING) && (t <= AVRO_NUM_TYPES);
 }
 
-
+/**
+ * Converts the given type into a string. Useful for generating messages.
+ */
 const std::string& toString(Type type);
 
+/**
+ * Writes a string form of the given type into the given ostream.
+ */
 std::ostream &operator<< (std::ostream &os, avro::Type type);
 
 /// define a type to identify Null in template functions
 struct Null { };
 
+/**
+ * Writes schema for null \p null type to \p os.
+ * \param os The ostream to write to.
+ * \param null The value to be written.
+ */
 std::ostream& operator<< (std::ostream &os, const Null &null);
 
 } // namespace avro

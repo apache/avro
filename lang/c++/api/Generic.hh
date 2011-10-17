@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,6 +34,28 @@
 
 namespace avro {
 
+/**
+ * Generic datum which can hold any Avro type. The datum has a type
+ * and a value. The type is one of the Avro data types. The C++ type for
+ * value corresponds to the Avro type.
+ * \li An Avro <tt>null</tt> corresponds to no C++ type. It is illegal to
+ * to try to access values for <tt>null</tt>.
+ * \li Avro <tt>boolean</tt> maps to C++ <tt>bool</tt>
+ * \li Avro <tt>int</tt> maps to C++ <tt>int32_t</tt>.
+ * \li Avro <tt>long</tt> maps to C++ <tt>int64_t</tt>.
+ * \li Avro <tt>float</tt> maps to C++ <tt>float</tt>.
+ * \li Avro <tt>double</tt> maps to C++ <tt>double</tt>.
+ * \li Avro <tt>string</tt> maps to C++ <tt>std::string</tt>.
+ * \li Avro <tt>bytes</tt> maps to C++ <tt>std::vector&lt;uint_t&gt;</tt>.
+ * \li Avro <tt>fixed</tt> maps to C++ class <tt>GenericFixed</tt>.
+ * \li Avro <tt>enum</tt> maps to C++ class <tt>GenericEnum</tt>.
+ * \li Avro <tt>array</tt> maps to C++ class <tt>GenericArray</tt>.
+ * \li Avro <tt>map</tt> maps to C++ class <tt>GenericMap</tt>.
+ * \li There is no C++ type corresponding to Avro <tt>union</tt>. The
+ * object should have the C++ type corresponing to one of the constituent
+ * types of the union.
+ *
+ */
 class GenericDatum {
     Type type_;
     boost::any value_;
@@ -44,15 +66,32 @@ class GenericDatum {
     GenericDatum(Type t, const T& v) : type_(t), value_(v) { }
 
 public:
+    /**
+     * The avro data type this datum holds.
+     */
     Type type() const {
         return type_;
     }
 
+    /**
+     * Returns the value held by this datum.
+     * T The type for the value. This must correspond to the
+     * avro type returned by type().
+     */
     template<typename T>
     const T& value() const {
         return *boost::any_cast<T>(&value_);
     }
 
+    /**
+     * Returns the reference to the value held by this datum, which
+     * can be used to change the contents. Please note that only
+     * value can be changed, the data type of the value held cannot
+     * be changed.
+     *
+     * T The type for the value. This must correspond to the
+     * avro type returned by type().
+     */
     template<typename T>
     T& value() {
         return *boost::any_cast<T>(&value_);
@@ -84,15 +123,35 @@ public:
     GenericDatum(const std::vector<uint8_t>& v) :
         type_(AVRO_BYTES), value_(v) { }
 
+    /**
+     * Constructs a datum corresponding to the given avro type.
+     * The value will the appropraite default corresponding to the
+     * data type.
+     * \param schema The schema that defines the avro type.
+     */
     GenericDatum(const NodePtr& schema);
 };
 
+/**
+ * The base class for all generic type for containers.
+ */
 class GenericContainer {
     const NodePtr schema_;
 protected:
+    /**
+     * Constructs a container corresponding to the given schema.
+     */
     GenericContainer(const NodePtr& s) : schema_(s) { }
 
+    /**
+     * Asserts if the given generic datum \p v has a type that matches \p n.
+     */
     static void assertSameType(const GenericDatum& v, const NodePtr& n);
+
+    /**
+     * Asserts that the given schema \p schema has the given type \c type.
+     * If not, it throws an exception with the given message \c message.
+     */
     static void assertType(const NodePtr& schema, Type type,
         const char* message);
 public:
@@ -102,43 +161,79 @@ public:
     }
 };
 
+/**
+ * The generic container for Avro records.
+ */
 class GenericRecord : public GenericContainer {
     std::vector<GenericDatum> fields_;
 public:
+    /**
+     * Constructs a generic record corresponding to the given schema \p schema,
+     * which should be of Avro type record.
+     */
     GenericRecord(const NodePtr& schema);
 
+    /**
+     * Returns the number of fields in the current record.
+     */
     size_t fieldCount() const {
         return fields_.size();
     }
 
+    /**
+     * Returns the field at the given position \p pos.
+     */
     const GenericDatum& fieldAt(size_t pos) const {
         return fields_[pos];
     }
 
+    /**
+     * Returns the reference to the field at the given position \p pos,
+     * which can be used to change the contents.
+     */
     GenericDatum& fieldAt(size_t pos) {
         return fields_[pos];
     }
 
+    /**
+     * Replaces the field at the given position \p pos with \p v.
+     */
     void setFieldAt(size_t pos, const GenericDatum& v) {
         assertSameType(v, schema()->leafAt(pos));    
         fields_[pos] = v;
     }
 };
 
+/**
+ * The generic container for Avro arrays.
+ */
 class GenericArray : public GenericContainer {
 public:
+    /**
+     * The contents type for the array.
+     */
     typedef std::vector<GenericDatum> Value;
 
+    /**
+     * Constructs a generic array corresponding to the given schema \p schema,
+     * which should be of Avro type array.
+     */
     GenericArray(const NodePtr& schema) : GenericContainer(schema) {
         if (schema->type() != AVRO_ARRAY) {
             throw Exception("Schema is not an array");
         }
     }
 
+    /**
+     * Returns the contents of this array.
+     */
     const Value& value() const {
         return value_;
     }
 
+    /**
+     * Returns the reference to the contents of this array.
+     */
     Value& value() {
         return value_;
     }
@@ -146,18 +241,34 @@ private:
     Value value_;
 };
 
+/**
+ * The generic container for Avro maps.
+ */
 class GenericMap : public GenericContainer {
 public:
+    /**
+     * The contents type for the map.
+     */
     typedef std::vector<std::pair<std::string, GenericDatum> > Value;
 
+    /**
+     * Constructs a generic map corresponding to the given schema \p schema,
+     * which should be of Avro type map.
+     */
     GenericMap(const NodePtr& schema) : GenericContainer(schema) {
         assertType(schema, AVRO_MAP, "Schema is not a map");
     }
 
+    /**
+     * Returns the contents of this map.
+     */
     const Value& value() const {
         return value_;
     }
 
+    /**
+     * Returns the reference to the contents of this map.
+     */
     Value& value() {
         return value_;
     }
@@ -165,12 +276,23 @@ private:
     Value value_;
 };
 
+/**
+ * Generic container for Avro enum.
+ */
 class GenericEnum : public GenericContainer {
     size_t value_;
 public:
+    /**
+     * Constructs a generic enum corresponding to the given schema \p schema,
+     * which should be of Avro type enum.
+     */
     GenericEnum(const NodePtr& schema) : GenericContainer(schema), value_(0) {
     }
 
+    /**
+     * Returns the symbol corresponding to the cardinal \p n. If the
+     * value for \p n is not within the limits an exception is thrown.
+     */
     const std::string& symbol(size_t n) {
         if (n < schema()->names()) {
             return schema()->nameAt(n);
@@ -178,6 +300,10 @@ public:
         throw Exception("Not as many symbols");
     }
 
+    /**
+     * Returns the cardinal for the given symbol \c symbol. If the symbol
+     * is not defined for this enum and exception is thrown.
+     */
     size_t index(const std::string& symbol) const {
         size_t result;
         if (schema()->nameIndex(symbol, result)) {
@@ -186,10 +312,16 @@ public:
         throw Exception("No such symbol");
     }
 
+    /**
+     * Set the value for this enum corresponding to the given symbol \c symbol.
+     */
     size_t set(const std::string& symbol) {
         return value_ = index(symbol);
     }
 
+    /**
+     * Set the value for this enum corresponding to the given cardinal \c n.
+     */
     void set(size_t n) {
         if (n < schema()->names()) {
             value_ = n;
@@ -198,32 +330,54 @@ public:
         throw Exception("Not as many symbols");
     }
 
+    /**
+     * Returns the cardinal for the current value of this enum.
+     */
     size_t value() const {
         return value_;
     }
 
+    /**
+     * Returns the symbol for the current value of this enum.
+     */
     const std::string& symbol() const {
         return schema()->nameAt(value_);
     }
 };
 
+/**
+ * Generic container for Avro fixed.
+ */
 class GenericFixed : public GenericContainer {
     std::vector<uint8_t> value_;
 public:
+    /**
+     * Constructs a generic enum corresponding to the given schema \p schema,
+     * which should be of Avro type fixed.
+     */
     GenericFixed(const NodePtr& schema) : GenericContainer(schema) {
         value_.resize(schema->fixedSize());
     }
 
+    /**
+     * Returns the contents of this fixed.
+     */
     const std::vector<uint8_t>& value() const {
         return value_;
     }
 
+    /**
+     * Returns the reference to the contents of this fixed.
+     */
     std::vector<uint8_t>& value() {
         return value_;
     }
 };
 
 
+/**
+ * A utility class to read generic datum from decoders.
+ */
 class GenericReader : boost::noncopyable {
     const ValidSchema schema_;
     const bool isResolving_;
@@ -232,10 +386,22 @@ class GenericReader : boost::noncopyable {
     static void read(GenericDatum& datum, const NodePtr& n, Decoder& d,
         bool isResolving);
 public:
+    /**
+     * Constructs a reader for the given schema using the given decoder.
+     */
     GenericReader(const ValidSchema& s, const DecoderPtr& decoder);
+
+    /**
+     * Constructs a reader for the given reader's schema \c readerSchema
+     * using the given
+     * decoder which holds data matching writer's schema \c writerSchema.
+     */
     GenericReader(const ValidSchema& writerSchema,
         const ValidSchema& readerSchema, const DecoderPtr& decoder);
 
+    /**
+     * Reads a value off the decoder.
+     */
     void read(GenericDatum& datum) const;
 
     /**
@@ -245,14 +411,23 @@ public:
 };
 
 
+/**
+ * A utility class to write generic datum to encoders.
+ */
 class GenericWriter : boost::noncopyable {
     const ValidSchema schema_;
     const EncoderPtr encoder_;
 
     static void write(const GenericDatum& datum, const NodePtr& n, Encoder& e);
 public:
+    /**
+     * Constructs a writer for the given schema using the given encoder.
+     */
     GenericWriter(const ValidSchema& s, const EncoderPtr& encoder);
 
+    /**
+     * Writes a value onto the encoder.
+     */
     void write(const GenericDatum& datum) const;
 
     /**
@@ -263,12 +438,17 @@ public:
 
 template <typename T> struct codec_traits;
 
+/**
+ * Specialization for codec_traits for Generic datum.
+ */
 template <> struct codec_traits<std::pair<ValidSchema, GenericDatum> > {
+    /** Encodes */
     static void encode(Encoder& e,
         const std::pair<ValidSchema, GenericDatum>& p) {
         GenericWriter::write(e, p.second, p.first);
     }
 
+    /** Decodes */
     static void decode(Decoder& d, std::pair<ValidSchema, GenericDatum>& p) {
         GenericReader::read(d, p.second, p.first);
     }

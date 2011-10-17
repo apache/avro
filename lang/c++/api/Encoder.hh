@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +44,11 @@
 
 namespace avro {
 
+/**
+ * The abstract base class for all Avro encoders. The implementations
+ * differ in the method of encoding (binary vresus JSON) or in capabilities
+ * such as ability to verify the order of invocation of different functions.
+ */
 class Encoder {
 public:
     /// All future encodings will go to os, which should be valid until
@@ -75,9 +80,19 @@ public:
     /// Encodes a UTF-8 string to the current stream.
     virtual void encodeString(const std::string& s) = 0;
 
-    /// Encodes arbitray binary data to the current stream.
+    /**
+     * Encodes aribtray binary data into tthe current stream as Avro "bytes"
+     * data type.
+     * \param bytes Where the data is
+     * \param len Number of bytes at \p bytes.
+     */
     virtual void encodeBytes(const uint8_t *bytes, size_t len) = 0;
 
+    /**
+     * Encodes aribtray binary data into tthe current stream as Avro "bytes"
+     * data type.
+     * \param bytes The data.
+     */
     void encodeBytes(const std::vector<uint8_t>& bytes) {
         encodeBytes(&bytes[0], bytes.size());
     }
@@ -85,6 +100,11 @@ public:
     /// Encodes fixed length binary to the current stream.
     virtual void encodeFixed(const uint8_t *bytes, size_t len) = 0;
 
+    /**
+     * Encodes an Avro data type Fixed.
+     * \param bytes The fixed, the length of which is taken as the size
+     * of fixed.
+     */
     void encodeFixed(const std::vector<uint8_t>& bytes) {
         encodeFixed(&bytes[0], bytes.size());
     }
@@ -115,6 +135,9 @@ public:
     virtual void encodeUnionIndex(size_t e) = 0;
 };
 
+/**
+ * Shared pointer to Encoder.
+ */
 typedef boost::shared_ptr<Encoder> EncoderPtr;
 
 /**
