@@ -123,7 +123,7 @@ public class Pair<K,V>
     if (o == this) return true;                 // identical object
     if (!(o instanceof Pair)) return false;     // not a pair
     Pair that = (Pair)o;
-    if (this.schema != that.schema)
+    if (!this.schema.equals(that.schema))
       return false;                             // not the same schema
     return this.compareTo(that) == 0;
   }
