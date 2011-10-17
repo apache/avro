@@ -79,6 +79,7 @@
             <configuration>
               <excludes>
                 <exclude>**/mapred/tether/**</exclude>
+                <exclude>org/apache/avro/data/Json.avsc</exclude>
               </excludes>
               <stringType>String</stringType>
               <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>

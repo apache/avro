@@ -34,6 +34,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
 
+import org.codehaus.jackson.JsonNode;
+
 import org.apache.avro.Schema.Type;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
@@ -45,6 +47,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.data.Json;
 import org.apache.avro.compiler.specific.TestSpecificCompiler;
 import org.apache.avro.util.Utf8;
 
@@ -457,7 +460,6 @@ public class TestSchema {
       +"{\"name\":\"f\",\"type\":"+y+"}"
       +"]}";
     Schema xs = Schema.parse(x);
-    System.out.println(xs);
     assertEquals(xs, Schema.parse(xs.toString()));
   }
 
@@ -610,6 +612,9 @@ public class TestSchema {
 
       // Check that we can generate the code for every schema we see.
       TestSpecificCompiler.assertCompiles(schema, false);
+
+      // Check that we can read/write the json of every schema we see.
+      checkBinaryJson(jsonSchema);
     }
   }
 
@@ -732,6 +737,24 @@ public class TestSchema {
         .jsonDecoder(schema, new ByteArrayInputStream(data)));
       
     assertEquals("Decoded data does not match.", datum, decoded);
+  }
+
+  public static void checkBinaryJson(String json) throws Exception {
+    JsonNode node = Schema.parseJson(json);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    DatumWriter<JsonNode> writer = new Json.Writer();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+    encoder = EncoderFactory.get().validatingEncoder(Json.SCHEMA, encoder);
+    writer.write(node, encoder);
+    encoder.flush();
+    byte[] bytes = out.toByteArray();
+
+    DatumReader<JsonNode> reader = new Json.Reader();
+    Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
+    decoder = DecoderFactory.get().validatingDecoder(Json.SCHEMA, decoder);
+    JsonNode decoded = reader.read(null, decoder);
+
+    assertEquals("Decoded json does not match.", node.toString(), decoded.toString());
   }
 
   private static final Schema ACTUAL =            // an empty record schema

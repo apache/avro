@@ -46,6 +46,14 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>../../../share/schemas</directory>
+        <includes>
+          <include>org/apache/avro/data/Json.avsc</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>com.thoughtworks.paranamer</groupId>

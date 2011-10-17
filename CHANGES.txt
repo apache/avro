@@ -58,6 +58,9 @@ Avro 1.6.0 (unreleased)
     achived by specifying <stringType>String</stringType> in
     avro-maven-plugin's pom.xml configuration. (cutting)
 
+    AVRO-924. Java: Support reading & writing arbitrary JSON data
+    using an efficient Avro binary representation.  (cutting)
+
   OPTIMIZATIONS
 
     AVRO-853: Java: Cache Schema hash codes. (cutting)
