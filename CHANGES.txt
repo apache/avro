@@ -150,6 +150,7 @@ Avro 1.6.0 (unreleased)
 
     AVRO-938. Some more warning when built on RHEL. (thiru)
 
+    AVRO-937. C++ CMake keeps generating code even when there is no change. (thiru)
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

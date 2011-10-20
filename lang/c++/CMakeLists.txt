@@ -73,25 +73,18 @@ add_dependencies(avrocpp parser lexer)
 
 target_link_libraries (precompile avrocpp ${Boost_LIBRARIES})
 
-add_custom_command (OUTPUT bigrecord
-    COMMAND precompile ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord
-        bigrecord
-    DEPENDS precompile)
+macro (gencpp file ns)
+    add_custom_command (OUTPUT ${ns}.hh
+        COMMAND precompile ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file}
+            ${file}
+        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen-cppcode.py
+            -n ${ns} -i ${file} -o ${ns}.hh
+        DEPENDS precompile ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file})
+    add_custom_target(${ns} DEPENDS ${ns}.hh)
+endmacro (gencpp)
 
-add_custom_target (testgen
-    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen-cppcode.py
-        -n testgen -i bigrecord -o testgen.hh
-    DEPENDS bigrecord)
-
-add_custom_command (OUTPUT bigrecord2
-    COMMAND precompile ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord2
-        bigrecord2
-    DEPENDS precompile)
-
-add_custom_target (testgen2
-    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen-cppcode.py
-        -n testgen2 -i bigrecord2 -o testgen2.hh
-    DEPENDS bigrecord2)
+gencpp (bigrecord testgen)
+gencpp (bigrecord2 testgen2)
 
 add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.cc
     COMMAND bison --defines=${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.hh -o ${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.cc
@@ -101,69 +94,32 @@ add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/AvroLex.cc
     COMMAND flex -oAvroLex.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/parser/AvroLex.ll)
     
-add_custom_target (bigrecord_hh
-    COMMAND avrogencpp
-        -p -
-        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord
-        -o bigrecord.hh -n testgen
-    DEPENDS avrogencpp)
+macro (gen file ns)
+    add_custom_command (OUTPUT ${file}.hh
+        COMMAND avrogencpp
+            -p -
+            -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file}
+            -o ${file}.hh -n ${ns} -U
+        DEPENDS avrogencpp ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file})
+    add_custom_target (${file}_hh DEPENDS ${file}.hh)
+endmacro (gen)
 
-add_custom_target (bigrecord2_hh
-    COMMAND avrogencpp
-        -p -
-        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/bigrecord2
-        -o bigrecord2.hh -n testgen2
-    DEPENDS avrogencpp)
-
-add_custom_target (union_array_union_hh
-    COMMAND avrogencpp
-        -p -
-        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_array_union
-        -o union_array_union.hh -n uau
-    DEPENDS avrogencpp)
-
-add_custom_target (union_map_union_hh
-    COMMAND avrogencpp
-        -p -
-        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_map_union
-        -o union_map_union.hh -n umu
-    DEPENDS avrogencpp)
-
-add_custom_target (union_conflict_hh
-    COMMAND avrogencpp
-        -p -
-        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/union_conflict
-        -o union_conflict.hh -n uc -U
-    DEPENDS avrogencpp)
-
-add_custom_target (recursive_hh
-    COMMAND avrogencpp
-        -p -
-        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/recursive
-        -o recursive.hh -n rec
-    DEPENDS avrogencpp)
-
-add_custom_target (reuse_hh
-    COMMAND avrogencpp
-        -p -
-        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/reuse
-        -o reuse.hh -n reu
-    DEPENDS avrogencpp)
-
-add_custom_target (circulardep_hh
-    COMMAND avrogencpp
-        -p -
-        -i ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/circulardep
-        -o circulardep.hh -n reu
-    DEPENDS avrogencpp)
+gen (bigrecord testgen)
+gen (bigrecord2 testgen2)
+gen (union_array_union uau)
+gen (union_map_union umu)
+gen (union_conflict uc)
+gen (recursive rec)
+gen (reuse ru)
+gen (circulardep cd)
 
 macro (test name)
     add_executable (${name} test/${name}.cc)
     target_link_libraries (${name} avrocpp ${Boost_LIBRARIES})
 endmacro (test)
 
-test(buffertest)
-test(unittest)
+test (buffertest)
+test (unittest)
 
 add_executable (CodecTests test/CodecTests.cc)
 target_link_libraries (CodecTests avrocpp ${Boost_LIBRARIES})
