@@ -47,6 +47,7 @@ namespace avro {
  */
 class Decoder {
 public:
+    virtual ~Decoder() { };
     /// All future decoding will come from is, which should be valid
     /// until replaced by another call to init() or this Decoder is
     /// destructed.

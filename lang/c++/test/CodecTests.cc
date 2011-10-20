@@ -347,6 +347,7 @@ static vector<string>::const_iterator skipCalls(Scanner& sc, Decoder& d,
 static void check(Decoder& d, unsigned int skipLevel,
     const char* calls, const vector<string>& values)
 {
+    const size_t zero = 0;
     Scanner sc(calls);
     stack<StackElement> containerStack;
     vector<string>::const_iterator it = values.begin();
@@ -465,7 +466,7 @@ static void check(Decoder& d, unsigned int skipLevel,
                 const StackElement& se = containerStack.top();
                 BOOST_CHECK_EQUAL(se.size, se.count);
                 if (se.size != 0) {
-                    BOOST_CHECK_EQUAL(0, d.arrayNext());
+                    BOOST_CHECK_EQUAL(zero, d.arrayNext());
                 }
                 containerStack.pop();
             }
@@ -475,7 +476,7 @@ static void check(Decoder& d, unsigned int skipLevel,
                 const StackElement& se = containerStack.top();
                 BOOST_CHECK_EQUAL(se.size, se.count);
                 if (se.size != 0) {
-                    BOOST_CHECK_EQUAL(0, d.mapNext());
+                    BOOST_CHECK_EQUAL(zero, d.mapNext());
                 }
                 containerStack.pop();
             }

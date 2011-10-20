@@ -51,6 +51,7 @@ namespace avro {
  */
 class Encoder {
 public:
+    virtual ~Encoder() { };
     /// All future encodings will go to os, which should be valid until
     /// it is reset with another call to init() or the encoder is
     /// destructed.

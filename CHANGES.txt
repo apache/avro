@@ -148,6 +148,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-918. Avro C++ documentation is very old. (thiru)
 
+    AVRO-938. Some more warning when built on RHEL. (thiru)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
