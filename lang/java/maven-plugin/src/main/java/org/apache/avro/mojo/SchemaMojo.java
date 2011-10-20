@@ -18,6 +18,8 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.generic.GenericData.StringType;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -55,7 +57,7 @@ public class SchemaMojo extends AbstractAvroMojo {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(schema);
-    compiler.setStringType(stringType);
+    compiler.setStringType(StringType.valueOf(stringType));
     compiler.compileToDestination(src, outputDirectory);
   }
 

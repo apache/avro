@@ -21,8 +21,6 @@ package org.apache.avro.mojo;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.avro.generic.GenericData.StringType;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -80,7 +78,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    *
    * @parameter expression="${stringType}"
    */
-  protected StringType stringType = StringType.CharSequence;
+  protected String stringType = "CharSequence";
 
 
   /**

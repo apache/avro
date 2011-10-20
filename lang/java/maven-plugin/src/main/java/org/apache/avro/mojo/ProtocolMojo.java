@@ -18,6 +18,8 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.generic.GenericData.StringType;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -54,7 +56,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
     File src = new File(sourceDirectory, filename);
     Protocol protocol = Protocol.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(protocol);
-    compiler.setStringType(stringType);
+    compiler.setStringType(StringType.valueOf(stringType));
     compiler.compileToDestination(src, outputDirectory);
   }
 
