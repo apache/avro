@@ -51,7 +51,8 @@ Avro 1.6.0 (unreleased)
     structures to be written and read from Avro-format data files.
     (cutting)
 
-    AVRO-908. Add an option to build avrocpp as a static library. (Nebojsa Sabovic via thiru)
+    AVRO-908. Add an option to build avrocpp as a static library.
+    (Nebojsa Sabovic via thiru)
 
     AVRO-803. Java: Optionally change string types in generated code
     to java.lang.String instead of java.lang.CharSequence.  This is
@@ -132,25 +133,32 @@ Avro 1.6.0 (unreleased)
 
     AVRO-910. Java: Add generated protobuf test code to subversion.  (cutting)
 
-    AVRO-917. Avrogencpp does not insert avro prefix for avro headers in the generated files. (thiru)
+    AVRO-917. Avrogencpp does not insert avro prefix for avro headers in the
+    generated files. (thiru)
 
-    AVRO-840. C++ generate nullable types for optional fields int the schema. (thiru)
+    AVRO-840. C++ generate nullable types for optional fields int the schema.
+    (thiru)
 
     AVRO-915. Large number of warnings in C++ builds. (thiru)
 
-    AVRO-913. CMake/C++ build should work for out-of-tree builds. (Nebojsa Sabovic via thiru)
+    AVRO-913. CMake/C++ build should work for out-of-tree builds.
+    (Nebojsa Sabovic via thiru)
 
-    AVRO-925. CMake/C++ Unable to build debug version of libavrocpp. (Nebojsa Sabovic via thiru)
+    AVRO-925. CMake/C++ Unable to build debug version of libavrocpp.
+    (Nebojsa Sabovic via thiru)
 
-    AVRO-932. C++ build.sh should have an option to install the built software. (thiru)
+    AVRO-932. C++ build.sh should have an option to install the built software.
+    (thiru)
 
-    AVRO-931. Avro C++ "make install" does not install the code generator. (thiru)
+    AVRO-931. Avro C++ "make install" does not install the code generator.
+    (thiru)
 
     AVRO-918. Avro C++ documentation is very old. (thiru)
 
     AVRO-938. Some more warning when built on RHEL. (thiru)
 
-    AVRO-937. C++ CMake keeps generating code even when there is no change. (thiru)
+    AVRO-937. C++ CMake keeps generating code even when there is no change.
+    (thiru)
 
     AVRO-940. C++ design for generic datum could be better. (thiru)
 
@@ -192,7 +200,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-916. 0xff in binary stream is interpreted as end-of-stream. (thiru)
 
-    AVRO-869. Lifetimes of streams and encoder/decoders not managed propertly. (thiru)
+    AVRO-869. Lifetimes of streams and encoder/decoders not managed propertly.
+    (thiru)
 
     AVRO-928. Debug statement no longer reports garbage value from
     stack. (Vivek Nadkarni via dcreager)
@@ -203,6 +212,7 @@ Avro 1.6.0 (unreleased)
     schemas. (Brock Noland via cutting)
 
     AVRO-936. Avro Java does not build with Maven 2. (thiru)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
