@@ -33,7 +33,6 @@
 #include "ValidSchema.hh"
 
 namespace avro {
-
 /**
  * Generic datum which can hold any Avro type. The datum has a type
  * and a value. The type is one of the Avro data types. The C++ type for
@@ -65,23 +64,19 @@ class GenericDatum {
     template <typename T>
     GenericDatum(Type t, const T& v) : type_(t), value_(v) { }
 
+    void init(const NodePtr& schema);
 public:
     /**
      * The avro data type this datum holds.
      */
-    Type type() const {
-        return type_;
-    }
+    Type type() const;
 
     /**
      * Returns the value held by this datum.
      * T The type for the value. This must correspond to the
      * avro type returned by type().
      */
-    template<typename T>
-    const T& value() const {
-        return *boost::any_cast<T>(&value_);
-    }
+    template<typename T> const T& value() const;
 
     /**
      * Returns the reference to the value held by this datum, which
@@ -92,10 +87,24 @@ public:
      * T The type for the value. This must correspond to the
      * avro type returned by type().
      */
-    template<typename T>
-    T& value() {
-        return *boost::any_cast<T>(&value_);
-    }
+    template<typename T> T& value();
+
+    /**
+     * Returns true if and only if this datum is a union.
+     */
+    bool isUnion() const { return type_ == AVRO_UNION; }
+
+    /**
+     * Returns the index of the current branch, if this is a union.
+     * \sa isUnion().
+     */
+    size_t unionBranch() const;
+
+    /**
+     * Selects a new branch in the union if this is a union.
+     * \sa isUnion().
+     */
+    void selectBranch(size_t branch);
 
     /// Makes a new AVRO_NULL datum.
     GenericDatum() : type_(AVRO_NULL) { }
@@ -130,35 +139,98 @@ public:
      * \param schema The schema that defines the avro type.
      */
     GenericDatum(const NodePtr& schema);
+
+    /**
+     * Constructs a datum corresponding to the given avro type.
+     * The value will the appropraite default corresponding to the
+     * data type.
+     * \param schema The schema that defines the avro type.
+     */
+    GenericDatum(const ValidSchema& schema);
 };
 
 /**
  * The base class for all generic type for containers.
  */
 class GenericContainer {
-    const NodePtr schema_;
+    NodePtr schema_;
+    static void assertType(const NodePtr& schema, Type type);
 protected:
     /**
      * Constructs a container corresponding to the given schema.
      */
-    GenericContainer(const NodePtr& s) : schema_(s) { }
+    GenericContainer(Type type, const NodePtr& s) : schema_(s) {
+        assertType(s, type);
+    }
 
     /**
      * Asserts if the given generic datum \p v has a type that matches \p n.
      */
     static void assertSameType(const GenericDatum& v, const NodePtr& n);
 
-    /**
-     * Asserts that the given schema \p schema has the given type \c type.
-     * If not, it throws an exception with the given message \c message.
-     */
-    static void assertType(const NodePtr& schema, Type type,
-        const char* message);
 public:
     /// Returns the schema for this object
     const NodePtr& schema() const {
         return schema_;
     }
+};
+
+/**
+ * Generic container for unions.
+ */
+class GenericUnion : public GenericContainer {
+    size_t curBranch_;
+    GenericDatum datum_;
+
+public:
+    /**
+     * Constructs a generic union corresponding to the given schema \p schema,
+     * and the given value. The schema should be of Avro type union
+     * and the value should correspond to one of the branches of the union.
+     */
+    GenericUnion(const NodePtr& schema) :
+        GenericContainer(AVRO_UNION, schema), curBranch_(schema->leaves()) {
+    }
+
+    /**
+     * Returns the index of the current branch.
+     */
+    size_t currentBranch() const { return curBranch_; }
+
+    /**
+     * Selects a new branch. The type for the value is changed accordingly.
+     * \param branch The index for the selected branch.
+     */
+    void selectBranch(size_t branch) {
+        if (curBranch_ != branch) {
+            datum_ = GenericDatum(schema()->leafAt(branch));
+            curBranch_ = branch;
+        }
+    }
+
+    /**
+     * Returns the type for currently selected branch in this union.
+     */
+    Type type() const {
+        return datum_.type();
+    }
+
+    /**
+     * Returns the value in this union.
+     */
+    template<typename T>
+    const T& value() const {
+        return datum_.value<T>();
+    }
+
+    /**
+     * Returns the reference to the value in this union.
+     */
+    template<typename T>
+    T& value() {
+        return datum_.value<T>();
+    }
+
 };
 
 /**
@@ -218,10 +290,7 @@ public:
      * Constructs a generic array corresponding to the given schema \p schema,
      * which should be of Avro type array.
      */
-    GenericArray(const NodePtr& schema) : GenericContainer(schema) {
-        if (schema->type() != AVRO_ARRAY) {
-            throw Exception("Schema is not an array");
-        }
+    GenericArray(const NodePtr& schema) : GenericContainer(AVRO_ARRAY, schema) {
     }
 
     /**
@@ -255,8 +324,7 @@ public:
      * Constructs a generic map corresponding to the given schema \p schema,
      * which should be of Avro type map.
      */
-    GenericMap(const NodePtr& schema) : GenericContainer(schema) {
-        assertType(schema, AVRO_MAP, "Schema is not a map");
+    GenericMap(const NodePtr& schema) : GenericContainer(AVRO_MAP, schema) {
     }
 
     /**
@@ -286,7 +354,8 @@ public:
      * Constructs a generic enum corresponding to the given schema \p schema,
      * which should be of Avro type enum.
      */
-    GenericEnum(const NodePtr& schema) : GenericContainer(schema), value_(0) {
+    GenericEnum(const NodePtr& schema) :
+        GenericContainer(AVRO_ENUM, schema), value_(0) {
     }
 
     /**
@@ -355,7 +424,7 @@ public:
      * Constructs a generic enum corresponding to the given schema \p schema,
      * which should be of Avro type fixed.
      */
-    GenericFixed(const NodePtr& schema) : GenericContainer(schema) {
+    GenericFixed(const NodePtr& schema) : GenericContainer(AVRO_FIXED, schema) {
         value_.resize(schema->fixedSize());
     }
 
@@ -383,8 +452,7 @@ class GenericReader : boost::noncopyable {
     const bool isResolving_;
     const DecoderPtr decoder_;
 
-    static void read(GenericDatum& datum, const NodePtr& n, Decoder& d,
-        bool isResolving);
+    static void read(GenericDatum& datum, Decoder& d, bool isResolving);
 public:
     /**
      * Constructs a reader for the given schema using the given decoder.
@@ -407,6 +475,11 @@ public:
     /**
      * Reads a generic datum from the stream, using the given schema.
      */
+    static void read(Decoder& d, GenericDatum& g);
+
+    /**
+     * Reads a generic datum from the stream, using the given schema.
+     */
     static void read(Decoder& d, GenericDatum& g, const ValidSchema& s);
 };
 
@@ -418,7 +491,7 @@ class GenericWriter : boost::noncopyable {
     const ValidSchema schema_;
     const EncoderPtr encoder_;
 
-    static void write(const GenericDatum& datum, const NodePtr& n, Encoder& e);
+    static void write(const GenericDatum& datum, Encoder& e);
 public:
     /**
      * Constructs a writer for the given schema using the given encoder.
@@ -431,15 +504,52 @@ public:
     void write(const GenericDatum& datum) const;
 
     /**
-     * Writes a generic datum on to the stream, using the given schema.
+     * Writes a generic datum on to the stream.
      */
-    static void write(Encoder& e, const GenericDatum& g, const ValidSchema& s);
+    static void write(Encoder& e, const GenericDatum& g);
+
+    /**
+     * Writes a generic datum on to the stream, using the given schema.
+     * Retained for backward compatibility.
+     */
+    static void write(Encoder& e, const GenericDatum& g, const ValidSchema&) {
+        write(e, g);
+    }
 };
+
+inline Type GenericDatum::type() const {
+    return (type_ == AVRO_UNION) ?
+        boost::any_cast<GenericUnion>(&value_)->type() : type_;
+}
+
+template<typename T>
+const T& GenericDatum::value() const {
+    return (type_ == AVRO_UNION) ?
+        boost::any_cast<GenericUnion>(&value_)->value<T>() :
+        *boost::any_cast<T>(&value_);
+}
+
+template<typename T>
+T& GenericDatum::value() {
+    return (type_ == AVRO_UNION) ?
+        boost::any_cast<GenericUnion>(&value_)->value<T>() :
+        *boost::any_cast<T>(&value_);
+}
+
+inline size_t GenericDatum::unionBranch() const {
+    return boost::any_cast<GenericUnion>(&value_)->currentBranch();
+}
+
+inline void GenericDatum::selectBranch(size_t branch) {
+    boost::any_cast<GenericUnion>(&value_)->selectBranch(branch);
+}
 
 template <typename T> struct codec_traits;
 
 /**
- * Specialization for codec_traits for Generic datum.
+ * Specialization of codec_traits for Generic datum along with its schema.
+ * This is maintained for compatibility with old code. Please use the
+ * cleaner codec_traits<GenericDatum> instead.
  */
 template <> struct codec_traits<std::pair<ValidSchema, GenericDatum> > {
     /** Encodes */
@@ -453,6 +563,22 @@ template <> struct codec_traits<std::pair<ValidSchema, GenericDatum> > {
         GenericReader::read(d, p.second, p.first);
     }
 };
+
+/**
+ * Specialization of codec_traits for GenericDatum.
+ */
+template <> struct codec_traits<GenericDatum> {
+    /** Encodes */
+    static void encode(Encoder& e, const GenericDatum& g) {
+        GenericWriter::write(e, g);
+    }
+
+    /** Decodes */
+    static void decode(Decoder& d, GenericDatum& g) {
+        GenericReader::read(d, g);
+    }
+};
+    
 }   // namespace avro
 #endif
 

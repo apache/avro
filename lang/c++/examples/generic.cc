@@ -29,10 +29,8 @@ main()
     avro::DecoderPtr d = avro::binaryDecoder();
     d->init(*in);
 
-    std::pair<avro::ValidSchema, avro::GenericDatum> p(cpxSchema,
-        avro::GenericDatum(cpxSchema.root()));
-    avro::decode(*d, p);
-    const avro::GenericDatum& datum = p.second;
+    avro::GenericDatum datum(cpxSchema);
+    avro::decode(*d, datum);
     std::cout << "Type: " << datum.type() << std::endl;
     if (datum.type() == avro::AVRO_RECORD) {
         const avro::GenericRecord& r = datum.value<avro::GenericRecord>();

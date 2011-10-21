@@ -23,6 +23,7 @@
 #include "Compiler.hh"
 #include "ValidSchema.hh"
 #include "Generic.hh"
+#include "Specific.hh"
 
 #include <stdint.h>
 #include <vector>
@@ -762,16 +763,14 @@ void testGeneric(const TestData& td) {
         DecoderPtr d1 = CodecFactory::newDecoder(vs);
         auto_ptr<InputStream> in1 = memoryInputStream(*p);
         d1->init(*in1);
-        GenericReader gr(vs, d1);
-        GenericDatum datum;
-        gr.read(datum);
+        GenericDatum datum(vs);
+        avro::decode(*d1, datum);
 
         EncoderPtr e2 = CodecFactory::newEncoder(vs);
         auto_ptr<OutputStream> ob = memoryOutputStream();
         e2->init(*ob);
 
-        GenericWriter gw(vs, e2);
-        gw.write(datum);
+        avro::encode(*e2, datum);
         e2->flush();
 
         BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
@@ -813,9 +812,7 @@ void testGenericResolving(const TestData3& td) {
         EncoderPtr e2 = CodecFactory::newEncoder(rvs);
         auto_ptr<OutputStream> ob = memoryOutputStream();
         e2->init(*ob);
-
-        GenericWriter gw(rvs, e2);
-        gw.write(datum);
+        avro::encode(*e2, datum);
         e2->flush();
 
         BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
@@ -859,9 +856,7 @@ void testGenericResolving2(const TestData4& td) {
     EncoderPtr e2 = CodecFactory::newEncoder(rvs);
     auto_ptr<OutputStream> ob = memoryOutputStream();
     e2->init(*ob);
-
-    GenericWriter gw(rvs, e2);
-    gw.write(datum);
+    avro::encode(*e2, datum);
     e2->flush();
     // We cannot verify with the reader calls because they are for
     // the resolving decoder and hence could be in a different order than
