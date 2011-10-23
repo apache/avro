@@ -151,8 +151,8 @@ class TetheredProcess  {
 
     // wrap the command in a stdout/stderr capture
     TaskAttemptID taskid = TaskAttemptID.forName(job.get("mapred.task.id"));
-    File stdout = TaskLog.getTaskLogFile(taskid, TaskLog.LogName.STDOUT);
-    File stderr = TaskLog.getTaskLogFile(taskid, TaskLog.LogName.STDERR);
+    File stdout = TaskLog.getTaskLogFile(taskid, false, TaskLog.LogName.STDOUT);
+    File stderr = TaskLog.getTaskLogFile(taskid, false, TaskLog.LogName.STDERR);
     long logLength = TaskLog.getTaskLogLength(job);
     command = TaskLog.captureOutAndError(command, stdout, stderr, logLength);
     stdout.getParentFile().mkdirs();

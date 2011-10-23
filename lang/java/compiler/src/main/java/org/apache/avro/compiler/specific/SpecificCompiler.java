@@ -272,11 +272,7 @@ public class SpecificCompiler {
       throw new RuntimeException(e);
     }
     StringWriter writer = new StringWriter();
-    try {
-      template.merge(context, writer);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    template.merge(context, writer);
     return writer.toString();
   }
 

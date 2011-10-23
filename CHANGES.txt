@@ -162,6 +162,8 @@ Avro 1.6.0 (unreleased)
 
     AVRO-940. C++ design for generic datum could be better. (thiru)
 
+    AVRO-935. Java: Update dependency versions for 1.6.0. (scottcarey)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.

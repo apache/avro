@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>8</version>
+    <version>10</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -41,7 +41,14 @@
        -->
   <properties>
     <avro.distDir>dist</avro.distDir>
-    <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>    
+    <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
+    <!-- dependency plugin versions -->
+    <apache-rat-tasks-version>0.7</apache-rat-tasks-version>    
+
+    <!-- plugin versions -->
+    <antrun-plugin-version>1.6</antrun-plugin-version>
+    <enforcer-plugin-version>1.0.1</enforcer-plugin-version>
+     
   </properties>
 
   <modules>
@@ -90,7 +97,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>1.0</version>
+        <version>${enforcer-plugin-version}</version>
         <configuration>
           <rules>
             <requireProperty>
@@ -117,7 +124,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>1.6</version>
+            <version>${antrun-plugin-version}</version>
             <configuration>
               <target name="rat">
                 <rat:report xmlns:rat="antlib:org.apache.rat.anttasks"
@@ -137,7 +144,7 @@
               <dependency>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-tasks</artifactId>
-                <version>0.7</version>
+                <version>${apache-rat-tasks-version}</version>
               </dependency>
             </dependencies>
           </plugin>
@@ -151,7 +158,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>1.6</version>
+            <version>${antrun-plugin-version}</version>
             <configuration>
               <target name="copy-java-artifacts">
                 <mkdir dir="${avro.distDir}/java"/>
