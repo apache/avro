@@ -74,7 +74,8 @@ case "$target" in
 
     dist)
         # ensure version matches
-        mvn enforcer:enforce -Davro.version=$VERSION
+        # FIXME: enforcer is broken:MENFORCER-42
+        # mvn enforcer:enforce -Davro.version=$VERSION
         
 	# build source tarball
         mkdir -p build
@@ -83,8 +84,9 @@ case "$target" in
 
 	rm -rf build/${SRC_DIR}
 	svn export --force . build/${SRC_DIR}
+
 	#runs RAT on artifacts
-        mvn -P rat antrun:run
+        mvn -N -P rat antrun:run
 
 	mkdir -p dist
         (cd build; tar czf ../dist/${SRC_DIR}.tar.gz ${SRC_DIR})
