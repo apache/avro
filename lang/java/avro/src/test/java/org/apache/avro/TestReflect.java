@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.node.NullNode;
+
 import org.apache.avro.Schema.Field;
 import org.apache.avro.TestReflect.SampleRecord.AnotherSampleRecord;
 import org.apache.avro.io.DecoderFactory;
@@ -289,10 +291,12 @@ public class TestReflect {
   @Test public void testR11() throws Exception {
     Schema r11Record = ReflectData.get().getSchema(R11.class);
     assertEquals(Schema.Type.RECORD, r11Record.getType());
-    Schema r11Field = r11Record.getField("text").schema();
-    assertEquals(Schema.Type.UNION, r11Field.getType());
-    assertEquals(Schema.Type.NULL, r11Field.getTypes().get(0).getType());
-    Schema r11String = r11Field.getTypes().get(1);
+    Field r11Field = r11Record.getField("text");
+    assertEquals(NullNode.getInstance(), r11Field.defaultValue());
+    Schema r11FieldSchema = r11Field.schema();
+    assertEquals(Schema.Type.UNION, r11FieldSchema.getType());
+    assertEquals(Schema.Type.NULL, r11FieldSchema.getTypes().get(0).getType());
+    Schema r11String = r11FieldSchema.getTypes().get(1);
     assertEquals(Schema.Type.STRING, r11String.getType());
     R11 r11 = new R11();
     checkReadWrite(r11, r11Record);

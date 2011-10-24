@@ -220,6 +220,9 @@ Avro 1.6.0 (unreleased)
     AVRO-930. C: Fixed memory lead in resolved writer class. (Vivek
     Nadkarni via dcreager)
 
+    AVRO-942. Java: Fix reflect so that @Nullable fields have a
+    default value of null. (Binglin Chang via cutting)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS

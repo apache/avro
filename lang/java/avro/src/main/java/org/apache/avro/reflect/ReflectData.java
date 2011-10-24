@@ -45,6 +45,8 @@ import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.io.BinaryData;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.NullNode;
 
 import com.thoughtworks.paranamer.CachingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
@@ -288,8 +290,15 @@ public class ReflectData extends SpecificData {
           for (Field field : getFields(c))
             if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0){
               Schema fieldSchema = createFieldSchema(field, names);
+              JsonNode defaultValue = null;
+              if (fieldSchema.getType() == Schema.Type.UNION) {
+                Schema defaultType = fieldSchema.getTypes().get(0);
+                if (defaultType.getType() == Schema.Type.NULL) {
+                  defaultValue = NullNode.getInstance();
+                }
+              }
               fields.add(new Schema.Field(field.getName(),
-                  fieldSchema, null /* doc */, null));
+                  fieldSchema, null /* doc */, defaultValue));
             }
           if (error)                              // add Throwable message
             fields.add(new Schema.Field("detailMessage", THROWABLE_MESSAGE,
