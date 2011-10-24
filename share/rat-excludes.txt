@@ -1,6 +1,7 @@
 **/*.avpr
 **/*.avro
 **/*.avsc
+**/*.dox
 **/*.gperf
 **/*.html
 **/*.json
@@ -9,6 +10,7 @@
 **/*.m4
 **/*.md5
 **/*.pom
+**/*.properties
 **/*.sha1
 **/*.txt
 **/.gitignore
