@@ -2767,6 +2767,7 @@ avro_resolved_writer_new_memoized(memoize_state_t *state,
 		      avro_schema_type_name(wschema),
 		      is_avro_link(wschema)? "]": "",
 		      avro_schema_type_name(rschema));
+		avro_value_iface_incref(&saved->parent);
 		return saved;
 	} else {
 		DEBUG("Resolving %s%s%s->%s",

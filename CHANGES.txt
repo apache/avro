@@ -215,6 +215,9 @@ Avro 1.6.0 (unreleased)
 
     AVRO-936. Avro Java does not build with Maven 2. (thiru)
 
+    AVRO-930. C: Fixed memory lead in resolved writer class. (Vivek
+    Nadkarni via dcreager)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
