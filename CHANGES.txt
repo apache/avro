@@ -43,6 +43,8 @@ Avro 1.6.0 (unreleased)
     AVRO-474. C: Added source package target to CMake build scripts.
     (dcreager)
 
+    AVRO-467. C: Change build system to CMake. (dcreager)
+
     AVRO-890: Java: Add Maven archetype for creating Avro service
     projects.  (Stephen Gargan via cutting)
 

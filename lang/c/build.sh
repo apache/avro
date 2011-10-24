@@ -9,17 +9,10 @@ version=$(./version.sh project)
 tarball="avro-c-$version.tar.gz"
 doc_dir="../../build/avro-doc-$version/api/c"
 
-function autoreconf_check {
-  if [ ! -f configure ]; then
-    autoreconf -f -i
-  fi
-}
-
 function prepare_build {
-  autoreconf_check
   clean
   mkdir -p $build_dir
-  (cd $build_dir && $root_dir/configure)
+  (cd $build_dir && cmake $root_dir -DCMAKE_BUILD_TYPE=RelWithDebInfo)
 }
 
 function clean {
@@ -45,13 +38,19 @@ case "$1" in
 
     test)
 	prepare_build
-	make -C $build_dir check
+	make -C $build_dir
+	make -C $build_dir test
         clean
 	;;
 
     dist)
 	prepare_build
-	make -C $build_dir dist
+	make -C $build_dir docs
+        # This is a hack to force the built documentation to be included
+        # in the source package.
+	cp $build_dir/docs/*.html $root_dir/docs
+	make -C $build_dir package_source
+	rm $root_dir/docs/*.html
 	if [ ! -d $dist_dir ]; then 
            mkdir -p $dist_dir 
         fi
