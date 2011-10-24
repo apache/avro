@@ -94,7 +94,7 @@ case "$target" in
 	# build lang-specific artifacts
         
 	(cd lang/java; mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate) 
-        (mvn -P copy-artifacts antrun:run) 
+        (mvn -N -P copy-artifacts antrun:run) 
 
 	(cd lang/py; ant dist)
 
@@ -140,7 +140,6 @@ case "$target" in
 	rm -rf build dist
 	(cd doc; ant clean)
 
-	(cd lang/java; mvn clean)
         (mvn clean)         
 
 	(cd lang/py; ant clean)
