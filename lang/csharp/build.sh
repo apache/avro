@@ -24,7 +24,7 @@ ROOT=../..
 VERSION=`cat $ROOT/share/VERSION.txt`
 
 export CONFIGURATION=Release
-export TARGETFRAMEWORKVERSION=3.5
+export TARGETFRAMEWORKVERSION=v3.5
 
 case "$1" in
 

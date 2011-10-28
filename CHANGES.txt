@@ -223,6 +223,8 @@ Avro 1.6.0 (27 October 2011)
     AVRO-942. Java: Fix reflect so that @Nullable fields have a
     default value of null. (Binglin Chang via cutting)
 
+    AVRO-945. C# port does not build under Ubuntu 11.10. (thiru)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS
