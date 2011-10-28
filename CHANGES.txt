@@ -231,6 +231,9 @@ Avro 1.6.0 (27 October 2011)
     AVRO-948. Java: Fix to more correctly handle Thrift optional and
     nullable fields.  (cutting)
 
+    AVRO-944. Java: Fix mapred so that reduce-side combines use
+    correct serializer. (cutting)
+
 Avro 1.5.4 (12 September 2011)
 
   IMPROVEMENTS

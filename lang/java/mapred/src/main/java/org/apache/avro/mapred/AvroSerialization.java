@@ -49,9 +49,6 @@ public class AvroSerialization<T> extends Configured
   /** Returns the specified map output deserializer.  Defaults to the final
    * output deserializer if no map output schema was specified. */
   public Deserializer<AvroWrapper<T>> getDeserializer(Class<AvroWrapper<T>> c) {
-    //  We need not rely on mapred.task.is.map here to determine whether map
-    //  output or final output is desired, since the mapreduce framework never
-    //  creates a deserializer for final output, only for map output.
     boolean isKey = AvroKey.class.isAssignableFrom(c);
     Schema schema = isKey
       ? Pair.getKeySchema(AvroJob.getMapOutputSchema(getConf()))
@@ -100,10 +97,9 @@ public class AvroSerialization<T> extends Configured
   
   /** Returns the specified output serializer. */
   public Serializer<AvroWrapper<T>> getSerializer(Class<AvroWrapper<T>> c) {
-    // Here we must rely on mapred.task.is.map to tell whether the map output
-    // or final output is needed.
-    boolean isMap = getConf().getBoolean("mapred.task.is.map", false);
-    Schema schema = !isMap
+    // AvroWrapper used for final output, AvroKey or AvroValue for map output
+    boolean isFinalOutput = c.equals(AvroWrapper.class);
+    Schema schema = isFinalOutput
       ? AvroJob.getOutputSchema(getConf())
       : (AvroKey.class.isAssignableFrom(c)
          ? Pair.getKeySchema(AvroJob.getMapOutputSchema(getConf()))
