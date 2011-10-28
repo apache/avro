@@ -55,6 +55,26 @@ public class TestThrift {
 
     System.out.println(test);
 
+    check(test);
+  }
+
+  @org.junit.Test public void testOptionals() throws Exception {
+
+    Test test = new Test();
+    test.setBoolField(true);
+    test.setByteField((byte)2);
+    test.setI16Field((short)3);
+    test.setI64Field(5L);
+    test.setDoubleField(2.0);
+
+    System.out.println(test);
+
+    check(test);
+  }
+
+
+  private void check(Test test) throws Exception {
+
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     ThriftDatumWriter<Test> w = new ThriftDatumWriter<Test>(Test.class);
     Encoder e = EncoderFactory.get().binaryEncoder(bao, null);

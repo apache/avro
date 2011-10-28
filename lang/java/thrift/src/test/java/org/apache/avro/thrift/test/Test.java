@@ -167,7 +167,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE)));
     tmpMap.put(_Fields.I16_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i16Field", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
-    tmpMap.put(_Fields.I32_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i32Field", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.I32_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i32Field", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.I64_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i64Field", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
@@ -175,7 +175,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.DOUBLE)));
     tmpMap.put(_Fields.STRING_FIELD, new org.apache.thrift.meta_data.FieldMetaData("stringField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.BINARY_FIELD, new org.apache.thrift.meta_data.FieldMetaData("binaryField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.BINARY_FIELD, new org.apache.thrift.meta_data.FieldMetaData("binaryField", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
     tmpMap.put(_Fields.MAP_FIELD, new org.apache.thrift.meta_data.FieldMetaData("mapField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
@@ -202,11 +202,9 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     boolean boolField,
     byte byteField,
     short i16Field,
-    int i32Field,
     long i64Field,
     double doubleField,
     String stringField,
-    ByteBuffer binaryField,
     Map<String,Integer> mapField,
     List<Integer> listField,
     Set<Integer> setField,
@@ -220,14 +218,11 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     setByteFieldIsSet(true);
     this.i16Field = i16Field;
     setI16FieldIsSet(true);
-    this.i32Field = i32Field;
-    setI32FieldIsSet(true);
     this.i64Field = i64Field;
     setI64FieldIsSet(true);
     this.doubleField = doubleField;
     setDoubleFieldIsSet(true);
     this.stringField = stringField;
-    this.binaryField = binaryField;
     this.mapField = mapField;
     this.listField = listField;
     this.setField = setField;
@@ -900,8 +895,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return false;
     }
 
-    boolean this_present_i32Field = true;
-    boolean that_present_i32Field = true;
+    boolean this_present_i32Field = true && this.isSetI32Field();
+    boolean that_present_i32Field = true && that.isSetI32Field();
     if (this_present_i32Field || that_present_i32Field) {
       if (!(this_present_i32Field && that_present_i32Field))
         return false;
@@ -1305,9 +1300,11 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     oprot.writeFieldBegin(I16_FIELD_FIELD_DESC);
     oprot.writeI16(this.i16Field);
     oprot.writeFieldEnd();
-    oprot.writeFieldBegin(I32_FIELD_FIELD_DESC);
-    oprot.writeI32(this.i32Field);
-    oprot.writeFieldEnd();
+    if (isSetI32Field()) {
+      oprot.writeFieldBegin(I32_FIELD_FIELD_DESC);
+      oprot.writeI32(this.i32Field);
+      oprot.writeFieldEnd();
+    }
     oprot.writeFieldBegin(I64_FIELD_FIELD_DESC);
     oprot.writeI64(this.i64Field);
     oprot.writeFieldEnd();
@@ -1320,9 +1317,11 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       oprot.writeFieldEnd();
     }
     if (this.binaryField != null) {
-      oprot.writeFieldBegin(BINARY_FIELD_FIELD_DESC);
-      oprot.writeBinary(this.binaryField);
-      oprot.writeFieldEnd();
+      if (isSetBinaryField()) {
+        oprot.writeFieldBegin(BINARY_FIELD_FIELD_DESC);
+        oprot.writeBinary(this.binaryField);
+        oprot.writeFieldEnd();
+      }
     }
     if (this.mapField != null) {
       oprot.writeFieldBegin(MAP_FIELD_FIELD_DESC);
@@ -1391,10 +1390,12 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     sb.append("i16Field:");
     sb.append(this.i16Field);
     first = false;
-    if (!first) sb.append(", ");
-    sb.append("i32Field:");
-    sb.append(this.i32Field);
-    first = false;
+    if (isSetI32Field()) {
+      if (!first) sb.append(", ");
+      sb.append("i32Field:");
+      sb.append(this.i32Field);
+      first = false;
+    }
     if (!first) sb.append(", ");
     sb.append("i64Field:");
     sb.append(this.i64Field);
@@ -1411,14 +1412,16 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       sb.append(this.stringField);
     }
     first = false;
-    if (!first) sb.append(", ");
-    sb.append("binaryField:");
-    if (this.binaryField == null) {
-      sb.append("null");
-    } else {
-      org.apache.thrift.TBaseHelper.toString(this.binaryField, sb);
+    if (isSetBinaryField()) {
+      if (!first) sb.append(", ");
+      sb.append("binaryField:");
+      if (this.binaryField == null) {
+        sb.append("null");
+      } else {
+        org.apache.thrift.TBaseHelper.toString(this.binaryField, sb);
+      }
+      first = false;
     }
-    first = false;
     if (!first) sb.append(", ");
     sb.append("mapField:");
     if (this.mapField == null) {

@@ -33,11 +33,11 @@ struct Test {
   1: bool boolField
   2: byte byteField
   3: i16 i16Field
-  4: i32 i32Field
+  4: optional i32 i32Field
   5: i64 i64Field
   6: double doubleField
   7: string stringField
-  8: binary binaryField
+  8: optional binary binaryField
   9: map<string,i32> mapField
  10: list<i32> listField
  11: set<i32> setField
