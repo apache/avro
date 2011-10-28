@@ -183,6 +183,12 @@ public class SpecificData extends GenericData {
       if (schema == null)
         try {
           schema = (Schema)(c.getDeclaredField("SCHEMA$").get(null));
+
+          if (!fullName.equals(getClassName(schema)))
+            // HACK: schema mismatches class. maven shade plugin? try replacing.
+            schema = Schema.parse
+              (schema.toString().replace(schema.getNamespace(),
+                                         c.getPackage().getName()));
         } catch (NoSuchFieldException e) {
           throw new AvroRuntimeException(e);
         } catch (IllegalAccessException e) {
@@ -197,8 +203,13 @@ public class SpecificData extends GenericData {
   /** Return the protocol for a Java interface. */
   public Protocol getProtocol(Class iface) {
     try {
-      return (Protocol)(iface.getDeclaredField("PROTOCOL").get(null));
-    } catch (NoSuchFieldException e) {
+      Protocol p = (Protocol)(iface.getDeclaredField("PROTOCOL").get(null));
+      if (!p.getNamespace().equals(iface.getPackage().getName()))
+        // HACK: protocol mismatches iface. maven shade plugin? try replacing.
+        p = Protocol.parse(p.toString().replace(p.getNamespace(),
+                                                iface.getPackage().getName()));
+      return p;
+   } catch (NoSuchFieldException e) {
       throw new AvroRuntimeException(e);
     } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);

@@ -166,6 +166,9 @@ Avro 1.6.0 (27 October 2011)
 
     AVRO-935. Java: Update dependency versions for 1.6.0. (scottcarey)
 
+    AVRO-941. Java: Make generated specific classes to work in some
+    cases after Maven shade plugin is used on them.  (cutting)
+
   BUG FIXES
 
     AVRO-824. Java: Fix usage message of BinaryFragmentToJsonTool.
