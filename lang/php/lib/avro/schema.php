@@ -443,7 +443,7 @@ class AvroSchema
         if (is_array($datum))
         {
           foreach ($expected_schema->fields() as $field)
-            if (!self::is_valid_datum($field->type(), $datum[$field->name()]))
+            if (!array_key_exists($field->name(), $datum) || !self::is_valid_datum($field->type(), $datum[$field->name()]))
               return false;
           return true;
         }
@@ -685,7 +685,7 @@ class AvroUnionSchema extends AvroSchema
    * @var int[] list of indices of named schemas which
    *                are defined in $schemata
    */
-  private $schema_from_schemata_indices;
+  public $schema_from_schemata_indices;
 
   /**
    * @param AvroSchema[] $schemas list of schemas in the union
@@ -795,7 +795,8 @@ class AvroNamedSchema extends AvroSchema
       throw new AvroSchemaParseException('Schema doc attribute must be a string');
     $this->doc = $doc;
 
-    $schemata = $schemata->clone_with_new_schema($this);
+    if (!is_null($schemata))
+      $schemata = $schemata->clone_with_new_schema($this);
   }
 
   /**
@@ -984,6 +985,12 @@ class AvroNamedSchemata
   public function __construct($schemata=array())
   {
     $this->schemata = $schemata;
+  }
+
+  public function list_schemas() {
+    var_export($this->schemata);
+    foreach($this->schemata as $sch) 
+      print('Schema '.$sch->__toString()."\n");
   }
 
   /**
@@ -1179,7 +1186,7 @@ class AvroRecordSchema extends AvroNamedSchema
    * @returns AvroField[]
    * @throws AvroSchemaParseException
    */
-  private static function parse_fields($field_data, $default_namespace, &$schemata)
+  static function parse_fields($field_data, $default_namespace, &$schemata)
   {
     $fields = array();
     $field_names = array();
@@ -1247,7 +1254,7 @@ class AvroRecordSchema extends AvroNamedSchema
         'Record schema requires a non-empty fields attribute');
 
     if (AvroSchema::REQUEST_SCHEMA == $schema_type)
-      $this->type = $schema_type;
+      parent::__construct($schema_type, $name); 
     else
       parent::__construct($schema_type, $name, $doc, $schemata);
 

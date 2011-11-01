@@ -4,6 +4,9 @@ Avro 1.6.1 (unreleased)
 
   NEW FEATURES
 
+    AVRO-821. PHP: Add support for parsing protocols. (Andy Wick,
+    Saleem Shafi and A B via cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

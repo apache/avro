@@ -92,7 +92,7 @@ class AvroIODatumWriter
    * @param AvroIOBinaryEncoder $encoder
    * @returns mixed
    *
-   * @throws AvrioIOTypeException if $datum is invalid for $writers_schema
+   * @throws AvroIOTypeException if $datum is invalid for $writers_schema
    */
   function write_data($writers_schema, $datum, $encoder)
   {
