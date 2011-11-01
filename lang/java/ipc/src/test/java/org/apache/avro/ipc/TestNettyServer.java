@@ -35,7 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestNettyServer {
-
+  static final long CONNECT_TIMEOUT_MILLIS = 2000; // 2 sec
   private static Server server;
   private static Transceiver transceiver;
   private static Mail proxy;
@@ -82,7 +82,7 @@ public class TestNettyServer {
     System.out.println("server port : " + serverPort);
 
     transceiver = new NettyTransceiver(new InetSocketAddress(
-        serverPort));
+        serverPort), CONNECT_TIMEOUT_MILLIS);
     proxy = SpecificRequestor.getClient(Mail.class, transceiver);
   }
   

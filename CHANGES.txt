@@ -10,6 +10,9 @@ Avro 1.6.1 (unreleased)
 
   BUG FIXES
 
+    AVRO-943. Java: Fix an intermittent deadlock in
+    TestNettyServerWithCallbacks.  (James Baldassari via cutting)
+
 Avro 1.6.0 (2 November 2011)
 
   INCOMPATIBLE CHANGES

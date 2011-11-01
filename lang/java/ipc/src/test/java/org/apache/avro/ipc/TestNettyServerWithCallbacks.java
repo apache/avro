@@ -67,7 +67,7 @@ public class TestNettyServerWithCallbacks {
     System.out.println("server port : " + serverPort);
 
     transceiver = new NettyTransceiver(new InetSocketAddress(
-        serverPort));
+        serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
     simpleClient = SpecificRequestor.getClient(Simple.Callback.class, transceiver);
   }
   
@@ -268,7 +268,7 @@ public class TestNettyServerWithCallbacks {
       System.out.println("server2 port : " + serverPort);
 
       Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
-          serverPort));
+          serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
       try {
         Simple.Callback simpleClient2 = 
           SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
@@ -337,7 +337,7 @@ public class TestNettyServerWithCallbacks {
 
       CallFuture<Integer> addFuture = new CallFuture<Integer>();
       Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
-          serverPort));
+          serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
       try {        
         Simple.Callback simpleClient2 = 
           SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
