@@ -23,7 +23,7 @@
   <version>${version}</version>
   <name>Simple Avro Ordering Service</name>
   <properties>
-    <avro-version>1.6.0</avro-version>
+    <avro-version>1.6.1-SNAPSHOT</avro-version>
     <jackson-version>1.8.4</jackson-version>
     <junit.version>4.8.1</junit.version>
     <logback.version>0.9.29</logback.version>
