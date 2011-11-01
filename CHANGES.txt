@@ -1,5 +1,15 @@
 Avro Change Log
 
+Avro 1.6.1 (unreleased)
+
+  NEW FEATURES
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
+  BUG FIXES
+
 Avro 1.6.0 (2 November 2011)
 
   INCOMPATIBLE CHANGES
