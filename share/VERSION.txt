@@ -1,1 +1,1 @@
-1.6.1-SNAPSHOT
+avro-1.6.1
