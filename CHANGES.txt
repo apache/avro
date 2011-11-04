@@ -24,6 +24,8 @@ Avro 1.6.1 (unreleased)
     AVRO-943. Java: Fix an intermittent deadlock in
     TestNettyServerWithCallbacks.  (James Baldassari via cutting)
 
+    AVRO-950. C: Fix source tarball to include VERSION.txt. (dcreager)
+
 Avro 1.6.0 (2 November 2011)
 
   NEW FEATURES

@@ -45,6 +45,7 @@ case "$1" in
 
     dist)
 	prepare_build
+	cp ../../share/VERSION.txt $root_dir
 	make -C $build_dir docs
         # This is a hack to force the built documentation to be included
         # in the source package.

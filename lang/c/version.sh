@@ -41,9 +41,14 @@ libage=$(($libavro_binary_age - $libavro_interface_age))
 
 if test "$1" = "project"; then
 	project_ver="undef"
-        version_file="../../share/VERSION.txt"
+	version_file="VERSION.txt"
 	if test -f $version_file; then
 		project_ver=$(cat $version_file)
+	else
+		version_file="../../share/VERSION.txt"
+		if test -f $version_file; then
+			project_ver=$(cat $version_file)
+		fi
 	fi
 	printf "%s" $project_ver
 elif test "$1" = "libtool"; then
