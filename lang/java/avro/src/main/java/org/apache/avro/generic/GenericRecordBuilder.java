@@ -56,12 +56,12 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
     record = new GenericData.Record(other, /* deepCopy = */ true);
     
     // Set all fields in the RecordBuilder that are set in the record
-    for (Field f : schema.getFields()) {
+    for (Field f : schema().getFields()) {
       Object value = other.get(f.pos());
       // Only set the value if it is not null, if the schema type is null, 
       // or if the schema type is a union that accepts nulls.
       if (isValidValue(f, value)) {
-        set(f, data.deepCopy(f.schema(), value));
+        set(f, data().deepCopy(f.schema(), value));
       }
     }
   }
@@ -72,7 +72,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    * @return the value of the field with the given name, or null if not set.
    */
   public Object get(String fieldName) {
-    return get(schema.getField(fieldName));
+    return get(schema().getField(fieldName));
   }
   
   /**
@@ -100,7 +100,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    * @return a reference to the RecordBuilder.
    */
   public GenericRecordBuilder set(String fieldName, Object value) {
-    return set(schema.getField(fieldName), value);
+    return set(schema().getField(fieldName), value);
   }
   
   /**
@@ -120,7 +120,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    * @return a reference to the RecordBuilder.
    */
   protected GenericRecordBuilder set(int pos, Object value) {
-    return set(fields[pos], pos, value);
+    return set(fields()[pos], pos, value);
   }
   
   /**
@@ -133,7 +133,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
   private GenericRecordBuilder set(Field field, int pos, Object value) {
     validate(field, value);
     record.put(pos, value);
-    fieldSetFlags[pos] = true;
+    fieldSetFlags()[pos] = true;
     return this;
   }
   
@@ -143,7 +143,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    * @return true if the given field is non-null; false otherwise.
    */
   public boolean has(String fieldName) {
-    return has(schema.getField(fieldName));
+    return has(schema().getField(fieldName));
   }
   
   /**
@@ -161,7 +161,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    * @return true if the given field is non-null; false otherwise.
    */
   protected boolean has(int pos) {
-    return fieldSetFlags[pos];
+    return fieldSetFlags()[pos];
   }
   
   /**
@@ -170,7 +170,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    * @return a reference to the RecordBuilder.
    */
   public GenericRecordBuilder clear(String fieldName) {
-    return clear(schema.getField(fieldName));
+    return clear(schema().getField(fieldName));
   }
   
   /**
@@ -189,7 +189,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    */
   protected GenericRecordBuilder clear(int pos) {
     record.put(pos, null);
-    fieldSetFlags[pos] = false;
+    fieldSetFlags()[pos] = false;
     return this;
   }
   
@@ -197,12 +197,12 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
   public Record build() {
     Record record;
     try {
-      record = new GenericData.Record(schema);
+      record = new GenericData.Record(schema());
     } catch (Exception e) {
       throw new AvroRuntimeException(e);
     }
     
-    for (Field field : fields) {
+    for (Field field : fields()) {
       Object value;
       try {
         value = getWithDefault(field);
@@ -229,8 +229,8 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    * @throws IOException
    */
   private Object getWithDefault(Field field) throws IOException {
-    return fieldSetFlags[field.pos()] ? 
-        record.get(field.pos()) : getDefaultValue(field);
+    return fieldSetFlags()[field.pos()] ? 
+        record.get(field.pos()) : defaultValue(field);
   }
 
   @Override

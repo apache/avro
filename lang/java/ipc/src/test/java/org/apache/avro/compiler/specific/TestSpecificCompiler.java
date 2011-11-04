@@ -120,6 +120,10 @@ public class TestSpecificCompiler {
     String schema = "" +
       "{ \"name\": \"volatile\", \"type\": \"record\", " +
       "  \"fields\": [ {\"name\": \"package\", \"type\": \"string\" }," +
+      "                {\"name\": \"data\", \"type\": \"int\" }," +
+      "                {\"name\": \"value\", \"type\": \"int\" }," +
+      "                {\"name\": \"defaultValue\", \"type\": \"int\" }," +
+      "                {\"name\": \"other\", \"type\": \"int\" }," +
       "                {\"name\": \"short\", \"type\": \"volatile\" } ] }";
     Collection<OutputFile> c =
       new SpecificCompiler(Schema.parse(schema)).compile();

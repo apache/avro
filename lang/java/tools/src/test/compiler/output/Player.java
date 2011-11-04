@@ -133,21 +133,21 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     /** Creates a Builder by copying an existing Player instance */
     private Builder(avro.examples.baseball.Player other) {
             super(avro.examples.baseball.Player.SCHEMA$);
-      if (isValidValue(fields[0], other.number)) {
-        number = (java.lang.Integer) data.deepCopy(fields[0].schema(), other.number);
-        fieldSetFlags[0] = true;
+      if (isValidValue(fields()[0], other.number)) {
+        this.number = (java.lang.Integer) data().deepCopy(fields()[0].schema(), other.number);
+        fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields[1], other.first_name)) {
-        first_name = (java.lang.CharSequence) data.deepCopy(fields[1].schema(), other.first_name);
-        fieldSetFlags[1] = true;
+      if (isValidValue(fields()[1], other.first_name)) {
+        this.first_name = (java.lang.CharSequence) data().deepCopy(fields()[1].schema(), other.first_name);
+        fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields[2], other.last_name)) {
-        last_name = (java.lang.CharSequence) data.deepCopy(fields[2].schema(), other.last_name);
-        fieldSetFlags[2] = true;
+      if (isValidValue(fields()[2], other.last_name)) {
+        this.last_name = (java.lang.CharSequence) data().deepCopy(fields()[2].schema(), other.last_name);
+        fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields[3], other.position)) {
-        position = (java.util.List<avro.examples.baseball.Position>) data.deepCopy(fields[3].schema(), other.position);
-        fieldSetFlags[3] = true;
+      if (isValidValue(fields()[3], other.position)) {
+        this.position = (java.util.List<avro.examples.baseball.Position>) data().deepCopy(fields()[3].schema(), other.position);
+        fieldSetFlags()[3] = true;
       }
     }
 
@@ -158,20 +158,20 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     
     /** Sets the value of the 'number' field */
     public avro.examples.baseball.Player.Builder setNumber(int value) {
-      validate(fields[0], value);
+      validate(fields()[0], value);
       this.number = value;
-      fieldSetFlags[0] = true;
+      fieldSetFlags()[0] = true;
       return this; 
     }
     
     /** Checks whether the 'number' field has been set */
     public boolean hasNumber() {
-      return fieldSetFlags[0];
+      return fieldSetFlags()[0];
     }
     
     /** Clears the value of the 'number' field */
     public avro.examples.baseball.Player.Builder clearNumber() {
-      fieldSetFlags[0] = false;
+      fieldSetFlags()[0] = false;
       return this;
     }
 
@@ -182,21 +182,21 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     
     /** Sets the value of the 'first_name' field */
     public avro.examples.baseball.Player.Builder setFirstName(java.lang.CharSequence value) {
-      validate(fields[1], value);
+      validate(fields()[1], value);
       this.first_name = value;
-      fieldSetFlags[1] = true;
+      fieldSetFlags()[1] = true;
       return this; 
     }
     
     /** Checks whether the 'first_name' field has been set */
     public boolean hasFirstName() {
-      return fieldSetFlags[1];
+      return fieldSetFlags()[1];
     }
     
     /** Clears the value of the 'first_name' field */
     public avro.examples.baseball.Player.Builder clearFirstName() {
       first_name = null;
-      fieldSetFlags[1] = false;
+      fieldSetFlags()[1] = false;
       return this;
     }
 
@@ -207,21 +207,21 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     
     /** Sets the value of the 'last_name' field */
     public avro.examples.baseball.Player.Builder setLastName(java.lang.CharSequence value) {
-      validate(fields[2], value);
+      validate(fields()[2], value);
       this.last_name = value;
-      fieldSetFlags[2] = true;
+      fieldSetFlags()[2] = true;
       return this; 
     }
     
     /** Checks whether the 'last_name' field has been set */
     public boolean hasLastName() {
-      return fieldSetFlags[2];
+      return fieldSetFlags()[2];
     }
     
     /** Clears the value of the 'last_name' field */
     public avro.examples.baseball.Player.Builder clearLastName() {
       last_name = null;
-      fieldSetFlags[2] = false;
+      fieldSetFlags()[2] = false;
       return this;
     }
 
@@ -232,21 +232,21 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     
     /** Sets the value of the 'position' field */
     public avro.examples.baseball.Player.Builder setPosition(java.util.List<avro.examples.baseball.Position> value) {
-      validate(fields[3], value);
+      validate(fields()[3], value);
       this.position = value;
-      fieldSetFlags[3] = true;
+      fieldSetFlags()[3] = true;
       return this; 
     }
     
     /** Checks whether the 'position' field has been set */
     public boolean hasPosition() {
-      return fieldSetFlags[3];
+      return fieldSetFlags()[3];
     }
     
     /** Clears the value of the 'position' field */
     public avro.examples.baseball.Player.Builder clearPosition() {
       position = null;
-      fieldSetFlags[3] = false;
+      fieldSetFlags()[3] = false;
       return this;
     }
 
@@ -254,10 +254,10 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     public Player build() {
       try {
         Player record = new Player();
-        record.number = fieldSetFlags[0] ? this.number : (java.lang.Integer) getDefaultValue(fields[0]);
-        record.first_name = fieldSetFlags[1] ? this.first_name : (java.lang.CharSequence) getDefaultValue(fields[1]);
-        record.last_name = fieldSetFlags[2] ? this.last_name : (java.lang.CharSequence) getDefaultValue(fields[2]);
-        record.position = fieldSetFlags[3] ? this.position : (java.util.List<avro.examples.baseball.Position>) getDefaultValue(fields[3]);
+        record.number = fieldSetFlags()[0] ? this.number : (java.lang.Integer) defaultValue(fields()[0]);
+        record.first_name = fieldSetFlags()[1] ? this.first_name : (java.lang.CharSequence) defaultValue(fields()[1]);
+        record.last_name = fieldSetFlags()[2] ? this.last_name : (java.lang.CharSequence) defaultValue(fields()[2]);
+        record.position = fieldSetFlags()[3] ? this.position : (java.util.List<avro.examples.baseball.Position>) defaultValue(fields()[3]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

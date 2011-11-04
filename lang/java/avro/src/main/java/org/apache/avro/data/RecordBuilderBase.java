@@ -44,13 +44,18 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     DEFAULT_VALUE_CACHE = 
       new ConcurrentHashMap<String, ConcurrentMap<Integer, Object>>();
   private static final Field[] EMPTY_FIELDS = new Field[0];
-  protected final Schema schema;
-  protected final Field[] fields;
-  protected final boolean[] fieldSetFlags;
-  protected final GenericData data;
+  private final Schema schema;
+  private final Field[] fields;
+  private final boolean[] fieldSetFlags;
+  private final GenericData data;
   private BinaryEncoder encoder = null;
   private BinaryDecoder decoder = null;
   
+  protected final Schema schema() { return schema; }
+  protected final Field[] fields() { return fields; }
+  protected final boolean[] fieldSetFlags() { return fieldSetFlags; }
+  protected final GenericData data() { return data; }
+
   /**
    * Creates a RecordBuilderBase for building records of the given type.
    * @param schema the schema associated with the record class.
@@ -141,7 +146,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
    * @throws IOException 
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  protected Object getDefaultValue(Field field) throws IOException {    
+  protected Object defaultValue(Field field) throws IOException {    
     if (field.schema().getType() == Type.NULL) {
       return null;
     }

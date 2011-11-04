@@ -134,9 +134,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       #if ($schema.isError())super(other)#else
       super(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.SCHEMA$)#end;
 #foreach ($field in $schema.getFields())
-      if (isValidValue(fields[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
-        ${this.mangle($field.name(), $schema.isError())} = (${this.javaType($field.schema())}) data.deepCopy(fields[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
-        fieldSetFlags[$field.pos()] = true;
+      if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
+        this.${this.mangle($field.name(), $schema.isError())} = (${this.javaType($field.schema())}) data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
+        fieldSetFlags()[$field.pos()] = true;
       }
 #end
     }
@@ -175,15 +175,15 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     
     /** Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field */
     public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
-      validate(fields[$field.pos()], value);
+      validate(fields()[$field.pos()], value);
       this.${this.mangle($field.name(), $schema.isError())} = value;
-      fieldSetFlags[$field.pos()] = true;
+      fieldSetFlags()[$field.pos()] = true;
       return this; 
     }
     
     /** Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has been set */
     public boolean ${this.generateHasMethod($schema, $field)}() {
-      return fieldSetFlags[$field.pos()];
+      return fieldSetFlags()[$field.pos()];
     }
     
     /** Clears the value of the '${this.mangle($field.name(), $schema.isError())}' field */
@@ -191,7 +191,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #if (${this.isUnboxedJavaTypeNullable($field.schema())})
       ${this.mangle($field.name(), $schema.isError())} = null;
 #end
-      fieldSetFlags[$field.pos()] = false;
+      fieldSetFlags()[$field.pos()] = false;
       return this;
     }
 
@@ -201,7 +201,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       try {
         ${this.mangle($schema.getName())} record = new ${this.mangle($schema.getName())}(#if ($schema.isError())getValue(), getCause()#end);
 #foreach ($field in $schema.getFields())
-        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) getDefaultValue(fields[$field.pos()]);
+        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
 #end
         return record;
       } catch (Exception e) {
