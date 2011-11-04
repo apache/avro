@@ -67,7 +67,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       case ARRAY:  writeArray(schema, datum, out);  break;
       case MAP:    writeMap(schema, datum, out);    break;
       case UNION:
-        int index = data.resolveUnion(schema, datum);
+        int index = resolveUnion(schema, datum);
         out.writeIndex(index);
         write(schema.getTypes().get(index), datum, out);
         break;
@@ -129,6 +129,12 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       write(element, it.next(), out);
     }
     out.writeArrayEnd();
+  }
+
+  /** Called to find the index for a datum within a union.  By default calls
+   * {@link GenericData#resolveUnion(Schema,Object)}.*/
+  protected int resolveUnion(Schema union, Object datum) {
+    return data.resolveUnion(union, datum);
   }
 
   /** Called by the default implementation of {@link #writeArray} to get the

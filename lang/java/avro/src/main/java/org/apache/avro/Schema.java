@@ -91,6 +91,7 @@ public abstract class Schema {
       INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
     private String name;
     private Type() { this.name = this.name().toLowerCase(); }
+    public String getName() { return name; }
   };
 
   private final Type type;
@@ -307,6 +308,11 @@ public abstract class Schema {
 
   /** If this is a union, returns its types. */
   public List<Schema> getTypes() {
+    throw new AvroRuntimeException("Not a union: "+this);
+  }
+
+  /** If this is a union, return the branch with the provided full name. */
+  public Integer getIndexNamed(String name) {
     throw new AvroRuntimeException("Not a union: "+this);
   }
 
@@ -790,37 +796,24 @@ public abstract class Schema {
 
   private static class UnionSchema extends Schema {
     private final List<Schema> types;
+    private final Map<String,Integer> indexByName
+      = new HashMap<String,Integer>();
     public UnionSchema(LockableArrayList<Schema> types) {
       super(Type.UNION);
       this.types = types.lock();
-      int seen = 0;
-      Set<String> seenNames = new HashSet<String>();
-      for (Schema type : types) {                 // check legality of union
-        switch (type.getType()) {
-        case UNION: 
+      int index = 0;
+      for (Schema type : types) {
+        if (type.getType() == Type.UNION)
           throw new AvroRuntimeException("Nested union: "+this);
-        case RECORD:
-        case FIXED:
-        case ENUM:
-          String fullname = type.getFullName();
-          if (fullname != null) {
-            if (seenNames.add(fullname)) {
-              continue;
-            } else {
-              throw new AvroRuntimeException("Duplicate name in union:" + fullname);
-            }
-          } else {
-            throw new AvroRuntimeException("Nameless Record, Fixed, or Enum in union:"+this);
-          }
-        default:
-          int mask = 1 << type.getType().ordinal();
-          if ((seen & mask) != 0)
-            throw new AvroRuntimeException("Ambiguous union: "+this);
-          seen |= mask;
-        }
+        String name = type.getFullName();
+        if (name == null)
+          throw new AvroRuntimeException("Nameless in union:"+this);
+        if (indexByName.put(name, index++) != null)
+          throw new AvroRuntimeException("Duplicate in union:" + name);
       }
     }
     public List<Schema> getTypes() { return types; }
+    public Integer getIndexNamed(String name) { return indexByName.get(name); }
     public boolean equals(Object o) {
       if (o == this) return true;
       if (!(o instanceof UnionSchema)) return false;

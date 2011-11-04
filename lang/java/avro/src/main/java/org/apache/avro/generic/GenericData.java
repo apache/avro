@@ -541,16 +541,45 @@ public class GenericData {
   }
 
   /** Return the index for a datum within a union.  Implemented with {@link
-   * #instanceOf(Schema,Object)}.*/
+   * Schema#getIndexNamed(String)} and {@link #getSchemaName(Schema,Object)}.*/
   public int resolveUnion(Schema union, Object datum) {
-    int i = 0;
-    for (Schema type : union.getTypes()) {
-      if (instanceOf(type, datum))
-        return i;
-      i++;
-    }
+    Integer i = union.getIndexNamed(getSchemaName(datum));
+    if (i != null)
+      return i;
     throw new UnresolvedUnionException(union, datum);
   }
+
+  /** Return the schema full name for a datum.  Called by {@link
+   * #resolveUnion(Schema,Object)}. */
+  protected String getSchemaName(Object datum) {
+    if (datum == null)
+      return Type.NULL.getName();
+    if (isRecord(datum))
+      return getRecordSchema(datum).getFullName();
+    if (isEnum(datum))
+      return getEnumSchema(datum).getFullName();
+    if (isArray(datum))
+      return Type.ARRAY.getName();
+    if (isMap(datum))
+      return Type.MAP.getName();
+    if (isFixed(datum))
+      return getFixedSchema(datum).getFullName();
+    if (isString(datum))
+      return Type.STRING.getName();
+    if (isBytes(datum))
+      return Type.BYTES.getName();
+    if (datum instanceof Integer)
+      return Type.INT.getName();
+    if (datum instanceof Long)
+      return Type.LONG.getName();
+    if (datum instanceof Float)
+      return Type.FLOAT.getName();
+    if (datum instanceof Double)
+      return Type.DOUBLE.getName();
+    if (datum instanceof Boolean)
+      return Type.BOOLEAN.getName();
+    throw new AvroRuntimeException("Unknown datum type: "+datum);
+ }
 
   /** Called by {@link #resolveUnion(Schema,Object)}.  May be overridden for
       alternate data representations.*/
