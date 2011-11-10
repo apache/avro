@@ -153,13 +153,6 @@ avro_file_writer_create(const char *path, avro_schema_t schema,
 		avro_set_error("Cannot allocate new file writer");
 		return ENOMEM;
 	}
-	rval = file_writer_create(path, schema, w);
-	if (rval) {
-		avro_freet(struct avro_file_writer_t_, w);
-		return rval;
-	}
-	*writer = w;
-
 	w->codec = avro_new(struct avro_codec_t_);
 	if (!w->codec) {
 		avro_set_error("Cannot allocate new codec");
@@ -170,6 +163,12 @@ avro_file_writer_create(const char *path, avro_schema_t schema,
 		avro_freet(struct avro_codec_t_, w->codec);
 		return rval;
 	}
+	rval = file_writer_create(path, schema, w);
+	if (rval) {
+		avro_freet(struct avro_file_writer_t_, w);
+		return rval;
+	}
+	*writer = w;
 
 	return 0;
 }
