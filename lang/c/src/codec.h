@@ -29,6 +29,7 @@ struct avro_codec_t_ {
 	avro_codec_type_t type;
 	int64_t block_size;
 	void * block_data;
+	void * codec_data;
 };
 typedef struct avro_codec_t_* avro_codec_t;
 

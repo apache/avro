@@ -28,6 +28,23 @@ avro_codec_deflate(avro_codec_t codec)
 	codec->type = AVRO_CODEC_DEFLATE;
 	codec->block_size = 0;
 	codec->block_data = NULL;
+	codec->codec_data = avro_new(z_stream);
+
+	if (!codec->codec_data) {
+		return 1;
+	}
+
+	z_stream *s = (z_stream *)codec->codec_data;
+
+	s->zalloc = Z_NULL;
+	s->zfree = Z_NULL;
+	s->opaque = Z_NULL;
+
+	if (deflateInit2(s, Z_BEST_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+		avro_freet(z_stream, codec->codec_data);
+		avro_set_error("Cannot initialize zlib");
+		return 1;
+	}
 
 	return 0;
 }
@@ -41,6 +58,7 @@ int avro_codec(avro_codec_t codec, const char *type)
 		codec->type = AVRO_CODEC_NULL;
 		codec->block_size = 0;
 		codec->block_data = NULL;
+		codec->codec_data = NULL;
 	}
 
 	return 0;
@@ -49,11 +67,12 @@ int avro_codec(avro_codec_t codec, const char *type)
 static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 {
 	size_t defl_len;
+	int err;
 
-	defl_len = compressBound(len);
+	defl_len = compressBound((uLong)len * 1.2);
 
 	if (!c->block_data) {
-		c->block_data = avro_new(defl_len);
+		c->block_data = avro_malloc(defl_len);
 	} else {
 		c->block_data = avro_realloc(c->block_data, c->block_size, defl_len);
 	}
@@ -64,13 +83,31 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 		return 1;
 	}
 
-	int ret = compress(c->block_data, &c->block_size, data, len);
+	c->block_size = defl_len;
 
-	if (!ret) {
-		return 0;
+	z_stream *s = (z_stream *)c->codec_data;
+
+	s->next_in = (Bytef*)data;
+	s->avail_in = (uInt)len;
+
+	s->next_out = c->block_data;
+	s->avail_out = (uInt)c->block_size;
+
+	s->total_out = 0;
+
+	err = deflate(s, Z_FINISH);
+	if (err != Z_STREAM_END) {
+		deflateEnd(s);
+		return err == Z_OK ? 1 : 0;
 	}
 
-	return 1;
+	c->block_size = s->total_out;
+
+	if (deflateReset(s) != Z_OK) {
+		return 1;
+	}
+
+	return 0;
 }
 
 int avro_codec_encode(avro_codec_t c, void * data, int64_t len)
@@ -90,9 +127,13 @@ static int reset_deflate(avro_codec_t c)
 	if (c->block_data) {
 		avro_free(c->block_data, c->block_size);
 	}
+	if (c->codec_data) {
+		avro_freet(z_stream, c->codec_data);
+	}
 
 	c->block_data = NULL;
 	c->block_size = 0;
+	c->codec_data = NULL;
 
 	return 0;
 }
@@ -104,6 +145,7 @@ int avro_codec_reset(avro_codec_t c)
 	} else {
 		c->block_data = NULL;
 		c->block_size = 0;
+		c->codec_data = NULL;
 	}
 
 	return 0;
