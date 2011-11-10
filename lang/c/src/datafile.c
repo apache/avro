@@ -21,6 +21,7 @@
 #include "avro/errors.h"
 #include "avro/value.h"
 #include "encoding.h"
+#include "codec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -40,6 +41,7 @@ struct avro_file_reader_t_ {
 struct avro_file_writer_t_ {
 	avro_schema_t writers_schema;
 	avro_writer_t writer;
+	avro_codec_t codec;
 	char sync[16];
 	int block_count;
 	size_t block_size;
@@ -82,7 +84,7 @@ static int write_header(avro_file_writer_t w)
 	check(rval, enc->write_string(w->writer, "avro.sync"));
 	check(rval, enc->write_bytes(w->writer, w->sync, sizeof(w->sync)));
 	check(rval, enc->write_string(w->writer, "avro.codec"));
-	check(rval, enc->write_bytes(w->writer, "null", 4));
+	check(rval, enc->write_bytes(w->writer, w->codec->name, strlen(w->codec->name)));
 	check(rval, enc->write_string(w->writer, "avro.schema"));
 	schema_writer = avro_writer_memory(schema_buf, sizeof(schema_buf));
 	rval = avro_schema_to_json(w->writers_schema, schema_writer);
@@ -157,6 +159,18 @@ avro_file_writer_create(const char *path, avro_schema_t schema,
 		return rval;
 	}
 	*writer = w;
+
+	w->codec = avro_new(struct avro_codec_t_);
+	if (!w->codec) {
+		avro_set_error("Cannot allocate new codec");
+		return ENOMEM;
+	}	
+	rval = avro_codec(w->codec, "null");
+	if (rval) {
+		avro_freet(struct avro_codec_t_, w->codec);
+		return rval;
+	}
+
 	return 0;
 }
 
@@ -335,11 +349,14 @@ static int file_write_block(avro_file_writer_t w)
 		/* Write the block count */
 		check_prefix(rval, enc->write_long(w->writer, w->block_count),
 			     "Cannot write file block count: ");
+		/* Encode the block */
+		check_prefix(rval, avro_codec_encode(w->codec, w->datum_buffer, w->block_size),
+			     "Cannot encode file block: ");		
 		/* Write the block length */
-		check_prefix(rval, enc->write_long(w->writer, w->block_size),
+		check_prefix(rval, enc->write_long(w->writer, w->codec->block_size),
 			     "Cannot write file block size: ");
 		/* Write the block */
-		check_prefix(rval, avro_write(w->writer, w->datum_buffer, w->block_size),
+		check_prefix(rval, avro_write(w->writer, w->codec->block_data, w->codec->block_size),
 			     "Cannot write file block: ");
 		/* Write the sync marker */
 		check_prefix(rval, write_sync(w),
