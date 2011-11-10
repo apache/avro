@@ -32,6 +32,7 @@
 struct avro_file_reader_t_ {
 	avro_schema_t writers_schema;
 	avro_reader_t reader;
+	avro_codec_t codec;
 	char sync[16];
 	int64_t blocks_read;
 	int64_t blocks_total;
@@ -182,8 +183,8 @@ int avro_file_writer_create_with_codec(const char *path,
 }
 
 static int file_read_header(avro_reader_t reader,
-			    avro_schema_t * writers_schema, char *sync,
-			    int synclen)
+			    avro_schema_t * writers_schema, avro_codec_t codec,
+			    char *sync, int synclen)
 {
 	int rval;
 	avro_schema_t meta_schema;
@@ -191,6 +192,7 @@ static int file_read_header(avro_reader_t reader,
 	avro_value_iface_t *meta_iface;
 	avro_value_t meta;
 	char magic[4];
+	avro_value_t codec_val;
 	avro_value_t schema_bytes;
 	const void *p;
 	size_t len;
@@ -216,6 +218,40 @@ static int file_read_header(avro_reader_t reader,
 		return EILSEQ;
 	}
 	avro_schema_decref(meta_schema);
+
+	rval = avro_value_get_by_name(&meta, "avro.codec", &codec_val, NULL);
+	if (rval) {
+		avro_set_error("File header doesn't contain a codec");
+		avro_value_decref(&meta);
+		return rval;
+	} else {
+		const void *buf;
+		size_t size;
+		const char *codec_name;
+
+		avro_type_t type = avro_value_get_type(&codec_val);
+
+		if (type != AVRO_BYTES) {
+			avro_set_error("Value type of codec is unexpected");
+			avro_value_decref(&meta);
+			return EILSEQ;
+		}
+
+		avro_value_get_bytes(&codec_val, &buf, &size);
+
+		if (size == 4 && strncmp((const char *) buf, "null", 4) == 0) {
+			codec_name = "null";
+		} else if (size == 7
+			   && strncmp((const char *) buf, "deflate", 7) == 0) {
+			codec_name = "deflate";
+		} else {
+			avro_set_error("File header contains an unknown codec");
+			avro_value_decref(&meta);
+			return EILSEQ;
+		}
+
+		avro_codec(codec, codec_name);
+	}
 
 	rval = avro_value_get_by_name(&meta, "avro.schema", &schema_bytes, NULL);
 	if (rval) {
@@ -256,7 +292,7 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 		return ENOMEM;
 	}
 	rval =
-	    file_read_header(reader, &w->writers_schema, w->sync,
+	    file_read_header(reader, &w->writers_schema, w->codec, w->sync,
 			     sizeof(w->sync));
 	avro_reader_free(reader);
 	/* Position to end of file and get ready to write */
@@ -323,8 +359,15 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 		return ENOMEM;
 	}
 
-	rval = file_read_header(r->reader, &r->writers_schema, r->sync,
-				sizeof(r->sync));
+	r->codec = avro_new(struct avro_codec_t_);
+	if (!r->codec) {
+		avro_set_error("Could not allocate codec for file %s", path);
+		avro_freet(struct avro_file_reader_t_, r);
+		return ENOMEM;
+	}
+
+	rval = file_read_header(r->reader, &r->writers_schema, r->codec,
+				r->sync, sizeof(r->sync));
 	if (rval) {
 		avro_freet(struct avro_file_reader_t_, r);
 		return rval;
