@@ -35,6 +35,8 @@ set(AVRO_SRC
     avro/value.h
     avro_generic_internal.h
     avro_private.h
+    codec.c
+    codec.h
     consumer.c
     consume-binary.c
     datafile.c
