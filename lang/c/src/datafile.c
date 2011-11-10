@@ -484,6 +484,8 @@ int avro_file_writer_close(avro_file_writer_t w)
 	check(rval, avro_file_writer_flush(w));
 	avro_writer_free(w->datum_writer);
 	avro_writer_free(w->writer);
+	avro_codec_reset(w->codec);
+	avro_freet(struct avro_codec_t_, w->codec);
 	avro_freet(struct avro_file_writer_t_, w);
 	return 0;
 }
@@ -544,6 +546,8 @@ int avro_file_reader_close(avro_file_reader_t reader)
 {
 	avro_schema_decref(reader->writers_schema);
 	avro_reader_free(reader->reader);
+	avro_codec_reset(reader->codec);
+	avro_freet(struct avro_codec_t_, reader->codec);
 	avro_freet(struct avro_file_reader_t_, reader);
 	return 0;
 }
