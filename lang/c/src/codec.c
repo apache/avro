@@ -128,6 +128,7 @@ static int reset_deflate(avro_codec_t c)
 		avro_free(c->block_data, c->block_size);
 	}
 	if (c->codec_data) {
+		deflateEnd((z_stream *)c->codec_data);
 		avro_freet(z_stream, c->codec_data);
 	}
 
