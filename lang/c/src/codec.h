@@ -36,5 +36,6 @@ typedef struct avro_codec_t_* avro_codec_t;
 int avro_codec(avro_codec_t c, const char *type);
 int avro_codec_reset(avro_codec_t c);
 int avro_codec_encode(avro_codec_t c, void * data, int64_t len);
+int avro_codec_decode(avro_codec_t c, void * data, int64_t len);
 
 #endif
