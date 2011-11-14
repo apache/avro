@@ -22,7 +22,7 @@
 #include "codec.h"
 
 static int
-avro_codec_deflate(avro_codec_t codec)
+codec_deflate(avro_codec_t codec)
 {
 	codec->name = "deflate";
 	codec->type = AVRO_CODEC_DEFLATE;
@@ -31,6 +31,7 @@ avro_codec_deflate(avro_codec_t codec)
 	codec->codec_data = avro_new(z_stream);
 
 	if (!codec->codec_data) {
+		avro_set_error("Cannot allocate memory for zlib");
 		return 1;
 	}
 
@@ -49,16 +50,24 @@ avro_codec_deflate(avro_codec_t codec)
 	return 0;
 }
 
+static int
+codec_null(avro_codec_t codec)
+{
+	codec->name = "null";
+	codec->type = AVRO_CODEC_NULL;
+	codec->block_size = 0;
+	codec->block_data = NULL;
+	codec->codec_data = NULL;
+
+	return codec;
+}
+
 int avro_codec(avro_codec_t codec, const char *type)
 {
 	if (strcmp("deflate", type) == 0) {
-		return avro_codec_deflate(codec);
+		return codec_deflate(codec);
 	} else {
-		codec->name = "null";
-		codec->type = AVRO_CODEC_NULL;
-		codec->block_size = 0;
-		codec->block_data = NULL;
-		codec->codec_data = NULL;
+		return codec_null(codec);
 	}
 
 	return 0;
@@ -110,11 +119,18 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 	return 0;
 }
 
+static int encode_null(avro_codec_t c, void * data, int64_t len)
+{
+	c->block_data = data;
+	c->block_size = len;
+
+	return 0;
+}
+
 int avro_codec_encode(avro_codec_t c, void * data, int64_t len)
 {
 	if (c->type == AVRO_CODEC_NULL) {
-		c->block_data = data;
-		c->block_size = len;
+		return encode_null(c, data, len);
 	} else if (c->type == AVRO_CODEC_DEFLATE) {
 		return encode_deflate(c, data, len);
 	}
@@ -139,14 +155,21 @@ static int reset_deflate(avro_codec_t c)
 	return 0;
 }
 
+static int reset_null(avro_codec_t c)
+{
+	c->block_data = NULL;
+	c->block_size = 0;
+	c->codec_data = NULL;
+
+	return 0;
+}
+
 int avro_codec_reset(avro_codec_t c)
 {
-	if (c->type == AVRO_CODEC_DEFLATE) {
+	if (c->type == AVRO_CODEC_NULL) {
+		return reset_null(c);
+	} else if (c->type == AVRO_CODEC_DEFLATE) {
 		return reset_deflate(c);
-	} else {
-		c->block_data = NULL;
-		c->block_size = 0;
-		c->codec_data = NULL;
 	}
 
 	return 0;
