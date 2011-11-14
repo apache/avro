@@ -32,11 +32,13 @@
 struct avro_file_reader_t_ {
 	avro_schema_t writers_schema;
 	avro_reader_t reader;
+	avro_reader_t block_reader;
 	avro_codec_t codec;
 	char sync[16];
 	int64_t blocks_read;
 	int64_t blocks_total;
 	int64_t current_blocklen;
+	char * current_blockdata;
 };
 
 struct avro_file_writer_t_ {
@@ -328,11 +330,33 @@ int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 static int file_read_block_count(avro_file_reader_t r)
 {
 	int rval;
+	int64_t len;
 	const avro_encoding_t *enc = &avro_binary_encoding;
 	check_prefix(rval, enc->read_long(r->reader, &r->blocks_total),
 		     "Cannot read file block count: ");
-	check_prefix(rval, enc->read_long(r->reader, &r->current_blocklen),
+	check_prefix(rval, enc->read_long(r->reader, &len),
 		     "Cannot read file block size: ");
+
+	if (r->current_blockdata) {
+		r->current_blockdata = avro_realloc(r->current_blockdata, r->current_blocklen, len);
+	} else {
+		r->current_blockdata = avro_malloc(len);
+	}
+
+	r->current_blocklen = len;
+
+	check_prefix(rval, avro_read(r->reader, r->current_blockdata, len),
+		     "Cannot read file block: ");
+	if (len < r->current_blocklen) {
+		fprintf(stderr, "Len: %lld Blocklen: %lld\n", len, r->current_blocklen);
+		avro_set_error("Could not read entire block");
+		return 1;
+	}
+
+	avro_codec_decode(r->codec, r->current_blockdata, r->current_blocklen);
+
+	avro_reader_memory_set_source(r->block_reader, r->codec->block_data, r->codec->block_size);
+
 	r->blocks_read = 0;
 	return 0;
 }
@@ -358,6 +382,12 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 		avro_freet(struct avro_file_reader_t_, r);
 		return ENOMEM;
 	}
+	r->block_reader = avro_reader_memory(0, 0);
+	if (!r->block_reader) {
+		avro_set_error("Cannot allocate block reader for file %s", path);
+		avro_freet(struct avro_file_reader_t_, r);
+		return ENOMEM;
+	}
 
 	r->codec = avro_new(struct avro_codec_t_);
 	if (!r->codec) {
@@ -372,6 +402,9 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 		avro_freet(struct avro_file_reader_t_, r);
 		return rval;
 	}
+
+	r->current_blockdata = NULL;
+	r->current_blocklen = 0;
 
 	rval = file_read_block_count(r);
 	if (rval) {
@@ -500,7 +533,7 @@ int avro_file_reader_read(avro_file_reader_t r, avro_schema_t readers_schema,
 	check_param(EINVAL, datum, "datum");
 
 	check(rval,
-	      avro_read_data(r->reader, r->writers_schema, readers_schema,
+	      avro_read_data(r->block_reader, r->writers_schema, readers_schema,
 			     datum));
 	r->blocks_read++;
 
@@ -526,7 +559,7 @@ avro_file_reader_read_value(avro_file_reader_t r, avro_value_t *value)
 	check_param(EINVAL, r, "reader");
 	check_param(EINVAL, value, "value");
 
-	check(rval, avro_value_read(r->reader, value));
+	check(rval, avro_value_read(r->block_reader, value));
 	r->blocks_read++;
 
 	if (r->blocks_read == r->blocks_total) {
@@ -546,8 +579,12 @@ int avro_file_reader_close(avro_file_reader_t reader)
 {
 	avro_schema_decref(reader->writers_schema);
 	avro_reader_free(reader->reader);
+	avro_reader_free(reader->block_reader);
 	avro_codec_reset(reader->codec);
 	avro_freet(struct avro_codec_t_, reader->codec);
+	if (reader->current_blockdata) {
+		avro_free(reader->current_blockdata, reader->current_blocklen);
+	}
 	avro_freet(struct avro_file_reader_t_, reader);
 	return 0;
 }
