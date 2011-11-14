@@ -59,7 +59,7 @@ codec_null(avro_codec_t codec)
 	codec->block_data = NULL;
 	codec->codec_data = NULL;
 
-	return codec;
+	return 0;
 }
 
 int avro_codec(avro_codec_t codec, const char *type)
