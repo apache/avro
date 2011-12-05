@@ -39,7 +39,7 @@ public class TestFileSpanStorage {
     TracePluginConfiguration conf = new TracePluginConfiguration();
     FileSpanStorage test = new FileSpanStorage(false, conf);
     Span s = Util.createEventlessSpan(Util.idValue(1), Util.idValue(1), null);
-    s.setMessageName(new Utf8("message"));
+    s.setMessageName(new String("message"));
     test.addSpan(s);
     try {
       Thread.sleep(1000);
@@ -58,7 +58,7 @@ public class TestFileSpanStorage {
     List<Span> spans = new ArrayList<Span>(50000);
     for (int i = 0; i < 50000; i++) {
       Span s = Util.createEventlessSpan(Util.idValue(i), Util.idValue(i), null);
-      s.setMessageName(new Utf8("message"));
+      s.setMessageName(new String("message"));
       test.addSpan(s);
       spans.add(s);
     }
@@ -76,7 +76,7 @@ public class TestFileSpanStorage {
     spans.clear();
     for (int i = 0; i < 5000; i++) {
       Span s = Util.createEventlessSpan(Util.idValue(i), Util.idValue(i), null);
-      s.setMessageName(new Utf8("message"));
+      s.setMessageName(new String("message"));
       test2.addSpan(s);
       spans.add(s);
     }
@@ -99,14 +99,14 @@ public class TestFileSpanStorage {
     // Add a bunch of spans
     for (int i = 0; i < 100; i++) {
       Span s = Util.createEventlessSpan(Util.idValue(i), Util.idValue(i), null);
-      s.setMessageName(new Utf8("message"));
+      s.setMessageName(new String("message"));
       test.addSpan(s);
     }
     
     List<Span> lastNine = new LinkedList<Span>();
     for (int i = 0; i < 9; i++) {
       Span s = Util.createEventlessSpan(Util.idValue(100 + i), Util.idValue(100 + i), null);
-      s.setMessageName(new Utf8("message"));
+      s.setMessageName(new String("message"));
       lastNine.add(s);
       test.addSpan(s);
     }
@@ -150,7 +150,7 @@ public class TestFileSpanStorage {
       s.getEvents().add(te1);
       s.getEvents().add(te2);
       
-      s.setMessageName(new Utf8("message"));
+      s.setMessageName(new String("message"));
       test.addSpan(s);
       spans[i] = s;
       

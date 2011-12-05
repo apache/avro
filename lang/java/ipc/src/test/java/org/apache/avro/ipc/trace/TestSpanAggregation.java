@@ -44,11 +44,11 @@ public class TestSpanAggregation {
    */
   @Test
   public void testSpanCompletion1() {
-    Span span1a = createClientSpan(idValue(1), idValue(1), null, new Utf8("a"));
+    Span span1a = createClientSpan(idValue(1), idValue(1), null, new String("a"));
     span1a.setRequestPayloadSize(10L);
     span1a.setResponsePayloadSize(0L);
     
-    Span span1b = createServerSpan(idValue(1), idValue(1), null, new Utf8("a"));
+    Span span1b = createServerSpan(idValue(1), idValue(1), null, new String("a"));
     span1b.setRequestPayloadSize(0L);
     span1b.setResponsePayloadSize(11L);
     
@@ -76,19 +76,19 @@ public class TestSpanAggregation {
   @Test
   public void testInvalidSpanCompletion() {
     // Trace: 1, Span: 1, Parent: null 
-    Span span1a = createClientSpan(idValue(1), idValue(1), null, new Utf8("a"));
-    Span span1b = createServerSpan(idValue(1), idValue(1), null, new Utf8("a"));
+    Span span1a = createClientSpan(idValue(1), idValue(1), null, new String("a"));
+    Span span1b = createServerSpan(idValue(1), idValue(1), null, new String("a"));
     
     // Trace: 1, Span: 10, Parent: 3 
-    Span spanBogus1 = createClientSpan(idValue(1), idValue(10), idValue(3), new Utf8("not"));
-    Span spanBogus2 = createServerSpan(idValue(1), idValue(10), idValue(3), new Utf8("equal"));
+    Span spanBogus1 = createClientSpan(idValue(1), idValue(10), idValue(3), new String("not"));
+    Span spanBogus2 = createServerSpan(idValue(1), idValue(10), idValue(3), new String("equal"));
     
     // Trace: 1, Span: 5, Parent: (2/3) 
-    Span spanBogus3 = createClientSpan(idValue(1), idValue(5), idValue(2), new Utf8("equal"));
-    Span spanBogus4 = createServerSpan(idValue(1), idValue(5), idValue(3), new Utf8("equal"));
+    Span spanBogus3 = createClientSpan(idValue(1), idValue(5), idValue(2), new String("equal"));
+    Span spanBogus4 = createServerSpan(idValue(1), idValue(5), idValue(3), new String("equal"));
     
     // Trace:1, Span: 4, Parent: 1
-    Span spanBogus5 = createClientSpan(idValue(1), idValue(4), idValue(1), new Utf8("alone"));
+    Span spanBogus5 = createClientSpan(idValue(1), idValue(4), idValue(1), new String("alone"));
     
     List<Span> partials = new ArrayList<Span>();
     partials.add(span1a);
@@ -114,10 +114,10 @@ public class TestSpanAggregation {
     Span result = results.completeSpans.get(0);
     assertTrue(result.getComplete());
     assertTrue(idsEqual(idValue(1), result.getSpanID()));
-    assertEquals(new Utf8("requestorHostname"), result.getRequestorHostname());
-    assertEquals(new Utf8("responderHostname"), result.getResponderHostname());
+    assertEquals(new String("requestorHostname"), result.getRequestorHostname());
+    assertEquals(new String("responderHostname"), result.getResponderHostname());
     assertNull(result.getParentSpanID());
-    assertEquals(new Utf8("a"), result.getMessageName());
+    assertEquals(new String("a"), result.getMessageName());
   }
   
   /**
@@ -129,20 +129,20 @@ public class TestSpanAggregation {
    */
   @Test
   public void testTraceFormation1() {
-    Span a1 = createClientSpan(idValue(1), idValue(1), null, new Utf8("a"));
-    Span a2 = createServerSpan(idValue(1), idValue(1), null, new Utf8("a"));
+    Span a1 = createClientSpan(idValue(1), idValue(1), null, new String("a"));
+    Span a2 = createServerSpan(idValue(1), idValue(1), null, new String("a"));
     
-    Span b1 = createClientSpan(idValue(1), idValue(2), idValue(1), new Utf8("b"));
-    Span b2 = createServerSpan(idValue(1), idValue(2), idValue(1), new Utf8("b"));
+    Span b1 = createClientSpan(idValue(1), idValue(2), idValue(1), new String("b"));
+    Span b2 = createServerSpan(idValue(1), idValue(2), idValue(1), new String("b"));
 
-    Span c1 = createClientSpan(idValue(1), idValue(3), idValue(2), new Utf8("c"));
-    Span c2 = createServerSpan(idValue(1), idValue(3), idValue(2), new Utf8("c"));
+    Span c1 = createClientSpan(idValue(1), idValue(3), idValue(2), new String("c"));
+    Span c2 = createServerSpan(idValue(1), idValue(3), idValue(2), new String("c"));
     
-    Span d1 = createClientSpan(idValue(1), idValue(4), idValue(2), new Utf8("d"));
-    Span d2 = createServerSpan(idValue(1), idValue(4), idValue(2), new Utf8("d"));
+    Span d1 = createClientSpan(idValue(1), idValue(4), idValue(2), new String("d"));
+    Span d2 = createServerSpan(idValue(1), idValue(4), idValue(2), new String("d"));
     
-    Span e1 = createClientSpan(idValue(1), idValue(5), idValue(4), new Utf8("e"));
-    Span e2 = createServerSpan(idValue(1), idValue(5), idValue(4), new Utf8("e"));
+    Span e1 = createClientSpan(idValue(1), idValue(5), idValue(4), new String("e"));
+    Span e2 = createServerSpan(idValue(1), idValue(5), idValue(4), new String("e"));
     
     List<Span> spans = new LinkedList<Span>();
     spans.addAll(Arrays.asList(new Span[] {a1, a2, b1, b2, c1, c2, d1, d2, e1, e2}));
@@ -151,8 +151,8 @@ public class TestSpanAggregation {
     
     assertEquals(5, merged.size());
     for (Span s: merged) {
-      assertEquals(new Utf8("requestorHostname"), s.getRequestorHostname());
-      assertEquals(new Utf8("responderHostname"), s.getResponderHostname());
+      assertEquals(new String("requestorHostname"), s.getRequestorHostname());
+      assertEquals(new String("responderHostname"), s.getResponderHostname());
     }
     
     List<Trace> traces = SpanAggregator.getTraces(merged).traces;
@@ -165,11 +165,11 @@ public class TestSpanAggregation {
   /**
    * Make a mock Span including client-side timing data.
    */
-  public Span createClientSpan(ID traceID, ID spanID, ID parentID, Utf8 msgName) {
+  public Span createClientSpan(ID traceID, ID spanID, ID parentID, String msgName) {
     Span out = new Span();
     out.setSpanID(spanID);
     out.setTraceID(traceID);
-    out.setRequestorHostname(new Utf8("requestorHostname"));
+    out.setRequestorHostname(new String("requestorHostname"));
     
     if (parentID != null) {
       out.setParentSpanID(parentID);
@@ -196,11 +196,11 @@ public class TestSpanAggregation {
   /**
    * Make a mock Span including server-side timing data.
    */
-  public Span createServerSpan(ID traceID, ID spanID, ID parentID, Utf8 msgName) {
+  public Span createServerSpan(ID traceID, ID spanID, ID parentID, String msgName) {
     Span out = new Span();
     out.setSpanID(spanID);
     out.setTraceID(traceID);
-    out.setResponderHostname(new Utf8("responderHostname"));
+    out.setResponderHostname(new String("responderHostname"));
     
     if (parentID != null) {
       out.setParentSpanID(parentID);

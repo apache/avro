@@ -25,6 +25,7 @@ import org.apache.avro.Protocol;
 import org.apache.avro.compiler.idl.Idl;
 import org.apache.avro.compiler.idl.ParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.generic.GenericData;
 
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
@@ -59,6 +60,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       String json = p.toString(true);
       Protocol protocol = Protocol.parse(json);
       SpecificCompiler compiler = new SpecificCompiler(protocol);
+      compiler.setStringType(GenericData.StringType.valueOf(stringType));
       compiler.compileToDestination(null, outputDirectory);
     } catch (ParseException e) {
       throw new IOException(e);
