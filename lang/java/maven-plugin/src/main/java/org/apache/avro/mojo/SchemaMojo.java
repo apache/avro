@@ -57,6 +57,7 @@ public class SchemaMojo extends AbstractAvroMojo {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(schema);
+    compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.compileToDestination(src, outputDirectory);
   }

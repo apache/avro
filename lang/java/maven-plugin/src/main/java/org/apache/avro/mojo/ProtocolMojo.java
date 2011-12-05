@@ -56,6 +56,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
     File src = new File(sourceDirectory, filename);
     Protocol protocol = Protocol.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(protocol);
+    compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.compileToDestination(src, outputDirectory);
   }

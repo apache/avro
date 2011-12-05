@@ -80,6 +80,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    */
   protected String stringType = "CharSequence";
 
+  /**
+   * The directory (within the java classpath) that contains the velocity templates
+   * to use for code generation. The default value points to the templates included
+   * with the avro-maven-plugin.
+   *
+   * @parameter expression="${templateDirectory}"
+   */
+  protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
   /**
    * The current Maven project.
