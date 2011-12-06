@@ -246,6 +246,9 @@ static int file_read_header(avro_reader_t reader,
 		} else if (size == 7
 			   && strncmp((const char *) buf, "deflate", 7) == 0) {
 			codec_name = "deflate";
+		} else if (size == 4
+				   && strncmp((const char *) buf, "lzma", 4) == 0) {
+				codec_name = "lzma";
 		} else {
 			avro_set_error("File header contains an unknown codec");
 			avro_value_decref(&meta);

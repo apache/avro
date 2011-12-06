@@ -16,6 +16,7 @@
  */
 
 #include <zlib.h>
+#include <lzma.h>
 #include <string.h>
 #include "avro/errors.h"
 #include "avro/allocation.h"
@@ -27,6 +28,13 @@ struct codec_data_deflate {
 };
 #define codec_data_deflate_stream(cd)	&((struct codec_data_deflate *)cd)->deflate
 #define codec_data_inflate_stream(cd)	&((struct codec_data_deflate *)cd)->inflate
+
+struct codec_data_lzma {
+	lzma_filter filters[2];
+	lzma_options_lzma options;
+};
+#define codec_data_lzma_filters(cd)	((struct codec_data_lzma *)cd)->filters
+#define codec_data_lzma_options(cd)	&((struct codec_data_lzma *)cd)->options
 
 #define DEFLATE_BUFSIZE	(16 * 1024)
 
@@ -70,6 +78,32 @@ codec_deflate(avro_codec_t codec)
 }
 
 static int
+codec_lzma(avro_codec_t codec)
+{
+	codec->name = "lzma";
+	codec->type = AVRO_CODEC_LZMA;
+	codec->block_size = 0;
+	codec->block_data = NULL;
+	codec->codec_data = avro_new(struct codec_data_lzma);
+
+	if (!codec->codec_data) {
+		avro_set_error("Cannot allocate memory for lzma");
+		return 1;
+	}
+
+	lzma_options_lzma* opt = codec_data_lzma_options(codec->codec_data);
+	lzma_lzma_preset(opt, LZMA_PRESET_DEFAULT);
+
+	lzma_filter* filters = codec_data_lzma_filters(codec->codec_data);
+	filters[0].id = LZMA_FILTER_LZMA2;
+	filters[0].options = opt;
+	filters[1].id = LZMA_VLI_UNKNOWN;
+	filters[1].options = NULL;
+
+	return 0;
+}
+
+static int
 codec_null(avro_codec_t codec)
 {
 	codec->name = "null";
@@ -85,6 +119,8 @@ int avro_codec(avro_codec_t codec, const char *type)
 {
 	if (strcmp("deflate", type) == 0) {
 		return codec_deflate(codec);
+	} else if (strcmp("lzma", type) == 0) {
+		return codec_lzma(codec);
 	} else {
 		return codec_null(codec);
 	}
@@ -138,6 +174,37 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 	return 0;
 }
 
+static int encode_lzma(avro_codec_t codec, void * data, int64_t len)
+{
+	lzma_filter* filters = codec_data_lzma_filters(codec->codec_data);
+
+	if (!codec->block_data) {
+		codec->block_data = avro_malloc(DEFLATE_BUFSIZE);
+	}
+
+	if (!codec->block_data)
+	{
+		fprintf(stderr, "Cannot allocate memory for lzma\n");
+		avro_set_error("Cannot allocate memory for lzma");
+		return 1;
+	}
+
+	codec->block_size = DEFLATE_BUFSIZE;
+
+	size_t written = 0;
+
+	lzma_ret ret = lzma_raw_buffer_encode(filters, NULL, data, len, codec->block_data, &written, codec->block_size);
+
+	codec->block_size = written;
+
+	if (ret != LZMA_OK) {
+		avro_set_error("Error in lzma");
+		return 1;
+	}
+
+	return 0;
+}
+
 static int encode_null(avro_codec_t c, void * data, int64_t len)
 {
 	c->block_data = data;
@@ -150,6 +217,8 @@ int avro_codec_encode(avro_codec_t c, void * data, int64_t len)
 {
 	if (c->type == AVRO_CODEC_NULL) {
 		return encode_null(c, data, len);
+	} else if (c->type == AVRO_CODEC_LZMA) {
+		return encode_lzma(c, data, len);
 	} else if (c->type == AVRO_CODEC_DEFLATE) {
 		return encode_deflate(c, data, len);
 	}
@@ -200,6 +269,39 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 	return 0;
 }
 
+static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
+{
+	size_t read_pos = 0;
+	size_t write_pos = 0;
+	lzma_ret ret;
+	lzma_filter* filters = codec_data_lzma_filters(codec->codec_data);
+
+	if (!codec->block_data) {
+		codec->block_data = avro_malloc(DEFLATE_BUFSIZE);
+	}
+
+	if (!codec->block_data)
+	{
+		avro_set_error("Cannot allocate memory for lzma");
+		return 1;
+	}
+
+	codec->block_size = DEFLATE_BUFSIZE;
+
+	ret = lzma_raw_buffer_decode(filters, NULL,
+							data, &read_pos, len,
+							codec->block_data, &write_pos, codec->block_size);
+
+	codec->block_size = write_pos;
+
+	if (ret != LZMA_OK) {
+		avro_set_error("Error in lzma");
+		return 1;
+	}
+
+	return 0;
+}
+
 static int decode_null(avro_codec_t c, void * data, int64_t len)
 {
 	c->block_data = data;
@@ -212,6 +314,8 @@ int avro_codec_decode(avro_codec_t c, void * data, int64_t len)
 {
 	if (c->type == AVRO_CODEC_NULL) {
 		return decode_null(c, data, len);
+	} else if (c->type == AVRO_CODEC_LZMA) {
+		return decode_lzma(c, data, len);
 	} else if (c->type == AVRO_CODEC_DEFLATE) {
 		return decode_deflate(c, data, len);
 	}
@@ -237,6 +341,22 @@ static int reset_deflate(avro_codec_t c)
 	return 0;
 }
 
+static int reset_lzma(avro_codec_t c)
+{
+	if (c->block_data) {
+		avro_free(c->block_data, DEFLATE_BUFSIZE);
+	}
+	if (c->codec_data) {
+		avro_freet(struct codec_data_lzma, c->codec_data);
+	}
+
+	c->block_data = NULL;
+	c->block_size = 0;
+	c->codec_data = NULL;
+
+	return 0;
+}
+
 static int reset_null(avro_codec_t c)
 {
 	c->block_data = NULL;
@@ -252,6 +372,8 @@ int avro_codec_reset(avro_codec_t c)
 		return reset_null(c);
 	} else if (c->type == AVRO_CODEC_DEFLATE) {
 		return reset_deflate(c);
+	} else if (c->type == AVRO_CODEC_LZMA) {
+		return reset_lzma(c);
 	}
 
 	return 0;

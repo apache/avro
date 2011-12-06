@@ -20,7 +20,8 @@
 
 enum avro_codec_type_t {
 	AVRO_CODEC_NULL,
-	AVRO_CODEC_DEFLATE
+	AVRO_CODEC_DEFLATE,
+	AVRO_CODEC_LZMA
 };
 typedef enum avro_codec_type_t avro_codec_type_t;
 
