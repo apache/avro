@@ -142,9 +142,10 @@ int main(void)
 	/* Delete the database if it exists */
 	unlink(dbname);
 	/* Create a new database */
-	rval = avro_file_writer_create_with_codec(dbname, person_schema, &db, "deflate");
+	rval = avro_file_writer_create_with_codec(dbname, person_schema, &db, "lzma");
 	if (rval) {
 		fprintf(stderr, "There was an error creating %s\n", dbname);
+		fprintf(stderr, " error message: %s\n", avro_strerror());
 		exit(EXIT_FAILURE);
 	}
 
@@ -159,6 +160,11 @@ int main(void)
 		add_person(db, "Bob", "Silent", "(555) 123-6422", 29);
 		add_person(db, "Jay", "???", number, 26);
 	}
+
+	/* Close the block and open a new one */
+	avro_file_writer_flush(db);
+	add_person(db, "Super", "Man", "123456", 31);
+
 	avro_file_writer_close(db);
 
 	fprintf(stdout, "\nNow let's read all the records back out\n");
