@@ -108,6 +108,7 @@ namespace Avro
                                 IDictionary<string, Field> fieldAliasMap, SchemaNames names)
                                 : base(type, name, aliases, props, names)
         {
+            if (!request && null == name.Name) throw new SchemaParseException("name cannot be null for record schema.");
             this.Fields = fields;
             this.request = request;
             this.fieldLookup = fieldMap;

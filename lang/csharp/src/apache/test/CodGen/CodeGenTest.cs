@@ -17,14 +17,12 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.CodeDom;
+using System.IO;
+using System.Linq;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
 using NUnit.Framework;
-using Avro;
 using Avro.Specific;
-using System.Reflection;
 
 namespace Avro.Test
 {
@@ -74,26 +72,7 @@ namespace Avro.Test
         {
             Schema schema = Schema.Parse(str);
 
-            var codegen = new CodeGen();
-            codegen.AddSchema(schema);
-            var compileUnit = codegen.GenerateCode();
-
-            var comparam = new CompilerParameters(new string[] {"mscorlib.dll"});
-            comparam.ReferencedAssemblies.Add("System.dll");
-            comparam.ReferencedAssemblies.Add("System.Core.dll");
-            comparam.ReferencedAssemblies.Add(Type.GetType("Mono.Runtime") != null ? "Mono.CSharp.dll" : "Microsoft.CSharp.dll");
-            comparam.ReferencedAssemblies.Add("Avro.dll");
-            comparam.GenerateInMemory = true;
-            var ccp = new Microsoft.CSharp.CSharpCodeProvider();
-            var units = new CodeCompileUnit[] { compileUnit };
-            var compres = ccp.CompileAssemblyFromDom(comparam, units);
-            if (compres == null || compres.Errors.Count>0)
-            {
-                for (int i=0; i<compres.Errors.Count;i++)
-                    Console.WriteLine(compres.Errors[i]);
-            }
-            if (null != compres)
-                Assert.AreEqual(0, compres.Errors.Count);
+            CompilerResults compres = GenerateSchema(schema);
 
             // instantiate object
             ISpecificRecord rec = compres.CompiledAssembly.CreateInstance((string)result[0]) as ISpecificRecord;
@@ -117,6 +96,58 @@ namespace Avro.Test
                 else
                     Assert.AreEqual(stype, field.GetType());
             }
+        }
+
+        [Test]
+        public void CanCodeGenTraceProtocol()
+        {
+            var traceProtocol = File.ReadAllText("../../../../../share/schemas/org/apache/avro/ipc/trace/avroTrace.avpr");
+            Protocol protocol = Protocol.Parse(traceProtocol);
+            var compilerResults = GenerateProtocol(protocol);
+
+            // instantiate object
+            var types = compilerResults.CompiledAssembly.GetTypes().Select(t => t.FullName);
+            Assert.That(4, Is.EqualTo(types.Count()));
+            Assert.That(types.Contains("org.apache.avro.ipc.trace.ID"), "Should have contained ID type");
+            Assert.That(types.Contains("org.apache.avro.ipc.trace.Span"), "Should have contained Span type");
+            Assert.That(types.Contains("org.apache.avro.ipc.trace.SpanEvent"), "Should have contained SpanEvent type");
+            Assert.That(types.Contains("org.apache.avro.ipc.trace.TimestampedEvent"), "Should have contained TimestampedEvent type");
+        }
+
+        private static CompilerResults GenerateSchema(Schema schema)
+        {
+            var codegen = new CodeGen();
+            codegen.AddSchema(schema);
+            return GenerateAssembly(codegen);
+        }
+
+        private static CompilerResults GenerateProtocol(Protocol protocol)
+        {
+            var codegen = new CodeGen();
+            codegen.AddProtocol(protocol);
+            return GenerateAssembly(codegen);            
+        }
+
+        private static CompilerResults GenerateAssembly(CodeGen schema)
+        {
+            var compileUnit = schema.GenerateCode();
+
+            var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
+            comparam.ReferencedAssemblies.Add("System.dll");
+            comparam.ReferencedAssemblies.Add("System.Core.dll");
+            comparam.ReferencedAssemblies.Add(Type.GetType("Mono.Runtime") != null ? "Mono.CSharp.dll" : "Microsoft.CSharp.dll");
+            comparam.ReferencedAssemblies.Add("Avro.dll");
+            comparam.GenerateInMemory = true;
+            var ccp = new CSharpCodeProvider();
+            var units = new[] { compileUnit };
+            var compres = ccp.CompileAssemblyFromDom(comparam, units);
+            if (compres.Errors.Count > 0)
+            {
+                for (int i = 0; i < compres.Errors.Count; i++)
+                    Console.WriteLine(compres.Errors[i]);
+            }
+            Assert.AreEqual(0, compres.Errors.Count);
+            return compres;
         }
     }
 }

@@ -124,7 +124,7 @@ namespace Avro
             if (null != this.Response)
             {
                 writer.WritePropertyName("response");
-                writer.WriteValue(Response.Name);
+                Response.WriteJson(writer, names, encspace);
             }
 
             if (null != this.Error)

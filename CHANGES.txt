@@ -16,6 +16,9 @@ Avro 1.6.2 (unreleased)
     AVRO-962. Java: Fix Maven plugin to support string type override.
     (George Fletcher via cutting)
 
+    AVRO-835. C#: Fix codgen for protocols to not fail.
+    (Dona Alvarez via cutting)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES
