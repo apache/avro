@@ -229,7 +229,7 @@ static int file_read_header(avro_reader_t reader,
 	} else {
 		const void *buf;
 		size_t size;
-		const char *codec_name;
+		char codec_name[11];
 
 		avro_type_t type = avro_value_get_type(&codec_val);
 
@@ -240,22 +240,14 @@ static int file_read_header(avro_reader_t reader,
 		}
 
 		avro_value_get_bytes(&codec_val, &buf, &size);
+		memset(codec_name, 0, sizeof(codec_name));
+		strncpy(codec_name, buf, size < 10 ? size : 10);
 
-		if (size == 4 && strncmp((const char *) buf, "null", 4) == 0) {
-			codec_name = "null";
-		} else if (size == 7
-			   && strncmp((const char *) buf, "deflate", 7) == 0) {
-			codec_name = "deflate";
-		} else if (size == 4
-				   && strncmp((const char *) buf, "lzma", 4) == 0) {
-				codec_name = "lzma";
-		} else {
+		if (avro_codec(codec, codec_name) != 0) {
 			avro_set_error("File header contains an unknown codec");
 			avro_value_decref(&meta);
 			return EILSEQ;
 		}
-
-		avro_codec(codec, codec_name);
 	}
 
 	rval = avro_value_get_by_name(&meta, "avro.schema", &schema_bytes, NULL);

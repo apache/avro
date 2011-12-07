@@ -69,6 +69,7 @@ string(REGEX REPLACE ".*\\..*\\.[0-9]+(.*)"
 # Source package support
 
 include(CPackConfig.txt)
+include(CheckLibraryExists)
 
 
 if(APPLE)
@@ -86,6 +87,27 @@ endif(CMAKE_COMPILER_IS_GNUCC)
 
 include_directories(${AvroC_SOURCE_DIR}/src)
 include_directories(${AvroC_SOURCE_DIR}/jansson/src)
+
+
+# Enable codecs
+if(HAVE_ZLIB)
+    set(ZLIB_REQUIRE z)
+    add_definitions(-DDEFLATE_CODEC)
+    message("Enabled deflate codec")
+else(HAVE_ZLIB)
+    message("Disabled deflate codec. zlib not found.")
+endif(HAVE_ZLIB)
+
+if(HAVE_LZMA)
+    set(LZMA_REQUIRE lzma)
+    add_definitions(-DLZMA_CODEC)
+    message("Enabled lzma codec")
+else(HAVE_LZMA)
+    message("Disabled lzma codec. liblzma not found.")
+endif(HAVE_LZMA)
+
+set(CODEC_LIBS ${ZLIB_REQUIRE} ${LZMA_REQUIRE})
+
 
 add_subdirectory(src)
 add_subdirectory(examples)
