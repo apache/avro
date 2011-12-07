@@ -61,6 +61,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       Protocol protocol = Protocol.parse(json);
       SpecificCompiler compiler = new SpecificCompiler(protocol);
       compiler.setStringType(GenericData.StringType.valueOf(stringType));
+      compiler.setTemplateDir(templateDirectory);
       compiler.compileToDestination(null, outputDirectory);
     } catch (ParseException e) {
       throw new IOException(e);
