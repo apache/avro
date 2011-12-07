@@ -351,7 +351,6 @@ static int file_read_block_count(avro_file_reader_t r)
 	check_prefix(rval, avro_read(r->reader, r->current_blockdata, len),
 		     "Cannot read file block: ");
 	if (len < r->current_blocklen) {
-		fprintf(stderr, "Len: %lld Blocklen: %lld\n", len, r->current_blocklen);
 		avro_set_error("Could not read entire block");
 		return 1;
 	}
