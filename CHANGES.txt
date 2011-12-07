@@ -19,6 +19,9 @@ Avro 1.6.2 (unreleased)
     AVRO-835. C#: Fix codgen for protocols to not fail.
     (Dona Alvarez via cutting)
 
+    AVRO-966. Java: Fix ReflectDatumWriter to be able to correctly
+    write unions containing Collection and/or ByteBuffer. (cutting)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

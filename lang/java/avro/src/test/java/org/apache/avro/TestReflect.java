@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,6 +92,19 @@ public class TestReflect {
 
   @Test public void testBytes() {
     check(new byte[0], "\"bytes\"");
+  }
+
+  @Test public void testUnionWithCollection() {
+    Schema s = Schema.parse
+      ("[\"null\", {\"type\":\"array\",\"items\":\"float\"}]");
+    GenericData data = ReflectData.get();
+    assertEquals(1, data.resolveUnion(s, new ArrayList<Float>()));
+  }
+
+  @Test public void testUnionWithBytes() {
+    Schema s = Schema.parse ("[\"null\", \"bytes\"]");
+    GenericData data = ReflectData.get();
+    assertEquals(1, data.resolveUnion(s, ByteBuffer.wrap(new byte[]{1})));
   }
 
   // test map, array and list type inference

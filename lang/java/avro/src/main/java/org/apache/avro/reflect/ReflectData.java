@@ -24,6 +24,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.GenericArrayType;
 import java.lang.annotation.Annotation;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
@@ -105,6 +106,7 @@ public class ReflectData extends SpecificData {
   protected boolean isRecord(Object datum) {
     if (datum == null) return false;
     if (super.isRecord(datum)) return true;
+    if (datum instanceof Collection) return false;
     return getSchema(datum.getClass()).getType() == Schema.Type.RECORD;
   }
 
@@ -257,6 +259,10 @@ public class ReflectData extends SpecificData {
       }
       if (CharSequence.class.isAssignableFrom(c))            // String
         return Schema.create(Schema.Type.STRING);
+      if (ByteBuffer.class.isAssignableFrom(c))              // bytes
+        return Schema.create(Schema.Type.BYTES);
+      if (Collection.class.isAssignableFrom(c))              // array
+        throw new AvroRuntimeException("Can't find element type of Collection");
       String fullName = c.getName();
       Schema schema = names.get(fullName);
       if (schema == null) {
