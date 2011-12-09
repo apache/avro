@@ -52,11 +52,11 @@
           Avro Protocol file with extension <code>.avpr</code>.
         </p>
         <p>
-          To convert a <code>.avdl</code> file into a <code>.avpr</code> file, it must be processed by the
+          To convert a <code>.avdl</code> file into a <code>.avpr</code> file, it may be processed by the
           <code>idl</code> tool. For example:
         </p>
         <source>
-$ java -jar avroj-tools-1.4.0.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
+$ java -jar avroj-tools.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
 $ head /tmp/namespaces.avpr
 {
   "protocol" : "TestNamespace",
@@ -66,6 +66,25 @@ $ head /tmp/namespaces.avpr
           The <code>idl</code> tool can also process input to and from <em>stdin</em> and <em>stdout</em>.
           See <code>idl --help</code> for full usage information.
         </p>
+        <p>A Maven plugin is also provided to compile .avdl files.  To
+        use it, add something like the following to your pom.xml:</p>
+<source><![CDATA[
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-maven-plugin</artifactId>
+      <executions>
+        <execution>
+          <goals>
+            <goal>idl-protocol</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
+]]></source>
       </section>
     </section> <!-- end overview -->
 
@@ -358,6 +377,9 @@ record MyRecord {
   string @aliases(["oldField", "ancientField"]) myNewField;
 }
         </source>
+        <p>Some annotations like those listed above are handled
+        specially.  All other annotations are added as properties to
+        the protocol, message, schema or field.</p>
       </section>
     </section>
     <section id="example">

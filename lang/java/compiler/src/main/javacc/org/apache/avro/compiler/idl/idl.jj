@@ -974,14 +974,12 @@ Protocol CompilationUnit():
 /*
  * Declaration syntax follows.
  */
-Schema NamedSchemaDeclaration():
+Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
 {
   Schema s;
-  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
   String savedSpace = this.namespace;
 }
 {
-  ( SchemaProperty(props) )*
   {
     if (props.containsKey("namespace"))
       this.namespace = getTextProp("namespace", props, token);
@@ -1048,6 +1046,11 @@ Protocol ProtocolDeclaration():
    name = Identifier()
  {
    p = new Protocol(name, getDoc(), namespace);
+   for (String key : props.keySet())
+     if ("namespace".equals(key)) {               // already handled: ignore
+     } else if (props.get(key).isTextual()) {     // ignore other non-textual
+       p.addProp(key, getTextProp(key, props, token));
+     }
  }
  ProtocolBody(p)
  {
@@ -1098,13 +1101,12 @@ void ProtocolBody(Protocol p):
   Schema schema;
   Message message;
   Protocol importProtocol;
+  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
-  "{" 
-  (  
-   schema = NamedSchemaDeclaration()
-
-   | <IMPORT>
+  "{"
+  (
+   <IMPORT>
    ((( importProtocol = ImportIdl() | importProtocol = ImportProtocol()) {
        for (Schema s : importProtocol.getTypes())
          names.put(s.getFullName(), s);
@@ -1112,10 +1114,15 @@ void ProtocolBody(Protocol p):
      })
      | schema = ImportSchema()
      )
-      
-   | message = MessageDeclaration(p) {
-     p.getMessages().put(message.getName(), message);
-   }
+   |
+   ( SchemaProperty(props) )*
+   (
+     schema = NamedSchemaDeclaration(props)
+     |
+     message = MessageDeclaration(p, props) {
+       p.getMessages().put(message.getName(), message);
+     }
+    )  { props.clear(); }
   ) *
   "}"
 
@@ -1289,7 +1296,7 @@ String MessageDocumentation():
    }
 }
 
-Message MessageDeclaration(Protocol p):
+Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
 {
   String msgDoc;
   String name;
@@ -1298,6 +1305,7 @@ Message MessageDeclaration(Protocol p):
   boolean oneWay = false;
   List<Schema> errorSchemata = new ArrayList<Schema>();
   errorSchemata.add(Protocol.SYSTEM_ERROR);
+  Map<String, String> propMap = new LinkedHashMap<String, String>();
 }
 {
   msgDoc = MessageDocumentation()
@@ -1307,12 +1315,17 @@ Message MessageDeclaration(Protocol p):
   [ "oneway" {oneWay = true; } | "throws" ErrorList(errorSchemata) ]
   ";"
   {
+    for (String key : props.keySet())
+      if (props.get(key).isTextual()) {    // ignore other non-textual
+        propMap.put(key, getTextProp(key, props, token));
+      }
+
     Schema errors = Schema.createUnion(errorSchemata);
     if (oneWay && response.getType() != Type.NULL)
       throw error("One-way message'"+name+"' must return void", token);
     return oneWay
-    ? p.createMessage(name, msgDoc, request)
-    : p.createMessage(name, msgDoc, request, response, errors);
+    ? p.createMessage(name, msgDoc, propMap, request)
+    : p.createMessage(name, msgDoc, propMap, request, response, errors);
     
   }
 }

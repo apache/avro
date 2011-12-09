@@ -1,6 +1,7 @@
 {"namespace": "org.apache.avro.test",
  "protocol": "Simple",
  "doc": "Protocol used for testing.",
+ "version" : "1.6.2",
 
  "types": [
      {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
@@ -44,6 +45,7 @@
      },
 
      "add": {
+         "specialProp" : "test",
          "request": [{"name": "arg1", "type": "int"}, {"name": "arg2", "type": "int"}],
          "response": "int"
      },

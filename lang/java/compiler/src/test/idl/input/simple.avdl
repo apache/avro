@@ -19,6 +19,7 @@
 /**
  * A simple test case.
  */
+@version("1.0.5")
 @namespace("org.apache.avro.test")
 protocol Simple {
   /** A kind of record. */
@@ -55,6 +56,7 @@ protocol Simple {
   string hello(string greeting);
   TestRecord echo(TestRecord `record` = {"name": "bar"});
   /** method 'add' takes @parameter 'arg1' @parameter 'arg2' */
+  @specialProp("test")
   int add(int arg1, int arg2 = 0);
   bytes echoBytes(bytes data);
   void `error`() throws TestError;

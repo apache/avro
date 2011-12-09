@@ -342,6 +342,10 @@ public class SpecificCompiler {
     Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
     Map<Schema,Schema> types = new LinkedHashMap<Schema,Schema>();
 
+    // Copy properties
+    for (Map.Entry<String,String> prop : p.getProps().entrySet())
+      newP.addProp(prop.getKey(), prop.getValue());   // copy props
+
     // annotate types
     Collection<Schema> namedTypes = new LinkedHashSet<Schema>();
     for (Schema s : p.getTypes())
@@ -352,9 +356,9 @@ public class SpecificCompiler {
     Map<String,Message> newM = newP.getMessages();
     for (Message m : p.getMessages().values())
       newM.put(m.getName(), m.isOneWay()
-               ? newP.createMessage(m.getName(), m.getDoc(),
+               ? newP.createMessage(m.getName(), m.getDoc(), m.getProps(),
                                     addStringType(m.getRequest(), types))
-               : newP.createMessage(m.getName(), m.getDoc(),
+               : newP.createMessage(m.getName(), m.getDoc(), m.getProps(),
                                     addStringType(m.getRequest(), types),
                                     addStringType(m.getResponse(), types),
                                     addStringType(m.getErrors(), types)));

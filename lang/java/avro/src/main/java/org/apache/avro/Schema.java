@@ -114,7 +114,7 @@ public abstract class Schema {
     }
   }
 
-  private static final class Props extends LinkedHashMap<String,String> {
+  static final class Props extends LinkedHashMap<String,String> {
     private Set<String> reserved;
     public Props(Set<String> reserved) {
       super(1);

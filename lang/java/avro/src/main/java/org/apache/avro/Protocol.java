@@ -28,6 +28,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.apache.avro.Schema.Field;
 import org.codehaus.jackson.JsonNode;
@@ -58,17 +61,30 @@ public class Protocol {
   /** The version of the protocol specification implemented here. */
   public static final long VERSION = 1;
 
+  // Support properties for both Protocol and Message objects
+  private static final Set<String> MESSAGE_RESERVED = new HashSet<String>();
+  static {
+    Collections.addAll(MESSAGE_RESERVED,
+                       "doc", "response","request", "errors", "one-way");
+  }
+
   /** A protocol message. */
   public class Message {
     private String name;
     private String doc;
     private Schema request;
-    
+    private final Schema.Props props = new Schema.Props(MESSAGE_RESERVED);
+
     /** Construct a message. */
-    private Message(String name, String doc, Schema request) {
+    private Message(String name, String doc,
+                    Map<String,String> propMap, Schema request) {
       this.name = name;
       this.doc = doc;
       this.request = request;
+
+      if (propMap != null)                        // copy props
+        for (Map.Entry<String,String> prop : propMap.entrySet())
+          this.addProp(prop.getKey(), prop.getValue());
     }
 
     /** The name of this message. */
@@ -85,6 +101,17 @@ public class Protocol {
     /** Returns true if this is a one-way message, with no response or errors.*/
     public boolean isOneWay() { return true; }
 
+    /** Return the value of the named property in this field or null. */
+    public synchronized String getProp(String name) { return props.get(name); }
+    /** Add a property with the given name to this field. */
+    public synchronized void addProp(String name, String value) {
+      props.add(name, value);
+    }
+    /** Return the defined properties as an unmodifieable Map. */
+    public Map<String,String> getProps() {
+      return Collections.unmodifiableMap(props);
+    }
+
     public String toString() {
       try {
         StringWriter writer = new StringWriter();
@@ -98,9 +125,8 @@ public class Protocol {
     }
     void toJson(JsonGenerator gen) throws IOException {
       gen.writeStartObject();
-
       if (doc != null) gen.writeStringField("doc", doc);
-
+      props.write(gen);                           // write out properties
       gen.writeFieldName("request");
       request.fieldsToJson(types, gen);
 
@@ -118,11 +144,12 @@ public class Protocol {
       if (!(o instanceof Message)) return false;
       Message that = (Message)o;
       return this.name.equals(that.name)
-        && this.request.equals(that.request);
+        && this.request.equals(that.request)
+        && props.equals(that.props);
     }
 
     public int hashCode() {
-      return name.hashCode() + request.hashCode();
+      return name.hashCode() + request.hashCode() + props.hashCode();
     }
 
     public String getDoc() { return doc; }
@@ -134,9 +161,9 @@ public class Protocol {
     private Schema errors;
     
     /** Construct a message. */
-    private TwoWayMessage(String name, String doc, Schema request,
-                          Schema response, Schema errors) {
-      super(name, doc, request);
+    private TwoWayMessage(String name, String doc, Map<String,String> propMap,
+                          Schema request, Schema response, Schema errors) {
+      super(name, doc, propMap, request);
       this.response = response;
       this.errors = errors;
     }
@@ -190,6 +217,14 @@ public class Protocol {
     SYSTEM_ERRORS = Schema.createUnion(errors);
   }
 
+  private static final Set<String> PROTOCOL_RESERVED = new HashSet<String>();
+  static {
+    Collections.addAll(PROTOCOL_RESERVED,
+       "namespace", "protocol", "doc",
+       "messages","types", "errors");
+  }
+  Schema.Props props = new Schema.Props(PROTOCOL_RESERVED);
+
   private Protocol() {}
 
   public Protocol(String name, String doc, String namespace) {
@@ -227,14 +262,55 @@ public class Protocol {
   public Map<String,Message> getMessages() { return messages; }
 
   /** Create a one-way message. */
+  @Deprecated
   public Message createMessage(String name, String doc, Schema request) {
-    return new Message(name, doc, request);
+    return createMessage(name, doc, new LinkedHashMap<String,String>(),request);
+  }
+  /** Create a one-way message. */
+  public Message createMessage(String name, String doc,
+                               Map<String,String> propMap, Schema request) {
+    return new Message(name, doc, propMap, request);
   }
 
   /** Create a two-way message. */
+  @Deprecated
   public Message createMessage(String name, String doc, Schema request,
                                Schema response, Schema errors) {
-    return new TwoWayMessage(name, doc, request, response, errors);
+    return createMessage(name, doc, new LinkedHashMap<String,String>(),
+                         request, response, errors);
+  }
+  /** Create a two-way message. */
+  public Message createMessage(String name, String doc,
+                               Map<String,String> propMap, Schema request,
+                               Schema response, Schema errors) {
+    return new TwoWayMessage(name, doc, propMap, request, response, errors);
+  }
+
+  /**
+   * Returns the value of the named property in this schema.
+   * Returns <tt>null</tt> if there is no property with that name.
+   * @param name
+   */
+  public synchronized String getProp(String name) {
+    return props.get(name);
+  }
+
+  /**
+   * Adds a property with the given name <tt>name</tt> and
+   * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
+   * <tt>null</tt>. It is illegal to add a property if another with
+   * the same name but different value already exists in this schema.
+   *
+   * @param name The name of the property to add
+   * @param value The value for the property to add
+   */
+  public synchronized void addProp(String name, String value) {
+    props.add(name, value);
+  }
+
+  /** Return the defined properties as an unmodifieable Map. */
+  public Map<String,String> getProps() {
+    return Collections.unmodifiableMap(props);
   }
 
   public boolean equals(Object o) {
@@ -244,12 +320,13 @@ public class Protocol {
     return this.name.equals(that.name)
       && this.namespace.equals(that.namespace)
       && this.types.equals(that.types)
-      && this.messages.equals(that.messages);
+      && this.messages.equals(that.messages)
+      && this.props.equals(this.props);
   }
   
   public int hashCode() {
     return name.hashCode() + namespace.hashCode()
-      + types.hashCode() + messages.hashCode();
+      + types.hashCode() + messages.hashCode() + props.hashCode();
   }
 
   /** Render this as <a href="http://json.org/">JSON</a>.*/
@@ -279,7 +356,7 @@ public class Protocol {
     gen.writeStringField("namespace", namespace);
 
     if (doc != null) gen.writeStringField("doc", doc);
-    
+    props.write(gen);
     gen.writeArrayFieldStart("types");
     Schema.Names resolved = new Schema.Names(namespace);
     for (Schema type : types.values())
@@ -339,6 +416,7 @@ public class Protocol {
     parseTypes(json);
     parseMessages(json);
     parseDoc(json);
+    parseProps(json);
   }
 
   private void parseNamespace(JsonNode json) {
@@ -377,6 +455,17 @@ public class Protocol {
     }
   }
 
+  private void parseProps(JsonNode json) {
+    for (Iterator<String> i = json.getFieldNames(); i.hasNext();) {
+      String p = i.next();                        // add non-reserved as props
+      if (!PROTOCOL_RESERVED.contains(p)) {
+        JsonNode prop = json.get(p);
+        if (prop.isValueNode() && prop.isTextual())
+          this.addProp(p,prop.getTextValue());
+      }
+    }
+  }
+
   private void parseMessages(JsonNode json) {
     JsonNode defs = json.get("messages");
     if (defs == null) return;                    // no messages defined
@@ -388,6 +477,16 @@ public class Protocol {
 
   private Message parseMessage(String messageName, JsonNode json) {
     String doc = parseDocNode(json);
+
+    Map<String,String> mProps = new LinkedHashMap<String,String>();
+    for (Iterator<String> i = json.getFieldNames(); i.hasNext();) {
+      String p = i.next();                        // add non-reserved as props
+      if (!MESSAGE_RESERVED.contains(p)) {
+        JsonNode prop = json.get(p);
+        if (prop.isValueNode() && prop.isTextual())
+          mProps.put(p,prop.getTextValue());
+      }
+    }
 
     JsonNode requestNode = json.get("request");
     if (requestNode == null || !requestNode.isArray())
@@ -427,7 +526,7 @@ public class Protocol {
       if (responseNode != null
           && Schema.parse(responseNode, types).getType() != Schema.Type.NULL)
         throw new SchemaParseException("One way response must be null: "+json);
-      return new Message(messageName, doc, request);
+      return new Message(messageName, doc, mProps, request);
     }
 
     Schema response = Schema.parse(responseNode, types);
@@ -448,7 +547,7 @@ public class Protocol {
       }
     }
 
-    return new TwoWayMessage(messageName, doc, request, response,
+    return new TwoWayMessage(messageName, doc, mProps, request, response,
                              Schema.createUnion(errs));
   }
 

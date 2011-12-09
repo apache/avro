@@ -19,6 +19,9 @@ Avro 1.6.2 (unreleased)
     types, we use the strings "NaN", "Infinity" and "-Infinity" in
     schemas.  These are also permitted in IDL.  (cutting)
 
+    AVRO-965. Java: Enhance IDL to support properties for protocols
+    and messages. (George Fletcher via cutting)
+
   BUG FIXES
 
     AVRO-962. Java: Fix Maven plugin to support string type override.
