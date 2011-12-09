@@ -42,6 +42,9 @@ protocol Simple {
     @foo("bar") MD5 hash;
 
     union { MD5, null} @aliases(["hash", "hsh"]) nullableHash;
+
+    double value = NaN;
+    float average = -Infinity;
   }
 
   error TestError {

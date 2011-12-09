@@ -35,6 +35,14 @@
       "name" : "nullableHash",
       "type" : [ "MD5", "null" ],
       "aliases" : [ "hash", "hsh" ]
+    }, {
+      "name" : "value",
+      "type" : "double",
+      "default" : "NaN"
+    }, {
+      "name" : "average",
+      "type" : "float",
+      "default" : "-Infinity"
     } ]
   }, {
     "type" : "error",

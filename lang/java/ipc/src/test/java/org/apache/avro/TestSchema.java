@@ -135,6 +135,9 @@ public class TestSchema {
     assertEquals(Schema.create(Type.FLOAT),
                  Schema.parse("{\"type\":\"float\"}"));
     check("\"float\"", "1.1", new Float(1.1));
+    checkDefault("\"float\"", "\"NaN\"", Float.NaN);
+    checkDefault("\"float\"", "\"Infinity\"", Float.POSITIVE_INFINITY);
+    checkDefault("\"float\"", "\"-Infinity\"", Float.NEGATIVE_INFINITY);
   }
 
   @Test
@@ -143,6 +146,9 @@ public class TestSchema {
     assertEquals(Schema.create(Type.DOUBLE),
                  Schema.parse("{\"type\":\"double\"}"));
     check("\"double\"", "1.2", new Double(1.2));
+    checkDefault("\"double\"", "\"NaN\"", Double.NaN);
+    checkDefault("\"double\"", "\"Infinity\"", Double.POSITIVE_INFINITY);
+    checkDefault("\"double\"", "\"-Infinity\"", Double.NEGATIVE_INFINITY);
   }
 
   @Test

@@ -41,6 +41,7 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.DoubleNode;
 
 /** An abstract data type.
  * <p>A schema may be one of:
@@ -443,14 +444,19 @@ public abstract class Schema {
       Field that = (Field) other;
       return (name.equals(that.name)) &&
         (schema.equals(that.schema)) &&
-        (defaultValue == null
-         ? that.defaultValue == null
-         : (defaultValue.equals(that.defaultValue))) &&
-        (order.equals(that.order)) &&
+        defaultValueEquals(that.defaultValue) &&
         props.equals(that.props);
     }
     public int hashCode() { return name.hashCode() + schema.computeHash(); }
     
+    private boolean defaultValueEquals(JsonNode thatDefaultValue) {
+      if (defaultValue == null)
+        return thatDefaultValue == null;
+      if (Double.isNaN(defaultValue.getValueAsDouble()))
+        return Double.isNaN(thatDefaultValue.getValueAsDouble());
+      return defaultValue.equals(thatDefaultValue);
+    }
+
     @Override
     public String toString() {
       return name + " type:" + schema.type + " pos:" + position;
@@ -1137,8 +1143,15 @@ public abstract class Schema {
           JsonNode orderNode = field.get("order");
           if (orderNode != null)
             order = Field.Order.valueOf(orderNode.getTextValue().toUpperCase());
+          JsonNode defaultValue = field.get("default");
+          if (defaultValue != null
+              && (Type.FLOAT.equals(fieldSchema.getType())
+                  || Type.DOUBLE.equals(fieldSchema.getType()))
+              && defaultValue.isTextual())
+            defaultValue =
+              new DoubleNode(Double.valueOf(defaultValue.getTextValue()));
           Field f = new Field(fieldName, fieldSchema,
-                              fieldDoc, field.get("default"), order);
+                              fieldDoc, defaultValue, order);
           Iterator<String> i = field.getFieldNames();
           while (i.hasNext()) {                       // add field props
             String prop = i.next();
