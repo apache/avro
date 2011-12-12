@@ -4,4 +4,4 @@ Version: @VERSION@
 URL: http://avro.apache.org/
 Libs: -L@prefix@/lib -lavro
 Cflags: -I@prefix@/include
-Requires: ${ZLIB_REQUIRE} ${LZMA_REQUIRE}
+Requires: @CODEC_PKG@
