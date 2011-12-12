@@ -29,6 +29,7 @@ struct avro_codec_t_ {
 	const char * name;
 	avro_codec_type_t type;
 	int64_t block_size;
+	int64_t used_size;
 	void * block_data;
 	void * codec_data;
 };

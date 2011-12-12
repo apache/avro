@@ -349,7 +349,7 @@ static int file_read_block_count(avro_file_reader_t r)
 
 	avro_codec_decode(r->codec, r->current_blockdata, r->current_blocklen);
 
-	avro_reader_memory_set_source(r->block_reader, r->codec->block_data, r->codec->block_size);
+	avro_reader_memory_set_source(r->block_reader, r->codec->block_data, r->codec->used_size);
 
 	r->blocks_read = 0;
 	return 0;
@@ -430,10 +430,10 @@ static int file_write_block(avro_file_writer_t w)
 		check_prefix(rval, avro_codec_encode(w->codec, w->datum_buffer, w->block_size),
 			     "Cannot encode file block: ");		
 		/* Write the block length */
-		check_prefix(rval, enc->write_long(w->writer, w->codec->block_size),
+		check_prefix(rval, enc->write_long(w->writer, w->codec->used_size),
 			     "Cannot write file block size: ");
 		/* Write the block */
-		check_prefix(rval, avro_write(w->writer, w->codec->block_data, w->codec->block_size),
+		check_prefix(rval, avro_write(w->writer, w->codec->block_data, w->codec->used_size),
 			     "Cannot write file block: ");
 		/* Write the sync marker */
 		check_prefix(rval, write_sync(w),

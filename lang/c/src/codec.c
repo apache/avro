@@ -36,6 +36,7 @@ codec_null(avro_codec_t codec)
 	codec->name = "null";
 	codec->type = AVRO_CODEC_NULL;
 	codec->block_size = 0;
+	codec->used_size = 0;
 	codec->block_data = NULL;
 	codec->codec_data = NULL;
 
@@ -46,6 +47,7 @@ static int encode_null(avro_codec_t c, void * data, int64_t len)
 {
 	c->block_data = data;
 	c->block_size = len;
+	c->used_size = len;
 
 	return 0;
 }
@@ -54,6 +56,7 @@ static int decode_null(avro_codec_t c, void * data, int64_t len)
 {
 	c->block_data = data;
 	c->block_size = len;
+	c->used_size = len;
 
 	return 0;
 }
@@ -62,6 +65,7 @@ static int reset_null(avro_codec_t c)
 {
 	c->block_data = NULL;
 	c->block_size = 0;
+	c->used_size = 0;
 	c->codec_data = NULL;
 
 	return 0;
@@ -85,6 +89,7 @@ codec_deflate(avro_codec_t codec)
 	codec->name = "deflate";
 	codec->type = AVRO_CODEC_DEFLATE;
 	codec->block_size = 0;
+	codec->used_size = 0;
 	codec->block_data = NULL;
 	codec->codec_data = avro_new(struct codec_data_deflate);
 
@@ -138,6 +143,7 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 	}
 
 	c->block_size = defl_len;
+	c->used_size = 0;
 
 	z_stream *s = codec_data_deflate_stream(c->codec_data);
 
@@ -152,10 +158,12 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 	err = deflate(s, Z_FINISH);
 	if (err != Z_STREAM_END) {
 		deflateEnd(s);
-		return err == Z_OK ? 1 : 0;
+		return err == Z_OK ? 0 : 1;
 	}
 
+	// zlib resizes the buffer?
 	c->block_size = s->total_out;
+	c->used_size = s->total_out;
 
 	if (deflateReset(s) != Z_OK) {
 		return 1;
@@ -170,6 +178,7 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 
 	if (!c->block_data) {
 		c->block_data = avro_malloc(DEFLATE_BUFSIZE);
+		c->block_size = DEFLATE_BUFSIZE;
 	} else {
 		c->block_data = avro_realloc(c->block_data, c->block_size, DEFLATE_BUFSIZE);
 	}
@@ -180,7 +189,7 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 		return 1;
 	}
 
-	c->block_size = DEFLATE_BUFSIZE;
+	c->used_size = 0;
 
 	z_stream *s = codec_data_inflate_stream(c->codec_data);
 
@@ -195,10 +204,12 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 	err = inflate(s, Z_FINISH);
 	if (err != Z_STREAM_END) {
 		inflateEnd(s);
-		return err == Z_OK ? 1 : 0;
+		return err == Z_OK ? 0 : 1;
 	}
 
+	// zlib resizes the buffer?
 	c->block_size = s->total_out;
+	c->used_size = s->total_out;
 
 	if (inflateReset(s) != Z_OK) {
 		return 1;
@@ -220,6 +231,7 @@ static int reset_deflate(avro_codec_t c)
 
 	c->block_data = NULL;
 	c->block_size = 0;
+	c->used_size = 0;
 	c->codec_data = NULL;
 
 	return 0;
@@ -244,6 +256,7 @@ codec_lzma(avro_codec_t codec)
 	codec->name = "lzma";
 	codec->type = AVRO_CODEC_LZMA;
 	codec->block_size = 0;
+	codec->used_size = 0;
 	codec->block_data = NULL;
 	codec->codec_data = avro_new(struct codec_data_lzma);
 
@@ -266,10 +279,15 @@ codec_lzma(avro_codec_t codec)
 
 static int encode_lzma(avro_codec_t codec, void * data, int64_t len)
 {
+	lzma_ret ret;
+	size_t written = 0;
 	lzma_filter* filters = codec_data_lzma_filters(codec->codec_data);
 
+	int64_t buff_len = len + lzma_raw_encoder_memusage(filters);
+
 	if (!codec->block_data) {
-		codec->block_data = avro_malloc(DEFLATE_BUFSIZE);
+		codec->block_data = avro_malloc(buff_len);
+		codec->block_size = buff_len;
 	}
 
 	if (!codec->block_data)
@@ -278,13 +296,9 @@ static int encode_lzma(avro_codec_t codec, void * data, int64_t len)
 		return 1;
 	}
 
-	codec->block_size = DEFLATE_BUFSIZE;
+	ret = lzma_raw_buffer_encode(filters, NULL, data, len, codec->block_data, &written, codec->block_size);
 
-	size_t written = 0;
-
-	lzma_ret ret = lzma_raw_buffer_encode(filters, NULL, data, len, codec->block_data, &written, codec->block_size);
-
-	codec->block_size = written;
+	codec->used_size = written;
 
 	if (ret != LZMA_OK) {
 		avro_set_error("Error in lzma");
@@ -303,21 +317,19 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 
 	if (!codec->block_data) {
 		codec->block_data = avro_malloc(DEFLATE_BUFSIZE);
+		codec->block_size = DEFLATE_BUFSIZE;
 	}
 
-	if (!codec->block_data)
-	{
+	if (!codec->block_data) {
 		avro_set_error("Cannot allocate memory for lzma");
 		return 1;
 	}
-
-	codec->block_size = DEFLATE_BUFSIZE;
 
 	ret = lzma_raw_buffer_decode(filters, NULL,
 							data, &read_pos, len,
 							codec->block_data, &write_pos, codec->block_size);
 
-	codec->block_size = write_pos;
+	codec->used_size = write_pos;
 
 	if (ret != LZMA_OK) {
 		avro_set_error("Error in lzma");
@@ -330,7 +342,7 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 static int reset_lzma(avro_codec_t c)
 {
 	if (c->block_data) {
-		avro_free(c->block_data, DEFLATE_BUFSIZE);
+		avro_free(c->block_data, c->block_size);
 	}
 	if (c->codec_data) {
 		avro_freet(struct codec_data_lzma, c->codec_data);
@@ -338,6 +350,7 @@ static int reset_lzma(avro_codec_t c)
 
 	c->block_data = NULL;
 	c->block_size = 0;
+	c->used_size = 0;
 	c->codec_data = NULL;
 
 	return 0;
