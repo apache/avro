@@ -180,8 +180,6 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 	if (!c->block_data) {
 		c->block_data = avro_malloc(DEFAULT_BLOCK_SIZE);
 		c->block_size = DEFAULT_BLOCK_SIZE;
-	} else {
-		c->block_data = avro_realloc(c->block_data, c->block_size, DEFAULT_BLOCK_SIZE);
 	}
 
 	if (!c->block_data)
@@ -200,14 +198,25 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 
 	s->total_out = 0;
 
-	err = inflate(s, Z_FINISH);
+	do
+	{
+		err = inflate(s, Z_FINISH);
+
+		// The buffer was not big enough. resize it.
+		if (err == Z_BUF_ERROR)
+		{
+			c->block_data = avro_realloc(c->block_data, c->block_size, c->block_size * 2);
+			s->next_out = c->block_data + s->total_out;
+			s->avail_out += c->block_size;
+			c->block_size = c->block_size * 2;
+		}
+	} while (err == Z_BUF_ERROR);
+
 	if (err != Z_STREAM_END) {
 		inflateEnd(s);
 		return err == Z_OK ? 0 : 1;
 	}
 
-	// zlib resizes the buffer?
-	c->block_size = s->total_out;
 	c->used_size = s->total_out;
 
 	if (inflateReset(s) != Z_OK) {
@@ -306,7 +315,6 @@ static int encode_lzma(avro_codec_t codec, void * data, int64_t len)
 
 	return 0;
 }
-#include <stdio.h>
 
 static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 {
