@@ -26,7 +26,7 @@
 #include "avro/allocation.h"
 #include "codec.h"
 
-#define DEFLATE_BUFSIZE	(16 * 1024)
+#define DEFAULT_BLOCK_SIZE	(16 * 1024)
 
 /* NULL codec */
 
@@ -175,12 +175,13 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 {
 	int err;
+	z_stream *s = codec_data_inflate_stream(c->codec_data);
 
 	if (!c->block_data) {
-		c->block_data = avro_malloc(DEFLATE_BUFSIZE);
-		c->block_size = DEFLATE_BUFSIZE;
+		c->block_data = avro_malloc(DEFAULT_BLOCK_SIZE);
+		c->block_size = DEFAULT_BLOCK_SIZE;
 	} else {
-		c->block_data = avro_realloc(c->block_data, c->block_size, DEFLATE_BUFSIZE);
+		c->block_data = avro_realloc(c->block_data, c->block_size, DEFAULT_BLOCK_SIZE);
 	}
 
 	if (!c->block_data)
@@ -190,8 +191,6 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 	}
 
 	c->used_size = 0;
-
-	z_stream *s = codec_data_inflate_stream(c->codec_data);
 
 	s->next_in = data;
 	s->avail_in = len;
@@ -292,7 +291,7 @@ static int encode_lzma(avro_codec_t codec, void * data, int64_t len)
 
 	if (!codec->block_data)
 	{
-		avro_set_error("Cannot allocate memory for lzma");
+		avro_set_error("Cannot allocate memory for lzma encoder");
 		return 1;
 	}
 
@@ -301,12 +300,13 @@ static int encode_lzma(avro_codec_t codec, void * data, int64_t len)
 	codec->used_size = written;
 
 	if (ret != LZMA_OK) {
-		avro_set_error("Error in lzma");
+		avro_set_error("Error in lzma encoder");
 		return 1;
 	}
 
 	return 0;
 }
+#include <stdio.h>
 
 static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 {
@@ -316,23 +316,34 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 	lzma_filter* filters = codec_data_lzma_filters(codec->codec_data);
 
 	if (!codec->block_data) {
-		codec->block_data = avro_malloc(DEFLATE_BUFSIZE);
-		codec->block_size = DEFLATE_BUFSIZE;
+		codec->block_data = avro_malloc(DEFAULT_BLOCK_SIZE);
+		codec->block_size = DEFAULT_BLOCK_SIZE;
 	}
 
 	if (!codec->block_data) {
-		avro_set_error("Cannot allocate memory for lzma");
+		avro_set_error("Cannot allocate memory for lzma decoder");
 		return 1;
 	}
 
-	ret = lzma_raw_buffer_decode(filters, NULL,
-							data, &read_pos, len,
-							codec->block_data, &write_pos, codec->block_size);
+	do
+	{
+		ret = lzma_raw_buffer_decode(filters, NULL,
+								data, &read_pos, len,
+								codec->block_data, &write_pos, codec->block_size);
 
-	codec->used_size = write_pos;
+		codec->used_size = write_pos;
+
+		// If it ran out of space to decode, give it more!!
+		// It will continue where it left off because of read_pos and write_pos.
+		if (ret == LZMA_BUF_ERROR) {
+			codec->block_data = avro_realloc(codec->block_data, codec->block_size, codec->block_size * 2);
+			codec->block_size = codec->block_size * 2;
+		}
+
+	} while (ret == LZMA_BUF_ERROR);
 
 	if (ret != LZMA_OK) {
-		avro_set_error("Error in lzma");
+		avro_set_error("Error in lzma decoder");
 		return 1;
 	}
 
