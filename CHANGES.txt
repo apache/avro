@@ -40,6 +40,8 @@ Avro 1.6.2 (unreleased)
     AVRO-977. Java: Fix codegen to not generate deprecated code. 
     (Hamed Asghari via cutting)
 
+    AVRO-978. Java: Fix reflect to better handle Byte type.  (cutting)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

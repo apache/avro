@@ -96,7 +96,9 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   @Override
   protected void write(Schema schema, Object datum, Encoder out)
     throws IOException {
-    if (datum instanceof Short)
+    if (datum instanceof Byte)
+      datum = ((Byte)datum).intValue();
+    else if (datum instanceof Short)
       datum = ((Short)datum).intValue();
     try {
       super.write(schema, datum, out);

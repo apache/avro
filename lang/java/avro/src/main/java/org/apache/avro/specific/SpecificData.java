@@ -190,7 +190,7 @@ public class SpecificData extends GenericData {
               (schema.toString().replace(schema.getNamespace(),
                                          c.getPackage().getName()));
         } catch (NoSuchFieldException e) {
-          throw new AvroRuntimeException(e);
+          throw new AvroRuntimeException("Not a Specific class: "+c);
         } catch (IllegalAccessException e) {
           throw new AvroRuntimeException(e);
         }
@@ -210,7 +210,7 @@ public class SpecificData extends GenericData {
                                                 iface.getPackage().getName()));
       return p;
    } catch (NoSuchFieldException e) {
-      throw new AvroRuntimeException(e);
+      throw new AvroRuntimeException("Not a Specific protocol: "+iface);
     } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }

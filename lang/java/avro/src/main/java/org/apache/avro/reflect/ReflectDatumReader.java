@@ -132,7 +132,10 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   protected Object readInt(Object old,
                            Schema expected, Decoder in) throws IOException {
     Object value = in.readInt();
-    if (Short.class.getName().equals(expected.getProp(ReflectData.CLASS_PROP)))
+    String intClass = expected.getProp(ReflectData.CLASS_PROP);
+    if (Byte.class.getName().equals(intClass))
+      value = ((Integer)value).byteValue();
+    else if (Short.class.getName().equals(intClass))
       value = ((Integer)value).shortValue();
     return value;
   }

@@ -206,8 +206,9 @@ public class ReflectData extends SpecificData {
     case STRING:  return String.class;
     case BYTES:   return BYTES_CLASS;
     case INT:
-      if (Short.class.getName().equals(schema.getProp(CLASS_PROP)))
-        return Short.TYPE;
+      String intClass = schema.getProp(CLASS_PROP);
+      if (Byte.class.getName().equals(intClass))  return Byte.TYPE;
+      if (Short.class.getName().equals(intClass)) return Short.TYPE;
     default:
       return super.getClass(schema);
     }
@@ -240,6 +241,10 @@ public class ReflectData extends SpecificData {
         schema.addProp(CLASS_PROP, raw.getName());
         return schema;
       }
+    } else if ((type == Byte.class) || (type == Byte.TYPE)) {
+      Schema result = Schema.create(Schema.Type.INT);
+      result.addProp(CLASS_PROP, Byte.class.getName());
+      return result;
     } else if ((type == Short.class) || (type == Short.TYPE)) {
       Schema result = Schema.create(Schema.Type.INT);
       result.addProp(CLASS_PROP, Short.class.getName());

@@ -71,6 +71,16 @@ public class TestReflect {
     check(Integer.class, "\"int\"");
   }
 
+  @Test public void testByte() {
+    check(Byte.TYPE, "{\"type\":\"int\",\"java-class\":\"java.lang.Byte\"}");
+    check(Byte.class, "{\"type\":\"int\",\"java-class\":\"java.lang.Byte\"}");
+  }
+
+  @Test public void testShort() {
+    check(Short.TYPE, "{\"type\":\"int\",\"java-class\":\"java.lang.Short\"}");
+    check(Short.class, "{\"type\":\"int\",\"java-class\":\"java.lang.Short\"}");
+  }
+
   @Test public void testLong() {
     check(Long.TYPE, "\"long\"");
     check(Long.class, "\"long\"");
@@ -188,12 +198,14 @@ public class TestReflect {
   public static class R4 {
     public short value;
     public short[] shorts;
+    public byte b;
     
     public boolean equals(Object o) {
       if (!(o instanceof R4)) return false;
       R4 that = (R4)o;
       return this.value == that.value
-        && Arrays.equals(this.shorts, that.shorts);
+        && Arrays.equals(this.shorts, that.shorts)
+        && this.b == that.b;
     }
   }
 
@@ -203,6 +215,7 @@ public class TestReflect {
     R5 r5 = new R5();
     r5.value = 1;
     r5.shorts = new short[] {3,255,256,Short.MAX_VALUE,Short.MIN_VALUE};
+    r5.b = 99;
     checkReadWrite(r5);
   }
 
