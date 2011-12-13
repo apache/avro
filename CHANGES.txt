@@ -37,6 +37,9 @@ Avro 1.6.2 (unreleased)
     AVRO-966. Java: Fix ReflectDatumWriter to be able to correctly
     write unions containing Collection and/or ByteBuffer. (cutting)
 
+    AVRO-977. Java: Fix codegen to not generate deprecated code. 
+    (Hamed Asghari via cutting)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES
