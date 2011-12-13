@@ -181,10 +181,10 @@ struct avro_value_iface {
 	int (*set_null)(const avro_value_iface_t *iface, void *self);
 	/* The input must be NUL-terminated */
 	int (*set_string)(const avro_value_iface_t *iface,
-			  void *self, char *str);
+			  void *self, const char *str);
 	/* and size must INCLUDE the NUL terminator */
 	int (*set_string_len)(const avro_value_iface_t *iface,
-			      void *self, char *str, size_t size);
+			      void *self, const char *str, size_t size);
 	int (*give_string_len)(const avro_value_iface_t *iface,
 			       void *self, avro_wrapped_buffer_t *buf);
 

@@ -80,8 +80,8 @@ int avro_generic_float_new(avro_value_t *value, float val);
 int avro_generic_int_new(avro_value_t *value, int32_t val);
 int avro_generic_long_new(avro_value_t *value, int64_t val);
 int avro_generic_null_new(avro_value_t *value);
-int avro_generic_string_new(avro_value_t *value, char *val);
-int avro_generic_string_new_length(avro_value_t *value, char *val, size_t size);
+int avro_generic_string_new(avro_value_t *value, const char *val);
+int avro_generic_string_new_length(avro_value_t *value, const char *val, size_t size);
 
 
 CLOSE_EXTERN

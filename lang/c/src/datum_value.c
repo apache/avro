@@ -393,7 +393,7 @@ avro_datum_value_set_null(const avro_value_iface_t *iface, void *vself)
 
 static int
 avro_datum_value_set_string(const avro_value_iface_t *iface,
-			    void *vself, char *str)
+			    void *vself, const char *str)
 {
 	AVRO_UNUSED(iface);
 	avro_datum_t  self = vself;
@@ -403,7 +403,7 @@ avro_datum_value_set_string(const avro_value_iface_t *iface,
 
 static int
 avro_datum_value_set_string_len(const avro_value_iface_t *iface,
-				void *vself, char *str, size_t size)
+				void *vself, const char *str, size_t size)
 {
 	AVRO_UNUSED(iface);
 	AVRO_UNUSED(size);

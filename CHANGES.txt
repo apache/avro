@@ -26,6 +26,10 @@ Avro 1.6.2 (unreleased)
     ExecutionHandler, to handle multiple requests simultaneously.
     (Bruno Dumon via cutting)
 
+    AVRO-960. C: avro_value_set_string and avro_value_set_string_len
+    input parameters are now "const char *" instead of "char *".
+    (Lucas Martin-King via dcreager)
+
   BUG FIXES
 
     AVRO-962. Java: Fix Maven plugin to support string type override.

@@ -402,7 +402,7 @@ avro_generic_link_set_null(const avro_value_iface_t *iface, void *vself)
 
 static int
 avro_generic_link_set_string(const avro_value_iface_t *iface,
-			     void *vself, char *str)
+			     void *vself, const char *str)
 {
 	AVRO_UNUSED(iface);
 	avro_value_t  *self = vself;
@@ -411,7 +411,7 @@ avro_generic_link_set_string(const avro_value_iface_t *iface,
 
 static int
 avro_generic_link_set_string_len(const avro_value_iface_t *iface,
-				 void *vself, char *str, size_t size)
+				 void *vself, const char *str, size_t size)
 {
 	AVRO_UNUSED(iface);
 	avro_value_t  *self = vself;
@@ -1750,7 +1750,7 @@ avro_generic_string_grab(const avro_value_iface_t *iface,
 
 static int
 avro_generic_string_set(const avro_value_iface_t *iface,
-			void *vself, char *val)
+			void *vself, const char *val)
 {
 	AVRO_UNUSED(iface);
 	check_param(EINVAL, val != NULL, "string contents");
@@ -1767,7 +1767,7 @@ avro_generic_string_set(const avro_value_iface_t *iface,
 
 static int
 avro_generic_string_set_length(const avro_value_iface_t *iface,
-			       void *vself, char *val, size_t size)
+			       void *vself, const char *val, size_t size)
 {
 	AVRO_UNUSED(iface);
 	check_param(EINVAL, val != NULL, "string contents");
@@ -1874,7 +1874,7 @@ avro_generic_string_class(void)
 }
 
 int
-avro_generic_string_new(avro_value_t *value, char *str)
+avro_generic_string_new(avro_value_t *value, const char *str)
 {
 	int  rval;
 	check(rval, avro_generic_value_new(&AVRO_GENERIC_STRING_CLASS.parent, value));
@@ -1882,7 +1882,7 @@ avro_generic_string_new(avro_value_t *value, char *str)
 }
 
 int
-avro_generic_string_new_length(avro_value_t *value, char *str, size_t size)
+avro_generic_string_new_length(avro_value_t *value, const char *str, size_t size)
 {
 	int  rval;
 	check(rval, avro_generic_value_new(&AVRO_GENERIC_STRING_CLASS.parent, value));

@@ -714,7 +714,7 @@ avro_resolved_link_reader_set_null(const avro_value_iface_t *iface, void *vself)
 
 static int
 avro_resolved_link_reader_set_string(const avro_value_iface_t *iface,
-				     void *vself, char *str)
+				     void *vself, const char *str)
 {
 	AVRO_UNUSED(iface);
 	avro_resolved_link_value_t  *self = vself;
@@ -725,7 +725,7 @@ avro_resolved_link_reader_set_string(const avro_value_iface_t *iface,
 
 static int
 avro_resolved_link_reader_set_string_len(const avro_value_iface_t *iface,
-					 void *vself, char *str, size_t size)
+					 void *vself, const char *str, size_t size)
 {
 	AVRO_UNUSED(iface);
 	avro_resolved_link_value_t  *self = vself;
@@ -2721,7 +2721,7 @@ avro_resolved_wunion_reader_set_null(const avro_value_iface_t *viface,
 
 static int
 avro_resolved_wunion_reader_set_string(const avro_value_iface_t *viface,
-				       void *vself, char *str)
+				       void *vself, const char *str)
 {
 	int  rval;
 	avro_value_t  src;
@@ -2731,7 +2731,7 @@ avro_resolved_wunion_reader_set_string(const avro_value_iface_t *viface,
 
 static int
 avro_resolved_wunion_reader_set_string_len(const avro_value_iface_t *viface,
-					   void *vself, char *str, size_t size)
+					   void *vself, const char *str, size_t size)
 {
 	int  rval;
 	avro_value_t  src;

@@ -843,7 +843,7 @@ avro_resolved_link_writer_set_null(const avro_value_iface_t *iface, void *vself)
 
 static int
 avro_resolved_link_writer_set_string(const avro_value_iface_t *iface,
-				     void *vself, char *str)
+				     void *vself, const char *str)
 {
 	AVRO_UNUSED(iface);
 	avro_resolved_link_value_t  *self = vself;
@@ -854,7 +854,7 @@ avro_resolved_link_writer_set_string(const avro_value_iface_t *iface,
 
 static int
 avro_resolved_link_writer_set_string_len(const avro_value_iface_t *iface,
-					 void *vself, char *str, size_t size)
+					 void *vself, const char *str, size_t size)
 {
 	AVRO_UNUSED(iface);
 	avro_resolved_link_value_t  *self = vself;
@@ -1475,7 +1475,7 @@ try_null(memoize_state_t *state, avro_resolved_writer_t **self,
 
 static int
 avro_resolved_writer_set_string(const avro_value_iface_t *viface,
-				void *vself, char *str)
+				void *vself, const char *str)
 {
 	int  rval;
 	const avro_resolved_writer_t  *iface =
@@ -1489,7 +1489,7 @@ avro_resolved_writer_set_string(const avro_value_iface_t *viface,
 
 static int
 avro_resolved_writer_set_string_len(const avro_value_iface_t *viface,
-				    void *vself, char *str, size_t size)
+				    void *vself, const char *str, size_t size)
 {
 	int  rval;
 	const avro_resolved_writer_t  *iface =
