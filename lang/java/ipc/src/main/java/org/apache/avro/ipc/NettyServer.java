@@ -44,6 +44,7 @@ import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.ChannelGroupFuture;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,7 @@ public class NettyServer implements Server {
       "avro-netty-server");
   private final ChannelFactory channelFactory;
   private final CountDownLatch closed = new CountDownLatch(1);
+  private final ExecutionHandler executionHandler;            
   
   public NettyServer(Responder responder, InetSocketAddress addr) {
     this(responder, addr, new NioServerSocketChannelFactory
@@ -69,23 +71,39 @@ public class NettyServer implements Server {
   
   public NettyServer(Responder responder, InetSocketAddress addr,
                      ChannelFactory channelFactory) {
-    this.responder = responder;
-    this.channelFactory = channelFactory;
-    ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
-    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-      @Override
-      public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline p = Channels.pipeline();
-        p.addLast("frameDecoder", new NettyFrameDecoder());
-        p.addLast("frameEncoder", new NettyFrameEncoder());
-        p.addLast("handler", new NettyServerAvroHandler());
-        return p;
-      }
-    });
-    serverChannel = bootstrap.bind(addr);
-    allChannels.add(serverChannel);
+      this(responder, addr, channelFactory, null);
   }
 
+    /**
+     *
+     * @param executionHandler if not null, will be inserted into the Netty
+     *                         pipeline. Use this when your responder does
+     *                         long, non-cpu bound processing (see Netty's
+     *                         ExecutionHandler javadoc).
+     */
+  public NettyServer(Responder responder, InetSocketAddress addr,
+                     ChannelFactory channelFactory, final ExecutionHandler executionHandler) {
+      this.responder = responder;
+      this.channelFactory = channelFactory;
+      this.executionHandler = executionHandler;
+      ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
+      bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+          @Override
+          public ChannelPipeline getPipeline() throws Exception {
+              ChannelPipeline p = Channels.pipeline();
+              p.addLast("frameDecoder", new NettyFrameDecoder());
+              p.addLast("frameEncoder", new NettyFrameEncoder());
+              if (executionHandler != null) {
+                  p.addLast("executionHandler", executionHandler);
+              }
+              p.addLast("handler", new NettyServerAvroHandler());
+              return p;
+          }
+      });
+      serverChannel = bootstrap.bind(addr);
+      allChannels.add(serverChannel);
+  }
+    
   @Override
   public void start() {
     // No-op.
