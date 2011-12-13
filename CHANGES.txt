@@ -46,6 +46,9 @@ Avro 1.6.2 (unreleased)
 
     AVRO-978. Java: Fix reflect to better handle Byte type.  (cutting)
 
+    AVRO-968. C: Fixed avro_value_cmp and avro_value_cmp_fast for string
+    values. (Vivek Nadkarni via dcreager)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

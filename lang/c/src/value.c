@@ -383,6 +383,8 @@ avro_value_cmp_fast(avro_value_t *val1, avro_value_t *val2)
 			size_t  size2;
 			size_t  min_size;
 			int  result;
+			check_return(0, avro_value_get_string(val1, &buf1, &size1));
+			check_return(0, avro_value_get_string(val2, &buf2, &size2));
 
 			min_size = (size1 < size2)? size1: size2;
 			result = memcmp(buf1, buf2, min_size);
