@@ -142,7 +142,7 @@ int main(void)
 	/* Delete the database if it exists */
 	unlink(dbname);
 	/* Create a new database */
-	rval = avro_file_writer_create(dbname, person_schema, &db);
+	rval = avro_file_writer_create_with_codec(dbname, person_schema, &db, "deflate");
 	if (rval) {
 		fprintf(stderr, "There was an error creating %s\n", dbname);
 		exit(EXIT_FAILURE);
