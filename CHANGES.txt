@@ -24,6 +24,7 @@ Avro 1.6.2 (unreleased)
 
     AVRO-976. Java: Extend NettyServer to permit specification of an
     ExecutionHandler, to handle multiple requests simultaneously.
+    (Bruno Dumon via cutting)
 
   BUG FIXES
 
