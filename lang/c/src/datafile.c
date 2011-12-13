@@ -49,8 +49,11 @@ struct avro_file_writer_t_ {
 	int block_count;
 	size_t block_size;
 	avro_writer_t datum_writer;
-	char datum_buffer[16 * 1024];
+	char* datum_buffer;
+	size_t datum_buffer_size;
 };
+
+#define DEFAULT_BLOCK_SIZE 16 * 1024
 
 /* TODO: should we just read /dev/random? */
 static void generate_sync(avro_file_writer_t w)
@@ -120,7 +123,7 @@ file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
 }
 
 static int
-file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w)
+file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w, size_t block_size)
 {
 	int rval;
 	w->block_count = 0;
@@ -129,11 +132,21 @@ file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w)
 		check(rval, file_writer_init_fp(path, "w", w));
 	}
 
+	w->datum_buffer_size = block_size;
+	w->datum_buffer = avro_malloc(w->datum_buffer_size);
+
+	if(!w->datum_buffer) {
+		avro_set_error("Could not allocate datum buffer\n");
+		avro_writer_free(w->writer);
+		return ENOMEM;
+	}
+
 	w->datum_writer =
-	    avro_writer_memory(w->datum_buffer, sizeof(w->datum_buffer));
+	    avro_writer_memory(w->datum_buffer, w->datum_buffer_size);
 	if (!w->datum_writer) {
 		avro_set_error("Cannot create datum writer for file %s", path);
 		avro_writer_free(w->writer);
+		avro_free(w->datum_buffer, w->datum_buffer_size);
 		return ENOMEM;
 	}
 
@@ -145,12 +158,12 @@ int
 avro_file_writer_create(const char *path, avro_schema_t schema,
 			avro_file_writer_t * writer)
 {
-	return avro_file_writer_create_with_codec(path, schema, writer, "null");
+	return avro_file_writer_create_with_codec(path, schema, writer, "null", 0);
 }
 
 int avro_file_writer_create_with_codec(const char *path,
 			avro_schema_t schema, avro_file_writer_t * writer,
-			const char *codec)
+			const char *codec, size_t block_size)
 {
 	avro_file_writer_t w;
 	int rval;
@@ -158,6 +171,10 @@ int avro_file_writer_create_with_codec(const char *path,
 	check_param(EINVAL, is_avro_schema(schema), "schema");
 	check_param(EINVAL, writer, "writer");
 	check_param(EINVAL, codec, "codec");
+
+	if (block_size == 0) {
+		block_size = DEFAULT_BLOCK_SIZE;
+	}
 
 	w = avro_new(struct avro_file_writer_t_);
 	if (!w) {
@@ -174,7 +191,7 @@ int avro_file_writer_create_with_codec(const char *path,
 		avro_freet(struct avro_codec_t_, w->codec);
 		return rval;
 	}
-	rval = file_writer_create(path, schema, w);
+	rval = file_writer_create(path, schema, w, block_size);
 	if (rval) {
 		avro_freet(struct avro_file_writer_t_, w);
 		return rval;
@@ -511,6 +528,7 @@ int avro_file_writer_close(avro_file_writer_t w)
 	check(rval, avro_file_writer_flush(w));
 	avro_writer_free(w->datum_writer);
 	avro_writer_free(w->writer);
+	avro_free(w->datum_buffer, w->datum_buffer_size);
 	avro_codec_reset(w->codec);
 	avro_freet(struct avro_codec_t_, w->codec);
 	avro_freet(struct avro_file_writer_t_, w);
