@@ -64,13 +64,13 @@ add_person(avro_file_writer_t db, const char *first, const char *last,
 	    || avro_record_set(person, "Last", last_datum)
 	    || avro_record_set(person, "Age", age_datum)
 	    || avro_record_set(person, "Phone", phone_datum)) {
-		fprintf(stderr, "Unable to create Person datum structure");
+		fprintf(stderr, "Unable to create Person datum structure\n");
 		exit(EXIT_FAILURE);
 	}
 
 	if (avro_file_writer_append(db, person)) {
 		fprintf(stderr,
-			"Unable to write Person datum to memory buffer");
+			"Unable to write Person datum to memory buffer\n");
 		exit(EXIT_FAILURE);
 	}
 
