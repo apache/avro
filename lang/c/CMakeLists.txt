@@ -94,7 +94,7 @@ include_directories(${AvroC_SOURCE_DIR}/jansson/src)
 
 
 # Enable codecs
-find_package(zlib)
+find_package(ZLIB)
 if (ZLIB_FOUND)
     set(ZLIB_PKG zlib)
     add_definitions(-DDEFLATE_CODEC)
@@ -104,7 +104,7 @@ else (ZLIB_FOUND)
     message("Disabled deflate codec. zlib not found.")
 endif (ZLIB_FOUND)
 
-find_package(pkgconfig)
+find_package(PkgConfig)
 pkg_check_modules(LZMA liblzma)
 if (LZMA_FOUND)
     set(LZMA_PKG liblzma)
