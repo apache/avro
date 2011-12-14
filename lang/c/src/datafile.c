@@ -349,22 +349,18 @@ static int file_read_block_count(avro_file_reader_t r)
 	check_prefix(rval, enc->read_long(r->reader, &len),
 		     "Cannot read file block size: ");
 
-	if (r->current_blockdata) {
+	if (r->current_blockdata && len > r->current_blocklen) {
 		r->current_blockdata = avro_realloc(r->current_blockdata, r->current_blocklen, len);
-	} else {
+		r->current_blocklen = len;
+	} else if (!r->current_blockdata) {
 		r->current_blockdata = avro_malloc(len);
+		r->current_blocklen = len;
 	}
-
-	r->current_blocklen = len;
 
 	check_prefix(rval, avro_read(r->reader, r->current_blockdata, len),
 		     "Cannot read file block: ");
-	if (len < r->current_blocklen) {
-		avro_set_error("Could not read entire block");
-		return 1;
-	}
 
-	avro_codec_decode(r->codec, r->current_blockdata, r->current_blocklen);
+	avro_codec_decode(r->codec, r->current_blockdata, len);
 
 	avro_reader_memory_set_source(r->block_reader, r->codec->block_data, r->codec->used_size);
 

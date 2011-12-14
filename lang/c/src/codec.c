@@ -125,15 +125,15 @@ codec_deflate(avro_codec_t codec)
 
 static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 {
-	size_t defl_len;
 	int err;
-
-	defl_len = compressBound((uLong)len * 1.2);
+	int64_t defl_len = compressBound((uLong)len * 1.2);
 
 	if (!c->block_data) {
 		c->block_data = avro_malloc(defl_len);
-	} else {
+		c->block_size = defl_len;
+	} else if ( c->block_size < defl_len) {
 		c->block_data = avro_realloc(c->block_data, c->block_size, defl_len);
+		c->block_size = defl_len;
 	}
 
 	if (!c->block_data)
@@ -142,7 +142,6 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 		return 1;
 	}
 
-	c->block_size = defl_len;
 	c->used_size = 0;
 
 	z_stream *s = codec_data_deflate_stream(c->codec_data);
