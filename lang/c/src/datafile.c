@@ -185,7 +185,7 @@ int avro_file_writer_create_with_codec(const char *path,
 	if (!w->codec) {
 		avro_set_error("Cannot allocate new codec");
 		return ENOMEM;
-	}	
+	}
 	rval = avro_codec(w->codec, codec);
 	if (rval) {
 		avro_freet(struct avro_codec_t_, w->codec);
@@ -445,7 +445,7 @@ static int file_write_block(avro_file_writer_t w)
 			     "Cannot write file block count: ");
 		/* Encode the block */
 		check_prefix(rval, avro_codec_encode(w->codec, w->datum_buffer, w->block_size),
-			     "Cannot encode file block: ");		
+			     "Cannot encode file block: ");
 		/* Write the block length */
 		check_prefix(rval, enc->write_long(w->writer, w->codec->used_size),
 			     "Cannot write file block size: ");

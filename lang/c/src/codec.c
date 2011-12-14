@@ -335,9 +335,9 @@ static int decode_lzma(avro_codec_t codec, void * data, int64_t len)
 
 	do
 	{
-		ret = lzma_raw_buffer_decode(filters, NULL,
-								data, &read_pos, len,
-								codec->block_data, &write_pos, codec->block_size);
+		ret = lzma_raw_buffer_decode(filters, NULL, data,
+			&read_pos, len, codec->block_data, &write_pos,
+			codec->block_size);
 
 		codec->used_size = write_pos;
 
