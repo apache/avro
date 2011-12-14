@@ -158,7 +158,11 @@ static int encode_deflate(avro_codec_t c, void * data, int64_t len)
 	err = deflate(s, Z_FINISH);
 	if (err != Z_STREAM_END) {
 		deflateEnd(s);
-		return err == Z_OK ? 0 : 1;
+		if (err != Z_OK) {
+			avro_set_error("Error compressing block with deflate (%i)", err);
+			return 1;
+		}
+		return 0;
 	}
 
 	// zlib resizes the buffer?
@@ -214,7 +218,11 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 
 	if (err != Z_STREAM_END) {
 		inflateEnd(s);
-		return err == Z_OK ? 0 : 1;
+		if (err != Z_OK) {
+			avro_set_error("Error decompressing block with deflate (%i)", err);
+			return 1;
+		}
+		return 0;
 	}
 
 	c->used_size = s->total_out;
@@ -397,6 +405,7 @@ int avro_codec(avro_codec_t codec, const char *type)
 		return codec_null(codec);
 	}
 
+	avro_set_error("Unknown codec %s", type);
 	return 1;
 }
 
@@ -415,7 +424,7 @@ int avro_codec_encode(avro_codec_t c, void * data, int64_t len)
 		return encode_lzma(c, data, len);
 #endif
 	default:
-		return 0;
+		return 1;
 	}
 }
 
@@ -434,7 +443,7 @@ int avro_codec_decode(avro_codec_t c, void * data, int64_t len)
 		return decode_lzma(c, data, len);
 #endif
 	default:
-		return 0;
+		return 1;
 	}
 }
 
@@ -453,6 +462,6 @@ int avro_codec_reset(avro_codec_t c)
 		return reset_lzma(c);
 #endif
 	default:
-		return 0;
+		return 1;
 	}
 }

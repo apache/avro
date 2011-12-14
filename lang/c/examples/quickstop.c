@@ -70,7 +70,7 @@ add_person(avro_file_writer_t db, const char *first, const char *last,
 
 	if (avro_file_writer_append(db, person)) {
 		fprintf(stderr,
-			"Unable to write Person datum to memory buffer\n");
+			"Unable to write Person datum to memory buffer\nMessage: %s\n", avro_strerror());
 		exit(EXIT_FAILURE);
 	}
 
@@ -176,7 +176,7 @@ int main(void)
 	}
 	for (i = 0; i < id; i++) {
 		if (print_person(dbreader, NULL)) {
-			fprintf(stderr, "Error printing person\n");
+			fprintf(stderr, "Error printing person\nMessage: %s\n", avro_strerror());
 			exit(EXIT_FAILURE);
 		}
 	}
