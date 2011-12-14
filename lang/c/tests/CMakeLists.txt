@@ -18,7 +18,7 @@
 #
 
 add_executable(generate_interop_data generate_interop_data.c)
-target_link_libraries(generate_interop_data avro-static ${CODEC_LIBS})
+target_link_libraries(generate_interop_data avro-static)
 
 add_executable(performance performance.c)
 target_link_libraries(performance avro-static)
