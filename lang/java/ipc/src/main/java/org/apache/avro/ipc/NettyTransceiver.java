@@ -462,7 +462,7 @@ public class NettyTransceiver extends Transceiver {
         if ((cse.getState() == ChannelState.OPEN) && (Boolean.FALSE.equals(cse.getValue()))) {
           // Server closed connection; disconnect client side
           LOG.debug("Remote peer " + remoteAddr + " closed connection.");
-          disconnect();
+          disconnect(false, true, null);
         }
       }
       super.handleUpstream(ctx, e);
