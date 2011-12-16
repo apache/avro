@@ -20,6 +20,10 @@ cmake_minimum_required(VERSION 2.4)
 project(AvroC)
 enable_testing()
 
+# Eliminates warning about linker paths when linking both zlib and
+# liblzma.
+cmake_policy(SET CMP0003 NEW)
+
 #-----------------------------------------------------------------------
 # Retrieve the current version number
 
@@ -69,6 +73,7 @@ string(REGEX REPLACE ".*\\..*\\.[0-9]+(.*)"
 # Source package support
 
 include(CPackConfig.txt)
+include(CheckLibraryExists)
 
 
 if(APPLE)
@@ -86,6 +91,34 @@ endif(CMAKE_COMPILER_IS_GNUCC)
 
 include_directories(${AvroC_SOURCE_DIR}/src)
 include_directories(${AvroC_SOURCE_DIR}/jansson/src)
+
+
+# Enable codecs
+find_package(ZLIB)
+if (ZLIB_FOUND)
+    set(ZLIB_PKG zlib)
+    add_definitions(-DDEFLATE_CODEC)
+    include_directories(${ZLIB_INCLUDE_DIR})
+    message("Enabled deflate codec")
+else (ZLIB_FOUND)
+    message("Disabled deflate codec. zlib not found.")
+endif (ZLIB_FOUND)
+
+find_package(PkgConfig)
+pkg_check_modules(LZMA liblzma)
+if (LZMA_FOUND)
+    set(LZMA_PKG liblzma)
+    add_definitions(-DLZMA_CODEC)
+    include_directories(${LZMA_INCLUDE_DIRS})
+    link_directories(${LZMA_LIBRARY_DIRS})
+    message("Enabled lzma codec")
+else (LZMA_FOUND)
+    message("Disabled lzma codec. liblzma not found.")
+endif (LZMA_FOUND)
+
+set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES})
+set(CODEC_PKG "@ZLIB_PKG@ @LZMA_PKG@")
+
 
 add_subdirectory(src)
 add_subdirectory(examples)
