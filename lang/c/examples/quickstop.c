@@ -64,13 +64,13 @@ add_person(avro_file_writer_t db, const char *first, const char *last,
 	    || avro_record_set(person, "Last", last_datum)
 	    || avro_record_set(person, "Age", age_datum)
 	    || avro_record_set(person, "Phone", phone_datum)) {
-		fprintf(stderr, "Unable to create Person datum structure");
+		fprintf(stderr, "Unable to create Person datum structure\n");
 		exit(EXIT_FAILURE);
 	}
 
 	if (avro_file_writer_append(db, person)) {
 		fprintf(stderr,
-			"Unable to write Person datum to memory buffer");
+			"Unable to write Person datum to memory buffer\nMessage: %s\n", avro_strerror());
 		exit(EXIT_FAILURE);
 	}
 
@@ -142,9 +142,10 @@ int main(void)
 	/* Delete the database if it exists */
 	unlink(dbname);
 	/* Create a new database */
-	rval = avro_file_writer_create(dbname, person_schema, &db);
+	rval = avro_file_writer_create_with_codec(dbname, person_schema, &db, "deflate", 0);
 	if (rval) {
 		fprintf(stderr, "There was an error creating %s\n", dbname);
+		fprintf(stderr, " error message: %s\n", avro_strerror());
 		exit(EXIT_FAILURE);
 	}
 
@@ -159,6 +160,11 @@ int main(void)
 		add_person(db, "Bob", "Silent", "(555) 123-6422", 29);
 		add_person(db, "Jay", "???", number, 26);
 	}
+
+	/* Close the block and open a new one */
+	avro_file_writer_flush(db);
+	add_person(db, "Super", "Man", "123456", 31);
+
 	avro_file_writer_close(db);
 
 	fprintf(stdout, "\nNow let's read all the records back out\n");
@@ -170,7 +176,7 @@ int main(void)
 	}
 	for (i = 0; i < id; i++) {
 		if (print_person(dbreader, NULL)) {
-			fprintf(stderr, "Error printing person\n");
+			fprintf(stderr, "Error printing person\nMessage: %s\n", avro_strerror());
 			exit(EXIT_FAILURE);
 		}
 	}

@@ -33,6 +33,9 @@ Avro 1.6.2 (unreleased)
     AVRO-961. C: avrocat/avropipe can now read from stdin.
     (Michael Cooper via dcreager)
 
+    AVRO-957. C: Codec support in C library.  (Michael Cooper and Lucas
+    Martin-King via dcreager)
+
   BUG FIXES
 
     AVRO-962. Java: Fix Maven plugin to support string type override.

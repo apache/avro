@@ -99,6 +99,9 @@ typedef struct avro_file_writer_t_ *avro_file_writer_t;
 
 int avro_file_writer_create(const char *path, avro_schema_t schema,
 			    avro_file_writer_t * writer);
+int avro_file_writer_create_with_codec(const char *path,
+				avro_schema_t schema, avro_file_writer_t * writer,
+				const char *codec, size_t block_size);
 int avro_file_writer_open(const char *path, avro_file_writer_t * writer);
 int avro_file_reader(const char *path, avro_file_reader_t * reader);
 int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
