@@ -335,10 +335,18 @@ process_file(const char *filename)
 {
 	avro_file_reader_t  reader;
 
-	if (avro_file_reader(filename, &reader)) {
-		fprintf(stderr, "Error opening %s:\n  %s\n",
-			filename, strerror(errno));
-		exit(1);
+	if (filename == NULL) {
+		if (avro_file_reader_fp(stdin, "<stdin>", 0, &reader)) {
+			fprintf(stderr, "Error opening <stdin>:\n  %s\n",
+				strerror(errno));
+			exit(1);
+		}
+	} else {
+		if (avro_file_reader(filename, &reader)) {
+			fprintf(stderr, "Error opening %s:\n  %s\n",
+				filename, strerror(errno));
+			exit(1);
+		}
 	}
 
 	/* The JSON root is an array */
@@ -405,9 +413,7 @@ int main(int argc, char **argv)
 	if (argc == 1) {
 		data_filename = argv[0];
 	} else if (argc == 0) {
-		fprintf(stderr, "Must provide an input file.\n");
-		usage();
-		exit(1);
+		data_filename = NULL;
 	} else {
 		fprintf(stderr, "Can't read from multiple input files.\n");
 		usage();

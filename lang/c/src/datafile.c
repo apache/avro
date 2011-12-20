@@ -280,23 +280,24 @@ static int file_read_block_count(avro_file_reader_t r)
 	return 0;
 }
 
-int avro_file_reader(const char *path, avro_file_reader_t * reader)
+int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
+			avro_file_reader_t * reader)
 {
 	int rval;
-	FILE *fp;
 	avro_file_reader_t r = avro_new(struct avro_file_reader_t_);
 	if (!r) {
+		if (should_close) {
+			fclose(fp);
+		}
 		avro_set_error("Cannot allocate file reader for %s", path);
 		return ENOMEM;
 	}
 
-	fp = fopen(path, "r");
-	if (!fp) {
-		avro_freet(struct avro_file_reader_t_, r);
-		return errno;
-	}
-	r->reader = avro_reader_file(fp);
+	r->reader = avro_reader_file_fp(fp, should_close);
 	if (!r->reader) {
+		if (should_close) {
+			fclose(fp);
+		}
 		avro_set_error("Cannot allocate reader for file %s", path);
 		avro_freet(struct avro_file_reader_t_, r);
 		return ENOMEM;
@@ -305,18 +306,32 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 	rval = file_read_header(r->reader, &r->writers_schema, r->sync,
 				sizeof(r->sync));
 	if (rval) {
+		avro_reader_free(r->reader);
 		avro_freet(struct avro_file_reader_t_, r);
 		return rval;
 	}
 
 	rval = file_read_block_count(r);
 	if (rval) {
+		avro_reader_free(r->reader);
 		avro_freet(struct avro_file_reader_t_, r);
 		return rval;
 	}
 
 	*reader = r;
 	return rval;
+}
+
+int avro_file_reader(const char *path, avro_file_reader_t * reader)
+{
+	FILE *fp;
+
+	fp = fopen(path, "r");
+	if (!fp) {
+		return errno;
+	}
+
+	return avro_file_reader_fp(fp, path, 1, reader);
 }
 
 avro_schema_t

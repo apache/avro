@@ -45,6 +45,7 @@ struct avro_writer_t_ {
 struct _avro_reader_file_t {
 	struct avro_reader_t_ reader;
 	FILE *fp;
+	int should_close;
 	char *cur;
 	char *end;
 	char buffer[4096];
@@ -53,6 +54,7 @@ struct _avro_reader_file_t {
 struct _avro_writer_file_t {
 	struct avro_writer_t_ writer;
 	FILE *fp;
+	int should_close;
 };
 
 struct _avro_reader_memory_t {
@@ -90,7 +92,7 @@ static void writer_init(avro_writer_t writer, avro_io_type_t type)
 	avro_refcount_set(&writer->refcount, 1);
 }
 
-avro_reader_t avro_reader_file(FILE * fp)
+avro_reader_t avro_reader_file_fp(FILE * fp, int should_close)
 {
 	struct _avro_reader_file_t *file_reader =
 	    avro_new(struct _avro_reader_file_t);
@@ -100,11 +102,17 @@ avro_reader_t avro_reader_file(FILE * fp)
 	}
 	memset(file_reader, 0, sizeof(struct _avro_reader_file_t));
 	file_reader->fp = fp;
+	file_reader->should_close = should_close;
 	reader_init(&file_reader->reader, AVRO_FILE_IO);
 	return &file_reader->reader;
 }
 
-avro_writer_t avro_writer_file(FILE * fp)
+avro_reader_t avro_reader_file(FILE * fp)
+{
+	return avro_reader_file_fp(fp, 1);
+}
+
+avro_writer_t avro_writer_file_fp(FILE * fp, int should_close)
 {
 	struct _avro_writer_file_t *file_writer =
 	    avro_new(struct _avro_writer_file_t);
@@ -113,8 +121,14 @@ avro_writer_t avro_writer_file(FILE * fp)
 		return NULL;
 	}
 	file_writer->fp = fp;
+	file_writer->should_close = should_close;
 	writer_init(&file_writer->writer, AVRO_FILE_IO);
 	return &file_writer->writer;
+}
+
+avro_writer_t avro_writer_file(FILE * fp)
+{
+	return avro_writer_file_fp(fp, 1);
 }
 
 avro_reader_t avro_reader_memory(const char *buf, int64_t len)
@@ -402,7 +416,9 @@ void avro_reader_free(avro_reader_t reader)
 	if (is_memory_io(reader)) {
 		avro_freet(struct _avro_reader_memory_t, reader);
 	} else if (is_file_io(reader)) {
-		fclose(avro_reader_to_file(reader)->fp);
+		if (avro_reader_to_file(reader)->should_close) {
+			fclose(avro_reader_to_file(reader)->fp);
+		}
 		avro_freet(struct _avro_reader_file_t, reader);
 	}
 }
@@ -412,7 +428,9 @@ void avro_writer_free(avro_writer_t writer)
 	if (is_memory_io(writer)) {
 		avro_freet(struct _avro_writer_memory_t, writer);
 	} else if (is_file_io(writer)) {
-		fclose(avro_writer_to_file(writer)->fp);
+		if (avro_writer_to_file(writer)->should_close) {
+			fclose(avro_writer_to_file(writer)->fp);
+		}
 		avro_freet(struct _avro_writer_file_t, writer);
 	}
 }
