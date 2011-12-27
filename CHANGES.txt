@@ -58,6 +58,9 @@ Avro 1.6.2 (unreleased)
     AVRO-982. Java: Fix NettyTransceiver to not hang when server stops.
     (Bruno Dumon via cutting)
 
+    AVRO-984. C: Resolved readers initialize complex array values
+    correctly. (Vivek Nadkarni via dcreager)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

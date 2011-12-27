@@ -1653,7 +1653,8 @@ avro_resolved_array_writer_append(const avro_value_iface_t *viface,
 	}
 
 	DEBUG("Appending to array %p", dest.self);
-	return avro_value_append(&dest, child_out->self, new_index);
+	check(rval, avro_value_append(&dest, child_out->self, new_index));
+	return avro_resolved_writer_init(aiface->child_resolver, child_out->self);
 }
 
 static avro_resolved_array_writer_t *
