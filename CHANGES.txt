@@ -62,7 +62,7 @@ Avro 1.6.2 (unreleased)
     correctly. (Vivek Nadkarni via dcreager)
 
     AVRO-994. Java: TestFileSpanStorage.testTonsOfSpans() fails on my 
-    slow VM.
+    slow VM. (jbaldassari)
 
 Avro 1.6.1 (8 November 2011)
 
