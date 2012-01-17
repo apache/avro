@@ -62,8 +62,12 @@ public class TestFileSpanStorage {
       test.addSpan(s);
       spans.add(s);
     }
+    
+    // Try up to 10 times to get the expected number of spans
     try {
-      Thread.sleep(2000);
+      for (int retries = 0; (retries < 10) && (test.getAllSpans().size() < 50000); retries++ ) {
+        Thread.sleep(1000);
+      }
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

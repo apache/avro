@@ -61,6 +61,9 @@ Avro 1.6.2 (unreleased)
     AVRO-984. C: Resolved readers initialize complex array values
     correctly. (Vivek Nadkarni via dcreager)
 
+    AVRO-994. Java: TestFileSpanStorage.testTonsOfSpans() fails on my 
+    slow VM.
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES
