@@ -64,6 +64,9 @@ Avro 1.6.2 (unreleased)
     AVRO-994. Java: TestFileSpanStorage.testTonsOfSpans() fails on my 
     slow VM. (jbaldassari)
 
+    AVRO-993. Java: Add methods back to GenericDatumReader that were 
+    removed in AVRO-839. (jbaldassari)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

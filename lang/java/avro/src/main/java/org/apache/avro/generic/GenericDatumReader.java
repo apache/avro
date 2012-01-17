@@ -258,6 +258,43 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     in.readFixed(fixed.bytes(), 0, expected.getFixedSize());
     return fixed;
   }
+  
+  /** 
+   * Called to create an fixed value. May be overridden for alternate fixed
+   * representations.  By default, returns {@link GenericFixed}.
+   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * {@link GenericData#createFixed(Object, Schema)}
+   */
+  @Deprecated
+  protected Object createFixed(Object old, Schema schema) {
+    return data.createFixed(old, schema);
+  }
+
+  /** 
+   * Called to create an fixed value. May be overridden for alternate fixed
+   * representations.  By default, returns {@link GenericFixed}.
+   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * {@link GenericData#createFixed(Object, byte[], Schema)}
+   */
+  @Deprecated
+  protected Object createFixed(Object old, byte[] bytes, Schema schema) {
+    return data.createFixed(old, bytes, schema);
+  }
+  
+  /**
+   * Called to create new record instances. Subclasses may override to use a
+   * different record implementation. The returned instance must conform to the
+   * schema provided. If the old object contains fields not present in the
+   * schema, they should either be removed from the old object, or it should
+   * create a new instance that conforms to the schema. By default, this returns
+   * a {@link GenericData.Record}.
+   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * {@link GenericData#newRecord(Object, Schema)}
+   */
+  @Deprecated
+  protected Object newRecord(Object old, Schema schema) {
+    return data.newRecord(old, schema);
+  }
 
   /** Called to create new array instances.  Subclasses may override to use a
    * different array implementation.  By default, this returns a {@link
