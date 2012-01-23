@@ -118,6 +118,14 @@ class DataFileWriter(object):
   sync_marker = property(lambda self: self._sync_marker)
   meta = property(lambda self: self._meta)
 
+  def __enter__(self):
+    return self
+
+  def __exit__(self, type, value, traceback):
+    # Perform a close if there's no exception
+    if type is None:
+      self.close()
+
   # read/write properties
   def set_block_count(self, new_val):
     self._block_count = new_val
@@ -229,7 +237,15 @@ class DataFileReader(object):
     # get ready to read
     self._block_count = 0
     self.datum_reader.writers_schema = schema.parse(self.get_meta(SCHEMA_KEY))
-  
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, type, value, traceback):
+    # Perform a close if there's no exception
+    if type is None:
+      self.close()
+
   def __iter__(self):
     return self
 

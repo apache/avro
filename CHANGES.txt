@@ -4,6 +4,9 @@ Avro 1.6.2 (unreleased)
 
   NEW FEATURES
 
+    AVRO-854.  Python: Permit DataFileWriter and DataFileReader to be
+    used as context managers in "with" statements. (Harsh J via cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
