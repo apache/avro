@@ -63,7 +63,11 @@ public class TestWordCount {
     }
   }    
 
-  @Test
+  @Test public void runTestsInOrder() throws Exception {
+    testJob();
+    testProjection();
+  }
+
   @SuppressWarnings("deprecation")
   public void testJob() throws Exception {
     JobConf job = new JobConf();
@@ -94,7 +98,6 @@ public class TestWordCount {
     WordCountUtil.validateCountsFile();
   }
   
-  @Test
   @SuppressWarnings("deprecation")
   public void testProjection() throws Exception {
     JobConf job = new JobConf();

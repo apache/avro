@@ -85,7 +85,15 @@ public class TestDataFile {
     return new File(DIR, "test-" + codec + ".avro");
   }
 
-  @Test
+  @Test public void runTestsInOrder() throws Exception {
+    testGenericWrite();
+    testGenericRead();
+    testSplits();
+    testSyncDiscovery();
+    testGenericAppend();
+    testReadWithHeader();
+  }
+
   public void testGenericWrite() throws IOException {
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(new GenericDatumWriter<Object>())
@@ -120,7 +128,6 @@ public class TestDataFile {
     }
   }
 
-  @Test
   public void testGenericRead() throws IOException {
     DataFileReader<Object> reader =
       new DataFileReader<Object>(makeFile(), new GenericDatumReader<Object>());
@@ -141,7 +148,6 @@ public class TestDataFile {
     }
   }
 
-  @Test
   public void testSplits() throws IOException {
     File file = makeFile();
     DataFileReader<Object> reader =
@@ -169,7 +175,6 @@ public class TestDataFile {
     }
   }
 
-  @Test
   public void testSyncDiscovery() throws IOException {
     File file = makeFile();
     DataFileReader<Object> reader =
@@ -198,7 +203,6 @@ public class TestDataFile {
     }
   }
 
-  @Test
   public void testGenericAppend() throws IOException {
     File file = makeFile();
     long start = file.length();
@@ -232,7 +236,6 @@ public class TestDataFile {
     }
   }  
 
-  @Test
   public void testReadWithHeader() throws IOException {
     File file = makeFile();
     DataFileReader<Object> reader =

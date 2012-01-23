@@ -249,7 +249,6 @@ public class TestProtocolSpecific {
       assertEquals("goodbye", response);
     } finally {
       t.close();
-      server.close();
     }
   }
 
