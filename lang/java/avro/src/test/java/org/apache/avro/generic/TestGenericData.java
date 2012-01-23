@@ -168,6 +168,11 @@ public class TestGenericData {
     GenericArray<Integer> array = new GenericData.Array<Integer>(1, schema);
     array.add(99);
     assertEquals(new Integer(99), array.get(0));
+    List<Integer> list = new ArrayList<Integer>();
+    list.add(99);
+    assertEquals(array, list);
+    assertEquals(list, array);
+    assertEquals(list.hashCode(), array.hashCode());
     try {
       array.get(2);
       fail("Expected IndexOutOfBoundsException getting index 2");

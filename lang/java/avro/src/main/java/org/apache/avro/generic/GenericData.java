@@ -198,19 +198,6 @@ public class GenericData {
     public T peek() {
       return (size < elements.length) ? (T)elements[size] : null;
     }
-    @Override
-    public int hashCode() {
-      return GenericData.get().hashCode(this, schema);
-    }
-    @Override
-    public boolean equals(Object o) {
-      if (o == this) return true;                 // identical object
-      if (!(o instanceof Array)) return false;    // not an array
-      Array that = (Array)o;
-      if (!schema.equals(that.schema))
-        return false;                             // not the same schema
-      return this.compareTo(that) == 0;
-    }
     public int compareTo(GenericArray<T> that) {
       return GenericData.get().compare(this, that, this.getSchema());
     }
