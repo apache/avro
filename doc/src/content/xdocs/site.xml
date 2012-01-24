@@ -63,7 +63,7 @@ See http://forrest.apache.org/docs/linking.html for more info
     <wiki      href="http://wiki.apache.org/hadoop/Avro/" />
     <faq       href="http://wiki.apache.org/hadoop/Avro/FAQ" />
     <json      href="http://www.json.org/" />
-    <vint      href="http://lucene.apache.org/java/2_4_0/fileformats.html#VInt"/>
+    <vint      href="http://lucene.apache.org/java/3_5_0/fileformats.html#VInt"/>
     <zigzag    href="http://code.google.com/apis/protocolbuffers/docs/encoding.html#types"/>
     <api href="api/">
       <c href="c/">

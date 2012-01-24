@@ -75,6 +75,8 @@ Avro 1.6.2 (unreleased)
     AVRO-1000. Java: Remove incompatible implementations of equals()
     and hashCode() from GenericData.Array.  (cutting)
 
+    AVRO-1002. Fix a broken link in the specification. (cutting)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES
