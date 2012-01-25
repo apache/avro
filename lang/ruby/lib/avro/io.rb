@@ -244,7 +244,7 @@ module Avro
           when 'record'
             return check_props(writers_schema, readers_schema, [:fullname])
           when 'error'
-            return check_props(writers_scheam, readers_schema, [:fullname])
+            return check_props(writers_schema, readers_schema, [:fullname])
           when 'request'
             return true
           when 'fixed'
