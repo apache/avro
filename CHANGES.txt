@@ -7,6 +7,9 @@ Avro 1.6.2 (unreleased)
     AVRO-854.  Python: Permit DataFileWriter and DataFileReader to be
     used as context managers in "with" statements. (Harsh J via cutting)
 
+    AVRO-986. C: avromod utility for modifying structural properties of
+    an Avro data file. (dcreager)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
@@ -82,6 +85,12 @@ Avro 1.6.2 (unreleased)
 
     AVRO-1004. C: avropipe no longer displays NUL terminator for string
     values. (dcreager)
+
+    AVRO-986. C: File headers no longer contain sync marker. (Michael
+    Cooper via dcreager)
+
+    AVRO-986. Java: DataFileReader correctly handles sync marker
+    appearing within file header. (cutting via dcreager)
 
 Avro 1.6.1 (8 November 2011)
 

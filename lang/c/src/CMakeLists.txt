@@ -132,10 +132,13 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/avro-c.pc
         DESTINATION lib/pkgconfig)
 
 add_executable(avrocat avrocat.c)
-
 target_link_libraries(avrocat avro-static)
 install(TARGETS avrocat RUNTIME DESTINATION bin)
 
 add_executable(avropipe avropipe.c)
 target_link_libraries(avropipe avro-static)
 install(TARGETS avropipe RUNTIME DESTINATION bin)
+
+add_executable(avromod avromod.c)
+target_link_libraries(avromod avro-static)
+install(TARGETS avromod RUNTIME DESTINATION bin)

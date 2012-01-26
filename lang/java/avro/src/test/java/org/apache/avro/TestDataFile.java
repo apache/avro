@@ -257,6 +257,15 @@ public class TestDataFile {
     assertNotNull("Should be able to reopen at sync point", reader.next());
   }
 
+  @Test public void testSyncInHeader() throws IOException {
+    DataFileReader<Object> reader = new DataFileReader<Object>
+      (new File("../../../share/test/data/syncInMeta.avro"),
+       new GenericDatumReader<Object>());
+    reader.sync(0);
+    for (Object datum : reader)
+      assertNotNull(datum);
+  }
+
   @Test public void test12() throws IOException {
     readFile(new File("../../../share/test/data/test.avro12"),
              new GenericDatumReader<Object>());

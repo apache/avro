@@ -339,13 +339,13 @@ process_file(const char *filename)
 	if (filename == NULL) {
 		if (avro_file_reader_fp(stdin, "<stdin>", 0, &reader)) {
 			fprintf(stderr, "Error opening <stdin>:\n  %s\n",
-				strerror(errno));
+				avro_strerror());
 			exit(1);
 		}
 	} else {
 		if (avro_file_reader(filename, &reader)) {
 			fprintf(stderr, "Error opening %s:\n  %s\n",
-				filename, strerror(errno));
+				filename, avro_strerror());
 			exit(1);
 		}
 	}

@@ -86,9 +86,7 @@ static int write_header(avro_file_writer_t w)
 	check(rval, avro_write(w->writer, "Obj", 3));
 	check(rval, avro_write(w->writer, &version, 1));
 
-	check(rval, enc->write_long(w->writer, 3));
-	check(rval, enc->write_string(w->writer, "avro.sync"));
-	check(rval, enc->write_bytes(w->writer, w->sync, sizeof(w->sync)));
+	check(rval, enc->write_long(w->writer, 2));
 	check(rval, enc->write_string(w->writer, "avro.codec"));
 	check(rval, enc->write_bytes(w->writer, w->codec->name, strlen(w->codec->name)));
 	check(rval, enc->write_string(w->writer, "avro.schema"));

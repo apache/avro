@@ -125,6 +125,11 @@ public class DataFileReader<D>
   @Override
   public void sync(long position) throws IOException {
     seek(position);
+    // work around an issue where 1.5.4 C stored sync in metadata
+    if ((position == 0) && (getMeta("avro.sync") != null)) {
+      initialize(sin);                            // re-init to skip header
+      return;
+    }
     try {
       int i=0, b;
       InputStream in = vin.inputStream();
