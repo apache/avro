@@ -286,7 +286,8 @@ process_value(const char *prefix, avro_value_t *value)
 			size_t  size;
 			avro_value_get_string(value, &buf, &size);
 			printf("%s\t", prefix);
-			print_bytes_value(buf, size);
+                        /* For strings, size includes the NUL terminator. */
+			print_bytes_value(buf, size-1);
 			printf("\n");
 			return;
 		}

@@ -80,6 +80,9 @@ Avro 1.6.2 (unreleased)
     AVRO-1003. C: Fix pkg-config file when codecs are missing.
     (dcreager)
 
+    AVRO-1004. C: avropipe no longer displays NUL terminator for string
+    values. (dcreager)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES
