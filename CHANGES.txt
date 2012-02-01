@@ -92,6 +92,9 @@ Avro 1.6.2 (unreleased)
     AVRO-986. Java: DataFileReader correctly handles sync marker
     appearing within file header. (cutting via dcreager)
 
+    AVRO-1014. C: Check for errors producing JSON output in avrocat.
+    (Lucas Martin-King via dcreager)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

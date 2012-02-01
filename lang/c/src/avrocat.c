@@ -55,9 +55,15 @@ process_file(const char *filename)
 
 	while (avro_file_reader_read_value(reader, &value) == 0) {
 		char  *json;
-		avro_value_to_json(&value, 1, &json);
-		printf("%s\n", json);
-		free(json);
+
+		if (avro_value_to_json(&value, 1, &json)) {
+			fprintf(stderr, "Error converting value to JSON: %s\n",
+				avro_strerror());
+		} else {
+			printf("%s\n", json);
+			free(json);
+		}
+
 		avro_value_reset(&value);
 	}
 
