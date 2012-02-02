@@ -37,12 +37,12 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 endif ()
 
 find_package (Boost 1.38 REQUIRED
-    COMPONENTS regex filesystem system program_options)
+    COMPONENTS filesystem system program_options)
 
 include_directories (api ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
 
 set (SOURCE_FILES
-        impl/Compiler.cc impl/CompilerNode.cc impl/Node.cc
+        impl/Compiler.cc impl/Node.cc
         impl/NodeImpl.cc impl/Resolver.cc impl/ResolverSchema.cc impl/Schema.cc
         impl/Types.cc impl/Validator.cc impl/ValidSchema.cc impl/Zigzag.cc
         impl/BinaryEncoder.cc impl/BinaryDecoder.cc
@@ -53,7 +53,9 @@ set (SOURCE_FILES
         impl/parsing/ValidatingCodec.cc
         impl/parsing/JsonCodec.cc
         impl/parsing/ResolvingDecoder.cc
-        ${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.cc ${CMAKE_CURRENT_BINARY_DIR}/AvroLex.cc)
+        impl/json/JsonIO.cc
+        impl/json/JsonDom.cc
+        )
 
 add_library (avrocpp SHARED ${SOURCE_FILES})
 
@@ -68,8 +70,6 @@ set_target_properties (avrocpp_s PROPERTIES
 target_link_libraries (avrocpp ${Boost_LIBRARIES})
 
 add_executable (precompile test/precompile.cc)
-
-add_dependencies(avrocpp parser lexer)
 
 target_link_libraries (precompile avrocpp ${Boost_LIBRARIES})
 
@@ -86,14 +86,6 @@ endmacro (gencpp)
 gencpp (bigrecord testgen)
 gencpp (bigrecord2 testgen2)
 
-add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.cc
-    COMMAND bison --defines=${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.hh -o ${CMAKE_CURRENT_BINARY_DIR}/AvroYacc.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/parser/AvroYacc.yy)
-
-add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/AvroLex.cc
-    COMMAND flex -oAvroLex.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/parser/AvroLex.ll)
-    
 macro (gen file ns)
     add_custom_command (OUTPUT ${file}.hh
         COMMAND avrogencpp
@@ -113,38 +105,33 @@ gen (recursive rec)
 gen (reuse ru)
 gen (circulardep cd)
 
-macro (test name)
-    add_executable (${name} test/${name}.cc)
-    target_link_libraries (${name} avrocpp ${Boost_LIBRARIES})
-endmacro (test)
-
-test (buffertest)
-test (unittest)
-
-add_executable (CodecTests test/CodecTests.cc)
-target_link_libraries (CodecTests avrocpp ${Boost_LIBRARIES})
-
-add_executable (StreamTests test/StreamTests.cc)
-target_link_libraries (StreamTests avrocpp ${Boost_LIBRARIES})
-
-add_executable (SpecificTests test/SpecificTests.cc)
-target_link_libraries (SpecificTests avrocpp ${Boost_LIBRARIES})
-
 add_executable (avrogencpp impl/avrogencpp.cc)
 target_link_libraries (avrogencpp avrocpp ${Boost_LIBRARIES})
 
-add_executable (testgentest test/testgen.cc)
-add_dependencies (testgentest testgen testgen2)
-target_link_libraries (testgentest avrocpp ${Boost_LIBRARIES})
+enable_testing()
 
-add_executable (AvrogencppTests test/AvrogencppTests.cc)
+macro (unittest name)
+    add_executable (${name} test/${name}.cc)
+    target_link_libraries (${name} avrocpp ${Boost_LIBRARIES})
+    add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
+endmacro (unittest)
+
+unittest (buffertest)
+unittest (unittest)
+unittest (SchemaTests)
+unittest (CodecTests)
+unittest (StreamTests)
+unittest (SpecificTests)
+unittest (DataFileTests)
+unittest (JsonTests)
+unittest (testgentest)
+unittest (AvrogencppTests)
+
+add_dependencies (testgentest testgen testgen2)
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord2_hh
     union_array_union_hh union_map_union_hh union_conflict_hh
     recursive_hh reuse_hh circulardep_hh)
-target_link_libraries (AvrogencppTests avrocpp ${BOOST_LIBRARIES})
-
-add_executable (DataFileTests test/DataFileTests.cc)
-target_link_libraries (DataFileTests avrocpp ${Boost_LIBRARIES})
 
 include (InstallRequiredSystemLibraries)
 
@@ -167,4 +154,3 @@ if (NOT CMAKE_BUILD_TYPE)
       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
-

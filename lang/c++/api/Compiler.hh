@@ -19,77 +19,18 @@
 #ifndef avro_Compiler_hh__
 #define avro_Compiler_hh__
 
-#include "Boost.hh"
-
-#include <FlexLexer.h>
-#include "Types.hh"
-#include "Node.hh"
-#include "CompilerNode.hh"
+#include <stdint.h>
+#include <istream>
 
 namespace avro {
+
+class InputStream;
 
 /// This class is used to implement an avro spec parser using a flex/bison
 /// compiler.  In order for the lexer to be reentrant, this class provides a
 /// lexer object for each parse.  The bison parser also uses this class to
 /// build up an avro parse tree as the avro spec is parsed.
     
-class CompilerContext {
-
-
-  public:
-
-    CompilerContext(std::istream &is) :
-        lexer_(&is)
-    {}
-
-    /// Called by the lexer whenever it encounters text that is not a symbol it recognizes
-    /// (names, fieldnames, values to be converted to integers, etc).
-    void setText(const char *text) {
-        text_ = text;
-    }
-
-    void addNamedType();
-
-    void startType();
-    void stopType();
-
-    void addType(avro::Type type);
-
-    void setSizeAttribute();
-    void setNameAttribute();
-    void setSymbolsAttribute();
-
-    void setFieldsAttribute();
-    void setItemsAttribute();
-    void setValuesAttribute();
-    void setTypesAttribute();
-
-    void textContainsFieldName();
-
-    const FlexLexer &lexer() const {
-        return lexer_;
-    }
-    FlexLexer &lexer() {
-        return lexer_;
-    }
-
-    const NodePtr &getRoot() const {
-        return root_;
-    }
-
-  private:
-
-    typedef boost::ptr_vector<CompilerNode> Stack;
-
-    void add(const NodePtr &node);
-
-    yyFlexLexer lexer_;
-    std::string text_;
-    
-    NodePtr   root_;
-    Stack     stack_;
-};
-
 class ValidSchema;
 
 /// Given a stream comtaining a JSON schema, compiles the schema to a
@@ -104,6 +45,16 @@ void compileJsonSchema(std::istream &is, ValidSchema &schema);
 ///
 
 bool compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error);
+
+ValidSchema compileJsonSchemaFromStream(InputStream& is);
+
+ValidSchema compileJsonSchemaFromMemory(const uint8_t* input, size_t len);
+
+ValidSchema compileJsonSchemaFromString(const char* input);
+
+ValidSchema compileJsonSchemaFromString(const std::string& input);
+
+ValidSchema compileJsonSchemaFromFile(const char* filename);
 
 } // namespace avro
 

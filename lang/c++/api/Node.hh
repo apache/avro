@@ -111,11 +111,9 @@ class Node : private boost::noncopyable
 
     virtual void printBasicInfo(std::ostream &os) const = 0;
 
-  protected:
-
-    friend class ValidSchema;
-
     virtual void setLeafToSymbolic(int index, const NodePtr &node) = 0;
+
+  protected:
 
     void checkLock() const {
         if(locked()) {
@@ -137,5 +135,14 @@ class Node : private boost::noncopyable
 };
 
 } // namespace avro
+
+namespace std {
+inline std::ostream& operator<<(std::ostream& os, const avro::Node& n)
+{
+    n.printJson(os, 0);
+    return os;
+}
+}
+
 
 #endif

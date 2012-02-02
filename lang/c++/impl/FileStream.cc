@@ -25,12 +25,81 @@
 #define O_BINARY 0
 #endif
 
+using std::auto_ptr;
+using std::istream;
+
 namespace avro {
-class FileInputStream : public InputStream {
+namespace stream {
+struct BufferCopyIn {
+    virtual ~BufferCopyIn() { }
+    virtual void seek(size_t len) = 0;
+    virtual bool read(uint8_t* b, size_t toRead, size_t& actual) = 0;
+
+};
+
+struct FileBufferCopyIn : public BufferCopyIn {
+    const int fd_;
+
+    FileBufferCopyIn(const char* filename) :
+        fd_(open(filename, O_RDONLY | O_BINARY)) {
+        if (fd_ < 0) {
+            throw Exception(boost::format("Cannot open file: %1%") %
+                ::strerror(errno));
+        }
+    }
+
+    ~FileBufferCopyIn() {
+        ::close(fd_);
+    }
+
+    void seek(size_t len) {
+        off_t r = ::lseek(fd_, len, SEEK_CUR);
+        if (r == static_cast<off_t>(-1)) {
+            throw Exception(boost::format("Cannot skip file: %1%") %
+                strerror(errno));
+        }
+    }
+
+    bool read(uint8_t* b, size_t toRead, size_t& actual) {
+        int n = ::read(fd_, b, toRead);
+        if (n > 0) {
+            actual = n;
+            return true;
+        }
+        return false;
+    }
+
+};
+
+struct IStreamBufferCopyIn : public BufferCopyIn {
+    istream& is_;
+
+    IStreamBufferCopyIn(istream& is) : is_(is) {
+    }
+
+    void seek(size_t len) {
+        if (! is_.seekg(len, std::ios_base::cur)) {
+            throw Exception("Cannot skip stream");
+        }
+    }
+
+    bool read(uint8_t* b, size_t toRead, size_t& actual) {
+        is_.read(reinterpret_cast<char*>(b), toRead);
+        if (is_.bad()) {
+            return false;
+        }
+        actual = is_.gcount();
+        return (! is_.eof() || actual != 0);
+    }
+
+};
+
+}
+
+class BufferCopyInInputStream : public InputStream {
     const size_t bufferSize_;
     uint8_t* const buffer_;
-    /// Input file descriptor
-    int in_;
+    auto_ptr<stream::BufferCopyIn> in_;
     size_t byteCount_;
     uint8_t* next_;
     size_t available_;
@@ -56,11 +125,7 @@ class FileInputStream : public InputStream {
     void skip(size_t len) {
         while (len > 0) {
             if (available_ == 0) {
-                off_t r = ::lseek(in_, len, SEEK_CUR);
-                if (r == static_cast<off_t>(-1)) {
-                    throw Exception(boost::format("Cannot skip file: %1%") %
-                        strerror(errno));
-                }
+                in_->seek(len);
                 byteCount_ += len;
                 return;
             }
@@ -75,8 +140,8 @@ class FileInputStream : public InputStream {
     size_t byteCount() const { return byteCount_; }
 
     bool fill() {
-        int n = ::read(in_, buffer_, bufferSize_);
-        if (n > 0) {
+        size_t n = 0;
+        if (in_->read(buffer_, bufferSize_, n)) {
             next_ = buffer_;
             available_ = n;
             return true;
@@ -86,21 +151,15 @@ class FileInputStream : public InputStream {
 
 
 public:
-    FileInputStream(const char* filename, size_t bufferSize) :
+    BufferCopyInInputStream(auto_ptr<stream::BufferCopyIn>& in, size_t bufferSize) :
         bufferSize_(bufferSize),
         buffer_(new uint8_t[bufferSize]),
-        in_(open(filename, O_RDONLY | O_BINARY)),
+        in_(in),
         byteCount_(0),
         next_(buffer_),
-        available_(0) {
-        if (in_ < 0) {
-            throw Exception(boost::format("Cannot open file: %1%") %
-                ::strerror(errno));
-        }
-    }
+        available_(0) { }
 
-    ~FileInputStream() {
-        ::close(in_);
+    ~BufferCopyInInputStream() {
         delete[] buffer_;
     }
 };
@@ -161,17 +220,24 @@ public:
     }
 };
 
-std::auto_ptr<InputStream> fileInputStream(const char* filename,
+auto_ptr<InputStream> fileInputStream(const char* filename,
     size_t bufferSize)
 {
-    return std::auto_ptr<InputStream>(
-        new FileInputStream(filename, bufferSize));
+    auto_ptr<stream::BufferCopyIn> in(new stream::FileBufferCopyIn(filename));
+    return auto_ptr<InputStream>( new BufferCopyInInputStream(in, bufferSize));
 }
 
-std::auto_ptr<OutputStream> fileOutputStream(const char* filename,
+auto_ptr<InputStream> istreamInputStream(istream& is,
     size_t bufferSize)
 {
-    return std::auto_ptr<OutputStream>(
+    auto_ptr<stream::BufferCopyIn> in(new stream::IStreamBufferCopyIn(is));
+    return auto_ptr<InputStream>( new BufferCopyInInputStream(in, bufferSize));
+}
+
+auto_ptr<OutputStream> fileOutputStream(const char* filename,
+    size_t bufferSize)
+{
+    return auto_ptr<OutputStream>(
         new FileOutputStream(filename, bufferSize));
 }
 

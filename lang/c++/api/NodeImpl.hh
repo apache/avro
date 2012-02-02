@@ -20,6 +20,7 @@
 #define avro_NodeImpl_hh__
 
 #include <limits>
+#include <set>
 #include <boost/weak_ptr.hpp>
 
 #include "Node.hh"
@@ -62,6 +63,13 @@ class NodeImpl : public Node
         sizeAttribute_(size)
     { }
 
+    void swap(NodeImpl& impl) {
+        std::swap(nameAttribute_, impl.nameAttribute_);
+        std::swap(leafAttributes_, impl.leafAttributes_);
+        std::swap(leafNameAttributes_, impl.leafNameAttributes_);
+        std::swap(sizeAttribute_, impl.sizeAttribute_);
+        std::swap(nameIndex_, impl.nameIndex_);
+    }
     bool hasName() const {
         return NameConcept::hasAttribute;
     }
@@ -182,6 +190,9 @@ class NodeSymbolic : public NodeImplSymbolic
         NodeImplSymbolic(AVRO_SYMBOLIC, name, NoLeaves(), NoLeafNames(), NoSize())
     { }
 
+    NodeSymbolic(const HasName &name, const NodePtr n) :
+        NodeImplSymbolic(AVRO_SYMBOLIC, name, NoLeaves(), NoLeafNames(), NoSize()), actualNode_(n)
+    { }
     SchemaResolution resolve(const Node &reader)  const;
 
     void printJson(std::ostream &os, int depth) const;
@@ -228,6 +239,10 @@ class NodeRecord : public NodeImplRecord
                  throw Exception(boost::format("Cannot add duplicate name: %1%") % leafNameAttributes_.get(i));
             }
         }
+    }
+
+    void swap(NodeRecord& r) {
+        NodeImplRecord::swap(r);
     }
 
     SchemaResolution resolve(const Node &reader)  const;
@@ -342,7 +357,60 @@ class NodeUnion : public NodeImplUnion
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
-        return (leafAttributes_.size() >= 1);
+        std::set<std::string> seen;
+        if (leafAttributes_.size() >= 1) {
+            for (size_t i = 0; i < leafAttributes_.size(); ++i) {
+                std::string name;
+                const NodePtr& n = leafAttributes_.get(i);
+                switch (n->type()) {
+                case AVRO_STRING:
+                    name = "string";
+                    break;
+                case AVRO_BYTES:
+                    name = "bytes";
+                    break;
+                case AVRO_INT:
+                    name = "int";
+                    break;
+                case AVRO_LONG:
+                    name = "long";
+                    break;
+                case AVRO_FLOAT:
+                    name = "float";
+                    break;
+                case AVRO_DOUBLE:
+                    name = "double";
+                    break;
+                case AVRO_BOOL:
+                    name = "bool";
+                    break;
+                case AVRO_NULL:
+                    name = "null";
+                    break;
+                case AVRO_ARRAY:
+                    name = "array";
+                    break;
+                case AVRO_MAP:
+                    name = "map";
+                    break;
+                case AVRO_RECORD:
+                case AVRO_ENUM:
+                case AVRO_UNION:
+                case AVRO_FIXED:
+                case AVRO_SYMBOLIC:
+                    name = n->name();
+                    break;
+                default:
+                    return false;
+                }
+                if (seen.find(name) != seen.end()) {
+                    return false;
+                }
+                seen.insert(name);
+            }
+            return true;
+        }
+        return false;
     }
 };
 

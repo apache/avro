@@ -154,6 +154,10 @@ std::auto_ptr<OutputStream> fileOutputStream(const char* filename,
 std::auto_ptr<InputStream> fileInputStream(const char* filename,
     size_t bufferSize = 8 * 1024);
 
+
+std::auto_ptr<InputStream> istreamInputStream(std::istream& in,
+    size_t bufferSize = 8 * 1024);
+
 /** A convenience class for reading from an InputStream */
 struct StreamReader {
     /**

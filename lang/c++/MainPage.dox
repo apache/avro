@@ -56,9 +56,8 @@ One should be able to build Avro C++ on any UNIX flavor including cygwin for Win
 In order to build Avro C++, one needs the following:
 <ul>
     <li>A C++ compiler and runtime libraries.
-    <li>Boost library version 1.38 or later. Please see <a href="http://www.boost.org/">http://www.boost.org</a> or your platform's documentation for details on how to set up Boost for your platform.
+    <li>Boost library version 1.38 or later. Apart from the header-only libraries of Boost, Avro C++ requires filesystem, system and program_options libraries. Please see <a href="http://www.boost.org/">http://www.boost.org</a> or your platform's documentation for details on how to set up Boost for your platform. 
     <li>CMake build tool version 2.6 or later. Please see <a href="http://www.cmake.org">http://www.cmake.org</a> or your platform's documentation for details on how to set up CMake for your system.
-    <li>Flex and Bison. For many Linux systems, Flex and Bison are pre-installed. If your platforms does not have Flex or Bison, please install them.
     <li>Python. If not already present, please consult your platform-specific documentation on how to install Python on your system.
 </ul>
 
@@ -68,12 +67,9 @@ For Ubuntu Linux, for example, you can have these by doing
 \li cmake
 \li g++
 \li libboost-dev
-\li libboost-regex-dev
 \li libboost-filesystem-dev
 \li libboost-system-dev
 \li libboost-program-options-dev
-\li flex
-\li bison
 
 <h3>Installing Avro C++</h3>
 <ol>
