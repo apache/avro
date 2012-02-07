@@ -56,7 +56,7 @@ Avro 1.6.2 (unreleased)
 
     AVRO-1010. Java: Improve codec javadoc. (Lars Francke via cutting)
 
-    AVRO-1018. Java: add svn:ignore to eclipse generated files for protobuf, thrift, and archetype modules
+    AVRO-1018. Java: add svn:ignore to eclipse generated files for protobuf, thrift, and archetype modules (scottcarey)
 
   BUG FIXES
 
