@@ -102,6 +102,9 @@ Avro 1.6.2 (unreleased)
     AVRO-996. Java: SpecificRecord builder pattern object copy fails 
     with unions in some cases. (scottcarey and jbaldassari)
 
+    AVRO-1020. Java: Fix builder API to correctly handle default
+    values for enums.  (cutting)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

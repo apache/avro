@@ -29,6 +29,7 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.io.DatumReader;
 
 import org.apache.thrift.TBase;
 import org.apache.thrift.TEnum;
@@ -55,6 +56,11 @@ public class ThriftData extends GenericData {
   
   /** Return the singleton instance. */
   public static ThriftData get() { return INSTANCE; }
+
+  @Override
+  public DatumReader createDatumReader(Schema schema) {
+    return new ThriftDatumReader(schema, schema, this);
+  }
 
   @Override
   public void setField(Object r, String n, int pos, Object o) {

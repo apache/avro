@@ -19,6 +19,8 @@
 @version("1.0.5")
 @namespace("org.apache.avro.ipc.specific")
 protocol Social {
+  enum PrivacyType { FRIENDS, FRIENDS_OF_FRIENDS, PUBLIC, CUSTOM } 
+  
   record Person {
     string name;
     int year_of_birth;
@@ -26,5 +28,6 @@ protocol Social {
     string state;
     array<Person> friends = [];
     array<string> languages = [ "English" , "Java" ];
+    PrivacyType defaultPrivacy = "FRIENDS";
   }
 } 

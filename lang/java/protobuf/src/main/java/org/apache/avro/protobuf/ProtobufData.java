@@ -31,6 +31,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.io.DatumReader;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -59,6 +60,11 @@ public class ProtobufData extends GenericData {
   
   /** Return the singleton instance. */
   public static ProtobufData get() { return INSTANCE; }
+
+  @Override
+  public DatumReader createDatumReader(Schema schema) {
+    return new ProtobufDatumReader(schema, schema, this);
+  }
 
   @Override
   public void setField(Object r, String n, int pos, Object o) {

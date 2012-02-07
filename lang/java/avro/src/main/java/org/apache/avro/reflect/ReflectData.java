@@ -46,6 +46,7 @@ import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.io.BinaryData;
+import org.apache.avro.io.DatumReader;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.NullNode;
 
@@ -77,6 +78,11 @@ public class ReflectData extends SpecificData {
   
   /** Return the singleton instance. */
   public static ReflectData get() { return INSTANCE; }
+
+  @Override
+  public DatumReader createDatumReader(Schema schema) {
+    return new ReflectDatumReader(schema, schema, this);
+  }
 
   @Override
   public void setField(Object record, String name, int position, Object o) {

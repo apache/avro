@@ -28,7 +28,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
@@ -179,7 +178,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
       encoder.flush();
       decoder = DecoderFactory.get().binaryDecoder(
           baos.toByteArray(), decoder);
-      defaultValue = new GenericDatumReader(
+      defaultValue = data.createDatumReader(
           field.schema()).read(null, decoder);
       defaultSchemaValues.putIfAbsent(field.pos(), defaultValue);
     }
