@@ -23,24 +23,35 @@ import java.util.zip.Deflater;
 
 import org.apache.avro.AvroRuntimeException;
 
-/** Encapsulates the ability to specify and configure a compression codec. */
+/**  Encapsulates the ability to specify and configure a compression codec.
+ *
+ * Currently there are three codecs registered by default:
+ * <ul>
+ *   <li>{@code null}</li>
+ *   <li>{@code deflate}</li>
+ *   <li>{@code snappy}</li>
+ * </ul>
+ *
+ * New and custom codecs can be registered using {@link #addCodec(String,
+ * CodecFactory)}.
+ */
 public abstract class CodecFactory {
   /** Null codec, for no compression. */
-  public static CodecFactory nullCodec() { 
-    return NullCodec.OPTION; 
-  };
-  
+  public static CodecFactory nullCodec() {
+    return NullCodec.OPTION;
+  }
+
   /** Deflate codec, with specific compression.
    * compressionLevel should be between 1 and 9, inclusive. */
-  public static CodecFactory deflateCodec(int compressionLevel) { 
-    return new DeflateCodec.Option(compressionLevel); 
-  };
-  
+  public static CodecFactory deflateCodec(int compressionLevel) {
+    return new DeflateCodec.Option(compressionLevel);
+  }
+
   /** Snappy codec.*/
-  public static CodecFactory snappyCodec() { 
-    return new SnappyCodec.Option(); 
-  };
-  
+  public static CodecFactory snappyCodec() {
+    return new SnappyCodec.Option();
+  }
+
   /** Creates internal Codec. */
   protected abstract Codec createInstance();
   
@@ -58,7 +69,15 @@ public abstract class CodecFactory {
     addCodec("snappy", snappyCodec());
   }
 
-  /** Maps a codec name into a CodecOption. */
+  /** Maps a codec name into a CodecFactory.
+   *
+   * Currently there are three codecs registered by default:
+   * <ul>
+   *   <li>{@code null}</li>
+   *   <li>{@code deflate}</li>
+   *   <li>{@code snappy}</li>
+   * </ul>
+   */
   public static CodecFactory fromString(String s) {
     CodecFactory o = REGISTERED.get(s);
     if (o == null) {

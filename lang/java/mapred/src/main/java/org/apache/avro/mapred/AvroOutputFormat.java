@@ -39,7 +39,13 @@ import org.apache.avro.file.CodecFactory;
 import static org.apache.avro.file.DataFileConstants.DEFAULT_SYNC_INTERVAL;
 import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 
-/** An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files. */
+/**
+ * An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files.
+ * <p/>
+ * You can specify various options using Job Configuration properties.
+ * Look at the fields in {@link AvroJob} as well as this class to get
+ * an overview of the supported options.
+ */
 public class AvroOutputFormat <T>
   extends FileOutputFormat<AvroWrapper<T>, NullWritable> {
 

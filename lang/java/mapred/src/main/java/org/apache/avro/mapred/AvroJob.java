@@ -42,7 +42,8 @@ public class AvroJob {
   public static final String MAP_OUTPUT_SCHEMA = "avro.map.output.schema";
   /** The configuration key for a job's output schema. */
   public static final String OUTPUT_SCHEMA = "avro.output.schema";
-  /** The configuration key for a job's output compression codec. */
+  /** The configuration key for a job's output compression codec.
+   *  This takes one of the strings registered in {@link org.apache.avro.file.CodecFactory} */
   public static final String OUTPUT_CODEC = "avro.output.codec";
   /** The configuration key prefix for a text output metadata. */
   public static final String TEXT_PREFIX = "avro.meta.text.";
