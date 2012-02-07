@@ -19,34 +19,18 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.6.2-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
+
   <artifactId>avro-mapred</artifactId>
+
   <name>Apache Avro Mapred API</name>
   <description>An org.apache.hadoop.mapred compatible API for using Avro Serializatin in Hadoop</description>
-
-  <dependencies>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>avro-ipc</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <!-- hadoop's execution environment provides its own jars, usurping any others. 
-        So we should not include it here -->
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.jopt-simple</groupId>
-      <artifactId>jopt-simple</artifactId>
-    </dependency>
-  </dependencies>
 
   <build>
     <plugins>
@@ -75,7 +59,7 @@
             <goals>
               <goal>protocol</goal>
             </goals>
-            <configuration>  
+            <configuration>
               <stringType>String</stringType>
               <includes>
                 <include>**/mapred/tether/*.avpr</include>
@@ -88,5 +72,31 @@
       </plugin>
     </plugins>
   </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro-ipc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <!-- hadoop's execution environment provides its own jars, usurping any others.
+        So we should not include it here -->
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+  </dependencies>
+
 </project>
 

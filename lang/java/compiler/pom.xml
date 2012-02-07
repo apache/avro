@@ -19,13 +19,16 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.6.2-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
+
   <artifactId>avro-compiler</artifactId>
+
   <name>Apache Avro Compiler</name>
   <url>http://avro.apache.org</url>
   <description>Compilers for Avro IDL and Avro Specific Java API</description>
@@ -45,8 +48,8 @@
       </testResource>
     </testResources>
     <plugins>
-      <!-- Avro generates a parser class with javacc. By default, this looks in src/main/javacc 
-        and outputs to target/generated-sources/javacc See http://mojo.codehaus.org/javacc-maven-plugin/javacc-mojo.html 
+      <!-- Avro generates a parser class with javacc. By default, this looks in src/main/javacc
+        and outputs to target/generated-sources/javacc See http://mojo.codehaus.org/javacc-maven-plugin/javacc-mojo.html
         for more info on using this plugin. -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -82,17 +85,24 @@
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
-      <scope>compile</scope>
+      <version>${commons-lang.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.ant</groupId>
       <artifactId>ant</artifactId>
-      <version>1.8.2</version>
+      <version>${ant.version}</version>
       <!-- can only be used from within ant -->
       <scope>provided</scope>
     </dependency>

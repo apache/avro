@@ -19,29 +19,18 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.6.2-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
-  <artifactId>avro-thrift</artifactId>
-  <name>Apache Avro Thrift Compatibility</name>
-  <description>Permit serialization of Thrift-generated classes as
-  Avro data.</description>
 
-  <dependencies>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>avro</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.thrift</groupId>
-      <artifactId>libthrift</artifactId>
-      <version>0.7.0</version>
-    </dependency>
-  </dependencies>
+  <artifactId>avro-thrift</artifactId>
+
+  <name>Apache Avro Thrift Compatibility</name>
+  <description>Permit serialization of Thrift-generated classes as Avro data.</description>
 
   <profiles>
     <profile>
@@ -55,15 +44,16 @@
                 <phase>generate-test-sources</phase>
                 <configuration>
                   <tasks>
-                    <mkdir dir="target/thrift-tmp" />
+                    <mkdir dir="target/thrift-tmp"/>
                     <exec executable="thrift">
-                      <arg value="--gen" /> <arg value="java:beans"/>
+                      <arg value="--gen"/>
+                      <arg value="java:beans"/>
                       <arg value="-o"/>
                       <arg value="target/thrift-tmp"/>
                       <arg value="src/test/thrift/test.thrift"/>
                     </exec>
                     <copy todir="src/test/java" overwrite="true">
-                      <fileset dir="target/thrift-tmp/gen-javabean" />
+                      <fileset dir="target/thrift-tmp/gen-javabean"/>
                     </copy>
                   </tasks>
                 </configuration>
@@ -77,5 +67,23 @@
       </build>
     </profile>
   </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.thrift</groupId>
+      <artifactId>libthrift</artifactId>
+      <version>${thrift.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+  </dependencies>
 
 </project>

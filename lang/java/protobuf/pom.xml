@@ -19,29 +19,18 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.6.2-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
-  <artifactId>avro-protobuf</artifactId>
-  <name>Apache Avro Protobuf Compatibility</name>
-  <description>Permit serialization of Protobuf-generated classes as
-  Avro data.</description>
 
-  <dependencies>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>avro</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>${protobuf-version}</version>
-    </dependency>
-  </dependencies>
+  <artifactId>avro-protobuf</artifactId>
+
+  <name>Apache Avro Protobuf Compatibility</name>
+  <description>Permit serialization of Protobuf-generated classes as Avro data.</description>
 
   <profiles>
     <profile>
@@ -55,7 +44,7 @@
                 <phase>generate-test-sources</phase>
                 <configuration>
                   <tasks>
-                    <mkdir dir="target/protobuf-tmp" />
+                    <mkdir dir="target/protobuf-tmp"/>
                     <exec executable="protoc">
                       <arg value="--java_out=src/test/java/"/>
                       <arg value="src/test/protobuf/test.proto"/>
@@ -72,5 +61,28 @@
       </build>
     </profile>
   </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>${protobuf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+  </dependencies>
 
 </project>

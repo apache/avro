@@ -18,39 +18,20 @@
 
 package org.apache.avro.mapred.tether;
 
-
 import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-import junit.framework.Assert;
-
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.Reporter;
 
-import org.apache.avro.Schema;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.util.Utf8;
-import org.apache.avro.Protocol;
 import org.junit.Test;
 
 import org.apache.avro.file.DataFileStream;
@@ -58,16 +39,9 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.WordCountUtil;
 import org.apache.avro.mapred.Pair;
-
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.file.DataFileStream;
 
 public class TestWordCountTether {
 

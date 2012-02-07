@@ -19,31 +19,19 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.6.2-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
+
   <artifactId>avro</artifactId>
+
   <name>Apache Avro</name>
   <url>http://avro.apache.org</url>
   <description>Avro core components</description>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.thoughtworks.paranamer</groupId>
-      <artifactId>paranamer</artifactId>
-    </dependency>
-      <dependency>
-	<groupId>org.xerial.snappy</groupId>
-	<artifactId>snappy-java</artifactId>
-      </dependency>
-  </dependencies>
 
   <build>
     <resources>
@@ -58,7 +46,7 @@
       <plugin>
         <groupId>com.thoughtworks.paranamer</groupId>
         <artifactId>paranamer-maven-plugin</artifactId>
-        <version>${paranamer-version}</version>
+        <version>${paranamer.version}</version>
         <executions>
           <execution>
             <id>paranamer-test</id>
@@ -101,6 +89,25 @@
       </build>
     </profile>
   </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.thoughtworks.paranamer</groupId>
+      <artifactId>paranamer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.xerial.snappy</groupId>
+      <artifactId>snappy-java</artifactId>
+    </dependency>
+  </dependencies>
 
 </project>
 

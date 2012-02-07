@@ -19,23 +19,22 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.6.2-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
+
   <artifactId>avro-maven-plugin</artifactId>
+  <packaging>maven-plugin</packaging>
+
   <name>Apache Avro Maven Plugin</name>
   <description>Maven plugin for Avro IDL and Specific API Compilers</description>
-  <packaging>maven-plugin</packaging>
-  
-  <properties>
-    <maven-version>2.0.10</maven-version>
-  </properties>
 
   <prerequisites>
-    <maven>${maven-version}</maven>
+    <maven>${maven.version}</maven>
   </prerequisites>
 
   <build>
@@ -60,17 +59,17 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>${maven-version}</version>
+      <version>${maven.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-project</artifactId>
-      <version>${maven-version}</version>
+      <version>${maven.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.shared</groupId>
       <artifactId>file-management</artifactId>
-      <version>1.2.1</version>
+      <version>${file-management.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

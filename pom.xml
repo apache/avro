@@ -16,7 +16,7 @@
    limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -34,7 +34,7 @@
   <url>http://avro.apache.org</url>
   <description>Avro toplevel pom</description>
 
-  <!-- This project is used for top level build tasks and artifact copying.  
+  <!-- This project is used for top level build tasks and artifact copying.
        The RAT task is run to validate licenses.  The Enforcer plugin is used
        to validate that java projects are the correct version.
        Java artifacts are copied to the final build destination with a custom profile.
@@ -43,12 +43,11 @@
     <avro.distDir>dist</avro.distDir>
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
     <!-- dependency plugin versions -->
-    <apache-rat-tasks-version>0.7</apache-rat-tasks-version>    
+    <apache-rat-tasks.version>0.7</apache-rat-tasks.version>
 
     <!-- plugin versions -->
-    <antrun-plugin-version>1.6</antrun-plugin-version>
-    <enforcer-plugin-version>1.0.1</enforcer-plugin-version>
-     
+    <antrun-plugin.version>1.6</antrun-plugin.version>
+    <enforcer-plugin.version>1.0.1</enforcer-plugin.version>
   </properties>
 
   <modules>
@@ -97,17 +96,17 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>${enforcer-plugin-version}</version>
+        <version>${enforcer-plugin.version}</version>
         <configuration>
           <rules>
             <requireProperty>
-             <property>avro.version</property>
-             <message>*****!!!!!!   Must have property avro.version set to enforce version.   !!!!!!*****</message>
+              <property>avro.version</property>
+              <message>*****!!!!!! Must have property avro.version set to enforce version. !!!!!!*****</message>
             </requireProperty>
             <requireProperty>
               <property>project.version</property>
               <regex>${avro.version}</regex>
-              <regexMessage>*****!!!!!   Version of project must be ${avro.version}   !!!!!*****</regexMessage>
+              <regexMessage>*****!!!!! Version of project must be ${avro.version} !!!!!*****</regexMessage>
             </requireProperty>
           </rules>
           <fail>true</fail>
@@ -168,7 +167,7 @@
               <execution>
                 <phase>package</phase>
                 <goals>
-                 <goal>enforce</goal>
+                  <goal>enforce</goal>
                 </goals>
               </execution>
             </executions>
@@ -188,7 +187,7 @@
                 <id>sign-artifacts</id>
                 <phase>verify</phase>
                 <goals>
-	          <goal>sign</goal>
+                  <goal>sign</goal>
                 </goals>
               </execution>
             </executions>
@@ -203,11 +202,11 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>${antrun-plugin-version}</version>
+            <version>${antrun-plugin.version}</version>
             <configuration>
               <target name="rat">
                 <rat:report xmlns:rat="antlib:org.apache.rat.anttasks"
-                    reportFile="build/rat-report.log">
+                            reportFile="build/rat-report.log">
                   <fileset dir="build/avro-src-${project.version}/"
                            excludesfile="share/rat-excludes.txt"/>
                 </rat:report>
@@ -223,7 +222,7 @@
               <dependency>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-tasks</artifactId>
-                <version>${apache-rat-tasks-version}</version>
+                <version>${apache-rat-tasks.version}</version>
               </dependency>
             </dependencies>
           </plugin>
@@ -237,17 +236,17 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>${antrun-plugin-version}</version>
+            <version>${antrun-plugin.version}</version>
             <configuration>
               <target name="copy-java-artifacts">
                 <mkdir dir="${avro.distDir}/java"/>
                 <copy todir="${avro.distDir}/java" verbose="true">
-                 <flattenmapper/>
-                 <fileset dir="lang/java/"
+                  <flattenmapper/>
+                  <fileset dir="lang/java/"
                            includes="*/target/*${project.version}*.jar"
                            excludes="**/original-*.jar **/*tests.jar"/>
                 </copy>
-                
+
                 <mkdir dir="${avro.docDir}"/>
                 <copy todir="${avro.docDir}/java">
                   <fileset dir="lang/java/target/site/apidocs"/>
@@ -259,4 +258,5 @@
       </build>
     </profile>
   </profiles>
+
 </project>
