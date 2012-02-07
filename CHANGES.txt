@@ -97,6 +97,9 @@ Avro 1.6.2 (unreleased)
     AVRO-1014. C: Check for errors producing JSON output in avrocat.
     (Lucas Martin-King via dcreager)
 
+    AVRO-996. Java: SpecificRecord builder pattern object copy fails 
+    with unions in some cases. (scottcarey and jbaldassari)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

@@ -830,14 +830,8 @@ public class GenericData {
         }
         return new Utf8(value.toString());
       case UNION:
-        for (Schema type : schema.getTypes()) {
-          if (GenericData.get().validate(type, value)) {
-            return deepCopy(type, value);
-          }
-        }
-        throw new AvroRuntimeException(
-            "Deep copy failed for schema \"" + schema + "\" and value \"" +
-            value + "\"");
+        return deepCopy(
+            schema.getTypes().get(resolveUnion(schema, value)), value);
       default:
         throw new AvroRuntimeException(
             "Deep copy failed for schema \"" + schema + "\" and value \"" +

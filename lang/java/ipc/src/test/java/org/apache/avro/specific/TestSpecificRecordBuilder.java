@@ -17,13 +17,22 @@
  */
 package org.apache.avro.specific;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.avro.Foo;
+import org.apache.avro.Interop;
+import org.apache.avro.Kind;
+import org.apache.avro.MD5;
+import org.apache.avro.Node;
+import org.apache.avro.ipc.specific.PageView;
 import org.apache.avro.ipc.specific.Person;
+import org.apache.avro.ipc.specific.ProductPage;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -81,6 +90,67 @@ public class TestSpecificRecordBuilder {
     Person person2 = builderCopy.build();
     Assert.assertNotNull(person2.getFriends());
     Assert.assertTrue(person2.getFriends().isEmpty());
+  }
+  
+  @Test
+  public void testUnions() {
+    long datetime = 1234L;
+    String product = "widget";
+    PageView p = PageView.newBuilder()
+      .setDatetime(1234L)
+      .setPageContext(ProductPage.newBuilder()
+          .setProduct(product)
+          .build())
+      .build();
+    Assert.assertEquals(datetime, p.getDatetime().longValue());
+    Assert.assertEquals(ProductPage.class, p.getPageContext().getClass());
+    Assert.assertEquals(product, ((ProductPage)p.getPageContext()).getProduct());
+    
+    PageView p2 = PageView.newBuilder(p).build();
+    
+    Assert.assertEquals(datetime, p2.getDatetime().longValue());
+    Assert.assertEquals(ProductPage.class, p2.getPageContext().getClass());
+    Assert.assertEquals(product, ((ProductPage)p2.getPageContext()).getProduct());
+    
+    Assert.assertEquals(p, p2);
+    
+  }
+
+  @Test
+  public void testInterop() {
+    Interop interop = Interop.newBuilder()
+        .setArrayField(Arrays.asList(new Double[] { 3.14159265, 6.022 }))
+        .setBoolField(true)
+        .setBytesField(ByteBuffer.allocate(4).put(new byte[] { 3, 2, 1, 0 }))
+        .setDoubleField(1.41421)
+        .setEnumField(Kind.C)
+        .setFixedField(new MD5(
+            new byte[] { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3 }))
+        .setFloatField(1.61803f)
+        .setIntField(64)
+        .setLongField(1024)
+        .setMapField(Collections.singletonMap("Foo1", new Foo()))
+        .setRecordField(new Node())
+        .setStringField("MyInterop")
+        .setUnionField(2.71828)
+        .build();
+    
+    Interop copy = Interop.newBuilder(interop).build();
+    Assert.assertEquals(interop.getArrayField().size(), copy.getArrayField().size());
+    Assert.assertEquals(interop.getArrayField(), copy.getArrayField());
+    Assert.assertEquals(interop.getBoolField(), copy.getBoolField());
+    Assert.assertEquals(interop.getBytesField().capacity(), copy.getBytesField().capacity());
+    Assert.assertEquals(interop.getBytesField(), copy.getBytesField());
+    Assert.assertEquals(interop.getDoubleField(), copy.getDoubleField());
+    Assert.assertEquals(interop.getEnumField(), copy.getEnumField());
+    Assert.assertEquals(interop.getFixedField(), copy.getFixedField());
+    Assert.assertEquals(interop.getFloatField(), copy.getFloatField());
+    Assert.assertEquals(interop.getIntField(), copy.getIntField());
+    Assert.assertEquals(interop.getLongField(), copy.getLongField());
+    Assert.assertEquals(interop.getMapField(), copy.getMapField());
+    Assert.assertEquals(interop.getRecordField(), copy.getRecordField());
+    Assert.assertEquals(interop.getStringField(), copy.getStringField());
+    Assert.assertEquals(interop.getUnionField(), copy.getUnionField());
   }
   
   @Test(expected=org.apache.avro.AvroRuntimeException.class)
