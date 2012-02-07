@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.EOFException;
+import java.net.Proxy;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +34,16 @@ public class HttpTransceiver extends Transceiver {
   static final String CONTENT_TYPE = "avro/binary"; 
 
   private URL url;
+  private Proxy proxy;
   private HttpURLConnection connection;
   private int timeout;
   
   public HttpTransceiver(URL url) { this.url = url; }
+
+  public HttpTransceiver(URL url, Proxy proxy) {
+    this(url);
+    this.proxy = proxy;
+  }
 
   /** Set the connect and read timeouts, in milliseconds. */
   public void setTimeout(int timeout) { this.timeout = timeout; }
@@ -49,7 +56,11 @@ public class HttpTransceiver extends Transceiver {
 
   public synchronized void writeBuffers(List<ByteBuffer> buffers)
     throws IOException {
-    connection = (HttpURLConnection)url.openConnection();
+    if (proxy == null)
+      connection = (HttpURLConnection)url.openConnection();
+    else
+      connection = (HttpURLConnection)url.openConnection(proxy);
+
     connection.setRequestMethod("POST");
     connection.setRequestProperty("Content-Type", CONTENT_TYPE);
     connection.setRequestProperty("Content-Length",

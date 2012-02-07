@@ -51,6 +51,9 @@ Avro 1.6.2 (unreleased)
     AVRO-1016. Java: Add Field#getAliases() method to better permit
     copying of schemas. (cutting)
 
+    AVRO-1005. Java: Extend HttpTransceiver to permit specification of
+    a Proxy. (Craig Landry via cutting)
+
   BUG FIXES
 
     AVRO-962. Java: Fix Maven plugin to support string type override.
