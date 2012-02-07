@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.codehaus.jackson.JsonNode;
 
@@ -549,6 +550,12 @@ public class TestSchema {
       +"{\"name\":\"h\",\"type\":\"int\"}]}";
     Schema s1 = Schema.parse(t1);
     Schema s2 = Schema.parse(t2);
+
+    assertEquals(s1.getAliases(), Collections.emptySet());
+    assertEquals(s1.getField("f").aliases(), Collections.emptySet());
+    assertEquals(s2.getAliases(), Collections.singleton("a.b"));
+    assertEquals(s2.getField("g").aliases(), Collections.singleton("f"));
+
     Schema s3 = Schema.applyAliases(s1,s2);
     assertFalse(s2 == s3);
     assertEquals(s2, s3);

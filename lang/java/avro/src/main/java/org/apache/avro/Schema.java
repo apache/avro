@@ -438,6 +438,12 @@ public abstract class Schema {
         this.aliases = new LinkedHashSet<String>();
       aliases.add(alias);
     }
+    /** Return the defined aliases as an unmodifieable Set. */
+    public Set<String> aliases() {
+      if (aliases == null)
+        return Collections.emptySet();
+      return Collections.unmodifiableSet(aliases);
+    }
     public boolean equals(Object other) {
       if (other == this) return true;
       if (!(other instanceof Field)) return false;
@@ -554,7 +560,7 @@ public abstract class Schema {
       return super.computeHash() + name.hashCode();
     }
     public void aliasesToJson(JsonGenerator gen) throws IOException {
-      if (aliases == null) return;
+      if (aliases == null || aliases.size() == 0) return;
       gen.writeFieldName("aliases");
       gen.writeStartArray();
       for (Name alias : aliases)
@@ -686,7 +692,7 @@ public abstract class Schema {
         }
         if (f.order() != Field.Order.ASCENDING)
           gen.writeStringField("order", f.order().name);
-        if (f.aliases != null) {
+        if (f.aliases != null && f.aliases.size() != 0) {
           gen.writeFieldName("aliases");
           gen.writeStartArray();
           for (String alias : f.aliases)
