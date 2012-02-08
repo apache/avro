@@ -117,6 +117,8 @@ Avro 1.6.2 (unreleased)
     AVRO-1020. Java: Fix builder API to correctly handle default
     values for enums.  (cutting)
 
+    AVRO-1013. Java: NettyTransceiver can hang after server restart. (jbaldassari)
+
 Avro 1.6.1 (8 November 2011)
 
   INCOMPATIBLE CHANGES

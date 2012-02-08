@@ -441,6 +441,47 @@ public class TestNettyServerWithCallbacks {
         transceiver2.close();
     }
   }
+  
+  @Test
+  public void clientReconnectAfterServerRestart() throws Exception {
+    // Start up a second server so that closing the server doesn't 
+    // interfere with the other unit tests:
+    SimpleImpl simpleImpl = new BlockingSimpleImpl();
+    Server server2 = new NettyServer(new SpecificResponder(Simple.class, 
+        simpleImpl), new InetSocketAddress(0));
+    try {      
+      server2.start();
+      int serverPort = server2.getPort();
+      System.out.println("server2 port : " + serverPort);
+
+      // Initialize a client, and establish a connection to the server:
+      Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
+          serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
+      Simple.Callback simpleClient2 = 
+          SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
+      Assert.assertEquals(3, simpleClient2.add(1, 2));
+      
+      // Restart the server:
+      server2.close();
+      try {
+        simpleClient2.add(2, -1);
+        Assert.fail("Client should not be able to invoke RPCs " +
+            "because server is no longer running");
+      } catch (Exception e) {
+        // Expected since server is no longer running
+      }
+      Thread.sleep(2000L);
+      server2 = new NettyServer(new SpecificResponder(Simple.class, 
+          simpleImpl), new InetSocketAddress(serverPort));
+      server2.start();
+      
+      // Invoke an RPC using the same client, which should reestablish the 
+      // connection to the server:
+      Assert.assertEquals(3, simpleClient2.add(1, 2));
+    } finally {
+      server2.close();
+    }
+  }
 
   @Ignore
   @Test

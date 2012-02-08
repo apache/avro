@@ -396,21 +396,24 @@ public class NettyTransceiver extends Transceiver {
   
   @Override
   public void writeBuffers(List<ByteBuffer> buffers) throws IOException {
-    writeDataPack(new NettyDataPack(serialGenerator.incrementAndGet(), buffers));
+    stateLock.readLock().lock();
+    try {
+      writeDataPack(
+          new NettyDataPack(serialGenerator.incrementAndGet(), buffers));
+    } finally {
+      stateLock.readLock().unlock();
+    }
   }
   
   /**
    * Writes a NettyDataPack, reconnecting to the remote peer if necessary.
+   * NOTE: The stateLock read lock *must* be acquired before calling this 
+   * method.
    * @param dataPack the data pack to write.
    * @throws IOException if an error occurs connecting to the remote peer.
    */
   private void writeDataPack(NettyDataPack dataPack) throws IOException {
-    stateLock.readLock().lock();
-    try {
-      getChannel().write(dataPack);
-    } finally {
-      stateLock.readLock().unlock();
-    }
+    getChannel().write(dataPack);
   }
 
   @Override
