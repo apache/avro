@@ -35,27 +35,27 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
     <!-- version properties for dependencies -->
     <hadoop.version>0.20.205.0</hadoop.version>
-    <jackson.version>1.8.6</jackson.version>
+    <jackson.version>1.8.8</jackson.version>
     <jetty.version>6.1.26</jetty.version>
     <jetty-servlet-api.version>2.5-20081211</jetty-servlet-api.version>
     <jopt-simple.version>4.1</jopt-simple.version>
     <junit.version>4.10</junit.version>
-    <netty.version>3.2.6.Final</netty.version>
+    <netty.version>3.2.7.Final</netty.version>
     <paranamer.version>2.3</paranamer.version>
     <protobuf.version>2.4.1</protobuf.version>
     <thrift.version>0.7.0</thrift.version>
-    <slf4j.version>1.6.3</slf4j.version>
+    <slf4j.version>1.6.4</slf4j.version>
     <snappy.version>1.0.4.1</snappy.version>
     <velocity.version>1.7</velocity.version>
-    <thrift.version>0.7.0</thrift.version>
     <maven.version>2.0.10</maven.version>
     <ant.version>1.8.2</ant.version>
     <commons-lang.version>2.6</commons-lang.version>
 
     <!-- version properties for plugins -->
-    <checkstyle-plugin.version>2.6</checkstyle-plugin.version>
+    <checkstyle-plugin.version>2.8</checkstyle-plugin.version>
     <compiler-plugin.version>2.3.2</compiler-plugin.version>
     <exec-plugin.version>1.2.1</exec-plugin.version>
     <jar-plugin.version>2.3.2</jar-plugin.version>
@@ -63,8 +63,11 @@
     <javadoc-plugin.version>2.8</javadoc-plugin.version>
     <plugin-plugin.version>2.9</plugin-plugin.version>
     <source-plugin.version>2.1.2</source-plugin.version>
-    <surefire-plugin.version>2.10</surefire-plugin.version>
-    <file-management.version>1.2.1</file-management.version>  </properties>
+    <surefire-plugin.version>2.12</surefire-plugin.version>
+    <file-management.version>1.2.1</file-management.version>
+    <shade-plugin.version>1.5</shade-plugin.version>
+    <archetype-plugin.version>2.2</archetype-plugin.version>
+  </properties>
 
   <modules>
     <module>avro</module>
@@ -191,6 +194,15 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>
           <version>${plugin-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${shade-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>${antrun-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>

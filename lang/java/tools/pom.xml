@@ -52,7 +52,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>1.4</version>
         <!-- primary artifact is shaded -->
         <executions>
           <execution>

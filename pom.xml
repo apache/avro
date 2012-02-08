@@ -46,7 +46,7 @@
     <apache-rat-tasks.version>0.7</apache-rat-tasks.version>
 
     <!-- plugin versions -->
-    <antrun-plugin.version>1.6</antrun-plugin.version>
+    <antrun-plugin.version>1.7</antrun-plugin.version>
     <enforcer-plugin.version>1.0.1</enforcer-plugin.version>
   </properties>
 
