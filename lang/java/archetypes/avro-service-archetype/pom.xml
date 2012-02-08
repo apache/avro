@@ -33,4 +33,20 @@
   <name>Apache Avro Maven Service Archetype</name>
   <description>Archetype that generates a simple example Avro service</description>
 
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <targetPath>archetype-resources</targetPath>
+        <directory>target/generated-resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>pom.xml</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+
 </project>

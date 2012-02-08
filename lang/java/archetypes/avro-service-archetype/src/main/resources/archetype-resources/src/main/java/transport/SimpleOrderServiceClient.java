@@ -37,43 +37,43 @@ import ${package}.service.OrderFailure;
 import ${package}.service.OrderProcessingService;
 
 /**
- * <code>SimpleOrderServiceClient</code> is a basic client for the Netty backed {@link OrderProcessingService}
+ * {@code SimpleOrderServiceClient} is a basic client for the Netty backed {@link OrderProcessingService}
  * implementation.
  */
 public class SimpleOrderServiceClient implements OrderProcessingService {
 
-	private static final Logger log = LoggerFactory.getLogger(SimpleOrderServiceEndpoint.class);
+  private static final Logger log = LoggerFactory.getLogger(SimpleOrderServiceEndpoint.class);
 
-	private InetSocketAddress endpointAddress;
+  private InetSocketAddress endpointAddress;
 
-	private Transceiver transceiver;
+  private Transceiver transceiver;
 
-	private OrderProcessingService service;
+  private OrderProcessingService service;
 
-	public SimpleOrderServiceClient(InetSocketAddress endpointAddress) {
-		this.endpointAddress = endpointAddress;
-	}
+  public SimpleOrderServiceClient(InetSocketAddress endpointAddress) {
+    this.endpointAddress = endpointAddress;
+  }
 
-	public synchronized void start() throws IOException {
-		if (log.isInfoEnabled()) {
-			log.info("Starting Simple Ordering Netty client on '{}'", endpointAddress);
-		}
-		transceiver = new NettyTransceiver(endpointAddress);
-		service = SpecificRequestor.getClient(OrderProcessingService.class, transceiver);
-	}
+  public synchronized void start() throws IOException {
+    if (log.isInfoEnabled()) {
+      log.info("Starting Simple Ordering Netty client on '{}'", endpointAddress);
+    }
+    transceiver = new NettyTransceiver(endpointAddress);
+    service = SpecificRequestor.getClient(OrderProcessingService.class, transceiver);
+  }
 
-	public void stop() throws IOException {
-		if (log.isInfoEnabled()) {
-			log.info("Stopping Simple Ordering Netty client on '{}'", endpointAddress);
-		}
-		if (transceiver != null && transceiver.isConnected()) {
-			transceiver.close();
-		}
-	}
+  public void stop() throws IOException {
+    if (log.isInfoEnabled()) {
+      log.info("Stopping Simple Ordering Netty client on '{}'", endpointAddress);
+    }
+    if (transceiver != null && transceiver.isConnected()) {
+      transceiver.close();
+    }
+  }
 
-	@Override
-	public Confirmation submitOrder(Order order) throws AvroRemoteException, OrderFailure {
-		return service.submitOrder(order);
-	}
+  @Override
+  public Confirmation submitOrder(Order order) throws AvroRemoteException, OrderFailure {
+    return service.submitOrder(order);
+  }
 
 }

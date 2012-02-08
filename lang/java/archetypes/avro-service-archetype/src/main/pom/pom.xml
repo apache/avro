@@ -27,11 +27,13 @@
   <name>Simple Avro Ordering Service</name>
 
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
     <avro.version>${project.version}</avro.version>
-    <jackson.version>1.8.4</jackson.version>
-    <junit.version>4.10</junit.version>
+    <jackson.version>${jackson.version}</jackson.version>
+    <junit.version>${junit.version}</junit.version>
     <logback.version>1.0.0</logback.version>
-    <slf4j.version>1.6.4</slf4j.version>
+    <slf4j.version>${slf4j.version}</slf4j.version>
   </properties>
 
   <dependencies>
@@ -79,7 +81,7 @@
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
-        <version>${avro.version}</version>
+        <version>\${avro.version}</version>
         <executions>
           <execution>
             <goals>
@@ -99,7 +101,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.9</version>
+        <version>${surefire-plugin.version}</version>
         <configuration>
           <excludes>
             <exclude>%regex[.*.integration.*]</exclude>
@@ -108,7 +110,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.6</version>
+        <version>${surefire-plugin.version}</version>
         <executions>
           <execution>
             <goals>
@@ -126,7 +128,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>${compiler-plugin.version}</version>
         <configuration>
           <source>1.6</source>
           <target>1.6</target>

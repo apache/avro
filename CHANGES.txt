@@ -62,6 +62,8 @@ Avro 1.6.2 (unreleased)
 
     AVRO-995. Java: Update Dependencies for 1.6.2. (scottcarey)
 
+    AVRO-1012. Java: Improve avro-service-archetype: POM and IT changes. (Lars Francke via scottcarey)
+
   BUG FIXES
 
     AVRO-962. Java: Fix Maven plugin to support string type override.

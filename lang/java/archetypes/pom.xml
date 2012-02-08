@@ -68,9 +68,9 @@
             <goals>
               <goal>copy-resources</goal>
             </goals>
-            <phase>validate</phase>
+            <phase>generate-resources</phase>
             <configuration>
-              <outputDirectory>src/main/resources/archetype-resources</outputDirectory>
+              <outputDirectory>target/generated-resources</outputDirectory>
               <escapeString>\</escapeString>
               <resources>
                 <resource>
