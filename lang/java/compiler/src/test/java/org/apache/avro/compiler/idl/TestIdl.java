@@ -30,6 +30,8 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 import org.apache.avro.Protocol;
 
@@ -122,7 +124,18 @@ public class TestIdl {
     }
 
     private String generate() throws Exception {
-      Idl parser = new Idl(in);
+      ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+      // Calculate the absolute path to src/test/resources/putOnClassPath/
+      File file = new File(".");
+      String currentWorkPath = file.toURI().toURL().toString();
+      String newPath = currentWorkPath + "src" + File.separator + "test"
+        + File.separator + "idl" + File.separator
+        + "putOnClassPath" + File.separator;
+      URL[] newPathURL = new URL[]{new URL(newPath)}; 
+      URLClassLoader ucl = new URLClassLoader(newPathURL, cl);
+
+      Idl parser = new Idl(in, ucl);
       Protocol p = parser.CompilationUnit();
       return p.toString(true);
     }

@@ -88,6 +88,7 @@ public class Idl
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
 
   File inputDir = new File(".");
+  ClassLoader resourceLoader = null;
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
 
@@ -104,6 +105,11 @@ public class Idl
     this.inputDir = inputFile.getParentFile();
   }
 
+  public Idl(File inputFile, ClassLoader resourceLoader) throws IOException {
+    this(inputFile);
+    this.resourceLoader = resourceLoader;
+  }
+  
   private ParseException error(String message, Token token) {
     return new ParseException
       (message+", at line "+token.beginLine+", column "+token.beginColumn);
@@ -129,6 +135,24 @@ public class Idl
       else
         throw error(key+" values must be textual: "+n, token);
     return values;
+  }
+  
+  private InputStream findFile(String importFile) throws IOException {
+    InputStream stream = null;
+    //Load the file if it exist in the inputDir
+    File file = new File(this.inputDir, importFile);
+    if (file.exists()) {
+      stream = new FileInputStream(file);
+    }
+    else if (this.resourceLoader != null) {
+      //Otherwise look for it using the provided ClassLoader.
+      stream = this.resourceLoader.getResourceAsStream(importFile);
+    }
+
+    if (stream == null) {
+      throw new FileNotFoundException(importFile);
+    }
+    return stream;
   }
 
 }
@@ -1139,7 +1163,12 @@ Protocol ImportIdl() : {
   <IDL> importFile = JsonString() ";"
     {
       try {
-        return new Idl(new File(inputDir, importFile)).CompilationUnit();
+        InputStream stream = findFile(importFile); 
+        try {
+          return new Idl(stream).CompilationUnit();
+        } finally {
+          stream.close();
+        }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
       }        
@@ -1154,7 +1183,12 @@ Protocol ImportProtocol() : {
     {
 
       try {
-        return Protocol.parse(new File(inputDir, importFile));
+        InputStream stream = findFile(importFile);
+        try {
+          return Protocol.parse(stream);
+        } finally {
+          stream.close();
+        }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
       }        
@@ -1170,9 +1204,14 @@ Schema ImportSchema() : {
       try {
         Parser parser = new Schema.Parser();
         parser.addTypes(names);                   // inherit names
-        Schema value = parser.parse(new File(inputDir, importFile));
-        names = parser.getTypes();                // update names
-        return value;
+        InputStream stream = findFile(importFile);
+        try {
+          Schema value = parser.parse(stream);
+          names = parser.getTypes();                // update names
+          return value;
+        } finally {
+          stream.close();
+        }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
       }        

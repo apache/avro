@@ -19,6 +19,12 @@
 @namespace("org.foo")
 protocol Import {
   import idl "reservedwords.avdl";
+  
+  //Note that this import is resolve via the classpath, not relative path.
+  import idl "OnTheClasspath.avdl";
+  import protocol "OnTheClasspath.avpr";
+  import schema "OnTheClasspath.avsc";
+  
   import schema "foo.avsc";
   import protocol "bar.avpr";
   

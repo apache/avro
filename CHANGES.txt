@@ -67,6 +67,9 @@ Avro 1.6.2 (unreleased)
     AVRO-1012. Java: Improve avro-service-archetype: POM and IT
     changes. (Lars Francke via scottcarey)
 
+    AVRO-971. Java: Permit IDL imports from classpath in Maven.
+    (Victor Chau via cutting)
+
   BUG FIXES
 
     AVRO-962. Java: Fix Maven plugin to support string type override.

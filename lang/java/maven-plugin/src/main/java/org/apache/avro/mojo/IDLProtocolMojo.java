@@ -20,6 +20,9 @@ package org.apache.avro.mojo;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.List;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.idl.Idl;
@@ -27,10 +30,13 @@ import org.apache.avro.compiler.idl.ParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
  * 
  * @goal idl-protocol
+ * @requiresDependencyResolution runtime
  * @phase generate-sources
  */
 public class IDLProtocolMojo extends AbstractAvroMojo {
@@ -54,8 +60,18 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
 
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
-    Idl parser = new Idl(new File(sourceDirectory, filename));
     try {
+      @SuppressWarnings("rawtypes")
+      List runtimeClasspathElements = project.getRuntimeClasspathElements();
+      URL[] runtimeUrls = new URL[runtimeClasspathElements.size()];
+      for (int i = 0; i < runtimeClasspathElements.size(); i++) {
+        String element = (String) runtimeClasspathElements.get(i);
+        runtimeUrls[i] = new File(element).toURI().toURL();
+      }
+      URLClassLoader projPathLoader = new URLClassLoader
+        (runtimeUrls, Thread.currentThread().getContextClassLoader());
+
+      Idl parser = new Idl(new File(sourceDirectory, filename), projPathLoader);
       Protocol p = parser.CompilationUnit();
       String json = p.toString(true);
       Protocol protocol = Protocol.parse(json);
@@ -65,6 +81,8 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       compiler.compileToDestination(null, outputDirectory);
     } catch (ParseException e) {
       throw new IOException(e);
+    } catch (DependencyResolutionRequiredException drre) {
+      throw new IOException(drre);
     }
   }
 

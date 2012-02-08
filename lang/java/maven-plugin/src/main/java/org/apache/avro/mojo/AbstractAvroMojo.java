@@ -96,7 +96,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @readonly
    * @required
    */
-  private MavenProject project;
+  protected MavenProject project;
 
   @Override
   public void execute() throws MojoExecutionException {

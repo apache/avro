@@ -19,6 +19,7 @@ package org.apache.avro;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -388,6 +389,11 @@ public class Protocol {
   /** Read a protocol from a Json file. */
   public static Protocol parse(File file) throws IOException {
     return parse(Schema.FACTORY.createJsonParser(file));
+  }
+
+  /** Read a protocol from a Json stream. */
+  public static Protocol parse(InputStream stream) throws IOException {
+    return parse(Schema.FACTORY.createJsonParser(stream));
   }
 
   /** Read a protocol from a Json string. */

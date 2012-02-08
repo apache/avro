@@ -1,0 +1,5 @@
+@namespace("org.on.the.classpath")
+protocol OnTheClasspath {
+	record FromAfar {
+	}
+}
