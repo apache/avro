@@ -56,13 +56,16 @@ Avro 1.6.2 (unreleased)
 
     AVRO-1010. Java: Improve codec javadoc. (Lars Francke via cutting)
 
-    AVRO-1018. Java: add svn:ignore to eclipse generated files for protobuf, thrift, and archetype modules (scottcarey)
+    AVRO-1018. Java: add svn:ignore to eclipse generated files for
+    protobuf, thrift, and archetype modules (scottcarey)
 
-    AVRO-1019. Java: Add unit test for Netty server concurrent execution. (jbaldassari)
+    AVRO-1019. Java: Add unit test for Netty server concurrent
+    execution. (jbaldassari)
 
     AVRO-995. Java: Update Dependencies for 1.6.2. (scottcarey)
 
-    AVRO-1012. Java: Improve avro-service-archetype: POM and IT changes. (Lars Francke via scottcarey)
+    AVRO-1012. Java: Improve avro-service-archetype: POM and IT
+    changes. (Lars Francke via scottcarey)
 
   BUG FIXES
 
@@ -121,7 +124,8 @@ Avro 1.6.2 (unreleased)
     AVRO-1020. Java: Fix builder API to correctly handle default
     values for enums.  (cutting)
 
-    AVRO-1013. Java: NettyTransceiver can hang after server restart. (jbaldassari)
+    AVRO-1013. Java: NettyTransceiver can hang after server
+    restart. (jbaldassari)
 
 Avro 1.6.1 (8 November 2011)
 
