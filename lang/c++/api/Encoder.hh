@@ -19,6 +19,7 @@
 #ifndef avro_Encoder_hh__
 #define avro_Encoder_hh__
 
+#include "Config.hh"
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -49,7 +50,7 @@ namespace avro {
  * differ in the method of encoding (binary vresus JSON) or in capabilities
  * such as ability to verify the order of invocation of different functions.
  */
-class Encoder {
+class AVRO_DECL Encoder {
 public:
     virtual ~Encoder() { };
     /// All future encodings will go to os, which should be valid until
@@ -95,7 +96,8 @@ public:
      * \param bytes The data.
      */
     void encodeBytes(const std::vector<uint8_t>& bytes) {
-        encodeBytes(&bytes[0], bytes.size());
+        uint8_t b = 0; 
+        encodeBytes(bytes.empty() ? &b : &bytes[0], bytes.size());
     }
 
     /// Encodes fixed length binary to the current stream.
@@ -144,19 +146,19 @@ typedef boost::shared_ptr<Encoder> EncoderPtr;
 /**
  *  Returns an encoder that can encode binary Avro standard.
  */
-EncoderPtr binaryEncoder();
+AVRO_DECL EncoderPtr binaryEncoder();
 
 /**
  *  Returns an encoder that validates sequence of calls to an underlying
  *  Encoder against the given schema.
  */
-EncoderPtr validatingEncoder(const ValidSchema& schema,
+AVRO_DECL EncoderPtr validatingEncoder(const ValidSchema& schema,
     const EncoderPtr& base);
 
 /**
  *  Returns an encoder that can encode Avro standard for JSON.
  */
-EncoderPtr jsonEncoder(const ValidSchema& schema);
+AVRO_DECL EncoderPtr jsonEncoder(const ValidSchema& schema);
 
 }   // namespace avro
 

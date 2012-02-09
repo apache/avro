@@ -73,6 +73,9 @@ Avro 1.6.2 (unreleased)
     AVRO-1007. Java: Enhance builder API's validity checks.
     (jbaldassari & cutting)
 
+    AVRO-1015. Support for C++ build using Micrsoft Visual Studio on Windows.
+    (thiru)
+
   BUG FIXES
 
     AVRO-962. Java: Fix Maven plugin to support string type override.

@@ -23,6 +23,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "Config.hh"
 #include "Exception.hh"
 #include "Types.hh"
 #include "SchemaResolution.hh"
@@ -49,7 +50,7 @@ typedef boost::shared_ptr<Node> NodePtr;
 /// different node types.
 ///
 
-class Node : private boost::noncopyable
+class AVRO_DECL Node : private boost::noncopyable
 {
   public:
 

@@ -20,6 +20,8 @@
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <boost/scoped_array.hpp>
+
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio.hpp>
 #endif
@@ -518,9 +520,9 @@ void TestReadSome()
         char datain[5000];
 
         while(is.rdbuf()->in_avail()) {
-            size_t bytesAvail = is.rdbuf()->in_avail();
+            size_t bytesAvail = static_cast<size_t>(is.rdbuf()->in_avail());
             cout << "Bytes avail = " << bytesAvail << endl;
-            size_t in = is.readsome(datain, sizeof(datain));
+            size_t in = static_cast<size_t>(is.readsome(datain, sizeof(datain)));
             cout << "Bytes read = " << in << endl;
             BOOST_CHECK_EQUAL(bytesAvail, in);
         }
@@ -753,14 +755,14 @@ void TestSplit()
 
         char datain[12];
         avro::istream is(buf);
-        size_t in = is.readsome(datain, sizeof(datain));
+        size_t in = static_cast<size_t>(is.readsome(datain, sizeof(datain)));
         BOOST_CHECK_EQUAL(in, sizeof(datain));
         BOOST_CHECK_EQUAL(static_cast<size_t>(is.tellg()), sizeof(datain));
 
         OutputBuffer part2;
         part2.append(is.getBuffer());
         BOOST_CHECK_EQUAL(part2.size(), buf.size());
-        InputBuffer part1 = part2.extractData(is.tellg());
+        InputBuffer part1 = part2.extractData(static_cast<size_t>(is.tellg()));
 
         BOOST_CHECK_EQUAL(part2.size(), str.size() - in);
 
@@ -791,14 +793,14 @@ void TestSplitOnBorder()
         BOOST_CHECK_EQUAL(buf.numDataChunks(), 2);
         size_t bufsize = buf.size();
     
-        char datain[firstChunkSize];
+        boost::scoped_array<char> datain(new char[firstChunkSize]);
         avro::istream is(buf);
-        size_t in = is.readsome(datain, firstChunkSize);
+        size_t in = static_cast<size_t>(is.readsome(&datain[0], firstChunkSize));
         BOOST_CHECK_EQUAL(in, firstChunkSize);
 
         OutputBuffer newBuf;
         newBuf.append(is.getBuffer());
-        newBuf.discardData(is.tellg());
+        newBuf.discardData(static_cast<size_t>(is.tellg()));
         BOOST_CHECK_EQUAL(newBuf.numDataChunks(), 1);
 
         BOOST_CHECK_EQUAL(newBuf.size(), bufsize - in);
@@ -827,13 +829,13 @@ void TestSplitTwice()
         buffer[5] = 0;
         std::cout << "buffer =" << buffer << std::endl;
         
-        buf1.discardData(is.tellg());
+        buf1.discardData(static_cast<size_t>(is.tellg()));
         printBuffer(buf1);
 
         avro::istream is2(buf1);
         is2.seekg(15);
 
-        buf1.discardData(is2.tellg());
+        buf1.discardData(static_cast<size_t>(is2.tellg()));
         printBuffer(buf1);
     }
 }

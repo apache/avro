@@ -21,6 +21,7 @@
 
 #include <boost/noncopyable.hpp>
 
+#include "Config.hh"
 #include "buffer/Buffer.hh"
 #include "Zigzag.hh"
 #include "Types.hh"

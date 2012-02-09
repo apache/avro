@@ -20,6 +20,10 @@ cmake_minimum_required (VERSION 2.6)
 
 set (CMAKE_LEGACY_CYGWIN_WIN32 0)
 
+if (NOT DEFINED CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS)
+    set (CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS ON)
+endif()
+
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt)
     file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt" AVRO_VERSION)
 else (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION.txt)
@@ -32,19 +36,32 @@ set (AVRO_VERSION_MINOR "0")
 
 project (Avro-cpp)
 
+if (WIN32 AND NOT CYGWIN)
+add_definitions (/EHa)
+add_definitions (
+    -DBOOST_REGEX_DYN_LINK
+    -DBOOST_FILESYSTEM_DYN_LINK
+    -DBOOST_SYSTEM_DYN_LINK
+    -DBOOST_PROGRAM_OPTIONS_DYN_LINK
+    -DBOOST_ALL_NO_LIB)
+endif()
+
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-Wall")
 endif ()
 
+
 find_package (Boost 1.38 REQUIRED
     COMPONENTS filesystem system program_options)
 
+add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+
 include_directories (api ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
 
-set (SOURCE_FILES
+set (AVRO_SOURCE_FILES
         impl/Compiler.cc impl/Node.cc
-        impl/NodeImpl.cc impl/Resolver.cc impl/ResolverSchema.cc impl/Schema.cc
-        impl/Types.cc impl/Validator.cc impl/ValidSchema.cc impl/Zigzag.cc
+        impl/NodeImpl.cc impl/ResolverSchema.cc impl/Schema.cc
+        impl/Types.cc impl/ValidSchema.cc impl/Zigzag.cc
         impl/BinaryEncoder.cc impl/BinaryDecoder.cc
         impl/Stream.cc impl/FileStream.cc
         impl/Generic.cc
@@ -55,11 +72,18 @@ set (SOURCE_FILES
         impl/parsing/ResolvingDecoder.cc
         impl/json/JsonIO.cc
         impl/json/JsonDom.cc
+        impl/Resolver.cc impl/Validator.cc
         )
 
-add_library (avrocpp SHARED ${SOURCE_FILES})
+add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})
 
-add_library (avrocpp_s STATIC ${SOURCE_FILES})
+set_property (TARGET avrocpp
+    APPEND PROPERTY COMPILE_DEFINITIONS AVRO_DYN_LINK)
+
+add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
+
+set_property (TARGET avrocpp avrocpp_s
+    APPEND PROPERTY COMPILE_DEFINITIONS AVRO_SOURCE)
 
 set_target_properties (avrocpp PROPERTIES
     VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR})
@@ -71,7 +95,7 @@ target_link_libraries (avrocpp ${Boost_LIBRARIES})
 
 add_executable (precompile test/precompile.cc)
 
-target_link_libraries (precompile avrocpp ${Boost_LIBRARIES})
+target_link_libraries (precompile avrocpp_s ${Boost_LIBRARIES})
 
 macro (gencpp file ns)
     add_custom_command (OUTPUT ${ns}.hh
@@ -83,8 +107,10 @@ macro (gencpp file ns)
     add_custom_target(${ns} DEPENDS ${ns}.hh)
 endmacro (gencpp)
 
-gencpp (bigrecord testgen)
-gencpp (bigrecord2 testgen2)
+if (CYGWIN OR NOT WIN32)
+    gencpp (bigrecord testgen)
+    gencpp (bigrecord2 testgen2)
+endif ()
 
 macro (gen file ns)
     add_custom_command (OUTPUT ${file}.hh
@@ -106,7 +132,7 @@ gen (reuse ru)
 gen (circulardep cd)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
-target_link_libraries (avrogencpp avrocpp ${Boost_LIBRARIES})
+target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES})
 
 enable_testing()
 
@@ -125,10 +151,13 @@ unittest (StreamTests)
 unittest (SpecificTests)
 unittest (DataFileTests)
 unittest (JsonTests)
-unittest (testgentest)
 unittest (AvrogencppTests)
 
-add_dependencies (testgentest testgen testgen2)
+if (CYGWIN OR NOT WIN32)
+    unittest (testgentest)
+    add_dependencies (testgentest testgen testgen2)
+endif()
+
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord2_hh
     union_array_union_hh union_map_union_hh union_conflict_hh
     recursive_hh reuse_hh circulardep_hh)

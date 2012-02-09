@@ -25,15 +25,16 @@
 #include <vector>
 
 #include "boost/any.hpp"
+#include "Config.hh"
 
 namespace avro {
 
-class InputStream;
+class AVRO_DECL InputStream;
 
 namespace json {
 
-class JsonParser;
-class JsonGenerator;
+class AVRO_DECL JsonParser;
+class AVRO_DECL JsonGenerator;
 
 enum EntityType {
     etNull,
@@ -45,7 +46,7 @@ enum EntityType {
     etObject
 };
 
-class Entity {
+class AVRO_DECL Entity {
     EntityType type_;
     boost::any value_;
 public:
@@ -98,11 +99,11 @@ template <> struct type_traits<int64_t> {
     static const char* name() { return "integer"; }
 };
 
-Entity readEntity(JsonParser& p);
+AVRO_DECL Entity readEntity(JsonParser& p);
 
-Entity loadEntity(InputStream& in);
-Entity loadEntity(const char* text);
-Entity loadEntity(const uint8_t* text, size_t len);
+AVRO_DECL Entity loadEntity(InputStream& in);
+AVRO_DECL Entity loadEntity(const char* text);
+AVRO_DECL Entity loadEntity(const uint8_t* text, size_t len);
 
 void writeEntity(JsonGenerator& g, const Entity& n);
 

@@ -383,14 +383,14 @@ static void check(Decoder& d, unsigned int skipLevel,
             {
                 float b1 = d.decodeFloat();
                 float b2 = from_string<float>(*it++);
-                BOOST_CHECK_CLOSE(b1, b2, 0.001);
+                BOOST_CHECK_CLOSE(b1, b2, 0.001f);
             }
             break;
         case 'D':
             {
                 double b1 = d.decodeDouble();
                 double b2 = from_string<double>(*it++);
-                BOOST_CHECK_CLOSE(b1, b2, 0.001);
+                BOOST_CHECK_CLOSE(b1, b2, 0.001f);
             }
             break;
         case 'S':

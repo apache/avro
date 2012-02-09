@@ -22,6 +22,8 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <stdint.h>
+
+#include "Config.hh"
 #include "Boost.hh"
 #include "Reader.hh"
 
@@ -34,7 +36,7 @@ class ValidSchema;
 class Layout;
 class Resolver;
 
-class ResolverSchema {
+class AVRO_DECL ResolverSchema {
 
   public:
 

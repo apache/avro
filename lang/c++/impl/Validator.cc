@@ -73,7 +73,7 @@ Validator::countingSetup()
             proceed = false;
         }
         else {
-            counters_.push_back(count_);
+            counters_.push_back(static_cast<size_t>(count_));
         }
     }
 
@@ -121,7 +121,7 @@ Validator::unionAdvance()
 
         if(count_ < static_cast<int64_t>(node->leaves())) {
             compoundStack_.pop_back();
-            setupOperation(node->leafAt(count_));
+            setupOperation(node->leafAt(static_cast<int>(count_)));
         }
         else {
             throw Exception(

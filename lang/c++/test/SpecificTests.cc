@@ -115,9 +115,9 @@ void testLong()
 
 void testFloat()
 {
-    float n = 10.19;
+    float n = 10.19f;
     float b = encodeAndDecode(n);
-    BOOST_CHECK_CLOSE(b, n, 0.00001);
+    BOOST_CHECK_CLOSE(b, n, 0.00001f);
 }
 
 void testDouble()

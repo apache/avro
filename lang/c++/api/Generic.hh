@@ -26,6 +26,7 @@
 #include <boost/any.hpp>
 #include <boost/utility.hpp>
 
+#include "Config.hh"
 #include "Node.hh"
 #include "Types.hh"
 #include "Encoder.hh"
@@ -55,7 +56,7 @@ namespace avro {
  * types of the union.
  *
  */
-class GenericDatum {
+class AVRO_DECL GenericDatum {
     Type type_;
     boost::any value_;
 
@@ -152,7 +153,7 @@ public:
 /**
  * The base class for all generic type for containers.
  */
-class GenericContainer {
+class AVRO_DECL GenericContainer {
     NodePtr schema_;
     static void assertType(const NodePtr& schema, Type type);
 protected:
@@ -162,11 +163,6 @@ protected:
     GenericContainer(Type type, const NodePtr& s) : schema_(s) {
         assertType(s, type);
     }
-
-    /**
-     * Asserts if the given generic datum \p v has a type that matches \p n.
-     */
-    static void assertSameType(const GenericDatum& v, const NodePtr& n);
 
 public:
     /// Returns the schema for this object
@@ -178,7 +174,7 @@ public:
 /**
  * Generic container for unions.
  */
-class GenericUnion : public GenericContainer {
+class AVRO_DECL GenericUnion : public GenericContainer {
     size_t curBranch_;
     GenericDatum datum_;
 
@@ -236,7 +232,7 @@ public:
 /**
  * The generic container for Avro records.
  */
-class GenericRecord : public GenericContainer {
+class AVRO_DECL GenericRecord : public GenericContainer {
     std::vector<GenericDatum> fields_;
 public:
     /**
@@ -271,7 +267,7 @@ public:
      * Replaces the field at the given position \p pos with \p v.
      */
     void setFieldAt(size_t pos, const GenericDatum& v) {
-        assertSameType(v, schema()->leafAt(pos));    
+        // assertSameType(v, schema()->leafAt(pos));    
         fields_[pos] = v;
     }
 };
@@ -279,7 +275,7 @@ public:
 /**
  * The generic container for Avro arrays.
  */
-class GenericArray : public GenericContainer {
+class AVRO_DECL GenericArray : public GenericContainer {
 public:
     /**
      * The contents type for the array.
@@ -313,7 +309,7 @@ private:
 /**
  * The generic container for Avro maps.
  */
-class GenericMap : public GenericContainer {
+class AVRO_DECL GenericMap : public GenericContainer {
 public:
     /**
      * The contents type for the map.
@@ -347,7 +343,7 @@ private:
 /**
  * Generic container for Avro enum.
  */
-class GenericEnum : public GenericContainer {
+class AVRO_DECL GenericEnum : public GenericContainer {
     size_t value_;
 public:
     /**
@@ -417,7 +413,7 @@ public:
 /**
  * Generic container for Avro fixed.
  */
-class GenericFixed : public GenericContainer {
+class AVRO_DECL GenericFixed : public GenericContainer {
     std::vector<uint8_t> value_;
 public:
     /**
@@ -447,7 +443,7 @@ public:
 /**
  * A utility class to read generic datum from decoders.
  */
-class GenericReader : boost::noncopyable {
+class AVRO_DECL GenericReader : boost::noncopyable {
     const ValidSchema schema_;
     const bool isResolving_;
     const DecoderPtr decoder_;
@@ -487,7 +483,7 @@ public:
 /**
  * A utility class to write generic datum to encoders.
  */
-class GenericWriter : boost::noncopyable {
+class AVRO_DECL GenericWriter : boost::noncopyable {
     const ValidSchema schema_;
     const EncoderPtr encoder_;
 
@@ -517,7 +513,7 @@ public:
     }
 };
 
-inline Type GenericDatum::type() const {
+inline Type AVRO_DECL GenericDatum::type() const {
     return (type_ == AVRO_UNION) ?
         boost::any_cast<GenericUnion>(&value_)->type() : type_;
 }

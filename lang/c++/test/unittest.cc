@@ -38,6 +38,9 @@ using namespace avro;
 
 static const uint8_t fixeddata[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
 
+#ifdef max
+#undef max
+#endif
 struct TestSchema
 {
     TestSchema() 
@@ -478,7 +481,7 @@ struct TestNested
         rec.addField("value", LongSchema());
         UnionSchema next;
         next.addType(NullSchema());
-        next.addType(rec);
+        next.addType(SymbolicSchema("LongList", rec.root()));
         rec.addField("next", next);
         rec.addField("end", BoolSchema());
 

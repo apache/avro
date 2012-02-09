@@ -30,7 +30,7 @@ encodeZigzag64(int64_t input)
 int64_t 
 decodeZigzag64(uint64_t input)
 {
-    return ((input >> 1) ^ -(input & 1));
+    return static_cast<int64_t>(((input >> 1) ^ -(static_cast<int64_t>(input) & 1)));
 }
 
 uint32_t 
@@ -42,7 +42,7 @@ encodeZigzag32(int32_t input)
 int32_t 
 decodeZigzag32(uint32_t input)
 {
-    return ((input >> 1) ^ -(input & 1));
+    return static_cast<int32_t>(((input >> 1) ^ -(static_cast<int64_t>(input) & 1)));
 }
 
 size_t 

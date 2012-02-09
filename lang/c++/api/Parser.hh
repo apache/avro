@@ -19,6 +19,7 @@
 #ifndef avro_Parser_hh__
 #define avro_Parser_hh__
 
+#include "Config.hh"
 #include "Reader.hh"
 
 namespace avro {

@@ -194,7 +194,7 @@ Production ResolvingGrammarGenerator::resolveRecords(
             if (p.size() == 1) {
                 result.push_back(p[0]);
             } else {
-                result.push_back(Symbol::indirect(make_shared<Production>(p)));
+                result.push_back(Symbol::indirect(boost::make_shared<Production>(p)));
             } 
         }
     }
@@ -262,7 +262,7 @@ Production ResolvingGrammarGenerator::doGenerate(
                     Symbol::sizeCheckSymbol(reader->fixedSize()),
                     Symbol::fixedSymbol() };
                 Production result(r, r + 2);
-                m[make_pair(writer, reader)] = make_shared<Production>(result);
+                m[make_pair(writer, reader)] = boost::make_shared<Production>(result);
                 return result;
             }
             break;
@@ -274,7 +274,7 @@ Production ResolvingGrammarGenerator::doGenerate(
 
                 const bool found = m.find(key) != m.end();
 
-                shared_ptr<Production> p = make_shared<Production>(result);
+                shared_ptr<Production> p = boost::make_shared<Production>(result);
                 m[key] = p;
                 return found ? Production(1, Symbol::indirect(p)) : result;
             }
@@ -287,7 +287,7 @@ Production ResolvingGrammarGenerator::doGenerate(
                     Symbol::enumSymbol(),
                 };
                 Production result(r, r + 2);
-                m[make_pair(writer, reader)] = make_shared<Production>(result);
+                m[make_pair(writer, reader)] = boost::make_shared<Production>(result);
                 return result;
             }
             break;

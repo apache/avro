@@ -19,6 +19,7 @@
 #ifndef avro_Decoder_hh__
 #define avro_Decoder_hh__
 
+#include "Config.hh"
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -45,7 +46,7 @@ namespace avro {
  * Decoder is an interface implemented by every decoder capable
  * of decoding Avro data.
  */
-class Decoder {
+class AVRO_DECL Decoder {
 public:
     virtual ~Decoder() { };
     /// All future decoding will come from is, which should be valid
@@ -163,7 +164,7 @@ typedef boost::shared_ptr<Decoder> DecoderPtr;
  * ResolvingDecoder is derived from \ref Decoder, with an additional
  * function to obtain the field ordering of fiedls within a record.
  */
-class ResolvingDecoder : public Decoder {
+class AVRO_DECL ResolvingDecoder : public Decoder {
 public:
     /// Returns the order of fields for records.
     /// The order of fields could be different from the order of their
@@ -180,19 +181,19 @@ typedef boost::shared_ptr<ResolvingDecoder> ResolvingDecoderPtr;
 /**
  *  Returns an decoder that can decode binary Avro standard.
  */
-DecoderPtr binaryDecoder();
+AVRO_DECL DecoderPtr binaryDecoder();
 
 /**
  *  Returns an decoder that validates sequence of calls to an underlying
  *  Decoder against the given schema.
  */
-DecoderPtr validatingDecoder(const ValidSchema& schema,
+AVRO_DECL DecoderPtr validatingDecoder(const ValidSchema& schema,
     const DecoderPtr& base);
 
 /**
  *  Returns an decoder that can decode Avro standard for JSON.
  */
-DecoderPtr jsonDecoder(const ValidSchema& schema);
+AVRO_DECL DecoderPtr jsonDecoder(const ValidSchema& schema);
 
 /**
  *  Returns a decoder that decodes avro data from base written according to
@@ -200,7 +201,7 @@ DecoderPtr jsonDecoder(const ValidSchema& schema);
  *  The client uses the decoder as if the data were written using readerSchema.
  *  // FIXME: Handle out of order fields.
  */
-ResolvingDecoderPtr resolvingDecoder(const ValidSchema& writer,
+AVRO_DECL ResolvingDecoderPtr resolvingDecoder(const ValidSchema& writer,
     const ValidSchema& reader, const DecoderPtr& base);
 
 

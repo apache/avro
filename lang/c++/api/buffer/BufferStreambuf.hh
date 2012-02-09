@@ -25,6 +25,9 @@
     \brief streambuf implementation for istream and ostream.
 */
 
+#ifdef min
+#undef min
+#endif
 namespace avro {
 
 /**
@@ -36,7 +39,7 @@ namespace avro {
  * but we have no need since all writes are immediately stored in the buffer.
  **/
 
-class ostreambuf : public std::streambuf {
+class AVRO_DECL ostreambuf : public std::streambuf {
 
   public:
 
@@ -69,7 +72,7 @@ class ostreambuf : public std::streambuf {
     /// Write a block of characters to the stream.
     virtual std::streamsize xsputn(const char_type *s, std::streamsize n) 
     {
-        return buffer_.writeTo(s, n);
+        return buffer_.writeTo(s, static_cast<size_t>(n));
     }
 
   private:
@@ -90,7 +93,7 @@ class ostreambuf : public std::streambuf {
  *
  **/
 
-class istreambuf : public std::streambuf {
+class AVRO_DECL istreambuf : public std::streambuf {
 
   public:
 
@@ -141,7 +144,7 @@ class istreambuf : public std::streambuf {
             size_t inBuffer = egptr() - gptr();
 
             if (inBuffer) {
-                size_t remaining = len - bytesCopied;
+                size_t remaining = static_cast<size_t>(len - bytesCopied);
                 size_t toCopy = std::min(inBuffer, remaining);
                 memcpy(c, gptr(), toCopy);
                 c += toCopy;
@@ -161,7 +164,7 @@ class istreambuf : public std::streambuf {
     }
 
     /// Special seek override to navigate InputBuffer chunks.
-    virtual pos_type seekoff(off_type off, std::ios::seekdir dir, std::_Ios_Openmode) {
+    virtual pos_type seekoff(off_type off, std::ios::seekdir dir, std::ios_base::openmode) {
 
         off_type curpos = basePos_ + (gptr() - eback()); 
         off_type newpos = off;
@@ -205,8 +208,8 @@ class istreambuf : public std::streambuf {
     }
 
     /// Calls seekoff for implemention.
-    virtual pos_type seekpos(pos_type pos, std::_Ios_Openmode) {
-        return istreambuf::seekoff(pos, std::ios::beg, std::_Ios_Openmode(0));
+    virtual pos_type seekpos(pos_type pos, std::ios_base::openmode) {
+        return istreambuf::seekoff(pos, std::ios::beg, std::ios_base::openmode(0));
     }
     
     /// Shows the number of bytes buffered in the current chunk, or next chunk if

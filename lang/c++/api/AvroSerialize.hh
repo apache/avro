@@ -19,6 +19,7 @@
 #ifndef avro_AvroSerialize_hh__
 #define avro_AvroSerialize_hh__
 
+#include "Config.hh"
 #include <boost/static_assert.hpp>
 #include "AvroTraits.hh"
 

@@ -17,6 +17,7 @@
  */
 
 #include <iostream>
+#include <string>
 #include <boost/static_assert.hpp>
 #include "Types.hh"
 

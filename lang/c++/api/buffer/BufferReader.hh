@@ -21,6 +21,9 @@
 
 #include "Buffer.hh"
 
+#ifdef min
+#undef min
+#endif
 /** 
  * \file BufferReader.hh 
  *
@@ -36,7 +39,7 @@ namespace avro {
  * chunk boundaries.  May read from an InputBuffer or OutputBuffer.
  *
  **/
-class BufferReader : private boost::noncopyable 
+class AVRO_DECL BufferReader : private boost::noncopyable 
 {
 
   public:

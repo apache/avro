@@ -19,10 +19,13 @@
 #ifndef avro_Buffer_hh__
 #define avro_Buffer_hh__
 
+#ifndef _WIN32
 #include <sys/uio.h>
+#endif
 #include <boost/type_traits.hpp>
 #include <vector>
 
+#include "Config.hh"
 #include "detail/BufferDetail.hh"
 #include "detail/BufferDetailIterator.hh"
 
@@ -59,7 +62,7 @@ class InputBuffer;
  * modifying one will modify both.
  **/
 
-class OutputBuffer 
+class AVRO_DECL OutputBuffer 
 {
 
   public:
@@ -323,7 +326,7 @@ class OutputBuffer
  *
  **/
 
-class InputBuffer 
+class AVRO_DECL InputBuffer 
 {
 
   public:

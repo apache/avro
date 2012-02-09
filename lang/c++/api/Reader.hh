@@ -23,6 +23,7 @@
 #include <vector>
 #include <boost/noncopyable.hpp>
 
+#include "Config.hh"
 #include "Zigzag.hh"
 #include "Types.hh"
 #include "Validator.hh"
@@ -63,7 +64,7 @@ class ReaderImpl : private boost::noncopyable
 
     void readValue(int32_t &val) {
         validator_.checkTypeExpected(AVRO_INT);
-        uint32_t encoded = readVarInt();
+        uint32_t encoded = static_cast<uint32_t>(readVarInt());
         val = decodeZigzag32(encoded);
     }
 
@@ -95,13 +96,13 @@ class ReaderImpl : private boost::noncopyable
 
     void readValue(std::string &val) {
         validator_.checkTypeExpected(AVRO_STRING);
-        int64_t size = readSize();
+        size_t size = static_cast<size_t>(readSize());
         reader_.read(val, size);
     }
 
     void readBytes(std::vector<uint8_t> &val) {
         validator_.checkTypeExpected(AVRO_BYTES);
-        int64_t size = readSize();
+        size_t size = static_cast<size_t>(readSize());
         val.resize(size);
         reader_.read(reinterpret_cast<char *>(&val[0]), size);
     }

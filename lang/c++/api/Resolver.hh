@@ -22,6 +22,7 @@
 #include <boost/noncopyable.hpp>
 #include <stdint.h>
 
+#include "Config.hh"
 #include "Reader.hh"
 
 /// \file Resolver.hh
@@ -32,7 +33,7 @@ namespace avro {
 class ValidSchema;
 class Layout;
     
-class Resolver : private boost::noncopyable
+class AVRO_DECL Resolver : private boost::noncopyable
 {
 
   public:

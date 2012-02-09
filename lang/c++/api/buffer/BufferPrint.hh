@@ -85,7 +85,7 @@ hexPrint(std::ostream &os, BufferReader &reader)
         }
         os << " |";
         for(i = 0; i < inBuffer; ++i) {
-            os.put(isprint(sixteenBytes[i]) ? sixteenBytes[i] : '.' );
+            os.put(isprint(sixteenBytes[i] & 0xff) ? sixteenBytes[i] : '.' );
         }
         os << "|\n";
 

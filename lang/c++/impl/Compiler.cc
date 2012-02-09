@@ -158,7 +158,7 @@ static NodePtr makeEnumNode(const Entity& e,
 static NodePtr makeFixedNode(const Entity& e,
     const string& name, const map<string, Entity>& m)
 {
-    int v = getField<int64_t>(e, m, "size");
+    int v = static_cast<int>(getField<int64_t>(e, m, "size"));
     if (v <= 0) {
         throw Exception(boost::format("Size for fixed is not positive: ") %
             e.toString());
@@ -246,7 +246,7 @@ static NodePtr makeNode(const json::Entity& e, SymbolTable& st)
     }
 }
 
-ValidSchema compileJsonSchemaFromStream(InputStream& is)
+AVRO_DECL ValidSchema compileJsonSchemaFromStream(InputStream& is)
 {
     json::Entity e = json::loadEntity(is);
     SymbolTable st;
@@ -254,12 +254,12 @@ ValidSchema compileJsonSchemaFromStream(InputStream& is)
     return ValidSchema(n);
 }
 
-ValidSchema compileJsonSchemaFromMemory(const uint8_t* input, size_t len)
+AVRO_DECL ValidSchema compileJsonSchemaFromMemory(const uint8_t* input, size_t len)
 {
     return compileJsonSchemaFromStream(*memoryInputStream(input, len));
 }
 
-ValidSchema compileJsonSchemaFromString(const char* input)
+AVRO_DECL ValidSchema compileJsonSchemaFromString(const char* input)
 {
     return compileJsonSchemaFromMemory(reinterpret_cast<const uint8_t*>(input),
         ::strlen(input));
@@ -271,8 +271,7 @@ static ValidSchema compile(std::istream& is)
     return compileJsonSchemaFromStream(*in);
 }
 
-void
-compileJsonSchema(std::istream &is, ValidSchema &schema)
+AVRO_DECL void compileJsonSchema(std::istream &is, ValidSchema &schema)
 {
     if (!is.good()) {
         throw Exception("Input stream is not good");
@@ -281,8 +280,7 @@ compileJsonSchema(std::istream &is, ValidSchema &schema)
     schema = compile(is);
 }
 
-bool
-compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error)
+AVRO_DECL bool compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error)
 {
     try {
         compileJsonSchema(is, schema);

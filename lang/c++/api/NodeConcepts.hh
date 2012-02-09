@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <map>
+#include "Config.hh"
 #include "Exception.hh"
 
 namespace avro {
@@ -81,6 +82,7 @@ struct SingleAttribute
     SingleAttribute() : attr_(), size_(0)
     { }
 
+    SingleAttribute(const Attribute& a) : attr_(a), size_(1) { }
     // copy constructing from another single attribute is allowed
     SingleAttribute(const SingleAttribute<Attribute> &rhs) : 
         attr_(rhs.attr_), size_(rhs.size_)
@@ -114,7 +116,7 @@ struct SingleAttribute
 
   private:
 
-    template<typename T> friend class MultiAttribute;
+    template<typename T> friend struct MultiAttribute;
 
     Attribute attr_;
     int       size_;

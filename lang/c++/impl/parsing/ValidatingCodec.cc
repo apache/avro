@@ -33,8 +33,6 @@
 
 namespace avro {
 
-using boost::make_shared;
-
 namespace parsing {
 
 using boost::shared_ptr;
@@ -87,7 +85,7 @@ Production ValidatingGrammarGenerator::doGenerate(const NodePtr& n,
                 Symbol::sizeCheckSymbol(n->fixedSize()),
                 Symbol::fixedSymbol() };
             Production result(r, r + 2);
-            m[n] = make_shared<Production>(result);
+            m[n] = boost::make_shared<Production>(result);
             return result;
         }
     case AVRO_RECORD: {
@@ -104,7 +102,7 @@ Production ValidatingGrammarGenerator::doGenerate(const NodePtr& n,
 
             bool found = m.find(n) != m.end();
 
-            shared_ptr<Production> p = make_shared<Production>(result);
+            shared_ptr<Production> p = boost::make_shared<Production>(result);
             m[n] = p;
 
             return found ? Production(1, Symbol::indirect(p)) : result;
@@ -115,7 +113,7 @@ Production ValidatingGrammarGenerator::doGenerate(const NodePtr& n,
                 Symbol::sizeCheckSymbol(n->names()),
                 Symbol::enumSymbol() };
             Production result(r, r + 2);
-            m[n] = make_shared<Production>(result);
+            m[n] = boost::make_shared<Production>(result);
             return result;
         }
     case AVRO_ARRAY:
@@ -577,13 +575,13 @@ void ValidatingEncoder<P>::encodeUnionIndex(size_t e)
 DecoderPtr validatingDecoder(const ValidSchema& s,
     const DecoderPtr& base)
 {
-    return make_shared<parsing::ValidatingDecoder<
+    return boost::make_shared<parsing::ValidatingDecoder<
         parsing::SimpleParser<parsing::DummyHandler> > >(s, base);
 }
 
 EncoderPtr validatingEncoder(const ValidSchema& schema, const EncoderPtr& base)
 {
-    return make_shared<parsing::ValidatingEncoder<
+    return boost::make_shared<parsing::ValidatingEncoder<
         parsing::SimpleParser<parsing::DummyHandler> > >(schema, base);
 }
 

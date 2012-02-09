@@ -126,7 +126,8 @@ void testNonEmpty2(const TestData& td) {
         v.push_back(i % 10 + '0');
     }
 
-    std::auto_ptr<InputStream> is = memoryInputStream(&v[0], v.size());
+    uint8_t v2 = 0;
+    std::auto_ptr<InputStream> is = memoryInputStream(v.empty() ? &v2 : &v[0], v.size());
     Verify1()(*is, td.dataSize);
 }
 

@@ -23,12 +23,13 @@
 #include <vector>
 #include <stdint.h>
 
+#include "Config.hh"
 #include "Types.hh"
 #include "ValidSchema.hh"
 
 namespace avro {
 
-class NullValidator : private boost::noncopyable
+class AVRO_DECL NullValidator : private boost::noncopyable
 {
   public:
 
@@ -69,7 +70,7 @@ class NullValidator : private boost::noncopyable
 /// through all leaf nodes but a union only skips to one), and reports which
 /// type is next.
 
-class Validator : private boost::noncopyable
+class AVRO_DECL Validator : private boost::noncopyable
 {
   public:
 
@@ -78,7 +79,7 @@ class Validator : private boost::noncopyable
     void setCount(int64_t val);
 
     bool typeIsExpected(Type type) const {
-        return (expectedTypesFlag_ & typeToFlag(type));
+        return (expectedTypesFlag_ & typeToFlag(type)) != 0;
     }
 
     Type nextTypeExpected() const {

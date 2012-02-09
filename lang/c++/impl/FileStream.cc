@@ -17,6 +17,7 @@
  */
 
 #include "Stream.hh"
+#ifndef _WIN32
 #include "unistd.h"
 #include "fcntl.h"
 #include "errno.h"
@@ -24,12 +25,20 @@
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
+#else
+#include "Windows.h"
+
+#ifdef min
+#undef min
+#endif
+#endif
 
 using std::auto_ptr;
 using std::istream;
+using std::ostream;
 
 namespace avro {
-namespace stream {
+namespace {
 struct BufferCopyIn {
     virtual ~BufferCopyIn() { }
     virtual void seek(size_t len) = 0;
@@ -38,6 +47,34 @@ struct BufferCopyIn {
 };
 
 struct FileBufferCopyIn : public BufferCopyIn {
+#ifdef _WIN32
+    HANDLE h_;
+    FileBufferCopyIn(const char* filename) :
+        h_(::CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
+        if (h_ == INVALID_HANDLE_VALUE) {
+            throw Exception(boost::format("Cannot open file: %1%") % ::GetLastError());
+        }
+    }
+
+    ~FileBufferCopyIn() {
+        ::CloseHandle(h_);
+    }
+
+    void seek(size_t len) {
+        if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) != INVALID_SET_FILE_POINTER) {
+            throw Exception(boost::format("Cannot skip file: %1%") % ::GetLastError());
+        }
+    }
+
+    bool read(uint8_t* b, size_t toRead, size_t& actual) {
+        DWORD dw = 0;
+        if (! ::ReadFile(h_, b, toRead, &dw, NULL)) {
+            throw Exception(boost::format("Cannot read file: %1%") % ::GetLastError());
+        }
+        actual = static_cast<size_t>(dw);
+        return actual != 0;
+    }
+#else
     const int fd_;
 
     FileBufferCopyIn(const char* filename) :
@@ -68,7 +105,8 @@ struct FileBufferCopyIn : public BufferCopyIn {
         }
         return false;
     }
-
+#endif
+  
 };
 
 struct IStreamBufferCopyIn : public BufferCopyIn {
@@ -88,7 +126,7 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
         if (is_.bad()) {
             return false;
         }
-        actual = is_.gcount();
+        actual = static_cast<size_t>(is_.gcount());
         return (! is_.eof() || actual != 0);
     }
 
@@ -99,7 +137,7 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
 class BufferCopyInInputStream : public InputStream {
     const size_t bufferSize_;
     uint8_t* const buffer_;
-    auto_ptr<stream::BufferCopyIn> in_;
+    auto_ptr<BufferCopyIn> in_;
     size_t byteCount_;
     uint8_t* next_;
     size_t available_;
@@ -151,7 +189,7 @@ class BufferCopyInInputStream : public InputStream {
 
 
 public:
-    BufferCopyInInputStream(auto_ptr<stream::BufferCopyIn>& in, size_t bufferSize) :
+    BufferCopyInInputStream(auto_ptr<BufferCopyIn>& in, size_t bufferSize) :
         bufferSize_(bufferSize),
         buffer_(new uint8_t[bufferSize]),
         in_(in),
@@ -164,10 +202,80 @@ public:
     }
 };
 
-class FileOutputStream : public OutputStream {
+namespace {
+struct BufferCopyOut {
+    virtual ~BufferCopyOut() { }
+    virtual void write(const uint8_t* b, size_t len) = 0;
+};
+
+struct FileBufferCopyOut : public BufferCopyOut {
+#ifdef _WIN32
+    HANDLE h_;
+    FileBufferCopyOut(const char* filename) :
+        h_(::CreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
+        if (h_ == INVALID_HANDLE_VALUE) {
+            throw Exception(boost::format("Cannot open file: %1%") % ::GetLastError());
+        }
+    }
+
+    ~FileBufferCopyOut() {
+        ::CloseHandle(h_);
+    }
+
+    void write(const uint8_t* b, size_t len) {
+        while (len > 0) {
+            DWORD dw = 0;
+            if (! ::WriteFile(h_, b, len, &dw, NULL)) {
+                throw Exception(boost::format("Cannot read file: %1%") % ::GetLastError());
+            }
+            b += dw;
+            len -= dw;
+        }
+    }
+#else
+    const int fd_;
+
+    FileBufferCopyOut(const char* filename) :
+        fd_(::open(filename, O_WRONLY | O_CREAT | O_BINARY, 0644)) {
+
+        if (fd_ < 0) {
+            throw Exception(boost::format("Cannot open file: %1%") %
+                ::strerror(errno));
+        }
+    }
+
+    ~FileBufferCopyOut() {
+        ::close(fd_);
+    }
+
+    void write(const uint8_t* b, size_t len) {
+        if (::write(fd_, b, len) < 0) {
+            throw Exception(boost::format("Cannot write file: %1%") %
+                ::strerror(errno));
+        }
+    }
+#endif
+  
+};
+
+struct OStreamBufferCopyOut : public BufferCopyOut {
+    ostream& os_;
+
+    OStreamBufferCopyOut(ostream& os) : os_(os) {
+    }
+
+    void write(const uint8_t* b, size_t len) {
+        os_.write(reinterpret_cast<const char*>(b), len);
+    }
+
+};
+
+}
+
+class BufferCopyOutputStream : public OutputStream {
     size_t bufferSize_;
     uint8_t* const buffer_;
-    int out_;
+    auto_ptr<BufferCopyOut> out_;
     uint8_t* next_;
     size_t available_;
     size_t byteCount_;
@@ -196,26 +304,20 @@ class FileOutputStream : public OutputStream {
     }
 
     void flush() {
-        if (::write(out_, buffer_, bufferSize_ - available_) < 0) {
-            throw Exception(boost::format("Cannot write file: %1%") %
-                strerror(errno));
-        }
+        out_->write(buffer_, bufferSize_ - available_);
         next_ = buffer_;
         available_ = bufferSize_;
     }
 
 public:
-    FileOutputStream(const char* filename, size_t bufferSize) :
+    BufferCopyOutputStream(auto_ptr<BufferCopyOut> out, size_t bufferSize) :
         bufferSize_(bufferSize),
         buffer_(new uint8_t[bufferSize]),
-        out_(::open(filename, O_WRONLY | O_CREAT | O_BINARY, 0644)),
+        out_(out),
         next_(buffer_),
         available_(bufferSize_), byteCount_(0) { }
 
-    ~FileOutputStream() {
-        if (out_ >= 0) {
-            ::close(out_);
-        }
+    ~BufferCopyOutputStream() {
         delete[] buffer_;
     }
 };
@@ -223,22 +325,30 @@ public:
 auto_ptr<InputStream> fileInputStream(const char* filename,
     size_t bufferSize)
 {
-    auto_ptr<stream::BufferCopyIn> in(new stream::FileBufferCopyIn(filename));
+    auto_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
     return auto_ptr<InputStream>( new BufferCopyInInputStream(in, bufferSize));
 }
 
 auto_ptr<InputStream> istreamInputStream(istream& is,
     size_t bufferSize)
 {
-    auto_ptr<stream::BufferCopyIn> in(new stream::IStreamBufferCopyIn(is));
+    auto_ptr<BufferCopyIn> in(new IStreamBufferCopyIn(is));
     return auto_ptr<InputStream>( new BufferCopyInInputStream(in, bufferSize));
 }
 
 auto_ptr<OutputStream> fileOutputStream(const char* filename,
     size_t bufferSize)
 {
-    return auto_ptr<OutputStream>(
-        new FileOutputStream(filename, bufferSize));
+    auto_ptr<BufferCopyOut> out(new FileBufferCopyOut(filename));
+    return auto_ptr<OutputStream>(new BufferCopyOutputStream(out, bufferSize));
 }
+
+auto_ptr<OutputStream> ostreamOutputStream(ostream& os,
+    size_t bufferSize)
+{
+    auto_ptr<BufferCopyOut> out(new OStreamBufferCopyOut(os));
+    return auto_ptr<OutputStream>(new BufferCopyOutputStream(out, bufferSize));
+}
+
 
 }   // namespace avro

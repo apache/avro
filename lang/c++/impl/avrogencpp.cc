@@ -17,7 +17,9 @@
  */
 
 #include <ctype.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -107,7 +109,7 @@ public:
         unionNumber_(0), os_(os), inNamespace_(false), ns_(ns),
         schemaFile_(schemaFile), headerFile_(headerFile),
         includePrefix_(includePrefix), noUnion_(noUnion),
-        random_(::time(0)) { }
+        random_(static_cast<uint32_t>(::time(0))) { }
     void generate(const ValidSchema& schema);
 };
 

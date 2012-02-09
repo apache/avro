@@ -51,7 +51,7 @@ Presently there is no support for the following specified in Avro specification.
 
 <h2>Installing Avro C++</h2>
 <h3>Supported platforms and pre-requisites</h3>
-One should be able to build Avro C++ on any UNIX flavor including cygwin for Windows. We have tested it on Linux systems and Cygwin.
+One should be able to build Avro C++ on (1) any UNIX flavor including cygwin for Windows and (2) natively on Windows using Visual Studio. We have tested it on (1) Linux systems (Ubuntu and RHEL) and Cygwin and Visual Studio 2010 Express edition.
 
 In order to build Avro C++, one needs the following:
 <ul>
@@ -71,16 +71,38 @@ For Ubuntu Linux, for example, you can have these by doing
 \li libboost-system-dev
 \li libboost-program-options-dev
 
+For Windows native builds, you need to install the following:
+\ul
+\li cmake
+\li boost distribution from Boost consulting
+\li Visual studio
+
 <h3>Installing Avro C++</h3>
 <ol>
     <li>Download the latest Avro distribution. Avro distribution is a compressed tarball.
 Please see the main documentation if you want to build anything more than Avro C++. 
+</ol>
+
+<h4>On Unix systems and on Cygwin</h4>
+<ol>
     <li>Expand the tarball into a directory.
     <li>Change to <tt>lang/c++</tt> subdirectory.
     <li>Type <tt>./build.sh test</tt>. This builds Avro C++ and runs tests on it.
     <li>Type <tt>./build.sh install</tt>. This installs Avro C++ under /usr/local on your system.
 </ol>
 
+<h4>On native Windows</h4>
+<ol>
+    <li>Ensure that Cmake's bin directory and Boost's lib directory are in the path.
+    <li>Expand the tarball into a directory.
+    <li>Change to <tt>lang/c++</tt> subdirectory.
+    <li>Create a subdirectory, say, build.win, and change to that directory.
+    <li>Type <tt>cmake -G "Visual Studio 10"</tt>. It creates, among other things, Avro-cpp.sln file.
+    <li>Open the solution file using Visual Studio and build the projects from within the Visual Studio.
+    <li>To run all unit tests, build the special project named "RUN_TESTS".
+    <li>After building all the projects, you can also execute the unit tests from command line. <tt>ctest -C release</tt> or <tt>ctest -C debug</tt>.
+
+</ol>
 
 <h2>Getting started with Avro C++</h2>
 

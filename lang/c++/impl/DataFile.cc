@@ -119,7 +119,7 @@ void DataFileWriterBase::flush()
     sync();
 }
 
-boost::mt19937 random(time(0));
+boost::mt19937 random(static_cast<uint32_t>(time(0)));
 
 DataFileSync DataFileWriterBase::makeSync()
 {
@@ -267,7 +267,7 @@ bool DataFileReaderBase::readDataBlock()
     avro::decode(*decoder_, byteCount);
     decoder_->init(*stream_);
 
-    auto_ptr<InputStream> st = boundedInputStream(*stream_, byteCount);
+    auto_ptr<InputStream> st = boundedInputStream(*stream_, static_cast<size_t>(byteCount));
     dataDecoder_->init(*st);
     dataStream_ = st;
     return true;

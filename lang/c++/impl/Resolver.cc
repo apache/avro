@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "boost/scoped_array.hpp"
 #include "Resolver.hh"
 #include "Layout.hh"
 #include "NodeImpl.hh"
@@ -375,7 +376,7 @@ class EnumParser : public Resolver
 
     virtual void parse(Reader &reader, uint8_t *address) const
     {
-        int64_t val = reader.readEnum();
+        size_t val = static_cast<size_t>(reader.readEnum());
         assert(static_cast<size_t>(val) < mapping_.size());
 
         if(mapping_[val] < readerSize_) {
@@ -402,7 +403,7 @@ class UnionSkipper : public Resolver
     virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Skipping union");
-        int64_t choice = reader.readUnion();
+        size_t choice = static_cast<size_t>(reader.readUnion());
         resolvers_[choice].parse(reader, address);
     }
 
@@ -423,7 +424,7 @@ class UnionParser : public Resolver
     virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading union");
-        int64_t writerChoice = reader.readUnion();
+        size_t writerChoice = static_cast<size_t>(reader.readUnion());
         int64_t *readerChoice = reinterpret_cast<int64_t *>(address + choiceOffset_);
 
         *readerChoice = choiceMapping_[writerChoice];
@@ -454,7 +455,7 @@ class UnionToNonUnionParser : public Resolver
     virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Reading union to non-union");
-        int64_t choice = reader.readUnion();
+        size_t choice = static_cast<size_t>(reader.readUnion());
         resolvers_[choice].parse(reader, address);
     }
 
@@ -506,8 +507,8 @@ class FixedSkipper : public Resolver
     virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Skipping fixed");
-        uint8_t val[size_];
-        reader.readFixed(val, size_);
+        boost::scoped_array<uint8_t> val(new uint8_t[size_]);
+        reader.readFixed(&val[0], size_);
     }
 
   protected:

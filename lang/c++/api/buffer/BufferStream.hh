@@ -35,7 +35,7 @@ namespace avro {
  *
  **/
 
-class ostream : public std::ostream {
+class AVRO_DECL ostream : public std::ostream {
 
   public:
 
@@ -71,7 +71,7 @@ class ostream : public std::ostream {
  *
  **/
 
-class istream : public std::istream {
+class AVRO_DECL istream : public std::istream {
 
   public:
 

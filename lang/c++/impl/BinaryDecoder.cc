@@ -119,7 +119,9 @@ void BinaryDecoder::decodeString(std::string& value)
 {
     size_t len = decodeInt();
     value.resize(len);
-    in_.readBytes(reinterpret_cast<uint8_t*>(&value[0]), len);
+    if (len > 0) {
+        in_.readBytes(reinterpret_cast<uint8_t*>(&value[0]), len);
+    }
 }
 
 void BinaryDecoder::skipString()
@@ -132,7 +134,9 @@ void BinaryDecoder::decodeBytes(std::vector<uint8_t>& value)
 {
     size_t len = decodeInt();
     value.resize(len);
-    in_.readBytes(&value[0], len);
+    if (len > 0) {
+        in_.readBytes(&value[0], len);
+    }
 }
 
 void BinaryDecoder::skipBytes()
@@ -144,7 +148,9 @@ void BinaryDecoder::skipBytes()
 void BinaryDecoder::decodeFixed(size_t n, std::vector<uint8_t>& value)
 {
     value.resize(n);
-    in_.readBytes(&value[0], n);
+    if (n > 0) {
+        in_.readBytes(&value[0], n);
+    }
 }
 
 void BinaryDecoder::skipFixed(size_t n)
@@ -154,7 +160,7 @@ void BinaryDecoder::skipFixed(size_t n)
 
 size_t BinaryDecoder::decodeEnum()
 {
-    return doDecodeLong();
+    return static_cast<size_t>(doDecodeLong());
 }
 
 size_t BinaryDecoder::arrayStart()
@@ -167,14 +173,14 @@ size_t BinaryDecoder::doDecodeItemCount()
     int64_t result = doDecodeLong();
     if (result < 0) {
         doDecodeLong();
-        return -result;
+        return static_cast<size_t>(-result);
     }
-    return result;
+    return static_cast<size_t>(result);
 }
 
 size_t BinaryDecoder::arrayNext()
 {
-    return doDecodeLong();
+    return static_cast<size_t>(doDecodeLong());
 }
 
 size_t BinaryDecoder::skipArray()
@@ -182,10 +188,10 @@ size_t BinaryDecoder::skipArray()
     for (; ;) {
         int64_t r = doDecodeLong();
         if (r < 0) {
-            size_t n = doDecodeLong();            
+            size_t n = static_cast<size_t>(doDecodeLong()); 
             in_.skipBytes(n);
         } else {
-            return r;
+            return static_cast<size_t>(r);
         }
     }
 }
@@ -207,7 +213,7 @@ size_t BinaryDecoder::skipMap()
 
 size_t BinaryDecoder::decodeUnionIndex()
 {
-    return doDecodeLong();
+    return static_cast<size_t>(doDecodeLong());
 }
 
 int64_t BinaryDecoder::doDecodeLong() {

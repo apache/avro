@@ -1,5 +1,6 @@
 .svn/
 build/
+build.win/
 doc/
 m4/
 test.avro

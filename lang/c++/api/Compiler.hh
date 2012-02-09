@@ -19,42 +19,44 @@
 #ifndef avro_Compiler_hh__
 #define avro_Compiler_hh__
 
+#include "Config.hh"
 #include <stdint.h>
 #include <istream>
 
 namespace avro {
 
-class InputStream;
+class AVRO_DECL InputStream;
 
 /// This class is used to implement an avro spec parser using a flex/bison
 /// compiler.  In order for the lexer to be reentrant, this class provides a
 /// lexer object for each parse.  The bison parser also uses this class to
 /// build up an avro parse tree as the avro spec is parsed.
     
-class ValidSchema;
+class AVRO_DECL ValidSchema;
 
 /// Given a stream comtaining a JSON schema, compiles the schema to a
 /// ValidSchema object.  Throws if the schema cannot be compiled to a valid
 /// schema
 
-void compileJsonSchema(std::istream &is, ValidSchema &schema);
+AVRO_DECL void compileJsonSchema(std::istream &is, ValidSchema &schema);
 
 /// Non-throwing version of compileJsonSchema.  
 ///
 /// \return True if no error, false if error (with the error string set)
 ///
 
-bool compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error);
+AVRO_DECL bool compileJsonSchema(std::istream &is, ValidSchema &schema,
+    std::string &error);
 
-ValidSchema compileJsonSchemaFromStream(InputStream& is);
+AVRO_DECL ValidSchema compileJsonSchemaFromStream(InputStream& is);
 
-ValidSchema compileJsonSchemaFromMemory(const uint8_t* input, size_t len);
+AVRO_DECL ValidSchema compileJsonSchemaFromMemory(const uint8_t* input, size_t len);
 
-ValidSchema compileJsonSchemaFromString(const char* input);
+AVRO_DECL ValidSchema compileJsonSchemaFromString(const char* input);
 
-ValidSchema compileJsonSchemaFromString(const std::string& input);
+AVRO_DECL ValidSchema compileJsonSchemaFromString(const std::string& input);
 
-ValidSchema compileJsonSchemaFromFile(const char* filename);
+AVRO_DECL ValidSchema compileJsonSchemaFromFile(const char* filename);
 
 } // namespace avro
 

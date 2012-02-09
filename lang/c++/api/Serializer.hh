@@ -21,6 +21,7 @@
 
 #include <boost/noncopyable.hpp>
 
+#include "Config.hh"
 #include "Writer.hh"
 
 namespace avro {

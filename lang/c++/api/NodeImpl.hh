@@ -23,6 +23,7 @@
 #include <set>
 #include <boost/weak_ptr.hpp>
 
+#include "Config.hh"
 #include "Node.hh"
 #include "NodeConcepts.hh"
 
@@ -159,7 +160,7 @@ typedef NodeImpl< NoName,  MultiLeaves, NoLeafNames,  NoSize  > NodeImplMap;
 typedef NodeImpl< NoName,  MultiLeaves, NoLeafNames,  NoSize  > NodeImplUnion;
 typedef NodeImpl< HasName, NoLeaves,    NoLeafNames,  HasSize > NodeImplFixed;
 
-class NodePrimitive : public NodeImplPrimitive
+class AVRO_DECL NodePrimitive : public NodeImplPrimitive
 {
   public:
 
@@ -176,7 +177,7 @@ class NodePrimitive : public NodeImplPrimitive
     }
 };
 
-class NodeSymbolic : public NodeImplSymbolic
+class AVRO_DECL NodeSymbolic : public NodeImplSymbolic
 {
     typedef boost::weak_ptr<Node> NodeWeakPtr;
 
@@ -223,7 +224,7 @@ class NodeSymbolic : public NodeImplSymbolic
 
 };
 
-class NodeRecord : public NodeImplRecord
+class AVRO_DECL NodeRecord : public NodeImplRecord
 {
   public:
 
@@ -258,7 +259,7 @@ class NodeRecord : public NodeImplRecord
     }
 };
 
-class NodeEnum : public NodeImplEnum
+class AVRO_DECL NodeEnum : public NodeImplEnum
 {
   public:
 
@@ -288,7 +289,7 @@ class NodeEnum : public NodeImplEnum
     }
 };
 
-class NodeArray : public NodeImplArray
+class AVRO_DECL NodeArray : public NodeImplArray
 {
   public:
 
@@ -309,7 +310,7 @@ class NodeArray : public NodeImplArray
     }
 };
 
-class NodeMap : public NodeImplMap
+class AVRO_DECL NodeMap : public NodeImplMap
 {
   public:
 
@@ -340,7 +341,7 @@ class NodeMap : public NodeImplMap
     }
 };
 
-class NodeUnion : public NodeImplUnion
+class AVRO_DECL NodeUnion : public NodeImplUnion
 {
   public:
 
@@ -414,7 +415,7 @@ class NodeUnion : public NodeImplUnion
     }
 };
 
-class NodeFixed : public NodeImplFixed
+class AVRO_DECL NodeFixed : public NodeImplFixed
 {
   public:
 

@@ -26,6 +26,7 @@
 
 #include "boost/array.hpp"
 
+#include "Config.hh"
 #include "Encoder.hh"
 #include "Decoder.hh"
 

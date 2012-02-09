@@ -38,8 +38,6 @@
 
 namespace avro {
 
-using boost::make_shared;
-
 namespace parsing {
 
 using boost::shared_ptr;
@@ -106,7 +104,7 @@ Production JsonGrammarGenerator::doGenerate(const NodePtr& n,
 
             bool found = m.find(n) != m.end();
 
-            shared_ptr<Production> p = make_shared<Production>(result);
+            shared_ptr<Production> p = boost::make_shared<Production>(result);
             m[n] = p;
 
             return found ? Production(1, Symbol::indirect(p)) : result;
@@ -678,13 +676,13 @@ void JsonEncoder<P>::encodeUnionIndex(size_t e)
 
 DecoderPtr jsonDecoder(const ValidSchema& s)
 {
-    return make_shared<parsing::JsonDecoder<
+    return boost::make_shared<parsing::JsonDecoder<
         parsing::SimpleParser<parsing::JsonDecoderHandler> > >(s);
 }
 
 EncoderPtr jsonEncoder(const ValidSchema& schema)
 {
-    return make_shared<parsing::JsonEncoder<
+    return boost::make_shared<parsing::JsonEncoder<
         parsing::SimpleParser<parsing::JsonHandler> > >(schema);
 }
 

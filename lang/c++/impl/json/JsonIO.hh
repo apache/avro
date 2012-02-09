@@ -24,6 +24,7 @@
 #include <sstream>
 #include <boost/utility.hpp>
 
+#include "Config.hh"
 #include "Stream.hh"
 
 namespace avro {
@@ -34,7 +35,7 @@ inline char toHex(unsigned int n) {
 }
 
 
-class JsonParser : boost::noncopyable {
+class AVRO_DECL JsonParser : boost::noncopyable {
 public:
     enum Token {
         tkNull,
@@ -128,7 +129,7 @@ public:
     }
 };
 
-class JsonGenerator {
+class AVRO_DECL JsonGenerator {
     StreamWriter out_;
     enum State {
         stStart,

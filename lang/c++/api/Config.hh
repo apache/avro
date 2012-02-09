@@ -16,31 +16,24 @@
  * limitations under the License.
  */
 
-#ifndef avro_Exception_hh__
-#define avro_Exception_hh__
+#ifndef avro_Config_hh
+#define avro_Config_hh
 
-#include "Config.hh"
-#include <stdexcept>
-#include <boost/format.hpp>
+// Windows DLL suport
 
-namespace avro {
+#ifdef _WIN32
+#if defined(AVRO_DYN_LINK)
+#ifdef AVRO_SOURCE
+# define AVRO_DECL __declspec(dllexport)
+#else
+# define AVRO_DECL __declspec(dllimport)
+#endif  // AVRO_SOURCE
+#endif  // AVRO_DYN_LINK
+#endif  // _WIN32
 
-/// Wrapper for std::runtime_error that provides convenience constructor
-/// for boost::format objects
-
-class AVRO_DECL Exception : public virtual std::runtime_error
-{
-  public:
-
-    Exception(const std::string &msg) :
-        std::runtime_error(msg)
-    { }
-
-    Exception(const boost::format &msg) :
-        std::runtime_error( boost::str(msg))
-    { }  
-};
-
-} // namespace avro
+#ifndef AVRO_DECL
+#define AVRO_DECL
+#endif
 
 #endif
+

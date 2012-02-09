@@ -29,6 +29,15 @@
 #include <fstream>
 #include <boost/test/included/unit_test_framework.hpp>
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
+
 using std::auto_ptr;
 using std::map;
 using std::string;

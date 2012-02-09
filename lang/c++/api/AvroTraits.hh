@@ -19,6 +19,7 @@
 #ifndef avro_AvroTraits_hh__
 #define avro_AvroTraits_hh__
 
+#include "Config.hh"
 #include "Boost.hh"
 #include "Types.hh"
 
