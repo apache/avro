@@ -1,6 +1,6 @@
 Avro Change Log
 
-Avro 1.6.2 (unreleased)
+Avro 1.6.2 (13 February 2012)
 
   NEW FEATURES
 
@@ -9,8 +9,6 @@ Avro 1.6.2 (unreleased)
 
     AVRO-986. C: avromod utility for modifying structural properties of
     an Avro data file. (dcreager)
-
-  OPTIMIZATIONS
 
   IMPROVEMENTS
 
