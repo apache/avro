@@ -25,6 +25,7 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Foo;
 import org.apache.avro.Interop;
 import org.apache.avro.Kind;
@@ -119,6 +120,7 @@ public class TestSpecificRecordBuilder {
   @Test
   public void testInterop() {
     Interop interop = Interop.newBuilder()
+        .setNullField(null)
         .setArrayField(Arrays.asList(new Double[] { 3.14159265, 6.022 }))
         .setBoolField(true)
         .setBytesField(ByteBuffer.allocate(4).put(new byte[] { 3, 2, 1, 0 }))
@@ -157,7 +159,36 @@ public class TestSpecificRecordBuilder {
   public void attemptToSetNonNullableFieldToNull() {
     Person.newBuilder().setName(null);
   }
-  
+
+  @Test(expected=org.apache.avro.AvroRuntimeException.class)
+  public void buildWithoutSettingRequiredFields1() {
+    Person.newBuilder().build();
+  }
+
+  @Test
+  public void buildWithoutSettingRequiredFields2() {
+    // Omit required non-primitive field
+    try {
+      Person.newBuilder().setYearOfBirth(1900).setState("MA").build();
+      Assert.fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
+    } catch (AvroRuntimeException e) {
+      // Exception should mention that the 'name' field has not been set
+      Assert.assertTrue(e.getMessage().contains("name"));
+    }
+  }
+
+  @Test
+  public void buildWithoutSettingRequiredFields3() {
+    // Omit required primitive field
+    try {
+      Person.newBuilder().setName("Anon").setState("CA").build();
+      Assert.fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
+    } catch (AvroRuntimeException e) {
+      // Exception should mention that the 'year_of_birth' field has not been set
+      Assert.assertTrue(e.getMessage().contains("year_of_birth"));
+    }
+  }
+
   @Ignore
   @Test
   public void testBuilderPerformance() {

@@ -49,10 +49,11 @@ public class TestSpecificErrorBuilder {
         TestError.newBuilder(testErrorBuilder));
     Assert.assertEquals(testErrorBuilder, TestError.newBuilder(testError));
     
-    Assert.assertEquals(
-        new TestError("value", new NullPointerException()),
+    TestError error = new TestError("value", new NullPointerException());
+    error.setMessage$("message");
+    Assert.assertEquals(error,
         TestError.newBuilder().setValue("value").
-          setCause(new NullPointerException()).build());
+          setCause(new NullPointerException()).setMessage$("message").build());
     
     // Test clear
     testErrorBuilder.clearValue();

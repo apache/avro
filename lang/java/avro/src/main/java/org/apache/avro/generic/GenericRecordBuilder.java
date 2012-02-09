@@ -222,7 +222,6 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
    * If the field has been set, the set value is returned (even if it's null).
    * If the field hasn't been set and has a default value, the default value 
    * is returned.
-   * Otherwise, null is returned.
    * @param field the field whose value should be retrieved.
    * @return the value set for the given field, the field's default value, 
    * or null.
