@@ -34,11 +34,6 @@
 
 #define DEFAULT_TABLE_SIZE 32
 
-struct avro_schema_error_t_ {
-	st_table *named_schemas;
-	json_error_t json_error;
-};
-
 static void avro_schema_init(avro_schema_t schema, avro_type_t type)
 {
 	schema->type = type;
@@ -658,29 +653,6 @@ avro_schema_t avro_schema_record_field_get_by_index
 	return val.field->type;
 }
 
-static int
-save_named_schemas(const char *name, avro_schema_t schema,
-		   avro_schema_error_t * error)
-{
-	st_table *st = (*error)->named_schemas;
-	return st_insert(st, (st_data_t) name, (st_data_t) schema);
-}
-
-static avro_schema_t
-find_named_schemas(const char *name, avro_schema_error_t * error)
-{
-	st_table *st = (*error)->named_schemas;
-	union {
-		avro_schema_t schema;
-		st_data_t data;
-	} val;
-	if (st_lookup(st, (st_data_t) name, &(val.data))) {
-		return val.schema;
-	}
-	avro_set_error("No schema type named %s", name);
-	return NULL;
-};
-
 avro_schema_t avro_schema_link(avro_schema_t to)
 {
 	if (!is_avro_named_type(to)) {
@@ -708,8 +680,28 @@ avro_schema_t avro_schema_link_target(avro_schema_t schema)
 }
 
 static int
-avro_type_from_json_t(json_t * json, avro_type_t * type,
-		      avro_schema_error_t * error, avro_schema_t * named_type)
+save_named_schemas(const char *name, avro_schema_t schema, st_table *st)
+{
+	return st_insert(st, (st_data_t) name, (st_data_t) schema);
+}
+
+static avro_schema_t
+find_named_schemas(const char *name, st_table *st)
+{
+	union {
+		avro_schema_t schema;
+		st_data_t data;
+	} val;
+	if (st_lookup(st, (st_data_t) name, &(val.data))) {
+		return val.schema;
+	}
+	avro_set_error("No schema type named %s", name);
+	return NULL;
+};
+
+static int
+avro_type_from_json_t(json_t *json, avro_type_t *type,
+		      st_table *named_schemas, avro_schema_t *named_type)
 {
 	json_t *json_type;
 	const char *type_str;
@@ -760,7 +752,7 @@ avro_type_from_json_t(json_t * json, avro_type_t * type,
 		*type = AVRO_MAP;
 	} else if (strcmp(type_str, "fixed") == 0) {
 		*type = AVRO_FIXED;
-	} else if ((*named_type = find_named_schemas(type_str, error))) {
+	} else if ((*named_type = find_named_schemas(type_str, named_schemas))) {
 		*type = AVRO_LINK;
 	} else {
 		avro_set_error("Unknown Avro \"type\": %s", type_str);
@@ -770,20 +762,20 @@ avro_type_from_json_t(json_t * json, avro_type_t * type,
 }
 
 static int
-avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
-			avro_schema_error_t * error)
+avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
+			st_table *named_schemas)
 {
 	avro_type_t type = 0;
 	unsigned int i;
-	avro_schema_t named_schemas = NULL;
+	avro_schema_t named_type = NULL;
 
-	if (avro_type_from_json_t(json, &type, error, &named_schemas)) {
+	if (avro_type_from_json_t(json, &type, named_schemas, &named_type)) {
 		return EINVAL;
 	}
 
 	switch (type) {
 	case AVRO_LINK:
-		*schema = avro_schema_link(named_schemas);
+		*schema = avro_schema_link(named_type);
 		break;
 
 	case AVRO_STRING:
@@ -854,7 +846,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 			}
 			*schema =
 			    avro_schema_record(record_name, record_namespace);
-			if (save_named_schemas(record_name, *schema, error)) {
+			if (save_named_schemas(record_name, *schema, named_schemas)) {
 				avro_set_error("Cannot save record schema");
 				return ENOMEM;
 			}
@@ -888,7 +880,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 				field_rval =
 				    avro_schema_from_json_t(json_field_type,
 							    &json_field_type_schema,
-							    error);
+							    named_schemas);
 				if (field_rval) {
 					avro_schema_decref(*schema);
 					return field_rval;
@@ -934,7 +926,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 				return EINVAL;
 			}
 			*schema = avro_schema_enum(name);
-			if (save_named_schemas(name, *schema, error)) {
+			if (save_named_schemas(name, *schema, named_schemas)) {
 				avro_set_error("Cannot save enum schema");
 				return ENOMEM;
 			}
@@ -971,7 +963,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 			}
 			items_rval =
 			    avro_schema_from_json_t(json_items, &items_schema,
-						    error);
+						    named_schemas);
 			if (items_rval) {
 				return items_rval;
 			}
@@ -992,7 +984,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 			}
 			values_rval =
 			    avro_schema_from_json_t(json_values, &values_schema,
-						    error);
+						    named_schemas);
 			if (values_rval) {
 				return values_rval;
 			}
@@ -1019,7 +1011,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 				}
 				schema_rval =
 				    avro_schema_from_json_t(schema_json, &s,
-							    error);
+							    named_schemas);
 				if (schema_rval != 0) {
 					avro_schema_decref(*schema);
 					return schema_rval;
@@ -1052,7 +1044,7 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 			size = json_integer_value(json_size);
 			name = json_string_value(json_name);
 			*schema = avro_schema_fixed(name, size);
-			if (save_named_schemas(name, *schema, error)) {
+			if (save_named_schemas(name, *schema, named_schemas)) {
 				avro_set_error("Cannot save fixed schema");
 				return ENOMEM;
 			}
@@ -1066,52 +1058,65 @@ avro_schema_from_json_t(json_t * json, avro_schema_t * schema,
 	return 0;
 }
 
+static int
+avro_schema_from_json_root(json_t *root, avro_schema_t *schema)
+{
+	int  rval;
+	st_table *named_schemas;
+
+	named_schemas = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
+	if (!named_schemas) {
+		avro_set_error("Cannot allocate named schema map");
+		json_decref(root);
+		return ENOMEM;
+	}
+
+	/* json_dumpf(root, stderr, 0); */
+	rval = avro_schema_from_json_t(root, schema, named_schemas);
+	json_decref(root);
+	st_free_table(named_schemas);
+	return rval;
+}
+
 int
 avro_schema_from_json(const char *jsontext, const int32_t len,
-		      avro_schema_t * schema, avro_schema_error_t * e)
+		      avro_schema_t *schema, avro_schema_error_t *e)
 {
 	check_param(EINVAL, jsontext, "JSON text");
 	check_param(EINVAL, schema, "schema pointer");
 
-	json_t *root;
-	int rval = 0;
-	avro_schema_error_t error;
+	json_t  *root;
+	json_error_t  json_error;
 
 	AVRO_UNUSED(len);
+	AVRO_UNUSED(e);
 
-	error = avro_new(struct avro_schema_error_t_);
-	if (!error) {
-		avro_set_error("Cannot allocate schema error buffer");
-		return ENOMEM;
-	}
-	*e = error;
-
-	error->named_schemas = st_init_strtable_with_size(DEFAULT_TABLE_SIZE);
-	if (!error->named_schemas) {
-		avro_set_error("Cannot allocate named schema map");
-		avro_freet(struct avro_schema_error_t_, error);
-		return ENOMEM;
-	}
-
-	root = json_loads(jsontext, 0, &error->json_error);
+	root = json_loads(jsontext, 0, &json_error);
 	if (!root) {
-		avro_set_error("Error parsing JSON: %s", error->json_error.text);
-		st_free_table(error->named_schemas);
-		avro_freet(struct avro_schema_error_t_, error);
+		avro_set_error("Error parsing JSON: %s", json_error.text);
 		return EINVAL;
 	}
 
-	/*
-	 * json_dumpf(root, stderr, 0); 
-	 */
-	rval = avro_schema_from_json_t(root, schema, e);
-	json_decref(root);
-	st_free_table(error->named_schemas);
-	if (rval == 0) {
-		/* no need for an error return */
-		avro_freet(struct avro_schema_error_t_, error);
+	return avro_schema_from_json_root(root, schema);
+}
+
+int
+avro_schema_from_json_length(const char *jsontext, size_t length,
+			     avro_schema_t *schema)
+{
+	check_param(EINVAL, jsontext, "JSON text");
+	check_param(EINVAL, schema, "schema pointer");
+
+	json_t  *root;
+	json_error_t  json_error;
+
+	root = json_loadb(jsontext, length, 0, &json_error);
+	if (!root) {
+		avro_set_error("Error parsing JSON: %s", json_error.text);
+		return EINVAL;
 	}
-	return rval;
+
+	return avro_schema_from_json_root(root, schema);
 }
 
 avro_schema_t avro_schema_copy(avro_schema_t schema)

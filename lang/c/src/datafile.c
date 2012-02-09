@@ -213,7 +213,6 @@ static int file_read_header(avro_reader_t reader,
 	avro_value_t schema_bytes;
 	const void *p;
 	size_t len;
-	avro_schema_error_t schema_error;
 
 	check(rval, avro_read(reader, magic, sizeof(magic)));
 	if (magic[0] != 'O' || magic[1] != 'b' || magic[2] != 'j'
@@ -273,7 +272,7 @@ static int file_read_header(avro_reader_t reader,
 	}
 
 	avro_value_get_bytes(&schema_bytes, &p, &len);
-	rval = avro_schema_from_json(p, len, writers_schema, &schema_error);
+	rval = avro_schema_from_json_length(p, len, writers_schema);
 	if (rval) {
 		avro_prefix_error("Cannot parse file header: ");
 		avro_value_decref(&meta);

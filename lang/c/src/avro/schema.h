@@ -83,9 +83,20 @@ avro_schema_t avro_schema_link(avro_schema_t schema);
 avro_schema_t avro_schema_link_target(avro_schema_t schema);
 
 typedef struct avro_schema_error_t_ *avro_schema_error_t;
-int avro_schema_from_json(const char *jsontext,
-			  const int32_t len,
-			  avro_schema_t * schema, avro_schema_error_t * error);
+
+int avro_schema_from_json(const char *jsontext, int32_t unused1,
+			  avro_schema_t *schema, avro_schema_error_t *unused2);
+
+/* jsontext does not need to be NUL terminated.  length must *NOT*
+ * include the NUL terminator, if one is present. */
+int avro_schema_from_json_length(const char *jsontext, size_t length,
+				 avro_schema_t *schema);
+
+/* A helper macro for loading a schema from a string literal.  The
+ * literal must be declared as a char[], not a char *, since we use the
+ * sizeof operator to determine its length. */
+#define avro_schema_from_json_literal(json, schema) \
+    (avro_schema_from_json_length((json), sizeof((json))-1, (schema)))
 
 int avro_schema_to_specific(avro_schema_t schema, const char *prefix);
 

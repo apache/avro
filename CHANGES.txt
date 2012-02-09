@@ -77,6 +77,10 @@ Avro 1.6.2 (13 February 2012)
     AVRO-1021. Clarify some naming issues in the specification.
     (Raymie Stata via cutting)
 
+    AVRO-980. C: avro_schema_from_json ignores length parameter.  Add
+    avro_schema_from_json_length that doesn't.
+    (Michael Cooper and dcreager)
+
   BUG FIXES
 
     AVRO-962. Java: Fix Maven plugin to support string type override.

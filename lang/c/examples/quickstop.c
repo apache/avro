@@ -25,7 +25,7 @@ avro_schema_t person_schema;
 int64_t id = 0;
 
 /* A simple schema for our tutorial */
-#define PERSON_SCHEMA \
+const char  PERSON_SCHEMA[] =
 "{\"type\":\"record\",\
   \"name\":\"Person\",\
   \"fields\":[\
@@ -33,14 +33,12 @@ int64_t id = 0;
      {\"name\": \"First\", \"type\": \"string\"},\
      {\"name\": \"Last\", \"type\": \"string\"},\
      {\"name\": \"Phone\", \"type\": \"string\"},\
-     {\"name\": \"Age\", \"type\": \"int\"}]}"
+     {\"name\": \"Age\", \"type\": \"int\"}]}";
 
 /* Parse schema into a schema data structure */
 void init_schema(void)
 {
-	avro_schema_error_t error;
-	if (avro_schema_from_json(PERSON_SCHEMA, sizeof(PERSON_SCHEMA),
-				  &person_schema, &error)) {
+	if (avro_schema_from_json_literal(PERSON_SCHEMA, &person_schema)) {
 		fprintf(stderr, "Unable to parse person schema\n");
 		exit(EXIT_FAILURE);
 	}

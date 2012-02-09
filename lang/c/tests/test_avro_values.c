@@ -916,7 +916,7 @@ test_array(void)
 static int
 test_enum(void)
 {
-	static const char  *SCHEMA_JSON =
+	static const char  SCHEMA_JSON[] =
 	"{"
 	"  \"type\": \"enum\","
 	"  \"name\": \"suits\","
@@ -924,9 +924,7 @@ test_enum(void)
 	"}";
 
 	avro_schema_t  enum_schema = NULL;
-	avro_schema_error_t  err;
-	if (avro_schema_from_json(SCHEMA_JSON, sizeof(SCHEMA_JSON),
-				  &enum_schema, &err)) {
+	if (avro_schema_from_json_literal(SCHEMA_JSON, &enum_schema)) {
 		fprintf(stderr, "Error parsing schema:\n  %s\n",
 			avro_strerror());
 		return EXIT_FAILURE;
@@ -974,7 +972,7 @@ test_enum(void)
 static int
 test_fixed(void)
 {
-	static const char  *SCHEMA_JSON =
+	static const char  SCHEMA_JSON[] =
 	"{"
 	"  \"type\": \"fixed\","
 	"  \"name\": \"ipv4\","
@@ -982,9 +980,7 @@ test_fixed(void)
 	"}";
 
 	avro_schema_t  fixed_schema = NULL;
-	avro_schema_error_t  err;
-	if (avro_schema_from_json(SCHEMA_JSON, sizeof(SCHEMA_JSON),
-				  &fixed_schema, &err)) {
+	if (avro_schema_from_json_literal(SCHEMA_JSON, &fixed_schema)) {
 		fprintf(stderr, "Error parsing schema:\n  %s\n",
 			avro_strerror());
 		return EXIT_FAILURE;
@@ -1198,7 +1194,7 @@ test_map(void)
 static int
 test_record(void)
 {
-	static const char  *SCHEMA_JSON =
+	static const char  SCHEMA_JSON[] =
 	"{"
 	"  \"type\": \"record\","
 	"  \"name\": \"test\","
@@ -1223,9 +1219,7 @@ test_record(void)
 	"}";
 
 	avro_schema_t  record_schema = NULL;
-	avro_schema_error_t  err;
-	if (avro_schema_from_json(SCHEMA_JSON, sizeof(SCHEMA_JSON),
-				  &record_schema, &err)) {
+	if (avro_schema_from_json_literal(SCHEMA_JSON, &record_schema)) {
 		fprintf(stderr, "Error parsing schema:\n  %s\n",
 			avro_strerror());
 		return EXIT_FAILURE;
@@ -1347,7 +1341,7 @@ test_record(void)
 static int
 test_union(void)
 {
-	static const char  *SCHEMA_JSON =
+	static const char  SCHEMA_JSON[] =
 	"["
 	"  \"null\","
 	"  \"int\","
@@ -1356,9 +1350,7 @@ test_union(void)
 	"]";
 
 	avro_schema_t  union_schema = NULL;
-	avro_schema_error_t  err;
-	if (avro_schema_from_json(SCHEMA_JSON, sizeof(SCHEMA_JSON),
-				  &union_schema, &err)) {
+	if (avro_schema_from_json_literal(SCHEMA_JSON, &union_schema)) {
 		fprintf(stderr, "Error parsing schema:\n  %s\n",
 			avro_strerror());
 		return EXIT_FAILURE;

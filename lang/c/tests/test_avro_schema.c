@@ -35,7 +35,6 @@ static void run_tests(char *dirpath, int should_pass)
 	struct dirent *dent;
 	FILE *fp;
 	avro_schema_t schema;
-	avro_schema_error_t avro_schema_error;
 
 	dir = opendir(dirpath);
 	if (dir == NULL) {
@@ -58,8 +57,7 @@ static void run_tests(char *dirpath, int should_pass)
 			rval = fread(jsontext, 1, sizeof(jsontext) - 1, fp);
 			jsontext[rval] = '\0';
 			test_rval =
-			    avro_schema_from_json(jsontext, jsonlen, &schema,
-						  &avro_schema_error);
+			    avro_schema_from_json(jsontext, 0, &schema, NULL);
 			test_cases++;
 			if (test_rval == 0) {
 				if (should_pass) {
