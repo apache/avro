@@ -252,7 +252,9 @@
           <li>start with <code>[A-Za-z_]</code></li>
           <li>subsequently contain only <code>[A-Za-z0-9_]</code></li>
 	</ul>
-        <p>A namespace is a dot-separated sequence of such names.</p>
+        <p>A namespace is a dot-separated sequence of such names.
+        Equality of names (including field names and enum symbols)
+        as well as fullnames is case-sensitive.</p>
         <p>In record, enum and fixed definitions, the fullname is
         determined in one of the following ways:</p>
 	<ul>
@@ -278,9 +280,14 @@
 	they do not contain a dot, the namespace is the namespace of
 	the enclosing definition.</p>
 	<p>Primitive type names have no namespace and their names may
-	not be defined in any namespace.  A schema may only contain
-	multiple definitions of a fullname if the definitions are
-	equivalent.</p>
+	not be defined in any namespace.</p>
+	<p> A schema or protocol may not contain multiple definitions
+	of a fullname.  Further, a name must be defined before it is
+	used ("before" in the depth-first, left-to-right traversal of
+	the JSON parse tree, where the <code>types</code> attribute of
+	a protocol is always deemed to come "before" the
+	<code>messages</code> attribute.)
+	</p>
       </section>
 
       <section>
