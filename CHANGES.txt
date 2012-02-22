@@ -6,6 +6,8 @@ Avro 1.6.3 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-1030. Fix a broken link in the documentation.
+
   BUG FIXES
 
 Avro 1.6.2 (13 February 2012)

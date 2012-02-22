@@ -68,8 +68,8 @@
     <section id="compare">
       <title>Comparison with other systems</title>
       <p>Avro provides functionality similar to systems such
-	as <a href="http://incubator.apache.org/thrift/">Thrift</a>,
-	<a href="http://code.google.com/protobuf/">Protocol
+	as <a href="http://thrift.apache.org/">Thrift</a>,
+	<a href="http://code.google.com/p/protobuf/">Protocol
 	  Buffers</a>, etc.  Avro differs from these systems in the
 	  following fundamental aspects.</p>
       <ul>
