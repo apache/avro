@@ -458,8 +458,8 @@ public abstract class Schema {
     private boolean defaultValueEquals(JsonNode thatDefaultValue) {
       if (defaultValue == null)
         return thatDefaultValue == null;
-      if (Double.isNaN(defaultValue.getValueAsDouble()))
-        return Double.isNaN(thatDefaultValue.getValueAsDouble());
+      if (Double.isNaN(defaultValue.getDoubleValue()))
+        return Double.isNaN(thatDefaultValue.getDoubleValue());
       return defaultValue.equals(thatDefaultValue);
     }
 
