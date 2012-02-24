@@ -66,6 +66,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.net.URL;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.*;
@@ -83,8 +84,7 @@ import org.apache.commons.lang.StringEscapeUtils;
  * Note: each instance is not thread-safe, but multiple separate
  * instances are safely independent.
  */
-public class Idl
-{
+public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
 
   File inputDir = new File(".");
@@ -110,6 +110,18 @@ public class Idl
     this.resourceLoader = resourceLoader;
   }
   
+  private Idl(URL input, Idl parent) throws IOException {
+    this(input.openStream(), "UTF-8");
+    this.inputDir = "file".equals(input.getProtocol())
+      ? new File(input.getPath()).getParentFile()
+      : parent.inputDir;
+    this.resourceLoader = parent.resourceLoader;
+  }
+  
+  public void close() throws IOException {
+    jj_input_stream.inputStream.close();
+  }
+
   private ParseException error(String message, Token token) {
     return new ParseException
       (message+", at line "+token.beginLine+", column "+token.beginColumn);
@@ -137,22 +149,16 @@ public class Idl
     return values;
   }
   
-  private InputStream findFile(String importFile) throws IOException {
-    InputStream stream = null;
-    //Load the file if it exist in the inputDir
+  private URL findFile(String importFile) throws IOException {
     File file = new File(this.inputDir, importFile);
-    if (file.exists()) {
-      stream = new FileInputStream(file);
-    }
-    else if (this.resourceLoader != null) {
-      //Otherwise look for it using the provided ClassLoader.
-      stream = this.resourceLoader.getResourceAsStream(importFile);
-    }
-
-    if (stream == null) {
+    URL result = null;
+    if (file.exists())
+      result = file.toURL();
+    else if (this.resourceLoader != null)
+      result = this.resourceLoader.getResource(importFile);
+    if (result == null)
       throw new FileNotFoundException(importFile);
-    }
-    return stream;
+    return result;
   }
 
 }
@@ -1163,11 +1169,11 @@ Protocol ImportIdl() : {
   <IDL> importFile = JsonString() ";"
     {
       try {
-        InputStream stream = findFile(importFile); 
+        Idl idl = new Idl(findFile(importFile), this); 
         try {
-          return new Idl(stream).CompilationUnit();
+          return idl.CompilationUnit();
         } finally {
-          stream.close();
+          idl.close();
         }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
@@ -1183,7 +1189,7 @@ Protocol ImportProtocol() : {
     {
 
       try {
-        InputStream stream = findFile(importFile);
+        InputStream stream = findFile(importFile).openStream();
         try {
           return Protocol.parse(stream);
         } finally {
@@ -1204,7 +1210,7 @@ Schema ImportSchema() : {
       try {
         Parser parser = new Schema.Parser();
         parser.addTypes(names);                   // inherit names
-        InputStream stream = findFile(importFile);
+        InputStream stream = findFile(importFile).openStream();
         try {
           Schema value = parser.parse(stream);
           names = parser.getTypes();                // update names

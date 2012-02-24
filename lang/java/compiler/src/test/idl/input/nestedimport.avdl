@@ -16,9 +16,16 @@
  * limitations under the License.
  */
 
-@namespace("org.on.the.classpath")
-protocol OnTheClasspath {
-    import idl "nestedtypes.avdl";
-	record FromAfar {
-	}
+@version("1.0.5")
+@namespace("org.apache.avro.ipc.specific")
+protocol nestedimport {
+    import idl "reservedwords.avdl";
+    import protocol "bar.avpr";
+    import schema "position.avsc";
+    import schema "player.avsc";
+
+    record ImportBar {
+        avro.examples.baseball.Player  foo;
+    }
+
 }

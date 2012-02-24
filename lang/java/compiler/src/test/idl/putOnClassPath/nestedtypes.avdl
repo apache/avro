@@ -17,8 +17,7 @@
  */
 
 @namespace("org.on.the.classpath")
-protocol OnTheClasspath {
-    import idl "nestedtypes.avdl";
-	record FromAfar {
+protocol OnTheClasspathTypes {
+	record NestedType {
 	}
 }

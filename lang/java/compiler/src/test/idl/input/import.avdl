@@ -19,7 +19,8 @@
 @namespace("org.foo")
 protocol Import {
   import idl "reservedwords.avdl";
-  
+  import idl "nestedimport.avdl";
+
   //Note that this import is resolve via the classpath, not relative path.
   import idl "OnTheClasspath.avdl";
   import protocol "OnTheClasspath.avpr";

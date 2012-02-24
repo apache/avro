@@ -12,6 +12,9 @@ Avro 1.6.3 (unreleased)
 
     AVRO-1037. Problems using Avro 1.6.2 with Hadoop (CDH3 or 1.0) (scottcarey)
 
+    AVRO-1036. Fix a regression in IDL imports created by AVRO-971.
+    (George Fletcher & cutting)
+
 Avro 1.6.2 (13 February 2012)
 
   NEW FEATURES
