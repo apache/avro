@@ -15,6 +15,9 @@ Avro 1.6.3 (unreleased)
     AVRO-1036. Fix a regression in IDL imports created by AVRO-971.
     (George Fletcher & cutting)
 
+    AVRO-1031. C: Test cases made too many assumptions about memcmp
+    result. (dcreager)
+
 Avro 1.6.2 (13 February 2012)
 
   NEW FEATURES

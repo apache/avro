@@ -52,12 +52,12 @@ main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (avro_value_cmp(&v1, &v2) != -1) {
+	if (avro_value_cmp(&v1, &v2) >= 0) {
 		fprintf(stderr, "Unexpected avro_value_cmp\n");
 		return EXIT_FAILURE;
 	}
 
-	if (avro_value_cmp_fast(&v1, &v2) != -1) {
+	if (avro_value_cmp_fast(&v1, &v2) >= 0) {
 		fprintf(stderr, "Unexpected avro_value_cmp_fast\n");
 		return EXIT_FAILURE;
 	}

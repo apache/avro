@@ -429,11 +429,11 @@ test_boolean(void)
 	    "Cannot create boolean");
 	try(avro_generic_boolean_new(&val2, 1),
 	    "Cannot create boolean");
-	if (avro_value_cmp_fast(&val1, &val2) != -1) {
+	if (avro_value_cmp_fast(&val1, &val2) >= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
 	}
-	if (avro_value_cmp_fast(&val2, &val1) != 1) {
+	if (avro_value_cmp_fast(&val2, &val1) <= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
 	}
@@ -510,15 +510,15 @@ test_bytes(void)
 	    "Cannot create bytes");
 	try(avro_generic_bytes_new(&val3, "abce", 4),
 	    "Cannot create bytes");
-	if (avro_value_cmp_fast(&val1, &val2) != -1) {
+	if (avro_value_cmp_fast(&val1, &val2) >= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
 	}
-	if (avro_value_cmp_fast(&val2, &val1) != 1) {
+	if (avro_value_cmp_fast(&val2, &val1) <= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
 	}
-	if (avro_value_cmp_fast(&val1, &val3) != -1) {
+	if (avro_value_cmp_fast(&val1, &val3) >= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
 	}
@@ -645,11 +645,11 @@ test_int(void)
 	    "Cannot create int");
 	try(avro_generic_int_new(&val2, 42),
 	    "Cannot create int");
-	if (avro_value_cmp_fast(&val1, &val2) != -1) {
+	if (avro_value_cmp_fast(&val1, &val2) >= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
 	}
-	if (avro_value_cmp_fast(&val2, &val1) != 1) {
+	if (avro_value_cmp_fast(&val2, &val1) <= 0) {
 		fprintf(stderr, "Incorrect sort order\n");
 		return EXIT_FAILURE;
 	}
