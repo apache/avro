@@ -18,6 +18,9 @@ Avro 1.6.3 (unreleased)
     AVRO-1031. C: Test cases made too many assumptions about memcmp
     result. (dcreager)
 
+    AVRO-1033. C: Fixed x86 assembly implementation of atomic reference
+    counting primitives. (Vivek Nadkarni via dcreager)
+
 Avro 1.6.2 (13 February 2012)
 
   NEW FEATURES

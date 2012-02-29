@@ -139,8 +139,8 @@ avro_refcount_inc(volatile int *refcount)
 {
 	if (*refcount != (int) -1) {
 		__asm__ __volatile__ ("lock ; inc"REFCOUNT_SS" %0"
-				      :"=m" (refcount)
-				      :"m" (refcount));
+				      :"=m" (*refcount)
+				      :"m" (*refcount));
 	}
 }
 
@@ -150,8 +150,8 @@ avro_refcount_dec(volatile int *refcount)
 	if (*refcount != (int) -1) {
 		char result;
 		__asm__ __volatile__ ("lock ; dec"REFCOUNT_SS" %0; setz %1"
-				      :"=m" (refcount), "=q" (result)
-				      :"m" (refcount));
+				      :"=m" (*refcount), "=q" (result)
+				      :"m" (*refcount));
 		return result;
 	}
 	return 0;
