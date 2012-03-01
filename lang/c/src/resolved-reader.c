@@ -1500,6 +1500,7 @@ avro_resolved_array_reader_reset(const avro_resolved_reader_t *iface, void *vsel
 
 	/* Clear out our cache of wrapped children */
 	avro_resolved_array_reader_free_elements(aiface->child_resolver, self);
+	avro_raw_array_clear(&self->children);
 	return 0;
 }
 
@@ -1518,6 +1519,8 @@ avro_resolved_array_reader_get_by_index(const avro_value_iface_t *viface,
 					avro_value_t *child, const char **name)
 {
 	int  rval;
+	size_t  old_size;
+	size_t  new_size;
 	const avro_resolved_reader_t  *iface =
 	    container_of(viface, avro_resolved_reader_t, parent);
 	const avro_resolved_array_reader_t  *aiface =
@@ -1528,8 +1531,16 @@ avro_resolved_array_reader_get_by_index(const avro_value_iface_t *viface,
 	 * Ensure that our child wrapper array is big enough to hold
 	 * this many elements.
 	 */
-	check(rval, avro_raw_array_ensure_size0(&self->children, index+1));
-	if (avro_raw_array_size(&self->children) <= index) {
+	new_size = index + 1;
+	check(rval, avro_raw_array_ensure_size0(&self->children, new_size));
+	old_size = avro_raw_array_size(&self->children);
+	if (old_size <= index) {
+		size_t  i;
+		for (i = old_size; i < new_size; i++) {
+			check(rval, avro_resolved_reader_init
+			      (aiface->child_resolver,
+			       avro_raw_array_get_raw(&self->children, i)));
+		}
 		avro_raw_array_size(&self->children) = index+1;
 	}
 

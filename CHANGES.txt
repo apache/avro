@@ -21,6 +21,9 @@ Avro 1.6.3 (unreleased)
     AVRO-1033. C: Fixed x86 assembly implementation of atomic reference
     counting primitives. (Vivek Nadkarni via dcreager)
 
+    AVRO-1034. C: Resolved readers initialize complex array values
+    correctly. (Vivek Nadkarni via dcreager)
+
     AVRO-1038. C: Require GCC 4.5.0 to use GCC atomic instrinsics.
     (Vivek Nadkarni via dcreager)
 
@@ -129,7 +132,7 @@ Avro 1.6.2 (13 February 2012)
     AVRO-982. Java: Fix NettyTransceiver to not hang when server stops.
     (Bruno Dumon via cutting)
 
-    AVRO-984. C: Resolved readers initialize complex array values
+    AVRO-984. C: Resolved writers initialize complex array values
     correctly. (Vivek Nadkarni via dcreager)
 
     AVRO-994. Java: TestFileSpanStorage.testTonsOfSpans() fails on my 
