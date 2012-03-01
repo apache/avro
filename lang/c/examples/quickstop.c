@@ -21,6 +21,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef DEFLATE_CODEC
+#define QUICKSTOP_CODEC  "deflate"
+#else
+#define QUICKSTOP_CODEC  "null"
+#endif
+
 avro_schema_t person_schema;
 int64_t id = 0;
 
@@ -140,7 +146,8 @@ int main(void)
 	/* Delete the database if it exists */
 	unlink(dbname);
 	/* Create a new database */
-	rval = avro_file_writer_create_with_codec(dbname, person_schema, &db, "deflate", 0);
+	rval = avro_file_writer_create_with_codec
+	    (dbname, person_schema, &db, QUICKSTOP_CODEC, 0);
 	if (rval) {
 		fprintf(stderr, "There was an error creating %s\n", dbname);
 		fprintf(stderr, " error message: %s\n", avro_strerror());
