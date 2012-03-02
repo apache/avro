@@ -29,6 +29,9 @@ Avro 1.6.3 (unreleased)
 
     AVRO-1039. C: Don't use nonexistent codecs in test cases. (dcreager)
 
+    AVRO-1041. Java: Fix Utf8 to reuse array in more cases.
+    (Dave Irving via cutting)
+
 Avro 1.6.2 (13 February 2012)
 
   NEW FEATURES

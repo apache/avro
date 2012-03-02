@@ -17,7 +17,13 @@
  */
 package org.apache.avro.util;
 
+import java.io.UnsupportedEncodingException;
+
+import junit.framework.Assert;
+
 import org.junit.Test;
+
+import static junit.framework.Assert.assertSame;
 import static org.junit.Assert.assertEquals;
 
 public class TestUtf8 {
@@ -28,5 +34,18 @@ public class TestUtf8 {
     for (int i=0; i<bs.length; i++) {
       assertEquals(bs[i], u.getBytes()[i]);
     }
+  }
+  
+  @Test public void testArrayReusedWhenLargerThanRequestedSize() throws UnsupportedEncodingException {
+    byte[] bs = "55555".getBytes("UTF-8");    
+    Utf8 u = new Utf8(bs);
+    assertEquals(5, u.getByteLength());
+    byte[] content = u.getBytes();
+    u.setByteLength(3);
+    assertEquals(3, u.getByteLength());
+    assertSame(content, u.getBytes());
+    u.setByteLength(4);
+    assertEquals(4, u.getByteLength());
+    assertSame(content, u.getBytes());
   }
 }

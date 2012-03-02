@@ -73,7 +73,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   /** Set length in bytes.  Should called whenever byte content changes, even
    * if the length does not change, as this also clears the cached String. */
   public Utf8 setByteLength(int newLength) {
-    if (this.length < newLength) {
+    if (this.bytes.length < newLength) {
       byte[] newBytes = new byte[newLength];
       System.arraycopy(bytes, 0, newBytes, 0, this.length);
       this.bytes = newBytes;
