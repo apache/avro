@@ -31,7 +31,7 @@ Avro 1.6.3 (5 March 2012)
     (Dave Irving via cutting)
 
     AVRO-1027. Java: Fix deadlock in NettyTransceiver.
-    (jbaldassari via cutting)
+    (Simon Wilkinson via cutting)
 
 Avro 1.6.2 (13 February 2012)
 
