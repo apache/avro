@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -81,7 +80,7 @@ public class NettyTransceiver extends Transceiver {
    * Read lock must be acquired whenever using non-final state.
    * Write lock must be acquired whenever modifying state.
    */
-  private final ReadWriteLock stateLock = new ReentrantReadWriteLock();
+  private final ReentrantReadWriteLock stateLock = new ReentrantReadWriteLock();
   private Channel channel;       // Synchronized on stateLock
   private Protocol remote;       // Synchronized on stateLock
 
@@ -280,6 +279,10 @@ public class NettyTransceiver extends Transceiver {
       Throwable cause) {
     Channel channelToClose = null;
     Map<Integer, Callback<List<ByteBuffer>>> requestsToCancel = null;
+    boolean stateReadLockHeld = stateLock.getReadHoldCount() != 0;
+    if (stateReadLockHeld) {
+      stateLock.readLock().unlock();
+    }
     stateLock.writeLock().lock();
     try {
       if (channel != null) {
@@ -301,6 +304,9 @@ public class NettyTransceiver extends Transceiver {
         }
       }
     } finally {
+      if (stateReadLockHeld) {
+        stateLock.readLock().lock();
+      }
       stateLock.writeLock().unlock();
     }
     

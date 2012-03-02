@@ -32,6 +32,9 @@ Avro 1.6.3 (unreleased)
     AVRO-1041. Java: Fix Utf8 to reuse array in more cases.
     (Dave Irving via cutting)
 
+    AVRO-1027. Java: Fix deadlock in NettyTransceiver.
+    (jbaldassari via cutting)
+
 Avro 1.6.2 (13 February 2012)
 
   NEW FEATURES
