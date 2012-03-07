@@ -4,6 +4,9 @@ Avro 1.7.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-1006.  Add schema fingerprinting to specification and Java.
+    (Raymie Stata via cutting)
+
   IMPROVEMENTS
 
   BUG FIXES
