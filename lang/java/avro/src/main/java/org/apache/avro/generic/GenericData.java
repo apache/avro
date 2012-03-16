@@ -784,11 +784,12 @@ public class GenericData {
         return new Boolean((Boolean)value);
       case BYTES:
         ByteBuffer byteBufferValue = (ByteBuffer) value;
-        byte[] bytesCopy = new byte[byteBufferValue.capacity()];
-        byteBufferValue.rewind();
-        byteBufferValue.get(bytesCopy);
-        byteBufferValue.rewind();
-        return ByteBuffer.wrap(bytesCopy);
+        int start = byteBufferValue.position();
+        int length = byteBufferValue.limit() - start;
+        byte[] bytesCopy = new byte[length];
+        byteBufferValue.get(bytesCopy, 0, length);
+        byteBufferValue.position(start);
+        return ByteBuffer.wrap(bytesCopy, 0, length);
       case DOUBLE:
         return new Double((Double)value);
       case ENUM:

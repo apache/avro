@@ -141,7 +141,6 @@ public class TestSpecificRecordBuilder {
     Assert.assertEquals(interop.getArrayField().size(), copy.getArrayField().size());
     Assert.assertEquals(interop.getArrayField(), copy.getArrayField());
     Assert.assertEquals(interop.getBoolField(), copy.getBoolField());
-    Assert.assertEquals(interop.getBytesField().capacity(), copy.getBytesField().capacity());
     Assert.assertEquals(interop.getBytesField(), copy.getBytesField());
     Assert.assertEquals(interop.getDoubleField(), copy.getDoubleField());
     Assert.assertEquals(interop.getEnumField(), copy.getEnumField());
