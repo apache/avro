@@ -4,6 +4,12 @@ Avro 1.7.0 (unreleased)
 
   NEW FEATURES
 
+    AVRO-301. Handle non-reserved properties appropriately in the Python
+    implementation. (Macrio Silva via tebeka)
+
+    AVRO-300. Support "doc" field in schemas in Python implementation.
+    (Harsh J via tebeka)
+
     AVRO-1006.  Add schema fingerprinting to specification and Java.
     (Raymie Stata via cutting)
 
