@@ -20,6 +20,8 @@ Avro 1.7.0 (unreleased)
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.
     (cutting)
 
+    AVRO-1055. Race condition in Java fingerprinting code (thiru)
+
 Avro 1.6.3 (5 March 2012)
 
   IMPROVEMENTS

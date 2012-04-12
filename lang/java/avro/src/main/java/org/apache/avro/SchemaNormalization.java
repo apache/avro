@@ -78,10 +78,9 @@ public class SchemaNormalization {
   /** Returns the 64-bit Rabin Fingerprint (as recommended in the Avro
     * spec) of a byte string. */
   public static long fingerprint64(byte[] data) {
-    if (fpTable64 == null) fillFPTable64();
     long result = EMPTY64;
     for (byte b: data)
-      result = (result >>> 8) ^ fpTable64[(int)(result ^ b) & 0xff];
+      result = (result >>> 8) ^ FP64.FP_TABLE[(int)(result ^ b) & 0xff];
     return result;
   }
 
@@ -157,17 +156,19 @@ public class SchemaNormalization {
   }
 
   final static long EMPTY64 = 0xc15d213aa4d7a795L;
-  private static long[] fpTable64 = null;
 
-  private static void fillFPTable64() {
-    fpTable64 = new long[256];
-    for (int i = 0; i < 256; i++) {
-      long fp = i;
-      for (int j = 0; j < 8; j++) {
-        long mask = -(fp & 1L);
-        fp = (fp >>> 1) ^ (EMPTY64 & mask);
+  /* An inner class ensures that FP_TABLE initialized only when needed. */
+  private static class FP64 {
+    private static final long[] FP_TABLE = new long[256];
+    static {
+      for (int i = 0; i < 256; i++) {
+        long fp = i;
+        for (int j = 0; j < 8; j++) {
+          long mask = -(fp & 1L);
+          fp = (fp >>> 1) ^ (EMPTY64 & mask);
+        }
+        FP_TABLE[i] = fp;
       }
-      fpTable64[i] = fp;
     }
   }
 }
