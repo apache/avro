@@ -40,6 +40,12 @@
         <version>${project.version}</version>
         <executions>
           <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+            </goals>
+          </execution>
+          <execution>
             <id>test-schemas</id>
             <phase>generate-sources</phase>
             <goals>
@@ -85,6 +91,18 @@
       <!-- hadoop's execution environment provides its own jars, usurping any others.
         So we should not include it here -->
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>${easymock.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>${hamcrest.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>

@@ -13,6 +13,9 @@ Avro 1.7.0 (unreleased)
     AVRO-1006.  Add schema fingerprinting to specification and Java.
     (Raymie Stata via cutting)
 
+    AVRO-593. Java: Add support for Hadoop's newer mapreduce API.
+    (Garrett Wu via cutting)
+
   IMPROVEMENTS
 
   BUG FIXES
