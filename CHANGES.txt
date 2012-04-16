@@ -18,6 +18,8 @@ Avro 1.7.0 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-1060. Java: Upgrade Netty to version 3.4.0.  (Karthik K via cutting)
+
   BUG FIXES
 
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.

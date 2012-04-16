@@ -43,7 +43,7 @@
     <jetty-servlet-api.version>2.5-20081211</jetty-servlet-api.version>
     <jopt-simple.version>4.1</jopt-simple.version>
     <junit.version>4.10</junit.version>
-    <netty.version>3.2.7.Final</netty.version>
+    <netty.version>3.4.0.Final</netty.version>
     <paranamer.version>2.3</paranamer.version>
     <protobuf.version>2.4.1</protobuf.version>
     <thrift.version>0.7.0</thrift.version>
@@ -279,7 +279,7 @@
         <version>${jetty.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.jboss.netty</groupId>
+        <groupId>io.netty</groupId>
         <artifactId>netty</artifactId>
         <version>${netty.version}</version>
       </dependency>
