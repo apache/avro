@@ -28,7 +28,7 @@ module Avro
     LONG_MAX_VALUE = (1 << 63) - 1
 
     def self.parse(json_string)
-      real_parse(Yajl.load(json_string), {})
+      real_parse(MultiJson.load(json_string), {})
     end
 
     # Build Avro Schema from data parsed out of JSON string.
@@ -143,7 +143,7 @@ module Avro
     end
 
     def to_s
-      Yajl.dump to_avro
+      MultiJson.dump to_avro
     end
 
     class NamedSchema < Schema
