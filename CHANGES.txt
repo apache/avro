@@ -27,6 +27,8 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1055. Race condition in Java fingerprinting code (thiru)
 
+    AVRO-954. Typo in JsonCodec.cc (Nebojsa Sabovic via thiru)
+
 Avro 1.6.3 (5 March 2012)
 
   IMPROVEMENTS

@@ -108,7 +108,7 @@ JsonParser::Token JsonParser::doAdvance()
     case 'n':
         return tryLiteral("ull", 3, tkNull);
     default:
-        if (isdigit(ch) || '-') {
+        if (isdigit(ch) || ch == '-') {
             return tryNumber(ch);
         } else {
             unexpected(ch);
