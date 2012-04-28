@@ -34,6 +34,8 @@ Avro 1.7.0 (unreleased)
 
     AVRO-954. Typo in JsonCodec.cc (Nebojsa Sabovic via thiru)
 
+    AVRO-1045. C: Use less stack space in avro_file_writer_create (dcreager)
+
 Avro 1.6.3 (5 March 2012)
 
   IMPROVEMENTS

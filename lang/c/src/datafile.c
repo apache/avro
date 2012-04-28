@@ -51,6 +51,7 @@ struct avro_file_writer_t_ {
 	avro_writer_t datum_writer;
 	char* datum_buffer;
 	size_t datum_buffer_size;
+	char schema_buf[64 * 1024];
 };
 
 #define DEFAULT_BLOCK_SIZE 16 * 1024
@@ -78,7 +79,6 @@ static int write_header(avro_file_writer_t w)
 	uint8_t version = 1;
 	/* TODO: remove this static buffer */
 	avro_writer_t schema_writer;
-	char schema_buf[64 * 1024];
 	const avro_encoding_t *enc = &avro_binary_encoding;
 	int64_t schema_len;
 
@@ -92,7 +92,8 @@ static int write_header(avro_file_writer_t w)
 	check(rval, enc->write_string(w->writer, "avro.codec"));
 	check(rval, enc->write_bytes(w->writer, w->codec->name, strlen(w->codec->name)));
 	check(rval, enc->write_string(w->writer, "avro.schema"));
-	schema_writer = avro_writer_memory(schema_buf, sizeof(schema_buf));
+	schema_writer =
+	    avro_writer_memory(&w->schema_buf[0], sizeof(w->schema_buf));
 	rval = avro_schema_to_json(w->writers_schema, schema_writer);
 	if (rval) {
 		avro_writer_free(schema_writer);
@@ -101,7 +102,7 @@ static int write_header(avro_file_writer_t w)
 	schema_len = avro_writer_tell(schema_writer);
 	avro_writer_free(schema_writer);
 	check(rval,
-	      enc->write_bytes(w->writer, schema_buf, schema_len));
+	      enc->write_bytes(w->writer, w->schema_buf, schema_len));
 	check(rval, enc->write_long(w->writer, 0));
 	return write_sync(w);
 }
