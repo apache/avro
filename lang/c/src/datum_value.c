@@ -15,7 +15,7 @@
  * permissions and limitations under the License.
  */
 
-#include <stdint.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -28,7 +28,7 @@
 #include "avro/value.h"
 #include "avro_private.h"
 
-static avro_value_iface_t  AVRO_DATUM_VALUE_CLASS;
+extern avro_value_iface_t  AVRO_DATUM_VALUE_CLASS;
 
 avro_value_iface_t *
 avro_datum_class(void)
@@ -55,14 +55,14 @@ avro_datum_as_child_value(avro_value_t *value, avro_datum_t src)
 static void
 avro_datum_value_incref(avro_value_t *value)
 {
-	avro_datum_t  self = value->self;
+	avro_datum_t  self = (avro_datum_t) value->self;
 	avro_datum_incref(self);
 }
 
 static void
 avro_datum_value_decref(avro_value_t *value)
 {
-	avro_datum_t  self = value->self;
+	avro_datum_t  self = (avro_datum_t) value->self;
 	avro_datum_decref(self);
 }
 
@@ -70,7 +70,7 @@ static int
 avro_datum_value_reset(const avro_value_iface_t *iface, void *vself)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_datum_reset(self);
 }
@@ -80,7 +80,19 @@ avro_datum_value_get_type(const avro_value_iface_t *iface, const void *vself)
 {
 	AVRO_UNUSED(iface);
 	const avro_datum_t  self = (const avro_datum_t) vself;
-	check_param(EINVAL, self, "datum instance");
+#ifdef _WIN32
+#pragma message("#warning: Bug: EINVAL is not of type avro_type_t.")
+#else
+#warning "Bug: EINVAL is not of type avro_type_t."
+#endif
+        /* We shouldn't use EINVAL as the return value to
+         * check_param(), because EINVAL (= 22) is not a valid enum
+         * avro_type_t. This is a structural issue -- we would need a
+         * different interface on all the get_type functions to fix
+         * this. For now, suppressing the error by casting EINVAL to
+         * (avro_type_t) so the code compiles under C++.
+         */
+	check_param((avro_type_t) EINVAL, self, "datum instance");
 	return avro_typeof(self);
 }
 
@@ -311,7 +323,7 @@ avro_datum_value_set_boolean(const avro_value_iface_t *iface,
 			     void *vself, int val)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_boolean_set(self, val);
 }
@@ -321,9 +333,9 @@ avro_datum_value_set_bytes(const avro_value_iface_t *iface,
 			   void *vself, void *buf, size_t size)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
-	return avro_bytes_set(self, buf, size);
+	return avro_bytes_set(self, (const char *) buf, size);
 }
 
 static int
@@ -347,7 +359,7 @@ avro_datum_value_set_double(const avro_value_iface_t *iface,
 			    void *vself, double val)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_double_set(self, val);
 }
@@ -357,7 +369,7 @@ avro_datum_value_set_float(const avro_value_iface_t *iface,
 			   void *vself, float val)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_float_set(self, val);
 }
@@ -367,7 +379,7 @@ avro_datum_value_set_int(const avro_value_iface_t *iface,
 			 void *vself, int32_t val)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_int32_set(self, val);
 }
@@ -377,7 +389,7 @@ avro_datum_value_set_long(const avro_value_iface_t *iface,
 			  void *vself, int64_t val)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_int64_set(self, val);
 }
@@ -386,7 +398,7 @@ static int
 avro_datum_value_set_null(const avro_value_iface_t *iface, void *vself)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, is_avro_null(self), "datum instance");
 	return 0;
 }
@@ -396,7 +408,7 @@ avro_datum_value_set_string(const avro_value_iface_t *iface,
 			    void *vself, const char *str)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_string_set(self, str);
 }
@@ -407,7 +419,7 @@ avro_datum_value_set_string_len(const avro_value_iface_t *iface,
 {
 	AVRO_UNUSED(iface);
 	AVRO_UNUSED(size);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_string_set(self, str);
 }
@@ -433,7 +445,7 @@ avro_datum_value_set_enum(const avro_value_iface_t *iface,
 			  void *vself, int val)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 	return avro_enum_set(self, val);
 }
@@ -443,9 +455,9 @@ avro_datum_value_set_fixed(const avro_value_iface_t *iface,
 			   void *vself, void *buf, size_t size)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
-	return avro_fixed_set(self, buf, size);
+	return avro_fixed_set(self, (const char *) buf, size);
 }
 
 static int
@@ -615,7 +627,7 @@ avro_datum_value_append(const avro_value_iface_t *iface,
 			void *vself, avro_value_t *child_out, size_t *new_index)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 
 	if (!is_avro_array(self)) {
@@ -650,7 +662,7 @@ avro_datum_value_add(const avro_value_iface_t *iface,
 		     avro_value_t *child, size_t *index, int *is_new)
 {
 	AVRO_UNUSED(iface);
-	avro_datum_t  self = vself;
+	avro_datum_t  self = (avro_datum_t) vself;
 	check_param(EINVAL, self, "datum instance");
 
 	if (!is_avro_map(self)) {
@@ -719,7 +731,7 @@ avro_datum_value_set_branch(const avro_value_iface_t *iface,
 }
 
 
-static avro_value_iface_t  AVRO_DATUM_VALUE_CLASS =
+avro_value_iface_t  AVRO_DATUM_VALUE_CLASS =
 {
 	/* "class" methods */
 	NULL, /* incref */

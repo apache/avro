@@ -15,7 +15,7 @@
  * permissions and limitations under the License.
  */
 
-#include <inttypes.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -133,7 +133,7 @@ static avro_resolver_t *
 avro_resolver_create(avro_schema_t wschema,
 		     avro_schema_t rschema)
 {
-	avro_resolver_t  *resolver = avro_new(avro_resolver_t);
+	avro_resolver_t  *resolver = (avro_resolver_t *) avro_new(avro_resolver_t);
 	memset(resolver, 0, sizeof(avro_resolver_t));
 
 	resolver->parent.free = avro_resolver_free;
@@ -295,7 +295,7 @@ avro_resolver_boolean_value(avro_consumer_t *consumer, int value,
 			    void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %s into %p", value? "TRUE": "FALSE", dest);
 	return avro_boolean_set(dest, value);
@@ -331,10 +331,10 @@ avro_resolver_bytes_value(avro_consumer_t *consumer,
 			  void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
-	debug("Storing %zu bytes into %p", value_len, dest);
-	return avro_givebytes_set(dest, value, value_len, free_bytes);
+	debug("Storing %" PRIsz " bytes into %p", value_len, dest);
+	return avro_givebytes_set(dest, (const char *) value, value_len, free_bytes);
 }
 
 static int
@@ -356,7 +356,7 @@ avro_resolver_double_value(avro_consumer_t *consumer, double value,
 			   void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %le into %p", value, dest);
 	return avro_double_set(dest, value);
@@ -381,7 +381,7 @@ avro_resolver_float_value(avro_consumer_t *consumer, float value,
 			  void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %e into %p", value, dest);
 	return avro_float_set(dest, value);
@@ -392,7 +392,7 @@ avro_resolver_float_double_value(avro_consumer_t *consumer, float value,
 				 void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %e into %p (promoting float to double)", value, dest);
 	return avro_double_set(dest, value);
@@ -422,7 +422,7 @@ avro_resolver_int_value(avro_consumer_t *consumer, int32_t value,
 			void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %" PRId32 " into %p", value, dest);
 	return avro_int32_set(dest, value);
@@ -433,7 +433,7 @@ avro_resolver_int_long_value(avro_consumer_t *consumer, int32_t value,
 			     void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %" PRId32 " into %p (promoting int to long)", value, dest);
 	return avro_int64_set(dest, value);
@@ -444,7 +444,7 @@ avro_resolver_int_double_value(avro_consumer_t *consumer, int32_t value,
 			       void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %" PRId32 " into %p (promoting int to double)", value, dest);
 	return avro_double_set(dest, value);
@@ -455,10 +455,10 @@ avro_resolver_int_float_value(avro_consumer_t *consumer, int32_t value,
 			      void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %" PRId32 " into %p (promoting int to float)", value, dest);
-	return avro_float_set(dest, value);
+	return avro_float_set(dest, (const float) value);
 }
 
 static int
@@ -495,7 +495,7 @@ avro_resolver_long_value(avro_consumer_t *consumer, int64_t value,
 			 void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %" PRId64 " into %p", value, dest);
 	return avro_int64_set(dest, value);
@@ -506,10 +506,10 @@ avro_resolver_long_float_value(avro_consumer_t *consumer, int64_t value,
 			       void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %" PRId64 " into %p (promoting long to float)", value, dest);
-	return avro_float_set(dest, value);
+	return avro_float_set(dest, (const float) value);
 }
 
 static int
@@ -517,10 +517,10 @@ avro_resolver_long_double_value(avro_consumer_t *consumer, int64_t value,
 				void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing %" PRId64 " into %p (promoting long to double)", value, dest);
-	return avro_double_set(dest, value);
+	return avro_double_set(dest, (const double) value);
 }
 
 static int
@@ -551,7 +551,7 @@ static int
 avro_resolver_null_value(avro_consumer_t *consumer, void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 
 	AVRO_UNUSED(dest);
@@ -580,10 +580,10 @@ avro_resolver_string_value(avro_consumer_t *consumer,
 {
 	AVRO_UNUSED(value_len);
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Storing \"%s\" into %p", (const char *) value, dest);
-	return avro_givestring_set(dest, value, avro_alloc_free_func);
+	return avro_givestring_set(dest, (const char *) value, avro_alloc_free_func);
 }
 
 static int
@@ -612,7 +612,7 @@ avro_resolver_array_start_block(avro_consumer_t *consumer,
 {
 	if (is_first_block) {
 		avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-		avro_datum_t  ud_dest = user_data;
+		avro_datum_t  ud_dest = (avro_datum_t) user_data;
 		avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 		AVRO_UNUSED(dest);
 
@@ -633,7 +633,7 @@ avro_resolver_array_element(avro_consumer_t *consumer,
 	AVRO_UNUSED(index);
 
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Adding element to array %p", dest);
 
@@ -698,7 +698,7 @@ try_array(avro_memoize_t *mem, avro_resolver_t **resolver,
 	 */
 
 	(*resolver)->num_children = 1;
-	(*resolver)->child_resolvers = avro_calloc(1, sizeof(avro_consumer_t *));
+	(*resolver)->child_resolvers = (avro_consumer_t **) avro_calloc(1, sizeof(avro_consumer_t *));
 	(*resolver)->child_resolvers[0] = item_consumer;
 	(*resolver)->parent.array_start_block = avro_resolver_array_start_block;
 	(*resolver)->parent.array_element = avro_resolver_array_element;
@@ -718,7 +718,7 @@ avro_resolver_enum_value(avro_consumer_t *consumer, int value,
 	AVRO_UNUSED(value);
 
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 
 	const char  *symbol_name = avro_schema_enum_get(resolver->parent.schema, value);
@@ -760,10 +760,10 @@ avro_resolver_fixed_value(avro_consumer_t *consumer,
 			  void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
-	debug("Storing (fixed) %zu bytes into %p", value_len, dest);
-	return avro_givefixed_set(dest, value, value_len, avro_alloc_free_func);
+	debug("Storing (fixed) %" PRIsz " bytes into %p", value_len, dest);
+	return avro_givefixed_set(dest, (const char *) value, value_len, avro_alloc_free_func);
 }
 
 static int
@@ -796,7 +796,7 @@ avro_resolver_map_start_block(avro_consumer_t *consumer,
 {
 	if (is_first_block) {
 		avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-		avro_datum_t  ud_dest = user_data;
+		avro_datum_t  ud_dest = (avro_datum_t) user_data;
 		avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 		AVRO_UNUSED(dest);
 
@@ -818,7 +818,7 @@ avro_resolver_map_element(avro_consumer_t *consumer,
 	AVRO_UNUSED(index);
 
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	debug("Adding element to map %p", dest);
 
@@ -883,7 +883,7 @@ try_map(avro_memoize_t *mem, avro_resolver_t **resolver,
 	 */
 
 	(*resolver)->num_children = 1;
-	(*resolver)->child_resolvers = avro_calloc(1, sizeof(avro_consumer_t *));
+	(*resolver)->child_resolvers = (avro_consumer_t **) avro_calloc(1, sizeof(avro_consumer_t *));
 	(*resolver)->child_resolvers[0] = value_consumer;
 	(*resolver)->parent.map_start_block = avro_resolver_map_start_block;
 	(*resolver)->parent.map_element = avro_resolver_map_element;
@@ -901,7 +901,7 @@ avro_resolver_record_start(avro_consumer_t *consumer,
 			   void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 	AVRO_UNUSED(dest);
 
@@ -923,7 +923,7 @@ avro_resolver_record_field(avro_consumer_t *consumer,
 			   void *user_data)
 {
 	avro_resolver_t  *resolver = (avro_resolver_t *) consumer;
-	avro_datum_t  ud_dest = user_data;
+	avro_datum_t  ud_dest = (avro_datum_t) user_data;
 	avro_datum_t  dest = avro_resolver_get_real_dest(resolver, ud_dest);
 
 	const char  *field_name =
@@ -1005,8 +1005,8 @@ try_record(avro_memoize_t *mem, avro_resolver_t **resolver,
 	debug("Checking writer record schema %s", wname);
 
 	avro_consumer_t  **child_resolvers =
-	    avro_calloc(wfields, sizeof(avro_consumer_t *));
-	int  *index_mapping = avro_calloc(wfields, sizeof(int));
+	    (avro_consumer_t **) avro_calloc(wfields, sizeof(avro_consumer_t *));
+	int  *index_mapping = (int *) avro_calloc(wfields, sizeof(int));
 
 	unsigned int  ri;
 	for (ri = 0; ri < rfields; ri++) {
@@ -1156,13 +1156,13 @@ try_union(avro_memoize_t *mem, avro_schema_t wschema, avro_schema_t rschema)
 	 */
 
 	size_t  num_branches = avro_schema_union_size(wschema);
-	debug("Checking %zu-branch writer union schema", num_branches);
+	debug("Checking %" PRIsz "-branch writer union schema", num_branches);
 
 	avro_resolver_t  *resolver = avro_resolver_create(wschema, rschema);
 	avro_memoize_set(mem, wschema, rschema, resolver);
 
 	avro_consumer_t  **child_resolvers =
-	    avro_calloc(num_branches, sizeof(avro_consumer_t *));
+	    (avro_consumer_t **) avro_calloc(num_branches, sizeof(avro_consumer_t *));
 	int  some_branch_compatible = 0;
 
 	unsigned int  i;

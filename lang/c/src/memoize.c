@@ -52,8 +52,8 @@ avro_memoize_key_hash(avro_memoize_key_t *a)
 
 
 static struct st_hash_type  avro_memoize_hash_type = {
-	avro_memoize_key_cmp,
-	avro_memoize_key_hash
+	HASH_FUNCTION_CAST avro_memoize_key_cmp,
+	HASH_FUNCTION_CAST avro_memoize_key_hash
 };
 
 
@@ -78,8 +78,8 @@ avro_memoize_free_key(avro_memoize_key_t *key, void *result, void *dummy)
 void
 avro_memoize_done(avro_memoize_t *mem)
 {
-	st_foreach(mem->cache, avro_memoize_free_key, 0);
-	st_free_table(mem->cache);
+	st_foreach((st_table *) mem->cache, HASH_FUNCTION_CAST avro_memoize_free_key, 0);
+	st_free_table((st_table *) mem->cache);
 	memset(mem, 0, sizeof(avro_memoize_t));
 }
 
@@ -98,7 +98,7 @@ avro_memoize_get(avro_memoize_t *mem,
 		void  *value;
 	} val;
 
-	if (st_lookup(mem->cache, (st_data_t) &key, &val.data)) {
+	if (st_lookup((st_table *) mem->cache, (st_data_t) &key, &val.data)) {
 		if (result) {
 			*result = val.value;
 		}
@@ -129,8 +129,8 @@ avro_memoize_set(avro_memoize_t *mem,
 		void  *value;
 	} val;
 
-	if (st_lookup(mem->cache, (st_data_t) &key, &val.data)) {
-		st_insert(mem->cache, (st_data_t) &key, (st_data_t) result);
+	if (st_lookup((st_table *) mem->cache, (st_data_t) &key, &val.data)) {
+		st_insert((st_table *) mem->cache, (st_data_t) &key, (st_data_t) result);
 		return;
 	}
 
@@ -138,11 +138,11 @@ avro_memoize_set(avro_memoize_t *mem,
 	 * If it's a new key pair, then we do need to allocate.
 	 */
 
-	avro_memoize_key_t  *real_key = avro_new(avro_memoize_key_t);
+	avro_memoize_key_t  *real_key = (avro_memoize_key_t *) avro_new(avro_memoize_key_t);
 	real_key->key1 = key1;
 	real_key->key2 = key2;
 
-	st_insert(mem->cache, (st_data_t) real_key, (st_data_t) result);
+	st_insert((st_table *) mem->cache, (st_data_t) real_key, (st_data_t) result);
 }
 
 
@@ -159,7 +159,7 @@ avro_memoize_delete(avro_memoize_t *mem, void *key1, void *key2)
 	} real_key;
 
 	real_key.key = &key;
-	if (st_delete(mem->cache, &real_key.data, NULL)) {
+	if (st_delete((st_table *) mem->cache, &real_key.data, NULL)) {
 		avro_freet(avro_memoize_key_t, real_key.key);
 	}
 }

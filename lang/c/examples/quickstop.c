@@ -16,10 +16,8 @@
  */
 
 #include <avro.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #ifdef DEFLATE_CODEC
 #define QUICKSTOP_CODEC  "deflate"
@@ -144,7 +142,7 @@ int main(void)
 	init_schema();
 
 	/* Delete the database if it exists */
-	unlink(dbname);
+	remove(dbname);
 	/* Create a new database */
 	rval = avro_file_writer_create_with_codec
 	    (dbname, person_schema, &db, QUICKSTOP_CODEC, 0);

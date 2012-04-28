@@ -9,15 +9,35 @@
 
 #ifndef ST_INCLUDED
 #define ST_INCLUDED
+#ifdef __cplusplus
+extern "C" {
+#define CLOSE_EXTERN }
+#else
+#define CLOSE_EXTERN
+#endif
 
-#include <stdint.h>		/* for uintptr_t */
+#include <avro/platform.h>		/* for uintptr_t */
+
+#ifndef ANYARGS
+ #ifdef __cplusplus
+   #define ANYARGS ...
+ #else
+   #define ANYARGS
+ #endif
+#endif
+
+#ifdef _WIN32
+  #define HASH_FUNCTION_CAST (int (__cdecl *)(ANYARGS))
+#else
+  #define HASH_FUNCTION_CAST
+#endif
 
 typedef uintptr_t st_data_t;
 typedef struct st_table st_table;
 
 struct st_hash_type {
-	int (*compare) ();
-	int (*hash) ();
+  int (*compare) (ANYARGS);
+  int (*hash) (ANYARGS);
 };
 
 struct st_table {
@@ -33,13 +53,6 @@ enum st_retval { ST_CONTINUE, ST_STOP, ST_DELETE, ST_CHECK };
 
 #ifndef _
 # define _(args) args
-#endif
-#ifndef ANYARGS
-# ifdef __cplusplus
-#   define ANYARGS ...
-# else
-#   define ANYARGS
-# endif
 #endif
 
 st_table *st_init_table _((struct st_hash_type *));
@@ -66,4 +79,5 @@ st_table *st_copy _((st_table *));
 
 int st_strhash();
 
+CLOSE_EXTERN
 #endif				/* ST_INCLUDED */

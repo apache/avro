@@ -15,7 +15,7 @@
  * permissions and limitations under the License.
  */
 
-#include <stdint.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -184,7 +184,7 @@ struct avro_wrapped_alloc {
 static void
 avro_wrapped_alloc_free(avro_wrapped_buffer_t *self)
 {
-	struct avro_wrapped_alloc  *alloc = self->user_data;
+	struct avro_wrapped_alloc  *alloc = (struct avro_wrapped_alloc *) self->user_data;
 	avro_free((void *) alloc->original, alloc->allocated_size);
 	avro_freet(struct avro_wrapped_alloc, alloc);
 }
@@ -193,7 +193,7 @@ static int
 avro_wrapped_alloc_new(avro_wrapped_buffer_t *dest,
 		       const void *buf, size_t length)
 {
-	struct avro_wrapped_alloc  *alloc = avro_new(struct avro_wrapped_alloc);
+	struct avro_wrapped_alloc  *alloc = (struct avro_wrapped_alloc *) avro_new(struct avro_wrapped_alloc);
 	if (alloc == NULL) {
 		return ENOMEM;
 	}
@@ -330,7 +330,7 @@ read_value(avro_reader_t reader, avro_value_t *dest)
 			char *bytes;
 			int64_t size = avro_schema_fixed_size(schema);
 
-			bytes = avro_malloc(size);
+			bytes = (char *) avro_malloc(size);
 			if (!bytes) {
 				avro_prefix_error("Cannot allocate new fixed value");
 				return ENOMEM;

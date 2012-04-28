@@ -21,6 +21,7 @@
 #include "avro_private.h"
 #include "avro/allocation.h"
 #include "avro/data.h"
+#include "avro/legacy.h"
 
 static void *
 avro_default_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
@@ -70,20 +71,20 @@ char *avro_strdup(const char *str)
 		return NULL;
 	}
 
-	size_t  *size = buf;
+	size_t  *size = (size_t *) buf;
 	char  *new_str = (char *) (size + 1);
 
 	*size = buf_size;
 	memcpy(new_str, str, str_size);
 
-	//fprintf(stderr, "--- new  %zu %p %s\n", *size, new_str, new_str);
+	//fprintf(stderr, "--- new  %" PRIsz " %p %s\n", *size, new_str, new_str);
 	return new_str;
 }
 
 void avro_str_free(char *str)
 {
 	size_t  *size = ((size_t *) str) - 1;
-	//fprintf(stderr, "--- free %zu %p %s\n", *size, str, str);
+	//fprintf(stderr, "--- free %" PRIsz " %p %s\n", *size, str, str);
 	avro_free(size, *size);
 }
 

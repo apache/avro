@@ -7,6 +7,12 @@
 
 #ifndef STRBUFFER_H
 #define STRBUFFER_H
+#ifdef __cplusplus
+extern "C" {
+#define CLOSE_EXTERN }
+#else
+#define CLOSE_EXTERN
+#endif
 
 typedef struct {
     char *value;
@@ -28,4 +34,5 @@ int strbuffer_append_bytes(strbuffer_t *strbuff, const char *data, int size);
 
 char strbuffer_pop(strbuffer_t *strbuff);
 
+CLOSE_EXTERN
 #endif

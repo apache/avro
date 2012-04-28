@@ -31,6 +31,7 @@ extern "C" {
 #include <avro/generic.h>
 #include <avro/io.h>
 #include <avro/legacy.h>
+#include <avro/platform.h>
 #include <avro/resolver.h>
 #include <avro/schema.h>
 #include <avro/value.h>

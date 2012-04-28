@@ -39,8 +39,8 @@ struct st_table_entry {
 static int numcmp(long, long);
 static int numhash(long);
 static struct st_hash_type type_numhash = {
-	numcmp,
-	numhash,
+	HASH_FUNCTION_CAST numcmp,
+	HASH_FUNCTION_CAST numhash
 };
 
 /*
@@ -48,8 +48,8 @@ static struct st_hash_type type_numhash = {
  */
 static int strhash(const char *);
 static struct st_hash_type type_strhash = {
-	strcmp,
-	strhash,
+	HASH_FUNCTION_CAST strcmp,
+	HASH_FUNCTION_CAST strhash
 };
 
 static void rehash(st_table *);
@@ -110,8 +110,7 @@ static long primes[] = {
 	0
 };
 
-static int new_size(size)
-int size;
+static int new_size(int size)
 {
 	unsigned int i;
 
@@ -148,9 +147,7 @@ static void stat_col()
 }
 #endif
 
-st_table *st_init_table_with_size(type, size)
-struct st_hash_type *type;
-int size;
+st_table *st_init_table_with_size(struct st_hash_type *type, int size)
 {
 	st_table *tbl;
 
@@ -163,7 +160,7 @@ int size;
 
 	size = new_size(size);	/* round up to prime number */
 
-	tbl = avro_new(st_table);
+	tbl = (st_table *) avro_new(st_table);
 	tbl->type = type;
 	tbl->num_entries = 0;
 	tbl->num_bins = size;
@@ -172,8 +169,7 @@ int size;
 	return tbl;
 }
 
-st_table *st_init_table(type)
-struct st_hash_type *type;
+st_table *st_init_table(struct st_hash_type *type)
 {
 	return st_init_table_with_size(type, 0);
 }
@@ -183,8 +179,7 @@ st_table *st_init_numtable(void)
 	return st_init_table(&type_numhash);
 }
 
-st_table *st_init_numtable_with_size(size)
-int size;
+st_table *st_init_numtable_with_size(int size)
 {
 	return st_init_table_with_size(&type_numhash, size);
 }
@@ -194,14 +189,12 @@ st_table *st_init_strtable(void)
 	return st_init_table(&type_strhash);
 }
 
-st_table *st_init_strtable_with_size(size)
-int size;
+st_table *st_init_strtable_with_size(int size)
 {
 	return st_init_table_with_size(&type_strhash, size);
 }
 
-void st_free_table(table)
-st_table *table;
+void st_free_table(st_table *table)
 {
 	register st_table_entry *ptr, *next;
 	int i;
@@ -239,10 +232,7 @@ st_table *table;
     }\
 } while (0)
 
-int st_lookup(table, key, value)
-st_table *table;
-register st_data_t key;
-st_data_t *value;
+int st_lookup(st_table *table, register st_data_t key, st_data_t *value)
 {
 	unsigned int hash_val, bin_pos;
 	register st_table_entry *ptr;
@@ -267,7 +257,7 @@ do {\
         bin_pos = hash_val % table->num_bins;\
     }\
     \
-    entry = avro_new(st_table_entry);\
+    entry = (st_table_entry *) avro_new(st_table_entry);\
     \
     entry->hash = hash_val;\
     entry->key = key;\
@@ -277,10 +267,7 @@ do {\
     table->num_entries++;\
 } while (0)
 
-int st_insert(table, key, value)
-register st_table *table;
-register st_data_t key;
-st_data_t value;
+int st_insert(register st_table *table, register st_data_t key, st_data_t value)
 {
 	unsigned int hash_val, bin_pos;
 	register st_table_entry *ptr;
@@ -297,10 +284,7 @@ st_data_t value;
 	}
 }
 
-void st_add_direct(table, key, value)
-st_table *table;
-st_data_t key;
-st_data_t value;
+void st_add_direct(st_table *table,st_data_t key,st_data_t value)
 {
 	unsigned int hash_val, bin_pos;
 
@@ -309,8 +293,7 @@ st_data_t value;
 	ADD_DIRECT(table, key, value, hash_val, bin_pos);
 }
 
-static void rehash(table)
-register st_table *table;
+static void rehash(register st_table *table)
 {
 	register st_table_entry *ptr, *next, **new_bins;
 	int i, old_num_bins = table->num_bins, new_num_bins;
@@ -335,14 +318,13 @@ register st_table *table;
 	table->bins = new_bins;
 }
 
-st_table *st_copy(old_table)
-st_table *old_table;
+st_table *st_copy(st_table *old_table)
 {
 	st_table *new_table;
 	st_table_entry *ptr, *entry;
 	int i, num_bins = old_table->num_bins;
 
-	new_table = avro_new(st_table);
+	new_table = (st_table *) avro_new(st_table);
 	if (new_table == 0) {
 		return 0;
 	}
@@ -360,7 +342,7 @@ st_table *old_table;
 		new_table->bins[i] = 0;
 		ptr = old_table->bins[i];
 		while (ptr != 0) {
-			entry = avro_new(st_table_entry);
+			entry = (st_table_entry *) avro_new(st_table_entry);
 			if (entry == 0) {
 				free_bins(new_table);
 				avro_freet(st_table, new_table);
@@ -375,10 +357,7 @@ st_table *old_table;
 	return new_table;
 }
 
-int st_delete(table, key, value)
-register st_table *table;
-register st_data_t *key;
-st_data_t *value;
+int st_delete(register st_table *table,register st_data_t *key,st_data_t *value)
 {
 	unsigned int hash_val;
 	st_table_entry *tmp;
@@ -419,11 +398,7 @@ st_data_t *value;
 	return 0;
 }
 
-int st_delete_safe(table, key, value, never)
-register st_table *table;
-register st_data_t *key;
-st_data_t *value;
-st_data_t never;
+int st_delete_safe(register st_table *table,register st_data_t *key,st_data_t *value,st_data_t never)
 {
 	unsigned int hash_val;
 	register st_table_entry *ptr;
@@ -451,8 +426,7 @@ st_data_t never;
 	return 0;
 }
 
-static int delete_never(key, value, never)
-st_data_t key, value, never;
+static int delete_never(st_data_t key, st_data_t value, st_data_t never)
 {
 	AVRO_UNUSED(key);
 
@@ -461,20 +435,15 @@ st_data_t key, value, never;
 	return ST_CONTINUE;
 }
 
-void st_cleanup_safe(table, never)
-st_table *table;
-st_data_t never;
+void st_cleanup_safe(st_table *table,st_data_t never)
 {
 	int num_entries = table->num_entries;
 
-	st_foreach(table, delete_never, never);
+	st_foreach(table, HASH_FUNCTION_CAST delete_never, never);
 	table->num_entries = num_entries;
 }
 
-int st_foreach(table, func, arg)
-st_table *table;
-int (*func) ();
-st_data_t arg;
+int st_foreach(st_table *table,int (*func) (ANYARGS),st_data_t arg)
 {
 	st_table_entry *ptr, *last, *tmp;
 	enum st_retval retval;
@@ -483,7 +452,7 @@ st_data_t arg;
 	for (i = 0; i < table->num_bins; i++) {
 		last = 0;
 		for (ptr = table->bins[i]; ptr != 0;) {
-			retval = (*func) (ptr->key, ptr->record, arg);
+			retval = (enum st_retval) (*func) (ptr->key, ptr->record, arg);
 			switch (retval) {
 			case ST_CHECK:	/* check if hash is modified during
 					 * iteration */
@@ -526,8 +495,7 @@ st_data_t arg;
 	return 0;
 }
 
-static int strhash(string)
-register const char *string;
+static int strhash(register const char *string)
 {
 	register int c;
 
@@ -564,14 +532,12 @@ register const char *string;
 #endif
 }
 
-static int numcmp(x, y)
-long x, y;
+static int numcmp(long x, long y)
 {
 	return x != y;
 }
 
-static int numhash(n)
-long n;
+static int numhash(long n)
 {
 	return n;
 }

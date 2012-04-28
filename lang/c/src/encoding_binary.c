@@ -23,7 +23,6 @@
 #include <limits.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/types.h>
 
 #define MAX_VARINT_BUF_SIZE 10
 
@@ -128,7 +127,7 @@ static int read_bytes(avro_reader_t reader, char **bytes, int64_t * len)
 	int rval;
 	check_prefix(rval, read_long(reader, len),
 		     "Cannot read bytes length: ");
-	*bytes = avro_malloc(*len + 1);
+	*bytes = (char *) avro_malloc(*len + 1);
 	if (!*bytes) {
 		avro_set_error("Cannot allocate buffer for bytes value");
 		return ENOMEM;
@@ -177,7 +176,7 @@ static int read_string(avro_reader_t reader, char **s, int64_t *len)
 	check_prefix(rval, read_long(reader, &str_len),
 		     "Cannot read string length: ");
 	*len = str_len + 1;
-	*s = avro_malloc(*len);
+	*s = (char *) avro_malloc(*len);
 	if (!*s) {
 		avro_set_error("Cannot allocate buffer for string value");
 		return ENOMEM;
@@ -206,14 +205,14 @@ static int64_t size_string(avro_writer_t writer, const char *s)
 
 static int read_float(avro_reader_t reader, float *f)
 {
-#if BYTE_ORDER == BIG_ENDIAN
+#if AVRO_PLATFORM_IS_BIG_ENDIAN
 	uint8_t buf[4];
 #endif
 	union {
 		float f;
 		int32_t i;
 	} v;
-#if BYTE_ORDER == BIG_ENDIAN
+#if AVRO_PLATFORM_IS_BIG_ENDIAN
 	AVRO_READ(reader, buf, 4);
 	v.i = ((int32_t) buf[0] << 0)
 	    | ((int32_t) buf[1] << 8)
@@ -233,7 +232,7 @@ static int skip_float(avro_reader_t reader)
 
 static int write_float(avro_writer_t writer, const float f)
 {
-#if BYTE_ORDER == BIG_ENDIAN
+#if AVRO_PLATFORM_IS_BIG_ENDIAN
 	uint8_t buf[4];
 #endif
 	union {
@@ -242,7 +241,7 @@ static int write_float(avro_writer_t writer, const float f)
 	} v;
 
 	v.f = f;
-#if BYTE_ORDER == BIG_ENDIAN
+#if AVRO_PLATFORM_IS_BIG_ENDIAN
 	buf[0] = (uint8_t) (v.i >> 0);
 	buf[1] = (uint8_t) (v.i >> 8);
 	buf[2] = (uint8_t) (v.i >> 16);
@@ -264,7 +263,7 @@ static int64_t size_float(avro_writer_t writer, const float f)
 
 static int read_double(avro_reader_t reader, double *d)
 {
-#if BYTE_ORDER == BIG_ENDIAN
+#if AVRO_PLATFORM_IS_BIG_ENDIAN
 	uint8_t buf[8];
 #endif
 	union {
@@ -272,7 +271,7 @@ static int read_double(avro_reader_t reader, double *d)
 		int64_t l;
 	} v;
 
-#if BYTE_ORDER == BIG_ENDIAN
+#if AVRO_PLATFORM_IS_BIG_ENDIAN
 	AVRO_READ(reader, buf, 8);
 	v.l = ((int64_t) buf[0] << 0)
 	    | ((int64_t) buf[1] << 8)
@@ -296,7 +295,7 @@ static int skip_double(avro_reader_t reader)
 
 static int write_double(avro_writer_t writer, const double d)
 {
-#if BYTE_ORDER == BIG_ENDIAN
+#if AVRO_PLATFORM_IS_BIG_ENDIAN
 	uint8_t buf[8];
 #endif
 	union {
@@ -305,7 +304,7 @@ static int write_double(avro_writer_t writer, const double d)
 	} v;
 
 	v.d = d;
-#if BYTE_ORDER == BIG_ENDIAN
+#if AVRO_PLATFORM_IS_BIG_ENDIAN
 	buf[0] = (uint8_t) (v.l >> 0);
 	buf[1] = (uint8_t) (v.l >> 8);
 	buf[2] = (uint8_t) (v.l >> 16);
@@ -382,62 +381,66 @@ static int64_t size_null(avro_writer_t writer)
 	return 0;
 }
 
+/* Win32 doesn't support the C99 method of initializing named elements
+ * in a struct declaration. So hide the named parameters for Win32,
+ * and initialize in the order the code was written.
+ */
 const avro_encoding_t avro_binary_encoding = {
-	.description = "BINARY FORMAT",
+	/* .description = */ "BINARY FORMAT",
 	/*
 	 * string 
 	 */
-	.read_string = read_string,
-	.skip_string = skip_string,
-	.write_string = write_string,
-	.size_string = size_string,
+	/* .read_string = */ read_string,
+	/* .skip_string = */ skip_string,
+	/* .write_string = */ write_string,
+	/* .size_string = */ size_string,
 	/*
 	 * bytes 
 	 */
-	.read_bytes = read_bytes,
-	.skip_bytes = skip_bytes,
-	.write_bytes = write_bytes,
-	.size_bytes = size_bytes,
+	/* .read_bytes = */ read_bytes,
+	/* .skip_bytes = */ skip_bytes,
+	/* .write_bytes = */ write_bytes,
+	/* .size_bytes = */ size_bytes,
 	/*
 	 * int 
 	 */
-	.read_int = read_int,
-	.skip_int = skip_int,
-	.write_int = write_int,
-	.size_int = size_int,
+	/* .read_int = */ read_int,
+	/* .skip_int = */ skip_int,
+	/* .write_int = */ write_int,
+	/* .size_int = */ size_int,
 	/*
 	 * long 
 	 */
-	.read_long = read_long,
-	.skip_long = skip_long,
-	.write_long = write_long,
-	.size_long = size_long,
+	/* .read_long = */ read_long,
+	/* .skip_long = */ skip_long,
+	/* .write_long = */ write_long,
+	/* .size_long = */ size_long,
 	/*
 	 * float 
 	 */
-	.read_float = read_float,
-	.skip_float = skip_float,
-	.write_float = write_float,
-	.size_float = size_float,
+	/* .read_float = */ read_float,
+	/* .skip_float = */ skip_float,
+	/* .write_float = */ write_float,
+	/* .size_float = */ size_float,
 	/*
 	 * double 
 	 */
-	.read_double = read_double,
-	.skip_double = skip_double,
-	.write_double = write_double,
-	.size_double = size_double,
+	/* .read_double = */ read_double,
+	/* .skip_double = */ skip_double,
+	/* .write_double = */ write_double,
+	/* .size_double = */ size_double,
 	/*
 	 * boolean 
 	 */
-	.read_boolean = read_boolean,
-	.skip_boolean = skip_boolean,
-	.write_boolean = write_boolean,
-	.size_boolean = size_boolean,
+	/* .read_boolean = */ read_boolean,
+	/* .skip_boolean = */ skip_boolean,
+	/* .write_boolean = */ write_boolean,
+	/* .size_boolean = */ size_boolean,
 	/*
 	 * null 
 	 */
-	.read_null = read_skip_null,
-	.skip_null = read_skip_null,
-	.write_null = write_null,
-	.size_null = size_null
+	/* .read_null = */ read_skip_null,
+	/* .skip_null = */ read_skip_null,
+	/* .write_null = */ write_null,
+	/* .size_null = */ size_null
 };

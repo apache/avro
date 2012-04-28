@@ -17,6 +17,13 @@
 
 #ifndef AVRO_ALLOCATION_H
 #define AVRO_ALLOCATION_H
+#ifdef __cplusplus
+extern "C" {
+#define CLOSE_EXTERN }
+#else
+#define CLOSE_EXTERN
+#endif
+
 #include <stdlib.h>
 
 /*
@@ -76,4 +83,5 @@ void *avro_calloc(size_t count, size_t size);
 char *avro_strdup(const char *str);
 void avro_str_free(char *str);
 
+CLOSE_EXTERN
 #endif

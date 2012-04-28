@@ -7,10 +7,20 @@
 
 #ifndef JANSSON_PRIVATE_H
 #define JANSSON_PRIVATE_H
+#ifdef __cplusplus
+extern "C" {
+#define CLOSE_EXTERN }
+#else
+#define CLOSE_EXTERN
+#endif
 
 #include <stddef.h>
 #include "jansson.h"
 #include "hashtable.h"
+
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
 
 #define container_of(ptr_, type_, member_)  \
     ((type_ *)((char *)ptr_ - offsetof(type_, member_)))
@@ -88,4 +98,5 @@ void* jsonp_malloc(size_t size);
 void jsonp_free(void *ptr);
 char *jsonp_strdup(const char *str);
 
+CLOSE_EXTERN
 #endif

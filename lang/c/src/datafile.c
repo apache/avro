@@ -55,7 +55,9 @@ struct avro_file_writer_t_ {
 
 #define DEFAULT_BLOCK_SIZE 16 * 1024
 
-/* TODO: should we just read /dev/random? */
+/* Note: We should not just read /dev/random here, because it may not
+ * exist on all platforms e.g. Win32.
+ */
 static void generate_sync(avro_file_writer_t w)
 {
 	unsigned int i;
@@ -120,18 +122,29 @@ file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
 	return 0;
 }
 
+/* Exclusive file writing is supported by GCC using the mode
+ * "wx". Win32 does not support exclusive file writing, so for win32
+ * fall back to the non-exclusive file writing.
+ */
+#ifdef _WIN32
+  #define EXCLUSIVE_WRITE_MODE   "wb"
+#else
+  #define EXCLUSIVE_WRITE_MODE   "wbx"
+#endif
+
 static int
 file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w, size_t block_size)
 {
 	int rval;
+
 	w->block_count = 0;
-	rval = file_writer_init_fp(path, "wx", w);
+	rval = file_writer_init_fp(path, EXCLUSIVE_WRITE_MODE, w);
 	if (rval) {
-		check(rval, file_writer_init_fp(path, "w", w));
+		check(rval, file_writer_init_fp(path, "wb", w));
 	}
 
 	w->datum_buffer_size = block_size;
-	w->datum_buffer = avro_malloc(w->datum_buffer_size);
+	w->datum_buffer = (char *) avro_malloc(w->datum_buffer_size);
 
 	if(!w->datum_buffer) {
 		avro_set_error("Could not allocate datum buffer\n");
@@ -174,12 +187,12 @@ int avro_file_writer_create_with_codec(const char *path,
 		block_size = DEFAULT_BLOCK_SIZE;
 	}
 
-	w = avro_new(struct avro_file_writer_t_);
+	w = (avro_file_writer_t) avro_new(struct avro_file_writer_t_);
 	if (!w) {
 		avro_set_error("Cannot allocate new file writer");
 		return ENOMEM;
 	}
-	w->codec = avro_new(struct avro_codec_t_);
+	w->codec = (avro_codec_t) avro_new(struct avro_codec_t_);
 	if (!w->codec) {
 		avro_set_error("Cannot allocate new codec");
 		return ENOMEM;
@@ -255,7 +268,7 @@ static int file_read_header(avro_reader_t reader,
 
 		avro_value_get_bytes(&codec_val, &buf, &size);
 		memset(codec_name, 0, sizeof(codec_name));
-		strncpy(codec_name, buf, size < 10 ? size : 10);
+		strncpy(codec_name, (const char *) buf, size < 10 ? size : 10);
 
 		if (avro_codec(codec, codec_name) != 0) {
 			avro_set_error("File header contains an unknown codec");
@@ -272,7 +285,7 @@ static int file_read_header(avro_reader_t reader,
 	}
 
 	avro_value_get_bytes(&schema_bytes, &p, &len);
-	rval = avro_schema_from_json_length(p, len, writers_schema);
+	rval = avro_schema_from_json_length((const char *) p, len, writers_schema);
 	if (rval) {
 		avro_prefix_error("Cannot parse file header: ");
 		avro_value_decref(&meta);
@@ -290,7 +303,7 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 	FILE *fp;
 	avro_reader_t reader;
 
-	fp = fopen(path, "r");
+	fp = fopen(path, "rb");
 	if (!fp) {
 		avro_set_error("Error opening file: %s",
 			       strerror(errno));
@@ -307,7 +320,7 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 			     sizeof(w->sync));
 	avro_reader_free(reader);
 	/* Position to end of file and get ready to write */
-	rval = file_writer_init_fp(path, "a", w);
+	rval = file_writer_init_fp(path, "ab", w);
 	if (rval) {
 		avro_freet(struct avro_file_writer_t_, w);
 	}
@@ -321,7 +334,7 @@ int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 	check_param(EINVAL, path, "path");
 	check_param(EINVAL, writer, "writer");
 
-	w = avro_new(struct avro_file_writer_t_);
+	w = (avro_file_writer_t) avro_new(struct avro_file_writer_t_);
 	if (!w) {
 		avro_set_error("Cannot create new file writer for %s", path);
 		return ENOMEM;
@@ -347,10 +360,10 @@ static int file_read_block_count(avro_file_reader_t r)
 		     "Cannot read file block size: ");
 
 	if (r->current_blockdata && len > r->current_blocklen) {
-		r->current_blockdata = avro_realloc(r->current_blockdata, r->current_blocklen, len);
+		r->current_blockdata = (char *) avro_realloc(r->current_blockdata, r->current_blocklen, len);
 		r->current_blocklen = len;
 	} else if (!r->current_blockdata) {
-		r->current_blockdata = avro_malloc(len);
+		r->current_blockdata = (char *) avro_malloc(len);
 		r->current_blocklen = len;
 	}
 
@@ -359,7 +372,7 @@ static int file_read_block_count(avro_file_reader_t r)
 
 	avro_codec_decode(r->codec, r->current_blockdata, len);
 
-	avro_reader_memory_set_source(r->block_reader, r->codec->block_data, r->codec->used_size);
+	avro_reader_memory_set_source(r->block_reader, (const char *) r->codec->block_data, r->codec->used_size);
 
 	r->blocks_read = 0;
 	return 0;
@@ -369,7 +382,7 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 			avro_file_reader_t * reader)
 {
 	int rval;
-	avro_file_reader_t r = avro_new(struct avro_file_reader_t_);
+	avro_file_reader_t r = (avro_file_reader_t) avro_new(struct avro_file_reader_t_);
 	if (!r) {
 		if (should_close) {
 			fclose(fp);
@@ -394,7 +407,7 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 		return ENOMEM;
 	}
 
-	r->codec = avro_new(struct avro_codec_t_);
+	r->codec = (avro_codec_t) avro_new(struct avro_codec_t_);
 	if (!r->codec) {
 		avro_set_error("Could not allocate codec for file %s", path);
 		avro_freet(struct avro_file_reader_t_, r);
@@ -427,7 +440,7 @@ int avro_file_reader(const char *path, avro_file_reader_t * reader)
 {
 	FILE *fp;
 
-	fp = fopen(path, "r");
+	fp = fopen(path, "rb");
 	if (!fp) {
 		return errno;
 	}

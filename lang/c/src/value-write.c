@@ -15,7 +15,7 @@
  * permissions and limitations under the License.
  */
 
-#include <stdint.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 
 #include "avro/basics.h"
@@ -126,7 +126,7 @@ avro_value_write(avro_writer_t writer, avro_value_t *src)
 			const void  *buf;
 			size_t  size;
 			check(rval, avro_value_get_bytes(src, &buf, &size));
-			return avro_binary_encoding.write_bytes(writer, buf, size);
+			return avro_binary_encoding.write_bytes(writer, (const char *) buf, size);
 		}
 
 		case AVRO_DOUBLE:

@@ -279,7 +279,7 @@ avro_consume_binary(avro_reader_t reader, avro_consumer_t *consumer, void *ud)
 			int64_t size =
 			    avro_schema_to_fixed(consumer->schema)->size;
 
-			bytes = avro_malloc(size);
+			bytes = (char *) avro_malloc(size);
 			if (!bytes) {
 				avro_prefix_error("Cannot allocate new fixed value");
 				return ENOMEM;

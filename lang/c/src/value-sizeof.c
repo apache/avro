@@ -15,7 +15,7 @@
  * permissions and limitations under the License.
  */
 
-#include <stdint.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 
 #include "avro/basics.h"
@@ -131,7 +131,7 @@ sizeof_value(avro_value_t *src, size_t *size)
 			const void  *buf;
 			size_t  sz;
 			check(rval, avro_value_get_bytes(src, &buf, &sz));
-			*size += avro_binary_encoding.size_bytes(NULL, buf, sz);
+			*size += avro_binary_encoding.size_bytes(NULL, (const char *) buf, sz);
 			return 0;
 		}
 

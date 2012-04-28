@@ -16,7 +16,7 @@
  */
 
 #include <errno.h>
-#include <stdint.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -49,7 +49,7 @@ encode_utf8_bytes(const void *src, size_t src_len,
 	// First, determine the size of the resulting UTF-8 buffer.
 	// Bytes in the range 0x00..0x7f will take up one byte; bytes in
 	// the range 0x80..0xff will take up two.
-	const uint8_t  *src8 = src;
+	const uint8_t  *src8 = (const uint8_t *) src;
 
 	size_t  utf8_len = src_len + 1;  // +1 for NUL terminator
 	size_t  i;
@@ -60,7 +60,7 @@ encode_utf8_bytes(const void *src, size_t src_len,
 	}
 
 	// Allocate a new buffer for the UTF-8 string and fill it in.
-	uint8_t  *dest8 = avro_malloc(utf8_len);
+	uint8_t  *dest8 = (uint8_t *) avro_malloc(utf8_len);
 	if (dest8 == NULL) {
 		avro_set_error("Cannot allocate JSON bytes buffer");
 		return ENOMEM;
@@ -127,7 +127,7 @@ avro_value_to_json_t(const avro_value_t *value)
 				return NULL;
 			}
 
-			json_t  *result = json_string_nocheck(encoded);
+			json_t  *result = json_string_nocheck((const char *) encoded);
 			avro_free(encoded, encoded_size);
 			if (result == NULL) {
 				avro_set_error("Cannot allocate JSON bytes");
@@ -242,7 +242,7 @@ avro_value_to_json_t(const avro_value_t *value)
 				return NULL;
 			}
 
-			json_t  *result = json_string_nocheck(encoded);
+			json_t  *result = json_string_nocheck((const char *) encoded);
 			avro_free(encoded, encoded_size);
 			if (result == NULL) {
 				avro_set_error("Cannot allocate JSON fixed");

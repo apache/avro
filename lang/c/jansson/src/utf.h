@@ -7,6 +7,12 @@
 
 #ifndef UTF_H
 #define UTF_H
+#ifdef __cplusplus
+extern "C" {
+#define CLOSE_EXTERN }
+#else
+#define CLOSE_EXTERN
+#endif
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -28,7 +34,7 @@ typedef int int32_t;
 
 #endif /* HAVE_CONFIG_H */
 
-int utf8_encode(int codepoint, char *buffer, int *size);
+int utf8_encode(int32_t codepoint, char *buffer, int *size);
 
 int utf8_check_first(char byte);
 int utf8_check_full(const char *buffer, int size, int32_t *codepoint);
@@ -36,4 +42,5 @@ const char *utf8_iterate(const char *buffer, int32_t *codepoint);
 
 int utf8_check_string(const char *string, int length);
 
+CLOSE_EXTERN
 #endif

@@ -17,6 +17,14 @@
 
 #ifndef AVRO_CODEC_H
 #define	AVRO_CODEC_H
+#ifdef __cplusplus
+extern "C" {
+#define CLOSE_EXTERN }
+#else
+#define CLOSE_EXTERN
+#endif
+
+#include <avro/platform.h>
 
 enum avro_codec_type_t {
 	AVRO_CODEC_NULL,
@@ -40,4 +48,5 @@ int avro_codec_reset(avro_codec_t c);
 int avro_codec_encode(avro_codec_t c, void * data, int64_t len);
 int avro_codec_decode(avro_codec_t c, void * data, int64_t len);
 
+CLOSE_EXTERN
 #endif

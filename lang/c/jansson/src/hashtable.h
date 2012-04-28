@@ -7,6 +7,12 @@
 
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
+#ifdef __cplusplus
+extern "C" {
+#define CLOSE_EXTERN }
+#else
+#define CLOSE_EXTERN
+#endif
 
 typedef size_t (*key_hash_fn)(const void *key);
 typedef int (*key_cmp_fn)(const void *key1, const void *key2);
@@ -204,4 +210,5 @@ void *hashtable_iter_value(void *iter);
  */
 void hashtable_iter_set(hashtable_t *hashtable, void *iter, void *value);
 
+CLOSE_EXTERN
 #endif

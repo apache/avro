@@ -15,8 +15,7 @@
  * permissions and limitations under the License.
  */
 
-#include <inttypes.h>
-#include <stdint.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -112,7 +111,7 @@ void
 avro_resolved_reader_set_source(avro_value_t *resolved,
 				avro_value_t *dest)
 {
-	avro_value_t  *self = resolved->self;
+	avro_value_t  *self = (avro_value_t *) resolved->self;
 	if (self->self != NULL) {
 		avro_value_decref(self);
 	}
@@ -122,7 +121,7 @@ avro_resolved_reader_set_source(avro_value_t *resolved,
 void
 avro_resolved_reader_clear_source(avro_value_t *resolved)
 {
-	avro_value_t  *self = resolved->self;
+	avro_value_t  *self = (avro_value_t *) resolved->self;
 	if (self->self != NULL) {
 		avro_value_decref(self);
 	}
@@ -145,8 +144,8 @@ avro_resolved_reader_new_value(avro_value_iface_t *viface,
 	}
 
 	memset(self, 0, iface->instance_size + sizeof(volatile int));
-	volatile int  *refcount = self;
-	self += sizeof(volatile int);
+	volatile int  *refcount = (volatile int *) self;
+	self = (char *) self + sizeof(volatile int);
 
 	rval = avro_resolved_reader_init(iface, self);
 	if (rval != 0) {
@@ -167,14 +166,14 @@ avro_resolved_reader_free_value(const avro_value_iface_t *viface, void *vself)
 {
 	avro_resolved_reader_t  *iface =
 	    container_of(viface, avro_resolved_reader_t, parent);
-	avro_value_t  *self = vself;
+	avro_value_t  *self = (avro_value_t *) vself;
 
 	avro_resolved_reader_done(iface, vself);
 	if (self->self != NULL) {
 		avro_value_decref(self);
 	}
 
-	vself -= sizeof(volatile int);
+	vself = (char *) vself - sizeof(volatile int);
 	avro_free(vself, iface->instance_size + sizeof(volatile int));
 }
 
@@ -185,7 +184,7 @@ avro_resolved_reader_incref(avro_value_t *value)
 	 * This only works if you pass in the top-level value.
 	 */
 
-	volatile int  *refcount = (value->self - sizeof(volatile int));
+	volatile int  *refcount = (volatile int *) ((char *) value->self - sizeof(volatile int));
 	avro_refcount_inc(refcount);
 }
 
@@ -196,7 +195,7 @@ avro_resolved_reader_decref(avro_value_t *value)
 	 * This only works if you pass in the top-level value.
 	 */
 
-	volatile int  *refcount = (value->self - sizeof(volatile int));
+	volatile int  *refcount = (volatile int *) ((char *) value->self - sizeof(volatile int));
 	if (avro_refcount_dec(refcount)) {
 		avro_resolved_reader_free_value(value->iface, value->self);
 	}
@@ -275,7 +274,7 @@ avro_resolved_reader_reset(const avro_value_iface_t *viface, void *vself)
 	int  rval;
 	avro_resolved_reader_t  *iface =
 	    container_of(viface, avro_resolved_reader_t, parent);
-	avro_value_t  *self = vself;
+	avro_value_t  *self = (avro_value_t *) vself;
 	check(rval, avro_resolved_reader_reset_wrappers(iface, vself));
 	return avro_value_reset(self);
 }
@@ -302,7 +301,7 @@ avro_resolved_reader_get_schema(const avro_value_iface_t *viface, const void *vs
 static avro_resolved_reader_t *
 avro_resolved_reader_create(avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_reader_t  *self = avro_new(avro_resolved_reader_t);
+	avro_resolved_reader_t  *self = (avro_resolved_reader_t  *) avro_new(avro_resolved_reader_t);
 	memset(self, 0, sizeof(avro_resolved_reader_t));
 
 	self->parent.incref_iface = avro_resolved_reader_incref_iface;
@@ -419,7 +418,7 @@ avro_resolved_link_reader_init(const avro_resolved_reader_t *iface, void *vself)
 	int  rval;
 	const avro_resolved_link_reader_t  *liface =
 	    container_of(iface, avro_resolved_link_reader_t, parent);
-	avro_resolved_link_value_t  *self = vself;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
 	size_t  target_instance_size = liface->target_resolver->instance_size;
 
 	self->target.iface = &liface->target_resolver->parent;
@@ -427,9 +426,9 @@ avro_resolved_link_reader_init(const avro_resolved_reader_t *iface, void *vself)
 	if (self->target.self == NULL) {
 		return ENOMEM;
 	}
-	DEBUG("Allocated <%p:%zu> for link", self->target.self, target_instance_size);
+	DEBUG("Allocated <%p:%" PRIsz "> for link", self->target.self, target_instance_size);
 
-	avro_value_t  *target_vself = self->target.self;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 
 	rval = avro_resolved_reader_init(liface->target_resolver, self->target.self);
@@ -444,9 +443,9 @@ avro_resolved_link_reader_done(const avro_resolved_reader_t *iface, void *vself)
 {
 	const avro_resolved_link_reader_t  *liface =
 	    container_of(iface, avro_resolved_link_reader_t, parent);
-	avro_resolved_link_value_t  *self = vself;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
 	size_t  target_instance_size = liface->target_resolver->instance_size;
-	DEBUG("Freeing <%p:%zu> for link", self->target.self, target_instance_size);
+	DEBUG("Freeing <%p:%" PRIsz "> for link", self->target.self, target_instance_size);
 	avro_resolved_reader_done(liface->target_resolver, self->target.self);
 	avro_free(self->target.self, target_instance_size);
 	self->target.iface = NULL;
@@ -458,7 +457,7 @@ avro_resolved_link_reader_reset(const avro_resolved_reader_t *iface, void *vself
 {
 	const avro_resolved_link_reader_t  *liface =
 	    container_of(iface, avro_resolved_link_reader_t, parent);
-	avro_resolved_link_value_t  *self = vself;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
 	return avro_resolved_reader_reset_wrappers
 	    (liface->target_resolver, self->target.self);
 }
@@ -467,8 +466,8 @@ static avro_type_t
 avro_resolved_link_reader_get_type(const avro_value_iface_t *iface, const void *vself)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_type(&self->target);
 }
@@ -477,8 +476,8 @@ static avro_schema_t
 avro_resolved_link_reader_get_schema(const avro_value_iface_t *iface, const void *vself)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_schema(&self->target);
 }
@@ -488,8 +487,8 @@ avro_resolved_link_reader_get_boolean(const avro_value_iface_t *iface,
 				      const void *vself, int *out)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_boolean(&self->target, out);
 }
@@ -499,8 +498,8 @@ avro_resolved_link_reader_get_bytes(const avro_value_iface_t *iface,
 				    const void *vself, const void **buf, size_t *size)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_bytes(&self->target, buf, size);
 }
@@ -510,8 +509,8 @@ avro_resolved_link_reader_grab_bytes(const avro_value_iface_t *iface,
 				     const void *vself, avro_wrapped_buffer_t *dest)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_grab_bytes(&self->target, dest);
 }
@@ -521,8 +520,8 @@ avro_resolved_link_reader_get_double(const avro_value_iface_t *iface,
 				     const void *vself, double *out)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_double(&self->target, out);
 }
@@ -532,8 +531,8 @@ avro_resolved_link_reader_get_float(const avro_value_iface_t *iface,
 				    const void *vself, float *out)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_float(&self->target, out);
 }
@@ -543,8 +542,8 @@ avro_resolved_link_reader_get_int(const avro_value_iface_t *iface,
 				  const void *vself, int32_t *out)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_int(&self->target, out);
 }
@@ -554,8 +553,8 @@ avro_resolved_link_reader_get_long(const avro_value_iface_t *iface,
 				   const void *vself, int64_t *out)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_long(&self->target, out);
 }
@@ -564,8 +563,8 @@ static int
 avro_resolved_link_reader_get_null(const avro_value_iface_t *iface, const void *vself)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_null(&self->target);
 }
@@ -575,8 +574,8 @@ avro_resolved_link_reader_get_string(const avro_value_iface_t *iface,
 				     const void *vself, const char **str, size_t *size)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_string(&self->target, str, size);
 }
@@ -586,8 +585,8 @@ avro_resolved_link_reader_grab_string(const avro_value_iface_t *iface,
 				      const void *vself, avro_wrapped_buffer_t *dest)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_grab_string(&self->target, dest);
 }
@@ -597,8 +596,8 @@ avro_resolved_link_reader_get_enum(const avro_value_iface_t *iface,
 				   const void *vself, int *out)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_enum(&self->target, out);
 }
@@ -608,8 +607,8 @@ avro_resolved_link_reader_get_fixed(const avro_value_iface_t *iface,
 				    const void *vself, const void **buf, size_t *size)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_fixed(&self->target, buf, size);
 }
@@ -619,8 +618,8 @@ avro_resolved_link_reader_grab_fixed(const avro_value_iface_t *iface,
 				     const void *vself, avro_wrapped_buffer_t *dest)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_grab_fixed(&self->target, dest);
 }
@@ -630,8 +629,8 @@ avro_resolved_link_reader_set_boolean(const avro_value_iface_t *iface,
 				      void *vself, int val)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_boolean(&self->target, val);
 }
@@ -641,8 +640,8 @@ avro_resolved_link_reader_set_bytes(const avro_value_iface_t *iface,
 				    void *vself, void *buf, size_t size)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_bytes(&self->target, buf, size);
 }
@@ -652,8 +651,8 @@ avro_resolved_link_reader_give_bytes(const avro_value_iface_t *iface,
 				     void *vself, avro_wrapped_buffer_t *buf)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_give_bytes(&self->target, buf);
 }
@@ -663,8 +662,8 @@ avro_resolved_link_reader_set_double(const avro_value_iface_t *iface,
 				     void *vself, double val)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_double(&self->target, val);
 }
@@ -674,8 +673,8 @@ avro_resolved_link_reader_set_float(const avro_value_iface_t *iface,
 				    void *vself, float val)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_float(&self->target, val);
 }
@@ -685,8 +684,8 @@ avro_resolved_link_reader_set_int(const avro_value_iface_t *iface,
 				  void *vself, int32_t val)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_int(&self->target, val);
 }
@@ -696,8 +695,8 @@ avro_resolved_link_reader_set_long(const avro_value_iface_t *iface,
 				   void *vself, int64_t val)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_long(&self->target, val);
 }
@@ -706,8 +705,8 @@ static int
 avro_resolved_link_reader_set_null(const avro_value_iface_t *iface, void *vself)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_null(&self->target);
 }
@@ -717,8 +716,8 @@ avro_resolved_link_reader_set_string(const avro_value_iface_t *iface,
 				     void *vself, const char *str)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_string(&self->target, str);
 }
@@ -728,8 +727,8 @@ avro_resolved_link_reader_set_string_len(const avro_value_iface_t *iface,
 					 void *vself, const char *str, size_t size)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_string_len(&self->target, str, size);
 }
@@ -739,8 +738,8 @@ avro_resolved_link_reader_give_string_len(const avro_value_iface_t *iface,
 					  void *vself, avro_wrapped_buffer_t *buf)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_give_string_len(&self->target, buf);
 }
@@ -750,8 +749,8 @@ avro_resolved_link_reader_set_enum(const avro_value_iface_t *iface,
 				   void *vself, int val)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_enum(&self->target, val);
 }
@@ -761,8 +760,8 @@ avro_resolved_link_reader_set_fixed(const avro_value_iface_t *iface,
 				    void *vself, void *buf, size_t size)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_fixed(&self->target, buf, size);
 }
@@ -772,8 +771,8 @@ avro_resolved_link_reader_give_fixed(const avro_value_iface_t *iface,
 				     void *vself, avro_wrapped_buffer_t *buf)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_give_fixed(&self->target, buf);
 }
@@ -783,8 +782,8 @@ avro_resolved_link_reader_get_size(const avro_value_iface_t *iface,
 				   const void *vself, size_t *size)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_size(&self->target, size);
 }
@@ -795,8 +794,8 @@ avro_resolved_link_reader_get_by_index(const avro_value_iface_t *iface,
 				       avro_value_t *child, const char **name)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_by_index(&self->target, index, child, name);
 }
@@ -807,8 +806,8 @@ avro_resolved_link_reader_get_by_name(const avro_value_iface_t *iface,
 				      avro_value_t *child, size_t *index)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_by_name(&self->target, name, child, index);
 }
@@ -818,8 +817,8 @@ avro_resolved_link_reader_get_discriminant(const avro_value_iface_t *iface,
 					   const void *vself, int *out)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_discriminant(&self->target, out);
 }
@@ -829,8 +828,8 @@ avro_resolved_link_reader_get_current_branch(const avro_value_iface_t *iface,
 					     const void *vself, avro_value_t *branch)
 {
 	AVRO_UNUSED(iface);
-	const avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	const avro_resolved_link_value_t  *self = (const avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_get_current_branch(&self->target, branch);
 }
@@ -841,8 +840,8 @@ avro_resolved_link_reader_append(const avro_value_iface_t *iface,
 				 size_t *new_index)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_append(&self->target, child_out, new_index);
 }
@@ -853,8 +852,8 @@ avro_resolved_link_reader_add(const avro_value_iface_t *iface,
 			      avro_value_t *child, size_t *index, int *is_new)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_add(&self->target, key, child, index, is_new);
 }
@@ -865,8 +864,8 @@ avro_resolved_link_reader_set_branch(const avro_value_iface_t *iface,
 				     avro_value_t *branch)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_link_value_t  *self = vself;
-	avro_value_t  *target_vself = self->target.self;
+	avro_resolved_link_value_t  *self = (avro_resolved_link_value_t *) vself;
+	avro_value_t  *target_vself = (avro_value_t *) self->target.self;
 	*target_vself = self->wrapped;
 	return avro_value_set_branch(&self->target, discriminant, branch);
 }
@@ -874,7 +873,7 @@ avro_resolved_link_reader_set_branch(const avro_value_iface_t *iface,
 static avro_resolved_link_reader_t *
 avro_resolved_link_reader_create(avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_reader_t  *self = avro_new(avro_resolved_link_reader_t);
+	avro_resolved_reader_t  *self = (avro_resolved_reader_t  *) avro_new(avro_resolved_link_reader_t);
 	memset(self, 0, sizeof(avro_resolved_link_reader_t));
 
 	self->parent.incref_iface = avro_resolved_reader_incref_iface;
@@ -1020,7 +1019,7 @@ avro_resolved_reader_get_boolean(const avro_value_iface_t *viface,
 				 const void *vself, int *val)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting boolean from %p", src->self);
 	return avro_value_get_boolean(src, val);
 }
@@ -1051,7 +1050,7 @@ avro_resolved_reader_get_bytes(const avro_value_iface_t *viface,
 			       const void *vself, const void **buf, size_t *size)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting bytes from %p", src->self);
 	return avro_value_get_bytes(src, buf, size);
 }
@@ -1061,7 +1060,7 @@ avro_resolved_reader_grab_bytes(const avro_value_iface_t *viface,
 				const void *vself, avro_wrapped_buffer_t *dest)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Grabbing bytes from %p", src->self);
 	return avro_value_grab_bytes(src, dest);
 }
@@ -1093,7 +1092,7 @@ avro_resolved_reader_get_double(const avro_value_iface_t *viface,
 				const void *vself, double *val)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting double from %p", src->self);
 	return avro_value_get_double(src, val);
 }
@@ -1105,7 +1104,7 @@ avro_resolved_reader_get_double_float(const avro_value_iface_t *viface,
 	int  rval;
 	float  real_val;
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Promoting double from float %p", src->self);
 	check(rval, avro_value_get_float(src, &real_val));
 	*val = real_val;
@@ -1119,7 +1118,7 @@ avro_resolved_reader_get_double_int(const avro_value_iface_t *viface,
 	int  rval;
 	int32_t  real_val;
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Promoting double from int %p", src->self);
 	check(rval, avro_value_get_int(src, &real_val));
 	*val = real_val;
@@ -1133,10 +1132,10 @@ avro_resolved_reader_get_double_long(const avro_value_iface_t *viface,
 	int  rval;
 	int64_t  real_val;
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Promoting double from long %p", src->self);
 	check(rval, avro_value_get_long(src, &real_val));
-	*val = real_val;
+	*val = (double) real_val;
 	return 0;
 }
 
@@ -1191,7 +1190,7 @@ avro_resolved_reader_get_float(const avro_value_iface_t *viface,
 			       const void *vself, float *val)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting float from %p", src->self);
 	return avro_value_get_float(src, val);
 }
@@ -1203,10 +1202,10 @@ avro_resolved_reader_get_float_int(const avro_value_iface_t *viface,
 	int  rval;
 	int32_t  real_val;
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Promoting float from int %p", src->self);
 	check(rval, avro_value_get_int(src, &real_val));
-	*val = real_val;
+	*val = (float) real_val;
 	return 0;
 }
 
@@ -1217,10 +1216,10 @@ avro_resolved_reader_get_float_long(const avro_value_iface_t *viface,
 	int  rval;
 	int64_t  real_val;
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Promoting float from long %p", src->self);
 	check(rval, avro_value_get_long(src, &real_val));
-	*val = real_val;
+	*val = (float) real_val;
 	return 0;
 }
 
@@ -1267,7 +1266,7 @@ avro_resolved_reader_get_int(const avro_value_iface_t *viface,
 			     const void *vself, int32_t *val)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting int from %p", src->self);
 	return avro_value_get_int(src, val);
 }
@@ -1298,7 +1297,7 @@ avro_resolved_reader_get_long(const avro_value_iface_t *viface,
 			      const void *vself, int64_t *val)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting long from %p", src->self);
 	return avro_value_get_long(src, val);
 }
@@ -1310,7 +1309,7 @@ avro_resolved_reader_get_long_int(const avro_value_iface_t *viface,
 	int  rval;
 	int32_t  real_val;
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Promoting long from int %p", src->self);
 	check(rval, avro_value_get_int(src, &real_val));
 	*val = real_val;
@@ -1352,7 +1351,7 @@ avro_resolved_reader_get_null(const avro_value_iface_t *viface,
 			      const void *vself)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting null from %p", src->self);
 	return avro_value_get_null(src);
 }
@@ -1383,7 +1382,7 @@ avro_resolved_reader_get_string(const avro_value_iface_t *viface,
 				const void *vself, const char **str, size_t *size)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting string from %p", src->self);
 	return avro_value_get_string(src, str, size);
 }
@@ -1393,7 +1392,7 @@ avro_resolved_reader_grab_string(const avro_value_iface_t *viface,
 				 const void *vself, avro_wrapped_buffer_t *dest)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Grabbing string from %p", src->self);
 	return avro_value_grab_string(src, dest);
 }
@@ -1463,9 +1462,9 @@ avro_resolved_array_reader_init(const avro_resolved_reader_t *iface, void *vself
 {
 	const avro_resolved_array_reader_t  *aiface =
 	    container_of(iface, avro_resolved_array_reader_t, parent);
-	avro_resolved_array_value_t  *self = vself;
+	avro_resolved_array_value_t  *self = (avro_resolved_array_value_t *) vself;
 	size_t  child_instance_size = aiface->child_resolver->instance_size;
-	DEBUG("Initializing child array (child_size=%zu)", child_instance_size);
+	DEBUG("Initializing child array (child_size=%" PRIsz ")", child_instance_size);
 	avro_raw_array_init(&self->children, child_instance_size);
 	return 0;
 }
@@ -1486,7 +1485,7 @@ avro_resolved_array_reader_done(const avro_resolved_reader_t *iface, void *vself
 {
 	const avro_resolved_array_reader_t  *aiface =
 	    container_of(iface, avro_resolved_array_reader_t, parent);
-	avro_resolved_array_value_t  *self = vself;
+	avro_resolved_array_value_t  *self = (avro_resolved_array_value_t *) vself;
 	avro_resolved_array_reader_free_elements(aiface->child_resolver, self);
 	avro_raw_array_done(&self->children);
 }
@@ -1496,7 +1495,7 @@ avro_resolved_array_reader_reset(const avro_resolved_reader_t *iface, void *vsel
 {
 	const avro_resolved_array_reader_t  *aiface =
 	    container_of(iface, avro_resolved_array_reader_t, parent);
-	avro_resolved_array_value_t  *self = vself;
+	avro_resolved_array_value_t  *self = (avro_resolved_array_value_t *) vself;
 
 	/* Clear out our cache of wrapped children */
 	avro_resolved_array_reader_free_elements(aiface->child_resolver, self);
@@ -1509,7 +1508,7 @@ avro_resolved_array_reader_get_size(const avro_value_iface_t *viface,
 				    const void *vself, size_t *size)
 {
 	AVRO_UNUSED(viface);
-	const avro_resolved_array_value_t  *self = vself;
+	const avro_resolved_array_value_t  *self = (const avro_resolved_array_value_t *) vself;
 	return avro_value_get_size(&self->wrapped, size);
 }
 
@@ -1547,14 +1546,14 @@ avro_resolved_array_reader_get_by_index(const avro_value_iface_t *viface,
 	child->iface = &aiface->child_resolver->parent;
 	child->self = avro_raw_array_get_raw(&self->children, index);
 
-	DEBUG("Getting element %zu from array %p", index, self->wrapped.self);
-	return avro_value_get_by_index(&self->wrapped, index, child->self, name);
+	DEBUG("Getting element %" PRIsz " from array %p", index, self->wrapped.self);
+	return avro_value_get_by_index(&self->wrapped, index, (avro_value_t *) child->self, name);
 }
 
 static avro_resolved_array_reader_t *
 avro_resolved_array_reader_create(avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_reader_t  *self = avro_new(avro_resolved_array_reader_t);
+	avro_resolved_reader_t  *self = (avro_resolved_reader_t  *) avro_new(avro_resolved_array_reader_t);
 	memset(self, 0, sizeof(avro_resolved_array_reader_t));
 
 	self->parent.incref_iface = avro_resolved_reader_incref_iface;
@@ -1631,7 +1630,7 @@ avro_resolved_reader_get_enum(const avro_value_iface_t *viface,
 			      const void *vself, int *val)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting enum from %p", src->self);
 	return avro_value_get_enum(src, val);
 }
@@ -1673,7 +1672,7 @@ avro_resolved_reader_get_fixed(const avro_value_iface_t *viface,
 			       const void *vself, const void **buf, size_t *size)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Getting fixed from %p", vself);
 	return avro_value_get_fixed(src, buf, size);
 }
@@ -1683,7 +1682,7 @@ avro_resolved_reader_grab_fixed(const avro_value_iface_t *viface,
 				const void *vself, avro_wrapped_buffer_t *dest)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	DEBUG("Grabbing fixed from %p", vself);
 	return avro_value_grab_fixed(src, dest);
 }
@@ -1758,9 +1757,9 @@ avro_resolved_map_reader_init(const avro_resolved_reader_t *iface, void *vself)
 {
 	const avro_resolved_map_reader_t  *miface =
 	    container_of(iface, avro_resolved_map_reader_t, parent);
-	avro_resolved_map_value_t  *self = vself;
+	avro_resolved_map_value_t  *self = (avro_resolved_map_value_t *) vself;
 	size_t  child_instance_size = miface->child_resolver->instance_size;
-	DEBUG("Initializing child array for map (child_size=%zu)", child_instance_size);
+	DEBUG("Initializing child array for map (child_size=%" PRIsz ")", child_instance_size);
 	avro_raw_array_init(&self->children, child_instance_size);
 	return 0;
 }
@@ -1781,7 +1780,7 @@ avro_resolved_map_reader_done(const avro_resolved_reader_t *iface, void *vself)
 {
 	const avro_resolved_map_reader_t  *miface =
 	    container_of(iface, avro_resolved_map_reader_t, parent);
-	avro_resolved_map_value_t  *self = vself;
+	avro_resolved_map_value_t  *self = (avro_resolved_map_value_t *) vself;
 	avro_resolved_map_reader_free_elements(miface->child_resolver, self);
 	avro_raw_array_done(&self->children);
 }
@@ -1791,7 +1790,7 @@ avro_resolved_map_reader_reset(const avro_resolved_reader_t *iface, void *vself)
 {
 	const avro_resolved_map_reader_t  *miface =
 	    container_of(iface, avro_resolved_map_reader_t, parent);
-	avro_resolved_map_value_t  *self = vself;
+	avro_resolved_map_value_t  *self = (avro_resolved_map_value_t *) vself;
 
 	/* Clear out our cache of wrapped children */
 	avro_resolved_map_reader_free_elements(miface->child_resolver, self);
@@ -1803,7 +1802,7 @@ avro_resolved_map_reader_get_size(const avro_value_iface_t *viface,
 				  const void *vself, size_t *size)
 {
 	AVRO_UNUSED(viface);
-	const avro_value_t  *src = vself;
+	const avro_value_t  *src = (const avro_value_t *) vself;
 	return avro_value_get_size(src, size);
 }
 
@@ -1831,8 +1830,8 @@ avro_resolved_map_reader_get_by_index(const avro_value_iface_t *viface,
 	child->iface = &miface->child_resolver->parent;
 	child->self = avro_raw_array_get_raw(&self->children, index);
 
-	DEBUG("Getting element %zu from map %p", index, self->wrapped.self);
-	return avro_value_get_by_index(&self->wrapped, index, child->self, name);
+	DEBUG("Getting element %" PRIsz " from map %p", index, self->wrapped.self);
+	return avro_value_get_by_index(&self->wrapped, index, (avro_value_t *) child->self, name);
 }
 
 static int
@@ -1872,7 +1871,7 @@ avro_resolved_map_reader_get_by_name(const avro_value_iface_t *viface,
 
 	child->iface = &miface->child_resolver->parent;
 	child->self = avro_raw_array_get_raw(&self->children, real_index);
-	avro_value_t  *child_vself = child->self;
+	avro_value_t  *child_vself = (avro_value_t *) child->self;
 	*child_vself = real_child;
 
 	if (index != NULL) {
@@ -1884,7 +1883,7 @@ avro_resolved_map_reader_get_by_name(const avro_value_iface_t *viface,
 static avro_resolved_map_reader_t *
 avro_resolved_map_reader_create(avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_reader_t  *self = avro_new(avro_resolved_map_reader_t);
+	avro_resolved_reader_t  *self = (avro_resolved_reader_t *) avro_new(avro_resolved_map_reader_t);
 	memset(self, 0, sizeof(avro_resolved_map_reader_t));
 
 	self->parent.incref_iface = avro_resolved_reader_incref_iface;
@@ -1973,7 +1972,7 @@ typedef struct avro_resolved_record_value {
 
 /** Return a pointer to the given field within a record struct. */
 #define avro_resolved_record_field(iface, rec, index) \
-	(((void *) (rec)) + (iface)->field_offsets[(index)])
+	(((char *) (rec)) + (iface)->field_offsets[(index)])
 
 
 static void
@@ -2003,14 +2002,14 @@ avro_resolved_record_reader_calculate_size(avro_resolved_reader_t *iface)
 			    (riface->field_resolvers[ri]);
 			size_t  field_size =
 			    riface->field_resolvers[ri]->instance_size;
-			DEBUG("Field %zu has size %zu", ri, field_size);
+			DEBUG("Field %" PRIsz " has size %" PRIsz, ri, field_size);
 			next_offset += field_size;
 		} else {
-			DEBUG("Field %zu is being skipped", ri);
+			DEBUG("Field %" PRIsz " is being skipped", ri);
 		}
 	}
 
-	DEBUG("Record has size %zu", next_offset);
+	DEBUG("Record has size %" PRIsz, next_offset);
 	iface->instance_size = next_offset;
 }
 
@@ -2030,7 +2029,7 @@ avro_resolved_record_reader_free_iface(avro_resolved_reader_t *iface, st_table *
 		size_t  i;
 		for (i = 0; i < riface->field_count; i++) {
 			if (riface->field_resolvers[i] != NULL) {
-				DEBUG("Freeing field %zu %p", i,
+				DEBUG("Freeing field %" PRIsz " %p", i,
 				      riface->field_resolvers[i]);
 				free_resolver(riface->field_resolvers[i], freeing);
 			}
@@ -2055,7 +2054,7 @@ avro_resolved_record_reader_init(const avro_resolved_reader_t *iface, void *vsel
 	int  rval;
 	const avro_resolved_record_reader_t  *riface =
 	    container_of(iface, avro_resolved_record_reader_t, parent);
-	avro_resolved_record_value_t  *self = vself;
+	avro_resolved_record_value_t  *self = (avro_resolved_record_value_t *) vself;
 
 	/* Initialize each field */
 	size_t  i;
@@ -2075,7 +2074,7 @@ avro_resolved_record_reader_done(const avro_resolved_reader_t *iface, void *vsel
 {
 	const avro_resolved_record_reader_t  *riface =
 	    container_of(iface, avro_resolved_record_reader_t, parent);
-	avro_resolved_record_value_t  *self = vself;
+	avro_resolved_record_value_t  *self = (avro_resolved_record_value_t  *) vself;
 
 	/* Finalize each field */
 	size_t  i;
@@ -2094,7 +2093,7 @@ avro_resolved_record_reader_reset(const avro_resolved_reader_t *iface, void *vse
 	int  rval;
 	const avro_resolved_record_reader_t  *riface =
 	    container_of(iface, avro_resolved_record_reader_t, parent);
-	avro_resolved_record_value_t  *self = vself;
+	avro_resolved_record_value_t  *self = (avro_resolved_record_value_t *) vself;
 
 	/* Reset each field */
 	size_t  i;
@@ -2131,9 +2130,9 @@ avro_resolved_record_reader_get_by_index(const avro_value_iface_t *viface,
 	    container_of(viface, avro_resolved_reader_t, parent);
 	const avro_resolved_record_reader_t  *riface =
 	    container_of(iface, avro_resolved_record_reader_t, parent);
-	const avro_resolved_record_value_t  *self = vself;
+	const avro_resolved_record_value_t  *self = (avro_resolved_record_value_t *) vself;
 
-	DEBUG("Getting reader field %zu from record %p", index, self->wrapped.self);
+	DEBUG("Getting reader field %" PRIsz " from record %p", index, self->wrapped.self);
 	if (riface->field_resolvers[index] == NULL) {
 		/*
 		 * TODO: Return the default value if the writer record
@@ -2145,10 +2144,10 @@ avro_resolved_record_reader_get_by_index(const avro_value_iface_t *viface,
 	}
 
 	size_t  writer_index = riface->index_mapping[index];
-	DEBUG("  Writer field is %zu", writer_index);
+	DEBUG("  Writer field is %" PRIsz, writer_index);
 	child->iface = &riface->field_resolvers[index]->parent;
 	child->self = avro_resolved_record_field(riface, self, index);
-	return avro_value_get_by_index(&self->wrapped, writer_index, child->self, name);
+	return avro_value_get_by_index(&self->wrapped, writer_index, (avro_value_t *) child->self, name);
 }
 
 static int
@@ -2175,7 +2174,7 @@ avro_resolved_record_reader_get_by_name(const avro_value_iface_t *viface,
 static avro_resolved_record_reader_t *
 avro_resolved_record_reader_create(avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_reader_t  *self = avro_new(avro_resolved_record_reader_t);
+	avro_resolved_reader_t  *self = (avro_resolved_reader_t *) avro_new(avro_resolved_record_reader_t);
 	memset(self, 0, sizeof(avro_resolved_record_reader_t));
 
 	self->parent.incref_iface = avro_resolved_reader_incref_iface;
@@ -2248,9 +2247,9 @@ try_record(memoize_state_t *state,
 	DEBUG("Checking reader record schema %s", wname);
 
 	avro_resolved_reader_t  **field_resolvers =
-	    avro_calloc(rfields, sizeof(avro_resolved_reader_t *));
-	size_t  *field_offsets = avro_calloc(rfields, sizeof(size_t));
-	size_t  *index_mapping = avro_calloc(rfields, sizeof(size_t));
+	    (avro_resolved_reader_t **) avro_calloc(rfields, sizeof(avro_resolved_reader_t *));
+	size_t  *field_offsets = (size_t *) avro_calloc(rfields, sizeof(size_t));
+	size_t  *index_mapping = (size_t *) avro_calloc(rfields, sizeof(size_t));
 
 	size_t  ri;
 	for (ri = 0; ri < rfields; ri++) {
@@ -2259,7 +2258,7 @@ try_record(memoize_state_t *state,
 		const char  *field_name =
 		    avro_schema_record_field_name(rschema, ri);
 
-		DEBUG("Resolving reader record field %zu (%s)", ri, field_name);
+		DEBUG("Resolving reader record field %" PRIsz " (%s)", ri, field_name);
 
 		/*
 		 * See if this field is also in the writer schema.
@@ -2299,7 +2298,7 @@ try_record(memoize_state_t *state,
 		 * Save the details for this field.
 		 */
 
-		DEBUG("Found match for field %s (%zu in reader, %d in writer)",
+		DEBUG("Found match for field %s (%" PRIsz " in reader, %d in writer)",
 		      field_name, ri, wi);
 		field_resolvers[ri] = field_resolver;
 		index_mapping[ri] = wi;
@@ -2376,7 +2375,7 @@ typedef struct avro_resolved_wunion_value {
 
 /** Return a pointer to the active branch within a union struct. */
 #define avro_resolved_wunion_branch(_wunion) \
-	(((void *) (_wunion)) + sizeof(avro_resolved_wunion_value_t))
+	(((char *) (_wunion)) + sizeof(avro_resolved_wunion_value_t))
 
 
 static void
@@ -2396,23 +2395,23 @@ avro_resolved_wunion_reader_calculate_size(avro_resolved_reader_t *iface)
 	size_t  max_branch_size = 0;
 	for (i = 0; i < uiface->branch_count; i++) {
 		if (uiface->branch_resolvers[i] == NULL) {
-			DEBUG("No match for writer union branch %zu", i);
+			DEBUG("No match for writer union branch %" PRIsz, i);
 		} else {
 			avro_resolved_reader_calculate_size
 			    (uiface->branch_resolvers[i]);
 			size_t  branch_size =
 			    uiface->branch_resolvers[i]->instance_size;
-			DEBUG("Writer branch %zu has size %zu", i, branch_size);
+			DEBUG("Writer branch %" PRIsz " has size %" PRIsz, i, branch_size);
 			if (branch_size > max_branch_size) {
 				max_branch_size = branch_size;
 			}
 		}
 	}
 
-	DEBUG("Maximum branch size is %zu", max_branch_size);
+	DEBUG("Maximum branch size is %" PRIsz, max_branch_size);
 	iface->instance_size =
 	    sizeof(avro_resolved_wunion_value_t) + max_branch_size;
-	DEBUG("Total union size is %zu", iface->instance_size);
+	DEBUG("Total union size is %" PRIsz, iface->instance_size);
 }
 
 
@@ -2442,7 +2441,7 @@ static int
 avro_resolved_wunion_reader_init(const avro_resolved_reader_t *iface, void *vself)
 {
 	AVRO_UNUSED(iface);
-	avro_resolved_wunion_value_t  *self = vself;
+	avro_resolved_wunion_value_t  *self = (avro_resolved_wunion_value_t *) vself;
 	self->discriminant = -1;
 	return 0;
 }
@@ -2452,7 +2451,7 @@ avro_resolved_wunion_reader_done(const avro_resolved_reader_t *iface, void *vsel
 {
 	const avro_resolved_wunion_reader_t  *uiface =
 	    container_of(iface, avro_resolved_wunion_reader_t, parent);
-	avro_resolved_wunion_value_t  *self = vself;
+	avro_resolved_wunion_value_t  *self = (avro_resolved_wunion_value_t *) vself;
 	if (self->discriminant >= 0) {
 		avro_resolved_reader_done
 		    (uiface->branch_resolvers[self->discriminant],
@@ -2466,7 +2465,7 @@ avro_resolved_wunion_reader_reset(const avro_resolved_reader_t *iface, void *vse
 {
 	const avro_resolved_wunion_reader_t  *uiface =
 	    container_of(iface, avro_resolved_wunion_reader_t, parent);
-	avro_resolved_wunion_value_t  *self = vself;
+	avro_resolved_wunion_value_t  *self = (avro_resolved_wunion_value_t *) vself;
 
 	/* Keep the same branch selected, for the common case that we're
 	 * about to reuse it. */
@@ -2517,7 +2516,7 @@ avro_resolved_wunion_get_real_src(const avro_value_iface_t *viface,
 
 	real_src->iface = &uiface->branch_resolvers[writer_disc]->parent;
 	real_src->self = avro_resolved_wunion_branch(self);
-	return avro_value_get_current_branch(&self->wrapped, real_src->self);
+	return avro_value_get_current_branch(&self->wrapped, (avro_value_t *) real_src->self);
 }
 
 static int
@@ -2878,7 +2877,7 @@ avro_resolved_wunion_reader_set_branch(const avro_value_iface_t *viface,
 static avro_resolved_wunion_reader_t *
 avro_resolved_wunion_reader_create(avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_reader_t  *self = avro_new(avro_resolved_wunion_reader_t);
+	avro_resolved_reader_t  *self = (avro_resolved_reader_t *) avro_new(avro_resolved_wunion_reader_t);
 	memset(self, 0, sizeof(avro_resolved_wunion_reader_t));
 
 	self->parent.incref_iface = avro_resolved_reader_incref_iface;
@@ -2951,14 +2950,14 @@ try_writer_union(memoize_state_t *state,
 	 */
 
 	size_t  branch_count = avro_schema_union_size(wschema);
-	DEBUG("Checking %zu-branch writer union schema", branch_count);
+	DEBUG("Checking %" PRIsz "-branch writer union schema", branch_count);
 
 	avro_resolved_wunion_reader_t  *uself =
 	    avro_resolved_wunion_reader_create(wschema, rschema);
 	avro_memoize_set(&state->mem, wschema, rschema, uself);
 
 	avro_resolved_reader_t  **branch_resolvers =
-	    avro_calloc(branch_count, sizeof(avro_resolved_reader_t *));
+	    (avro_resolved_reader_t **) avro_calloc(branch_count, sizeof(avro_resolved_reader_t *));
 	int  some_branch_compatible = 0;
 
 	size_t  i;
@@ -2966,7 +2965,7 @@ try_writer_union(memoize_state_t *state,
 		avro_schema_t  branch_schema =
 		    avro_schema_union_branch(wschema, i);
 
-		DEBUG("Resolving writer union branch %zu (%s)", i,
+		DEBUG("Resolving writer union branch %" PRIsz " (%s)", i,
 		      avro_schema_type_name(branch_schema));
 
 		/*
@@ -2979,9 +2978,9 @@ try_writer_union(memoize_state_t *state,
 		branch_resolvers[i] =
 		    avro_resolved_reader_new_memoized(state, branch_schema, rschema);
 		if (branch_resolvers[i] == NULL) {
-			DEBUG("No match for writer union branch %zu", i);
+			DEBUG("No match for writer union branch %" PRIsz, i);
 		} else {
-			DEBUG("Found match for writer union branch %zu", i);
+			DEBUG("Found match for writer union branch %" PRIsz, i);
 			some_branch_compatible = 1;
 		}
 	}
@@ -3113,7 +3112,7 @@ avro_resolved_runion_reader_get_discriminant(const avro_value_iface_t *viface,
 	    container_of(viface, avro_resolved_reader_t, parent);
 	const avro_resolved_runion_reader_t  *uiface =
 	    container_of(iface, avro_resolved_runion_reader_t, parent);
-	DEBUG("Reader union is branch %zu", uiface->active_branch);
+	DEBUG("Reader union is branch %" PRIsz, uiface->active_branch);
 	*out = uiface->active_branch;
 	return 0;
 }
@@ -3126,7 +3125,7 @@ avro_resolved_runion_reader_get_current_branch(const avro_value_iface_t *viface,
 	    container_of(viface, avro_resolved_reader_t, parent);
 	const avro_resolved_runion_reader_t  *uiface =
 	    container_of(iface, avro_resolved_runion_reader_t, parent);
-	DEBUG("Getting reader branch %zu for union %p", uiface->active_branch, vself);
+	DEBUG("Getting reader branch %" PRIsz " for union %p", uiface->active_branch, vself);
 	branch->iface = &uiface->branch_resolver->parent;
 	branch->self = (void *) vself;
 	return 0;
@@ -3135,7 +3134,7 @@ avro_resolved_runion_reader_get_current_branch(const avro_value_iface_t *viface,
 static avro_resolved_runion_reader_t *
 avro_resolved_runion_reader_create(avro_schema_t wschema, avro_schema_t rschema)
 {
-	avro_resolved_reader_t  *self = avro_new(avro_resolved_runion_reader_t);
+	avro_resolved_reader_t  *self = (avro_resolved_reader_t *) avro_new(avro_resolved_runion_reader_t);
 	memset(self, 0, sizeof(avro_resolved_runion_reader_t));
 
 	self->parent.incref_iface = avro_resolved_reader_incref_iface;
@@ -3170,7 +3169,7 @@ try_reader_union(memoize_state_t *state,
 	 */
 
 	size_t  branch_count = avro_schema_union_size(rschema);
-	DEBUG("Checking %zu-branch reader union schema", branch_count);
+	DEBUG("Checking %" PRIsz "-branch reader union schema", branch_count);
 
 	avro_resolved_runion_reader_t  *uself =
 	    avro_resolved_runion_reader_create(wschema, rschema);
@@ -3181,7 +3180,7 @@ try_reader_union(memoize_state_t *state,
 		avro_schema_t  branch_schema =
 		    avro_schema_union_branch(rschema, i);
 
-		DEBUG("Resolving reader union branch %zu (%s)", i,
+		DEBUG("Resolving reader union branch %" PRIsz " (%s)", i,
 		      avro_schema_type_name(branch_schema));
 
 		/*
@@ -3194,9 +3193,9 @@ try_reader_union(memoize_state_t *state,
 		uself->branch_resolver =
 		    avro_resolved_reader_new_memoized(state, wschema, branch_schema);
 		if (uself->branch_resolver == NULL) {
-			DEBUG("No match for reader union branch %zu", i);
+			DEBUG("No match for reader union branch %" PRIsz, i);
 		} else {
-			DEBUG("Found match for reader union branch %zu", i);
+			DEBUG("Found match for reader union branch %" PRIsz, i);
 			uself->active_branch = i;
 			return &uself->parent;
 		}

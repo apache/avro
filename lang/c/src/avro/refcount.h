@@ -17,6 +17,12 @@
 
 #ifndef AVRO_REFCOUNT_H
 #define AVRO_REFCOUNT_H
+
+#if defined(_WIN32) && defined(__cplusplus)
+/* Include the C++ file <intrin.h> outside the scope of extern "C" */
+#include <intrin.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #define CLOSE_EXTERN }
@@ -49,10 +55,38 @@ avro_refcount_dec(volatile int *refcount);
 
 
 /*-----------------------------------------------------------------------
+ * Non-Atomic Reference Count
+ */
+#if defined(AVRO_NON_ATOMIC_REFCOUNT)
+static inline void
+avro_refcount_set(volatile int *refcount, int value)
+{
+	*refcount = value;
+}
+
+static inline void
+avro_refcount_inc(volatile int *refcount)
+{
+	if (*refcount != (int) -1) {
+		*refcount += 1;
+	}
+}
+
+static inline int
+avro_refcount_dec(volatile int *refcount)
+{
+	if (*refcount != (int) -1) {
+		*refcount -= 1;
+		return (*refcount == 0);
+	}
+	return 0;
+}
+
+/*-----------------------------------------------------------------------
  * Mac OS X
  */
 
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
+#elif __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
 
 #include <libkern/OSAtomic.h>
 
@@ -119,7 +153,7 @@ avro_refcount_dec(volatile int *refcount)
 /* determine the size of int */
 
 #include <limits.h>
-#include <stdint.h>
+#include <avro/platform.h>
 #if INT_MAX == INT32_MAX
 #define REFCOUNT_SS "l"
 #elif INT_MAX == INT64_MAX
@@ -228,11 +262,14 @@ avro_refcount_dec(volatile int *refcount)
 /*-----------------------------------------------------------------------
  * Windows intrinsics
  */
+#elif defined(_WIN32)
 
-#elif defined(__WIN32__)
-
+#ifdef __cplusplus
+// Note: <intrin.h> included outside the extern "C" wrappers above
+#else
 #include <windows.h>
 #include <intrin.h>
+#endif // __cplusplus
 
 static inline void
 avro_refcount_set(volatile int *refcount, int value)
@@ -244,7 +281,7 @@ static inline void
 avro_refcount_inc(volatile int *refcount)
 {
 	if (*refcount != (int) -1) {
-		_InterlockedIncrement(refcount);
+		_InterlockedIncrement((volatile long *) refcount);
 	}
 }
 
@@ -252,16 +289,14 @@ static inline int
 avro_refcount_dec(volatile int *refcount)
 {
 	if (*refcount != (int) -1) {
-		return (_InterlockedDecrement(refcount) == 0);
+		return (_InterlockedDecrement((volatile long *) refcount) == 0);
 	}
 	return 0;
 }
 
-
 /*-----------------------------------------------------------------------
  * Fallback
  */
-
 #else
 #error "No atomic implementation!"
 #endif

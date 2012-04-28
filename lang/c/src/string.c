@@ -58,15 +58,15 @@ struct avro_wrapped_resizable {
 static void
 avro_wrapped_resizable_free(avro_wrapped_buffer_t *self)
 {
-	DEBUG("--- Freeing resizable <%p:%zu> (%p)", self->buf, self->size, self->user_data);
-	struct avro_wrapped_resizable  *resizable = self->user_data;
+	DEBUG("--- Freeing resizable <%p:%" PRIsz "> (%p)", self->buf, self->size, self->user_data);
+	struct avro_wrapped_resizable  *resizable = (struct avro_wrapped_resizable *) self->user_data;
 	avro_free(resizable, avro_wrapped_resizable_size(resizable->buf_size));
 }
 
 static int
 avro_wrapped_resizable_resize(avro_wrapped_buffer_t *self, size_t desired)
 {
-	struct avro_wrapped_resizable  *resizable = self->user_data;
+	struct avro_wrapped_resizable  *resizable = (struct avro_wrapped_resizable *) self->user_data;
 
 	/*
 	 * If we've already allocated enough memory for the desired
@@ -82,24 +82,24 @@ avro_wrapped_resizable_resize(avro_wrapped_buffer_t *self, size_t desired)
 		new_buf_size = desired;
 	}
 
-	DEBUG("--- Resizing <%p:%zu> (%p) -> %zu",
+	DEBUG("--- Resizing <%p:%" PRIsz "> (%p) -> %" PRIsz,
 	      self->buf, self->buf_size, self->user_data, new_buf_size);
 
 	struct avro_wrapped_resizable  *new_resizable =
-	    avro_realloc(resizable,
+	    (struct avro_wrapped_resizable *) avro_realloc(resizable,
 		         avro_wrapped_resizable_size(resizable->buf_size),
 			 avro_wrapped_resizable_size(new_buf_size));
 	if (new_resizable == NULL) {
 		return ENOMEM;
 	}
-	DEBUG("--- New buffer <%p:%zu>", new_buf, new_buf_size);
+	DEBUG("--- New buffer <%p:%" PRIsz ">", new_buf, new_buf_size);
 
 	new_resizable->buf_size = new_buf_size;
 
-	void  *old_buf = resizable;
-	void  *new_buf = new_resizable;
+	char  *old_buf = (char *) resizable;
+	char  *new_buf = (char *) new_resizable;
 
-	ptrdiff_t  offset = self->buf - old_buf;
+	ptrdiff_t  offset = (char *) self->buf - old_buf;
 	DEBUG("--- Old data pointer is %p", self->buf);
 	self->buf = new_buf + offset;
 	self->user_data = new_resizable;
@@ -112,15 +112,15 @@ avro_wrapped_resizable_new(avro_wrapped_buffer_t *dest, size_t buf_size)
 {
 	size_t  allocated_size = avro_wrapped_resizable_size(buf_size);
 	struct avro_wrapped_resizable  *resizable =
-	    avro_malloc(allocated_size);
+	    (struct avro_wrapped_resizable *) avro_malloc(allocated_size);
 	if (resizable == NULL) {
 		return ENOMEM;
 	}
 
 	resizable->buf_size = buf_size;
 
-	dest->buf = ((void *) resizable) + sizeof(struct avro_wrapped_resizable);
-	DEBUG("--- Creating resizable <%p:%zu> (%p)", dest->buf, buf_size, resizable);
+	dest->buf = ((char *) resizable) + sizeof(struct avro_wrapped_resizable);
+	DEBUG("--- Creating resizable <%p:%" PRIsz "> (%p)", dest->buf, buf_size, resizable);
 	dest->size = buf_size;
 	dest->user_data = resizable;
 	dest->free = avro_wrapped_resizable_free;
@@ -180,7 +180,7 @@ avro_raw_string_ensure_buf(avro_raw_string_t *str, size_t length)
 {
 	int  rval;
 
-	DEBUG("--- Ensuring resizable buffer of size %zu", length);
+	DEBUG("--- Ensuring resizable buffer of size %" PRIsz, length);
 	if (is_resizable(str->wrapped)) {
 		/*
 		 * If we've already got a resizable buffer, just have it
@@ -235,7 +235,7 @@ void avro_raw_string_append_length(avro_raw_string_t *str,
 	}
 
 	avro_raw_string_ensure_buf(str, str->wrapped.size + length);
-	memcpy((void *) str->wrapped.buf + str->wrapped.size, src, length);
+	memcpy((char *) str->wrapped.buf + str->wrapped.size, src, length);
 	str->wrapped.size += length;
 }
 
@@ -260,7 +260,7 @@ avro_raw_string_append(avro_raw_string_t *str, const char *src)
 	/* Assume that str->wrapped.size includes a NUL terminator */
 	size_t  length = strlen(src);
 	avro_raw_string_ensure_buf(str, str->wrapped.size + length);
-	memcpy((void *) str->wrapped.buf + str->wrapped.size - 1, src, length+1);
+	memcpy((char *) str->wrapped.buf + str->wrapped.size - 1, src, length+1);
 	str->wrapped.size += length;
 }
 
@@ -269,7 +269,7 @@ void
 avro_raw_string_give(avro_raw_string_t *str,
 		     avro_wrapped_buffer_t *src)
 {
-	DEBUG("--- Giving control of <%p:%zu> (%p) to string",
+	DEBUG("--- Giving control of <%p:%" PRIsz "> (%p) to string",
 	      src->buf, src->size, src);
 	avro_wrapped_buffer_free(&str->wrapped);
 	avro_wrapped_buffer_move(&str->wrapped, src);

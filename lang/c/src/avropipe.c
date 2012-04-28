@@ -18,8 +18,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
-#include <inttypes.h>
-#include <stdint.h>
+#include <avro/platform.h>
+#include <avro/platform.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,7 +43,7 @@ static void
 create_array_prefix(avro_raw_string_t *dest, const char *prefix, size_t index)
 {
 	static char  buf[100];
-	snprintf(buf, sizeof(buf), "%zu", index);
+	snprintf(buf, sizeof(buf), "%" PRIsz, index);
 	avro_raw_string_set(dest, prefix);
 	avro_raw_string_append(dest, separator);
 	avro_raw_string_append(dest, buf);
@@ -120,7 +120,7 @@ process_array(const char *prefix, avro_value_t *value)
 		avro_value_get_by_index(value, i, &element_value, NULL);
 
 		create_array_prefix(&element_prefix, prefix, i);
-		process_value(avro_raw_string_get(&element_prefix), &element_value);
+		process_value((const char *) avro_raw_string_get(&element_prefix), &element_value);
 	}
 
 	avro_raw_string_done(&element_prefix);
@@ -157,7 +157,7 @@ process_map(const char *prefix, avro_value_t *value)
 		avro_value_get_by_index(value, i, &element_value, &key);
 
 		create_object_prefix(&element_prefix, prefix, key);
-		process_value(avro_raw_string_get(&element_prefix), &element_value);
+		process_value((const char *) avro_raw_string_get(&element_prefix), &element_value);
 	}
 
 	avro_raw_string_done(&element_prefix);
@@ -180,7 +180,7 @@ process_record(const char *prefix, avro_value_t *value)
 		avro_value_get_by_index(value, i, &field_value, &field_name);
 
 		create_object_prefix(&field_prefix, prefix, field_name);
-		process_value(avro_raw_string_get(&field_prefix), &field_value);
+		process_value((const char *) avro_raw_string_get(&field_prefix), &field_value);
 	}
 
 	avro_raw_string_done(&field_prefix);
@@ -210,7 +210,7 @@ process_union(const char *prefix, avro_value_t *value)
 	create_object_prefix(&branch_prefix, prefix, branch_name);
 
 	printf("%s\t{}\n", prefix);
-	process_value(avro_raw_string_get(&branch_prefix), &branch_value);
+	process_value((const char *) avro_raw_string_get(&branch_prefix), &branch_value);
 
 	avro_raw_string_done(&branch_prefix);
 }
@@ -234,7 +234,7 @@ process_value(const char *prefix, avro_value_t *value)
 			size_t  size;
 			avro_value_get_bytes(value, &buf, &size);
 			printf("%s\t", prefix);
-			print_bytes_value(buf, size);
+			print_bytes_value((const char *) buf, size);
 			printf("\n");
 			return;
 		}
@@ -306,7 +306,7 @@ process_value(const char *prefix, avro_value_t *value)
 			size_t  size;
 			avro_value_get_fixed(value, &buf, &size);
 			printf("%s\t", prefix);
-			print_bytes_value(buf, size);
+			print_bytes_value((const char *) buf, size);
 			printf("\n");
 			return;
 		}
@@ -365,7 +365,7 @@ process_file(const char *filename)
 
 	for (; avro_file_reader_read_value(reader, &value) == 0; record_number++) {
 		create_array_prefix(&prefix, "", record_number);
-		process_value(avro_raw_string_get(&prefix), &value);
+		process_value((const char *) avro_raw_string_get(&prefix), &value);
 		avro_value_reset(&value);
 	}
 
@@ -377,7 +377,6 @@ process_file(const char *filename)
 
 
 /*-- MAIN PROGRAM --*/
-
 static struct option longopts[] = {
 	{ "separator", required_argument, NULL, 's' },
 	{ NULL, 0, NULL, 0 }
@@ -396,7 +395,7 @@ int main(int argc, char **argv)
 	char  *data_filename;
 
 	int  ch;
-	while ((ch = getopt_long(argc, argv, "s:", longopts, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "s:", longopts, NULL) ) != -1) {
 		switch (ch) {
 			case 's':
 				separator = optarg;
