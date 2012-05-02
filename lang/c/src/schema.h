@@ -17,7 +17,7 @@
 #ifndef AVRO_SCHEMA_PRIV_H
 #define AVRO_SCHEMA_PRIV_H
 
-#include <stdint.h>
+#include <avro/platform.h>
 #include "avro/basics.h"
 #include "avro/schema.h"
 #include "avro_private.h"

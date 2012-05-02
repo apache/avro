@@ -100,7 +100,7 @@ avro_raw_array_ensure_size0(avro_raw_array_t *array, size_t desired_count);
  */
 
 #define avro_raw_array_get_raw(array, index) \
-	((array)->data + (array)->element_size * index)
+	((char *) (array)->data + (array)->element_size * index)
 
 /**
  * Returns the given element of an avro_raw_array_t, using element_type
@@ -424,6 +424,14 @@ void avro_raw_string_set(avro_raw_string_t *str, const char *src);
 
 void avro_raw_string_append(avro_raw_string_t *str, const char *src);
 
+/**
+ * Appends the given C string to an avro_raw_string_t, using the
+ * provided length instead of calling strlen(src).
+ */
+
+void avro_raw_string_append_length(avro_raw_string_t *str,
+				   const void *src,
+				   size_t length);
 /**
  * Gives control of a buffer to an avro_raw_string_t.
  */

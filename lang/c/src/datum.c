@@ -43,14 +43,14 @@ avro_str_free_wrapper(void *ptr, size_t sz)
 {
 	// don't need sz, since the size is stored in the string buffer
 	AVRO_UNUSED(sz);
-	avro_str_free(ptr);
+	avro_str_free((char *)ptr);
 }
 
 static avro_datum_t avro_string_private(char *str, int64_t size,
 					avro_free_func_t string_free)
 {
 	struct avro_string_datum_t *datum =
-	    avro_new(struct avro_string_datum_t);
+	    (struct avro_string_datum_t *) avro_new(struct avro_string_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new string datum");
 		return NULL;
@@ -135,7 +135,7 @@ static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 				       avro_free_func_t bytes_free)
 {
 	struct avro_bytes_datum_t *datum;
-	datum = avro_new(struct avro_bytes_datum_t);
+	datum = (struct avro_bytes_datum_t *) avro_new(struct avro_bytes_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new bytes datum");
 		return NULL;
@@ -150,7 +150,7 @@ static avro_datum_t avro_bytes_private(char *bytes, int64_t size,
 
 avro_datum_t avro_bytes(const char *bytes, int64_t size)
 {
-	char *bytes_copy = avro_malloc(size);
+	char *bytes_copy = (char *) avro_malloc(size);
 	if (!bytes_copy) {
 		avro_set_error("Cannot copy bytes content");
 		return NULL;
@@ -191,7 +191,7 @@ static int avro_bytes_set_private(avro_datum_t datum, const char *bytes,
 int avro_bytes_set(avro_datum_t datum, const char *bytes, const int64_t size)
 {
 	int rval;
-	char *bytes_copy = avro_malloc(size);
+	char *bytes_copy = (char *) avro_malloc(size);
 	if (!bytes_copy) {
 		avro_set_error("Cannot copy bytes content");
 		return ENOMEM;
@@ -225,7 +225,7 @@ int avro_bytes_get(avro_datum_t datum, char **bytes, int64_t * size)
 avro_datum_t avro_int32(int32_t i)
 {
 	struct avro_int32_datum_t *datum =
-	    avro_new(struct avro_int32_datum_t);
+	    (struct avro_int32_datum_t *) avro_new(struct avro_int32_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new int datum");
 		return NULL;
@@ -258,7 +258,7 @@ int avro_int32_set(avro_datum_t datum, const int32_t i)
 avro_datum_t avro_int64(int64_t l)
 {
 	struct avro_int64_datum_t *datum =
-	    avro_new(struct avro_int64_datum_t);
+	    (struct avro_int64_datum_t *) avro_new(struct avro_int64_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new long datum");
 		return NULL;
@@ -291,7 +291,7 @@ int avro_int64_set(avro_datum_t datum, const int64_t l)
 avro_datum_t avro_float(float f)
 {
 	struct avro_float_datum_t *datum =
-	    avro_new(struct avro_float_datum_t);
+	    (struct avro_float_datum_t *) avro_new(struct avro_float_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new float datum");
 		return NULL;
@@ -324,7 +324,7 @@ int avro_float_get(avro_datum_t datum, float *f)
 avro_datum_t avro_double(double d)
 {
 	struct avro_double_datum_t *datum =
-	    avro_new(struct avro_double_datum_t);
+	    (struct avro_double_datum_t *) avro_new(struct avro_double_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new double atom");
 		return NULL;
@@ -357,7 +357,7 @@ int avro_double_get(avro_datum_t datum, double *d)
 avro_datum_t avro_boolean(int8_t i)
 {
 	struct avro_boolean_datum_t *datum =
-	    avro_new(struct avro_boolean_datum_t);
+	    (struct avro_boolean_datum_t *) avro_new(struct avro_boolean_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new boolean datum");
 		return NULL;
@@ -402,7 +402,7 @@ avro_datum_t avro_union(avro_schema_t schema,
 	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_union_datum_t *datum =
-	    avro_new(struct avro_union_datum_t);
+	    (struct avro_union_datum_t *) avro_new(struct avro_union_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new union datum");
 		return NULL;
@@ -472,7 +472,7 @@ avro_datum_t avro_record(avro_schema_t schema)
 	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_record_datum_t *datum =
-	    avro_new(struct avro_record_datum_t);
+	    (struct avro_record_datum_t *) avro_new(struct avro_record_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new record datum");
 		return NULL;
@@ -554,7 +554,7 @@ avro_datum_t avro_enum(avro_schema_t schema, int i)
 	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_enum_datum_t *datum =
-	    avro_new(struct avro_enum_datum_t);
+	    (struct avro_enum_datum_t *) avro_new(struct avro_enum_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new enum datum");
 		return NULL;
@@ -616,7 +616,7 @@ static avro_datum_t avro_fixed_private(avro_schema_t schema,
 	}
 
 	struct avro_fixed_datum_t *datum =
-	    avro_new(struct avro_fixed_datum_t);
+	    (struct avro_fixed_datum_t *) avro_new(struct avro_fixed_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new fixed datum");
 		return NULL;
@@ -633,7 +633,7 @@ static avro_datum_t avro_fixed_private(avro_schema_t schema,
 avro_datum_t avro_fixed(avro_schema_t schema,
 			const char *bytes, const int64_t size)
 {
-	char *bytes_copy = avro_malloc(size);
+	char *bytes_copy = (char *) avro_malloc(size);
 	if (!bytes_copy) {
 		avro_set_error("Cannot copy fixed content");
 		return NULL;
@@ -676,7 +676,7 @@ static int avro_fixed_set_private(avro_datum_t datum,
 int avro_fixed_set(avro_datum_t datum, const char *bytes, const int64_t size)
 {
 	int rval;
-	char *bytes_copy = avro_malloc(size);
+	char *bytes_copy = (char *) avro_malloc(size);
 	if (!bytes_copy) {
 		avro_set_error("Cannot copy fixed content");
 		return ENOMEM;
@@ -736,7 +736,7 @@ avro_datum_t avro_map(avro_schema_t schema)
 	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_map_datum_t *datum =
-	    avro_new(struct avro_map_datum_t);
+	    (struct avro_map_datum_t *) avro_new(struct avro_map_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new map datum");
 		return NULL;
@@ -876,7 +876,7 @@ avro_datum_t avro_array(avro_schema_t schema)
 	check_param(NULL, is_avro_schema(schema), "schema");
 
 	struct avro_array_datum_t *datum =
-	    avro_new(struct avro_array_datum_t);
+	    (struct avro_array_datum_t *) avro_new(struct avro_array_datum_t);
 	if (!datum) {
 		avro_set_error("Cannot create new array datum");
 		return NULL;
@@ -1087,7 +1087,7 @@ static void avro_datum_free(avro_datum_t datum)
 				record = avro_datum_to_record(datum);
 				avro_schema_decref(record->schema);
 				st_foreach(record->fields_byname,
-					   char_datum_free_foreach, 0);
+					   HASH_FUNCTION_CAST char_datum_free_foreach, 0);
 				st_free_table(record->field_order);
 				st_free_table(record->fields_byname);
 				avro_freet(struct avro_record_datum_t, record);
@@ -1115,7 +1115,7 @@ static void avro_datum_free(avro_datum_t datum)
 				struct avro_map_datum_t *map;
 				map = avro_datum_to_map(datum);
 				avro_schema_decref(map->schema);
-				st_foreach(map->map, char_datum_free_foreach,
+				st_foreach(map->map, HASH_FUNCTION_CAST char_datum_free_foreach,
 					   0);
 				st_free_table(map->map);
 				st_free_table(map->indices_by_key);
@@ -1127,7 +1127,7 @@ static void avro_datum_free(avro_datum_t datum)
 				struct avro_array_datum_t *array;
 				array = avro_datum_to_array(datum);
 				avro_schema_decref(array->schema);
-				st_foreach(array->els, array_free_foreach, 0);
+				st_foreach(array->els, HASH_FUNCTION_CAST array_free_foreach, 0);
 				st_free_table(array->els);
 				avro_freet(struct avro_array_datum_t, array);
 			}
@@ -1153,7 +1153,7 @@ datum_reset_foreach(int i, avro_datum_t datum, void *arg)
 {
 	AVRO_UNUSED(i);
 	int  rval;
-	int  *result = arg;
+	int  *result = (int *) arg;
 
 	rval = avro_datum_reset(datum);
 	if (rval == 0) {
@@ -1175,7 +1175,7 @@ avro_datum_reset(avro_datum_t datum)
 		{
 			struct avro_array_datum_t *array;
 			array = avro_datum_to_array(datum);
-			st_foreach(array->els, array_free_foreach, 0);
+			st_foreach(array->els, HASH_FUNCTION_CAST array_free_foreach, 0);
 			st_free_table(array->els);
 
 			rval = avro_init_array(array);
@@ -1190,7 +1190,7 @@ avro_datum_reset(avro_datum_t datum)
 		{
 			struct avro_map_datum_t *map;
 			map = avro_datum_to_map(datum);
-			st_foreach(map->map, char_datum_free_foreach, 0);
+			st_foreach(map->map, HASH_FUNCTION_CAST char_datum_free_foreach, 0);
 			st_free_table(map->map);
 			st_free_table(map->indices_by_key);
 			st_free_table(map->keys_by_index);
@@ -1209,7 +1209,7 @@ avro_datum_reset(avro_datum_t datum)
 			record = avro_datum_to_record(datum);
 			rval = 0;
 			st_foreach(record->fields_byname,
-				   datum_reset_foreach, (st_data_t) &rval);
+				   HASH_FUNCTION_CAST datum_reset_foreach, (st_data_t) &rval);
 			return rval;
 		}
 

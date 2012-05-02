@@ -22,7 +22,7 @@
 #include "avro/legacy.h"
 #include "avro/schema.h"
 #include "avro_private.h"
-#include <inttypes.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -115,7 +115,7 @@ static void avro_schema_free(avro_schema_t schema)
 				if (record->space) {
 					avro_str_free(record->space);
 				}
-				st_foreach(record->fields, record_free_foreach,
+				st_foreach(record->fields, HASH_FUNCTION_CAST record_free_foreach,
 					   0);
 				st_free_table(record->fields_byname);
 				st_free_table(record->fields);
@@ -127,7 +127,7 @@ static void avro_schema_free(avro_schema_t schema)
 				struct avro_enum_schema_t *enump;
 				enump = avro_schema_to_enum(schema);
 				avro_str_free(enump->name);
-				st_foreach(enump->symbols, enum_free_foreach,
+				st_foreach(enump->symbols, HASH_FUNCTION_CAST enum_free_foreach,
 					   0);
 				st_free_table(enump->symbols);
 				st_free_table(enump->symbols_byname);
@@ -161,7 +161,7 @@ static void avro_schema_free(avro_schema_t schema)
 		case AVRO_UNION:{
 				struct avro_union_schema_t *unionp;
 				unionp = avro_schema_to_union(schema);
-				st_foreach(unionp->branches, union_free_foreach,
+				st_foreach(unionp->branches, HASH_FUNCTION_CAST union_free_foreach,
 					   0);
 				st_free_table(unionp->branches);
 				st_free_table(unionp->branches_byname);
@@ -283,7 +283,7 @@ avro_schema_t avro_schema_fixed(const char *name, const int64_t size)
 	}
 
 	struct avro_fixed_schema_t *fixed =
-	    avro_new(struct avro_fixed_schema_t);
+	    (struct avro_fixed_schema_t *) avro_new(struct avro_fixed_schema_t);
 	if (!fixed) {
 		avro_set_error("Cannot allocate new fixed schema");
 		return NULL;
@@ -302,7 +302,7 @@ int64_t avro_schema_fixed_size(const avro_schema_t fixed)
 avro_schema_t avro_schema_union(void)
 {
 	struct avro_union_schema_t *schema =
-	    avro_new(struct avro_union_schema_t);
+	    (struct avro_union_schema_t *) avro_new(struct avro_union_schema_t);
 	if (!schema) {
 		avro_set_error("Cannot allocate new union schema");
 		return NULL;
@@ -392,7 +392,7 @@ avro_schema_t avro_schema_union_branch_by_name
 avro_schema_t avro_schema_array(const avro_schema_t items)
 {
 	struct avro_array_schema_t *array =
-	    avro_new(struct avro_array_schema_t);
+	    (struct avro_array_schema_t *) avro_new(struct avro_array_schema_t);
 	if (!array) {
 		avro_set_error("Cannot allocate new array schema");
 		return NULL;
@@ -410,7 +410,7 @@ avro_schema_t avro_schema_array_items(avro_schema_t array)
 avro_schema_t avro_schema_map(const avro_schema_t values)
 {
 	struct avro_map_schema_t *map =
-	    avro_new(struct avro_map_schema_t);
+	    (struct avro_map_schema_t *) avro_new(struct avro_map_schema_t);
 	if (!map) {
 		avro_set_error("Cannot allocate new map schema");
 		return NULL;
@@ -432,7 +432,7 @@ avro_schema_t avro_schema_enum(const char *name)
 		return NULL;
 	}
 
-	struct avro_enum_schema_t *enump = avro_new(struct avro_enum_schema_t);
+	struct avro_enum_schema_t *enump = (struct avro_enum_schema_t *) avro_new(struct avro_enum_schema_t);
 	if (!enump) {
 		avro_set_error("Cannot allocate new enum schema");
 		return NULL;
@@ -533,7 +533,7 @@ avro_schema_record_field_append(const avro_schema_t record_schema,
 	}
 
 	struct avro_record_schema_t *record = avro_schema_to_record(record_schema);
-	struct avro_record_field_t *new_field = avro_new(struct avro_record_field_t);
+	struct avro_record_field_t *new_field = (struct avro_record_field_t *) avro_new(struct avro_record_field_t);
 	if (!new_field) {
 		avro_set_error("Cannot allocate new record field");
 		return ENOMEM;
@@ -555,7 +555,7 @@ avro_schema_t avro_schema_record(const char *name, const char *space)
 		return NULL;
 	}
 
-	struct avro_record_schema_t *record = avro_new(struct avro_record_schema_t);
+	struct avro_record_schema_t *record = (struct avro_record_schema_t *) avro_new(struct avro_record_schema_t);
 	if (!record) {
 		avro_set_error("Cannot allocate new record schema");
 		return NULL;
@@ -660,7 +660,7 @@ avro_schema_t avro_schema_link(avro_schema_t to)
 		return NULL;
 	}
 
-	struct avro_link_schema_t *link = avro_new(struct avro_link_schema_t);
+	struct avro_link_schema_t *link = (struct avro_link_schema_t *) avro_new(struct avro_link_schema_t);
 	if (!link) {
 		avro_set_error("Cannot allocate new link schema");
 		return NULL;
@@ -765,7 +765,15 @@ static int
 avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			st_table *named_schemas)
 {
-	avro_type_t type = 0;
+#ifdef _WIN32
+ #pragma message("#warning: Bug: '0' is not of type avro_type_t.")
+#else
+ #warning "Bug: '0' is not of type avro_type_t."
+#endif
+  /* We should really have an "AVRO_INVALID" type in
+   * avro_type_t. Suppress warning below in which we set type to 0.
+   */
+	avro_type_t type = (avro_type_t) 0;
 	unsigned int i;
 	avro_schema_t named_type = NULL;
 
@@ -1031,7 +1039,7 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 		{
 			json_t *json_size = json_object_get(json, "size");
 			json_t *json_name = json_object_get(json, "name");
-			int size;
+			json_int_t size;
 			const char *name;
 			if (!json_is_integer(json_size)) {
 				avro_set_error("Fixed type must have a \"size\"");
@@ -1043,7 +1051,7 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			}
 			size = json_integer_value(json_size);
 			name = json_string_value(json_name);
-			*schema = avro_schema_fixed(name, size);
+			*schema = avro_schema_fixed(name, (int64_t) size);
 			if (save_named_schemas(name, *schema, named_schemas)) {
 				avro_set_error("Cannot save fixed schema");
 				return ENOMEM;
@@ -1532,7 +1540,7 @@ static int write_fixed(avro_writer_t out, const struct avro_fixed_schema_t *fixe
 	check(rval, avro_write_str(out, "{\"type\":\"fixed\",\"name\":\""));
 	check(rval, avro_write_str(out, fixed->name));
 	check(rval, avro_write_str(out, "\",\"size\":"));
-	snprintf(size, sizeof(size), "%"PRId64, fixed->size);
+	snprintf(size, sizeof(size), "%" PRId64, fixed->size);
 	check(rval, avro_write_str(out, size));
 	return avro_write_str(out, "}");
 }

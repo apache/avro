@@ -1,8 +1,6 @@
 #include <avro.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #define SIMPLE_ARRAY \
 "{\"type\": \"array\", \"items\": \"long\"}"

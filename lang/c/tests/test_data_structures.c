@@ -36,15 +36,15 @@ test_array(void)
 	/* Test once on a fresh array */
 
 	avro_raw_array_init(&array, sizeof(long));
-	element = avro_raw_array_append(&array);
+	element = (long *) avro_raw_array_append(&array);
 	*element = 1;
-	element = avro_raw_array_append(&array);
+	element = (long *) avro_raw_array_append(&array);
 	*element = 3;
 
 	if (avro_raw_array_size(&array) != 2) {
-		fprintf(stderr, "Incorrect array size: got %zu, expected %zu.\n",
-			(size_t) avro_raw_array_size(&array),
-			(size_t) 2);
+		fprintf(stderr, "Incorrect array size: got %lu, expected %lu.\n",
+			(unsigned long) avro_raw_array_size(&array),
+			(unsigned long) 2);
 		return EXIT_FAILURE;
 	}
 
@@ -58,13 +58,13 @@ test_array(void)
 	/* And test again after clearing the array */
 
 	avro_raw_array_clear(&array);
-	element = avro_raw_array_append(&array);
+	element = (long *) avro_raw_array_append(&array);
 	*element = 1;
-	element = avro_raw_array_append(&array);
+	element = (long *) avro_raw_array_append(&array);
 	*element = 3;
 
 	if (avro_raw_array_size(&array) != 2) {
-		fprintf(stderr, "Incorrect array size: got %zu, expected %zu.\n",
+		fprintf(stderr, "Incorrect array size: got %" PRIsz ", expected %" PRIsz ".\n",
 			(size_t) avro_raw_array_size(&array),
 			(size_t) 2);
 		return EXIT_FAILURE;
@@ -98,7 +98,7 @@ test_map(void)
 	*element = 3;
 
 	if (avro_raw_map_size(&map) != 2) {
-		fprintf(stderr, "Incorrect map size: got %zu, expected %zu.\n",
+		fprintf(stderr, "Incorrect map size: got %" PRIsz ", expected %" PRIsz ".\n",
 			(size_t) avro_raw_map_size(&map),
 			(size_t) 2);
 		return EXIT_FAILURE;
@@ -119,10 +119,10 @@ test_map(void)
 		return EXIT_FAILURE;
 	}
 
-	element = avro_raw_map_get(&map, "y", &index);
+	element = (long *) avro_raw_map_get(&map, "y", &index);
 	if (index != 1) {
 		fprintf(stderr, "Unexpected index for map element \"%s\": "
-			"got %zu, expected %u.\n",
+			"got %" PRIsz ", expected %u.\n",
 			"y", index, 1);
 		return EXIT_FAILURE;
 	}
@@ -143,7 +143,7 @@ test_map(void)
 	*element = 3;
 
 	if (avro_raw_map_size(&map) != 2) {
-		fprintf(stderr, "Incorrect map size: got %zu, expected %zu.\n",
+		fprintf(stderr, "Incorrect map size: got %" PRIsz ", expected %" PRIsz ".\n",
 			(size_t) avro_raw_map_size(&map),
 			(size_t) 2);
 		return EXIT_FAILURE;
@@ -157,10 +157,10 @@ test_map(void)
 		return EXIT_FAILURE;
 	}
 
-	element = avro_raw_map_get(&map, "y", &index);
+	element = (long *) avro_raw_map_get(&map, "y", &index);
 	if (index != 1) {
 		fprintf(stderr, "Unexpected index for map element \"%s\": "
-			"got %zu, expected %u.\n",
+			"got %" PRIsz ", expected %u.\n",
 			"y", index, 1);
 		return EXIT_FAILURE;
 	}
@@ -189,13 +189,13 @@ test_string(void)
 	avro_raw_string_set(&str, "abcd");
 
 	if (avro_raw_string_length(&str) != 5) {
-		fprintf(stderr, "Incorrect string size: got %zu, expected %zu.\n",
+		fprintf(stderr, "Incorrect string size: got %" PRIsz ", expected %" PRIsz ".\n",
 			(size_t) avro_raw_string_length(&str),
 			(size_t) 5);
 		return EXIT_FAILURE;
 	}
 
-	if (strcmp(str.wrapped.buf, "abcd") != 0) {
+	if (strcmp((const char *) str.wrapped.buf, "abcd") != 0) {
 		fprintf(stderr, "Incorrect string contents: "
 				"got \"%s\", expected \"%s\".\n",
 			(char *) avro_raw_string_get(&str),
@@ -208,13 +208,13 @@ test_string(void)
 	avro_raw_string_give(&str, &wbuf);
 
 	if (avro_raw_string_length(&str) != 5) {
-		fprintf(stderr, "Incorrect string size: got %zu, expected %zu.\n",
+		fprintf(stderr, "Incorrect string size: got %" PRIsz ", expected %" PRIsz ".\n",
 			(size_t) avro_raw_string_length(&str),
 			(size_t) 5);
 		return EXIT_FAILURE;
 	}
 
-	if (strcmp(str.wrapped.buf, "abcd") != 0) {
+	if (strcmp((const char *) str.wrapped.buf, "abcd") != 0) {
 		fprintf(stderr, "Incorrect string contents: "
 				"got \"%s\", expected \"%s\".\n",
 			(char *) avro_raw_string_get(&str),

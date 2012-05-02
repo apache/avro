@@ -21,7 +21,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <dirent.h>
+#ifdef _WIN32
+ #include "msdirent.h"
+#else
+ #include <dirent.h>
+#endif
 
 int test_cases = 0;
 avro_writer_t avro_stderr;
@@ -43,6 +47,11 @@ static void run_tests(char *dirpath, int should_pass)
 	}
 	do {
 		dent = readdir(dir);
+
+		/* Suppress failures on CVS directories */
+		if ( dent && !strcmp( (const char *) dent->d_name, "CVS" ) )
+			continue;
+
 		if (dent && dent->d_name[0] != '.') {
 			int test_rval;
 			snprintf(filepath, sizeof(filepath), "%s/%s", dirpath,

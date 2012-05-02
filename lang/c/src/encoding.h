@@ -16,7 +16,14 @@
  */
 #ifndef AVRO_ENCODING_H
 #define AVRO_ENCODING_H
-#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#define CLOSE_EXTERN }
+#else
+#define CLOSE_EXTERN
+#endif
+
+#include <avro/platform.h>
 #include "avro/io.h"
 
 /*
@@ -95,5 +102,5 @@ typedef struct avro_encoding_t avro_encoding_t;
 extern const avro_encoding_t avro_binary_encoding;	/* in
 							 * encoding_binary 
 							 */
-
+CLOSE_EXTERN
 #endif

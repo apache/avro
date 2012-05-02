@@ -32,7 +32,7 @@ struct avro_wrapped_copy {
 static void
 avro_wrapped_copy_free(avro_wrapped_buffer_t *self)
 {
-	struct avro_wrapped_copy  *copy = self->user_data;
+	struct avro_wrapped_copy  *copy = (struct avro_wrapped_copy *) self->user_data;
 	if (avro_refcount_dec(&copy->refcount)) {
 		avro_free(copy, copy->allocated_size);
 	}
@@ -43,9 +43,9 @@ avro_wrapped_copy_copy(avro_wrapped_buffer_t *dest,
 		       const avro_wrapped_buffer_t *src,
 		       size_t offset, size_t length)
 {
-	struct avro_wrapped_copy  *copy = src->user_data;
+	struct avro_wrapped_copy  *copy = (struct avro_wrapped_copy *) src->user_data;
 	avro_refcount_inc(&copy->refcount);
-	dest->buf = src->buf + offset;
+	dest->buf = (char *) src->buf + offset;
 	dest->size = length;
 	dest->user_data = copy;
 	dest->free = avro_wrapped_copy_free;
@@ -59,12 +59,12 @@ avro_wrapped_buffer_new_copy(avro_wrapped_buffer_t *dest,
 			     const void *buf, size_t length)
 {
 	size_t  allocated_size = sizeof(struct avro_wrapped_copy) + length;
-	struct avro_wrapped_copy  *copy = avro_malloc(allocated_size);
+	struct avro_wrapped_copy  *copy = (struct avro_wrapped_copy *) avro_malloc(allocated_size);
 	if (copy == NULL) {
 		return ENOMEM;
 	}
 
-	dest->buf = ((void *) copy) + sizeof(struct avro_wrapped_copy);
+	dest->buf = ((char *) copy) + sizeof(struct avro_wrapped_copy);
 	dest->size = length;
 	dest->user_data = copy;
 	dest->free = avro_wrapped_copy_free;
@@ -115,7 +115,7 @@ avro_wrapped_buffer_copy(avro_wrapped_buffer_t *dest,
 	}
 
 	if (src->copy == NULL) {
-		return avro_wrapped_buffer_new_copy(dest, src->buf + offset, length);
+		return avro_wrapped_buffer_new_copy(dest, (char *) src->buf + offset, length);
 	} else {
 		return src->copy(dest, src, offset, length);
 	}
@@ -136,7 +136,7 @@ avro_wrapped_buffer_slice(avro_wrapped_buffer_t *self,
 	}
 
 	if (self->slice == NULL) {
-		self->buf += offset;
+		self->buf  = (char *) self->buf + offset;
 		self->size = length;
 		return 0;
 	} else {

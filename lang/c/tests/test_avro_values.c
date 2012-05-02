@@ -17,17 +17,12 @@
 
 /* Test cases for the new avro_value_t interface */
 
-#include <inttypes.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #include "avro.h"
-#include "avro/allocation.h"
-#include "avro/data.h"
-#include "avro/generic.h"
-#include "avro/value.h"
 #include "avro_private.h"
 
 typedef int (*avro_test) (void);
@@ -48,7 +43,7 @@ test_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
 	AVRO_UNUSED(osize);
 
 #if SHOW_ALLOCATIONS
-	fprintf(stderr, "alloc(%p, %zu, %zu) => ", ptr, osize, nsize);
+	fprintf(stderr, "alloc(%p, %" PRIsz ", %" PRIsz ") => ", ptr, osize, nsize);
 #endif
 
 	if (nsize == 0) {
@@ -59,9 +54,9 @@ test_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
 				"ERROR!\n"
 #endif
 				"Error freeing %p:\n"
-				"Size passed to avro_free (%zu) "
+				"Size passed to avro_free (%" PRIsz ") "
 				"doesn't match size passed to "
-				"avro_malloc (%zu)\n",
+				"avro_malloc (%" PRIsz ")\n",
 				ptr, osize, *size);
 			exit(EXIT_FAILURE);
 		}
@@ -73,7 +68,7 @@ test_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
 	} else {
 		size_t  real_size = nsize + sizeof(size_t);
 		size_t  *old_size = ptr? ((size_t *) ptr)-1: NULL;
-		size_t  *size = realloc(old_size, real_size);
+		size_t  *size = (size_t *) realloc(old_size, real_size);
 		*size = nsize;
 #if SHOW_ALLOCATIONS
 		fprintf(stderr, "%p\n", (size+1));
@@ -129,9 +124,15 @@ _check_invalid_methods(const char *name, avro_value_t *val)
 {
 	avro_type_t  type = avro_value_get_type(val);
 
+/* For a description on GCC vs Visual Studio 2008 usage of variadic
+ * macros see:
+ * http://stackoverflow.com/questions/2575864/the-problem-about-different
+ * -treatment-to-va-args-when-using-vs-2008-and-gcc
+ */
+#define expand_args(...) __VA_ARGS__
 #define check_bad(method, ...) \
 	do { \
-		if (!avro_value_##method(__VA_ARGS__)) { \
+          if (!expand_args(avro_value_##method(__VA_ARGS__))) {  \
 			fprintf(stderr, \
 				"Shouldn't be able to " #method " a %s\n", \
 				name); \
@@ -780,7 +781,7 @@ test_string(void)
 			return EXIT_FAILURE;
 		}
 
-		if (strcmp(wbuf.buf, strings[i]) != 0) {
+		if (strcmp((const char *) wbuf.buf, strings[i]) != 0) {
 			fprintf(stderr, "Unexpected grabbed string contents\n");
 			return EXIT_FAILURE;
 		}
@@ -816,7 +817,7 @@ test_string(void)
 			return EXIT_FAILURE;
 		}
 
-		if (strcmp(wbuf.buf, strings[i]) != 0) {
+		if (strcmp((const char *) wbuf.buf, strings[i]) != 0) {
 			fprintf(stderr, "Unexpected grabbed string contents\n");
 			return EXIT_FAILURE;
 		}
@@ -1078,7 +1079,7 @@ test_map(void)
 			int  is_new = 0;
 
 			char  key[64];
-			snprintf(key, 64, "%zu", j);
+			snprintf(key, 64, "%" PRIsz, j);
 
 			try(avro_value_add(&val, key,
 					   &element, &new_index, &is_new),
@@ -1275,7 +1276,7 @@ test_record(void)
 	try(avro_value_get_by_name(&val, "i", &field, &index),
 	    "Cannot get \"i\" field");
 	if (index != 1) {
-		fprintf(stderr, "Unexpected index for \"i\" field: %zu\n", index);
+		fprintf(stderr, "Unexpected index for \"i\" field: %" PRIsz "\n", index);
 		return EXIT_FAILURE;
 	}
 

@@ -27,47 +27,56 @@ cmake_policy(SET CMP0003 NEW)
 #-----------------------------------------------------------------------
 # Retrieve the current version number
 
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/version.sh project
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    RESULT_VARIABLE AVRO_VERSION_RESULT
-    OUTPUT_VARIABLE AVRO_VERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-if(AVRO_VERSION_RESULT)
-    message(FATAL_ERROR "Cannot determine Avro version number")
-endif(AVRO_VERSION_RESULT)
+if (UNIX)
+    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/version.sh project
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE AVRO_VERSION_RESULT
+        OUTPUT_VARIABLE AVRO_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(AVRO_VERSION_RESULT)
+        message(FATAL_ERROR "Cannot determine Avro version number")
+    endif(AVRO_VERSION_RESULT)
 
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/version.sh libtool
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    RESULT_VARIABLE LIBAVRO_VERSION_RESULT
-    OUTPUT_VARIABLE LIBAVRO_VERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-if(LIBAVRO_VERSION_RESULT)
-    message(FATAL_ERROR "Cannot determine libavro version number")
-endif(LIBAVRO_VERSION_RESULT)
+    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/version.sh libtool
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE LIBAVRO_VERSION_RESULT
+        OUTPUT_VARIABLE LIBAVRO_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(LIBAVRO_VERSION_RESULT)
+        message(FATAL_ERROR "Cannot determine libavro version number")
+    endif(LIBAVRO_VERSION_RESULT)
+else(UNIX)
+    # Hard code for win32 -- need to figure out how to port version.sh for
+    # Windows.
+    set(LIBAVRO_VERSION "22:0:0")
+endif(UNIX)
+
 
 #-----------------------------------------------------------------------
 # Extract major.minor.patch from version number
 
-string(REGEX REPLACE "([0-9]+)\\..*"
-    "\\1"
-    AVRO_MAJOR_VERSION
-    ${AVRO_VERSION}
-)
-string(REGEX REPLACE ".*\\.([0-9]+)\\..*"
-    "\\1"
-    AVRO_MINOR_VERSION
-    ${AVRO_VERSION}
-)
-string(REGEX REPLACE ".*\\..*\\.([0-9]+).*"
-    "\\1"
-    AVRO_PATCH_VERSION
-    ${AVRO_VERSION}
-)
-string(REGEX REPLACE ".*\\..*\\.[0-9]+(.*)"
-    "\\1"
-    AVRO_VERSION_EXTENSION
-    ${AVRO_VERSION}
-)
+if (UNIX)
+    string(REGEX REPLACE "([0-9]+)\\..*"
+        "\\1"
+        AVRO_MAJOR_VERSION
+        ${AVRO_VERSION}
+    )
+    string(REGEX REPLACE ".*\\.([0-9]+)\\..*"
+        "\\1"
+        AVRO_MINOR_VERSION
+        ${AVRO_VERSION}
+    )
+    string(REGEX REPLACE ".*\\..*\\.([0-9]+).*"
+        "\\1"
+        AVRO_PATCH_VERSION
+        ${AVRO_VERSION}
+    )
+    string(REGEX REPLACE ".*\\..*\\.[0-9]+(.*)"
+        "\\1"
+        AVRO_VERSION_EXTENSION
+        ${AVRO_VERSION}
+    )
+endif(UNIX)
 
 #-----------------------------------------------------------------------
 # Source package support
@@ -88,6 +97,17 @@ endif(APPLE)
 if(CMAKE_COMPILER_IS_GNUCC)
     add_definitions(-W -Wall)
 endif(CMAKE_COMPILER_IS_GNUCC)
+
+if (WIN32)
+   # Compile win32 in C++ to allow declarations after statements
+   add_definitions(/TP)
+endif(WIN32)
+
+# Uncomment to allow missing fields in the resolved-writer
+# add_definitions(-DAVRO_ALLOW_MISSING_FIELDS_IN_RESOLVED_WRITER)
+
+# Uncomment to allow non-atomic increment/decrement of reference count
+# add_definitions(-DAVRO_ALLOW_NON_ATOMIC_REFCOUNT)
 
 include_directories(${AvroC_SOURCE_DIR}/src)
 include_directories(${AvroC_SOURCE_DIR}/jansson/src)

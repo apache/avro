@@ -76,7 +76,7 @@ avro_raw_array_ensure_size(avro_raw_array_t *array, size_t desired_count)
 
 	array->data = avro_realloc(array->data, array->allocated_size, new_size);
 	if (array->data == NULL) {
-		avro_set_error("Cannot allocate space in array for %zu elements",
+		avro_set_error("Cannot allocate space in array for %" PRIsz " elements",
 			       desired_count);
 		return ENOMEM;
 	}
@@ -96,7 +96,7 @@ avro_raw_array_ensure_size0(avro_raw_array_t *array, size_t desired_count)
 	if (array->allocated_size > old_allocated_size) {
 		size_t  extra_space = array->allocated_size - old_allocated_size;
 		void  *buf = array->data;
-		memset(buf + old_allocated_size, 0, extra_space);
+		memset((char *)buf + old_allocated_size, 0, extra_space);
 	}
 
 	return 0;
@@ -114,5 +114,5 @@ void *avro_raw_array_append(avro_raw_array_t *array)
 
 	size_t  offset = array->element_size * array->element_count;
 	array->element_count++;
-	return array->data + offset;
+	return (char *)array->data + offset;
 }

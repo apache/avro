@@ -17,7 +17,6 @@
 
 #include "avro.h"
 #include "avro_private.h"
-#include <inttypes.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,9 +44,9 @@ test_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
 		if (osize != *size) {
 			fprintf(stderr,
 				"Error freeing %p:\n"
-				"Size passed to avro_free (%zu) "
+				"Size passed to avro_free (%" PRIsz ") "
 				"doesn't match size passed to "
-				"avro_malloc (%zu)\n",
+				"avro_malloc (%" PRIsz ")\n",
 				ptr, osize, *size);
 			abort();
 			//exit(EXIT_FAILURE);
@@ -57,7 +56,7 @@ test_allocator(void *ud, void *ptr, size_t osize, size_t nsize)
 	} else {
 		size_t  real_size = nsize + sizeof(size_t);
 		size_t  *old_size = ptr? ((size_t *) ptr)-1: NULL;
-		size_t  *size = realloc(old_size, real_size);
+		size_t  *size = (size_t *) realloc(old_size, real_size);
 		*size = nsize;
 		return (size + 1);
 	}

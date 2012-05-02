@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #include <errno.h>
-#include <stdint.h>
+#include <avro/platform.h>
 #include <stdlib.h>
 
 #include <avro/data.h>

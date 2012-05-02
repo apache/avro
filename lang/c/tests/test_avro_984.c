@@ -16,10 +16,8 @@
  */
 
 #include <avro.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 
 /* Test code for JIRA Issue AVRO-984. 
@@ -246,7 +244,7 @@ int write_nested_array_file ( int64_t buf_len, const char *raw_binary_file_name 
   fprintf( stdout, "Create %s\n", raw_binary_file_name );
 
   // Allocate a buffer
-  buf = malloc( buf_len * sizeof( char ) );
+  buf = (char *) malloc( buf_len * sizeof( char ) );
   if ( buf == NULL )
   {
     printf( "There was an error creating the nested buffer %s.\n", raw_binary_file_name);
@@ -271,7 +269,7 @@ int write_nested_array_file ( int64_t buf_len, const char *raw_binary_file_name 
   printf( "Serialize the data to a file\n");
 
   /* Delete the nested array if it exists, and create a new one */
-  unlink(raw_binary_file_name);
+  remove(raw_binary_file_name);
   fid = fopen( raw_binary_file_name, "w+");
   if ( fid == NULL )
   {
@@ -313,7 +311,7 @@ int read_nested_array_file ( int64_t buf_len,
   fprintf( stdout, "Use %s reader\n", use_resolving_reader ? "Resolving":"Matched" );
 
   // Allocate a buffer
-  buf = calloc( buf_len, sizeof( char ) );
+  buf = (char *) calloc( buf_len, sizeof( char ) );
   if ( buf == NULL )
   {
     printf( "There was an error creating the buffer for reading %s.\n", raw_binary_file_name);
@@ -459,7 +457,7 @@ int main(void)
   avro_schema_decref(schema_new);
 
   // Remove the binary file
-  unlink(raw_binary_file_name);
+  remove(raw_binary_file_name);
   
   printf("\n");
   return 0;

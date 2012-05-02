@@ -17,7 +17,7 @@
 
 #ifndef AVRO_DATUM_H
 #define AVRO_DATUM_H
-#include <stdint.h>
+#include <avro/platform.h>
 #include "avro/basics.h"
 #include "avro/data.h"
 #include "avro/legacy.h"
