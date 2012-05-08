@@ -728,7 +728,7 @@ Avro 1.5.0 (10 March 2011)
     AVRO-741. C: Minor API change to handling of bytes data.
     (Douglas Creager via brucem)
 
-    AVRO-246. Java: Add required Schema parameter to GenericData.Fixed
+    AVRO-656. Java: Add required Schema parameter to GenericData.Fixed
     and GenericData.EnumSymbol constructors.  Also fix union dispatch
     to conform to specification, using full schema name for records,
     enums and fixed.
