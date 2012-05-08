@@ -1,3 +1,7 @@
+.project
+.settings
+.classpath
+target
 *.pyc
 .svn
 /build

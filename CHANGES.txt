@@ -25,6 +25,8 @@ Avro 1.7.0 (unreleased)
     AVRO-551. C: Now compiles on Win32, using Visual Studio C++ 2008.
     (Vivek Nadkarni via dcreager)
 
+    AVRO-1075. Add some Eclipse stuff to .gitignore.  (Karthik K via cutting)
+
   BUG FIXES
 
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.
