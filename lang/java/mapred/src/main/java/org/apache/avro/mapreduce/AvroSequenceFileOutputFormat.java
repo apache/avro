@@ -15,12 +15,12 @@
  * permissions and limitations under the License.
  */
 
-package org.apache.avro.hadoop.io;
+package org.apache.avro.mapreduce;
 
 import java.io.IOException;
 
 import org.apache.avro.Schema;
-import org.apache.avro.mapreduce.AvroJob;
+import org.apache.avro.hadoop.io.AvroSequenceFile;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

@@ -38,6 +38,8 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1045. C: Use less stack space in avro_file_writer_create (dcreager)
 
+    AVRO-1070. AvroSequenceFileOutputFormat is in wrong package. (thiru)
+
 Avro 1.6.3 (5 March 2012)
 
   IMPROVEMENTS
