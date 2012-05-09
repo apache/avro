@@ -61,6 +61,8 @@ TestData<double> doubleData[] = {
 TestData<const char*> stringData[] = {
     { "\"\"", etString, "" },
     { "\"a\"", etString, "a" },
+    { "\"\\U000a\"", etString, "\n" },
+    { "\"\\u000a\"", etString, "\n" },
     { "\"\\\"\"", etString, "\"" },
     { "\"\\/\"", etString, "/" },
 };

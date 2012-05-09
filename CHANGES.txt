@@ -40,6 +40,8 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1070. AvroSequenceFileOutputFormat is in wrong package. (thiru)
 
+    AVRO-1080. JsonIO.cc should allow \u escape sequence in string. (Keh-Li Sheng via thiru)
+
 Avro 1.6.3 (5 March 2012)
 
   IMPROVEMENTS

@@ -265,6 +265,7 @@ JsonParser::Token JsonParser::tryString()
             case 't':
                 sv.push_back('\t');
                 continue;
+            case 'u':
             case 'U':
                 {
                     unsigned int n = 0;
