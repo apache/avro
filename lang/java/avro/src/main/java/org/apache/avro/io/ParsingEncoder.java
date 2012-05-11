@@ -49,10 +49,10 @@ public abstract class ParsingEncoder extends Encoder {
 
   /** Push a new collection on to the stack. */
   protected final void push() {
-    if (pos == counts.length) {
+    if (++pos == counts.length) {
       counts = Arrays.copyOf(counts, pos + 10);
     }
-    counts[++pos] = 0;
+    counts[pos] = 0;
   }
   
   protected final void pop() {

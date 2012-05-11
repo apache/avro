@@ -835,6 +835,13 @@ public class TestValidatingIO {
           + "{\"name\":\"car\", \"type\":\"Lisp\"},"
           + "{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
           "U2U1S10U0N"},
+          
+        // Deep recursion
+        { "{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
+          + "{\"name\":\"children\", \"type\":"
+          + "{\"type\": \"array\", \"items\": \"Node\" }}]}",
+          "[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[]]]]]]]]]]]]" },
+              
     };
   }
   

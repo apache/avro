@@ -42,6 +42,8 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1080. JsonIO.cc should allow \u escape sequence in string. (Keh-Li Sheng via thiru)
 
+    AVRO-1066. ArrayIndexOutOfBoundsException in ParsingEncoder when trying to use a json encoder to serialize a deep object graph. (thiru)
+
 Avro 1.6.3 (5 March 2012)
 
   IMPROVEMENTS
