@@ -157,7 +157,19 @@ AVRO_DECL std::auto_ptr<OutputStream> fileOutputStream(const char* filename,
 AVRO_DECL std::auto_ptr<InputStream> fileInputStream(const char* filename,
     size_t bufferSize = 8 * 1024);
 
+/**
+ * Returns a new OutputStream whose contents will be sent to the given
+ * std::ostream. The std::ostream object should outlive the returned
+ * OutputStream.
+ */
+AVRO_DECL std::auto_ptr<OutputStream> ostreamOutputStream(std::ostream& os,
+    size_t bufferSize = 8 * 1024);
 
+/**
+ * Returns a new InputStream whose contents come from the given
+ * std::istream. The std::istream object should outlive the returned
+ * InputStream.
+ */
 AVRO_DECL std::auto_ptr<InputStream> istreamInputStream(std::istream& in,
     size_t bufferSize = 8 * 1024);
 

@@ -51,6 +51,8 @@ Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)
 
+    AVRO-1078. ostreamOutputStream declaration missing in C++ API (thiru)
+
   IMPROVEMENTS
 
     AVRO-1030. Fix a broken link in the documentation.
