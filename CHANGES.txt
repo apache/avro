@@ -27,6 +27,8 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1075. Add some Eclipse stuff to .gitignore.  (Karthik K via cutting)
 
+    AVRO-1085. Fingerprinting for C#. (Eric Hauser via thiru)
+
   BUG FIXES
 
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.

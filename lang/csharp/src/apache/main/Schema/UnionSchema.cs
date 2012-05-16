@@ -73,7 +73,7 @@ namespace Avro
         /// <param name="schemas"></param>
         private UnionSchema(List<Schema> schemas, PropertyMap props) : base(Type.Union, props)
         {
-            if (schemas.Count == 0)
+            if (schemas == null)
                 throw new ArgumentNullException("schemas");
             this.Schemas = schemas;
         }

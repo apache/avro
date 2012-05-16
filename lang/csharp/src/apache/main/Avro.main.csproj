@@ -118,6 +118,7 @@
     <Compile Include="Schema\RecordSchema.cs" />
     <Compile Include="Schema\Schema.cs" />
     <Compile Include="Schema\SchemaName.cs" />
+    <Compile Include="Schema\SchemaNormalization.cs" />
     <Compile Include="Schema\SchemaParseException.cs" />
     <Compile Include="Schema\UnionSchema.cs" />
     <Compile Include="Schema\UnnamedSchema.cs" />

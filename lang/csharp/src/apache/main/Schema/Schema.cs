@@ -215,7 +215,7 @@ namespace Avro
         {
             writer.WriteStartObject();
             writer.WritePropertyName("type");
-            writer.WriteValue(getTypeString(this.Tag));
+            writer.WriteValue(GetTypeString(this.Tag));
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace Avro
         /// </summary>
         /// <param name="type">schema type</param>
         /// <returns>symbol name</returns>
-        protected static string getTypeString(Type type)
+        public static string GetTypeString(Type type)
         {
             if (type != Type.Enumeration) return type.ToString().ToLower();
             return "enum";
