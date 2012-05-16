@@ -25,6 +25,7 @@
 #include <map>
 #include <set>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 
@@ -79,6 +80,7 @@ class CodeGen {
     const std::string headerFile_;
     const std::string includePrefix_;
     const bool noUnion_;
+    const std::string guardString_;
     boost::mt19937 random_;
 
     vector<PendingSetterGetter> pendingGettersAndSetters;
@@ -105,10 +107,12 @@ class CodeGen {
 public:
     CodeGen(std::ostream& os, const std::string& ns,
         const std::string& schemaFile, const std::string& headerFile,
+        const std::string& guardString,
         const std::string& includePrefix, bool noUnion) :
         unionNumber_(0), os_(os), inNamespace_(false), ns_(ns),
         schemaFile_(schemaFile), headerFile_(headerFile),
         includePrefix_(includePrefix), noUnion_(noUnion),
+        guardString_(guardString),
         random_(static_cast<uint32_t>(::time(0))) { }
     void generate(const ValidSchema& schema);
 };
@@ -602,7 +606,7 @@ void CodeGen::generate(const ValidSchema& schema)
 {
     emitCopyright();
 
-    string h = guard();
+    string h = guardString_.empty() ? guard() : guardString_;
 
     os_ << "#ifndef " << h << "\n";
     os_ << "#define " << h << "\n\n\n";
@@ -661,6 +665,28 @@ static const string IN("input");
 static const string INCLUDE_PREFIX("include-prefix");
 static const string NO_UNION_TYPEDEF("no-union-typedef");
 
+static string readGuard(const string& filename)
+{
+    std::ifstream ifs(filename.c_str());
+    string buf;
+    string candidate;
+    while (std::getline(ifs, buf)) {
+        boost::algorithm::trim(buf);
+        if (candidate.empty()) {
+            if (boost::algorithm::starts_with(buf, "#ifndef ")) {
+                candidate = buf.substr(8);
+            }
+        } else if (boost::algorithm::starts_with(buf, "#define ")) {
+            if (candidate == buf.substr(8)) {
+                break;
+            }
+        } else {
+            candidate.erase();
+        }
+    }
+    return candidate;
+}
+
 int main(int argc, char** argv)
 {
     po::options_description desc("Allowed options");
@@ -705,10 +731,11 @@ int main(int argc, char** argv)
         }
 
         if (! outf.empty()) {
+            string g = readGuard(outf);
             ofstream out(outf.c_str());
-            CodeGen(out, ns, inf, outf, incPrefix, noUnion).generate(schema);
+            CodeGen(out, ns, inf, outf, g, incPrefix, noUnion).generate(schema);
         } else {
-            CodeGen(std::cout, ns, inf, outf, incPrefix, noUnion).
+            CodeGen(std::cout, ns, inf, outf, "", incPrefix, noUnion).
                 generate(schema);
         }
         return 0;
