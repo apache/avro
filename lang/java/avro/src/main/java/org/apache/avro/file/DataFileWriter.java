@@ -31,11 +31,11 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.rmi.server.UID;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -192,7 +192,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     try {
       MessageDigest digester = MessageDigest.getInstance("MD5");
       long time = System.currentTimeMillis();
-      digester.update((new UID()+"@"+time).getBytes());
+      digester.update((UUID.randomUUID()+"@"+time).getBytes());
       return digester.digest();
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);

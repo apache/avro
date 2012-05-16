@@ -31,6 +31,9 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1079. C++ Generator, improve include guard generation. (thiru)
 
+    AVRO-1062. Java: Remove use of java.rmi.server.UID so things work
+    on Android.  (Kevin Zhao via cutting)
+
   BUG FIXES
 
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.
