@@ -58,6 +58,10 @@ Avro 1.6.3 (5 March 2012)
 
     AVRO-1078. ostreamOutputStream declaration missing in C++ API (thiru)
 
+    AVRO-1051. Java: Fix specific RPC so that method is found when
+    parameters are a union of a primitive and null.
+    (Hamed Asghari via cutting)
+
   IMPROVEMENTS
 
     AVRO-1030. Fix a broken link in the documentation.

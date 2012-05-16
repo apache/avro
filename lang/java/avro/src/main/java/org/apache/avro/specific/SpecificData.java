@@ -103,7 +103,7 @@ public class SpecificData extends GenericData {
     case UNION:
       List<Schema> types = schema.getTypes();     // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
-        return getClass(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
+        return getWrapper(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return Object.class;
     case STRING:
       if (STRING_TYPE_STRING.equals(schema.getProp(STRING_PROP)))
@@ -118,6 +118,17 @@ public class SpecificData extends GenericData {
     case NULL:    return Void.TYPE;
     default: throw new AvroRuntimeException("Unknown type: "+schema);
     }
+  }
+
+  private Class getWrapper(Schema schema) {
+    switch (schema.getType()) {
+    case INT:     return Integer.class;
+    case LONG:    return Long.class;
+    case FLOAT:   return Float.class;
+    case DOUBLE:  return Double.class;
+    case BOOLEAN: return Boolean.class;
+    }
+    return getClass(schema);
   }
 
   /** Returns the Java class name indicated by a schema's name and namespace. */
