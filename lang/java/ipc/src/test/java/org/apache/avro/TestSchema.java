@@ -191,6 +191,10 @@ public class TestSchema {
       +"[{\"name\":\"f\", \"type\":\"long\", \"foo\":\"bar\"}]}";
     Schema schema = Schema.parse(recordJson);
 
+    GenericData.Record record = new GenericData.Record(schema);
+    record.put("f", 11L);
+    check(recordJson, "{\"f\":11}", record, false);
+
     // test field props
     assertEquals("bar", schema.getField("f").getProp("foo"));
     assertEquals("bar", Schema.parse(schema.toString())
@@ -198,9 +202,6 @@ public class TestSchema {
     schema.getField("f").addProp("baz", "boo");
     assertEquals("boo", schema.getField("f").getProp("baz"));
 
-    GenericData.Record record = new GenericData.Record(schema);
-    record.put("f", 11L);
-    check(recordJson, "{\"f\":11}", record, false);
     checkParseError("{\"type\":\"record\"}");
     checkParseError("{\"type\":\"record\",\"name\":\"X\"}");
     checkParseError("{\"type\":\"record\",\"name\":\"X\",\"fields\":\"Y\"}");

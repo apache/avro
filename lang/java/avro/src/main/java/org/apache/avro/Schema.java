@@ -451,6 +451,7 @@ public abstract class Schema {
       return (name.equals(that.name)) &&
         (schema.equals(that.schema)) &&
         defaultValueEquals(that.defaultValue) &&
+        (order == that.order) &&
         props.equals(that.props);
     }
     public int hashCode() { return name.hashCode() + schema.computeHash(); }

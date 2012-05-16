@@ -103,7 +103,7 @@ public class GenericData {
       if (o == this) return true;                 // identical object
       if (!(o instanceof Record)) return false;   // not a record
       Record that = (Record)o;
-      if (!schema.getFullName().equals(that.schema.getFullName()))
+      if (!this.schema.equals(that.schema))
         return false;                             // not the same schema
       return GenericData.get().compare(this, that, schema, true) == 0;
     }

@@ -140,6 +140,30 @@ public class TestGenericData {
     return schema;
   }
 
+  @Test public void testEquals2() {
+   Schema schema1 = Schema.createRecord("r", null, "x", false);
+   List<Field> fields1 = new ArrayList<Field>();
+   fields1.add(new Field("a", Schema.create(Schema.Type.STRING), null, null,
+                         Field.Order.IGNORE));
+   schema1.setFields(fields1);
+
+   // only differs in field order
+   Schema schema2 = Schema.createRecord("r", null, "x", false);
+   List<Field> fields2 = new ArrayList<Field>();
+   fields2.add(new Field("a", Schema.create(Schema.Type.STRING), null, null,
+                         Field.Order.ASCENDING));
+   schema2.setFields(fields2);
+
+   GenericRecord record1 = new GenericData.Record(schema1);
+   record1.put("a", "1");
+
+   GenericRecord record2 = new GenericData.Record(schema2);
+   record2.put("a", "2");
+
+   assertFalse(record2.equals(record1));
+   assertFalse(record1.equals(record2));
+  }
+
   @Test
   public void testRecordGetFieldDoesntExist() throws Exception {
     List<Field> fields = new ArrayList<Field>();

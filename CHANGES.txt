@@ -62,6 +62,9 @@ Avro 1.6.3 (5 March 2012)
     parameters are a union of a primitive and null.
     (Hamed Asghari via cutting)
 
+    AVRO-1049. Java: Fix GenericData.Record#equals() to correctly
+    compare schemas and fix Schema#equals() to consider order. (cutting)
+
   IMPROVEMENTS
 
     AVRO-1030. Fix a broken link in the documentation.
