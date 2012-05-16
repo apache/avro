@@ -49,6 +49,8 @@ Avro 1.7.0 (unreleased)
     AVRO-1065. NodeRecord::isValid() treats records with no fields as invalid. (thiru)
 Avro 1.6.3 (5 March 2012)
 
+    AVRO-1077. Missing 'inline' for union set function. (thiru)
+
   IMPROVEMENTS
 
     AVRO-1030. Fix a broken link in the documentation.
