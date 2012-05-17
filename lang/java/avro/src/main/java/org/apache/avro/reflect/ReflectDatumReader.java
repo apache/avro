@@ -121,11 +121,17 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   protected Object createString(String value) { return value; }
 
   @Override
-  protected Object readBytes(Object old, Decoder in) throws IOException {
+  protected Object readBytes(Object old, Schema s, Decoder in)
+    throws IOException {
     ByteBuffer bytes = in.readBytes(null);
-    byte[] result = new byte[bytes.remaining()];
-    bytes.get(result);
-    return result;
+    Class c = ReflectData.getClassProp(s, ReflectData.CLASS_PROP);
+    if (c != null && c.isArray()) {
+      byte[] result = new byte[bytes.remaining()];
+      bytes.get(result);
+      return result;
+    } else {
+      return bytes;
+    }
   }
 
   @Override

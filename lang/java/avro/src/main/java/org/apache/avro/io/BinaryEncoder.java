@@ -57,10 +57,13 @@ public abstract class BinaryEncoder extends Encoder {
 
   @Override
   public void writeBytes(ByteBuffer bytes) throws IOException {
-    int pos = bytes.position();
-    int start = bytes.arrayOffset() + pos;
-    int len = bytes.limit() - pos;
-    writeBytes(bytes.array(), start, len);
+    int len = bytes.limit() - bytes.position();
+    if (0 == len) {
+      writeZero();
+    } else {
+      writeInt(len);
+      writeFixed(bytes);
+    }
   }
   
   @Override

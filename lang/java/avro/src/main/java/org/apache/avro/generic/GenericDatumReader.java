@@ -148,7 +148,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case UNION:   return read(old, expected.getTypes().get(in.readIndex()), in);
     case FIXED:   return readFixed(old, expected, in);
     case STRING:  return readString(old, expected, in);
-    case BYTES:   return readBytes(old, in);
+    case BYTES:   return readBytes(old, expected, in);
     case INT:     return readInt(old, expected, in);
     case LONG:    return in.readLong();
     case FLOAT:   return in.readFloat();
@@ -340,6 +340,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * to use a different string representation.  By default, this calls {@link
    * Utf8#Utf8(String)}.*/
   protected Object createString(String value) { return new Utf8(value); }
+
+  /** Called to read byte arrays.  Subclasses may override to use a different
+   * byte array representation.  By default, this calls {@link
+   * Decoder#readBytes(ByteBuffer)}.*/
+  protected Object readBytes(Object old, Schema s, Decoder in)
+    throws IOException {
+    return readBytes(old, in);
+  }
 
   /** Called to read byte arrays.  Subclasses may override to use a different
    * byte array representation.  By default, this calls {@link

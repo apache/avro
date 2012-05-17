@@ -19,6 +19,9 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 
 import org.apache.avro.AvroRuntimeException;
 
@@ -151,6 +154,15 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     System.arraycopy(bytes, start, buf, pos, len);
     pos += len;
   }
+  
+  @Override
+  public void writeFixed(ByteBuffer bytes) throws IOException {
+    if (!bytes.hasArray() && bytes.remaining() > bulkLimit) {
+      sink.innerWrite(bytes);                     // bypass the buffer
+    } else {
+      super.writeFixed(bytes);
+    }
+  }
 
   @Override
   protected void writeZero() throws IOException {
@@ -182,15 +194,20 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     protected ByteSink() {}
     /** Write data from bytes, starting at off, for len bytes **/
     protected abstract void innerWrite(byte[] bytes, int off, int len) throws IOException;
+    
+    protected abstract void innerWrite(ByteBuffer buff) throws IOException;
+    
     /** Flush the underlying output, if supported **/
     protected abstract void innerFlush() throws IOException;
   }
   
   static class OutputStreamSink extends ByteSink {
     private final OutputStream out;
+    private final WritableByteChannel channel;
     private OutputStreamSink(OutputStream out) {
       super();
       this.out = out;
+      channel = Channels.newChannel(out);
     }
     @Override
     protected void innerWrite(byte[] bytes, int off, int len)
@@ -200,6 +217,10 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     @Override
     protected void innerFlush() throws IOException {
       out.flush();
+    }
+    @Override
+    protected void innerWrite(ByteBuffer buff) throws IOException {
+      channel.write(buff);
     }
   }
 }

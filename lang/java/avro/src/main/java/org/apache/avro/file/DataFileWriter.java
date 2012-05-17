@@ -279,8 +279,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * Appending non-conforming data may result in an unreadable file. */
   public void appendEncoded(ByteBuffer datum) throws IOException {
     assertOpen();
-    int start = datum.position();
-    bufOut.writeFixed(datum.array(), start, datum.limit()-start);
+    bufOut.writeFixed(datum);
     blockCount++;
     writeIfBlockFull();
   }

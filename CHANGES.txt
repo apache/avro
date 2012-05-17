@@ -58,6 +58,10 @@ Avro 1.7.0 (unreleased)
     AVRO-1065. NodeRecord::isValid() treats records with no fields as
     invalid. (thiru)
 
+    AVRO-1081. Java: Fix to be able to write ByteBuffers that have no
+    backing array.  Also fix reflection to correctly read ByteBuffer
+    fields.  (cutting)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)

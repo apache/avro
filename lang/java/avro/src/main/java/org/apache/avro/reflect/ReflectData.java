@@ -262,8 +262,11 @@ public class ReflectData extends SpecificData {
         return super.createSchema(type, names);
       if (c.isArray()) {                                     // array
         Class component = c.getComponentType();
-        if (component == Byte.TYPE)                          // byte array
-          return Schema.create(Schema.Type.BYTES);
+        if (component == Byte.TYPE) {                        // byte array
+          Schema result = Schema.create(Schema.Type.BYTES);
+          result.addProp(CLASS_PROP, c.getName());
+          return result;
+        }
         Schema result = Schema.createArray(createSchema(component, names));
         setElement(result, component);
         return result;

@@ -101,7 +101,8 @@ public class TestReflect {
   }
 
   @Test public void testBytes() {
-    check(new byte[0], "\"bytes\"");
+    check(ByteBuffer.allocate(0), "\"bytes\"");
+    check(new byte[0], "{\"type\":\"bytes\",\"java-class\":\"[B\"}");
   }
 
   @Test public void testUnionWithCollection() {
