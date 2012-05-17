@@ -20,7 +20,8 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1060. Java: Upgrade Netty to version 3.4.0.  (Karthik K via cutting)
 
-    AVRO-1068. Avro Java does not build on recent Eclipse versions with m2eclipse (thiru)
+    AVRO-1068. Avro Java does not build on recent Eclipse versions
+    with m2eclipse (thiru)
 
     AVRO-551. C: Now compiles on Win32, using Visual Studio C++ 2008.
     (Vivek Nadkarni via dcreager)
@@ -47,11 +48,16 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1070. AvroSequenceFileOutputFormat is in wrong package. (thiru)
 
-    AVRO-1080. JsonIO.cc should allow \u escape sequence in string. (Keh-Li Sheng via thiru)
+    AVRO-1080. JsonIO.cc should allow \u escape sequence in
+    string. (Keh-Li Sheng via thiru)
 
-    AVRO-1066. ArrayIndexOutOfBoundsException in ParsingEncoder when trying to use a json encoder to serialize a deep object graph. (thiru)
+    AVRO-1066. ArrayIndexOutOfBoundsException in ParsingEncoder when
+    trying to use a json encoder to serialize a deep object
+    graph. (thiru)
 
-    AVRO-1065. NodeRecord::isValid() treats records with no fields as invalid. (thiru)
+    AVRO-1065. NodeRecord::isValid() treats records with no fields as
+    invalid. (thiru)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)
