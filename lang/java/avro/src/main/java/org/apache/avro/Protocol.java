@@ -322,7 +322,7 @@ public class Protocol {
       && this.namespace.equals(that.namespace)
       && this.types.equals(that.types)
       && this.messages.equals(that.messages)
-      && this.props.equals(this.props);
+      && this.props.equals(that.props);
   }
   
   public int hashCode() {
