@@ -85,6 +85,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   @Override
   public String toString() {
+    if (this.length == 0) return "";
     if (this.string == null) {
       this.string = new String(bytes, 0, length, UTF8);
     }

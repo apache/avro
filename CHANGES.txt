@@ -38,6 +38,9 @@ Avro 1.7.0 (unreleased)
     AVRO-1090. Java: Permit appending to files besides java.io.File,
     e.g., files in HDFS. (cutting)
 
+    AVRO-1074. Java: Optimize Utf8#length() and #toString() to not
+    allocate a String when the length is zero.  (cutting)
+
   BUG FIXES
 
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.
