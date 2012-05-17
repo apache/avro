@@ -112,6 +112,13 @@ public class TestReflect {
     assertEquals(1, data.resolveUnion(s, new ArrayList<Float>()));
   }
 
+  @Test public void testUnionWithMap() {
+    Schema s = Schema.parse
+      ("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
+    GenericData data = ReflectData.get();
+    assertEquals(1, data.resolveUnion(s, new HashMap<String,Float>()));
+  }
+
   @Test public void testUnionWithBytes() {
     Schema s = Schema.parse ("[\"null\", \"bytes\"]");
     GenericData data = ReflectData.get();

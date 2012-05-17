@@ -68,6 +68,9 @@ Avro 1.7.0 (unreleased)
     AVRO-1046. Java: Fix ReflectDatumReader to be able to read generic
     or specific arrays. (cutting)
 
+    AVRO-1056. Java: Fix reflect to correctly handle unions containing
+    maps.  (Kevin Zhao via cutting)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)
