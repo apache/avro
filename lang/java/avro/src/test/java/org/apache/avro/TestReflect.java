@@ -145,7 +145,7 @@ public class TestReflect {
 
   @Test public void testArray() throws Exception {
     check(R1.class.getDeclaredField("arrayField").getGenericType(),
-          "{\"type\":\"array\",\"items\":\"string\"}");
+          "{\"type\":\"array\",\"items\":\"string\",\"java-class\":\"[Ljava.lang.String;\"}");
   }
   @Test public void testList() throws Exception {
     check(R1.class.getDeclaredField("listField").getGenericType(),

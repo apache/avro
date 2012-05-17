@@ -268,6 +268,7 @@ public class ReflectData extends SpecificData {
           return result;
         }
         Schema result = Schema.createArray(createSchema(component, names));
+        result.addProp(CLASS_PROP, c.getName());
         setElement(result, component);
         return result;
       }

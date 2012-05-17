@@ -1,0 +1,10 @@
+{
+    "type": "record",
+    "name": "FooBarSpecificRecord",
+    "namespace": "org.apache.avro",
+    "fields": [
+        {"name": "id", "type": "int"},
+        {"name": "relatedids", "type": 
+            {"type": "array", "items": "int"}}
+    ]
+}

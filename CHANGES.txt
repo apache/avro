@@ -65,6 +65,9 @@ Avro 1.7.0 (unreleased)
     backing array.  Also fix reflection to correctly read ByteBuffer
     fields.  (cutting)
 
+    AVRO-1046. Java: Fix ReflectDatumReader to be able to read generic
+    or specific arrays. (cutting)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)

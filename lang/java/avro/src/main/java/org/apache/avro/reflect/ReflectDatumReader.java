@@ -59,9 +59,16 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   @Override
   @SuppressWarnings(value="unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    ReflectData data = ReflectData.get();
-    Class collectionClass = ReflectData.getClassProp(schema, ReflectData.CLASS_PROP);
-    if (collectionClass != null) {
+    Class collectionClass =
+      ReflectData.getClassProp(schema, ReflectData.CLASS_PROP);
+    Class elementClass =
+      ReflectData.getClassProp(schema, ReflectData.ELEMENT_PROP);
+
+    if (collectionClass == null && elementClass == null)
+      return super.newArray(old, size, schema);   // use specific/generic
+
+    ReflectData data = (ReflectData)getData();
+    if (collectionClass != null && !collectionClass.isArray()) {
       if (old instanceof Collection) {
         ((Collection)old).clear();
         return old;
@@ -70,7 +77,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         return new ArrayList();
       return data.newInstance(collectionClass, schema);
     }
-    Class elementClass = ReflectData.getClassProp(schema, ReflectData.ELEMENT_PROP);
+
     if (elementClass == null)
       elementClass = data.getClass(schema.getElementType());
     return Array.newInstance(elementClass, size);
