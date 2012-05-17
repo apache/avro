@@ -21,14 +21,11 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilterOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -149,14 +146,19 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Open a writer appending to an existing file. */
   public DataFileWriter<D> appendTo(File file) throws IOException {
+    return appendTo(new SeekableFileInput(file),
+                    new FileOutputStream(file, true));
+  }
+
+  /** Open a writer appending to an existing file.
+   * @param in reading the existing file.
+   * @param out positioned at the end of the existing file.
+   */
+  public DataFileWriter<D> appendTo(SeekableInput in, OutputStream out)
+    throws IOException {
     assertNotOpen();
-    if (!file.exists())
-      throw new FileNotFoundException("Not found: "+file);
-    RandomAccessFile raf = new RandomAccessFile(file, "r");
-    FileDescriptor fd = raf.getFD();
     DataFileReader<D> reader =
-      new DataFileReader<D>(new SeekableFileInput(fd),
-                            new GenericDatumReader<D>());
+      new DataFileReader<D>(in, new GenericDatumReader<D>());
     this.schema = reader.getSchema();
     this.sync = reader.getHeader().sync;
     this.meta.putAll(reader.getHeader().meta);
@@ -167,9 +169,9 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     } else {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
-    raf.close();
+    reader.close();
 
-    init(new FileOutputStream(file, true));
+    init(out);
 
     return this;
   }
