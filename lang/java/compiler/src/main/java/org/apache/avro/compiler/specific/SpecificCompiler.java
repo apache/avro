@@ -115,7 +115,9 @@ public class SpecificCompiler {
     initializeVelocity();
   }
 
-  /** Set the CLASSPATH resource directory where templates reside. */
+  /** Set the resource directory where templates reside. First, the compiler checks
+   * the system path for the specified file, if not it is assumed that it is
+   * present on the classpath.*/
   public void setTemplateDir(String templateDir) {
     this.templateDir = templateDir;
   }
@@ -125,12 +127,16 @@ public class SpecificCompiler {
   private void initializeVelocity() {
     this.velocityEngine = new VelocityEngine();
 
-    // These two properties tell Velocity to use its own classpath-based
-    // loader
-    velocityEngine.addProperty("resource.loader", "class");
+    // These  properties tell Velocity to use its own classpath-based
+    // loader, then drop down to check the root and the current folder
+    velocityEngine.addProperty("resource.loader", "class, file");
     velocityEngine.addProperty("class.resource.loader.class",
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+    velocityEngine.addProperty("file.resource.loader.class", 
+        "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
+    velocityEngine.addProperty("file.resource.loader.path", "/, .");
     velocityEngine.setProperty("runtime.references.strict", true);
+
     // try to use Slf4jLogChute, but if we can't use the null one.
     if (null == logChuteName) {
       // multiple threads can get here concurrently, but that's ok.
