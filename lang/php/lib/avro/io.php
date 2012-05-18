@@ -146,9 +146,9 @@ class AvroIO
 class AvroStringIO extends AvroIO
 {
   /**
-   * @var array  array of individual bytes
+   * @var string
    */
-  private $buffer;
+  private $string_buffer;
   /**
    * @var int  current position in string
    */
@@ -167,11 +167,11 @@ class AvroStringIO extends AvroIO
   public function __construct($str = '')
   {
     $this->is_closed = false;
-    $this->buffer = array();
+    $this->string_buffer = '';
     $this->current_index = 0;
 
     if (is_string($str))
-      $this->buffer = str_split($str);
+      $this->string_buffer .= $str;
     else
       throw new AvroIOException(
         sprintf('constructor argument must be a string: %s', gettype($str)));
@@ -201,14 +201,14 @@ class AvroStringIO extends AvroIO
   public function read($len)
   {
     $this->check_closed();
-    $read=array();
+    $read='';
     for($i=$this->current_index; $i<($this->current_index+$len); $i++) 
-      $read []=$this->buffer[$i];
-    if (count($read) < $len)
+      $read .= $this->string_buffer[$i];
+    if (strlen($read) < $len)
       $this->current_index = $this->length();
     else
       $this->current_index += $len;
-    return join($read);
+    return $read;
   }
 
   /**
@@ -291,14 +291,13 @@ class AvroStringIO extends AvroIO
    * @returns integer count of bytes written.
    */
   private function append_str($str)
-  {
-    $this->check_closed();
-    $ary = str_split($str);
-    $len = count($ary);
-    $this->buffer = array_merge($this->buffer, $ary);
-    $this->current_index += $len;
-    return $len;
-  }
+  { 
+    $this->check_closed(); 
+    $this->string_buffer .= $str; 
+    $len = strlen($str); 
+    $this->current_index += $len; 
+    return $len; 
+  } 
 
   /**
    * Truncates the truncate buffer to 0 bytes and returns the pointer
@@ -308,7 +307,7 @@ class AvroStringIO extends AvroIO
   public function truncate()
   {
     $this->check_closed();
-    $this->buffer = array();
+    $this->string_buffer = '';
     $this->current_index = 0;
     return true;
   }
@@ -318,12 +317,12 @@ class AvroStringIO extends AvroIO
    * @internal Could probably memoize length for performance, but
    *           no need do this yet.
    */
-  public function length() { return count($this->buffer); }
+  public function length() { return strlen($this->string_buffer); }
 
   /**
    * @returns string
    */
-  public function __toString() { return join($this->buffer); }
+  public function __toString() { return $this->string_buffer; }
 
 
   /**
