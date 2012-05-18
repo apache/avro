@@ -43,6 +43,9 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1050. PHP: Optimize memory use by string append. (A B via cutting)
 
+    AVRO-1028. Python: Fix HTTP server to handle connection resets and
+    redirects.  (Bo Shi via cutting)
+
   BUG FIXES
 
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.

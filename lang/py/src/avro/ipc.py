@@ -16,7 +16,8 @@
 """
 Support for inter-process calls.
 """
-import httplib
+import uuid
+from urllib3.connectionpool import HTTPConnectionPool
 try:
   from cStringIO import StringIO
 except ImportError:
@@ -439,45 +440,57 @@ class HTTPTransceiver(object):
   A simple HTTP-based transceiver implementation.
   Useful for clients but not for servers
   """
-  def __init__(self, host, port, req_resource='/'):
+  def __init__(self, host, port, req_resource='/', remote_name=None,
+               timeout=None, redirect=True, max_pool_size=1, block=1):
+    """
+    The following parameters set behavior for the underlying connection pool
+    for this transceiver.
+
+    :param redirect:
+      Automatically handle redirects (status codes 301, 302, 303, 307), each
+      redirect counts as a retry.
+
+    :param timeout:
+      Socket timeout for each individual connection, can be a float. None
+      disables timeout.
+
+    :param maxsize:
+      Number of connections to save that can be reused. More than 1 is useful
+      in multithreaded situations. If ``block`` is set to false, more
+      connections will be created but they will not be saved once they've been
+      used.
+
+    :param block:
+      If set to True, no more than ``maxsize`` connections will be used at a
+      time. When no free connections are available, the call will block until a
+      connection has been released. This is a useful side effect for particular
+      multithreaded situations where one does not want to use more than maxsize
+      connections per host to prevent flooding.
+    """
     self.req_resource = req_resource
-    self.conn = httplib.HTTPConnection(host, port)
-    self.conn.connect()
+    self._remote_name = remote_name or uuid.uuid4()
+    self._pool = HTTPConnectionPool(host, port=port, timeout=timeout,
+        maxsize=max_pool_size, block=block)
+    self._redirect = redirect
 
   # read-only properties
-  sock = property(lambda self: self.conn.sock)
-  remote_name = property(lambda self: self.sock.getsockname())
-
-  # read/write properties
-  def set_conn(self, new_conn):
-    self._conn = new_conn
-  conn = property(lambda self: self._conn, set_conn)
-  req_resource = '/'
+  pool = property(lambda self: self._pool)
+  remote_name = property(lambda self: self._remote_name)
+  redirect = property(lambda self: self._redirect)
 
   def transceive(self, request):
-    self.write_framed_message(request)
-    result = self.read_framed_message()
-    return result
-
-  def read_framed_message(self):
-    response = self.conn.getresponse()
-    response_reader = FramedReader(response)
-    framed_message = response_reader.read_framed_message()
-    response.read()    # ensure we're ready for subsequent requests
-    return framed_message
-
-  def write_framed_message(self, message):
     req_method = 'POST'
     req_headers = {'Content-Type': 'avro/binary'}
 
     req_body_buffer = FramedWriter(StringIO())
-    req_body_buffer.write_framed_message(message)
-    req_body = req_body_buffer.writer.getvalue()
+    req_body_buffer.write_framed_message(request)
+    response = self.pool.urlopen(req_method, self.req_resource,
+                                 body=req_body_buffer.writer.getvalue(),
+                                 headers=req_headers,
+                                 redirect=self.redirect)
 
-    self.conn.request(req_method, self.req_resource, req_body, req_headers)
+    return FramedReader(StringIO(response.data)).read_framed_message()
 
-  def close(self):
-    self.conn.close()
 
 #
 # Server Implementations (none yet)
