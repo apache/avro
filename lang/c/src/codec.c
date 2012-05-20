@@ -110,12 +110,14 @@ codec_deflate(avro_codec_t codec)
 
 	if (deflateInit2(ds, Z_BEST_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
 		avro_freet(struct codec_data_deflate, codec->codec_data);
+		codec->codec_data = NULL;
 		avro_set_error("Cannot initialize zlib deflate");
 		return 1;
 	}
 
 	if (inflateInit2(is, -15) != Z_OK) {
 		avro_freet(struct codec_data_deflate, codec->codec_data);
+		codec->codec_data = NULL;
 		avro_set_error("Cannot initialize zlib inflate");
 		return 1;
 	}

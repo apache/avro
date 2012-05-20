@@ -95,6 +95,9 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1083. C: Fix multiple memory leaks.  (Pugachev Maxim via dcreager)
 
+    AVRO-1086. C: Fix possible crash bug in default codec initialization.
+    (Pugachev Maxim via dcreager)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)
