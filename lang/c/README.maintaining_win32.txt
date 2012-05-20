@@ -152,3 +152,15 @@ Instructions for Maintenance
     changes in st.c and st.h -- which were converted to new-style
     function declarations.
 
+19. Structures cannot be initialized using the .element notation for
+    Win32. For example if we have a struct test_t:
+        typedef struct
+        {
+           int a;
+           int b;
+        } test_t;
+    Then we can initialize the struct using the syntax:
+        test_t t1 = { 0, 0 };
+    But we cannot use the syntax:
+        test_t t2 = { .a = 0, . b = 0 };
+    because Win32 does not support it.

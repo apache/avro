@@ -55,3 +55,9 @@ like the following:
 to the cmake command given above.  The set of architectures that you can
 choose from differs depending on which version of OS X you're running;
 common possibilities include "i386", "x86_64", "ppc", and "ppc64".
+
+On Unix, you can request thread-safe versions of the Avro library's
+global functions by defining the THREADSAFE cmake variable.  Just add
+the following to your cmake invokation:
+
+        -DTHREADSAFE=true

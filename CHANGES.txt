@@ -104,6 +104,9 @@ Avro 1.7.0 (unreleased)
     AVRO-1088. C: Performance tests for arrays and schema resolution.
     (Vivek Nadkarni via dcreager)
 
+    AVRO-1092. C: Error management code can be defined in a thread-safe
+    manner.  (Pugachev Maxim and Vivek Nadkarni via dcreager)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)

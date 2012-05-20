@@ -106,6 +106,20 @@ endif(WIN32)
 # Uncomment to allow non-atomic increment/decrement of reference count
 # add_definitions(-DAVRO_ALLOW_NON_ATOMIC_REFCOUNT)
 
+# Thread support (only for *nix with pthreads)
+set(THREADS_LIBRARIES)
+if(UNIX AND THREADSAFE AND CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_THREAD_PREFER_PTHREAD)
+    find_package(Threads)
+
+    if(NOT CMAKE_USE_PTHREADS_INIT)
+        message(FATAL_ERROR "pthreads not found")
+    endif(NOT CMAKE_USE_PTHREADS_INIT)
+
+    add_definitions(-DTHREADSAFE -D_REENTRANT)
+    set(THREADS_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
+endif(UNIX AND THREADSAFE AND CMAKE_COMPILER_IS_GNUCC)
+
 include_directories(${AvroC_SOURCE_DIR}/src)
 include_directories(${AvroC_SOURCE_DIR}/jansson/src)
 

@@ -102,13 +102,13 @@ source_group(Jansson FILES ${JANSSON_SRC})
 string(REPLACE ":" "." LIBAVRO_DOT_VERSION ${LIBAVRO_VERSION})
 
 add_library(avro-static STATIC ${AVRO_SRC} ${JANSSON_SRC})
-target_link_libraries(avro-static ${CODEC_LIBRARIES})
+target_link_libraries(avro-static ${CODEC_LIBRARIES} ${THREADS_LIBRARIES})
 set_target_properties(avro-static PROPERTIES OUTPUT_NAME avro)
 
 if (NOT WIN32)
 # TODO: Create Windows DLLs. See http://www.cmake.org/Wiki/BuildingWinDLL
 add_library(avro-shared SHARED ${AVRO_SRC} ${JANSSON_SRC})
-target_link_libraries(avro-shared ${CODEC_LIBRARIES})
+target_link_libraries(avro-shared ${CODEC_LIBRARIES} ${THREADS_LIBRARIES})
 set_target_properties(avro-shared PROPERTIES
         OUTPUT_NAME avro
         SOVERSION ${LIBAVRO_DOT_VERSION})
