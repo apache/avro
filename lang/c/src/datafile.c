@@ -163,7 +163,7 @@ file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w,
 		return ENOMEM;
 	}
 
-	w->writers_schema = schema;
+	w->writers_schema = avro_schema_incref(schema);
 	return write_header(w);
 }
 
@@ -454,7 +454,7 @@ avro_schema_t
 avro_file_reader_get_writer_schema(avro_file_reader_t r)
 {
 	check_param(NULL, r, "reader");
-	return r->writers_schema;
+	return avro_schema_incref(r->writers_schema);
 }
 
 static int file_write_block(avro_file_writer_t w)
@@ -549,6 +549,7 @@ int avro_file_writer_close(avro_file_writer_t w)
 {
 	int rval;
 	check(rval, avro_file_writer_flush(w));
+	avro_schema_decref(w->writers_schema);
 	avro_writer_free(w->datum_writer);
 	avro_writer_free(w->writer);
 	avro_free(w->datum_buffer, w->datum_buffer_size);
