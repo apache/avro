@@ -53,7 +53,7 @@ JsonParser::Token JsonParser::doAdvance()
             stateStack.pop();
             return tkArrayEnd;
         } else {
-            unexpected(ch);
+            throw unexpected(ch);
         }
     } else if (ch == '}') {
         if (curState == stObject0 || stObjectN) {
@@ -61,11 +61,11 @@ JsonParser::Token JsonParser::doAdvance()
             stateStack.pop();
             return tkObjectEnd;
         } else {
-            unexpected(ch);
+            throw unexpected(ch);
         }
     } else if (ch == ',') {
         if (curState != stObjectN && curState != stArrayN) {
-            unexpected(ch);
+            throw unexpected(ch);
         }
         if (curState == stObjectN) {
             curState = stObject0;
@@ -73,7 +73,7 @@ JsonParser::Token JsonParser::doAdvance()
         ch = next();
     } else if (ch == ':') {
         if (curState != stKey) {
-            unexpected(ch);
+            throw unexpected(ch);
         }
         curState = stObjectN;
         ch = next();
@@ -81,7 +81,7 @@ JsonParser::Token JsonParser::doAdvance()
 
     if (curState == stObject0) {
         if (ch != '"') {
-            unexpected(ch);
+            throw unexpected(ch);
         }
         curState = stKey;
     } else if (curState == stArray0) {
@@ -111,7 +111,7 @@ JsonParser::Token JsonParser::doAdvance()
         if (isdigit(ch) || ch == '-') {
             return tryNumber(ch);
         } else {
-            unexpected(ch);
+            throw unexpected(ch);
         }
     }
 }
@@ -227,7 +227,7 @@ JsonParser::Token JsonParser::tryNumber(char ch)
             }
         } else {
             if (hasNext) {
-                unexpected(ch);
+                throw unexpected(ch);
             } else {
                 throw Exception("Unexpected EOF");
             }
@@ -281,14 +281,14 @@ JsonParser::Token JsonParser::tryString()
                         } else if (c >= 'A' && c <= 'F') {
                             n += c - 'A' + 10;
                         } else {
-                            unexpected(c);
+                            throw unexpected(c);
                         }
                     }
                     sv.push_back(n);
                 }
                 break;
             default:
-                unexpected(ch);
+                throw unexpected(ch);
             }
         } else {
             sv.push_back(ch);
@@ -296,11 +296,11 @@ JsonParser::Token JsonParser::tryString()
     }
 }
 
-void JsonParser::unexpected(unsigned char c)
+Exception JsonParser::unexpected(unsigned char c)
 {
     std::ostringstream oss;
     oss << "Unexpected character in json " << toHex(c / 16) << toHex(c % 16);
-    throw Exception(oss.str());
+    return Exception(oss.str());
 }
 
 JsonParser::Token JsonParser::tryLiteral(const char exp[], size_t n, Token tk)
@@ -309,13 +309,13 @@ JsonParser::Token JsonParser::tryLiteral(const char exp[], size_t n, Token tk)
     in_.readBytes(reinterpret_cast<uint8_t*>(c), n);
     for (size_t i = 0; i < n; ++i) {
         if (c[i] != exp[i]) {
-            unexpected(c[i]);
+            throw unexpected(c[i]);
         }
     }
     if (in_.hasMore()) {
         nextChar = in_.read();
         if (isdigit(nextChar) || isalpha(nextChar)) {
-            unexpected(nextChar);
+            throw unexpected(nextChar);
         }
         hasNext = true;
     }

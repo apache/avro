@@ -75,7 +75,7 @@ private:
     Token tryLiteral(const char exp[], size_t n, Token tk);
     Token tryNumber(char ch);
     Token tryString();
-    void unexpected(unsigned char ch);
+    Exception unexpected(unsigned char ch);
     char next();
 
 public:
