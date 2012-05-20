@@ -618,6 +618,7 @@ static avro_datum_t avro_fixed_private(avro_schema_t schema,
 	struct avro_fixed_datum_t *datum =
 	    (struct avro_fixed_datum_t *) avro_new(struct avro_fixed_datum_t);
 	if (!datum) {
+		avro_free((char *) bytes, size);
 		avro_set_error("Cannot create new fixed datum");
 		return NULL;
 	}

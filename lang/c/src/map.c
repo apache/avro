@@ -113,6 +113,7 @@ int avro_raw_map_get_or_create(avro_raw_map_t *map, const char *key,
 		st_insert((st_table *) map->indices_by_key,
 			  (st_data_t) raw_entry->key, (st_data_t) i);
 		if (!raw_entry) {
+			avro_str_free((char*)raw_entry->key);
 			return -ENOMEM;
 		}
 		el = ((char *) raw_entry) + sizeof(avro_raw_map_entry_t);

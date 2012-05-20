@@ -197,15 +197,20 @@ int avro_file_writer_create_with_codec(const char *path,
 	w->codec = (avro_codec_t) avro_new(struct avro_codec_t_);
 	if (!w->codec) {
 		avro_set_error("Cannot allocate new codec");
+		avro_freet(struct avro_file_writer_t_, w);
 		return ENOMEM;
 	}
 	rval = avro_codec(w->codec, codec);
 	if (rval) {
+		avro_codec_reset(w->codec);
 		avro_freet(struct avro_codec_t_, w->codec);
+		avro_freet(struct avro_file_writer_t_, w);
 		return rval;
 	}
 	rval = file_writer_create(path, schema, w, block_size);
 	if (rval) {
+		avro_codec_reset(w->codec);
+		avro_freet(struct avro_codec_t_, w->codec);
 		avro_freet(struct avro_file_writer_t_, w);
 		return rval;
 	}
@@ -405,6 +410,7 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 	r->block_reader = avro_reader_memory(0, 0);
 	if (!r->block_reader) {
 		avro_set_error("Cannot allocate block reader for file %s", path);
+		avro_reader_free(r->reader);
 		avro_freet(struct avro_file_reader_t_, r);
 		return ENOMEM;
 	}
@@ -412,6 +418,7 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 	r->codec = (avro_codec_t) avro_new(struct avro_codec_t_);
 	if (!r->codec) {
 		avro_set_error("Could not allocate codec for file %s", path);
+		avro_reader_free(r->reader);
 		avro_freet(struct avro_file_reader_t_, r);
 		return ENOMEM;
 	}
@@ -420,6 +427,8 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 				r->sync, sizeof(r->sync));
 	if (rval) {
 		avro_reader_free(r->reader);
+		avro_codec_reset(r->codec);
+		avro_freet(struct avro_codec_t_, r->codec);
 		avro_freet(struct avro_file_reader_t_, r);
 		return rval;
 	}
@@ -430,6 +439,8 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 	rval = file_read_block_count(r);
 	if (rval) {
 		avro_reader_free(r->reader);
+		avro_codec_reset(r->codec);
+		avro_freet(struct avro_codec_t_, r->codec);
 		avro_freet(struct avro_file_reader_t_, r);
 		return rval;
 	}
