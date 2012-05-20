@@ -214,6 +214,7 @@ int avro_schema_to_specific(avro_schema_t schema, const char *prefix)
 	snprintf(buf, sizeof(buf), "%s_avro.c", prefix);
 	ctx.source = fopen(buf, "w");
 	if (!ctx.source) {
+		fclose(ctx.header);
 		return errno;
 	}
 

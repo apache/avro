@@ -117,6 +117,7 @@ file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
 	}
 	w->writer = avro_writer_file(fp);
 	if (!w->writer) {
+		fclose(fp);
 		avro_set_error("Cannot create file writer for %s", path);
 		return ENOMEM;
 	}
