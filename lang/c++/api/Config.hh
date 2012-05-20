@@ -22,6 +22,8 @@
 // Windows DLL suport
 
 #ifdef _WIN32
+#pragma warning (disable: 4275 4251)
+
 #if defined(AVRO_DYN_LINK)
 #ifdef AVRO_SOURCE
 # define AVRO_DECL __declspec(dllexport)

@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <sstream>
 
 #include "Compiler.hh"
 #include "Types.hh"
@@ -32,7 +33,7 @@ using std::vector;
 
 namespace avro {
 
-typedef map<string, NodePtr> SymbolTable;
+typedef map<Name, NodePtr> SymbolTable;
 
 using json::Entity;
 
@@ -61,7 +62,7 @@ static NodePtr makePrimitive(const std::string& t)
     }
 }
 
-static NodePtr makeNode(const json::Entity& e, SymbolTable& st);
+static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string& ns);
 
 template <typename T>
 concepts::SingleAttribute<T> asSingleAttribute(const T& t)
@@ -71,17 +72,29 @@ concepts::SingleAttribute<T> asSingleAttribute(const T& t)
     return n;
 }
 
-static NodePtr makeNode(const std::string& t, SymbolTable& st)
+static bool isFullName(const string& s)
+{
+    return s.find('.') != string::npos;
+}
+    
+static Name getName(const string& name, const string& ns)
+{
+    return (isFullName(name)) ? Name(name) : Name(name, ns);
+}
+
+static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
 {
     NodePtr result = makePrimitive(t);
     if (result) {
         return result;
     }
-    map<string, NodePtr>::const_iterator it = st.find(t);
+    Name n = getName(t, ns);
+
+    map<Name, NodePtr>::const_iterator it = st.find(n);
     if (it != st.end()) {
-        return NodePtr(new NodeSymbolic(asSingleAttribute(t), it->second));
+        return NodePtr(new NodeSymbolic(asSingleAttribute(n), it->second));
     }
-    throw Exception(boost::format("Unknown type: %1%") % t);
+    throw Exception(boost::format("Unknown type: %1%") % n.fullname());
 }
 
 const map<string, Entity>::const_iterator findField(const Entity& e,
@@ -117,22 +130,23 @@ struct Field {
     Field(const string& n, const NodePtr& v) : name(n), value(v) { }
 };
 
-static Field makeField(const Entity& e, SymbolTable& st)
+static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
 {
     const map<string, Entity>& m = e.value<map<string, Entity> >();
     const string& n = getField<string>(e, m, "name");
     map<string, Entity>::const_iterator it = findField(e, m, "type");
-    return Field(n, makeNode(it->second, st));
+    return Field(n, makeNode(it->second, st, ns));
 }
 
 static NodePtr makeRecordNode(const Entity& e,
-    const string& name, const map<string, Entity>& m, SymbolTable& st)
-{
+    const Name& name, const map<string, Entity>& m, SymbolTable& st, const string& ns)
+{        
     const vector<Entity>& v = getField<vector<Entity> >(e, m, "fields");
     concepts::MultiAttribute<string> fieldNames;
     concepts::MultiAttribute<NodePtr> fieldValues;
+    
     for (vector<Entity>::const_iterator it = v.begin(); it != v.end(); ++it) {
-        Field f = makeField(*it, st);
+        Field f = makeField(*it, st, ns);
         fieldNames.add(f.name);
         fieldValues.add(f.value);
     }
@@ -141,7 +155,7 @@ static NodePtr makeRecordNode(const Entity& e,
 }
 
 static NodePtr makeEnumNode(const Entity& e,
-    const string& name, const map<string, Entity>& m)
+    const Name& name, const map<string, Entity>& m)
 {
     const vector<Entity>& v = getField<vector<Entity> >(e, m, "symbols");
     concepts::MultiAttribute<string> symbols;
@@ -156,37 +170,58 @@ static NodePtr makeEnumNode(const Entity& e,
 }
 
 static NodePtr makeFixedNode(const Entity& e,
-    const string& name, const map<string, Entity>& m)
+    const Name& name, const map<string, Entity>& m)
 {
     int v = static_cast<int>(getField<int64_t>(e, m, "size"));
     if (v <= 0) {
         throw Exception(boost::format("Size for fixed is not positive: ") %
             e.toString());
     }
-    
     return NodePtr(new NodeFixed(asSingleAttribute(name),
         asSingleAttribute(v)));
 }
 
 static NodePtr makeArrayNode(const Entity& e, const map<string, Entity>& m,
-    SymbolTable& st)
+    SymbolTable& st, const string& ns)
 {
     map<string, Entity>::const_iterator it = findField(e, m, "items");
     return NodePtr(new NodeArray(asSingleAttribute(
-        makeNode(it->second, st))));
+        makeNode(it->second, st, ns))));
 }
 
 static NodePtr makeMapNode(const Entity& e, const map<string, Entity>& m,
-    SymbolTable& st)
+    SymbolTable& st, const string& ns)
 {
     map<string, Entity>::const_iterator it = findField(e, m, "values");
 
     return NodePtr(new NodeMap(asSingleAttribute(
-        makeNode(it->second, st))));
+        makeNode(it->second, st, ns))));
+}
+
+static Name getName(const Entity& e, const map<string, Entity>& m, const string& ns)
+{
+    const string& name = getField<string>(e, m, "name");
+
+    if (isFullName(name)) {
+        return Name(name);
+    } else {
+        map<string, Entity>::const_iterator it = m.find("namespace");
+        if (it != m.end()) {
+            if (it->second.type() != json::type_traits<string>::type()) {
+                throw Exception(boost::format(
+                    "Json field \"%1%\" is not a %2%: %3%") %
+                        "namespace" % json::type_traits<string>::name() %
+                        it->second.toString());
+            }
+            Name result = Name(name, it->second.value<string>());
+            return result;
+        }
+        return Name(name, ns);
+    }
 }
 
 static NodePtr makeNode(const Entity& e, const map<string, Entity>& m,
-    SymbolTable& st)
+    SymbolTable& st, const string& ns)
 {
     const string& type = getField<string>(e, m, "type");
     if (NodePtr result = makePrimitive(type)) {
@@ -199,48 +234,48 @@ static NodePtr makeNode(const Entity& e, const map<string, Entity>& m,
         }
     } else if (type == "record" || type == "error" ||
         type == "enum" || type == "fixed") {
-        const string& name = getField<string>(e, m, "name");
+        Name nm = getName(e, m, ns);
         NodePtr result;
         if (type == "record" || type == "error") {
             result = NodePtr(new NodeRecord());
-            st[name] = result;
-            NodePtr r = makeRecordNode(e, name, m, st);
+            st[nm] = result;
+            NodePtr r = makeRecordNode(e, nm, m, st, nm.ns());
             (boost::dynamic_pointer_cast<NodeRecord>(r))->swap(
                 *boost::dynamic_pointer_cast<NodeRecord>(result));
         } else {
-            result = (type == "enum") ? makeEnumNode(e, name, m) :
-                makeFixedNode(e, name, m);
-            st[name] = result;
+            result = (type == "enum") ? makeEnumNode(e, nm, m) :
+                makeFixedNode(e, nm, m);
+            st[nm] = result;
         }
         return result;
     } else if (type == "array") {
-        return makeArrayNode(e, m, st);
+        return makeArrayNode(e, m, st, ns);
     } else if (type == "map") {
-        return makeMapNode(e, m, st);
+        return makeMapNode(e, m, st, ns);
     }
     throw Exception(boost::format("Unknown type definition: %1%")
         % e.toString());
 }
 
 static NodePtr makeNode(const Entity& e, const vector<Entity>& m,
-    SymbolTable& st)
+    SymbolTable& st, const string& ns)
 {
     concepts::MultiAttribute<NodePtr> mm;
     for (vector<Entity>::const_iterator it = m.begin(); it != m.end(); ++it) {
-        mm.add(makeNode(*it, st));
+        mm.add(makeNode(*it, st, ns));
     }
     return NodePtr(new NodeUnion(mm));
 }
 
-static NodePtr makeNode(const json::Entity& e, SymbolTable& st)
+static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string& ns)
 {
     switch (e.type()) {
     case json::etString:
-        return makeNode(e.value<string>(), st);
+        return makeNode(e.value<string>(), st, ns);
     case json::etObject:
-        return makeNode(e, e.value<map<string, Entity> >(), st);
+        return makeNode(e, e.value<map<string, Entity> >(), st, ns);
     case json::etArray:
-        return makeNode(e, e.value<vector<Entity> >(), st);
+        return makeNode(e, e.value<vector<Entity> >(), st, ns);
     default:
         throw Exception(boost::format("Invalid Avro type: %1%") % e.toString());
     }
@@ -250,7 +285,7 @@ AVRO_DECL ValidSchema compileJsonSchemaFromStream(InputStream& is)
 {
     json::Entity e = json::loadEntity(is);
     SymbolTable st;
-    NodePtr n = makeNode(e, st);
+    NodePtr n = makeNode(e, st, "");
     return ValidSchema(n);
 }
 

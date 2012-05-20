@@ -19,9 +19,10 @@
 #ifndef avro_NodeConcepts_hh__
 #define avro_NodeConcepts_hh__
 
+#include "Config.hh"
+
 #include <vector>
 #include <map>
-#include "Config.hh"
 #include "Exception.hh"
 
 namespace avro {
@@ -72,6 +73,13 @@ struct NoAttribute
         return empty;
     }
 
+    Attribute &get(size_t index = 0) {
+        // There must be an get function for the generic NodeImpl, but the
+        // Node APIs ensure that it is never called, the throw here is
+        // just in case
+        throw Exception("This type does not have attribute");
+    }
+
 };
 
 template<typename Attribute>
@@ -79,47 +87,45 @@ struct SingleAttribute
 {
     static const bool hasAttribute = true;
 
-    SingleAttribute() : attr_(), size_(0)
+    SingleAttribute() : attr_()
     { }
 
-    SingleAttribute(const Attribute& a) : attr_(a), size_(1) { }
+    SingleAttribute(const Attribute& a) : attr_(a) { }
     // copy constructing from another single attribute is allowed
     SingleAttribute(const SingleAttribute<Attribute> &rhs) : 
-        attr_(rhs.attr_), size_(rhs.size_)
+        attr_(rhs.attr_)
     { }
 
     // copy constructing from a no attribute is allowed
     SingleAttribute(const NoAttribute<Attribute> &rhs) : 
-        attr_(), size_(0)
+        attr_()
     { }
 
     size_t size() const {
-        return size_;
+        return 1;
     }
 
     void add(const Attribute &attr) {
-        if(size_ == 0) {
-            size_ = 1;
-        }
-        else {
-            throw Exception("SingleAttribute can only be set once");
-        }
         attr_ = attr;
     }
 
     const Attribute &get(size_t index = 0) const {
-        if(index != 0) {
+        if (index != 0) {
             throw Exception("SingleAttribute has only 1 value");
         }
         return attr_;
     }
 
-  private:
+    Attribute &get(size_t index = 0) {
+        if (index != 0) {
+            throw Exception("SingleAttribute has only 1 value");
+        }
+        return attr_;
+    }
 
+private:
     template<typename T> friend struct MultiAttribute;
-
     Attribute attr_;
-    int       size_;
 };
 
 template<typename Attribute>

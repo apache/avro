@@ -18,6 +18,7 @@
 
 #include "bigrecord.hh"
 #include "bigrecord2.hh"
+#include "tweet.hh"
 #include "union_array_union.hh"
 #include "union_map_union.hh"
 #include "union_conflict.hh"
@@ -140,6 +141,21 @@ void testEncoding()
     check(t2, t1);
 }
 
+void testNamespace()
+{
+    ValidSchema s;
+    ifstream ifs("jsonschemas/tweet");
+    // basic compilation should work
+    compileJsonSchema(ifs, s);
+    // an AvroPoint was defined and then referred to from within a namespace
+    testgen3::AvroPoint point;
+    point.latitude = 42.3570;
+    point.longitude = -71.1109;
+    // set it in something that referred to it in the schema
+    testgen3::_tweet_Union__1__ twPoint;
+    twPoint.set_AvroPoint(point);
+}
+
 void setRecord(uau::r1& r)
 {
 }
@@ -199,6 +215,7 @@ init_unit_test_suite(int argc, char* argv[])
     ts->add(BOOST_TEST_CASE(testEncoding));
     ts->add(BOOST_TEST_CASE(testEncoding2<uau::r1>));
     ts->add(BOOST_TEST_CASE(testEncoding2<umu::r1>));
+    ts->add(BOOST_TEST_CASE(testNamespace));
     return ts;
 }
 

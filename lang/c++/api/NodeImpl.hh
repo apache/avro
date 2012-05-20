@@ -19,11 +19,12 @@
 #ifndef avro_NodeImpl_hh__
 #define avro_NodeImpl_hh__
 
+#include "Config.hh"
+
 #include <limits>
 #include <set>
 #include <boost/weak_ptr.hpp>
 
-#include "Config.hh"
 #include "Node.hh"
 #include "NodeConcepts.hh"
 
@@ -71,15 +72,16 @@ class NodeImpl : public Node
         std::swap(sizeAttribute_, impl.sizeAttribute_);
         std::swap(nameIndex_, impl.nameIndex_);
     }
+
     bool hasName() const {
         return NameConcept::hasAttribute;
     }
 
-    void doSetName(const std::string &name) {
+    void doSetName(const Name &name) {
         nameAttribute_.add(name);
     }
     
-    const std::string &name() const {
+    const Name &name() const {
         return nameAttribute_.get();
     }
 
@@ -96,7 +98,7 @@ class NodeImpl : public Node
     }
 
     void doAddName(const std::string &name) { 
-        if(! nameIndex_.add(name, leafNameAttributes_.size())) {
+        if (! nameIndex_.add(name, leafNameAttributes_.size())) {
             throw Exception(boost::format("Cannot add duplicate name: %1%") % name);
         }
         leafNameAttributes_.add(name);
@@ -128,7 +130,42 @@ class NodeImpl : public Node
 
     void setLeafToSymbolic(int index, const NodePtr &node);
    
-    SchemaResolution furtherResolution(const Node &node) const;
+    SchemaResolution furtherResolution(const Node &reader) const {
+        SchemaResolution match = RESOLVE_NO_MATCH;
+
+        if (reader.type() == AVRO_SYMBOLIC) {
+    
+            // resolve the symbolic type, and check again
+            const NodePtr &node = reader.leafAt(0);
+            match = resolve(*node);
+        }
+        else if(reader.type() == AVRO_UNION) {
+
+            // in this case, need to see if there is an exact match for the
+            // writer's type, or if not, the first one that can be promoted to a
+            // match
+        
+            for(size_t i= 0; i < reader.leaves(); ++i)  {
+
+                const NodePtr &node = reader.leafAt(i);
+                SchemaResolution thisMatch = resolve(*node);
+
+                // if matched then the search is done
+                if(thisMatch == RESOLVE_MATCH) {
+                    match = thisMatch;
+                    break;
+                }
+
+                // thisMatch is either no match, or promotable, this will set match to 
+                // promotable if it hasn't been set already
+                if (match == RESOLVE_NO_MATCH) {
+                    match = thisMatch;
+                }
+            }
+        }
+
+        return match;
+    }
 
     NameConcept nameAttribute_;
     LeavesConcept leafAttributes_;
@@ -137,8 +174,8 @@ class NodeImpl : public Node
     concepts::NameIndexConcept<LeafNamesConcept> nameIndex_;
 };
 
-typedef concepts::NoAttribute<std::string>     NoName;
-typedef concepts::SingleAttribute<std::string> HasName;
+typedef concepts::NoAttribute<Name>     NoName;
+typedef concepts::SingleAttribute<Name> HasName;
 
 typedef concepts::NoAttribute<NodePtr>      NoLeaves;
 typedef concepts::SingleAttribute<NodePtr>  SingleLeaf;
@@ -398,7 +435,7 @@ class AVRO_DECL NodeUnion : public NodeImplUnion
                 case AVRO_UNION:
                 case AVRO_FIXED:
                 case AVRO_SYMBOLIC:
-                    name = n->name();
+                    name = n->name().fullname();
                     break;
                 default:
                     return false;
@@ -465,8 +502,9 @@ NodeImpl<A,B,C,D>::printBasicInfo(std::ostream &os) const
 {
     os << type();
     if(hasName()) {
-        os << " " << nameAttribute_.get();
+        os << ' ' << nameAttribute_.get();
     }
+
     if(D::hasAttribute) {
         os << " " << sizeAttribute_.get();
     }

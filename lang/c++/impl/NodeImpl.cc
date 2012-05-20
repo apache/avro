@@ -21,47 +21,6 @@
 
 namespace avro {
 
-
-template < class A, class B, class C, class D >
-SchemaResolution 
-NodeImpl<A,B,C,D>::furtherResolution(const Node &reader) const
-{
-    SchemaResolution match = RESOLVE_NO_MATCH;
-
-    if(reader.type() == AVRO_SYMBOLIC) {
-    
-        // resolve the symbolic type, and check again
-        const NodePtr &node = reader.leafAt(0);
-        match = resolve(*node);
-    }
-    else if(reader.type() == AVRO_UNION) {
-
-        // in this case, need to see if there is an exact match for the
-        // writer's type, or if not, the first one that can be promoted to a
-        // match
-        
-        for(size_t i= 0; i < reader.leaves(); ++i)  {
-
-            const NodePtr &node = reader.leafAt(i);
-            SchemaResolution thisMatch = resolve(*node);
-
-            // if matched then the search is done
-            if(thisMatch == RESOLVE_MATCH) {
-                match = thisMatch;
-                break;
-            }
-
-            // thisMatch is either no match, or promotable, this will set match to 
-            // promotable if it hasn't been set already
-            if (match == RESOLVE_NO_MATCH) {
-                match = thisMatch;
-            }
-        }
-    }
-
-    return match;
-}
-
 SchemaResolution 
 NodePrimitive::resolve(const Node &reader) const
 {
@@ -216,14 +175,20 @@ NodeSymbolic::printJson(std::ostream &os, int depth) const
     os << '\"' << nameAttribute_.get() << '\"';
 }
 
+static void printName(std::ostream& os, const Name& n, int depth)
+{
+    if (!n.ns().empty()) {
+        os << indent(depth) << "\"namespace\": \"" << n.ns() << "\",\n";
+    }
+    os << indent(depth) << "\"name\": \"" << n.simpleName() << "\",\n";
+}
+
 void 
 NodeRecord::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
-    if(!nameAttribute_.get().empty()) {
-        os << indent(depth) << "\"name\": \"" << nameAttribute_.get() << "\",\n";
-    }
+    printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"fields\": [\n";
 
     int fields = leafAttributes_.size();
@@ -249,9 +214,7 @@ NodeEnum::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"enum\",\n";
-    if(!nameAttribute_.get().empty()) {
-        os << indent(depth) << "\"name\": \"" << nameAttribute_.get() << "\",\n";
-    }
+    printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
 
     int names = leafNameAttributes_.size();
@@ -312,7 +275,7 @@ NodeFixed::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
     os << indent(depth) << "\"size\": " << sizeAttribute_.get() << ",\n";
-    os << indent(depth) << "\"name\": \"" << nameAttribute_.get() << "\"\n";
+    printName(os, nameAttribute_.get(), depth);
     os << indent(--depth) << '}';
 }
 

@@ -481,7 +481,7 @@ struct TestNested
         rec.addField("value", LongSchema());
         UnionSchema next;
         next.addType(NullSchema());
-        next.addType(SymbolicSchema("LongList", rec.root()));
+        next.addType(SymbolicSchema(Name("LongList"), rec.root()));
         rec.addField("next", next);
         rec.addField("end", BoolSchema());
 

@@ -117,6 +117,11 @@ public:
     void generate(const ValidSchema& schema);
 };
 
+static string decorate(const avro::Name& name)
+{
+    return name.simpleName();
+}
+
 string CodeGen::fullname(const string& name) const
 {
     return ns_.empty() ? name : (ns_ + "::" + name);
@@ -124,13 +129,14 @@ string CodeGen::fullname(const string& name) const
 
 string CodeGen::generateEnumType(const NodePtr& n)
 {
-    os_ << "enum " << n->name() << " {\n";
+    string s = decorate(n->name());
+    os_ << "enum " << s << " {\n";
     size_t c = n->names();
     for (size_t i = 0; i < c; ++i) {
         os_ << "    " << n->nameAt(i) << ",\n";
     }
     os_ << "};\n\n";
-    return n->name();
+    return s;
 }
 
 string CodeGen::cppTypeOf(const NodePtr& n)
@@ -152,7 +158,10 @@ string CodeGen::cppTypeOf(const NodePtr& n)
         return "bool";
     case avro::AVRO_RECORD:
     case avro::AVRO_ENUM:
-        return inNamespace_ ? n->name() : fullname(n->name());
+        {
+            string nm = decorate(n->name());
+            return inNamespace_ ? nm : fullname(nm);
+        }
     case avro::AVRO_ARRAY:
         return "std::vector<" + cppTypeOf(n->leafAt(0)) + " >";
     case avro::AVRO_MAP:
@@ -189,7 +198,7 @@ static string cppNameOf(const NodePtr& n)
     case avro::AVRO_RECORD:
     case avro::AVRO_ENUM:
     case avro::AVRO_FIXED:
-        return n->name();
+        return decorate(n->name());
     case avro::AVRO_ARRAY:
         return "array";
     case avro::AVRO_MAP:
@@ -214,7 +223,7 @@ string CodeGen::generateRecordType(const NodePtr& n)
         return it->second;
     }
 
-    os_ << "struct " << n->name() << " {\n";
+    os_ << "struct " << decorate(n->name()) << " {\n";
     if (! noUnion_) {
         for (size_t i = 0; i < c; ++i) {
             if (n->leafAt(i)->type() == avro::AVRO_UNION) {
@@ -232,7 +241,7 @@ string CodeGen::generateRecordType(const NodePtr& n)
         os_ << ' ' << n->nameAt(i) << ";\n";
     }
     os_ << "};\n\n";
-    return n->name();
+    return decorate(n->name());
 }
 
 void makeCanonical(string& s, bool foldCase)
@@ -443,7 +452,7 @@ string CodeGen::generateDeclaration(const NodePtr& n)
 
 void CodeGen::generateEnumTraits(const NodePtr& n)
 {
-    string fn = fullname(n->name());
+    string fn = fullname(decorate(n->name()));
     os_ << "template<> struct codec_traits<" << fn << "> {\n"
         << "    static void encode(Encoder& e, " << fn << " v) {\n"
         << "        e.encodeEnum(v);\n"
@@ -461,7 +470,7 @@ void CodeGen::generateRecordTraits(const NodePtr& n)
         generateTraits(n->leafAt(i));
     }
 
-    string fn = fullname(n->name());
+    string fn = fullname(decorate(n->name()));
     os_ << "template<> struct codec_traits<" << fn << "> {\n"
         << "    static void encode(Encoder& e, const " << fn << "& v) {\n";
 

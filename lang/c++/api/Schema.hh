@@ -133,7 +133,7 @@ public:
 
 class AVRO_DECL SymbolicSchema : public Schema {
 public:
-    SymbolicSchema(const std::string& name, const NodePtr& link);
+    SymbolicSchema(const Name& name, const NodePtr& link);
 };
 } // namespace avro
 

@@ -275,7 +275,7 @@ Validator::getCurrentRecordName(std::string &name) const
     }
     
     if(idx >= 0 && compoundStack_[idx].node->type() == AVRO_RECORD) {
-        name = compoundStack_[idx].node->name();
+        name = compoundStack_[idx].node->name().simpleName();
         found = true;
     }
     return found;

@@ -48,6 +48,7 @@ Avro 1.7.0 (unreleased)
 
     AVRO-1095. C++ compiler warns about control reaching end of doAdavance (in JsonIO.cc) which returns something other than void. (thiru)
 
+    AVRO-1026. Add namespace support to C++. (Keh-Li Sheng via thiru)
   BUG FIXES
 
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.
