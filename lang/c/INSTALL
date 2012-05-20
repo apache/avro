@@ -45,3 +45,13 @@ The "RelWithDebInfo" build type will build an optimized copy of the
 library, including debugging symbols.  Use the "Release" build type if
 you don't want debugging symbols.  Use the "Debug" build type if you
 want a non-optimized library, with debugging symbols.
+
+On Mac OS X, you can build a universal binary by setting the
+CMAKE_OSX_ARCHITECTURES option when running cmake.  Just add something
+like the following:
+
+        -DCMAKE_OSX_ARCHITECTURES=i386;x86_64
+
+to the cmake command given above.  The set of architectures that you can
+choose from differs depending on which version of OS X you're running;
+common possibilities include "i386", "x86_64", "ppc", and "ppc64".
