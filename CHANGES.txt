@@ -88,6 +88,8 @@ Avro 1.7.0 (unreleased)
     AVRO-1082. C: Avoid leaking open FILE objects.
     (Pugachev Maxim via dcreager)
 
+    AVRO-1096. C: Don't set default CMAKE_OSX_ARCHITECTURES. (dcreager)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)

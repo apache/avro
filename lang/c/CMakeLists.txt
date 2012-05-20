@@ -86,9 +86,6 @@ include(CheckLibraryExists)
 
 
 if(APPLE)
-    if (NOT CMAKE_OSX_ARCHITECTURES)
-        set(CMAKE_OSX_ARCHITECTURES "i386;x86_64" CACHE STRING "Build architectures for Mac OS X" FORCE)
-    endif (NOT CMAKE_OSX_ARCHITECTURES)
     if (NOT CMAKE_INSTALL_NAME_DIR)
         set(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
     endif (NOT CMAKE_INSTALL_NAME_DIR)
