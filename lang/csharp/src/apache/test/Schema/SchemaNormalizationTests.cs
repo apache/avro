@@ -48,7 +48,7 @@ namespace Avro.Test
             Assert.AreEqual(carefulFP, SchemaNormalization.ParsingFingerprint64(s));
         }
 
-        private static IEnumerable<object> ProvideFingerprintTestCases()
+        private static List<object[]> ProvideFingerprintTestCases()
         {
             using (StreamReader reader = new StreamReader("../../../../../share/test/data/schema-tests.txt"))
             {
@@ -56,7 +56,7 @@ namespace Avro.Test
             }
         }
 
-        private static IEnumerable<object> ProvideCanonicalTestCases()
+        private static List<object[]> ProvideCanonicalTestCases()
         {
             using (StreamReader reader = new StreamReader("../../../../../share/test/data/schema-tests.txt"))
             {

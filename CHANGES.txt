@@ -16,6 +16,9 @@ Avro 1.7.0 (unreleased)
     AVRO-593. Java: Add support for Hadoop's newer mapreduce API.
     (Garrett Wu via cutting)
 
+    AVRO-1052. Java: Add AvroMultipleOutputFormat, to permit splitting
+    mapreduce output to multiple locations.  (Ashish Nagavaram via cutting)
+
   IMPROVEMENTS
 
     AVRO-1060. Java: Upgrade Netty to version 3.4.0.  (Karthik K via cutting)
