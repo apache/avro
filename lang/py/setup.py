@@ -19,12 +19,11 @@ try:
   from setuptools import setup
 except ImportError:
   from distutils.core import setup
-
 from sys import version_info
-if version_info[:2] > (2, 5):
-    install_requires = ['python-snappy']
-else:
-    install_requires = ['python-snappy', 'simplejson >= 2.0.9', 'urllib3']
+
+install_requires = ['python-snappy', 'urllib3']
+if version_info[:2] <= (2, 5):
+    install_requires.append('simplejson >= 2.0.9')
 
 setup(
   name = 'avro',
