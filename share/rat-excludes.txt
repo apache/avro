@@ -16,6 +16,7 @@
 **/.gitignore
 **/Makefile**
 **/configure**
+**/_*
 doc/**
 lang/py/lib/simplejson/**
 lang/c++/Doxyfile
@@ -26,6 +27,8 @@ lang/c++/config**
 lang/c/docs/**
 lang/c/json/**
 lang/c/src/avro-c.pc.in
+lang/c/src/avro/msinttypes.h
+lang/c/src/avro/msstdint.h
 lang/c/tests/**
 lang/c/version.sh
 lang/ruby/Manifest
@@ -36,6 +39,7 @@ lang/c/src/st.h
 lang/c/src/st.c
 lang/csharp/Avro.sln
 lang/csharp/Avro.nunit
+lang/java/avro/src/test/java/org/apache/avro/FooBarSpecificRecord.java
 lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/*.js
 lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/*.css
 lang/java/protobuf/src/test/java/org/apache/avro/protobuf/Test.java
