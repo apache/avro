@@ -411,7 +411,7 @@ test_generic_helper( unsigned long num_tests,
 	avro_generic_value_new(reader_iface, &out);
 
 	/* Use resolved reader to resolve schemas while writing data to memory */
-	avro_value_iface_t *resolved_reader_iface;
+	avro_value_iface_t *resolved_reader_iface = NULL;
 	avro_value_t resolved_reader_value;
 	if ( resolution_type & USE_RESOLVED_READER ) {
 		resolved_reader_iface = avro_resolved_reader_new( schema, schema );
@@ -421,7 +421,7 @@ test_generic_helper( unsigned long num_tests,
 	}
 
 	/* Use resolved writer to resolve schemas while reading data from memory */
-	avro_value_iface_t *resolved_writer_iface;
+	avro_value_iface_t *resolved_writer_iface = NULL;
 	avro_value_t resolved_writer_value;
 	if ( resolution_type & USE_RESOLVED_WRITER ) {
 		resolved_writer_iface = avro_resolved_writer_new( schema, schema );
@@ -431,8 +431,8 @@ test_generic_helper( unsigned long num_tests,
 	}
 
 	/* Set up pointers */
-	avro_value_t *p_value_to_write_to_memory;
-	avro_value_t *p_value_to_read_from_memory;
+	avro_value_t *p_value_to_write_to_memory = NULL;
+	avro_value_t *p_value_to_read_from_memory = NULL;
 
 	if ( resolution_type == USE_MATCHED_SCHEMAS ) {
 		p_value_to_write_to_memory = &val;
