@@ -310,13 +310,17 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 	FILE *fp;
 	avro_reader_t reader;
 
-	fp = fopen(path, "rb");
+	/* Open for read AND write */
+	fp = fopen(path, "r+b");
 	if (!fp) {
 		avro_set_error("Error opening file: %s",
 			       strerror(errno));
 		return errno;
 	}
-	reader = avro_reader_file(fp);
+
+	/* Don`t close the underlying file descriptor, logrotate can
+	 * vanish it from sight. */
+	reader = avro_reader_file_fp(fp, 0);
 	if (!reader) {
 		fclose(fp);
 		avro_set_error("Cannot create file reader for %s", path);
@@ -325,13 +329,44 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 	rval =
 	    file_read_header(reader, &w->writers_schema, w->codec, w->sync,
 			     sizeof(w->sync));
+
 	avro_reader_free(reader);
-	/* Position to end of file and get ready to write */
-	rval = file_writer_init_fp(path, "ab", w);
 	if (rval) {
-		avro_freet(struct avro_file_writer_t_, w);
+		fclose(fp);
+		return rval;
 	}
-	return rval;
+
+	w->block_count = 0;
+
+	/* Position to end of file and get ready to write */
+	fseek(fp, 0, SEEK_END);
+
+	w->writer = avro_writer_file(fp);
+	if (!w->writer) {
+		fclose(fp);
+		avro_set_error("Cannot create file writer for %s", path);
+		return ENOMEM;
+	}
+
+	w->datum_buffer_size = DEFAULT_BLOCK_SIZE;
+	w->datum_buffer = avro_malloc(w->datum_buffer_size);
+
+	if(!w->datum_buffer) {
+		avro_set_error("Could not allocate datum buffer\n");
+		avro_writer_free(w->writer);
+		return ENOMEM;
+	}
+
+	w->datum_writer =
+	    avro_writer_memory(w->datum_buffer, w->datum_buffer_size);
+	if (!w->datum_writer) {
+		avro_set_error("Cannot create datum writer for file %s", path);
+		avro_writer_free(w->writer);
+		avro_free(w->datum_buffer, w->datum_buffer_size);
+		return ENOMEM;
+	}
+
+	return 0;
 }
 
 int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
@@ -346,8 +381,16 @@ int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 		avro_set_error("Cannot create new file writer for %s", path);
 		return ENOMEM;
 	}
+	w->codec = avro_new(struct avro_codec_t_);
+	if (!w->codec) {
+		avro_set_error("Cannot allocate new codec");
+		avro_freet(struct avro_file_writer_t_, w);
+		return ENOMEM;
+	}
 	rval = file_writer_open(path, w);
 	if (rval) {
+		avro_codec_reset(w->codec);
+		avro_freet(struct avro_codec_t_, w->codec);
 		avro_freet(struct avro_file_writer_t_, w);
 		return rval;
 	}

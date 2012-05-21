@@ -113,6 +113,9 @@ Avro 1.7.0 (unreleased)
     AVRO-1091. C: Helper scripts for calling CMake.
     (Vivek Nadkarni via dcreager)
 
+    AVRO-1087. C: avro_file_writer_open() and appending Avro values
+    works correctly.  (Pugachev Maxim via dcreager)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)
