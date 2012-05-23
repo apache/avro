@@ -26,6 +26,8 @@ or
 
 $ CONFIGURATION=Debug TARGETFRAMEWORKVERSION=3.5 xbuild Avro.sln
 
+Note: In Ubuntu 12.04 (Precise Pangolin), please omit TARGETFRAMEWORKVERSION argument and leave it to the default.
+
 2. Unit tests
 
 This is a common procedure for both Windows and Linux.

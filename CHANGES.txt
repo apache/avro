@@ -59,6 +59,9 @@ Avro 1.7.0 (unreleased)
     instead of a generic IOException when reading ints and longs past
     the end of file.  (thiru & cutting)
 
+    AVRO-1098: CSharp: Fix compilation to work under older versions of Mono.
+    (cutting)
+
   BUG FIXES
 
     AVRO-1045. Java: Fix a bug in GenericData#deepCopy() of ByteBuffer values.
