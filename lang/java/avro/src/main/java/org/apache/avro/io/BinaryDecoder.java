@@ -458,6 +458,8 @@ public class BinaryDecoder extends Decoder {
     if (remaining < num) {
       // move remaining to front
       source.compactAndFill(buf, pos, minPos, remaining);
+      if (pos >= limit)
+        throw new EOFException();
     }
   }
 

@@ -433,4 +433,17 @@ public class TestBinaryDecoder {
     }
     Assert.assertTrue(null != eof);
   }
+  
+  @Test(expected = EOFException.class)
+  public void testEOF() throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    Encoder e = EncoderFactory.get().binaryEncoder(baos, null);
+    e.writeLong(0x10000000000000l);
+    e.flush();
+      
+    Decoder d = newDecoder(new ByteArrayInputStream(baos.toByteArray()));
+    Assert.assertEquals(0x10000000000000l, d.readLong());
+    d.readInt();
+  }
+
 }
