@@ -70,7 +70,12 @@ avro_datum_t avro_string(const char *str)
 		avro_set_error("Cannot copy string content");
 		return NULL;
 	}
-	return avro_string_private(p, 0, avro_str_free_wrapper);
+	avro_datum_t s_datum = avro_string_private(p, 0, avro_str_free_wrapper);
+	if (!s_datum) {
+		avro_str_free(p);
+	}
+
+	return s_datum;
 }
 
 avro_datum_t avro_givestring(const char *str,
