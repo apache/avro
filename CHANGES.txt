@@ -129,6 +129,10 @@ Avro 1.7.0 (28 May 2012)
     AVRO-1102. C: Remove memory leak in avro_string().  (Maxim Pugachev via
     dcreager)
 
+    AVRO-1099. Java: Fix JsonDecoder to permit floats and doubles to
+    be read from JSON values without decimal points, and for ints and
+    longs to be read from JSON values with decimal points. (cutting)
+
 Avro 1.6.3 (5 March 2012)
 
     AVRO-1077. Missing 'inline' for union set function. (thiru)

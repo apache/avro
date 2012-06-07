@@ -164,7 +164,7 @@ public class JsonDecoder extends ParsingDecoder
   @Override
   public int readInt() throws IOException {
     advance(Symbol.INT);
-    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_INT) {
+    if (in.getCurrentToken().isNumeric()) {
       int result = in.getIntValue();
       in.nextToken();
       return result;
@@ -176,7 +176,7 @@ public class JsonDecoder extends ParsingDecoder
   @Override
   public long readLong() throws IOException {
     advance(Symbol.LONG);
-    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_INT) {
+    if (in.getCurrentToken().isNumeric()) {
       long result = in.getLongValue();
       in.nextToken();
       return result;
@@ -188,7 +188,7 @@ public class JsonDecoder extends ParsingDecoder
   @Override
   public float readFloat() throws IOException {
     advance(Symbol.FLOAT);
-    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_FLOAT) {
+    if (in.getCurrentToken().isNumeric()) {
       float result = in.getFloatValue();
       in.nextToken();
       return result;
@@ -200,7 +200,7 @@ public class JsonDecoder extends ParsingDecoder
   @Override
   public double readDouble() throws IOException {
     advance(Symbol.DOUBLE);
-    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_FLOAT) {
+    if (in.getCurrentToken().isNumeric()) {
       double result = in.getDoubleValue();
       in.nextToken();
       return result;
