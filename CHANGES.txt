@@ -8,6 +8,7 @@ Avro 1.7.1 (unreleased)
 
   BUG FIXES
 
+    AVRO-1114. Java: Update license headers for new mapreduce code.  (cutting)
 
 Avro 1.7.0 (11 June 2012)
 
