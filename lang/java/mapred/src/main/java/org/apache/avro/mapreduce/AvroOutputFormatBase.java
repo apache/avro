@@ -20,6 +20,7 @@ package org.apache.avro.mapreduce;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.hadoop.fs.Path;
@@ -59,7 +60,10 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
    * @return The target output stream.
    */
   protected OutputStream getAvroFileOutputStream(TaskAttemptContext context) throws IOException {
-    Path path = getDefaultWorkFile(context, org.apache.avro.mapred.AvroOutputFormat.EXT);
+    Path path = new Path(((FileOutputCommitter)getOutputCommitter(context)).getWorkPath(),
+      getUniqueFile(context,context.getConfiguration().get("avro.mo.config.namedOutput","part"),org.apache.avro.mapred.AvroOutputFormat.EXT));
     return path.getFileSystem(context.getConfiguration()).create(path);
   }
+ 
+   
 }

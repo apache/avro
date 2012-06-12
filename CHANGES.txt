@@ -4,6 +4,9 @@ Avro 1.7.1 (unreleased)
 
   NEW FEATURES
 
+    AVRO-1106. Java: Add AvroMultipleOutputs for newer mapreduce API.
+    (Ashish Nagavaram via cutting)
+
   IMPROVEMENTS
 
   BUG FIXES
