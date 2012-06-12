@@ -13,6 +13,8 @@ Avro 1.7.1 (unreleased)
 
     AVRO-1114. Java: Update license headers for new mapreduce code.  (cutting)
 
+    AVRO-1069. Java: Fix HttpTransceiver to close streams. (cutting)
+
 Avro 1.7.0 (11 June 2012)
 
   NEW FEATURES

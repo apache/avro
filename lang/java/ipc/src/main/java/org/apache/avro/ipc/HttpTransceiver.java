@@ -51,7 +51,12 @@ public class HttpTransceiver extends Transceiver {
   public String getRemoteName() { return this.url.toString(); }
     
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
-    return readBuffers(connection.getInputStream());
+    InputStream in = connection.getInputStream();
+    try {
+      return readBuffers(in);
+    } finally {
+      in.close();
+    }
   }
 
   public synchronized void writeBuffers(List<ByteBuffer> buffers)
@@ -68,7 +73,13 @@ public class HttpTransceiver extends Transceiver {
     connection.setDoOutput(true);
     connection.setReadTimeout(timeout);
     connection.setConnectTimeout(timeout);
-    writeBuffers(buffers, connection.getOutputStream());
+
+    OutputStream out = connection.getOutputStream();
+    try {
+      writeBuffers(buffers, out);
+    } finally {
+      out.close();
+    }
   }
 
   static int getLength(List<ByteBuffer> buffers) {
