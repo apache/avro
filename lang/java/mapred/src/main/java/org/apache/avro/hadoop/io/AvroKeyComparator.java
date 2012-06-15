@@ -22,7 +22,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapreduce.AvroJob;
-import org.apache.avro.specific.SpecificData;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.RawComparator;
@@ -57,6 +57,6 @@ public class AvroKeyComparator<T> extends Configured implements RawComparator<Av
   /** {@inheritDoc} */
   @Override
   public int compare(AvroKey<T> x, AvroKey<T> y) {
-    return SpecificData.get().compare(x.datum(), y.datum(), mSchema);
+    return ReflectData.get().compare(x.datum(), y.datum(), mSchema);
   }
 }

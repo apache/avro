@@ -26,7 +26,7 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.mapred.AvroWrapper;
-import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.hadoop.io.serializer.Deserializer;
 
 /**
@@ -66,7 +66,7 @@ public abstract class AvroDeserializer<T extends AvroWrapper<D>, D> implements D
   protected AvroDeserializer(Schema writerSchema, Schema readerSchema) {
     mWriterSchema = writerSchema;
     mReaderSchema = null != readerSchema ? readerSchema : writerSchema;
-    mAvroDatumReader = new SpecificDatumReader<D>(mWriterSchema, mReaderSchema);
+    mAvroDatumReader = new ReflectDatumReader<D>(mWriterSchema, mReaderSchema);
   }
 
   /**

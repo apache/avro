@@ -26,7 +26,7 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.mapred.AvroWrapper;
-import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.hadoop.io.serializer.Serializer;
 
 /**
@@ -79,7 +79,7 @@ public class AvroSerializer<T> implements Serializer<AvroWrapper<T>> {
       throw new IllegalArgumentException("Writer schema may not be null");
     }
     mWriterSchema = writerSchema;
-    mAvroDatumWriter = new SpecificDatumWriter<T>(writerSchema);
+    mAvroDatumWriter = new ReflectDatumWriter<T>(writerSchema);
   }
 
   /**

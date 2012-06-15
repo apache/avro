@@ -29,6 +29,8 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.FsInput;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -56,6 +58,18 @@ public class TestWordCount {
       Schema.parse("{\"name\":\"stats\",\"type\":\"record\","
           + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"},"
           + "{\"name\":\"name\",\"type\":\"string\"}]}");
+
+  public static class ReflectStats {
+    String name;
+    int count;
+  }
+
+  // permit data written as SpecficStats to be read as ReflectStats
+  private static Schema REFLECT_STATS_SCHEMA
+    = ReflectData.get().getSchema(ReflectStats.class);
+  static {
+    REFLECT_STATS_SCHEMA.addAlias(TextStats.SCHEMA$.getFullName());
+  }
 
   private static class LineCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
     private IntWritable mOne;
@@ -88,6 +102,26 @@ public class TestWordCount {
         throws IOException, InterruptedException {
       mCount.set(record.datum().count);
       mText.set(record.datum().name.toString());
+      context.write(mText, mCount);
+    }
+  }
+
+  private static class ReflectCountMapper
+      extends Mapper<AvroKey<ReflectStats>, NullWritable, Text, IntWritable> {
+    private IntWritable mCount;
+    private Text mText;
+
+    @Override
+    protected void setup(Context context) {
+      mCount = new IntWritable(0);
+      mText = new Text("");
+    }
+
+    @Override
+    protected void map(AvroKey<ReflectStats> record, NullWritable ignore, Context context)
+        throws IOException, InterruptedException {
+      mCount.set(record.datum().count);
+      mText.set(record.datum().name);
       context.write(mText, mCount);
     }
   }
@@ -129,6 +163,29 @@ public class TestWordCount {
     protected void reduce(Text line, Iterable<IntWritable> counts, Context context)
         throws IOException, InterruptedException {
       TextStats record = new TextStats();
+      record.count = 0;
+      for (IntWritable count : counts) {
+        record.count += count.get();
+      }
+      record.name = line.toString();
+      mStats.datum(record);
+      context.write(mStats, NullWritable.get());
+    }
+  }
+
+  private static class ReflectStatsReducer
+      extends Reducer<Text, IntWritable, AvroKey<ReflectStats>, NullWritable> {
+    private AvroKey<ReflectStats> mStats;
+
+    @Override
+    protected void setup(Context context) {
+      mStats = new AvroKey<ReflectStats>(null);
+    }
+
+    @Override
+    protected void reduce(Text line, Iterable<IntWritable> counts, Context context)
+        throws IOException, InterruptedException {
+      ReflectStats record = new ReflectStats();
       record.count = 0;
       for (IntWritable count : counts) {
         record.count += count.get();
@@ -238,6 +295,46 @@ public class TestWordCount {
   }
 
   @Test
+  public void testAvroReflectOutput() throws Exception {
+    Job job = new Job();
+
+    FileInputFormat.setInputPaths(job, new Path(getClass()
+            .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
+            .toURI().toString()));
+    job.setInputFormatClass(TextInputFormat.class);
+
+    job.setMapperClass(LineCountMapper.class);
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(IntWritable.class);
+
+    job.setReducerClass(ReflectStatsReducer.class);
+    AvroJob.setOutputKeySchema(job, REFLECT_STATS_SCHEMA);
+
+    job.setOutputFormatClass(AvroKeyOutputFormat.class);
+    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-reflect");
+    FileOutputFormat.setOutputPath(job, outputPath);
+
+    Assert.assertTrue(job.waitForCompletion(true));
+
+    // Check that the results from the MapReduce were as expected.
+    FileSystem fileSystem = FileSystem.get(job.getConfiguration());
+    FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
+    Assert.assertEquals(1, outputFiles.length);
+    DataFileReader<ReflectStats> reader = new DataFileReader<ReflectStats>(
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+        new ReflectDatumReader<ReflectStats>());
+    Map<String, Integer> counts = new HashMap<String, Integer>();
+    for (ReflectStats record : reader) {
+      counts.put(record.name.toString(), record.count);
+    }
+    reader.close();
+
+    Assert.assertEquals(3, counts.get("apple").intValue());
+    Assert.assertEquals(2, counts.get("banana").intValue());
+    Assert.assertEquals(1, counts.get("carrot").intValue());
+  }
+
+  @Test
   public void testAvroInput() throws Exception {
     Job job = new Job();
 
@@ -269,6 +366,46 @@ public class TestWordCount {
         new SpecificDatumReader<TextStats>());
     Map<String, Integer> counts = new HashMap<String, Integer>();
     for (TextStats record : reader) {
+      counts.put(record.name.toString(), record.count);
+    }
+    reader.close();
+
+    Assert.assertEquals(3, counts.get("apple").intValue());
+    Assert.assertEquals(2, counts.get("banana").intValue());
+    Assert.assertEquals(1, counts.get("carrot").intValue());
+  }
+
+  @Test
+  public void testReflectInput() throws Exception {
+    Job job = new Job();
+    FileInputFormat.setInputPaths(job, new Path(getClass()
+            .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro")
+            .toURI().toString()));
+    job.setInputFormatClass(AvroKeyInputFormat.class);
+    AvroJob.setInputKeySchema(job, REFLECT_STATS_SCHEMA);
+
+    job.setMapperClass(ReflectCountMapper.class);
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(IntWritable.class);
+
+    job.setReducerClass(ReflectStatsReducer.class);
+    AvroJob.setOutputKeySchema(job, REFLECT_STATS_SCHEMA);
+
+    job.setOutputFormatClass(AvroKeyOutputFormat.class);
+    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-reflect-input");
+    FileOutputFormat.setOutputPath(job, outputPath);
+
+    Assert.assertTrue(job.waitForCompletion(true));
+
+    // Check that the results from the MapReduce were as expected.
+    FileSystem fileSystem = FileSystem.get(job.getConfiguration());
+    FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
+    Assert.assertEquals(1, outputFiles.length);
+    DataFileReader<ReflectStats> reader = new DataFileReader<ReflectStats>(
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+        new ReflectDatumReader<ReflectStats>());
+    Map<String, Integer> counts = new HashMap<String, Integer>();
+    for (ReflectStats record : reader) {
       counts.put(record.name.toString(), record.count);
     }
     reader.close();
