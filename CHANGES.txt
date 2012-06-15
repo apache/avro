@@ -7,6 +7,9 @@ Avro 1.7.1 (unreleased)
     AVRO-1106. Java: Add AvroMultipleOutputs for newer mapreduce API.
     (Ashish Nagavaram via cutting)
 
+    AVRO-1112. Java: Add support for Snappy codec to newer mapreduce API.
+    (Matt Mead via cutting)
+
   IMPROVEMENTS
 
   BUG FIXES

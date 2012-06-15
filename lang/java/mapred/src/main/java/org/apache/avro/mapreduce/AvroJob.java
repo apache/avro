@@ -57,6 +57,10 @@ public final class AvroJob {
   /** Configuration key for the output value schema. */
   private static final String CONF_OUTPUT_VALUE_SCHEMA = "avro.schema.output.value";
 
+  /** The configuration key for a job's output compression codec.
+   *  This takes one of the strings registered in {@link org.apache.avro.file.CodecFactory} */
+  public static final String CONF_OUTPUT_CODEC = "avro.output.codec";
+
   /**
    * Sets the job input key schema.
    *

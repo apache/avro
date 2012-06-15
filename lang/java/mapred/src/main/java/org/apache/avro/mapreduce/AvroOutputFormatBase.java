@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileConstants;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -42,11 +43,17 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
    */
   protected static CodecFactory getCompressionCodec(TaskAttemptContext context) {
     if (FileOutputFormat.getCompressOutput(context)) {
-      // Deflate compression.
-      int compressionLevel = context.getConfiguration().getInt(
-          org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY,
-          org.apache.avro.mapred.AvroOutputFormat.DEFAULT_DEFLATE_LEVEL);
-      return CodecFactory.deflateCodec(compressionLevel);
+      // Default to deflate compression.
+      String outputCodec = context.getConfiguration()
+        .get(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.DEFLATE_CODEC);
+      if (DataFileConstants.DEFLATE_CODEC.equals(outputCodec)) {
+        int compressionLevel = context.getConfiguration().getInt(
+            org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY,
+            org.apache.avro.mapred.AvroOutputFormat.DEFAULT_DEFLATE_LEVEL);
+        return CodecFactory.deflateCodec(compressionLevel);
+      } else {
+        return CodecFactory.fromString(outputCodec);
+      }
     }
 
     // No compression.

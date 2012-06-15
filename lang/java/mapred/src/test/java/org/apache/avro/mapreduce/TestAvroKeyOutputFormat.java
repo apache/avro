@@ -26,6 +26,7 @@ import java.io.OutputStream;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroOutputFormat;
 import org.apache.hadoop.conf.Configuration;
@@ -56,6 +57,14 @@ public class TestAvroKeyOutputFormat {
     conf.setBoolean("mapred.output.compress", true);
     conf.setInt(org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY, 3);
     testGetRecordWriter(conf, CodecFactory.deflateCodec(3));
+  }
+
+  @Test
+  public void testWithSnappyCode() throws IOException {
+    Configuration conf = new Configuration();
+    conf.setBoolean("mapred.output.compress", true);
+    conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.SNAPPY_CODEC);
+    testGetRecordWriter(conf, CodecFactory.snappyCodec());
   }
 
   /**
