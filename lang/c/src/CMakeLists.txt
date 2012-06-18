@@ -148,6 +148,10 @@ add_executable(avrocat avrocat.c)
 target_link_libraries(avrocat avro-static)
 install(TARGETS avrocat RUNTIME DESTINATION bin)
 
+add_executable(avroappend avroappend.c)
+target_link_libraries(avroappend avro-static)
+install(TARGETS avroappend RUNTIME DESTINATION bin)
+
 if (NOT WIN32)
 #TODO: Port getopt() to Windows to compile avropipe.c and avromod.c
 add_executable(avropipe avropipe.c)

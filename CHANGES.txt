@@ -13,6 +13,8 @@ Avro 1.7.1 (unreleased)
     AVRO-1108. Java: Add support for reflect API to newer mapreduce API.
     (cutting)
 
+    AVRO-1104. C: avroappend utility. (Lucas Martin-King via dcreager)
+
   IMPROVEMENTS
 
   BUG FIXES
