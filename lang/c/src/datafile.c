@@ -108,9 +108,12 @@ static int write_header(avro_file_writer_t w)
 }
 
 static int
-file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
+file_writer_init_fp(FILE *fp, const char *path, const char *mode, avro_file_writer_t w)
 {
-	FILE *fp = fopen(path, mode);
+	if (!fp) {
+		fp = fopen(path, mode);
+	}
+
 	if (!fp) {
 		avro_set_error("Cannot open file for %s", path);
 		return ENOMEM;
@@ -135,14 +138,14 @@ file_writer_init_fp(const char *path, const char *mode, avro_file_writer_t w)
 #endif
 
 static int
-file_writer_create(const char *path, avro_schema_t schema, avro_file_writer_t w, size_t block_size)
+file_writer_create(FILE *fp, const char *path, avro_schema_t schema, avro_file_writer_t w, size_t block_size)
 {
 	int rval;
 
 	w->block_count = 0;
-	rval = file_writer_init_fp(path, EXCLUSIVE_WRITE_MODE, w);
+	rval = file_writer_init_fp(fp, path, EXCLUSIVE_WRITE_MODE, w);
 	if (rval) {
-		check(rval, file_writer_init_fp(path, "wb", w));
+		check(rval, file_writer_init_fp(fp, path, "wb", w));
 	}
 
 	w->datum_buffer_size = block_size;
@@ -171,10 +174,24 @@ int
 avro_file_writer_create(const char *path, avro_schema_t schema,
 			avro_file_writer_t * writer)
 {
-	return avro_file_writer_create_with_codec(path, schema, writer, "null", 0);
+	return avro_file_writer_create_with_codec_fp(NULL, path, schema, writer, "null", 0);
+}
+
+int
+avro_file_writer_create_fp(FILE *fp, const char *path, avro_schema_t schema,
+			avro_file_writer_t * writer)
+{
+	return avro_file_writer_create_with_codec_fp(fp, path, schema, writer, "null", 0);
 }
 
 int avro_file_writer_create_with_codec(const char *path,
+			avro_schema_t schema, avro_file_writer_t * writer,
+			const char *codec, size_t block_size)
+{
+	return avro_file_writer_create_with_codec_fp(NULL, path, schema, writer, codec, block_size);
+}
+
+int avro_file_writer_create_with_codec_fp(FILE *fp, const char *path,
 			avro_schema_t schema, avro_file_writer_t * writer,
 			const char *codec, size_t block_size)
 {
@@ -207,7 +224,7 @@ int avro_file_writer_create_with_codec(const char *path,
 		avro_freet(struct avro_file_writer_t_, w);
 		return rval;
 	}
-	rval = file_writer_create(path, schema, w, block_size);
+	rval = file_writer_create(fp, path, schema, w, block_size);
 	if (rval) {
 		avro_codec_reset(w->codec);
 		avro_freet(struct avro_codec_t_, w->codec);
