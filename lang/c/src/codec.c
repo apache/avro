@@ -390,6 +390,10 @@ static int reset_lzma(avro_codec_t c)
 
 int avro_codec(avro_codec_t codec, const char *type)
 {
+	if (type == NULL) {
+		return codec_null(codec);
+	}
+
 #ifdef DEFLATE_CODEC
 	if (strcmp("deflate", type) == 0) {
 		return codec_deflate(codec);

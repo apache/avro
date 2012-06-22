@@ -27,6 +27,9 @@ Avro 1.7.1 (unreleased)
 
     AVRO-1069. Java: Fix HttpTransceiver to close streams. (cutting)
 
+    AVRO-1115. C: Fix crash error in codec cleanup code. (Maxim Pugachev via
+    dcreager)
+
 Avro 1.7.0 (11 June 2012)
 
   NEW FEATURES

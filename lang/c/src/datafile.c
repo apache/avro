@@ -404,6 +404,7 @@ int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 		avro_freet(struct avro_file_writer_t_, w);
 		return ENOMEM;
 	}
+	avro_codec(w->codec, NULL);
 	rval = file_writer_open(path, w);
 	if (rval) {
 		avro_codec_reset(w->codec);
@@ -482,6 +483,7 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 		avro_freet(struct avro_file_reader_t_, r);
 		return ENOMEM;
 	}
+	avro_codec(r->codec, NULL);
 
 	rval = file_read_header(r->reader, &r->writers_schema, r->codec,
 				r->sync, sizeof(r->sync));
