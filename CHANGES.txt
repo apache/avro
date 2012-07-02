@@ -21,6 +21,9 @@ Avro 1.7.1 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-1120. Let AvroMultipleOutput jobs use multiple schemas with
+    map-only jobs. (Ashish Nagavaram via cutting)
+
   BUG FIXES
 
     AVRO-1114. Java: Update license headers for new mapreduce code.  (cutting)

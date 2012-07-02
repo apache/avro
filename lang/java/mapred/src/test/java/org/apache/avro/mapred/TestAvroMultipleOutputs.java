@@ -45,19 +45,31 @@ import org.junit.Test;
 
 public class TestAvroMultipleOutputs {
 
-      private static final String UTF8 = "UTF-8";
+  private static final String UTF8 = "UTF-8";
 
   public static class MapImpl extends AvroMapper<Utf8, Pair<Utf8, Long>> {
- 
-  
+    private AvroMultipleOutputs amos;
+
+    public void configure(JobConf Job) {
+      this.amos = new AvroMultipleOutputs(Job);
+    }
 
     @Override
       public void map(Utf8 text, AvroCollector<Pair<Utf8,Long>> collector,
                       Reporter reporter) throws IOException {
       StringTokenizer tokens = new StringTokenizer(text.toString());
-      while (tokens.hasMoreTokens())
-        collector.collect(new Pair<Utf8,Long>(new Utf8(tokens.nextToken()),1L));
+      while (tokens.hasMoreTokens()) {
+        String tok = tokens.nextToken();
+        collector.collect(new Pair<Utf8,Long>(new Utf8(tok),1L));
+        amos.getCollector("myavro2",reporter)
+          .collect(new Pair<Utf8,Long>(new Utf8(tok),1L).toString());
+      }
+        
     }
+    public void close() throws IOException {
+      amos.close();
+    }
+
   }
   
   public static class ReduceImpl
@@ -91,6 +103,8 @@ public class TestAvroMultipleOutputs {
     testJob();
     testProjection();
     testProjection1();
+    testJob_noreducer();
+    testProjection_noreducer();
   }
   
   @SuppressWarnings("deprecation")
@@ -118,7 +132,7 @@ public class TestAvroMultipleOutputs {
     FileOutputFormat.setCompressOutput(job, false);
     AvroMultipleOutputs.addNamedOutput(job,"myavro",AvroOutputFormat.class, new Pair<Utf8,Long>(new Utf8(""), 0L).getSchema());
     AvroMultipleOutputs.addNamedOutput(job,"myavro1",AvroOutputFormat.class, Schema.create(Schema.Type.STRING));
-    
+    AvroMultipleOutputs.addNamedOutput(job,"myavro2",AvroOutputFormat.class, Schema.create(Schema.Type.STRING));   
     WordCountUtil.setMeta(job);
 
 
@@ -200,5 +214,50 @@ public class TestAvroMultipleOutputs {
      actualSumOfCounts += count;
     }
     Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+  }
+
+  @SuppressWarnings("deprecation")
+  public void testJob_noreducer() throws Exception {
+    JobConf job = new JobConf();
+    job.setNumReduceTasks(0);
+//    private static final String UTF8 = "UTF-8";
+    String dir = System.getProperty("test.dir", ".") + "/mapred";
+    Path outputPath = new Path(dir + "/out");
+
+    outputPath.getFileSystem(job).delete(outputPath);
+    WordCountUtil.writeLinesFile();
+
+    job.setJobName("AvroMultipleOutputs_noreducer");
+
+    AvroJob.setInputSchema(job, Schema.create(Schema.Type.STRING));
+    AvroJob.setOutputSchema(job,
+                            new Pair<Utf8,Long>(new Utf8(""), 0L).getSchema());
+
+    AvroJob.setMapperClass(job, MapImpl.class);
+
+    FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
+    FileOutputFormat.setOutputPath(job, outputPath);
+    FileOutputFormat.setCompressOutput(job, false);
+    AvroMultipleOutputs.addNamedOutput(job,"myavro2",AvroOutputFormat.class, Schema.create(Schema.Type.STRING));
+    JobClient.runJob(job);
+  }
+  
+  public void testProjection_noreducer() throws Exception {
+    JobConf job = new JobConf();
+    long onel = 1;
+    Schema readerSchema = Schema.create(Schema.Type.STRING);
+    AvroJob.setInputSchema(job, readerSchema);
+    String dir= System.getProperty("test.dir", ".") + "/mapred";
+    Path inputPath = new Path(dir + "/out" + "/myavro2-m-00000.avro");
+    FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
+    FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
+    AvroRecordReader<Utf8> recordReader_new = new AvroRecordReader<Utf8>(job, fileSplit);
+    AvroWrapper<Utf8> inputPair_new = new AvroWrapper<Utf8>(null);
+    NullWritable ignore = NullWritable.get();
+    long testl=0;
+     while(recordReader_new.next(inputPair_new, ignore)) {
+       testl=Long.parseLong(inputPair_new.datum().toString().split(":")[2].replace("}","").trim());
+       Assert.assertEquals(onel,testl);
+    }
   }
 }

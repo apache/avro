@@ -70,7 +70,7 @@ import org.apache.hadoop.io.NullWritable;
  * Usage pattern for job submission:
  * <pre>
  *
- * Job job = new Job();
+ * JobConf job = new JobConf();
  *
  * FileInputFormat.setInputPath(job, inDir);
  * FileOutputFormat.setOutputPath(job, outDir);
@@ -526,15 +526,19 @@ public class AvroMultipleOutputs {
    public static final String CONFIG_NAMED_OUTPUT = "mo.config.namedOutput";
 
    @SuppressWarnings({"unchecked"})
-   public RecordWriter<Object, Object> getRecordWriter(FileSystem fs,JobConf job, String baseFileName, Progressable arg3) throws IOException
-   {
+   public RecordWriter<Object, Object> getRecordWriter(FileSystem fs,JobConf job, String baseFileName, Progressable arg3) throws IOException {
    String nameOutput = job.get(CONFIG_NAMED_OUTPUT, null);
    String fileName = getUniqueName(job, baseFileName);
    Schema schema = schemaList.get(nameOutput+"_SCHEMA");
    JobConf outputConf = new JobConf(job);
    outputConf.setOutputFormat(getNamedOutputFormatClass(job, nameOutput));
-   if(schema!=null)
-    AvroJob.setOutputSchema(outputConf,schema);
+   boolean isMapOnly = job.getNumReduceTasks() == 0;
+   if (schema != null) {
+     if (isMapOnly)
+       AvroJob.setMapOutputSchema(outputConf, schema);
+     else
+       AvroJob.setOutputSchema(outputConf, schema);
+   }
    OutputFormat outputFormat = outputConf.getOutputFormat();
    return outputFormat.getRecordWriter(fs, outputConf, fileName, arg3);
    }   
