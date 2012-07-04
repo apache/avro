@@ -44,6 +44,8 @@ using avro::ValidSchema;
 using avro::GenericDatum;
 using avro::GenericRecord;
 
+const int count = 1000;
+
 template <typename T>
 struct Complex {
     T re;
@@ -150,7 +152,7 @@ public:
         avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100);
         int64_t re = 3;
         int64_t im = 5;
-        for (int i = 0; i < 1000; ++i, re *= im, im += 3) {
+        for (int i = 0; i < count; ++i, re *= im, im += 3) {
             ComplexInteger c(re, im);
             df.write(c);
         }
@@ -167,7 +169,7 @@ public:
         c = GenericDatum(writerSchema.root());
         GenericRecord& r = c.value<GenericRecord>();
 
-        for (int i = 0; i < 1000; ++i, re *= im, im += 3) {
+        for (int i = 0; i < count; ++i, re *= im, im += 3) {
             r.fieldAt(0) = re;
             r.fieldAt(1) = im;
             df.write(p);
@@ -179,7 +181,7 @@ public:
         avro::DataFileWriter<ComplexDouble> df(filename, writerSchema, 100);
         double re = 3.0;
         double im = 5.0;
-        for (int i = 0; i < 1000; ++i, re += im - 0.7, im += 3.1) {
+        for (int i = 0; i < count; ++i, re += im - 0.7, im += 3.1) {
             ComplexDouble c(re, im);
             df.write(c);
         }
@@ -199,7 +201,7 @@ public:
             im += 3;
             ++i;
         }
-        BOOST_CHECK_EQUAL(i, 1000);
+        BOOST_CHECK_EQUAL(i, count);
     }
 
     void testReadProjection() {
@@ -214,7 +216,7 @@ public:
             im += 3;
             ++i;
         }
-        BOOST_CHECK_EQUAL(i, 1000);
+        BOOST_CHECK_EQUAL(i, count);
     }
 
     void testReaderGeneric() {
@@ -241,7 +243,7 @@ public:
             im += 3;
             ++i;
         }
-        BOOST_CHECK_EQUAL(i, 1000);
+        BOOST_CHECK_EQUAL(i, count);
     }
 
     void testReaderGenericProjection() {
@@ -265,7 +267,7 @@ public:
             im += 3;
             ++i;
         }
-        BOOST_CHECK_EQUAL(i, 1000);
+        BOOST_CHECK_EQUAL(i, count);
     }
 
     void testReadDouble() {
@@ -281,7 +283,7 @@ public:
             im += 3.1;
             ++i;
         }
-        BOOST_CHECK_EQUAL(i, 1000);
+        BOOST_CHECK_EQUAL(i, count);
     }
 
     /**
@@ -304,7 +306,7 @@ public:
             im += 3.1;
             ++i;
         }
-        BOOST_CHECK_EQUAL(i, 1000);
+        BOOST_CHECK_EQUAL(i, count);
     }
 
     /**
@@ -328,7 +330,7 @@ public:
             im += 3.1;
             ++i;
         }
-        BOOST_CHECK_EQUAL(i, 1000);
+        BOOST_CHECK_EQUAL(i, count);
     }
 };
 

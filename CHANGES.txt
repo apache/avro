@@ -33,6 +33,8 @@ Avro 1.7.1 (unreleased)
     AVRO-1115. C: Fix crash error in codec cleanup code. (Maxim Pugachev via
     dcreager)
 
+    AVRO-1116. C++ code crashes on Data files with no data. (thiru)
+
 Avro 1.7.0 (11 June 2012)
 
   NEW FEATURES

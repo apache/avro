@@ -161,6 +161,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::auto_ptr<InputStream> stream_;
     const DecoderPtr decoder_;
     int64_t objectCount_;
+    bool eof_;
 
     ValidSchema readerSchema_;
     ValidSchema dataSchema_;

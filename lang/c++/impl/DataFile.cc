@@ -151,7 +151,7 @@ void DataFileWriterBase::setMetadata(const string& key, const string& value)
 
 DataFileReaderBase::DataFileReaderBase(const char* filename) :
     filename_(filename), stream_(fileInputStream(filename)),
-    decoder_(binaryDecoder()), objectCount_(0)
+    decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
 }
@@ -196,9 +196,12 @@ std::ostream& operator << (std::ostream& os, const DataFileSync& s)
 
 bool DataFileReaderBase::hasMore()
 {
-    if (objectCount_ != 0) {
+     if (eof_) {
+        return false;
+    } else if (objectCount_ != 0) {
         return true;
     }
+
     dataDecoder_->init(*dataStream_);
     drain(*dataStream_);
     DataFileSync s;
@@ -259,6 +262,7 @@ bool DataFileReaderBase::readDataBlock()
     const uint8_t* p = 0;
     size_t n = 0;
     if (! stream_->next(&p, &n)) {
+        eof_ = true;
         return false;
     }
     stream_->backup(n);
