@@ -24,6 +24,9 @@ Avro 1.7.1 (unreleased)
     AVRO-1120. Let AvroMultipleOutput jobs use multiple schemas with
     map-only jobs. (Ashish Nagavaram via cutting)
 
+    AVRO-1119. Java: Permit NettyServer to be used with SSL.
+    (Sebastian Ortega via cutting)
+
   BUG FIXES
 
     AVRO-1114. Java: Update license headers for new mapreduce code.  (cutting)
