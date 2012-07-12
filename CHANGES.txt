@@ -1,6 +1,6 @@
 Avro Change Log
 
-Avro 1.7.1 (unreleased)
+Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES
 
@@ -40,7 +40,8 @@ Avro 1.7.1 (unreleased)
 
     AVRO-1116. C++ code crashes on Data files with no data. (thiru)
 
-    AVRO-1109. CSharp specific fails on multidimensional arrays. (Mark Farnan via thiru)
+    AVRO-1109. CSharp specific fails on multidimensional arrays.
+    (Mark Farnan via thiru)
 
 Avro 1.7.0 (11 June 2012)
 
