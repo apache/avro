@@ -112,6 +112,15 @@ namespace Avro.Specific
         public Type GetType(string name, Schema.Type schemaType)
         {
             Type type;
+
+            // Modify provided type to ensure it can be discovered.
+            // This is mainly for Generics, and Nullables.
+
+            name = name.Replace("Nullable", "Nullable`1");
+            name = name.Replace("IList", "System.Collections.Generic.IList`1");
+            name = name.Replace("<", "[");
+            name = name.Replace(">", "]");
+
             if (diffAssembly)
             {
                 // entry assembly different from current assembly, try entry assembly first
@@ -122,12 +131,23 @@ namespace Avro.Specific
             else
                 type = Type.GetType(name);
 
+            Type[] types;
+
             if (type == null) // type is still not found, need to loop through all loaded assemblies
             {
                 Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
                 foreach (Assembly assembly in assemblies)
                 {
-                    type = assembly.GetType(name);
+                    types = assembly.GetTypes();
+
+                    // Change the search to look for Types by both NAME and FULLNAME
+                    foreach (Type t in types)
+                    {
+                        if (name == t.Name || name == t.FullName) type = t;
+
+                    }
+
+                    
                     if (type != null)
                         break;
                 }

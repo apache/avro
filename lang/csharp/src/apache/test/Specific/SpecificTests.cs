@@ -81,15 +81,17 @@ namespace Avro.Test
 				{ ""name"" : ""myArray2"", ""type"" : { ""type"" : ""array"", ""items"" : { ""type"" : ""record"", ""name"" : ""newRec"", ""fields"" : [ { ""name"" : ""f1"", ""type"" : ""long""} ] } } },
 				{ ""name"" : ""myMap"", ""type"" : { ""type"" : ""map"", ""values"" : ""string"" } },
 				{ ""name"" : ""myMap2"", ""type"" : { ""type"" : ""map"", ""values"" : ""newRec"" } },
-				{ ""name"" : ""myObject"", ""type"" : [ ""MyEnum"", ""A"", ""null"" ] }
+				{ ""name"" : ""myObject"", ""type"" : [ ""MyEnum"", ""A"", ""null"" ] },
+                { ""name"" : ""myArray3"", ""type"" : { ""type"" : ""array"", ""items"" : { ""type"" : ""array"", ""items"" : [ ""double"", ""string"", ""null"" ] } } }
 			]
    } 
    ]
 }"
 , new object[] {3, // index of the schema to serialize
   "com.foo.Z",  // name of the schema to serialize
+@"Console.WriteLine(""Constructing com.foo.Z..."");", // Empty Constructor.
 @"
-  Console.WriteLine(""Constructing com.foo.Z..."");
+  Console.WriteLine(""Populating com.foo.Z..."");
   string bytes = ""bytes sample text"";
   System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 
@@ -130,6 +132,26 @@ namespace Avro.Test
   newrec.f1 = 1200;
   myMap2.Add(""A"", newrec);
   myObject = com.foo.MyEnum.B;
+
+  IList<System.Object> o1 = new List<System.Object>();
+
+    o1.Add((double)1123123121);
+    o1.Add((double)2);
+    o1.Add(null);
+    o1.Add(""fred"");
+
+    IList<System.Object> o2 = new List<System.Object>();
+
+    o2.Add((double)1);
+    o2.Add((double)32531);
+    o2.Add((double)4);
+    o2.Add((double)555);
+    o2.Add((double)0);
+
+    myArray3 = new List<IList<System.Object>>();
+    myArray3.Add(o1);
+    myArray3.Add(o2);
+
 "}
 )]
         public static void TestSpecific(string str, object[] result)
@@ -146,6 +168,18 @@ namespace Avro.Test
             CodeSnippetExpression snippet = new CodeSnippetExpression((string)result[2]);
             constructor.Statements.Add(snippet);
             ctd.Members.Add(constructor);
+
+            // add a function to the main class to populate the data
+            // This has been moved from constructor, as it was causing some tests to pass that shouldn't when referencing a blank object on READ.
+
+            CodeMemberMethod method = new CodeMemberMethod();
+            method.Attributes = MemberAttributes.Public;
+            method.Name = "Populate";
+            CodeSnippetExpression snippet2 = new CodeSnippetExpression((string)result[3]);
+            method.Statements.Add(snippet2);
+            ctd.Members.Add(method);
+
+
 
             // compile
             var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
@@ -167,6 +201,15 @@ namespace Avro.Test
 
             // create record
             ISpecificRecord rec = compres.CompiledAssembly.CreateInstance((string)result[1]) as ISpecificRecord;
+
+            // Call populate to put some data in it.
+            Type recType = rec.GetType(); ;
+            MethodInfo methodInfo = recType.GetMethod("Populate");
+            methodInfo.Invoke(rec, null);
+
+            var x1 = compres.CompiledAssembly.FullName;
+            
+
             Assert.IsFalse(rec == null);
 
             // serialize
