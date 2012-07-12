@@ -27,6 +27,8 @@ Avro 1.7.1 (unreleased)
     AVRO-1119. Java: Permit NettyServer to be used with SSL.
     (Sebastian Ortega via cutting)
 
+    AVRO-1125. Java: Remove un-needed warning about reflect API. (cutting)
+
   BUG FIXES
 
     AVRO-1114. Java: Update license headers for new mapreduce code.  (cutting)

@@ -21,20 +21,16 @@
 Use Java reflection to generate schemas and protocols for existing
 classes.
 
-<p>This API is not recommended except as a stepping stone for
-systems that currently uses Java interfaces to define RPC protocols.
-For new RPC systems, the {@link org.apache.avro.specific specific} API
-is preferred.  For systems that process dynamic data, the {@link
-org.apache.avro.generic generic} API is probably best.
-
 <p>Java types are mapped to Avro schemas as follows:
 
 <ul>
 
 <li><b>Classes</b> are mapped to Avro records. Only concrete classes
-  with a no-argument constructor are supported.  Fields are not
-  permitted to be null.  All inherited fields that are not static or
-  transient are used.</li>
+  with a no-argument constructor are supported.  All inherited fields
+  that are not static or transient are used.  Fields are not permitted
+  to be null unless annotated by {@link
+  org.apache.avro.reflect.Nullable Nullable} or a {@link
+  org.apache.avro.reflect.Union Union} containing null.</li>
 
 <li><b>Arrays</b> are mapped to Avro array schemas.  If an array's
   elements are a union defined by the {@link
@@ -62,9 +58,13 @@ org.apache.avro.generic generic} API is probably best.
 
 </ul>
 
-The {@link org.apache.avro.reflect.Union Union} annotation can be used
+<p>The {@link org.apache.avro.reflect.Union Union} annotation can be used
 to support reflection of schemas for interfaces, abstract base classes
 and other uses of polymorphism.
+
+<p>The {@link org.apache.avro.reflect.Stringable Stringable} annotation
+will cause a type to be serialized via its {@link java.lang.Object#toString()
+toString} method.
 
 </body>
 </html>
