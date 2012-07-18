@@ -1,5 +1,13 @@
 Avro Change Log
 
+Avro 1.7.2 (unreleased)
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+  BUG FIXES
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES
