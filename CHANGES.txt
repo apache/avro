@@ -8,6 +8,9 @@ Avro 1.7.2 (unreleased)
 
   BUG FIXES
 
+    AVRO-1128. Java: Fix SpecificRecordBase#equals() to work for
+    records that contain maps.  (cutting)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES

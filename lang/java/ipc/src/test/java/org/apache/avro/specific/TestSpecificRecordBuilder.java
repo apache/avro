@@ -152,6 +152,7 @@ public class TestSpecificRecordBuilder {
     Assert.assertEquals(interop.getRecordField(), copy.getRecordField());
     Assert.assertEquals(interop.getStringField(), copy.getStringField());
     Assert.assertEquals(interop.getUnionField(), copy.getUnionField());
+    Assert.assertEquals(interop, copy);
   }
   
   @Test(expected=org.apache.avro.AvroRuntimeException.class)
