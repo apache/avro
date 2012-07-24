@@ -36,7 +36,7 @@ set (AVRO_VERSION_MINOR "0")
 
 project (Avro-cpp)
 
-if (WIN32 AND NOT CYGWIN)
+if (WIN32 AND NOT CYGWIN AND NOT MSYS)
 add_definitions (/EHa)
 add_definitions (
     -DBOOST_REGEX_DYN_LINK
