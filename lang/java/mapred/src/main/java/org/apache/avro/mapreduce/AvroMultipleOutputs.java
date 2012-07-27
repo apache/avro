@@ -503,6 +503,18 @@ public class AvroMultipleOutputs{
     return taskContext;
   }
   
+  public Schema getKeySchema(String nameOutput)
+  {
+      return keySchemas.get(nameOutput);
+  }
+
+  public Schema getValSchema(String nameOutput)
+  {
+      return valSchemas.get(nameOutput);
+  }
+
+
+
   /**
    * Closes all the opened outputs.
    * 
