@@ -65,9 +65,13 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   public Deserializer<AvroWrapper<T>> getDeserializer(Class<AvroWrapper<T>> c) {
     Configuration conf = getConf();
     if (AvroKey.class.isAssignableFrom(c)) {
-      return new AvroKeyDeserializer<T>(getKeyWriterSchema(conf), getKeyReaderSchema(conf));
+      return new AvroKeyDeserializer<T>(getKeyWriterSchema(conf),
+                                        getKeyReaderSchema(conf),
+                                        conf.getClassLoader());
     } else if (AvroValue.class.isAssignableFrom(c)) {
-      return new AvroValueDeserializer<T>(getValueWriterSchema(conf), getValueReaderSchema(conf));
+      return new AvroValueDeserializer<T>(getValueWriterSchema(conf),
+                                          getValueReaderSchema(conf),
+                                          conf.getClassLoader());
     } else {
       throw new IllegalStateException("Only AvroKey and AvroValue are supported.");
     }

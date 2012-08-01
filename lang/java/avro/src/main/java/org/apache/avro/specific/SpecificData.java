@@ -55,6 +55,9 @@ public class SpecificData extends GenericData {
     this.classLoader = classLoader;
   }
   
+  /** Return the class loader that's used. */
+  public ClassLoader getClassLoader() { return classLoader; }
+
   @Override
   public DatumReader createDatumReader(Schema schema) {
     return new SpecificDatumReader(schema, schema, this);
@@ -267,14 +270,14 @@ public class SpecificData extends GenericData {
   
   @Override
   public Object createFixed(Object old, Schema schema) {
-    Class c = SpecificData.get().getClass(schema);
+    Class c = getClass(schema);
     if (c == null) return super.createFixed(old, schema); // punt to generic
     return c.isInstance(old) ? old : newInstance(c, schema);
   }
   
   @Override
   public Object newRecord(Object old, Schema schema) {
-    Class c = SpecificData.get().getClass(schema);
+    Class c = getClass(schema);
     if (c == null) return super.newRecord(old, schema); // punt to generic
     return (c.isInstance(old) ? old : newInstance(c, schema));
   }

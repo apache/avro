@@ -36,8 +36,9 @@ public class AvroKeyDeserializer<D> extends AvroDeserializer<AvroWrapper<D>, D> 
    * @param writerSchema The Avro writer schema for the data to deserialize.
    * @param readerSchema The Avro reader schema for the data to deserialize.
    */
-  public AvroKeyDeserializer(Schema writerSchema, Schema readerSchema) {
-    super(writerSchema, readerSchema);
+  public AvroKeyDeserializer(Schema writerSchema, Schema readerSchema,
+                             ClassLoader classLoader) {
+    super(writerSchema, readerSchema, classLoader);
   }
 
   /**

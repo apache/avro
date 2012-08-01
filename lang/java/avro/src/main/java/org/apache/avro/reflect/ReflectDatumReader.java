@@ -52,7 +52,8 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     this(writer, reader, ReflectData.get());
   }
 
-  protected ReflectDatumReader(Schema writer, Schema reader, ReflectData data){
+  /** Construct given writer's and reader's schema and the data model. */
+  public ReflectDatumReader(Schema writer, Schema reader, ReflectData data) {
     super(writer, reader, data);
   }
 

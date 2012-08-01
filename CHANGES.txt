@@ -14,6 +14,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1131. Generated build makefiles for MSYS/MinGW use Visual
     Studio compiler flags (Laurent Moss via thiru)
 
+    AVRO-1103. Java: Fix SpecificData and mapreduce to use correct
+    classloader. (cutting)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES

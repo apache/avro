@@ -22,6 +22,8 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapred.AvroWrapper;
@@ -29,8 +31,10 @@ import org.apache.avro.mapreduce.AvroJob;
 import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
+import org.junit.Assert;
 
 public class TestAvroSerialization {
   @Test
@@ -117,5 +121,18 @@ public class TestAvroSerialization {
 
     // Check that the reader schema is set correctly on the deserializer.
     assertEquals(readerSchema, avroDeserializer.getReaderSchema());
+  }
+
+  @Test public void testClassPath() throws Exception {
+    Configuration conf = new Configuration();
+    ClassLoader loader = new ClassLoader() {};
+    conf.setClassLoader(loader);
+    AvroSerialization serialization = new AvroSerialization();
+    serialization.setConf(conf);
+    AvroDeserializer des =
+      (AvroDeserializer)serialization.getDeserializer(AvroKey.class);
+    ReflectData data =
+      (ReflectData)((ReflectDatumReader)des.mAvroDatumReader).getData();
+    Assert.assertEquals(loader, data.getClassLoader());
   }
 }

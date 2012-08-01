@@ -76,6 +76,11 @@ public class ReflectData extends SpecificData {
 
   protected ReflectData() {}
   
+  /** Construct with a particular classloader. */
+  public ReflectData(ClassLoader classLoader) {
+    super(classLoader);
+  }
+  
   /** Return the singleton instance. */
   public static ReflectData get() { return INSTANCE; }
 

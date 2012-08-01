@@ -38,8 +38,10 @@ public class TestAvroValueDeserializer {
     // Create a deserializer.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
     Schema readerSchema = Schema.create(Schema.Type.STRING);
+    ClassLoader classLoader = this.getClass().getClassLoader();
     AvroValueDeserializer<CharSequence> deserializer
-        = new AvroValueDeserializer<CharSequence>(writerSchema, readerSchema);
+      = new AvroValueDeserializer<CharSequence>(writerSchema, readerSchema,
+                                                classLoader);
 
     // Check the schemas.
     assertEquals(writerSchema, deserializer.getWriterSchema());

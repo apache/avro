@@ -26,6 +26,7 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.mapred.AvroWrapper;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.hadoop.io.serializer.Deserializer;
 
@@ -52,7 +53,7 @@ public abstract class AvroDeserializer<T extends AvroWrapper<D>, D> implements D
   private final Schema mReaderSchema;
 
   /** The Avro datum reader for deserializing. */
-  private final DatumReader<D> mAvroDatumReader;
+  final DatumReader<D> mAvroDatumReader;
 
   /** An Avro binary decoder for deserializing. */
   private BinaryDecoder mAvroDecoder;
@@ -63,10 +64,12 @@ public abstract class AvroDeserializer<T extends AvroWrapper<D>, D> implements D
    * @param writerSchema The Avro writer schema for the data to deserialize.
    * @param readerSchema The Avro reader schema for the data to deserialize (may be null).
    */
-  protected AvroDeserializer(Schema writerSchema, Schema readerSchema) {
+  protected AvroDeserializer(Schema writerSchema, Schema readerSchema,
+                             ClassLoader classLoader) {
     mWriterSchema = writerSchema;
     mReaderSchema = null != readerSchema ? readerSchema : writerSchema;
-    mAvroDatumReader = new ReflectDatumReader<D>(mWriterSchema, mReaderSchema);
+    mAvroDatumReader = new ReflectDatumReader<D>(mWriterSchema, mReaderSchema,
+                                                 new ReflectData(classLoader));
   }
 
   /**
