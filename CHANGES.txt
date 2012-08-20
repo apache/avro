@@ -17,6 +17,8 @@ Avro 1.7.2 (unreleased)
     AVRO-1103. Java: Fix SpecificData and mapreduce to use correct
     classloader. (cutting)
 
+    AVRO-1135. Avro C++ fails to build on Mac. (thiru)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES

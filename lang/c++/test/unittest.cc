@@ -332,7 +332,7 @@ struct TestSchema
     void readFixed(Parser &p) {
 
         boost::array<uint8_t, 16> input;
-        p.readFixed<16>(input);
+        p.readFixed(input);
         BOOST_CHECK_EQUAL(input.size(), 16U);
 
         for(int i=0; i< 16; ++i) {
