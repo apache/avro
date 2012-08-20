@@ -25,7 +25,7 @@
 #include <boost/type_traits.hpp>
 #include <vector>
 
-#include "Config.hh"
+#include "../Config.hh"
 #include "detail/BufferDetail.hh"
 #include "detail/BufferDetailIterator.hh"
 
