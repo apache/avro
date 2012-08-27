@@ -236,7 +236,7 @@ struct FileBufferCopyOut : public BufferCopyOut {
     const int fd_;
 
     FileBufferCopyOut(const char* filename) :
-        fd_(::open(filename, O_WRONLY | O_CREAT | O_BINARY, 0644)) {
+        fd_(::open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0644)) {
 
         if (fd_ < 0) {
             throw Exception(boost::format("Cannot open file: %1%") %

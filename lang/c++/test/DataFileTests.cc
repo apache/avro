@@ -188,6 +188,17 @@ public:
         df.close();
     }
 
+    void testTruncate() {
+        testWriteDouble();
+        uintmax_t size = boost::filesystem::file_size(filename);
+        {
+            avro::DataFileWriter<Pair> df(filename, writerSchema, 100);
+            df.close();
+        }
+        uintmax_t new_size = boost::filesystem::file_size(filename);
+        BOOST_CHECK(size > new_size);
+    }
+
     void testReadFull() {
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
         int i = 0;
@@ -364,5 +375,10 @@ init_unit_test_suite( int argc, char* argv[] )
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDoubleTwoStepProject,
         t3));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t3));
+
+    shared_ptr<DataFileTest> t4(new DataFileTest("test4.df", dsch, dblsch));
+    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testTruncate, t4));
+    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t4));
+
     return ts;
 }

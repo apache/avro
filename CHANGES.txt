@@ -21,6 +21,8 @@ Avro 1.7.2 (unreleased)
 
     AVRO-1140. Buffer.hh includes Config.hh without "../" (Jan van der Lugt via thiru)
 
+    AVRO-1141. Avro data files are created without O_TRUNC (Martin Nagy via thiru)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES
