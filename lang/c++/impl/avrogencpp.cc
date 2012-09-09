@@ -171,6 +171,8 @@ string CodeGen::cppTypeOf(const NodePtr& n)
             lexical_cast<string>(n->fixedSize()) + ">";
     case avro::AVRO_SYMBOLIC:
         return cppTypeOf(resolveSymbol(n));
+    case avro::AVRO_UNION:
+        return fullname(done[n]);
     default:
         return "$Undefined$";
     }

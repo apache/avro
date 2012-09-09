@@ -1,8 +1,14 @@
 {
-  "type": "record",
-  "name": "r1",
-  "fields" : [
-    {"name": "id", "type": "string"},
-    {"name": "val", "type": [{"type": "array", "items": {"name": "r3", "type": "record", "fields": [{"name": "name", "type": "string"}, {"name": "data", "type": "bytes"}, {"name": "rev", "type": ["string", "null"]}]}}, "null"]}
-  ]
+    "type": "record",
+    "name": "r1",
+    "fields" : [
+        {
+            "name": "f1",
+            "type":
+            [
+                "null",
+                { "type":"array", "items":[ "null", "int" ] }
+            ]
+        }
+    ]
 }
