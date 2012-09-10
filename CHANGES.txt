@@ -32,6 +32,8 @@ Avro 1.7.2 (unreleased)
 
     AVRO-1143. avrogencpp generates $Undefined$ for some union types (thiru)
 
+    AVRO-1152. Java: Fix TestTraceSingletons for Java 7. (cutting)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES
