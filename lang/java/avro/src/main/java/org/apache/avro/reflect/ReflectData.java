@@ -217,6 +217,7 @@ public class ReflectData extends SpecificData {
   }
 
   static final String CLASS_PROP = "java-class";
+  static final String KEY_CLASS_PROP = "java-key-class";
   static final String ELEMENT_PROP = "java-element-class";
 
   static Class getClassProp(Schema schema, String prop) {
@@ -269,11 +270,15 @@ public class ReflectData extends SpecificData {
       Class raw = (Class)ptype.getRawType();
       Type[] params = ptype.getActualTypeArguments();
       if (Map.class.isAssignableFrom(raw)) {                 // Map
-        Type key = params[0];
-        Type value = params[1];
-        if (!(key == String.class))
+        Schema schema = Schema.createMap(createSchema(params[1], names));
+        Class key = (Class)params[0];
+        if (key.isAnnotationPresent(Stringable.class) || // Stringable key
+            stringableClasses.contains(key)) {
+          schema.addProp(KEY_CLASS_PROP, key.getName());
+        } else if (key != String.class) {
           throw new AvroTypeException("Map key class not String: "+key);
-        return Schema.createMap(createSchema(value, names));
+        }
+        return schema;
       } else if (Collection.class.isAssignableFrom(raw)) {   // Collection
         if (params.length != 1)
           throw new AvroTypeException("No array type specified.");

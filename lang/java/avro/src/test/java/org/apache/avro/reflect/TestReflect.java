@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro;
+package org.apache.avro.reflect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -33,21 +33,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
 import org.codehaus.jackson.node.NullNode;
 
 import org.apache.avro.Schema.Field;
-import org.apache.avro.TestReflect.SampleRecord.AnotherSampleRecord;
+import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.reflect.ReflectData;
-import org.apache.avro.reflect.ReflectDatumReader;
-import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.avro.reflect.Stringable;
-import org.apache.avro.reflect.Nullable;
-import org.apache.avro.reflect.Union;
 
 import org.junit.Test;
 
@@ -414,13 +412,13 @@ public class TestReflect {
   public static enum E { A, B };
   @Test public void testEnum() throws Exception {
     check(E.class, "{\"type\":\"enum\",\"name\":\"E\",\"namespace\":"
-          +"\"org.apache.avro.TestReflect$\",\"symbols\":[\"A\",\"B\"]}");
+          +"\"org.apache.avro.reflect.TestReflect$\",\"symbols\":[\"A\",\"B\"]}");
   }
 
   public static class R { int a; long b; }
   @Test public void testRecord() throws Exception {
     check(R.class, "{\"type\":\"record\",\"name\":\"R\",\"namespace\":"
-          +"\"org.apache.avro.TestReflect$\",\"fields\":["
+          +"\"org.apache.avro.reflect.TestReflect$\",\"fields\":["
           +"{\"name\":\"a\",\"type\":\"int\"},"
           +"{\"name\":\"b\",\"type\":\"long\"}]}");
   }
@@ -622,7 +620,35 @@ public class TestReflect {
     checkBinary(schema, c.getConstructor(String.class).newInstance(value));
   }
 
-  public static void checkBinary(Schema schema, Object datum)
+  public static class M1 {
+    Map<Integer, String> integerKeyMap;
+    Map<java.math.BigInteger, String> bigIntegerKeyMap;
+    Map<java.math.BigDecimal, String> bigDecimalKeyMap;
+    Map<java.io.File, String> fileKeyMap;
+  }
+
+  /** Test Map with stringable key classes. */
+  @Test public void testStringableMapKeys() throws Exception {
+    M1 record = new M1();
+    record.integerKeyMap = new HashMap<Integer, String>(1);
+    record.integerKeyMap.put(10, "foo");
+
+    record.bigIntegerKeyMap = new HashMap<java.math.BigInteger, String>(1);
+    record.bigIntegerKeyMap.put(java.math.BigInteger.TEN, "bar");
+
+    record.bigDecimalKeyMap = new HashMap<java.math.BigDecimal, String>(1);
+    record.bigDecimalKeyMap.put(java.math.BigDecimal.ONE, "bigDecimal");
+
+    record.fileKeyMap = new HashMap<java.io.File, String>(1);
+    record.fileKeyMap.put(new java.io.File("foo.bar"), "file");
+
+    ReflectData data = new ReflectData().addStringable(Integer.class);
+
+    checkBinary(data, data.getSchema(M1.class), record, true);
+  }
+
+  public static void checkBinary(ReflectData reflectData, Schema schema,
+                                 Object datum, boolean equals)
     throws IOException {
     ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(schema);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -633,8 +659,13 @@ public class TestReflect {
     Object decoded =
       reader.read(null, DecoderFactory.get().binaryDecoder(
           data, null));
-      
-    assertEquals(0, ReflectData.get().compare(datum, decoded, schema));
+
+    assertEquals(0, reflectData.compare(datum, decoded, schema, equals));
+  }
+
+  public static void checkBinary(Schema schema, Object datum)
+    throws IOException {
+    checkBinary(ReflectData.get(), schema, datum, false);
   }
 
   /** Test that the error message contains the name of the class. */

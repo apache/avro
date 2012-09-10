@@ -236,11 +236,19 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (l > 0) {
       do {
         for (int i = 0; i < l; i++) {
-          addToMap(map, readString(null, expected, in), read(null, eValue, in));
+          addToMap(map, readMapKey(null, expected, in), read(null, eValue, in));
         }
       } while ((l = in.mapNext()) > 0);
     }
     return map;
+  }
+
+  /** Called by the default implementation of {@link #readMap} to read a
+   * key value.  The default implementation returns delegates to
+   * {@link #readString(Object, org.apache.avro.io.Decoder)}.*/
+  protected Object readMapKey(Object old, Schema expected, Decoder in)
+    throws IOException{
+    return readString(old, expected, in);
   }
 
   /** Called by the default implementation of {@link #readMap} to add a

@@ -10,6 +10,9 @@ Avro 1.7.2 (unreleased)
     strings, including BigDecimal, BigInteger, URI, URL, Date and
     File.  (Alexandre Normand and cutting)
 
+    AVRO-1147. Java: Permit stringable map keys in reflect.
+    (Alexandre Normand)
+
   BUG FIXES
 
     AVRO-1128. Java: Fix SpecificRecordBase#equals() to work for

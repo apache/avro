@@ -100,11 +100,22 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   }
 
   @Override
+  protected Object readMapKey(Object old, Schema s, Decoder in)
+    throws IOException {
+    Class c = ReflectData.getClassProp(s, ReflectData.KEY_CLASS_PROP);
+    return readString(in, c);
+  }
+
+  @Override
   @SuppressWarnings(value="unchecked")
   protected Object readString(Object old, Schema s,
                               Decoder in) throws IOException {
-    String value = (String)readString(null, in);
     Class c = ReflectData.getClassProp(s, ReflectData.CLASS_PROP);
+    return readString(in, c);
+  }
+
+  private Object readString(Decoder in, Class c) throws IOException {
+    String value = (String)readString(null, in);
     if (c != null)                                // Stringable annotated class
       try {                                       // use String-arg ctor
         return c.getConstructor(String.class).newInstance(value);
