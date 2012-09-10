@@ -23,16 +23,21 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import org.junit.Test;
+import org.junit.Before;
 
 public class TestTraceSingletons {
   
+  @Before
+  public void clearSingleton() throws Exception {
+    SingletonTestingTracePlugin.clearSingletonInfo();
+  }
+
   @Test
   public void testNormalConfiguration() throws IOException {
     TracePluginConfiguration conf = new TracePluginConfiguration();
     SingletonTestingTracePlugin.configureSingleton(conf);
     TracePlugin plugin = SingletonTestingTracePlugin.getSingleton();
     assertEquals(plugin.config, conf);
-    SingletonTestingTracePlugin.clearSingletonInfo();
   }
   
   /** Someone tries to re-configure after plugin dispatched. */
@@ -44,7 +49,6 @@ public class TestTraceSingletons {
     SingletonTestingTracePlugin.configureSingleton(conf1);
     TracePlugin plugin = SingletonTestingTracePlugin.getSingleton();
     SingletonTestingTracePlugin.configureSingleton(conf2);
-    SingletonTestingTracePlugin.clearSingletonInfo();
   }
   
   /** 
@@ -63,7 +67,6 @@ public class TestTraceSingletons {
     catch (RuntimeException e) {
       throw new AssertionError("Valid double configuration threw error.");
     }
-    SingletonTestingTracePlugin.clearSingletonInfo();
   }
   
   /**
