@@ -603,6 +603,25 @@ public class TestReflect {
     checkBinary(schema, null);
   }
 
+  /** Test stringable classes. */
+  @Test public void testStringables() throws Exception {
+    checkStringable(java.math.BigDecimal.class, "10");
+    checkStringable(java.math.BigInteger.class, "20");
+    checkStringable(java.net.URI.class, "foo://bar:9000/baz");
+    checkStringable(java.net.URL.class, "http://bar:9000/baz");
+    checkStringable(java.io.File.class, "foo.bar");
+    checkStringable(java.util.Date.class, "Sat, 12 Aug 1995 13:30:00 GMT");
+  }
+
+  public void checkStringable(Class c, String value) throws Exception {
+    ReflectData data = new ReflectData().get();
+    Schema schema = data.getSchema(c);
+    assertEquals
+      ("{\"type\":\"string\",\"java-class\":\""+c.getName()+"\"}",
+       schema.toString());
+    checkBinary(schema, c.getConstructor(String.class).newInstance(value));
+  }
+
   public static void checkBinary(Schema schema, Object datum)
     throws IOException {
     ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(schema);

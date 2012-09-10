@@ -33,6 +33,8 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
@@ -74,7 +76,22 @@ public class ReflectData extends SpecificData {
   
   private static final ReflectData INSTANCE = new ReflectData();
 
-  protected ReflectData() {}
+  /** Read/write some common builtin classes as strings.  Representing these as
+   * strings isn't always best, as they aren't always ordered ideally, but at
+   * least they're stored.  Also note that, for compatibility, only classes
+   * that wouldn't be otherwise correctly readable or writable should be added
+   * here, e.g., those without a no-arg constructor or those whose fields are
+   * all transient. */
+  private Set<Class> stringableClasses = new HashSet<Class>(); {
+    stringableClasses.add(java.math.BigDecimal.class);
+    stringableClasses.add(java.math.BigInteger.class);
+    stringableClasses.add(java.net.URI.class);
+    stringableClasses.add(java.net.URL.class);
+    stringableClasses.add(java.io.File.class);
+    stringableClasses.add(java.util.Date.class);
+  }
+
+  public ReflectData() {}
   
   /** Construct with a particular classloader. */
   public ReflectData(ClassLoader classLoader) {
@@ -83,6 +100,13 @@ public class ReflectData extends SpecificData {
   
   /** Return the singleton instance. */
   public static ReflectData get() { return INSTANCE; }
+
+  /** Cause a class to be treated as though it had an {@link Stringable}
+   ** annotation. */
+  public ReflectData addStringable(Class c) {
+    stringableClasses.add(c);
+    return this;
+  }
 
   @Override
   public DatumReader createDatumReader(Schema schema) {
@@ -215,7 +239,11 @@ public class ReflectData extends SpecificData {
       if (collectionClass != null)
         return collectionClass;
       return java.lang.reflect.Array.newInstance(getClass(schema.getElementType()),0).getClass();
-    case STRING:  return String.class;
+    case STRING:
+      Class stringClass = getClassProp(schema, CLASS_PROP);
+      if (stringClass != null)
+        return stringClass;
+      return String.class;
     case BYTES:   return BYTES_CLASS;
     case INT:
       String intClass = schema.getProp(CLASS_PROP);
@@ -263,8 +291,12 @@ public class ReflectData extends SpecificData {
       return result;
     } else if (type instanceof Class) {                      // Class
       Class<?> c = (Class<?>)type;
-      if (c.isPrimitive() || Number.class.isAssignableFrom(c)
-          || c == Void.class || c == Boolean.class)          // primitive
+      if (c.isPrimitive() ||                                 // primitives
+          c == Void.class || c == Boolean.class || 
+          c == Integer.class || c == Long.class ||
+          c == Float.class || c == Double.class || 
+          c == Byte.class || c == Short.class || 
+          c == Character.class)
         return super.createSchema(type, names);
       if (c.isArray()) {                                     // array
         Class component = c.getComponentType();
@@ -294,7 +326,8 @@ public class ReflectData extends SpecificData {
         Union union = c.getAnnotation(Union.class);
         if (union != null) {                                 // union annotated
           return getAnnotatedUnion(union, names);
-        } else if (c.isAnnotationPresent(Stringable.class)){ // Stringable
+        } else if (c.isAnnotationPresent(Stringable.class) || // Stringable
+                   stringableClasses.contains(c)) {
           Schema result = Schema.create(Schema.Type.STRING);
           result.addProp(CLASS_PROP, c.getName());
           return result;

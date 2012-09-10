@@ -6,6 +6,10 @@ Avro 1.7.2 (unreleased)
 
   IMPROVEMENTS
 
+    AVRO-1146. Java: Serialize several built-in Java classes as
+    strings, including BigDecimal, BigInteger, URI, URL, Date and
+    File.  (Alexandre Normand and cutting)
+
   BUG FIXES
 
     AVRO-1128. Java: Fix SpecificRecordBase#equals() to work for
