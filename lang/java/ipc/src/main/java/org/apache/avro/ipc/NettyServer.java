@@ -146,6 +146,16 @@ public class NettyServer implements Server {
   public void join() throws InterruptedException {
     closed.await();
   }
+  
+  /**
+   *
+   * @return The number of clients currently connected to this server.
+   */
+  public int getNumActiveConnections() {
+    //allChannels also contains the server channel, so exclude that from the
+    //count.
+    return allChannels.size() - 1;
+  }
 
   /**
    * Avro server handler for the Netty transport 
@@ -190,8 +200,18 @@ public class NettyServer implements Server {
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
       LOG.warn("Unexpected exception from downstream.", e.getCause());
       e.getChannel().close();
+      allChannels.remove(e.getChannel());
+    }
+
+    @Override
+    public void channelClosed(
+            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+      LOG.info("Connection to {} disconnected.",
+              e.getChannel().getRemoteAddress());
+      super.channelClosed(ctx, e);
+      e.getChannel().close();
+      allChannels.remove(e.getChannel());
     }
 
   }
-
 }

@@ -127,6 +127,18 @@ public class TestNettyServer {
 
   }
 
+  @Test
+  public void testConnectionsCount() throws Exception {
+    Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
+            server.getPort()), CONNECT_TIMEOUT_MILLIS);
+    Mail proxy2 = SpecificRequestor.getClient(Mail.class, transceiver2);
+    proxy.fireandforget(createMessage());
+    proxy2.fireandforget(createMessage());
+    Assert.assertEquals(2, ((NettyServer) server).getNumActiveConnections());
+    transceiver2.close();
+    Assert.assertEquals(1, ((NettyServer) server).getNumActiveConnections());
+  }
+
   private Message createMessage() {
     Message msg = Message.newBuilder().
       setTo("wife").
