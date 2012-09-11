@@ -21,6 +21,7 @@ package org.apache.avro.ipc;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.avro.AvroRuntimeException;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -119,6 +120,13 @@ public class NettyTransportCodec {
     private boolean packHeaderRead = false;
     private int listSize;
     private NettyDataPack dataPack;
+    private final long maxMem;
+    private static final long SIZEOF_REF = 8L; // mem usage of 64-bit pointer
+
+
+    public NettyFrameDecoder() {
+      maxMem = Runtime.getRuntime().maxMemory();
+    }
     
     /**
      * decode buffer to NettyDataPack
@@ -150,8 +158,19 @@ public class NettyTransportCodec {
       }
 
       int serial = buffer.readInt();
-      listSize = buffer.readInt();
+      int listSize = buffer.readInt();
+
+      // Sanity check to reduce likelihood of invalid requests being honored.
+      // Only allow 10% of available memory to go towards this list (too much!)
+      if (listSize * SIZEOF_REF > 0.1 * maxMem) {
+        channel.close().await();
+        throw new AvroRuntimeException("Excessively large list allocation " +
+            "request detected: " + listSize + " items! Connection closed.");
+      }
+
+      this.listSize = listSize;
       dataPack = new NettyDataPack(serial, new ArrayList<ByteBuffer>(listSize));
+
       return true;
     }
     

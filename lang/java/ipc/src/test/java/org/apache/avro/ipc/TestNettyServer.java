@@ -18,9 +18,14 @@
 
 package org.apache.avro.ipc;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import static org.junit.Assert.assertEquals;
 
 import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -146,6 +151,22 @@ public class TestNettyServer {
       setBody("I love you!").
       build();
     return msg;
+  }
+
+  // send a malformed request (HTTP) to the NettyServer port
+  @Test
+  public void testBadRequest() throws IOException {
+    int port = server.getPort();
+    String msg = "GET /status HTTP/1.1\n\n";
+    InetSocketAddress sockAddr = new InetSocketAddress("127.0.0.1", port);
+    Socket sock = new Socket();
+    sock.connect(sockAddr);
+    OutputStream out = sock.getOutputStream();
+    out.write(msg.getBytes(Charset.forName("UTF-8")));
+    out.flush();
+    byte[] buf = new byte[2048];
+    int bytesRead = sock.getInputStream().read(buf);
+    Assert.assertTrue("Connection should have been closed", bytesRead == -1);
   }
 
 }

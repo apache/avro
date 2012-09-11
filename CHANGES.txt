@@ -37,6 +37,9 @@ Avro 1.7.2 (unreleased)
 
     AVRO-1152. Java: Fix TestTraceSingletons for Java 7. (cutting)
 
+    AVRO-1111. Malformed data can cause OutOfMemoryError in Avro IPC.
+    (Mike Percy via tomwhite)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES
