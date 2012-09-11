@@ -47,6 +47,24 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public ${this.mangle($schema.getName())}(Object value, Throwable cause) {
     super(value, cause);
   }
+  
+#else
+#if ($schema.getFields().size() > 0)  
+
+  /**
+   * Default constructor.
+   */
+  public ${this.mangle($schema.getName())}() {}
+
+  /**
+   * All-args constructor.
+   */
+  public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end) {
+#foreach ($field in $schema.getFields())
+    this.${this.mangle($field.name())} = ${this.mangle($field.name())};
+#end
+  }
+#end
 
 #end
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }

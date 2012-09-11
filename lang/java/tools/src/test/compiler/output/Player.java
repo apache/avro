@@ -11,6 +11,22 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   @Deprecated public java.lang.CharSequence first_name;
   @Deprecated public java.lang.CharSequence last_name;
   @Deprecated public java.util.List<avro.examples.baseball.Position> position;
+
+  /**
+   * Default constructor.
+   */
+  public Player() {}
+
+  /**
+   * All-args constructor.
+   */
+  public Player(java.lang.Integer number, java.lang.CharSequence first_name, java.lang.CharSequence last_name, java.util.List<avro.examples.baseball.Position> position) {
+    this.number = number;
+    this.first_name = first_name;
+    this.last_name = last_name;
+    this.position = position;
+  }
+
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {

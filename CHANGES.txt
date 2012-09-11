@@ -19,6 +19,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1151. Netty Avro server should expose the number of connections
     currently open. (Hari Shreedharan via tomwhite)
 
+    AVRO-1149. Java: Add a constructor to generated classes with all
+    fields as parameters. (Gabriel Reid via cutting)
+
   BUG FIXES
 
     AVRO-1128. Java: Fix SpecificRecordBase#equals() to work for
