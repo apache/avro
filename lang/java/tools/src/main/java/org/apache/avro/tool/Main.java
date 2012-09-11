@@ -49,7 +49,10 @@ public class Main {
         new RpcSendTool(),
         new FromTextTool(),
         new ToTextTool(),
-        new TetherTool()
+        new TetherTool(),
+        new TrevniCreateRandomTool(),
+        new TrevniMetadataTool(),
+        new TrevniToJsonTool()
         }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {

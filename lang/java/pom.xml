@@ -63,6 +63,7 @@
     <jar-plugin.version>2.3.2</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
     <javadoc-plugin.version>2.8</javadoc-plugin.version>
+    <maven-site-plugin.version>3.1</maven-site-plugin.version>
     <plugin-plugin.version>2.9</plugin-plugin.version>
     <source-plugin.version>2.1.2</source-plugin.version>
     <surefire-plugin.version>2.12</surefire-plugin.version>
@@ -76,6 +77,7 @@
     <module>compiler</module>
     <module>maven-plugin</module>
     <module>ipc</module>
+    <module>trevni</module>
     <module>tools</module>
     <module>mapred</module>
     <module>protobuf</module>

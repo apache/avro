@@ -4,6 +4,9 @@ Avro 1.7.2 (unreleased)
 
   NEW FEATURES
 
+    AVRO-806.  Add specification of the Trevni columnar file format
+    and a Java implementation of it. (cutting)
+
   IMPROVEMENTS
 
     AVRO-1146. Java: Serialize several built-in Java classes as

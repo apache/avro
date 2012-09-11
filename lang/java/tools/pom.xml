@@ -110,6 +110,28 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.trevni</groupId>
+      <artifactId>trevni-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.trevni</groupId>
+      <artifactId>trevni-avro</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.trevni</groupId>
+      <artifactId>trevni-core</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.trevni</groupId>
+      <artifactId>trevni-avro</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-core-asl</artifactId>
       <version>${jackson.version}</version>

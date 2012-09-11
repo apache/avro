@@ -42,6 +42,7 @@ See http://forrest.apache.org/docs/linking.html for more info
   <docs label="Documentation"> 
     <overview   label="Overview"          href="index.html" />
     <spec       label="Specification"     href="spec.html" />
+    <trevni     label="Trevni"            href="ext:trevni/spec" />
     <java-api   label="Java API"          href="ext:api/java/index" />
     <c-api      label="C API"             href="ext:api/c/index" />
     <cpp-api    label="C++ API"           href="ext:api/cpp/index" />
@@ -79,6 +80,9 @@ See http://forrest.apache.org/docs/linking.html for more info
 	<index href="index.html" />
       </java>
     </api>
+    <trevni href="trevni/">
+      <spec href="spec.html"/>
+    </trevni>
   </external-refs>
  
 </site>
