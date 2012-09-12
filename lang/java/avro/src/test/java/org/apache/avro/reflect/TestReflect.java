@@ -646,6 +646,18 @@ public class TestReflect {
     checkBinary(data, data.getSchema(M1.class), record, true);
   }
 
+  public static class NullableStringable {
+    java.math.BigDecimal number;
+  }
+
+  @Test public void testNullableStringableField() throws Exception {
+    NullableStringable datum = new NullableStringable();
+    datum.number = java.math.BigDecimal.TEN;
+
+    Schema schema = ReflectData.AllowNull.get().getSchema(NullableStringable.class);
+    checkBinary(schema, datum);
+  }
+
   public static void checkBinary(ReflectData reflectData, Schema schema,
                                  Object datum, boolean equals)
     throws IOException {

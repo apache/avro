@@ -92,6 +92,9 @@ Avro 1.7.1 (16 July 2012)
     AVRO-1109. CSharp specific fails on multidimensional arrays.
     (Mark Farnan via thiru)
 
+    AVRO-1153. Java: Fix reflect to be able to write unions that
+    contain stringable schemas. (Alexandre Normand via cutting)
+
 Avro 1.7.0 (11 June 2012)
 
   NEW FEATURES

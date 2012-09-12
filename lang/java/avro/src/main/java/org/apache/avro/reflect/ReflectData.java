@@ -271,8 +271,7 @@ public class ReflectData extends SpecificData {
       if (Map.class.isAssignableFrom(raw)) {                 // Map
         Schema schema = Schema.createMap(createSchema(params[1], names));
         Class key = (Class)params[0];
-        if (key.isAnnotationPresent(Stringable.class) || // Stringable key
-            stringableClasses.contains(key)) {
+        if (isStringable(key)) {                             // Stringable key
           schema.addProp(KEY_CLASS_PROP, key.getName());
         } else if (key != String.class) {
           throw new AvroTypeException("Map key class not String: "+key);
@@ -330,8 +329,7 @@ public class ReflectData extends SpecificData {
         Union union = c.getAnnotation(Union.class);
         if (union != null) {                                 // union annotated
           return getAnnotatedUnion(union, names);
-        } else if (c.isAnnotationPresent(Stringable.class) || // Stringable
-                   stringableClasses.contains(c)) {
+        } else if (isStringable(c)) {                        // Stringable
           Schema result = Schema.create(Schema.Type.STRING);
           result.addProp(CLASS_PROP, c.getName());
           return result;
@@ -374,6 +372,11 @@ public class ReflectData extends SpecificData {
       return schema;
     }
     return super.createSchema(type, names);
+  }
+
+  private boolean isStringable(Class<?> c) {
+    return c.isAnnotationPresent(Stringable.class) ||
+      stringableClasses.contains(c);
   }
 
   private static final Schema THROWABLE_MESSAGE =
@@ -506,6 +509,16 @@ public class ReflectData extends SpecificData {
       throw new AvroTypeException("Error getting schema for "+type+": "
                                   +e.getMessage(), e);
     }
+  }
+
+  @Override
+  protected String getSchemaName(Object datum) {
+    if (datum != null) {
+      Class c = datum.getClass();
+      if (isStringable(c))
+        return Schema.Type.STRING.getName();
+    }
+    return super.getSchemaName(datum);
   }
 
   @Override
