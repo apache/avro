@@ -46,6 +46,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1111. Malformed data can cause OutOfMemoryError in Avro IPC.
     (Mike Percy via tomwhite)
 
+    AVRO-1155. Stringable Date test in TestReflect fails if timezone doesn't
+    match locale's default. Removed Date from built-in stringables. (tomwhite)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES

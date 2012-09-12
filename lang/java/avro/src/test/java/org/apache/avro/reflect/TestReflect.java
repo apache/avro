@@ -608,7 +608,6 @@ public class TestReflect {
     checkStringable(java.net.URI.class, "foo://bar:9000/baz");
     checkStringable(java.net.URL.class, "http://bar:9000/baz");
     checkStringable(java.io.File.class, "foo.bar");
-    checkStringable(java.util.Date.class, "Sat, 12 Aug 1995 13:30:00 GMT");
   }
 
   public void checkStringable(Class c, String value) throws Exception {

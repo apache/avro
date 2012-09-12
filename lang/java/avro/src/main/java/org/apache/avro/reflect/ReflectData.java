@@ -88,7 +88,6 @@ public class ReflectData extends SpecificData {
     stringableClasses.add(java.net.URI.class);
     stringableClasses.add(java.net.URL.class);
     stringableClasses.add(java.io.File.class);
-    stringableClasses.add(java.util.Date.class);
   }
 
   public ReflectData() {}
