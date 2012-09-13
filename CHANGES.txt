@@ -25,6 +25,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1138. C: Add function for opening existing data file with non-default
     block size.  (Maxim Pugachev via dcreager)
 
+    AVRO-1129. C: Detect when avro_schema_decref frees schema.
+    (Maxim Pugachev via dcreager)
+
   BUG FIXES
 
     AVRO-1128. Java: Fix SpecificRecordBase#equals() to work for

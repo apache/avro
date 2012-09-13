@@ -188,11 +188,14 @@ avro_schema_t avro_schema_incref(avro_schema_t schema)
 	return schema;
 }
 
-void avro_schema_decref(avro_schema_t schema)
+int
+avro_schema_decref(avro_schema_t schema)
 {
 	if (schema && avro_refcount_dec(&schema->refcount)) {
 		avro_schema_free(schema);
+		return 0;
 	}
+	return 1;
 }
 
 avro_schema_t avro_schema_string(void)

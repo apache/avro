@@ -108,7 +108,7 @@ avro_schema_t avro_schema_copy(avro_schema_t schema);
 int avro_schema_equal(avro_schema_t a, avro_schema_t b);
 
 avro_schema_t avro_schema_incref(avro_schema_t schema);
-void avro_schema_decref(avro_schema_t schema);
+int avro_schema_decref(avro_schema_t schema);
 
 int avro_schema_match(avro_schema_t writers_schema,
 		      avro_schema_t readers_schema);
