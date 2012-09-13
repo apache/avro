@@ -53,7 +53,7 @@ Avro 1.7.2 (unreleased)
     characters. (Jeff Mesnil via cutting)
 
     AVRO-1154. Java: Fix NettyTransciever to not hang when the server
-    is stopped. (Bruno Dumon via cutting)
+    is stopped. (Karel Vervaeke & Bruno Dumon via cutting)
 
 Avro 1.7.1 (16 July 2012)
 
