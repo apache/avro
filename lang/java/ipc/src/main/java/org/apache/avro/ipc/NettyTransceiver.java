@@ -28,8 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.ipc.NettyTransportCodec.NettyDataPack;
@@ -76,6 +76,10 @@ public class NettyTransceiver extends Transceiver {
   private final ClientBootstrap bootstrap;
   private final InetSocketAddress remoteAddr;
   
+  volatile ChannelFuture channelFuture;
+  volatile boolean stopping;
+  private final Object channelFutureLock = new Object();
+
   /**
    * Read lock must be acquired whenever using non-final state.
    * Write lock must be acquired whenever modifying state.
@@ -89,6 +93,7 @@ public class NettyTransceiver extends Transceiver {
     connectTimeoutMillis = 0L;
     bootstrap = null;
     remoteAddr = null;
+    channelFuture = null;
   }
 
   /**
@@ -242,14 +247,24 @@ public class NettyTransceiver extends Transceiver {
       stateLock.writeLock().lock();
       try {
         if (!isChannelReady(channel)) {
+          synchronized(channelFutureLock) {
+            if (!stopping) {
           LOG.debug("Connecting to " + remoteAddr);
-          ChannelFuture channelFuture = bootstrap.connect(remoteAddr);
+              channelFuture = bootstrap.connect(remoteAddr);
+            }
+          }
+          if (channelFuture != null) {
           channelFuture.awaitUninterruptibly(connectTimeoutMillis);
+
+            synchronized(channelFutureLock) {
           if (!channelFuture.isSuccess()) {
             throw new IOException("Error connecting to " + remoteAddr, 
                 channelFuture.getCause());
           }
           channel = channelFuture.getChannel();
+              channelFuture = null;
+            }
+          }
         }
       } finally {
         // Downgrade to read lock:
@@ -280,6 +295,12 @@ public class NettyTransceiver extends Transceiver {
     Channel channelToClose = null;
     Map<Integer, Callback<List<ByteBuffer>>> requestsToCancel = null;
     boolean stateReadLockHeld = stateLock.getReadHoldCount() != 0;
+
+    synchronized(channelFutureLock) {
+        if (stopping && channelFuture != null) {
+           channelFuture.cancel();
+        }
+    }
     if (stateReadLockHeld) {
       stateLock.readLock().unlock();
     }
@@ -350,6 +371,7 @@ public class NettyTransceiver extends Transceiver {
   public void close() {
     try {
       // Close the connection:
+      stopping = true;
       disconnect(true, true, null);
     } finally {
       // Shut down all thread pools to exit.
