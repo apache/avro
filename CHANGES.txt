@@ -67,6 +67,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1159. C: Check union discriminants in avro_value_read.
     (Lucas Martin-King via dcreager)
 
+    AVRO-1160. C: Better error reporting in avrocat.  (Lucas Martin-King
+    via dcreager)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES
