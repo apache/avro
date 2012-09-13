@@ -22,6 +22,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1149. Java: Add a constructor to generated classes with all
     fields as parameters. (Gabriel Reid via cutting)
 
+    AVRO-1138. C: Add function for opening existing data file with non-default
+    block size.  (Maxim Pugachev via dcreager)
+
   BUG FIXES
 
     AVRO-1128. Java: Fix SpecificRecordBase#equals() to work for

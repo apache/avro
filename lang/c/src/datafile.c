@@ -323,7 +323,8 @@ static int file_read_header(avro_reader_t reader,
 	return avro_read(reader, sync, synclen);
 }
 
-static int file_writer_open(const char *path, avro_file_writer_t w)
+static int
+file_writer_open(const char *path, avro_file_writer_t w, size_t block_size)
 {
 	int rval;
 	FILE *fp;
@@ -367,7 +368,11 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 		return ENOMEM;
 	}
 
-	w->datum_buffer_size = DEFAULT_BLOCK_SIZE;
+	if (block_size == 0) {
+		block_size = DEFAULT_BLOCK_SIZE;
+	}
+
+	w->datum_buffer_size = block_size;
 	w->datum_buffer = avro_malloc(w->datum_buffer_size);
 
 	if(!w->datum_buffer) {
@@ -388,7 +393,9 @@ static int file_writer_open(const char *path, avro_file_writer_t w)
 	return 0;
 }
 
-int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
+int
+avro_file_writer_open_bs(const char *path, avro_file_writer_t * writer,
+			 size_t block_size)
 {
 	avro_file_writer_t w;
 	int rval;
@@ -407,7 +414,7 @@ int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 		return ENOMEM;
 	}
 	avro_codec(w->codec, NULL);
-	rval = file_writer_open(path, w);
+	rval = file_writer_open(path, w, block_size);
 	if (rval) {
 		avro_codec_reset(w->codec);
 		avro_freet(struct avro_codec_t_, w->codec);
@@ -417,6 +424,12 @@ int avro_file_writer_open(const char *path, avro_file_writer_t * writer)
 
 	*writer = w;
 	return 0;
+}
+
+int
+avro_file_writer_open(const char *path, avro_file_writer_t * writer)
+{
+	return avro_file_writer_open_bs(path, writer, 0);
 }
 
 static int file_read_block_count(avro_file_reader_t r)
