@@ -49,6 +49,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1155. Stringable Date test in TestReflect fails if timezone doesn't
     match locale's default. Removed Date from built-in stringables. (tomwhite)
 
+    AVRO-851. Java: Fix a bug in GenericData#toString() when escaping
+    characters. (Jeff Mesnil via cutting)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES

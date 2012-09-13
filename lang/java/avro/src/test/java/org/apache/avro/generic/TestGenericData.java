@@ -305,7 +305,8 @@ public class TestGenericData {
     schema.setFields(Arrays.asList(stringField, enumField));
     
     GenericRecord r = new GenericData.Record(schema);
-    r.put(stringField.name(), "hello\nthere\"\tyou}");
+    // \u2013 is EN DASH
+    r.put(stringField.name(), "hello\nthere\"\tyou\u2013}");
     r.put(enumField.name(), new GenericData.EnumSymbol(enumField.schema(),"a"));
     
     String json = r.toString();
