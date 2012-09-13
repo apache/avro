@@ -453,7 +453,8 @@ static int file_read_block_count(avro_file_reader_t r)
 	check_prefix(rval, avro_read(r->reader, r->current_blockdata, len),
 		     "Cannot read file block: ");
 
-	avro_codec_decode(r->codec, r->current_blockdata, len);
+	check_prefix(rval, avro_codec_decode(r->codec, r->current_blockdata, len),
+		     "Cannot decode file block: ");
 
 	avro_reader_memory_set_source(r->block_reader, (const char *) r->codec->block_data, r->codec->used_size);
 

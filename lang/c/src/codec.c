@@ -207,6 +207,14 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 	{
 		err = inflate(s, Z_FINISH);
 
+		// Apparently if there is yet available space in the output then something
+		// has gone wrong in decompressing the data (according to cpython zlibmodule.c)
+		if (err == Z_BUF_ERROR && s->avail_out > 0) {
+			inflateEnd(s);
+			avro_set_error("Error decompressing block with deflate, possible data error");
+			return 1;
+		}
+
 		// The buffer was not big enough. resize it.
 		if (err == Z_BUF_ERROR)
 		{
@@ -229,6 +237,7 @@ static int decode_deflate(avro_codec_t c, void * data, int64_t len)
 	c->used_size = s->total_out;
 
 	if (inflateReset(s) != Z_OK) {
+		avro_set_error("Error resetting deflate decompression");
 		return 1;
 	}
 
