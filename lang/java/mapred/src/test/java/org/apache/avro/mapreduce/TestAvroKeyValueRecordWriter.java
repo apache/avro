@@ -34,6 +34,8 @@ import org.apache.avro.hadoop.io.AvroDatumConverterFactory;
 import org.apache.avro.hadoop.io.AvroKeyValue;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.AvroValue;
+import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -100,5 +102,57 @@ public class TestAvroKeyValueRecordWriter {
     // That's all, folks.
     assertFalse(avroFileReader.hasNext());
     avroFileReader.close();
+  }
+
+  public static class R1 {
+    String attribute;
+  }
+  @Test public void testUsingReflection() throws Exception {
+    Job job = new Job();
+    Schema schema = ReflectData.get().getSchema(R1.class);
+    AvroJob.setOutputValueSchema(job, schema);
+    TaskAttemptContext context = createMock(TaskAttemptContext.class);
+    replay(context);
+
+    R1 record = new R1();
+    record.attribute = "test";
+    AvroValue<R1> avroValue = new AvroValue<R1>(record);
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    AvroDatumConverterFactory factory =
+      new AvroDatumConverterFactory(job.getConfiguration());
+
+    AvroDatumConverter<Text, ?> keyConverter = factory.create(Text.class);
+
+    @SuppressWarnings("unchecked")
+    AvroDatumConverter<AvroValue<R1>, R1> valueConverter =
+      factory.create((Class<AvroValue<R1>>) avroValue.getClass());
+
+    AvroKeyValueRecordWriter<Text, AvroValue<R1>> writer =
+      new AvroKeyValueRecordWriter<Text, AvroValue<R1>>(keyConverter,
+        valueConverter, CodecFactory.nullCodec(), outputStream);
+
+    writer.write(new Text("reflectionData"), avroValue);
+    writer.close(context);
+
+    verify(context);
+
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+    Schema readerSchema = AvroKeyValue.getSchema(
+      Schema.create(Schema.Type.STRING), schema);
+    DatumReader<GenericRecord> datumReader =
+      new ReflectDatumReader<GenericRecord>(readerSchema);
+    DataFileStream<GenericRecord> avroFileReader =
+      new DataFileStream<GenericRecord>(inputStream, datumReader);
+
+    // Verify that the first record was written.
+    assertTrue(avroFileReader.hasNext());
+
+    // Verify that the record holds the same data that we've written
+    AvroKeyValue<CharSequence, R1> firstRecord =
+      new AvroKeyValue<CharSequence, R1>(avroFileReader.next());
+    assertNotNull(firstRecord.get());
+    assertEquals("reflectionData", firstRecord.getKey().toString());
+    assertEquals(record.attribute, firstRecord.getValue().attribute);
   }
 }

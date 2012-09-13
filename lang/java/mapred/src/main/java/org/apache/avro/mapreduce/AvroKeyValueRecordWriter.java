@@ -27,8 +27,8 @@ import org.apache.avro.hadoop.io.AvroDatumConverter;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -69,7 +69,7 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> {
 
     // Create an Avro container file and a writer to it.
     mAvroFileWriter = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>(mKeyValuePairSchema));
+        new ReflectDatumWriter<GenericRecord>(mKeyValuePairSchema));
     mAvroFileWriter.setCodec(compressionCodec);
     mAvroFileWriter.create(mKeyValuePairSchema, outputStream);
 

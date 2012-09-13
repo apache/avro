@@ -28,6 +28,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1129. C: Detect when avro_schema_decref frees schema.
     (Maxim Pugachev via dcreager)
 
+    AVRO-1162. Java: Extend AvroKeyValueOutputFormat to support
+    reflection.  (Alexandre Normand via cutting)
+
   BUG FIXES
 
     AVRO-1128. Java: Fix SpecificRecordBase#equals() to work for
