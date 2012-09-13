@@ -165,6 +165,13 @@ read_union_value(avro_reader_t reader, avro_value_t *dest)
 	check_prefix(rval, avro_binary_encoding.
 		     read_long(reader, &discriminant),
 		     "Cannot read union discriminant: ");
+
+	if (discriminant < 0) {
+		avro_set_error("Invalid union discriminant value: (%d)",
+			       discriminant);
+		return 1;
+	}
+
 	check(rval, avro_value_set_branch(dest, discriminant, &branch));
 	check(rval, read_value(reader, &branch));
 	return 0;
