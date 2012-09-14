@@ -31,6 +31,8 @@ Avro 1.7.2 (unreleased)
     AVRO-1162. Java: Extend AvroKeyValueOutputFormat to support
     reflection.  (Alexandre Normand via cutting)
 
+    AVRO-1142. Clarify Snappy block compression in specification. (cutting)
+
   BUG FIXES
 
     AVRO-1128. Java: Fix SpecificRecordBase#equals() to work for
