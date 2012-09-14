@@ -17,6 +17,7 @@
       &lt;!ENTITY AvroVersion "${version}"&gt;
     </echo>
     <exec executable="${forrest.home}/bin/forrest" failonerror="true">
+      <arg value="-Dproject.configfile=${basedir}/src/cli.xconf"/>
       <arg value="-Dproject.content-dir=src"/>
       <arg value="-Dproject.site=../${build.dir}/"/>
     </exec>
