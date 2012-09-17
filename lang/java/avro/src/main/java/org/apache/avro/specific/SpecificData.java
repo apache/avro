@@ -189,8 +189,8 @@ public class SpecificData extends GenericData {
       } else if (Map.class.isAssignableFrom(raw)) {   // map
         java.lang.reflect.Type key = params[0];
         java.lang.reflect.Type value = params[1];
-        if (!(type instanceof Class
-              && CharSequence.class.isAssignableFrom((Class)type)))
+        if (!(key instanceof Class
+              && CharSequence.class.isAssignableFrom((Class)key)))
           throw new AvroTypeException("Map key class not CharSequence: "+key);
         return Schema.createMap(createSchema(value, names));
       } else {

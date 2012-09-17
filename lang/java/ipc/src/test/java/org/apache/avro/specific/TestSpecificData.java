@@ -18,6 +18,7 @@
 package org.apache.avro.specific;
 
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 
 import org.junit.Test;
@@ -44,6 +45,15 @@ public class TestSpecificData {
   /** Make sure that even with nulls, toString() doesn't throw NPE. */
   public void testToString() {
     new TestRecord().toString();
+  }
+
+  private static class X {
+    public Map<String,String> map;
+  }
+
+  @Test
+  public void testGetMapSchema() throws Exception {
+    SpecificData.get().getSchema(X.class.getField("map").getGenericType());
   }
 
   @Test
