@@ -184,6 +184,10 @@ avro_generic_link_decref_iface(avro_value_iface_t *viface)
 		/* We don't keep a reference to the target
 		 * implementation, since that would give us a reference
 		 * cycle. */
+		/* We do however keep a reference to the target
+		 * schema, which we need to decrement before freeing
+		 * the link */
+		avro_schema_decref(iface->schema);
 		avro_freet(avro_generic_link_value_iface_t, iface);
 	}
 }
