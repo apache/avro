@@ -373,6 +373,7 @@ process_file(const char *filename)
 	avro_value_decref(&value);
 	avro_value_iface_decref(iface);
 	avro_file_reader_close(reader);
+	avro_schema_decref(wschema);
 }
 
 

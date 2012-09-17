@@ -89,6 +89,8 @@ Avro 1.7.2 (unreleased)
     AVRO-1165. C: Fix memory leak in generic value implementations involving
     LINK schemas.  (Vivek Nadkarni via dcreager)
 
+    AVRO-1161. C: Fix memory leak in avro{append,cat,mod,pipe} (dcreager)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES

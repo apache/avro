@@ -86,6 +86,7 @@ process_file(const char *filename)
 	avro_file_reader_close(reader);
 	avro_value_decref(&value);
 	avro_value_iface_decref(iface);
+	avro_schema_decref(wschema);
 
 	if (should_close) {
 		fclose(fp);

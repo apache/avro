@@ -82,6 +82,7 @@ process_file(const char *in_filename, const char *out_filename)
 	avro_file_writer_close(writer);
 	avro_value_decref(&value);
 	avro_value_iface_decref(iface);
+	avro_schema_decref(wschema);
 }
 
 
