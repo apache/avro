@@ -46,9 +46,11 @@ Avro 1.7.2 (unreleased)
 
     AVRO-1135. Avro C++ fails to build on Mac. (thiru)
 
-    AVRO-1140. Buffer.hh includes Config.hh without "../" (Jan van der Lugt via thiru)
+    AVRO-1140. Buffer.hh includes Config.hh without "../" (Jan van der
+    Lugt via thiru)
 
-    AVRO-1141. Avro data files are created without O_TRUNC (Martin Nagy via thiru)
+    AVRO-1141. Avro data files are created without O_TRUNC (Martin
+    Nagy via thiru)
 
     AVRO-1143. avrogencpp generates $Undefined$ for some union types (thiru)
 
