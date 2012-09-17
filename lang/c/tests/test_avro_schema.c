@@ -33,7 +33,7 @@ avro_writer_t avro_stderr;
 static void run_tests(char *dirpath, int should_pass)
 {
 	char jsontext[4096];
-	size_t jsonlen, rval;
+	size_t rval;
 	char filepath[1024];
 	DIR *dir;
 	struct dirent *dent;
@@ -57,13 +57,13 @@ static void run_tests(char *dirpath, int should_pass)
 			snprintf(filepath, sizeof(filepath), "%s/%s", dirpath,
 				 dent->d_name);
 			fprintf(stderr, "TEST %s...", filepath);
-			jsonlen = 0;
 			fp = fopen(filepath, "r");
 			if (!fp) {
 				fprintf(stderr, "can't open!\n");
 				exit(EXIT_FAILURE);
 			}
 			rval = fread(jsontext, 1, sizeof(jsontext) - 1, fp);
+			fclose(fp);
 			jsontext[rval] = '\0';
 			test_rval =
 			    avro_schema_from_json(jsontext, 0, &schema, NULL);
@@ -104,6 +104,7 @@ static void run_tests(char *dirpath, int should_pass)
 		}
 	}
 	while (dent != NULL);
+	closedir(dir);
 }
 
 static int test_array(void)
@@ -164,6 +165,8 @@ static int test_fixed(void)
 		fprintf(stderr, "Unexpected fixed size\n");
 		exit(EXIT_FAILURE);
 	}
+
+	avro_schema_decref(schema);
 	return 0;
 }
 

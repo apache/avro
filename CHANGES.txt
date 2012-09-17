@@ -83,6 +83,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1150. Java: Fix tests to create all temporary files in target
     directories.  (Gabriel Reid via cutting)
 
+    AVRO-1164. C: Clean up valgrind warnings in test_avro_schema test case.
+    (Vivek Nadkarni via dcreager)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES
