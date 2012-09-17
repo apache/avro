@@ -62,7 +62,7 @@ public class TestTextFileTools {
   public static void writeRandomFile() throws IOException {
     schema = Schema.create(Type.BYTES);
     lines = new ByteBuffer[COUNT];
-    linesFile = AvroTestUtil.tempFile("random.lines");
+    linesFile = AvroTestUtil.tempFile(TestTextFileTools.class, "random.lines");
 
     OutputStream out =
       new BufferedOutputStream(new FileOutputStream(linesFile));
@@ -84,7 +84,7 @@ public class TestTextFileTools {
   }
   
   private void fromText(String name, String... args) throws Exception {
-    File avroFile = AvroTestUtil.tempFile(name + ".avro");
+    File avroFile = AvroTestUtil.tempFile(getClass(), name + ".avro");
 
     ArrayList<String> arglist = new ArrayList<String>();
     arglist.addAll(Arrays.asList(args));
@@ -120,8 +120,8 @@ public class TestTextFileTools {
   }
 
   private static void toText(String name) throws Exception {
-    File avroFile = AvroTestUtil.tempFile(name + ".avro");
-    File outFile = AvroTestUtil.tempFile(name + ".lines");
+    File avroFile = AvroTestUtil.tempFile(TestTextFileTools.class, name + ".avro");
+    File outFile = AvroTestUtil.tempFile(TestTextFileTools.class, name + ".lines");
 
     ArrayList<String> arglist = new ArrayList<String>();
     arglist.add(avroFile.toString());

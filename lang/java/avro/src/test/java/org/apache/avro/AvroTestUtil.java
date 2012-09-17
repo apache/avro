@@ -21,12 +21,34 @@ import java.io.File;
 
 /** Utilities for Avro tests. */
 public class AvroTestUtil {
-  static final File TMPDIR = new File(System.getProperty("test.dir", "/tmp"));
+  static final File TMPDIR = new File(System.getProperty("test.dir", System.getProperty("java.io.tmpdir", "/tmp")), "tmpfiles");
 
-  private AvroTestUtil() { }
-  
-  /** Create a temporary file in a test-appropriate directory. */
-  public static File tempFile(String name) {
-    return new File(TMPDIR, name);
+  private AvroTestUtil() {
   }
+
+  /** 
+   * Create a temporary file in a test-appropriate directory.
+   * 
+   * @param testClass The test case class requesting the file creation
+   * @param name The name of the file to be created 
+   */
+  public static File tempFile(Class testClass, String name) {
+    File testClassDir = new File(TMPDIR, testClass.getName());
+    testClassDir.mkdirs();
+    return new File(testClassDir, name);
+  }
+
+  /** 
+   * Create a temporary directory in a test-appropriate directory.
+   * 
+   * @param testClass The test case class requesting the directory creation
+   * @param name The name of the directory to be created  
+   */
+  public static File tempDirectory(Class testClass, String name) {
+    File tmpFile = tempFile(testClass, name);
+    tmpFile.delete();
+    tmpFile.mkdir();
+    return tmpFile;
+  }
+
 }

@@ -202,7 +202,7 @@ public class TestSpecificCompiler {
       "{ \"name\": \"Foo\", \"type\": \"record\", " +
       "  \"fields\": [ {\"name\": \"package\", \"type\": \"string\" }," +
       "                {\"name\": \"short\", \"type\": \"Foo\" } ] }";
-    File inputFile = File.createTempFile("input", "avsc");
+    File inputFile = AvroTestUtil.tempFile(getClass(), "input.avsc");
     FileWriter fw = new FileWriter(inputFile);
     fw.write(schema);
     fw.close();
@@ -663,7 +663,7 @@ public class TestSpecificCompiler {
     if (outputs.isEmpty()) {
       return;               // Nothing to compile!
     }
-    File dstDir = AvroTestUtil.tempFile("realCompiler");
+    File dstDir = AvroTestUtil.tempFile(TestSpecificCompiler.class, "realCompiler");
     List<File> javaFiles = new ArrayList<File>();
     for (OutputFile o : outputs) {
       javaFiles.add(o.writeToDestination(null, dstDir));

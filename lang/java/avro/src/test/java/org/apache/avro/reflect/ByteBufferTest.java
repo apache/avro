@@ -33,6 +33,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
+import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -51,13 +52,10 @@ public class ByteBufferTest {
     String name = "";
     ByteBuffer content;
   }
-  File tmpdir;
   File content;
 
   @Before public void before() throws IOException{
-    tmpdir = File.createTempFile("avro", "test");
-    tmpdir.delete();
-    tmpdir.mkdirs();
+    File tmpdir = AvroTestUtil.tempDirectory(getClass(), "content");
     content = new File(tmpdir,"test-content");
     FileOutputStream out = new FileOutputStream(content);
     for(int i=0;i<100000;i++){

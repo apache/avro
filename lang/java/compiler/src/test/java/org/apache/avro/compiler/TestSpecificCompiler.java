@@ -17,10 +17,13 @@
  */
 package org.apache.avro.compiler;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData.StringType;
@@ -41,10 +44,8 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(velocityTemplateDir);
     compiler.setStringType(StringType.CharSequence);
-    File outputDir = File.createTempFile("avro-tmp", "");
-    outputDir.delete();
-    outputDir.mkdir();
+    File outputDir = AvroTestUtil.tempDirectory(getClass(), "specific-output");
     compiler.compileToDestination(src, outputDir);
-    new File(outputDir, "SimpleRecord.java").delete();
+    assertTrue(new File(outputDir, "SimpleRecord.java").exists());
   }
 }

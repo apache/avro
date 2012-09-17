@@ -80,6 +80,9 @@ Avro 1.7.2 (unreleased)
     AVRO-1166. Java: Fix bug in SpecificData.getSchema(Map). (George
     Fletcher via cutting)
 
+    AVRO-1150. Java: Fix tests to create all temporary files in target
+    directories.  (Gabriel Reid via cutting)
+
 Avro 1.7.1 (16 July 2012)
 
   NEW FEATURES

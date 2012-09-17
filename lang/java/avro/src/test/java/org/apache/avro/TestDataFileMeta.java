@@ -44,7 +44,7 @@ public class TestDataFileMeta {
   @Test()
   public void testUseMeta() throws IOException {
     DataFileWriter<?> w = new DataFileWriter<Object>(new GenericDatumWriter<Object>());
-    File f = AvroTestUtil.tempFile("testDataFileMeta.avro");
+    File f = AvroTestUtil.tempFile(getClass(), "testDataFileMeta.avro");
     w.setMeta("hello", "bar");
     w.create(Schema.create(Type.NULL), f);
     w.close();

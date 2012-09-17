@@ -56,10 +56,10 @@ public class TestDataFileTools {
 
   @BeforeClass
   public static void writeSampleFile() throws IOException {
-    sampleFile = AvroTestUtil.tempFile(
+    sampleFile = AvroTestUtil.tempFile(TestDataFileTools.class,
       TestDataFileTools.class.getName() + ".avro");
     schema = Schema.create(Type.INT);
-    schemaFile = File.createTempFile("schema-temp", "schema");
+    schemaFile = AvroTestUtil.tempFile(TestDataFileTools.class, "schema-temp.schema");
     FileWriter fw = new FileWriter(schemaFile);
     fw.append(schema.toString());
     fw.close();
@@ -136,7 +136,7 @@ public class TestDataFileTools {
   }
   public void testWrite(String name, List<String> extra, String expectedCodec, String... extraArgs) 
   throws Exception {
-    File outFile = AvroTestUtil.tempFile(
+    File outFile = AvroTestUtil.tempFile(getClass(),
         TestDataFileTools.class + ".testWrite." + name + ".avro");
     FileOutputStream fout = new FileOutputStream(outFile);
     PrintStream out = new PrintStream(fout);
@@ -218,7 +218,7 @@ public class TestDataFileTools {
   }
   
   public File writeToAvroFile(String testName, String schema, String json) throws Exception {
-    File outFile = AvroTestUtil.tempFile(
+    File outFile = AvroTestUtil.tempFile(getClass(),
         TestDataFileTools.class + "." + testName + ".avro");
     FileOutputStream fout = new FileOutputStream(outFile);
     PrintStream out = new PrintStream(fout);

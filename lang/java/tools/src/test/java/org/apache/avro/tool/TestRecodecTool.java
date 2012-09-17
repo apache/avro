@@ -40,7 +40,7 @@ public class TestRecodecTool {
     String metaKey = "myMetaKey";
     String metaValue = "myMetaValue";
     
-    File inputFile = AvroTestUtil.tempFile("input.avro");
+    File inputFile = AvroTestUtil.tempFile(getClass(), "input.avro");
     
     Schema schema = Schema.create(Type.STRING);
     DataFileWriter<String> writer = new DataFileWriter<String>(
@@ -56,11 +56,11 @@ public class TestRecodecTool {
     }
     writer.close();
 
-    File defaultOutputFile = AvroTestUtil.tempFile("default-output.avro");
-    File nullOutputFile = AvroTestUtil.tempFile("null-output.avro");
-    File deflateDefaultOutputFile = AvroTestUtil.tempFile("deflate-default-output.avro");
-    File deflate1OutputFile = AvroTestUtil.tempFile("deflate-1-output.avro");
-    File deflate9OutputFile = AvroTestUtil.tempFile("deflate-9-output.avro");
+    File defaultOutputFile = AvroTestUtil.tempFile(getClass(), "default-output.avro");
+    File nullOutputFile = AvroTestUtil.tempFile(getClass(), "null-output.avro");
+    File deflateDefaultOutputFile = AvroTestUtil.tempFile(getClass(), "deflate-default-output.avro");
+    File deflate1OutputFile = AvroTestUtil.tempFile(getClass(), "deflate-1-output.avro");
+    File deflate9OutputFile = AvroTestUtil.tempFile(getClass(), "deflate-9-output.avro");
     
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(defaultOutputFile), null, new ArrayList<String>());
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(nullOutputFile), null, asList("--codec=null"));
