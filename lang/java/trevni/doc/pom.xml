@@ -21,12 +21,12 @@
 
   <parent>
     <artifactId>trevni-java</artifactId>
-    <groupId>org.apache.trevni</groupId>
+    <groupId>org.apache.avro</groupId>
     <version>1.7.2</version>
     <relativePath>..</relativePath>
   </parent>
 
-  <groupId>org.apache.trevni</groupId>
+  <groupId>org.apache.avro</groupId>
   <artifactId>trevni-doc</artifactId>
   <version>1.7.2</version>
   <packaging>pom</packaging>

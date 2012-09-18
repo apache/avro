@@ -117,23 +117,23 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.trevni</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>trevni-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.trevni</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>trevni-avro</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.trevni</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>trevni-core</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.trevni</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>trevni-avro</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>
