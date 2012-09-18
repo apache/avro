@@ -22,13 +22,14 @@
   <parent>
     <artifactId>trevni-java</artifactId>
     <groupId>org.apache.trevni</groupId>
-    <version>1.7.2-SNAPSHOT</version>
+    <version>1.7.2</version>
     <relativePath>..</relativePath>
   </parent>
 
   <groupId>org.apache.trevni</groupId>
   <artifactId>trevni-doc</artifactId>
-  <version>1.7.2-SNAPSHOT</version>
+  <version>1.7.2</version>
+  <packaging>pom</packaging>
 
   <name>Trevni Specification</name>
   <url>http://avro.apache.org/</url>

@@ -27,7 +27,7 @@
 
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-toplevel</artifactId>
-  <version>1.7.2-SNAPSHOT</version>
+  <version>1.7.2</version>
   <packaging>pom</packaging>
 
   <name>Apache Avro Toplevel</name>
@@ -243,7 +243,7 @@
                 <copy todir="${avro.distDir}/java" verbose="true">
                   <flattenmapper/>
                   <fileset dir="lang/java/"
-                           includes="*/target/*${project.version}*.jar"
+                           includes="**/target/*${project.version}*.jar"
                            excludes="**/original-*.jar **/*tests.jar"/>
                 </copy>
 

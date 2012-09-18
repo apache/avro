@@ -22,7 +22,7 @@
   <parent>
     <artifactId>trevni-java</artifactId>
     <groupId>org.apache.trevni</groupId>
-    <version>1.7.2-SNAPSHOT</version>
+    <version>1.7.2</version>
     <relativePath>../</relativePath>
   </parent>
 

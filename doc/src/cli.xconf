@@ -213,8 +213,8 @@
    <exclude pattern="**apidocs**"/>
    <exclude pattern="api/**"/>
 
-<!-- Avro: Exclude anything in a subdirectory. -->
-   <exclude pattern="**/**"/>
+<!-- Avro: Exclude trevni doc. -->
+   <exclude pattern="trevni/**"/>
 
 <!--
   This is a workaround for FOR-284 "link rewriting broken when
