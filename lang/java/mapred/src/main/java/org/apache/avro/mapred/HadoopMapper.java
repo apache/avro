@@ -45,7 +45,6 @@ class HadoopMapper<IN,OUT,K,V,KO,VO> extends MapReduceBase
       (conf.getClass(AvroJob.MAPPER, AvroMapper.class, AvroMapper.class),
        conf);
     this.isMapOnly = conf.getNumReduceTasks() == 0;
-    this.mapper.configure(conf);
   }
 
   @SuppressWarnings("unchecked")

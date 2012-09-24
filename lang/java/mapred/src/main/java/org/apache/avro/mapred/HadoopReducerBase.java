@@ -39,7 +39,6 @@ abstract class HadoopReducerBase<K,V,OUT,KO,VO> extends MapReduceBase
   @Override
   public void configure(JobConf conf) {
     this.reducer = getReducer(conf);
-    this.reducer.configure(conf);
   }
 
   class ReduceIterable implements Iterable<V>, Iterator<V> {

@@ -181,9 +181,8 @@ public class TestWeather {
     // check that AvroMapper and AvroReducer get close() and configure() called
     assertEquals(1, mapCloseCalls.get());
     assertEquals(1, reducerCloseCalls.get());
-    // gets called twice for some reason, so loosen this check
-    assertTrue(mapConfigureCalls.get() >= 1);
-    assertTrue(reducerConfigureCalls.get() >= 1);
+    assertEquals(1, mapConfigureCalls.get());
+    assertEquals(1, reducerConfigureCalls.get());
 
 
   }

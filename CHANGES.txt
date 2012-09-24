@@ -11,6 +11,9 @@ Trunk (not yet released)
 
   BUG FIXES
 
+    AVRO-1171. Java: Don't call configure() twice on mappers & reducers.
+    (Dave Beech via cutting)
+
 Avro 1.7.2 (20 October 2012)
 
   NEW FEATURES
