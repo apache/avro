@@ -18,6 +18,7 @@
 package org.apache.avro.mapreduce;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputFormat;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.avro.Schema;
@@ -422,7 +424,7 @@ public class AvroMultipleOutputs{
   public void write(Object key, Object value, String baseOutputPath) 
       throws IOException, InterruptedException {
     checkBaseOutputPath(baseOutputPath);
-    TaskAttemptContext taskContext = new TaskAttemptContext(
+    TaskAttemptContext taskContext = createTaskAttemptContext(
       context.getConfiguration(), context.getTaskAttemptID());
     getRecordWriter(taskContext, baseOutputPath).write(key, value);
   }
@@ -495,12 +497,40 @@ public class AvroMultipleOutputs{
       else
         AvroJob.setOutputValueSchema(job,valSchema);
     }
-    taskContext = new TaskAttemptContext(
+    taskContext = createTaskAttemptContext(
       job.getConfiguration(), context.getTaskAttemptID());
     
     taskContexts.put(nameOutput, taskContext);
     
     return taskContext;
+  }
+  
+  private TaskAttemptContext createTaskAttemptContext(Configuration conf, 
+      TaskAttemptID taskId) {
+    // Use reflection since the context types changed incompatibly between 1.0
+    // and 2.0.
+    try {
+      Class<?> c = getTaskAttemptContextClass();
+      Constructor<?> cons = c.getConstructor(Configuration.class,
+          TaskAttemptID.class);
+      return (TaskAttemptContext) cons.newInstance(conf, taskId);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
+  }
+  
+  private Class<?> getTaskAttemptContextClass() {
+    try {
+      return Class.forName(
+          "org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl");
+    } catch (Exception e) {
+      try {
+        return Class.forName(
+            "org.apache.hadoop.mapreduce.TaskAttemptContext");
+      } catch (Exception ex) {
+        throw new IllegalStateException(ex);
+      }
+    }
   }
   
   /**

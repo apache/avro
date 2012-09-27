@@ -81,7 +81,7 @@ public class TestAvroKeyOutputFormat {
     expect(context.getConfiguration())
         .andReturn(job.getConfiguration()).anyTimes();
     expect(context.getTaskAttemptID())
-        .andReturn(new TaskAttemptID("id", 1, true, 1, 1))
+        .andReturn(TaskAttemptID.forName("attempt_200707121733_0001_m_000000_0"))
         .anyTimes();
 
     // Create a mock record writer.

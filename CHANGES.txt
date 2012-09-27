@@ -14,6 +14,9 @@ Trunk (not yet released)
     AVRO-1171. Java: Don't call configure() twice on mappers & reducers.
     (Dave Beech via cutting)
 
+    AVRO-1170. Java: Avro's new mapreduce APIs don't work with Hadoop 2.
+    (tomwhite)
+
 Avro 1.7.2 (20 October 2012)
 
   NEW FEATURES

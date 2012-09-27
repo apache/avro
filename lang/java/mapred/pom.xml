@@ -76,6 +76,25 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>main</id>
+            <goals><goal>jar</goal></goals>
+            <phase>package</phase>
+          </execution>
+          <execution>
+            <id>with-classifier</id>
+            <goals><goal>jar</goal></goals>
+            <phase>package</phase>
+            <configuration>
+              <classifier>${envClassifier}</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -85,14 +104,7 @@
       <artifactId>avro-ipc</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <!-- hadoop's execution environment provides its own jars, usurping any others.
-        So we should not include it here -->
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
+    <dependency>     
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
       <version>${easymock.version}</version>
@@ -115,6 +127,64 @@
       <version>${jackson.version}</version>
     </dependency>
   </dependencies>
+  
+  <profiles>
+     <profile>
+      <id>hadoop1</id>
+      <activation>
+        <property>
+          <name>!hadoop.version</name> <!-- if no hadoop.version is set -->
+        </property>
+      </activation>
+      <properties>
+        <envClassifier>hadoop1</envClassifier>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+          <version>${hadoop1.version}</version>
+          <!-- hadoop's execution environment provides its own jars, usurping any others.
+            So we should not include it here -->
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>hadoop2</id>
+      <activation>
+        <property>
+          <name>hadoop.version</name>
+          <value>2</value>
+        </property>
+      </activation>
+      <properties>
+        <envClassifier>hadoop2</envClassifier>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client</artifactId>
+          <version>${hadoop2.version}</version>
+          <!-- hadoop's execution environment provides its own jars, usurping any others.
+            So we should not include it here -->
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-mapreduce-client-common</artifactId>
+        <version>${hadoop2.version}</version>
+          <scope>test</scope> <!-- for LocalJobRunner -->
+        </dependency>
+        <dependency>
+          <groupId>commons-httpclient</groupId>
+          <artifactId>commons-httpclient</artifactId>
+          <version>${commons-httpclient.version}</version>
+          <scope>test</scope> <!-- for LocalJobRunner -->
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
 </project>
 

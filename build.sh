@@ -93,7 +93,8 @@ case "$target" in
 
 	# build lang-specific artifacts
         
-	(cd lang/java; mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate) 
+	(cd lang/java; mvn package -DskipTests -Dhadoop.version=2;
+	  mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate) 
         (cd lang/java/trevni/doc; mvn site)
         (mvn -N -P copy-artifacts antrun:run) 
 
