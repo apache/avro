@@ -21,7 +21,7 @@ except ImportError:
   from distutils.core import setup
 from sys import version_info
 
-install_requires = ['python-snappy']
+install_requires = []
 if version_info[:2] <= (2, 5):
     install_requires.append('simplejson >= 2.0.9')
 
@@ -43,4 +43,7 @@ setup(
   license = 'Apache License 2.0',
   keywords = 'avro serialization rpc',
   url = 'http://hadoop.apache.org/avro',
+  extras_require = {
+    'snappy': ['python-snappy'],
+  },
 )

@@ -25,8 +25,9 @@ from avro import schema
 from avro import io
 try:
   import snappy
-except:
-  pass # fail later if snappy is used
+  has_snappy = True
+except ImportError:
+  has_snappy = False
 #
 # Constants
 #
@@ -43,7 +44,9 @@ META_SCHEMA = schema.parse("""\
    {"name": "meta", "type": {"type": "map", "values": "bytes"}},
    {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": %d}}]}
 """ % (MAGIC_SIZE, SYNC_SIZE))
-VALID_CODECS = ['null', 'deflate', 'snappy']
+VALID_CODECS = ['null', 'deflate']
+if has_snappy:
+    VALID_CODECS.append('snappy')
 VALID_ENCODINGS = ['binary'] # not used yet
 
 CODEC_KEY = "avro.codec"
