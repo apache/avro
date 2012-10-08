@@ -4,6 +4,8 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-485.  JavaScript: Add validator. (Quinn Slack via cutting) 
+
   IMPROVEMENTS
 
     AVRO-1169. Java: Reduce memory footprint of resolver.

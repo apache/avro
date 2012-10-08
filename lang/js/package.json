@@ -1,0 +1,34 @@
+{
+  "name": "avro-js",
+  "version": "0.0.1",
+  "author": "Avro Developers <dev@avro.apache.org>",
+  "description": "Avro validator for Javascript",
+  "contributors": [
+    {
+      "name": "Quinn Slack",
+      "email": "sqs@cs.stanford.edu"
+    } 
+  ],
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "svn",
+    "url": "http://svn.apache.org/repos/asf/avro/trunk/lang/js/"
+  },
+  "keywords": [
+    "avro",
+    "json"
+  ],
+  "dependencies" : {
+    "underscore"   :  "*"
+  },
+  "devDependencies" : {
+    "grunt"        :  "*"
+  },
+  "noAnalyze": true,
+  "license": "Apache",
+  "engine": {
+    "node": ">=0.4"
+  }
+}

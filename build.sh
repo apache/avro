@@ -45,6 +45,7 @@ case "$target" in
 	(cd lang/c; ./build.sh test)
 	(cd lang/c++; ./build.sh test)
 	(cd lang/csharp; ./build.sh test)
+	(cd lang/js; ./build.sh test)
 	(cd lang/ruby; rake test)
 	(cd lang/php; ./build.sh test)
 
@@ -106,6 +107,8 @@ case "$target" in
 
 	(cd lang/csharp; ./build.sh dist)
 
+	(cd lang/js; ./build.sh dist)
+
 	(cd lang/ruby; rake dist)
 
 	(cd lang/php; ./build.sh dist)
@@ -151,6 +154,8 @@ case "$target" in
 	(cd lang/c++; ./build.sh clean)
 
 	(cd lang/csharp; ./build.sh clean)
+
+	(cd lang/js; ./build.sh clean)
 
 	(cd lang/ruby; rake clean)
 
