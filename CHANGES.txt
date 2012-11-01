@@ -6,6 +6,9 @@ Trunk (not yet released)
 
     AVRO-485.  JavaScript: Add validator. (Quinn Slack via cutting) 
 
+    AVRO-1157. Java: Extend schema and protocol property support from
+    string-only to full JSON. (cutting)
+
   IMPROVEMENTS
 
     AVRO-1169. Java: Reduce memory footprint of resolver.

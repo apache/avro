@@ -1027,8 +1027,8 @@ Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
      } else if ("aliases".equals(key)) {          // aliases
        for (String alias : getTextProps("aliases", props, token))
          s.addAlias(alias);
-     } else if (props.get(key).isTextual()) {     // ignore other non-textual
-       s.addProp(key, getTextProp(key, props, token));
+     } else {                                     // add all other props
+       s.addProp(key, props.get(key));
      }
 
    return s;
@@ -1078,8 +1078,8 @@ Protocol ProtocolDeclaration():
    p = new Protocol(name, getDoc(), namespace);
    for (String key : props.keySet())
      if ("namespace".equals(key)) {               // already handled: ignore
-     } else if (props.get(key).isTextual()) {     // ignore other non-textual
-       p.addProp(key, getTextProp(key, props, token));
+     } else {                                     // add all other props
+       p.addProp(key, props.get(key));
      }
  }
  ProtocolBody(p)
@@ -1296,7 +1296,7 @@ void FieldDeclaration(List<Field> fields):
   ";"
   {
     for (String key : props.keySet())
-      type.addProp(key, getTextProp(key, props, token));
+      type.addProp(key, props.get(key));
   }
 }
 
@@ -1324,8 +1324,8 @@ void VariableDeclarator(Schema type, List<Field> fields):
       } else if ("aliases".equals(key)) {         // aliases
         for (String alias : getTextProps("aliases", props, token))
           field.addAlias(alias);
-      } else if (props.get(key).isTextual()) {    // ignore other non-textual
-        field.addProp(key, getTextProp(key, props, token));
+      } else {                                    // add all other props
+        field.addProp(key, props.get(key));
       }
     fields.add(field);
   }
@@ -1350,7 +1350,6 @@ Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
   boolean oneWay = false;
   List<Schema> errorSchemata = new ArrayList<Schema>();
   errorSchemata.add(Protocol.SYSTEM_ERROR);
-  Map<String, String> propMap = new LinkedHashMap<String, String>();
 }
 {
   msgDoc = MessageDocumentation()
@@ -1360,17 +1359,12 @@ Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
   [ "oneway" {oneWay = true; } | "throws" ErrorList(errorSchemata) ]
   ";"
   {
-    for (String key : props.keySet())
-      if (props.get(key).isTextual()) {    // ignore other non-textual
-        propMap.put(key, getTextProp(key, props, token));
-      }
-
     Schema errors = Schema.createUnion(errorSchemata);
     if (oneWay && response.getType() != Type.NULL)
       throw error("One-way message'"+name+"' must return void", token);
     return oneWay
-    ? p.createMessage(name, msgDoc, propMap, request)
-    : p.createMessage(name, msgDoc, propMap, request, response, errors);
+    ? p.createMessage(name, msgDoc, props, request)
+    : p.createMessage(name, msgDoc, props, request, response, errors);
     
   }
 }

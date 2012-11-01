@@ -850,7 +850,7 @@ public class TestSchema {
   @Test(expected=AvroRuntimeException.class)
   public void testImmutability2() {
     Schema s = enumSchema();
-    s.addProp("p1", null);
+    s.addProp("p1", (String)null);
   }
 
   private static List<String> lockedArrayList() {

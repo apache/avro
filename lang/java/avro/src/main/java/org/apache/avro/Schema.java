@@ -75,7 +75,7 @@ import org.codehaus.jackson.node.DoubleNode;
  * existing property.
  * </ul>
  */
-public abstract class Schema {
+public abstract class Schema extends JsonProperties {
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
@@ -97,7 +97,10 @@ public abstract class Schema {
 
   private final Type type;
 
-  Schema(Type type) { this.type = type; }
+  Schema(Type type) {
+    super(SCHEMA_RESERVED);
+    this.type = type;
+  }
 
   /** Create a schema for a primitive type. */
   public static Schema create(Type type) {
@@ -114,67 +117,18 @@ public abstract class Schema {
     }
   }
 
-  static final class Props extends LinkedHashMap<String,String> {
-    private Set<String> reserved;
-    public Props(Set<String> reserved) {
-      super(1);
-      this.reserved = reserved;
-    }
-    public void add(String name, String value) {
-      if (reserved.contains(name))
-        throw new AvroRuntimeException("Can't set reserved property: " + name);
-      
-      if (value == null)
-        throw new AvroRuntimeException("Can't set a property to null: " + name);
-    
-      String old = get(name);
-      if (old == null)
-        put(name, value);
-      else if (!old.equals(value))
-        throw new AvroRuntimeException("Can't overwrite property: " + name);
-    }
-
-    public void write(JsonGenerator gen) throws IOException {
-      for (Map.Entry<String,String> e : entrySet())
-        gen.writeStringField(e.getKey(), e.getValue());
-    }
-  }
-
   private static final Set<String> SCHEMA_RESERVED = new HashSet<String>();
   static {
     Collections.addAll(SCHEMA_RESERVED,
                        "doc", "fields", "items", "name", "namespace",
-                       "size", "symbols", "values", "type");
+                       "size", "symbols", "values", "type", "aliases");
   }
 
-  Props props = new Props(SCHEMA_RESERVED);
   int hashCode = NO_HASHCODE;
 
-  /**
-   * Returns the value of the named property in this schema.
-   * Returns <tt>null</tt> if there is no property with that name.
-   */
-  public synchronized String getProp(String name) {
-    return props.get(name);
-  }
-
-  /**
-   * Adds a property with the given name <tt>name</tt> and
-   * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
-   * <tt>null</tt>. It is illegal to add a property if another with
-   * the same name but different value already exists in this schema.
-   * 
-   * @param name The name of the property to add
-   * @param value The value for the property to add
-   */
-  public synchronized void addProp(String name, String value) {
-    props.add(name, value);
+  @Override public void addProp(String name, JsonNode value) {
+    super.addProp(name, value);
     hashCode = NO_HASHCODE;
-  }
-
-  /** Return the defined properties as an unmodifieable Map. */
-  public Map<String,String> getProps() {
-    return Collections.unmodifiableMap(props);
   }
 
   /** Create an anonymous record schema. */
@@ -348,7 +302,7 @@ public abstract class Schema {
     } else {
       gen.writeStartObject();
       gen.writeStringField("type", getName());
-      props.write(gen);
+      writeProps(gen);
       gen.writeEndObject();
     }
   }
@@ -380,11 +334,12 @@ public abstract class Schema {
 
   private static final Set<String> FIELD_RESERVED = new HashSet<String>();
   static {
-    Collections.addAll(FIELD_RESERVED, "default","doc","name","order","type");
+    Collections.addAll(FIELD_RESERVED,
+                       "default","doc","name","order","type","aliases");
   }
 
   /** A field within a record. */
-  public static class Field {
+  public static class Field extends JsonProperties {
 
     /** How values of this field should be ordered when sorting records. */
     public enum Order {
@@ -400,7 +355,6 @@ public abstract class Schema {
     private final JsonNode defaultValue;
     private final Order order;
     private Set<String> aliases;
-    private final Props props = new Props(FIELD_RESERVED);
 
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue) {
@@ -408,6 +362,7 @@ public abstract class Schema {
     }
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue, Order order) {
+      super(FIELD_RESERVED);
       this.name = validateName(name);
       this.schema = schema;
       this.doc = doc;
@@ -423,16 +378,7 @@ public abstract class Schema {
     public String doc() { return doc; }
     public JsonNode defaultValue() { return defaultValue; }
     public Order order() { return order; }
-    /** Return the value of the named property in this field or null. */
-    public synchronized String getProp(String name) { return props.get(name); }
-    /** Add a property with the given name to this field. */
-    public synchronized void addProp(String name, String value) {
-      props.add(name, value);
-    }
-    /** Return the defined properties as an unmodifieable Map. */
-    public Map<String,String> props() {
-      return Collections.unmodifiableMap(props);
-    }
+    @Deprecated public Map<String,String> props() { return getProps(); }
     public void addAlias(String alias) {
       if (aliases == null)
         this.aliases = new LinkedHashSet<String>();
@@ -672,7 +618,7 @@ public abstract class Schema {
         gen.writeStringField("doc", getDoc());
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
-      props.write(gen);
+      writeProps(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
       names.space = savedSpace;                   // restore namespace
@@ -700,7 +646,7 @@ public abstract class Schema {
             gen.writeString(alias);
           gen.writeEndArray();
         }
-        f.props.write(gen);
+        f.writeProps(gen);
         gen.writeEndObject();
       }
       gen.writeEndArray();
@@ -745,7 +691,7 @@ public abstract class Schema {
       for (String symbol : symbols)
         gen.writeString(symbol);
       gen.writeEndArray();
-      props.write(gen);
+      writeProps(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
     }
@@ -774,7 +720,7 @@ public abstract class Schema {
       gen.writeStringField("type", "array");
       gen.writeFieldName("items");
       elementType.toJson(names, gen);
-      props.write(gen);
+      writeProps(gen);
       gen.writeEndObject();
     }
   }
@@ -802,7 +748,7 @@ public abstract class Schema {
       gen.writeStringField("type", "map");
       gen.writeFieldName("values");
       valueType.toJson(names, gen);
-      props.write(gen);
+      writeProps(gen);
       gen.writeEndObject();
     }
   }
@@ -882,7 +828,7 @@ public abstract class Schema {
       if (getDoc() != null)
         gen.writeStringField("doc", getDoc());
       gen.writeNumberField("size", size);
-      props.write(gen);
+      writeProps(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
     }
@@ -1162,9 +1108,8 @@ public abstract class Schema {
           Iterator<String> i = field.getFieldNames();
           while (i.hasNext()) {                       // add field props
             String prop = i.next();
-            String value = field.get(prop).getTextValue();
-            if (!FIELD_RESERVED.contains(prop) && value != null)
-              f.addProp(prop, value);
+            if (!FIELD_RESERVED.contains(prop))
+              f.addProp(prop, field.get(prop));
           }
           f.aliases = parseAliases(field);
           fields.add(f);
@@ -1200,9 +1145,8 @@ public abstract class Schema {
       Iterator<String> i = schema.getFieldNames();
       while (i.hasNext()) {                       // add properties
         String prop = i.next();
-        String value = schema.get(prop).getTextValue();
-        if (!SCHEMA_RESERVED.contains(prop) && value != null) // ignore reserved
-          result.addProp(prop, value);
+        if (!SCHEMA_RESERVED.contains(prop))      // ignore reserved
+          result.addProp(prop, schema.get(prop));
       }
       if (savedSpace != null)
         names.space(savedSpace);                  // restore space

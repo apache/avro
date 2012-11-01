@@ -44,7 +44,10 @@
       "name" : "average",
       "type" : "float",
       "default" : "-Infinity"
-    } ]
+    } ],
+    "myProperty" : {
+      "key" : 3
+    }
   }, {
     "type" : "error",
     "name" : "TestError",

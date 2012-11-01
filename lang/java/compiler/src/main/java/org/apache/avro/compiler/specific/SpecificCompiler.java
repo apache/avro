@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.jackson.JsonNode;
+
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
@@ -349,7 +351,7 @@ public class SpecificCompiler {
     Map<Schema,Schema> types = new LinkedHashMap<Schema,Schema>();
 
     // Copy properties
-    for (Map.Entry<String,String> prop : p.getProps().entrySet())
+    for (Map.Entry<String,JsonNode> prop : p.getJsonProps().entrySet())
       newP.addProp(prop.getKey(), prop.getValue());   // copy props
 
     // annotate types
@@ -362,9 +364,9 @@ public class SpecificCompiler {
     Map<String,Message> newM = newP.getMessages();
     for (Message m : p.getMessages().values())
       newM.put(m.getName(), m.isOneWay()
-               ? newP.createMessage(m.getName(), m.getDoc(), m.getProps(),
+               ? newP.createMessage(m.getName(), m.getDoc(), m.getJsonProps(),
                                     addStringType(m.getRequest(), types))
-               : newP.createMessage(m.getName(), m.getDoc(), m.getProps(),
+               : newP.createMessage(m.getName(), m.getDoc(), m.getJsonProps(),
                                     addStringType(m.getRequest(), types),
                                     addStringType(m.getResponse(), types),
                                     addStringType(m.getErrors(), types)));
@@ -395,7 +397,7 @@ public class SpecificCompiler {
         Schema fSchema = addStringType(f.schema(), seen);
         Field newF =
           new Field(f.name(), fSchema, f.doc(), f.defaultValue(), f.order());
-        for (Map.Entry<String,String> p : f.props().entrySet())
+        for (Map.Entry<String,JsonNode> p : f.getJsonProps().entrySet())
           newF.addProp(p.getKey(), p.getValue()); // copy props
         newFields.add(newF);
       }
@@ -417,7 +419,7 @@ public class SpecificCompiler {
       result = Schema.createUnion(types);
       break;
     }
-    for (Map.Entry<String,String> p : s.getProps().entrySet())
+    for (Map.Entry<String,JsonNode> p : s.getJsonProps().entrySet())
       result.addProp(p.getKey(), p.getValue());   // copy props
     seen.put(s, result);
     return result;
