@@ -22,6 +22,9 @@ package $schema.getNamespace();
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end
+#foreach ($annotation in $this.javaAnnotations($schema))
+@$annotation
+#end
 public enum ${this.mangle($schema.getName())} { 
   #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($velocityHasNext), #end#end
   ;

@@ -23,6 +23,9 @@ package $protocol.getNamespace();
 #if ($protocol.getDoc())
 /** $protocol.getDoc() */
 #end
+#foreach ($annotation in $this.javaAnnotations($protocol))
+@$annotation
+#end
 public interface $this.mangle($protocol.getName()) {
   public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("${this.javaEscape($protocol.toString())}");
 #foreach ($e in $protocol.getMessages().entrySet())
@@ -31,6 +34,9 @@ public interface $this.mangle($protocol.getName()) {
 #set ($response = $message.getResponse())
 #if ($message.getDoc())
   /** $this.escapeForJavadoc($message.getDoc()) */
+#end
+#foreach ($annotation in $this.javaAnnotations($message))
+  @$annotation
 #end
   #if ($message.isOneWay())void#else${this.javaUnbox($response)}#end
  ${this.mangle($name)}(##

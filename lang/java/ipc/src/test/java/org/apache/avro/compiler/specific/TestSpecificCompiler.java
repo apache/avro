@@ -19,6 +19,7 @@ package org.apache.avro.compiler.specific;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -41,6 +42,13 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.TestProtocolParsing;
 import org.apache.avro.TestSchema;
+import org.apache.avro.TestAnnotation;
+
+import org.apache.avro.test.Simple;
+import org.apache.avro.test.TestRecord;
+import org.apache.avro.test.MD5;
+import org.apache.avro.test.Kind;
+
 import org.apache.avro.compiler.specific.SpecificCompiler.OutputFile;
 import org.junit.Test;
 
@@ -626,6 +634,24 @@ public class TestSpecificCompiler {
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("clearSchema$1", SpecificCompiler.generateClearMethod(
         createRecord("test", false, schema, Schema$), Schema$));
+  }
+
+  @Test public void testAnnotations() throws Exception {
+    // an interface generated for protocol
+    assertNotNull(Simple.class.getAnnotation(TestAnnotation.class));
+    // a class generated for a record
+    assertNotNull(TestRecord.class.getAnnotation(TestAnnotation.class));
+    // a class generated for a fixed
+    assertNotNull(MD5.class.getAnnotation(TestAnnotation.class));
+    // a class generated for an enum
+    assertNotNull(Kind.class.getAnnotation(TestAnnotation.class));
+
+    // a field
+    assertNotNull(TestRecord.class.getField("name")
+                  .getAnnotation(TestAnnotation.class));
+    // a method
+    assertNotNull(Simple.class.getMethod("ack")
+                  .getAnnotation(TestAnnotation.class));
   }
 
   /**

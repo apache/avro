@@ -9,6 +9,12 @@ Trunk (not yet released)
     AVRO-1157. Java: Extend schema and protocol property support from
     string-only to full JSON. (cutting)
 
+    AVRO-1186. Java: Extend specific compiler to emit Java annotations
+    on interfaces, classes, fields and methods for the property
+    "javaAnnotation".  The value of the property may either be a
+    string or a JSON array of strings in order to emit multiple
+    annotations. (cutting)
+
   IMPROVEMENTS
 
     AVRO-1169. Java: Reduce memory footprint of resolver.

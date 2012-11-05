@@ -2,15 +2,21 @@
  "protocol": "Simple",
  "doc": "Protocol used for testing.",
  "version" : "1.6.2",
+ "javaAnnotation": ["javax.annotation.Generated(\"avro\")",
+                    "org.apache.avro.TestAnnotation"],
 
  "types": [
-     {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
+     {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"],
+      "javaAnnotation": "org.apache.avro.TestAnnotation"},
 
-     {"name": "MD5", "type": "fixed", "size": 16},
+     {"name": "MD5", "type": "fixed", "size": 16,
+      "javaAnnotation": "org.apache.avro.TestAnnotation"},
 
      {"name": "TestRecord", "type": "record",
+      "javaAnnotation": "org.apache.avro.TestAnnotation",
       "fields": [
-          {"name": "name", "type": "string", "order": "ignore"},
+          {"name": "name", "type": "string", "order": "ignore",
+           "javaAnnotation": "org.apache.avro.TestAnnotation"},
           {"name": "kind", "type": "Kind", "order": "descending"},
           {"name": "hash", "type": "MD5"}
       ]
@@ -66,7 +72,8 @@
          "doc": "Send a one way message",
          "request": [],
          "response": "null",
-         "one-way": true
+         "one-way": true,
+         "javaAnnotation": "org.apache.avro.TestAnnotation"
      }
  }
 

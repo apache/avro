@@ -37,6 +37,7 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.velocity.Template;
@@ -475,6 +476,23 @@ public class SpecificCompiler {
     case BOOLEAN: return "boolean";
     default:      return javaType(schema);
     }
+  }
+
+  /** Utility for template use.  Returns the java annotations for a schema. */
+  public String[] javaAnnotations(JsonProperties props) {
+    JsonNode value = props.getJsonProp("javaAnnotation");
+    if (value == null)
+      return new String[0];
+    if (value.isTextual())
+      return new String[] { value.getTextValue() };
+    if (value.isArray()) {
+      int i = 0;
+      String[] result = new String[value.size()];
+      for (JsonNode v : value)
+        result[i++] = v.getTextValue();
+      return result;
+    }
+    return new String[0];
   }
 
   /** Utility for template use.  Escapes quotes and backslashes. */
