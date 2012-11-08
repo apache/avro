@@ -28,6 +28,10 @@ Trunk (not yet released)
     AVRO-1170. Java: Avro's new mapreduce APIs don't work with Hadoop 2.
     (tomwhite)
 
+    AVRO-1197. Java: Expose mapreduce tests so that 'maven install'
+    works correctly.  (Mike Percy via cutting)
+
+
 Avro 1.7.2 (20 October 2012)
 
   NEW FEATURES
