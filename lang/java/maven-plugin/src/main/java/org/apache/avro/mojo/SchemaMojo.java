@@ -51,11 +51,10 @@ public class SchemaMojo extends AbstractAvroMojo {
    */
   private String[] testIncludes = new String[] { "**/*.avsc" };
 
-  private Schema.Parser parser = new Schema.Parser();
-
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
+    Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(templateDirectory);
