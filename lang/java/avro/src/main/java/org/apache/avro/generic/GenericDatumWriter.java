@@ -19,6 +19,7 @@ package org.apache.avro.generic;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Collection;
@@ -122,13 +123,19 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     throws IOException {
     Schema element = schema.getElementType();
     long size = getArraySize(datum);
+    long actualSize = 0;
     out.writeArrayStart();
     out.setItemCount(size);
     for (Iterator<? extends Object> it = getArrayElements(datum); it.hasNext();) {
       out.startItem();
       write(element, it.next(), out);
+      actualSize++;
     }
     out.writeArrayEnd();
+    if (actualSize != size) {
+      throw new ConcurrentModificationException("Size of array written was " +
+          size + ", but number of elements written was " + actualSize + ". ");
+    }
   }
 
   /** Called to find the index for a datum within a union.  By default calls
@@ -157,14 +164,20 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     throws IOException {
     Schema value = schema.getValueType();
     int size = getMapSize(datum);
+    int actualSize = 0;
     out.writeMapStart();
     out.setItemCount(size);
     for (Map.Entry<Object,Object> entry : getMapEntries(datum)) {
       out.startItem();
       writeString(entry.getKey().toString(), out);
       write(value, entry.getValue(), out);
+      actualSize++;
     }
     out.writeMapEnd();
+    if (actualSize != size) {
+      throw new ConcurrentModificationException("Size of map written was " +
+          size + ", but number of entries written was " + actualSize + ". ");
+    }
   }
 
   /** Called by the default implementation of {@link #writeMap} to get the size

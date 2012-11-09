@@ -21,7 +21,7 @@ Trunk (not yet released)
     (Hernan Otero via cutting)
 
     AVRO-983. maven-avro-plugin: Allow maven schema compiler to support
-    external reference in an another avro schema file (tomwhite)
+    external reference in an another avro schema file. (tomwhite)
 
   BUG FIXES
 
@@ -33,6 +33,9 @@ Trunk (not yet released)
 
     AVRO-1197. Java: Expose mapreduce tests so that 'maven install'
     works correctly.  (Mike Percy via cutting)
+
+    AVRO-1200. DatumWriter can write malformed data if collection is
+    modified during write. (tomwhite)
 
 
 Avro 1.7.2 (20 October 2012)
