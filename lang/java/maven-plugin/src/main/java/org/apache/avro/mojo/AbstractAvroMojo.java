@@ -20,6 +20,7 @@ package org.apache.avro.mojo;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -136,7 +137,9 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     for (String exclude : excludes) {
       fs.addExclude(exclude);
     }
-    return fileSetManager.getIncludedFiles(fs);
+    String[] files = fileSetManager.getIncludedFiles(fs);
+    Arrays.sort(files);
+    return files;
   }
 
   private void compileFiles(String[] files, File sourceDir, File outDir) throws MojoExecutionException {

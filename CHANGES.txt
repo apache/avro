@@ -20,6 +20,9 @@ Trunk (not yet released)
     AVRO-1169. Java: Reduce memory footprint of resolver.
     (Hernan Otero via cutting)
 
+    AVRO-983. maven-avro-plugin: Allow maven schema compiler to support
+    external reference in an another avro schema file (tomwhite)
+
   BUG FIXES
 
     AVRO-1171. Java: Don't call configure() twice on mappers & reducers.
