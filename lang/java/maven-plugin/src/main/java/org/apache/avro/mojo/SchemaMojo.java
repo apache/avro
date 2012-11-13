@@ -34,6 +34,12 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
  */
 public class SchemaMojo extends AbstractAvroMojo {
   /**
+   * A parser used to parse all schema files. Using a common parser will 
+   * facilitate the import of external schemas.
+   */
+   private Schema.Parser schemaParser = new Schema.Parser();
+  
+   /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avsc</code> is used to select grammar files.
@@ -54,8 +60,18 @@ public class SchemaMojo extends AbstractAvroMojo {
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
-    Schema.Parser parser = new Schema.Parser();
-    Schema schema = parser.parse(src);
+    Schema schema;
+
+    // This is necessary to maintain backward-compatibility. If there are  
+    // no imported files then isolate the schemas from each other, otherwise
+    // allow them to share a single schema so resuse and sharing of schema
+    // is possible.
+    if (imports == null) {
+      schema = new Schema.Parser().parse(src);
+    } else {
+      schema = schemaParser.parse(src);
+    }
+    
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));

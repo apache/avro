@@ -15,6 +15,9 @@ Trunk (not yet released)
     string or a JSON array of strings in order to emit multiple
     annotations. (cutting)
 
+    AVRO-1188. Java: Permit external schema imports for schemas in
+    Maven plugin. (Sharmarke Aden via tomwhite)
+
   IMPROVEMENTS
 
     AVRO-1169. Java: Reduce memory footprint of resolver.

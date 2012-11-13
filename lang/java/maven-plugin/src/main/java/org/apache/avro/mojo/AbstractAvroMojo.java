@@ -20,6 +20,7 @@ package org.apache.avro.mojo;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -55,6 +56,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    */
   private File testOutputDirectory;
 
+  /**
+   * A list of files or directories that should be compiled first thus making
+   * them importable by subsequently compiled schemas. Note that imported files
+   * should not reference each other.
+   * @parameter 
+   */
+  protected String[] imports;
+  
   /**
    * A set of Ant-like exclusion patterns used to prevent certain files from
    * being processed. By default, this set is empty such that no files are
@@ -102,6 +111,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException {
     boolean hasSourceDir = null != sourceDirectory
         && sourceDirectory.isDirectory();
+    boolean hasImports = null != imports;
     boolean hasTestDir = null != testSourceDirectory
         && testSourceDirectory.isDirectory();
     if (!hasSourceDir && !hasTestDir) {
@@ -109,12 +119,32 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
           + sourceDirectory + " or testSourceDirectory: " + testSourceDirectory
           + " are directories");
     }
+
+    if (hasImports) {
+      for (String importedFile : imports) {
+        File file = new File(importedFile);
+        if (file.isDirectory()) {
+          String[] includedFiles = getIncludedFiles(file.getAbsolutePath(), excludes, getIncludes());
+          getLog().info("Importing Directory: " + file.getAbsolutePath());
+          getLog().debug("Importing Directory Files: " + Arrays.toString(includedFiles));
+          compileFiles(includedFiles, file, outputDirectory);
+        } else if (file.isFile()) {
+          getLog().info("Importing File: " + file.getAbsolutePath());
+          compileFiles(new String[]{file.getName()}, file.getParentFile(), outputDirectory);
+        }
+      }
+    }
+
     if (hasSourceDir) {
       String[] includedFiles = getIncludedFiles(
           sourceDirectory.getAbsolutePath(), excludes, getIncludes());
       compileFiles(includedFiles, sourceDirectory, outputDirectory);
+    }
+    
+    if (hasImports || hasSourceDir) {
       project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
     }
+    
     if (hasTestDir) {
       String[] includedFiles = getIncludedFiles(
           testSourceDirectory.getAbsolutePath(), testExcludes,
@@ -130,6 +160,23 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     FileSet fs = new FileSet();
     fs.setDirectory(absPath);
     fs.setFollowSymlinks(false);
+    
+    //exclude imports directory since it has already been compiled.
+    if (imports != null) {
+      String importExclude = null;
+
+      for (String importFile : this.imports) {
+        File file = new File(importFile);
+
+        if (file.isDirectory()) {
+          importExclude = file.getName() + "/**";
+        } else if (file.isFile()) {
+          importExclude = "**/" + file.getName();
+        }
+
+        fs.addExclude(importExclude);
+      }
+    }
     for (String include : includes) {
       fs.addInclude(include);
     }
