@@ -23,6 +23,9 @@ Trunk (not yet released)
     AVRO-1169. Java: Reduce memory footprint of resolver.
     (Hernan Otero via cutting)
 
+    AVRO-1183. Java: Provide a better error message when the schema
+    for a Pair cannot be inferred. (cutting)
+
   BUG FIXES
 
     AVRO-1171. Java: Don't call configure() twice on mappers & reducers.

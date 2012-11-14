@@ -25,6 +25,7 @@ import java.util.WeakHashMap;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
@@ -165,43 +166,43 @@ public class Pair<K,V>
 
   @SuppressWarnings("unchecked")
   public Pair(Object key, Object value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, getSchema(key), (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(Object key, GenericContainer value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, value.getSchema());
+    this((K)key, getSchema(key), (V)value, value.getSchema());
   }
   @SuppressWarnings("unchecked")
   public Pair(Object key, CharSequence value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, STRING_SCHEMA);
+    this((K)key, getSchema(key), (V)value, STRING_SCHEMA);
   }
   @SuppressWarnings("unchecked")
   public Pair(Object key, ByteBuffer value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, BYTES_SCHEMA);
+    this((K)key, getSchema(key), (V)value, BYTES_SCHEMA);
   }
   @SuppressWarnings("unchecked")
   public Pair(Object key, Integer value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, INT_SCHEMA);
+    this((K)key, getSchema(key), (V)value, INT_SCHEMA);
   }
   @SuppressWarnings("unchecked")
   public Pair(Object key, Long value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, LONG_SCHEMA);
+    this((K)key, getSchema(key), (V)value, LONG_SCHEMA);
   }
   @SuppressWarnings("unchecked")
   public Pair(Object key, Float value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, FLOAT_SCHEMA);
+    this((K)key, getSchema(key), (V)value, FLOAT_SCHEMA);
   }
   @SuppressWarnings("unchecked")
   public Pair(Object key, Double value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, DOUBLE_SCHEMA);
+    this((K)key, getSchema(key), (V)value, DOUBLE_SCHEMA);
   }
   @SuppressWarnings("unchecked")
   public Pair(Object key, Void value) {
-    this((K)key, ReflectData.get().getSchema(key.getClass()), (V)value, NULL_SCHEMA);
+    this((K)key, getSchema(key), (V)value, NULL_SCHEMA);
   }
   @SuppressWarnings("unchecked")
   public Pair(GenericContainer key, Object value) {
-    this((K)key, key.getSchema(), (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, key.getSchema(), (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(GenericContainer key, GenericContainer value) {
@@ -237,7 +238,7 @@ public class Pair<K,V>
   }
   @SuppressWarnings("unchecked")
   public Pair(CharSequence key, Object value) {
-    this((K)key, STRING_SCHEMA, (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, STRING_SCHEMA, (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(CharSequence key, GenericContainer value) {
@@ -273,7 +274,7 @@ public class Pair<K,V>
   }
   @SuppressWarnings("unchecked")
   public Pair(ByteBuffer key, Object value) {
-    this((K)key, BYTES_SCHEMA, (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, BYTES_SCHEMA, (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(ByteBuffer key, GenericContainer value) {
@@ -309,7 +310,7 @@ public class Pair<K,V>
   }
   @SuppressWarnings("unchecked")
   public Pair(Integer key, Object value) {
-    this((K)key, INT_SCHEMA, (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, INT_SCHEMA, (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(Integer key, GenericContainer value) {
@@ -345,7 +346,7 @@ public class Pair<K,V>
   }
   @SuppressWarnings("unchecked")
   public Pair(Long key, Object value) {
-    this((K)key, LONG_SCHEMA, (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, LONG_SCHEMA, (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(Long key, GenericContainer value) {
@@ -381,7 +382,7 @@ public class Pair<K,V>
   }
   @SuppressWarnings("unchecked")
   public Pair(Float key, Object value) {
-    this((K)key, FLOAT_SCHEMA, (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, FLOAT_SCHEMA, (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(Float key, GenericContainer value) {
@@ -417,7 +418,7 @@ public class Pair<K,V>
   }
   @SuppressWarnings("unchecked")
   public Pair(Double key, Object value) {
-    this((K)key, DOUBLE_SCHEMA, (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, DOUBLE_SCHEMA, (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(Double key, GenericContainer value) {
@@ -453,7 +454,7 @@ public class Pair<K,V>
   }
   @SuppressWarnings("unchecked")
   public Pair(Void key, Object value) {
-    this((K)key, NULL_SCHEMA, (V)value, ReflectData.get().getSchema(value.getClass()));
+    this((K)key, NULL_SCHEMA, (V)value, getSchema(value));
   }
   @SuppressWarnings("unchecked")
   public Pair(Void key, GenericContainer value) {
@@ -488,8 +489,18 @@ public class Pair<K,V>
     this((K)key, NULL_SCHEMA, (V)value, NULL_SCHEMA);
   }
 
+  private static Schema getSchema(Object o) {
+    try {
+      return ReflectData.get().getSchema(o.getClass());
+    } catch (AvroRuntimeException e) {
+      throw new AvroRuntimeException
+        ("Cannot infer schema for : " + o.getClass()
+         + ".  Must create Pair with explicit key and value schemas.", e);
+    }
+  }
+
   // private static final String[][] TABLE = new String[][] {
-  //   {"Object", "ReflectData.get().getSchema({0}.getClass())"},
+  //   {"Object", "getSchema({0})"},
   //   {"GenericContainer", "{0}.getSchema()"},
   //   {"CharSequence", "STRING_SCHEMA"},
   //   {"ByteBuffer", "BYTES_SCHEMA"},
