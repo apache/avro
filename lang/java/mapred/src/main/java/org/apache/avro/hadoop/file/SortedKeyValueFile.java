@@ -536,7 +536,7 @@ public class SortedKeyValueFile {
         throw new IllegalArgumentException("Records must be inserted in sorted key order."
             + " Attempted to insert key " + key + " after " + mPreviousKey + ".");
       }
-      mPreviousKey = key;
+      mPreviousKey = GenericData.get().deepCopy(mKeySchema, key);
 
       // Construct the data record.
       AvroKeyValue<K, V> dataRecord

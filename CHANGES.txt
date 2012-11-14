@@ -40,6 +40,9 @@ Trunk (not yet released)
     AVRO-1200. DatumWriter can write malformed data if collection is
     modified during write. (tomwhite)
 
+    AVRO-1199. Java: Fix SortedKeyValueFile to copy the key used to
+    compare against next.  Also improve GenericData#deepCopy() to be
+    generic, so that its return type matches its parameter type. (cutting)
 
 Avro 1.7.2 (20 October 2012)
 

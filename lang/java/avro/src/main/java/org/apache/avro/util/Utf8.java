@@ -83,6 +83,14 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     return this;
   }
 
+  /** Set to the contents of a String. */
+  public Utf8 set(String string) {
+    this.bytes = getBytesFor(string);
+    this.length = bytes.length;
+    this.string = string;
+    return this;
+  }
+
   @Override
   public String toString() {
     if (this.length == 0) return "";

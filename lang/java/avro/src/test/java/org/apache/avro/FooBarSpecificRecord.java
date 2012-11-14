@@ -96,11 +96,11 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
     private Builder(org.apache.avro.FooBarSpecificRecord other) {
             super(org.apache.avro.FooBarSpecificRecord.SCHEMA$);
       if (isValidValue(fields()[0], other.id)) {
-        this.id = (java.lang.Integer) data().deepCopy(fields()[0].schema(), other.id);
+        this.id = data().deepCopy(fields()[0].schema(), other.id);
         fieldSetFlags()[0] = true;
       }
       if (isValidValue(fields()[1], other.relatedids)) {
-        this.relatedids = (java.util.List<java.lang.Integer>) data().deepCopy(fields()[1].schema(), other.relatedids);
+        this.relatedids = data().deepCopy(fields()[1].schema(), other.relatedids);
         fieldSetFlags()[1] = true;
       }
     }

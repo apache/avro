@@ -150,19 +150,19 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     private Builder(avro.examples.baseball.Player other) {
             super(avro.examples.baseball.Player.SCHEMA$);
       if (isValidValue(fields()[0], other.number)) {
-        this.number = (java.lang.Integer) data().deepCopy(fields()[0].schema(), other.number);
+        this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;
       }
       if (isValidValue(fields()[1], other.first_name)) {
-        this.first_name = (java.lang.CharSequence) data().deepCopy(fields()[1].schema(), other.first_name);
+        this.first_name = data().deepCopy(fields()[1].schema(), other.first_name);
         fieldSetFlags()[1] = true;
       }
       if (isValidValue(fields()[2], other.last_name)) {
-        this.last_name = (java.lang.CharSequence) data().deepCopy(fields()[2].schema(), other.last_name);
+        this.last_name = data().deepCopy(fields()[2].schema(), other.last_name);
         fieldSetFlags()[2] = true;
       }
       if (isValidValue(fields()[3], other.position)) {
-        this.position = (java.util.List<avro.examples.baseball.Position>) data().deepCopy(fields()[3].schema(), other.position);
+        this.position = data().deepCopy(fields()[3].schema(), other.position);
         fieldSetFlags()[3] = true;
       }
     }

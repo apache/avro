@@ -159,7 +159,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       super(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.SCHEMA$)#end;
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
-        this.${this.mangle($field.name(), $schema.isError())} = (${this.javaType($field.schema())}) data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
+        this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
         fieldSetFlags()[$field.pos()] = true;
       }
 #end

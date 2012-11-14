@@ -374,8 +374,7 @@ public class TestGenericData {
     GenericRecord record = new GenericData.Record(schema);
     record.put(byte_field.name(), buffer);
     
-    GenericRecord copy =
-      (GenericRecord) GenericData.get().deepCopy(schema, record);
+    GenericRecord copy = GenericData.get().deepCopy(schema, record);
     ByteBuffer buffer_copy = (ByteBuffer) copy.get(byte_field.name());
 
     assertEquals(buffer, buffer_copy);

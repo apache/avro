@@ -767,7 +767,7 @@ public class GenericData {
    * @return a deep copy of the given value.
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public Object deepCopy(Schema schema, Object value) {
+  public <T> T deepCopy(Schema schema, T value) {
     if (value == null) {
       return null;
     }
@@ -779,9 +779,9 @@ public class GenericData {
         for (Object obj : arrayValue) {
           arrayCopy.add(deepCopy(schema.getElementType(), obj));
         }
-        return arrayCopy;
+        return (T)arrayCopy;
       case BOOLEAN:
-        return new Boolean((Boolean)value);
+        return (T)new Boolean((Boolean)value);
       case BYTES:
         ByteBuffer byteBufferValue = (ByteBuffer) value;
         int start = byteBufferValue.position();
@@ -789,20 +789,20 @@ public class GenericData {
         byte[] bytesCopy = new byte[length];
         byteBufferValue.get(bytesCopy, 0, length);
         byteBufferValue.position(start);
-        return ByteBuffer.wrap(bytesCopy, 0, length);
+        return (T)ByteBuffer.wrap(bytesCopy, 0, length);
       case DOUBLE:
-        return new Double((Double)value);
+        return (T)new Double((Double)value);
       case ENUM:
         // Enums are immutable; shallow copy will suffice
         return value;
       case FIXED:
-        return createFixed(null, ((GenericFixed) value).bytes(), schema);
+        return (T)createFixed(null, ((GenericFixed) value).bytes(), schema);
       case FLOAT:
-        return new Float((Float)value);
+        return (T)new Float((Float)value);
       case INT:
-        return new Integer((Integer)value);
+        return (T)new Integer((Integer)value);
       case LONG:
-        return new Long((Long)value);
+        return (T)new Long((Long)value);
       case MAP:
         Map<CharSequence, Object> mapValue = (Map) value;
         Map<CharSequence, Object> mapCopy = 
@@ -811,7 +811,7 @@ public class GenericData {
           mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
               deepCopy(schema.getValueType(), entry.getValue()));
         }
-        return mapCopy;
+        return (T)mapCopy;
       case NULL:
         return null;
       case RECORD:
@@ -821,11 +821,11 @@ public class GenericData {
           recordCopy.put(field.pos(), 
               deepCopy(field.schema(), recordValue.get(field.pos())));
         }
-        return recordCopy;
+        return (T)recordCopy;
       case STRING:
         // Strings are immutable
         if (value instanceof String) {
-          return value;
+          return (T)value;
         }
         
         // Some CharSequence subclasses are mutable, so we still need to make 
@@ -833,9 +833,9 @@ public class GenericData {
         else if (value instanceof Utf8) {
           // Utf8 copy constructor is more efficient than converting 
           // to string and then back to Utf8
-          return new Utf8((Utf8)value);
+          return (T)new Utf8((Utf8)value);
         }
-        return new Utf8(value.toString());
+        return (T)new Utf8(value.toString());
       case UNION:
         return deepCopy(
             schema.getTypes().get(resolveUnion(schema, value)), value);

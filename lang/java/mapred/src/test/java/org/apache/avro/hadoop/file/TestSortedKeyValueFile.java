@@ -32,6 +32,7 @@ import org.apache.avro.hadoop.io.AvroKeyValue;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
+import org.apache.avro.util.Utf8;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.Rule;
@@ -61,9 +62,11 @@ public class TestSortedKeyValueFile {
     SortedKeyValueFile.Writer<CharSequence, CharSequence> writer
         = new SortedKeyValueFile.Writer<CharSequence, CharSequence>(options);
 
+    Utf8 key = new Utf8();                        // re-use key, to test copied
+
     try {
-      writer.append("banana", "Banana");
-      writer.append("apple", "Apple");  // Ruh, roh!
+      writer.append(key.set("banana"), "Banana");
+      writer.append(key.set("apple"), "Apple");  // Ruh, roh!
     } finally {
       writer.close();
     }
