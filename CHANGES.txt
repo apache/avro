@@ -18,6 +18,9 @@ Trunk (not yet released)
     AVRO-1188. Java: Permit external schema imports for schemas in
     Maven plugin. (Sharmarke Aden via tomwhite)
 
+    AVRO-1202. Java & Python: Add "Getting Started" guides.
+    (Skye Wanderman-Milne via cutting)
+
   IMPROVEMENTS
 
     AVRO-1169. Java: Reduce memory footprint of resolver.
