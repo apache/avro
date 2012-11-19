@@ -241,7 +241,7 @@ public class TestAvroProtocolGrpc {
     }
 
     @Override
-    public Void error(boolean declared) throws AvroRemoteException, TestError {
+    public void error(boolean declared) throws AvroRemoteException, TestError {
       if (declared) {
         throw declaredError;
       }

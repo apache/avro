@@ -793,8 +793,16 @@ public class SpecificCompiler {
     return null;
   }
 
-  /** Utility for template use.  Returns the unboxed java type for a Schema. */
+  /**
+   * Utility for template use.  Returns the unboxed java type for a Schema.
+   * @Deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby of custom templates
+   */
   public String javaUnbox(Schema schema) {
+    return javaUnbox(schema, false);
+  }
+
+  /** Utility for template use.  Returns the unboxed java type for a Schema including the void type. */
+  public String javaUnbox(Schema schema, boolean unboxNullToVoid) {
     String convertedLogicalType = getConvertedLogicalType(schema);
     if (convertedLogicalType != null) {
       return convertedLogicalType;
@@ -806,10 +814,14 @@ public class SpecificCompiler {
       case FLOAT:   return "float";
       case DOUBLE:  return "double";
       case BOOLEAN: return "boolean";
+      case NULL:
+        if (unboxNullToVoid) {
+          // Used for preventing unnecessary returns for RPC methods without response but with error(s)
+          return "void";
+        }
       default:      return javaType(schema, false);
     }
   }
-
 
   /** Utility for template use.  Return a string with a given number
     * of spaces to be used for indentation purposes. */

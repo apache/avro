@@ -192,7 +192,7 @@ public class TestNettyServerConcurrentExecution {
     }
 
     @Override
-    public Void error() throws AvroRemoteException, TestError {
+    public void error() throws AvroRemoteException, TestError {
       throw new TestError("TestError");
     }
   }

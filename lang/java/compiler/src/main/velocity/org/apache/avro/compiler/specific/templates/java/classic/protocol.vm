@@ -44,7 +44,7 @@ public interface $this.mangle($protocol.getName()) {
 #foreach ($annotation in $this.javaAnnotations($message))
   @$annotation
 #end
-  #if ($message.isOneWay())void#else${this.javaUnbox($response)}#end
+  #if ($message.isOneWay())void#else${this.javaUnbox($response, true)}#end
  ${this.mangle($name)}(##
 #foreach ($p in $message.getRequest().getFields())##
 #*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($foreach.hasNext), #end

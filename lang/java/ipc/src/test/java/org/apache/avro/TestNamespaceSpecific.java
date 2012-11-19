@@ -39,7 +39,7 @@ public class TestNamespaceSpecific {
 
   public static class TestImpl implements TestNamespace {
     public TestRecord echo(TestRecord record) { return record; }
-    public Void error() throws AvroRemoteException {
+    public void error() throws AvroRemoteException {
       throw TestError.newBuilder().setMessage$("an error").build();
     }
   }
