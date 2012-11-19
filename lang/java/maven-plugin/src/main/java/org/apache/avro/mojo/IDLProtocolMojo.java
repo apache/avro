@@ -63,6 +63,12 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
     try {
       @SuppressWarnings("rawtypes")
       List runtimeClasspathElements = project.getRuntimeClasspathElements();
+      Idl parser;
+
+      // If runtimeClasspathElements is not empty values add its values to Idl path.
+      if(runtimeClasspathElements == null || runtimeClasspathElements.isEmpty()) {
+        parser = new Idl(new File(sourceDirectory, filename));
+      } else {
       URL[] runtimeUrls = new URL[runtimeClasspathElements.size()];
       for (int i = 0; i < runtimeClasspathElements.size(); i++) {
         String element = (String) runtimeClasspathElements.get(i);
@@ -70,8 +76,9 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       }
       URLClassLoader projPathLoader = new URLClassLoader
         (runtimeUrls, Thread.currentThread().getContextClassLoader());
+        parser = new Idl(new File(sourceDirectory, filename), projPathLoader);
+      }
 
-      Idl parser = new Idl(new File(sourceDirectory, filename), projPathLoader);
       Protocol p = parser.CompilationUnit();
       String json = p.toString(true);
       Protocol protocol = Protocol.parse(json);

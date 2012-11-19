@@ -29,6 +29,8 @@ Trunk (not yet released)
     AVRO-1183. Java: Provide a better error message when the schema
     for a Pair cannot be inferred. (cutting)
 
+    AVRO-1207. Java: Add tests for Maven plugins. (Sharmarke Aden via cutting)
+
   BUG FIXES
 
     AVRO-1171. Java: Don't call configure() twice on mappers & reducers.

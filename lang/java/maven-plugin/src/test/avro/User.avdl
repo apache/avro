@@ -1,0 +1,14 @@
+@namespace("test")
+protocol IdlTest {
+
+    enum IdlPrivacy {
+      Public, Private
+    }
+
+    record IdlUser {
+      union { null, string } id;
+      union { null, long } createdOn;
+      union { null, IdlPrivacy } privacy;
+    }
+
+}
