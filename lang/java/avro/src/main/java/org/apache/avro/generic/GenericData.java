@@ -142,14 +142,18 @@ public class GenericData {
         addAll(c);
       }
     }
+    @Override
     public Schema getSchema() { return schema; }
     @Override public int size() { return size; }
     @Override public void clear() { size = 0; }
     @Override public Iterator<T> iterator() {
       return new Iterator<T>() {
         private int position = 0;
+        @Override
         public boolean hasNext() { return position < size; }
+        @Override
         public T next() { return (T)elements[position++]; }
+        @Override
         public void remove() { throw new UnsupportedOperationException(); }
       };
     }
@@ -196,12 +200,15 @@ public class GenericData {
       elements[size] = null;
       return result;
     }
+    @Override
     public T peek() {
       return (size < elements.length) ? (T)elements[size] : null;
     }
+    @Override
     public int compareTo(GenericArray<T> that) {
       return GenericData.get().compare(this, that, this.getSchema());
     }
+    @Override
     public void reverse() {
       int left = 0;
       int right = elements.length - 1;
@@ -217,7 +224,7 @@ public class GenericData {
     }
     @Override
     public String toString() {
-      StringBuffer buffer = new StringBuffer();
+      StringBuilder buffer = new StringBuilder();
       buffer.append("[");
       int count = 0;
       for (T e : this) {
@@ -253,6 +260,7 @@ public class GenericData {
 
     public void bytes(byte[] bytes) { this.bytes = bytes; }
 
+    @Override
     public byte[] bytes() { return bytes; }
 
     @Override
@@ -268,6 +276,7 @@ public class GenericData {
     @Override
     public String toString() { return Arrays.toString(bytes); }
 
+    @Override
     public int compareTo(Fixed that) {
       return BinaryData.compareBytes(this.bytes, 0, this.bytes.length,
                                      that.bytes, 0, that.bytes.length);
@@ -318,13 +327,13 @@ public class GenericData {
     case ENUM:
       return schema.getEnumSymbols().contains(datum.toString());
     case ARRAY:
-      if (!(datum instanceof Collection)) return false;
+      if (!(isArray(datum))) return false;
       for (Object element : (Collection<?>)datum)
         if (!validate(schema.getElementType(), element))
           return false;
       return true;
     case MAP:
-      if (!(datum instanceof Map)) return false;
+      if (!(isMap(datum))) return false;
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet())
@@ -341,11 +350,11 @@ public class GenericData {
         && ((GenericFixed)datum).bytes().length==schema.getFixedSize();
     case STRING:  return isString(datum);
     case BYTES:   return isBytes(datum);
-    case INT:     return datum instanceof Integer;
-    case LONG:    return datum instanceof Long;
-    case FLOAT:   return datum instanceof Float;
-    case DOUBLE:  return datum instanceof Double;
-    case BOOLEAN: return datum instanceof Boolean;
+    case INT:     return isInteger(datum);
+    case LONG:    return isLong(datum);
+    case FLOAT:   return isFloat(datum);
+    case DOUBLE:  return isDouble(datum);
+    case BOOLEAN: return isBoolean(datum);
     case NULL:    return datum == null;
     default: return false;
     }
@@ -371,7 +380,7 @@ public class GenericData {
           buffer.append(", ");
       }
       buffer.append("}");
-    } else if (datum instanceof Collection) {
+    } else if (isArray(datum)) {
       Collection<?> array = (Collection<?>)datum;
       buffer.append("[");
       long last = array.size()-1;
@@ -382,7 +391,7 @@ public class GenericData {
           buffer.append(", ");
       }        
       buffer.append("]");
-    } else if (datum instanceof Map) {
+    } else if (isMap(datum)) {
       buffer.append("{");
       int count = 0;
       @SuppressWarnings(value="unchecked")
@@ -395,12 +404,11 @@ public class GenericData {
           buffer.append(", ");
       }
       buffer.append("}");
-    } else if (datum instanceof CharSequence
-               || datum instanceof GenericEnumSymbol) {
+    } else if (isString(datum)|| isEnum(datum)) {
       buffer.append("\"");
       writeEscapedString(datum.toString(), buffer);
       buffer.append("\"");
-    } else if (datum instanceof ByteBuffer) {
+    } else if (isBytes(datum)) {
       buffer.append("{\"bytes\": \"");
       ByteBuffer bytes = (ByteBuffer)datum;
       for (int i = bytes.position(); i < bytes.limit(); i++)
@@ -459,7 +467,7 @@ public class GenericData {
   public Schema induce(Object datum) {
     if (isRecord(datum)) {
       return getRecordSchema(datum);
-    } else if (datum instanceof Collection) {
+    } else if (isArray(datum)) {
       Schema elementType = null;
       for (Object element : (Collection<?>)datum) {
         if (elementType == null) {
@@ -473,7 +481,7 @@ public class GenericData {
       }
       return Schema.createArray(elementType);
 
-    } else if (datum instanceof Map) {
+    } else if (isMap(datum)) {
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       Schema value = null;
@@ -492,13 +500,13 @@ public class GenericData {
       return Schema.createFixed(null, null, null,
                                 ((GenericFixed)datum).bytes().length);
     }
-    else if (datum instanceof CharSequence) return Schema.create(Type.STRING);
-    else if (datum instanceof ByteBuffer) return Schema.create(Type.BYTES);
-    else if (datum instanceof Integer)    return Schema.create(Type.INT);
-    else if (datum instanceof Long)       return Schema.create(Type.LONG);
-    else if (datum instanceof Float)      return Schema.create(Type.FLOAT);
-    else if (datum instanceof Double)     return Schema.create(Type.DOUBLE);
-    else if (datum instanceof Boolean)    return Schema.create(Type.BOOLEAN);
+    else if (isString(datum)) return Schema.create(Type.STRING);
+    else if (isBytes(datum)) return Schema.create(Type.BYTES);
+    else if (isInteger(datum))    return Schema.create(Type.INT);
+    else if (isLong(datum))       return Schema.create(Type.LONG);
+    else if (isFloat(datum))      return Schema.create(Type.FLOAT);
+    else if (isDouble(datum))     return Schema.create(Type.DOUBLE);
+    else if (isBoolean(datum))    return Schema.create(Type.BOOLEAN);
     else if (datum == null)               return Schema.create(Type.NULL);
 
     else throw new AvroTypeException("Can't create schema for: "+datum);
@@ -561,15 +569,15 @@ public class GenericData {
       return Type.STRING.getName();
     if (isBytes(datum))
       return Type.BYTES.getName();
-    if (datum instanceof Integer)
+    if (isInteger(datum))
       return Type.INT.getName();
-    if (datum instanceof Long)
+    if (isLong(datum))
       return Type.LONG.getName();
-    if (datum instanceof Float)
+    if (isFloat(datum))
       return Type.FLOAT.getName();
-    if (datum instanceof Double)
+    if (isDouble(datum))
       return Type.DOUBLE.getName();
-    if (datum instanceof Boolean)
+    if (isBoolean(datum))
       return Type.BOOLEAN.getName();
     throw new AvroRuntimeException("Unknown datum type: "+datum);
  }
@@ -593,11 +601,11 @@ public class GenericData {
       return schema.getFullName().equals(getFixedSchema(datum).getFullName());
     case STRING:  return isString(datum);
     case BYTES:   return isBytes(datum);
-    case INT:     return datum instanceof Integer;
-    case LONG:    return datum instanceof Long;
-    case FLOAT:   return datum instanceof Float;
-    case DOUBLE:  return datum instanceof Double;
-    case BOOLEAN: return datum instanceof Boolean;
+    case INT:     return isInteger(datum);
+    case LONG:    return isLong(datum);
+    case FLOAT:   return isFloat(datum);
+    case DOUBLE:  return isDouble(datum);
+    case BOOLEAN: return isBoolean(datum);
     case NULL:    return datum == null;
     default: throw new AvroRuntimeException("Unexpected type: " +schema);
     }
@@ -658,6 +666,42 @@ public class GenericData {
   protected boolean isBytes(Object datum) {
     return datum instanceof ByteBuffer;
   }
+
+   /**
+   * Called by the default implementation of {@link #instanceOf}.
+   */
+  protected boolean isInteger(Object datum) {
+    return datum instanceof Integer;
+  }
+
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   */
+  protected boolean isLong(Object datum) {
+    return datum instanceof Long;
+  }
+
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   */
+  protected boolean isFloat(Object datum) {
+    return datum instanceof Float;
+  }
+
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   */
+  protected boolean isDouble(Object datum) {
+    return datum instanceof Double;
+  }
+
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   */
+  protected boolean isBoolean(Object datum) {
+    return datum instanceof Boolean;
+  }
+   
 
   /** Compute a hash code according to a schema, consistent with {@link
    * #compare(Object,Object,Schema)}. */

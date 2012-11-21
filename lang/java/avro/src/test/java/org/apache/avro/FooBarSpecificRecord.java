@@ -6,15 +6,32 @@
 package org.apache.avro;  
 @SuppressWarnings("all")
 public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FooBarSpecificRecord\",\"namespace\":\"org.apache.avro\",\"fields\":[{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"relatedids\",\"type\":{\"type\":\"array\",\"items\":\"int\"}}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FooBarSpecificRecord\",\"namespace\":\"org.apache.avro\",\"fields\":[{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"relatedids\",\"type\":{\"type\":\"array\",\"items\":\"int\"}},{\"name\":\"typeEnum\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"TypeEnum\",\"symbols\":[\"a\",\"b\",\"c\"]}],\"default\":null}]}");
   @Deprecated public int id;
   @Deprecated public java.util.List<java.lang.Integer> relatedids;
+  @Deprecated public org.apache.avro.TypeEnum typeEnum;
+
+  /**
+   * Default constructor.
+   */
+  public FooBarSpecificRecord() {}
+
+  /**
+   * All-args constructor.
+   */
+  public FooBarSpecificRecord(java.lang.Integer id, java.util.List<java.lang.Integer> relatedids, org.apache.avro.TypeEnum typeEnum) {
+    this.id = id;
+    this.relatedids = relatedids;
+    this.typeEnum = typeEnum;
+  }
+
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return id;
     case 1: return relatedids;
+    case 2: return typeEnum;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -24,6 +41,7 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
     switch (field$) {
     case 0: id = (java.lang.Integer)value$; break;
     case 1: relatedids = (java.util.List<java.lang.Integer>)value$; break;
+    case 2: typeEnum = (org.apache.avro.TypeEnum)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -58,6 +76,21 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
     this.relatedids = value;
   }
 
+  /**
+   * Gets the value of the 'typeEnum' field.
+   */
+  public org.apache.avro.TypeEnum getTypeEnum() {
+    return typeEnum;
+  }
+
+  /**
+   * Sets the value of the 'typeEnum' field.
+   * @param value the value to set.
+   */
+  public void setTypeEnum(org.apache.avro.TypeEnum value) {
+    this.typeEnum = value;
+  }
+
   /** Creates a new FooBarSpecificRecord RecordBuilder */
   public static org.apache.avro.FooBarSpecificRecord.Builder newBuilder() {
     return new org.apache.avro.FooBarSpecificRecord.Builder();
@@ -81,6 +114,7 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
 
     private int id;
     private java.util.List<java.lang.Integer> relatedids;
+    private org.apache.avro.TypeEnum typeEnum;
 
     /** Creates a new Builder */
     private Builder() {
@@ -96,13 +130,17 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
     private Builder(org.apache.avro.FooBarSpecificRecord other) {
             super(org.apache.avro.FooBarSpecificRecord.SCHEMA$);
       if (isValidValue(fields()[0], other.id)) {
-        this.id = data().deepCopy(fields()[0].schema(), other.id);
+        this.id = (java.lang.Integer) data().deepCopy(fields()[0].schema(), other.id);
         fieldSetFlags()[0] = true;
       }
       if (isValidValue(fields()[1], other.relatedids)) {
-        this.relatedids = data().deepCopy(fields()[1].schema(), other.relatedids);
+        this.relatedids = (java.util.List<java.lang.Integer>) data().deepCopy(fields()[1].schema(), other.relatedids);
         fieldSetFlags()[1] = true;
       }
+      if (isValidValue(fields()[2], other.typeEnum)) {
+        this.typeEnum = (org.apache.avro.TypeEnum) data().deepCopy(fields()[2].schema(), other.typeEnum);
+        fieldSetFlags()[2] = true;
+    }
     }
 
     /** Gets the value of the 'id' field */
@@ -154,12 +192,38 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
       return this;
     }
 
+    /** Gets the value of the 'typeEnum' field */
+    public org.apache.avro.TypeEnum getTypeEnum() {
+      return typeEnum;
+    }
+    
+    /** Sets the value of the 'typeEnum' field */
+    public org.apache.avro.FooBarSpecificRecord.Builder setTypeEnum(org.apache.avro.TypeEnum value) {
+      validate(fields()[2], value);
+      this.typeEnum = value;
+      fieldSetFlags()[2] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'typeEnum' field has been set */
+    public boolean hasTypeEnum() {
+      return fieldSetFlags()[2];
+    }
+    
+    /** Clears the value of the 'typeEnum' field */
+    public org.apache.avro.FooBarSpecificRecord.Builder clearTypeEnum() {
+      typeEnum = null;
+      fieldSetFlags()[2] = false;
+      return this;
+    }
+
     @Override
     public FooBarSpecificRecord build() {
       try {
         FooBarSpecificRecord record = new FooBarSpecificRecord();
         record.id = fieldSetFlags()[0] ? this.id : (java.lang.Integer) defaultValue(fields()[0]);
         record.relatedids = fieldSetFlags()[1] ? this.relatedids : (java.util.List<java.lang.Integer>) defaultValue(fields()[1]);
+        record.typeEnum = fieldSetFlags()[2] ? this.typeEnum : (org.apache.avro.TypeEnum) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

@@ -49,6 +49,9 @@ Trunk (not yet released)
     compare against next.  Also improve GenericData#deepCopy() to be
     generic, so that its return type matches its parameter type. (cutting)
 
+    AVRO-1201. Java: Fix GenericData#toString() to generate valid JSON for
+    enum values. (Sharmarke Aden via cutting)
+
 Avro 1.7.2 (20 October 2012)
 
   NEW FEATURES

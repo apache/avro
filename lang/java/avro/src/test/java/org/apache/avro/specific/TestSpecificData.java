@@ -18,14 +18,20 @@
 
 package org.apache.avro.specific;
 
+import java.io.IOException;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import org.apache.avro.FooBarSpecificRecord;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.TypeEnum;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -71,6 +77,23 @@ public class TestSpecificData {
   @Test(expected = NoSuchMethodException.class)
   public void testPrimitiveWrapperParamError() throws Exception {
     Reflection.class.getMethod("primitive", integerClass);
+  }
+
+  @Test
+  public void testToString() throws IOException {
+   FooBarSpecificRecord foo = FooBarSpecificRecord.newBuilder()
+           .setId(123)
+           .setRelatedids(Arrays.asList(1,2,3))
+           .setTypeEnum(TypeEnum.c)
+           .build();
+    
+    String json = foo.toString();
+    JsonFactory factory = new JsonFactory();
+    JsonParser parser = factory.createJsonParser(json);
+    ObjectMapper mapper = new ObjectMapper();
+    
+    // will throw exception if string is not parsable json
+    mapper.readTree(parser);
   }
 
   static class Reflection {

@@ -5,6 +5,15 @@
     "fields": [
         {"name": "id", "type": "int"},
         {"name": "relatedids", "type": 
-            {"type": "array", "items": "int"}}
+            {"type": "array", "items": "int"}},
+        {"name": "typeEnum", "type": 
+            ["null", { 
+                    "type": "enum",
+                    "name": "TypeEnum",
+                    "namespace": "org.apache.avro",
+                    "symbols" : ["a","b", "c"]
+                }],
+            "default": null
+        }
     ]
 }
