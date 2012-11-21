@@ -26,6 +26,7 @@ package $protocol.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($protocol))
 @$annotation
 #end
+@org.apache.avro.specific.AvroGenerated
 public interface $this.mangle($protocol.getName()) {
   public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("${this.javaEscape($protocol.toString())}");
 #foreach ($e in $protocol.getMessages().entrySet())

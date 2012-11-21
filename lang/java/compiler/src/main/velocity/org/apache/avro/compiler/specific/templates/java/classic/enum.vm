@@ -25,6 +25,7 @@ package $schema.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
+@org.apache.avro.specific.AvroGenerated
 public enum ${this.mangle($schema.getName())} { 
   #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($velocityHasNext), #end#end
   ;
