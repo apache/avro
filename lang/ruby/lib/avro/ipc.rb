@@ -242,7 +242,7 @@ module Avro::IPC
 
     # Called by a server to deserialize a request, compute and serialize
     # a response or error. Compare to 'handle()' in Thrift.
-    def respond(call_request)
+    def respond(call_request, transport=nil)
       buffer_decoder = Avro::IO::BinaryDecoder.new(StringIO.new(call_request))
       buffer_writer = StringIO.new('', 'w+')
       buffer_encoder = Avro::IO::BinaryEncoder.new(buffer_writer)
@@ -250,7 +250,7 @@ module Avro::IPC
       response_metadata = {}
 
       begin
-        remote_protocol = process_handshake(buffer_decoder, buffer_encoder)
+        remote_protocol = process_handshake(buffer_decoder, buffer_encoder, transport)
         # handshake failure
         unless remote_protocol
           return buffer_writer.string
@@ -302,7 +302,10 @@ module Avro::IPC
       buffer_writer.string
     end
 
-    def process_handshake(decoder, encoder)
+    def process_handshake(decoder, encoder, connection=nil)
+      if connection && connection.is_connected?
+        return connection.protocol
+      end
       handshake_request = HANDSHAKE_RESPONDER_READER.read(decoder)
       handshake_response = {}
 
@@ -338,6 +341,11 @@ module Avro::IPC
       end
 
       HANDSHAKE_RESPONDER_WRITER.write(handshake_response, encoder)
+
+      if connection && handshake_response['match'] != 'NONE'
+        connection.protocol = remote_protocol
+      end
+
       remote_protocol
     end
 
@@ -366,9 +374,15 @@ module Avro::IPC
     # A simple socket-based Transport implementation.
 
     attr_reader :sock, :remote_name
+    attr_accessor :protocol
 
     def initialize(sock)
       @sock = sock
+      @protocol = nil
+    end
+
+    def is_connected?()
+      !!@protocol
     end
 
     def transceive(request)
