@@ -23,7 +23,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.BinaryDecoder.BufferAccessor;
 
 /** Utilities for binary-encoded data. */
 public class BinaryData {
@@ -31,19 +30,20 @@ public class BinaryData {
   private BinaryData() {}                      // no public ctor
 
   private static class Decoders {
-     private final BufferAccessor b1, b2;
-     private final BinaryDecoder d1, d2;
+    private final BinaryDecoder d1, d2;
     public Decoders() {
        this.d1 = new BinaryDecoder(new byte[0], 0, 0);
        this.d2 = new BinaryDecoder(new byte[0], 0, 0);
-       this.b1 = d1.getBufferAccessor();
-       this.b2 = d2.getBufferAccessor();
     }
-     public void set(byte[] data1, int off1, int len1, 
-         byte[] data2, int off2, int len2) {
-       this.d1.configure(data1, off1, len1);
-       this.d2.configure(data2, off2, len2);
-  }
+    public void set(byte[] data1, int off1, int len1, 
+                    byte[] data2, int off2, int len2) {
+      d1.setBuf(data1, off1, len1);
+      d2.setBuf(data2, off2, len2);
+    }
+    public void clear() {
+      d1.clearBuf();
+      d2.clearBuf();
+    }
   }                     // no public ctor
 
   private static final ThreadLocal<Decoders> DECODERS
@@ -72,6 +72,8 @@ public class BinaryData {
       return compare(decoders, schema);
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
+    } finally {
+      decoders.clear();
     }
   }
 
@@ -141,8 +143,8 @@ public class BinaryData {
     }
     case FIXED: {
       int size = schema.getFixedSize();
-      int c = compareBytes(d.b1.getBuf(), d.b1.getPos(), size,
-                           d.b2.getBuf(), d.b2.getPos(), size);
+      int c = compareBytes(d.d1.getBuf(), d.d1.getPos(), size,
+                           d.d2.getBuf(), d.d2.getPos(), size);
       d.d1.skipFixed(size);
       d.d2.skipFixed(size);
       return c;
@@ -150,8 +152,8 @@ public class BinaryData {
     case STRING: case BYTES: {
       int l1 = d1.readInt();
       int l2 = d2.readInt();
-      int c = compareBytes(d.b1.getBuf(), d.b1.getPos(), l1,
-                           d.b2.getBuf(), d.b2.getPos(), l2);
+      int c = compareBytes(d.d1.getBuf(), d.d1.getPos(), l1,
+                           d.d2.getBuf(), d.d2.getPos(), l2);
       d.d1.skipFixed(l1);
       d.d2.skipFixed(l2);
       return c;
@@ -194,14 +196,12 @@ public class BinaryData {
   }
 
   private static class HashData {
-    private final BufferAccessor bytes;
     private final BinaryDecoder decoder;
     public HashData() {
       this.decoder = new BinaryDecoder(new byte[0], 0, 0);
-      this.bytes = decoder.getBufferAccessor();
     }
     public void set(byte[] bytes, int start, int len) {
-      this.decoder.configure(bytes, start, len);
+      this.decoder.setBuf(bytes, start, len);
     }
   }
 
@@ -280,8 +280,8 @@ public class BinaryData {
   private static int hashBytes(int init, HashData data, int len, boolean rev)
     throws IOException {
     int hashCode = init;
-    byte[] bytes = data.bytes.getBuf();
-    int start = data.bytes.getPos();
+    byte[] bytes = data.decoder.getBuf();
+    int start = data.decoder.getPos();
     int end = start+len;
     if (rev) 
       for (int i = end-1; i >= start; i--)

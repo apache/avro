@@ -50,10 +50,17 @@ public class BinaryDecoder extends Decoder {
   private int pos = 0;
   private int limit = 0;
 
-  BufferAccessor getBufferAccessor() {
-    return new BufferAccessor(this);
+  byte[] getBuf() { return buf; }
+  int getPos() { return pos; }
+  int getLimit() { return limit; }
+
+  void setBuf(byte[] buf, int pos, int len) {
+    this.buf = buf;
+    this.pos = pos;
+    this.limit = pos+len;
   }
-  
+  void clearBuf() { this.buf = null; }
+
   /** protected constructor for child classes */
   protected BinaryDecoder() {
   }

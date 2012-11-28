@@ -69,6 +69,9 @@ Trunk (not yet released)
     AVRO-1177. Ruby: Fix RPC to only send handshake for first request
     over a connection.  (Georg Franz via cutting)
 
+    AVRO-1175. Java: Clear thread local reference in BinaryData#compare().
+    (cutting)
+
 Avro 1.7.2 (20 October 2012)
 
   NEW FEATURES
