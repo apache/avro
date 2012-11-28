@@ -39,6 +39,9 @@ Trunk (not yet released)
     AVRO-1210. Java: Fix mistakes in AvroMultipleOutputs error messages.
     (Dave Beech via cutting)
 
+    AVRO-1178. Java: Fix typos in parsing document.
+    (Martin Kleppmann via cutting)
+
   BUG FIXES
 
     AVRO-1171. Java: Don't call configure() twice on mappers & reducers.
