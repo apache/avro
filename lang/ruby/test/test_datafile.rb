@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -140,4 +141,17 @@ JSON
       assert_equal(block_count+1, dw.block_count)
     end
   end
+
+  def test_utf8
+    datafile = Avro::DataFile::open('data.avr', 'w', '"string"')
+    datafile << "家"
+    datafile.close
+
+    datafile = Avro::DataFile.open('data.avr')
+    datafile.each do |s|
+      assert_equal "家", s
+    end
+    datafile.close
+  end
+
 end

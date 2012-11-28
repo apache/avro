@@ -21,7 +21,7 @@ Echoe.new('avro', VERSION) do |p|
   p.author = "Apache Software Foundation"
   p.email = "avro-dev@hadoop.apache.org"
   p.summary = "Apache Avro for Ruby"
-  p.description = "Apache is a data serialization and RPC format"
+  p.description = "Avro is a data serialization and RPC format"
   p.url = "http://hadoop.apache.org/avro/"
   p.runtime_dependencies = %w[yajl-ruby]
 end

@@ -201,7 +201,7 @@ module Avro
 
       # Bytes are encoded as a long followed by that many bytes of data.
       def write_bytes(datum)
-        write_long(datum.size)
+        write_long(datum.bytesize)
         @writer.write(datum)
       end
 

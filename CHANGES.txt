@@ -57,6 +57,9 @@ Trunk (not yet released)
     AVRO-1201. Java: Fix GenericData#toString() to generate valid JSON for
     enum values. (Sharmarke Aden via cutting)
 
+    AVRO-1206. Ruby: Fix UTF-8 handling in Ruby 1.9.
+    (Nicolas Fouché via cutting)
+
 Avro 1.7.2 (20 October 2012)
 
   NEW FEATURES
