@@ -178,7 +178,7 @@ public class AvroMultipleOutputs {
   private static void checkTokenName(String namedOutput) {
     if (namedOutput == null || namedOutput.length() == 0) {
       throw new IllegalArgumentException(
-        "Name cannot be NULL or emtpy");
+        "Name cannot be NULL or empty");
     }
     for (char ch : namedOutput.toCharArray()) {
       if ((ch >= 'A') && (ch <= 'Z')) {
@@ -191,7 +191,7 @@ public class AvroMultipleOutputs {
         continue;
       }
       throw new IllegalArgumentException(
-        "Name cannot be have a '" + ch + "' char");
+        "Name cannot have a '" + ch + "' char");
     }
   }
 
