@@ -54,10 +54,16 @@ import org.slf4j.LoggerFactory;
  * Java reserved keywords are mangled to preserve compilation.
  */
 public class SpecificCompiler {
+  public static enum FieldVisibility {
+    PUBLIC, PUBLIC_DEPRECATED, PRIVATE
+  }
+
   private final Set<Schema> queue = new HashSet<Schema>();
   private Protocol protocol;
   private VelocityEngine velocityEngine;
   private String templateDir;
+  private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
+  private boolean createSetters = true;
 
   /* List of Java reserved words from
    * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
@@ -123,6 +129,46 @@ public class SpecificCompiler {
    * present on the classpath.*/
   public void setTemplateDir(String templateDir) {
     this.templateDir = templateDir;
+  }
+
+  /**
+   * @return true if the record fields should be marked as deprecated
+   */
+  public boolean deprecatedFields() {
+    return (this.fieldVisibility == FieldVisibility.PUBLIC_DEPRECATED);
+  }
+
+  /**
+   * @return true if the record fields should be public
+   */
+  public boolean publicFields() {
+    return (this.fieldVisibility == FieldVisibility.PUBLIC ||
+            this.fieldVisibility == FieldVisibility.PUBLIC_DEPRECATED);
+  }
+
+  /**
+   * @return true if the record fields should be private
+   */
+  public boolean privateFields() {
+    return (this.fieldVisibility == FieldVisibility.PRIVATE);
+  }
+
+  /**
+   * Sets the field visibility option.
+   */
+  public void setFieldVisibility(FieldVisibility fieldVisibility) {
+    this.fieldVisibility = fieldVisibility;
+  }
+
+  public boolean isCreateSetters() {
+      return this.createSetters;
+  }
+
+  /**
+   * Set to false to not create setter methods for the fields of the record.
+   */
+  public void setCreateSetters(boolean createSetters) {
+    this.createSetters = createSetters;
   }
 
   private static String logChuteName = null;

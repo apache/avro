@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.avro.compiler.specific.SpecificCompiler;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -55,6 +57,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    *            default-value="${project.build.directory}/generated-test-sources/avro"
    */
   private File testOutputDirectory;
+
+  /**
+   * The field visibility indicator for the fields of the generated class, as
+   * string values of SpecificCompiler.FieldVisibility.  The text is case
+   * insensitive.
+   *
+   * @parameter default-value="PUBLIC_DEPRECATED"
+   */
+  private String fieldVisibility;
 
   /**
    * A list of files or directories that should be compiled first thus making
@@ -97,6 +108,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter expression="${templateDirectory}"
    */
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
+
+  /**
+   * Determines whether or not to create setters for the fields of the record.
+   * The default is to create setters.
+   *
+   * @parameter default-value="true"
+   */
+  protected boolean createSetters;
 
   /**
    * The current Maven project.
@@ -194,6 +213,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
         throw new MojoExecutionException("Error compiling protocol file "
             + filename + " to " + outDir, e);
       }
+    }
+  }
+
+  protected SpecificCompiler.FieldVisibility getFieldVisibility() {
+    try {
+      String upper = String.valueOf(this.fieldVisibility).trim().toUpperCase();
+      return SpecificCompiler.FieldVisibility.valueOf(upper);
+    } catch (IllegalArgumentException e) {
+      return SpecificCompiler.FieldVisibility.PUBLIC_DEPRECATED;
     }
   }
 

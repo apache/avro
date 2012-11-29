@@ -75,6 +75,8 @@ public class SchemaMojo extends AbstractAvroMojo {
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
+    compiler.setFieldVisibility(getFieldVisibility());
+    compiler.setCreateSetters(createSetters);
     compiler.compileToDestination(src, outputDirectory);
   }
 

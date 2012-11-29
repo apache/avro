@@ -35,7 +35,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #foreach ($annotation in $this.javaAnnotations($field))
   @$annotation
 #end
-  @Deprecated public ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+  #if (${this.deprecatedFields()})@Deprecated#end #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
 #end
 #if ($schema.isError())
 
@@ -108,6 +108,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     return ${this.mangle($field.name(), $schema.isError())};
   }
 
+#if ($this.createSetters)
   /**
    * Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #if ($field.doc())   * $field.doc()#end
@@ -116,6 +117,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} value) {
     this.${this.mangle($field.name(), $schema.isError())} = value;
   }
+#end
 
 #end
   /** Creates a new ${this.mangle($schema.getName())} RecordBuilder */

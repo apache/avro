@@ -26,6 +26,16 @@ Trunk (not yet released)
     annotation org.apache.avro.specific.AvroGenerated.
     (Sharmarke Aden via cutting)
 
+    AVRO-988. Java: Add option to make fields in generated classes
+    private, public, or public & deprecated.  This is specified with
+    the "fieldVisibility" option in Maven and is public_deprecated by
+    default for compatibility. (Jeff Kolesky via cutting)
+
+    AVRO-1209. Java: Add option to generate immutable classes, without
+    setter methods.  This is specified with the "createSetters"
+    boolean option in Maven and is true by default for compatibility.
+    (Jeff Kolesky via cutting)
+
   IMPROVEMENTS
 
     AVRO-1169. Java: Reduce memory footprint of resolver.
