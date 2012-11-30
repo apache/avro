@@ -615,6 +615,7 @@ static avro_datum_t avro_fixed_private(avro_schema_t schema,
 	check_param(NULL, is_avro_schema(schema), "schema");
 	struct avro_fixed_schema_t *fschema = avro_schema_to_fixed(schema);
 	if (size != fschema->size) {
+		avro_free((char *) bytes, size);
 		avro_set_error("Fixed size (%zu) doesn't match schema (%zu)",
 			       (size_t) size, (size_t) fschema->size);
 		return NULL;

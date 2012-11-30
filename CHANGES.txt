@@ -82,6 +82,9 @@ Avro 1.7.3 (3 November 2012)
     AVRO-1175. Java: Clear thread local reference in BinaryData#compare().
     (cutting)
 
+    AVRO-1163. C: Fix a memory leak in avro_fixed_private(). (Maxim
+    Pugachev via brucem)
+
 Avro 1.7.2 (20 October 2012)
 
   NEW FEATURES
