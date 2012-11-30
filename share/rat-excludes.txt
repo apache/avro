@@ -39,6 +39,7 @@ lang/c/src/st.h
 lang/c/src/st.c
 lang/csharp/Avro.sln
 lang/csharp/Avro.nunit
+lang/java/avro/src/test/java/org/apache/avro/TypeEnum.java
 lang/java/avro/src/test/java/org/apache/avro/FooBarSpecificRecord.java
 lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/*.js
 lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/*.css
