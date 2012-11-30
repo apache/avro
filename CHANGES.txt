@@ -85,6 +85,8 @@ Avro 1.7.3 (3 November 2012)
     AVRO-1163. C: Fix a memory leak in avro_fixed_private(). (Maxim
     Pugachev via brucem)
 
+    AVRO-1174. C: Fix Windows build. (Stefan Langer via brucem)
+
 Avro 1.7.2 (20 October 2012)
 
   NEW FEATURES

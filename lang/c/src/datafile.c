@@ -373,7 +373,7 @@ file_writer_open(const char *path, avro_file_writer_t w, size_t block_size)
 	}
 
 	w->datum_buffer_size = block_size;
-	w->datum_buffer = avro_malloc(w->datum_buffer_size);
+	w->datum_buffer = (char *) avro_malloc(w->datum_buffer_size);
 
 	if(!w->datum_buffer) {
 		avro_set_error("Could not allocate datum buffer\n");
@@ -407,7 +407,7 @@ avro_file_writer_open_bs(const char *path, avro_file_writer_t * writer,
 		avro_set_error("Cannot create new file writer for %s", path);
 		return ENOMEM;
 	}
-	w->codec = avro_new(struct avro_codec_t_);
+	w->codec = (avro_codec_t) avro_new(struct avro_codec_t_);
 	if (!w->codec) {
 		avro_set_error("Cannot allocate new codec");
 		avro_freet(struct avro_file_writer_t_, w);
