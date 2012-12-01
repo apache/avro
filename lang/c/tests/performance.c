@@ -810,15 +810,15 @@ main(int argc, char **argv)
 		  test_nested_record_value_by_index_resolved_reader },
 		{ "simple array matched schemas", 250000,
 		  test_simple_array },
-		{ "simple array resolved writer", 10000,
+		{ "simple array resolved writer", 250000,
 		  test_simple_array_resolved_writer },
 		{ "simple array resolved reader", 250000,
 		  test_simple_array_resolved_reader },
 		{ "nested array matched schemas", 250000,
 		  test_nested_array },
-		{ "nested array resolved writer", 10000,
+		{ "nested array resolved writer", 250000,
 		  test_nested_array_resolved_writer },
-		{ "simple array resolved reader", 250000,
+		{ "nested array resolved reader", 250000,
 		  test_nested_array_resolved_reader },
 	};
 

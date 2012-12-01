@@ -52,6 +52,9 @@ Avro 1.7.3 (3 December 2012)
     AVRO-1178. Java: Fix typos in parsing document.
     (Martin Kleppmann via cutting)
 
+    AVRO-1089. C: Remove performance penalty when using resolved writer with
+    arrays.  (dcreager)
+
   BUG FIXES
 
     AVRO-1171. Java: Don't call configure() twice on mappers & reducers.

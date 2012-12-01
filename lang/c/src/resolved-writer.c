@@ -1614,6 +1614,7 @@ avro_resolved_array_writer_reset(const avro_resolved_writer_t *iface, void *vsel
 
 	/* Clear out our cache of wrapped children */
 	avro_resolved_array_writer_free_elements(aiface->child_resolver, self);
+	avro_raw_array_clear(&self->children);
 	return 0;
 }
 
