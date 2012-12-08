@@ -86,6 +86,7 @@ class DataFileWriter(object):
     self._buffer_encoder = io.BinaryEncoder(self._buffer_writer)
     self._block_count = 0
     self._meta = {}
+    self._header_written = False
 
     if writers_schema is not None:
       if codec not in VALID_CODECS:
@@ -94,7 +95,6 @@ class DataFileWriter(object):
       self.set_meta('avro.codec', codec)
       self.set_meta('avro.schema', str(writers_schema))
       self.datum_writer.writers_schema = writers_schema
-      self._write_header()
     else:
       # open writer for reading to collect metadata
       dfr = DataFileReader(writer, io.DatumReader())
@@ -111,6 +111,7 @@ class DataFileWriter(object):
 
       # seek to the end of the file and prepare for writing
       writer.seek(0, 2)
+      self._header_written = True
 
   # read-only properties
   writer = property(lambda self: self._writer)
@@ -145,9 +146,13 @@ class DataFileWriter(object):
               'meta': self.meta,
               'sync': self.sync_marker}
     self.datum_writer.write_data(META_SCHEMA, header, self.encoder)
+    self._header_written = True
 
   # TODO(hammer): make a schema for blocks and use datum_writer
   def _write_block(self):
+    if not self._header_written:
+      self._write_header()
+
     if self.block_count > 0:
       # write number of items in block
       self.encoder.write_long(self.block_count)
