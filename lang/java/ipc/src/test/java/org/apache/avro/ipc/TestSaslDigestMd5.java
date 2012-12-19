@@ -64,7 +64,11 @@ public class TestSaslDigestMd5 extends TestProtocolGeneric {
 
   static {
     DIGEST_MD5_PROPS.put(Sasl.QOP, "auth-int");
-    DIGEST_MD5_PROPS.put("com.sun.security.sasl.digest.realm", REALM);
+    if (System.getProperty("java.vendor").contains("IBM")) {
+      DIGEST_MD5_PROPS.put("com.ibm.security.sasl.digest.realm", REALM);
+    } else {
+      DIGEST_MD5_PROPS.put("com.sun.security.sasl.digest.realm", REALM);
+    }
   }
 
   private static class TestSaslCallbackHandler implements CallbackHandler {

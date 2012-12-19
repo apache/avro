@@ -9,6 +9,9 @@ Trunk (not yet released)
     AVRO-1211. Add MR guide to documentation. (Skye Wanderman-Milne via
     tomwhite)
 
+    AVRO-1221. Java: Fix TestSaslDigestMd5 to pass on IBM JVM.
+    (Rodrigo Trujillo via cutting)
+
   BUG FIXES
 
 Avro 1.7.3 (6 December 2012)
