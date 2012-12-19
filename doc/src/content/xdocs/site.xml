@@ -49,6 +49,7 @@ See http://forrest.apache.org/docs/linking.html for more info
     <c-api      label="C API"             href="ext:api/c/index" />
     <cpp-api    label="C++ API"           href="ext:api/cpp/index" />
     <csharp-api label="C# API"            href="ext:api/csharp/index" />
+    <mr         label="MapReduce guide"  href="mr.html" />
     <idl        label="IDL language"      href="idl.html" />
     <sasl       label="SASL profile"      href="sasl.html" />
     <wiki       label="Wiki"              href="ext:wiki" />

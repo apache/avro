@@ -6,6 +6,9 @@ Trunk (not yet released)
 
   IMPROVEMENTS
 
+    AVRO-1211. Add MR guide to documentation. (Skye Wanderman-Milne via
+    tomwhite)
+
   BUG FIXES
 
 Avro 1.7.3 (6 December 2012)

@@ -21,6 +21,9 @@
       <arg value="-Dproject.content-dir=src"/>
       <arg value="-Dproject.site=../${build.dir}/"/>
     </exec>
+    <copy todir="${build.dir}/examples">
+      <fileset dir="examples"/>
+    </copy>
   </target>
 
   <target name="forrest.check" unless="forrest.home">
