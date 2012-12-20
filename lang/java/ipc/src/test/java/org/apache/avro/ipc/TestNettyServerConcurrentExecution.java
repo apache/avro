@@ -93,11 +93,11 @@ public class TestNettyServerConcurrentExecution {
     
     transceiver = new NettyTransceiver(new InetSocketAddress(
         server.getPort()), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
+    
+    // 1. Create the RPC proxy, and establish the handshake:
     final Simple.Callback simpleClient = 
         SpecificRequestor.getClient(Simple.Callback.class, transceiver);
-    
-    // 1. Execute the Client.add(int, int) RPC to establish the handshake:
-    Assert.assertEquals(3, simpleClient.add(1, 2));
+    SpecificRequestor.getRemote(simpleClient);    // force handshake
     
     /*
      * 2a. In a background thread, wait for the Client.hello("wait") call to be

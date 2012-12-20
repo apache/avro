@@ -12,6 +12,9 @@ Trunk (not yet released)
     AVRO-1221. Java: Fix TestSaslDigestMd5 to pass on IBM JVM.
     (Rodrigo Trujillo via cutting)
 
+    AVRO-1008. Java: Improve support for forcing connection
+    handshakes. (jbaldassari & cutting)
+
   BUG FIXES
 
 Avro 1.7.3 (6 December 2012)

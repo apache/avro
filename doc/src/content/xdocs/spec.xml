@@ -1013,6 +1013,10 @@
           declaration.</li>
         </ul>
 
+        <p>When the empty string is used as a message name a server
+        should ignore the parameters and return an empty response.  A
+        client may use this to ping a server or to perform a handshake
+        without sending a protocol message.</p>
 
         <p>When a message is declared one-way and a stateful
         connection has been established by a successful handshake

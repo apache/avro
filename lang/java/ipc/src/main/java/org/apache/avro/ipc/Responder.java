@@ -123,6 +123,8 @@ public abstract class Responder {
       // read request using remote protocol specification
       context.setRequestCallMeta(META_READER.read(null, in));
       String messageName = in.readString(null).toString();
+      if (messageName.equals(""))                 // a handshake ping
+        return handshake;
       Message rm = remote.getMessages().get(messageName);
       if (rm == null)
         throw new AvroRuntimeException("No such remote message: "+messageName);
