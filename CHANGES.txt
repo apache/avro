@@ -17,6 +17,9 @@ Trunk (not yet released)
 
   BUG FIXES
 
+    AVRO-1231. Java: Fix Trevni shredder to work on non-recursive
+    schemas with multiple references. (Mark Wagner via cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES

@@ -86,6 +86,19 @@ public class TestShredder {
           new ColumnMetaData("y", ValueType.STRING));
   }
 
+  @Test public void testNamedRecord() throws Exception {
+	    String s = 
+	      "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
+	      +"{\"name\":\"R1\",\"type\":"+SIMPLE_RECORD+"},"
+	      +"{\"name\":\"R2\",\"type\":\"R\"}"
+	      +"]}";
+	    check(Schema.parse(s),
+	          new ColumnMetaData("R1#x", ValueType.INT),
+	          new ColumnMetaData("R1#y", ValueType.STRING),
+	          new ColumnMetaData("R2#x", ValueType.INT),
+	          new ColumnMetaData("R2#y", ValueType.STRING));
+	  }
+  
   @Test public void testSimpleArray() throws Exception {
     String s = "{\"type\":\"array\",\"items\":\"long\"}";
     check(Schema.parse(s),

@@ -97,6 +97,7 @@ class AvroColumnator {
     default:
       throw new TrevniRuntimeException("Unknown schema: "+s);
     }
+    seen.remove(s);
   }
 
   private String p(String parent, Schema child, String sep) {
