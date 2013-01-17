@@ -44,6 +44,7 @@ class InputBuffer {
       this.buf = ((InputBytes)in).getBuffer();
       this.limit = (int)in.length();
       this.offset = limit;
+      this.pos = (int)position;
     } else {                                      // create new buffer
       this.buf = new byte[8192];                  // big enough for primitives
     }

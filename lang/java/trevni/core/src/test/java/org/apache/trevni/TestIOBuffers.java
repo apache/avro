@@ -230,4 +230,15 @@ public class TestIOBuffers {
     in.skipValue(ValueType.BYTES);
     Assert.assertEquals(sentinel, in.readLong());
   }
+  @Test public void testInitPos() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(Integer.MAX_VALUE, ValueType.INT);
+    out.writeLong(sentinel);
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.readInt();
+    long pos = in.tell();
+    in = new InputBuffer(new InputBytes(out.toByteArray()), pos);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
 }

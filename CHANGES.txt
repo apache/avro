@@ -23,6 +23,9 @@ Trunk (not yet released)
     AVRO-1230. avro-mapred-1.7.3-hadoop1.jar does not work with
     Hadoop 1. (tomwhite)
 
+    AVRO-1233. Java: Fix InputBuffer's constructor to use the
+    specified initial position. (Mark Wagner via cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES
