@@ -18,7 +18,10 @@
 
 package org.apache.avro.mapreduce;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +30,7 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.mapred.AvroKey;
+import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapred.FsInput;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.reflect.ReflectData;
@@ -45,6 +49,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -123,6 +128,19 @@ public class TestWordCount {
       mCount.set(record.datum().count);
       mText.set(record.datum().name);
       context.write(mText, mCount);
+    }
+  }
+
+  private static class AvroSumReducer
+      extends Reducer<Text, IntWritable, AvroKey<CharSequence>, AvroValue<Integer>> {
+    @Override
+    protected void reduce(Text key, Iterable<IntWritable> counts, Context context)
+        throws IOException, InterruptedException {
+      int sum = 0;
+      for (IntWritable count : counts) {
+        sum += count.get();
+      }
+      context.write(new AvroKey<CharSequence>(key.toString()), new AvroValue<Integer>(sum));
     }
   }
 
@@ -454,5 +472,50 @@ public class TestWordCount {
     Assert.assertEquals(3, counts.get("apple").intValue());
     Assert.assertEquals(2, counts.get("banana").intValue());
     Assert.assertEquals(1, counts.get("carrot").intValue());
+  }
+
+  /**
+   * Tests the MR output to text files when using AvroKey and AvroValue records.
+   */
+  @Test
+  public void testAvroUsingTextFileOutput() throws Exception {
+    Job job = new Job();
+
+    FileInputFormat.setInputPaths(job, new Path(getClass()
+            .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
+            .toURI().toString()));
+    job.setInputFormatClass(TextInputFormat.class);
+
+    job.setMapperClass(LineCountMapper.class);
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(IntWritable.class);
+
+    job.setReducerClass(AvroSumReducer.class);
+    AvroJob.setOutputKeySchema(job, Schema.create(Schema.Type.STRING));
+    AvroJob.setOutputValueSchema(job, Schema.create(Schema.Type.INT));
+
+    job.setOutputFormatClass(TextOutputFormat.class);
+    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-text");
+    FileOutputFormat.setOutputPath(job, outputPath);
+
+    Assert.assertTrue(job.waitForCompletion(true));
+
+    // Check that the results from the MapReduce were as expected.
+    FileSystem fileSystem = FileSystem.get(job.getConfiguration());
+    FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
+    Assert.assertEquals(1, outputFiles.length);
+    Path filePath = outputFiles[0].getPath();
+    InputStream inputStream = filePath.getFileSystem(job.getConfiguration()).open(filePath);
+    Assert.assertNotNull(inputStream);
+    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    try {
+      Assert.assertTrue(reader.ready());
+      Assert.assertEquals("apple\t3", reader.readLine());
+      Assert.assertEquals("banana\t2", reader.readLine());
+      Assert.assertEquals("carrot\t1", reader.readLine());
+      Assert.assertFalse(reader.ready());
+    } finally {
+      reader.close();
+    }
   }
 }

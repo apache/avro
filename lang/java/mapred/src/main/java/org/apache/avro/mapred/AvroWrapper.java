@@ -54,4 +54,9 @@ public class AvroWrapper<T> {
     return true;
   }
     
+  /** Get the wrapped datum as JSON. */
+  @Override
+  public String toString() {
+    return datum.toString();
+  }
 }

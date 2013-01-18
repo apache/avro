@@ -22,6 +22,9 @@ Trunk (not yet released)
     AVRO-1223. Java: Add a static method to generated classes that
     returns its schema, getClassSchema().  (cutting)
 
+    AVRO-1232. Java: Add a toString() method to AvroWrapper so that it
+    works with TextOutputFormat.  (Garrett Wu via cutting)
+
   BUG FIXES
 
     AVRO-1231. Java: Fix Trevni shredder to work on non-recursive
