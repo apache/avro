@@ -30,4 +30,5 @@ public enum ${this.mangle($schema.getName())} {
   #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($velocityHasNext), #end#end
   ;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
+  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 }

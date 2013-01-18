@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.ArrayList;
 
 import org.junit.Test;
+import org.junit.Assert;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -87,6 +88,11 @@ public class TestSpecificData {
         new SpecificDatumReader<Object>());
 }
 
+  @Test public void testGetClassSchema() throws Exception {
+    Assert.assertEquals(TestRecord.getClassSchema(), TestRecord.SCHEMA$);
+    Assert.assertEquals(MD5.getClassSchema(), MD5.SCHEMA$);
+    Assert.assertEquals(Kind.getClassSchema(), Kind.SCHEMA$);
+  }
 
 
 }

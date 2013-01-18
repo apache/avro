@@ -19,6 +19,9 @@ Trunk (not yet released)
 
     AVRO-970. Java: Make Codec API public. (Rui Pereira via cutting)
 
+    AVRO-1223. Java: Add a static method to generated classes that
+    returns its schema, getClassSchema().  (cutting)
+
   BUG FIXES
 
     AVRO-1231. Java: Fix Trevni shredder to work on non-recursive

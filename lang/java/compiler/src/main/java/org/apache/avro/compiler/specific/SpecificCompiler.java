@@ -81,7 +81,9 @@ public class SpecificCompiler {
   
   /* Reserved words for accessor/mutator methods */
   private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = 
-      new HashSet<String>(Arrays.asList(new String[] { "class", "schema" }));
+      new HashSet<String>(Arrays.asList(new String[] {
+            "class", "schema", "classSchema"
+          }));
   static {
     // Add reserved words to accessor/mutator reserved words
     ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
