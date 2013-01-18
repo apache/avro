@@ -36,10 +36,10 @@ class SnappyCodec extends Codec {
 
   private SnappyCodec() {}
 
-  @Override String getName() { return DataFileConstants.SNAPPY_CODEC; }
+  @Override public String getName() { return DataFileConstants.SNAPPY_CODEC; }
 
   @Override
-  ByteBuffer compress(ByteBuffer in) throws IOException {
+  public ByteBuffer compress(ByteBuffer in) throws IOException {
     ByteBuffer out =
       ByteBuffer.allocate(Snappy.maxCompressedLength(in.remaining())+4);
     int size = Snappy.compress(in.array(), in.position(), in.remaining(),
@@ -54,7 +54,7 @@ class SnappyCodec extends Codec {
   }
 
   @Override
-  ByteBuffer decompress(ByteBuffer in) throws IOException {
+  public ByteBuffer decompress(ByteBuffer in) throws IOException {
     ByteBuffer out = ByteBuffer.allocate
       (Snappy.uncompressedLength(in.array(),in.position(),in.remaining()-4));
     int size = Snappy.uncompress(in.array(),in.position(),in.remaining()-4,

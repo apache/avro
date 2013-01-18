@@ -63,12 +63,12 @@ class DeflateCodec extends Codec {
   }
 
   @Override
-  String getName() {
+  public String getName() {
     return DataFileConstants.DEFLATE_CODEC;
   }
 
   @Override
-  ByteBuffer compress(ByteBuffer data) throws IOException {
+  public ByteBuffer compress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
     DeflaterOutputStream ios = new DeflaterOutputStream(baos, getDeflater());
     writeAndClose(data, ios);
@@ -77,7 +77,7 @@ class DeflateCodec extends Codec {
   }
 
   @Override
-  ByteBuffer decompress(ByteBuffer data) throws IOException {
+  public ByteBuffer decompress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
     InflaterOutputStream ios = new InflaterOutputStream(baos, getInflater());
     writeAndClose(data, ios);

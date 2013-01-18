@@ -22,16 +22,14 @@ import java.nio.ByteBuffer;
 
 /** 
  * Interface for Avro-supported compression codecs for data files.
- *
- * This is currently exclusively an internal-facing API.
  */
-abstract class Codec {
+public abstract class Codec {
   /** Name of the codec; written to the file's metadata. */
-  abstract String getName();
+  public abstract String getName();
   /** Compresses the input data */
-  abstract ByteBuffer compress(ByteBuffer uncompressedData) throws IOException;
+  public abstract ByteBuffer compress(ByteBuffer uncompressedData) throws IOException;
   /** Decompress the data  */
-  abstract ByteBuffer decompress(ByteBuffer compressedData) throws IOException;
+  public abstract ByteBuffer decompress(ByteBuffer compressedData) throws IOException;
   /** 
    * Codecs must implement an equals() method.  Two codecs, A and B are equal
    * if: the result of A and B decompressing content compressed by A is the same

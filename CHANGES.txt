@@ -17,6 +17,8 @@ Trunk (not yet released)
     AVRO-1008. Java: Improve support for forcing connection
     handshakes. (jbaldassari & cutting)
 
+    AVRO-970. Java: Make Codec API public. (Rui Pereira via cutting)
+
   BUG FIXES
 
     AVRO-1231. Java: Fix Trevni shredder to work on non-recursive

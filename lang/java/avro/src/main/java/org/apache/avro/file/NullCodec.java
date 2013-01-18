@@ -36,17 +36,17 @@ final class NullCodec extends Codec {
   public static final CodecFactory OPTION = new Option();
 
   @Override
-  String getName() {
+  public String getName() {
     return DataFileConstants.NULL_CODEC;
   }
 
   @Override
-  ByteBuffer compress(ByteBuffer buffer) throws IOException {
+  public ByteBuffer compress(ByteBuffer buffer) throws IOException {
     return buffer;
   }
 
   @Override
-  ByteBuffer decompress(ByteBuffer data) throws IOException {
+  public ByteBuffer decompress(ByteBuffer data) throws IOException {
     return data;
   }
 
