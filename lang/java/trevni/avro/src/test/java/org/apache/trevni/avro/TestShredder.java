@@ -38,6 +38,8 @@ public class TestShredder {
   @Test public void testPrimitives() throws Exception {
     check(Schema.create(Schema.Type.NULL),
           new ColumnMetaData("null", ValueType.NULL));
+    check(Schema.create(Schema.Type.BOOLEAN),
+          new ColumnMetaData("boolean", ValueType.BOOLEAN));
 
     check(Schema.create(Schema.Type.INT),
           new ColumnMetaData("int", ValueType.INT));

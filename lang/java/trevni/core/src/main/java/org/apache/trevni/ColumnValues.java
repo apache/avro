@@ -136,7 +136,7 @@ public class ColumnValues<T extends Comparable>
       throw new TrevniRuntimeException
         ("Column is not array: " +column.metaData.getName());
     assert arrayLength == 0;
-    return arrayLength = values.readInt();
+    return arrayLength = values.readLength();
   }
 
   /** Expert: Returns the next value in a column. */

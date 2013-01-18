@@ -27,6 +27,8 @@ import java.util.Arrays;
 class OutputBuffer extends ByteArrayOutputStream {
   static final int BLOCK_SIZE = 64 * 1024;
 
+  private int bitCount;                           // position in booleans
+
   public OutputBuffer() { super(BLOCK_SIZE + BLOCK_SIZE >> 2); }
 
   public boolean isFull() { return size() >= BLOCK_SIZE; }
@@ -38,6 +40,8 @@ class OutputBuffer extends ByteArrayOutputStream {
     switch (type) {
     case NULL:
                                               break;
+    case BOOLEAN:
+      writeBoolean((Boolean)value);           break;
     case INT:
       writeInt((Integer)value);               break;
     case LONG:
@@ -61,6 +65,23 @@ class OutputBuffer extends ByteArrayOutputStream {
     default:
       throw new TrevniRuntimeException("Unknown value type: "+type);
     }
+  }
+
+  public void writeBoolean(boolean value) {
+    if (bitCount == 0) {                           // first bool in byte
+      ensure(1);
+      count++;
+    }
+    if (value)
+      buf[count-1] |= (byte)(1 << bitCount);
+    bitCount++;
+    if (bitCount == 8)
+      bitCount = 0;
+  }
+
+  public void writeLength(int length) throws IOException {
+    bitCount = 0;
+    writeInt(length);
   }
 
   private static final Charset UTF8 = Charset.forName("UTF-8");

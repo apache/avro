@@ -26,7 +26,7 @@ import org.junit.Test;
 
 public class TestIOBuffers {
 
-  private static final int COUNT = 1000;
+  private static final int COUNT = 1001;
 
   @Test public void testEmpty() throws Exception {
     OutputBuffer out = new OutputBuffer();
@@ -45,6 +45,19 @@ public class TestIOBuffers {
     Assert.assertEquals(0, bytes[0]);
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     Assert.assertEquals(0, in.readInt());
+  }
+
+  @Test public void testBoolean() throws Exception {
+    Random random = TestUtil.createRandom();
+    OutputBuffer out = new OutputBuffer();
+    for (int i = 0; i < COUNT; i++)
+      out.writeValue(random.nextBoolean(), ValueType.BOOLEAN);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    random = TestUtil.createRandom();
+    for (int i = 0; i < COUNT; i++)
+      Assert.assertEquals(random.nextBoolean(),
+                          in.readValue(ValueType.BOOLEAN));
   }
 
   @Test public void testInt() throws Exception {
@@ -148,6 +161,16 @@ public class TestIOBuffers {
     
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.NULL);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipBoolean() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(false, ValueType.BOOLEAN);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.BOOLEAN);
     Assert.assertEquals(sentinel, in.readLong());
   }
   @Test public void testSkipInt() throws Exception {

@@ -33,7 +33,7 @@ class ArrayColumnOutputBuffer extends ColumnOutputBuffer {
   @Override public void writeLength(int length) throws IOException {
     assert this.length == 0;
     this.length = length;
-    getBuffer().writeInt(length);
+    getBuffer().writeLength(length);
   }
 
   @Override public void writeValue(Object value) throws IOException {

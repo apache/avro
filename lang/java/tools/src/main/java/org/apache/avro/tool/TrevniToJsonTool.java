@@ -143,6 +143,8 @@ public class TrevniToJsonTool implements Tool {
     switch (column.getType()) {
     case NULL:
       generator.writeNull();                        break;
+    case BOOLEAN:
+      generator.writeBoolean((Boolean)value);       break;
     case INT:
       generator.writeNumber((Integer)value);        break;
     case LONG:

@@ -190,6 +190,8 @@ whether subsequent bytes are present.  For example:
 
   * <<null>>, requires zero bytes.  Sometimes used in array columns.
 
+  * <<boolean>>, one bit, packed into bytes, little-endian;
+
   * <<int>>, like <long>, but restricted to 32-bit signed values
 
   * <<long>> 64-bit signed values, represented as above
