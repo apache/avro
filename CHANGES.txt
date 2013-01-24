@@ -36,6 +36,8 @@ Trunk (not yet released)
     AVRO-1233. Java: Fix InputBuffer's constructor to use the
     specified initial position. (Mark Wagner via cutting)
 
+    AVRO-1227. Java: Large ByteBuffers can corrupt output. (cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES
