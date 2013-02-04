@@ -18,10 +18,14 @@
 package org.apache.avro.generic;
 
 import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.WeakHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +37,15 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.BinaryData;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.util.Utf8;
+
+import org.codehaus.jackson.JsonNode;
 
 /** Utilities for generic Java data. */
 public class GenericData {
@@ -800,6 +811,52 @@ public class GenericData {
     default:
       return ((Comparable)o1).compareTo(o2);
     }
+  }
+
+  private final Map<Field, Object> defaultValueCache
+    = Collections.synchronizedMap(new WeakHashMap<Field, Object>());
+
+  /**
+   * Gets the default value of the given field, if any.
+   * @param field the field whose default value should be retrieved.
+   * @return the default value associated with the given field, 
+   * or null if none is specified in the schema.
+   */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  public Object getDefaultValue(Field field) {    
+    JsonNode json = field.defaultValue();
+    if (json == null)
+      throw new AvroRuntimeException("Field " + field
+                                     + " not set and has no default value");
+    if (json.isNull()
+        && (field.schema().getType() == Type.NULL
+            || (field.schema().getType() == Type.UNION
+                && field.schema().getTypes().get(0).getType() == Type.NULL))) {
+      return null;
+    }
+    
+    // Check the cache
+    Object defaultValue = defaultValueCache.get(field);
+    
+    // If not cached, get the default Java value by encoding the default JSON
+    // value and then decoding it:
+    if (defaultValue == null)
+      try {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
+        ResolvingGrammarGenerator.encode(encoder, field.schema(), json);
+        encoder.flush();
+        BinaryDecoder decoder =
+          DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
+        defaultValue =
+          createDatumReader(field.schema()).read(null, decoder);
+
+        defaultValueCache.put(field, defaultValue);
+      } catch (IOException e) {
+        throw new AvroRuntimeException(e);
+      }
+
+    return defaultValue;
   }
 
   private static final Schema STRINGS = Schema.create(Type.STRING);

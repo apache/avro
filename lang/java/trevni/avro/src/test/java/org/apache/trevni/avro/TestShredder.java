@@ -62,16 +62,30 @@ public class TestShredder {
           new ColumnMetaData("F", ValueType.BYTES));
   }
 
+  private static final String SIMPLE_FIELDS =
+    "{\"name\":\"x\",\"type\":\"int\"},"+
+    "{\"name\":\"y\",\"type\":\"string\"}";
+
   private static final String SIMPLE_RECORD =
     "{\"type\":\"record\",\"name\":\"R\",\"fields\":["
-    +"{\"name\":\"x\",\"type\":\"int\"},"
-    +"{\"name\":\"y\",\"type\":\"string\"}"
+    +SIMPLE_FIELDS
     +"]}";
 
   @Test public void testSimpleRecord() throws Exception {
     check(Schema.parse(SIMPLE_RECORD),
           new ColumnMetaData("x", ValueType.INT),
           new ColumnMetaData("y", ValueType.STRING));
+  }
+
+  @Test public void testDefaultValue() throws Exception {
+    String s = 
+      "{\"type\":\"record\",\"name\":\"R\",\"fields\":["
+      +SIMPLE_FIELDS+","
+      +"{\"name\":\"z\",\"type\":\"int\","
+      +"\"default\":1,\""+RandomData.USE_DEFAULT+"\":true}"
+      +"]}";
+    checkWrite(Schema.parse(SIMPLE_RECORD));
+    checkRead(Schema.parse(s));
   }
 
   @Test public void testNestedRecord() throws Exception {
@@ -252,7 +266,8 @@ public class TestShredder {
 
   private void checkRead(Schema schema) throws IOException {
     AvroColumnReader<Object> reader =
-      new AvroColumnReader<Object>(new AvroColumnReader.Params(FILE));
+      new AvroColumnReader<Object>(new AvroColumnReader.Params(FILE)
+                                   .setSchema(schema));
     for (Object expected : new RandomData(schema, COUNT))
       assertEquals(expected, reader.next());
     reader.close();

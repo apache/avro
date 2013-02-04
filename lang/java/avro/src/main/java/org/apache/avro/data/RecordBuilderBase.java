@@ -17,11 +17,8 @@
  */
 package org.apache.avro.data;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -29,26 +26,15 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
-import org.codehaus.jackson.JsonNode;
 
 /** Abstract base class for RecordBuilder implementations.  Not thread-safe. */
 public abstract class RecordBuilderBase<T extends IndexedRecord> 
   implements RecordBuilder<T> {
-  private static final ConcurrentMap<String, ConcurrentMap<Integer, Object>> 
-    DEFAULT_VALUE_CACHE = 
-      new ConcurrentHashMap<String, ConcurrentMap<Integer, Object>>();
   private static final Field[] EMPTY_FIELDS = new Field[0];
   private final Schema schema;
   private final Field[] fields;
   private final boolean[] fieldSetFlags;
   private final GenericData data;
-  private BinaryEncoder encoder = null;
-  private BinaryDecoder decoder = null;
   
   protected final Schema schema() { return schema; }
   protected final Field[] fields() { return fields; }
@@ -146,48 +132,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   protected Object defaultValue(Field field) throws IOException {    
-    JsonNode defaultJsonValue = field.defaultValue();
-    if (defaultJsonValue == null) {
-      throw new AvroRuntimeException("Field " + field + " not set and has no default value");
-    }
-    if (defaultJsonValue.isNull()
-        && (field.schema().getType() == Type.NULL
-            || (field.schema().getType() == Type.UNION
-                && field.schema().getTypes().get(0).getType() == Type.NULL))) {
-      return null;
-    }
-    
-    // Get the default value
-    Object defaultValue = null;
-    
-    // First try to get the default value from cache:
-    ConcurrentMap<Integer, Object> defaultSchemaValues = 
-      DEFAULT_VALUE_CACHE.get(schema.getFullName());
-    if (defaultSchemaValues == null) {
-      DEFAULT_VALUE_CACHE.putIfAbsent(schema.getFullName(), 
-          new ConcurrentHashMap<Integer, Object>(fields.length));
-      defaultSchemaValues = DEFAULT_VALUE_CACHE.get(schema.getFullName());
-    }
-    defaultValue = defaultSchemaValues.get(field.pos());
-    
-    // If not cached, get the default Java value by encoding the default JSON
-    // value and then decoding it:
-    if (defaultValue == null) {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      encoder = EncoderFactory.get().binaryEncoder(baos, encoder);
-      ResolvingGrammarGenerator.encode(
-          encoder, field.schema(), defaultJsonValue);
-      encoder.flush();
-      decoder = DecoderFactory.get().binaryDecoder(
-          baos.toByteArray(), decoder);
-      defaultValue = data.createDatumReader(
-          field.schema()).read(null, decoder);
-      defaultSchemaValues.putIfAbsent(field.pos(), defaultValue);
-    }
-    
-    // Make a deep copy of the default value so that subsequent mutations 
-    // will not affect the default value cache:
-    return data.deepCopy(field.schema(), defaultValue);
+    return data.deepCopy(field.schema(), data.getDefaultValue(field));
   }
 
   @Override

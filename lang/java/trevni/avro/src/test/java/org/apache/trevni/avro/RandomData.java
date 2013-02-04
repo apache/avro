@@ -36,6 +36,8 @@ import org.apache.trevni.TestUtil;
 
 /** Generates schema data as Java objects with random values. */
 public class RandomData implements Iterable<Object> {
+  public static final String USE_DEFAULT = "use-default";
+
   private final Schema root;
   private final int count;
 
@@ -62,8 +64,12 @@ public class RandomData implements Iterable<Object> {
     switch (schema.getType()) {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
-      for (Schema.Field field : schema.getFields())
-        record.put(field.name(), generate(field.schema(), random, d+1));
+      for (Schema.Field field : schema.getFields()) {
+        Object value = (field.getJsonProp(USE_DEFAULT) == null) 
+          ? generate(field.schema(), random, d+1)
+          : GenericData.get().getDefaultValue(field);
+        record.put(field.name(), value);
+      }
       return record;
     case ENUM:
       List<String> symbols = schema.getEnumSymbols();

@@ -55,6 +55,9 @@ public class AvroColumnReader<D>
   private int[] arrayWidths;
   private int column;                          // current index in values
 
+  private Map<String,Map<String,Object>> defaults =
+    new HashMap<String,Map<String,Object>>();
+
   /** Parameters for reading an Avro column file. */
   public static class Params {
     Input input;
@@ -111,10 +114,59 @@ public class AvroColumnReader<D>
     int j = 0;
     for (ColumnMetaData c : readColumns) {
       Integer n = fileColumnNumbers.get(c.getName());
-      if (n == null)
-        throw new TrevniRuntimeException("No column named: "+c.getName());
-      values[j++] = reader.getValues(n);
+      if (n != null)
+        values[j++] = reader.getValues(n);
     }
+    findDefaults(readSchema, fileSchema);
+  }
+
+  // get defaults for fields in read that are not in write
+  private void findDefaults(Schema read, Schema write) {
+    switch (read.getType()) {
+    case NULL: case BOOLEAN:
+    case INT: case LONG:
+    case FLOAT: case DOUBLE: 
+    case BYTES: case STRING: 
+    case ENUM: case FIXED:
+      if (read.getType() != write.getType())
+        throw new TrevniRuntimeException("Type mismatch: "+read+" & "+write);
+      break;
+    case MAP: 
+      findDefaults(read.getValueType(), write.getValueType());
+      break;
+    case ARRAY: 
+      findDefaults(read.getElementType(), write.getElementType());
+      break;
+    case UNION:
+      for (Schema s : read.getTypes()) {
+        Integer index = write.getIndexNamed(s.getFullName());
+        if (index == null)
+          throw new TrevniRuntimeException("No matching branch: "+s);
+        findDefaults(s, write.getTypes().get(index));
+      }
+      break;
+    case RECORD: 
+      for (Field f : read.getFields()) {
+        Field g = write.getField(f.name());
+        if (g == null)
+          setDefault(read, f);
+        else
+          findDefaults(f.schema(), g.schema());
+      }
+      break;
+    default:
+      throw new TrevniRuntimeException("Unknown schema: "+read);
+    }
+  }
+
+  private void setDefault(Schema record, Field f) {
+    String recordName = record.getFullName();
+    Map<String,Object> recordDefaults = defaults.get(recordName);
+    if (recordDefaults == null) {
+      recordDefaults = new HashMap<String,Object>();
+      defaults.put(recordName, recordDefaults);
+    }
+    recordDefaults.put(f.name(), model.getDefaultValue(f));
   }
 
   @Override
@@ -132,7 +184,8 @@ public class AvroColumnReader<D>
   public D next() {
     try {
       for (int i = 0; i < values.length; i++)
-        values[i].startRow();
+        if (values[i] != null)
+          values[i].startRow();
       this.column = 0;
       return (D)read(readSchema);
     } catch (IOException e) {
@@ -160,8 +213,13 @@ public class AvroColumnReader<D>
       return map;
     case RECORD: 
       Object record = model.newRecord(null, s);
-      for (Field f : s.getFields())
-        model.setField(record, f.name(), f.pos(), read(f.schema()));
+      Map<String,Object> rDefaults = defaults.get(s.getFullName());
+      for (Field f : s.getFields()) {
+        Object value = ((rDefaults != null) && rDefaults.containsKey(f.name()))
+          ? model.deepCopy(f.schema(), rDefaults.get(f.name()))
+          : read(f.schema());
+        model.setField(record, f.name(), f.pos(), value);
+      }
       return record;
     case ARRAY: 
       int length = values[column].nextLength();

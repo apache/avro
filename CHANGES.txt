@@ -40,6 +40,9 @@ Trunk (not yet released)
 
     AVRO-1227. Java: Large ByteBuffers can corrupt output. (cutting)
 
+    AVRO-1228. Java: Fix Trevni to use default values for missing Avro fields.
+    (cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES
