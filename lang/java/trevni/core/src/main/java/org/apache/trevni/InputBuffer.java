@@ -21,6 +21,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 
 /** Used to read values. */
 class InputBuffer {
@@ -33,6 +34,8 @@ class InputBuffer {
   private int pos;                                // position within buffer
   private int limit;                              // end of valid buffer data
 
+  private CharsetDecoder utf8 = Charset.forName("UTF-8").newDecoder();
+  
   private int bitCount;                           // position in booleans
 
   public InputBuffer(Input in) throws IOException { this(in, 0); }
@@ -274,18 +277,16 @@ class InputBuffer {
     return (readFixed32() & 0xFFFFFFFFL) | (((long)readFixed32()) << 32);
   }
 
-  private static final Charset UTF8 = Charset.forName("UTF-8");
-
   public String readString() throws IOException {
     int length = readInt();
     if (length <= (limit - pos)) {                        // in buffer
-      String result = new String(buf, pos, length, UTF8); // read directly
+      String result = utf8.decode(ByteBuffer.wrap(buf, pos, length)).toString();
       pos += length;
       return result;
     }
     byte[] bytes = new byte[length];
     readFully(bytes, 0, length);
-    return new String(bytes, 0, length, UTF8);
+    return utf8.decode(ByteBuffer.wrap(bytes, 0, length)).toString();
   }  
 
   public byte[] readBytes() throws IOException {
