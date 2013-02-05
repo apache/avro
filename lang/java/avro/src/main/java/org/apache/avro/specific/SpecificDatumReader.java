@@ -26,8 +26,10 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     this(null, null, SpecificData.get());
   }
 
+  /** Construct for reading instances of a class. */
   public SpecificDatumReader(Class<T> c) {
-    this(SpecificData.get().getSchema(c));
+    this(new SpecificData(c.getClassLoader()));
+    setSchema(getSpecificData().getSchema(c));
   }
 
   /** Construct where the writer's and reader's schemas are the same. */
@@ -45,6 +47,11 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   public SpecificDatumReader(Schema writer, Schema reader,
                              SpecificData data) {
     super(writer, reader, data);
+  }
+
+  /** Construct given a {@link SpecificData}. */
+  public SpecificDatumReader(SpecificData data) {
+    super(data);
   }
 
   /** Return the contained {@link SpecificData}. */

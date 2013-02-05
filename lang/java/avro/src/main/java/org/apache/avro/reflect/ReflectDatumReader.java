@@ -38,8 +38,10 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     this(null, null, ReflectData.get());
   }
 
+  /** Construct for reading instances of a class. */
   public ReflectDatumReader(Class<T> c) {
-    this(ReflectData.get().getSchema(c));
+    this(new ReflectData(c.getClassLoader()));
+    setSchema(getSpecificData().getSchema(c));
   }
 
   /** Construct where the writer's and reader's schemas are the same. */
@@ -55,6 +57,11 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   /** Construct given writer's and reader's schema and the data model. */
   public ReflectDatumReader(Schema writer, Schema reader, ReflectData data) {
     super(writer, reader, data);
+  }
+
+  /** Construct given a {@link ReflectData}. */
+  public ReflectDatumReader(ReflectData data) {
+    super(data);
   }
 
   @Override
