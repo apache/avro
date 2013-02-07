@@ -46,6 +46,9 @@ Trunk (not yet released)
     AVRO-1240. Java: Fix SpecificDatumReader(Class) constructor to use
     correct ClassLoader. (cutting)
 
+    AVRO-1242. Java: Fix AvroTrevniOutputFormat to correctly get file
+    metadata from JobConf. (Ted Malaska via cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES

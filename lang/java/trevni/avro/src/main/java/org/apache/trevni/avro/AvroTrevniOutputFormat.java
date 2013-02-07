@@ -71,11 +71,7 @@ public class AvroTrevniOutputFormat <T>
       ? AvroJob.getMapOutputSchema(job)
       : AvroJob.getOutputSchema(job);
 
-    final ColumnFileMetaData meta = new ColumnFileMetaData();
-    for (Map.Entry<String,String> e : job)
-      if (e.getKey().startsWith(META_PREFIX))
-        meta.put(e.getKey().substring(AvroJob.TEXT_PREFIX.length()),
-                 e.getValue().getBytes(MetaData.UTF8));
+    final ColumnFileMetaData meta = filterMetadata(job);
 
     final Path dir = FileOutputFormat.getTaskOutputPath(job, name);
     final FileSystem fs = dir.getFileSystem(job);
@@ -109,6 +105,15 @@ public class AvroTrevniOutputFormat <T>
         flush();
       }
     };
+  }
+
+   static ColumnFileMetaData filterMetadata(final JobConf job) {
+    final ColumnFileMetaData meta = new ColumnFileMetaData();
+    for (Map.Entry<String,String> e : job)
+      if (e.getKey().startsWith(META_PREFIX))
+        meta.put(e.getKey().substring(META_PREFIX.length()),
+                 e.getValue().getBytes(MetaData.UTF8));
+    return meta;
   }
 
 }
