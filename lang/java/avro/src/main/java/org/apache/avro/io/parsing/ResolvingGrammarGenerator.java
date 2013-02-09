@@ -90,7 +90,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       case FIXED:
         if (writer.getFullName().equals(reader.getFullName())
             && writer.getFixedSize() == reader.getFixedSize()) {
-          return Symbol.seq(new Symbol.IntCheckAction(writer.getFixedSize()),
+          return Symbol.seq(Symbol.intCheckAction(writer.getFixedSize()),
               Symbol.FIXED);
         }
         break;
@@ -155,7 +155,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         int j = bestBranch(reader, writer);
         if (j >= 0) {
           Symbol s = generate(writer, reader.getTypes().get(j), seen);
-          return Symbol.seq(new Symbol.UnionAdjustAction(j, s), Symbol.UNION);
+          return Symbol.seq(Symbol.unionAdjustAction(j, s), Symbol.UNION);
         }
         break;
       case NULL:
@@ -194,7 +194,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       i++;
     }
     return Symbol.seq(Symbol.alt(symbols, labels),
-        new Symbol.WriterUnionAction());
+                      Symbol.writerUnionAction());
   }
 
   private Symbol resolveRecords(Schema writer, Schema reader,
@@ -234,7 +234,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       }
 
       Symbol[] production = new Symbol[count];
-      production[--count] = new Symbol.FieldOrderAction(reordered);
+      production[--count] = Symbol.fieldOrderAction(reordered);
 
       /**
        * We construct a symbol without filling the array. Please see
@@ -256,7 +256,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         Field rf = reader.getField(fname);
         if (rf == null) {
           production[--count] =
-            new Symbol.SkipAction(generate(wf.schema(), wf.schema(), seen));
+            Symbol.skipAction(generate(wf.schema(), wf.schema(), seen));
         } else {
           production[--count] =
             generate(wf.schema(), rf.schema(), seen);
@@ -269,7 +269,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         Field wf = writer.getField(fname);
         if (wf == null) {
           byte[] bb = getBinary(rf.schema(), rf.defaultValue());
-          production[--count] = new Symbol.DefaultStartAction(bb);
+          production[--count] = Symbol.defaultStartAction(bb);
           production[--count] = generate(rf.schema(), rf.schema(), seen);
           production[--count] = Symbol.DEFAULT_END_ACTION;
         }
@@ -409,7 +409,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       adjustments[i] = (j == -1 ? "No match for " + wsymbols.get(i)
                                 : new Integer(j));
     }
-    return new Symbol.EnumAdjustAction(rsymbols.size(), adjustments);
+    return Symbol.enumAdjustAction(rsymbols.size(), adjustments);
   }
 
   private static int bestBranch(Schema r, Schema w) {

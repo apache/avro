@@ -401,23 +401,36 @@ public abstract class Symbol {
     }
   }
 
+  public static IntCheckAction intCheckAction(int size) {
+    return new IntCheckAction(size);
+  }
+
   public static class IntCheckAction extends Symbol {
     public final int size;
-    public IntCheckAction(int size) {
+    @Deprecated public IntCheckAction(int size) {
       super(Kind.EXPLICIT_ACTION);
       this.size = size;
     }
   }
 
+  public static EnumAdjustAction enumAdjustAction(int rsymCount, Object[] adj) {
+    return new EnumAdjustAction(rsymCount, adj);
+  }
+  
   public static class EnumAdjustAction extends IntCheckAction {
     public final Object[] adjustments;
-    public EnumAdjustAction(int rsymCount, Object[] adjustments) {
+    @Deprecated public EnumAdjustAction(int rsymCount, Object[] adjustments) {
       super(rsymCount);
       this.adjustments = adjustments;
     }
   }
 
+  public static WriterUnionAction writerUnionAction() {
+    return new WriterUnionAction();
+  }
+
   public static class WriterUnionAction extends ImplicitAction {
+    private WriterUnionAction() {}
   }
 
   public static class ResolvingAction extends ImplicitAction {
@@ -437,9 +450,13 @@ public abstract class Symbol {
 
   }
   
+  public static SkipAction skipAction(Symbol symToSkip) {
+    return new SkipAction(symToSkip);
+  }
+
   public static class SkipAction extends ImplicitAction {
     public final Symbol symToSkip;
-    public SkipAction(Symbol symToSkip) {
+    @Deprecated public SkipAction(Symbol symToSkip) {
       super(true);
       this.symToSkip = symToSkip;
     }
@@ -452,33 +469,49 @@ public abstract class Symbol {
 
   }
 
+  public static FieldAdjustAction fieldAdjustAction(int rindex, String fname) {
+    return new FieldAdjustAction(rindex, fname);
+  }
+  
   public static class FieldAdjustAction extends ImplicitAction {
     public final int rindex;
     public final String fname;
-    public FieldAdjustAction(int rindex, String fname) {
+    @Deprecated public FieldAdjustAction(int rindex, String fname) {
       this.rindex = rindex;
       this.fname = fname;
     }
   }
   
+  public static FieldOrderAction fieldOrderAction(Schema.Field[] fields) {
+    return new FieldOrderAction(fields);
+  }
+
   public static final class FieldOrderAction extends ImplicitAction {
     public final Schema.Field[] fields;
-    public FieldOrderAction(Schema.Field[] fields) {
+    @Deprecated public FieldOrderAction(Schema.Field[] fields) {
       this.fields = fields;
     }
   }
 
+  public static DefaultStartAction defaultStartAction(byte[] contents) {
+    return new DefaultStartAction(contents);
+  }
+
   public static class DefaultStartAction extends ImplicitAction {
     public final byte[] contents;
-    public DefaultStartAction(byte[] contents) {
+    @Deprecated public DefaultStartAction(byte[] contents) {
       this.contents = contents;
     }
+  }
+
+  public static UnionAdjustAction unionAdjustAction(int rindex, Symbol sym) {
+    return new UnionAdjustAction(rindex, sym);
   }
 
   public static class UnionAdjustAction extends ImplicitAction {
     public final int rindex;
     public final Symbol symToParse;
-    public UnionAdjustAction(int rindex, Symbol symToParse) {
+    @Deprecated public UnionAdjustAction(int rindex, Symbol symToParse) {
       this.rindex = rindex;
       this.symToParse = symToParse;
     }
@@ -492,9 +525,13 @@ public abstract class Symbol {
   }
 
   /** For JSON. */
+  public static EnumLabelsAction enumLabelsAction(List<String> symbols) {
+    return new EnumLabelsAction(symbols);
+  }
+
   public static class EnumLabelsAction extends IntCheckAction {
     public final List<String> symbols;
-    public EnumLabelsAction(List<String> symbols) {
+    @Deprecated public EnumLabelsAction(List<String> symbols) {
       super(symbols.size());
       this.symbols = symbols;
     }

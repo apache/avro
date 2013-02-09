@@ -61,7 +61,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
     case UNION:
       return super.generate(sc, seen);
     case ENUM:
-      return Symbol.seq(new Symbol.EnumLabelsAction(sc.getEnumSymbols()),
+      return Symbol.seq(Symbol.enumLabelsAction(sc.getEnumSymbols()),
           Symbol.ENUM);
     case ARRAY:
       return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END,
@@ -84,7 +84,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
         int n = 0;
         production[--i] = Symbol.RECORD_START;
         for (Field f : sc.getFields()) {
-          production[--i] = new Symbol.FieldAdjustAction(n, f.name());
+          production[--i] = Symbol.fieldAdjustAction(n, f.name());
           production[--i] = generate(f.schema(), seen);
           production[--i] = Symbol.FIELD_END;
           n++;

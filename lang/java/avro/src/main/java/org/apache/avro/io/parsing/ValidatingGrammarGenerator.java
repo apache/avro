@@ -65,10 +65,10 @@ public class ValidatingGrammarGenerator {
     case BYTES:
       return Symbol.BYTES;
     case FIXED:
-      return Symbol.seq(new Symbol.IntCheckAction(sc.getFixedSize()),
+      return Symbol.seq(Symbol.intCheckAction(sc.getFixedSize()),
           Symbol.FIXED);
     case ENUM:
-      return Symbol.seq(new Symbol.IntCheckAction(sc.getEnumSymbols().size()),
+      return Symbol.seq(Symbol.intCheckAction(sc.getEnumSymbols().size()),
           Symbol.ENUM);
     case ARRAY:
       return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, generate(sc.getElementType(), seen)),

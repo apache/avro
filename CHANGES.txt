@@ -49,6 +49,9 @@ Trunk (not yet released)
     AVRO-1242. Java: Fix AvroTrevniOutputFormat to correctly get file
     metadata from JobConf. (Ted Malaska via cutting)
 
+    AVRO-1220. Java: Fix a deadlock when reading by replacing parser
+    symbol constructors with factory methods. (cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES
