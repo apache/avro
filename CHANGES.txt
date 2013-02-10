@@ -4,6 +4,9 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-1248. Avro Tool to dump protocol of a remote RPC Service
+    (Gareth Davis via philz)
+
     AVRO-1229. Add support for booleans to Trevni. (cutting)
 
   IMPROVEMENTS

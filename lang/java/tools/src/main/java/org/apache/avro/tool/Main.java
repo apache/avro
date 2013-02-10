@@ -47,6 +47,7 @@ public class Main {
         new RecodecTool(),
         new RpcReceiveTool(),
         new RpcSendTool(),
+        new RpcProtocolTool(),
         new FromTextTool(),
         new ToTextTool(),
         new TetherTool(),
