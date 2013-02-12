@@ -45,6 +45,7 @@ public class Main {
         new DataFileGetSchemaTool(),
         new IdlTool(),
         new RecodecTool(),
+        new ConcatTool(),
         new RpcReceiveTool(),
         new RpcSendTool(),
         new RpcProtocolTool(),

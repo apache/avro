@@ -9,6 +9,9 @@ Trunk (not yet released)
 
     AVRO-1229. Add support for booleans to Trevni. (cutting)
 
+    AVRO-1250. Add a command-line tool to concatenate data files.
+    (Nick White via cutting)
+
   IMPROVEMENTS
 
     AVRO-1211. Add MR guide to documentation. (Skye Wanderman-Milne via
