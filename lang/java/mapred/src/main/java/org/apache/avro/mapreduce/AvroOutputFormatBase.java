@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
+import org.apache.avro.hadoop.file.HadoopCodecFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -35,6 +36,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  * @param <V> The type of value to write.
  */
 public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> {
+  
   /**
    * Gets the configured compression codec from the task context.
    *
@@ -44,17 +46,29 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
   protected static CodecFactory getCompressionCodec(TaskAttemptContext context) {
     if (FileOutputFormat.getCompressOutput(context)) {
       // Default to deflate compression.
+      int compressionLevel = context.getConfiguration().getInt(
+          org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY,
+          org.apache.avro.mapred.AvroOutputFormat.DEFAULT_DEFLATE_LEVEL);
+      
       String outputCodec = context.getConfiguration()
-        .get(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.DEFLATE_CODEC);
-      if (DataFileConstants.DEFLATE_CODEC.equals(outputCodec)) {
-        int compressionLevel = context.getConfiguration().getInt(
-            org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY,
-            org.apache.avro.mapred.AvroOutputFormat.DEFAULT_DEFLATE_LEVEL);
-        return CodecFactory.deflateCodec(compressionLevel);
-      } else {
-        return CodecFactory.fromString(outputCodec);
+        .get(AvroJob.CONF_OUTPUT_CODEC);
+
+      if (outputCodec == null) {
+        String compressionCodec = context.getConfiguration().get("mapred.output.compression.codec");
+        String avroCodecName = HadoopCodecFactory.getAvroCodecName(compressionCodec);
+        if ( avroCodecName != null){
+          context.getConfiguration().set(AvroJob.CONF_OUTPUT_CODEC, avroCodecName);
+          return HadoopCodecFactory.fromHadoopString(compressionCodec);
+        } else {
+          return CodecFactory.deflateCodec(compressionLevel);
+        }
+      } else if (DataFileConstants.DEFLATE_CODEC.equals(outputCodec)) {
+          return CodecFactory.deflateCodec(compressionLevel);
+        } else {
+          return CodecFactory.fromString(outputCodec);
+        }
+      
       }
-    }
 
     // No compression.
     return CodecFactory.nullCodec();

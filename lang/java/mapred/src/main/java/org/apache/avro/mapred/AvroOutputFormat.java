@@ -36,6 +36,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.hadoop.file.HadoopCodecFactory;
+
 import static org.apache.avro.file.DataFileConstants.DEFAULT_SYNC_INTERVAL;
 import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 
@@ -74,13 +76,11 @@ public class AvroOutputFormat <T>
   
   static <T> void configureDataFileWriter(DataFileWriter<T> writer,
       JobConf job) throws UnsupportedEncodingException {
-    if (FileOutputFormat.getCompressOutput(job)) {
-      int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
-      String codecName = job.get(AvroJob.OUTPUT_CODEC, DEFLATE_CODEC);
-      CodecFactory factory = codecName.equals(DEFLATE_CODEC)
-        ? CodecFactory.deflateCodec(level)
-        : CodecFactory.fromString(codecName);
-      writer.setCodec(factory);
+    
+    CodecFactory factory = getCodecFactory(job);
+    
+    if (factory != null) {
+      writer.setCodec(factory);  
     }
     
     writer.setSyncInterval(job.getInt(SYNC_INTERVAL_KEY, DEFAULT_SYNC_INTERVAL));
@@ -95,6 +95,44 @@ public class AvroOutputFormat <T>
                        URLDecoder.decode(e.getValue(), "ISO-8859-1")
                        .getBytes("ISO-8859-1"));
     }
+  }
+
+  /** This will select the correct compression codec from the JobConf.
+   * The order of selection is as follows:
+   * <ul>
+   *   <li>If mapred.output.compress is true then look for codec otherwise no compression</li>
+   *   <li>Use avro.output.codec if populated</li>
+   *   <li>Next use mapred.output.compression.codec if populated</li>
+   *   <li>If not default to Deflate Codec</li>
+   * </ul>  
+   */
+  static CodecFactory getCodecFactory(JobConf job) {
+    CodecFactory factory = null;
+    
+    if (FileOutputFormat.getCompressOutput(job)) {
+      int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
+      String codecName = job.get(AvroJob.OUTPUT_CODEC);
+      
+      if (codecName == null) {
+        String codecClassName = job.get("mapred.output.compression.codec", null);
+        String avroCodecName = HadoopCodecFactory.getAvroCodecName(codecClassName);
+        if ( codecClassName != null && avroCodecName != null){
+          factory = HadoopCodecFactory.fromHadoopString(codecClassName);
+          job.set(AvroJob.OUTPUT_CODEC , avroCodecName);
+          return factory;
+        } else {
+          return CodecFactory.deflateCodec(level);
+        }
+      } else { 
+        if ( codecName.equals(DEFLATE_CODEC)) {
+          factory = CodecFactory.deflateCodec(level);
+        } else {
+          factory = CodecFactory.fromString(codecName);
+        }
+      }
+    }
+    
+    return factory;
   }
 
   @Override

@@ -66,9 +66,41 @@ public class TestAvroKeyOutputFormat {
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.SNAPPY_CODEC);
     testGetRecordWriter(conf, CodecFactory.snappyCodec());
   }
+  
+  @Test
+  public void testWithBZip2Code() throws IOException {
+    Configuration conf = new Configuration();
+    conf.setBoolean("mapred.output.compress", true);
+    conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.BZIP2_CODEC);
+    testGetRecordWriter(conf, CodecFactory.bzip2Codec());
+  }
+  
+  @Test
+  public void testWithDeflateCodeWithHadoopConfig() throws IOException {
+    Configuration conf = new Configuration();
+    conf.setBoolean("mapred.output.compress", true);
+    conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.DeflateCodec");
+    conf.setInt(org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY, -1);
+  }
+  
+  @Test
+  public void testWithSnappyCodeWithHadoopConfig() throws IOException {
+    Configuration conf = new Configuration();
+    conf.setBoolean("mapred.output.compress", true);
+    conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.SnappyCodec");
+    testGetRecordWriter(conf, CodecFactory.snappyCodec());
+  }
+  
+  @Test
+  public void testWithBZip2CodeWithHadoopConfig() throws IOException {
+    Configuration conf = new Configuration();
+    conf.setBoolean("mapred.output.compress", true);
+    conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.BZip2Codec");
+    testGetRecordWriter(conf, CodecFactory.bzip2Codec());
+  }
 
   /**
-   * Tests that the record writer is contructed and returned correclty from the output format.
+   * Tests that the record writer is constructed and returned correctly from the output format.
    */
   private void testGetRecordWriter(Configuration conf, CodecFactory expectedCodec)
       throws IOException {

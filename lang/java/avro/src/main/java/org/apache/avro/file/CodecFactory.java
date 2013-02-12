@@ -30,6 +30,7 @@ import org.apache.avro.AvroRuntimeException;
  *   <li>{@code null}</li>
  *   <li>{@code deflate}</li>
  *   <li>{@code snappy}</li>
+ *   <li>{@code bzip2}</li>
  * </ul>
  *
  * New and custom codecs can be registered using {@link #addCodec(String,
@@ -52,6 +53,11 @@ public abstract class CodecFactory {
     return new SnappyCodec.Option();
   }
 
+  /** bzip2 codec.*/
+  public static CodecFactory bzip2Codec() {
+    return new BZip2Codec.Option();
+  }
+
   /** Creates internal Codec. */
   protected abstract Codec createInstance();
   
@@ -67,15 +73,17 @@ public abstract class CodecFactory {
     addCodec("null", nullCodec());
     addCodec("deflate", deflateCodec(DEFAULT_DEFLATE_LEVEL));
     addCodec("snappy", snappyCodec());
+    addCodec("bzip2", bzip2Codec());
   }
 
   /** Maps a codec name into a CodecFactory.
    *
-   * Currently there are three codecs registered by default:
+   * Currently there are four codecs registered by default:
    * <ul>
    *   <li>{@code null}</li>
    *   <li>{@code deflate}</li>
    *   <li>{@code snappy}</li>
+   *   <li>{@code bzip2}</li>
    * </ul>
    */
   public static CodecFactory fromString(String s) {
@@ -86,6 +94,8 @@ public abstract class CodecFactory {
     return o;
   }
   
+
+
   /** Adds a new codec implementation.  If name already had
    * a codec associated with it, returns the previous codec. */
   public static CodecFactory addCodec(String name, CodecFactory c) {
