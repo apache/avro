@@ -30,6 +30,8 @@ Trunk (not yet released)
 
     AVRO-1241. Java: Optimize Trevni string input. (Joseph Adler via cutting)
 
+    AVRO-1198. Java: Improve error message for malformed data. (cutting)
+
   BUG FIXES
 
     AVRO-1231. Java: Fix Trevni shredder to work on non-recursive

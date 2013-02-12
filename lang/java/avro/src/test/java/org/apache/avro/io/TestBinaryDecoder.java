@@ -29,6 +29,7 @@ import java.util.Collection;
 
 import org.apache.avro.RandomData;
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.ByteBufferInputStream;
@@ -354,6 +355,19 @@ public class TestBinaryDecoder {
       message = ioe.getMessage();
     }
     Assert.assertEquals("Invalid long encoding", message);
+  }
+
+  @Test
+  public void testBadLengthEncoding() throws IOException {
+    byte[] bad = new byte[] { (byte)1 };
+    Decoder bd = factory.binaryDecoder(bad, null);
+    String message = "";
+    try {
+      bd.readString();
+    } catch (AvroRuntimeException e) {
+      message = e.getMessage();
+    }
+    Assert.assertEquals("Malformed data. Length is negative: -1", message);
   }
 
   @Test(expected=EOFException.class)
