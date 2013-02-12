@@ -63,6 +63,9 @@ Trunk (not yet released)
     AVRO-1220. Java: Fix a deadlock when reading by replacing parser
     symbol constructors with factory methods. (cutting)
 
+    AVRO-1249. Java: Fix DataFileWriter#close() to not throw an
+    exception when called twice.  (E. Sammer via cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES

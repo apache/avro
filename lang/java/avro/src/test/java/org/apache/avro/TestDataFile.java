@@ -126,6 +126,17 @@ public class TestDataFile {
     } finally {
       writer.close();
     }
+
+    // Ensure that a second call to close doesn't raise an exception. (AVRO-1249)
+    Exception doubleCloseEx = null;
+
+    try {
+      writer.close();
+    } catch (Exception e) {
+      doubleCloseEx = e;
+    }
+
+    Assert.assertNull("Double close() threw an unexpected exception", doubleCloseEx);
   }
 
   public void testGenericRead() throws IOException {
