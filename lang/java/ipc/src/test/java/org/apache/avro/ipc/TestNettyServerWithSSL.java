@@ -18,24 +18,18 @@
 
 package org.apache.avro.ipc;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
 import java.security.Security;
 import java.security.cert.X509Certificate;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import junit.framework.Assert;
-import org.apache.avro.ipc.specific.SpecificRequestor;
-import org.apache.avro.ipc.specific.SpecificResponder;
-import org.apache.avro.test.Mail;
-import org.apache.avro.test.Message;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -44,121 +38,27 @@ import org.jboss.netty.channel.socket.SocketChannel;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.ssl.SslHandler;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
-public class TestNettyServerWithSSL {
+public class TestNettyServerWithSSL extends TestNettyServer{
   public static final String TEST_CERTIFICATE = "servercert.p12";
   public static final String TEST_CERTIFICATE_PASSWORD = "s3cret";
-  static final long CONNECT_TIMEOUT_MILLIS = 2000; // 2 sec
-  private static Server server;
-  private static Transceiver transceiver;
-  private static Mail proxy;
-  private static MailImpl mailService;
-
-  public static class MailImpl implements Mail {
-
-    private CountDownLatch allMessages = new CountDownLatch(5);
-
-    // in this simple example just return details of the message
-    public String send(Message message) {
-      return "Sent message to [" + message.getTo().toString() +
-             "] from [" + message.getFrom().toString() + "] with body [" +
-             message.getBody().toString() + "]";
-    }
-
-    public void fireandforget(Message message) {
-      allMessages.countDown();
-    }
-
-    private void awaitMessages() throws InterruptedException {
-      allMessages.await(2, TimeUnit.SECONDS);
-    }
-
-    private void assertAllMessagesReceived() {
-      assertEquals(0, allMessages.getCount());
-    }
-
-    public void reset() {
-      allMessages = new CountDownLatch(5);
-    }
-  }
-
-  @BeforeClass
-  public static void initializeConnections() throws Exception {
-    // start server
-    System.out.println("starting server...");
-    mailService = new MailImpl();
-    Responder responder = new SpecificResponder(Mail.class, mailService);
+  
+  protected static Server initializeServer(Responder responder) {
     ChannelFactory channelFactory = new NioServerSocketChannelFactory(
         Executors.newCachedThreadPool(),
         Executors.newCachedThreadPool()
     );
-    server = new NettyServer(responder, new InetSocketAddress(0),
-                             channelFactory, new SSLChannelPipelineFactory(),
-                             null);
-    server.start();
-
-    int serverPort = server.getPort();
-    System.out.println("server port : " + serverPort);
-
-    transceiver = new NettyTransceiver(new InetSocketAddress(serverPort),
-                                       new SSLChannelFactory(),
-                                       CONNECT_TIMEOUT_MILLIS);
-    proxy = SpecificRequestor.getClient(Mail.class, transceiver);
+    return new NettyServer(responder, new InetSocketAddress(0),
+        channelFactory, new SSLChannelPipelineFactory(),
+        null);
+  }
+  
+  protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
+    return  new NettyTransceiver(new InetSocketAddress(serverPort),
+        new SSLChannelFactory(),
+        CONNECT_TIMEOUT_MILLIS);
   }
 
-  @AfterClass
-  public static void tearDownConnections() throws Exception {
-    transceiver.close();
-    server.close();
-  }
-
-  @Test
-  public void testRequestResponse() throws Exception {
-    for (int x = 0; x < 5; x++) {
-      verifyResponse(proxy.send(createMessage()));
-    }
-  }
-
-  private void verifyResponse(String result) {
-    Assert.assertEquals(
-        "Sent message to [wife] from [husband] with body [I love you!]",
-        result.toString());
-  }
-
-  @Test
-  public void testOneway() throws Exception {
-    for (int x = 0; x < 5; x++) {
-      proxy.fireandforget(createMessage());
-    }
-    mailService.awaitMessages();
-    mailService.assertAllMessagesReceived();
-  }
-
-  @Test
-  public void testMixtureOfRequests() throws Exception {
-    mailService.reset();
-    for (int x = 0; x < 5; x++) {
-      Message createMessage = createMessage();
-      proxy.fireandforget(createMessage);
-      verifyResponse(proxy.send(createMessage));
-    }
-    mailService.awaitMessages();
-    mailService.assertAllMessagesReceived();
-
-  }
-
-  private Message createMessage() {
-    Message msg = Message.newBuilder().
-        setTo("wife").
-        setFrom("husband").
-        setBody("I love you!").
-        build();
-    return msg;
-  }
 
   /**
    * Factory of SSL-enabled client channels

@@ -80,15 +80,23 @@ public class TestNettyServer {
     System.out.println("starting server...");
     mailService = new MailImpl();
     Responder responder = new SpecificResponder(Mail.class, mailService);
-    server = new NettyServer(responder, new InetSocketAddress(0));
+    server = initializeServer(responder);
     server.start();
   
     int serverPort = server.getPort();
     System.out.println("server port : " + serverPort);
 
-    transceiver = new NettyTransceiver(new InetSocketAddress(
-        serverPort), CONNECT_TIMEOUT_MILLIS);
+    transceiver = initializeTransceiver(serverPort);
     proxy = SpecificRequestor.getClient(Mail.class, transceiver);
+  }
+  
+  protected static Server initializeServer(Responder responder) {
+    return new NettyServer(responder, new InetSocketAddress(0));
+  }
+  
+  protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
+    return new NettyTransceiver(new InetSocketAddress(
+        serverPort), CONNECT_TIMEOUT_MILLIS);
   }
   
   @AfterClass

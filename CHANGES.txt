@@ -47,6 +47,10 @@ Trunk (not yet released)
     AVRO-1255. Python: Make 'names' parameter optional in to_json methods.
     (Jeremy Kahn via cutting)
 
+    AVRO-1251. Java: Add TestNettyServerWithCompression, illustrating
+    how one can add compression to Avro Netty-based RPC.
+    (Ted Malaska via cutting)
+
   BUG FIXES
 
     AVRO-1231. Java: Fix Trevni shredder to work on non-recursive
