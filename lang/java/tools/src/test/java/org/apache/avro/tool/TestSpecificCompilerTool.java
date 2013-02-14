@@ -56,6 +56,13 @@ public class TestSpecificCompilerTool {
   private static final File TEST_OUTPUT_POSITION =
     new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Position.java");
 
+  private static final File TEST_OUTPUT_STRING_DIR =
+    new File("target/compiler/output-string");
+  private static final File TEST_OUTPUT_STRING_PLAYER =
+    new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Player.java");
+  private static final File TEST_OUTPUT_STRING_POSITION =
+    new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Position.java");
+
   @Before
   public void setUp() {
     TEST_OUTPUT_DIR.delete();
@@ -90,6 +97,17 @@ public class TestSpecificCompilerTool {
       TEST_OUTPUT_DIR.getPath()});
     assertFileMatch(TEST_EXPECTED_POSITION, TEST_OUTPUT_POSITION);
     assertFileMatch(TEST_EXPECTED_PLAYER,   TEST_OUTPUT_PLAYER);
+  }
+
+  @Test
+  public void testCompileSchemasUsingString() throws Exception {
+
+    doCompile(new String[]{"-string", "schema",
+      TEST_INPUT_DIR.toString() + "/position.avsc",
+      TEST_INPUT_DIR.toString() + "/player.avsc",
+      TEST_OUTPUT_DIR.getPath()});
+    assertFileMatch(TEST_EXPECTED_POSITION, TEST_OUTPUT_STRING_POSITION);
+    assertFileMatch(TEST_EXPECTED_PLAYER,   TEST_OUTPUT_STRING_PLAYER);
   }
 
   // Runs the actual compiler tool with the given input args

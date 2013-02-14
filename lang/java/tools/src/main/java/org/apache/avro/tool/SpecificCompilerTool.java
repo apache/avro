@@ -26,6 +26,9 @@ import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
@@ -39,25 +42,46 @@ public class SpecificCompilerTool implements Tool {
       List<String> args) throws Exception {
     if (args.size() < 3) {
       System.err
-          .println("Need at least 3 arguments: (schema|protocol) input... outputdir");
+          .println("Usage: [-string] (schema|protocol) input... outputdir");
       System.err
           .println(" input - input files or directories");
       System.err
           .println(" outputdir - directory to write generated java");
+      System.err.println(" -string - use java.lang.String instead of Utf8");
       return 1;
     }
-    String method = args.get(0);
+
+    StringType stringType = StringType.CharSequence;
+
+    int arg = 0;
+    if ("-string".equals(args.get(arg))) {
+      stringType = StringType.String;
+      arg++;
+    }
+      
+    String method = args.get(arg);
     List<File> inputs = new ArrayList<File>();
     File output = new File(args.get(args.size() - 1));
 
-    for (int i = 1; i < args.size() - 1; i++) {
+    for (int i = arg+1; i < args.size() - 1; i++) {
       inputs.add(new File(args.get(i)));
     }
 
     if ("schema".equals(method)) {
-      SpecificCompiler.compileSchema(determineInputs(inputs, SCHEMA_FILTER), output);
+      Schema.Parser parser = new Schema.Parser();
+      for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
+        Schema schema = parser.parse(src);
+        SpecificCompiler compiler = new SpecificCompiler(schema);
+        compiler.setStringType(stringType);
+        compiler.compileToDestination(src, output);
+      }
     } else if ("protocol".equals(method)) {
-      SpecificCompiler.compileProtocol(determineInputs(inputs, PROTOCOL_FILTER), output);
+      for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
+        Protocol protocol = Protocol.parse(src);
+        SpecificCompiler compiler = new SpecificCompiler(protocol);
+        compiler.setStringType(stringType);
+        compiler.compileToDestination(src, output);
+      }
     } else {
       System.err.println("Expected \"schema\" or \"protocol\".");
       return 1;

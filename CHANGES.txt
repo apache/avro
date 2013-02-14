@@ -41,6 +41,9 @@ Trunk (not yet released)
 
     AVRO-1198. Java: Improve error message for malformed data. (cutting)
 
+    AVRO-1252. Java: Add a '-string' option to compiler command line
+    to cause java.lang.String to be used instead of Utf8. (cutting)
+
   BUG FIXES
 
     AVRO-1231. Java: Fix Trevni shredder to work on non-recursive
