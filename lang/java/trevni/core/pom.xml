@@ -43,6 +43,10 @@
       <artifactId>snappy-java</artifactId>
       <version>${snappy.version}</version>
       <scope>compile</scope>
+    </dependency>    
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
     </dependency>
   </dependencies>
 

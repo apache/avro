@@ -15,6 +15,9 @@ Trunk (not yet released)
     AVRO-1243. Java: Add support for bzip2 file compression and
     translate Hadoop job compression options. (Ted Malaska via cutting)
 
+    AVRO-1253. Java: Add support for bzip2 file compression to Trevni.
+    (Ted Malaska via cutting)
+
   IMPROVEMENTS
 
     AVRO-1211. Add MR guide to documentation. (Skye Wanderman-Milne via

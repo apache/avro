@@ -31,6 +31,8 @@ abstract class Codec {
       return new DeflateCodec();
     else if ("snappy".equals(name))
       return new SnappyCodec();
+    else if ("bzip2".equals(name))
+      return new BZip2Codec();
     else
       throw new TrevniRuntimeException("Unknown codec: "+name);
   }
