@@ -141,8 +141,7 @@ class Schema(object):
     self._props[key] = value
 
   def __str__(self):
-    names = Names()
-    return json.dumps(self.to_json(names))
+    return json.dumps(self.to_json())
 
   def to_json(self, names):
     """
@@ -350,7 +349,12 @@ class Field(object):
   def set_prop(self, key, value):
     self._props[key] = value
 
-  def to_json(self, names):
+  def __str__(self):
+    return json.dumps(self.to_json())
+
+  def to_json(self, names=None):
+    if names is None:
+      names = Names()
     to_dump = self.props.copy()
     to_dump['type'] = self.type.to_json(names)
     return to_dump
@@ -374,7 +378,7 @@ class PrimitiveSchema(Schema):
 
     self.fullname = type
 
-  def to_json(self, names):
+  def to_json(self, names=None):
     if len(self.props) == 1:
       return self.fullname
     else:
@@ -403,7 +407,9 @@ class FixedSchema(NamedSchema):
   # read-only properties
   size = property(lambda self: self.get_prop('size'))
 
-  def to_json(self, names):
+  def to_json(self, names=None):
+    if names is None:
+      names = Names()
     if self.fullname in names.names:
       return self.name_ref(names)
     else:
@@ -437,7 +443,9 @@ class EnumSchema(NamedSchema):
   symbols = property(lambda self: self.get_prop('symbols'))
   doc = property(lambda self: self.get_prop('doc'))
 
-  def to_json(self, names):
+  def to_json(self, names=None):
+    if names is None:
+      names = Names()
     if self.fullname in names.names:
       return self.name_ref(names)
     else:
@@ -471,7 +479,9 @@ class ArraySchema(Schema):
   # read-only properties
   items = property(lambda self: self.get_prop('items'))
 
-  def to_json(self, names):
+  def to_json(self, names=None):
+    if names is None:
+      names = Names()
     to_dump = self.props.copy()
     item_schema = self.get_prop('items')
     to_dump['items'] = item_schema.to_json(names)
@@ -501,7 +511,9 @@ class MapSchema(Schema):
   # read-only properties
   values = property(lambda self: self.get_prop('values'))
 
-  def to_json(self, names):
+  def to_json(self, names=None):
+    if names is None:
+      names = Names()
     to_dump = self.props.copy()
     to_dump['values'] = self.get_prop('values').to_json(names)
     return to_dump
@@ -546,7 +558,9 @@ class UnionSchema(Schema):
   # read-only properties
   schemas = property(lambda self: self._schemas)
 
-  def to_json(self, names):
+  def to_json(self, names=None):
+    if names is None:
+      names = Names()
     to_dump = []
     for schema in self.schemas:
       to_dump.append(schema.to_json(names))
@@ -561,7 +575,9 @@ class ErrorUnionSchema(UnionSchema):
     # Prepend "string" to handle system errors
     UnionSchema.__init__(self, ['string'] + schemas, names)
 
-  def to_json(self, names):
+  def to_json(self, names=None):
+    if names is None:
+      names = Names()
     to_dump = []
     for schema in self.schemas:
       # Don't print the system error schema
@@ -643,7 +659,9 @@ class RecordSchema(NamedSchema):
       fields_dict[field.name] = field
     return fields_dict
 
-  def to_json(self, names):
+  def to_json(self, names=None):
+    if names is None:
+      names = Names()
     # Request records don't have names
     if self.type == 'request':
       return [ f.to_json(names) for f in self.fields ]
