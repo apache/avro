@@ -56,7 +56,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     this(writer, reader, GenericData.get());
   }
 
-  protected GenericDatumReader(Schema writer, Schema reader, GenericData data) {
+  public GenericDatumReader(Schema writer, Schema reader, GenericData data) {
     this(data);
     this.actual = writer;
     this.expected = reader;

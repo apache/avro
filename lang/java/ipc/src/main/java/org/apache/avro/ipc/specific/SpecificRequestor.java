@@ -42,16 +42,32 @@ import org.apache.avro.specific.SpecificDatumWriter;
 
 /** {@link org.apache.avro.ipc.Requestor Requestor} for generated interfaces. */
 public class SpecificRequestor extends Requestor implements InvocationHandler {
-  
+  SpecificData data;
+
   public SpecificRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
-    this(SpecificData.get().getProtocol(iface), transceiver);
+    this(iface, transceiver, new SpecificData(iface.getClassLoader()));
   }
 
   protected SpecificRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
-    super(protocol, transceiver);
+    this(protocol, transceiver, SpecificData.get());
   }
+
+  public SpecificRequestor(Class<?> iface, Transceiver transceiver,
+                           SpecificData data)
+    throws IOException {
+    this(data.getProtocol(iface), transceiver, data);
+  }
+
+  public SpecificRequestor(Protocol protocol, Transceiver transceiver,
+                           SpecificData data)
+    throws IOException {
+    super(protocol, transceiver);
+    this.data = data;
+  }
+
+  public SpecificData getSpecificData() { return data; }
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args)
@@ -90,7 +106,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter<Object>(schema);
+    return new SpecificDatumWriter<Object>(schema, data);
   }
 
   @Deprecated                                     // for compatibility in 1.5
@@ -99,7 +115,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new SpecificDatumReader<Object>(writer, reader);
+    return new SpecificDatumReader<Object>(writer, reader, data);
   }
 
   @Override
@@ -129,25 +145,27 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   /** Create a proxy instance whose methods invoke RPCs. */
   public static  <T> T getClient(Class<T> iface, Transceiver transciever)
     throws IOException {
-    return getClient(iface, transciever, SpecificData.get());
+    return getClient(iface, transciever,
+                     new SpecificData(iface.getClassLoader()));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
   public static  <T> T getClient(Class<T> iface, Transceiver transciever,
-                                 SpecificData specificData)
+                                 SpecificData data)
     throws IOException {
-    Protocol protocol = specificData.getProtocol(iface);
-    return (T)Proxy.newProxyInstance(iface.getClassLoader(),
-                                  new Class[] { iface },
-                                  new SpecificRequestor(protocol, transciever));
+    Protocol protocol = data.getProtocol(iface);
+    return (T)Proxy.newProxyInstance
+      (data.getClassLoader(),
+       new Class[] { iface },
+       new SpecificRequestor(protocol, transciever, data));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
   public static <T> T getClient(Class<T> iface, SpecificRequestor requestor)
     throws IOException {
-    return (T)Proxy.newProxyInstance(iface.getClassLoader(),
+    return (T)Proxy.newProxyInstance(requestor.data.getClassLoader(),
                                   new Class[] { iface }, requestor);
   }
 
@@ -158,4 +176,3 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
 }
-

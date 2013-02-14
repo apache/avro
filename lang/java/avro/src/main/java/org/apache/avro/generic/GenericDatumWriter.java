@@ -44,7 +44,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     setSchema(root);
   }
 
-  protected GenericDatumWriter(Schema root, GenericData data) {
+  public GenericDatumWriter(Schema root, GenericData data) {
     this(data);
     setSchema(root);
   }

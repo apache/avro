@@ -33,21 +33,31 @@ import org.apache.avro.reflect.ReflectDatumWriter;
 /** {@link org.apache.avro.ipc.Responder} for existing interfaces.*/
 public class ReflectResponder extends SpecificResponder {
   public ReflectResponder(Class iface, Object impl) {
-    super(ReflectData.get().getProtocol(iface), impl, ReflectData.get());
+    this(iface, impl, new ReflectData(impl.getClass().getClassLoader()));
   }
   
   public ReflectResponder(Protocol protocol, Object impl) {
-    super(protocol, impl, ReflectData.get());
+    this(protocol, impl, new ReflectData(impl.getClass().getClassLoader()));
   }
+
+  public ReflectResponder(Class iface, Object impl, ReflectData data) {
+    this(data.getProtocol(iface), impl, data);
+  }
+
+  public ReflectResponder(Protocol protocol, Object impl, ReflectData data) {
+    super(protocol, impl, data);
+  }
+
+  public ReflectData getReflectData() { return (ReflectData)getSpecificData(); }
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new ReflectDatumWriter<Object>(schema);
+    return new ReflectDatumWriter<Object>(schema, getReflectData());
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
-    return new ReflectDatumReader<Object>(actual, expected);
+    return new ReflectDatumReader<Object>(actual, expected, getReflectData());
   }
 
   @Override

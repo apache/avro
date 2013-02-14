@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import org.apache.avro.specific.SpecificData;
 import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.RPCPlugin;
@@ -113,6 +114,19 @@ public class TestProtocolSpecific {
   
   public Transceiver createTransceiver() throws Exception{
     return new SocketTransceiver(new InetSocketAddress(server.getPort()));
+  }
+
+  @Test public void testClassLoader() throws Exception {
+    ClassLoader loader = new ClassLoader() {};
+
+    SpecificResponder responder
+      = new SpecificResponder(Simple.class, new TestImpl(),
+                              new SpecificData(loader));
+    assertEquals(responder.getSpecificData().getClassLoader(), loader);
+
+    SpecificRequestor requestor
+      = new SpecificRequestor(Simple.class, client, new SpecificData(loader));
+    assertEquals(requestor.getSpecificData().getClassLoader(), loader);
   }
 
   @Test public void testGetRemote() throws IOException {

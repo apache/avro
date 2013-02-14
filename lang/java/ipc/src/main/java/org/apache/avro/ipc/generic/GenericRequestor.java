@@ -24,6 +24,7 @@ import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Decoder;
@@ -34,10 +35,21 @@ import org.apache.avro.ipc.Transceiver;
 
 /** {@link Requestor} implementation for generic Java data. */
 public class GenericRequestor extends Requestor {
+  GenericData data;
+
   public GenericRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
-    super(protocol, transceiver);
+    this(protocol, transceiver, GenericData.get());
   }
+
+  public GenericRequestor(Protocol protocol, Transceiver transceiver,
+                          GenericData data)
+    throws IOException {
+    super(protocol, transceiver);
+    this.data = data;
+  }
+
+  public GenericData getGenericData() { return data; }
 
   @Override
   public Object request(String messageName, Object request)
@@ -70,19 +82,20 @@ public class GenericRequestor extends Requestor {
   @Override
   public void writeRequest(Schema schema, Object request, Encoder out)
     throws IOException {
-    new GenericDatumWriter<Object>(schema).write(request, out);
+    new GenericDatumWriter<Object>(schema, data).write(request, out);
   }
 
   @Override
   public Object readResponse(Schema writer, Schema reader, Decoder in)
     throws IOException {
-    return new GenericDatumReader<Object>(writer, reader).read(null, in);
+    return new GenericDatumReader<Object>(writer, reader, data).read(null, in);
   }
 
   @Override
   public Exception readError(Schema writer, Schema reader, Decoder in)
     throws IOException {
-    Object error = new GenericDatumReader<Object>(writer, reader).read(null,in);
+    Object error = new GenericDatumReader<Object>(writer, reader, data)
+      .read(null,in);
     if (error instanceof CharSequence)
       return new AvroRuntimeException(error.toString()); // system error
     return new AvroRemoteException(error);

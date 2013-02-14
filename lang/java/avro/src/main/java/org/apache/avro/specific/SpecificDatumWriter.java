@@ -37,7 +37,7 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
     super(schema, SpecificData.get());
   }
   
-  protected SpecificDatumWriter(Schema root, SpecificData specificData) {
+  public SpecificDatumWriter(Schema root, SpecificData specificData) {
     super(root, specificData);
   }
   

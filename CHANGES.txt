@@ -69,6 +69,9 @@ Trunk (not yet released)
     AVRO-1249. Java: Fix DataFileWriter#close() to not throw an
     exception when called twice.  (E. Sammer via cutting)
 
+    AVRO-1247. Java: Fix Requestor and Responder implementations to
+    use correct ClassLoader. (cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES

@@ -36,28 +36,43 @@ public class ReflectRequestor extends SpecificRequestor {
   
   public ReflectRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
-    this(ReflectData.get().getProtocol(iface), transceiver);
+    this(iface, transceiver, new ReflectData(iface.getClassLoader()));
   }
 
   protected ReflectRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
-    super(protocol, transceiver);
+    this(protocol, transceiver, ReflectData.get());
   }
     
+  public ReflectRequestor(Class<?> iface, Transceiver transceiver,
+                          ReflectData data)
+    throws IOException {
+    this(data.getProtocol(iface), transceiver, data);
+  }
+    
+  public ReflectRequestor(Protocol protocol, Transceiver transceiver,
+                          ReflectData data)
+    throws IOException {
+    super(protocol, transceiver, data);
+  }
+    
+  public ReflectData getReflectData() { return (ReflectData)getSpecificData(); }
+
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new ReflectDatumWriter<Object>(schema);
+    return new ReflectDatumWriter<Object>(schema, getReflectData());
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new ReflectDatumReader<Object>(writer, reader);
+    return new ReflectDatumReader<Object>(writer, reader, getReflectData());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   public static <T> T getClient(Class<T> iface, Transceiver transciever) 
     throws IOException {
-    return getClient(iface, transciever, ReflectData.get());
+    return getClient(iface, transciever,
+                     new ReflectData(iface.getClassLoader()));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
@@ -65,16 +80,17 @@ public class ReflectRequestor extends SpecificRequestor {
   public static <T> T getClient(Class<T> iface, Transceiver transciever,
                                 ReflectData reflectData) throws IOException {
     Protocol protocol = reflectData.getProtocol(iface);
-    return (T)Proxy.newProxyInstance(iface.getClassLoader(), 
-                                  new Class[] { iface },
-                                  new ReflectRequestor(protocol, transciever));
+    return (T)Proxy.newProxyInstance
+      (reflectData.getClassLoader(), 
+       new Class[] { iface },
+       new ReflectRequestor(protocol, transciever, reflectData));
   }
   
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
   public static <T> T getClient(Class<T> iface, ReflectRequestor rreq) 
     throws IOException {
-    return (T)Proxy.newProxyInstance(iface.getClassLoader(), 
+    return (T)Proxy.newProxyInstance(rreq.getReflectData().getClassLoader(), 
                                   new Class[] { iface }, rreq);
   }
 }

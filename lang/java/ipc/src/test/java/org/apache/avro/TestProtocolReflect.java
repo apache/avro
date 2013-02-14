@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.SocketServer;
@@ -79,6 +80,19 @@ public class TestProtocolReflect {
     server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     proxy = ReflectRequestor.getClient(Simple.class, client);
+  }
+
+  @Test public void testClassLoader() throws Exception {
+    ClassLoader loader = new ClassLoader() {};
+
+    ReflectResponder responder
+      = new ReflectResponder(Simple.class, new TestImpl(),
+                             new ReflectData(loader));
+    assertEquals(responder.getReflectData().getClassLoader(), loader);
+
+    ReflectRequestor requestor
+      = new ReflectRequestor(Simple.class, client, new ReflectData(loader));
+    assertEquals(requestor.getReflectData().getClassLoader(), loader);
   }
 
   @Test

@@ -38,31 +38,34 @@ import org.apache.avro.ipc.generic.GenericResponder;
 /** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
 public class SpecificResponder extends GenericResponder {
   private Object impl;
-  private SpecificData data;
 
   public SpecificResponder(Class iface, Object impl) {
-    this(SpecificData.get().getProtocol(iface), impl);
+    this(iface, impl, new SpecificData(impl.getClass().getClassLoader()));
   }
     
   public SpecificResponder(Protocol protocol, Object impl) {
-    this(protocol, impl, SpecificData.get());
+    this(protocol, impl, new SpecificData(impl.getClass().getClassLoader()));
   }
 
-  protected SpecificResponder(Protocol protocol, Object impl,
-                              SpecificData data) {
-    super(protocol);
-    this.impl = impl;
-    this.data = data;
+  public SpecificResponder(Class iface, Object impl, SpecificData data) {
+    this(data.getProtocol(iface), impl, data);
   }
+
+  public SpecificResponder(Protocol protocol, Object impl, SpecificData data) {
+    super(protocol, data);
+    this.impl = impl;
+  }
+
+  public SpecificData getSpecificData() {return (SpecificData)getGenericData();}
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter<Object>(schema);
+    return new SpecificDatumWriter<Object>(schema, getSpecificData());
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
-    return new SpecificDatumReader<Object>(actual, expected);
+    return new SpecificDatumReader<Object>(actual, expected, getSpecificData());
   }
 
   @Override
@@ -80,7 +83,7 @@ public class SpecificResponder extends GenericResponder {
     try {
       for (Schema.Field param: message.getRequest().getFields()) {
         params[i] = ((GenericRecord)request).get(param.name());
-        paramTypes[i] = data.getClass(param.schema());
+        paramTypes[i] = getSpecificData().getClass(param.schema());
         i++;
       }
       Method method = impl.getClass().getMethod(message.getName(), paramTypes);

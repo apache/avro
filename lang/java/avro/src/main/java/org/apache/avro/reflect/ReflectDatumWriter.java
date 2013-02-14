@@ -47,7 +47,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     this(root, ReflectData.get());
   }
 
-  protected ReflectDatumWriter(Schema root, ReflectData reflectData) {
+  public ReflectDatumWriter(Schema root, ReflectData reflectData) {
     super(root, reflectData);
   }
   

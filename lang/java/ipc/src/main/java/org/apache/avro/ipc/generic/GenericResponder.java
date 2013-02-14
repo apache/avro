@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Decoder;
@@ -33,17 +34,26 @@ import org.apache.avro.ipc.Responder;
 
 /** {@link Responder} implementation for generic Java data. */
 public abstract class GenericResponder extends Responder {
+  private GenericData data;
 
   public GenericResponder(Protocol local) {
-    super(local);
+    this(local, GenericData.get());
+    
   }
 
+  public GenericResponder(Protocol local, GenericData data) {
+    super(local);
+    this.data = data;
+  }
+
+  public GenericData getGenericData() { return data; }
+
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new GenericDatumWriter<Object>(schema);
+    return new GenericDatumWriter<Object>(schema, data);
   }
 
   protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
-    return new GenericDatumReader<Object>(actual, expected);
+    return new GenericDatumReader<Object>(actual, expected, data);
   }
 
   @Override
