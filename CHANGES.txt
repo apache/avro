@@ -82,6 +82,9 @@ Trunk (not yet released)
     AVRO-1247. Java: Fix Requestor and Responder implementations to
     use correct ClassLoader. (cutting)
 
+    AVRO-1215. Java: Fix AvroMultipleOutputs when specifying baseOutputPath.
+    (Ashish Nagavaram via cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES

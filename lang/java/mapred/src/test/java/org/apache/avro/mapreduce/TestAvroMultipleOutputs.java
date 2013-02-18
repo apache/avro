@@ -127,7 +127,10 @@ public class TestAvroMultipleOutputs {
       record2.put("name1", new Utf8(line.toString()));
       record2.put("count1", new Integer(sum));
       mStats.datum(record2); 
+      amos.write(mStats, NullWritable.get(), STATS_SCHEMA_2, null, "testnewwrite2");
       amos.write("myavro1",mStats);
+      amos.write(mStats, NullWritable.get(), STATS_SCHEMA, null, "testnewwrite");
+      amos.write(mStats, NullWritable.get(), "testwritenonschema");
     }
    
     @Override
@@ -241,6 +244,52 @@ public class TestAvroMultipleOutputs {
     Assert.assertEquals(3, counts.get("apple").intValue());
     Assert.assertEquals(2, counts.get("banana").intValue());
     Assert.assertEquals(1, counts.get("carrot").intValue());
+  
+    outputFiles = fileSystem.globStatus(outputPath.suffix("/testnewwrite-r-00000.avro"));
+    Assert.assertEquals(1, outputFiles.length);
+    reader = new DataFileReader<GenericData.Record>(
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+            new GenericDatumReader<GenericData.Record>(STATS_SCHEMA));
+    counts = new HashMap<String, Integer>();
+    for (GenericData.Record record : reader) {
+       counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
+    }
+    reader.close();
+    
+    Assert.assertEquals(3, counts.get("apple").intValue());
+    Assert.assertEquals(2, counts.get("banana").intValue());
+    Assert.assertEquals(1, counts.get("carrot").intValue());
+        
+    outputFiles = fileSystem.globStatus(outputPath.suffix("/testnewwrite2-r-00000.avro"));
+    Assert.assertEquals(1, outputFiles.length);
+    reader = new DataFileReader<GenericData.Record>(
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+        new GenericDatumReader<GenericData.Record>(STATS_SCHEMA_2));
+    counts = new HashMap<String, Integer>();
+    for (GenericData.Record record : reader) {
+     counts.put(((Utf8) record.get("name1")).toString(), (Integer) record.get("count1"));
+    }
+    reader.close();
+    Assert.assertEquals(3, counts.get("apple").intValue());
+    Assert.assertEquals(2, counts.get("banana").intValue());
+    Assert.assertEquals(1, counts.get("carrot").intValue());
+    
+    outputFiles = fileSystem.globStatus(outputPath.suffix("/testwritenonschema-r-00000.avro"));
+    Assert.assertEquals(1, outputFiles.length);
+    reader = new DataFileReader<GenericData.Record>(
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+        new GenericDatumReader<GenericData.Record>(STATS_SCHEMA));
+    counts = new HashMap<String, Integer>();
+    for (GenericData.Record record : reader) {
+      counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
+    }
+    reader.close();
+
+    Assert.assertEquals(3, counts.get("apple").intValue());
+    Assert.assertEquals(2, counts.get("banana").intValue());
+    Assert.assertEquals(1, counts.get("carrot").intValue());
+    
+    
   }
 
   @Test

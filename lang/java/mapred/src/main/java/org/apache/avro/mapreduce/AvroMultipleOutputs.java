@@ -144,16 +144,6 @@ public class AvroMultipleOutputs{
   private Map<String, TaskAttemptContext> taskContexts = new HashMap<String, TaskAttemptContext>();
 
   /**
-   * Cache for the Key Schemas
-   */
-  private static Map<String, Schema> keySchemas = new HashMap<String, Schema>();
-
-  /**
-   * Cache for the Value Schemas
-   */
-  private static Map<String, Schema> valSchemas = new HashMap<String, Schema>();
-
-  /**
    * Checks if a named output name is valid token.
    *
    * @param namedOutput named output Name
@@ -272,9 +262,10 @@ public class AvroMultipleOutputs{
       conf.get(MULTIPLE_OUTPUTS, "") + " " + namedOutput);
     conf.setClass(MO_PREFIX + namedOutput + FORMAT, outputFormatClass,
       OutputFormat.class);
-    keySchemas.put(namedOutput+"_KEYSCHEMA",keySchema);
-    valSchemas.put(namedOutput+"_VALSCHEMA",valueSchema);
-  
+    conf.set(MO_PREFIX+namedOutput+".keyschema", keySchema.toString());
+    if(valueSchema!=null){
+      conf.set(MO_PREFIX+namedOutput+".valueschema",valueSchema.toString());
+    }
   }
 
   /**
@@ -420,15 +411,35 @@ public class AvroMultipleOutputs{
    * @param baseOutputPath base-output path to write the record to.
    * Note: Framework will generate unique filename for the baseOutputPath
    */
-  @SuppressWarnings("unchecked")
   public void write(Object key, Object value, String baseOutputPath) 
       throws IOException, InterruptedException {
+        write(key, value, null, null, baseOutputPath);
+  }
+  
+  /**
+   * Write key value to an output file name.
+   * 
+   * Gets the record writer from job's output format. Job's output format should
+   * be a FileOutputFormat.
+   * 
+   * @param key   the key
+   * @param value the value
+   * @param keySchema   keySchema to use
+   * @param valSchema   ValueSchema to use
+   * @param baseOutputPath base-output path to write the record to. Note: Framework will
+   *          generate unique filename for the baseOutputPath
+   */
+  @SuppressWarnings("unchecked")
+  public void write(Object key, Object value, Schema keySchema,
+      Schema valSchema, String baseOutputPath) throws IOException,
+      InterruptedException {
     checkBaseOutputPath(baseOutputPath);
-    TaskAttemptContext taskContext = createTaskAttemptContext(
-      context.getConfiguration(), context.getTaskAttemptID());
+    Job job = new Job(context.getConfiguration());
+    setSchema(job, keySchema, valSchema);
+    TaskAttemptContext taskContext = createTaskAttemptContext(job.getConfiguration(), context.getTaskAttemptID());
     getRecordWriter(taskContext, baseOutputPath).write(key, value);
   }
-
+    
   // by being synchronized MultipleOutputTask can be use with a
   // MultithreadedMapper.
   @SuppressWarnings("unchecked")
@@ -443,6 +454,7 @@ public class AvroMultipleOutputs{
     if (writer == null) {
       // get the record writer from context output format
       //FileOutputFormat.setOutputName(taskContext, baseFileName);
+      taskContext.getConfiguration().set("avro.mo.config.namedOutput",baseFileName);
       try {
         writer = ((OutputFormat) ReflectionUtils.newInstance(
           taskContext.getOutputFormatClass(), taskContext.getConfiguration()))
@@ -463,8 +475,27 @@ public class AvroMultipleOutputs{
     return writer;
   }
 
+  private void setSchema(Job job, Schema keySchema, Schema valSchema) {
+
+    boolean isMaponly = job.getNumReduceTasks() == 0;
+    if (keySchema != null) {
+      if (isMaponly)
+        AvroJob.setMapOutputKeySchema(job, keySchema);
+      else
+        AvroJob.setOutputKeySchema(job, keySchema);
+    }
+    if (valSchema != null) {
+      if (isMaponly)
+        AvroJob.setMapOutputValueSchema(job, valSchema);
+      else
+        AvroJob.setOutputValueSchema(job, valSchema);
+    }
+
+  }
+
    // Create a taskAttemptContext for the named output with 
    // output format and output key/value types put in the context
+  @SuppressWarnings("deprecation")
   private TaskAttemptContext getContext(String nameOutput) throws IOException {
 
     TaskAttemptContext taskContext = taskContexts.get(nameOutput);
@@ -475,28 +506,17 @@ public class AvroMultipleOutputs{
 
     // The following trick leverages the instantiation of a record writer via
     // the job thus supporting arbitrary output formats.
-    context.getConfiguration().set("avro.mo.config.namedOutput",nameOutput);
     Job job = new Job(context.getConfiguration());
     job.setOutputFormatClass(getNamedOutputFormatClass(context, nameOutput));
-    Schema keySchema = keySchemas.get(nameOutput+"_KEYSCHEMA");
-    Schema valSchema = valSchemas.get(nameOutput+"_VALSCHEMA");
-
-    boolean isMaponly=job.getNumReduceTasks() == 0;
-
-    if(keySchema!=null)
-    {
-      if(isMaponly)
-        AvroJob.setMapOutputKeySchema(job,keySchema);
-      else
-        AvroJob.setOutputKeySchema(job,keySchema);
-    }
-    if(valSchema!=null)
-    {
-      if(isMaponly)
-        AvroJob.setMapOutputValueSchema(job,valSchema);
-      else
-        AvroJob.setOutputValueSchema(job,valSchema);
-    }
+    Schema keySchema=null,valSchema=null;
+    if (job.getConfiguration().get(MO_PREFIX + nameOutput + ".keyschema",null) != null)
+        keySchema = Schema.parse(job.getConfiguration().get(
+            MO_PREFIX + nameOutput + ".keyschema"));
+      if (job.getConfiguration().get(MO_PREFIX + nameOutput + ".valueschema",
+          null) != null)
+        valSchema = Schema.parse(job.getConfiguration().get(
+            MO_PREFIX + nameOutput + ".valueschema"));
+    setSchema(job, keySchema, valSchema);
     taskContext = createTaskAttemptContext(
       job.getConfiguration(), context.getTaskAttemptID());
     
