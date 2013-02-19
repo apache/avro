@@ -96,8 +96,9 @@ module Avro
       def read_string
         # A string is encoded as a long followed by that many bytes of
         # UTF-8 encoded character data.
-        # FIXME utf-8 encode this in 1.9
-        read_bytes
+        read_bytes.tap do |string|
+          string.force_encoding("UTF-8") if string.respond_to? :force_encoding
+        end
       end
 
       def read(len)

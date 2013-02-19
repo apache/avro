@@ -88,6 +88,9 @@ Trunk (not yet released)
     AVRO-1215. Java: Fix AvroMultipleOutputs when specifying baseOutputPath.
     (Ashish Nagavaram via cutting)
 
+    AVRO-1257. Ruby: Fix UTF-8 encoding in Ruby 1.9.
+    (Martin Kleppmann via cutting)
+
 Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES
