@@ -50,7 +50,6 @@ import org.apache.avro.Schema;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import static org.apache.trevni.avro.WordCountUtil.DIR;
 
 public class TestWordCount {
 
@@ -82,14 +81,16 @@ public class TestWordCount {
     testInputFormat();
   }
 
-  private static final Schema STRING = Schema.create(Schema.Type.STRING);
+  static final Schema STRING = Schema.create(Schema.Type.STRING);
   static { GenericData.setStringType(STRING, GenericData.StringType.String); }
-  private static final Schema LONG = Schema.create(Schema.Type.LONG);
+  static final Schema LONG = Schema.create(Schema.Type.LONG);
 
   public void testOutputFormat() throws Exception {
     JobConf job = new JobConf();
     
-    WordCountUtil.writeLinesFile();
+    WordCountUtil wordCountUtil = new WordCountUtil("trevniMapredTest");
+    
+    wordCountUtil.writeLinesFile();
     
     AvroJob.setInputSchema(job, STRING);
     AvroJob.setOutputSchema(job, Pair.getPairSchema(STRING,LONG));
@@ -98,15 +99,15 @@ public class TestWordCount {
     AvroJob.setCombinerClass(job, ReduceImpl.class);
     AvroJob.setReducerClass(job, ReduceImpl.class);
     
-    FileInputFormat.setInputPaths(job, new Path(DIR + "/in"));
-    FileOutputFormat.setOutputPath(job, new Path(DIR + "/out"));
+    FileInputFormat.setInputPaths(job, new Path(wordCountUtil.getDir().toString() + "/in"));
+    FileOutputFormat.setOutputPath(job, new Path(wordCountUtil.getDir().toString() + "/out"));
     FileOutputFormat.setCompressOutput(job, true);
     
     job.setOutputFormat(AvroTrevniOutputFormat.class);
 
     JobClient.runJob(job);
     
-    WordCountUtil.validateCountsFile();
+    wordCountUtil.validateCountsFile();
   }
 
   private static long total;
@@ -121,6 +122,9 @@ public class TestWordCount {
   public void testInputFormat() throws Exception {
     JobConf job = new JobConf();
 
+    WordCountUtil wordCountUtil = new WordCountUtil("trevniMapredTest");
+    
+    
     Schema subSchema = Schema.parse("{\"type\":\"record\"," +
                                     "\"name\":\"PairValue\","+
                                     "\"fields\": [ " + 
@@ -128,7 +132,7 @@ public class TestWordCount {
                                     "]}");
     AvroJob.setInputSchema(job, subSchema);
     AvroJob.setMapperClass(job, Counter.class);        
-    FileInputFormat.setInputPaths(job, new Path(DIR + "/out/*"));
+    FileInputFormat.setInputPaths(job, new Path(wordCountUtil.getDir().toString() + "/out/*"));
     job.setInputFormat(AvroTrevniInputFormat.class);
 
     job.setNumReduceTasks(0);                     // map-only

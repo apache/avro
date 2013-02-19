@@ -41,9 +41,11 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.mapred.JobConf;
 
 import org.apache.avro.Schema;
+import org.apache.avro.hadoop.io.AvroKeyValue;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.DataFileStream;
@@ -51,12 +53,20 @@ import org.apache.avro.mapred.Pair;
 
 public class WordCountUtil {
 
-  public static final File DIR = new File("target", "wc");
-  public static final File LINES_FILE
-    = new File(new File(DIR, "in"), "lines.avro");
-  static final File COUNTS_FILE
-    = new File(new File(DIR, "out"), "part-00000/part-0.trv");
+  public File dir;
+  public File linesFiles;
+  public File countFiles;
 
+  public WordCountUtil (String testName) {
+    this(testName, "part-00000");
+  }
+  
+  public WordCountUtil (String testName, String partDirName) {
+    dir = new File("target/wc", testName);
+    linesFiles = new File(new File(dir, "in"), "lines.avro");
+    countFiles = new File(new File(dir, "out"), partDirName + "/part-0.trv");
+  }
+  
   public static final String[] LINES = new String[] {
     "the quick brown fox jumps over the lazy dog",
     "the cow jumps over the moon",
@@ -80,24 +90,42 @@ public class WordCountUtil {
     TOTAL = total;
   }
 
-  public static void writeLinesFile() throws IOException {
-    FileUtil.fullyDelete(DIR);
+  public File getDir() {
+    return dir;
+  }
+  
+  public void writeLinesFile() throws IOException {
+    FileUtil.fullyDelete(dir);
     DatumWriter<String> writer = new GenericDatumWriter<String>();
     DataFileWriter<String> out = new DataFileWriter<String>(writer);
-    LINES_FILE.getParentFile().mkdirs();
-    out.create(Schema.create(Schema.Type.STRING), LINES_FILE);
+    linesFiles.getParentFile().mkdirs();
+    out.create(Schema.create(Schema.Type.STRING), linesFiles);
     for (String line : LINES)
       out.append(line);
     out.close();
   }
 
-  public static void validateCountsFile() throws Exception {
+  public void validateCountsFile() throws Exception {
     AvroColumnReader<Pair<String,Long>> reader =
       new AvroColumnReader<Pair<String,Long>>
-      (new AvroColumnReader.Params(COUNTS_FILE).setModel(SpecificData.get()));
+      (new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
     for (Pair<String,Long> wc : reader) {
       assertEquals(wc.key(), COUNTS.get(wc.key()), wc.value());
+      numWords++;
+    }
+    reader.close();
+    assertEquals(COUNTS.size(), numWords);
+  }
+  
+  public void validateCountsFileGenericRecord() throws Exception {
+    AvroColumnReader<GenericRecord > reader =
+      new AvroColumnReader<GenericRecord >
+      (new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
+    int numWords = 0;
+    for (GenericRecord  wc : reader) {
+      assertEquals((String)wc.get("key"), COUNTS.get(wc.get("key")), (Long)wc.get("value"));
+      //assertEquals(wc.getKey(), COUNTS.get(wc.getKey()), wc.getValue());
       numWords++;
     }
     reader.close();
