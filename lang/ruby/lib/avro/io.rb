@@ -245,7 +245,7 @@ module Avro
           when 'record'
             return check_props(writers_schema, readers_schema, [:fullname])
           when 'error'
-            return check_props(writers_scheam, readers_schema, [:fullname])
+            return check_props(writers_schema, readers_schema, [:fullname])
           when 'request'
             return true
           when 'fixed'
@@ -315,7 +315,7 @@ module Avro
         when 'array';   read_array(writers_schema, readers_schema, decoder)
         when 'map';     read_map(writers_schema, readers_schema, decoder)
         when 'union';   read_union(writers_schema, readers_schema, decoder)
-        when 'record', 'errors', 'request';  read_record(writers_schema, readers_schema, decoder)
+        when 'record', 'error', 'request';  read_record(writers_schema, readers_schema, decoder)
         else
           raise AvroError, "Cannot read unknown schema type: #{writers_schema.type}"
         end
@@ -443,7 +443,7 @@ module Avro
           return read_map
         when 'union'
           return read_default_value(field_schema.schemas[0], default_value)
-        when 'record'
+        when 'record', 'error'
           read_record = {}
           field_schema.fields.each do |field|
             json_val = default_value[field.name]
@@ -454,7 +454,7 @@ module Avro
           return read_record
         else
           fail_msg = "Unknown type: #{field_schema.type}"
-          raise AvroError(fail_msg)
+          raise AvroError, fail_msg
         end
       end
 
@@ -566,7 +566,7 @@ module Avro
         when 'array';   write_array(writers_schema, datum, encoder)
         when 'map';     write_map(writers_schema, datum, encoder)
         when 'union';   write_union(writers_schema, datum, encoder)
-        when 'record', 'errors', 'request';  write_record(writers_schema, datum, encoder)
+        when 'record', 'error', 'request';  write_record(writers_schema, datum, encoder)
         else
           raise AvroError.new("Unknown type: #{writers_schema.type}")
         end

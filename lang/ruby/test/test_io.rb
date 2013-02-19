@@ -73,6 +73,16 @@ EOS
     check_default(record_schema, '{"f": 11}', {"f" => 11})
   end
 
+  def test_error
+    error_schema = <<EOS
+      {"type": "error",
+       "name": "TestError",
+       "fields": [{"name": "message",
+                   "type": "string"}]}
+EOS
+    check_default(error_schema, '{"message": "boom"}', {"message" => "boom"})
+  end
+
   def test_enum
     enum_schema = '{"type": "enum", "name": "Test","symbols": ["A", "B"]}'
     check_default(enum_schema, '"B"', "B")

@@ -58,7 +58,7 @@ class RandomData
         map[nextdata(Avro::Schema::PrimitiveSchema.new('string'))] = nextdata(schm.values, d+1)
       end
       map
-    when 'record'
+    when 'record', 'error'
       m = {}
       schm.fields.each do |field|
         m[field.name] = nextdata(field.type, d+1)
