@@ -104,8 +104,12 @@ public class TestKeyValueWordCount {
     }
   }  
   
-  @Test
-  public void testKeyOutputFormat() throws Exception {
+  @Test public void testIOFormat() throws Exception {
+    checkOutputFormat();
+    checkInputFormat();
+  }
+
+  public void checkOutputFormat() throws Exception {
     Job job = new Job();
     
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyValueTest", "part-r-00000");
@@ -134,8 +138,7 @@ public class TestKeyValueWordCount {
     wordCountUtil.validateCountsFileGenericRecord();
   }
   
-  @Test
-  public void testInputFormat() throws Exception {
+  public void checkInputFormat() throws Exception {
     Job job = new Job();
     
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyValueTest");
