@@ -6,6 +6,8 @@ Trunk (not yet released)
 
   IMPROVEMENTS
 
+    AVRO-1260. Ruby: Improve read performance. (Martin Kleppmann via cutting)
+
   BUG FIXES
 
 Avro 1.7.4 (22 February 2012)

@@ -27,52 +27,52 @@ class RandomData
   end
 
   def nextdata(schm, d=0)
-    case schm.type
-    when 'boolean'
+    case schm.type_sym
+    when :boolean
       rand > 0.5
-    when 'string'
+    when :string
       randstr()
-    when 'int'
+    when :int
       rand(Avro::Schema::INT_MAX_VALUE - Avro::Schema::INT_MIN_VALUE) + Avro::Schema::INT_MIN_VALUE
-    when 'long'
+    when :long
       rand(Avro::Schema::LONG_MAX_VALUE - Avro::Schema::LONG_MIN_VALUE) + Avro::Schema::LONG_MIN_VALUE
-    when 'float'
+    when :float
       (-1024 + 2048 * rand).round.to_f
-    when 'double'
+    when :double
       Avro::Schema::LONG_MIN_VALUE + (Avro::Schema::LONG_MAX_VALUE - Avro::Schema::LONG_MIN_VALUE) * rand
-    when 'bytes'
+    when :bytes
       randstr(BYTEPOOL)
-    when 'null'
+    when :null
       nil
-    when 'array'
+    when :array
       arr = []
       len = rand(5) + 2 - d
       len = 0 if len < 0
       len.times{ arr << nextdata(schm.items, d+1) }
       arr
-    when 'map'
+    when :map
       map = {}
       len = rand(5) + 2 - d
       len = 0 if len < 0
       len.times do
-        map[nextdata(Avro::Schema::PrimitiveSchema.new('string'))] = nextdata(schm.values, d+1)
+        map[nextdata(Avro::Schema::PrimitiveSchema.new(:string))] = nextdata(schm.values, d+1)
       end
       map
-    when 'record', 'error'
+    when :record, :error
       m = {}
       schm.fields.each do |field|
         m[field.name] = nextdata(field.type, d+1)
       end
       m
-    when 'union'
+    when :union
       types = schm.schemas
       nextdata(types[rand(types.size)], d)
-    when 'enum'
+    when :enum
       symbols = schm.symbols
       len = symbols.size
       return nil if len == 0
       symbols[rand(len)]
-    when 'fixed'
+    when :fixed
       f = ""
       schm.size.times { f << BYTEPOOL[rand(BYTEPOOL.size), 1] }
       f

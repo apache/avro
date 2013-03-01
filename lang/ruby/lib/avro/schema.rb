@@ -16,11 +16,16 @@
 
 module Avro
   class Schema
-    # FIXME turn these into symbols to prevent some gc pressure
+    # Sets of strings, for backwards compatibility. See below for sets of symbols,
+    # for better performance.
     PRIMITIVE_TYPES = Set.new(%w[null boolean string bytes int long float double])
     NAMED_TYPES =     Set.new(%w[fixed enum record error])
 
     VALID_TYPES = PRIMITIVE_TYPES + NAMED_TYPES + Set.new(%w[array map union request])
+
+    PRIMITIVE_TYPES_SYM = Set.new(PRIMITIVE_TYPES.map(&:to_sym))
+    NAMED_TYPES_SYM     = Set.new(NAMED_TYPES.map(&:to_sym))
+    VALID_TYPES_SYM     = Set.new(VALID_TYPES.map(&:to_sym))
 
     INT_MIN_VALUE = -(1 << 31)
     INT_MAX_VALUE = (1 << 31) - 1
@@ -35,38 +40,46 @@ module Avro
     def self.real_parse(json_obj, names=nil)
       if json_obj.is_a? Hash
         type = json_obj['type']
-        if PRIMITIVE_TYPES.include?(type)
-          return PrimitiveSchema.new(type)
-        elsif NAMED_TYPES.include? type
+        raise SchemaParseError, %Q(No "type" property: #{json_obj}) if type.nil?
+
+        # Check that the type is valid before calling #to_sym, since symbols are never garbage
+        # collected (important to avoid DoS if we're accepting schemas from untrusted clients)
+        unless VALID_TYPES.include?(type)
+          raise SchemaParseError, "Unknown type: #{type}"
+        end
+
+        type_sym = type.to_sym
+        if PRIMITIVE_TYPES_SYM.include?(type_sym)
+          return PrimitiveSchema.new(type_sym)
+
+        elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
           namespace = json_obj['namespace']
-          case type
-          when 'fixed'
+          case type_sym
+          when :fixed
             size = json_obj['size']
             return FixedSchema.new(name, namespace, size, names)
-          when 'enum'
+          when :enum
             symbols = json_obj['symbols']
             return EnumSchema.new(name, namespace, symbols, names)
-          when 'record', 'error'
+          when :record, :error
             fields = json_obj['fields']
-            return RecordSchema.new(name, namespace, fields, names, type)
+            return RecordSchema.new(name, namespace, fields, names, type_sym)
           else
             raise SchemaParseError.new("Unknown named type: #{type}")
           end
-        elsif VALID_TYPES.include?(type)
-          case type
-          when 'array'
+
+        else
+          case type_sym
+          when :array
             return ArraySchema.new(json_obj['items'], names)
-          when 'map'
+          when :map
             return MapSchema.new(json_obj['values'], names)
           else
             raise SchemaParseError.new("Unknown Valid Type: #{type}")
           end
-        elsif type.nil?
-          raise SchemaParseError.new("No \"type\" property: #{json_obj}")
-        else
-          raise SchemaParseError.new("Undefined type: #{type}")
         end
+
       elsif json_obj.is_a? Array
         # JSON array (union)
         return UnionSchema.new(json_obj, names)
@@ -80,34 +93,34 @@ module Avro
 
     # Determine if a ruby datum is an instance of a schema
     def self.validate(expected_schema, datum)
-      case expected_schema.type
-      when 'null'
+      case expected_schema.type_sym
+      when :null
         datum.nil?
-      when 'boolean'
+      when :boolean
         datum == true || datum == false
-      when 'string', 'bytes'
+      when :string, :bytes
         datum.is_a? String
-      when 'int'
+      when :int
         (datum.is_a?(Fixnum) || datum.is_a?(Bignum)) &&
             (INT_MIN_VALUE <= datum) && (datum <= INT_MAX_VALUE)
-      when 'long'
+      when :long
         (datum.is_a?(Fixnum) || datum.is_a?(Bignum)) &&
             (LONG_MIN_VALUE <= datum) && (datum <= LONG_MAX_VALUE)
-      when 'float', 'double'
+      when :float, :double
         datum.is_a?(Float) || datum.is_a?(Fixnum) || datum.is_a?(Bignum)
-      when 'fixed'
+      when :fixed
         datum.is_a?(String) && datum.size == expected_schema.size
-      when 'enum'
+      when :enum
         expected_schema.symbols.include? datum
-      when 'array'
+      when :array
         datum.is_a?(Array) &&
           datum.all?{|d| validate(expected_schema.items, d) }
-      when 'map'
+      when :map
           datum.keys.all?{|k| k.is_a? String } &&
           datum.values.all?{|v| validate(expected_schema.values, v) }
-      when 'union'
+      when :union
         expected_schema.schemas.any?{|s| validate(s, datum) }
-      when 'record', 'error', 'request'
+      when :record, :error, :request
         datum.is_a?(Hash) &&
           expected_schema.fields.all?{|f| validate(f.type, datum[f.name]) }
       else
@@ -116,17 +129,21 @@ module Avro
     end
 
     def initialize(type)
-      @type = type
+      @type_sym = type.is_a?(Symbol) ? type : type.to_sym
     end
 
-    def type; @type; end
+    attr_reader :type_sym
+
+    # Returns the type as a string (rather than a symbol), for backwards compatibility.
+    # Deprecated in favor of {#type_sym}.
+    def type; @type_sym.to_s; end
 
     def ==(other, seen=nil)
-      other.is_a?(Schema) && @type == other.type
+      other.is_a?(Schema) && type_sym == other.type_sym
     end
 
     def hash(seen=nil)
-      @type.hash
+      type_sym.hash
     end
 
     def subparse(json_obj, names=nil)
@@ -139,7 +156,7 @@ module Avro
     end
 
     def to_avro
-      {'type' => @type}
+      {'type' => type}
     end
 
     def to_s
@@ -161,7 +178,7 @@ module Avro
       end
 
       def fullname
-        Name.make_fullname(@name, @namespace)
+        @fullname ||= Name.make_fullname(@name, @namespace)
       end
     end
 
@@ -190,9 +207,9 @@ module Avro
         field_objects
       end
 
-      def initialize(name, namespace, fields, names=nil, schema_type='record')
-        if schema_type == 'request'
-          @type = schema_type
+      def initialize(name, namespace, fields, names=nil, schema_type=:record)
+        if schema_type == :request || schema_type == 'request'
+          @type_sym = schema_type.to_sym
         else
           super(schema_type, name, namespace, names)
         end
@@ -200,12 +217,12 @@ module Avro
       end
 
       def fields_hash
-        fields.inject({}){|hsh, field| hsh[field.name] = field; hsh }
+        @fields_hash ||= fields.inject({}){|hsh, field| hsh[field.name] = field; hsh }
       end
 
       def to_avro
         hsh = super.merge('fields' => @fields.map {|f| f.to_avro } )
-        if type == 'request'
+        if type_sym == :request
           hsh['fields']
         else
           hsh
@@ -218,7 +235,7 @@ module Avro
       def initialize(items, names=nil)
         @items_schema_from_names = false
 
-        super('array')
+        super(:array)
 
         if items.is_a?(String) && names.has_key?(items)
           @items = names[items]
@@ -243,7 +260,7 @@ module Avro
 
       def initialize(values, names=nil)
         @values_schema_from_names = false
-        super('map')
+        super(:map)
         if values.is_a?(String) && names.has_key?(values)
           values_schema = names[values]
           @values_schema_from_names = true
@@ -267,7 +284,7 @@ module Avro
     class UnionSchema < Schema
       attr_reader :schemas, :schema_from_names_indices
       def initialize(schemas, names=nil)
-        super('union')
+        super(:union)
 
         schema_objects = []
         @schema_from_names_indices = []
@@ -280,12 +297,12 @@ module Avro
             new_schema = subparse(schema, names)
           end
 
-          ns_type = new_schema.type
-          if VALID_TYPES.include?(ns_type) &&
-              !NAMED_TYPES.include?(ns_type) &&
-              schema_objects.map{|o| o.type }.include?(ns_type)
+          ns_type = new_schema.type_sym
+          if VALID_TYPES_SYM.include?(ns_type) &&
+              !NAMED_TYPES_SYM.include?(ns_type) &&
+              schema_objects.any?{|o| o.type_sym == ns_type }
             raise SchemaParseError, "#{ns_type} is already in Union"
-          elsif ns_type == 'union'
+          elsif ns_type == :union
             raise SchemaParseError, "Unions cannot contain other unions"
           else
             schema_objects << new_schema
@@ -317,7 +334,7 @@ module Avro
           fail_msg = 'Duplicate symbol: %s' % symbols
           raise Avro::SchemaParseError, fail_msg
         end
-        super('enum', name, space, names)
+        super(:enum, name, space, names)
         @symbols = symbols
       end
 
@@ -329,11 +346,13 @@ module Avro
     # Valid primitive types are in PRIMITIVE_TYPES.
     class PrimitiveSchema < Schema
       def initialize(type)
-        unless PRIMITIVE_TYPES.include? type
+        if PRIMITIVE_TYPES_SYM.include?(type)
+          super(type)
+        elsif PRIMITIVE_TYPES.include?(type)
+          super(type.to_sym)
+        else
           raise AvroError.new("#{type} is not a valid primitive type.")
         end
-
-        super(type)
       end
 
       def to_avro
@@ -349,7 +368,7 @@ module Avro
         unless size.is_a?(Fixnum) || size.is_a?(Bignum)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
-        super('fixed', name, space, names)
+        super(:fixed, name, space, names)
         @size = size
       end
 

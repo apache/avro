@@ -17,6 +17,7 @@
 module Avro
   class Protocol
     VALID_TYPE_SCHEMA_TYPES = Set.new(%w[enum record error fixed])
+    VALID_TYPE_SCHEMA_TYPES_SYM = Set.new(VALID_TYPE_SCHEMA_TYPES.map(&:to_sym))
     class ProtocolParseError < Avro::AvroError; end
 
     attr_reader :name, :namespace, :types, :messages, :md5
@@ -71,7 +72,7 @@ module Avro
         # FIXME adding type.name to type_names is not defined in the
         # spec. Possible bug in the python impl and the spec.
         type_object = Schema.real_parse(type, type_names)
-        unless VALID_TYPE_SCHEMA_TYPES.include?(type_object.type)
+        unless VALID_TYPE_SCHEMA_TYPES_SYM.include?(type_object.type_sym)
           msg = "Type #{type} not an enum, record, fixed or error."
           raise ProtocolParseError, msg
         end
@@ -142,7 +143,7 @@ module Avro
         unless request.is_a?(Array)
           raise ProtocolParseError, "Request property not an Array: #{request.inspect}"
         end
-        Schema::RecordSchema.new(nil, nil, request, names, 'request')
+        Schema::RecordSchema.new(nil, nil, request, names, :request)
       end
 
       def parse_response(response, names)
