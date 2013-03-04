@@ -971,6 +971,7 @@ TOKEN :
 | < AT: "@" >
 | < EQUALS: "=" >
 | < DOT: "." >
+| < DASH: "-" >
 }
 
 TOKEN :
@@ -1272,7 +1273,7 @@ void SchemaProperty(Map<String, JsonNode> properties):
   JsonNode val;
 }
 {
-  "@" key = Identifier() "(" val = Json() ")"
+  "@" key = PropertyName() "(" val = Json() ")"
   {
     if (properties.containsKey(key))
       throw error("Property '" + key + "' already specified", token);
@@ -1489,6 +1490,19 @@ Schema ResultType():
   LOOKAHEAD(2)
     "void"          { return Schema.create(Type.NULL); }
   | schema = Type() { return schema; }
+}
+
+String PropertyName():
+{
+  Token t;
+  StringBuffer name = new StringBuffer();
+}
+{
+  t = <IDENTIFIER>   { name.append(t.image); }
+  ( t = <DASH>       { name.append(t.image); }
+    t = <IDENTIFIER> { name.append(t.image); }
+  ) *
+  { return name.toString(); }
 }
 
 String Identifier():

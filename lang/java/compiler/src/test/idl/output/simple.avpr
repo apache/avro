@@ -45,7 +45,7 @@
       "type" : "float",
       "default" : "-Infinity"
     } ],
-    "myProperty" : {
+    "my-property" : {
       "key" : 3
     }
   }, {

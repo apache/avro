@@ -34,7 +34,7 @@ protocol Simple {
   fixed MD5(16);
 
   /** A TestRecord. */
-  @myProperty({"key":3})
+  @my-property({"key":3})
   record TestRecord {
     string @order("ignore") name = "foo";
 
