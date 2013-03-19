@@ -37,7 +37,7 @@ module Avro
     end
 
     # Build Avro Schema from data parsed out of JSON string.
-    def self.real_parse(json_obj, names=nil)
+    def self.real_parse(json_obj, names=nil, default_namespace=nil)
       if json_obj.is_a? Hash
         type = json_obj['type']
         raise SchemaParseError, %Q(No "type" property: #{json_obj}) if type.nil?
@@ -54,7 +54,7 @@ module Avro
 
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
-          namespace = json_obj['namespace']
+          namespace = json_obj.include?('namespace') ? json_obj['namespace'] : default_namespace
           case type_sym
           when :fixed
             size = json_obj['size']
@@ -72,9 +72,9 @@ module Avro
         else
           case type_sym
           when :array
-            return ArraySchema.new(json_obj['items'], names)
+            return ArraySchema.new(json_obj['items'], names, default_namespace)
           when :map
-            return MapSchema.new(json_obj['values'], names)
+            return MapSchema.new(json_obj['values'], names, default_namespace)
           else
             raise SchemaParseError.new("Unknown Valid Type: #{type}")
           end
@@ -82,7 +82,7 @@ module Avro
 
       elsif json_obj.is_a? Array
         # JSON array (union)
-        return UnionSchema.new(json_obj, names)
+        return UnionSchema.new(json_obj, names, default_namespace)
       elsif PRIMITIVE_TYPES.include? json_obj
         return PrimitiveSchema.new(json_obj)
       else
@@ -146,16 +146,21 @@ module Avro
       type_sym.hash
     end
 
-    def subparse(json_obj, names=nil)
+    def subparse(json_obj, names=nil, namespace=nil)
+      if json_obj.is_a?(String) && names
+        fullname = Name.make_fullname(json_obj, namespace)
+        return names[fullname] if names.include?(fullname)
+      end
+
       begin
-        Schema.real_parse(json_obj, names)
+        Schema.real_parse(json_obj, names, namespace)
       rescue => e
         raise e if e.is_a? SchemaParseError
         raise SchemaParseError, "Sub-schema for #{self.class.name} not a valid Avro schema. Bad schema: #{json_obj}"
       end
     end
 
-    def to_avro
+    def to_avro(names=nil)
       {'type' => type}
     end
 
@@ -171,7 +176,11 @@ module Avro
         names = Name.add_name(names, self)
       end
 
-      def to_avro
+      def to_avro(names=Set.new)
+        if @name
+          return fullname if names.include?(fullname)
+          names << fullname
+        end
         props = {'name' => @name}
         props.merge!('namespace' => @namespace) if @namespace
         super.merge props
@@ -185,7 +194,7 @@ module Avro
     class RecordSchema < NamedSchema
       attr_reader :fields
 
-      def self.make_field_objects(field_data, names)
+      def self.make_field_objects(field_data, names, namespace=nil)
         field_objects, field_names = [], Set.new
         field_data.each_with_index do |field, i|
           if field.respond_to?(:[]) # TODO(jmhodges) wtffffff
@@ -193,7 +202,7 @@ module Avro
             name = field['name']
             default = field['default']
             order = field['order']
-            new_field = Field.new(type, name, default, order, names)
+            new_field = Field.new(type, name, default, order, names, namespace)
             # make sure field name has not been used yet
             if field_names.include?(new_field.name)
               raise SchemaParseError, "Field name #{new_field.name.inspect} is already in use"
@@ -210,18 +219,21 @@ module Avro
       def initialize(name, namespace, fields, names=nil, schema_type=:record)
         if schema_type == :request || schema_type == 'request'
           @type_sym = schema_type.to_sym
+          @namespace = namespace
         else
           super(schema_type, name, namespace, names)
         end
-        @fields = RecordSchema.make_field_objects(fields, names)
+        @fields = RecordSchema.make_field_objects(fields, names, self.namespace)
       end
 
       def fields_hash
         @fields_hash ||= fields.inject({}){|hsh, field| hsh[field.name] = field; hsh }
       end
 
-      def to_avro
-        hsh = super.merge('fields' => @fields.map {|f| f.to_avro } )
+      def to_avro(names=Set.new)
+        hsh = super
+        return hsh unless hsh.is_a?(Hash)
+        hsh['fields'] = @fields.map {|f| f.to_avro(names) }
         if type_sym == :request
           hsh['fields']
         else
@@ -231,73 +243,42 @@ module Avro
     end
 
     class ArraySchema < Schema
-      attr_reader :items, :items_schema_from_names
-      def initialize(items, names=nil)
-        @items_schema_from_names = false
+      attr_reader :items
 
+      def initialize(items, names=nil, default_namespace=nil)
         super(:array)
-
-        if items.is_a?(String) && names.has_key?(items)
-          @items = names[items]
-          @items_schema_from_names = true
-        else
-          @items = subparse(items, names)
-        end
+        @items = subparse(items, names, default_namespace)
       end
 
-      def to_avro
-        name_or_json = if items_schema_from_names
-                         items.fullname
-                       else
-                         items.to_avro
-                       end
-        super.merge('items' => name_or_json)
+      def to_avro(names=Set.new)
+        super.merge('items' => items.to_avro(names))
       end
     end
 
     class MapSchema < Schema
-      attr_reader :values, :values_schema_from_names
+      attr_reader :values
 
-      def initialize(values, names=nil)
-        @values_schema_from_names = false
+      def initialize(values, names=nil, default_namespace=nil)
         super(:map)
-        if values.is_a?(String) && names.has_key?(values)
-          values_schema = names[values]
-          @values_schema_from_names = true
-        else
-          values_schema = subparse(values, names)
-        end
-        @values = values_schema
+        @values = subparse(values, names, default_namespace)
       end
 
-      def to_avro
-        to_dump = super
-        if values_schema_from_names
-          to_dump['values'] = values
-        else
-          to_dump['values'] = values.to_avro
-        end
-        to_dump
+      def to_avro(names=Set.new)
+        super.merge('values' => values.to_avro(names))
       end
     end
 
     class UnionSchema < Schema
-      attr_reader :schemas, :schema_from_names_indices
-      def initialize(schemas, names=nil)
+      attr_reader :schemas
+
+      def initialize(schemas, names=nil, default_namespace=nil)
         super(:union)
 
         schema_objects = []
-        @schema_from_names_indices = []
         schemas.each_with_index do |schema, i|
-          from_names = false
-          if schema.is_a?(String) && names.has_key?(schema)
-            new_schema = names[schema]
-            from_names = true
-          else
-            new_schema = subparse(schema, names)
-          end
-
+          new_schema = subparse(schema, names, default_namespace)
           ns_type = new_schema.type_sym
+
           if VALID_TYPES_SYM.include?(ns_type) &&
               !NAMED_TYPES_SYM.include?(ns_type) &&
               schema_objects.any?{|o| o.type_sym == ns_type }
@@ -306,24 +287,13 @@ module Avro
             raise SchemaParseError, "Unions cannot contain other unions"
           else
             schema_objects << new_schema
-            @schema_from_names_indices << i if from_names
           end
           @schemas = schema_objects
         end
       end
 
-      def to_avro
-        # FIXME(jmhodges) this from_name pattern is really weird and
-        # seems code-smelly.
-        to_dump = []
-        schemas.each_with_index do |schema, i|
-          if schema_from_names_indices.include?(i)
-            to_dump << schema.fullname
-          else
-            to_dump << schema.to_avro
-          end
-        end
-        to_dump
+      def to_avro(names=Set.new)
+        schemas.map {|schema| schema.to_avro(names) }
       end
     end
 
@@ -338,8 +308,9 @@ module Avro
         @symbols = symbols
       end
 
-      def to_avro
-        super.merge('symbols' => symbols)
+      def to_avro(names=Set.new)
+        avro = super
+        avro.is_a?(Hash) ? avro.merge('symbols' => symbols) : avro
       end
     end
 
@@ -355,7 +326,7 @@ module Avro
         end
       end
 
-      def to_avro
+      def to_avro(names=nil)
         hsh = super
         hsh.size == 1 ? type : hsh
       end
@@ -372,36 +343,27 @@ module Avro
         @size = size
       end
 
-      def to_avro
-        super.merge('size' => @size)
+      def to_avro(names=Set.new)
+        avro = super
+        avro.is_a?(Hash) ? avro.merge('size' => size) : avro
       end
     end
 
     class Field < Schema
-      attr_reader :type, :name, :default, :order, :type_from_names
-      def initialize(type, name, default=nil, order=nil, names=nil)
-        @type_from_names = false
-        if type.is_a?(String) && names && names.has_key?(type)
-          type_schema = names[type]
-          @type_from_names = true
-        else
-          type_schema = subparse(type, names)
-        end
-        @type = type_schema
+      attr_reader :type, :name, :default, :order
+
+      def initialize(type, name, default=nil, order=nil, names=nil, namespace=nil)
+        @type = subparse(type, names, namespace)
         @name = name
         @default = default
         @order = order
       end
 
-      def to_avro
-        sigh_type = type_from_names ? type.fullname : type.to_avro
-        hsh = {
-          'name' => name,
-          'type' => sigh_type
-        }
-        hsh['default'] = default if default
-        hsh['order'] = order if order
-        hsh
+      def to_avro(names=Set.new)
+        {'name' => name, 'type' => type.to_avro(names)}.tap do |avro|
+          avro['default'] = default if default
+          avro['order'] = order if order
+        end
       end
     end
   end

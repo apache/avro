@@ -10,6 +10,9 @@ Trunk (not yet released)
 
     AVRO-1267. Java: Permit dashes in IDL property names. (cutting)
 
+    AVRO-1272. Ruby: Improve schema namespace handling.
+    (Martin Kleppmann via cutting)
+
   BUG FIXES
 
 Avro 1.7.4 (22 February 2012)

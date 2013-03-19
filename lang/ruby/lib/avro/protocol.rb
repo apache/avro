@@ -71,7 +71,7 @@ module Avro
       types.collect do |type|
         # FIXME adding type.name to type_names is not defined in the
         # spec. Possible bug in the python impl and the spec.
-        type_object = Schema.real_parse(type, type_names)
+        type_object = Schema.real_parse(type, type_names, namespace)
         unless VALID_TYPE_SCHEMA_TYPES_SYM.include?(type_object.type_sym)
           msg = "Type #{type} not an enum, record, fixed or error."
           raise ProtocolParseError, msg
@@ -92,47 +92,42 @@ module Avro
         request  = body['request']
         response = body['response']
         errors   = body['errors']
-        message_objects[name] = Message.new(name, request, response, errors, names)
+        message_objects[name] = Message.new(name, request, response, errors, names, namespace)
       end
       message_objects
     end
 
     protected
-    def to_avro
+    def to_avro(names=Set.new)
       hsh = {'protocol' => name}
       hsh['namespace'] = namespace if namespace
-      hsh['types'] = types.map{|t| t.to_avro } if types
+      hsh['types'] = types.map{|t| t.to_avro(names) } if types
 
       if messages
-        hsh['messages'] = messages.collect_hash{|k,t| [k, t.to_avro] }
+        hsh['messages'] = messages.collect_hash{|k,t| [k, t.to_avro(names)] }
       end
 
       hsh
     end
 
     class Message
-      attr_reader :name, :response_from_names, :request, :response, :errors
-      def initialize(name, request, response, errors=nil, names=nil)
-        @name = name
-        @response_from_names = false
+      attr_reader :name, :request, :response, :errors, :default_namespace
 
+      def initialize(name, request, response, errors=nil, names=nil, default_namespace=nil)
+        @name = name
+        @default_namespace = default_namespace
         @request = parse_request(request, names)
         @response = parse_response(response, names)
         @errors = parse_errors(errors, names) if errors
       end
 
-      def to_avro
-        hsh = {'request' => request.to_avro}
-        if response_from_names
-          hsh['response'] = response.fullname
-        else
-          hsh['response'] = response.to_avro
+      def to_avro(names=Set.new)
+        {
+          'request' => request.to_avro(names),
+          'response' => response.to_avro(names)
+        }.tap do |hash|
+          hash['errors'] = errors.to_avro(names) if errors
         end
-
-        if errors
-          hsh['errors'] = errors.to_avro
-        end
-        hsh
       end
 
       def to_s
@@ -143,23 +138,23 @@ module Avro
         unless request.is_a?(Array)
           raise ProtocolParseError, "Request property not an Array: #{request.inspect}"
         end
-        Schema::RecordSchema.new(nil, nil, request, names, :request)
+        Schema::RecordSchema.new(nil, default_namespace, request, names, :request)
       end
 
       def parse_response(response, names)
-        if response.is_a?(String) && names[response]
-          @response_from_names = true
-          names[response]
-        else
-          Schema.real_parse(response, names)
+        if response.is_a?(String) && names
+          fullname = Name.make_fullname(response, default_namespace)
+          return names[fullname] if names.include?(fullname)
         end
+
+        Schema.real_parse(response, names, default_namespace)
       end
 
       def parse_errors(errors, names)
         unless errors.is_a?(Array)
           raise ProtocolParseError, "Errors property not an Array: #{errors}"
         end
-        Schema.real_parse(errors, names)
+        Schema.real_parse(errors, names, default_namespace)
       end
     end
   end

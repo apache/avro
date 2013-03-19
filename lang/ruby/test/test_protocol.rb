@@ -189,4 +189,11 @@ EOS
       assert_equal original, round_trip
     end
   end
+
+  def test_namespaces
+    protocol = Protocol.parse(EXAMPLES.first.protocol_string)
+    protocol.types.each do |type|
+      assert_equal type.namespace, 'com.acme'
+    end
+  end
 end
