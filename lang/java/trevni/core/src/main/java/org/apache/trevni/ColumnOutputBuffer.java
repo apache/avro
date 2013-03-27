@@ -70,7 +70,7 @@ class ColumnOutputBuffer {
     rowCount++;
   }
 
-  private void flushBuffer() throws IOException {
+  void flushBuffer() throws IOException {
     if (rowCount == 0) return;
     ByteBuffer raw = buffer.asByteBuffer();
     ByteBuffer c = codec.compress(raw);

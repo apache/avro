@@ -261,7 +261,9 @@ whether subsequent bytes are present.  For example:
   * <<trevni.array>> if present, indicates that each row in this column
     contains a sequence of values of the named type rather than just a
     single value.  An integer length precedes each sequence of values
-    indicating the count of values in the sequence.
+    indicating the count of values in the sequence.  If the length is
+    negative then it indicates a sequence of zero or one lengths, where -1
+    indicates two zeros, -2 two ones, -3 three zeros, -4 three ones, etc.
 
   * <<trevni.parent>> if present, the name of an <array> column whose
     lengths are also used by this column.  Thus values of this column
@@ -348,7 +350,7 @@ name=value  type=string              parent=sigs
 
   A <<file header>> consists of:
 
-  * Four bytes, ASCII 'T', 'r', 'v', followed by 1.
+  * Four bytes, ASCII 'T', 'r', 'v', followed by 0x02.
 
   * a <fixed64> indicating the number of rows in the file
 

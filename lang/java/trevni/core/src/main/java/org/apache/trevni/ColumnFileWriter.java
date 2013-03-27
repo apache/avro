@@ -30,7 +30,8 @@ import java.util.HashSet;
 public class ColumnFileWriter {
 
   static final byte[] MAGIC_0 = new byte[] {'T', 'r', 'v', 0};
-  static final byte[] MAGIC = new byte[] {'T', 'r', 'v', 1};
+  static final byte[] MAGIC_1 = new byte[] {'T', 'r', 'v', 1};
+  static final byte[] MAGIC = new byte[] {'T', 'r', 'v', 2};
 
   private ColumnFileMetaData metaData;
   private ColumnOutputBuffer[] columns;

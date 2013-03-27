@@ -38,6 +38,9 @@ class InputBuffer {
   
   private int bitCount;                           // position in booleans
 
+  private int runLength;                          // length of run
+  private int runValue;                           // value of run
+
   public InputBuffer(Input in) throws IOException { this(in, 0); }
 
   public InputBuffer(Input in, long position) throws IOException {
@@ -56,6 +59,7 @@ class InputBuffer {
   }
 
   public void seek(long position) throws IOException {
+    runLength = 0;
     if (position >= (offset-limit) && position <= offset) {
       pos = (int)(limit - (offset - position));   // seek in buffer;
       return;
@@ -133,7 +137,18 @@ class InputBuffer {
 
   public int readLength() throws IOException {
     bitCount = 0;
-    return readInt();
+    if (runLength > 0) {
+      runLength--;                                // in run
+      return runValue;
+    }
+
+    int length = readInt();
+    if (length >= 0)                              // not a run
+      return length;
+
+    runLength = (1-length)>>>1;                   // start of run
+    runValue = (length+1) & 1;
+    return runValue;
   }
 
   public int readInt() throws IOException {

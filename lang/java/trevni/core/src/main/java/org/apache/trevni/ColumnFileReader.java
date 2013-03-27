@@ -111,6 +111,7 @@ public class ColumnFileReader implements Closeable {
       throw new IOException("Not a data file.");
     }
     if (!(Arrays.equals(ColumnFileWriter.MAGIC, magic)
+          || !Arrays.equals(ColumnFileWriter.MAGIC_1, magic)
           || !Arrays.equals(ColumnFileWriter.MAGIC_0, magic)))
       throw new IOException("Not a data file.");
   }
