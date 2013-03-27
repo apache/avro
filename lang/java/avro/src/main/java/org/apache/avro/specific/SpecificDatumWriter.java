@@ -54,5 +54,13 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
       out.writeEnum(((Enum)datum).ordinal());
   }
 
+  @Override
+  protected void writeString(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    if (!(datum instanceof CharSequence))         // Stringable
+      datum = datum.toString();                   // call toString()
+    writeString(datum, out);
+  }
+
 }
 

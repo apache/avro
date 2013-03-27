@@ -13,6 +13,12 @@ Trunk (not yet released)
     AVRO-1272. Ruby: Improve schema namespace handling.
     (Martin Kleppmann via cutting)
 
+    AVRO-1268. Java: Extend support for stringables from reflect to
+    specific.  String schemas in generated classes now support the
+    "java-class" and "java-key-class" properties.  The built-in Java
+    types BigDecimal, BigInteger, URI, URL, Date and File can now be
+    fields in generated classes. (Alexandre Normand and cutting)
+
   BUG FIXES
 
 Avro 1.7.4 (22 February 2012)

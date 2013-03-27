@@ -33,8 +33,6 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
 
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
@@ -75,20 +73,6 @@ public class ReflectData extends SpecificData {
   }
   
   private static final ReflectData INSTANCE = new ReflectData();
-
-  /** Read/write some common builtin classes as strings.  Representing these as
-   * strings isn't always best, as they aren't always ordered ideally, but at
-   * least they're stored.  Also note that, for compatibility, only classes
-   * that wouldn't be otherwise correctly readable or writable should be added
-   * here, e.g., those without a no-arg constructor or those whose fields are
-   * all transient. */
-  private Set<Class> stringableClasses = new HashSet<Class>(); {
-    stringableClasses.add(java.math.BigDecimal.class);
-    stringableClasses.add(java.math.BigInteger.class);
-    stringableClasses.add(java.net.URI.class);
-    stringableClasses.add(java.net.URL.class);
-    stringableClasses.add(java.io.File.class);
-  }
 
   public ReflectData() {}
   
@@ -215,8 +199,14 @@ public class ReflectData extends SpecificData {
     throw new AvroRuntimeException("No field named "+name+" in: "+original);
   }
 
+  /** @deprecated  Replaced by {@link SpecificData#CLASS_PROP} */
+  @Deprecated
   static final String CLASS_PROP = "java-class";
+  /** @deprecated  Replaced by {@link SpecificData#KEY_CLASS_PROP} */
+  @Deprecated
   static final String KEY_CLASS_PROP = "java-key-class";
+  /** @deprecated  Replaced by {@link SpecificData#ELEMENT_PROP} */
+  @Deprecated
   static final String ELEMENT_PROP = "java-element-class";
 
   static Class getClassProp(Schema schema, String prop) {
@@ -374,9 +364,8 @@ public class ReflectData extends SpecificData {
     return super.createSchema(type, names);
   }
 
-  private boolean isStringable(Class<?> c) {
-    return c.isAnnotationPresent(Stringable.class) ||
-      stringableClasses.contains(c);
+  @Override protected boolean isStringable(Class<?> c) {
+    return c.isAnnotationPresent(Stringable.class) || super.isStringable(c);
   }
 
   private static final Schema THROWABLE_MESSAGE =
@@ -509,16 +498,6 @@ public class ReflectData extends SpecificData {
       throw new AvroTypeException("Error getting schema for "+type+": "
                                   +e.getMessage(), e);
     }
-  }
-
-  @Override
-  protected String getSchemaName(Object datum) {
-    if (datum != null) {
-      Class c = datum.getClass();
-      if (isStringable(c))
-        return Schema.Type.STRING.getName();
-    }
-    return super.getSchemaName(datum);
   }
 
   @Override

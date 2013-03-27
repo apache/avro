@@ -22,7 +22,10 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.FooBarSpecificRecord.Builder;
@@ -31,6 +34,8 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.junit.Test;
+
+import test.StringablesRecord;
 
 public class TestSpecificDatumReader {
 
@@ -44,10 +49,22 @@ public class TestSpecificDatumReader {
     return byteArrayOutputStream.toByteArray();
   }
 
+  public static byte[] serializeRecord(StringablesRecord stringablesRecord) throws IOException {
+    SpecificDatumWriter<StringablesRecord> datumWriter =
+      new SpecificDatumWriter<StringablesRecord>(StringablesRecord.SCHEMA$);
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
+    datumWriter.write(stringablesRecord, encoder);
+    encoder.flush();
+    return byteArrayOutputStream.toByteArray();
+  }
+
   @Test
   public void testRead() throws IOException {
     Builder newBuilder = FooBarSpecificRecord.newBuilder();
     newBuilder.setId(42);
+    newBuilder.setName("foo");
+    newBuilder.setNicknames(Arrays.asList("bar"));
     newBuilder.setRelatedids(Arrays.asList(1,2,3));
     FooBarSpecificRecord specificRecord = newBuilder.build();
     
@@ -59,7 +76,30 @@ public class TestSpecificDatumReader {
     specificDatumReader.read(deserialized, decoder);
     
     assertEquals(specificRecord, deserialized);
-        
+  }
+
+  @Test
+  public void testStringables() throws IOException {
+    StringablesRecord.Builder newBuilder = StringablesRecord.newBuilder();
+    newBuilder.setValue(new BigDecimal("42.11"));
+    HashMap<String, BigDecimal> mapWithBigDecimalElements = new HashMap<String, BigDecimal>();
+    mapWithBigDecimalElements.put("test", new BigDecimal("11.11"));
+    newBuilder.setMapWithBigDecimalElements(mapWithBigDecimalElements);
+    HashMap<BigInteger, String> mapWithBigIntKeys = new HashMap<BigInteger, String>();
+    mapWithBigIntKeys.put(BigInteger.ONE, "test");
+    newBuilder.setMapWithBigIntKeys(mapWithBigIntKeys);
+    StringablesRecord stringablesRecord = newBuilder.build();
+
+    byte[] recordBytes = serializeRecord(stringablesRecord);
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(recordBytes, null);
+    SpecificDatumReader<StringablesRecord> specificDatumReader =
+      new SpecificDatumReader<StringablesRecord>(StringablesRecord.SCHEMA$);
+    StringablesRecord deserialized = new StringablesRecord();
+    specificDatumReader.read(deserialized, decoder);
+
+    assertEquals(stringablesRecord, deserialized);
+
   }
 
 }

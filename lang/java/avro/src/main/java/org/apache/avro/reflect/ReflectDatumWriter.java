@@ -78,14 +78,6 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   }
 
   @Override
-  protected void writeString(Schema schema, Object datum, Encoder out)
-    throws IOException {
-    if (schema.getProp(ReflectData.CLASS_PROP) != null) // Stringable annotated
-      datum = datum.toString();                         // call toString()
-    writeString(datum, out);
-  }
-
-  @Override
   protected void writeBytes(Object datum, Encoder out) throws IOException {
     if (datum instanceof byte[])
       out.writeBytes((byte[])datum);

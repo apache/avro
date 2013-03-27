@@ -22,17 +22,23 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.TypeEnum;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.util.Utf8;
 
 /**
@@ -70,6 +76,7 @@ public class Perf {
   private static final List<TestDescriptor> RECORD = new ArrayList<TestDescriptor>();
   private static final List<TestDescriptor> GENERIC = new ArrayList<TestDescriptor>();
   private static final List<TestDescriptor> GENERIC_ONETIME = new ArrayList<TestDescriptor>();
+  private static final List<TestDescriptor> SPECIFIC = new ArrayList<TestDescriptor>();
   private static final LinkedHashMap<String, TestDescriptor> ALL_TESTS;
   private static final LinkedHashMap<String, List<TestDescriptor>> BATCHES;
   static {
@@ -95,6 +102,7 @@ public class Perf {
     new TestDescriptor(RecordWithPromotion.class, "-Rp").add(RECORD);
     BATCHES.put("-generic", GENERIC);
     new TestDescriptor(GenericTest.class, "-G").add(GENERIC);
+    new TestDescriptor(GenericStrings.class, "-Gs").add(GENERIC);
     new TestDescriptor(GenericNested.class, "-Gn").add(GENERIC);
     new TestDescriptor(GenericNestedFake.class, "-Gf").add(GENERIC);
     new TestDescriptor(GenericWithDefault.class, "-Gd").add(GENERIC);
@@ -104,6 +112,7 @@ public class Perf {
     new TestDescriptor(GenericOneTimeDecoderUse.class, "-Gotd").add(GENERIC_ONETIME);
     new TestDescriptor(GenericOneTimeReaderUse.class, "-Gotr").add(GENERIC_ONETIME);
     new TestDescriptor(GenericOneTimeUse.class, "-Got").add(GENERIC_ONETIME);
+    new TestDescriptor(FooBarSpecificRecordTest.class, "-Sf").add(SPECIFIC);
   }
   
   private static void usage() {
@@ -665,6 +674,14 @@ public class Perf {
     }
   }
   
+  private static String randomString(Random r) {
+    char[] data = new char[r.nextInt(70)];
+    for (int j = 0; j < data.length; j++) {
+      data[j] = (char)('a' + r.nextInt('z'-'a'));
+    }
+    return new String(data);
+  }
+
   static class StringTest extends BasicTest {
     String[] sourceData = null;
     public StringTest() throws IOException {
@@ -675,13 +692,8 @@ public class Perf {
     void genSourceData() {
       Random r = newRandom();
       sourceData = new String[count];
-      for (int i = 0; i < sourceData.length;) {
-        char[] data = new char[r.nextInt(70)];
-        for (int j = 0; j < data.length; j++) {
-          data[j] = (char)('a' + r.nextInt('z'-'a'));
-        }
-        sourceData[i++] = new String(data); 
-      }
+      for (int i = 0; i < sourceData.length;)
+        sourceData[i++] = randomString(r);
     }
    
     @Override
@@ -1125,6 +1137,31 @@ public class Perf {
     }
   }
   
+  private static final String GENERIC_STRINGS = 
+    "{ \"type\": \"record\", \"name\": \"R\", \"fields\": [\n"
+    + "{ \"name\": \"f1\", \"type\": \"string\" },\n"
+    + "{ \"name\": \"f2\", \"type\": \"string\" },\n"
+    + "{ \"name\": \"f3\", \"type\": \"string\" }\n"
+    + "] }";
+  
+  static class GenericStrings extends GenericTest {
+    public GenericStrings() throws IOException {
+      super("GenericStrings", GENERIC_STRINGS);
+    }
+    @Override
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new GenericRecord[count];
+      for (int i = 0; i < sourceData.length; i++) {
+        GenericRecord rec = new GenericData.Record(schema);
+        rec.put(0, randomString(r));
+        rec.put(1, randomString(r));
+        rec.put(2, randomString(r));
+        sourceData[i] = rec; 
+      }
+    }
+  }
+
   static class GenericNested extends GenericTest {
     public GenericNested() throws IOException {
       super("GenericNested_", NESTED_RECORD_SCHEMA);
@@ -1292,5 +1329,86 @@ public class Perf {
       return newDecoder();
     }
   }
-  
+
+  static abstract class SpecificTest<T extends SpecificRecordBase> extends BasicTest {
+    protected final SpecificDatumReader<T> reader;
+    protected final SpecificDatumWriter<T> writer;
+    private Object[] sourceData;
+
+    protected SpecificTest(String name, String writerSchema) throws IOException {
+      super(name, writerSchema, 12);
+      reader = newReader();
+      writer = newWriter();
+    }
+    protected SpecificDatumReader<T> getReader() {
+      return reader;
+    }
+    protected SpecificDatumWriter<T> getWriter() {
+      return writer;
+    }
+    protected SpecificDatumReader<T> newReader() {
+      return new SpecificDatumReader<T>(schema);
+    }
+    protected SpecificDatumWriter<T> newWriter() {
+      return new SpecificDatumWriter<T>(schema);
+    }
+    @Override
+    void genSourceData() {
+      Random r = newRandom();
+      sourceData = new Object[count];
+      for (int i = 0; i < sourceData.length; i++) {
+        sourceData[i] = genSingleRecord(r);
+      }
+    }
+
+    protected abstract T genSingleRecord(Random r);
+
+    @Override
+    void readInternal(Decoder d) throws IOException {
+      for (int i = 0; i < count; i++) {
+        getReader().read(null, d);
+      }
+    }
+    @Override
+    void writeInternal(Encoder e) throws IOException {
+      for (int i = 0; i < sourceData.length; i++) {
+        @SuppressWarnings("unchecked")
+        T rec = (T) sourceData[i];
+        getWriter().write(rec, e);
+      }
+    }
+    @Override
+    void reset() {
+      sourceData = null;
+      data = null;
+    }
+  }
+
+  static class FooBarSpecificRecordTest extends SpecificTest<FooBarSpecificRecord> {
+    public FooBarSpecificRecordTest() throws IOException {
+      super("FooBarSpecificRecordTest", FooBarSpecificRecord.SCHEMA$.toString());
+    }
+
+    @Override
+    protected FooBarSpecificRecord genSingleRecord(Random r) {
+      TypeEnum[] typeEnums = TypeEnum.values();
+      List<Integer> relatedIds = new ArrayList<Integer>(10);
+      for (int i = 0; i < 10; i++) {
+        relatedIds.add(r.nextInt());
+      }
+
+      try {
+        return FooBarSpecificRecord.newBuilder().
+          setId(r.nextInt()).
+          setName(randomString(r)).
+          setNicknames(Arrays.asList(randomString(r), randomString(r))).
+          setTypeEnum(typeEnums[r.nextInt(typeEnums.length)]).
+          setRelatedids(relatedIds).
+          build();
+      }
+      catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
 }

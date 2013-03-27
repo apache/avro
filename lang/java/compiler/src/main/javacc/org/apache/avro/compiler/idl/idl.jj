@@ -1404,8 +1404,11 @@ void FormalParameter(List<Field> fields):
 Schema Type():
 {
   Schema s;
+  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
+
+    ( SchemaProperty(props) )*
   (
       LOOKAHEAD(2) s = ReferenceType()
     | s = PrimitiveType()
@@ -1414,6 +1417,8 @@ Schema Type():
     | s = MapType()
   )
   {
+    for (String key : props.keySet())
+      s.addProp(key, props.get(key));
     return s;
   }
 }

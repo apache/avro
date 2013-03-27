@@ -19,38 +19,19 @@
 package org.apache.avro.reflect;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.TestSpecificDatumReader;
 import org.junit.Test;
 
 public class TestReflectDatumReader {
-
-  @Test
-  public void testRead_SpecificDataRecord() throws IOException {
-    FooBarSpecificRecord specificRecord = FooBarSpecificRecord.newBuilder().setId(42)
-        .setRelatedids(Arrays.asList(1, 2, 3)).build();
-    byte[] specificRecordBytes = TestSpecificDatumReader.serializeRecord(specificRecord);
-
-    Decoder decoder = DecoderFactory.get().binaryDecoder(specificRecordBytes, null);
-    ReflectDatumReader<FooBarSpecificRecord> reflectDatumReader = new ReflectDatumReader<FooBarSpecificRecord>(
-        FooBarSpecificRecord.class);
-
-    FooBarSpecificRecord deserialized = new FooBarSpecificRecord();
-    reflectDatumReader.read(deserialized, decoder);
-
-    assertEquals(specificRecord, deserialized);
-  }
 
   private static <T> byte[] serializeWithReflectDatumWriter(T toSerialize, Class<T> toSerializeClass)
       throws IOException {

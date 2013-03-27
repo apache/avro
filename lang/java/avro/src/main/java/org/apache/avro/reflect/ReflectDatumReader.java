@@ -21,10 +21,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.io.Decoder;
@@ -104,38 +102,6 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     } else {
       Array.set(array, (int)pos, e);
     }
-  }
-
-  @Override
-  protected Object readMapKey(Object old, Schema s, Decoder in)
-    throws IOException {
-    Class c = ReflectData.getClassProp(s, ReflectData.KEY_CLASS_PROP);
-    return readString(in, c);
-  }
-
-  @Override
-  @SuppressWarnings(value="unchecked")
-  protected Object readString(Object old, Schema s,
-                              Decoder in) throws IOException {
-    Class c = ReflectData.getClassProp(s, ReflectData.CLASS_PROP);
-    return readString(in, c);
-  }
-
-  private Object readString(Decoder in, Class c) throws IOException {
-    String value = (String)readString(null, in);
-    if (c != null)                                // Stringable annotated class
-      try {                                       // use String-arg ctor
-        return c.getConstructor(String.class).newInstance(value);
-      } catch (NoSuchMethodException e) {
-        throw new AvroRuntimeException(e);
-      } catch (InstantiationException e) {
-        throw new AvroRuntimeException(e);
-      } catch (IllegalAccessException e) {
-        throw new AvroRuntimeException(e);
-      } catch (InvocationTargetException e) {
-        throw new AvroRuntimeException(e);
-      }
-    return value;
   }
 
   @Override

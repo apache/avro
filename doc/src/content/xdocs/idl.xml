@@ -352,6 +352,17 @@ record MyRecord {
   @java-class("java.util.ArrayList") array&lt;string&gt; myStrings;
 }
         </source>
+
+        <p>This can be used to support java classes that can be
+          serialized/deserialized via their toString/String constructor, e.g.:</p>
+        <source>
+record MyRecord {
+  @java-class("java.math.BigDecimal") string value;
+  @java-key-class("java.io.File") map&lt;string&gt; fileStates;
+  array&lt;@java-class("java.math.BigDecimal") string&gt; weights;
+}
+        </source>
+
         <p>Similarly, a <code>@namespace</code> annotation may be used to modify the namespace
         when defining a named schema. For example:
         </p>

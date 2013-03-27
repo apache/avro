@@ -17,10 +17,17 @@
  */
 package org.apache.avro.specific;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 
+import org.apache.avro.FooBarSpecificRecord;
+import org.apache.avro.TypeEnum;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -94,5 +101,23 @@ public class TestSpecificData {
     Assert.assertEquals(Kind.getClassSchema(), Kind.SCHEMA$);
   }
 
+  @Test
+  public void testSpecificRecordToString() throws IOException {
+    FooBarSpecificRecord foo = FooBarSpecificRecord.newBuilder()
+      .setId(123)
+      .setName("foo")
+      .setNicknames(Arrays.asList("bar"))
+      .setRelatedids(Arrays.asList(1, 2, 3))
+      .setTypeEnum(TypeEnum.c)
+      .build();
+
+    String json = foo.toString();
+    JsonFactory factory = new JsonFactory();
+    JsonParser parser = factory.createJsonParser(json);
+    ObjectMapper mapper = new ObjectMapper();
+
+    // will throw exception if string is not parsable json
+    mapper.readTree(parser);
+  }
 
 }

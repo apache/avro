@@ -53,6 +53,17 @@ classes.
   property set to "java.lang.Short", e.g.:
   <pre>{"type": "int", "java-class": "java.lang.Short"}</pre>
 
+<li><b>{@link java.math.BigDecimal}, {@link java.math.BigInteger},
+  {@link java.net.URI}, {@link java.net.URL}, {@link java.io.File}</b>
+  are mapped to an Avro string schema as
+  {@link org.apache.avro.reflect.Stringable Stringable} types and
+  serialized via their {@link java.lang.Object#toString() toString}
+  method and de-serialized via their {@link java.lang.String} constructor.
+  This is done via the "java-class", "java-key-class" or
+  "java-element-class" depending on whether it is a field, or map key
+  or a list/map element, e.g.:
+  <pre>{"type": "string", "java-class": "java.math.BigDecimal"}</pre></li>
+
 <li>All other types are mapped as in the {@link org.apache.avro.generic
   generic} API.</li>
 

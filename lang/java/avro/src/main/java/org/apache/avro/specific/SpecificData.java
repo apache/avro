@@ -17,9 +17,11 @@
  */
 package org.apache.avro.specific;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
@@ -46,6 +48,25 @@ public class SpecificData extends GenericData {
   private static final Class<?>[] SCHEMA_ARG = new Class[]{Schema.class};
   private static final Map<Class,Constructor> CTOR_CACHE =
     new ConcurrentHashMap<Class,Constructor>();
+
+  public static final String CLASS_PROP = "java-class";
+  public static final String KEY_CLASS_PROP = "java-key-class";
+  public static final String ELEMENT_PROP = "java-element-class";
+
+  /** Read/write some common builtin classes as strings.  Representing these as
+   * strings isn't always best, as they aren't always ordered ideally, but at
+   * least they're stored.  Also note that, for compatibility, only classes
+   * that wouldn't be otherwise correctly readable or writable should be added
+   * here, e.g., those without a no-arg constructor or those whose fields are
+   * all transient. */
+  protected Set<Class> stringableClasses = new HashSet<Class>();
+  {
+    stringableClasses.add(java.math.BigDecimal.class);
+    stringableClasses.add(java.math.BigInteger.class);
+    stringableClasses.add(java.net.URI.class);
+    stringableClasses.add(java.net.URL.class);
+    stringableClasses.add(java.io.File.class);
+  }
 
   /** For subclasses.  Applications normally use {@link SpecificData#get()}. */
   protected SpecificData() { this(SpecificData.class.getClassLoader()); }
@@ -218,6 +239,21 @@ public class SpecificData extends GenericData {
       return schema;
     }
     throw new AvroTypeException("Unknown type: "+type);
+  }
+
+  @Override
+  protected String getSchemaName(Object datum) {
+    if (datum != null) {
+      Class c = datum.getClass();
+      if (isStringable(c))
+        return Schema.Type.STRING.getName();
+    }
+    return super.getSchemaName(datum);
+  }
+
+  /** True iff a class should be serialized with toString(). */ 
+  protected boolean isStringable(Class<?> c) {
+    return stringableClasses.contains(c);
   }
 
   /** Return the protocol for a Java interface. */

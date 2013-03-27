@@ -19,9 +19,12 @@ package org.apache.avro.generic;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Collection;
 import java.nio.ByteBuffer;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -335,10 +338,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * #readString(Object,Decoder)}.*/
   protected Object readString(Object old, Schema expected,
                               Decoder in) throws IOException {
-    if (data.STRING_TYPE_STRING.equals(expected.getProp(data.STRING_PROP)))
+    Class stringClass = getStringClass(expected);
+    if (stringClass == String.class)
       return in.readString();
-    else
+    if (stringClass == CharSequence.class)
       return readString(old, in);
+    return newInstanceFromString(stringClass, in.readString());
   }                  
 
   /** Called to read strings.  Subclasses may override to use a different
@@ -352,6 +357,58 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * to use a different string representation.  By default, this calls {@link
    * Utf8#Utf8(String)}.*/
   protected Object createString(String value) { return new Utf8(value); }
+
+  /** Determines the class to used to represent a string Schema.  By default
+   * uses {@link #STRING_PROP} to determine whether {@link Utf8} or {@link
+   * String} is used.  Subclasses may override for alternate representations.
+   */
+  protected Class findStringClass(Schema schema) {
+    String name = schema.getProp(GenericData.STRING_PROP);
+    if (name == null) return CharSequence.class;
+
+    switch (GenericData.StringType.valueOf(name)) {
+      case String:
+        return String.class;
+      default:
+        return CharSequence.class;
+    }
+  }
+
+  private Map<Schema,Class> stringClassCache =
+    new IdentityHashMap<Schema,Class>();
+
+  private Class getStringClass(Schema s) {
+    Class c = stringClassCache.get(s);
+    if (c == null) {
+      c = findStringClass(s);
+      stringClassCache.put(s, c);
+    }
+    return c;
+  }
+
+  private final Map<Class,Constructor> stringCtorCache =
+    new HashMap<Class,Constructor>();
+
+  @SuppressWarnings("unchecked")
+  private Object newInstanceFromString(Class c, String s) {
+    try {
+      Constructor ctor = stringCtorCache.get(c);
+      if (ctor == null) {
+        ctor = c.getDeclaredConstructor(String.class);
+        ctor.setAccessible(true);
+        stringCtorCache.put(c, ctor);
+      }
+      return ctor.newInstance(s);
+    } catch (NoSuchMethodException e) {
+      throw new AvroRuntimeException(e);
+    } catch (InstantiationException e) {
+      throw new AvroRuntimeException(e);
+    } catch (IllegalAccessException e) {
+      throw new AvroRuntimeException(e);
+    } catch (InvocationTargetException e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
 
   /** Called to read byte arrays.  Subclasses may override to use a different
    * byte array representation.  By default, this calls {@link

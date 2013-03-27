@@ -18,6 +18,7 @@
 package org.apache.avro.specific;
 
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Java classes. */
@@ -77,6 +78,31 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     Class c = getSpecificData().getClass(schema);
     if (c == null) return super.createEnum(symbol, schema); // punt to generic
     return Enum.valueOf(c, symbol);
+  }
+
+  @Override protected Class findStringClass(Schema schema) {
+    Class stringClass = null;
+    switch (schema.getType()) {
+    case STRING:
+      stringClass = getPropAsClass(schema, SpecificData.CLASS_PROP);
+      break;
+    case MAP: 
+      stringClass = getPropAsClass(schema, SpecificData.KEY_CLASS_PROP);
+      break;
+    }
+    if (stringClass != null)
+      return stringClass;
+    return super.findStringClass(schema);
+  }
+
+  private Class getPropAsClass(Schema schema, String prop) {
+    String name = schema.getProp(prop);
+    if (name == null) return null;
+    try {
+      return Class.forName(name);
+    } catch (ClassNotFoundException e) {
+      throw new AvroRuntimeException(e);
+    }
   }
 
 }

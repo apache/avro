@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.specific.SpecificData;
 import org.codehaus.jackson.JsonNode;
 
 import org.apache.avro.Protocol;
@@ -474,7 +475,9 @@ public class SpecificCompiler {
     return result;
   }
 
-  private String getStringType() {
+  private String getStringType(JsonNode overrideClassProperty) {
+    if (overrideClassProperty != null)
+      return overrideClassProperty.getTextValue();
     switch (stringType) {
     case String:        return "java.lang.String";
     case Utf8:          return "org.apache.avro.util.Utf8";
@@ -495,14 +498,16 @@ public class SpecificCompiler {
     case ARRAY:
       return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
-      return "java.util.Map<"+getStringType()+","
-          + javaType(schema.getValueType()) + ">";
+      return "java.util.Map<"
+        + getStringType(schema.getJsonProp(SpecificData.KEY_CLASS_PROP))+","
+        + javaType(schema.getValueType()) + ">";
     case UNION:
       List<Schema> types = schema.getTypes(); // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
         return javaType(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "java.lang.Object";
-    case STRING:  return getStringType();
+    case STRING:
+      return getStringType(schema.getJsonProp(SpecificData.CLASS_PROP));
     case BYTES:   return "java.nio.ByteBuffer";
     case INT:     return "java.lang.Integer";
     case LONG:    return "java.lang.Long";
