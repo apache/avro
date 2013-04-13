@@ -24,6 +24,9 @@ Trunk (not yet released)
 
   BUG FIXES
 
+    AVRO-1266. Java: Fix mapred.AvroMultipleOutputs to support multiple
+    different schemas.  (Ashish Nagavaram via martinkl)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES

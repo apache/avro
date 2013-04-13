@@ -113,9 +113,11 @@ import org.apache.hadoop.io.NullWritable;
  * AvroCollector&lt;OUT&gt;, Reporter reporter)
  * throws IOException {
  * ...
- * amos.getCollector("avro1", reporter).collect(datum);
+ * amos.collect("avro1", reporter,datum);
  * amos.getCollector("avro2", "A", reporter).collect(datum);
- * amos.getCollector("avro3", "B", reporter).collect(datum);
+ * amos.collect("avro1",reporter,schema,datum,"testavrofile");// this create a file testavrofile and writes data with schema "schema" into it
+ *                                                            and uses other values from namedoutput "avro1" like outputclass etc.
+ * amos.collect("avro1",reporter,schema,datum,"testavrofile1");
  * ...
  * }
  *
@@ -140,7 +142,6 @@ public class AvroMultipleOutputs {
   private static final String COUNTERS_ENABLED = "mo.counters";
  
  
-  private static Map<String,Schema> schemaList = new HashMap<String,Schema>();
   /**
    * Counters group used by the counters of MultipleOutputs.
    */
@@ -310,7 +311,8 @@ public class AvroMultipleOutputs {
     checkNamedOutputName(namedOutput);
     checkNamedOutput(conf, namedOutput, true);
     boolean isMapOnly = conf.getNumReduceTasks() == 0;
-    schemaList.put(namedOutput+"_SCHEMA", schema);
+    if(schema!=null)
+      conf.set(MO_PREFIX+namedOutput+".schema", schema.toString());
     conf.set(NAMED_OUTPUTS, conf.get(NAMED_OUTPUTS, "") + " " + namedOutput);
     conf.setClass(MO_PREFIX + namedOutput + FORMAT, outputFormatClass,
       OutputFormat.class);
@@ -393,7 +395,7 @@ public class AvroMultipleOutputs {
   // MultithreaderMapRunner.
   private synchronized RecordWriter getRecordWriter(String namedOutput,
                                                     String baseFileName,
-                                                    final Reporter reporter)
+                                                    final Reporter reporter,Schema schema)
     throws IOException {
     RecordWriter writer = recordWriters.get(baseFileName);
     if (writer == null) {
@@ -401,6 +403,8 @@ public class AvroMultipleOutputs {
         throw new IllegalArgumentException(
           "Counters are enabled, Reporter cannot be NULL");
       }
+      if(schema!=null)
+        conf.set(MO_PREFIX+namedOutput+".schema",schema.toString());
       JobConf jobConf = new JobConf(conf);
       jobConf.set(InternalFileOutputFormat.CONFIG_NAMED_OUTPUT, namedOutput);
       FileSystem fs = FileSystem.get(conf);
@@ -440,7 +444,52 @@ public class AvroMultipleOutputs {
       writer.close(reporter);
     }
   }
-
+  
+  /**
+   * Output Collector for the default schema.
+   * <p/>
+   *
+   * @param namedOutput the named output name
+   * @param reporter    the reporter
+   * @param datum       output data
+   * @return void
+   * @throws IOException thrown if output collector could not be created
+   */
+  public void collect(String namedOutput, Reporter reporter,Object datum) throws IOException{
+    getCollector(namedOutput,reporter).collect(datum);
+  }
+  
+  /**
+   * OutputCollector with custom schema.
+   * <p/>
+   *
+   * @param namedOutput the named output name (this will the output file name)
+   * @param reporter    the reporter
+   * @param datum       output data
+   * @param schema      schema to use for this output
+   * @return void
+   * @throws IOException thrown if output collector could not be created
+  */
+  public void collect(String namedOutput, Reporter reporter, Schema schema,Object datum) throws IOException{
+    getCollector(namedOutput,reporter,schema).collect(datum);
+  }
+  
+  /**
+   * OutputCollector with custom schema and file name.
+   * <p/>
+   *
+   * @param namedOutput the named output name
+   * @param reporter    the reporter
+   * @param baseOutputPath outputfile name to use.
+   * @param datum       output data
+   * @param schema      schema to use for this output
+   * @return void
+   * @throws IOException thrown if output collector could not be created
+  */
+  public void collect(String namedOutput,Reporter reporter,Schema schema,Object datum,String baseOutputPath) throws IOException{
+    getCollector(namedOutput,null,reporter,baseOutputPath,schema).collect(datum);
+  }
+  
   /**
    * Gets the output collector for a named output.
    * <p/>
@@ -449,13 +498,43 @@ public class AvroMultipleOutputs {
    * @param reporter    the reporter
    * @return the output collector for the given named output
    * @throws IOException thrown if output collector could not be created
+   * @deprecated Use {@link collect} method for collecting output
    */
-  @SuppressWarnings({"unchecked"})
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public AvroCollector getCollector(String namedOutput, Reporter reporter)
     throws IOException {
-    return getCollector(namedOutput, null, reporter);
+    return getCollector(namedOutput, null, reporter,namedOutput,null);
   }
 
+  @SuppressWarnings("rawtypes")
+  private AvroCollector getCollector(String namedOutput, Reporter reporter, Schema schema)
+      throws IOException{
+    return getCollector(namedOutput,null,reporter,namedOutput,schema);
+  }
+  
+  /**
+   * Gets the output collector for a named output.
+   * <p/>
+   *
+   * @param namedOutput the named output name
+   * @param reporter    the reporter
+   * @param multiName   the multiname 
+   * @return the output collector for the given named output
+   * @throws IOException thrown if output collector could not be created
+   */
+  @SuppressWarnings("rawtypes")
+  public AvroCollector getCollector(String namedOutput,String multiName, Reporter reporter)
+      throws IOException{
+    return getCollector(namedOutput,multiName,reporter,namedOutput,null);
+  }
+
+  @SuppressWarnings("rawtypes")
+  private AvroCollector getCollector(String namedOutput,Schema schema, Reporter reporter, String baseFileName)
+      throws IOException{
+    //namedOutputs.add(baseFileName);
+    return getCollector(namedOutput,null,reporter,baseFileName,schema);
+  }  
+  
   /**
    * Gets the output collector for a multi named output.
    * <p/>
@@ -467,8 +546,8 @@ public class AvroMultipleOutputs {
    * @throws IOException thrown if output collector could not be created
    */
   @SuppressWarnings({"unchecked"})
-  public AvroCollector getCollector(String namedOutput, String multiName,
-                                      Reporter reporter)
+  private AvroCollector getCollector(String namedOutput, String multiName,
+                                      Reporter reporter,String baseOutputFileName, Schema schema)
     throws IOException {
 
     checkNamedOutputName(namedOutput);
@@ -486,10 +565,10 @@ public class AvroMultipleOutputs {
       checkTokenName(multiName);
     }
 
-    String baseFileName = (multi) ? namedOutput + "_" + multiName : namedOutput;
+    String baseFileName = (multi) ? namedOutput + "_" + multiName : baseOutputFileName;
 
     final RecordWriter writer =
-      getRecordWriter(namedOutput, baseFileName, reporter);
+      getRecordWriter(namedOutput, baseFileName, reporter,schema);
 
     return new AvroCollector() {
    
@@ -525,11 +604,14 @@ public class AvroMultipleOutputs {
   private static class InternalFileOutputFormat extends FileOutputFormat<Object, Object> {
    public static final String CONFIG_NAMED_OUTPUT = "mo.config.namedOutput";
 
-   @SuppressWarnings({"unchecked"})
+   @SuppressWarnings({"unchecked", "deprecation"})
    public RecordWriter<Object, Object> getRecordWriter(FileSystem fs,JobConf job, String baseFileName, Progressable arg3) throws IOException {
    String nameOutput = job.get(CONFIG_NAMED_OUTPUT, null);
    String fileName = getUniqueName(job, baseFileName);
-   Schema schema = schemaList.get(nameOutput+"_SCHEMA");
+   Schema schema = null;
+   String schemastr = job.get(MO_PREFIX+nameOutput+".schema",null);
+   if (schemastr!=null)
+      schema = Schema.parse(schemastr);
    JobConf outputConf = new JobConf(job);
    outputConf.setOutputFormat(getNamedOutputFormatClass(job, nameOutput));
    boolean isMapOnly = job.getNumReduceTasks() == 0;

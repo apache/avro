@@ -90,7 +90,9 @@ public class TestAvroMultipleOutputs {
         sum += count;
       Pair<Utf8,Long> outputvalue= new Pair<Utf8,Long>(word,sum);
       amos.getCollector("myavro",reporter).collect(outputvalue);
-      amos.getCollector("myavro1",reporter).collect(outputvalue.toString());
+      amos.collect("myavro1",reporter,outputvalue.toString());
+      amos.collect("myavro",reporter,new Pair<Utf8,Long>(new Utf8(""), 0L).getSchema(),outputvalue,"testavrofile");
+      amos.collect("myavro",reporter,Schema.create(Schema.Type.STRING),outputvalue.toString(),"testavrofile1");
       collector.collect(new Pair<Utf8,Long>(word, sum));
     }
     public void close() throws IOException
@@ -102,6 +104,8 @@ public class TestAvroMultipleOutputs {
   @Test public void runTestsInOrder() throws Exception {
     testJob();
     testProjection();
+    testProjection_newmethods();
+    testProjection_newmethods_1();
     testProjection1();
     testJob_noreducer();
     testProjection_noreducer();
@@ -186,7 +190,57 @@ public class TestAvroMultipleOutputs {
     }
     
     Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+
   }
+  
+  @SuppressWarnings("deprecation")
+  public void testProjection_newmethods() throws Exception {
+    JobConf job = new JobConf();
+    
+    Integer defaultRank = new Integer(-1);
+    
+    String jsonSchema = 
+      "{\"type\":\"record\"," +
+      "\"name\":\"org.apache.avro.mapred.Pair\","+
+      "\"fields\": [ " + 
+        "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," +
+        "{\"name\":\"value\", \"type\":\"long\"}" + 
+      "]}";
+    
+    Schema readerSchema = Schema.parse(jsonSchema);
+    
+    AvroJob.setInputSchema(job, readerSchema);
+    
+    String dir = System.getProperty("test.dir", ".") + "/mapred";
+    Path inputPath = new Path(dir + "/out" + "/testavrofile-r-00000.avro");
+    FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
+    FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
+
+    
+    AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<Pair<Integer, Long>>(job, fileSplit);
+    
+    AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<Pair<Integer, Long>>(null);
+    NullWritable ignore = NullWritable.get();
+    
+    long sumOfCounts = 0;
+    long numOfCounts = 0;
+    while(recordReader.next(inputPair, ignore)) {
+      Assert.assertEquals((Integer)inputPair.datum().get(0), defaultRank);
+      sumOfCounts += (Long) inputPair.datum().get(1);
+      numOfCounts++;
+    }
+    
+    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    
+    long actualSumOfCounts = 0;
+    for(Long count : WordCountUtil.COUNTS.values()) {
+      actualSumOfCounts += count;
+    }
+    
+    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+
+  }
+  
 
   @SuppressWarnings("deprecation")
   // Test for a differnt schema output
@@ -197,6 +251,34 @@ public class TestAvroMultipleOutputs {
 
     String dir = System.getProperty("test.dir", ".") + "/mapred";
     Path inputPath = new Path(dir + "/out" + "/myavro1-r-00000.avro");
+    FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
+    FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
+    AvroWrapper<Utf8> inputPair = new AvroWrapper<Utf8>(null);
+    NullWritable ignore = NullWritable.get();
+    AvroRecordReader<Utf8> recordReader = new AvroRecordReader<Utf8>(job, fileSplit);
+    long sumOfCounts = 0;
+    long numOfCounts = 0;
+    while(recordReader.next(inputPair, ignore)) {
+        sumOfCounts += Long.parseLong(inputPair.datum().toString().split(":")[2].replace("}","").trim());
+        numOfCounts++;
+    }
+    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    long actualSumOfCounts = 0;
+    for(Long count : WordCountUtil.COUNTS.values()) {
+     actualSumOfCounts += count;
+    }
+    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+  }
+  
+  @SuppressWarnings("deprecation")
+  // Test for a differnt schema output
+  public void testProjection_newmethods_1() throws Exception {
+    JobConf job = new JobConf();
+    Schema readerSchema = Schema.create(Schema.Type.STRING);
+    AvroJob.setInputSchema(job, readerSchema);
+
+    String dir = System.getProperty("test.dir", ".") + "/mapred";
+    Path inputPath = new Path(dir + "/out" + "/testavrofile1-r-00000.avro");
     FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
     FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
     AvroWrapper<Utf8> inputPair = new AvroWrapper<Utf8>(null);
