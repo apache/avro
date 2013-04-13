@@ -25,6 +25,9 @@ Trunk (not yet released)
     AVRO-1287. Add data file with deflate codec to the interoperability
     test suite. (martinkl)
 
+    AVRO-1288. Ruby: Add support for deflate codec in data files.
+    (martinkl)
+
   BUG FIXES
 
     AVRO-1266. Java: Fix mapred.AvroMultipleOutputs to support multiple

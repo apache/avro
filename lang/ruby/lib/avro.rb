@@ -19,6 +19,7 @@ require 'set'
 require 'digest/md5'
 require 'net/http'
 require 'stringio'
+require 'zlib'
 
 module Avro
   VERSION = "FIXME"

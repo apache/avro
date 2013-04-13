@@ -45,6 +45,10 @@ task :generate_interop do
   ensure
     writer.close
   end
+
+  Avro::DataFile.open(BUILD + '/interop/data/ruby_deflate.avro', 'w', schema.to_s, :deflate) do |writer|
+    20.times { writer << r.next }
+  end
 end
 
 
