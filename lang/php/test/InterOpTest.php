@@ -37,8 +37,13 @@ class InterOpTest extends PHPUnit_Framework_TestCase
     $data_files = array();
     if (!($dh = opendir($data_dir)))
       die("Could not open data dir '$data_dir'\n");
+
+    /* TODO This currently only tries to read files of the form 'language.avro',
+     * but not 'language_deflate.avro' as the PHP implementation is not yet
+     * able to read deflate data files. When deflate support is added, change
+     * this to match *.avro. */
     while ($file = readdir($dh))
-      if (0 < preg_match('/.*\.avro$/', $file))
+      if (0 < preg_match('/^[a-z]+\.avro$/', $file))
         $data_files []= join(DIRECTORY_SEPARATOR, array($data_dir, $file));
     closedir($dh);
 

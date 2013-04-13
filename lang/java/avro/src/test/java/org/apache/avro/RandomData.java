@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
@@ -123,14 +124,15 @@ public class RandomData implements Iterable<Object> {
   }
 
   public static void main(String[] args) throws Exception {
-    if(args.length != 3) {
-      System.out.println("Usage: RandomData <schemafile> <outputfile> <count>");
+    if(args.length < 3 || args.length > 4) {
+      System.out.println("Usage: RandomData <schemafile> <outputfile> <count> [codec]");
       System.exit(-1);
     }
     Schema sch = Schema.parse(new File(args[0]));
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(new GenericDatumWriter<Object>())
-      .create(sch, new File(args[1]));
+      new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+    writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
+    writer.create(sch, new File(args[1]));
     try {
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {
         writer.append(datum);

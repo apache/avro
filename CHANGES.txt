@@ -22,6 +22,9 @@ Trunk (not yet released)
     AVRO-1259. Java: Improve Trevni's encoding of sparse columns.
     (cutting)
 
+    AVRO-1287. Add data file with deflate codec to the interoperability
+    test suite. (martinkl)
+
   BUG FIXES
 
     AVRO-1266. Java: Fix mapred.AvroMultipleOutputs to support multiple

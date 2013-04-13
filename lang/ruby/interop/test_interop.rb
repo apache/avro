@@ -23,7 +23,10 @@ class TestInterop < Test::Unit::TestCase
   HERE = File.expand_path(File.dirname(__FILE__))
   SHARE = HERE + '/../../../share'
   SCHEMAS = SHARE + '/test/schemas'
-  Dir[HERE + '/../../../build/interop/data/*'].each do |fn|  
+
+  # TODO this currently ignores data files with deflate codec.
+  # Remove this restriction when deflate support is added.
+  Dir[HERE + '/../../../build/interop/data/*'].reject{|fn| fn =~ /_deflate/ }.each do |fn|  
     define_method("test_read_#{File.basename(fn, 'avro')}") do
       projection = Avro::Schema.parse(File.read(SCHEMAS+'/interop.avsc'))
 

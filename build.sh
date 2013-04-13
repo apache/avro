@@ -51,7 +51,7 @@ case "$target" in
 
 	# create interop test data
         mkdir -p build/interop/data
-	(cd lang/java/avro; mvn exec:java -P interop-data-generate)
+	(cd lang/java/avro; mvn -P interop-data-generate generate-resources)
 	(cd lang/py; ant interop-data-generate)
 	(cd lang/c; ./build.sh interop-data-generate)
 	#(cd lang/c++; make interop-data-generate)

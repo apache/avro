@@ -78,25 +78,49 @@
   <profiles>
     <profile>
       <id>interop-data-generate</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
       <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <groupId>org.codehaus.mojo</groupId>
-              <artifactId>exec-maven-plugin</artifactId>
-              <!-- default configuration is to generate random data for interop tests -->
-              <configuration>
-                <mainClass>org.apache.avro.RandomData</mainClass>
-                <classpathScope>test</classpathScope>
-                <arguments>
-                  <argument>../../../share/test/schemas/interop.avsc</argument>
-                  <argument>../../../build/interop/data/java.avro</argument>
-                  <argument>100</argument>
-                </arguments>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <!-- Generate random data for interop tests, using null codec -->
+              <execution>
+                <id>interop-generate-null-codec</id>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <mainClass>org.apache.avro.RandomData</mainClass>
+                  <classpathScope>test</classpathScope>
+                  <arguments>
+                    <argument>../../../share/test/schemas/interop.avsc</argument>
+                    <argument>../../../build/interop/data/java.avro</argument>
+                    <argument>100</argument>
+                  </arguments>
+                </configuration>
+                <goals><goal>java</goal></goals>
+              </execution>
+              <!-- Generate random data for interop tests, using deflate codec -->
+              <execution>
+                <id>interop-generate-deflate-codec</id>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <mainClass>org.apache.avro.RandomData</mainClass>
+                  <classpathScope>test</classpathScope>
+                  <arguments>
+                    <argument>../../../share/test/schemas/interop.avsc</argument>
+                    <argument>../../../build/interop/data/java_deflate.avro</argument>
+                    <argument>100</argument>
+                    <argument>deflate</argument>
+                  </arguments>
+                </configuration>
+                <goals><goal>java</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
       </build>
     </profile>
   </profiles>
