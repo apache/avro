@@ -426,6 +426,8 @@ public abstract class Schema extends JsonProperties {
         return;
       }
       int lastDot = name.lastIndexOf('.');
+      if ("".equals(space))
+        space = null;
       if (lastDot < 0) {                          // unqualified name
         this.space = space;                       // use default space
         this.name = validateName(name);
@@ -452,6 +454,8 @@ public abstract class Schema extends JsonProperties {
           gen.writeStringField("namespace", space);
         if (names.space() == null)                // default namespace
           names.space(space);
+      } else if (names.space() != null) {         // null within non-null
+        gen.writeStringField("namespace", "");
       }
     }
     public String getQualified(String defaultSpace) {

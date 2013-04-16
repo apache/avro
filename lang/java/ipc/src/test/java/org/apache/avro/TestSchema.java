@@ -472,6 +472,15 @@ public class TestSchema {
   }
 
   @Test
+  public void testNestedNullNamespace() throws Exception {
+    Schema inner =
+      Schema.parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
+    Schema outer = Schema.createRecord("Outer", null, "space", false);
+    outer.setFields(Arrays.asList(new Field("f", inner, null, null)));
+    assertEquals(outer, Schema.parse(outer.toString()));
+  }
+
+  @Test
   public void testNullPointer() throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
       +"[{\"name\":\"x\", \"type\":\"string\"}]}";

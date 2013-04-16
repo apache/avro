@@ -33,6 +33,9 @@ Trunk (not yet released)
     AVRO-1266. Java: Fix mapred.AvroMultipleOutputs to support multiple
     different schemas.  (Ashish Nagavaram via martinkl)
 
+    AVRO-1295. Java: Fix printing of a non-null namespace within a
+    null namespace. (cutting)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES
