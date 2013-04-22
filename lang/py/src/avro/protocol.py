@@ -123,7 +123,7 @@ class Protocol(object):
   def to_json(self):
     to_dump = {}
     to_dump['protocol'] = self.name
-    names = schema.Names()
+    names = schema.Names(default_namespace=self.namespace)
     if self.namespace: 
       to_dump['namespace'] = self.namespace
     if self.types:

@@ -234,7 +234,24 @@ class Names(object):
       if not self.names.has_key(test):
           return None
       return self.names[test]
-      
+  
+  def prune_namespace(self, properties):
+    """given a properties, return properties with namespace removed if
+    it matches the own default namespace"""
+    if self.default_namespace is None:
+      # I have no default -- no change
+      return properties
+    if 'namespace' not in properties:
+      # he has no namespace - no change
+      return properties
+    if properties['namespace'] != self.default_namespace:
+      # we're different - leave his stuff alone
+      return properties
+    # we each have a namespace and it's redundant. delete his.
+    prunable = properties.copy()
+    del(prunable['namespace'])
+    return prunable
+
   def add_name(self, name_attr, space_attr, new_schema):
     """
     Add a new schema object to the name set.
@@ -414,7 +431,7 @@ class FixedSchema(NamedSchema):
       return self.name_ref(names)
     else:
       names.names[self.fullname] = self
-      return self.props
+      return names.prune_namespace(self.props)
 
   def __eq__(self, that):
     return self.props == that.props
@@ -450,7 +467,7 @@ class EnumSchema(NamedSchema):
       return self.name_ref(names)
     else:
       names.names[self.fullname] = self
-      return self.props
+      return names.prune_namespace(self.props)
 
   def __eq__(self, that):
     return self.props == that.props
@@ -671,7 +688,7 @@ class RecordSchema(NamedSchema):
     else:
       names.names[self.fullname] = self
 
-    to_dump = self.props.copy()
+    to_dump = names.prune_namespace(self.props.copy())
     to_dump['fields'] = [ f.to_json(names) for f in self.fields ]
     return to_dump
 
@@ -709,7 +726,7 @@ def make_avsc_object(json_data, names=None):
       return PrimitiveSchema(type)
     elif type in NAMED_TYPES:
       name = json_data.get('name')
-      namespace = json_data.get('namespace')
+      namespace = json_data.get('namespace', names.default_namespace)
       if type == 'fixed':
         size = json_data.get('size')
         return FixedSchema(name, namespace, size, names, other_props)
