@@ -155,6 +155,12 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     /** Creates a Builder by copying an existing Builder */
     private Builder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder other) {
       super(other);
+#foreach ($field in $schema.getFields())
+      if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
+        this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
+        fieldSetFlags()[$field.pos()] = true;
+      }
+#end
     }
     
     /** Creates a Builder by copying an existing $this.mangle($schema.getName()) instance */
