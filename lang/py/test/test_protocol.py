@@ -379,7 +379,7 @@ class TestProtocol(unittest.TestCase):
     self.assertEqual('com.acme.Greeting', proto.types[0].fullname)
     self.assertEqual('Greeting', proto.types[0].name)
     # but there shouldn't be 'namespace' rendered to json on the inner type
-    self.assertNotIn('namespace', proto.to_json()['types'][0])
+    self.assertFalse('namespace' in proto.to_json()['types'][0])
 
   def test_valid_cast_to_string_after_parse(self):
     """
