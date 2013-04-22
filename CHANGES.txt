@@ -28,6 +28,9 @@ Trunk (not yet released)
     AVRO-1288. Ruby: Add support for deflate codec in data files.
     (martinkl)
 
+    AVRO-867. Java: Enable command-line tools to read data files from
+    any Hadoop FileSystem implementation. (Vincenz Priesnitz via cutting)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

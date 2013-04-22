@@ -17,7 +17,6 @@
  */
 package org.apache.avro.tool;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -28,6 +27,7 @@ import joptsimple.OptionSpec;
 
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.mapred.FsInput;
 
 /** Reads a data file to get its metadata. */
 public class DataFileGetMetaTool implements Tool {
@@ -60,9 +60,9 @@ public class DataFileGetMetaTool implements Tool {
       p.printHelpOn(err);
       return 1;
     }
+    FsInput in = Util.openSeekableFromFS(args.get(0));
     DataFileReader<Void> reader =
-      new DataFileReader<Void>(new File(args.get(0)),
-                               new GenericDatumReader<Void>());
+      new DataFileReader<Void>(in, new GenericDatumReader<Void>());
     if (keyName != null) {
       byte[] value = reader.getMeta(keyName);
       if (value != null) {

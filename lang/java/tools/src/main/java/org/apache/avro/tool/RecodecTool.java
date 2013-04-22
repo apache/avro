@@ -17,8 +17,6 @@
  */
 package org.apache.avro.tool;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -65,13 +63,13 @@ public class RecodecTool implements Tool {
     InputStream input = in;
     boolean inputNeedsClosing = false;
     if (nargs.size() > 0 && !nargs.get(0).equals("-")) {
-      input = new FileInputStream(nargs.get(0));
+      input = Util.openFromFS(nargs.get(0));
       inputNeedsClosing = true;
     }
     OutputStream output = out;
     boolean outputNeedsClosing = false;
     if (nargs.size() > 1 && !nargs.get(1).equals("-")) {
-      output = new FileOutputStream(nargs.get(1));
+      output = Util.createFromFS(nargs.get(1));
       outputNeedsClosing = true;
     }
 

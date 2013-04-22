@@ -55,8 +55,7 @@ public class ToTextTool implements Tool {
     OptionParser p = new OptionParser();
     OptionSet opts = p.parse(args.toArray(new String[0]));
     if (opts.nonOptionArguments().size() != 2) {
-      err.println("Expected 2 args: from_file to_file (local filenames," +
-      " Hadoop URI's, or '-' for stdin/stdout");
+      err.println("Expected 2 args: from_file to_file (filenames or '-' for stdin/stdout");
       p.printHelpOn(err);
       return 1;
     }
@@ -66,11 +65,12 @@ public class ToTextTool implements Tool {
 
     GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
     DataFileStream<Object> fileReader =
-      new DataFileStream<Object>(inStream, reader);
+        new DataFileStream<Object>(inStream, reader);
 
-    if (!fileReader.getSchema().equals(Schema.parse(TEXT_FILE_SCHEMA))) {
+    if (!fileReader.getSchema().equals(new Schema.Parser().parse(TEXT_FILE_SCHEMA))) {
       err.println("Avro file is not generic text schema");
       p.printHelpOn(err);
+      fileReader.close();
       return 1;
     }
     
@@ -79,9 +79,9 @@ public class ToTextTool implements Tool {
       outStream.write(outBuff.array());
       outStream.write(LINE_SEPARATOR);
     }
-    
-    outStream.close();
-    inStream.close();
+    fileReader.close();
+    Util.close(inStream);
+    Util.close(outStream);
     return 0;
   }
 

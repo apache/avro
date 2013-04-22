@@ -19,8 +19,6 @@ package org.apache.avro.tool;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -84,11 +82,10 @@ public class DataFileWriteTool implements Tool {
         p.printHelpOn(err);
         return 1;
     }
-    if (schemafile != null) {
-        schemastr = readSchemaFromFile(schemafile);
-    }
+    Schema schema = (schemafile != null)
+        ? new Schema.Parser().parse(Util.openFromFS(schemafile))
+        : new Schema.Parser().parse(schemastr);
     
-    Schema schema = Schema.parse(schemastr);
     DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
 
     InputStream input = Util.fileOrStdin(nargs.get(0), stdin);
@@ -110,28 +107,9 @@ public class DataFileWriteTool implements Tool {
       }
       writer.close();
     } finally {
-      if (input != stdin) {
-        input.close();
-      }
+      Util.close(input);
     }
     return 0;
   }
 
-  public static String readSchemaFromFile(String schemafile) throws IOException {
-    String schemastr;
-    StringBuilder b = new StringBuilder();
-    FileReader r = new FileReader(schemafile);
-    try {
-        char[] buf = new char[64*1024];
-        for(;;) {
-            int read = r.read(buf);
-            if (read==-1) break;
-            b.append(buf, 0, read);
-        }
-        schemastr = b.toString();
-    } finally {
-        r.close();
-    }
-    return schemastr;
-  }
 }

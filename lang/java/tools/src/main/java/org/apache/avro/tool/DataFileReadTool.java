@@ -17,7 +17,6 @@
  */
 package org.apache.avro.tool;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -56,7 +55,7 @@ public class DataFileReadTool implements Tool {
 
     GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
     FileReader<Object> fileReader =
-      DataFileReader.openReader(new File(args.get(0)), reader);
+      DataFileReader.openReader(Util.openSeekableFromFS(args.get(0)), reader);
     try {
       Schema schema = fileReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);

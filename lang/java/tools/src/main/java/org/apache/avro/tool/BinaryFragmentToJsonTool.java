@@ -17,7 +17,6 @@
  */
 package org.apache.avro.tool;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -43,16 +42,9 @@ public class BinaryFragmentToJsonTool implements Tool {
       err.println("Use '-' as binary_data_file for stdin.");
       return 1;
     }
-    Schema schema = Schema.parse(args.get(0));
-    InputStream input;
-    boolean needsClosing;
-    if (args.get(1).equals("-")) {
-      input = stdin;
-      needsClosing = false;
-    } else {
-      input = new FileInputStream(args.get(1));
-      needsClosing = true;
-    }
+    Schema schema = new Schema.Parser().parse(args.get(0));
+    InputStream input = Util.fileOrStdin(args.get(1), stdin);
+
     try {
       DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
       Object datum = reader.read(null,
@@ -66,9 +58,7 @@ public class BinaryFragmentToJsonTool implements Tool {
       out.println();
       out.flush();
     } finally {
-      if (needsClosing) {
-        input.close();
-      }
+      Util.close(input);
     }
     return 0;
   }

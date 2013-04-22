@@ -20,64 +20,110 @@ package org.apache.avro.tool;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.mapred.FsInput;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 /** Static utility methods for tools. */
 class Util {
   /**
-   * Returns stdin if filename is "-", else opens the local or HDFS file
+   * Returns stdin if filename is "-", else opens the File in the owning filesystem
    * and returns an InputStream for it.
+   * Relative paths will be opened in the default filesystem. 
+   * @param filename The filename to be opened
    * @throws IOException 
    */
   static BufferedInputStream fileOrStdin(String filename, InputStream stdin) 
       throws IOException {
-    if (filename.equals("-")) {
-      return new BufferedInputStream(stdin);
-    } 
-    else {
-      String[] parts = filename.split(":");
-      if (parts.length > 1 && parts[0].equals("hdfs")) {
-        FileSystem fs = FileSystem.get(
-            URI.create(filename), new Configuration());
-        return new BufferedInputStream(fs.open(new Path(filename)));
-      } else {
-        return new BufferedInputStream(new FileInputStream(new File(filename)));
+    return new BufferedInputStream(filename.equals("-")
+        ? stdin
+        : openFromFS(filename));  
+  }
+  
+  /**
+   * Returns stdout if filename is "-", else opens the file from the owning filesystem
+   * and returns an OutputStream for it.
+   * Relative paths will be opened in the default filesystem.  
+   * @param filename The filename to be opened
+   * @throws IOException 
+   */
+  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout) 
+      throws IOException {
+    return new BufferedOutputStream(filename.equals("-")
+        ? stdout
+        : createFromFS(filename));
+  }
+  
+  /**
+   * Returns an InputStream for the file using the owning filesystem,
+   * or the default if none is given.
+   * @param filename The filename to be opened
+   * @throws IOException 
+   */
+  static InputStream openFromFS(String filename) 
+      throws IOException {
+    Path p = new Path(filename);
+    return p.getFileSystem(new Configuration()).open(p);
+  }
+  
+  /**
+   * Returns a seekable FsInput using the owning filesystem, 
+   * or the default if none is given.
+   * @param filename The filename to be opened
+   * @throws IOException 
+   */
+  static FsInput openSeekableFromFS(String filename) 
+      throws IOException {       
+    return new FsInput(new Path(filename), new Configuration());
+  }
+  
+  /**
+   * Opens the file for writing in the owning filesystem,
+   * or the default if none is given.
+   * @param filename The filename to be opened.
+   * @return An OutputStream to the specified file.
+   * @throws IOException
+   */
+  static OutputStream createFromFS(String filename) 
+      throws IOException {
+    Path p = new Path(filename);
+    return new BufferedOutputStream(p.getFileSystem(new Configuration()).create(p));
+  }
+  
+  /**
+   * Closes the inputstream created from {@link Util.fileOrStdin} 
+   * unless it is System.in.
+   * @param in The inputstream to be closed.
+   */
+  static void close(InputStream in) {
+    if (!System.in.equals(in)) {
+      try {
+        in.close();
+      } catch (IOException e) {
+        System.err.println("could not close InputStream " + in.toString());
       }
     }
   }
   
   /**
-   * Returns stdout if filename is "-", else opens the local or HDFS file
-   * and returns an OutputStream for it.
-   * @throws IOException 
+   * Closes the outputstream created from {@link Util.fileOrStdout}
+   * unless it is System.out.
+   * @param out The outputStream to be closed.
    */
-  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout) 
-  throws IOException {
-    if (filename.equals("-")) {
-      return new BufferedOutputStream(stdout);
-    } 
-    else {
-      String[] parts = filename.split(":");
-      if (parts.length > 1 && parts[0].equals("hdfs")) {
-        FileSystem fs = FileSystem.get(
-          URI.create(filename), new Configuration());
-        return new BufferedOutputStream(fs.create(new Path(filename)));
-      } else {
-        return new BufferedOutputStream(
-            new FileOutputStream(new File(filename)));
+  static void close(OutputStream out) {
+    if (!System.out.equals(out)) {
+      try {
+        out.close();
+      } catch (IOException e) {
+        System.err.println("could not close OutputStream " + out.toString());
       }
     }
   }
