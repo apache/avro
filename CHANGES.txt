@@ -31,6 +31,9 @@ Trunk (not yet released)
     AVRO-867. Java: Enable command-line tools to read data files from
     any Hadoop FileSystem implementation. (Vincenz Priesnitz via cutting)
 
+    AVRO-1299. Java: SpecificRecordBase implements GenericRecord.
+    (Christophe Taton via cutting)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

@@ -18,13 +18,17 @@
 
 package org.apache.avro.specific;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,5 +80,49 @@ public class TestSpecificData {
   static class Reflection {
     public void primitive(int i) {}
     public void primitiveWrapper(Integer i) {}
+  }
+
+  private static class TestRecord extends SpecificRecordBase {
+    private static final Schema SCHEMA = Schema.createRecord("TestRecord", null, null, false);
+    static {
+      List<Field> fields = new ArrayList<Field>();
+      fields.add(new Field("x", Schema.create(Type.INT), null, null));
+      fields.add(new Field("y", Schema.create(Type.STRING), null, null));
+      SCHEMA.setFields(fields);
+    }
+    private int x;
+    private String y;
+
+    @Override
+    public void put(int i, Object v) {
+      switch (i) {
+      case 0: x = (Integer) v; break;
+      case 1: y = (String) v; break;
+      default: throw new RuntimeException();
+      }
+    }
+
+    @Override
+    public Object get(int i) {
+      switch (i) {
+      case 0: return x;
+      case 1: return y;
+      }
+      throw new RuntimeException();
+    }
+
+    @Override
+    public Schema getSchema() {
+      return SCHEMA;
+    }
+  }
+
+  @Test
+  public void testSpecificRecordBase() {
+    final TestRecord record = new TestRecord();
+    record.put("x", 1);
+    record.put("y", "str");
+    assertEquals(1, record.get("x"));
+    assertEquals("str", record.get("y"));
   }
 }

@@ -18,14 +18,25 @@
 package org.apache.avro.specific;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
 
 /** Base class for generated record classes. */
 public abstract class SpecificRecordBase
-  implements SpecificRecord, Comparable<SpecificRecord> {
+  implements SpecificRecord, Comparable<SpecificRecord>, GenericRecord {
 
   public abstract Schema getSchema();
   public abstract Object get(int field);
   public abstract void put(int field, Object value);
+
+  @Override
+  public void put(String fieldName, Object value) {
+    put(getSchema().getField(fieldName).pos(), value);
+  }
+
+  @Override
+  public Object get(String fieldName) {
+    return get(getSchema().getField(fieldName).pos());
+  }
 
   @Override
   public boolean equals(Object that) {
