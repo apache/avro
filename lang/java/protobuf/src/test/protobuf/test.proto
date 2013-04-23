@@ -37,8 +37,10 @@ message Foo {
   optional    bytes bytes    = 15;
   optional        A enum     = 16;
 
-  // a repeated type
+  // some repeated types
   repeated    int32 intArray = 17;
+  repeated    Foo   fooArray = 20;
+  repeated    A     syms = 19;
 
   // a recursive type
   optional     Foo  foo      = 18;

@@ -28,6 +28,7 @@ import org.apache.avro.io.ResolvingDecoder;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
+import com.google.protobuf.ProtocolMessageEnum;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Protobuf
  * classes. */
@@ -67,7 +68,7 @@ public class ProtobufDatumReader<T> extends GenericDatumReader<T> {
     try {
       Class c = Class.forName(SpecificData.getClassName(schema));
       if (c == null) return super.createEnum(symbol, schema); // punt to generic
-      return Enum.valueOf(c, symbol);
+      return ((ProtocolMessageEnum)Enum.valueOf(c, symbol)).getValueDescriptor();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

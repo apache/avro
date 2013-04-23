@@ -37,7 +37,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
-import com.google.protobuf.ProtocolMessageEnum;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
@@ -81,9 +80,6 @@ public class ProtobufData extends GenericData {
     Builder b = (Builder)r;
     FieldDescriptor f = ((FieldDescriptor[])state)[pos];
     switch (f.getType()) {
-    case ENUM:
-      b.setField(f, ((ProtocolMessageEnum)o).getValueDescriptor());
-      break;
     case MESSAGE:
       if (o == null) {
         b.clearField(f);
@@ -99,17 +95,8 @@ public class ProtobufData extends GenericData {
     Message m = (Message)record;
     FieldDescriptor f = ((FieldDescriptor[])state)[pos];
     switch (f.getType()) {
-    case ENUM:
-      Schema s = getSchema(f);
-      try {
-        Class c = Class.forName(SpecificData.getClassName(s));
-        EnumValueDescriptor symbol = (EnumValueDescriptor)m.getField(f);
-        return Enum.valueOf(c, symbol.getName());
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
     case MESSAGE:
-      if (!m.hasField(f))
+      if (!f.isRepeated() && !m.hasField(f))
         return null;
     default:
       return m.getField(f);
@@ -211,12 +198,8 @@ public class ProtobufData extends GenericData {
       seen.put(descriptor, result);
         
       List<Field> fields = new ArrayList<Field>();
-      for (FieldDescriptor f : descriptor.getFields()) {
-        Schema s = getSchema(f);
-        if (f.isRepeated())
-          s = Schema.createArray(s);
-        fields.add(new Field(f.getName(), s, null, getDefault(f)));
-      }
+      for (FieldDescriptor f : descriptor.getFields())
+        fields.add(new Field(f.getName(), getSchema(f), null, getDefault(f)));
       result.setFields(fields);
       return result;
 
@@ -263,6 +246,13 @@ public class ProtobufData extends GenericData {
   private static final Schema NULL = Schema.create(Schema.Type.NULL);
 
   private Schema getSchema(FieldDescriptor f) {
+    Schema s = getNonRepeatedSchema(f);
+    if (f.isRepeated())
+      s = Schema.createArray(s);
+    return s;
+  }
+
+  private Schema getNonRepeatedSchema(FieldDescriptor f) {
     Schema result;
     switch (f.getType()) {
     case BOOL:

@@ -57,7 +57,12 @@ public class TestProtobuf {
     builder.setBytes(ByteString.copyFromUtf8("bar"));
     builder.setEnum(A.X);
     builder.addIntArray(27);
+    builder.addSyms(A.Y);
     Foo fooInner = builder.build();
+
+    Foo fooInArray = builder.build();
+    builder = Foo.newBuilder(fooInArray);
+    builder.addFooArray(fooInArray);
 
     builder = Foo.newBuilder(fooInner);
     builder.setFoo(fooInner);
@@ -77,7 +82,6 @@ public class TestProtobuf {
        (new ByteArrayInputStream(bao.toByteArray()), null));
 
     assertEquals(foo, o);
-
   }
 
   @Test public void testNestedEnum() throws Exception {

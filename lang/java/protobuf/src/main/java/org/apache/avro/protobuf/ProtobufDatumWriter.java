@@ -24,6 +24,7 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors.EnumValueDescriptor;
 
 /** {@link org.apache.avro.io.DatumWriter DatumWriter} for generated protobuf
  * classes. */
@@ -51,10 +52,11 @@ public class ProtobufDatumWriter<T> extends GenericDatumWriter<T> {
   @Override
   protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
-    if (!(datum instanceof Enum))
+    if (!(datum instanceof EnumValueDescriptor))
       super.writeEnum(schema, datum, out);        // punt to generic
     else
-      out.writeEnum(((Enum)datum).ordinal());
+      out.writeEnum
+        (schema.getEnumOrdinal(((EnumValueDescriptor)datum).getName()));
   }
 
   @Override
