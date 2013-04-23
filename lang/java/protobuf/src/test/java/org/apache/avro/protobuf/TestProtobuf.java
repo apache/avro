@@ -20,9 +20,11 @@ package org.apache.avro.protobuf;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import org.apache.avro.Schema;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificData;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -31,6 +33,7 @@ import com.google.protobuf.ByteString;
 
 import org.apache.avro.protobuf.Test.Foo;
 import org.apache.avro.protobuf.Test.A;
+import org.apache.avro.protobuf.Test.M.N;
 
 public class TestProtobuf {
   @Test public void testMessage() throws Exception {
@@ -76,4 +79,10 @@ public class TestProtobuf {
     assertEquals(foo, o);
 
   }
+
+  @Test public void testNestedEnum() throws Exception {
+    Schema s = ProtobufData.get().getSchema(N.class);
+    assertEquals(N.class.getName(), SpecificData.getClassName(s));
+  }
+
 }

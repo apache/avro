@@ -45,6 +45,8 @@ Trunk (not yet released)
     AVRO-1300. Java: Fix generated copy constructors to copy field
     values. (Christophe Taton via cutting)
 
+    AVRO-1309. Java: Fix nested protobuf enums. (cutting)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES

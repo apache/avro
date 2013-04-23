@@ -137,7 +137,7 @@ public final class Test {
     
     // optional string string = 14;
     boolean hasString();
-    java.lang.String getString();
+    String getString();
     
     // optional bytes bytes = 15;
     boolean hasBytes();
@@ -322,14 +322,14 @@ public final class Test {
     public boolean hasString() {
       return ((bitField0_ & 0x00002000) == 0x00002000);
     }
-    public java.lang.String getString() {
+    public String getString() {
       java.lang.Object ref = string_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
+        String s = bs.toStringUtf8();
         if (com.google.protobuf.Internal.isValidUtf8(bs)) {
           string_ = s;
         }
@@ -338,10 +338,9 @@ public final class Test {
     }
     private com.google.protobuf.ByteString getStringBytes() {
       java.lang.Object ref = string_;
-      if (ref instanceof java.lang.String) {
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
         string_ = b;
         return b;
       } else {
@@ -413,7 +412,7 @@ public final class Test {
       string_ = "";
       bytes_ = com.google.protobuf.ByteString.EMPTY;
       enum_ = org.apache.avro.protobuf.Test.A.X;
-      intArray_ = java.util.Collections.emptyList();
+      intArray_ = java.util.Collections.emptyList();;
       foo_ = org.apache.avro.protobuf.Test.Foo.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
@@ -735,7 +734,7 @@ public final class Test {
         bitField0_ = (bitField0_ & ~0x00004000);
         enum_ = org.apache.avro.protobuf.Test.A.X;
         bitField0_ = (bitField0_ & ~0x00008000);
-        intArray_ = java.util.Collections.emptyList();
+        intArray_ = java.util.Collections.emptyList();;
         bitField0_ = (bitField0_ & ~0x00010000);
         if (fooBuilder_ == null) {
           foo_ = org.apache.avro.protobuf.Test.Foo.getDefaultInstance();
@@ -1369,19 +1368,17 @@ public final class Test {
       public boolean hasString() {
         return ((bitField0_ & 0x00002000) == 0x00002000);
       }
-      public java.lang.String getString() {
+      public String getString() {
         java.lang.Object ref = string_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
           string_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
-      public Builder setString(
-          java.lang.String value) {
+      public Builder setString(String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -1451,7 +1448,7 @@ public final class Test {
       }
       
       // repeated int32 intArray = 17;
-      private java.util.List<java.lang.Integer> intArray_ = java.util.Collections.emptyList();
+      private java.util.List<java.lang.Integer> intArray_ = java.util.Collections.emptyList();;
       private void ensureIntArrayIsMutable() {
         if (!((bitField0_ & 0x00010000) == 0x00010000)) {
           intArray_ = new java.util.ArrayList<java.lang.Integer>(intArray_);
@@ -1489,7 +1486,7 @@ public final class Test {
         return this;
       }
       public Builder clearIntArray() {
-        intArray_ = java.util.Collections.emptyList();
+        intArray_ = java.util.Collections.emptyList();;
         bitField0_ = (bitField0_ & ~0x00010000);
         onChanged();
         return this;
@@ -1596,11 +1593,358 @@ public final class Test {
     // @@protoc_insertion_point(class_scope:org.apache.avro.protobuf.Foo)
   }
   
+  public interface MOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+  }
+  public static final class M extends
+      com.google.protobuf.GeneratedMessage
+      implements MOrBuilder {
+    // Use M.newBuilder() to construct.
+    private M(Builder builder) {
+      super(builder);
+    }
+    private M(boolean noInit) {}
+    
+    private static final M defaultInstance;
+    public static M getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public M getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.avro.protobuf.Test.internal_static_org_apache_avro_protobuf_M_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.avro.protobuf.Test.internal_static_org_apache_avro_protobuf_M_fieldAccessorTable;
+    }
+    
+    public enum N
+        implements com.google.protobuf.ProtocolMessageEnum {
+      A(0, 1),
+      ;
+      
+      public static final int A_VALUE = 1;
+      
+      
+      public final int getNumber() { return value; }
+      
+      public static N valueOf(int value) {
+        switch (value) {
+          case 1: return A;
+          default: return null;
+        }
+      }
+      
+      public static com.google.protobuf.Internal.EnumLiteMap<N>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<N>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<N>() {
+              public N findValueByNumber(int number) {
+                return N.valueOf(number);
+              }
+            };
+      
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return org.apache.avro.protobuf.Test.M.getDescriptor().getEnumTypes().get(0);
+      }
+      
+      private static final N[] VALUES = {
+        A, 
+      };
+      
+      public static N valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+      
+      private final int index;
+      private final int value;
+      
+      private N(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+      
+      // @@protoc_insertion_point(enum_scope:org.apache.avro.protobuf.M.N)
+    }
+    
+    private void initFields() {
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static org.apache.avro.protobuf.Test.M parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.apache.avro.protobuf.Test.M parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.apache.avro.protobuf.Test.M parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.apache.avro.protobuf.Test.M parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.apache.avro.protobuf.Test.M parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.apache.avro.protobuf.Test.M parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.apache.avro.protobuf.Test.M parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.apache.avro.protobuf.Test.M parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.apache.avro.protobuf.Test.M parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.apache.avro.protobuf.Test.M parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.avro.protobuf.Test.M prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.avro.protobuf.Test.MOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.avro.protobuf.Test.internal_static_org_apache_avro_protobuf_M_descriptor;
+      }
+      
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.avro.protobuf.Test.internal_static_org_apache_avro_protobuf_M_fieldAccessorTable;
+      }
+      
+      // Construct using org.apache.avro.protobuf.Test.M.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.avro.protobuf.Test.M.getDescriptor();
+      }
+      
+      public org.apache.avro.protobuf.Test.M getDefaultInstanceForType() {
+        return org.apache.avro.protobuf.Test.M.getDefaultInstance();
+      }
+      
+      public org.apache.avro.protobuf.Test.M build() {
+        org.apache.avro.protobuf.Test.M result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private org.apache.avro.protobuf.Test.M buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        org.apache.avro.protobuf.Test.M result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public org.apache.avro.protobuf.Test.M buildPartial() {
+        org.apache.avro.protobuf.Test.M result = new org.apache.avro.protobuf.Test.M(this);
+        onBuilt();
+        return result;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.avro.protobuf.Test.M) {
+          return mergeFrom((org.apache.avro.protobuf.Test.M)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(org.apache.avro.protobuf.Test.M other) {
+        if (other == org.apache.avro.protobuf.Test.M.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              onChanged();
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                onChanged();
+                return this;
+              }
+              break;
+            }
+          }
+        }
+      }
+      
+      
+      // @@protoc_insertion_point(builder_scope:org.apache.avro.protobuf.M)
+    }
+    
+    static {
+      defaultInstance = new M(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:org.apache.avro.protobuf.M)
+  }
+  
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_org_apache_avro_protobuf_Foo_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_org_apache_avro_protobuf_Foo_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_apache_avro_protobuf_M_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_org_apache_avro_protobuf_M_fieldAccessorTable;
   
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1620,7 +1964,8 @@ public final class Test {
       "ing\030\016 \001(\t\022\r\n\005bytes\030\017 \001(\014\022)\n\004enum\030\020 \001(\0162\033" +
       ".org.apache.avro.protobuf.A\022\020\n\010intArray\030" +
       "\021 \003(\005\022*\n\003foo\030\022 \001(\0132\035.org.apache.avro.pro",
-      "tobuf.Foo*\030\n\001A\022\005\n\001X\020\001\022\005\n\001Y\020\002\022\005\n\001Z\020\003"
+      "tobuf.Foo\"\017\n\001M\"\n\n\001N\022\005\n\001A\020\001*\030\n\001A\022\005\n\001X\020\001\022\005" +
+      "\n\001Y\020\002\022\005\n\001Z\020\003"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -1635,6 +1980,14 @@ public final class Test {
               new java.lang.String[] { "Int32", "Int64", "Uint32", "Uint64", "Sint32", "Sint64", "Fixed32", "Fixed64", "Sfixed32", "Sfixed64", "Float", "Double", "Bool", "String", "Bytes", "Enum", "IntArray", "Foo", },
               org.apache.avro.protobuf.Test.Foo.class,
               org.apache.avro.protobuf.Test.Foo.Builder.class);
+          internal_static_org_apache_avro_protobuf_M_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_org_apache_avro_protobuf_M_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_org_apache_avro_protobuf_M_descriptor,
+              new java.lang.String[] { },
+              org.apache.avro.protobuf.Test.M.class,
+              org.apache.avro.protobuf.Test.M.Builder.class);
           return null;
         }
       };

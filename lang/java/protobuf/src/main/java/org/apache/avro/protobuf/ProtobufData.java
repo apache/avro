@@ -176,7 +176,11 @@ public class ProtobufData extends GenericData {
 
     if (schema == null) {                         // cache miss
       try {
-        schema=getSchema((Descriptor)c.getMethod("getDescriptor").invoke(null));
+        Object descriptor = c.getMethod("getDescriptor").invoke(null);
+        if (c.isEnum())
+          schema = getSchema((EnumDescriptor)descriptor);
+        else
+          schema = getSchema((Descriptor)descriptor);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -200,7 +204,9 @@ public class ProtobufData extends GenericData {
     try {
       Schema result =
         Schema.createRecord(descriptor.getName(), null,
-                            getNamespace(descriptor.getFile()), false);
+                            getNamespace(descriptor.getFile(),
+                                         descriptor.getContainingType()),
+                            false);
 
       seen.put(descriptor, result);
         
@@ -220,7 +226,7 @@ public class ProtobufData extends GenericData {
     }
   }
 
-  private String getNamespace(FileDescriptor fd) {
+  private String getNamespace(FileDescriptor fd, Descriptor containing) {
     FileOptions o = fd.getOptions();
     String p = o.hasJavaPackage()
       ? o.getJavaPackage()
@@ -233,7 +239,12 @@ public class ProtobufData extends GenericData {
       outer = outer.substring(0, outer.lastIndexOf('.'));
       outer = toCamelCase(outer);
     }
-    return p + "." + outer + "$";
+    String inner = "";
+    while (containing != null) {
+      inner = containing.getName() + "$" + inner;
+      containing = containing.getContainingType();
+    }
+    return p + "." + outer + "$" + inner;
   }
 
   private static String toCamelCase(String s){
@@ -271,13 +282,7 @@ public class ProtobufData extends GenericData {
     case INT64: case UINT64: case SINT64: case FIXED64: case SFIXED64:
       return Schema.create(Schema.Type.LONG);
     case ENUM:
-      EnumDescriptor d = f.getEnumType();
-      List<String> symbols = new ArrayList<String>();
-      for (EnumValueDescriptor e : d.getValues()) {
-        symbols.add(e.getName());
-      }
-      return Schema.createEnum(d.getName(), null, getNamespace(d.getFile()),
-                               symbols);
+      return getSchema(f.getEnumType());
     case MESSAGE:
       result = getSchema(f.getMessageType());
       if (f.isOptional())
@@ -288,6 +293,16 @@ public class ProtobufData extends GenericData {
     default:
       throw new RuntimeException("Unexpected type: "+f.getType());
     }
+  }
+
+  private Schema getSchema(EnumDescriptor d) {
+    List<String> symbols = new ArrayList<String>();
+    for (EnumValueDescriptor e : d.getValues()) {
+      symbols.add(e.getName());
+    }
+    return Schema.createEnum(d.getName(), null,
+                             getNamespace(d.getFile(), d.getContainingType()),
+                             symbols);
   }
 
   private static final JsonFactory FACTORY = new JsonFactory();

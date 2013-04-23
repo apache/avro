@@ -51,3 +51,10 @@ enum A {
   Y = 2;
   Z = 3;
 }
+
+// a nested enum
+message M {
+  enum N {
+    A = 1;
+  }
+}
