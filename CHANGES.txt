@@ -53,6 +53,9 @@ Trunk (not yet released)
     AVRO-1308. Java: Fix repeated protobuf messages & enums.
     (Steve Zesch & cutting)
 
+    AVRO-1306. Java mapred: Fix incorrect documentation for combiners.
+    (Mina Naguib via martinkl)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES
