@@ -35,6 +35,7 @@ public class Main {
   Main() {
     tools = new TreeMap<String, Tool>();
     for (Tool tool : new Tool[] {
+        new CatTool(),
         new SpecificCompilerTool(),
         new InduceSchemaTool(),
         new JsonToBinaryFragmentTool(),

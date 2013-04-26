@@ -4,6 +4,9 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-1307. Java: Add 'cat' tool to append and sample data files.
+    (Vincenz Priesnitz via cutting)
+
   IMPROVEMENTS
 
     AVRO-1260. Ruby: Improve read performance. (Martin Kleppmann via cutting)

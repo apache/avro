@@ -23,6 +23,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -30,6 +33,8 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.mapred.FsInput;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 /** Static utility methods for tools. */
@@ -72,6 +77,17 @@ class Util {
       throws IOException {
     Path p = new Path(filename);
     return p.getFileSystem(new Configuration()).open(p);
+  }
+  
+  /**
+   * Returns an InputStream for the file using the owning filesystem,
+   * or the default if none is given.
+   * @param filename The filename to be opened
+   * @throws IOException 
+   */
+  static InputStream openFromFS(Path filename) 
+      throws IOException {
+    return filename.getFileSystem(new Configuration()).open(filename);
   }
   
   /**
@@ -126,6 +142,54 @@ class Util {
         System.err.println("could not close OutputStream " + out.toString());
       }
     }
+  }
+  
+  /**If pathname is a file, this method returns a list with a single absolute Path to that file,
+   * if pathname is a directory, this method returns a list of Pathes to all the files within
+   * this directory.
+   * Only files inside that directory are included, no subdirectories or files in subdirectories
+   * will be added. 
+   * The List is sorted alphabetically.
+   * @param fileOrDirName filename or directoryname
+   * @return A Path List 
+   * @throws IOException
+   */
+  static List<Path> getFiles(String fileOrDirName) 
+    throws IOException {
+    List<Path> pathList = new ArrayList<Path>();  
+    Path path = new Path(fileOrDirName);
+    FileSystem fs = path.getFileSystem(new Configuration());
+    
+    if (fs.isFile(path)) {
+      pathList.add(path);
+    }
+    else if (fs.getFileStatus(path).isDir()) {
+      for (FileStatus status : fs.listStatus(path)) {
+        if(!status.isDir()) {
+          pathList.add(status.getPath());
+        }
+      }
+    }
+    Collections.sort(pathList);
+    return pathList;
+  }
+  
+  /**
+   * This method returns a list which contains a path to every given file
+   * in the input and a path to every file inside a given directory.
+   * The list is sorted alphabetically and contains no subdirectories or files within those.
+   * @param fileOrDirNames A list of filenames and directorynames
+   * @return A list of Pathes, one for each file 
+   * @throws IOException
+   */
+  static List<Path> getFiles(List<String> fileOrDirNames) 
+      throws IOException {
+    ArrayList<Path> pathList = new ArrayList<Path>();
+    for(String name : fileOrDirNames) {
+      pathList.addAll(getFiles(name));
+    }
+    Collections.sort(pathList);
+    return pathList;
   }
   
   /** 
