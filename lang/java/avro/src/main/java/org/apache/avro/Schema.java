@@ -63,7 +63,8 @@ import org.codehaus.jackson.node.DoubleNode;
  * </ul>
  * 
  * A schema can be constructed using one of its static <tt>createXXX</tt>
- * methods. The schema objects are <i>logically</i> immutable.
+ * methods, or more conveniently using {@link SchemaBuilder}. The schema objects are
+ * <i>logically</i> immutable.
  * There are only two mutating methods - {@link #setFields(List)} and
  * {@link #addProp(String, String)}. The following restrictions apply on these
  * two methods.

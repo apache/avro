@@ -47,7 +47,10 @@ import org.apache.avro.util.Utf8;
 
 import org.codehaus.jackson.JsonNode;
 
-/** Utilities for generic Java data. */
+/** Utilities for generic Java data. See {@link GenericRecordBuilder} for a convenient
+ * way to build {@link GenericRecord} instances.
+ * @see GenericRecordBuilder
+ */
 public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
@@ -72,7 +75,11 @@ public class GenericData {
 
   protected GenericData() {}
   
-  /** Default implementation of {@link GenericRecord}. */
+  /** Default implementation of {@link GenericRecord}. Note that this implementation
+   * does not fill in default values for fields if they are not specified; use {@link
+   * GenericRecordBuilder} in that case.
+   * @see GenericRecordBuilder
+   */
   public static class Record implements GenericRecord, Comparable<Record> {
     private final Schema schema;
     private final Object[] values;

@@ -25,7 +25,8 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.data.RecordBuilderBase;
 import org.apache.avro.generic.GenericData.Record;
 
-/** A RecordBuilder for generic records */
+/** A RecordBuilder for generic records. GenericRecordBuilder fills in default values
+ * for fields if they are not specified.  */
 public class GenericRecordBuilder extends RecordBuilderBase<Record> {
   private final GenericData.Record record;
   

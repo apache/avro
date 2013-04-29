@@ -7,6 +7,8 @@ Trunk (not yet released)
     AVRO-1307. Java: Add 'cat' tool to append and sample data files.
     (Vincenz Priesnitz via cutting)
 
+    AVRO-1274. Java: Add a schema builder API. (tomwhite)
+
   IMPROVEMENTS
 
     AVRO-1260. Ruby: Improve read performance. (Martin Kleppmann via cutting)
