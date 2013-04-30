@@ -24,29 +24,29 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.codehaus.jackson.node.NullNode;
-
 import org.apache.avro.Schema.Field;
-import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
-import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.generic.GenericData;
-
+import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
+import org.codehaus.jackson.node.NullNode;
 import org.junit.Test;
 
 public class TestReflect {
@@ -104,21 +104,21 @@ public class TestReflect {
   }
 
   @Test public void testUnionWithCollection() {
-    Schema s = Schema.parse
+    Schema s = new Schema.Parser().parse
       ("[\"null\", {\"type\":\"array\",\"items\":\"float\"}]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, new ArrayList<Float>()));
   }
 
   @Test public void testUnionWithMap() {
-    Schema s = Schema.parse
+    Schema s = new Schema.Parser().parse
       ("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, new HashMap<String,Float>()));
   }
 
   @Test public void testUnionWithBytes() {
-    Schema s = Schema.parse ("[\"null\", \"bytes\"]");
+    Schema s = new Schema.Parser().parse ("[\"null\", \"bytes\"]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, ByteBuffer.wrap(new byte[]{1})));
   }
@@ -134,6 +134,7 @@ public class TestReflect {
       listField.add("foo");
     }
     
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R1)) return false;
       R1 that = (R1)o;
@@ -157,7 +158,7 @@ public class TestReflect {
           "{\"type\":\"array\",\"items\":\"string\""
           +",\"java-class\":\"java.util.List\"}");
   }
-
+  
   @Test public void testR1() throws Exception {
     checkReadWrite(new R1());
   }
@@ -167,6 +168,7 @@ public class TestReflect {
     private String[] arrayField;
     private Collection<String> collectionField;
     
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R2)) return false;
       R2 that = (R2)o;
@@ -187,6 +189,7 @@ public class TestReflect {
   public static class R3 {
     private int[] intArray;
     
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R3)) return false;
       R3 that = (R3)o;
@@ -206,6 +209,7 @@ public class TestReflect {
     public short[] shorts;
     public byte b;
     
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R4)) return false;
       R4 that = (R4)o;
@@ -231,6 +235,7 @@ public class TestReflect {
 
   public static class R7 extends R6 {
     public int value;
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R7)) return false;
       return this.value == ((R7)o).value;
@@ -238,6 +243,7 @@ public class TestReflect {
   }
   public static class R8 extends R6 {
     public float value;
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R8)) return false;
       return this.value == ((R8)o).value;
@@ -247,6 +253,7 @@ public class TestReflect {
   // test arrays of union annotated class
   public static class R9  {
     public R6[] r6s;
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R9)) return false;
       return Arrays.equals(this.r6s, ((R9)o).r6s);
@@ -296,7 +303,9 @@ public class TestReflect {
   @Stringable public static class R10 {
     private String text;
     public R10(String text) { this.text = text; }
+    @Override
     public String toString() { return text; }
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R10)) return false;
       return this.text.equals(((R10)o).text);
@@ -313,6 +322,7 @@ public class TestReflect {
   // test Nullable annotation on field
   public static class R11 {
     @Nullable private String text;
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof R11)) return false;
       R11 that = (R11)o;
@@ -364,6 +374,7 @@ public class TestReflect {
   }
 
   // test error
+  @SuppressWarnings("serial")
   public static class E1 extends Exception {}
   public static interface P2 {
     void error() throws E1;
@@ -390,9 +401,9 @@ public class TestReflect {
   }
 
   @Test public void testNoPackage() throws Exception {
-    Class noPackage = Class.forName("NoPackage");
+    Class<?> noPackage = Class.forName("NoPackage");
     Schema s = ReflectData.get().getSchema(noPackage);
-    assertEquals(noPackage.getName(), ReflectData.get().getClassName(s));
+    assertEquals(noPackage.getName(), ReflectData.getClassName(s));
   }
 
   void checkReadWrite(Object object) throws Exception {
@@ -477,10 +488,12 @@ public class TestReflect {
     public int x = 1;
     private int y = 2;
 
+    @Override
     public int hashCode() {
       return x + y;
     }
 
+    @Override
     public boolean equals(Object obj) {
       if (this == obj)
         return true;
@@ -508,12 +521,14 @@ public class TestReflect {
         this.s = new SampleRecord();
       }
 
+      @Override
       public int hashCode() {
         int hash = (a != null ? a.hashCode() : 0);
         hash += (s != null ? s.hashCode() : 0);
         return hash;
       }
 
+      @Override
       public boolean equals(Object other) {
         if (other instanceof AnotherSampleRecord) {
           AnotherSampleRecord o = (AnotherSampleRecord) other;
@@ -592,12 +607,65 @@ public class TestReflect {
     // test that this instance can be written & re-read
     checkBinary(schema, record);
   }
+  
+  @Test
+  public void testPrimitiveArray() throws Exception {
+    testPrimitiveArrays(false);
+  }
+  
+  @Test
+  public void testPrimitiveArrayBlocking() throws Exception {
+    testPrimitiveArrays(true);
+  }
+  
+  private void testPrimitiveArrays(boolean blocking) throws Exception {
+    testPrimitiveArray(boolean.class, blocking);
+    testPrimitiveArray(byte.class, blocking);
+    testPrimitiveArray(short.class, blocking);
+    testPrimitiveArray(char.class, blocking);
+    testPrimitiveArray(int.class, blocking);
+    testPrimitiveArray(long.class, blocking);
+    testPrimitiveArray(float.class, blocking);
+    testPrimitiveArray(double.class, blocking);
+  }
+
+  private void testPrimitiveArray(Class<?> c, boolean blocking) throws Exception {
+    ReflectData data = new ReflectData();
+    Random r = new Random();
+    int size = 200;
+    Object array = Array.newInstance(c, size);
+    Schema s = data.getSchema(array.getClass());
+    for(int i = 0; i < size; i++) {
+      Array.set(array, i, randomFor(c, r));
+    }
+    checkBinary(data, s, array, false, blocking);
+  }
+
+  private Object randomFor(Class<?> c, Random r) {
+    if (c == boolean.class)
+      return r.nextBoolean();
+    if (c == int.class)
+      return r.nextInt();
+    if (c == long.class)
+      return r.nextLong();
+    if (c == byte.class)
+      return (byte)r.nextInt();
+    if (c == float.class)
+      return r.nextFloat();
+    if (c == double.class)
+      return r.nextDouble();
+    if (c == char.class)
+      return (char)r.nextInt();
+    if (c == short.class)
+      return (short)r.nextInt();
+    return null;
+  }
 
   /** Test union of null and an array. */
   @Test
   public void testNullArray() throws Exception {
     String json = "[{\"type\":\"array\", \"items\": \"long\"}, \"null\"]";
-    Schema schema = Schema.parse(json);
+    Schema schema = new Schema.Parser().parse(json);
     checkBinary(schema, null);
   }
 
@@ -610,8 +678,9 @@ public class TestReflect {
     checkStringable(java.io.File.class, "foo.bar");
   }
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void checkStringable(Class c, String value) throws Exception {
-    ReflectData data = new ReflectData().get();
+    ReflectData data = new ReflectData();
     Schema schema = data.getSchema(c);
     assertEquals
       ("{\"type\":\"string\",\"java-class\":\""+c.getName()+"\"}",
@@ -659,17 +728,26 @@ public class TestReflect {
   }
 
   public static void checkBinary(ReflectData reflectData, Schema schema,
-                                 Object datum, boolean equals)
-    throws IOException {
+      Object datum, boolean equals) throws IOException {
+    checkBinary(reflectData, schema, datum, equals, false);
+  }
+  
+  private static void checkBinary(ReflectData reflectData, Schema schema,
+      Object datum, boolean equals, boolean blocking) throws IOException {
     ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(schema);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
+    if (!blocking) {
+      writer.write(datum, EncoderFactory.get().directBinaryEncoder(out, null));
+    } else {
+      writer.write(datum, new EncoderFactory().configureBlockSize(64)
+          .blockingBinaryEncoder(out, null));
+    }
     writer.write(datum, EncoderFactory.get().directBinaryEncoder(out, null));
     byte[] data = out.toByteArray();
 
     ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(schema);
-    Object decoded =
-      reader.read(null, DecoderFactory.get().binaryDecoder(
-          data, null));
+    Object decoded = reader.read(null,
+        DecoderFactory.get().binaryDecoder(data, null));
 
     assertEquals(0, reflectData.compare(datum, decoded, schema, equals));
   }
@@ -689,6 +767,5 @@ public class TestReflect {
       assertTrue(e.getMessage().contains(datum.getClass().getName()));
     }
   }
-
 
 }

@@ -39,6 +39,9 @@ Trunk (not yet released)
     AVRO-1299. Java: SpecificRecordBase implements GenericRecord.
     (Christophe Taton via cutting)
 
+    AVRO-1282. Java: Use sun.misc.Unsafe to improve Reflect API Performance.
+    (Leo Romanoff via scottcarey)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

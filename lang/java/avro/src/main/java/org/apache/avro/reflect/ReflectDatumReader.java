@@ -18,14 +18,18 @@
 package org.apache.avro.reflect;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.ArrayList;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.io.ResolvingDecoder;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.specific.SpecificDatumReader;
 
 /**
  * {@link org.apache.avro.io.DatumReader DatumReader} for existing classes via
@@ -63,29 +67,29 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   }
 
   @Override
-  @SuppressWarnings(value="unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    Class collectionClass =
-      ReflectData.getClassProp(schema, ReflectData.CLASS_PROP);
-    Class elementClass =
-      ReflectData.getClassProp(schema, ReflectData.ELEMENT_PROP);
+    Class<?> collectionClass =
+      ReflectData.getClassProp(schema, SpecificData.CLASS_PROP);
+    Class<?> elementClass =
+      ReflectData.getClassProp(schema, SpecificData.ELEMENT_PROP);
 
     if (collectionClass == null && elementClass == null)
       return super.newArray(old, size, schema);   // use specific/generic
 
-    ReflectData data = (ReflectData)getData();
     if (collectionClass != null && !collectionClass.isArray()) {
       if (old instanceof Collection) {
-        ((Collection)old).clear();
+        ((Collection<?>)old).clear();
         return old;
       }
       if (collectionClass.isAssignableFrom(ArrayList.class))
-        return new ArrayList();
-      return data.newInstance(collectionClass, schema);
+        return new ArrayList<Object>();
+      return SpecificData.newInstance(collectionClass, schema);
     }
 
-    if (elementClass == null)
+    if (elementClass == null) {
+      ReflectData data = (ReflectData)getData();
       elementClass = data.getClass(schema.getElementType());
+    }
     return Array.newInstance(elementClass, size);
   }
 
@@ -95,13 +99,68 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   }
 
   @Override
-  @SuppressWarnings(value="unchecked")
   protected void addToArray(Object array, long pos, Object e) {
-    if (array instanceof Collection) {
-      ((Collection)array).add(e);
-    } else {
-      Array.set(array, (int)pos, e);
+    throw new AvroRuntimeException("reflectDatumReader does not use addToArray");
+  }
+
+  @Override
+  /** Called to read an array instance.  May be overridden for alternate array
+   * representations.*/
+  protected Object readArray(Object old, Schema expected, ResolvingDecoder in)
+      throws IOException {
+    Schema expectedType = expected.getElementType();
+    long l = in.readArrayStart();
+    if (l <= 0) {
+      return newArray(old, 0, expected);
     }
+    Object array = newArray(old, (int) l, expected);
+    if (array instanceof Collection) {
+      @SuppressWarnings("unchecked")
+      Collection<Object> c = (Collection<Object>) array;
+      return readCollection(c, expectedType, l, in);
+    } else {
+      return readJavaArray(array, expectedType, l, in);
+    }
+  }
+
+  private Object readJavaArray(Object array, Schema expectedType, long l,
+      ResolvingDecoder in) throws IOException {
+    Class<?> elementType = array.getClass().getComponentType();
+    if (elementType.isPrimitive()) {
+      return readPrimitiveArray(array, elementType, l, in);
+    } else {
+      return readObjectArray((Object[]) array, expectedType, l, in);
+    }
+  }
+
+  private Object readPrimitiveArray(Object array, Class<?> c, long l, ResolvingDecoder in)
+      throws IOException {
+    return ArrayAccessor.readArray(array, c, l, in);
+  }
+
+  private Object readObjectArray(Object[] array, Schema expectedType, long l,
+      ResolvingDecoder in) throws IOException {
+    int index = 0;
+    do {
+      int limit = index + (int) l;
+      while (index < limit) {
+        Object element = read(null, expectedType, in);
+        array[index] = element;
+        index++;
+      }
+    } while ((l = in.arrayNext()) > 0);
+    return array;
+  }
+
+  private Object readCollection(Collection<Object> c, Schema expectedType,
+      long l, ResolvingDecoder in) throws IOException {
+    do {
+      for (int i = 0; i < l; i++) {
+        Object element = read(null, expectedType, in);
+        c.add(element);
+      }
+    } while ((l = in.arrayNext()) > 0);
+    return c;
   }
 
   @Override
@@ -116,7 +175,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   protected Object readBytes(Object old, Schema s, Decoder in)
     throws IOException {
     ByteBuffer bytes = in.readBytes(null);
-    Class c = ReflectData.getClassProp(s, ReflectData.CLASS_PROP);
+    Class<?> c = ReflectData.getClassProp(s, SpecificData.CLASS_PROP);
     if (c != null && c.isArray()) {
       byte[] result = new byte[bytes.remaining()];
       bytes.get(result);
@@ -130,12 +189,27 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   protected Object readInt(Object old,
                            Schema expected, Decoder in) throws IOException {
     Object value = in.readInt();
-    String intClass = expected.getProp(ReflectData.CLASS_PROP);
+    String intClass = expected.getProp(SpecificData.CLASS_PROP);
     if (Byte.class.getName().equals(intClass))
       value = ((Integer)value).byteValue();
     else if (Short.class.getName().equals(intClass))
       value = ((Integer)value).shortValue();
+    else if (Character.class.getName().equals(intClass))
+        value = ((Character)(char)(int)(Integer)value);
     return value;
   }
 
+  @Override
+  protected void readField(Object record, Field f, Object oldDatum,
+      ResolvingDecoder in, Object state) throws IOException {
+    if (state != null) {
+      FieldAccessor accessor = ((FieldAccessor[]) state)[f.pos()];
+      if (accessor != null && !Schema.Type.UNION.equals(f.schema().getType())
+          && accessor.supportsIO()) {
+        accessor.read(record, in);
+        return;
+      }
+    }
+    super.readField(record, f, oldDatum, in, state);
+  }
 }

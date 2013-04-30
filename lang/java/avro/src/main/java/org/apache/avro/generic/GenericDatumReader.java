@@ -165,7 +165,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     default: throw new AvroRuntimeException("Unknown type: " + expected);
     }
   }
-
+  
   /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
   protected Object readRecord(Object old, Schema expected, 
@@ -176,11 +176,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     for (Field f : in.readFieldOrder()) {
       int pos = f.pos();
       String name = f.name();
-      Object oldDatum = (old!=null) ? data.getField(r, name, pos, state) : null;
-      data.setField(r, name, pos, read(oldDatum, f.schema(), in), state);
+      Object oldDatum = null;
+      if (old!=null) {
+        oldDatum = data.getField(r, name, pos, state);
+      }
+      readField(r, f, oldDatum, in, state);
     }
 
     return r;
+  }
+  
+  /** Called to read a single field of a record. May be overridden for more 
+   * efficient or alternate implementations.*/
+  protected void readField(Object r, Field f, Object oldDatum,
+    ResolvingDecoder in, Object state) throws IOException {
+    data.setField(r, f.name(), f.pos(), read(oldDatum, f.schema(), in), state);
   }
   
   /** Called to read an enum value. May be overridden for alternate enum

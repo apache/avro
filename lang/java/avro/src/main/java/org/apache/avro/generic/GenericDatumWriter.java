@@ -101,12 +101,19 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     throws IOException {
     Object state = data.getRecordState(datum, schema);
     for (Field f : schema.getFields()) {
-      Object value = data.getField(datum, f.name(), f.pos(), state);
-      try {
-        write(f.schema(), value, out);
-      } catch (NullPointerException e) {
-        throw npe(e, " in field "+f.name());
-      }
+      writeField(datum, f, out, state);
+    }
+  }
+  
+  /** Called to write a single field of a record. May be overridden for more 
+   * efficient or alternate implementations.*/
+  protected void writeField(Object datum, Field f, Encoder out, Object state) 
+      throws IOException {
+    Object value = data.getField(datum, f.name(), f.pos(), state);
+    try {
+      write(f.schema(), value, out);
+    } catch (NullPointerException e) {
+      throw npe(e, " in field " + f.name());
     }
   }
   

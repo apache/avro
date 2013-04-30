@@ -17,14 +17,14 @@
  */
 package org.apache.avro.reflect;
 
-import java.lang.reflect.Array;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Collection;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.specific.SpecificDatumWriter;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
@@ -54,29 +54,74 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   protected ReflectDatumWriter(ReflectData reflectData) {
     super(reflectData);
   }
+
+  /** Called to write a array.  May be overridden for alternate array
+   * representations.*/
+  @Override
+  protected void writeArray(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    if (datum instanceof Collection) {
+      super.writeArray(schema, datum, out);
+      return;
+    }
+    Class<?> elementClass = datum.getClass().getComponentType();
+    if (null == elementClass) {
+      // not a Collection or an Array
+      throw new AvroRuntimeException("Array data must be a Collection or Array");
+    } 
+    Schema element = schema.getElementType();
+    if (elementClass.isPrimitive()) {
+      Schema.Type type = element.getType();
+      out.writeArrayStart();
+      switch(type) {
+      case BOOLEAN:
+        if(elementClass.isPrimitive())
+        ArrayAccessor.writeArray((boolean[]) datum, out);
+        break;
+      case DOUBLE:
+        ArrayAccessor.writeArray((double[]) datum, out);
+        break;
+      case FLOAT:
+        ArrayAccessor.writeArray((float[]) datum, out);
+        break;
+      case INT:
+        if(elementClass.equals(int.class)) {
+          ArrayAccessor.writeArray((int[]) datum, out);
+        } else if(elementClass.equals(char.class)) {
+          ArrayAccessor.writeArray((char[]) datum, out);
+        } else if(elementClass.equals(short.class)) {
+          ArrayAccessor.writeArray((short[]) datum, out);
+        } else {
+          arrayError(elementClass, type);
+        }
+        break;
+      case LONG:
+        ArrayAccessor.writeArray((long[]) datum, out);
+        break;
+      default:
+        arrayError(elementClass, type);
+      }
+      out.writeArrayEnd();
+    } else {
+      out.writeArrayStart();
+      writeObjectArray(element, (Object[]) datum, out);
+      out.writeArrayEnd();
+    }
+  }
   
-  @Override
-  @SuppressWarnings("unchecked")
-  protected long getArraySize(Object array) {
-    if (array instanceof Collection)
-      return ((Collection)array).size();
-    return Array.getLength(array);
+  private void writeObjectArray(Schema element, Object[] data, Encoder out) throws IOException {
+    int size = data.length;
+    out.setItemCount(size);
+    for (int i = 0; i < size; i++) {
+      this.write(element, data[i], out);
+    }
   }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  protected Iterator<Object> getArrayElements(final Object array) {
-    if (array instanceof Collection)
-      return ((Collection<Object>)array).iterator();
-    return new Iterator<Object>() {
-      private int i = 0;
-      private final int length = Array.getLength(array);
-      public boolean hasNext() { return i < length; }
-      public Object next() { return Array.get(array, i++); }
-      public void remove() { throw new UnsupportedOperationException(); }
-    };
+    
+  private void arrayError(Class<?> cl, Schema.Type type) {
+    throw new AvroRuntimeException("Error writing array with inner type " +
+      cl + " and avro type: " + type);
   }
-
+  
   @Override
   protected void writeBytes(Object datum, Encoder out) throws IOException {
     if (datum instanceof byte[])
@@ -92,6 +137,8 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       datum = ((Byte)datum).intValue();
     else if (datum instanceof Short)
       datum = ((Short)datum).intValue();
+    else if (datum instanceof Character)
+        datum = (int)(char)(Character)datum;
     try {
       super.write(schema, datum, out);
     } catch (NullPointerException e) {            // improve error message
@@ -102,4 +149,17 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     }
   }
 
+  @Override
+  protected void writeField(Object record, Field f, Encoder out, Object state)
+      throws IOException {
+    if (state != null) {
+      FieldAccessor accessor = ((FieldAccessor[]) state)[f.pos()];
+      if (accessor != null && !Schema.Type.UNION.equals(f.schema().getType())
+          && accessor.supportsIO()) {
+        accessor.write(record, out);
+        return;
+      }
+    }
+    super.writeField(record, f, out, state);
+  }
 }

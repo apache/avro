@@ -119,7 +119,7 @@ public class EncoderFactory {
       size = MIN_BLOCK_BUFFER_SIZE;
     if (size > MAX_BLOCK_BUFFER_SIZE)
       size = MAX_BLOCK_BUFFER_SIZE;
-    this.binaryBufferSize = size;
+    this.binaryBlockSize = size;
     return this;
   }
 
@@ -249,11 +249,15 @@ public class EncoderFactory {
    * @see BlockingBinaryEncoder
    * @see Encoder
    */
-  public BinaryEncoder blockingBinaryEncoder(OutputStream out, BinaryEncoder reuse) {
+  public BinaryEncoder blockingBinaryEncoder(OutputStream out,
+      BinaryEncoder reuse) {
+    int blockSize = this.binaryBlockSize;
+    int bufferSize = (blockSize * 2 >= this.binaryBufferSize) ? 32
+        : this.binaryBufferSize;
     if (null == reuse || !reuse.getClass().equals(BlockingBinaryEncoder.class)) {
-      return new BlockingBinaryEncoder(out, this.binaryBlockSize, 32);
+      return new BlockingBinaryEncoder(out, blockSize, bufferSize);
     } else {
-      return ((BlockingBinaryEncoder)reuse).configure(out, this.binaryBlockSize, 32);
+      return ((BlockingBinaryEncoder) reuse).configure(out, blockSize, bufferSize);
     }
   }
 
