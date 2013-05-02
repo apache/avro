@@ -32,6 +32,7 @@ class FieldAccessReflect extends FieldAccess {
 
     public ReflectionBasedAccessor(Field field) {
       this.field = field;
+      this.field.setAccessible(true);
     }
 
     @Override

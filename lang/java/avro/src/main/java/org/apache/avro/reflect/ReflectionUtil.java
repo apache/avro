@@ -39,10 +39,12 @@ class ReflectionUtil {
     // so it is monomorphic and the JIT can inline
     FieldAccess access = null;
     try {
-      FieldAccess unsafeAccess = load(
-          "org.apache.avro.reflect.FieldAccessUnsafe", FieldAccess.class);
-      if (validate(unsafeAccess)) {
-        access = unsafeAccess;
+      if (null == System.getProperty("avro.disable.unsafe")) {
+        FieldAccess unsafeAccess = load(
+            "org.apache.avro.reflect.FieldAccessUnsafe", FieldAccess.class);
+        if (validate(unsafeAccess)) {
+          access = unsafeAccess;
+        }
       }
     } catch (Throwable ignored) {
     }
@@ -75,9 +77,9 @@ class ReflectionUtil {
   }
 
   private static final class AccessorTestClass {
-    boolean b = true;
-    byte by = 0xf;
-    char c = 'c';
+    private boolean b = true;
+    protected byte by = 0xf;
+    public char c = 'c';
     short s = 123;
     int i = 999;
     long l = 12345L;
