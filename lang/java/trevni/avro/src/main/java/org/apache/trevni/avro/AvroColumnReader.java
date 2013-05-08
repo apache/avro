@@ -238,7 +238,7 @@ public class AvroColumnReader<D>
       for (Schema branch : s.getTypes()) {
         if (branch.getType() == Schema.Type.NULL) continue;
         if (values[column].nextLength() == 1) {
-          value = nextValue(s, column);
+          value = nextValue(branch, column);
           column++;
           if (!isSimple(branch))
             value = read(branch);
@@ -257,9 +257,9 @@ public class AvroColumnReader<D>
     
     switch (s.getType()) {
     case ENUM:
-      return new GenericData.EnumSymbol(s, s.getEnumSymbols().get((Integer)v));
+      return model.createEnum(s.getEnumSymbols().get((Integer)v), s);
     case FIXED:
-      return new GenericData.Fixed(s, ((ByteBuffer)v).array());
+      return model.createFixed(null, ((ByteBuffer)v).array(), s);
     }
 
     return v;

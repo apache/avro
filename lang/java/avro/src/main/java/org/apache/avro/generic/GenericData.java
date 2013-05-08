@@ -971,6 +971,12 @@ public class GenericData {
     return fixed;
   }
   
+  /** Called to create an enum value. May be overridden for alternate enum
+   * representations.  By default, returns a GenericEnumSymbol. */
+  public Object createEnum(String symbol, Schema schema) {
+    return new EnumSymbol(schema, symbol);
+  }
+
   /**
    * Called to create new record instances. Subclasses may override to use a
    * different record implementation. The returned instance must conform to the

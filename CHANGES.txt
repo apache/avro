@@ -67,6 +67,9 @@ Trunk (not yet released)
     AVRO-1306. Java mapred: Fix incorrect documentation for combiners.
     (Mina Naguib via martinkl)
 
+    AVRO-1320. Java: Fix Trevni to correctly read unions and specific enums.
+    (cutting)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES

@@ -72,14 +72,6 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     super.setSchema(actual);
   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  protected Object createEnum(String symbol, Schema schema) {
-    Class c = getSpecificData().getClass(schema);
-    if (c == null) return super.createEnum(symbol, schema); // punt to generic
-    return Enum.valueOf(c, symbol);
-  }
-
   @Override protected Class findStringClass(Schema schema) {
     Class stringClass = null;
     switch (schema.getType()) {

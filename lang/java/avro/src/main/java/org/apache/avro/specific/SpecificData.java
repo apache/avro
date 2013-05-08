@@ -93,6 +93,13 @@ public class SpecificData extends GenericData {
   }
 
   @Override
+  public Object createEnum(String symbol, Schema schema) {
+    Class c = getClass(schema);
+    if (c == null) return super.createEnum(symbol, schema); // punt to generic
+    return Enum.valueOf(c, symbol);
+  }
+
+  @Override
   protected Schema getEnumSchema(Object datum) {
     return (datum instanceof Enum)
       ? getSchema(datum.getClass())

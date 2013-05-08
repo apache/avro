@@ -202,7 +202,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to create an enum value. May be overridden for alternate enum
    * representations.  By default, returns a GenericEnumSymbol. */
   protected Object createEnum(String symbol, Schema schema) {
-    return new GenericData.EnumSymbol(schema, symbol);
+    return data.createEnum(symbol, schema);
   }
 
   /** Called to read an array instance.  May be overridden for alternate array
