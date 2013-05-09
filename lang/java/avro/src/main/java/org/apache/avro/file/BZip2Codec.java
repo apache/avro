@@ -48,7 +48,9 @@ public class BZip2Codec extends Codec {
     BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos);
 
     try {
-      outputStream.write(uncompressedData.array());
+      outputStream.write(uncompressedData.array(),
+                         uncompressedData.position(),
+                         uncompressedData.remaining());
     } finally {
       outputStream.close();
     }

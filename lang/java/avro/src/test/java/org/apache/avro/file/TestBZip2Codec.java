@@ -41,7 +41,8 @@ public class TestBZip2Codec {
       inputByteArray[i] = (byte)(65 + i % 10);
     }
     
-    ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputByteArray);
+    ByteBuffer inputByteBuffer = ByteBuffer.allocate(inputByteSize * 2);
+    inputByteBuffer.put(inputByteArray);
     
     ByteBuffer compressedBuffer = codec.compress(inputByteBuffer);
     
