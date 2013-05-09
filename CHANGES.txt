@@ -48,6 +48,8 @@ Trunk (not yet released)
     AVRO-1313. Java: Add system property avro.disable.unsafe for disabling
     use of sun.misc.Unsafe. (scottcarey)
 
+    AVRO-1327. Java: Make GenericEnumSymbol implement Comparable. (cutting)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

@@ -361,6 +361,16 @@ public class TestGenericData {
   }
   
   @Test
+  public void testEnumCompare() {
+    Schema s = Schema.createEnum("Kind",null,null,Arrays.asList("Z","Y","X"));
+    GenericEnumSymbol z = new GenericData.EnumSymbol(s, "Z");
+    GenericEnumSymbol y = new GenericData.EnumSymbol(s, "Y");
+    assertEquals(0, z.compareTo(z));
+    assertTrue(y.compareTo(z) > 0);
+    assertTrue(z.compareTo(y) < 0);
+  }
+
+  @Test
   public void testByteBufferDeepCopy() {
     // Test that a deep copy of a byte buffer respects the byte buffer
     // limits and capacity.

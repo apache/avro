@@ -18,7 +18,8 @@
 package org.apache.avro.generic;
 
 /** An enum symbol. */
-public interface GenericEnumSymbol extends GenericContainer {
+public interface GenericEnumSymbol
+    extends GenericContainer, Comparable<GenericEnumSymbol> {
   /** Return the symbol. */
   String toString();
 }
