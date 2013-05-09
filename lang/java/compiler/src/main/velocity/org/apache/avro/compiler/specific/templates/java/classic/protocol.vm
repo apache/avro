@@ -28,7 +28,7 @@ package $protocol.getNamespace();
 #end
 @org.apache.avro.specific.AvroGenerated
 public interface $this.mangle($protocol.getName()) {
-  public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse("${this.javaEscape($protocol.toString())}");
+  public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse(${this.javaSplit($protocol.toString())});
 #foreach ($e in $protocol.getMessages().entrySet())
 #set ($name = $e.getKey())
 #set ($message = $e.getValue())

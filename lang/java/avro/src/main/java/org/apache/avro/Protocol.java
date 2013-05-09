@@ -366,6 +366,14 @@ public class Protocol extends JsonProperties {
     return parse(Schema.FACTORY.createJsonParser(stream));
   }
 
+  /** Read a protocol from one or more json strings */
+  public static Protocol parse(String string, String... more) {
+    StringBuilder b = new StringBuilder(string);
+    for (String part : more)
+      b.append(part);
+    return parse(b.toString());
+  }
+      
   /** Read a protocol from a Json string. */
   public static Protocol parse(String string) {
     try {

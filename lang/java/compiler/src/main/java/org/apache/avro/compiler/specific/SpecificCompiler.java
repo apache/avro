@@ -548,6 +548,25 @@ public class SpecificCompiler {
     return new String[0];
   }
 
+  // maximum size for string constants, to avoid javac limits
+  int maxStringChars = 8192;
+
+  /** Utility for template use. Takes a (potentially overly long) string and
+   *  splits it into a quoted, comma-separted sequence of escaped strings.
+   *  @param s The string to split
+   *  @return A sequence of quoted, comma-separated, escaped strings
+   */
+  public String javaSplit(String s) throws IOException {
+    StringBuilder b = new StringBuilder("\"");    // initial quote
+    for (int i = 0; i < s.length(); i += maxStringChars) {
+      if (i != 0) b.append("\",\"");              // insert quote-comma-quote
+      String chunk = s.substring(i, Math.min(s.length(), i + maxStringChars));
+      b.append(javaEscape(chunk));                // escape chunks
+    }
+    b.append("\"");                               // final quote
+    return b.toString();
+  }
+  
   /** Utility for template use.  Escapes quotes and backslashes. */
   public static String javaEscape(Object o) {
       return o.toString().replace("\\","\\\\").replace("\"", "\\\"");

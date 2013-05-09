@@ -915,6 +915,14 @@ public abstract class Schema extends JsonProperties {
       return parse(FACTORY.createJsonParser(in));
     }
 
+    /** Read a schema from one or more json strings */
+    public Schema parse(String s, String... more) {
+      StringBuilder b = new StringBuilder(s);
+      for (String part : more)
+        b.append(part);
+      return parse(b.toString());
+    }
+      
     /** Parse a schema from the provided string.
      * If named, the schema is added to the names known to this parser. */
     public Schema parse(String s) {

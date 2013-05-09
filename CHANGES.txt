@@ -80,6 +80,9 @@ Trunk (not yet released)
     AVRO-1322. Java: Add Hadoop version classifier to trevni-avro
     Maven artifacts.  (massie)
 
+    AVRO-1316. Java: Fix compiler to split long schema string
+    constants so javac can compile them. (Jeremy Kahn via cutting)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES

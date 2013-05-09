@@ -123,9 +123,7 @@ public class TestSpecificCompiler {
 
   }
 
-  @Test
-  public void testManglingForRecords() throws IOException {
-    String schema = "" +
+  private static String SCHEMA =
       "{ \"name\": \"volatile\", \"type\": \"record\", " +
       "  \"fields\": [ {\"name\": \"package\", \"type\": \"string\" }," +
       "                {\"name\": \"data\", \"type\": \"int\" }," +
@@ -133,8 +131,12 @@ public class TestSpecificCompiler {
       "                {\"name\": \"defaultValue\", \"type\": \"int\" }," +
       "                {\"name\": \"other\", \"type\": \"int\" }," +
       "                {\"name\": \"short\", \"type\": \"volatile\" } ] }";
+
+
+  @Test
+  public void testManglingForRecords() throws IOException {
     Collection<OutputFile> c =
-      new SpecificCompiler(Schema.parse(schema)).compile();
+      new SpecificCompiler(Schema.parse(SCHEMA)).compile();
     assertEquals(1, c.size());
     String contents = c.iterator().next().contents;
 
@@ -158,6 +160,22 @@ public class TestSpecificCompiler {
     assertTrue(contents.contains("new$"));
     
     assertCompilesWithJavaCompiler(c);
+  }
+
+  @Test
+  public void testSchemaSplit() throws IOException {
+    SpecificCompiler compiler = new SpecificCompiler(Schema.parse(SCHEMA));
+    compiler.maxStringChars = 10;
+    Collection<OutputFile> files = compiler.compile();
+    assertCompilesWithJavaCompiler(files);
+  }
+
+  @Test
+  public void testProtocolSplit() throws IOException {
+    SpecificCompiler compiler = new SpecificCompiler(Protocol.parse(PROTOCOL));
+    compiler.maxStringChars = 10;
+    Collection<OutputFile> files = compiler.compile();
+    assertCompilesWithJavaCompiler(files);
   }
 
   @Test

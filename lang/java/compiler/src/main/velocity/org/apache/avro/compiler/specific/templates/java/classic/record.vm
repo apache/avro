@@ -27,7 +27,7 @@ package $schema.getNamespace();
 #end
 @org.apache.avro.specific.AvroGenerated
 public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends org.apache.avro.specific.SpecificExceptionBase#else extends org.apache.avro.specific.SpecificRecordBase#end implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 #foreach ($field in $schema.getFields())
 #if ($field.doc())
