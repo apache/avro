@@ -9,6 +9,9 @@ Trunk (not yet released)
 
     AVRO-1274. Java: Add a schema builder API. (tomwhite)
 
+    AVRO-1319. Java: Add command line tools to generate random data
+    files and to convert Avro to Trevni.  (cutting)
+
   IMPROVEMENTS
 
     AVRO-1260. Ruby: Improve read performance. (Martin Kleppmann via cutting)
