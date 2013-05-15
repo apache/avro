@@ -38,6 +38,7 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
  * @goal idl-protocol
  * @requiresDependencyResolution runtime
  * @phase generate-sources
+ * @threadSafe
  */
 public class IDLProtocolMojo extends AbstractAvroMojo {
   /**

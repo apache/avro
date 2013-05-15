@@ -31,6 +31,7 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
  * 
  * @goal schema
  * @phase generate-sources
+ * @threadSafe
  */
 public class SchemaMojo extends AbstractAvroMojo {
   /**

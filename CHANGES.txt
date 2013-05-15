@@ -50,6 +50,9 @@ Trunk (not yet released)
 
     AVRO-1327. Java: Make GenericEnumSymbol implement Comparable. (cutting)
 
+    AVRO-1314. Java: add @threadSafe annotation to maven plugins.
+    (scottcarey)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

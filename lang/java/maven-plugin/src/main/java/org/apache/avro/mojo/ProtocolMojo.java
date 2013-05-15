@@ -31,6 +31,7 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
  * 
  * @goal protocol
  * @phase generate-sources
+ * @threadSafe
  */
 public class ProtocolMojo extends AbstractAvroMojo {
   /**
