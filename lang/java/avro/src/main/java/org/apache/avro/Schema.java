@@ -1068,7 +1068,7 @@ public abstract class Schema extends JsonProperties {
       Schema result;
       String type = getRequiredText(schema, "type", "No type");
       Name name = null;
-      String savedSpace = null;
+      String savedSpace = names.space();
       String doc = null;
       if (type.equals("record") || type.equals("error")
           || type.equals("enum") || type.equals("fixed")) {
@@ -1079,7 +1079,6 @@ public abstract class Schema extends JsonProperties {
         name = new Name(getRequiredText(schema, "name", "No name in schema"),
                         space);
         if (name.space != null) {                 // set default namespace
-          savedSpace = names.space();
           names.space(name.space);
         }
       }
@@ -1161,8 +1160,7 @@ public abstract class Schema extends JsonProperties {
         if (!SCHEMA_RESERVED.contains(prop))      // ignore reserved
           result.addProp(prop, schema.get(prop));
       }
-      if (savedSpace != null)
-        names.space(savedSpace);                  // restore space
+      names.space(savedSpace);                  // restore space
       if (result instanceof NamedSchema) {
         Set<String> aliases = parseAliases(schema);
         if (aliases != null)                      // add aliases

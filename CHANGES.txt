@@ -86,6 +86,9 @@ Trunk (not yet released)
     AVRO-1316. Java: Fix compiler to split long schema string
     constants so javac can compile them. (Jeremy Kahn via cutting)
 
+    AVRO-1331. Java: Fix schema-parsing incompatibility from AVRO-1295.
+    (cutting)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES
