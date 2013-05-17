@@ -935,6 +935,9 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 				avro_str_free(namespace);
 			} else if (json_is_string(json_namespace)) {
 				const char *namespace = json_string_value(json_namespace);
+				if (strlen(namespace) == 0) {
+					namespace = NULL;
+				}
 				*schema = avro_schema_record(fullname, namespace);
 			} else {
 				*schema = avro_schema_record(fullname, parent_namespace);
@@ -1032,6 +1035,9 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 				avro_str_free(namespace);
 			} else if (json_is_string(json_namespace)) {
 				const char *namespace = json_string_value(json_namespace);
+				if (strlen(namespace) == 0) {
+					namespace = NULL;
+				}
 				*schema = avro_schema_enum_ns(fullname, namespace);
 			} else {
 				*schema = avro_schema_enum_ns(fullname, parent_namespace);
@@ -1166,6 +1172,9 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 				avro_str_free(namespace);
 			} else if (json_is_string(json_namespace)) {
 				const char *namespace = json_string_value(json_namespace);
+				if (strlen(namespace) == 0) {
+					namespace = NULL;
+				}
 				*schema = avro_schema_fixed_ns(fullname, namespace, (int64_t) size);
 			} else {
 				*schema = avro_schema_fixed_ns(fullname, parent_namespace, (int64_t) size);
@@ -1638,9 +1647,11 @@ static int write_record(avro_writer_t out, const struct avro_record_schema_t *re
 	check(rval, avro_write_str(out, "{\"type\":\"record\",\"name\":\""));
 	check(rval, avro_write_str(out, record->name));
 	check(rval, avro_write_str(out, "\","));
-	if (record->space && nullstrcmp(record->space, parent_namespace)) {
+	if (nullstrcmp(record->space, parent_namespace)) {
 		check(rval, avro_write_str(out, "\"namespace\":\""));
-		check(rval, avro_write_str(out, record->space));
+		if (record->space) {
+			check(rval, avro_write_str(out, record->space));
+		}
 		check(rval, avro_write_str(out, "\","));
 	}
 	check(rval, avro_write_str(out, "\"fields\":["));
@@ -1666,9 +1677,11 @@ static int write_enum(avro_writer_t out, const struct avro_enum_schema_t *enump,
 	check(rval, avro_write_str(out, "{\"type\":\"enum\",\"name\":\""));
 	check(rval, avro_write_str(out, enump->name));
 	check(rval, avro_write_str(out, "\","));
-	if (enump->space && nullstrcmp(enump->space, parent_namespace)) {
+	if (nullstrcmp(enump->space, parent_namespace)) {
 		check(rval, avro_write_str(out, "\"namespace\":\""));
-		check(rval, avro_write_str(out, enump->space));
+		if (enump->space) {
+			check(rval, avro_write_str(out, enump->space));
+		}
 		check(rval, avro_write_str(out, "\","));
 	}
 	check(rval, avro_write_str(out, "\"symbols\":["));
@@ -1697,9 +1710,11 @@ static int write_fixed(avro_writer_t out, const struct avro_fixed_schema_t *fixe
 	check(rval, avro_write_str(out, "{\"type\":\"fixed\",\"name\":\""));
 	check(rval, avro_write_str(out, fixed->name));
 	check(rval, avro_write_str(out, "\","));
-	if (fixed->space && nullstrcmp(fixed->space, parent_namespace)) {
+	if (nullstrcmp(fixed->space, parent_namespace)) {
 		check(rval, avro_write_str(out, "\"namespace\":\""));
-		check(rval, avro_write_str(out, fixed->space));
+		if (fixed->space) {
+			check(rval, avro_write_str(out, fixed->space));
+		}
 		check(rval, avro_write_str(out, "\","));
 	}
 	check(rval, avro_write_str(out, "\"size\":"));
