@@ -54,7 +54,7 @@
     <protobuf.version>2.4.1</protobuf.version>
     <thrift.version>0.7.0</thrift.version>
     <slf4j.version>1.6.4</slf4j.version>
-    <snappy.version>1.0.4.1</snappy.version>
+    <snappy.version>1.0.5</snappy.version>
     <velocity.version>1.7</velocity.version>
     <maven.version>2.0.10</maven.version>
     <ant.version>1.8.2</ant.version>

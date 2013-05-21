@@ -53,6 +53,9 @@ Trunk (not yet released)
     AVRO-1314. Java: add @threadSafe annotation to maven plugins.
     (scottcarey)
 
+    AVRO-1334. Java: Upgrade snappy-java dependency to 1.0.5
+    (scottcarey)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types
