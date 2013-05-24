@@ -65,6 +65,8 @@ void avro_writer_flush(avro_writer_t writer);
 void avro_writer_dump(avro_writer_t writer, FILE * fp);
 void avro_reader_dump(avro_reader_t reader, FILE * fp);
 
+int avro_reader_is_eof(avro_reader_t reader);
+
 void avro_reader_free(avro_reader_t reader);
 void avro_writer_free(avro_writer_t writer);
 

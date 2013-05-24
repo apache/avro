@@ -684,9 +684,6 @@ avro_file_reader_read_value(avro_file_reader_t r, avro_value_t *value)
 	check_param(EINVAL, r, "reader");
 	check_param(EINVAL, value, "value");
 
-	check(rval, avro_value_read(r->block_reader, value));
-	r->blocks_read++;
-
 	if (r->blocks_read == r->blocks_total) {
 		check(rval, avro_read(r->reader, sync, sizeof(sync)));
 		if (memcmp(r->sync, sync, sizeof(r->sync)) != 0) {
@@ -694,9 +691,17 @@ avro_file_reader_read_value(avro_file_reader_t r, avro_value_t *value)
 			avro_set_error("Incorrect sync bytes");
 			return EILSEQ;
 		}
-		/* For now, ignore errors (e.g. EOF) */
-		file_read_block_count(r);
+
+		/* Did we just hit the end of the file? */
+		if (avro_reader_is_eof(r->reader))
+			return EOF;
+
+		check(rval, file_read_block_count(r));
 	}
+
+	check(rval, avro_value_read(r->block_reader, value));
+	r->blocks_read++;
+
 	return 0;
 }
 

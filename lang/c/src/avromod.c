@@ -57,6 +57,7 @@ process_file(const char *in_filename, const char *out_filename)
 	avro_schema_t  wschema;
 	avro_value_iface_t  *iface;
 	avro_value_t  value;
+	int rval;
 
 	wschema = avro_file_reader_get_writer_schema(reader);
 	iface = avro_generic_class_from_schema(wschema);
@@ -69,13 +70,17 @@ process_file(const char *in_filename, const char *out_filename)
 		exit(1);
 	}
 
-	while (avro_file_reader_read_value(reader, &value) == 0) {
+	while ((rval = avro_file_reader_read_value(reader, &value)) == 0) {
 		if (avro_file_writer_append_value(writer, &value)) {
 			fprintf(stderr, "Error writing to %s:\n  %s\n",
 				out_filename, avro_strerror());
 			exit(1);
 		}
 		avro_value_reset(&value);
+	}
+
+	if (rval != EOF) {
+		fprintf(stderr, "Error reading value: %s", avro_strerror());
 	}
 
 	avro_file_reader_close(reader);

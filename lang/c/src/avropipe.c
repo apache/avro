@@ -362,11 +362,16 @@ process_file(const char *filename)
 	avro_generic_value_new(iface, &value);
 
 	size_t  record_number = 0;
+	int rval;
 
-	for (; avro_file_reader_read_value(reader, &value) == 0; record_number++) {
+	for (; (rval = avro_file_reader_read_value(reader, &value)) == 0; record_number++) {
 		create_array_prefix(&prefix, "", record_number);
 		process_value((const char *) avro_raw_string_get(&prefix), &value);
 		avro_value_reset(&value);
+	}
+
+	if (rval != EOF) {
+		fprintf(stderr, "Error reading value: %s", avro_strerror());
 	}
 
 	avro_raw_string_done(&prefix);

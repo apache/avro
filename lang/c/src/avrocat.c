@@ -65,7 +65,9 @@ process_file(const char *filename)
 	iface = avro_generic_class_from_schema(wschema);
 	avro_generic_value_new(iface, &value);
 
-	while (avro_file_reader_read_value(reader, &value) == 0) {
+	int rval;
+
+	while ((rval = avro_file_reader_read_value(reader, &value)) == 0) {
 		char  *json;
 
 		if (avro_value_to_json(&value, 1, &json)) {
@@ -79,7 +81,9 @@ process_file(const char *filename)
 		avro_value_reset(&value);
 	}
 
-	if (!feof(fp)) {
+	// If it was not an EOF that caused it to fail,
+	// print the error.
+	if (rval != EOF) {
 		fprintf(stderr, "Error: %s\n", avro_strerror());
 	}
 

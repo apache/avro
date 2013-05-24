@@ -223,7 +223,7 @@ avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 		if (rval != needed) {
 			avro_set_error("Cannot read %" PRIsz " bytes from file",
 				       (size_t) needed);
-			return -1;
+			return EILSEQ;
 		}
 		return 0;
 	} else if (needed <= bytes_available(reader)) {
@@ -241,7 +241,7 @@ avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 		if (rval == 0) {
 			avro_set_error("Cannot read %" PRIsz " bytes from file",
 				       (size_t) needed);
-			return -1;
+			return EILSEQ;
 		}
 		reader->cur = reader->buffer;
 		reader->end = reader->cur + rval;
@@ -249,7 +249,7 @@ avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 		if (bytes_available(reader) < needed) {
 			avro_set_error("Cannot read %" PRIsz " bytes from file",
 				       (size_t) needed);
-			return -1;
+			return EILSEQ;
 		}
 		memcpy(p, reader->cur, needed);
 		reader->cur += needed;
@@ -257,7 +257,7 @@ avro_read_file(struct _avro_reader_file_t *reader, void *buf, int64_t len)
 	}
 	avro_set_error("Cannot read %" PRIsz " bytes from file",
 		       (size_t) needed);
-	return -1;
+	return EILSEQ;
 }
 
 int avro_read(avro_reader_t reader, void *buf, int64_t len)
@@ -345,7 +345,7 @@ avro_write_file(struct _avro_writer_file_t *writer, void *buf, int64_t len)
 	if (len > 0) {
 		rval = fwrite(buf, len, 1, writer->fp);
 		if (rval == 0) {
-			return feof(writer->fp) ? -1 : 0;
+			return feof(writer->fp) ? EOF : 0;
 		}
 	}
 	return 0;
@@ -385,7 +385,7 @@ int64_t avro_writer_tell(avro_writer_t writer)
 	if (is_memory_io(writer)) {
 		return avro_writer_to_memory(writer)->written;
 	}
-	return -1;
+	return EINVAL;
 }
 
 void avro_writer_flush(avro_writer_t writer)
@@ -433,4 +433,12 @@ void avro_writer_free(avro_writer_t writer)
 		}
 		avro_freet(struct _avro_writer_file_t, writer);
 	}
+}
+
+int avro_reader_is_eof(avro_reader_t reader)
+{
+	if (is_file_io(reader)) {
+		return feof(avro_reader_to_file(reader)->fp);
+	}
+	return 0;
 }
