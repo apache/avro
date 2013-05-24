@@ -57,13 +57,8 @@ void *avro_calloc(size_t count, size_t size)
 	return ptr;
 }
 
-char *avro_strdup(const char *str)
+char *avro_str_alloc(size_t str_size)
 {
-	if (str == NULL) {
-		return NULL;
-	}
-
-	size_t  str_size = strlen(str)+1;
 	size_t  buf_size = str_size + sizeof(size_t);
 
 	void  *buf = avro_malloc(buf_size);
@@ -75,6 +70,18 @@ char *avro_strdup(const char *str)
 	char  *new_str = (char *) (size + 1);
 
 	*size = buf_size;
+
+	return new_str;
+}
+
+char *avro_strdup(const char *str)
+{
+	if (str == NULL) {
+		return NULL;
+	}
+
+	size_t  str_size = strlen(str)+1;
+	char *new_str = avro_str_alloc(str_size);
 	memcpy(new_str, str, str_size);
 
 	//fprintf(stderr, "--- new  %" PRIsz " %p %s\n", *size, new_str, new_str);

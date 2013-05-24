@@ -30,13 +30,7 @@ schema_record_equal(struct avro_record_schema_t *a,
 		 */
 		return 0;
 	}
-	if (a->space && b->space) {
-		/* They have different namespaces */
-		if (strcmp(a->space, b->space)) {
-			return 0;
-		}
-	} else if (a->space || b->space) {
-		/* One has a namespace, one doesn't */
+	if (nullstrcmp(a->space, b->space)) {
 		return 0;
 	}
 	for (i = 0; i < a->fields->num_entries; i++) {
@@ -148,6 +142,15 @@ schema_link_equal(struct avro_link_schema_t *a, struct avro_link_schema_t *b)
 	 * recursive schemas so we just check the name of the schema pointed
 	 * to instead of a deep check.  Otherwise, we recurse forever... 
 	 */
+	if (is_avro_record(a->to)) {
+		if (!is_avro_record(b->to)) {
+			return 0;
+		}
+		if (nullstrcmp(avro_schema_to_record(a->to)->space,
+			       avro_schema_to_record(b->to)->space)) {
+			return 0;
+		}
+	}
 	return (strcmp(avro_schema_name(a->to), avro_schema_name(b->to)) == 0);
 }
 

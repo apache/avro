@@ -92,5 +92,8 @@ extern "C" {
 #define container_of(ptr_, type_, member_)  \
     ((type_ *)((char *)ptr_ - (size_t)&((type_ *)0)->member_))
 
+#define nullstrcmp(s1, s2) \
+    (((s1) && (s2)) ? strcmp(s1, s2) : ((s1) || (s2)))
+
 CLOSE_EXTERN
 #endif

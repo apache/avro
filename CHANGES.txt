@@ -59,6 +59,9 @@ Trunk (not yet released)
     AVRO-1238. C: EOF detection in avro_file_reader_read_value.
     (Michael Cooper via dcreager)
 
+    AVRO-1324. C: Handle namespaces in schema parsing.
+    (Ben Walsh via dcreager)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

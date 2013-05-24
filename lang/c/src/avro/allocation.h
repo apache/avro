@@ -80,6 +80,7 @@ void *avro_calloc(size_t count, size_t size);
  * avro_str_free is a string created via avro_strdup.
  */
 
+char *avro_str_alloc(size_t str_size);
 char *avro_strdup(const char *str);
 void avro_str_free(char *str);
 

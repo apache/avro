@@ -33,12 +33,14 @@ avro_writer_t avro_stderr;
 static void run_tests(char *dirpath, int should_pass)
 {
 	char jsontext[4096];
+	char jsontext2[4096];
 	size_t rval;
 	char filepath[1024];
 	DIR *dir;
 	struct dirent *dent;
 	FILE *fp;
 	avro_schema_t schema;
+	avro_writer_t jsontext2_writer;
 
 	dir = opendir(dirpath);
 	if (dir == NULL) {
@@ -82,6 +84,26 @@ static void run_tests(char *dirpath, int should_pass)
 							"failed to avro_schema_equal(schema,avro_schema_copy())\n");
 						exit(EXIT_FAILURE);
 					}
+					jsontext2_writer = avro_writer_memory(jsontext2, sizeof(jsontext2));
+					if (avro_schema_to_json(schema, jsontext2_writer)) {
+						fprintf(stderr, "failed to write schema (%s)\n",
+							avro_strerror());
+						exit(EXIT_FAILURE);
+					}
+					avro_write(jsontext2_writer, (void *)"", 1);  /* zero terminate */
+					avro_writer_free(jsontext2_writer);
+					avro_schema_decref(schema);
+					if (avro_schema_from_json(jsontext2, 0, &schema, NULL)) {
+						fprintf(stderr, "failed to write then read schema (%s)\n",
+							avro_strerror());
+						exit(EXIT_FAILURE);
+					}
+					if (!avro_schema_equal
+					    (schema, schema_copy)) {
+						fprintf(stderr, "failed read-write-read cycle (%s)\n",
+							avro_strerror());
+						exit(EXIT_FAILURE);
+					}
 					avro_schema_decref(schema_copy);
 					avro_schema_decref(schema);
 				} else {
@@ -94,6 +116,7 @@ static void run_tests(char *dirpath, int should_pass)
 				}
 			} else {
 				if (should_pass) {
+					fprintf(stderr, "%s\n", avro_strerror());
 					fprintf(stderr,
 						"fail! (should have succeeded but didn't)\n");
 					exit(EXIT_FAILURE);
