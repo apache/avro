@@ -102,6 +102,8 @@ public:
         return curToken;
     }
 
+    void expectToken(Token tk);
+
     bool boolValue() {
         return bv;
     }

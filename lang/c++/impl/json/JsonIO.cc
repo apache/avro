@@ -21,6 +21,8 @@
 namespace avro {
 namespace json {
 
+using std::ostringstream;
+
 const char* const
 JsonParser::tokenNames[] = {
     "Null",
@@ -42,6 +44,25 @@ char JsonParser::next()
     }
     hasNext = false;
     return ch;
+}
+
+void JsonParser::expectToken(Token tk)
+{
+    if (advance() != tk) {
+        if (tk == tkDouble && cur() == tkString
+            && (sv == "Infinity" || sv == "-Infinity" || sv == "NaN")) {
+            curToken = tkDouble;
+            dv = sv == "Infinity" ? std::numeric_limits<double>::infinity() :
+                sv == "-Infinity" ? -std::numeric_limits<double>::infinity() :
+                std::numeric_limits<double>::quiet_NaN();
+            return;
+        }
+        ostringstream oss;
+        oss << "Incorrect token in the stream. Expected: "
+            << JsonParser::toString(tk) << ", found "
+            << JsonParser::toString(cur());
+        throw Exception(oss.str());
+    }
 }
 
 JsonParser::Token JsonParser::doAdvance()
@@ -122,14 +143,14 @@ JsonParser::Token JsonParser::tryNumber(char ch)
     sv.push_back(ch);
 
     hasNext = false;
-    int state = (ch == '-') ? 0 : (ch == 0) ? 1 : 2;
+    int state = (ch == '-') ? 0 : (ch == '0') ? 1 : 2;
     for (; ;) {
         switch (state) {
         case 0:
             if (in_.hasMore()) {
                 ch = in_.read();
                 if (isdigit(ch)) {
-                    state = (ch == 0) ? 1 : 2;
+                    state = (ch == '0') ? 1 : 2;
                     sv.push_back(ch);
                     continue;
                 }

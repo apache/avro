@@ -26,6 +26,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/any.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include "ValidatingCodec.hh"
 #include "Symbol.hh"
@@ -160,13 +161,7 @@ Production JsonGrammarGenerator::doGenerate(const NodePtr& n,
 
 static void expectToken(JsonParser& in, JsonParser::Token tk)
 {
-    if (in.advance() != tk) {
-        ostringstream oss;
-        oss << "Incorrect token in the stream. Expected: "
-            << JsonParser::toString(tk) << ", found "
-            << JsonParser::toString(in.cur());
-        throw Exception(oss.str());
-    }
+    in.expectToken(tk);
 }
 
 class JsonDecoderHandler {
@@ -573,14 +568,30 @@ template<typename P>
 void JsonEncoder<P>::encodeFloat(float f)
 {
     parser_.advance(Symbol::sFloat);
-    out_.encodeNumber(f);
+    if (f == std::numeric_limits<float>::infinity()) {
+        out_.encodeString("Infinity");
+    } else if (f == -std::numeric_limits<float>::infinity()) {
+        out_.encodeString("-Infinity");
+    } else if (boost::math::isnan(f)) {
+        out_.encodeString("NaN");
+    } else {
+        out_.encodeNumber(f);
+    }
 }
 
 template<typename P>
 void JsonEncoder<P>::encodeDouble(double d)
 {
     parser_.advance(Symbol::sDouble);
-    out_.encodeNumber(d);
+    if (d == std::numeric_limits<double>::infinity()) {
+        out_.encodeString("Infinity");
+    } else if (d == -std::numeric_limits<double>::infinity()) {
+        out_.encodeString("-Infinity");
+    } else if (boost::math::isnan(d)) {
+        out_.encodeString("NaN");
+    } else {
+        out_.encodeNumber(d);
+    }
 }
 
 template<typename P>

@@ -36,8 +36,24 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 namespace avro {
+
+/*
+void dump(const OutputStream& os)
+{
+    std::auto_ptr<InputStream> in = memoryInputStream(os);
+    const char *b;
+    size_t n;
+    std::cout << os.byteCount() << std::endl;
+    while (in->next(reinterpret_cast<const uint8_t**>(&b), &n)) {
+        std::cout << std::string(b, n);
+    }
+    std::cout << std::endl;
+}
+*/
+
 namespace parsing {
 
 static const unsigned int count = 10;
@@ -588,20 +604,6 @@ struct TestData4 {
     const char* readerValues[100];
     unsigned int depth;
 };
-
-/*
-static void dump(const OutputStream& os)
-{
-    std::auto_ptr<InputStream> in = memoryInputStream(os);
-    const char *b;
-    size_t n;
-    std::cout << os.byteCount() << std::endl;
-    while (in->next(reinterpret_cast<const uint8_t**>(&b), &n)) {
-        std::cout << std::string(b, n);
-    }
-    std::cout << std::endl;
-}
-*/
 
 template<typename CodecFactory>
 void testCodec(const TestData& td) {
@@ -1418,6 +1420,57 @@ static void testStreamLifetimes()
 
 }
 
+static void testLimits(const EncoderPtr& e, const DecoderPtr& d)
+{
+    std::auto_ptr<OutputStream> s1 = memoryOutputStream();
+    {
+        e->init(*s1);
+        e->encodeDouble(std::numeric_limits<double>::infinity());
+        e->encodeDouble(-std::numeric_limits<double>::infinity());
+        e->encodeDouble(std::numeric_limits<double>::quiet_NaN());
+        e->encodeFloat(std::numeric_limits<float>::infinity());
+        e->encodeFloat(-std::numeric_limits<float>::infinity());
+        e->encodeFloat(std::numeric_limits<float>::quiet_NaN());
+        e->flush();
+    }
+
+    {
+        std::auto_ptr<InputStream> s2 = memoryInputStream(*s1);
+        d->init(*s2);
+        BOOST_CHECK_EQUAL(d->decodeDouble(),
+            std::numeric_limits<double>::infinity());
+        BOOST_CHECK_EQUAL(d->decodeDouble(),
+            -std::numeric_limits<double>::infinity());
+        BOOST_CHECK(boost::math::isnan(d->decodeDouble()));
+        BOOST_CHECK_EQUAL(d->decodeFloat(),
+            std::numeric_limits<float>::infinity());
+        BOOST_CHECK_EQUAL(d->decodeFloat(),
+            -std::numeric_limits<float>::infinity());
+        BOOST_CHECK(boost::math::isnan(d->decodeFloat()));
+    }
+
+}
+
+static void testLimitsBinaryCodec()
+{
+    testLimits(binaryEncoder(), binaryDecoder());
+}
+
+static void testLimitsJsonCodec()
+{
+    const char* s = "{ \"type\": \"record\", \"name\": \"r\", \"fields\": ["
+        "{ \"name\": \"d1\", \"type\": \"double\" },"
+        "{ \"name\": \"d2\", \"type\": \"double\" },"
+        "{ \"name\": \"d3\", \"type\": \"double\" },"
+        "{ \"name\": \"f1\", \"type\": \"float\" },"
+        "{ \"name\": \"f2\", \"type\": \"float\" },"
+        "{ \"name\": \"f3\", \"type\": \"float\" }"
+    "]}";
+    ValidSchema schema = parsing::makeValidSchema(s);
+    testLimits(jsonEncoder(schema), jsonDecoder(schema));
+}
+
+
 }   // namespace avro
 
 boost::unit_test::test_suite*
@@ -1428,6 +1481,8 @@ init_unit_test_suite( int argc, char* argv[] )
     test_suite* ts= BOOST_TEST_SUITE("Avro C++ unit tests for codecs");
     avro::parsing::add_tests(*ts);
     ts->add(BOOST_TEST_CASE(avro::testStreamLifetimes));
+    ts->add(BOOST_TEST_CASE(avro::testLimitsBinaryCodec));
+    ts->add(BOOST_TEST_CASE(avro::testLimitsJsonCodec));
 
     return ts;
 }

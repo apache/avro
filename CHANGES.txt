@@ -62,6 +62,8 @@ Trunk (not yet released)
     AVRO-1324. C: Handle namespaces in schema parsing.
     (Ben Walsh via dcreager)
 
+    AVRO-1290. Handling NaN and positive and negative infinities in C++ Json (Daniel Russel via thiru)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types
