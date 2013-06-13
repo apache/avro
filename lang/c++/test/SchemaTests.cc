@@ -137,6 +137,12 @@ static void testBasic_fail(const char* schema)
     BOOST_CHECK_THROW(compileJsonSchemaFromString(schema), Exception);
 }
 
+static void testCompile(const char* schema)
+{
+    BOOST_CHECKPOINT(schema);
+    compileJsonSchemaFromString(std::string(schema));
+}
+
 }
 }
 
@@ -155,6 +161,7 @@ init_unit_test_suite(int argc, char* argv[])
     ADD_PARAM_TEST(ts, avro::schema::testBasic, avro::schema::basicSchemas);
     ADD_PARAM_TEST(ts, avro::schema::testBasic_fail,
         avro::schema::basicSchemaErrors);
+    ADD_PARAM_TEST(ts, avro::schema::testCompile, avro::schema::basicSchemas);
 
     return ts;
 }

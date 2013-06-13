@@ -300,6 +300,12 @@ AVRO_DECL ValidSchema compileJsonSchemaFromString(const char* input)
         ::strlen(input));
 }
 
+AVRO_DECL ValidSchema compileJsonSchemaFromString(const std::string& input)
+{
+    return compileJsonSchemaFromMemory(
+        reinterpret_cast<const uint8_t*>(&input[0]), input.size());
+}
+
 static ValidSchema compile(std::istream& is)
 {
     std::auto_ptr<InputStream> in = istreamInputStream(is);
