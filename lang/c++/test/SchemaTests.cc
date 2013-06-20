@@ -83,6 +83,17 @@ const char* basicSchemas[] = {
         "\"namespace\": \"org.apache.hadoop.avro\", \"size\": 1}",
     "{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1}",
     "{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1}",
+
+    // Extra attributes (should be ignored)
+    "{\"type\": \"null\", \"extra attribute\": \"should be ignored\"}",
+    "{\"type\": \"boolean\", \"extra1\": 1, \"extra2\": 2, \"extra3\": 3}",
+    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
+        "[{\"name\": \"f\",\"type\": \"long\"}], \"extra attribute\": 1}",
+    "{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"],"
+        "\"extra attribute\": 1}",
+    "{\"type\": \"array\", \"items\": \"long\", \"extra attribute\": 1}",
+    "{\"type\": \"map\", \"values\": \"long\", \"extra attribute\": 1}",
+    "{\"type\": \"fixed\", \"name\": \"Test\", \"size\": 1, \"extra attribute\": 1}",
 };
 
 const char* basicSchemaErrors[] = {

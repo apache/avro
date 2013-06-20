@@ -225,13 +225,7 @@ static NodePtr makeNode(const Entity& e, const map<string, Entity>& m,
 {
     const string& type = getField<string>(e, m, "type");
     if (NodePtr result = makePrimitive(type)) {
-        if (m.size() > 1) {
-            throw Exception(boost::format(
-                "Unknown additional Json fields: %1%")
-                % e.toString());
-        } else {
-            return result;
-        }
+        return result;
     } else if (type == "record" || type == "error" ||
         type == "enum" || type == "fixed") {
         Name nm = getName(e, m, ns);
