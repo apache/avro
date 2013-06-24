@@ -104,6 +104,8 @@ Trunk (not yet released)
 
     AVRO-1346. C++: schema parser cannot parse verbose primitive types (Skye Wanderman-Milne via thiru)
 
+    AVRO-1171. Avro C++ Json Decoder: Double cannot be decoded (Sam Overend via thiru)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES

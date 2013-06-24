@@ -257,6 +257,8 @@ public:
         sep2();
     }
 
+    void encodeNumber(double t);
+
     void encodeString(const std::string& s) {
         if (top == stMap0) {
             top = stKey;

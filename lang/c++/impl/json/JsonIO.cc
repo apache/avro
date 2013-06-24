@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "boost/math/special_functions/fpclassify.hpp"
 #include "JsonIO.hh"
 
 namespace avro {
@@ -49,13 +50,20 @@ char JsonParser::next()
 void JsonParser::expectToken(Token tk)
 {
     if (advance() != tk) {
-        if (tk == tkDouble && cur() == tkString
-            && (sv == "Infinity" || sv == "-Infinity" || sv == "NaN")) {
-            curToken = tkDouble;
-            dv = sv == "Infinity" ? std::numeric_limits<double>::infinity() :
-                sv == "-Infinity" ? -std::numeric_limits<double>::infinity() :
-                std::numeric_limits<double>::quiet_NaN();
-            return;
+        if (tk == tkDouble) {
+            if(cur() == tkString
+                && (sv == "Infinity" || sv == "-Infinity" || sv == "NaN")) {
+                curToken = tkDouble;
+                dv = sv == "Infinity" ?
+                    std::numeric_limits<double>::infinity() :
+                    sv == "-Infinity" ?
+                        -std::numeric_limits<double>::infinity() :
+                    std::numeric_limits<double>::quiet_NaN();
+                return;
+            } else if (cur() == tkLong) {
+                dv = double(lv);
+                return;
+            }
         }
         ostringstream oss;
         oss << "Incorrect token in the stream. Expected: "
@@ -342,6 +350,24 @@ JsonParser::Token JsonParser::tryLiteral(const char exp[], size_t n, Token tk)
     }
     return tk;
 }
+
+void JsonGenerator::encodeNumber(double t) {
+    sep();
+    std::ostringstream oss;
+    if (boost::math::isfinite(t)) {
+        oss << t;
+    } else if (boost::math::isnan(t)) {
+        oss << "NaN";
+    } else if (t == std::numeric_limits<double>::infinity()) {
+        oss << "Infinity";
+    } else {
+        oss << "-Infinity";
+    }
+    const std::string& s = oss.str();
+    out_.writeBytes(reinterpret_cast<const uint8_t*>(&s[0]), s.size());
+    sep2();
+}
+
 
 }
 }

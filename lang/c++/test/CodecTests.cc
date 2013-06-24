@@ -1309,6 +1309,7 @@ static const TestData4 data4[] = {
 };
 
 #define COUNTOF(x)  sizeof(x) / sizeof(x[0])
+#define ENDOF(x)    (x) + COUNTOF(x)
 
 #define ADD_TESTS(testSuite, Factory, testFunc, data)           \
 testSuite.add(BOOST_PARAM_TEST_CASE(&testFunc<Factory>,         \
@@ -1470,6 +1471,28 @@ static void testLimitsJsonCodec()
     testLimits(jsonEncoder(schema), jsonDecoder(schema));
 }
 
+struct JsonData {
+    const char *schema;
+    const char *json;
+    const char* calls;
+    int depth;
+};
+
+const JsonData jsonData[] = {
+    { "{\"type\": \"double\"}", " 10 ", "D", 1 },
+    { "{\"type\": \"double\"}", " 10.0 ", "D", 1 },
+    { "{\"type\": \"double\"}", " \"Infinity\"", "D", 1 },
+    { "{\"type\": \"double\"}", " \"-Infinity\"", "D", 1 },
+    { "{\"type\": \"double\"}", " \"NaN\"", "D", 1 },
+    { "{\"type\": \"long\"}", " 10 ", "L", 1 },
+};
+
+static void testJson(const JsonData& data)
+{
+    ValidSchema schema = parsing::makeValidSchema(data.schema);
+    EncoderPtr e = jsonEncoder(schema);
+    
+}
 
 }   // namespace avro
 
@@ -1483,6 +1506,8 @@ init_unit_test_suite( int argc, char* argv[] )
     ts->add(BOOST_TEST_CASE(avro::testStreamLifetimes));
     ts->add(BOOST_TEST_CASE(avro::testLimitsBinaryCodec));
     ts->add(BOOST_TEST_CASE(avro::testLimitsJsonCodec));
+    ts->add(BOOST_PARAM_TEST_CASE(&avro::testJson, avro::jsonData,
+        ENDOF(avro::jsonData)));
 
     return ts;
 }
