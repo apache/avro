@@ -12,6 +12,8 @@ Trunk (not yet released)
     AVRO-1319. Java: Add command line tools to generate random data
     files and to convert Avro to Trevni.  (cutting)
 
+    AVRO-823: C#: Add data file support. (David McIntosh via cutting)
+
   IMPROVEMENTS
 
     AVRO-1260. Ruby: Improve read performance. (Martin Kleppmann via cutting)

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
@@ -88,6 +88,16 @@
     <Compile Include="CodeGen\CodeGen.cs" />
     <Compile Include="CodeGen\CodeGenException.cs" />
     <Compile Include="CodeGen\CodeGenUtil.cs" />
+    <Compile Include="File\Codec.cs" />
+    <Compile Include="File\DataBlock.cs" />
+    <Compile Include="File\DataFileConstants.cs" />
+    <Compile Include="File\DataFileReader.cs" />
+    <Compile Include="File\DataFileWriter.cs" />
+    <Compile Include="File\DeflateCodec.cs" />
+    <Compile Include="File\Header.cs" />
+    <Compile Include="File\IFileReader.cs" />
+    <Compile Include="File\IFileWriter.cs" />
+    <Compile Include="File\NullCodec.cs" />
     <Compile Include="Generic\DatumReader.cs" />
     <Compile Include="Generic\DatumWriter.cs" />
     <Compile Include="Generic\GenericEnum.cs" />

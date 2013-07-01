@@ -98,10 +98,11 @@ namespace Avro.Test
             }
         }
 
+       
         [Test]
         public void CanCodeGenTraceProtocol()
         {
-            var traceProtocol = File.ReadAllText("../../../../../share/schemas/org/apache/avro/ipc/trace/avroTrace.avpr");
+            var traceProtocol = System.IO.File.ReadAllText("../../../../../share/schemas/org/apache/avro/ipc/trace/avroTrace.avpr");
             Protocol protocol = Protocol.Parse(traceProtocol);
             var compilerResults = GenerateProtocol(protocol);
 
@@ -113,6 +114,7 @@ namespace Avro.Test
             Assert.That(types.Contains("org.apache.avro.ipc.trace.SpanEvent"), "Should have contained SpanEvent type");
             Assert.That(types.Contains("org.apache.avro.ipc.trace.TimestampedEvent"), "Should have contained TimestampedEvent type");
         }
+
 
         private static CompilerResults GenerateSchema(Schema schema)
         {
@@ -134,8 +136,6 @@ namespace Avro.Test
 
             var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
-            comparam.ReferencedAssemblies.Add("System.Core.dll");
-            comparam.ReferencedAssemblies.Add(Type.GetType("Mono.Runtime") != null ? "Mono.CSharp.dll" : "Microsoft.CSharp.dll");
             comparam.ReferencedAssemblies.Add("Avro.dll");
             comparam.GenerateInMemory = true;
             var ccp = new CSharpCodeProvider();

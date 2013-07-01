@@ -181,7 +181,8 @@ namespace Avro.Specific
         /// <returns>enum value</returns>
         protected override object ReadEnum(object reuse, EnumSchema writerSchema, Schema readerSchema, Decoder dec)
         {
-            return dec.ReadEnum();
+            EnumSchema rs = readerSchema as EnumSchema;
+            return rs.Ordinal(writerSchema[dec.ReadEnum()]);
         }
 
         /// <summary>

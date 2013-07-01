@@ -184,8 +184,6 @@ namespace Avro.Test
             // compile
             var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
-            comparam.ReferencedAssemblies.Add("System.Core.dll");
-            comparam.ReferencedAssemblies.Add(Type.GetType("Mono.Runtime") != null ? "Mono.CSharp.dll" : "Microsoft.CSharp.dll");
             comparam.ReferencedAssemblies.Add("Avro.dll");
             comparam.GenerateInMemory = true;
             var ccp = new Microsoft.CSharp.CSharpCodeProvider();
@@ -208,7 +206,6 @@ namespace Avro.Test
             methodInfo.Invoke(rec, null);
 
             var x1 = compres.CompiledAssembly.FullName;
-            
 
             Assert.IsFalse(rec == null);
 
@@ -224,6 +221,55 @@ namespace Avro.Test
             var reader = new SpecificDefaultReader(rec.Schema, rec.Schema);
             var rec2 = (ISpecificRecord)reader.Read(null, rec.Schema, rec.Schema, decoder);
             Assert.IsFalse(rec2 == null);
+        }
+
+        [TestCase]
+        public void TestEnumResolution()
+        {
+            Schema writerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," + 
+                                        "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [\"FIRST\", \"SECOND\"]} }]}");
+
+            Schema readerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," + 
+                                        "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");
+
+
+            EnumRecord testRecord = new EnumRecord();
+            testRecord.enumType = EnumType.SECOND;
+
+            // serialize
+            var stream = new MemoryStream();
+            var binEncoder = new BinaryEncoder(stream);
+            var writer = new SpecificWriter<EnumRecord>(writerSchema);
+            writer.Write(testRecord, binEncoder);
+
+            // deserialize
+            stream.Position = 0;
+            var decoder = new BinaryDecoder(stream);
+            var reader = new SpecificReader<EnumRecord>(writerSchema, readerSchema);
+            var rec2 = reader.Read(null, decoder);
+            Assert.AreEqual( EnumType.SECOND, rec2.enumType );
+        }
+    }
+    enum EnumType
+    {
+        THIRD,
+        FIRST,
+        SECOND
+    }
+
+    class EnumRecord : ISpecificRecord
+    {
+        public EnumType enumType { get; set; }
+        public Schema Schema { get; set; }
+
+        public object Get(int fieldPos)
+        {
+            return enumType;
+        }
+
+        public void Put(int fieldPos, object fieldValue)
+        {
+            enumType = (EnumType)fieldValue;
         }
     }
 }

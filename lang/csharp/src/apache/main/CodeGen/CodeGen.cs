@@ -565,7 +565,7 @@ namespace Avro
             var ctrfield = new CodeTypeReference("Schema");
             string schemaFname = "_SCHEMA";
             var codeField = new CodeMemberField(ctrfield, schemaFname);
-            codeField.Attributes = MemberAttributes.Private | MemberAttributes.Static;
+            codeField.Attributes = MemberAttributes.Public | MemberAttributes.Static;
             // create function call Schema.Parse(json)
             var cpe = new CodePrimitiveExpression(schema.ToString());
             var cmie = new CodeMethodInvokeExpression(
