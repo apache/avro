@@ -296,11 +296,17 @@ public class NettyTransceiver extends Transceiver {
     Map<Integer, Callback<List<ByteBuffer>>> requestsToCancel = null;
     boolean stateReadLockHeld = stateLock.getReadHoldCount() != 0;
 
+    ChannelFuture channelFutureToCancel = null;
     synchronized(channelFutureLock) {
         if (stopping && channelFuture != null) {
-           channelFuture.cancel();
+          channelFutureToCancel = channelFuture;
+          channelFuture = null;
         }
     }
+    if (channelFutureToCancel != null) {
+      channelFutureToCancel.cancel();
+    }
+    
     if (stateReadLockHeld) {
       stateLock.readLock().unlock();
     }

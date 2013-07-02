@@ -112,6 +112,9 @@ Trunk (not yet released)
     AVRO-1171. Avro C++ Json Decoder: Double cannot be decoded (Sam
     Overend via thiru)
 
+    AVRO-1293. Java: Fix potential deadlock in NettyTransceiver.
+    (James Baldassari via cutting)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES
