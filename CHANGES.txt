@@ -115,6 +115,9 @@ Trunk (not yet released)
     AVRO-1293. Java: Fix potential deadlock in NettyTransceiver.
     (James Baldassari via cutting)
 
+    AVRO-1292. Java: Fix potential client blocking in NettyTransceiver.
+    (James Baldassari via cutting)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES
