@@ -64,7 +64,8 @@ Trunk (not yet released)
     AVRO-1324. C: Handle namespaces in schema parsing.
     (Ben Walsh via dcreager)
 
-    AVRO-1290. Handling NaN and positive and negative infinities in C++ Json (Daniel Russel via thiru)
+    AVRO-1290. Handling NaN and positive and negative infinities in
+    C++ Json (Daniel Russel via thiru)
 
   BUG FIXES
 
@@ -102,11 +103,14 @@ Trunk (not yet released)
     AVRO-1331. Java: Fix schema-parsing incompatibility from AVRO-1295.
     (cutting)
 
-    AVRO-1181. compileJsonSchemaFromString(std::string) declared in Compiler.hh but not defined (Daniel Russel via thiru)
+    AVRO-1181. compileJsonSchemaFromString(std::string) declared in
+    Compiler.hh but not defined (Daniel Russel via thiru)
 
-    AVRO-1346. C++: schema parser cannot parse verbose primitive types (Skye Wanderman-Milne via thiru)
+    AVRO-1346. C++: schema parser cannot parse verbose primitive types
+    (Skye Wanderman-Milne via thiru)
 
-    AVRO-1171. Avro C++ Json Decoder: Double cannot be decoded (Sam Overend via thiru)
+    AVRO-1171. Avro C++ Json Decoder: Double cannot be decoded (Sam
+    Overend via thiru)
 
 Avro 1.7.4 (22 February 2012)
 
