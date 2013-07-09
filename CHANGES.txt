@@ -67,6 +67,9 @@ Trunk (not yet released)
     AVRO-1290. Handling NaN and positive and negative infinities in
     C++ Json (Daniel Russel via thiru)
 
+    AVRO-1351. Extend SortedKeyValueFile to support data models
+    besides generic. (cutting)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

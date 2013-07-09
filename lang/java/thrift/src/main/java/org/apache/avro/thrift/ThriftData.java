@@ -30,6 +30,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
 
 import org.apache.thrift.TBase;
 import org.apache.thrift.TEnum;
@@ -60,6 +61,11 @@ public class ThriftData extends GenericData {
   @Override
   public DatumReader createDatumReader(Schema schema) {
     return new ThriftDatumReader(schema, schema, this);
+  }
+
+  @Override
+  public DatumWriter createDatumWriter(Schema schema) {
+    return new ThriftDatumWriter(schema, this);
   }
 
   @Override

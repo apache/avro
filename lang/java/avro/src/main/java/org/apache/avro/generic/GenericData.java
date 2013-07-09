@@ -42,6 +42,7 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.util.Utf8;
 
@@ -336,6 +337,11 @@ public class GenericData {
   /** Returns a {@link DatumReader} for this kind of data. */
   public DatumReader createDatumReader(Schema schema) {
     return new GenericDatumReader(schema, schema, this);
+  }
+
+  /** Returns a {@link DatumWriter} for this kind of data. */
+  public DatumWriter createDatumWriter(Schema schema) {
+    return new GenericDatumWriter(schema, this);
   }
 
   /** Returns true if a Java datum matches a schema. */
@@ -929,13 +935,17 @@ public class GenericData {
       case NULL:
         return null;
       case RECORD:
-        IndexedRecord recordValue = (IndexedRecord) value;
-        IndexedRecord recordCopy = (IndexedRecord) newRecord(null, schema);
-        for (Field field : schema.getFields()) {
-          recordCopy.put(field.pos(), 
-              deepCopy(field.schema(), recordValue.get(field.pos())));
+        Object oldState = getRecordState(value, schema);
+        Object newRecord = newRecord(null, schema);
+        Object newState = getRecordState(newRecord, schema);
+        for (Field f : schema.getFields()) {
+          int pos = f.pos();
+          String name = f.name();
+          Object newValue = deepCopy(f.schema(),
+                                     getField(value, name, pos, oldState));
+          setField(newRecord, name, pos, newValue, newState);
         }
-        return (T)recordCopy;
+        return (T)newRecord;
       case STRING:
         // Strings are immutable
         if (value instanceof String) {

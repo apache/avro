@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.hadoop.io.AvroKeyValue;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.file.FileReader;
@@ -198,4 +199,71 @@ public class TestSortedKeyValueFile {
       reader.close();
     }
   }
+
+  public static class Stringy implements Comparable<Stringy> {
+    private String s;
+    public Stringy() {};
+    public Stringy(String s) { this.s = s; }
+    @Override public String toString() { return s; }
+    @Override public int hashCode() { return s.hashCode(); }
+    @Override public boolean equals(Object that) {
+      return this.s.equals(that.toString());
+    }
+    @Override public int compareTo(Stringy that) {
+      return this.s.compareTo(that.s);
+    }
+  }
+
+  @Test public void testAlternateModel() throws Exception {
+    LOG.debug("Writing some reflect records...");
+
+    ReflectData model = ReflectData.get();
+
+    Configuration conf = new Configuration();
+    SortedKeyValueFile.Writer.Options options
+      = new SortedKeyValueFile.Writer.Options()
+      .withKeySchema(model.getSchema(Stringy.class))
+      .withValueSchema(model.getSchema(Stringy.class))
+      .withConfiguration(conf)
+      .withPath(new Path(mTempDir.getRoot().getPath(), "reflect"))
+      .withDataModel(model)
+      .withIndexInterval(2);
+
+    SortedKeyValueFile.Writer<Stringy,Stringy> writer
+        = new SortedKeyValueFile.Writer<Stringy,Stringy>(options);
+
+    try {
+      writer.append(new Stringy("apple"), new Stringy("Apple"));
+      writer.append(new Stringy("banana"), new Stringy("Banana"));
+      writer.append(new Stringy("carrot"), new Stringy("Carrot"));
+      writer.append(new Stringy("durian"), new Stringy("Durian"));
+    } finally {
+      writer.close();
+    }
+
+    LOG.debug("Reading the file back using a reader...");
+    SortedKeyValueFile.Reader.Options readerOptions =
+      new SortedKeyValueFile.Reader.Options()
+      .withKeySchema(model.getSchema(Stringy.class))
+      .withValueSchema(model.getSchema(Stringy.class))
+      .withConfiguration(conf)
+      .withPath(new Path(mTempDir.getRoot().getPath(), "reflect"))
+      .withDataModel(model);
+
+    SortedKeyValueFile.Reader<Stringy,Stringy> reader
+      = new SortedKeyValueFile.Reader<Stringy,Stringy>(readerOptions);
+
+    try {
+      assertEquals(new Stringy("Carrot"), reader.get(new Stringy("carrot")));
+      assertEquals(new Stringy("Banana"), reader.get(new Stringy("banana")));
+      assertNull(reader.get(new Stringy("a-vegetable")));
+      assertNull(reader.get(new Stringy("beet")));
+      assertNull(reader.get(new Stringy("zzz")));
+    } finally {
+      reader.close();
+    }
+
+  }
+
+
 }

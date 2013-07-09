@@ -28,9 +28,8 @@ import java.util.TreeMap;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.file.DataFileReader;
@@ -89,6 +88,9 @@ public class SortedKeyValueFile {
     /** The key schema for the data file. */
     private final Schema mKeySchema;
 
+    /** The model for the data. */
+    private GenericData model;
+
     /** A class to encapsulate the options of a Reader. */
     public static class Options {
       /** The configuration. */
@@ -102,6 +104,9 @@ public class SortedKeyValueFile {
 
       /** The reader schema for the value. */
       private Schema mValueSchema;
+
+      /** The model for the data. */
+      private GenericData model = SpecificData.get();
 
       /**
        * Sets the configuration.
@@ -182,6 +187,18 @@ public class SortedKeyValueFile {
       public Schema getValueSchema() {
         return mValueSchema;
       }
+
+      /** Set the data model. */
+      public Options withDataModel(GenericData model) {
+        this.model = model;
+        return this;
+      }
+
+      /** Return the data model. */
+      public GenericData getDataModel() {
+        return model;
+      }
+
     }
 
     /**
@@ -192,6 +209,7 @@ public class SortedKeyValueFile {
      */
     public Reader(Options options) throws IOException {
       mKeySchema = options.getKeySchema();
+      this.model = options.getDataModel();
 
       // Load the whole index file into memory.
       Path indexFilePath = new Path(options.getPath(), INDEX_FILENAME);
@@ -202,10 +220,12 @@ public class SortedKeyValueFile {
       Path dataFilePath = new Path(options.getPath(), DATA_FILENAME);
       LOG.debug("Loading the data file " + dataFilePath);
       Schema recordSchema = AvroKeyValue.getSchema(mKeySchema, options.getValueSchema());
-      DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(recordSchema);
+      DatumReader<GenericRecord> datumReader =
+        model.createDatumReader(recordSchema);
       mDataFileReader =
         new DataFileReader<GenericRecord>
         (new FsInput(dataFilePath, options.getConfiguration()), datumReader);
+      
     }
 
     /**
@@ -235,7 +255,7 @@ public class SortedKeyValueFile {
       Iterator<AvroKeyValue<K, V>> iter = iterator();
       while (iter.hasNext()) {
         AvroKeyValue<K, V> record = iter.next();
-        int comparison = GenericData.get().compare(record.getKey(), key, mKeySchema);
+        int comparison = model.compare(record.getKey(), key, mKeySchema);
         if (0 == comparison) {
           // We've found it!
           LOG.debug("Found record for key " + key);
@@ -281,9 +301,9 @@ public class SortedKeyValueFile {
      * @param keySchema The reader schema for the key.
      * @throws IOException If there is an error.
      */
-    private static <K> NavigableMap<K, Long> loadIndexFile(
+    private <K> NavigableMap<K, Long> loadIndexFile(
         Configuration conf, Path path, Schema keySchema) throws IOException {
-      DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(
+      DatumReader<GenericRecord> datumReader = model.createDatumReader(
           AvroKeyValue.getSchema(keySchema, Schema.create(Schema.Type.LONG)));
       DataFileReader<GenericRecord> fileReader = new DataFileReader<GenericRecord>(
           new FsInput(path, conf), datumReader);
@@ -331,6 +351,9 @@ public class SortedKeyValueFile {
     /** The schema of the index file records. */
     private final Schema mIndexSchema;
 
+    /** The model for the data. */
+    private GenericData model;
+
     /** The writer for the data file. */
     private final DataFileWriter<GenericRecord> mDataFileWriter;
 
@@ -362,6 +385,9 @@ public class SortedKeyValueFile {
 
       /** The number of records between indexed entries. */
       private int mIndexInterval = 128;
+
+      /** The model for the data. */
+      private GenericData model = SpecificData.get();
 
       /**
        * Sets the key schema.
@@ -465,6 +491,17 @@ public class SortedKeyValueFile {
       public int getIndexInterval() {
         return mIndexInterval;
       }
+
+      /** Set the data model. */
+      public Options withDataModel(GenericData model) {
+        this.model = model;
+        return this;
+      }
+
+      /** Return the data model. */
+      public GenericData getDataModel() {
+        return model;
+      }
     }
 
     /**
@@ -474,6 +511,8 @@ public class SortedKeyValueFile {
      * @throws IOException If there is an error.
      */
     public Writer(Options options) throws IOException {
+      this.model = options.getDataModel();
+
       if (null == options.getConfiguration()) {
         throw new IllegalArgumentException("Configuration may not be null");
       }
@@ -504,8 +543,8 @@ public class SortedKeyValueFile {
       Path dataFilePath = new Path(options.getPath(), DATA_FILENAME);
       LOG.debug("Creating writer for avro data file: " + dataFilePath);
       mRecordSchema = AvroKeyValue.getSchema(mKeySchema, mValueSchema);
-      DatumWriter<GenericRecord> datumWriter
-          = new GenericDatumWriter<GenericRecord>(mRecordSchema);
+      DatumWriter<GenericRecord> datumWriter =
+        model.createDatumWriter(mRecordSchema);
       OutputStream dataOutputStream = fileSystem.create(dataFilePath);
       mDataFileWriter = new DataFileWriter<GenericRecord>(datumWriter)
           .setSyncInterval(1 << 20)  // Set the auto-sync interval sufficiently large, since
@@ -516,8 +555,8 @@ public class SortedKeyValueFile {
       Path indexFilePath = new Path(options.getPath(), INDEX_FILENAME);
       LOG.debug("Creating writer for avro index file: " + indexFilePath);
       mIndexSchema = AvroKeyValue.getSchema(mKeySchema, Schema.create(Schema.Type.LONG));
-      DatumWriter<GenericRecord> indexWriter
-          = new GenericDatumWriter<GenericRecord>(mIndexSchema);
+      DatumWriter<GenericRecord> indexWriter =
+        model.createDatumWriter(mIndexSchema);
       OutputStream indexOutputStream = fileSystem.create(indexFilePath);
       mIndexFileWriter = new DataFileWriter<GenericRecord>(indexWriter)
           .create(mIndexSchema, indexOutputStream);
@@ -532,11 +571,11 @@ public class SortedKeyValueFile {
      */
     public void append(K key, V value) throws IOException {
       // Make sure the keys are inserted in sorted order.
-      if (null != mPreviousKey && GenericData.get().compare(key, mPreviousKey, mKeySchema) < 0) {
+      if (null != mPreviousKey && model.compare(key, mPreviousKey, mKeySchema) < 0) {
         throw new IllegalArgumentException("Records must be inserted in sorted key order."
             + " Attempted to insert key " + key + " after " + mPreviousKey + ".");
       }
-      mPreviousKey = GenericData.get().deepCopy(mKeySchema, key);
+      mPreviousKey = model.deepCopy(mKeySchema, key);
 
       // Construct the data record.
       AvroKeyValue<K, V> dataRecord

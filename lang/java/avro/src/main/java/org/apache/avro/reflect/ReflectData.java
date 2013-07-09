@@ -48,6 +48,7 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
 import org.codehaus.jackson.JsonNode;
@@ -97,6 +98,11 @@ public class ReflectData extends SpecificData {
   @Override
   public DatumReader createDatumReader(Schema schema) {
     return new ReflectDatumReader(schema, schema, this);
+  }
+
+  @Override
+  public DatumWriter createDatumWriter(Schema schema) {
+    return new ReflectDatumWriter(schema, this);
   }
 
   @Override
