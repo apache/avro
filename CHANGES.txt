@@ -73,6 +73,9 @@ Trunk (not yet released)
     AVRO-1261. Clarify in documentation that generated no-arg
     constructors do not use default values from schema. (cutting)
 
+    AVRO-1297. NettyTransceiver: Provide overloaded 
+    close(boolean awaitCompletion). (jbaldassari)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

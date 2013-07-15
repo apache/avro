@@ -398,11 +398,26 @@ public class NettyTransceiver extends Transceiver {
     
   }
 
+  /**
+   * Closes this transceiver and disconnects from the remote peer.
+   * Cancels all pending RPCs, sends an IOException to all pending callbacks, 
+   * and blocks until the close has completed.
+   */
+  @Override
   public void close() {
+    close(true);
+  }
+  
+  /**
+   * Closes this transceiver and disconnects from the remote peer.
+   * Cancels all pending RPCs and sends an IOException to all pending callbacks.
+   * @param awaitCompletion if true, will block until the close has completed.
+   */
+  public void close(boolean awaitCompletion) {
     try {
       // Close the connection:
       stopping = true;
-      disconnect(true, true, null);
+      disconnect(awaitCompletion, true, null);
     } finally {
       // Shut down all thread pools to exit.
       channelFactory.releaseExternalResources();
