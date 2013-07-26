@@ -20,6 +20,8 @@ cmake_minimum_required(VERSION 2.4)
 project(AvroC)
 enable_testing()
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
+
 # Eliminates warning about linker paths when linking both zlib and
 # liblzma.
 cmake_policy(SET CMP0003 NEW)
@@ -125,6 +127,7 @@ include_directories(${AvroC_SOURCE_DIR}/jansson/src)
 
 
 # Enable codecs
+
 find_package(ZLIB)
 if (ZLIB_FOUND)
     set(ZLIB_PKG zlib)
@@ -135,6 +138,16 @@ else (ZLIB_FOUND)
     set(ZLIB_PKG "")
     message("Disabled deflate codec. zlib not found.")
 endif (ZLIB_FOUND)
+
+find_package(Snappy)
+if (SNAPPY_FOUND AND ZLIB_FOUND)  # Snappy borrows crc32 from zlib
+   set(SNAPPY_PKG libsnappy)
+   add_definitions(-DSNAPPY_CODEC)
+   message("Enabled snappy codec")
+else (SNAPPY_FOUND AND ZLIB_FOUND)
+   set (SNAPPY_PKG "")
+   message("Disabled snappy codec. libsnappy not found or zlib not found.")
+endif (SNAPPY_FOUND AND ZLIB_FOUND)
 
 find_package(PkgConfig)
 pkg_check_modules(LZMA liblzma)
@@ -149,8 +162,8 @@ else (LZMA_FOUND)
     message("Disabled lzma codec. liblzma not found.")
 endif (LZMA_FOUND)
 
-set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES})
-set(CODEC_PKG "@ZLIB_PKG@ @LZMA_PKG@")
+set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES} ${SNAPPY_LIBRARIES})
+set(CODEC_PKG "@ZLIB_PKG@ @LZMA_PKG@ @SNAPPY_PKG@")
 
 
 add_subdirectory(src)

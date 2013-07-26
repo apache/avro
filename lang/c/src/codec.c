@@ -16,6 +16,10 @@
  */
 
 #include <string.h>
+#ifdef SNAPPY_CODEC
+#include <snappy-c.h>
+#include <byteswap.h>
+#endif
 #ifdef DEFLATE_CODEC
 #include <zlib.h>
 #endif
@@ -70,6 +74,112 @@ static int reset_null(avro_codec_t c)
 
 	return 0;
 }
+
+/* Snappy codec */
+
+#ifdef SNAPPY_CODEC
+
+static int
+codec_snappy(avro_codec_t codec)
+{
+	codec->name = "snappy";
+	codec->type = AVRO_CODEC_SNAPPY;
+	codec->block_size = 0;
+	codec->used_size = 0;
+	codec->block_data = NULL;
+	codec->codec_data = NULL;
+
+	return 0;
+}
+
+static int encode_snappy(avro_codec_t c, void * data, int64_t len)
+{
+        uint32_t crc;
+        size_t outlen = snappy_max_compressed_length(len);
+
+	if (!c->block_data) {
+		c->block_data = avro_malloc(outlen+4);
+		c->block_size = outlen+4;
+	} else if (c->block_size < (int64_t) (outlen+4)) {
+            c->block_data = avro_realloc(c->block_data, c->block_size, (outlen+4));
+		c->block_size = outlen+4;
+	}
+
+	if (!c->block_data) {
+		avro_set_error("Cannot allocate memory for snappy");
+		return 1;
+	}
+
+        if (snappy_compress(data, len, c->block_data, &outlen) != SNAPPY_OK)
+        {
+                avro_set_error("Error compressing block with Snappy");
+		return 1;
+	}
+
+        crc = __bswap_32(crc32(0, data, len));
+        memcpy(c->block_data+outlen, &crc, 4);
+        c->used_size = outlen+4;
+
+	return 0;
+}
+
+static int decode_snappy(avro_codec_t c, void * data, int64_t len)
+{
+        uint32_t crc;
+        size_t outlen;
+
+        if (snappy_uncompressed_length(data, len-4, &outlen) != SNAPPY_OK) {
+		avro_set_error("Uncompressed length error in snappy");
+		return 1;
+        }
+
+	if (!c->block_data) {
+		c->block_data = avro_malloc(outlen);
+		c->block_size = outlen;
+	} else if ( (size_t)c->block_size < outlen) {
+		c->block_data = avro_realloc(c->block_data, c->block_size, outlen);
+		c->block_size = outlen;
+	}
+
+	if (!c->block_data)
+	{
+		avro_set_error("Cannot allocate memory for snappy");
+		return 1;
+	}
+
+        if (snappy_uncompress(data, len-4, c->block_data, &outlen) != SNAPPY_OK)
+        {
+                avro_set_error("Error uncompressing block with Snappy");
+		return 1;
+	}
+
+        crc = __bswap_32(crc32(0, c->block_data, outlen));
+        if (memcmp(&crc, (char*)data+len-4, 4))
+        {
+                avro_set_error("CRC32 check failure uncompressing block with Snappy");
+		return 1;
+	}
+
+        c->used_size = outlen;
+
+	return 0;
+}
+
+static int reset_snappy(avro_codec_t c)
+{
+	if (c->block_data) {
+		avro_free(c->block_data, c->block_size);
+	}
+
+	c->block_data = NULL;
+	c->block_size = 0;
+	c->used_size = 0;
+	c->codec_data = NULL;
+
+	return 0;
+}
+
+#endif // SNAPPY_CODEC
 
 /* Deflate codec */
 
@@ -403,6 +513,12 @@ int avro_codec(avro_codec_t codec, const char *type)
 		return codec_null(codec);
 	}
 
+#ifdef SNAPPY_CODEC
+	if (strcmp("snappy", type) == 0) {
+		return codec_snappy(codec);
+	}
+#endif
+
 #ifdef DEFLATE_CODEC
 	if (strcmp("deflate", type) == 0) {
 		return codec_deflate(codec);
@@ -429,6 +545,10 @@ int avro_codec_encode(avro_codec_t c, void * data, int64_t len)
 	{
 	case AVRO_CODEC_NULL:
 		return encode_null(c, data, len);
+#ifdef SNAPPY_CODEC
+	case AVRO_CODEC_SNAPPY:
+		return encode_snappy(c, data, len);
+#endif
 #ifdef DEFLATE_CODEC
 	case AVRO_CODEC_DEFLATE:
 		return encode_deflate(c, data, len);
@@ -448,6 +568,10 @@ int avro_codec_decode(avro_codec_t c, void * data, int64_t len)
 	{
 	case AVRO_CODEC_NULL:
 		return decode_null(c, data, len);
+#ifdef SNAPPY_CODEC
+	case AVRO_CODEC_SNAPPY:
+		return decode_snappy(c, data, len);
+#endif
 #ifdef DEFLATE_CODEC
 	case AVRO_CODEC_DEFLATE:
 		return decode_deflate(c, data, len);
@@ -467,6 +591,10 @@ int avro_codec_reset(avro_codec_t c)
 	{
 	case AVRO_CODEC_NULL:
 		return reset_null(c);
+#ifdef SNAPPY_CODEC
+	case AVRO_CODEC_SNAPPY:
+		return reset_snappy(c);
+#endif
 #ifdef DEFLATE_CODEC
 	case AVRO_CODEC_DEFLATE:
 		return reset_deflate(c);
