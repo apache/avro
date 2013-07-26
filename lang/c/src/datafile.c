@@ -276,9 +276,11 @@ static int file_read_header(avro_reader_t reader,
 
 	rval = avro_value_get_by_name(&meta, "avro.codec", &codec_val, NULL);
 	if (rval) {
-		avro_set_error("File header doesn't contain a codec");
-		avro_value_decref(&meta);
-		return rval;
+		if (avro_codec(codec, NULL) != 0) {
+			avro_set_error("Codec not specified in header and unable to set 'null' codec");
+			avro_value_decref(&meta);
+			return EILSEQ;
+		}
 	} else {
 		const void *buf;
 		size_t size;
@@ -307,7 +309,7 @@ static int file_read_header(avro_reader_t reader,
 	if (rval) {
 		avro_set_error("File header doesn't contain a schema");
 		avro_value_decref(&meta);
-		return rval;
+		return EILSEQ;
 	}
 
 	avro_value_get_bytes(&schema_bytes, &p, &len);
