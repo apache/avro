@@ -81,6 +81,8 @@ Trunk (not yet released)
     AVRO-1279. C: Treat missing codec in data files as null codec.
     (Carl Steinbach via dcreager)
 
+    AVRO-1325. Java: Enhanced Schema Builder API. (scottcarey)
+
   BUG FIXES
 
     AVRO-1296. Python: Fix schemas retrieved from protocol types

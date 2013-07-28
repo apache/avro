@@ -26,18 +26,11 @@ public class TestSchema {
   @Test
   public void testSplitSchemaBuild() {
     Schema s = SchemaBuilder
-       .recordType("HandshakeRequest")
-       .namespace("org.apache.avro.ipc")
-       .unionType("clientProtocol", SchemaBuilder.unionType(
-           SchemaBuilder.NULL,
-           SchemaBuilder.STRING)
-           .build())
-       .unionType("meta", SchemaBuilder.unionType(
-           SchemaBuilder.NULL,
-           SchemaBuilder.mapType(SchemaBuilder.BYTES)
-             .build())
-           .build())
-       .build();
+       .record("HandshakeRequest")
+       .namespace("org.apache.avro.ipc").fields()
+         .name("clientProtocol").type().optional().stringType()
+         .name("meta").type().optional().map().values().bytesType()
+         .endRecord();
     
     String schemaString = s.toString();
     final int mid = schemaString.length() / 2;

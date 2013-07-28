@@ -44,7 +44,7 @@
     -->
     <hadoop1.version>0.20.205.0</hadoop1.version>
     <hadoop2.version>2.0.1-alpha</hadoop2.version>
-    <jackson.version>1.8.8</jackson.version>
+    <jackson.version>1.9.13</jackson.version>
     <jetty.version>6.1.26</jetty.version>
     <jetty-servlet-api.version>2.5-20081211</jetty-servlet-api.version>
     <jopt-simple.version>4.1</jopt-simple.version>
@@ -202,6 +202,7 @@
                  rather than the console. -->
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <failIfNoTests>false</failIfNoTests>
+            <argLine>-Xmx1000m -XX:MaxPermSize=200m</argLine>
             <systemPropertyVariables>
               <test.dir>${project.basedir}/target/</test.dir>
             </systemPropertyVariables>
@@ -301,6 +302,30 @@
               <redirectTestOutputToFile>false</redirectTestOutputToFile>
               <systemPropertyVariables>
                 <test.dir>../../../build/interop/data/</test.dir>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>mac</id>
+      <activation>
+        <os>
+        <family>mac</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId> 
+            <configuration>
+              <systemPropertyVariables>
+                <test.dir>${project.basedir}/target/</test.dir>
+                <!-- avro-mapred will fail in tests on mac without this -->
+                <java.security.krb5.realm>OX.AC.UK</java.security.krb5.realm>
+                <java.security.krb5.kdc>kdc0.ox.ac.uk:kdc1.ox.ac.uk</java.security.krb5.kdc>
               </systemPropertyVariables>
             </configuration>
           </plugin>

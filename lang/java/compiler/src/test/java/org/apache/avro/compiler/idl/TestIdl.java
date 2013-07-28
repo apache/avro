@@ -18,12 +18,10 @@
 
 package org.apache.avro.compiler.idl;
 
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,8 +30,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.avro.Protocol;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Simple test harness for Idl.
@@ -137,7 +141,8 @@ public class TestIdl {
 
       Idl parser = new Idl(in, ucl);
       Protocol p = parser.CompilationUnit();
-      return p.toString(true);
+      parser.close();
+      return p.toString();
     }
 
     public String testName() {
@@ -161,9 +166,12 @@ public class TestIdl {
       String line = null;
       StringBuilder builder = new StringBuilder();
       while ((line = in.readLine()) != null) {
-        builder.append(line).append('\n');
+        builder.append(line);
       }
-      return builder.toString();
+      in.close();
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode json = mapper.readTree(builder.toString());
+      return mapper.writer().writeValueAsString(json);
     }
 
     private static void writeFile(File f, String s) throws IOException {
