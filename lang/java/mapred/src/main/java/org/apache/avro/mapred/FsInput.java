@@ -34,8 +34,8 @@ public class FsInput implements Closeable, SeekableInput {
 
   /** Construct given a path and a configuration. */
   public FsInput(Path path, Configuration conf) throws IOException {
-    this.stream = path.getFileSystem(conf).open(path);
     this.len = path.getFileSystem(conf).getFileStatus(path).getLen();
+    this.stream = path.getFileSystem(conf).open(path);
   }
 
   public long length() {

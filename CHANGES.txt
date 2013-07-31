@@ -134,6 +134,9 @@ Trunk (not yet released)
     AVRO-1292. Java: Fix potential client blocking in NettyTransceiver.
     (James Baldassari via cutting)
 
+    AVRO-1144. Java: Deadlock with FSInput and Hadoop NativeS3FileSystem.
+    (scottcarey)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES
