@@ -64,7 +64,7 @@ public class TestAvroKeyValueRecordWriter {
     // Write two records: <'apple', TextStats('apple')> and <'banana', TextStats('banana')>.
     AvroKeyValueRecordWriter<Text, AvroValue<TextStats>> writer
         = new AvroKeyValueRecordWriter<Text, AvroValue<TextStats>>(keyConverter, valueConverter,
-            compressionCodec, outputStream);
+            new ReflectData(), compressionCodec, outputStream);
     TextStats appleStats = new TextStats();
     appleStats.name = "apple";
     writer.write(new Text("apple"), new AvroValue<TextStats>(appleStats));
@@ -129,8 +129,9 @@ public class TestAvroKeyValueRecordWriter {
       factory.create((Class<AvroValue<R1>>) avroValue.getClass());
 
     AvroKeyValueRecordWriter<Text, AvroValue<R1>> writer =
-      new AvroKeyValueRecordWriter<Text, AvroValue<R1>>(keyConverter,
-        valueConverter, CodecFactory.nullCodec(), outputStream);
+      new AvroKeyValueRecordWriter<Text, AvroValue<R1>>(
+        keyConverter, valueConverter, new ReflectData(),
+        CodecFactory.nullCodec(), outputStream);
 
     writer.write(new Text("reflectionData"), avroValue);
     writer.close(context);

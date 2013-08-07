@@ -19,6 +19,7 @@
 package org.apache.avro.hadoop.io;
 
 import org.apache.avro.Schema;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapred.AvroWrapper;
 
@@ -39,6 +40,18 @@ public class AvroValueDeserializer<D> extends AvroDeserializer<AvroWrapper<D>, D
   public AvroValueDeserializer(Schema writerSchema, Schema readerSchema,
                                ClassLoader classLoader) {
     super(writerSchema, readerSchema, classLoader);
+  }
+
+  /**
+   * Constructor.
+   *
+   * @param writerSchema The Avro writer schema for the data to deserialize.
+   * @param readerSchema The Avro reader schema for the data to deserialize.
+   * @param datumReader The Avro datum reader to use for deserialization.
+   */
+  public AvroValueDeserializer(Schema writerSchema, Schema readerSchema,
+                               DatumReader<D> datumReader) {
+    super(writerSchema, readerSchema, datumReader);
   }
 
   /**

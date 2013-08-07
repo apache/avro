@@ -78,6 +78,7 @@ public class ReflectData extends SpecificData {
   
   private static final ReflectData INSTANCE = new ReflectData();
 
+  /** For subclasses.  Applications normally use {@link ReflectData#get()}. */
   public ReflectData() {}
   
   /** Construct with a particular classloader. */
@@ -98,6 +99,11 @@ public class ReflectData extends SpecificData {
   @Override
   public DatumReader createDatumReader(Schema schema) {
     return new ReflectDatumReader(schema, schema, this);
+  }
+
+  @Override
+  public DatumReader createDatumReader(Schema writer, Schema reader) {
+    return new ReflectDatumReader(writer, reader, this);
   }
 
   @Override

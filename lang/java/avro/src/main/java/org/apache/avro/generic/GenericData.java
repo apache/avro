@@ -62,6 +62,8 @@ public class GenericData {
   protected static final String STRING_PROP = "avro.java.string";
   protected static final String STRING_TYPE_STRING = "String";
 
+  private final ClassLoader classLoader;
+
   /** Set the Java type to be used when reading this schema.  Meaningful only
    * only string schemas and map schemas (for the keys). */
   public static void setStringType(Schema s, StringType stringType) {
@@ -74,8 +76,21 @@ public class GenericData {
   /** Return the singleton instance. */
   public static GenericData get() { return INSTANCE; }
 
-  protected GenericData() {}
-  
+  /** For subclasses.  Applications normally use {@link GenericData#get()}. */
+  public GenericData() {
+    this(null);
+  }
+
+  /** For subclasses.  GenericData does not use a ClassLoader. */
+  public GenericData(ClassLoader classLoader) {
+    this.classLoader = (classLoader != null)
+      ? classLoader
+      : getClass().getClassLoader();
+  }
+
+  /** Return the class loader that's used (by subclasses). */
+  public ClassLoader getClassLoader() { return classLoader; }
+
   /** Default implementation of {@link GenericRecord}. Note that this implementation
    * does not fill in default values for fields if they are not specified; use {@link
    * GenericRecordBuilder} in that case.
@@ -337,6 +352,11 @@ public class GenericData {
   /** Returns a {@link DatumReader} for this kind of data. */
   public DatumReader createDatumReader(Schema schema) {
     return new GenericDatumReader(schema, schema, this);
+  }
+
+  /** Returns a {@link DatumReader} for this kind of data. */
+  public DatumReader createDatumReader(Schema writer, Schema reader) {
+    return new GenericDatumReader(writer, reader, this);
   }
 
   /** Returns a {@link DatumWriter} for this kind of data. */

@@ -28,7 +28,6 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -61,15 +60,15 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> {
   private final AvroDatumConverter<V, ?> mValueConverter;
 
   public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter,
-      AvroDatumConverter<V, ?> valueConverter, CodecFactory compressionCodec,
-      OutputStream outputStream) throws IOException {
+      AvroDatumConverter<V, ?> valueConverter, GenericData dataModel,
+      CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
     // Create the generic record schema for the key/value pair.
     mKeyValuePairSchema = AvroKeyValue.getSchema(
         keyConverter.getWriterSchema(), valueConverter.getWriterSchema());
 
     // Create an Avro container file and a writer to it.
     mAvroFileWriter = new DataFileWriter<GenericRecord>(
-        new ReflectDatumWriter<GenericRecord>(mKeyValuePairSchema));
+        dataModel.createDatumWriter(mKeyValuePairSchema));
     mAvroFileWriter.setCodec(compressionCodec);
     mAvroFileWriter.create(mKeyValuePairSchema, outputStream);
 

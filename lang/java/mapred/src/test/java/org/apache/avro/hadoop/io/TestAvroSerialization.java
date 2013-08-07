@@ -19,11 +19,21 @@ package org.apache.avro.hadoop.io;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
+import org.apache.avro.util.Utf8;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapred.AvroWrapper;
@@ -125,8 +135,7 @@ public class TestAvroSerialization {
 
   @Test public void testClassPath() throws Exception {
     Configuration conf = new Configuration();
-    ClassLoader loader = new ClassLoader() {};
-    conf.setClassLoader(loader);
+    ClassLoader loader = conf.getClass().getClassLoader();
     AvroSerialization serialization = new AvroSerialization();
     serialization.setConf(conf);
     AvroDeserializer des =
@@ -134,5 +143,36 @@ public class TestAvroSerialization {
     ReflectData data =
       (ReflectData)((ReflectDatumReader)des.mAvroDatumReader).getData();
     Assert.assertEquals(loader, data.getClassLoader());
+  }
+
+  private <T, O> O roundTrip(Schema schema, T data, Class<? extends GenericData> modelClass) throws IOException {
+    Job job = new Job();
+    AvroJob.setMapOutputKeySchema(job, schema);
+    if (modelClass != null)
+      AvroJob.setDataModelClass(job, modelClass);
+    AvroSerialization serialization =
+      ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    Serializer<AvroKey<T>> serializer = serialization.getSerializer(AvroKey.class);
+    Deserializer<AvroKey<O>> deserializer = serialization.getDeserializer(AvroKey.class);
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    serializer.open(baos);
+    serializer.serialize(new AvroKey<T>(data));
+    serializer.close();
+
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    deserializer.open(bais);
+    AvroKey<O> result = null;
+    result = deserializer.deserialize(result);
+    deserializer.close();
+
+    return result.datum();
+  }
+
+  @Test
+  public void testRoundTrip() throws Exception {
+    Schema schema = Schema.create(Schema.Type.STRING);
+    assertTrue(roundTrip(schema, "record", null) instanceof String);
+    assertTrue(roundTrip(schema, "record", GenericData.class) instanceof Utf8);
   }
 }

@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroOutputFormat;
 import org.apache.hadoop.conf.Configuration;
@@ -66,7 +67,7 @@ public class TestAvroKeyOutputFormat {
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.SNAPPY_CODEC);
     testGetRecordWriter(conf, CodecFactory.snappyCodec());
   }
-  
+
   @Test
   public void testWithBZip2Code() throws IOException {
     Configuration conf = new Configuration();
@@ -74,7 +75,7 @@ public class TestAvroKeyOutputFormat {
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.BZIP2_CODEC);
     testGetRecordWriter(conf, CodecFactory.bzip2Codec());
   }
-  
+
   @Test
   public void testWithDeflateCodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
@@ -82,7 +83,7 @@ public class TestAvroKeyOutputFormat {
     conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.DeflateCodec");
     conf.setInt(org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY, -1);
   }
-  
+
   @Test
   public void testWithSnappyCodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
@@ -90,7 +91,7 @@ public class TestAvroKeyOutputFormat {
     conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.SnappyCodec");
     testGetRecordWriter(conf, CodecFactory.snappyCodec());
   }
-  
+
   @Test
   public void testWithBZip2CodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
@@ -127,6 +128,7 @@ public class TestAvroKeyOutputFormat {
     // Expect the record writer factory to be called with appropriate parameters.
     Capture<CodecFactory> capturedCodecFactory = new Capture<CodecFactory>();
     expect(recordWriterFactory.create(eq(writerSchema),
+        anyObject(GenericData.class),
         capture(capturedCodecFactory),  // Capture for comparison later.
         anyObject(OutputStream.class))).andReturn(expectedRecordWriter);
 

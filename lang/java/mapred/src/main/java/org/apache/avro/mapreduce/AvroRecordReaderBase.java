@@ -23,9 +23,10 @@ import java.io.IOException;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.SeekableInput;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.hadoop.io.AvroSerialization;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.FsInput;
-import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -87,8 +88,10 @@ public abstract class AvroRecordReaderBase<K, V, T> extends RecordReader<K, V> {
         = createSeekableInput(context.getConfiguration(), fileSplit.getPath());
 
     // Wrap the seekable input stream in an Avro DataFileReader.
-    mAvroFileReader = createAvroFileReader(seekableFileInput,
-        new ReflectDatumReader<T>(mReaderSchema));
+    Configuration conf = context.getConfiguration();
+    GenericData dataModel = AvroSerialization.createDataModel(conf);
+    DatumReader<T> datumReader = dataModel.createDatumReader(mReaderSchema);
+    mAvroFileReader = createAvroFileReader(seekableFileInput, datumReader);
 
     // Initialize the start and end offsets into the file based on the boundaries of the
     // input split we're responsible for.  We will read the first block that begins

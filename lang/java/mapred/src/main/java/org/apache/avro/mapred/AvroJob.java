@@ -19,6 +19,7 @@
 package org.apache.avro.mapred;
 
 import java.util.Collection;
+import java.lang.reflect.Constructor;
 import java.net.URLEncoder;
 import java.io.UnsupportedEncodingException;
 
@@ -26,7 +27,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.lib.IdentityMapper;
 import org.apache.hadoop.mapred.lib.IdentityReducer;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.specific.SpecificData;
 
 /** Setters to configure jobs for Avro data. */
 public class AvroJob {
@@ -53,6 +58,8 @@ public class AvroJob {
   public static final String INPUT_IS_REFLECT = "avro.input.is.reflect";
   /** The configuration key for reflection-based map output representation. */
   public static final String MAP_OUTPUT_IS_REFLECT = "avro.map.output.is.reflect";
+  /** The configuration key for the data model implementation class. */
+  private static final String CONF_DATA_MODEL = "avro.serialization.data.model";
 
   /** Configure a job's map input schema. */
   public static void setInputSchema(JobConf job, Schema s) {
@@ -62,7 +69,8 @@ public class AvroJob {
 
   /** Return a job's map input schema. */
   public static Schema getInputSchema(Configuration job) {
-    return Schema.parse(job.get(INPUT_SCHEMA));
+    String schemaString = job.get(INPUT_SCHEMA);
+    return schemaString != null ? Schema.parse(schemaString) : null;
   }
 
   /** Configure a job's map output schema.  The map output schema defaults to
@@ -190,6 +198,57 @@ public class AvroJob {
     job.set(REDUCER, c.getName());
   }
 
+  /** Configure a job's data model implementation class. */
+  public static void setDataModelClass(JobConf job, Class<? extends GenericData> modelClass) {
+    job.setClass(CONF_DATA_MODEL, modelClass, GenericData.class);
+  }
   
+  /** Return the job's data model implementation class. */
+  public static Class<? extends GenericData> getDataModelClass(Configuration conf) {
+    return (Class<? extends GenericData>) conf.getClass(
+        CONF_DATA_MODEL, ReflectData.class, GenericData.class);
+  }
 
+  private static GenericData newDataModelInstance(Class<? extends GenericData> modelClass, Configuration conf) {
+    GenericData dataModel;
+    try {
+      Constructor<? extends GenericData> ctor = modelClass.getDeclaredConstructor(ClassLoader.class);
+      ctor.setAccessible(true);
+      dataModel = ctor.newInstance(conf.getClassLoader());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    ReflectionUtils.setConf(dataModel, conf);
+    return dataModel;
+  }
+
+  public static GenericData createDataModel(Configuration conf) {
+    return newDataModelInstance(getDataModelClass(conf), conf);
+  }
+
+  public static GenericData createInputDataModel(Configuration conf) {
+    String className = conf.get(CONF_DATA_MODEL, null);
+    Class<? extends GenericData> modelClass;
+    if (className != null) {
+      modelClass = getDataModelClass(conf);
+    } else if (conf.getBoolean(INPUT_IS_REFLECT, false)) {
+      modelClass = ReflectData.class;
+    } else {
+      modelClass = SpecificData.class;
+    }
+    return newDataModelInstance(modelClass, conf);
+  }
+
+  public static GenericData createMapOutputDataModel(Configuration conf) {
+    String className = conf.get(CONF_DATA_MODEL, null);
+    Class<? extends GenericData> modelClass;
+    if (className != null) {
+      modelClass = getDataModelClass(conf);
+    } else if (conf.getBoolean(MAP_OUTPUT_IS_REFLECT, false)) {
+      modelClass = ReflectData.class;
+    } else {
+      modelClass = SpecificData.class;
+    }
+    return newDataModelInstance(modelClass, conf);
+  }
 }

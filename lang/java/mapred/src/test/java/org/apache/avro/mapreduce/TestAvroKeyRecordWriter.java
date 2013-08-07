@@ -29,8 +29,10 @@ import java.io.InputStream;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.AvroKey;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -41,6 +43,7 @@ public class TestAvroKeyRecordWriter {
   @Test
   public void testWrite() throws IOException {
     Schema writerSchema = Schema.create(Schema.Type.INT);
+    GenericData dataModel = new ReflectData();
     CodecFactory compressionCodec = CodecFactory.nullCodec();
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     TaskAttemptContext context = createMock(TaskAttemptContext.class);
@@ -49,7 +52,7 @@ public class TestAvroKeyRecordWriter {
 
     // Write an avro container file with two records: 1 and 2.
     AvroKeyRecordWriter<Integer> recordWriter = new AvroKeyRecordWriter<Integer>(
-        writerSchema, compressionCodec, outputStream);
+        writerSchema, dataModel, compressionCodec, outputStream);
     recordWriter.write(new AvroKey<Integer>(1), NullWritable.get());
     recordWriter.write(new AvroKey<Integer>(2), NullWritable.get());
     recordWriter.close(context);

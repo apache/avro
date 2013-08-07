@@ -73,6 +73,20 @@ public abstract class AvroDeserializer<T extends AvroWrapper<D>, D> implements D
   }
 
   /**
+   * Constructor.
+   *
+   * @param writerSchema The Avro writer schema for the data to deserialize.
+   * @param readerSchema The Avro reader schema for the data to deserialize (may be null).
+   * @param datumReader The Avro datum reader to use for deserialization.
+   */
+  protected AvroDeserializer(Schema writerSchema, Schema readerSchema,
+                             DatumReader<D> datumReader) {
+    mWriterSchema = writerSchema;
+    mReaderSchema = null != readerSchema ? readerSchema : writerSchema;
+    mAvroDatumReader = datumReader;
+  }
+
+  /**
    * Gets the writer schema used for deserializing.
    *
    * @return The writer schema;

@@ -20,8 +20,11 @@ package org.apache.avro.mapreduce;
 
 import java.io.IOException;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.hadoop.io.AvroDatumConverter;
 import org.apache.avro.hadoop.io.AvroDatumConverterFactory;
+import org.apache.avro.hadoop.io.AvroSerialization;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -45,15 +48,18 @@ public class AvroKeyValueOutputFormat<K, V> extends AvroOutputFormatBase<K, V> {
   @Override
   @SuppressWarnings("unchecked")
   public RecordWriter<K, V> getRecordWriter(TaskAttemptContext context) throws IOException {
-    AvroDatumConverterFactory converterFactory = new AvroDatumConverterFactory(
-        context.getConfiguration());
+    Configuration conf = context.getConfiguration();
+
+    AvroDatumConverterFactory converterFactory = new AvroDatumConverterFactory(conf);
 
     AvroDatumConverter<K, ?> keyConverter = converterFactory.create(
         (Class<K>) context.getOutputKeyClass());
     AvroDatumConverter<V, ?> valueConverter = converterFactory.create(
         (Class<V>) context.getOutputValueClass());
 
+    GenericData dataModel = AvroSerialization.createDataModel(conf);
+
     return new AvroKeyValueRecordWriter<K, V>(keyConverter, valueConverter,
-        getCompressionCodec(context), getAvroFileOutputStream(context));
+        dataModel, getCompressionCodec(context), getAvroFileOutputStream(context));
   }
 }

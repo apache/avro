@@ -25,18 +25,17 @@ import java.io.OutputStream;
 import org.apache.hadoop.io.serializer.Serialization;
 import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.Serializer;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.reflect.ReflectDatumReader;
-import org.apache.avro.reflect.ReflectDatumWriter;
 
 /** The {@link Serialization} used by jobs configured with {@link AvroJob}. */
 public class AvroSerialization<T> extends Configured 
@@ -49,14 +48,13 @@ public class AvroSerialization<T> extends Configured
   /** Returns the specified map output deserializer.  Defaults to the final
    * output deserializer if no map output schema was specified. */
   public Deserializer<AvroWrapper<T>> getDeserializer(Class<AvroWrapper<T>> c) {
+    Configuration conf = getConf();
     boolean isKey = AvroKey.class.isAssignableFrom(c);
     Schema schema = isKey
-      ? Pair.getKeySchema(AvroJob.getMapOutputSchema(getConf()))
-      : Pair.getValueSchema(AvroJob.getMapOutputSchema(getConf()));
-    DatumReader<T> datumReader =
-      getConf().getBoolean(AvroJob.MAP_OUTPUT_IS_REFLECT, false)
-      ? new ReflectDatumReader<T>(schema)
-      : new SpecificDatumReader<T>(schema);
+      ? Pair.getKeySchema(AvroJob.getMapOutputSchema(conf))
+      : Pair.getValueSchema(AvroJob.getMapOutputSchema(conf));
+    GenericData dataModel = AvroJob.createMapOutputDataModel(conf);
+    DatumReader<T> datumReader = dataModel.createDatumReader(schema);
     return new AvroWrapperDeserializer(datumReader, isKey);
   }
   
@@ -99,12 +97,14 @@ public class AvroSerialization<T> extends Configured
   public Serializer<AvroWrapper<T>> getSerializer(Class<AvroWrapper<T>> c) {
     // AvroWrapper used for final output, AvroKey or AvroValue for map output
     boolean isFinalOutput = c.equals(AvroWrapper.class);
+    Configuration conf = getConf();
     Schema schema = isFinalOutput
-      ? AvroJob.getOutputSchema(getConf())
+      ? AvroJob.getOutputSchema(conf)
       : (AvroKey.class.isAssignableFrom(c)
-         ? Pair.getKeySchema(AvroJob.getMapOutputSchema(getConf()))
-         : Pair.getValueSchema(AvroJob.getMapOutputSchema(getConf())));
-    return new AvroWrapperSerializer(new ReflectDatumWriter<T>(schema));
+         ? Pair.getKeySchema(AvroJob.getMapOutputSchema(conf))
+         : Pair.getValueSchema(AvroJob.getMapOutputSchema(conf)));
+    GenericData dataModel = AvroJob.createDataModel(conf);
+    return new AvroWrapperSerializer(dataModel.createDatumWriter(schema));
   }
 
   private class AvroWrapperSerializer implements Serializer<AvroWrapper<T>> {

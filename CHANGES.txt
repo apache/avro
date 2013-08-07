@@ -22,6 +22,10 @@ Trunk (not yet released)
     AVRO-1341. Java: Add reflection annotations @AvroName, @AvroIgnore,
     @AvroMeta, @AvroAlias and @AvroEncode. (Vincenz Priesnitz via cutting)
 
+    AVRO-1353. Java: Permit specification of data model (generic,
+    specific, reflect, or other) in mapreduce job configuration.
+    (Marshall Bockrath-Vandegrift via cutting)
+
   IMPROVEMENTS
 
     AVRO-1260. Ruby: Improve read performance. (Martin Kleppmann via cutting)

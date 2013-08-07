@@ -43,8 +43,6 @@ public class SpecificData extends GenericData {
 
   private static final SpecificData INSTANCE = new SpecificData();
   
-  private final ClassLoader classLoader;
-  
   private static final Class<?>[] NO_ARG = new Class[]{};
   private static final Class<?>[] SCHEMA_ARG = new Class[]{Schema.class};
   private static final Map<Class,Constructor> CTOR_CACHE =
@@ -70,19 +68,21 @@ public class SpecificData extends GenericData {
   }
 
   /** For subclasses.  Applications normally use {@link SpecificData#get()}. */
-  protected SpecificData() { this(SpecificData.class.getClassLoader()); }
+  public SpecificData() {}
 
   /** Construct with a specific classloader. */
   public SpecificData(ClassLoader classLoader) {
-    this.classLoader = classLoader;
+    super(classLoader);
   }
   
-  /** Return the class loader that's used. */
-  public ClassLoader getClassLoader() { return classLoader; }
-
   @Override
   public DatumReader createDatumReader(Schema schema) {
     return new SpecificDatumReader(schema, schema, this);
+  }
+
+  @Override
+  public DatumReader createDatumReader(Schema writer, Schema reader) {
+    return new SpecificDatumReader(writer, reader, this);
   }
 
   @Override
@@ -128,7 +128,7 @@ public class SpecificData extends GenericData {
       Class c = classCache.get(name);
       if (c == null) {
         try {
-          c = classLoader.loadClass(getClassName(schema));
+          c = getClassLoader().loadClass(getClassName(schema));
         } catch (ClassNotFoundException e) {
           c = NO_CLASS;
         }

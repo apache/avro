@@ -19,10 +19,10 @@
 package org.apache.avro.hadoop.io;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapreduce.AvroJob;
-import org.apache.avro.reflect.ReflectData;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.RawComparator;
@@ -36,6 +36,7 @@ import org.apache.hadoop.io.RawComparator;
 public class AvroKeyComparator<T> extends Configured implements RawComparator<AvroKey<T>> {
   /** The schema of the Avro data in the key to compare. */
   private Schema mSchema;
+  private GenericData mDataModel;
 
   /** {@inheritDoc} */
   @Override
@@ -43,8 +44,10 @@ public class AvroKeyComparator<T> extends Configured implements RawComparator<Av
     super.setConf(conf);
     if (null != conf) {
       // The MapReduce framework will be using this comparator to sort AvroKey objects
-      // output from the map phase, so use the schema defined for the map output key.
+      // output from the map phase, so use the schema defined for the map output key
+      // and the data model non-raw compare() implementation.
       mSchema = AvroJob.getMapOutputKeySchema(conf);
+      mDataModel = AvroSerialization.createDataModel(conf);
     }
   }
 
@@ -57,6 +60,6 @@ public class AvroKeyComparator<T> extends Configured implements RawComparator<Av
   /** {@inheritDoc} */
   @Override
   public int compare(AvroKey<T> x, AvroKey<T> y) {
-    return ReflectData.get().compare(x.datum(), y.datum(), mSchema);
+    return mDataModel.compare(x.datum(), y.datum(), mSchema);
   }
 }

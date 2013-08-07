@@ -33,9 +33,9 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.util.Progressable;
 
 import org.apache.avro.Schema;
-import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.hadoop.file.HadoopCodecFactory;
 
 import static org.apache.avro.file.DataFileConstants.DEFAULT_SYNC_INTERVAL;
@@ -145,9 +145,10 @@ public class AvroOutputFormat <T>
     Schema schema = isMapOnly
       ? AvroJob.getMapOutputSchema(job)
       : AvroJob.getOutputSchema(job);
+    GenericData dataModel = AvroJob.createDataModel(job);
 
     final DataFileWriter<T> writer =
-      new DataFileWriter<T>(new ReflectDatumWriter<T>());
+      new DataFileWriter<T>(dataModel.createDatumWriter(null));
     
     configureDataFileWriter(writer, job);
 

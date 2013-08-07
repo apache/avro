@@ -24,8 +24,8 @@ import java.io.OutputStream;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.mapred.AvroKey;
-import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -47,10 +47,10 @@ public class AvroKeyRecordWriter<T> extends RecordWriter<AvroKey<T>, NullWritabl
    * @param outputStream The output stream to write the Avro container file to.
    * @throws IOException If the record writer cannot be opened.
    */
-  public AvroKeyRecordWriter(Schema writerSchema, CodecFactory compressionCodec,
-      OutputStream outputStream) throws IOException {
+  public AvroKeyRecordWriter(Schema writerSchema, GenericData dataModel,
+      CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
     // Create an Avro container file and a writer to it.
-    mAvroFileWriter = new DataFileWriter<T>(new ReflectDatumWriter<T>(writerSchema));
+    mAvroFileWriter = new DataFileWriter<T>(dataModel.createDatumWriter(writerSchema));
     mAvroFileWriter.setCodec(compressionCodec);
     mAvroFileWriter.create(writerSchema, outputStream);
   }

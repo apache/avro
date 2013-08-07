@@ -19,6 +19,7 @@
 package org.apache.avro.mapreduce;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.hadoop.io.AvroKeyComparator;
 import org.apache.avro.hadoop.io.AvroSerialization;
 import org.apache.avro.mapred.AvroKey;
@@ -129,6 +130,16 @@ public final class AvroJob {
   public static void setOutputValueSchema(Job job, Schema schema) {
     job.setOutputValueClass(AvroValue.class);
     job.getConfiguration().set(CONF_OUTPUT_VALUE_SCHEMA, schema.toString());
+  }
+
+  /**
+   * Sets the job data model class.
+   *
+   * @param job The job to configure.
+   * @param modelClass The job data model class.
+   */
+  public static void setDataModelClass(Job job, Class<? extends GenericData> modelClass) {
+    AvroSerialization.setDataModelClass(job.getConfiguration(), modelClass);
   }
 
   /**

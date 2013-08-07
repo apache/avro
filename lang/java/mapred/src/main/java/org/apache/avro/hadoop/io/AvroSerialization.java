@@ -18,17 +18,23 @@
 
 package org.apache.avro.hadoop.io;
 
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapred.AvroWrapper;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.Serialization;
 import org.apache.hadoop.io.serializer.Serializer;
+import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * The {@link org.apache.hadoop.io.serializer.Serialization} used by jobs configured with
@@ -49,6 +55,9 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   /** Conf key for the reader schema of the AvroValue datum being serialized/deserialized. */
   private static final String CONF_VALUE_READER_SCHEMA = "avro.serialization.value.reader.schema";
 
+  /** Conf key for the data model implementation class. */
+  private static final String CONF_DATA_MODEL = "avro.serialization.data.model";
+
   /** {@inheritDoc} */
   @Override
   public boolean accept(Class<?> c) {
@@ -64,14 +73,21 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   @Override
   public Deserializer<AvroWrapper<T>> getDeserializer(Class<AvroWrapper<T>> c) {
     Configuration conf = getConf();
+    GenericData dataModel = createDataModel(conf);
     if (AvroKey.class.isAssignableFrom(c)) {
-      return new AvroKeyDeserializer<T>(getKeyWriterSchema(conf),
-                                        getKeyReaderSchema(conf),
-                                        conf.getClassLoader());
+      Schema writerSchema = getKeyWriterSchema(conf);
+      Schema readerSchema = getKeyReaderSchema(conf);
+      DatumReader<T> datumReader = (readerSchema != null)
+        ? dataModel.createDatumReader(writerSchema, readerSchema)
+        : dataModel.createDatumReader(writerSchema);
+      return new AvroKeyDeserializer<T>(writerSchema, readerSchema, datumReader);
     } else if (AvroValue.class.isAssignableFrom(c)) {
-      return new AvroValueDeserializer<T>(getValueWriterSchema(conf),
-                                          getValueReaderSchema(conf),
-                                          conf.getClassLoader());
+      Schema writerSchema = getValueWriterSchema(conf);
+      Schema readerSchema = getValueReaderSchema(conf);
+      DatumReader<T> datumReader = (readerSchema != null)
+        ? dataModel.createDatumReader(writerSchema, readerSchema)
+        : dataModel.createDatumReader(writerSchema);
+      return new AvroValueDeserializer<T>(writerSchema, readerSchema, datumReader);
     } else {
       throw new IllegalStateException("Only AvroKey and AvroValue are supported.");
     }
@@ -85,15 +101,18 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   @Override
   public Serializer<AvroWrapper<T>> getSerializer(Class<AvroWrapper<T>> c) {
+    Configuration conf = getConf();
     Schema schema;
     if (AvroKey.class.isAssignableFrom(c)) {
-      schema = getKeyWriterSchema(getConf());
+      schema = getKeyWriterSchema(conf);
     } else if (AvroValue.class.isAssignableFrom(c)) {
-      schema = getValueWriterSchema(getConf());
+      schema = getValueWriterSchema(conf);
     } else {
       throw new IllegalStateException("Only AvroKey and AvroValue are supported.");
     }
-    return new AvroSerializer<T>(schema);
+    GenericData dataModel = createDataModel(conf);
+    DatumWriter<T> datumWriter = dataModel.createDatumWriter(schema);
+    return new AvroSerializer<T>(schema, datumWriter);
   }
 
   /**
@@ -158,6 +177,16 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
+   * Sets the data model class for de/seralization.
+   *
+   * @param conf The configuration.
+   * @param modelClass The data model class.
+   */
+  public static void setDataModelClass(Configuration conf, Class<? extends GenericData> modelClass) {
+    conf.setClass(CONF_DATA_MODEL, modelClass, GenericData.class);
+  }
+
+  /**
    * Gets the writer schema of the AvroKey datum that is being serialized/deserialized.
    *
    * @param conf The configuration.
@@ -199,5 +228,39 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   public static Schema getValueReaderSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_READER_SCHEMA);
     return null == json ? null : Schema.parse(json);
+  }
+
+  /**
+   * Gets the data model class for de/seralization.
+   *
+   * @param conf The configuration.
+   */
+  public static Class<? extends GenericData> getDataModelClass(Configuration conf) {
+    return conf.getClass(CONF_DATA_MODEL, ReflectData.class, GenericData.class);
+  }
+
+  private static GenericData newDataModelInstance(Class<? extends GenericData> modelClass, Configuration conf) {
+    GenericData dataModel;
+    try {
+      Constructor<? extends GenericData> ctor = modelClass.getDeclaredConstructor(ClassLoader.class);
+      ctor.setAccessible(true);
+      dataModel = ctor.newInstance(conf.getClassLoader());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    ReflectionUtils.setConf(dataModel, conf);
+    return dataModel;
+  }
+
+  /**
+   * Gets an instance of data model implementation, defaulting to
+   * {@link ReflectData} if not explicitly specified.
+   *
+   * @param conf The job configuration.
+   * @return Instance of the job data model implementation.
+   */
+  public static GenericData createDataModel(Configuration conf) {
+    Class<? extends GenericData> modelClass = getDataModelClass(conf);
+    return newDataModelInstance(modelClass, conf);
   }
 }

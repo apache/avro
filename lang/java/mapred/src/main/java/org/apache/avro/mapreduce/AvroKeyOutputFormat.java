@@ -23,7 +23,10 @@ import java.io.OutputStream;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.hadoop.io.AvroSerialization;
 import org.apache.avro.mapred.AvroKey;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -70,9 +73,9 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
      * @param outputStream The target output stream for the records.
      */
     protected RecordWriter<AvroKey<T>, NullWritable> create(
-        Schema writerSchema, CodecFactory compressionCodec, OutputStream outputStream)
-        throws IOException {
-      return new AvroKeyRecordWriter<T>(writerSchema, compressionCodec, outputStream);
+        Schema writerSchema, GenericData dataModel, CodecFactory compressionCodec,
+        OutputStream outputStream) throws IOException {
+      return new AvroKeyRecordWriter<T>(writerSchema, dataModel, compressionCodec, outputStream);
     }
   }
 
@@ -81,25 +84,25 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
   @SuppressWarnings("unchecked")
   public RecordWriter<AvroKey<T>, NullWritable> getRecordWriter(TaskAttemptContext context)
       throws IOException {
+    Configuration conf = context.getConfiguration();
     // Get the writer schema.
-    Schema writerSchema = null;
+    Schema writerSchema = AvroJob.getOutputKeySchema(conf);
     boolean isMapOnly = context.getNumReduceTasks() == 0;
     if (isMapOnly) {
-      writerSchema = AvroJob.getMapOutputKeySchema(context.getConfiguration());
-      //If the MapOutputKeySchema is not set, try to use the OutputKeySchema
-      if (null == writerSchema) {
-        writerSchema = AvroJob.getOutputKeySchema(context.getConfiguration());
+      Schema mapOutputSchema = AvroJob.getMapOutputKeySchema(conf);
+      if (mapOutputSchema != null) {
+        writerSchema = mapOutputSchema;
       }
-    }
-    else {
-      writerSchema = AvroJob.getOutputKeySchema(context.getConfiguration());
     }
     if (null == writerSchema) {
       throw new IOException(
           "AvroKeyOutputFormat requires an output schema. Use AvroJob.setOutputKeySchema().");
     }
 
-    return mRecordWriterFactory.create(
-        writerSchema, getCompressionCodec(context), getAvroFileOutputStream(context));
+    GenericData dataModel = AvroSerialization.createDataModel(conf);
+
+    return mRecordWriterFactory.create
+      (writerSchema, dataModel, getCompressionCodec(context),
+       getAvroFileOutputStream(context));
   }
 }
