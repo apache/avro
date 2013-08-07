@@ -38,6 +38,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 
 /**
  * Constructs converters that turn objects (usually from the output of a MR job) into Avro
@@ -77,8 +78,18 @@ public class AvroDatumConverterFactory extends Configured {
    */
   @SuppressWarnings("unchecked")
   public <IN, OUT> AvroDatumConverter<IN, OUT> create(Class<IN> inputClass) {
+    boolean isMapOnly = ((JobConf)getConf()).getNumReduceTasks() == 0;
     if (AvroKey.class.isAssignableFrom(inputClass)) {
-      Schema schema = AvroJob.getOutputKeySchema(getConf());
+      Schema schema = null;
+      if (isMapOnly) {
+        schema = AvroJob.getMapOutputKeySchema(getConf());
+        if (null == schema) {
+          schema = AvroJob.getOutputKeySchema(getConf());
+        }
+      }
+      else {
+        schema = AvroJob.getOutputKeySchema(getConf());
+      }
       if (null == schema) {
         throw new IllegalStateException(
             "Writer schema for output key was not set. Use AvroJob.setOutputKeySchema().");
@@ -86,7 +97,16 @@ public class AvroDatumConverterFactory extends Configured {
       return (AvroDatumConverter<IN, OUT>) new AvroWrapperConverter(schema);
     }
     if (AvroValue.class.isAssignableFrom(inputClass)) {
-      Schema schema = AvroJob.getOutputValueSchema(getConf());
+      Schema schema = null;
+      if (isMapOnly) {
+        AvroJob.getMapOutputValueSchema(getConf());
+        if (null == schema) {
+          schema = AvroJob.getOutputValueSchema(getConf());
+        }
+      }
+      else {
+        schema = AvroJob.getOutputValueSchema(getConf());
+      }
       if (null == schema) {
         throw new IllegalStateException(
             "Writer schema for output value was not set. Use AvroJob.setOutputValueSchema().");

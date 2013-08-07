@@ -82,7 +82,18 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
   public RecordWriter<AvroKey<T>, NullWritable> getRecordWriter(TaskAttemptContext context)
       throws IOException {
     // Get the writer schema.
-    Schema writerSchema = AvroJob.getOutputKeySchema(context.getConfiguration());
+    Schema writerSchema = null;
+    boolean isMapOnly = context.getNumReduceTasks() == 0;
+    if (isMapOnly) {
+      writerSchema = AvroJob.getMapOutputKeySchema(context.getConfiguration());
+      //If the MapOutputKeySchema is not set, try to use the OutputKeySchema
+      if (null == writerSchema) {
+        writerSchema = AvroJob.getOutputKeySchema(context.getConfiguration());
+      }
+    }
+    else {
+      writerSchema = AvroJob.getOutputKeySchema(context.getConfiguration());
+    }
     if (null == writerSchema) {
       throw new IOException(
           "AvroKeyOutputFormat requires an output schema. Use AvroJob.setOutputKeySchema().");

@@ -140,6 +140,9 @@ Trunk (not yet released)
     AVRO-1144. Java: Deadlock with FSInput and Hadoop NativeS3FileSystem.
     (scottcarey)
 
+    AVRO-1356. Java: Fix AvroMultipleOutputs for map-only jobs.
+    (Alan Paulsen via cutting)
+
 Avro 1.7.4 (22 February 2012)
 
   NEW FEATURES

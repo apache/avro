@@ -115,6 +115,7 @@ public class TestAvroKeyOutputFormat {
     expect(context.getTaskAttemptID())
         .andReturn(TaskAttemptID.forName("attempt_200707121733_0001_m_000000_0"))
         .anyTimes();
+    expect(context.getNumReduceTasks()).andReturn(1);
 
     // Create a mock record writer.
     @SuppressWarnings("unchecked")
