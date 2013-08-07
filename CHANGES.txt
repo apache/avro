@@ -16,6 +16,9 @@ Trunk (not yet released)
 
     AVRO-896. C: Snappy compression codec. (Grisha Trubetskoy via dcreager)
 
+    AVRO-1337. Java: Add a command line tool to generate schema files
+    from a protocol. (Bertrand Dechoux via cutting)
+
   IMPROVEMENTS
 
     AVRO-1260. Ruby: Improve read performance. (Martin Kleppmann via cutting)

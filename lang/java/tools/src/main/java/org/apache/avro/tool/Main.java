@@ -46,6 +46,7 @@ public class Main {
         new DataFileGetMetaTool(),
         new DataFileGetSchemaTool(),
         new IdlTool(),
+        new IdlToSchemataTool(),
         new RecodecTool(),
         new ConcatTool(),
         new RpcReceiveTool(),
