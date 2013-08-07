@@ -1,6 +1,6 @@
 Avro Change Log
 
-Trunk (not yet released)
+Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES
 
@@ -150,7 +150,7 @@ Trunk (not yet released)
     AVRO-1356. Java: Fix AvroMultipleOutputs for map-only jobs.
     (Alan Paulsen via cutting)
 
-Avro 1.7.4 (22 February 2012)
+Avro 1.7.4 (22 February 2013)
 
   NEW FEATURES
 
