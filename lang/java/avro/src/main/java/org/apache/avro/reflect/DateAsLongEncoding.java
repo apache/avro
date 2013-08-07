@@ -18,38 +18,36 @@
 package org.apache.avro.reflect;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.util.Date;
 
+import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
-abstract class FieldAccessor {
-  FieldAccessor() {
+/**
+ * This encoder/decoder writes a java.util.Date object as a long to
+ * avro and reads a Date object from long.
+ * The long stores the number of milliseconds since January 1, 1970, 00:00:00 GMT
+ * represented by the Date object.
+ */
+public class DateAsLongEncoding extends CustomEncoding<Date> {
+  {
+    schema = Schema.create(Schema.Type.LONG);
+    schema.addProp("CustomEncoding", "DateAsLongEncoding");
   }
 
-  protected abstract Object get(Object object) throws IllegalAccessException;
-
-  protected abstract void set(Object object, Object value)
-      throws IllegalAccessException, IOException;
-
-  protected void read(Object object, Decoder in) throws IOException {
+  @Override
+  protected final void write(Object datum, Encoder out) throws IOException {
+    out.writeLong(((Date)datum).getTime());
   }
 
-  protected void write(Object object, Encoder out) throws IOException {
+  @Override
+  protected final Date read(Object reuse, Decoder in) throws IOException {
+    if (reuse != null && reuse instanceof Date) {
+      ((Date)reuse).setTime(in.readLong());
+      return (Date)reuse;
+    }
+    else return new Date(in.readLong());
   }
 
-  protected boolean supportsIO() {
-    return false;
-  }
-  
-  protected abstract Field getField();
-  
-  protected boolean isStringable() {
-    return false;
-  }
-  
-  protected boolean isCustomEncoded() {
-    return false;
-  }
-  
 }

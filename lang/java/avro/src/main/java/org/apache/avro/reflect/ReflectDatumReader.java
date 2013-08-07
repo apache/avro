@@ -87,6 +87,9 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     }
 
     if (elementClass == null) {
+      elementClass = collectionClass.getComponentType();
+    }
+    if (elementClass == null) {
       ReflectData data = (ReflectData)getData();
       elementClass = data.getClass(schema.getElementType());
     }
@@ -204,10 +207,24 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       ResolvingDecoder in, Object state) throws IOException {
     if (state != null) {
       FieldAccessor accessor = ((FieldAccessor[]) state)[f.pos()];
-      if (accessor != null && !Schema.Type.UNION.equals(f.schema().getType())
-          && accessor.supportsIO()) {
-        accessor.read(record, in);
-        return;
+      if (accessor != null) {
+        if (accessor.supportsIO()
+            && (!Schema.Type.UNION.equals(f.schema().getType())
+                || accessor.isCustomEncoded())) {
+          accessor.read(record, in);
+          return;
+        }
+        if (accessor.isStringable()) {
+          try {
+            String asString = (String) read(null, f.schema(), in);
+            accessor.set(record, asString == null 
+              ? null
+              : newInstanceFromString(accessor.getField().getType(), asString));
+            return;
+          } catch (Exception e) {
+            throw new AvroRuntimeException("Failed to read Stringable", e);
+          } 
+        }
       }
     }
     super.readField(record, f, oldDatum, in, state);

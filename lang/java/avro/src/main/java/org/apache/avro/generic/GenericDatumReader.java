@@ -400,7 +400,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     new HashMap<Class,Constructor>();
 
   @SuppressWarnings("unchecked")
-  private Object newInstanceFromString(Class c, String s) {
+  protected Object newInstanceFromString(Class c, String s) {
     try {
       Constructor ctor = stringCtorCache.get(c);
       if (ctor == null) {

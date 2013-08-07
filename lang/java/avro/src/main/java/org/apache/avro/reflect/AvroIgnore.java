@@ -17,18 +17,17 @@
  */
 package org.apache.avro.reflect;
 
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares that a class or field should be represented by an Avro string.  It's {@link
- * Object#toString()} method will be used to convert it to a string, and its
- * single String parameter constructor will be used to create instances.
+ * Marks a field as transient.
+ * Such a field will not get written into or read from a schema,
+ * when using reflection.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.FIELD})
-@Documented
-public @interface Stringable {}
+@Target({ElementType.FIELD})
+public @interface AvroIgnore {
+}

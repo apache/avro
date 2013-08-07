@@ -29,10 +29,14 @@ class FieldAccessReflect extends FieldAccess {
 
   private final class ReflectionBasedAccessor extends FieldAccessor {
     private final Field field;
+    private boolean isStringable;
+    private boolean isCustomEncoded;
 
     public ReflectionBasedAccessor(Field field) {
       this.field = field;
       this.field.setAccessible(true);
+      isStringable = field.isAnnotationPresent(Stringable.class);
+      isCustomEncoded = field.isAnnotationPresent(AvroEncode.class); 
     }
 
     @Override
@@ -49,6 +53,21 @@ class FieldAccessReflect extends FieldAccess {
     public void set(Object object, Object value) throws IllegalAccessException,
         IOException {
       field.set(object, value);
+    }
+    
+    @Override
+    protected Field getField() {
+      return field;
+    }
+    
+    @Override
+    protected boolean isStringable() {
+      return isStringable;
+    }
+    
+    @Override
+    protected boolean isCustomEncoded() {
+      return isCustomEncoded;
     }
 
   }

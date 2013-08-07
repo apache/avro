@@ -154,10 +154,22 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       throws IOException {
     if (state != null) {
       FieldAccessor accessor = ((FieldAccessor[]) state)[f.pos()];
-      if (accessor != null && !Schema.Type.UNION.equals(f.schema().getType())
-          && accessor.supportsIO()) {
-        accessor.write(record, out);
-        return;
+      if (accessor != null) {
+        if (accessor.supportsIO()
+            && (!Schema.Type.UNION.equals(f.schema().getType())
+                || accessor.isCustomEncoded())) {
+          accessor.write(record, out);
+          return;
+        }
+        if (accessor.isStringable()) {
+          try {
+            Object object = accessor.get(record);
+            write(f.schema(), (object == null) ? null : object.toString(), out);
+          } catch (IllegalAccessException e) {
+            throw new AvroRuntimeException("Failed to write Stringable", e);
+          }
+          return;
+        }  
       }
     }
     super.writeField(record, f, out, state);

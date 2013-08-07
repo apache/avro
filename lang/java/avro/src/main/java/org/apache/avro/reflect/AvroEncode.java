@@ -17,18 +17,19 @@
  */
 package org.apache.avro.reflect;
 
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares that a class or field should be represented by an Avro string.  It's {@link
- * Object#toString()} method will be used to convert it to a string, and its
- * single String parameter constructor will be used to create instances.
+ * Expert: Fields with this annotation are encoded using the given custom encoder.
+ * This annotation overrides {@link org.apache.avro.reflect.Stringable Stringable} and {@link org.apache.avro.reflect.Nullable Nullable}.
+ * Since no validation is performed, invalid custom encodings may result in an unreadable file.
+ * Use of {@link org.apache.avro.io.ValidatingEncoder} is recommended.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.FIELD})
-@Documented
-public @interface Stringable {}
+@Target(ElementType.FIELD)
+public @interface AvroEncode {
+  Class<? extends CustomEncoding<?>> using();
+}

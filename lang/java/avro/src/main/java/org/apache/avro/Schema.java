@@ -242,6 +242,11 @@ public abstract class Schema extends JsonProperties {
     throw new AvroRuntimeException("Not a named type: "+this);
   }
 
+  /** If this is a record, enum or fixed, add an alias. */
+  public void addAlias(String alias, String space) {
+    throw new AvroRuntimeException("Not a named type: "+this);
+  }
+
   /** If this is a record, enum or fixed, return its aliases, if any. */
   public Set<String> getAliases() {
     throw new AvroRuntimeException("Not a named type: "+this);
@@ -481,9 +486,14 @@ public abstract class Schema extends JsonProperties {
     public String getNamespace() { return name.space; }
     public String getFullName() { return name.full; }
     public void addAlias(String alias) {
+      addAlias(alias, null);
+    }
+    public void addAlias(String name, String space) {
       if (aliases == null)
         this.aliases = new LinkedHashSet<Name>();
-      aliases.add(new Name(alias, name.space));
+      if (space == null)
+        space = this.name.space;
+      aliases.add(new Name(name, space));
     }
     public Set<String> getAliases() {
       Set<String> result = new LinkedHashSet<String>();

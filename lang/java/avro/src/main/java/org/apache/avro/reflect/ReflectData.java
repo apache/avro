@@ -211,8 +211,14 @@ public class ReflectData extends SpecificData {
     private ClassAccessorData(Class<?> c) {
       clazz = c;
       for(Field f : getFields(c, false)) {
+        if (f.isAnnotationPresent(AvroIgnore.class)) {
+          continue;
+        }
         FieldAccessor accessor = ReflectionUtil.getFieldAccess().getAccessor(f);
-        byName.put(f.getName(), accessor);
+        AvroName avroname = f.getAnnotation(AvroName.class);    
+        byName.put( (avroname != null 
+          ? avroname.value()
+          : f.getName()) , accessor);  
       }
     }
     
@@ -436,18 +442,22 @@ public class ReflectData extends SpecificData {
           for (int i = 0; i < constants.length; i++)
             symbols.add(constants[i].name());
           schema = Schema.createEnum(name, null /* doc */, space, symbols);
+          consumeAvroAliasAnnotation(c, schema);
         } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed
           int size = c.getAnnotation(FixedSize.class).value();
           schema = Schema.createFixed(name, null /* doc */, space, size);
+          consumeAvroAliasAnnotation(c, schema);
         } else if (IndexedRecord.class.isAssignableFrom(c)) { // specific
           return super.createSchema(type, names);
         } else {                                             // record
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
           boolean error = Throwable.class.isAssignableFrom(c);
           schema = Schema.createRecord(name, null /* doc */, space, error);
+          consumeAvroAliasAnnotation(c, schema);
           names.put(c.getName(), schema);
           for (Field field : getCachedFields(c))
-            if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0){
+            if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0 
+                && !field.isAnnotationPresent(AvroIgnore.class)) {
               Schema fieldSchema = createFieldSchema(field, names);
               JsonNode defaultValue = null;
               if (fieldSchema.getType() == Schema.Type.UNION) {
@@ -456,14 +466,29 @@ public class ReflectData extends SpecificData {
                   defaultValue = NullNode.getInstance();
                 }
               }
-              Schema.Field recordField = new Schema.Field(field.getName(),
-                      fieldSchema, null /* doc */, defaultValue);
+              AvroName annotatedName = field.getAnnotation(AvroName.class);       // Rename fields
+              String fieldName = (annotatedName != null)            
+                ? annotatedName.value()
+                : field.getName();
+              Schema.Field recordField 
+                = new Schema.Field(fieldName, fieldSchema, null, defaultValue);
+             
+              AvroMeta meta = field.getAnnotation(AvroMeta.class);              // add metadata
+              if (meta != null) 
+                recordField.addProp(meta.key(), meta.value());  
+              for(Schema.Field f : fields) {                                
+                if (f.name().equals(fieldName)) 
+                  throw new AvroTypeException("double field entry: "+ fieldName);
+              }
               fields.add(recordField);
             }
           if (error)                              // add Throwable message
             fields.add(new Schema.Field("detailMessage", THROWABLE_MESSAGE,
                                         null, null));
           schema.setFields(fields);
+          AvroMeta meta = c.getAnnotation(AvroMeta.class);
+          if (meta != null) 
+              schema.addProp(meta.key(), meta.value());
         }
         names.put(fullName, schema);
       }
@@ -536,7 +561,17 @@ public class ReflectData extends SpecificData {
   
   /** Create a schema for a field. */
   protected Schema createFieldSchema(Field field, Map<String, Schema> names) {
+    AvroEncode enc = field.getAnnotation(AvroEncode.class);
+    if (enc != null)
+      try {
+          return enc.using().newInstance().getSchema();
+      } catch (Exception e) {
+          throw new AvroRuntimeException("Could not create schema from custom serializer for " + field.getName());
+      } 
     Schema schema = createSchema(field.getGenericType(), names);
+    if (field.isAnnotationPresent(Stringable.class)) {      // Stringable
+      schema = Schema.create(Schema.Type.STRING);
+    }
     if (field.isAnnotationPresent(Nullable.class))           // nullable
       schema = makeNullable(schema);
     return schema;
@@ -650,4 +685,15 @@ public class ReflectData extends SpecificData {
   protected Object getRecordState(Object record, Schema schema) {
     return getFieldAccessors(record.getClass(), schema);
   }
+  
+  private void consumeAvroAliasAnnotation(Class<?> c, Schema schema) {
+    AvroAlias alias = c.getAnnotation(AvroAlias.class);
+    if (alias != null) {
+      String space = alias.space();
+      if (AvroAlias.NULL.equals(space))
+        space = null;
+      schema.addAlias(alias.alias(), space);
+    }
+  }
+  
 }

@@ -77,5 +77,22 @@ and other uses of polymorphism.
 will cause a type to be serialized via its {@link java.lang.Object#toString()
 toString} method.
 
+<p>Fields annotated with {@link org.apache.avro.reflect.AvroIgnore AvroIgnore} 
+will not be written or read to. 
+
+<p> The {@link org.apache.avro.reflect.Avroname AvroName} annotation renames 
+the field in the schema to the given name. The reflect datum reader will look 
+for a schema field with the given name, when trying to read into such an 
+annotated java field. 
+
+<p>The {@link org.apache.avro.reflect.AvroMeta AvroMeta} annotation adds an 
+arbitrary key:value pair in the schema at the node of the java field.
+
+<p>The {@link org.apache.avro.reflect.AvroEncode AvroEncode} annotation forces 
+the use of an custom encoder. This annotation overrides 
+{@link org.apache.avro.reflect.Stringable Stringable} and 
+{@link org.apache.avro.reflect.Nullable Nullable}.
+
+
 </body>
 </html>

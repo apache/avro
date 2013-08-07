@@ -20,6 +20,7 @@ package org.apache.avro.reflect;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
@@ -43,6 +44,13 @@ class FieldAccessUnsafe extends FieldAccess {
 
   @Override
   protected FieldAccessor getAccessor(Field field) {
+    AvroEncode enc = field.getAnnotation(AvroEncode.class);
+    if (enc != null)
+      try {
+        return new UnsafeCustomEncodedField(field, enc.using().newInstance() );
+      } catch (Exception e) {
+        throw new AvroRuntimeException("Could not instantiate custom Encoding");
+      }
     Class<?> c = field.getType();
     if (c == int.class)
       return new UnsafeIntField(field);
@@ -66,20 +74,34 @@ class FieldAccessUnsafe extends FieldAccess {
 
   abstract static class UnsafeCachedField extends FieldAccessor {
     protected final long offset;
+    protected Field field;
+    protected final boolean isStringable;
 
-    UnsafeCachedField(long offset) {
-      this.offset = offset;
+    UnsafeCachedField(Field f) {
+      this.offset = UNSAFE.objectFieldOffset(f);
+      this.field = f;
+      this.isStringable = f.isAnnotationPresent(Stringable.class);
+    }
+
+    @Override
+    protected Field getField() {
+      return field;
     }
 
     @Override
     protected boolean supportsIO() {
       return true;
     }
+    
+    @Override
+    protected boolean isStringable() {
+      return isStringable;
+    }
   }
 
   final static class UnsafeIntField extends UnsafeCachedField {
     UnsafeIntField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -105,7 +127,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   final static class UnsafeFloatField extends UnsafeCachedField {
     protected UnsafeFloatField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -131,7 +153,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   final static class UnsafeShortField extends UnsafeCachedField {
     protected UnsafeShortField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -157,7 +179,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   final static class UnsafeByteField extends UnsafeCachedField {
     protected UnsafeByteField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -183,7 +205,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   final static class UnsafeBooleanField extends UnsafeCachedField {
     protected UnsafeBooleanField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -209,7 +231,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   final static class UnsafeCharField extends UnsafeCachedField {
     protected UnsafeCharField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -235,7 +257,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   final static class UnsafeLongField extends UnsafeCachedField {
     protected UnsafeLongField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -261,7 +283,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   final static class UnsafeDoubleField extends UnsafeCachedField {
     protected UnsafeDoubleField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -287,7 +309,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   final static class UnsafeObjectField extends UnsafeCachedField {
     protected UnsafeObjectField(Field f) {
-      super(UNSAFE.objectFieldOffset(f));
+      super(f);
     }
 
     @Override
@@ -305,5 +327,39 @@ class FieldAccessUnsafe extends FieldAccess {
       return false;
     }
     
+  }
+  
+  final static class UnsafeCustomEncodedField extends UnsafeCachedField {
+
+    private CustomEncoding<?> encoding;
+    
+    UnsafeCustomEncodedField(Field f, CustomEncoding<?> encoding) {
+      super(f);
+      this.encoding = encoding;
+    }
+
+    @Override
+    protected Object get(Object object) throws IllegalAccessException {
+      return UNSAFE.getObject(object, offset);
+    }
+
+    @Override
+    protected void set(Object object, Object value) throws IllegalAccessException, IOException {
+      UNSAFE.putObject(object, offset, value);
+    }
+    
+    @Override
+    protected void read(Object object, Decoder in) throws IOException {
+      UNSAFE.putObject(object, offset, encoding.read(in));
+    }
+
+    @Override
+    protected void write(Object object, Encoder out) throws IOException {
+      encoding.write(UNSAFE.getObject(object, offset), out);
+    }
+    
+    protected boolean isCustomEncoded() {
+      return true;
+    }
   }
 }

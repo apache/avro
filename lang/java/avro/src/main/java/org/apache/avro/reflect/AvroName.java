@@ -17,18 +17,18 @@
  */
 package org.apache.avro.reflect;
 
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares that a class or field should be represented by an Avro string.  It's {@link
- * Object#toString()} method will be used to convert it to a string, and its
- * single String parameter constructor will be used to create instances.
+ * Sets the avroname for this java field.
+ * When reading into this class, a reflectdatumreader
+ * looks for a schema field with the avroname.
  */
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.FIELD})
-@Documented
-public @interface Stringable {}
+public @interface AvroName {
+  String value();
+}
