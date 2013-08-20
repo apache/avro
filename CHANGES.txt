@@ -8,6 +8,9 @@ Trunk (not yet released)
 
   IMPROVEMENTS
 
+    AVRO-1355. Java: Reject schemas with duplicate field
+    names. (Christophe Taton via cutting)
+
   BUG FIXES
 
 Avro 1.7.5 (12 August 2013)

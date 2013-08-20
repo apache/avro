@@ -19,7 +19,14 @@ package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
 import org.junit.Test;
 
 public class TestSchema {  
@@ -42,5 +49,19 @@ public class TestSchema {
     assertNotNull(parsedStringSchema);
     assertNotNull(parsedArrayOfStringSchema);
     assertEquals(parsedStringSchema.toString(), parsedArrayOfStringSchema.toString());
+  }
+
+  @Test
+  public void testDuplicateRecordFieldName() {
+    final Schema schema = Schema.createRecord("RecordName", null, null, false);
+    final List<Field> fields = new ArrayList<Field>();
+    fields.add(new Field("field_name", Schema.create(Type.NULL), null, null));
+    fields.add(new Field("field_name", Schema.create(Type.INT), null, null));
+    try {
+      schema.setFields(fields);
+      fail("Should not be able to create a record with duplicate field name.");
+    } catch (AvroRuntimeException are) {
+      assertTrue(are.getMessage().contains("Duplicate field field_name in record RecordName"));
+    }
   }
 }

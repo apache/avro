@@ -587,7 +587,12 @@ public abstract class Schema extends JsonProperties {
         if (f.position != -1)
           throw new AvroRuntimeException("Field already used: " + f);
         f.position = i++;
-        fieldMap.put(f.name(), f);
+        final Field existingField = fieldMap.put(f.name(), f);
+        if (existingField != null) {
+          throw new AvroRuntimeException(String.format(
+              "Duplicate field %s in record %s: %s and %s.",
+              f.name(), name, f, existingField));
+        }
         ff.add(f);
       }
       this.fields = ff.lock();
