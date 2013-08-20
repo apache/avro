@@ -56,6 +56,11 @@ namespace Avro
         public bool? Oneway { get; set; }
 
         /// <summary>
+        /// Explicitly defined protocol errors plus system added "string" error
+        /// </summary>
+        public UnionSchema SupportedErrors { get; set; }
+
+        /// <summary>
         /// Constructor for Message class
         /// </summary>
         /// <param name="name">name property</param>
@@ -72,6 +77,23 @@ namespace Avro
             this.Name = name;
             this.Doc = doc;
             this.Oneway = oneway;
+
+            if (error != null && error.CanRead(Schema.Parse("[\"string\"]")))
+            {
+                this.SupportedErrors = error;
+            }
+            else
+            {
+                this.SupportedErrors = (UnionSchema) Schema.Parse("[\"string\"]");
+
+                if (error != null)
+                {
+                    for (int i = 0; i < error.Schemas.Count; ++i)
+                    {
+                        this.SupportedErrors.Schemas.Add(error.Schemas[i]);
+                    }
+                }
+            }
         }
 
         /// <summary>

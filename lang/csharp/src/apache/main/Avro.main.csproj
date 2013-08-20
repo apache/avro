@@ -26,7 +26,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Avro</RootNamespace>
     <AssemblyName>Avro</AssemblyName>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -47,6 +47,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -107,8 +108,13 @@
     <Compile Include="Generic\GenericWriter.cs" />
     <Compile Include="IO\BinaryDecoder.cs" />
     <Compile Include="IO\BinaryEncoder.cs" />
+    <Compile Include="IO\ByteBufferInputStream.cs" />
+    <Compile Include="IO\ByteBufferOutputStream.cs" />
     <Compile Include="IO\Decoder.cs" />
     <Compile Include="IO\Encoder.cs" />
+    <Compile Include="IO\ICallback.cs" />
+    <Compile Include="IO\InputStream.cs" />
+    <Compile Include="IO\OutputStream.cs" />
     <Compile Include="IO\Resolver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol\Message.cs" />
@@ -132,6 +138,8 @@
     <Compile Include="Schema\SchemaParseException.cs" />
     <Compile Include="Schema\UnionSchema.cs" />
     <Compile Include="Schema\UnnamedSchema.cs" />
+    <Compile Include="Specific\SpecificException.cs" />
+    <Compile Include="Specific\SpecificProtocol.cs" />
     <Compile Include="Specific\ObjectCreator.cs" />
     <Compile Include="Specific\SpecificFixed.cs" />
     <Compile Include="Specific\SpecificReader.cs" />

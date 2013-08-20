@@ -32,6 +32,11 @@ namespace Avro
         /// </summary>
         public Schema ValueSchema { get; set; }
 
+        public static MapSchema CreateMap(Schema type)
+        {
+            return new MapSchema(type,null);
+        }
+
         /// <summary>
         /// Static function to return new instance of map schema
         /// </summary>

@@ -30,5 +30,39 @@ namespace Avro.Specific
     {
         public SpecificFixed(uint size) : base(size) { }
         public abstract new Schema Schema { get; }
+
+        protected bool Equals(SpecificFixed obj)
+        {
+            if (this == obj) return true;
+            if (obj != null && obj is SpecificFixed)
+            {
+                SpecificFixed that = obj as SpecificFixed;
+                if (that.Schema.Equals(this.Schema))
+                {
+                    for (int i = 0; i < value.Length; i++) if (this.value[i] != that.Value[i]) return false;
+                    return true;
+                }
+            }
+            return false;
+
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SpecificFixed) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            int result = Schema.GetHashCode();
+            foreach (byte b in value)
+            {
+                result += 23 * b;
+            }
+            return result;
+        }
     }
 }

@@ -154,7 +154,7 @@ namespace Avro.Test
 
 "}
 )]
-        public static void TestSpecific(string str, object[] result)
+        public void TestSpecific(string str, object[] result)
         {
             Protocol protocol = Protocol.Parse(str);
             var codegen = new CodeGen();

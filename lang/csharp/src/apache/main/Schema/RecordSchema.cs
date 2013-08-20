@@ -266,7 +266,8 @@ namespace Avro
         /// <returns>true if this and writer schema are compatible based on the AVRO specification, false otherwise</returns>
         public override bool CanRead(Schema writerSchema)
         {
-            if (writerSchema.Tag != Type.Record) return false;
+            if ((writerSchema.Tag != Type.Record) && (writerSchema.Tag != Type.Error)) return false;
+
             RecordSchema that = writerSchema as RecordSchema;
             return protect(() => true, () =>
             {

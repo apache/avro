@@ -114,6 +114,7 @@ namespace Avro.Generic
                     Write<byte[]>(value, schema.Tag, encoder.WriteBytes);
                     break;
                 case Schema.Type.Record:
+                case Schema.Type.Error:
                     WriteRecord(schema as RecordSchema, value, encoder);
                     break;
                 case Schema.Type.Enumeration:

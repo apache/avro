@@ -17,6 +17,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -155,6 +157,8 @@ namespace Avro
                             throw new CodeGenException("Names in protocol should only be of type NamedSchema, type found " + sn.Value.Tag);
                     }
                 }
+
+                processInterface(protocol);
             }
         }
 
@@ -319,6 +323,189 @@ namespace Avro
             codens.Types.Add(ctd);
         }
 
+        protected virtual void processInterface(Protocol protocol)
+        {
+            // Create abstract class
+            string protocolNameMangled = CodeGenUtil.Instance.Mangle(protocol.Name);
+
+            var ctd = new CodeTypeDeclaration(protocolNameMangled);
+            ctd.TypeAttributes = TypeAttributes.Abstract | TypeAttributes.Public;
+            ctd.IsClass = true;
+            ctd.BaseTypes.Add("Avro.Specific.ISpecificProtocol");
+
+            AddProtocolDocumentation(protocol, ctd);
+
+            // Add static protocol field.
+            var protocolField = new CodeMemberField();
+            protocolField.Attributes = MemberAttributes.Private | MemberAttributes.Static | MemberAttributes.Final;
+            protocolField.Name = "protocol";
+            protocolField.Type = new CodeTypeReference("readonly Avro.Protocol");
+
+            var cpe = new CodePrimitiveExpression(protocol.ToString());
+            var cmie = new CodeMethodInvokeExpression(
+                new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(typeof(Protocol)), "Parse"),
+                new CodeExpression[] { cpe });
+
+            protocolField.InitExpression = cmie;
+
+            ctd.Members.Add(protocolField);
+
+            // Add overridden Protocol method.
+            var property = new CodeMemberProperty();
+            property.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+            property.Name = "Protocol";
+            property.Type = new CodeTypeReference("Avro.Protocol");
+            property.HasGet = true;
+
+
+            property.GetStatements.Add(new CodeTypeReferenceExpression("return protocol"));
+            ctd.Members.Add(property);
+
+            //var requestMethod = CreateRequestMethod();
+            //ctd.Members.Add(requestMethod);
+
+            var requestMethod = CreateRequestMethod();
+            //requestMethod.Attributes |= MemberAttributes.Override;
+            var builder = new StringBuilder();
+
+            if (protocol.Messages.Count > 0)
+            {
+                builder.Append("switch(messageName)\n\t\t\t{");
+
+                foreach (var a in protocol.Messages)
+                {
+                    builder.Append("\n\t\t\t\tcase \"").Append(a.Key).Append("\":\n");
+
+                    bool unused = false;
+                    string type = getType(a.Value.Response, false, ref unused);
+
+                    builder.Append("\t\t\t\trequestor.Request<")
+                           .Append(type)
+                           .Append(">(messageName, args, callback);\n");
+                    builder.Append("\t\t\t\tbreak;\n");
+                }
+
+                builder.Append("\t\t\t}");
+            }
+            var cseGet = new CodeSnippetExpression(builder.ToString());
+
+            requestMethod.Statements.Add(cseGet);
+            ctd.Members.Add(requestMethod);
+
+            AddMethods(protocol, false, ctd);
+
+            string nspace = protocol.Namespace;
+            if (string.IsNullOrEmpty(nspace))
+                throw new CodeGenException("Namespace required for enum schema " + nspace);
+            CodeNamespace codens = addNamespace(nspace);
+
+            codens.Types.Add(ctd);
+
+            // Create callback abstract class
+            ctd = new CodeTypeDeclaration(protocolNameMangled + "Callback");
+            ctd.TypeAttributes = TypeAttributes.Abstract | TypeAttributes.Public;
+            ctd.IsClass = true;
+            ctd.BaseTypes.Add(protocolNameMangled);
+
+            // Need to override
+            
+
+
+            AddProtocolDocumentation(protocol, ctd);
+
+            AddMethods(protocol, true, ctd);
+
+            codens.Types.Add(ctd);
+        }
+
+        private static CodeMemberMethod CreateRequestMethod()
+        {
+            var requestMethod = new CodeMemberMethod();
+            requestMethod.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+            requestMethod.Name = "Request";
+            requestMethod.ReturnType = new CodeTypeReference(typeof (void));
+            {
+                var requestor = new CodeParameterDeclarationExpression(typeof (Avro.Specific.ICallbackRequestor),
+                                                                       "requestor");
+                requestMethod.Parameters.Add(requestor);
+
+                var messageName = new CodeParameterDeclarationExpression(typeof (string), "messageName");
+                requestMethod.Parameters.Add(messageName);
+
+                var args = new CodeParameterDeclarationExpression(typeof (object[]), "args");
+                requestMethod.Parameters.Add(args);
+
+                var callback = new CodeParameterDeclarationExpression(typeof (object), "callback");
+                requestMethod.Parameters.Add(callback);
+            }
+            return requestMethod;
+        }
+
+        private static void AddMethods(Protocol protocol, bool generateCallback, CodeTypeDeclaration ctd)
+        {
+            foreach (var e in protocol.Messages)
+            {
+                var name = e.Key;
+                var message = e.Value;
+                var response = message.Response;
+
+                if (generateCallback && message.Oneway.GetValueOrDefault())
+                    continue;
+
+                var messageMember = new CodeMemberMethod();
+                messageMember.Name = CodeGenUtil.Instance.Mangle(name);
+                messageMember.Attributes = MemberAttributes.Public | MemberAttributes.Abstract;
+
+                if (message.Doc!= null && message.Doc.Trim() != string.Empty)
+                    messageMember.Comments.Add(new CodeCommentStatement(message.Doc));
+
+                if (message.Oneway.GetValueOrDefault() || generateCallback)
+                {
+                    messageMember.ReturnType = new CodeTypeReference(typeof (void));
+                }
+                else
+                {
+                    bool ignored = false;
+                    string type = getType(response, false, ref ignored);
+
+                    messageMember.ReturnType = new CodeTypeReference(type);
+                }
+
+                foreach (Field field in message.Request.Fields)
+                {
+                    bool ignored = false;
+                    string type = getType(field.Schema, false, ref ignored);
+
+                    string fieldName = CodeGenUtil.Instance.Mangle(field.Name);
+                    var parameter = new CodeParameterDeclarationExpression(type, fieldName);
+                    messageMember.Parameters.Add(parameter);
+                }
+
+                if (generateCallback)
+                {
+                    bool unused = false;
+                    var type = getType(response, false, ref unused);
+                    var parameter = new CodeParameterDeclarationExpression("Avro.IO.ICallback<" + type + ">",
+                                                                           "callback");
+                    messageMember.Parameters.Add(parameter);
+                }
+
+
+                ctd.Members.Add(messageMember);
+            }
+        }
+
+        private void AddProtocolDocumentation(Protocol protocol, CodeTypeDeclaration ctd)
+        {
+            // Add interface documentation
+            if (protocol.Doc != null && protocol.Doc.Trim() != string.Empty)
+            {
+                var interfaceDoc = createDocComment(protocol.Doc);
+                if (interfaceDoc != null)
+                    ctd.Comments.Add(interfaceDoc);
+            }
+        }
+
         /// <summary>
         /// Creates a class declaration
         /// </summary>
@@ -330,14 +517,17 @@ namespace Avro
             RecordSchema recordSchema = schema as RecordSchema;
             if (null == recordSchema) throw new CodeGenException("Unable to cast schema into a record");
 
+            bool isError = recordSchema.Tag == Schema.Type.Error;
+
             // declare the class
             var ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(recordSchema.Name));
-            ctd.BaseTypes.Add("ISpecificRecord");
+            ctd.BaseTypes.Add(isError ? "SpecificException" : "ISpecificRecord");
+
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsClass = true;
             ctd.IsPartial = true;
 
-            createSchemaField(schema, ctd, false);
+            createSchemaField(schema, ctd, isError);
 
             // declare Get() to be used by the Writer classes
             var cmmGet = new CodeMemberMethod();
@@ -355,6 +545,12 @@ namespace Avro
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression("System.Object", "fieldValue"));
             var putFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
+
+            if (isError)
+            {
+                cmmGet.Attributes |= MemberAttributes.Override;
+                cmmPut.Attributes |= MemberAttributes.Override;
+            }
 
             foreach (Field field in recordSchema.Fields)
             {

@@ -193,6 +193,7 @@ namespace Avro.Specific
                     return obj is byte[];
                 case Schema.Type.String:
                     return obj is string;
+                case Schema.Type.Error:
                 case Schema.Type.Record:
                     return obj is ISpecificRecord && 
                            (((obj as ISpecificRecord).Schema) as RecordSchema).SchemaName.Equals((sc as RecordSchema).SchemaName);

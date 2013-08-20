@@ -98,21 +98,36 @@ namespace Avro.Test
             }
         }
 
-       
+
         [Test]
         public void CanCodeGenTraceProtocol()
         {
-            var traceProtocol = System.IO.File.ReadAllText("../../../../../share/schemas/org/apache/avro/ipc/trace/avroTrace.avpr");
+            var traceProtocol =
+                System.IO.File.ReadAllText("../../../../../share/schemas/org/apache/avro/ipc/trace/avroTrace.avpr");
             Protocol protocol = Protocol.Parse(traceProtocol);
             var compilerResults = GenerateProtocol(protocol);
 
             // instantiate object
-            var types = compilerResults.CompiledAssembly.GetTypes().Select(t => t.FullName);
-            Assert.That(4, Is.EqualTo(types.Count()));
-            Assert.That(types.Contains("org.apache.avro.ipc.trace.ID"), "Should have contained ID type");
-            Assert.That(types.Contains("org.apache.avro.ipc.trace.Span"), "Should have contained Span type");
-            Assert.That(types.Contains("org.apache.avro.ipc.trace.SpanEvent"), "Should have contained SpanEvent type");
-            Assert.That(types.Contains("org.apache.avro.ipc.trace.TimestampedEvent"), "Should have contained TimestampedEvent type");
+            List<string> types = GetTypeFullNames(compilerResults.CompiledAssembly.GetTypes());
+            Assert.AreEqual(6, types.Count);
+            Assert.IsTrue(types.Contains("org.apache.avro.ipc.trace.ID"), "Should have contained ID type");
+            Assert.IsTrue(types.Contains("org.apache.avro.ipc.trace.Span"), "Should have contained Span type");
+            Assert.IsTrue(types.Contains("org.apache.avro.ipc.trace.SpanEvent"), "Should have contained SpanEvent type");
+            Assert.IsTrue(types.Contains("org.apache.avro.ipc.trace.TimestampedEvent"),
+                          "Should have contained TimestampedEvent type");
+            Assert.IsTrue(types.Contains("org.apache.avro.ipc.trace.AvroTrace"), "Should have contained SpanEvent type");
+            Assert.IsTrue(types.Contains("org.apache.avro.ipc.trace.AvroTraceCallback"),
+                          "Should have contained TimestampedEvent type");
+        }
+
+        private static List<string> GetTypeFullNames(Type[] types)
+        {
+            var typeFullNames = new List<string>();
+            foreach (var type in types)
+            {
+                typeFullNames.Add(type.FullName);
+            }
+            return typeFullNames;
         }
 
 

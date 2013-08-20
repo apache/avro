@@ -123,7 +123,7 @@ namespace Avro.File
             {
                 return _header.MetaData[key];
             }
-            catch (KeyNotFoundException knfe)
+            catch (KeyNotFoundException)
             {
                 return null; 
             }
@@ -183,7 +183,7 @@ namespace Avro.File
                         _stream.Position = _stream.Position - (DataFileConstants.SyncSize - 1);
                 } while (!done);
             }
-            catch (Exception e) { } // could not find .. default to EOF
+            catch (Exception) { } // could not find .. default to EOF
 
             _blockStart = _stream.Position;
         }

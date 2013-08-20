@@ -186,5 +186,10 @@ namespace Avro.IO
         {
             Stream.WriteByte(b);
         }
+
+        public void Flush()
+        {
+            Stream.Flush();
+        }
     }
 }

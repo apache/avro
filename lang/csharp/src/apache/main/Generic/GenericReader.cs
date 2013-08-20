@@ -177,6 +177,7 @@ namespace Avro.Generic
                     return Read<string>(writerSchema.Tag, readerSchema, d.ReadString);
                 case Schema.Type.Bytes:
                     return Read<byte[]>(writerSchema.Tag, readerSchema, d.ReadBytes);
+                case Schema.Type.Error:
                 case Schema.Type.Record:
                     return ReadRecord(reuse, (RecordSchema)writerSchema, readerSchema, d);
                 case Schema.Type.Enumeration:

@@ -107,6 +107,9 @@ namespace Avro.Specific
         {
             RecordSchema rs = (RecordSchema)readerSchema;
 
+            if (rs.Name == null)
+                return base.ReadRecord(reuse, writerSchema, readerSchema, dec);
+
             ISpecificRecord rec = (reuse != null ? reuse : ObjectCreator.Instance.New(rs.Fullname, Schema.Type.Record)) as ISpecificRecord;
             object obj;
             foreach (Field wf in writerSchema)

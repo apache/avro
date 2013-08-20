@@ -39,6 +39,11 @@ namespace Avro.Specific
         /// </summary>
         private Type GenericListType = typeof(List<>);
 
+        /// <summary>
+        /// Static generic nullable type used for creating new nullable instances
+        /// </summary>
+        private Type GenericNullableType = typeof(Nullable<>);
+        
         private readonly Assembly execAssembly;
         private readonly Assembly entryAssembly;
         private readonly bool diffAssembly;
@@ -104,18 +109,17 @@ namespace Avro.Specific
         }
 
         /// <summary>
-        /// Gets the type of the specified type name
+        /// Find the type with the given name
         /// </summary>
-        /// <param name="name">name of the object to get type of</param>
-        /// <param name="schemaType">schema type for the object</param>
-        /// <returns>Type</returns>
-        public Type GetType(string name, Schema.Type schemaType)
+        /// <param name="name">the object type to locate</param>
+        /// <param name="throwError">whether or not to throw an error if the type wasn't found</param>
+        /// <returns>the object type, or <c>null</c> if not found</returns>
+        private Type FindType(string name,bool throwError) 
         {
             Type type;
 
             // Modify provided type to ensure it can be discovered.
             // This is mainly for Generics, and Nullables.
-
             name = name.Replace("Nullable", "Nullable`1");
             name = name.Replace("IList", "System.Collections.Generic.IList`1");
             name = name.Replace("<", "[");
@@ -138,22 +142,130 @@ namespace Avro.Specific
                 Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
                 foreach (Assembly assembly in assemblies)
                 {
+                    // Fix for Mono 3.0.10
+                    if (assembly.FullName.StartsWith("MonoDevelop.NUnit"))
+                        continue;
+
                     types = assembly.GetTypes();
 
                     // Change the search to look for Types by both NAME and FULLNAME
                     foreach (Type t in types)
                     {
                         if (name == t.Name || name == t.FullName) type = t;
-
                     }
-
                     
                     if (type != null)
                         break;
                 }
             }
-            if (type == null)
+
+            if (null == type && throwError)
+            {
                 throw new AvroException("Unable to find type " + name + " in all loaded assemblies");
+            }
+
+            return type;
+        }
+
+
+        /// <summary>
+        /// Gets the type for the specified schema
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
+        public Type GetType(Schema schema)
+        {
+            switch(schema.Tag) {
+            case Schema.Type.Null:
+                break;
+            case Schema.Type.Boolean:
+                return typeof(bool);
+            case Schema.Type.Int:
+                return typeof(int);
+            case Schema.Type.Long:
+                return typeof(long);
+            case Schema.Type.Float:
+                return typeof(float);
+            case Schema.Type.Double:
+                return typeof(double);
+            case Schema.Type.Bytes:
+                return typeof(byte[]); 
+            case Schema.Type.String:
+                return typeof(string);
+            case Schema.Type.Union:
+                {
+                    UnionSchema unSchema = schema as UnionSchema;
+                    if (null != unSchema && unSchema.Count==2)
+                    {
+                        Schema s1 = unSchema.Schemas[0];
+                        Schema s2 = unSchema.Schemas[1];
+
+                        // Nullable ?
+                        Type itemType = null;
+                        if (s1.Tag == Schema.Type.Null)
+                        {
+                            itemType = GetType(s2);
+                        }
+                        else if (s2.Tag == Schema.Type.Null)
+                        {
+                            itemType = GetType(s1);
+                        }
+
+                        if (null != itemType ) 
+                        {
+                            if (itemType.IsValueType && !itemType.IsEnum)
+                            {
+                                try
+                                {
+                                    largs[0] = itemType;
+                                    return GenericNullableType.MakeGenericType(largs);
+                                }
+                                catch (Exception) { }
+                            }
+                            
+                            return itemType;
+                        }
+                    }
+
+                    return typeof(object);
+                }
+            case Schema.Type.Array: {
+                ArraySchema arrSchema = schema as ArraySchema;
+                Type itemSchema = GetType(arrSchema.ItemSchema);
+
+                largs[0] = itemSchema;
+                return GenericListType.MakeGenericType(largs); }
+            case Schema.Type.Map: {
+                MapSchema mapSchema = schema as MapSchema;
+                Type itemSchema = GetType(mapSchema.ValueSchema);
+
+                margs[1] = itemSchema;
+                return GenericMapType.MakeGenericType(margs); }
+            case Schema.Type.Enumeration:
+            case Schema.Type.Record:
+            case Schema.Type.Fixed:
+            case Schema.Type.Error: {
+                // Should all be named types
+                var named = schema as NamedSchema;
+                if(null!=named) {
+                    return FindType(named.Fullname,true);
+                }
+                break; }
+            }
+
+            // Fallback
+            return FindType(schema.Name,true);
+        }
+
+        /// <summary>
+        /// Gets the type of the specified type name
+        /// </summary>
+        /// <param name="name">name of the object to get type of</param>
+        /// <param name="schemaType">schema type for the object</param>
+        /// <returns>Type</returns>
+        public Type GetType(string name, Schema.Type schemaType)
+        {
+            Type type = FindType(name, true);
 
             if (schemaType == Schema.Type.Map)
             {

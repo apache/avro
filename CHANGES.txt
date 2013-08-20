@@ -4,6 +4,8 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-975. C#: Add RPC support. (Mark Lamley via cutting)
+
   IMPROVEMENTS
 
   BUG FIXES
