@@ -51,8 +51,8 @@ Avro 1.7.5 (12 August 2013)
     AVRO-1268. Java: Extend support for stringables from reflect to
     specific.  String schemas in generated classes now support the
     "java-class" and "java-key-class" properties.  The built-in Java
-    types BigDecimal, BigInteger, URI, URL, Date and File can now be
-    fields in generated classes. (Alexandre Normand and cutting)
+    types BigDecimal, BigInteger, URI, URL, and File can now be fields
+    in generated classes. (Alexandre Normand and cutting)
 
     AVRO-1259. Java: Improve Trevni's encoding of sparse columns.
     (cutting)
