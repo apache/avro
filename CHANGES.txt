@@ -13,6 +13,10 @@ Trunk (not yet released)
 
   BUG FIXES
 
+    AVRO-1368. Fix SpecificDatumWriter to, when writing a string
+    schema, not silently convert any object to a string.
+    (Christophe Taton via cutting)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES

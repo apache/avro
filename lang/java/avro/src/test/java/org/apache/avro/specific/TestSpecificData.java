@@ -22,7 +22,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +32,9 @@ import java.util.List;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -124,5 +129,20 @@ public class TestSpecificData {
     record.put("y", "str");
     assertEquals(1, record.get("x"));
     assertEquals("str", record.get("y"));
+  }
+
+  /** Tests that non Stringable datum are rejected by specific writers. */
+  @Test
+  public void testNonStringable() throws Exception {
+    final Schema string = Schema.create(Type.STRING);
+    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    final Encoder encoder = EncoderFactory.get().directBinaryEncoder(baos, null);
+    final DatumWriter<Object> writer = new SpecificDatumWriter<Object>(string);
+    try {
+      writer.write(new Object(), encoder);
+      fail("Non stringable object should be rejected.");
+    } catch (ClassCastException cce) {
+      // Expected error
+    }
   }
 }

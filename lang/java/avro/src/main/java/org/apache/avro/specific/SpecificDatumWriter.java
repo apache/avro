@@ -45,6 +45,11 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
     super(specificData);
   }
   
+  /** Returns the {@link SpecificData} implementation used by this writer. */
+  public SpecificData getSpecificData() {
+    return (SpecificData) getData();
+  }
+
   @Override
   protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
@@ -57,8 +62,10 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
   @Override
   protected void writeString(Schema schema, Object datum, Encoder out)
     throws IOException {
-    if (!(datum instanceof CharSequence))         // Stringable
-      datum = datum.toString();                   // call toString()
+    if (!(datum instanceof CharSequence)
+        && getSpecificData().isStringable(datum.getClass())) {
+      datum = datum.toString();                   // convert to string
+    }
     writeString(datum, out);
   }
 
