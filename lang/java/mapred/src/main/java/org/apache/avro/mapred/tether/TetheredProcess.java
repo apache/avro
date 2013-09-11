@@ -154,7 +154,7 @@ class TetheredProcess  {
     File stdout = TaskLog.getTaskLogFile(taskid, false, TaskLog.LogName.STDOUT);
     File stderr = TaskLog.getTaskLogFile(taskid, false, TaskLog.LogName.STDERR);
     long logLength = TaskLog.getTaskLogLength(job);
-    command = TaskLog.captureOutAndError(command, stdout, stderr, logLength);
+    command = TaskLog.captureOutAndError(null, command, stdout, stderr, logLength, false);
     stdout.getParentFile().mkdirs();
     stderr.getParentFile().mkdirs();
 
