@@ -399,7 +399,7 @@
           <title>Complex Types</title>
           <p>Complex types are encoded in binary as follows:</p>
 
-          <section>
+          <section id="record_encoding">
             <title>Records</title>
 	    <p>A record is encoded by encoding the values of its
 	      fields in the order that they are declared.  In other
@@ -426,7 +426,7 @@
 	    <source>36 06 66 6f 6f</source>
 	  </section>
           
-          <section>
+          <section id="enum_encoding">
             <title>Enums</title>
             <p>An enum is encoded by a <code>int</code>, representing
               the zero-based position of the symbol in the schema.</p>
@@ -440,7 +440,7 @@
 	  </section>
 
 
-          <section>
+          <section id="array_encoding">
             <title>Arrays</title>
             <p>Arrays are encoded as a series of <em>blocks</em>.
               Each block consists of a <code>long</code> <em>count</em>
@@ -469,7 +469,7 @@
 
           </section>
 
-	  <section>
+	  <section id="map_encoding">
             <title>Maps</title>
             <p>Maps are encoded as a series of <em>blocks</em>.  Each
               block consists of a <code>long</code> <em>count</em>
@@ -490,7 +490,7 @@
 	
 	  </section>
 
-          <section>
+          <section id="union_encoding">
             <title>Unions</title>
             <p>A union is encoded by first writing a <code>long</code>
               value indicating the zero-based position within the
@@ -508,7 +508,7 @@
             </ul>
           </section>
 
-          <section>
+          <section id="fixed_encoding">
             <title>Fixed</title>
             <p>Fixed instances are encoded using the number of bytes
               declared in the schema.</p>
@@ -644,11 +644,9 @@
         <li>The 16-byte, randomly-generated sync marker for this file.</li>
       </ul>
 
-      <p>File metadata consists of:</p>
-      <ul>
-        <li>A long indicating the number of metadata key/value pairs.</li>
-        <li>For each pair, a string key and bytes value.</li>
-      </ul>
+      <p>File metadata is written as if defined by the following <a
+      href="#map_encoding">map</a> schema:</p>
+      <source>{"type": "map", "values": "bytes"}</source>
 
       <p>All metadata properties that start with "avro." are reserved.
       The following file metadata properties are currently used:</p>

@@ -20,6 +20,9 @@ Trunk (not yet released)
     AVRO-1374. Java: Fix compilation against Hadoop 2.1.
     (Julian Zhou via cutting)
 
+    AVRO-1366. Fix specification's description of metadata format.
+    (cutting)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES
