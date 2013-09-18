@@ -18,7 +18,12 @@
 #include <string.h>
 #ifdef SNAPPY_CODEC
 #include <snappy-c.h>
-#include <byteswap.h>
+#  if defined(__APPLE__)
+#    include <libkern/OSByteOrder.h>
+#    define __bswap_32 OSSwapInt32
+#  else
+#    include <byteswap.h>
+#  endif
 #endif
 #ifdef DEFLATE_CODEC
 #include <zlib.h>
