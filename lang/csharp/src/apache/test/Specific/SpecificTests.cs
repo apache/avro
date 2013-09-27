@@ -16,15 +16,13 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.IO;
-using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
-using Avro;
-using Avro.Generic;
 using Avro.IO;
 using System.CodeDom;
 using System.CodeDom.Compiler;
-using Microsoft.CSharp;
 using Avro.Specific;
 using System.Reflection;
 
@@ -131,7 +129,7 @@ namespace Avro.Test
   com.foo.newRec newrec = new com.foo.newRec();
   newrec.f1 = 1200;
   myMap2.Add(""A"", newrec);
-  myObject = com.foo.MyEnum.B;
+  myObject = myA;
 
   IList<System.Object> o1 = new List<System.Object>();
 
@@ -210,17 +208,12 @@ namespace Avro.Test
             Assert.IsFalse(rec == null);
 
             // serialize
-            var stream = new MemoryStream();
-            var binEncoder = new BinaryEncoder(stream);
-            var writer = new SpecificDefaultWriter(rec.Schema);
-            writer.Write(rec.Schema, rec, binEncoder);
+            var stream = serialize(rec.Schema, rec);
 
             // deserialize
-            stream.Position = 0;
-            var decoder = new BinaryDecoder(stream);
-            var reader = new SpecificDefaultReader(rec.Schema, rec.Schema);
-            var rec2 = (ISpecificRecord)reader.Read(null, rec.Schema, rec.Schema, decoder);
+            var rec2 = deserialize<ISpecificRecord>(stream, rec.Schema, rec.Schema);
             Assert.IsFalse(rec2 == null);
+            AssertSpecificRecordEqual(rec, rec2);
         }
 
         [TestCase]
@@ -229,27 +222,119 @@ namespace Avro.Test
             Schema writerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," + 
                                         "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [\"FIRST\", \"SECOND\"]} }]}");
 
-            Schema readerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," + 
-                                        "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");
+            var testRecord = new EnumRecord();
 
-
-            EnumRecord testRecord = new EnumRecord();
+            Schema readerSchema = testRecord.Schema;
             testRecord.enumType = EnumType.SECOND;
 
             // serialize
-            var stream = new MemoryStream();
-            var binEncoder = new BinaryEncoder(stream);
-            var writer = new SpecificWriter<EnumRecord>(writerSchema);
-            writer.Write(testRecord, binEncoder);
+            var stream = serialize(writerSchema, testRecord);
 
             // deserialize
-            stream.Position = 0;
-            var decoder = new BinaryDecoder(stream);
-            var reader = new SpecificReader<EnumRecord>(writerSchema, readerSchema);
-            var rec2 = reader.Read(null, decoder);
+            var rec2 = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
             Assert.AreEqual( EnumType.SECOND, rec2.enumType );
         }
+
+        private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class, ISpecificRecord
+        {
+            long initialPos = ms.Position;
+            var r = new SpecificReader<S>(ws, rs);
+            Decoder d = new BinaryDecoder(ms);
+            S output = r.Read(null, d);
+            Assert.AreEqual(ms.Length, ms.Position); // Ensure we have read everything.
+            checkAlternateDeserializers(output, ms, initialPos, ws, rs);
+            return output;
+        }
+
+        private static void checkAlternateDeserializers<S>(S expected, Stream input, long startPos, Schema ws, Schema rs) where S : class, ISpecificRecord
+        {
+            input.Position = startPos;
+            var reader = new SpecificDatumReader<S>(ws, rs);
+            Decoder d = new BinaryDecoder(input);
+            S output = reader.Read(null, d);
+            Assert.AreEqual(input.Length, input.Position); // Ensure we have read everything.
+            AssertSpecificRecordEqual(expected, output);
+        }
+
+        private static Stream serialize<T>(Schema ws, T actual)
+        {
+            var ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            var w = new SpecificWriter<T>(ws);
+            w.Write(actual, e);
+            ms.Flush();
+            ms.Position = 0;
+            checkAlternateSerializers(ms.ToArray(), actual, ws);
+            return ms;
+        }
+
+        private static void checkAlternateSerializers<T>(byte[] expected, T value, Schema ws)
+        {
+            var ms = new MemoryStream();
+            var writer = new SpecificDatumWriter<T>(ws);
+            var e = new BinaryEncoder(ms);
+            writer.Write(value, e);
+            var output = ms.ToArray();
+            
+            Assert.AreEqual(expected.Length, output.Length);
+            Assert.True(expected.SequenceEqual(output));
+        }
+
+        private static void AssertSpecificRecordEqual(ISpecificRecord rec1, ISpecificRecord rec2)
+        {
+            var recordSchema = (RecordSchema) rec1.Schema;
+            for (int i = 0; i < recordSchema.Count; i++)
+            {
+                var rec1Val = rec1.Get(i);
+                var rec2Val = rec2.Get(i);
+                if (rec1Val is ISpecificRecord)
+                {
+                    AssertSpecificRecordEqual((ISpecificRecord)rec1Val, (ISpecificRecord)rec2Val);
+                }
+                else if (rec1Val is IList)
+                {
+                    var rec1List = (IList) rec1Val;
+                    if( rec1List.Count > 0 && rec1List[0] is ISpecificRecord)
+                    {
+                        var rec2List = (IList) rec2Val;
+                        Assert.AreEqual(rec1List.Count, rec2List.Count);
+                        for (int j = 0; j < rec1List.Count; j++)
+                        {
+                            AssertSpecificRecordEqual((ISpecificRecord)rec1List[j], (ISpecificRecord)rec2List[j]);
+                        }
+                    }
+                    else
+                    {
+                        Assert.AreEqual(rec1Val, rec2Val);
+                    }
+                }
+                else if (rec1Val is IDictionary)
+                {
+                    var rec1Dict = (IDictionary) rec1Val;
+                    var rec2Dict = (IDictionary) rec2Val;
+                    Assert.AreEqual(rec2Dict.Count, rec2Dict.Count);
+                    foreach (var key in rec1Dict.Keys)
+                    {
+                        var val1 = rec1Dict[key];
+                        var val2 = rec2Dict[key];
+                        if (val1 is ISpecificRecord)
+                        {
+                            AssertSpecificRecordEqual((ISpecificRecord)val1, (ISpecificRecord)val2);
+                        }
+                        else
+                        {
+                            Assert.AreEqual(val1, val2);
+                        }
+                    }
+                }
+                else
+                {
+                    Assert.AreEqual(rec1Val, rec2Val);
+                }
+            }
+        }
     }
+
     enum EnumType
     {
         THIRD,
@@ -260,7 +345,15 @@ namespace Avro.Test
     class EnumRecord : ISpecificRecord
     {
         public EnumType enumType { get; set; }
-        public Schema Schema { get; set; }
+        public Schema Schema
+        {
+            get
+            {
+                return Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," + 
+                                        "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\":" +
+                                        " \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");
+            }
+        }
 
         public object Get(int fieldPos)
         {

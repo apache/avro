@@ -27,6 +27,8 @@ namespace Avro.File
 {
     public class DataFileReader<T> : IFileReader<T>
     {
+        public delegate DatumReader<T> CreateDatumReader(Schema writerSchema, Schema readerSchema);
+
         private DatumReader<T> _reader;
         private Decoder _decoder, _datumDecoder;
         private Header _header;
@@ -39,6 +41,7 @@ namespace Avro.File
         private long _blockStart;
         private Stream _stream;
         private Schema _readerSchema;
+        private readonly CreateDatumReader _datumReaderFactory;
 
         /// <summary>
         ///  Open a reader for a file using path
@@ -71,11 +74,22 @@ namespace Avro.File
         }
 
         /// <summary>
-        ///  Open a reader for a stream and using the reader's schema
+        ///  Open a reader for a stream using the reader's schema
         /// </summary>
         /// <param name="inStream"></param>
         /// <returns></returns>
         public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema)
+        {
+            return OpenReader(inStream, readerSchema, CreateDefaultReader);
+        }
+
+
+        /// <summary>
+        ///  Open a reader for a stream using the reader's schema and a custom DatumReader
+        /// </summary>
+        /// <param name="inStream"></param>
+        /// <returns></returns>
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory)
         {
             if (!inStream.CanSeek)
                 throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
@@ -90,14 +104,15 @@ namespace Avro.File
             inStream.Seek(0, SeekOrigin.Begin);
 
             if (magic.SequenceEqual(DataFileConstants.Magic))   // current format
-                return new DataFileReader<T>(inStream, readerSchema);         // (not supporting 1.2 or below, format) 
+                return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory);         // (not supporting 1.2 or below, format) 
 
             throw new AvroRuntimeException("Not an Avro data file");
         }
 
-        DataFileReader(Stream stream, Schema readerSchema)
+        DataFileReader(Stream stream, Schema readerSchema, CreateDatumReader datumReaderFactory)
         {
             _readerSchema = readerSchema;
+            _datumReaderFactory = datumReaderFactory;
             Init(stream);
             BlockFinished();
         }
@@ -288,22 +303,22 @@ namespace Avro.File
 
             // parse schema and set codec 
             _header.Schema = Schema.Parse(GetMetaString(DataFileConstants.MetaDataSchema));
-            _reader = GetReaderFromSchema();
+            _reader = _datumReaderFactory(_header.Schema, _readerSchema ?? _header.Schema);
             _codec = ResolveCodec();
         }
 
-        private DatumReader<T> GetReaderFromSchema()
+        private static DatumReader<T> CreateDefaultReader(Schema writerSchema, Schema readerSchema)
         {
             DatumReader<T> reader = null;
             Type type = typeof(T);
 
             if (typeof(ISpecificRecord).IsAssignableFrom(type))
             {
-                reader = new SpecificReader<T>(_header.Schema, _readerSchema ?? _header.Schema);
+                reader = new SpecificReader<T>(writerSchema, readerSchema);
             }
             else // generic
             {
-                reader = new GenericReader<T>(_header.Schema, _readerSchema ?? _header.Schema);
+                reader = new GenericReader<T>(writerSchema, readerSchema);
             }
             return reader;
         }

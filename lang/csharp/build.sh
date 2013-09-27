@@ -33,6 +33,11 @@ case "$1" in
 	nunit-console Avro.nunit
 	;;
 
+    perf)
+	xbuild
+	mono build/perf/Release/Avro.perf.exe
+	;;
+
     dist)
         # build binary tarball
 	xbuild
@@ -51,7 +56,7 @@ case "$1" in
 	;;
 
     *)
-        echo "Usage: $0 {test|clean}"
+        echo "Usage: $0 {test|clean|dist|perf}"
         exit 1
 esac
 

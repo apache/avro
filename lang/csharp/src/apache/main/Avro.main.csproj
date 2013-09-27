@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
@@ -101,11 +101,15 @@
     <Compile Include="File\NullCodec.cs" />
     <Compile Include="Generic\DatumReader.cs" />
     <Compile Include="Generic\DatumWriter.cs" />
+    <Compile Include="Generic\GenericDatumReader.cs" />
+    <Compile Include="Generic\GenericDatumWriter.cs" />
     <Compile Include="Generic\GenericEnum.cs" />
     <Compile Include="Generic\GenericFixed.cs" />
     <Compile Include="Generic\GenericReader.cs" />
     <Compile Include="Generic\GenericRecord.cs" />
     <Compile Include="Generic\GenericWriter.cs" />
+    <Compile Include="Generic\PreresolvingDatumReader.cs" />
+    <Compile Include="Generic\PreresolvingDatumWriter.cs" />
     <Compile Include="IO\BinaryDecoder.cs" />
     <Compile Include="IO\BinaryEncoder.cs" />
     <Compile Include="IO\ByteBufferInputStream.cs" />
@@ -138,9 +142,11 @@
     <Compile Include="Schema\SchemaParseException.cs" />
     <Compile Include="Schema\UnionSchema.cs" />
     <Compile Include="Schema\UnnamedSchema.cs" />
+    <Compile Include="Specific\SpecificDatumWriter.cs" />
     <Compile Include="Specific\SpecificException.cs" />
     <Compile Include="Specific\SpecificProtocol.cs" />
     <Compile Include="Specific\ObjectCreator.cs" />
+    <Compile Include="Specific\SpecificDatumReader.cs" />
     <Compile Include="Specific\SpecificFixed.cs" />
     <Compile Include="Specific\SpecificReader.cs" />
     <Compile Include="Specific\SpecificWriter.cs" />

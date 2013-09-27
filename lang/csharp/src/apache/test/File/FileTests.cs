@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.IO;
 using System.Collections.Generic;
 using Avro.Generic;
@@ -63,32 +64,34 @@ namespace Avro.Test.File
         {
             // create and write out
             IList<Foo> records = MakeRecords(recs);
-            MemoryStream dataFileOutputStream = new MemoryStream();
 
-            Schema schema = Schema.Parse(schemaStr);
-            DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
-            using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(codecType)))
+            foreach(var rwFactory in SpecificOptions<Foo>())
             {
-                foreach (Foo rec in records)
-                    dataFileWriter.Append(rec);
-            }
+                MemoryStream dataFileOutputStream = new MemoryStream();
+                Schema schema = Schema.Parse(schemaStr);
+                using (IFileWriter<Foo> dataFileWriter = rwFactory.CreateWriter(dataFileOutputStream, schema, Codec.CreateCodec(codecType)))
+                {
+                    foreach (Foo rec in records)
+                        dataFileWriter.Append(rec);
+                }
 
-            MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
+                MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
 
-            // read back
-            IList<Foo> readRecords = new List<Foo>();
+                // read back
+                IList<Foo> readRecords = new List<Foo>();
 
-            using (IFileReader<Foo> reader = DataFileReader<Foo>.OpenReader(dataFileInputStream))
-            {
-                foreach (Foo rec in reader.NextEntries)
-                    readRecords.Add(rec);
-            }
+                using (IFileReader<Foo> reader = rwFactory.CreateReader(dataFileInputStream, null))
+                {
+                    foreach (Foo rec in reader.NextEntries)
+                        readRecords.Add(rec);
+                }
 
-            // compare objects via Json
-            Assert.AreEqual(records.Count, readRecords.Count);
-            for (int i = 0; i < records.Count; i++)
-            {
-                Assert.AreEqual(records[i].ToString(), readRecords[i].ToString());
+                // compare objects via Json
+                Assert.AreEqual(records.Count, readRecords.Count);
+                for (int i = 0; i < records.Count; i++)
+                {
+                    Assert.AreEqual(records[i].ToString(), readRecords[i].ToString());
+                }
             }
         }
 
@@ -169,25 +172,30 @@ namespace Avro.Test.File
             new object[] { "f1", 100L }, Codec.Type.Null)]
         public void TestGenericData(string schemaStr, object[] value, Codec.Type codecType)
         {
-            // Create and write out
-            MemoryStream dataFileOutputStream = new MemoryStream();
-            WriteGeneric(dataFileOutputStream, Schema.Parse(schemaStr) as RecordSchema,
-                                               mkRecord(value, Schema.Parse(schemaStr) as RecordSchema), codecType);
-
-            MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
-
-            // Read back
-            IList<GenericRecord> readFoos = new List<GenericRecord>();
-            using (IFileReader<GenericRecord> reader = DataFileReader<GenericRecord>.OpenReader(dataFileInputStream))
+            foreach(var rwFactory in GenericOptions<GenericRecord>())
             {
-                foreach (GenericRecord foo in reader.NextEntries)
+                // Create and write out
+                MemoryStream dataFileOutputStream = new MemoryStream();
+                using (var writer = rwFactory.CreateWriter(dataFileOutputStream, Schema.Parse(schemaStr), Codec.CreateCodec(codecType)))
                 {
-                    readFoos.Add(foo);
+                    writer.Append(mkRecord(value, Schema.Parse(schemaStr) as RecordSchema));
                 }
-            }
 
-            Assert.IsTrue((readFoos != null && readFoos.Count > 0),
-                           string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
+                MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
+
+                // Read back
+                IList<GenericRecord> readFoos = new List<GenericRecord>();
+                using (IFileReader<GenericRecord> reader = rwFactory.CreateReader(dataFileInputStream,null))
+                {
+                    foreach (GenericRecord foo in reader.NextEntries)
+                    {
+                        readFoos.Add(foo);
+                    }
+                }
+
+                Assert.IsTrue((readFoos != null && readFoos.Count > 0),
+                               string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
+            }
         }
 
         /// <summary>
@@ -243,14 +251,19 @@ namespace Avro.Test.File
         [TestCase("{\"type\":\"string\"}", "test", Codec.Type.Null)]
         public void TestPrimitiveData(string schemaStr, object value, Codec.Type codecType)
         {
-            MemoryStream dataFileOutputStream = new MemoryStream();
-            Schema schema = Schema.Parse(schemaStr);
-            WriteGeneric(dataFileOutputStream, schema, value, codecType);
+            foreach(var rwFactory in GenericOptions<object>())
+            {
+                MemoryStream dataFileOutputStream = new MemoryStream();
+                using (var writer = rwFactory.CreateWriter(dataFileOutputStream, Schema.Parse(schemaStr), Codec.CreateCodec(codecType)))
+                {
+                    writer.Append(value);
+                }
 
-            MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
+                MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
 
-            Assert.IsTrue(ReadGeneric(dataFileInputStream, value),
-                          string.Format("Error reading generic data for object: {0}", value));
+                Assert.IsTrue(CheckPrimitive(dataFileInputStream, value, rwFactory.CreateReader),
+                              string.Format("Error reading generic data for object: {0}", value));
+            }
         }
 
         /// <summary>
@@ -524,40 +537,60 @@ namespace Avro.Test.File
             Schema readerSchema = Schema.Parse( "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"},"
                 +"{\"name\":\"f3\", \"type\":\"string\", \"default\":\"test\"}]}" );
 
-            MemoryStream dataFileOutputStream = new MemoryStream();
-
-            WriteGeneric(dataFileOutputStream, writerSchema, mkRecord(new [] { "f1", "f1val", "f2", "f2val" }, writerSchema), Codec.Type.Null);
-
-            MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
-
-            using (IFileReader<GenericRecord> reader = DataFileReader<GenericRecord>.OpenReader(dataFileInputStream, readerSchema))
+            foreach(var rwFactory in GenericOptions<GenericRecord>())
             {
-                GenericRecord result = reader.Next();
-                object ignore;
-                Assert.IsFalse(result.TryGetValue("f2", out ignore));
-                Assert.AreEqual("f1val", result["f1"]);
-                Assert.AreEqual("test", result["f3"]);
+                MemoryStream dataFileOutputStream = new MemoryStream();
+
+                using (var writer = rwFactory.CreateWriter(dataFileOutputStream, writerSchema, Codec.CreateCodec(Codec.Type.Null)))
+                {
+                    writer.Append(mkRecord(new [] { "f1", "f1val", "f2", "f2val" }, writerSchema));
+                }
+
+                MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
+
+                using (IFileReader<GenericRecord> reader = rwFactory.CreateReader(dataFileInputStream, readerSchema))
+                {
+                    GenericRecord result = reader.Next();
+                    object ignore;
+                    Assert.IsFalse(result.TryGetValue("f2", out ignore));
+                    Assert.AreEqual("f1val", result["f1"]);
+                    Assert.AreEqual("test", result["f3"]);
+                }
             }
         }
 
-        private bool ReadGeneric<T>(Stream input, T value)
+        private bool CheckPrimitive<T>(Stream input, T value, ReaderWriterPair<T>.ReaderFactory createReader)
         {
-            IFileReader<T> reader = DataFileReader<T>.OpenReader(input);
+            IFileReader<T> reader = createReader(input, null);
             IList<T> readFoos = new List<T>();
             foreach (T foo in reader.NextEntries)
             {
                 readFoos.Add(foo);
             }
-            return (readFoos != null && readFoos.Count > 0);
+            return (readFoos.Count > 0 && 
+                CheckPrimitiveEquals(value, readFoos[0]));
         }
 
-        private void WriteGeneric<T>(Stream output, Schema schema, T value, Codec.Type codecType)
+        private bool CheckPrimitiveEquals(object first, object second)
         {
-            DatumWriter<T> writer = new GenericWriter<T>(schema);
-            using (IFileWriter<T> dataFileWriter = DataFileWriter<T>.OpenWriter(writer, output, Codec.CreateCodec(codecType)))
+            if (first is IList)
             {
-                dataFileWriter.Append(value);
+                var firstList = (IList) first;
+                var secondList = (IList) second;
+                if (firstList.Count != secondList.Count)
+                {
+                    return false;
+                }
+                for (int i = 0; i < firstList.Count; i++)
+                {
+                    if (!CheckPrimitiveEquals(firstList[i], secondList[i]))
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
+            return (first == null && second == null) || (first.Equals(second));
         }
 
         private static GenericRecord mkRecord(object[] kv, RecordSchema s)
@@ -649,6 +682,51 @@ namespace Avro.Test.File
                                   new object[] {"Dave", 103}, new object[] { "Hillary", 79 }, new object[] { "Grant", 88 },
                                   new object[] {"JJ", 14}, new object[] { "Bill", 90 }, new object[] { "Larry", 4 },
                                   new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }};
+        }
+
+        private static IEnumerable<ReaderWriterPair<T>> SpecificOptions<T>()
+        {
+            yield return new ReaderWriterPair<T>
+                             {
+                                 CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema),
+                                 CreateWriter = (stream, schema, codec) => 
+                                     DataFileWriter<T>.OpenWriter(new SpecificWriter<T>(schema), stream, codec )
+                             };
+
+            yield return new ReaderWriterPair<T>
+                             {
+                                 CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema,
+                                     (ws, rs) => new SpecificDatumReader<T>(ws, rs)),
+                                 CreateWriter = (stream, schema, codec) => 
+                                     DataFileWriter<T>.OpenWriter(new SpecificDatumWriter<T>(schema), stream, codec )
+                             };
+        }
+
+        private static IEnumerable<ReaderWriterPair<T>> GenericOptions<T>()
+        {
+            yield return new ReaderWriterPair<T>
+                             {
+                                 CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema),
+                                 CreateWriter = (stream, schema, codec) => 
+                                     DataFileWriter<T>.OpenWriter(new GenericWriter<T>(schema), stream, codec )
+                             };
+
+            yield return new ReaderWriterPair<T>
+                             {
+                                 CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema,
+                                     (ws, rs) => new GenericDatumReader<T>(ws, rs)),
+                                 CreateWriter = (stream, schema, codec) => 
+                                     DataFileWriter<T>.OpenWriter(new GenericDatumWriter<T>(schema), stream, codec )
+                             };
+        }
+
+        class ReaderWriterPair<T>
+        {
+            public delegate IFileWriter<T> WriterFactory(Stream stream, Schema writerSchema, Codec codec);
+            public delegate IFileReader<T> ReaderFactory(Stream stream, Schema readerSchema);
+
+            public WriterFactory CreateWriter { get; set; }
+            public ReaderFactory CreateReader { get; set; }
         }
     }
 

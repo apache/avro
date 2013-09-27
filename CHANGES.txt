@@ -11,6 +11,9 @@ Trunk (not yet released)
     AVRO-1355. Java: Reject schemas with duplicate field
     names. (Christophe Taton via cutting)
 
+    AVRO-1332. C#: Improve DatumReader performance.
+    (David McIntosh via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string
