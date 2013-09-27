@@ -458,8 +458,6 @@ public abstract class Schema extends JsonProperties {
       if (space != null) {
         if (!space.equals(names.space()))
           gen.writeStringField("namespace", space);
-        if (names.space() == null)                // default namespace
-          names.space(space);
       } else if (names.space() != null) {         // null within non-null
         gen.writeStringField("namespace", "");
       }

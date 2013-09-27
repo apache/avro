@@ -23,6 +23,10 @@ Trunk (not yet released)
     AVRO-1366. Fix specification's description of metadata format.
     (cutting)
 
+    AVRO-1377. Java: Fix a bug in Schema#toString() when a namespaced
+    enum or fixed is defined within an un-namespaced record.
+    (Graham Sanderson via cutting)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES

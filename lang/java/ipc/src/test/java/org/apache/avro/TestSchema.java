@@ -481,6 +481,28 @@ public class TestSchema {
   }
 
   @Test
+  public void testNestedNonNullNamespace1() throws Exception {
+    Schema inner1 = Schema.createEnum("InnerEnum", null, "space", Arrays.asList("x"));
+    Schema inner2 = Schema.parse("{\"type\":\"record\",\"namespace\":\"space\",\"name\":"
+      +"\"InnerRecord\",\"fields\":[]}");
+    Schema nullOuter = Schema.createRecord("Outer", null, null, false);
+    nullOuter.setFields(Arrays.asList(new Field("f1", inner1, null, null),
+                                      new Field("f2", inner2, null, null)));
+    assertEquals(nullOuter, Schema.parse(nullOuter.toString()));
+  }
+
+  @Test
+  public void testNestedNonNullNamespace2() throws Exception {
+    Schema inner1 = Schema.createFixed("InnerFixed", null, "space", 1);
+    Schema inner2 = Schema.parse("{\"type\":\"record\",\"namespace\":\"space\",\"name\":"
+      +"\"InnerRecord\",\"fields\":[]}");
+    Schema nullOuter = Schema.createRecord("Outer", null, null, false);
+    nullOuter.setFields(Arrays.asList(new Field("f1", inner1, null, null),
+                                      new Field("f2", inner2, null, null)));
+    assertEquals(nullOuter, Schema.parse(nullOuter.toString()));
+  }
+
+  @Test
   public void testNullPointer() throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
       +"[{\"name\":\"x\", \"type\":\"string\"}]}";
