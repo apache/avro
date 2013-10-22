@@ -6,6 +6,7 @@ class Constants {
     static final String SCHEMA_EXTENSION = "avsc";
     static final String PROTOCOL_EXTENSION = "avpr";
     static final String IDL_EXTENSION = "avdl";
+    static final String JAVA_EXTENSION = "java";
 
     static final String GROUP_SOURCE_GENERATION = "Source Generation";
 }
