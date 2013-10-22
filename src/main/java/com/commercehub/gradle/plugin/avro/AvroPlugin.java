@@ -150,8 +150,4 @@ public class AvroPlugin implements Plugin<Project> {
         // Other options here: http://forums.gradle.org/gradle/topics/how_can_i_do_convention_mappings_from_java_without_depending_on_an_internal_api
         return ((IConventionAware) conventionAware).getConventionMapping();
     }
-
-    private AvroExtension avro(Project project) {
-        return project.getExtensions().getByType(AvroExtension.class);
-    }
 }
