@@ -4,7 +4,7 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 # Usage
 
-Add the following to your `build.gradle` file.  Substitute the desired version based on [CHANGES.md]().
+Add the following to your `build.gradle` file.  Substitute the desired version based on [CHANGES.md](https://github.com/commercehub-oss/gradle-avro-plugin/blob/master/CHANGES.md).
 
 ```groovy
 buildscript {
