@@ -17,6 +17,7 @@ import org.gradle.plugins.ide.idea.model.IdeaModule;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -84,8 +85,10 @@ public class AvroPlugin implements Plugin<Project> {
                 // Thus, we remove the build directory exclude and add all non-generated sub-directories as excludes.
                 Set<File> excludeDirs = new HashSet<>(module.getExcludeDirs());
                 excludeDirs.remove(project.getBuildDir());
-                for (File dir : project.getBuildDir().listFiles(new NonGeneratedDirectoryFileFilter())) {
-                    excludeDirs.add(dir);
+                File buildDir = project.getBuildDir();
+                if (buildDir.isDirectory()) {
+                    Collections.addAll(excludeDirs,
+                            project.getBuildDir().listFiles(new NonGeneratedDirectoryFileFilter()));
                 }
                 module.setExcludeDirs(excludeDirs);
             }

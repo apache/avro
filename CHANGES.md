@@ -1,5 +1,8 @@
 # Change Log
 
+* 0.1.1 (unreleased)
+    * Fixed NullPointerException when performing clean builds
+
 * 0.1.0 (2013-10-23)
     * Add support for converting IDL files to JSON protocol declaration files
     * Add support for generating Java classes from JSON protocol declaration files
