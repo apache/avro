@@ -28,7 +28,7 @@ public class AvroPlugin implements Plugin<Project> {
         String taskName = sourceSet.getTaskName("generate", "avroProtocol");
         GenerateAvroProtocolTask task = project.getTasks().create(taskName, GenerateAvroProtocolTask.class);
         task.setDescription(String.format("Generates %s Avro protocol definition files from IDL files.", sourceSet.getName()));
-        // TODO: group name?
+        task.setGroup(Constants.GROUP_SOURCE_GENERATION);
         task.source(project.file(String.format("src/%s/avro", sourceSet.getName())));
         task.include("*." + Constants.IDL_EXTENSION);
         task.setOutputDir(outputDir);
@@ -40,7 +40,7 @@ public class AvroPlugin implements Plugin<Project> {
         String taskName = sourceSet.getTaskName("generate", "avroJava");
         GenerateAvroJavaTask task = project.getTasks().create(taskName, GenerateAvroJavaTask.class);
         task.setDescription(String.format("Generates %s Avro Java source files from schema/protocol definition files.", sourceSet.getName()));
-        // TODO: group name?
+        task.setGroup(Constants.GROUP_SOURCE_GENERATION);
         task.source(project.file(String.format("src/%s/avro", sourceSet.getName())));
         task.source(protoTask.getOutputs());
         task.include("*." + Constants.SCHEMA_EXTENSION, "*." + Constants.PROTOCOL_EXTENSION);
