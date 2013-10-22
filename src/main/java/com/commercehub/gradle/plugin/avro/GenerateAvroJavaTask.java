@@ -1,5 +1,7 @@
 package com.commercehub.gradle.plugin.avro;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.commons.io.FilenameUtils;
 import org.gradle.api.GradleException;
@@ -10,6 +12,8 @@ import java.io.File;
 import java.io.IOException;
 
 public class GenerateAvroJavaTask extends OutputDirTask {
+    private Schema.Parser parser = new Schema.Parser();
+
     @TaskAction
     protected void process() {
         boolean didWork = false;
@@ -33,7 +37,9 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     private void processProtoFile(File sourceFile) {
         try {
-            SpecificCompiler.compileProtocol(sourceFile, getOutputDir());
+            Protocol protocol = Protocol.parse(sourceFile);
+            SpecificCompiler compiler = new SpecificCompiler(protocol);
+            compiler.compileToDestination(sourceFile, getOutputDir());
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile protocol definition file %s", sourceFile), ex);
         }
@@ -41,7 +47,9 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     private void processSchemaFile(File sourceFile) {
         try {
-            SpecificCompiler.compileSchema(sourceFile, getOutputDir());
+            Schema schema = parser.parse(sourceFile);
+            SpecificCompiler compiler = new SpecificCompiler(schema);
+            compiler.compileToDestination(sourceFile, getOutputDir());
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile schema definition file %s", sourceFile), ex);
         }
