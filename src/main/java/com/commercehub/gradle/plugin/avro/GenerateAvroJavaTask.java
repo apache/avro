@@ -10,7 +10,6 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
-import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -111,9 +110,5 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             throw new GradleException(String.format("Failed to compile schema definition files due to undefined names: %s", nextPass));
         }
         return processedTotal;
-    }
-
-    private FileCollection filterSources(Spec<? super File> spec) {
-        return getInputs().getSourceFiles().filter(spec);
     }
 }

@@ -6,33 +6,43 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
 
+import static com.commercehub.gradle.plugin.avro.Constants.*;
+
 public class GenerateAvroProtocolTask extends OutputDirTask {
     @TaskAction
     protected void process() {
-        boolean didWork = false;
-        FileCollection sourceFiles = getInputs().getSourceFiles();
-        getLogger().info("Found {} files", sourceFiles.getFiles().size());
-        for (File sourceFile : sourceFiles) {
-            getLogger().info("Processing {}", sourceFile);
-            String extension = FilenameUtils.getExtension(sourceFile.getName());
-            if (Constants.IDL_EXTENSION.equals(extension)) {
-                processIDLFile(sourceFile);
-                didWork = true;
-            } else {
-                throw new GradleException(String.format("Unsupported file extension: %s for %s", extension, sourceFile));
-            }
+        getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
+        failOnUnsupportedFiles();
+        processFiles();
+    }
+
+    private void failOnUnsupportedFiles() {
+        FileCollection unsupportedFiles = filterSources(new NotSpec<>(new FileExtensionSpec(IDL_EXTENSION)));
+        if (!unsupportedFiles.isEmpty()) {
+            throw new GradleException(
+                    String.format("Unsupported file extension for the following files: %s", unsupportedFiles));
         }
-        setDidWork(didWork);
+    }
+
+    private void processFiles() {
+        int processedFileCount = 0;
+        for (File sourceFile : filterSources(new FileExtensionSpec(IDL_EXTENSION))) {
+            processIDLFile(sourceFile);
+            processedFileCount++;
+        }
+        setDidWork(processedFileCount > 0);
     }
 
     private void processIDLFile(File idlFile) {
+        getLogger().info("Processing {}", idlFile);
         File protoFile = new File(getOutputDir(),
-                FilenameUtils.getBaseName(idlFile.getName()) + Constants.PROTOCOL_EXTENSION);
+                FilenameUtils.getBaseName(idlFile.getName()) + PROTOCOL_EXTENSION);
         try (Idl idl = new Idl(idlFile)) {
             String protoJson = idl.CompilationUnit().toString();
             FileUtils.writeStringToFile(protoFile, protoJson, Constants.UTF8_ENCONDING);
