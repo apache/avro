@@ -9,4 +9,6 @@ class Constants {
     static final String JAVA_EXTENSION = "java";
 
     static final String GROUP_SOURCE_GENERATION = "Source Generation";
+
+    static final String AVRO_EXTENSION_NAME = "avro";
 }

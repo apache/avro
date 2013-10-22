@@ -7,13 +7,16 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.generic.GenericData;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -22,6 +25,29 @@ import static com.commercehub.gradle.plugin.avro.Constants.*;
 
 public class GenerateAvroJavaTask extends OutputDirTask {
     private static Set<String> SUPPORTED_EXTENSIONS = Sets.newHashSet(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
+
+    private String stringType;
+
+    @Input
+    public String getStringType() {
+        return stringType;
+    }
+
+    public void setStringType(String stringType) {
+        this.stringType = stringType;
+    }
+
+    private GenericData.StringType parseStringType() {
+        String stringType = getStringType();
+        for (GenericData.StringType type : GenericData.StringType.values()) {
+            if (type.name().equalsIgnoreCase(stringType)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException(String.format("Invalid stringType '%s'.  Valid values are: %s", stringType,
+                Arrays.asList(GenericData.StringType.values())));
+
+    }
 
     @TaskAction
     protected void process() {
@@ -59,6 +85,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         try {
             Protocol protocol = Protocol.parse(sourceFile);
             SpecificCompiler compiler = new SpecificCompiler(protocol);
+            compiler.setStringType(parseStringType());
             compiler.compileToDestination(sourceFile, getOutputDir());
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile protocol definition file %s", sourceFile), ex);
@@ -86,6 +113,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                     parser.addTypes(types);
                     Schema schema = parser.parse(sourceFile);
                     SpecificCompiler compiler = new SpecificCompiler(schema);
+                    compiler.setStringType(parseStringType());
                     compiler.compileToDestination(sourceFile, getOutputDir());
                     types = parser.getTypes();
                     getLogger().info("Processed {}", sourceFile);
