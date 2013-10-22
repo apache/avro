@@ -1,0 +1,26 @@
+apply plugin: "groovy"
+apply plugin: "idea"
+apply plugin: "maven-publish"
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile "org.apache.avro:avro-compiler:1.7.5"
+    testCompile "org.spockframework:spock-core:0.6-groovy-1.8"
+}
+
+sourceCompatibility = 1.7
+
+group = "com.commercehub.gradle.plugin"
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
