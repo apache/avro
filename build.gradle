@@ -1,6 +1,15 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3"
+        classpath "com.github.townsfolk:gradle-release:1.2"
+    }
+}
+
 apply plugin: "groovy"
 apply plugin: "idea"
-apply plugin: "maven-publish"
 
 repositories {
     jcenter()
@@ -17,10 +26,42 @@ sourceCompatibility = 1.7
 
 group = "com.commercehub.gradle.plugin"
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.allSource
+    classifier "sources"
+    extension "jar"
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    classifier "javadoc"
+    extension "jar"
+}
+
+apply plugin: "maven-publish"
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            artifact sourcesJar
+            artifact javadocJar
         }
     }
 }
+
+apply plugin: "release"
+apply plugin: "bintray"
+def project = this
+bintray {
+    user = project.hasProperty("bintrayUserName") ? bintrayUserName : null
+    key = project.hasProperty("bintrayApiKey") ? bintrayApiKey : null
+    publications = ["mavenJava"]
+    pkg {
+        repo = "main"
+        userOrg = "commercehub-oss"
+        name = project.name
+        licenses = ["Apache-2.0"]
+    }
+}
+bintrayUpload.dependsOn build, sourcesJar, javadocJar
+createReleaseTag.dependsOn bintrayUpload
