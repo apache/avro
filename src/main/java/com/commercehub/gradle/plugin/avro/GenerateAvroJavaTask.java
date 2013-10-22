@@ -25,7 +25,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                 processSchemaFile(sourceFile);
                 didWork = true;
             } else {
-                throw new GradleException(String.format("Supported file extension: %s", sourceFile));
+                throw new GradleException(String.format("Unsupported file extension: %s for %s", extension, sourceFile));
             }
         }
         setDidWork(didWork);
