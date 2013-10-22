@@ -42,7 +42,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
     private void processIDLFile(File idlFile) {
         getLogger().info("Processing {}", idlFile);
         File protoFile = new File(getOutputDir(),
-                FilenameUtils.getBaseName(idlFile.getName()) + PROTOCOL_EXTENSION);
+                FilenameUtils.getBaseName(idlFile.getName()) + "." + PROTOCOL_EXTENSION);
         try (Idl idl = new Idl(idlFile)) {
             String protoJson = idl.CompilationUnit().toString();
             FileUtils.writeStringToFile(protoFile, protoJson, Constants.UTF8_ENCONDING);
