@@ -1,8 +1,5 @@
 package com.commercehub.gradle.plugin.avro;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
@@ -17,6 +14,8 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -24,7 +23,7 @@ import java.util.Set;
 import static com.commercehub.gradle.plugin.avro.Constants.*;
 
 public class GenerateAvroJavaTask extends OutputDirTask {
-    private static Set<String> SUPPORTED_EXTENSIONS = Sets.newHashSet(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
+    private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
 
     private String stringType;
 
@@ -95,9 +94,9 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private int processSchemaFiles() {
         int processedTotal = 0;
         int processedThisPass = -1;
-        Map<String, Schema> types = Maps.newHashMap();
-        Queue<File> nextPass = Lists.newLinkedList(filterSources(new FileExtensionSpec(SCHEMA_EXTENSION)).getFiles());
-        Queue<File> thisPass = Lists.newLinkedList();
+        Map<String, Schema> types = new HashMap<>();
+        Queue<File> nextPass = new LinkedList<>(filterSources(new FileExtensionSpec(SCHEMA_EXTENSION)).getFiles());
+        Queue<File> thisPass = new LinkedList<>();
         while (processedThisPass != 0) {
             if (processedThisPass > 0) {
                 processedTotal += processedThisPass;

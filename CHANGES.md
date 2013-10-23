@@ -1,5 +1,8 @@
 # Change Log
 
+* 0.1.2 (2013-10-24)
+    * Eliminate dependency on guava, make dependency on commons-io explicit
+
 * 0.1.1 (2013-10-24)
     * Fixed NullPointerException when performing clean builds
 

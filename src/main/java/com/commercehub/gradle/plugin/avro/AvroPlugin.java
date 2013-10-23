@@ -1,6 +1,5 @@
 package com.commercehub.gradle.plugin.avro;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.avro.generic.GenericData;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -17,9 +16,6 @@ import org.gradle.plugins.ide.idea.model.IdeaModule;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static com.commercehub.gradle.plugin.avro.Constants.*;
@@ -70,26 +66,25 @@ public class AvroPlugin implements Plugin<Project> {
                 SourceSet mainSourceSet = getMainSourceSet(project);
                 SourceSet testSourceSet = getTestSourceSet(project);
                 IdeaModule module = ideaPlugin.getModel().getModule();
-                module.setSourceDirs(new ImmutableSet.Builder<File>()
+                module.setSourceDirs(new SetBuilder<File>()
                         .addAll(module.getSourceDirs())
                         .add(getAvroSourceDir(project, mainSourceSet))
                         .add(getGeneratedOutputDir(project, mainSourceSet, JAVA_EXTENSION))
                         .build());
-                module.setTestSourceDirs(new ImmutableSet.Builder<File>()
+                module.setTestSourceDirs(new SetBuilder<File>()
                         .addAll(module.getTestSourceDirs())
                         .add(getAvroSourceDir(project, testSourceSet))
                         .add(getGeneratedOutputDir(project, testSourceSet, JAVA_EXTENSION))
                         .build());
                 // IntelliJ doesn't allow source directories beneath an excluded directory.
                 // Thus, we remove the build directory exclude and add all non-generated sub-directories as excludes.
-                Set<File> excludeDirs = new HashSet<>(module.getExcludeDirs());
-                excludeDirs.remove(project.getBuildDir());
+                SetBuilder<File> excludeDirs = new SetBuilder<>();
+                excludeDirs.addAll(module.getExcludeDirs()).remove(project.getBuildDir());
                 File buildDir = project.getBuildDir();
                 if (buildDir.isDirectory()) {
-                    Collections.addAll(excludeDirs,
-                            project.getBuildDir().listFiles(new NonGeneratedDirectoryFileFilter()));
+                    excludeDirs.addAll(project.getBuildDir().listFiles(new NonGeneratedDirectoryFileFilter()));
                 }
-                module.setExcludeDirs(excludeDirs);
+                module.setExcludeDirs(excludeDirs.build());
             }
         });
     }
