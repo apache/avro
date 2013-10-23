@@ -1,6 +1,6 @@
 # Change Log
 
-* 0.1.1 (unreleased)
+* 0.1.1 (2013-10-24)
     * Fixed NullPointerException when performing clean builds
 
 * 0.1.0 (2013-10-23)
