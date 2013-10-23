@@ -67,9 +67,8 @@ public class AvroPlugin implements Plugin<Project> {
         project.getPlugins().withType(IdeaPlugin.class).all(new Action<IdeaPlugin>() {
             @Override
             public void execute(IdeaPlugin ideaPlugin) {
-                SourceSetContainer sourceSets = getSourceSets(project);
-                SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-                SourceSet testSourceSet = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME);
+                SourceSet mainSourceSet = getMainSourceSet(project);
+                SourceSet testSourceSet = getTestSourceSet(project);
                 IdeaModule module = ideaPlugin.getModel().getModule();
                 module.setSourceDirs(new ImmutableSet.Builder<File>()
                         .addAll(module.getSourceDirs())
@@ -138,6 +137,14 @@ public class AvroPlugin implements Plugin<Project> {
 
     private static SourceSetContainer getSourceSets(Project project) {
         return project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets();
+    }
+
+    private static SourceSet getMainSourceSet(Project project) {
+        return getSourceSets(project).getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+    }
+
+    private static SourceSet getTestSourceSet(Project project) {
+        return getSourceSets(project).getByName(SourceSet.TEST_SOURCE_SET_NAME);
     }
 
     private static class NonGeneratedDirectoryFileFilter implements FileFilter {
