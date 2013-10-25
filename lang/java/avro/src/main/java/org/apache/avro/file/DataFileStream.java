@@ -310,6 +310,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     private long numEntries;
     private int blockSize;
     private int offset = 0;
+    private boolean flushOnWrite = true;
     private DataBlock(long numEntries, int blockSize) {
       this.data = new byte[blockSize];
       this.numEntries = numEntries;
@@ -334,6 +335,14 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     int getBlockSize() {
       return blockSize;
     }
+
+    boolean isFlushOnWrite() {
+      return flushOnWrite;
+    }
+
+    void setFlushOnWrite(boolean flushOnWrite) {
+      this.flushOnWrite = flushOnWrite;
+    }
     
     ByteBuffer getAsByteBuffer() {
       return ByteBuffer.wrap(data, offset, blockSize);
@@ -356,8 +365,10 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       e.writeLong(this.blockSize);
       e.writeFixed(this.data, offset, this.blockSize);
       e.writeFixed(sync);
-      e.flush();
-    }   
+      if (flushOnWrite) {
+        e.flush();
+      }
+    }
     
   }
 }

@@ -20,6 +20,7 @@ package org.apache.avro;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -282,6 +283,38 @@ public class TestDataFile {
              new GenericDatumReader<Object>());
   }
 
+  @Test
+  public void testFlushCount() throws IOException {
+    DataFileWriter<Object> writer =
+      new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+    writer.setFlushOnEveryBlock(false);
+    TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
+    writer.create(SCHEMA, out);
+    int currentCount = 0;
+    int flushCounter = 0;
+    try {
+      for (Object datum : new RandomData(SCHEMA, COUNT, SEED+1)) {
+        currentCount++;
+        writer.append(datum);
+        writer.sync();
+        if (currentCount % 10 == 0) {
+          flushCounter++;
+          writer.flush();
+        }
+      }
+    } finally {
+      writer.close();
+    }
+    System.out.println("Total number of flushes: " + out.flushCount);
+    // Unfortunately, the underlying buffered output stream might flush data
+    // to disk when the buffer becomes full, so the only check we can
+    // accurately do is that each sync did not lead to a flush and that the
+    // file was flushed at least as many times as we called flush. Generally
+    // noticed that out.flushCount is almost always 24 though.
+    Assert.assertTrue(out.flushCount < currentCount &&
+      out.flushCount >= flushCounter);
+  }
+
   static void readFile(File f, DatumReader<? extends Object> datumReader)
     throws IOException {
     FileReader<? extends Object> reader = DataFileReader.openReader(f, datumReader);
@@ -300,5 +333,15 @@ public class TestDataFile {
     for (int i = 0; i < 4; i++)
       TestDataFile.readFile(input, new GenericDatumReader<Object>(null, projection));
     System.out.println("Time: "+(System.currentTimeMillis()-start));
+  }
+
+  private class TestingByteArrayOutputStream extends ByteArrayOutputStream {
+    private int flushCount = 0;
+
+    @Override
+    public void flush() throws IOException {
+      super.flush();
+      flushCount++;
+    }
   }
 }

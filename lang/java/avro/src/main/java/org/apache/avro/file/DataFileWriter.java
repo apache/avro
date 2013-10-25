@@ -70,6 +70,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private boolean isOpen;
   private Codec codec;
 
+  private boolean flushOnEveryBlock = true;
+
   /** Construct a writer, not yet open. */
   public DataFileWriter(DatumWriter<D> dout) {
     this.dout = dout;
@@ -97,6 +99,14 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * Set the synchronization interval for this file, in bytes. 
    * Valid values range from 32 to 2^30
    * Suggested values are between 2K and 2M
+   *
+   * The stream is flushed by default at the end of each synchronization
+   * interval.
+   *
+   * If {@linkplain #setFlushOnEveryBlock(boolean)} is
+   * called with param set to false, then the block may not be flushed to the
+   * stream after the sync marker is written. In this case,
+   * the {@linkplain #flush()} must be called to flush the stream.
    * 
    * Invalid values throw IllegalArgumentException
    * 
@@ -142,6 +152,27 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     vout.writeFixed(sync);                       // write initial sync
     vout.flush(); //vout may be buffered, flush before writing to out
     return this;
+  }
+
+  /**
+   * Set whether this writer should flush the block to the stream every time
+   * a sync marker is written. By default, the writer will flush the buffer
+   * each time a sync marker is written (if the block size limit is reached
+   * or the {@linkplain #sync()} is called.
+   * @param flushOnEveryBlock - If set to false, this writer will not flush
+   *                          the block to the stream until {@linkplain
+   *                          #flush()} is explicitly called.
+   */
+  public void setFlushOnEveryBlock(boolean flushOnEveryBlock) {
+    this.flushOnEveryBlock = flushOnEveryBlock;
+  }
+
+  /**
+   * @return - true if this writer flushes the block to the stream every time
+   * a sync marker is written. Else returns false.
+   */
+  public boolean isFlushOnEveryBlock() {
+    return this.flushOnEveryBlock;
   }
 
   /** Open a writer appending to an existing file. */
@@ -345,6 +376,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       bufOut.flush();
       ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
       DataBlock block = new DataBlock(uncompressed, blockCount);
+      block.setFlushOnWrite(flushOnEveryBlock);
       block.compressUsing(codec);
       block.writeBlockTo(vout, sync);
       buffer.reset();
@@ -354,21 +386,30 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Return the current position as a value that may be passed to {@link
    * DataFileReader#seek(long)}.  Forces the end of the current block,
-   * emitting a synchronization marker. */
+   * emitting a synchronization marker. By default, this will also flush the
+   * block to the stream.
+   *
+   * If {@linkplain #setFlushOnEveryBlock(boolean)} is
+   * called with param set to false, then this method may not flush
+   * the block. In this case, the {@linkplain #flush()} must be called to
+   * flush the stream.
+   */
   public long sync() throws IOException {
     assertOpen();
     writeBlock();
     return out.tell();
   }
 
-  /** Flush the current state of the file. */
+  /** Calls {@linkplain #sync()} and then flushes the current state of the
+   * file.
+   */
   @Override
   public void flush() throws IOException {
     sync();
     vout.flush();
   }
 
-  /** Close the file. */
+  /** Flush and close the file. */
   @Override
   public void close() throws IOException {
     if (isOpen) {

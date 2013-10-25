@@ -14,6 +14,9 @@ Trunk (not yet released)
     AVRO-1332. C#: Improve DatumReader performance.
     (David McIntosh via cutting)
 
+    AVRO-1387. Java: Add DataFileWriter option to inhibit flush per block.
+    (Hari Shreedharan via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string
