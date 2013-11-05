@@ -17,6 +17,9 @@ Trunk (not yet released)
     AVRO-1387. Java: Add DataFileWriter option to inhibit flush per block.
     (Hari Shreedharan via cutting)
 
+    AVRO-1384. Java: Permit Maven to find imports within project.
+    (Alexandre Normand via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string

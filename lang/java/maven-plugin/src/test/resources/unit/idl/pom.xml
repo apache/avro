@@ -42,7 +42,7 @@
           </execution>
         </executions>
         <configuration>
-          <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
+          <sourceDirectory>${basedir}/src/test</sourceDirectory>
           <outputDirectory>${basedir}/target/test-harness/idl</outputDirectory>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>

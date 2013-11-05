@@ -35,6 +35,11 @@ import org.apache.maven.shared.model.fileset.util.FileSetManager;
  */
 public abstract class AbstractAvroMojo extends AbstractMojo {
   /**
+   * The source directory of avro files. This directory is added to the
+   * classpath at schema compiling time. All files can therefore be referenced
+   * as classpath resources following the directory structure under the
+   * source directory.
+   *
    * @parameter expression="${sourceDirectory}"
    *            default-value="${basedir}/src/main/avro"
    */

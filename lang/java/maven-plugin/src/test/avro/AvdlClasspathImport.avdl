@@ -15,30 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.mojo;
+@namespace("test")
+protocol IdlClasspathImportTest {
+    import idl "avro/User.avdl";
 
-import java.io.File;
+    record IdlUserWrapper {
+      union { null, test.IdlUser } wrapped;
+    }
 
-/**
- * Test the IDL Protocol Mojo.
- * 
- * @author saden
- */
-public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
-
-  protected File testPom = new File(getBasedir(),
-          "src/test/resources/unit/idl/pom.xml");
-
-  public void testIdlProtocolMojo() throws Exception {
-    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
-
-    assertNotNull(mojo);
-    mojo.execute();
-
-    File outputDir = new File(getBasedir(), "target/test-harness/idl/test");
-    String[] generatedFiles = new String[]{"IdlPrivacy.java",
-      "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"};
-
-    assertFilesExist(outputDir, generatedFiles);
-  }
 }

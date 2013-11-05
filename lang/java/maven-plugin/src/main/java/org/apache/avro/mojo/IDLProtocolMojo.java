@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.avro.Protocol;
@@ -66,19 +67,23 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       List runtimeClasspathElements = project.getRuntimeClasspathElements();
       Idl parser;
 
+      List<URL> runtimeUrls = new ArrayList<URL>();
+
+      // Add the source directory of avro files to the classpath so that
+      // imports can refer to other idl files as classpath resources
+      runtimeUrls.add(sourceDirectory.toURI().toURL());
+
       // If runtimeClasspathElements is not empty values add its values to Idl path.
-      if(runtimeClasspathElements == null || runtimeClasspathElements.isEmpty()) {
-        parser = new Idl(new File(sourceDirectory, filename));
-      } else {
-      URL[] runtimeUrls = new URL[runtimeClasspathElements.size()];
-      for (int i = 0; i < runtimeClasspathElements.size(); i++) {
-        String element = (String) runtimeClasspathElements.get(i);
-        runtimeUrls[i] = new File(element).toURI().toURL();
+      if (runtimeClasspathElements != null && !runtimeClasspathElements.isEmpty()) {
+        for (Object runtimeClasspathElement : runtimeClasspathElements) {
+          String element = (String) runtimeClasspathElement;
+          runtimeUrls.add(new File(element).toURI().toURL());
       }
+      }
+
       URLClassLoader projPathLoader = new URLClassLoader
-        (runtimeUrls, Thread.currentThread().getContextClassLoader());
+          (runtimeUrls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
         parser = new Idl(new File(sourceDirectory, filename), projPathLoader);
-      }
 
       Protocol p = parser.CompilationUnit();
       String json = p.toString(true);
