@@ -20,6 +20,9 @@ Trunk (not yet released)
     AVRO-1384. Java: Permit Maven to find imports within project.
     (Alexandre Normand via cutting)
 
+    AVRO-1397. Java: Improve error message when missing field has no default.
+    (David Carr via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string

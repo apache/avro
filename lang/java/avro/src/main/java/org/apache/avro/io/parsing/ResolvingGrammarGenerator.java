@@ -223,7 +223,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         if (writer.getField(fname) == null) {
           if (rf.defaultValue() == null) {
             result = Symbol.error("Found " + writer.getFullName()
-                                  + ", expecting " + reader.getFullName());
+                                  + ", expecting " + reader.getFullName()
+                                  + ", missing required field " + fname);
             seen.put(wsc, result);
             return result;
           } else {

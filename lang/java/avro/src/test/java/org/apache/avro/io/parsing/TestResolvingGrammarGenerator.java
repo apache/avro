@@ -17,18 +17,28 @@
  */
 package org.apache.avro.io.parsing;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -56,6 +66,30 @@ public class TestResolvingGrammarGenerator {
     
     ResolvingGrammarGenerator.encode(e, schema, data);
     e.flush();
+  }
+
+  @Test
+  public void testRecordMissingRequiredFieldError() throws Exception {
+    Schema schemaWithoutField = SchemaBuilder
+        .record("MyRecord").namespace("ns")
+        .fields()
+          .name("field1").type().stringType().noDefault()
+        .endRecord();
+    Schema schemaWithField = SchemaBuilder
+        .record("MyRecord").namespace("ns")
+        .fields()
+          .name("field1").type().stringType().noDefault()
+          .name("field2").type().stringType().noDefault()
+        .endRecord();
+    GenericData.Record record = new GenericRecordBuilder(schemaWithoutField).set("field1", "someValue").build();
+    byte[] data = writeRecord(schemaWithoutField, record);
+    try {
+      readRecord(schemaWithField, data);
+      Assert.fail("Expected exception not thrown");
+    } catch (AvroTypeException typeException) {
+      Assert.assertEquals("Incorrect exception message",
+          "Found ns.MyRecord, expecting ns.MyRecord, missing required field field2", typeException.getMessage());
+    }
   }
   
   @Parameterized.Parameters
@@ -92,4 +126,27 @@ public class TestResolvingGrammarGenerator {
     return ret;
   }
 
+  private byte[] writeRecord(Schema schema, GenericData.Record record) throws Exception {
+    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericData.Record> datumWriter = new GenericDatumWriter<GenericData.Record>(schema);
+    DataFileWriter<GenericData.Record> writer = new DataFileWriter<GenericData.Record>(datumWriter);
+    try {
+      writer.create(schema, byteStream);
+      writer.append(record);
+    } finally {
+      writer.close();
+    }
+    return byteStream.toByteArray();
+  }
+
+  private GenericData.Record readRecord(Schema schema, byte[] data) throws Exception {
+    ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+    GenericDatumReader<GenericData.Record> datumReader = new GenericDatumReader<GenericData.Record>(schema);
+    DataFileStream<GenericData.Record> reader = new DataFileStream<GenericData.Record>(byteStream, datumReader);
+    try {
+      return reader.next();
+    } finally {
+      reader.close();
+    }
+  }
 }
