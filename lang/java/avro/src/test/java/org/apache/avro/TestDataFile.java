@@ -35,6 +35,7 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.SeekableFileInput;
+import org.apache.avro.file.Syncable;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -93,6 +94,8 @@ public class TestDataFile {
     testSyncDiscovery();
     testGenericAppend();
     testReadWithHeader();
+    testFSync(false);
+    testFSync(true);
   }
 
   public void testGenericWrite() throws IOException {
@@ -315,6 +318,37 @@ public class TestDataFile {
       out.flushCount >= flushCounter);
   }
 
+  private void testFSync(boolean useFile) throws IOException {
+    DataFileWriter<Object> writer =
+      new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+    writer.setFlushOnEveryBlock(false);
+    TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
+    if (useFile) {
+      File f = makeFile();
+      SeekableFileInput in = new SeekableFileInput(f);
+      writer.appendTo(in, out);
+    } else {
+      writer.create(SCHEMA, out);
+    }
+    int currentCount = 0;
+    int syncCounter = 0;
+    try {
+      for (Object datum : new RandomData(SCHEMA, COUNT, SEED+1)) {
+        currentCount++;
+        writer.append(datum);
+        if (currentCount % 10 == 0) {
+          writer.fSync();
+          syncCounter++;
+        }
+      }
+    } finally {
+      writer.close();
+    }
+    System.out.println("Total number of syncs: " + out.syncCount);
+    Assert.assertEquals(syncCounter, out.syncCount);
+  }
+
+
   static void readFile(File f, DatumReader<? extends Object> datumReader)
     throws IOException {
     FileReader<? extends Object> reader = DataFileReader.openReader(f, datumReader);
@@ -335,13 +369,20 @@ public class TestDataFile {
     System.out.println("Time: "+(System.currentTimeMillis()-start));
   }
 
-  private class TestingByteArrayOutputStream extends ByteArrayOutputStream {
+  private class TestingByteArrayOutputStream extends ByteArrayOutputStream
+    implements Syncable {
     private int flushCount = 0;
+    private int syncCount = 0;
 
     @Override
     public void flush() throws IOException {
       super.flush();
       flushCount++;
+    }
+
+    @Override
+    public void sync() throws IOException {
+      syncCount++;
     }
   }
 }

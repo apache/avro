@@ -21,7 +21,6 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilterOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
@@ -53,6 +52,8 @@ import org.apache.avro.io.EncoderFactory;
 public class DataFileWriter<D> implements Closeable, Flushable {
   private Schema schema;
   private DatumWriter<D> dout;
+
+  private OutputStream underlyingStream;
 
   private BufferedFileOutputStream out;
   private BinaryEncoder vout;
@@ -125,7 +126,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Open a new file for data matching a schema. */
   public DataFileWriter<D> create(Schema schema, File file) throws IOException {
-    return create(schema, new FileOutputStream(file));
+    return create(schema, new SyncableFileOutputStream(file));
   }
 
   /** Open a new file for data matching a schema. */
@@ -178,7 +179,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   /** Open a writer appending to an existing file. */
   public DataFileWriter<D> appendTo(File file) throws IOException {
     return appendTo(new SeekableFileInput(file),
-                    new FileOutputStream(file, true));
+                    new SyncableFileOutputStream(file, true));
   }
 
   /** Open a writer appending to an existing file.
@@ -208,6 +209,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   private void init(OutputStream outs) throws IOException {
+    this.underlyingStream = outs;
     this.out = new BufferedFileOutputStream(outs);
     EncoderFactory efactory = new EncoderFactory();
     this.vout = efactory.binaryEncoder(out, null);
@@ -407,6 +409,21 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   public void flush() throws IOException {
     sync();
     vout.flush();
+  }
+
+  /**
+   * If this writer was instantiated using a File or using an
+   * {@linkplain Syncable} instance, this method flushes all buffers for this
+   * writer to disk. In other cases, this method behaves exactly
+   * like {@linkplain #flush()}.
+   *
+   * @throws IOException
+   */
+  public void fSync() throws IOException {
+    flush();
+    if (underlyingStream instanceof Syncable) {
+      ((Syncable) underlyingStream).sync();
+    }
   }
 
   /** Flush and close the file. */

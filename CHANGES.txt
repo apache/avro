@@ -6,6 +6,9 @@ Trunk (not yet released)
 
     AVRO-975. C#: Add RPC support. (Mark Lamley via cutting)
 
+    AVRO-1388. Java: Add fsync support to DataFileWriter.
+    (Hari Shreedharan via cutting)
+
   IMPROVEMENTS
 
     AVRO-1355. Java: Reject schemas with duplicate field
