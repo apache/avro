@@ -434,22 +434,32 @@ namespace Avro.Test.Generic
             long initialPos = ms.Position;
             GenericReader<S> r = new GenericReader<S>(ws, rs);
             Decoder d = new BinaryDecoder(ms);
-            S n = default(S);
-            S output = r.Read(n, d);
+            var items = new List<S>();
+            // validate reading twice to make sure there isn't some state that isn't reset between reads.
+            items.Add( Read( r, d ) );
+            items.Add( Read( r, d ) );
             Assert.AreEqual(ms.Length, ms.Position); // Ensure we have read everything.
-            checkAlternateDeserializers(output, ms, initialPos, ws, rs);
-            return output;
+            checkAlternateDeserializers(items, ms, initialPos, ws, rs);
+            return items[0];
         }
 
-        private static void checkAlternateDeserializers<S>(S expected, Stream input, long startPos, Schema ws, Schema rs)
+        private static S Read<S>( DatumReader<S> reader, Decoder d )
+        {
+            S reuse = default( S );
+            return reader.Read( reuse, d );
+        }
+
+        private static void checkAlternateDeserializers<S>(IEnumerable<S> expectations, Stream input, long startPos, Schema ws, Schema rs)
         {
             input.Position = startPos;
             var reader = new GenericDatumReader<S>(ws, rs);
             Decoder d = new BinaryDecoder(input);
-            S n = default(S);
-            S output = reader.Read(n, d);
+            foreach( var expected in expectations )
+            {
+                var read = Read( reader, d );
+                Assert.AreEqual(expected, read);
+            }
             Assert.AreEqual(input.Length, input.Position); // Ensure we have read everything.
-            Assert.AreEqual(expected, output);
         }
 
         private static void serialize<T>(string writerSchema, T actual, out Stream stream, out Schema ws)
@@ -458,6 +468,8 @@ namespace Avro.Test.Generic
             Encoder e = new BinaryEncoder(ms);
             ws = Schema.Parse(writerSchema);
             GenericWriter<T> w = new GenericWriter<T>(ws);
+            // write twice so we can validate reading twice
+            w.Write(actual, e);
             w.Write(actual, e);
             ms.Flush();
             ms.Position = 0;
@@ -470,6 +482,7 @@ namespace Avro.Test.Generic
             var ms = new MemoryStream();
             var writer = new GenericDatumWriter<T>(ws);
             var e = new BinaryEncoder(ms);
+            writer.Write(value, e);
             writer.Write(value, e);
             var output = ms.ToArray();
             
