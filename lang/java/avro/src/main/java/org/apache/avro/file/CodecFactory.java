@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.zip.Deflater;
 
 import org.apache.avro.AvroRuntimeException;
+import org.tukaani.xz.LZMA2Options;
 
 /**  Encapsulates the ability to specify and configure a compression codec.
  *
@@ -48,6 +49,12 @@ public abstract class CodecFactory {
     return new DeflateCodec.Option(compressionLevel);
   }
 
+  /** XZ codec, with specific compression.
+   * compressionLevel should be between 1 and 9, inclusive. */
+  public static CodecFactory xzCodec(int compressionLevel) {
+      return new XZCodec.Option(compressionLevel);
+  }
+
   /** Snappy codec.*/
   public static CodecFactory snappyCodec() {
     return new SnappyCodec.Option();
@@ -67,23 +74,26 @@ public abstract class CodecFactory {
   private static final Map<String, CodecFactory> REGISTERED = 
     new HashMap<String, CodecFactory>();
 
-  private static final int DEFAULT_DEFLATE_LEVEL = Deflater.DEFAULT_COMPRESSION;
+  public static final int DEFAULT_DEFLATE_LEVEL = Deflater.DEFAULT_COMPRESSION;
+  public static final int DEFAULT_XZ_LEVEL = LZMA2Options.PRESET_DEFAULT;
 
   static {
     addCodec("null", nullCodec());
     addCodec("deflate", deflateCodec(DEFAULT_DEFLATE_LEVEL));
     addCodec("snappy", snappyCodec());
     addCodec("bzip2", bzip2Codec());
+    addCodec("xz", xzCodec(DEFAULT_XZ_LEVEL));
   }
 
   /** Maps a codec name into a CodecFactory.
    *
-   * Currently there are four codecs registered by default:
+   * Currently there are five codecs registered by default:
    * <ul>
    *   <li>{@code null}</li>
    *   <li>{@code deflate}</li>
    *   <li>{@code snappy}</li>
    *   <li>{@code bzip2}</li>
+   *   <li>{@code xz}</li>
    * </ul>
    */
   public static CodecFactory fromString(String s) {

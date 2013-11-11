@@ -67,6 +67,9 @@ public class TestDataFile {
     r.add(new Object[] { CodecFactory.deflateCodec(9) });
     r.add(new Object[] { CodecFactory.nullCodec() });
     r.add(new Object[] { CodecFactory.snappyCodec() });
+    r.add(new Object[] { CodecFactory.xzCodec(0) });
+    r.add(new Object[] { CodecFactory.xzCodec(1) });
+    r.add(new Object[] { CodecFactory.xzCodec(6) });
     return r;
   }
 
@@ -81,7 +84,7 @@ public class TestDataFile {
     "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
     +"{\"name\":\"stringField\", \"type\":\"string\"},"
     +"{\"name\":\"longField\", \"type\":\"long\"}]}";
-  private static final Schema SCHEMA = Schema.parse(SCHEMA_JSON);
+  private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
   private File makeFile() {
     return new File(DIR, "test-" + codec + ".avro");

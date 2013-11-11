@@ -28,7 +28,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -54,11 +54,8 @@ public class DataFileWriteTool implements Tool {
       List<String> args) throws Exception {
 
     OptionParser p = new OptionParser();
-    OptionSpec<String> codec =
-      p.accepts("codec", "Compression codec")
-      .withRequiredArg()
-      .defaultsTo("null")
-      .ofType(String.class);
+    OptionSpec<String> codec = Util.compressionCodecOption(p);
+    OptionSpec<Integer> level = Util.compressionLevelOption(p);
     OptionSpec<String> file =
         p.accepts("schema-file", "Schema File")
         .withOptionalArg()
@@ -93,7 +90,7 @@ public class DataFileWriteTool implements Tool {
       DataInputStream din = new DataInputStream(input);
       DataFileWriter<Object> writer =
         new DataFileWriter<Object>(new GenericDatumWriter<Object>());
-      writer.setCodec(CodecFactory.fromString(codec.value(opts)));
+      writer.setCodec(Util.codecFactory(opts, codec, level, DataFileConstants.NULL_CODEC));
       writer.create(schema, out);
       Decoder decoder = DecoderFactory.get().jsonDecoder(schema, din);
       Object datum;

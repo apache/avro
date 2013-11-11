@@ -17,6 +17,8 @@
  */
 package org.apache.avro.tool;
 
+import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -26,8 +28,11 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.Deflater;
 
 import org.apache.avro.Schema;
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
@@ -36,6 +41,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import joptsimple.OptionSet;
+import joptsimple.OptionParser;
+import joptsimple.OptionSpec;
 
 /** Static utility methods for tools. */
 class Util {
@@ -218,4 +227,36 @@ class Util {
     }
   }
 
+  static OptionSpec<String> compressionCodecOption(OptionParser optParser) {
+    return optParser
+      .accepts("codec", "Compression codec")
+      .withRequiredArg()
+      .ofType(String.class)
+      .defaultsTo("null");
+}
+
+  static OptionSpec<Integer> compressionLevelOption(OptionParser optParser) {
+    return optParser
+      .accepts("level", "Compression level (only applies to deflate and xz)")
+      .withRequiredArg()
+      .ofType(Integer.class)
+      .defaultsTo(Deflater.DEFAULT_COMPRESSION);
+  }
+
+  static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level) {
+    return codecFactory(opts, codec, level, DEFLATE_CODEC);
+  }
+
+  static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level, String defaultCodec) {
+      String codecName = opts.hasArgument(codec)
+        ? codec.value(opts)
+        : defaultCodec;
+      if(codecName.equals(DEFLATE_CODEC)) {
+        return CodecFactory.deflateCodec(level.value(opts));
+      } else if(codecName.equals(DataFileConstants.XZ_CODEC)) {
+        return CodecFactory.xzCodec(level.value(opts));
+      } else {
+        return CodecFactory.fromString(codec.value(opts));
+      }
+  }
 }

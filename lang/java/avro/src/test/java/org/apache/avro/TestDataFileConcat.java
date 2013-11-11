@@ -65,6 +65,14 @@ public class TestDataFileConcat {
         { CodecFactory.deflateCodec(3), CodecFactory.nullCodec(), false });
     r.add(new Object[]
         { CodecFactory.nullCodec(), CodecFactory.deflateCodec(6), false });
+    r.add(new Object[]
+            { CodecFactory.xzCodec(1), CodecFactory.xzCodec(2), false });
+    r.add(new Object[]
+            { CodecFactory.xzCodec(1), CodecFactory.xzCodec(2), true });
+    r.add(new Object[]
+            { CodecFactory.xzCodec(2), CodecFactory.nullCodec(), false });
+    r.add(new Object[]
+            { CodecFactory.nullCodec(), CodecFactory.xzCodec(2), false });
     return r;
   }
 
@@ -82,14 +90,14 @@ public class TestDataFileConcat {
     ","
     +"{\"name\":\"longField\", \"type\":\"long\"}" +
     "]}";
-  private static final Schema SCHEMA = Schema.parse(SCHEMA_JSON);
+  private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
   private File makeFile(String name) {
     return new File(DIR, "test-" + name + ".avro");
   }
 
   @Test
-  public void testConcateateFiles() throws IOException {
+  public void testConcatenateFiles() throws IOException {
     System.out.println("SEED = "+SEED);
     System.out.println("COUNT = "+COUNT);
     for (int k = 0; k < 60; k++) {

@@ -58,7 +58,7 @@ class TetherOutputFormat
 
     if (FileOutputFormat.getCompressOutput(job)) {
       int level = job.getInt(AvroOutputFormat.DEFLATE_LEVEL_KEY,
-                             AvroOutputFormat.DEFAULT_DEFLATE_LEVEL);
+                             CodecFactory.DEFAULT_DEFLATE_LEVEL);
       writer.setCodec(CodecFactory.deflateCodec(level));
     }
 

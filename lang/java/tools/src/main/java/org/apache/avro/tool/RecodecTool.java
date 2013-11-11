@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
-import java.util.zip.Deflater;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -29,6 +28,7 @@ import joptsimple.OptionSpec;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
@@ -42,16 +42,8 @@ public class RecodecTool implements Tool {
       List<String> args) throws Exception {
 
     OptionParser optParser = new OptionParser();
-    OptionSpec<String> codecOpt = optParser
-      .accepts("codec", "Compression codec")
-      .withRequiredArg()
-      .defaultsTo("null")
-      .ofType(String.class);
-    OptionSpec<String> levelOpt = optParser
-      .accepts("level", "Compression level (only applies to deflate)")
-      .withRequiredArg()
-      .defaultsTo("" + Deflater.DEFAULT_COMPRESSION)
-      .ofType(String.class);
+    OptionSpec<String> codecOpt = Util.compressionCodecOption(optParser);
+    OptionSpec<Integer> levelOpt = Util.compressionLevelOption(optParser);
     OptionSet opts = optParser.parse(args.toArray(new String[0]));
 
     List<String> nargs = opts.nonOptionArguments();
@@ -78,9 +70,8 @@ public class RecodecTool implements Tool {
     Schema schema = reader.getSchema();
     DataFileWriter<GenericRecord> writer = new DataFileWriter<GenericRecord>(
         new GenericDatumWriter<GenericRecord>());
-    CodecFactory codec = opts.valueOf(codecOpt).equals("deflate")
-        ? CodecFactory.deflateCodec(Integer.parseInt(levelOpt.value(opts)))
-        : CodecFactory.fromString(codecOpt.value(opts));
+    // unlike the other Avro tools, we default to a null codec, not deflate
+    CodecFactory codec = Util.codecFactory(opts, codecOpt, levelOpt, DataFileConstants.NULL_CODEC);
     writer.setCodec(codec);
     for (String key : reader.getMetaKeys()) {
       if (!DataFileWriter.isReservedMeta(key)) {

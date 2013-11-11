@@ -46,9 +46,12 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
   protected static CodecFactory getCompressionCodec(TaskAttemptContext context) {
     if (FileOutputFormat.getCompressOutput(context)) {
       // Default to deflate compression.
-      int compressionLevel = context.getConfiguration().getInt(
+      int deflateLevel = context.getConfiguration().getInt(
           org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY,
-          org.apache.avro.mapred.AvroOutputFormat.DEFAULT_DEFLATE_LEVEL);
+          CodecFactory.DEFAULT_DEFLATE_LEVEL);
+      int xzLevel = context.getConfiguration().getInt(
+              org.apache.avro.mapred.AvroOutputFormat.XZ_LEVEL_KEY,
+              CodecFactory.DEFAULT_XZ_LEVEL);
       
       String outputCodec = context.getConfiguration()
         .get(AvroJob.CONF_OUTPUT_CODEC);
@@ -60,10 +63,12 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
           context.getConfiguration().set(AvroJob.CONF_OUTPUT_CODEC, avroCodecName);
           return HadoopCodecFactory.fromHadoopString(compressionCodec);
         } else {
-          return CodecFactory.deflateCodec(compressionLevel);
+          return CodecFactory.deflateCodec(deflateLevel);
         }
       } else if (DataFileConstants.DEFLATE_CODEC.equals(outputCodec)) {
-          return CodecFactory.deflateCodec(compressionLevel);
+        return CodecFactory.deflateCodec(deflateLevel);
+      } else if (DataFileConstants.XZ_CODEC.equals(outputCodec)) {
+          return CodecFactory.xzCodec(xzLevel);
         } else {
           return CodecFactory.fromString(outputCodec);
         }

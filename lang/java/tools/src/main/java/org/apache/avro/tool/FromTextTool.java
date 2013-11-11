@@ -32,7 +32,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
-import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 
 /** Reads a text file into an Avro data file.
  * 
@@ -57,11 +56,8 @@ public class FromTextTool implements Tool {
       List<String> args) throws Exception {
     
     OptionParser p = new OptionParser();
-    OptionSpec<Integer> level = p.accepts("level", "compression level")
-    .withOptionalArg().ofType(Integer.class);
-
-    OptionSpec<String> codec = p.accepts("codec", "compression codec")
-    .withOptionalArg().ofType(String.class);
+    OptionSpec<Integer> level = Util.compressionLevelOption(p);
+    OptionSpec<String> codec = Util.compressionCodecOption(p);
 
     OptionSet opts = p.parse(args.toArray(new String[0]));
 
@@ -73,18 +69,8 @@ public class FromTextTool implements Tool {
       return 1;
     }
  
-    int compressionLevel = 1; // Default compression level
-    if (opts.hasArgument(level)) {
-      compressionLevel = level.value(opts);
-    }
+    CodecFactory codecFactory = Util.codecFactory(opts, codec, level);
   
-    String codecName = opts.hasArgument(codec)
-      ? codec.value(opts)
-      : DEFLATE_CODEC;
-    CodecFactory codecFactory = codecName.equals(DEFLATE_CODEC)
-      ? CodecFactory.deflateCodec(compressionLevel)
-      : CodecFactory.fromString(codecName);
-
     BufferedInputStream inStream = Util.fileOrStdin(nargs.get(0), stdin);
     BufferedOutputStream outStream = Util.fileOrStdout(nargs.get(1), out);
     

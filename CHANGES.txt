@@ -9,6 +9,9 @@ Trunk (not yet released)
     AVRO-1388. Java: Add fsync support to DataFileWriter.
     (Hari Shreedharan via cutting)
 
+    AVRO-1373. Java: Add support for "xz" compresssion codec, using LZMA2.
+    (Nick White via cutting)
+
   IMPROVEMENTS
 
     AVRO-1355. Java: Reject schemas with duplicate field

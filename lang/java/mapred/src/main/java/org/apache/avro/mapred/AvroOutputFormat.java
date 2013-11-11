@@ -40,6 +40,9 @@ import org.apache.avro.hadoop.file.HadoopCodecFactory;
 
 import static org.apache.avro.file.DataFileConstants.DEFAULT_SYNC_INTERVAL;
 import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
+import static org.apache.avro.file.DataFileConstants.XZ_CODEC;
+import static org.apache.avro.file.CodecFactory.DEFAULT_DEFLATE_LEVEL;
+import static org.apache.avro.file.CodecFactory.DEFAULT_XZ_LEVEL;
 
 /**
  * An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files.
@@ -57,11 +60,11 @@ public class AvroOutputFormat <T>
   /** The configuration key for Avro deflate level. */
   public static final String DEFLATE_LEVEL_KEY = "avro.mapred.deflate.level";
 
+  /** The configuration key for Avro XZ level. */
+  public static final String XZ_LEVEL_KEY = "avro.mapred.xz.level";
+
   /** The configuration key for Avro sync interval. */
   public static final String SYNC_INTERVAL_KEY = "avro.mapred.sync.interval";
-
-  /** The default deflate level. */
-  public static final int DEFAULT_DEFLATE_LEVEL = 1;
 
   /** Enable output compression using the deflate codec and specify its level.*/
   public static void setDeflateLevel(JobConf job, int level) {
@@ -110,7 +113,8 @@ public class AvroOutputFormat <T>
     CodecFactory factory = null;
     
     if (FileOutputFormat.getCompressOutput(job)) {
-      int level = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
+      int deflateLevel = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
+      int xzLevel = job.getInt(XZ_LEVEL_KEY, DEFAULT_XZ_LEVEL);
       String codecName = job.get(AvroJob.OUTPUT_CODEC);
       
       if (codecName == null) {
@@ -121,11 +125,13 @@ public class AvroOutputFormat <T>
           job.set(AvroJob.OUTPUT_CODEC , avroCodecName);
           return factory;
         } else {
-          return CodecFactory.deflateCodec(level);
+          return CodecFactory.deflateCodec(deflateLevel);
         }
       } else { 
         if ( codecName.equals(DEFLATE_CODEC)) {
-          factory = CodecFactory.deflateCodec(level);
+          factory = CodecFactory.deflateCodec(deflateLevel);
+        } else if ( codecName.equals(XZ_CODEC)) {
+          factory = CodecFactory.xzCodec(xzLevel);
         } else {
           factory = CodecFactory.fromString(codecName);
         }

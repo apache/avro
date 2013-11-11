@@ -26,7 +26,6 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.trevni.avro.RandomData;
@@ -53,11 +52,8 @@ public class CreateRandomFileTool implements Tool {
       p.accepts("count", "Record Count")
       .withRequiredArg()
       .ofType(Integer.class);
-    OptionSpec<String> codec =
-      p.accepts("codec", "Compression codec")
-      .withRequiredArg()
-      .defaultsTo("null")
-      .ofType(String.class);
+    OptionSpec<String> codec = Util.compressionCodecOption(p);
+    OptionSpec<Integer> level = Util.compressionLevelOption(p);
     OptionSpec<String> file =
         p.accepts("schema-file", "Schema File")
         .withOptionalArg()
@@ -87,7 +83,7 @@ public class CreateRandomFileTool implements Tool {
 
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(new GenericDatumWriter<Object>());
-    writer.setCodec(CodecFactory.fromString(codec.value(opts)));
+    writer.setCodec(Util.codecFactory(opts, codec, level));
     writer.create(schema, Util.fileOrStdout(args.get(0), out));
 
     for (Object datum : new RandomData(schema, (int)count.value(opts)))
