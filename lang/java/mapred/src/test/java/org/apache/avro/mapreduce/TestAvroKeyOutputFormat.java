@@ -82,6 +82,7 @@ public class TestAvroKeyOutputFormat {
     conf.setBoolean("mapred.output.compress", true);
     conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.DeflateCodec");
     conf.setInt(org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY, -1);
+    testGetRecordWriter(conf, CodecFactory.deflateCodec(-1));
   }
 
   @Test

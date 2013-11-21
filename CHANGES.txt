@@ -45,6 +45,9 @@ Trunk (not yet released)
     enum or fixed is defined within an un-namespaced record.
     (Graham Sanderson via cutting)
 
+    AVRO-1399. Java: Fix a test within TestAvroKeyOutputFormat.
+    (Rob Turner via cutting)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES
