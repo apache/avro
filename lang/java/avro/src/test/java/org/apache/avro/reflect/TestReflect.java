@@ -943,4 +943,18 @@ public class TestReflect {
     check(AliasB.class, "{\"type\":\"record\",\"name\":\"AliasB\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[],\"aliases\":[\"a\"]}");
     check(AliasC.class, "{\"type\":\"record\",\"name\":\"AliasC\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[],\"aliases\":[\"a\"]}");    
   }
+
+  private static class DefaultTest {
+    @AvroDefault("1")
+    int foo;
+  }  
+  
+  @Test
+  public void testAvroDefault() {
+    check(DefaultTest.class,
+          "{\"type\":\"record\",\"name\":\"DefaultTest\","
+          +"\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":["
+          +"{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]}");
+  }
+
 }

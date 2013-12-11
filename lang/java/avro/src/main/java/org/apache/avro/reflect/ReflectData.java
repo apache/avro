@@ -465,8 +465,14 @@ public class ReflectData extends SpecificData {
             if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0 
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
               Schema fieldSchema = createFieldSchema(field, names);
-              JsonNode defaultValue = null;
-              if (fieldSchema.getType() == Schema.Type.UNION) {
+              AvroDefault defaultAnnotation
+                = field.getAnnotation(AvroDefault.class);
+              JsonNode defaultValue = (defaultAnnotation == null)
+                ? null
+                : Schema.parseJson(defaultAnnotation.value());
+              
+              if (defaultValue == null
+                  && fieldSchema.getType() == Schema.Type.UNION) {
                 Schema defaultType = fieldSchema.getTypes().get(0);
                 if (defaultType.getType() == Schema.Type.NULL) {
                   defaultValue = NullNode.getInstance();

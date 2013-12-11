@@ -12,6 +12,9 @@ Trunk (not yet released)
     AVRO-1373. Java: Add support for "xz" compresssion codec, using LZMA2.
     (Nick White via cutting)
 
+    AVRO-1400. Java: Add AvroDefault reflect annotation to specify
+    default values. (cutting)
+
   IMPROVEMENTS
 
     AVRO-1355. Java: Reject schemas with duplicate field
