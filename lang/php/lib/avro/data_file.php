@@ -44,10 +44,10 @@ class AvroDataIO
   const SYNC_SIZE = 16;
 
   /**
-   * @var int   count of items per block, arbitrarily set to 1000 * SYNC_SIZE
+   * @var int   count of items per block, arbitrarily set to 4000 * SYNC_SIZE
    * @todo make this value configurable
    */
-  const SYNC_INTERVAL = 16000;
+  const SYNC_INTERVAL = 64000;
 
   /**
    * @var string map key for datafile metadata codec value

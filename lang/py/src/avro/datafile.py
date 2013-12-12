@@ -36,7 +36,7 @@ VERSION = 1
 MAGIC = 'Obj' + chr(VERSION)
 MAGIC_SIZE = len(MAGIC)
 SYNC_SIZE = 16
-SYNC_INTERVAL = 1000 * SYNC_SIZE # TODO(hammer): make configurable
+SYNC_INTERVAL = 4000 * SYNC_SIZE # TODO(hammer): make configurable
 META_SCHEMA = schema.parse("""\
 {"type": "record", "name": "org.apache.avro.file.Header",
  "fields" : [

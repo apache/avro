@@ -41,6 +41,6 @@ namespace Avro.File
         public const int DeflateCodecHash = 0;
 
         public const int SyncSize = 16;
-        public const int DefaultSyncInterval = 1000 * SyncSize;
+        public const int DefaultSyncInterval = 4000 * SyncSize;
     }
 }

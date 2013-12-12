@@ -30,7 +30,7 @@ public class DataFileConstants {
   };
   public static final long FOOTER_BLOCK = -1;
   public static final int SYNC_SIZE = 16;
-  public static final int DEFAULT_SYNC_INTERVAL = 1000*SYNC_SIZE; 
+  public static final int DEFAULT_SYNC_INTERVAL = 4000*SYNC_SIZE; 
 
   public static final String SCHEMA = "avro.schema";
   public static final String CODEC = "avro.codec";

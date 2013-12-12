@@ -40,7 +40,7 @@ const string AVRO_NULL_CODEC("null");
 
 const size_t minSyncInterval = 32;
 const size_t maxSyncInterval = 1u << 30;
-const size_t defaultSyncInterval = 16 * 1024;
+const size_t defaultSyncInterval = 64 * 1024;
 
 static string toString(const ValidSchema& schema)
 {

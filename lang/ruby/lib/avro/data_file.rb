@@ -22,7 +22,7 @@ module Avro
     MAGIC = "Obj" + [VERSION].pack('c')
     MAGIC_SIZE = MAGIC.size
     SYNC_SIZE = 16
-    SYNC_INTERVAL = 1000 * SYNC_SIZE
+    SYNC_INTERVAL = 4000 * SYNC_SIZE
     META_SCHEMA = Schema.parse('{"type": "map", "values": "bytes"}')
     VALID_ENCODINGS = ['binary'] # not used yet
 

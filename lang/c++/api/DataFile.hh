@@ -124,7 +124,7 @@ public:
      * Constructs a new data file.
      */
     DataFileWriter(const char* filename, const ValidSchema& schema,
-        size_t syncInterval = 16 * 1024) :
+        size_t syncInterval = 64 * 1024) :
         base_(new DataFileWriterBase(filename, schema, syncInterval)) { }
 
     /**
