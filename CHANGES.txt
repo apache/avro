@@ -15,6 +15,9 @@ Trunk (not yet released)
     AVRO-1400. Java: Add AvroDefault reflect annotation to specify
     default values. (cutting)
 
+    AVRO-1397. Java: Binary fragment tools can now read multiple
+    objects from their input.  (Rob Turner via cutting)
+
   IMPROVEMENTS
 
     AVRO-1355. Java: Reject schemas with duplicate field

@@ -26,6 +26,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.junit.Test;
 
 /**
@@ -33,35 +34,54 @@ import org.junit.Test;
  * and {@link BinaryFragmentToJsonTool}.
  */
 public class TestJsonToFromBinaryFragmentTools {
-  private static final Schema STRING_SCHEMA = Schema.parse("\"string\"");
+  private static final Schema STRING_SCHEMA = Schema.create(Type.STRING);
   private static final String UTF8 = "utf-8";
   private static final String AVRO = 
     "ZLong string implies readable length encoding.";
   private static final String JSON = 
-    "\"Long string implies readable length encoding.\"";
+    "\"Long string implies readable length encoding.\"\n";
 
   @Test
   public void testBinaryToJson() throws Exception {
+    binaryToJson(AVRO, JSON);
+  }
+  
+  @Test
+    public void testJsonToBinary() throws Exception {
+    jsonToBinary(JSON, AVRO);
+  }
+
+  @Test
+    public void testMultiBinaryToJson() throws Exception {
+    binaryToJson(AVRO + AVRO + AVRO, JSON + JSON + JSON);
+  }
+
+  @Test
+    public void testMultiJsonToBinary() throws Exception {
+    jsonToBinary(JSON + JSON + JSON, AVRO + AVRO + AVRO);
+  }
+
+  private void binaryToJson(String avro, String json) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(new BufferedOutputStream(baos));
     
     new BinaryFragmentToJsonTool().run(
-        new ByteArrayInputStream(AVRO.getBytes(UTF8)), // stdin
+        new ByteArrayInputStream(avro.getBytes(UTF8)), // stdin
         p, // stdout
         null, // stderr
         Arrays.asList(STRING_SCHEMA.toString(), "-"));
-    assertEquals(JSON + "\n", baos.toString(UTF8).replace("\r", ""));
+    assertEquals(json, baos.toString(UTF8).replace("\r", ""));
   }
   
-  @Test
-  public void testJsonToBinary() throws Exception {
+  private void jsonToBinary(String json, String avro) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(new BufferedOutputStream(baos));
+
     new JsonToBinaryFragmentTool().run(
-        new ByteArrayInputStream(JSON.getBytes(UTF8)), // stdin
+        new ByteArrayInputStream(json.getBytes(UTF8)), // stdin
         p, // stdout
         null, // stderr
         Arrays.asList(STRING_SCHEMA.toString(), "-"));
-    assertEquals(AVRO, baos.toString(UTF8));
+    assertEquals(avro, baos.toString(UTF8));
   }
 }

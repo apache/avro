@@ -17,6 +17,7 @@
  */
 package org.apache.avro.tool;
 
+import java.io.EOFException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -27,6 +28,7 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.JsonDecoder;
 
 /** Tool to convert JSON data into the binary form. */
 public class JsonToBinaryFragmentTool implements Tool {
@@ -43,14 +45,20 @@ public class JsonToBinaryFragmentTool implements Tool {
     try {
     GenericDatumReader<Object> reader = 
         new GenericDatumReader<Object>(schema);
-      Object datum = reader.read(null,
-          DecoderFactory.get().jsonDecoder(schema, input));
     
+    JsonDecoder jsonDecoder = 
+      DecoderFactory.get().jsonDecoder(schema, input);
     GenericDatumWriter<Object> writer = 
         new GenericDatumWriter<Object>(schema);
     Encoder e = EncoderFactory.get().binaryEncoder(out, null);
-    writer.write(datum, e);
-    e.flush();
+    Object datum = null;
+    try {
+      while(true) {
+        datum = reader.read(datum, jsonDecoder);
+        writer.write(datum, e);
+        e.flush();
+      }
+    } catch (EOFException eofException) {}
     } finally {
       Util.close(input);
     }
