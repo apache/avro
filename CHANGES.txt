@@ -41,6 +41,9 @@ Trunk (not yet released)
     AVRO-1234. Java: Permit AvroInputFormat to process files whose
     names don't end in .avro.  (Dave Beech & Sandy Ryza via cutting)
 
+    AVRO-1344. Java: Expose sync interval configuration in mapreduce API.
+    (Rob Turner via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string

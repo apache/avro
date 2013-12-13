@@ -43,13 +43,17 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class TestAvroKeyOutputFormat {
+  private static final String SYNC_INTERVAL_KEY = org.apache.avro.mapred.AvroOutputFormat.SYNC_INTERVAL_KEY;
+  private static final int TEST_SYNC_INTERVAL = 12345;
+
   @Rule
   public TemporaryFolder mTempDir = new TemporaryFolder();
 
   @Test
   public void testWithNullCodec() throws IOException {
     Configuration conf = new Configuration();
-    testGetRecordWriter(conf, CodecFactory.nullCodec());
+    conf.setInt(SYNC_INTERVAL_KEY, TEST_SYNC_INTERVAL);
+    testGetRecordWriter(conf, CodecFactory.nullCodec(), TEST_SYNC_INTERVAL);
   }
 
   @Test
@@ -57,7 +61,7 @@ public class TestAvroKeyOutputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.setInt(org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY, 3);
-    testGetRecordWriter(conf, CodecFactory.deflateCodec(3));
+    testGetRecordWriter(conf, CodecFactory.deflateCodec(3), DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
   @Test
@@ -65,7 +69,8 @@ public class TestAvroKeyOutputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.SNAPPY_CODEC);
-    testGetRecordWriter(conf, CodecFactory.snappyCodec());
+    conf.setInt(SYNC_INTERVAL_KEY, TEST_SYNC_INTERVAL);
+    testGetRecordWriter(conf, CodecFactory.snappyCodec(), TEST_SYNC_INTERVAL);
   }
 
   @Test
@@ -73,7 +78,7 @@ public class TestAvroKeyOutputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.BZIP2_CODEC);
-    testGetRecordWriter(conf, CodecFactory.bzip2Codec());
+    testGetRecordWriter(conf, CodecFactory.bzip2Codec(), DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
   @Test
@@ -82,7 +87,8 @@ public class TestAvroKeyOutputFormat {
     conf.setBoolean("mapred.output.compress", true);
     conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.DeflateCodec");
     conf.setInt(org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY, -1);
-    testGetRecordWriter(conf, CodecFactory.deflateCodec(-1));
+    conf.setInt(SYNC_INTERVAL_KEY, TEST_SYNC_INTERVAL);
+    testGetRecordWriter(conf, CodecFactory.deflateCodec(-1), TEST_SYNC_INTERVAL);
   }
 
   @Test
@@ -90,7 +96,7 @@ public class TestAvroKeyOutputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.SnappyCodec");
-    testGetRecordWriter(conf, CodecFactory.snappyCodec());
+    testGetRecordWriter(conf, CodecFactory.snappyCodec(), DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
   @Test
@@ -98,13 +104,14 @@ public class TestAvroKeyOutputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.BZip2Codec");
-    testGetRecordWriter(conf, CodecFactory.bzip2Codec());
+    conf.setInt(SYNC_INTERVAL_KEY, TEST_SYNC_INTERVAL);
+    testGetRecordWriter(conf, CodecFactory.bzip2Codec(), TEST_SYNC_INTERVAL);
   }
 
   /**
    * Tests that the record writer is constructed and returned correctly from the output format.
    */
-  private void testGetRecordWriter(Configuration conf, CodecFactory expectedCodec)
+  private void testGetRecordWriter(Configuration conf, CodecFactory expectedCodec, int expectedSyncInterval)
       throws IOException {
     // Configure a mock task attempt context.
     Job job = new Job(conf);
@@ -131,7 +138,8 @@ public class TestAvroKeyOutputFormat {
     expect(recordWriterFactory.create(eq(writerSchema),
         anyObject(GenericData.class),
         capture(capturedCodecFactory),  // Capture for comparison later.
-        anyObject(OutputStream.class))).andReturn(expectedRecordWriter);
+        anyObject(OutputStream.class),
+        eq(expectedSyncInterval))).andReturn(expectedRecordWriter);
 
     replay(context);
     replay(expectedRecordWriter);

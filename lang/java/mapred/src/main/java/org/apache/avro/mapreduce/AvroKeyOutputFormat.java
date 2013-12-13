@@ -71,11 +71,12 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
      * @param writerSchema The writer schema for the records to write.
      * @param compressionCodec The compression type for the writer file.
      * @param outputStream The target output stream for the records.
+     * @param syncInterval The sync interval for the writer file.
      */
     protected RecordWriter<AvroKey<T>, NullWritable> create(
         Schema writerSchema, GenericData dataModel, CodecFactory compressionCodec,
-        OutputStream outputStream) throws IOException {
-      return new AvroKeyRecordWriter<T>(writerSchema, dataModel, compressionCodec, outputStream);
+        OutputStream outputStream, int syncInterval) throws IOException {
+      return new AvroKeyRecordWriter<T>(writerSchema, dataModel, compressionCodec, outputStream, syncInterval);
     }
   }
 
@@ -103,6 +104,6 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
 
     return mRecordWriterFactory.create
       (writerSchema, dataModel, getCompressionCodec(context),
-       getAvroFileOutputStream(context));
+       getAvroFileOutputStream(context), getSyncInterval(context));
   }
 }

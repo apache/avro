@@ -60,6 +60,7 @@ public class AvroKeyValueOutputFormat<K, V> extends AvroOutputFormatBase<K, V> {
     GenericData dataModel = AvroSerialization.createDataModel(conf);
 
     return new AvroKeyValueRecordWriter<K, V>(keyConverter, valueConverter,
-        dataModel, getCompressionCodec(context), getAvroFileOutputStream(context));
+        dataModel, getCompressionCodec(context), getAvroFileOutputStream(context),
+        getSyncInterval(context));
   }
 }

@@ -25,6 +25,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.hadoop.io.AvroKeyValue;
 import org.apache.avro.hadoop.io.AvroDatumConverter;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -59,9 +60,20 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> {
   /** A helper object that converts the input value to an Avro datum. */
   private final AvroDatumConverter<V, ?> mValueConverter;
 
+  /**
+   * Constructor.
+   *
+   * @param keyConverter A key to Avro datum converter.
+   * @param valueConverter A value to Avro datum converter.
+   * @param dataModel The data model for key and value.
+   * @param compressionCodec A compression codec factory for the Avro container file.
+   * @param outputStream The output stream to write the Avro container file to.
+   * @param syncInterval The sync interval for the Avro container file.
+   * @throws IOException If the record writer cannot be opened.
+   */
   public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter,
       AvroDatumConverter<V, ?> valueConverter, GenericData dataModel,
-      CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
+      CodecFactory compressionCodec, OutputStream outputStream, int syncInterval) throws IOException {
     // Create the generic record schema for the key/value pair.
     mKeyValuePairSchema = AvroKeyValue.getSchema(
         keyConverter.getWriterSchema(), valueConverter.getWriterSchema());
@@ -70,6 +82,7 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> {
     mAvroFileWriter = new DataFileWriter<GenericRecord>(
         dataModel.createDatumWriter(mKeyValuePairSchema));
     mAvroFileWriter.setCodec(compressionCodec);
+    mAvroFileWriter.setSyncInterval(syncInterval);
     mAvroFileWriter.create(mKeyValuePairSchema, outputStream);
 
     // Keep a reference to the converters.
@@ -80,6 +93,23 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> {
     mOutputRecord = new AvroKeyValue<Object, Object>(new GenericData.Record(mKeyValuePairSchema));
   }
 
+  /**
+   * Constructor.
+   *
+   * @param keyConverter A key to Avro datum converter.
+   * @param valueConverter A value to Avro datum converter.
+   * @param dataModel The data model for key and value.
+   * @param compressionCodec A compression codec factory for the Avro container file.
+   * @param outputStream The output stream to write the Avro container file to.
+   * @throws IOException If the record writer cannot be opened.
+   */
+  public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter,
+      AvroDatumConverter<V, ?> valueConverter, GenericData dataModel,
+      CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
+    this(keyConverter, valueConverter, dataModel, compressionCodec, outputStream, 
+        DataFileConstants.DEFAULT_SYNC_INTERVAL);
+  }
+  
   /**
    * Gets the writer schema for the key/value pair generic record.
    *

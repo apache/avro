@@ -90,6 +90,17 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
       getUniqueFile(context,context.getConfiguration().get("avro.mo.config.namedOutput","part"),org.apache.avro.mapred.AvroOutputFormat.EXT));
     return path.getFileSystem(context.getConfiguration()).create(path);
   }
- 
-   
+
+  /**
+   * Gets the configured sync interval from the task context.
+   *
+   * @param context The task attempt context.
+   * @return The sync interval to use for the output Avro container file.
+   */
+  protected static int getSyncInterval(TaskAttemptContext context) {
+    return context.getConfiguration().getInt(
+          org.apache.avro.mapred.AvroOutputFormat.SYNC_INTERVAL_KEY,
+          DataFileConstants.DEFAULT_SYNC_INTERVAL);
+  }
+
 }
