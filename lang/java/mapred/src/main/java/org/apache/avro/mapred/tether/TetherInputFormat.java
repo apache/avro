@@ -31,19 +31,31 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RecordReader;
 
+import org.apache.avro.mapred.AvroInputFormat;
 import org.apache.avro.mapred.AvroOutputFormat;
 
-/** An {@link org.apache.hadoop.mapred.InputFormat} for tethered Avro input. */
+/**
+ * An {@link org.apache.hadoop.mapred.InputFormat} for tethered Avro input.
+ * 
+ * By default, when pointed at a directory, this will silently skip over any
+ * files in it that do not have .avro extension. To instead include all files,
+ * set the avro.mapred.ignore.inputs.without.extension property to false.
+ * */
 class TetherInputFormat
   extends FileInputFormat<TetherData, NullWritable> {
 
   @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
-    List<FileStatus> result = new ArrayList<FileStatus>();
-    for (FileStatus file : super.listStatus(job))
-      if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
-        result.add(file);
-    return result.toArray(new FileStatus[0]);
+    if (job.getBoolean(AvroInputFormat.IGNORE_FILES_WITHOUT_EXTENSION_KEY,
+        AvroInputFormat.IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT)) {
+      List<FileStatus> result = new ArrayList<FileStatus>();
+      for (FileStatus file : super.listStatus(job))
+        if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
+          result.add(file);
+      return result.toArray(new FileStatus[0]);
+    } else {
+      return super.listStatus(job);
+    }
   }
 
   @Override

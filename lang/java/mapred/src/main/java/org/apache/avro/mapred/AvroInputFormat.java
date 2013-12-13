@@ -31,17 +31,36 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RecordReader;
 
-/** An {@link org.apache.hadoop.mapred.InputFormat} for Avro data files */
+/**
+ * An {@link org.apache.hadoop.mapred.InputFormat} for Avro data files.
+ * 
+ * By default, when pointed at a directory, this will silently skip over any
+ * files in it that do not have .avro extension. To instead include all files,
+ * set the avro.mapred.ignore.inputs.without.extension property to false.
+ */
 public class AvroInputFormat<T>
   extends FileInputFormat<AvroWrapper<T>, NullWritable> {
 
+  /** Whether to silently ignore input files without the .avro extension */
+  public static final String IGNORE_FILES_WITHOUT_EXTENSION_KEY =
+      "avro.mapred.ignore.inputs.without.extension";
+  
+  /** Default of whether to silently ignore input files without the .avro
+   * extension. */
+  public static final boolean IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT = true;
+  
   @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
-    List<FileStatus> result = new ArrayList<FileStatus>();
-    for (FileStatus file : super.listStatus(job))
-      if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
-        result.add(file);
-    return result.toArray(new FileStatus[0]);
+    if (job.getBoolean(IGNORE_FILES_WITHOUT_EXTENSION_KEY,
+        IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT)) {
+      List<FileStatus> result = new ArrayList<FileStatus>();
+      for (FileStatus file : super.listStatus(job))
+        if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
+          result.add(file);
+      return result.toArray(new FileStatus[0]);
+    } else {
+      return super.listStatus(job);
+    }
   }
 
   @Override

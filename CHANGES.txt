@@ -35,6 +35,9 @@ Trunk (not yet released)
     AVRO-1398. Increase default sync interval from 16k to 64k.
     (Rob Turner via cutting)
 
+    AVRO-1234. Java: Permit AvroInputFormat to process files whose
+    names don't end in .avro.  (Dave Beech & Sandy Ryza via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string
