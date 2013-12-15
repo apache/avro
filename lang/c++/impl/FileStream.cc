@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include "Stream.hh"
 #ifndef _WIN32
 #include "unistd.h"

@@ -60,7 +60,7 @@ using std::make_pair;
 typedef pair<NodePtr, NodePtr> NodePair;
 
 class ResolvingGrammarGenerator : public ValidatingGrammarGenerator {
-    Production doGenerate(const NodePtr& writer, const NodePtr& reader,
+    Production doGenerate2(const NodePtr& writer, const NodePtr& reader,
         map<NodePair, shared_ptr<Production> > &m,
         const map<NodePtr, shared_ptr<Production> > &m2);
     Production resolveRecords(const NodePtr& writer, const NodePtr& reader,
@@ -99,7 +99,7 @@ Symbol ResolvingGrammarGenerator::generate(
     fixup(backup, m2);
 
     map<NodePair, shared_ptr<Production> > m;
-    Production main = doGenerate(rr, rw, m, m2);
+    Production main = doGenerate2(rr, rw, m, m2);
     fixup(main, m);
     return Symbol::rootSymbol(main, backup);
 }
@@ -183,7 +183,7 @@ Production ResolvingGrammarGenerator::resolveRecords(
             find_if(rf.begin(), rf.end(),
                 equalsFirst<string, size_t>(it->first));
         if (it2 != rf.end()) {
-            Production p = doGenerate(writer->leafAt(it->second),
+            Production p = doGenerate2(writer->leafAt(it->second),
                 reader->leafAt(it2->second), m, m2);
             copy(p.rbegin(), p.rend(), back_inserter(result));
             fieldOrder.push_back(it2->second);
@@ -219,7 +219,7 @@ Production ResolvingGrammarGenerator::resolveUnion(
     size_t c = writer->leaves();
     v.reserve(c);
     for (size_t i = 0; i < c; ++i) {
-        Production p = doGenerate(writer->leafAt(i), reader, m, m2);
+        Production p = doGenerate2(writer->leafAt(i), reader, m, m2);
         v.push_back(p);
     }
     Symbol r[] = {
@@ -229,7 +229,7 @@ Production ResolvingGrammarGenerator::resolveUnion(
     return Production(r, r + 2);
 }
 
-Production ResolvingGrammarGenerator::doGenerate(
+Production ResolvingGrammarGenerator::doGenerate2(
     const NodePtr& writer, const NodePtr& reader,
     map<NodePair, shared_ptr<Production> > &m,
     const map<NodePtr, shared_ptr<Production> > &m2)
@@ -298,14 +298,14 @@ Production ResolvingGrammarGenerator::doGenerate(
                 Symbol r[] = {
                     Symbol::arrayEndSymbol(),
                     Symbol::repeater(
-                        doGenerate(writer->leafAt(0), reader->leafAt(0), m, m2),
+                        doGenerate2(writer->leafAt(0), reader->leafAt(0), m, m2),
                         p, true),
                     Symbol::arrayStartSymbol() };
                 return Production(r, r + 3);
             }
         case AVRO_MAP:
             {
-                Production v = doGenerate(writer->leafAt(1),
+                Production v = doGenerate2(writer->leafAt(1),
                     reader->leafAt(1), m, m2);
                 v.push_back(Symbol::stringSymbol());
 
@@ -369,7 +369,7 @@ Production ResolvingGrammarGenerator::doGenerate(
             {
                 int j = bestBranch(writer, reader);
                 if (j >= 0) {
-                    Production p = doGenerate(writer, reader->leafAt(j), m, m2);
+                    Production p = doGenerate2(writer, reader->leafAt(j), m, m2);
                     Symbol r[] = {
                         Symbol::unionAdjustSymbol(j, p),
                         Symbol::unionSymbol()

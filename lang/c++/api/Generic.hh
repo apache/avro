@@ -249,6 +249,41 @@ public:
     }
 
     /**
+     * Returns index of the field with the given name \p name
+     */
+    size_t fieldIndex(const std::string& name) const { 
+        size_t index = 0;
+        if (!schema()->nameIndex(name, index)) {
+            throw Exception("Invalid field name: " + name);
+        }
+        return index;
+    }
+
+    /**
+     * Returns true if a field with the given name \p name is located in this record, 
+     * false otherwise
+     */
+    bool hasField(const std::string& name) const {
+        size_t index = 0;
+        return schema()->nameIndex(name, index);
+    }
+
+    /**
+     * Returns the field with the given name \p name.
+     */
+    const GenericDatum& field(const std::string& name) const {
+        return fieldAt(fieldIndex(name));
+    }
+
+    /**
+     * Returns the reference to the field with the given name \p name,
+     * which can be used to change the contents.
+     */
+    GenericDatum& field(const std::string& name) {
+        return fieldAt(fieldIndex(name));
+    }
+
+    /**
      * Returns the field at the given position \p pos.
      */
     const GenericDatum& fieldAt(size_t pos) const {
@@ -261,6 +296,14 @@ public:
      */
     GenericDatum& fieldAt(size_t pos) {
         return fields_[pos];
+    }
+
+    /**
+     * Replaces the field with the given name \p name with \p v.
+     */
+    void setField(const std::string& name, const GenericDatum& v) {
+        // assertSameType(v, schema()->leafAt(pos)); 
+        return setFieldAt(fieldIndex(name), v);
     }
 
     /**

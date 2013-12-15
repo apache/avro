@@ -44,6 +44,8 @@ Trunk (not yet released)
     AVRO-1344. Java: Expose sync interval configuration in mapreduce API.
     (Rob Turner via cutting)
 
+    AVRO-1406. C++. GenericRecord (GenericDatum, etc.) doesn't support getters and setters with field name argument. (Iaroslav Zeigerman via thiru)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string
