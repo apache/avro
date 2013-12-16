@@ -65,6 +65,9 @@ Trunk (not yet released)
     AVRO-1399. Java: Fix a test within TestAvroKeyOutputFormat.
     (Rob Turner via cutting)
 
+    AVRO-1410. Explicit version specification in pom prevents dependency
+    management. (Eric Sammer via tomwhite)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES
