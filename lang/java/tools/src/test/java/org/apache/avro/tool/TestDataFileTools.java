@@ -100,6 +100,12 @@ public class TestDataFileTools {
   }
   
   @Test
+  public void testReadToJsonPretty() throws Exception {
+    assertEquals(jsonData.toString(),
+        run(new DataFileReadTool(), "--pretty", sampleFile.getPath()));
+  }
+  
+  @Test
   public void testGetMeta() throws Exception {
     String output = run(new DataFileGetMetaTool(), sampleFile.getPath());
     assertTrue(output, output.contains("avro.schema\t"+schema.toString()+"\n"));

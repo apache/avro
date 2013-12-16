@@ -18,6 +18,9 @@ Trunk (not yet released)
     AVRO-1397. Java: Binary fragment tools can now read multiple
     objects from their input.  (Rob Turner via cutting)
 
+    AVRO-1396. Java: Enable tojson command-line tool to pretty print output.
+    (Rob Turner via cutting)
+
   IMPROVEMENTS
 
     AVRO-1355. Java: Reject schemas with duplicate field

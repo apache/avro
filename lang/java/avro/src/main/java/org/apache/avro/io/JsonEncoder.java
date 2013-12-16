@@ -31,6 +31,7 @@ import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.codehaus.jackson.util.MinimalPrettyPrinter;
 
 /** An {@link Encoder} for Avro's JSON data encoding. 
@@ -43,6 +44,7 @@ import org.codehaus.jackson.util.MinimalPrettyPrinter;
  * JsonEncoder is not thread-safe.
  * */
 public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler {
+  private static final String LINE_SEPARATOR = System.getProperty("line.separator");
   final Parser parser;
   private JsonGenerator out;
   /**
@@ -51,7 +53,11 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   protected BitSet isEmpty = new BitSet();
 
   JsonEncoder(Schema sc, OutputStream out) throws IOException {
-    this(sc, getJsonGenerator(out));
+    this(sc, getJsonGenerator(out, false));
+  }
+
+  JsonEncoder(Schema sc, OutputStream out, boolean pretty) throws IOException {
+    this(sc, getJsonGenerator(out, pretty));
   }
 
   JsonEncoder(Schema sc, JsonGenerator out) throws IOException {
@@ -68,16 +74,29 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     }
   }
 
-  // by default, one object per line
-  private static JsonGenerator getJsonGenerator(OutputStream out)
+  // by default, one object per line.
+  // with pretty option use default pretty printer with root line separator.
+  private static JsonGenerator getJsonGenerator(OutputStream out, boolean pretty)
       throws IOException {
     if (null == out)
       throw new NullPointerException("OutputStream cannot be null"); 
     JsonGenerator g
       = new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
-    MinimalPrettyPrinter pp = new MinimalPrettyPrinter();
-    pp.setRootValueSeparator(System.getProperty("line.separator"));
-    g.setPrettyPrinter(pp);
+    if (pretty) {
+      DefaultPrettyPrinter pp = new DefaultPrettyPrinter() {
+        //@Override
+        public void writeRootValueSeparator(JsonGenerator jg)
+            throws IOException
+        {
+          jg.writeRaw(LINE_SEPARATOR);
+        }
+      };
+      g.setPrettyPrinter(pp);
+    } else {
+      MinimalPrettyPrinter pp = new MinimalPrettyPrinter();
+      pp.setRootValueSeparator(LINE_SEPARATOR);
+      g.setPrettyPrinter(pp);
+    }
     return g;
   }
   
@@ -96,7 +115,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    * @return this JsonEncoder
    */
   public JsonEncoder configure(OutputStream out) throws IOException {
-    this.configure(getJsonGenerator(out));
+    this.configure(getJsonGenerator(out, false));
     return this;
   }
   
