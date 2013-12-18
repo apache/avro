@@ -82,6 +82,9 @@ Trunk (not yet released)
     AVRO-1237. C: Bounds-check union discriminant when reading a data file.
     (Michael Cooper via dcreager)
 
+    AVRO-1369. C: Use correct byte-swapping functions on Mac OS X.
+    (thinker0 via dcreager)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES
