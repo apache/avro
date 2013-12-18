@@ -623,6 +623,29 @@ avro_file_writer_append_value(avro_file_writer_t w, avro_value_t *value)
 	return 0;
 }
 
+int
+avro_file_writer_append_encoded(avro_file_writer_t w,
+				const void *buf, int64_t len)
+{
+	int rval;
+	check_param(EINVAL, w, "writer");
+
+	rval = avro_write(w->datum_writer, (void *) buf, len);
+	if (rval) {
+		check(rval, file_write_block(w));
+		rval = avro_write(w->datum_writer, (void *) buf, len);
+		if (rval) {
+			avro_set_error("Value too large for file block size");
+			/* TODO: if the value encoder larger than our buffer,
+			   just write a single large datum */
+			return rval;
+		}
+	}
+	w->block_count++;
+	w->block_size = avro_writer_tell(w->datum_writer);
+	return 0;
+}
+
 int avro_file_writer_sync(avro_file_writer_t w)
 {
 	return file_write_block(w);

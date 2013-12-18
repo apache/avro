@@ -130,6 +130,10 @@ avro_file_reader_read_value(avro_file_reader_t reader, avro_value_t *dest);
 int
 avro_file_writer_append_value(avro_file_writer_t writer, avro_value_t *src);
 
+int
+avro_file_writer_append_encoded(avro_file_writer_t writer,
+				const void *buf, int64_t len);
+
 /*
  * Legacy avro_datum_t API
  */

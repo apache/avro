@@ -24,6 +24,9 @@ Trunk (not yet released)
     AVRO-1409. Java: Add an API for testing schema compatibility.
     (Christophe Taton via cutting)
 
+    AVRO-1379. C: avro_file_writer_append_encoded() function.
+    (Mark Teodoro via dcreager)
+
   IMPROVEMENTS
 
     AVRO-1355. Java: Reject schemas with duplicate field
