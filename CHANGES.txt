@@ -77,6 +77,8 @@ Trunk (not yet released)
     AVRO-1410. Explicit version specification in pom prevents dependency
     management. (Eric Sammer via tomwhite)
 
+    AVRO-1358. C: Hide symbols that aren't in the public API. (dcreager)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES

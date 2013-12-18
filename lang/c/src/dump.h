@@ -26,7 +26,9 @@ extern "C" {
 
 #include <stdio.h>
 
+#pragma GCC visibility push(hidden)
 void dump(FILE * out, const char *addr, const long len);
+#pragma GCC visibility pop
 
 CLOSE_EXTERN
 #endif

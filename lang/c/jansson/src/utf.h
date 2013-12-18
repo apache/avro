@@ -34,6 +34,8 @@ typedef int int32_t;
 
 #endif /* HAVE_CONFIG_H */
 
+#pragma GCC visibility push(hidden)
+
 int utf8_encode(int32_t codepoint, char *buffer, int *size);
 
 int utf8_check_first(char byte);
@@ -41,6 +43,8 @@ int utf8_check_full(const char *buffer, int size, int32_t *codepoint);
 const char *utf8_iterate(const char *buffer, int32_t *codepoint);
 
 int utf8_check_string(const char *string, int length);
+
+#pragma GCC visibility pop
 
 CLOSE_EXTERN
 #endif

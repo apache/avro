@@ -18,6 +18,8 @@ extern "C" {
 
 #include <avro/platform.h>		/* for uintptr_t */
 
+#pragma GCC visibility push(hidden)
+
 #ifndef ANYARGS
  #ifdef __cplusplus
    #define ANYARGS ...
@@ -78,6 +80,8 @@ st_table *st_copy _((st_table *));
 #define st_numhash	ST_NUMHASH
 
 int st_strhash();
+
+#pragma GCC visibility pop
 
 CLOSE_EXTERN
 #endif				/* ST_INCLUDED */

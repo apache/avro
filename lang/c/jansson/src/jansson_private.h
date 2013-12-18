@@ -18,6 +18,8 @@ extern "C" {
 #include "jansson.h"
 #include "hashtable.h"
 
+#pragma GCC visibility push(hidden)
+
 #ifdef _WIN32
 #define snprintf _snprintf
 #endif
@@ -97,6 +99,8 @@ void jsonp_error_vset(json_error_t *error, int line, int column,
 void* jsonp_malloc(size_t size);
 void jsonp_free(void *ptr);
 char *jsonp_strdup(const char *str);
+
+#pragma GCC visibility pop
 
 CLOSE_EXTERN
 #endif

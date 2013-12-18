@@ -14,6 +14,8 @@ extern "C" {
 #define CLOSE_EXTERN
 #endif
 
+#pragma GCC visibility push(hidden)
+
 typedef size_t (*key_hash_fn)(const void *key);
 typedef int (*key_cmp_fn)(const void *key1, const void *key2);
 typedef void (*free_fn)(void *key);
@@ -209,6 +211,8 @@ void *hashtable_iter_value(void *iter);
  * @value: The value to set
  */
 void hashtable_iter_set(hashtable_t *hashtable, void *iter, void *value);
+
+#pragma GCC visibility pop
 
 CLOSE_EXTERN
 #endif

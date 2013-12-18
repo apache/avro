@@ -14,6 +14,8 @@ extern "C" {
 #define CLOSE_EXTERN
 #endif
 
+#pragma GCC visibility push(hidden)
+
 typedef struct {
     char *value;
     int length;   /* bytes used */
@@ -33,6 +35,8 @@ int strbuffer_append_byte(strbuffer_t *strbuff, char byte);
 int strbuffer_append_bytes(strbuffer_t *strbuff, const char *data, int size);
 
 char strbuffer_pop(strbuffer_t *strbuff);
+
+#pragma GCC visibility pop
 
 CLOSE_EXTERN
 #endif
