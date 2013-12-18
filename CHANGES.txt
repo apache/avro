@@ -79,6 +79,9 @@ Trunk (not yet released)
 
     AVRO-1358. C: Hide symbols that aren't in the public API. (dcreager)
 
+    AVRO-1237. C: Bounds-check union discriminant when reading a data file.
+    (Michael Cooper via dcreager)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES
