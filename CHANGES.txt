@@ -27,6 +27,11 @@ Trunk (not yet released)
     AVRO-1379. C: avro_file_writer_append_encoded() function.
     (Mark Teodoro via dcreager)
 
+  OPTIMIZATIONS
+
+    AVRO-1348. Java: Improve UTF-8 to String conversion performance in
+    Java 6. (cutting)
+
   IMPROVEMENTS
 
     AVRO-1355. Java: Reject schemas with duplicate field
