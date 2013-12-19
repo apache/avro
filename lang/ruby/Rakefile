@@ -23,7 +23,7 @@ Echoe.new('avro', VERSION) do |p|
   p.summary = "Apache Avro for Ruby"
   p.description = "Avro is a data serialization and RPC format"
   p.url = "http://hadoop.apache.org/avro/"
-  p.runtime_dependencies = %w[yajl-ruby]
+  p.runtime_dependencies = %w[multi-json]
 end
 
 t = Rake::TestTask.new(:interop)

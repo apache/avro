@@ -57,6 +57,9 @@ Trunk (not yet released)
     getters and setters with field name argument.
     (Iaroslav Zeigerman via thiru)
 
+    AVRO-1063. Ruby: Use multi_json instead of requiring yajl.
+    (Duke via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string

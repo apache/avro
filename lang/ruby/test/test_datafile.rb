@@ -108,9 +108,9 @@ JSON
     end
 
     %w[fixed enum record error array map union].each do |s|
-      reader = Yajl.load(writer_schema)
+      reader = MultiJson.load(writer_schema)
       reader['fields'] = reader['fields'].reject{|f| f['type']['type'] == s}
-      Avro::DataFile.open('data.avr', 'r', Yajl.dump(reader)) do |dr|
+      Avro::DataFile.open('data.avr', 'r', MultiJson.dump(reader)) do |dr|
         dr.each_with_index do |obj, i|
           reader['fields'].each do |field|
             assert_equal data[i][field['name']], obj[field['name']]
