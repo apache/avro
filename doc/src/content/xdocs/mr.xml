@@ -104,11 +104,16 @@
     <section>
       <title>Example: ColorCount</title>
       <p>
-        Below is a simple example of a MapReduce that uses Avro.  This example
-        can be found in the Avro docs under
-        <em>examples/mr-example/src/main/java/example/ColorCount.java</em>.
-        We'll go over the specifics of what's going on in subsequent sections.
+        Below is a simple example of a MapReduce that uses Avro. There is an example
+        for both the old (<em>org.apache.hadoop.mapred</em>) and new
+        (<em>org.apache.hadoop.mapreduce</em>) APIs under
+        <em>examples/mr-example/src/main/java/example/</em>. <em>MapredColorCount</em>
+        is the example for the older mapred API while <em>MapReduceColorCount</em> is
+        the example for the newer mapreduce API. Both examples are below, but
+        we will detail the mapred API in our subsequent examples.
       </p>
+
+      <p>MapredColorCount:</p>
       <source>
 package example;
 
@@ -124,7 +129,7 @@ import org.apache.hadoop.util.*;
 
 import example.avro.User;
 
-public class ColorCount extends Configured implements Tool {
+public class MapredColorCount extends Configured implements Tool {
 
   public static class ColorCountMapper extends AvroMapper&#60;User, Pair&#60;CharSequence, Integer>> {
     @Override
@@ -156,11 +161,11 @@ public class ColorCount extends Configured implements Tool {
 
   public int run(String[] args) throws Exception {
     if (args.length != 2) {
-      System.err.println("Usage: ColorCount &#60;input path> &#60;output path>");
+      System.err.println("Usage: MapredColorCount &#60;input path> &#60;output path>");
       return -1;
     }
 
-    JobConf conf = new JobConf(getConf(), ColorCount.class);
+    JobConf conf = new JobConf(getConf(), MapredColorCount.class);
     conf.setJobName("colorcount");
 
     FileInputFormat.setInputPaths(conf, new Path(args[0]));
@@ -172,7 +177,7 @@ public class ColorCount extends Configured implements Tool {
     // Note that AvroJob.setInputSchema and AvroJob.setOutputSchema set
     // relevant config options such as input/output format, map output
     // classes, and output key class.
-    AvroJob.setInputSchema(conf, User.SCHEMA$);
+    AvroJob.setInputSchema(conf, User.getClassSchema());
     AvroJob.setOutputSchema(conf, Pair.getPairSchema(Schema.create(Type.STRING),
         Schema.create(Type.INT)));
 
@@ -181,11 +186,105 @@ public class ColorCount extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new Configuration(), new ColorCount(), args);
+    int res = ToolRunner.run(new Configuration(), new MapredColorCount(), args);
     System.exit(res);
   }
 }
       </source>
+
+      <p>MapReduceColorCount:</p>
+      <source>
+package example;
+
+import java.io.IOException;
+
+import org.apache.avro.Schema;
+import org.apache.avro.mapred.AvroKey;
+import org.apache.avro.mapred.AvroValue;
+import org.apache.avro.mapreduce.AvroJob;
+import org.apache.avro.mapreduce.AvroKeyInputFormat;
+import org.apache.avro.mapreduce.AvroKeyValueOutputFormat;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+
+import example.avro.User;
+
+public class MapReduceColorCount extends Configured implements Tool {
+
+  public static class ColorCountMapper extends
+      Mapper&lt;AvroKey&lt;User&gt;, NullWritable, Text, IntWritable&gt; {
+
+    @Override
+    public void map(AvroKey&lt;User&gt; key, NullWritable value, Context context)
+        throws IOException, InterruptedException {
+
+      CharSequence color = key.datum().getFavoriteColor();
+      if (color == null) {
+        color = &quot;none&quot;;
+      }
+      context.write(new Text(color.toString()), new IntWritable(1));
+    }
+  }
+
+  public static class ColorCountReducer extends
+      Reducer&lt;Text, IntWritable, AvroKey&lt;CharSequence&gt;, AvroValue&lt;Integer&gt;&gt; {
+
+    @Override
+    public void reduce(Text key, Iterable&lt;IntWritable&gt; values,
+        Context context) throws IOException, InterruptedException {
+
+      int sum = 0;
+      for (IntWritable value : values) {
+        sum += value.get();
+      }
+      context.write(new AvroKey&lt;CharSequence&gt;(key.toString()), new AvroValue&lt;Integer&gt;(sum));
+    }
+  }
+
+  public int run(String[] args) throws Exception {
+    if (args.length != 2) {
+      System.err.println(&quot;Usage: MapReduceColorCount &lt;input path&gt; &lt;output path&gt;&quot;);
+      return -1;
+    }
+
+    Job job = new Job(getConf());
+    job.setJarByClass(MapReduceColorCount.class);
+    job.setJobName(&quot;Color Count&quot;);
+
+    FileInputFormat.setInputPaths(job, new Path(args[0]));
+    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+    job.setInputFormatClass(AvroKeyInputFormat.class);
+    job.setMapperClass(ColorCountMapper.class);
+    AvroJob.setInputKeySchema(job, User.getClassSchema());
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(IntWritable.class);
+
+    job.setOutputFormatClass(AvroKeyValueOutputFormat.class);
+    job.setReducerClass(ColorCountReducer.class);
+    AvroJob.setOutputKeySchema(job, Schema.create(Schema.Type.STRING));
+    AvroJob.setOutputValueSchema(job, Schema.create(Schema.Type.INT));
+
+    return (job.waitForCompletion(true) ? 0 : 1);
+  }
+
+  public static void main(String[] args) throws Exception {
+    int res = ToolRunner.run(new MapReduceColorCount(), args);
+    System.exit(res);
+  }
+}
+      </source>
+
       <p>
         ColorCount reads in data files containing <code>User</code> records,
         defined in <em>examples/user.avsc</em>, and counts the number of
@@ -229,8 +328,8 @@ public class ColorCount extends Configured implements Tool {
 mvn compile
         </source>
         <p>
-          Next, run GenerateData to create an Avro data file,
-          <em>input/users.avro</em>, containing 20 <code>User</code>s with
+          Next, run GenerateData from examples/mr-examples to create an Avro data
+          file, <em>input/users.avro</em>, containing 20 <code>User</code>s with
           favorite colors chosen randomly from a list:
         </p>
         <source>
@@ -254,7 +353,7 @@ mvn exec:java -q -Dexec.mainClass=example.GenerateData
           folder already exists):
         </p>
         <source>
-mvn exec:java -q -Dexec.mainClass=example.ColorCount -Dexec.args="input output"
+mvn exec:java -q -Dexec.mainClass=example.MapredColorCount -Dexec.args="input output"
         </source>
         <p>
           Once ColorCount completes, checking the contents of the new
@@ -281,7 +380,7 @@ $ java -jar /path/to/avro-tools-&AvroVersion;.jar tojson output/part-00000.avro
     </section>
     <p>Now let's go over the ColorCount example in detail.</p>
     <section>
-      <title>AvroMapper</title>
+      <title>Mapper - org.apache.hadoop.mapred API</title>
       <p>
         The easiest way to use Avro data files as input to a MapReduce job is to
         subclass <code>AvroMapper</code>.  An <code>AvroMapper</code> defines a
@@ -314,7 +413,7 @@ public static class ColorCountMapper extends AvroMapper&#60;User, Pair&#60;CharS
       </p>
       <source>
 AvroJob.setMapperClass(conf, ColorCountMapper.class);
-AvroJob.setInputSchema(conf, User.SCHEMA$);
+AvroJob.setInputSchema(conf, User.getClassSchema());
       </source>
       <p>
         Note that <code>AvroMapper</code> does not implement the
@@ -332,7 +431,33 @@ AvroJob.setInputSchema(conf, User.SCHEMA$);
       </p>
     </section>
     <section>
-      <title>AvroReducer</title>
+      <title>Mapper - org.apache.hadoop.mapreduce API</title>
+      <p>
+        This document will not go into all the differences between the mapred and mapreduce APIs,
+        however will describe the main differences. As you can see, ColorCountMapper is now a
+        subclass of the Hadoop Mapper class and is passed an AvroKey as it's key.
+
+        Additionally, the AvroJob method calls were slightly changed.
+      </p>
+      <source>
+  public static class ColorCountMapper extends
+      Mapper&lt;AvroKey&lt;User&gt;, NullWritable, Text, IntWritable&gt; {
+
+    @Override
+    public void map(AvroKey&lt;User&gt; key, NullWritable value, Context context)
+        throws IOException, InterruptedException {
+
+      CharSequence color = key.datum().getFavoriteColor();
+      if (color == null) {
+        color = &quot;none&quot;;
+      }
+      context.write(new Text(color.toString()), new IntWritable(1));
+    }
+  }
+      </source>
+    </section>
+    <section>
+      <title>Reducer - org.apache.hadoop.mapred API</title>
       <p>
         Analogously to <code>AvroMapper</code>, an <code>AvroReducer</code>
         defines a reducer function that takes the key/value types output by an
@@ -387,18 +512,48 @@ AvroJob.setOutputSchema(conf, Pair.getPairSchema(Schema.create(Type.STRING),
       </p>
     </section>
     <section>
+      <title>Reduce - org.apache.hadoop.mapreduce API</title>
+      <p>
+        As before we not detail every difference between the APIs. As with the Mapper
+        change ColorCountReducer is now a subclass of Reducer and AvroKey and AvroValue
+        are emitted.
+
+        Additionally, the AvroJob method calls were slightly changed.
+      </p>
+      <source>
+  public static class ColorCountReducer extends
+      Reducer&lt;Text, IntWritable, AvroKey&lt;CharSequence&gt;, AvroValue&lt;Integer&gt;&gt; {
+
+    @Override
+    public void reduce(Text key, Iterable&lt;IntWritable&gt; values,
+        Context context) throws IOException, InterruptedException {
+
+      int sum = 0;
+      for (IntWritable value : values) {
+        sum += value.get();
+      }
+      context.write(new AvroKey&lt;CharSequence&gt;(key.toString()), new AvroValue&lt;Integer&gt;(sum));
+    }
+  }
+      </source>
+    </section>
+    <section>
       <title>Learning more</title>
       <p>
-        It's possible to mix <code>AvroMapper</code>s and
+        The mapred API allows users to mix Avro <code>AvroMapper</code>s and
         <code>AvroReducer</code>s with non-Avro <code>Mapper</code>s and
-        <code>Reducer</code>s.  See the <a
+        <code>Reducer</code>s and the mapreduce API allows users input Avro
+        and output non-Avro or vice versa.
+      </p>
+
+      <p>
+        The mapred package has api <a
         href="http://avro.apache.org/docs/current/api/java/org/apache/avro/mapred/package-summary.html">
-        <code>org.apache.avro.mapred</code> documentation</a> for more details.
-        There is also a <a
+        <code>org.apache.avro.mapred</code> documentation</a> as does the <a
         href="http://avro.apache.org/docs/current/api/java/org/apache/avro/mapreduce/package-summary.html">
-        <code>org.apache.avro.mapreduce</code> package</a> for use with the new
-        MapReduce API (<code>org.apache.hadoop.mapreduce</code>).  It's also
-        possible to implement your own <code>Mapper</code>s and
+        <code>org.apache.avro.mapreduce</code> package</a>.
+        MapReduce API (<code>org.apache.hadoop.mapreduce</code>). Similarily to the mapreduce package,
+        it's possible with the mapred API to implement your own <code>Mapper</code>s and
         <code>Reducer</code>s directly using the public classes provided in
         these libraries.  See the AvroWordCount application, found under
         <em>examples/mr-example/src/main/java/example/AvroWordCount.java</em> in

@@ -65,6 +65,8 @@ Trunk (not yet released)
     AVRO-1063. Ruby: Use multi_json instead of requiring yajl.
     (Duke via cutting)
 
+    AVRO-1225. Java: Add guide for MapReduce API. (Brock Noland via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string

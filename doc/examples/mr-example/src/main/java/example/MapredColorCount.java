@@ -30,7 +30,7 @@ import org.apache.hadoop.util.*;
 
 import example.avro.User;
 
-public class ColorCount extends Configured implements Tool {
+public class MapredColorCount extends Configured implements Tool {
 
   public static class ColorCountMapper extends AvroMapper<User, Pair<CharSequence, Integer>> {
     @Override
@@ -62,11 +62,11 @@ public class ColorCount extends Configured implements Tool {
 
   public int run(String[] args) throws Exception {
     if (args.length != 2) {
-      System.err.println("Usage: ColorCount <input path> <output path>");
+      System.err.println("Usage: MapredColorCount <input path> <output path>");
       return -1;
     }
 
-    JobConf conf = new JobConf(getConf(), ColorCount.class);
+    JobConf conf = new JobConf(getConf(), MapredColorCount.class);
     conf.setJobName("colorcount");
 
     FileInputFormat.setInputPaths(conf, new Path(args[0]));
@@ -78,7 +78,7 @@ public class ColorCount extends Configured implements Tool {
     // Note that AvroJob.setInputSchema and AvroJob.setOutputSchema set
     // relevant config options such as input/output format, map output
     // classes, and output key class.
-    AvroJob.setInputSchema(conf, User.SCHEMA$);
+    AvroJob.setInputSchema(conf, User.getClassSchema());
     AvroJob.setOutputSchema(conf, Pair.getPairSchema(Schema.create(Type.STRING),
         Schema.create(Type.INT)));
 
@@ -87,7 +87,7 @@ public class ColorCount extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new Configuration(), new ColorCount(), args);
+    int res = ToolRunner.run(new Configuration(), new MapredColorCount(), args);
     System.exit(res);
   }
 }
