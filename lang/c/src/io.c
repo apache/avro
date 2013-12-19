@@ -438,7 +438,10 @@ void avro_writer_free(avro_writer_t writer)
 int avro_reader_is_eof(avro_reader_t reader)
 {
 	if (is_file_io(reader)) {
-		return feof(avro_reader_to_file(reader)->fp);
+		struct _avro_reader_file_t *file = avro_reader_to_file(reader);
+		if (feof(file->fp)) {
+			return file->cur == file->end;
+		}
 	}
 	return 0;
 }
