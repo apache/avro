@@ -17,7 +17,7 @@
 
 set -e
 
-# connect to Avro Ruby root directory
+# connect to avro ruby root directory
 cd `dirname "$0"`
 
 # maintain our gems here
