@@ -46,7 +46,7 @@ case "$target" in
 	(cd lang/c++; ./build.sh test)
 	(cd lang/csharp; ./build.sh test)
 	(cd lang/js; ./build.sh test)
-	(cd lang/ruby; rake test)
+	(cd lang/ruby; ./build.sh test)
 	(cd lang/php; ./build.sh test)
 
 	# create interop test data
@@ -109,7 +109,7 @@ case "$target" in
 
 	(cd lang/js; ./build.sh dist)
 
-	(cd lang/ruby; rake dist)
+	(cd lang/ruby; ./build.sh dist)
 
 	(cd lang/php; ./build.sh dist)
 
@@ -157,7 +157,7 @@ case "$target" in
 
 	(cd lang/js; ./build.sh clean)
 
-	(cd lang/ruby; rake clean)
+	(cd lang/ruby; ./build.sh clean)
 
 	(cd lang/php; ./build.sh clean)
 	;;
