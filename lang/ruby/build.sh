@@ -25,7 +25,7 @@ export GEM_HOME=.gem/
 export PATH="$PATH:.gem/bin"
 
 # boostrap bundler
-gem install --conservative --no-rdoc --no-ri bundler
+gem install --no-rdoc --no-ri bundler
 
 case "$1" in
      test)
