@@ -24,7 +24,7 @@ cd `dirname "$0"`
 export GEM_HOME=.gem/
 export PATH="$PATH:.gem/bin"
 
-# boostrap bundler
+# bootstrap bundler
 gem install --no-rdoc --no-ri bundler
 
 case "$1" in
