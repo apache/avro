@@ -39,7 +39,8 @@
       See the <a href="http://hadoop.apache.org/docs/current/">Hadoop
       documentation</a> and the <a href="gettingstartedjava.html">Avro getting
       started guide</a> for introductions to these projects.  This guide uses
-      the old MapReduce API (<code>org.apache.hadoop.mapred</code>).
+      the old MapReduce API (<code>org.apache.hadoop.mapred</code>) and the new 
+      MapReduce API (<code>org.apache.hadoop.mapreduce</code>).
     </p>
     <section>
       <title>Setup</title>
@@ -289,7 +290,10 @@ public class MapReduceColorCount extends Configured implements Tool {
         ColorCount reads in data files containing <code>User</code> records,
         defined in <em>examples/user.avsc</em>, and counts the number of
         instances of each favorite color.  (This example draws inspiration from
-        the canonical WordCount MapReduce application.)  The <code>User</code>
+        the canonical WordCount MapReduce application.)  This example uses the 
+        old MapReduce API.  See MapReduceAvroWordCount, found under 
+        <em>doc/examples/mr-example/src/main/java/example/</em> to see the new MapReduce 
+        API example.  The <code>User</code>
         schema is defined as follows:
       </p>
       <source>
@@ -547,7 +551,7 @@ AvroJob.setOutputSchema(conf, Pair.getPairSchema(Schema.create(Type.STRING),
       </p>
 
       <p>
-        The mapred package has api <a
+        The mapred package has API <a
         href="http://avro.apache.org/docs/current/api/java/org/apache/avro/mapred/package-summary.html">
         <code>org.apache.avro.mapred</code> documentation</a> as does the <a
         href="http://avro.apache.org/docs/current/api/java/org/apache/avro/mapreduce/package-summary.html">
@@ -558,7 +562,11 @@ AvroJob.setOutputSchema(conf, Pair.getPairSchema(Schema.create(Type.STRING),
         these libraries.  See the AvroWordCount application, found under
         <em>examples/mr-example/src/main/java/example/AvroWordCount.java</em> in
         the Avro documentation, for an example of implementing a
-        <code>Reducer</code> that outputs Avro data.
+        <code>Reducer</code> that outputs Avro data using the old MapReduce API.
+        See the MapReduceAvroWordCount application, found under
+        <em>examples/mr-example/src/main/java/example/MapReduceAvroWordCount.java</em> in
+        the Avro documentation, for an example of implementing a
+        <code>Reducer</code> that outputs Avro data using the new MapReduce API.
       </p>
     </section>
   </body>

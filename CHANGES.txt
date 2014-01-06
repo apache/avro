@@ -67,6 +67,9 @@ Trunk (not yet released)
 
     AVRO-1225. Java: Add guide for MapReduce API. (Brock Noland via cutting)
 
+    AVRO-1426. Java: Add mapreduce word count example.
+    (Jesse Anderson via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string
