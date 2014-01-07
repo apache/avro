@@ -32,8 +32,16 @@
 
 #include "boost/array.hpp"
 #include "boost/utility.hpp"
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/scoped_ptr.hpp>
 
 namespace avro {
+
+/** Specify type of compression to use when writing data files. */
+enum Codec {
+  NULL_CODEC,
+  DEFLATE_CODEC
+};
 
 /**
  * The sync value.
@@ -50,6 +58,7 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
     const ValidSchema schema_;
     const EncoderPtr encoderPtr_;
     const size_t syncInterval_;
+    Codec codec_;
 
     std::auto_ptr<OutputStream> stream_;
     std::auto_ptr<OutputStream> buffer_;
@@ -76,7 +85,7 @@ public:
      * Returns the current encoder for this writer.
      */
     Encoder& encoder() const { return *encoderPtr_; }
-    
+
     /**
      * Returns true if the buffer has sufficient data for a sync to be
      * inserted.
@@ -93,7 +102,7 @@ public:
      * Constructs a data file writer with the given sync interval and name.
      */
     DataFileWriterBase(const char* filename, const ValidSchema& schema,
-        size_t syncInterval);
+        size_t syncInterval, Codec codec = NULL_CODEC);
 
     ~DataFileWriterBase();
     /**
@@ -124,8 +133,8 @@ public:
      * Constructs a new data file.
      */
     DataFileWriter(const char* filename, const ValidSchema& schema,
-        size_t syncInterval = 64 * 1024) :
-        base_(new DataFileWriterBase(filename, schema, syncInterval)) { }
+        size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
+        base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) { }
 
     /**
      * Writes the given piece of data into the file.
@@ -162,6 +171,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const DecoderPtr decoder_;
     int64_t objectCount_;
     bool eof_;
+    Codec codec_;
 
     ValidSchema readerSchema_;
     ValidSchema dataSchema_;
@@ -171,6 +181,10 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
 
     Metadata metadata_;
     DataFileSync sync_;
+
+    // for compressed buffer
+    boost::scoped_ptr<boost::iostreams::filtering_istream> os_;
+    std::vector<char> compressed_;
 
     void readHeader();
 
@@ -315,5 +329,3 @@ public:
 
 }   // namespace avro
 #endif
-
-

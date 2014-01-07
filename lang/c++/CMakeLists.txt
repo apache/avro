@@ -52,7 +52,7 @@ endif ()
 
 
 find_package (Boost 1.38 REQUIRED
-    COMPONENTS filesystem system program_options)
+    COMPONENTS filesystem system program_options iostreams)
 
 add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 

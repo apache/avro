@@ -76,7 +76,7 @@ template <typename T> struct codec_traits<Complex<T> > {
         avro::encode(e, c.re);
         avro::encode(e, c.im);
     }
-    
+
     static void decode(Decoder& d, Complex<T>& c) {
         avro::decode(d, c.re);
         avro::decode(d, c.im);
@@ -147,7 +147,7 @@ public:
     void testCleanup() {
         BOOST_CHECK(boost::filesystem::remove(filename));
     }
-    
+
     void testWrite() {
         avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100);
         int64_t re = 3;
@@ -281,7 +281,7 @@ public:
         Pair p(writerSchema, GenericDatum());
         int64_t re = 3;
         int64_t im = 5;
-        
+
         const GenericDatum& ci = p.second;
         while (df.read(p)) {
             BOOST_REQUIRE_EQUAL(ci.type(), avro::AVRO_RECORD);
@@ -388,6 +388,37 @@ public:
         }
         BOOST_CHECK_EQUAL(i, count);
     }
+    /**
+     * Test writing DataFiles into other streams operations.
+     */
+    void testZip() {
+        const size_t number_of_objects = 100;
+        // first create a large file
+        ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
+        {
+            avro::DataFileWriter<ComplexInteger> writer(
+              filename, dschema, 16 * 1024, avro::DEFLATE_CODEC);
+
+            for (size_t i = 0; i < number_of_objects; ++i) {
+                ComplexInteger d;
+                d.re = i;
+                d.im = 2 * i;
+                writer.write(d);
+            }
+        }
+        {
+            avro::DataFileReader<ComplexInteger> reader(filename, dschema);
+            std::vector<int> found;
+            ComplexInteger record;
+            while (reader.read(record)) {
+                found.push_back(record.re);
+            }
+            BOOST_CHECK_EQUAL(found.size(), number_of_objects);
+            for (unsigned int i = 0; i < found.size(); ++i) {
+                BOOST_CHECK_EQUAL(found[i], i);
+            }
+        }
+    }
 };
 
 void addReaderTests(test_suite* ts, const shared_ptr<DataFileTest>& t)
@@ -403,7 +434,7 @@ void addReaderTests(test_suite* ts, const shared_ptr<DataFileTest>& t)
 }
 
 test_suite*
-init_unit_test_suite( int argc, char* argv[] ) 
+init_unit_test_suite( int argc, char* argv[] )
 {
     test_suite* ts= BOOST_TEST_SUITE("DataFile tests");
     shared_ptr<DataFileTest> t1(new DataFileTest("test1.df", sch, isch));
@@ -429,6 +460,10 @@ init_unit_test_suite( int argc, char* argv[] )
     shared_ptr<DataFileTest> t5(new DataFileTest("test5.df", sch, isch));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGenericByName, t5));
     addReaderTests(ts, t5);
+
+    shared_ptr<DataFileTest> t6(new DataFileTest("test6.df", dsch, dblsch));
+    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZip, t6));
+
 
     return ts;
 }

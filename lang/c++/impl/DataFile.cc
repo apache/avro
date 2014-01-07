@@ -23,6 +23,9 @@
 #include <sstream>
 
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
 
 namespace avro {
 using std::auto_ptr;
@@ -34,13 +37,24 @@ using std::string;
 
 using boost::array;
 
+namespace {
 const string AVRO_SCHEMA_KEY("avro.schema");
 const string AVRO_CODEC_KEY("avro.codec");
 const string AVRO_NULL_CODEC("null");
+const string AVRO_DEFLATE_CODEC("deflate");
 
 const size_t minSyncInterval = 32;
 const size_t maxSyncInterval = 1u << 30;
 const size_t defaultSyncInterval = 64 * 1024;
+
+boost::iostreams::zlib_params get_zlib_params() {
+  boost::iostreams::zlib_params ret;
+  ret.method = boost::iostreams::zlib::deflated;
+  ret.noheader = true;
+  return ret;
+}
+}
+
 
 static string toString(const ValidSchema& schema)
 {
@@ -50,9 +64,10 @@ static string toString(const ValidSchema& schema)
 }
 
 DataFileWriterBase::DataFileWriterBase(const char* filename,
-    const ValidSchema& schema, size_t syncInterval) :
+    const ValidSchema& schema, size_t syncInterval, Codec codec) :
     filename_(filename), schema_(schema), encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
+    codec_(codec),
     stream_(fileOutputStream(filename)),
     buffer_(memoryOutputStream()),
     sync_(makeSync()), objectCount_(0)
@@ -64,6 +79,13 @@ DataFileWriterBase::DataFileWriterBase(const char* filename,
     }
     setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
 
+    if (codec_ == NULL_CODEC) {
+      setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
+    } else if (codec_ == DEFLATE_CODEC) {
+      setMetadata(AVRO_CODEC_KEY, AVRO_DEFLATE_CODEC);
+    } else {
+      throw Exception("Unknown codec codec");
+    }
     setMetadata(AVRO_SCHEMA_KEY, toString(schema));
 
     writeHeader();
@@ -89,12 +111,35 @@ void DataFileWriterBase::sync()
 
     encoderPtr_->init(*stream_);
     avro::encode(*encoderPtr_, objectCount_);
-    int64_t byteCount = buffer_->byteCount();
-    avro::encode(*encoderPtr_, byteCount);
-    encoderPtr_->flush();
+    if (codec_ == NULL_CODEC) {
+        int64_t byteCount = buffer_->byteCount();
+        avro::encode(*encoderPtr_, byteCount);
+        encoderPtr_->flush();
+        std::auto_ptr<InputStream> in = memoryInputStream(*buffer_);
+        copy(*in, *stream_);
+    } else {
+        std::vector<char> buf;
+        {
+            boost::iostreams::filtering_ostream os;
+            if (codec_ == DEFLATE_CODEC) {
+                os.push(boost::iostreams::zlib_compressor(get_zlib_params()));
+            }
+            os.push(boost::iostreams::back_inserter(buf));
+            const uint8_t* data;
+            size_t len;
 
-    auto_ptr<InputStream> in = memoryInputStream(*buffer_);
-    copy(*in, *stream_);
+            std::auto_ptr<InputStream> input = memoryInputStream(*buffer_);
+            while (input->next(&data, &len)) {
+                boost::iostreams::write(os, reinterpret_cast<const char*>(data), len);
+            }
+        } // make sure all is flushed
+        std::auto_ptr<InputStream> in = memoryInputStream(
+           reinterpret_cast<const uint8_t*>(&buf[0]), buf.size());
+        int64_t byteCount = buf.size();
+        avro::encode(*encoderPtr_, byteCount);
+        encoderPtr_->flush();
+        copy(*in, *stream_);
+    }
 
     encoderPtr_->init(*stream_);
     avro::encode(*encoderPtr_, sync_);
@@ -272,8 +317,30 @@ bool DataFileReaderBase::readDataBlock()
     decoder_->init(*stream_);
 
     auto_ptr<InputStream> st = boundedInputStream(*stream_, static_cast<size_t>(byteCount));
-    dataDecoder_->init(*st);
-    dataStream_ = st;
+    if (codec_ == NULL_CODEC) {
+        dataDecoder_->init(*st);
+        dataStream_ = st;
+    } else {
+        compressed_.clear();
+        const uint8_t* data;
+        size_t len;
+        while (st->next(&data, &len)) {
+            compressed_.insert(compressed_.end(), data, data + len);
+        }
+        // boost::iostreams::write(os, reinterpret_cast<const char*>(data), len);
+        os_.reset(new boost::iostreams::filtering_istream());
+        if (codec_ == DEFLATE_CODEC) {
+            os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
+        } else {
+            throw Exception("Bad codec");
+        }
+        os_->push(boost::iostreams::basic_array_source<char>(
+            &compressed_[0], compressed_.size()));
+
+        std::auto_ptr<InputStream> in = istreamInputStream(*os_);
+        dataDecoder_->init(*in);
+        dataStream_ = in;
+    }
     return true;
 }
 
@@ -318,8 +385,13 @@ void DataFileReaderBase::readHeader()
     }
 
     it = metadata_.find(AVRO_CODEC_KEY);
-    if (it != metadata_.end() && toString(it->second) != AVRO_NULL_CODEC) {
-        throw Exception("Unknown codec in data file: " + toString(it->second));
+    if (it != metadata_.end() && toString(it->second) == AVRO_DEFLATE_CODEC) {
+        codec_ = DEFLATE_CODEC;
+    } else {
+        codec_ = NULL_CODEC;
+        if (it != metadata_.end() && toString(it->second) != AVRO_NULL_CODEC) {
+            throw Exception("Unknown codec in data file: " + toString(it->second));
+        }
     }
 
     avro::decode(*decoder_, sync_);

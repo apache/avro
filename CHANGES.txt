@@ -27,6 +27,9 @@ Trunk (not yet released)
     AVRO-1379. C: avro_file_writer_append_encoded() function.
     (Mark Teodoro via dcreager)
 
+    AVRO-1414. C++: Add support for deflate-compressed data files.
+    (Daniel Russel via cutting)
+
   OPTIMIZATIONS
 
     AVRO-1348. Java: Improve UTF-8 to String conversion performance in
