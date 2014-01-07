@@ -19,26 +19,26 @@ package org.apache.avro.mapreduce;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.List;
-import java.util.Set;
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
+import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.RecordWriter;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputFormat;
+import org.apache.hadoop.mapreduce.RecordWriter;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.avro.Schema;
+import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * The AvroMultipleOutputs class simplifies writing Avro output data 
@@ -439,7 +439,35 @@ public class AvroMultipleOutputs{
     TaskAttemptContext taskContext = createTaskAttemptContext(job.getConfiguration(), context.getTaskAttemptID());
     getRecordWriter(taskContext, baseOutputPath).write(key, value);
   }
-    
+
+  /**
+   * 
+   * Gets the record writer from job's output format. Job's output format should
+   * be a FileOutputFormat.If the record writer implements Syncable then returns 
+   * the current position as a value that may be passed to DataFileReader.seek(long)
+   * otherwise returns -1. 
+   * Forces the end of the current block, emitting a synchronization marker.
+   * 
+   * @param namedOutput   the namedOutput
+   * @param baseOutputPath base-output path to write the record to. Note: Framework will
+   *          generate unique filename for the baseOutputPath
+   */
+  @SuppressWarnings("unchecked")
+  public long sync(String namedOutput, String baseOutputPath) throws IOException, InterruptedException {
+   checkNamedOutputName(context, namedOutput, false);
+   checkBaseOutputPath(baseOutputPath);
+   if (!namedOutputs.contains(namedOutput)) {
+      throw new IllegalArgumentException("Undefined named output '" + namedOutput + "'");
+   }
+   TaskAttemptContext taskContext = getContext(namedOutput);
+   RecordWriter recordWriter = getRecordWriter(taskContext, baseOutputPath);
+   long position = -1;
+   if (recordWriter instanceof Syncable) {
+      Syncable syncableWriter = (Syncable) recordWriter;
+      position = syncableWriter.sync();
+   }
+   return position;
+ }
   // by being synchronized MultipleOutputTask can be use with a
   // MultithreadedMapper.
   @SuppressWarnings("unchecked")

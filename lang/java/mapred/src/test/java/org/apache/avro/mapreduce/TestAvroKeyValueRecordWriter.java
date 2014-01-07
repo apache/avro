@@ -18,25 +18,37 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.*;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.hadoop.io.AvroDatumConverter;
 import org.apache.avro.hadoop.io.AvroDatumConverterFactory;
 import org.apache.avro.hadoop.io.AvroKeyValue;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.AvroValue;
+import org.apache.avro.mapred.FsInput;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -156,4 +168,68 @@ public class TestAvroKeyValueRecordWriter {
     assertEquals("reflectionData", firstRecord.getKey().toString());
     assertEquals(record.attribute, firstRecord.getValue().attribute);
   }
+ 
+  @Test
+  public void testSyncableWriteRecords() throws IOException {
+    Job job = new Job();
+    AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
+    TaskAttemptContext context = createMock(TaskAttemptContext.class);
+
+    replay(context);
+
+    AvroDatumConverterFactory factory = new AvroDatumConverterFactory(job.getConfiguration());
+    AvroDatumConverter<Text, ?> keyConverter = factory.create(Text.class);
+    AvroValue<TextStats> avroValue = new AvroValue<TextStats>(null);
+    @SuppressWarnings("unchecked")
+    AvroDatumConverter<AvroValue<TextStats>, ?> valueConverter
+        = factory.create((Class<AvroValue<TextStats>>) avroValue.getClass());
+    CodecFactory compressionCodec = CodecFactory.nullCodec();
+    FileOutputStream outputStream = new FileOutputStream(new File("target/temp.avro"));
+
+    // Write a marker followed by each record: <'apple', TextStats('apple')> and <'banana', TextStats('banana')>.
+    AvroKeyValueRecordWriter<Text, AvroValue<TextStats>> writer
+        = new AvroKeyValueRecordWriter<Text, AvroValue<TextStats>>(keyConverter, valueConverter,
+            new ReflectData(), compressionCodec, outputStream);
+    TextStats appleStats = new TextStats();
+    appleStats.name = "apple";
+    long pointOne = writer.sync();
+    writer.write(new Text("apple"), new AvroValue<TextStats>(appleStats));
+    TextStats bananaStats = new TextStats();
+    bananaStats.name = "banana";
+    long pointTwo = writer.sync();
+    writer.write(new Text("banana"), new AvroValue<TextStats>(bananaStats));
+    writer.close(context);
+
+    verify(context);
+
+	Configuration conf = new Configuration();
+	conf.set("fs.default.name", "file:///");
+	Path avroFile = new Path("target/temp.avro");
+	DataFileReader<GenericData.Record> avroFileReader = new DataFileReader<GenericData.Record>(new FsInput(avroFile,
+			conf), new SpecificDatumReader<GenericData.Record>());
+    
+	
+	avroFileReader.seek(pointTwo);
+    // Verify that the second record was written;
+    assertTrue(avroFileReader.hasNext());
+    AvroKeyValue<CharSequence, TextStats> secondRecord
+        = new AvroKeyValue<CharSequence, TextStats>(avroFileReader.next());
+    assertNotNull(secondRecord.get());
+    assertEquals("banana", secondRecord.getKey().toString());
+    assertEquals("banana", secondRecord.getValue().name.toString());
+
+    
+	avroFileReader.seek(pointOne);
+    // Verify that the first record was written.
+    assertTrue(avroFileReader.hasNext());
+    AvroKeyValue<CharSequence, TextStats> firstRecord
+        = new AvroKeyValue<CharSequence, TextStats>(avroFileReader.next());
+    assertNotNull(firstRecord.get());
+    assertEquals("apple", firstRecord.getKey().toString());
+    assertEquals("apple", firstRecord.getValue().name.toString());
+
+
+    // That's all, folks.
+    avroFileReader.close();
+  }  
 }

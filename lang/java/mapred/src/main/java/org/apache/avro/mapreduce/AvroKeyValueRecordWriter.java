@@ -22,13 +22,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.avro.Schema;
-import org.apache.avro.hadoop.io.AvroKeyValue;
-import org.apache.avro.hadoop.io.AvroDatumConverter;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.hadoop.io.AvroDatumConverter;
+import org.apache.avro.hadoop.io.AvroKeyValue;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -44,7 +44,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * @param <K> The type of key to write.
  * @param <V> The type of value to write.
  */
-public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> {
+public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implements Syncable {
   /** A writer for the Avro container file. */
   private final DataFileWriter<GenericRecord> mAvroFileWriter;
 
@@ -132,4 +132,10 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> {
   public void close(TaskAttemptContext context) throws IOException {
     mAvroFileWriter.close();
   }
+
+  /** {@inheritDoc} */
+  @Override
+  public long sync() throws IOException {
+    return mAvroFileWriter.sync();
+  }  
 }

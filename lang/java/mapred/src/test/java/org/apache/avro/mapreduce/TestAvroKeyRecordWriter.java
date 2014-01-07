@@ -18,25 +18,34 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.*;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.AvroKey;
+import org.apache.avro.mapred.FsInput;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 public class TestAvroKeyRecordWriter {
@@ -73,4 +82,43 @@ public class TestAvroKeyRecordWriter {
 
     dataFileReader.close();
   }
+  
+  @Test
+  public void testSycnableWrite() throws IOException {
+    Schema writerSchema = Schema.create(Schema.Type.INT);
+    GenericData dataModel = new ReflectData();
+    CodecFactory compressionCodec = CodecFactory.nullCodec();
+    FileOutputStream outputStream = new FileOutputStream(new File("target/temp.avro"));
+    TaskAttemptContext context = createMock(TaskAttemptContext.class);
+
+    replay(context);
+
+    // Write an avro container file with two records: 1 and 2.
+    AvroKeyRecordWriter<Integer> recordWriter = new AvroKeyRecordWriter<Integer>(
+        writerSchema, dataModel, compressionCodec, outputStream);
+    long positionOne = recordWriter.sync();
+    recordWriter.write(new AvroKey<Integer>(1), NullWritable.get());
+    long positionTwo = recordWriter.sync();
+    recordWriter.write(new AvroKey<Integer>(2), NullWritable.get());
+    recordWriter.close(context);
+
+    verify(context);
+
+    // Verify that the file was written as expected.
+	Configuration conf = new Configuration();
+	conf.set("fs.default.name", "file:///");
+	Path avroFile = new Path("target/temp.avro");
+	DataFileReader<GenericData.Record> dataFileReader = new DataFileReader<GenericData.Record>(new FsInput(avroFile,
+			conf), new SpecificDatumReader<GenericData.Record>());
+
+    dataFileReader.seek(positionTwo);
+    assertTrue(dataFileReader.hasNext());  // Record 2.
+    assertEquals(2, dataFileReader.next());
+
+	dataFileReader.seek(positionOne);
+    assertTrue(dataFileReader.hasNext());  // Record 1.
+    assertEquals(1, dataFileReader.next());
+    
+    dataFileReader.close();
+  }  
 }
