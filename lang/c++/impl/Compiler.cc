@@ -32,6 +32,8 @@ using std::map;
 using std::vector;
 
 namespace avro {
+using json::Object;
+using json::Array;
 
 typedef map<Name, NodePtr> SymbolTable;
 
@@ -97,10 +99,10 @@ static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
     throw Exception(boost::format("Unknown type: %1%") % n.fullname());
 }
 
-const map<string, Entity>::const_iterator findField(const Entity& e,
-    const map<string, Entity>& m, const string& fieldName)
+const json::Object::const_iterator findField(const Entity& e,
+    const Object& m, const string& fieldName)
 {
-    map<string, Entity>::const_iterator it = m.find(fieldName);
+    Object::const_iterator it = m.find(fieldName);
     if (it == m.end()) {
         throw Exception(boost::format("Missing Json field \"%1%\": %2%") %
             fieldName % e.toString());
@@ -109,21 +111,38 @@ const map<string, Entity>::const_iterator findField(const Entity& e,
     }
 }
 
-template<typename T>
-const T& getField(const Entity& e, const map<string, Entity>& m,
-    const string& fieldName)
+template <typename T> void ensureType(const Entity& e, const string& name)
 {
-    map<string, Entity>::const_iterator it = findField(e, m, fieldName);
-    if (it->second.type() != json::type_traits<T>::type()) {
-        throw Exception(boost::format(
-            "Json field \"%1%\" is not a %2%: %3%") %
-                fieldName % json::type_traits<T>::name() %
-                it->second.toString());
-    } else {
-        return it->second.value<T>();
+    if (e.type() != json::type_traits<T>::type()) {
+        throw Exception(boost::format("Json field \"%1%\" is not a %2%: %3%") %
+            name % json::type_traits<T>::name() % e.toString());
     }
 }
 
+const string& getStringField(const Entity& e, const Object& m,
+                             const string& fieldName)
+{
+    Object::const_iterator it = findField(e, m, fieldName);
+    ensureType<string>(it->second, fieldName);
+    return it->second.stringValue();
+}
+
+const Array& getArrayField(const Entity& e, const Object& m,
+                           const string& fieldName)
+{
+    Object::const_iterator it = findField(e, m, fieldName);
+    ensureType<Array >(it->second, fieldName);
+    return it->second.arrayValue();
+}
+
+const int64_t getLongField(const Entity& e, const Object& m,
+                           const string& fieldName)
+{
+    Object::const_iterator it = findField(e, m, fieldName);
+    ensureType<int64_t>(it->second, fieldName);
+    return it->second.longValue();
+}
+    
 struct Field {
     const string& name;
     const NodePtr value;
@@ -132,20 +151,20 @@ struct Field {
 
 static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
 {
-    const map<string, Entity>& m = e.value<map<string, Entity> >();
-    const string& n = getField<string>(e, m, "name");
-    map<string, Entity>::const_iterator it = findField(e, m, "type");
+    const Object& m = e.objectValue();
+    const string& n = getStringField(e, m, "name");
+    Object::const_iterator it = findField(e, m, "type");
     return Field(n, makeNode(it->second, st, ns));
 }
 
 static NodePtr makeRecordNode(const Entity& e,
-    const Name& name, const map<string, Entity>& m, SymbolTable& st, const string& ns)
+    const Name& name, const Object& m, SymbolTable& st, const string& ns)
 {        
-    const vector<Entity>& v = getField<vector<Entity> >(e, m, "fields");
+    const Array& v = getArrayField(e, m, "fields");
     concepts::MultiAttribute<string> fieldNames;
     concepts::MultiAttribute<NodePtr> fieldValues;
     
-    for (vector<Entity>::const_iterator it = v.begin(); it != v.end(); ++it) {
+    for (Array::const_iterator it = v.begin(); it != v.end(); ++it) {
         Field f = makeField(*it, st, ns);
         fieldNames.add(f.name);
         fieldValues.add(f.value);
@@ -155,24 +174,24 @@ static NodePtr makeRecordNode(const Entity& e,
 }
 
 static NodePtr makeEnumNode(const Entity& e,
-    const Name& name, const map<string, Entity>& m)
+    const Name& name, const Object& m)
 {
-    const vector<Entity>& v = getField<vector<Entity> >(e, m, "symbols");
+    const Array& v = getArrayField(e, m, "symbols");
     concepts::MultiAttribute<string> symbols;
-    for (vector<Entity>::const_iterator it = v.begin(); it != v.end(); ++it) {
+    for (Array::const_iterator it = v.begin(); it != v.end(); ++it) {
         if (it->type() != json::etString) {
             throw Exception(boost::format("Enum symbol not a string: %1%") %
                 it->toString());
         }
-        symbols.add(it->value<string>());
+        symbols.add(it->stringValue());
     }
     return NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
 }
 
 static NodePtr makeFixedNode(const Entity& e,
-    const Name& name, const map<string, Entity>& m)
+    const Name& name, const Object& m)
 {
-    int v = static_cast<int>(getField<int64_t>(e, m, "size"));
+    int v = static_cast<int>(getLongField(e, m, "size"));
     if (v <= 0) {
         throw Exception(boost::format("Size for fixed is not positive: ") %
             e.toString());
@@ -181,31 +200,31 @@ static NodePtr makeFixedNode(const Entity& e,
         asSingleAttribute(v)));
 }
 
-static NodePtr makeArrayNode(const Entity& e, const map<string, Entity>& m,
+static NodePtr makeArrayNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
-    map<string, Entity>::const_iterator it = findField(e, m, "items");
+    Object::const_iterator it = findField(e, m, "items");
     return NodePtr(new NodeArray(asSingleAttribute(
         makeNode(it->second, st, ns))));
 }
 
-static NodePtr makeMapNode(const Entity& e, const map<string, Entity>& m,
+static NodePtr makeMapNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
-    map<string, Entity>::const_iterator it = findField(e, m, "values");
+    Object::const_iterator it = findField(e, m, "values");
 
     return NodePtr(new NodeMap(asSingleAttribute(
         makeNode(it->second, st, ns))));
 }
 
-static Name getName(const Entity& e, const map<string, Entity>& m, const string& ns)
+static Name getName(const Entity& e, const Object& m, const string& ns)
 {
-    const string& name = getField<string>(e, m, "name");
+    const string& name = getStringField(e, m, "name");
 
     if (isFullName(name)) {
         return Name(name);
     } else {
-        map<string, Entity>::const_iterator it = m.find("namespace");
+        Object::const_iterator it = m.find("namespace");
         if (it != m.end()) {
             if (it->second.type() != json::type_traits<string>::type()) {
                 throw Exception(boost::format(
@@ -213,17 +232,17 @@ static Name getName(const Entity& e, const map<string, Entity>& m, const string&
                         "namespace" % json::type_traits<string>::name() %
                         it->second.toString());
             }
-            Name result = Name(name, it->second.value<string>());
+            Name result = Name(name, it->second.stringValue());
             return result;
         }
         return Name(name, ns);
     }
 }
 
-static NodePtr makeNode(const Entity& e, const map<string, Entity>& m,
+static NodePtr makeNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
-    const string& type = getField<string>(e, m, "type");
+    const string& type = getStringField(e, m, "type");
     if (NodePtr result = makePrimitive(type)) {
         return result;
     } else if (type == "record" || type == "error" ||
@@ -251,11 +270,11 @@ static NodePtr makeNode(const Entity& e, const map<string, Entity>& m,
         % e.toString());
 }
 
-static NodePtr makeNode(const Entity& e, const vector<Entity>& m,
+static NodePtr makeNode(const Entity& e, const Array& m,
     SymbolTable& st, const string& ns)
 {
     concepts::MultiAttribute<NodePtr> mm;
-    for (vector<Entity>::const_iterator it = m.begin(); it != m.end(); ++it) {
+    for (Array::const_iterator it = m.begin(); it != m.end(); ++it) {
         mm.add(makeNode(*it, st, ns));
     }
     return NodePtr(new NodeUnion(mm));
@@ -265,11 +284,11 @@ static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string& ns
 {
     switch (e.type()) {
     case json::etString:
-        return makeNode(e.value<string>(), st, ns);
+        return makeNode(e.stringValue(), st, ns);
     case json::etObject:
-        return makeNode(e, e.value<map<string, Entity> >(), st, ns);
+        return makeNode(e, e.objectValue(), st, ns);
     case json::etArray:
-        return makeNode(e, e.value<vector<Entity> >(), st, ns);
+        return makeNode(e, e.arrayValue(), st, ns);
     default:
         throw Exception(boost::format("Invalid Avro type: %1%") % e.toString());
     }

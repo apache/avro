@@ -21,12 +21,14 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include <stack>
 #include <sstream>
 
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/tuple/tuple.hpp>
 
 #include "Node.hh"
@@ -39,8 +41,9 @@ namespace parsing {
 class Symbol;
 
 typedef std::vector<Symbol> Production;
-typedef boost::tuple<size_t, bool, Production, Production> RepeaterInfo;
-typedef boost::tuple<Production, Production> RootInfo;
+typedef boost::shared_ptr<Production> ProductionPtr;
+typedef boost::tuple<size_t, bool, ProductionPtr, ProductionPtr> RepeaterInfo;
+typedef boost::tuple<ProductionPtr, ProductionPtr> RootInfo;
 
 class Symbol {
 public:
@@ -128,12 +131,13 @@ public:
         return stringValues[k];
     }
 
-    static Symbol rootSymbol(const Production& s)
+    static Symbol rootSymbol(ProductionPtr& s)
     {
-        return Symbol(Symbol::sRoot, RootInfo(s, Production()));
+        return Symbol(Symbol::sRoot, RootInfo(s, boost::make_shared<Production>()));
     }
 
-    static Symbol rootSymbol(const Production& main, const Production& backup)
+    static Symbol rootSymbol(const ProductionPtr& main,
+                             const ProductionPtr& backup)
     {
         return Symbol(Symbol::sRoot, RootInfo(main, backup));
     }
@@ -198,18 +202,21 @@ public:
         return Symbol(sMapEnd);
     }
 
-    static Symbol repeater(const Production& p, bool isArray) {
+    static Symbol repeater(const ProductionPtr& p,
+                           bool isArray) {
         size_t s = 0;
         return Symbol(sRepeater, boost::make_tuple(s, isArray, p, p));
     }
 
-    static Symbol repeater(const Production& read, const Production& skip,
-        bool isArray) {
+    static Symbol repeater(const ProductionPtr& read,
+                           const ProductionPtr& skip,
+                           bool isArray) {
         size_t s = 0;
         return Symbol(sRepeater, boost::make_tuple(s, isArray, read, skip));
     }
 
-    static Symbol alternative(const std::vector<Production>& branches)
+    static Symbol alternative(
+        const std::vector<ProductionPtr>& branches)
     {
         return Symbol(Symbol::sAlternative, branches);
     }
@@ -244,7 +251,7 @@ public:
         return Symbol(sPlaceholder, n);
     }
 
-    static Symbol indirect(const boost::shared_ptr<Production>& p) {
+    static Symbol indirect(const ProductionPtr& p) {
         return Symbol(sIndirect, p);
     }
 
@@ -255,7 +262,8 @@ public:
     static Symbol enumAdjustSymbol(const NodePtr& writer,
         const NodePtr& reader);
 
-    static Symbol unionAdjustSymbol(size_t branch, const Production& p) {
+    static Symbol unionAdjustSymbol(size_t branch,
+                                    const ProductionPtr& p) {
         return Symbol(sUnionAdjust, std::make_pair(branch, p));
     }
 
@@ -280,35 +288,52 @@ public:
 };
 
 template<typename T>
-void fixup(Production& p,
-    const std::map<T, boost::shared_ptr<Production> > &m)
+void fixup(const ProductionPtr& p,
+           const std::map<T, ProductionPtr> &m)
 {
-    for (Production::iterator it = p.begin(); it != p.end(); ++it) {
-        fixup(*it, m);
+    std::set<ProductionPtr> seen;
+    for (Production::iterator it = p->begin(); it != p->end(); ++it) {
+        fixup(*it, m, seen);
+    }
+}
+    
+
+template<typename T>
+void fixup_internal(const ProductionPtr& p,
+                    const std::map<T, ProductionPtr> &m,
+                    std::set<ProductionPtr>& seen)
+{
+    if (seen.find(p) == seen.end()) {
+        seen.insert(p);
+        for (Production::iterator it = p->begin(); it != p->end(); ++it) {
+            fixup(*it, m, seen);
+        }
     }
 }
 
 template<typename T>
-void fixup(Symbol& s, const std::map<T, boost::shared_ptr<Production> > &m)
+void fixup(Symbol& s, const std::map<T, ProductionPtr> &m,
+           std::set<ProductionPtr>& seen)
 {
     switch (s.kind()) {
     case Symbol::sIndirect:
-        fixup(*s.extra<boost::shared_ptr<Production> >(), m);
+        fixup_internal(s.extra<ProductionPtr>(), m, seen);
         break;
     case Symbol::sAlternative:
         {
-            std::vector<Production> *vv = s.extrap<std::vector<Production> >();
-            for (std::vector<Production>::iterator it = vv->begin();
+            const std::vector<ProductionPtr> *vv =
+            s.extrap<std::vector<ProductionPtr> >();
+            for (std::vector<ProductionPtr>::const_iterator it = vv->begin();
                 it != vv->end(); ++it) {
-                fixup(*it, m);
+                fixup_internal(*it, m, seen);
             }
         }
         break;
     case Symbol::sRepeater:
         {
-            RepeaterInfo& ri = *s.extrap<RepeaterInfo>();
-            fixup(boost::tuples::get<2>(ri), m);
-            fixup(boost::tuples::get<3>(ri), m);
+            const RepeaterInfo& ri = *s.extrap<RepeaterInfo>();
+            fixup_internal(boost::tuples::get<2>(ri), m, seen);
+            fixup_internal(boost::tuples::get<3>(ri), m, seen);
         }
     
         break;
@@ -317,7 +342,8 @@ void fixup(Symbol& s, const std::map<T, boost::shared_ptr<Production> > &m)
             m.find(s.extra<T>())->second));
         break;
     case Symbol::sUnionAdjust:
-        fixup(s.extrap<std::pair<size_t, Production> >()->second, m);
+        fixup_internal(s.extrap<std::pair<size_t, ProductionPtr> >()->second,
+                       m, seen);
         break;
     default:
         break;
@@ -347,9 +373,9 @@ class SimpleParser {
 
     }
 
-    void append(const Production& ss) {
-        for (Production::const_iterator it = ss.begin();
-            it != ss.end(); ++it) {
+    void append(const ProductionPtr& ss) {
+        for (Production::const_iterator it = ss->begin();
+            it != ss->end(); ++it) {
             parsingStack.push(*it);
         }
     }
@@ -386,18 +412,18 @@ public:
                     continue;
                 case Symbol::sIndirect:
                     {
-                        boost::shared_ptr<Production> pp =
-                            s.extra<boost::shared_ptr<Production> >();
+                        ProductionPtr pp =
+                            s.extra<ProductionPtr>();
                         parsingStack.pop();
-                        append(*pp);
+                        append(pp);
                     }
                     continue;
                 case Symbol::sSymbolic:
                     {
-                        boost::shared_ptr<Production> pp(
+                        ProductionPtr pp(
                             s.extra<boost::weak_ptr<Production> >());
                         parsingStack.pop();
-                        append(*pp);
+                        append(pp);
                     }
                     continue;
                 case Symbol::sRepeater:
@@ -538,18 +564,18 @@ public:
                 break;
             case Symbol::sIndirect:
                 {
-                    boost::shared_ptr<Production> pp =
-                        t.extra<boost::shared_ptr<Production> >();
+                    ProductionPtr pp =
+                        t.extra<ProductionPtr>();
                     parsingStack.pop();
-                    append(*pp);
+                    append(pp);
                 }
                 continue;
             case Symbol::sSymbolic:
                 {
-                    boost::shared_ptr<Production> pp(
+                    ProductionPtr pp(
                         t.extra<boost::weak_ptr<Production> >());
                     parsingStack.pop();
-                    append(*pp);
+                    append(pp);
                 }
                 continue;
             default:
@@ -598,8 +624,8 @@ public:
     size_t unionAdjust() {
         const Symbol& s = parsingStack.top();
         assertMatch(Symbol::sUnionAdjust, s.kind());
-        std::pair<size_t, Production> p = s.extra<std::pair<size_t,
-            Production> >();
+        std::pair<size_t, ProductionPtr> p =
+        s.extra<std::pair<size_t, ProductionPtr> >();
         parsingStack.pop();
         append(p.second);
         return p.first;
@@ -656,7 +682,8 @@ public:
     void selectBranch(size_t n) {
         const Symbol& s = parsingStack.top();
         assertMatch(Symbol::sAlternative, s.kind());
-        std::vector<Production> v = s.extra<std::vector<Production> >();
+        std::vector<ProductionPtr> v =
+        s.extra<std::vector<ProductionPtr> >();
         if (n >= v.size()) {
             throw Exception("Not that many branches");
         }

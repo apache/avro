@@ -60,15 +60,15 @@ using std::make_pair;
 typedef pair<NodePtr, NodePtr> NodePair;
 
 class ResolvingGrammarGenerator : public ValidatingGrammarGenerator {
-    Production doGenerate2(const NodePtr& writer, const NodePtr& reader,
-        map<NodePair, shared_ptr<Production> > &m,
-        const map<NodePtr, shared_ptr<Production> > &m2);
-    Production resolveRecords(const NodePtr& writer, const NodePtr& reader,
-        map<NodePair, shared_ptr<Production> > &m,
-        const map<NodePtr, shared_ptr<Production> > &m2);
-    Production resolveUnion(const NodePtr& writer, const NodePtr& reader,
-        map<NodePair, shared_ptr<Production> > &m,
-        const map<NodePtr, shared_ptr<Production> > &m2);
+    ProductionPtr doGenerate2(const NodePtr& writer,
+        const NodePtr& reader, map<NodePair, ProductionPtr> &m,
+        const map<NodePtr, ProductionPtr> &m2);
+    ProductionPtr resolveRecords(const NodePtr& writer,
+        const NodePtr& reader, map<NodePair, ProductionPtr> &m,
+        const map<NodePtr, ProductionPtr> &m2);
+    ProductionPtr resolveUnion(const NodePtr& writer,
+        const NodePtr& reader, map<NodePair, ProductionPtr> &m,
+        const map<NodePtr, ProductionPtr> &m2);
 
     static vector<pair<string, size_t> > fields(const NodePtr& n) {
         vector<pair<string, size_t> > result;
@@ -81,8 +81,8 @@ class ResolvingGrammarGenerator : public ValidatingGrammarGenerator {
 
     static int bestBranch(const NodePtr& writer, const NodePtr& reader);
 
-    Production getWriterProduction(const NodePtr& n,
-        const map<NodePtr, shared_ptr<Production> >& m2);
+    ProductionPtr getWriterProduction(const NodePtr& n,
+        const map<NodePtr, ProductionPtr>& m2);
 
 public:
     Symbol generate(
@@ -91,15 +91,15 @@ public:
 
 Symbol ResolvingGrammarGenerator::generate(
     const ValidSchema& writer, const ValidSchema& reader) {
-    map<NodePtr, shared_ptr<Production> > m2;
+    map<NodePtr, ProductionPtr> m2;
 
     const NodePtr& rr = reader.root();
     const NodePtr& rw = writer.root();
-    Production backup = ValidatingGrammarGenerator::doGenerate(rw, m2);
+    ProductionPtr backup = ValidatingGrammarGenerator::doGenerate(rw, m2);
     fixup(backup, m2);
 
-    map<NodePair, shared_ptr<Production> > m;
-    Production main = doGenerate2(rr, rw, m, m2);
+    map<NodePair, ProductionPtr> m;
+    ProductionPtr main = doGenerate2(rr, rw, m, m2);
     fixup(main, m);
     return Symbol::rootSymbol(main, backup);
 }
@@ -155,22 +155,22 @@ struct equalsFirst
     }
 };
 
-Production ResolvingGrammarGenerator::getWriterProduction(const NodePtr& n,
-    const map<NodePtr, shared_ptr<Production> >& m2)
+ProductionPtr ResolvingGrammarGenerator::getWriterProduction(
+    const NodePtr& n, const map<NodePtr, ProductionPtr>& m2)
 {
     const NodePtr& nn = (n->type() == AVRO_SYMBOLIC) ?
         static_cast<const NodeSymbolic& >(*n).getNode() : n;
-    map<NodePtr, shared_ptr<Production> >::const_iterator it2 = m2.find(nn);
-    return (it2 != m2.end()) ? *(it2->second) :
+    map<NodePtr, ProductionPtr>::const_iterator it2 = m2.find(nn);
+    return (it2 != m2.end()) ? it2->second :
         ValidatingGrammarGenerator::generate(nn);
 }
 
-Production ResolvingGrammarGenerator::resolveRecords(
+ProductionPtr ResolvingGrammarGenerator::resolveRecords(
     const NodePtr& writer, const NodePtr& reader,
-    map<NodePair, shared_ptr<Production> >& m,
-    const map<NodePtr, shared_ptr<Production> >& m2)
+    map<NodePair, ProductionPtr>& m,
+    const map<NodePtr, ProductionPtr>& m2)
 {
-    Production result;
+    ProductionPtr result = make_shared<Production>();
 
     vector<pair<string, size_t> > wf = fields(writer);
     vector<pair<string, size_t> > rf = fields(reader);
@@ -183,18 +183,19 @@ Production ResolvingGrammarGenerator::resolveRecords(
             find_if(rf.begin(), rf.end(),
                 equalsFirst<string, size_t>(it->first));
         if (it2 != rf.end()) {
-            Production p = doGenerate2(writer->leafAt(it->second),
+            ProductionPtr p = doGenerate2(writer->leafAt(it->second),
                 reader->leafAt(it2->second), m, m2);
-            copy(p.rbegin(), p.rend(), back_inserter(result));
+            copy(p->rbegin(), p->rend(), back_inserter(*result));
             fieldOrder.push_back(it2->second);
             rf.erase(it2);
         } else {
-            Production p = getWriterProduction(writer->leafAt(it->second), m2);
-            result.push_back(Symbol::skipStart());
-            if (p.size() == 1) {
-                result.push_back(p[0]);
+            ProductionPtr p = getWriterProduction(
+            writer->leafAt(it->second), m2);
+            result->push_back(Symbol::skipStart());
+            if (p->size() == 1) {
+                result->push_back((*p)[0]);
             } else {
-                result.push_back(Symbol::indirect(boost::make_shared<Production>(p)));
+                result->push_back(Symbol::indirect(p));
             } 
         }
     }
@@ -202,37 +203,36 @@ Production ResolvingGrammarGenerator::resolveRecords(
     if (! rf.empty()) {
         throw Exception("Don't know how to handle excess fields for reader.");
     }
-    reverse(result.begin(), result.end());
-    result.push_back(Symbol::sizeListAction(fieldOrder));
-    result.push_back(Symbol::recordAction());
+    reverse(result->begin(), result->end());
+    result->push_back(Symbol::sizeListAction(fieldOrder));
+    result->push_back(Symbol::recordAction());
 
     return result;
 
 }
 
-Production ResolvingGrammarGenerator::resolveUnion(
+ProductionPtr ResolvingGrammarGenerator::resolveUnion(
     const NodePtr& writer, const NodePtr& reader,
-    map<NodePair, shared_ptr<Production> >& m,
-    const map<NodePtr, shared_ptr<Production> >& m2)
+    map<NodePair, ProductionPtr>& m,
+    const map<NodePtr, ProductionPtr>& m2)
 {
-    vector<Production> v;
+    vector<ProductionPtr> v;
     size_t c = writer->leaves();
     v.reserve(c);
     for (size_t i = 0; i < c; ++i) {
-        Production p = doGenerate2(writer->leafAt(i), reader, m, m2);
+        ProductionPtr p = doGenerate2(writer->leafAt(i), reader, m, m2);
         v.push_back(p);
     }
-    Symbol r[] = {
-        Symbol::alternative(v),
-        Symbol::writerUnionAction()
-    };
-    return Production(r, r + 2);
+    ProductionPtr result = make_shared<Production>();
+    result->push_back(Symbol::alternative(v));
+    result->push_back(Symbol::writerUnionAction());
+    return result;
 }
 
-Production ResolvingGrammarGenerator::doGenerate2(
+ProductionPtr ResolvingGrammarGenerator::doGenerate2(
     const NodePtr& writer, const NodePtr& reader,
-    map<NodePair, shared_ptr<Production> > &m,
-    const map<NodePtr, shared_ptr<Production> > &m2)
+    map<NodePair, ProductionPtr> &m,
+    const map<NodePtr, ProductionPtr> &m2)
 {
     Type writerType = writer->type();
     Type readerType = reader->type();
@@ -240,29 +240,28 @@ Production ResolvingGrammarGenerator::doGenerate2(
     if (writerType == readerType) {
         switch (writerType) {
         case AVRO_NULL:
-            return Production(1, Symbol::nullSymbol());
+            return make_shared<Production>(1, Symbol::nullSymbol());
         case AVRO_BOOL:
-            return Production(1, Symbol::boolSymbol());
+            return make_shared<Production>(1, Symbol::boolSymbol());
         case AVRO_INT:
-            return Production(1, Symbol::intSymbol());
+            return make_shared<Production>(1, Symbol::intSymbol());
         case AVRO_LONG:
-            return Production(1, Symbol::longSymbol());
+            return make_shared<Production>(1, Symbol::longSymbol());
         case AVRO_FLOAT:
-            return Production(1, Symbol::floatSymbol());
+            return make_shared<Production>(1, Symbol::floatSymbol());
         case AVRO_DOUBLE:
-            return Production(1, Symbol::doubleSymbol());
+            return make_shared<Production>(1, Symbol::doubleSymbol());
         case AVRO_STRING:
-            return Production(1, Symbol::stringSymbol());
+            return make_shared<Production>(1, Symbol::stringSymbol());
         case AVRO_BYTES:
-            return Production(1, Symbol::bytesSymbol());
+            return make_shared<Production>(1, Symbol::bytesSymbol());
         case AVRO_FIXED:
             if (writer->name() == reader->name() &&
                 writer->fixedSize() == reader->fixedSize()) {
-                Symbol r[] = {
-                    Symbol::sizeCheckSymbol(reader->fixedSize()),
-                    Symbol::fixedSymbol() };
-                Production result(r, r + 2);
-                m[make_pair(writer, reader)] = boost::make_shared<Production>(result);
+                ProductionPtr result = make_shared<Production>();
+                result->push_back(Symbol::sizeCheckSymbol(reader->fixedSize()));
+                result->push_back(Symbol::fixedSymbol());
+                m[make_pair(writer, reader)] = result;
                 return result;
             }
             break;
@@ -270,53 +269,46 @@ Production ResolvingGrammarGenerator::doGenerate2(
             if (writer->name() == reader->name()) {
                 const pair<NodePtr, NodePtr> key(writer, reader);
                 m.erase(key);
-                Production result = resolveRecords(writer, reader, m, m2);
-
-                const bool found = m.find(key) != m.end();
-
-                shared_ptr<Production> p = boost::make_shared<Production>(result);
-                m[key] = p;
-                return found ? Production(1, Symbol::indirect(p)) : result;
+                ProductionPtr result = resolveRecords(writer, reader, m, m2);
+                m[key] = result;
+                return result;
             }
             break;
 
         case AVRO_ENUM:
             if (writer->name() == reader->name()) {
-                Symbol r[] = {
-                    Symbol::enumAdjustSymbol(writer, reader),
-                    Symbol::enumSymbol(),
-                };
-                Production result(r, r + 2);
-                m[make_pair(writer, reader)] = boost::make_shared<Production>(result);
+                ProductionPtr result = make_shared<Production>();
+                result->push_back(Symbol::enumAdjustSymbol(writer, reader));
+                result->push_back(Symbol::enumSymbol());
+                m[make_pair(writer, reader)] = result;
                 return result;
             }
             break;
 
         case AVRO_ARRAY:
             {
-                Production p = getWriterProduction(writer->leafAt(0), m2);
-                Symbol r[] = {
-                    Symbol::arrayEndSymbol(),
-                    Symbol::repeater(
-                        doGenerate2(writer->leafAt(0), reader->leafAt(0), m, m2),
-                        p, true),
-                    Symbol::arrayStartSymbol() };
-                return Production(r, r + 3);
+                ProductionPtr p = getWriterProduction(writer->leafAt(0), m2);
+                ProductionPtr p2 = doGenerate2(writer->leafAt(0), reader->leafAt(0), m, m2);
+                ProductionPtr result = make_shared<Production>();
+                result->push_back(Symbol::arrayEndSymbol());
+                result->push_back(Symbol::repeater(p2, p, true));
+                result->push_back(Symbol::arrayStartSymbol());
+                return result;
             }
         case AVRO_MAP:
             {
-                Production v = doGenerate2(writer->leafAt(1),
+                ProductionPtr v = doGenerate2(writer->leafAt(1),
                     reader->leafAt(1), m, m2);
-                v.push_back(Symbol::stringSymbol());
+                v->push_back(Symbol::stringSymbol());
 
-                Production v2 = getWriterProduction(writer->leafAt(1), m2);
-                v2.push_back(Symbol::stringSymbol());
+                ProductionPtr v2 = getWriterProduction(writer->leafAt(1), m2);
+                v2->push_back(Symbol::stringSymbol());
 
-                Symbol r[] = {
-                    Symbol::mapEndSymbol(),
-                    Symbol::repeater(v, v2, false),
-                    Symbol::mapStartSymbol() };
-                return Production(r, r + 3);
+                ProductionPtr result = make_shared<Production>();
+                result->push_back(Symbol::mapEndSymbol());
+                result->push_back(Symbol::repeater(v, v2, false));
+                result->push_back(Symbol::mapStartSymbol());
+                return result;
             }
         case AVRO_UNION:
             return resolveUnion(writer, reader, m, m2);
@@ -327,12 +319,12 @@ Production ResolvingGrammarGenerator::doGenerate2(
                 shared_ptr<NodeSymbolic> r =
                     static_pointer_cast<NodeSymbolic>(reader);
                 NodePair p(w->getNode(), r->getNode());
-                map<NodePair, shared_ptr<Production> >::iterator it = m.find(p);
+                map<NodePair, ProductionPtr>::iterator it = m.find(p);
                 if (it != m.end() && it->second) {
-                    return *it->second;
+                    return it->second;
                 } else {
-                    m[p] = shared_ptr<Production>();
-                    return Production(1, Symbol::placeholder(p));
+                    m[p] = ProductionPtr();
+                    return make_shared<Production>(1, Symbol::placeholder(p));
                 }
             }
         default:
@@ -344,13 +336,13 @@ Production ResolvingGrammarGenerator::doGenerate2(
         switch (readerType) {
         case AVRO_LONG:
             if (writerType == AVRO_INT) {
-                return Production(1,
+                return make_shared<Production>(1,
                     Symbol::resolveSymbol(Symbol::sInt, Symbol::sLong));
             }
             break;
         case AVRO_FLOAT:
             if (writerType == AVRO_INT || writerType == AVRO_LONG) {
-                return Production(1,
+                return make_shared<Production>(1,
                     Symbol::resolveSymbol(writerType == AVRO_INT ?
                     Symbol::sInt : Symbol::sLong, Symbol::sFloat));
             }
@@ -358,7 +350,7 @@ Production ResolvingGrammarGenerator::doGenerate2(
         case AVRO_DOUBLE:
             if (writerType == AVRO_INT || writerType == AVRO_LONG
                 || writerType == AVRO_FLOAT) {
-                return Production(1,
+                return make_shared<Production>(1,
                     Symbol::resolveSymbol(writerType == AVRO_INT ?
                     Symbol::sInt : writerType == AVRO_LONG ?
                     Symbol::sLong : Symbol::sFloat, Symbol::sDouble));
@@ -369,12 +361,11 @@ Production ResolvingGrammarGenerator::doGenerate2(
             {
                 int j = bestBranch(writer, reader);
                 if (j >= 0) {
-                    Production p = doGenerate2(writer, reader->leafAt(j), m, m2);
-                    Symbol r[] = {
-                        Symbol::unionAdjustSymbol(j, p),
-                        Symbol::unionSymbol()
-                    };
-                    return Production(r, r + 2);
+                    ProductionPtr p = doGenerate2(writer, reader->leafAt(j), m, m2);
+                    ProductionPtr result = make_shared<Production>();
+                    result->push_back(Symbol::unionAdjustSymbol(j, p));
+                    result->push_back(Symbol::unionSymbol());
+                    return result;
                 }
             }
             break;
@@ -392,7 +383,7 @@ Production ResolvingGrammarGenerator::doGenerate2(
             throw Exception("Unknown node type");
         }
     }
-    return Production(1, Symbol::error(writer, reader));
+    return make_shared<Production>(1, Symbol::error(writer, reader));
 }
 
 class ResolvingDecoderHandler {

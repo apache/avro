@@ -21,12 +21,29 @@
 #include <stdexcept>
 
 #include <string.h>
+#include <boost/make_shared.hpp>
 
 #include "Stream.hh"
 #include "JsonIO.hh"
 
+using std::string;
+using boost::format;
+
 namespace avro {
 namespace json {
+static const char* typeToString(EntityType t)
+{
+    switch (t) {
+    case etNull: return "null";
+    case etBool: return "bool";
+    case etLong: return "long";
+    case etDouble: return "double";
+    case etString: return "string";
+    case etArray: return "array";
+    case etObject: return "object";
+    default: return "unknown";
+    }
+}
 
 Entity readEntity(JsonParser& p)
 {
@@ -45,13 +62,13 @@ Entity readEntity(JsonParser& p)
         return Entity(p.doubleValue());
     case JsonParser::tkString:
         p.advance();
-        return Entity(p.stringValue());
+        return Entity(boost::make_shared<String>(p.stringValue()));
     case JsonParser::tkArrayStart:
         {
             p.advance();
-            std::vector<Entity> v;
+            boost::shared_ptr<Array> v = boost::make_shared<Array>();
             while (p.peek() != JsonParser::tkArrayEnd) {
-                v.push_back(readEntity(p));
+                v->push_back(readEntity(p));
             }
             p.advance();
             return Entity(v);
@@ -59,12 +76,12 @@ Entity readEntity(JsonParser& p)
     case JsonParser::tkObjectStart:
         {
             p.advance();
-            std::map<std::string, Entity> v;
+            boost::shared_ptr<Object> v = boost::make_shared<Object>();
             while (p.peek() != JsonParser::tkObjectEnd) {
                 p.advance();
                 std::string k = p.stringValue();
                 Entity n = readEntity(p);
-                v.insert(std::make_pair(k, n));
+                v->insert(std::make_pair(k, n));
             }
             p.advance();
             return Entity(v);
@@ -100,22 +117,22 @@ void writeEntity(JsonGenerator& g, const Entity& n)
         g.encodeNull();
         break;
     case etBool:
-        g.encodeBool(n.value<bool>());
+        g.encodeBool(n.boolValue());
         break;
     case etLong:
-        g.encodeNumber(n.value<int64_t>());
+        g.encodeNumber(n.longValue());
         break;
     case etDouble:
-        g.encodeNumber(n.value<double>());
+        g.encodeNumber(n.doubleValue());
         break;
     case etString:
-        g.encodeString(n.value<std::string>());
+        g.encodeString(n.stringValue());
         break;
     case etArray:
         {
             g.arrayStart();
-            const std::vector<Entity>& v = n.value<std::vector<Entity> >();
-            for (std::vector<Entity>::const_iterator it = v.begin();
+            const Array& v = n.arrayValue();
+            for (Array::const_iterator it = v.begin();
                 it != v.end(); ++it) {
                 writeEntity(g, *it);
             }
@@ -125,10 +142,8 @@ void writeEntity(JsonGenerator& g, const Entity& n)
     case etObject:
         {
             g.objectStart();
-            const std::map<std::string, Entity>& v =
-                n.value<std::map<std::string, Entity> >();
-            for (std::map<std::string, Entity>::const_iterator it = v.begin();
-                it != v.end(); ++it) {
+            const Object& v = n.objectValue();
+            for (Object::const_iterator it = v.begin(); it != v.end(); ++it) {
                 g.encodeString(it->first);
                 writeEntity(g, it->second);
             }
@@ -137,6 +152,16 @@ void writeEntity(JsonGenerator& g, const Entity& n)
         break;
     }
 }
+
+void Entity::ensureType(EntityType type) const
+{
+    if (type_ != type) {
+        format msg = format("Invalid type. Expected \"%1%\" actual %2%") %
+            typeToString(type) % typeToString(type_);
+        throw Exception(msg);
+    }
+}
+    
 
 std::string Entity::toString() const
 {

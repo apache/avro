@@ -42,6 +42,7 @@ namespace avro {
 namespace parsing {
 
 using boost::shared_ptr;
+using boost::make_shared;
 using boost::static_pointer_cast;
 
 using std::map;
@@ -55,8 +56,8 @@ using avro::json::JsonParser;
 using avro::json::JsonGenerator;
 
 class JsonGrammarGenerator : public ValidatingGrammarGenerator {
-    Production doGenerate(const NodePtr& n,
-        std::map<NodePtr, boost::shared_ptr<Production> > &m);
+    ProductionPtr doGenerate(const NodePtr& n,
+        std::map<NodePtr, ProductionPtr> &m);
 };
 
 static std::string nameOf(const NodePtr& n)
@@ -69,8 +70,8 @@ static std::string nameOf(const NodePtr& n)
     return oss.str();
 }
 
-Production JsonGrammarGenerator::doGenerate(const NodePtr& n,
-    std::map<NodePtr, boost::shared_ptr<Production> > &m) {
+ProductionPtr JsonGrammarGenerator::doGenerate(const NodePtr& n,
+    std::map<NodePtr, ProductionPtr> &m) {
     switch (n->type()) {
     case AVRO_NULL:
     case AVRO_BOOL:
@@ -87,28 +88,24 @@ Production JsonGrammarGenerator::doGenerate(const NodePtr& n,
         return ValidatingGrammarGenerator::doGenerate(n, m);
     case AVRO_RECORD:
         {
-            Production result;
+            ProductionPtr result = make_shared<Production>();
 
             m.erase(n);
 
             size_t c = n->leaves();
-            result.reserve(2 + 2 * c);
-            result.push_back(Symbol::recordStartSymbol());
+            result->reserve(2 + 2 * c);
+            result->push_back(Symbol::recordStartSymbol());
             for (size_t i = 0; i < c; ++i) {
                 const NodePtr& leaf = n->leafAt(i);
-                Production v = doGenerate(leaf, m);
-                result.push_back(Symbol::fieldSymbol(n->nameAt(i)));
-                copy(v.rbegin(), v.rend(), back_inserter(result));
+                ProductionPtr v = doGenerate(leaf, m);
+                result->push_back(Symbol::fieldSymbol(n->nameAt(i)));
+                copy(v->rbegin(), v->rend(), back_inserter(*result));
             }
-            result.push_back(Symbol::recordEndSymbol());
-            reverse(result.begin(), result.end());
+            result->push_back(Symbol::recordEndSymbol());
+            reverse(result->begin(), result->end());
 
-            bool found = m.find(n) != m.end();
-
-            shared_ptr<Production> p = boost::make_shared<Production>(result);
-            m[n] = p;
-
-            return found ? Production(1, Symbol::indirect(p)) : result;
+            m[n] = result;
+            return result;
         }
     case AVRO_ENUM:
         {
@@ -118,18 +115,17 @@ Production JsonGrammarGenerator::doGenerate(const NodePtr& n,
             for (size_t i = 0; i < c; ++i) {
                 nn.push_back(n->nameAt(i));
             }
-            Symbol r[] = {
-                Symbol::nameListSymbol(nn),
-                Symbol::enumSymbol() };
-            Production result(r, r + 2);
-            m[n] = boost::make_shared<Production>(result);
+            ProductionPtr result = make_shared<Production>();
+            result->push_back(Symbol::nameListSymbol(nn));
+            result->push_back(Symbol::enumSymbol());
+            m[n] = result;
             return result;
         }
     case AVRO_UNION:
         {
             size_t c = n->leaves();
 
-            vector<Production> vv;
+            vector<ProductionPtr> vv;
             vv.reserve(c);
 
             vector<string> names;
@@ -137,22 +133,21 @@ Production JsonGrammarGenerator::doGenerate(const NodePtr& n,
 
             for (size_t i = 0; i < c; ++i) {
                 const NodePtr& nn = n->leafAt(i);
-                Production v = doGenerate(nn, m);
+                ProductionPtr v = doGenerate(nn, m);
                 if (nn->type() != AVRO_NULL) {
-                    Production v2;
-                    v2.push_back(Symbol::recordEndSymbol());
-                    copy(v.begin(), v.end(), back_inserter(v2));
+                    ProductionPtr v2 = make_shared<Production>();
+                    v2->push_back(Symbol::recordEndSymbol());
+                    copy(v->begin(), v->end(), back_inserter(*v2));
                     v.swap(v2);
                 }
                 vv.push_back(v);
                 names.push_back(nameOf(nn));
             }
-            Symbol r[] = {
-                Symbol::alternative(vv),
-                Symbol::nameListSymbol(names),
-                Symbol::unionSymbol()
-            };
-            return Production(r, r + 3);
+            ProductionPtr result = make_shared<Production>();
+            result->push_back(Symbol::alternative(vv));
+            result->push_back(Symbol::nameListSymbol(names));
+            result->push_back(Symbol::unionSymbol());
+            return result;
         }
     default:
         throw Exception("Unknown node type");

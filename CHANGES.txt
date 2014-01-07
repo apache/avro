@@ -103,6 +103,8 @@ Trunk (not yet released)
     AVRO-1405. C: Check for end-of-file correctly.
     (Mika Ristimaki via dcreager)
 
+    AVRO-1424. ValidatingDecoder hangs on large schema (thiru)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES

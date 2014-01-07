@@ -28,8 +28,6 @@ using boost::shared_ptr;
 
 class BinaryEncoder : public Encoder {
     StreamWriter out_;
-    uint8_t *next_;
-    uint8_t *end_;
 
     void init(OutputStream& os);
     void flush();

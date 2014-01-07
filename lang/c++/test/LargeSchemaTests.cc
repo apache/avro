@@ -16,37 +16,31 @@
  * limitations under the License.
  */
 
-#ifndef avro_parsing_ValidatingCodec_hh__
-#define avro_parsing_ValidatingCodec_hh__
-
-#include <map>
-#include <vector>
-#include "boost/make_shared.hpp"
-
-#include "Symbol.hh"
+#include <fstream>
+#include "Compiler.hh"
 #include "ValidSchema.hh"
-#include "NodeImpl.hh"
+#include "Decoder.hh"
 
-namespace avro {
-namespace parsing {
+#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/test/parameterized_test.hpp>
 
-class ValidatingGrammarGenerator {
-protected:
-    template<typename T>
-    static void doFixup(Production& p, const std::map<T, ProductionPtr> &m);
+void testLargeSchema()
+{
+    std::ifstream in("jsonschemas/large_schema.avsc");
+    avro::ValidSchema vs;
+    avro::compileJsonSchema(in, vs);
+    avro::DecoderPtr d = avro::binaryDecoder();
+    avro::DecoderPtr vd = avro::validatingDecoder(vs, d);
+    avro::DecoderPtr rd = avro::resolvingDecoder(vs, vs, d);
+}
 
-    template<typename T>
-    static void doFixup(Symbol &s, const std::map<T, ProductionPtr> &m);
-    virtual ProductionPtr doGenerate(const NodePtr& n,
-        std::map<NodePtr, ProductionPtr> &m);
+boost::unit_test::test_suite*
+init_unit_test_suite(int argc, char* argv[]) 
+{
+    using namespace boost::unit_test;
 
-    ProductionPtr generate(const NodePtr& schema);
-public:
-    Symbol generate(const ValidSchema& schema);
-
-};
-
-}   // namespace parsing
-}   // namespace avro
-
-#endif
+    test_suite* ts= BOOST_TEST_SUITE("Avro C++ unit tests for schemas");
+    ts->add(BOOST_TEST_CASE(&testLargeSchema));
+    return ts;
+}

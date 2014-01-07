@@ -67,26 +67,33 @@ TestData<const char*> stringData[] = {
     { "\"\\/\"", etString, "/" },
 };
 
-template <typename T>
-void testPrimitive(const TestData<T>& d)
+void testBool(const TestData<bool>& d)
 {
     Entity n = loadEntity(d.input);
     BOOST_CHECK_EQUAL(n.type(), d.type);
-    BOOST_CHECK_EQUAL(n.value<T>(), d.value);
+    BOOST_CHECK_EQUAL(n.boolValue(), d.value);
+}
+
+    
+void testLong(const TestData<int64_t>& d)
+{
+    Entity n = loadEntity(d.input);
+    BOOST_CHECK_EQUAL(n.type(), d.type);
+    BOOST_CHECK_EQUAL(n.longValue(), d.value);
 }
 
 void testDouble(const TestData<double>& d)
 {
     Entity n = loadEntity(d.input);
     BOOST_CHECK_EQUAL(n.type(), d.type);
-    BOOST_CHECK_CLOSE(n.value<double>(), d.value, 1e-10);
+    BOOST_CHECK_CLOSE(n.doubleValue(), d.value, 1e-10);
 }
 
 void testString(const TestData<const char*>& d)
 {
     Entity n = loadEntity(d.input);
     BOOST_CHECK_EQUAL(n.type(), d.type);
-    BOOST_CHECK_EQUAL(n.value<std::string>(), d.value);
+    BOOST_CHECK_EQUAL(n.stringValue(), d.value);
 }
 
 static void testNull()
@@ -100,7 +107,7 @@ static void testArray0()
 {
     Entity n = loadEntity("[]");
     BOOST_CHECK_EQUAL(n.type(), etArray);
-    const std::vector<Entity>& a = n.value<std::vector<Entity> >();
+    const Array& a = n.arrayValue();
     BOOST_CHECK_EQUAL(a.size(), 0);
 }
 
@@ -108,30 +115,29 @@ static void testArray1()
 {
     Entity n = loadEntity("[200]");
     BOOST_CHECK_EQUAL(n.type(), etArray);
-    const std::vector<Entity>& a = n.value<std::vector<Entity> >();
+    const Array& a = n.arrayValue();
     BOOST_CHECK_EQUAL(a.size(), 1);
     BOOST_CHECK_EQUAL(a[0].type(), etLong);
-    BOOST_CHECK_EQUAL(a[0].value<int64_t>(), 200ll);
+    BOOST_CHECK_EQUAL(a[0].longValue(), 200ll);
 }
 
 static void testArray2()
 {
     Entity n = loadEntity("[200, \"v100\"]");
     BOOST_CHECK_EQUAL(n.type(), etArray);
-    const std::vector<Entity>& a = n.value<std::vector<Entity> >();
+    const Array& a = n.arrayValue();
     BOOST_CHECK_EQUAL(a.size(), 2);
     BOOST_CHECK_EQUAL(a[0].type(), etLong);
-    BOOST_CHECK_EQUAL(a[0].value<int64_t>(), 200ll);
+    BOOST_CHECK_EQUAL(a[0].longValue(), 200ll);
     BOOST_CHECK_EQUAL(a[1].type(), etString);
-    BOOST_CHECK_EQUAL(a[1].value<std::string>(), "v100");
+    BOOST_CHECK_EQUAL(a[1].stringValue(), "v100");
 }
 
 static void testObject0()
 {
     Entity n = loadEntity("{}");
     BOOST_CHECK_EQUAL(n.type(), etObject);
-    const std::map<std::string, Entity>& m =
-        n.value<std::map<std::string, Entity> >();
+    const Object& m = n.objectValue();
     BOOST_CHECK_EQUAL(m.size(), 0);
 }
 
@@ -139,36 +145,34 @@ static void testObject1()
 {
     Entity n = loadEntity("{\"k1\": 100}");
     BOOST_CHECK_EQUAL(n.type(), etObject);
-    const std::map<std::string, Entity>& m =
-        n.value<std::map<std::string, Entity> >();
+    const Object& m = n.objectValue();
     BOOST_CHECK_EQUAL(m.size(), 1);
     BOOST_CHECK_EQUAL(m.begin()->first, "k1");
     BOOST_CHECK_EQUAL(m.begin()->second.type(), etLong);
-    BOOST_CHECK_EQUAL(m.begin()->second.value<int64_t>(), 100ll);
+    BOOST_CHECK_EQUAL(m.begin()->second.longValue(), 100ll);
 }
 
 static void testObject2()
 {
     Entity n = loadEntity("{\"k1\": 100, \"k2\": [400, \"v0\"]}");
     BOOST_CHECK_EQUAL(n.type(), etObject);
-    const std::map<std::string, Entity>& m =
-        n.value<std::map<std::string, Entity> >();
+    const Object& m = n.objectValue();
     BOOST_CHECK_EQUAL(m.size(), 2);
 
-    std::map<std::string, Entity>::const_iterator it = m.find("k1");
+    Object::const_iterator it = m.find("k1");
     BOOST_CHECK(it != m.end());
     BOOST_CHECK_EQUAL(it->second.type(), etLong);
-    BOOST_CHECK_EQUAL(m.begin()->second.value<int64_t>(), 100ll);
+    BOOST_CHECK_EQUAL(m.begin()->second.longValue(), 100ll);
 
     it = m.find("k2");
     BOOST_CHECK(it != m.end());
     BOOST_CHECK_EQUAL(it->second.type(), etArray);
-    const std::vector<Entity>& a = it->second.value<std::vector<Entity> >();
+    const Array& a = it->second.arrayValue();
     BOOST_CHECK_EQUAL(a.size(), 2);
     BOOST_CHECK_EQUAL(a[0].type(), etLong);
-    BOOST_CHECK_EQUAL(a[0].value<int64_t>(), 400ll);
+    BOOST_CHECK_EQUAL(a[0].longValue(), 400ll);
     BOOST_CHECK_EQUAL(a[1].type(), etString);
-    BOOST_CHECK_EQUAL(a[1].value<std::string>(), "v0");
+    BOOST_CHECK_EQUAL(a[1].stringValue(), "v0");
 }
 
 }
@@ -184,10 +188,10 @@ init_unit_test_suite( int argc, char* argv[] )
     test_suite* ts= BOOST_TEST_SUITE("Avro C++ unit tests for json routines");
 
     ts->add(BOOST_TEST_CASE(&avro::json::testNull));
-    ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testPrimitive<bool>,
+    ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testBool,
         avro::json::boolData,
         avro::json::boolData + COUNTOF(avro::json::boolData)));
-    ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testPrimitive<int64_t>,
+    ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testLong,
         avro::json::longData,
         avro::json::longData + COUNTOF(avro::json::longData)));
     ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testDouble,
