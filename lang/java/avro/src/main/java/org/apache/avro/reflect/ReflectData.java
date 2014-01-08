@@ -422,6 +422,9 @@ public class ReflectData extends SpecificData {
         setElement(result, component);
         return result;
       }
+      AvroSchema explicit = c.getAnnotation(AvroSchema.class);
+      if (explicit != null)                                  // explicit schema
+        return Schema.parse(explicit.value());
       if (CharSequence.class.isAssignableFrom(c))            // String
         return Schema.create(Schema.Type.STRING);
       if (ByteBuffer.class.isAssignableFrom(c))              // bytes
@@ -580,6 +583,11 @@ public class ReflectData extends SpecificData {
       } catch (Exception e) {
           throw new AvroRuntimeException("Could not create schema from custom serializer for " + field.getName());
       } 
+
+    AvroSchema explicit = field.getAnnotation(AvroSchema.class);
+    if (explicit != null)                                   // explicit schema
+      return Schema.parse(explicit.value());
+
     Schema schema = createSchema(field.getGenericType(), names);
     if (field.isAnnotationPresent(Stringable.class)) {      // Stringable
       schema = Schema.create(Schema.Type.STRING);
@@ -628,11 +636,15 @@ public class ReflectData extends SpecificData {
     Annotation[][] annotations = method.getParameterAnnotations();
     for (int i = 0; i < paramTypes.length; i++) {
       Schema paramSchema = getSchema(paramTypes[i], names);
-      for (int j = 0; j < annotations[i].length; j++)
-        if (annotations[i][j] instanceof Union)
-          paramSchema = getAnnotatedUnion(((Union)annotations[i][j]), names);
-        else if (annotations[i][j] instanceof Nullable)
+      for (int j = 0; j < annotations[i].length; j++) {
+        Annotation annotation = annotations[i][j];
+        if (annotation instanceof AvroSchema)     // explicit schema
+          paramSchema = Schema.parse(((AvroSchema)annotation).value());
+        else if (annotation instanceof Union)     // union
+          paramSchema = getAnnotatedUnion(((Union)annotation), names);
+        else if (annotation instanceof Nullable)  // nullable
           paramSchema = makeNullable(paramSchema);
+      }
       String paramName =  paramNames.length == paramTypes.length
         ? paramNames[i]
         : paramSchema.getName()+i;
@@ -647,6 +659,10 @@ public class ReflectData extends SpecificData {
       : getAnnotatedUnion(union, names);
     if (method.isAnnotationPresent(Nullable.class))          // nullable
       response = makeNullable(response);
+
+    AvroSchema explicit = method.getAnnotation(AvroSchema.class);
+    if (explicit != null)                         // explicit schema
+      response = Schema.parse(explicit.value());
 
     List<Schema> errs = new ArrayList<Schema>();
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw

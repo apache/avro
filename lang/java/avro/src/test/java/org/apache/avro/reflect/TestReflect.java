@@ -373,6 +373,45 @@ public class TestReflect {
     assertEquals(String.class, ReflectData.get().getClass(param));
   }
 
+  // test AvroSchema annotation
+  public static class R12 {                       // fields
+    @AvroSchema("\"int\"")
+      Object x;
+
+    @AvroSchema("{\"type\":\"array\",\"items\":[\"null\",\"string\"]}")
+      List<String> strings;
+  }
+
+
+  @Test public void testR12() throws Exception {
+    Schema s = ReflectData.get().getSchema(R12.class);
+    assertEquals(Schema.Type.INT, s.getField("x").schema().getType());
+    assertEquals(Schema.parse
+                 ("{\"type\":\"array\",\"items\":[\"null\",\"string\"]}"),
+                 s.getField("strings").schema());
+  }
+    
+  @AvroSchema("\"null\"")                          // record
+  public class R13 {}
+
+  @Test public void testR13() throws Exception {
+    Schema s = ReflectData.get().getSchema(R13.class);
+    assertEquals(Schema.Type.NULL, s.getType());
+  }
+    
+  public interface P4 {
+    @AvroSchema("\"int\"")                        // message value
+    Object foo(@AvroSchema("\"int\"")Object x);   // message param
+  }
+
+  @Test public void testP4() throws Exception {
+    Protocol p = ReflectData.get().getProtocol(P4.class);
+    Protocol.Message message = p.getMessages().get("foo");
+    assertEquals(Schema.Type.INT, message.getResponse().getType());
+    Field field = message.getRequest().getField("x");
+    assertEquals(Schema.Type.INT, field.schema().getType());
+  }
+
   // test error
   @SuppressWarnings("serial")
   public static class E1 extends Exception {}
