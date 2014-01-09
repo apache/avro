@@ -592,7 +592,7 @@ public class GenericData {
   }
 
   /** Return the index for a datum within a union.  Implemented with {@link
-   * Schema#getIndexNamed(String)} and {@link #getSchemaName(Schema,Object)}.*/
+   * Schema#getIndexNamed(String)} and {@link #getSchemaName(Object)}.*/
   public int resolveUnion(Schema union, Object datum) {
     Integer i = union.getIndexNamed(getSchemaName(datum));
     if (i != null)

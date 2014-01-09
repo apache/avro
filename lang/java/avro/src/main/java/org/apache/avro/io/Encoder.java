@@ -166,7 +166,7 @@ public abstract class Encoder implements Flushable {
     writeFixed(bytes, 0, bytes.length);
   }
   
-  /** A version of {@link writeFixed} for ByteBuffers. */
+  /** Writes a fixed from a ByteBuffer. */
   public void writeFixed(ByteBuffer bytes) throws IOException {
     int pos = bytes.position();
     int len = bytes.limit() - pos;

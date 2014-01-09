@@ -62,7 +62,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
-   * one should use {@link \#newBuilder()}. 
+   * one should use <code>newBuilder()</code>. 
    */
   public ${this.mangle($schema.getName())}() {}
 

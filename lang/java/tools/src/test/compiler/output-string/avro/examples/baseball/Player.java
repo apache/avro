@@ -17,7 +17,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
-   * one should use {@link \#newBuilder()}. 
+   * one should use <code>newBuilder()</code>. 
    */
   public Player() {}
 

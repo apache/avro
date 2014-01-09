@@ -965,7 +965,7 @@ public class SchemaBuilder {
    * defined named types to be referenced from {@link #type(String)}</li>
    * <li>A completion context representing the scope that the builder was
    * created in. A builder created in a nested context (for example,
-   * {@link #MapBuilder.values()} will have a completion context assigned by the
+   * {@link MapBuilder#values()} will have a completion context assigned by the
    * {@link MapBuilder}</li>
    **/
   public static class BaseTypeBuilder<R> {
@@ -2133,10 +2133,11 @@ public class SchemaBuilder {
     }
   }
     
-  private static abstract class FieldDefault<R, S extends FieldDefault<R, S>> extends Completion<S> {
+  /** Abstract base class for field defaults. **/
+  public static abstract class FieldDefault<R, S extends FieldDefault<R, S>> extends Completion<S> {
     private final FieldBuilder<R> field;
     private Schema schema;
-    protected FieldDefault(FieldBuilder<R> field) {
+    FieldDefault(FieldBuilder<R> field) {
       this.field = field;
     }
     
@@ -2150,12 +2151,12 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final S complete(Schema schema) {
+    final S complete(Schema schema) {
       this.schema = schema;
       return self();
     }
     
-    protected abstract S self();
+    abstract S self();
   }
   
   /** Choose whether to use a default value for the field or not. **/
@@ -2170,7 +2171,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final BooleanDefault<R> self() {
+    final BooleanDefault<R> self() {
       return this;
     }
   }
@@ -2187,7 +2188,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final IntDefault<R> self() {
+    final IntDefault<R> self() {
       return this;
     }
   }
@@ -2204,7 +2205,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final LongDefault<R> self() {
+    final LongDefault<R> self() {
       return this;
     }
   }
@@ -2221,7 +2222,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final FloatDefault<R> self() {
+    final FloatDefault<R> self() {
       return this;
     }
   }
@@ -2238,7 +2239,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final DoubleDefault<R> self() {
+    final DoubleDefault<R> self() {
       return this;
     }
   }
@@ -2255,7 +2256,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final StringDefault<R> self() {
+    final StringDefault<R> self() {
       return this;
     }
   }
@@ -2284,7 +2285,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final BytesDefault<R> self() {
+    final BytesDefault<R> self() {
       return this;
     }
   }
@@ -2301,7 +2302,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final NullDefault<R> self() {
+    final NullDefault<R> self() {
       return this;
     }
   }
@@ -2318,7 +2319,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final MapDefault<R> self() {
+    final MapDefault<R> self() {
       return this;
     }
   }
@@ -2335,7 +2336,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final ArrayDefault<R> self() {
+    final ArrayDefault<R> self() {
       return this;
     }
   }
@@ -2364,7 +2365,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final FixedDefault<R> self() {
+    final FixedDefault<R> self() {
       return this;
     }
   }
@@ -2381,7 +2382,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final EnumDefault<R> self() {
+    final EnumDefault<R> self() {
       return this;
     }
   }
@@ -2398,7 +2399,7 @@ public class SchemaBuilder {
     }
     
     @Override
-    protected final RecordDefault<R> self() {
+    final RecordDefault<R> self() {
       return this;
     }
   }
@@ -2429,7 +2430,7 @@ public class SchemaBuilder {
    * Completion is an object that takes a Schema and returns some result.
    */
   private abstract static class Completion<R> {
-    protected abstract R complete(Schema schema);
+    abstract R complete(Schema schema);
   }
   
   private static class SchemaCompletion extends Completion<Schema> {

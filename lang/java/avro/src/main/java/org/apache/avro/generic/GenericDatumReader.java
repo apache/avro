@@ -369,8 +369,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected Object createString(String value) { return new Utf8(value); }
 
   /** Determines the class to used to represent a string Schema.  By default
-   * uses {@link #STRING_PROP} to determine whether {@link Utf8} or {@link
-   * String} is used.  Subclasses may override for alternate representations.
+   * uses {@link GenericData#STRING_PROP} to determine whether {@link Utf8} or
+   * {@link String} is used.  Subclasses may override for alternate
+   * representations.
    */
   protected Class findStringClass(Schema schema) {
     String name = schema.getProp(GenericData.STRING_PROP);

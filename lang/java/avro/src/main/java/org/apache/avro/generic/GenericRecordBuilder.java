@@ -116,7 +116,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
   
   /**
    * Sets the value of a field.
-   * @param field the field to set.
+   * @param pos the field to set.
    * @param value the value to set.
    * @return a reference to the RecordBuilder.
    */

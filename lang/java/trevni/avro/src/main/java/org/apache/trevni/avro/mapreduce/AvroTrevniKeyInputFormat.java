@@ -42,7 +42,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  * 
  * <p>
  * A subset schema to be read may be specified with
- * {@link AvroJob#setInputKeySchema(Schema)}.
+ * {@link org.apache.avro.mapreduce.AvroJob#setInputKeySchema}.
  */
 public class AvroTrevniKeyInputFormat<T> extends FileInputFormat<AvroKey<T>, NullWritable> {
   

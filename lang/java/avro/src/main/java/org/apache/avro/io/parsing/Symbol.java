@@ -116,7 +116,6 @@ public abstract class Symbol {
   /**
    * A convenience method to construct an ErrorAction.
    * @param e
-   * @return
    */
   static Symbol error(String e) {
     return new ErrorAction(e);

@@ -35,9 +35,6 @@ import org.apache.avro.file.CodecFactory;
  *   <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to {@code zbip2}</li>
  *   <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to {@code deflate}</li>
  * </ul>
- *
- * New and custom codecs can be registered using {@link #addCodec(String,
- * CodecFactory)}.
  */
 public class HadoopCodecFactory {
 

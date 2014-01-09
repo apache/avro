@@ -40,7 +40,7 @@ import org.apache.avro.mapred.AvroWrapper;
 /** An {@link org.apache.hadoop.mapred.InputFormat} for Trevni files.
  *
  * <p>A subset schema to be read may be specified with {@link
- * AvroJob#setInputSchema(Schema)}.
+ * AvroJob#setInputSchema(JobConf,Schema)}.
  */
 public class AvroTrevniInputFormat<T>
   extends FileInputFormat<AvroWrapper<T>, NullWritable> {

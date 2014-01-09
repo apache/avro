@@ -1213,7 +1213,6 @@ public abstract class Schema extends JsonProperties {
    * @param container Container where to find key.
    * @param key Key to look for in container.
    * @param error String to prepend to the SchemaParseException.
-   * @return
    */
   private static String getRequiredText(JsonNode container, String key,
       String error) {

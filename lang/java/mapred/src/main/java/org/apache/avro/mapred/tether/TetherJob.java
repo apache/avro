@@ -61,7 +61,7 @@ public class TetherJob extends Configured {
    * and provides the mapper/reducer). 
    * @param job - Job
    * @param executable - The URI of the executable
-   * @param argstr - A string of additional arguments
+   * @param args - A string of additional arguments
    * @param cached - If true, the executable URI is cached using DistributedCache
    *               - if false its not cached. I.e if the file is already stored on each local file system
    *                or if its on a NFS share

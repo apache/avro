@@ -334,7 +334,7 @@ public class SpecificData extends GenericData {
 
   /** Tag interface that indicates that a class has a one-argument constructor
    * that accepts a Schema.
-   * @see SpecificDatumReader#newInstance
+   * @see #newInstance
    */
   public interface SchemaConstructable {}
   

@@ -28,7 +28,7 @@ import org.apache.avro.mapred.AvroWrapper;
  *
  * @param <D> The java type of the avro data to deserialize.
  *
- * @see org.apache.avro.io.AvroDeserializer
+ * @see AvroDeserializer
  */
 public class AvroValueDeserializer<D> extends AvroDeserializer<AvroWrapper<D>, D> {
   /**

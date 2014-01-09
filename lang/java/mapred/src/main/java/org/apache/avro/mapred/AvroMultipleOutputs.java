@@ -325,7 +325,7 @@ public class AvroMultipleOutputs {
    * By default these counters are disabled.
    * <p/>
    * MultipleOutputs supports counters, by default the are disabled.
-   * The counters group is the {@link MultipleOutputs} class name.
+   * The counters group is the {@link AvroMultipleOutputs} class name.
    * </p>
    * The names of the counters are the same as the named outputs. For multi
    * named outputs the name of the counter is the concatenation of the named
@@ -344,7 +344,7 @@ public class AvroMultipleOutputs {
    * By default these counters are disabled.
    * <p/>
    * MultipleOutputs supports counters, by default the are disabled.
-   * The counters group is the {@link MultipleOutputs} class name.
+   * The counters group is the {@link AvroMultipleOutputs} class name.
    * </p>
    * The names of the counters are the same as the named outputs. For multi
    * named outputs the name of the counter is the concatenation of the named
@@ -452,7 +452,6 @@ public class AvroMultipleOutputs {
    * @param namedOutput the named output name
    * @param reporter    the reporter
    * @param datum       output data
-   * @return void
    * @throws IOException thrown if output collector could not be created
    */
   public void collect(String namedOutput, Reporter reporter,Object datum) throws IOException{
@@ -467,7 +466,6 @@ public class AvroMultipleOutputs {
    * @param reporter    the reporter
    * @param datum       output data
    * @param schema      schema to use for this output
-   * @return void
    * @throws IOException thrown if output collector could not be created
   */
   public void collect(String namedOutput, Reporter reporter, Schema schema,Object datum) throws IOException{
@@ -483,7 +481,6 @@ public class AvroMultipleOutputs {
    * @param baseOutputPath outputfile name to use.
    * @param datum       output data
    * @param schema      schema to use for this output
-   * @return void
    * @throws IOException thrown if output collector could not be created
   */
   public void collect(String namedOutput,Reporter reporter,Schema schema,Object datum,String baseOutputPath) throws IOException{
@@ -498,7 +495,7 @@ public class AvroMultipleOutputs {
    * @param reporter    the reporter
    * @return the output collector for the given named output
    * @throws IOException thrown if output collector could not be created
-   * @deprecated Use {@link collect} method for collecting output
+   * @deprecated Use {@link #collect} method for collecting output
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
   public AvroCollector getCollector(String namedOutput, Reporter reporter)

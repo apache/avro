@@ -271,7 +271,7 @@ public class AvroMultipleOutputs{
   /**
    * Enables or disables counters for the named outputs.
    * 
-   * The counters group is the {@link MultipleOutputs} class name.
+   * The counters group is the {@link AvroMultipleOutputs} class name.
    * The names of the counters are the same as the named outputs. These
    * counters count the number records written to each output name.
    * By default these counters are disabled.
