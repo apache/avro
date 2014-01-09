@@ -119,6 +119,9 @@ Trunk (not yet released)
 
     AVRO-1424. ValidatingDecoder hangs on large schema (thiru)
 
+    AVRO-1433. Java: Fix compiler to not drop aliases when StringType
+    is String. (cutting)
+
 Avro 1.7.5 (12 August 2013)
 
   NEW FEATURES

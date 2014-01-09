@@ -441,6 +441,8 @@ public class SpecificCompiler {
     case RECORD:
       result =
         Schema.createRecord(s.getFullName(), s.getDoc(), null, s.isError());
+      for (String alias : s.getAliases())
+        result.addAlias(alias, null);             // copy aliases
       seen.put(s, result);
       List<Field> newFields = new ArrayList<Field>();
       for (Field f : s.getFields()) {
@@ -449,6 +451,8 @@ public class SpecificCompiler {
           new Field(f.name(), fSchema, f.doc(), f.defaultValue(), f.order());
         for (Map.Entry<String,JsonNode> p : f.getJsonProps().entrySet())
           newF.addProp(p.getKey(), p.getValue()); // copy props
+        for (String a : f.aliases())
+          newF.addAlias(a);                       // copy aliases
         newFields.add(newF);
       }
       result.setFields(newFields);

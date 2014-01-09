@@ -43,6 +43,7 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.TestProtocolParsing;
 import org.apache.avro.TestSchema;
 import org.apache.avro.TestAnnotation;
+import org.apache.avro.generic.GenericData.StringType;
 
 import org.apache.avro.test.Simple;
 import org.apache.avro.test.TestRecord;
@@ -670,6 +671,21 @@ public class TestSpecificCompiler {
     // a method
     assertNotNull(Simple.class.getMethod("ack")
                   .getAnnotation(TestAnnotation.class));
+  }
+
+  @Test
+  public void testAliases() throws IOException {
+    Schema s = Schema.parse
+      ("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
+       +"{\"name\":\"f\",\"type\":\"int\",\"aliases\":[\"g\"]}]}");
+    SpecificCompiler compiler = new SpecificCompiler(s);
+    compiler.setStringType(StringType.valueOf("String"));
+    Collection<OutputFile> outputs = compiler.compile();
+    assertEquals(1, outputs.size());
+    OutputFile o = outputs.iterator().next();
+    assertEquals(o.path, "X.java");
+    assertTrue(o.contents.contains("[\\\"Y\\\"]"));
+    assertTrue(o.contents.contains("[\\\"g\\\"]"));
   }
 
   /**
