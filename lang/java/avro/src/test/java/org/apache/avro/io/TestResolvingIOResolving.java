@@ -58,13 +58,14 @@ public class TestResolvingIOResolving {
   @Test
   public void testResolving()
     throws IOException {
-    Schema writerSchema = Schema.parse(sJsWrtSchm);
+    Schema writerSchema = new Schema.Parser().parse(sJsWrtSchm);
     byte[] bytes = TestValidatingIO.make(writerSchema, sWrtCls,
-        oaWrtVals, TestValidatingIO.Encoding.BINARY);
-    Schema readerSchema = Schema.parse(sJsRdrSchm);
+        oaWrtVals, eEnc);
+    Schema readerSchema = new Schema.Parser().parse(sJsRdrSchm);
+    TestValidatingIO.print(eEnc, iSkipL, writerSchema, readerSchema, oaWrtVals, oaRdrVals);
     TestResolvingIO.check(writerSchema, readerSchema, bytes, sRdrCls,
         oaRdrVals,
-        TestValidatingIO.Encoding.BINARY, iSkipL);
+        eEnc, iSkipL);
   }
 
   @Parameterized.Parameters
@@ -174,7 +175,7 @@ public class TestResolvingIOResolving {
         { "\"int\"", "I", new Object[] { 100 },
             "[ \"long\", \"string\"]", "U0L", new Object[] { 100L } },
         { "[ \"int\", \"string\"]", "U0I", new Object[] { 100 },
-            "\"long\"", "L", new Object[] { 100 } },
+            "\"long\"", "L", new Object[] { 100L } },
         // Record where union field is skipped.
         { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f0\", \"type\":\"boolean\"},"

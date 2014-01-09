@@ -80,6 +80,8 @@ Trunk (not yet released)
 
     AVRO-987. Java: Make Avro OSGI-ready. (Ioannis Canellos via cutting)
 
+    AVRO-1427. Java: Improve ResolvingDecoder tests. (Rob Turner via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string

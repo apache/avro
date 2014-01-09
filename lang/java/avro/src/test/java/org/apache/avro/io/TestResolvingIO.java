@@ -82,12 +82,15 @@ public class TestResolvingIO {
       Encoding encoding,
       int skipLevel) throws IOException {
     Object[] values = TestValidatingIO.randomValues(writerCalls);
-    Schema writerSchema = Schema.parse(jsonWriterSchema);
+    Object[] expected = TestValidatingIO.randomValues(readerCalls);
+    
+    Schema writerSchema = new Schema.Parser().parse(jsonWriterSchema);
     byte[] bytes = TestValidatingIO.make(writerSchema, writerCalls,
         values, encoding);
-    Schema readerSchema = Schema.parse(jsonReaderSchema);
+    Schema readerSchema = new Schema.Parser().parse(jsonReaderSchema);
+    TestValidatingIO.print(encoding, skipLevel, writerSchema, readerSchema, values, expected);
     check(writerSchema, readerSchema, bytes, readerCalls,
-        values,
+        expected,
         encoding, skipLevel);
   }
 

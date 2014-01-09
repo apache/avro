@@ -17,14 +17,9 @@
  */
 package org.apache.avro.io;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import org.apache.avro.Schema;
-import org.apache.avro.util.Utf8;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,6 +33,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.avro.Schema;
+import org.apache.avro.util.Utf8;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RunWith(Parameterized.class)
 public class TestValidatingIO {
   enum Encoding {
@@ -45,7 +48,10 @@ public class TestValidatingIO {
     BLOCKING_BINARY,
     JSON,
   }
-
+  
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TestValidatingIO.class);
+  
   private Encoding eEnc;
   private int iSkipL;
   private String sJsSch;
@@ -62,7 +68,7 @@ public class TestValidatingIO {
   @Test
   public void testMain() throws IOException {
     for (int i = 0; i < COUNT; i++) {
-      testOnce(Schema.parse(sJsSch), sCl, iSkipL, eEnc);
+      testOnce(new Schema.Parser().parse(sJsSch), sCl, iSkipL, eEnc);
     }
   }
 
@@ -71,6 +77,7 @@ public class TestValidatingIO {
       Encoding encoding)
     throws IOException {
     Object[] values = randomValues(calls);
+    print(eEnc, iSkipL, schema, schema, values, values);
     byte[] bytes = make(schema, calls, values, encoding);
     check(schema, bytes, calls, values, skipLevel, encoding);
   }
@@ -217,7 +224,7 @@ public class TestValidatingIO {
   }
 
   public static Object[] randomValues(String calls) {
-    Random r = new Random();
+    Random r = new Random(0L);
     InputScanner cs = new InputScanner(calls.toCharArray());
     List<Object> result = new ArrayList<Object>();
     while (! cs.isDone()) {
@@ -233,13 +240,13 @@ public class TestValidatingIO {
         result.add(r.nextInt());
         break;
       case 'L':
-        result.add(r.nextLong());
+        result.add(new Long(r.nextInt()));
         break;
       case 'F':
-        result.add(r.nextFloat());
+        result.add(new Float(r.nextInt()));
         break;
       case 'D':
-        result.add(r.nextDouble());
+        result.add(new Double(r.nextInt()));
         break;
       case 'S':
       case 'K':
@@ -329,23 +336,22 @@ public class TestValidatingIO {
         vi.readNull();
         break;
       case 'B':
-        boolean b = ((Boolean) values[p++]).booleanValue();
-        assertEquals(b, vi.readBoolean());
+        assertEquals(values[p++], vi.readBoolean());
         break;
       case 'I':
-        int ii = ((Integer) values[p++]).intValue();
-        assertEquals(ii, vi.readInt());
+        assertEquals(values[p++], vi.readInt());
         break;
       case 'L':
-        long l = longValue(values[p++]);
-        assertEquals(l, vi.readLong());
+        assertEquals(values[p++], vi.readLong());
         break;
       case 'F':
-        float f = floatValue(values[p++]);
+        if (!(values[p] instanceof Float)) fail();
+        float f = (Float) values[p++];
         assertEquals(f, vi.readFloat(), Math.abs(f / 1000));
         break;
       case 'D':
-        double d = doubleValue(values[p++]);
+        if (!(values[p] instanceof Double)) fail();
+        double d = (Double) values[p++];
         assertEquals(d, vi.readDouble(), Math.abs(d / 1000));
         break;
       case 'S':
@@ -469,25 +475,6 @@ public class TestValidatingIO {
       }
     }
     assertEquals(values.length, p);
-  }
-  
-  private static float floatValue(Object object) {
-    return (object instanceof Integer) ? ((Integer) object).floatValue() :
-      (object instanceof Long) ? ((Long) object).floatValue() :
-      ((Float) object).floatValue();
-  }
-
-  private static double doubleValue(Object object) {
-    return (object instanceof Double) ? ((Double) object).doubleValue() :
-      (object instanceof Float) ? ((Float) object).doubleValue() :
-      (object instanceof Long) ? ((Long) object).doubleValue() :
-      ((Integer) object).doubleValue();
-  }
-
-  private static long longValue(Object object) {
-    return (object instanceof Long) ? ((Long) object).longValue() :
-      (object instanceof Double) ? ((Double) object).longValue() :
-      ((Integer) object).longValue();
   }
 
   private static int skip(InputScanner cs, Decoder vi, boolean isArray)
@@ -857,4 +844,17 @@ public class TestValidatingIO {
     System.out.println();
   }
 
+  static void print(Encoding encoding, int skipLevel, Schema writerSchema, 
+      Schema readerSchema, Object[] writtenValues, Object[] expectedValues) {
+    LOG.debug("{} Skip Level {}", encoding, skipLevel); 
+    printSchemaAndValues("Writer", writerSchema, writtenValues);
+    printSchemaAndValues("Reader", readerSchema, expectedValues);
+  }
+
+  private static void printSchemaAndValues(String schemaType, Schema schema, Object[] values) {
+    LOG.debug("{} Schema {}", schemaType, schema); 
+    for (Object value : values) {
+      LOG.debug("{} -> {}", value, value.getClass().getSimpleName());
+    }
+  }  
 }
