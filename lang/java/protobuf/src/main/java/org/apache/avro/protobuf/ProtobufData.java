@@ -45,6 +45,7 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 
+import org.apache.avro.util.ClassUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -133,7 +134,7 @@ public class ProtobufData extends GenericData {
   @Override
   public Object newRecord(Object old, Schema schema) {
     try {
-      Class c = Class.forName(SpecificData.getClassName(schema));
+      Class c = ClassUtils.forName(SpecificData.getClassName(schema));
       if (c == null)
         return newRecord(old, schema);            // punt to generic
       if (c.isInstance(old))

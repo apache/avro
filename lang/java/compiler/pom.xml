@@ -30,8 +30,21 @@
   <artifactId>avro-compiler</artifactId>
 
   <name>Apache Avro Compiler</name>
+  <packaging>bundle</packaging>
   <url>http://avro.apache.org</url>
   <description>Compilers for Avro IDL and Avro Specific Java API</description>
+
+  <properties>
+    <osgi.import>
+      !org.apache.avro.compiler*,
+      org.apache.avro*;version="${project.version}",
+      org.apache.commons.lang*,
+      org.apache.commons.velocity*,
+      org.apache.ant*,
+      *
+    </osgi.import>
+    <osgi.export>org.apache.avro.compiler*;version="${project.version}"</osgi.export>
+  </properties>
 
   <build>
     <resources>

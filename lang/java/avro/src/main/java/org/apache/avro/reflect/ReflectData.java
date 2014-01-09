@@ -47,6 +47,7 @@ import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryData;
+import org.apache.avro.util.ClassUtils;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
@@ -308,7 +309,7 @@ public class ReflectData extends SpecificData {
     if (c != null)
        return c;
     try {
-      c = Class.forName(name);
+      c =  ClassUtils.forName(name);
       CLASS_CACHE.put(name, c);
     } catch (ClassNotFoundException e) {
       throw new AvroRuntimeException(e);

@@ -78,6 +78,8 @@ Trunk (not yet released)
     AVRO-1426. Java: Add mapreduce word count example.
     (Jesse Anderson via cutting)
 
+    AVRO-987. Java: Make Avro OSGI-ready. (Ioannis Canellos via cutting)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string

@@ -31,6 +31,17 @@
 
   <name>Apache Avro Mapred API</name>
   <description>An org.apache.hadoop.mapred compatible API for using Avro Serializatin in Hadoop</description>
+  <packaging>bundle</packaging>
+
+  <properties>
+    <osgi.import>
+      !org.apache.avro.mapred*,
+      org.apache.avro*;version="${project.version}",
+      org.apache.hadoop*,
+      *
+    </osgi.import>
+    <osgi.export>org.apache.avro.mapred*;version="${project.version}"</osgi.export>
+  </properties>
 
   <build>
     <plugins>

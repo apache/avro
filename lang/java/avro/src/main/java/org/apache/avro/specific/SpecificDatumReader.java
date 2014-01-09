@@ -20,6 +20,7 @@ package org.apache.avro.specific;
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.util.ClassUtils;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Java classes. */
 public class SpecificDatumReader<T> extends GenericDatumReader<T> {
@@ -91,7 +92,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     String name = schema.getProp(prop);
     if (name == null) return null;
     try {
-      return Class.forName(name);
+      return ClassUtils.forName(getData().getClassLoader(), name);
     } catch (ClassNotFoundException e) {
       throw new AvroRuntimeException(e);
     }

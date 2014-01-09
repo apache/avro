@@ -26,6 +26,7 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.util.ClassUtils;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Thrift
  * classes. */
@@ -55,7 +56,7 @@ public class ThriftDatumReader<T> extends GenericDatumReader<T> {
   @Override
   protected Object createEnum(String symbol, Schema schema) {
     try {
-      Class c = Class.forName(SpecificData.getClassName(schema));
+      Class c = ClassUtils.forName(SpecificData.getClassName(schema));
       if (c == null) return super.createEnum(symbol, schema); // punt to generic
       return Enum.valueOf(c, symbol);
     } catch (Exception e) {

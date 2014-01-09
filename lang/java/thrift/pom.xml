@@ -31,6 +31,17 @@
 
   <name>Apache Avro Thrift Compatibility</name>
   <description>Permit serialization of Thrift-generated classes as Avro data.</description>
+  <packaging>bundle</packaging>
+
+  <properties>
+    <osgi.import>
+      !org.apache.avro.thrift*,
+      org.apache.avro*;version="${project.version}",
+      org.apache.thrift*,
+      *
+    </osgi.import>
+    <osgi.export>org.apache.avro.thrift*;version="${project.version}"</osgi.export>
+  </properties>
 
   <profiles>
     <profile>

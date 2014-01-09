@@ -32,6 +32,7 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 
+import org.apache.avro.util.ClassUtils;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TEnum;
 import org.apache.thrift.TFieldIdEnum;
@@ -135,7 +136,7 @@ public class ThriftData extends GenericData {
   @Override
   public Object newRecord(Object old, Schema schema) {
     try {
-      Class c = Class.forName(SpecificData.getClassName(schema));
+      Class c = ClassUtils.forName(SpecificData.getClassName(schema));
       if (c == null)
         return newRecord(old, schema);            // punt to generic
       if (c.isInstance(old))

@@ -25,6 +25,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.ResolvingDecoder;
+import org.apache.avro.util.ClassUtils;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -66,7 +67,7 @@ public class ProtobufDatumReader<T> extends GenericDatumReader<T> {
   @Override
   protected Object createEnum(String symbol, Schema schema) {
     try {
-      Class c = Class.forName(SpecificData.getClassName(schema));
+      Class c = ClassUtils.forName(SpecificData.getClassName(schema));
       if (c == null) return super.createEnum(symbol, schema); // punt to generic
       return ((ProtocolMessageEnum)Enum.valueOf(c, symbol)).getValueDescriptor();
     } catch (Exception e) {

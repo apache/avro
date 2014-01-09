@@ -66,6 +66,7 @@
 
     <!-- version properties for plugins -->
     <checkstyle-plugin.version>2.8</checkstyle-plugin.version>
+    <bundle-plugin-version>2.1.0</bundle-plugin-version>
     <compiler-plugin.version>2.3.2</compiler-plugin.version>
     <exec-plugin.version>1.2.1</exec-plugin.version>
     <jar-plugin.version>2.3.2</jar-plugin.version>
@@ -276,6 +277,38 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>${bundle-plugin-version}</version>
+        <extensions>true</extensions>
+        <inherited>true</inherited>
+        <configuration>
+          <instructions>
+            <Bundle-Name>${project.name}</Bundle-Name>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Export-Package>${osgi.export}</Export-Package>
+            <Import-Package>${osgi.import}</Import-Package>
+            <DynamicImport-Package>${osgi.dynamic.import}</DynamicImport-Package>
+            <Private-Package>${osgi.private}</Private-Package>
+            <Require-Bundle>${osgi.bundles}</Require-Bundle>
+            <Bundle-Activator>${osgi.activator}</Bundle-Activator>
+          </instructions>
+          <supportedProjectTypes>
+            <supportedProjectType>bundle</supportedProjectType>
+          </supportedProjectTypes>
+          <unpackBundle>true</unpackBundle>
+        </configuration>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

@@ -31,6 +31,17 @@
 
   <name>Apache Avro Protobuf Compatibility</name>
   <description>Permit serialization of Protobuf-generated classes as Avro data.</description>
+  <packaging>bundle</packaging>
+
+  <properties>
+    <osgi.import>
+      !org.apache.avro.protobuf*,
+      org.apache.avro*;version="${project.version}",
+      com.google.protobuf*;version="${project.version}",
+      *
+    </osgi.import>
+    <osgi.export>org.apache.avro.protobuf*;version="${project.version}"</osgi.export>
+  </properties>
 
   <profiles>
     <profile>

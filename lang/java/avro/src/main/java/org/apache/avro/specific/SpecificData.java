@@ -34,6 +34,7 @@ import org.apache.avro.Protocol;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.util.ClassUtils;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
@@ -128,7 +129,7 @@ public class SpecificData extends GenericData {
       Class c = classCache.get(name);
       if (c == null) {
         try {
-          c = getClassLoader().loadClass(getClassName(schema));
+          c = ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
           c = NO_CLASS;
         }

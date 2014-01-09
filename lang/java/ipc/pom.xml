@@ -32,6 +32,20 @@
   <name>Apache Avro IPC</name>
   <url>http://avro.apache.org</url>
   <description>Avro inter-process communication components</description>
+  <packaging>bundle</packaging>
+
+  <properties>
+    <osgi.import>
+      !org.apache.avro.ipc*,
+      org.apache.avro*;version="${project.version}",
+      org.jboss.netty*,
+      javax.servlet*;resolution:=optional,
+      org.mortbay*;resolution:=optional,
+      org.apache.velocity*;resolution:=optional,
+      *
+    </osgi.import>
+    <osgi.export>org.apache.avro.ipc*;version="${project.version}"</osgi.export>
+  </properties>
 
   <build>
     <resources>
