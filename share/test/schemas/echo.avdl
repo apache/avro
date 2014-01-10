@@ -1,0 +1,14 @@
+@namespace("org.apache.avro.echo")
+protocol Echo {
+  record Ping {
+    long timestamp = -1;
+    string text = "";
+  }
+
+  record Pong {
+    long timestamp = -1;
+    Ping ping;
+  }
+
+  Pong ping(Ping ping);
+}

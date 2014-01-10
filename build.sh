@@ -42,6 +42,7 @@ case "$target" in
 	# run lang-specific tests
         (cd lang/java; mvn test)
 	(cd lang/py; ant test)
+	(cd lang/py3; python3 setup.py test)
 	(cd lang/c; ./build.sh test)
 	(cd lang/c++; ./build.sh test)
 	(cd lang/csharp; ./build.sh test)
@@ -100,6 +101,7 @@ case "$target" in
         (mvn -N -P copy-artifacts antrun:run) 
 
 	(cd lang/py; ant dist)
+	(cd lang/py3; python3 setup.py bdist; cp -r dist ../../dist/py3)
 
 	(cd lang/c; ./build.sh dist)
 
@@ -148,6 +150,7 @@ case "$target" in
         (mvn clean)         
 
 	(cd lang/py; ant clean)
+	(cd lang/py3; python3 setup.py clean)
 
 	(cd lang/c; ./build.sh clean)
 

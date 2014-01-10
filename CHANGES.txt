@@ -35,6 +35,8 @@ Trunk (not yet released)
 
     AVRO-1421. Java: Add an @AvroSchema annotation to reflect. (cutting)
 
+    AVRO-1382. Add support for Python3. (Christophe Taton via cutting)
+
   OPTIMIZATIONS
 
     AVRO-1348. Java: Improve UTF-8 to String conversion performance in
