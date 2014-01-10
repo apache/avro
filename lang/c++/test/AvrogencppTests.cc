@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "empty_record.hh"
 #include "bigrecord.hh"
 #include "bigrecord2.hh"
 #include "tweet.hh"

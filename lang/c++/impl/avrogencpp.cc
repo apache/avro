@@ -225,7 +225,8 @@ string CodeGen::generateRecordType(const NodePtr& n)
         return it->second;
     }
 
-    os_ << "struct " << decorate(n->name()) << " {\n";
+    string decoratedName = decorate(n->name());
+    os_ << "struct " << decoratedName << " {\n";
     if (! noUnion_) {
         for (size_t i = 0; i < c; ++i) {
             if (n->leafAt(i)->type() == avro::AVRO_UNION) {
@@ -242,6 +243,26 @@ string CodeGen::generateRecordType(const NodePtr& n)
         }
         os_ << ' ' << n->nameAt(i) << ";\n";
     }
+
+    os_ << "    " << decoratedName << "()";
+    if (c > 0) {
+        os_ << " :";
+    }
+    os_ << "\n";
+    for (size_t i = 0; i < c; ++i) {
+        os_ << "        " << n->nameAt(i) << "(";
+        if (! noUnion_ && n->leafAt(i)->type() == avro::AVRO_UNION) {
+            os_ << n->nameAt(i) << "_t";
+        } else {
+            os_ << types[i];
+        }
+        os_ << "())";
+        if (i != (c - 1)) {
+            os_ << ',';
+        }
+        os_ << "\n";
+    }
+    os_ << "        { }\n";
     os_ << "};\n\n";
     return decorate(n->name());
 }
@@ -454,15 +475,45 @@ string CodeGen::generateDeclaration(const NodePtr& n)
 
 void CodeGen::generateEnumTraits(const NodePtr& n)
 {
-    string fn = fullname(decorate(n->name()));
-    os_ << "template<> struct codec_traits<" << fn << "> {\n"
-        << "    static void encode(Encoder& e, " << fn << " v) {\n"
-        << "        e.encodeEnum(v);\n"
-        << "    }\n"
-        << "    static void decode(Decoder& d, " << fn << "& v) {\n"
-        << "        v = static_cast<" << fn << ">(d.decodeEnum());\n"
-        << "    }\n"
-        << "};\n\n";
+	string dname = decorate(n->name());
+	string fn = fullname(dname);
+	size_t c = n->names();
+	string first; 
+	string last;
+	if (!ns_.empty())
+	{
+		first = ns_;
+		first += "::";
+		first += n->nameAt(0);
+
+		last = ns_;
+		last += "::";
+		last += n->nameAt(c-1);
+	} else {
+		first = n->nameAt(0);
+		last = n->nameAt(c-1);
+	}
+	os_ << "template<> struct codec_traits<" << fn << "> {\n"
+		<< "    static void encode(Encoder& e, " << fn << " v) {\n"
+		<< "		if (v < "  << first << " || v > " << last << ")\n" 
+		<< "		{\n"
+		<< "			std::ostringstream error;\n"
+		<< "			error << \"enum value \" << v << \" is out of bound for " << fn << " and cannot be encoded\";\n"
+		<< "			throw avro::Exception(error.str());\n"
+		<< "		}\n"
+		<< "        e.encodeEnum(v);\n"
+		<< "    }\n"
+		<< "    static void decode(Decoder& d, " << fn << "& v) {\n"
+		<< "		size_t index = d.decodeEnum();\n"
+		<< "		if (index < " << first << " || index > " << last << ")\n" 
+		<< "		{\n"
+		<< "			std::ostringstream error;\n"
+		<< "			error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"
+		<< "			throw avro::Exception(error.str());\n"
+		<< "		}\n"
+		<< "        v = static_cast<" << fn << ">(index);\n"
+		<< "    }\n"
+		<< "};\n\n";
 }
 
 void CodeGen::generateRecordTraits(const NodePtr& n)
@@ -622,7 +673,8 @@ void CodeGen::generate(const ValidSchema& schema)
     os_ << "#ifndef " << h << "\n";
     os_ << "#define " << h << "\n\n\n";
 
-    os_ << "#include \"boost/any.hpp\"\n"
+    os_ << "#include <sstream>\n"
+        << "#include \"boost/any.hpp\"\n"
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"

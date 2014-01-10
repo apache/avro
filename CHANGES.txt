@@ -84,6 +84,8 @@ Trunk (not yet released)
 
     AVRO-1432. Java: Reduce javadoc warnings. (cutting)
 
+    AVRO-1415. C++ binary encoder and decoder doesn't handle uninitialzed enums (Ramana Suvarapu via thiru)
+
   BUG FIXES
 
     AVRO-1368. Fix SpecificDatumWriter to, when writing a string
