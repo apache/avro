@@ -86,7 +86,11 @@ Trunk (not yet released)
 
     AVRO-1432. Java: Reduce javadoc warnings. (cutting)
 
-    AVRO-1415. C++ binary encoder and decoder doesn't handle uninitialzed enums (Ramana Suvarapu via thiru)
+    AVRO-1415. C++ binary encoder and decoder doesn't handle
+    uninitialzed enums (Ramana Suvarapu via thiru)
+
+    AVRO-1434. C#: Fix ObjectCreator to be thread safe.
+    (David Taylor via cutting)
 
   BUG FIXES
 

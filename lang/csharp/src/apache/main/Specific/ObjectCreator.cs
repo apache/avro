@@ -47,8 +47,6 @@ namespace Avro.Specific
         private readonly Assembly execAssembly;
         private readonly Assembly entryAssembly;
         private readonly bool diffAssembly;
-        private readonly Type[] margs;
-        private readonly Type[] largs;
 
         public delegate object CtorDelegate();
         private Type ctorType = typeof(CtorDelegate);
@@ -63,8 +61,6 @@ namespace Avro.Specific
 
             GenericMapType = typeof(Dictionary<,>);
             GenericListType = typeof(List<>);
-            margs = new Type[2] { typeof(string), null };
-            largs = new Type[1] { null };
 
             ctors = new Dictionary<NameCtorKey, CtorDelegate>();
         }
@@ -217,8 +213,7 @@ namespace Avro.Specific
                             {
                                 try
                                 {
-                                    largs[0] = itemType;
-                                    return GenericNullableType.MakeGenericType(largs);
+                                    return GenericNullableType.MakeGenericType(new [] {itemType});
                                 }
                                 catch (Exception) { }
                             }
@@ -233,14 +228,12 @@ namespace Avro.Specific
                 ArraySchema arrSchema = schema as ArraySchema;
                 Type itemSchema = GetType(arrSchema.ItemSchema);
 
-                largs[0] = itemSchema;
-                return GenericListType.MakeGenericType(largs); }
+                return GenericListType.MakeGenericType(new [] {itemSchema}); }
             case Schema.Type.Map: {
                 MapSchema mapSchema = schema as MapSchema;
                 Type itemSchema = GetType(mapSchema.ValueSchema);
 
-                margs[1] = itemSchema;
-                return GenericMapType.MakeGenericType(margs); }
+                return GenericMapType.MakeGenericType(new [] { typeof(string), itemSchema }); }
             case Schema.Type.Enumeration:
             case Schema.Type.Record:
             case Schema.Type.Fixed:
@@ -269,13 +262,11 @@ namespace Avro.Specific
 
             if (schemaType == Schema.Type.Map)
             {
-                margs[1] = type;
-                type = GenericMapType.MakeGenericType(margs);
+                type = GenericMapType.MakeGenericType(new[] { typeof(string), type });
             }
             else if (schemaType == Schema.Type.Array)
             {
-                largs[0] = type;
-                type = GenericListType.MakeGenericType(largs);
+                type = GenericListType.MakeGenericType(new [] {type});
             }
 
             return type;
