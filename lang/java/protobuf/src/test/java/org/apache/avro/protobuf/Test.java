@@ -143,7 +143,7 @@ public final class Test {
     boolean hasBytes();
     com.google.protobuf.ByteString getBytes();
     
-    // optional .org.apache.avro.protobuf.A enum = 16;
+    // optional .org.apache.avro.protobuf.A enum = 16 [default = Z];
     boolean hasEnum();
     org.apache.avro.protobuf.Test.A getEnum();
     
@@ -373,7 +373,7 @@ public final class Test {
       return bytes_;
     }
     
-    // optional .org.apache.avro.protobuf.A enum = 16;
+    // optional .org.apache.avro.protobuf.A enum = 16 [default = Z];
     public static final int ENUM_FIELD_NUMBER = 16;
     private org.apache.avro.protobuf.Test.A enum_;
     public boolean hasEnum() {
@@ -460,7 +460,7 @@ public final class Test {
       bool_ = false;
       string_ = "";
       bytes_ = com.google.protobuf.ByteString.EMPTY;
-      enum_ = org.apache.avro.protobuf.Test.A.X;
+      enum_ = org.apache.avro.protobuf.Test.A.Z;
       intArray_ = java.util.Collections.emptyList();;
       fooArray_ = java.util.Collections.emptyList();
       syms_ = java.util.Collections.emptyList();
@@ -809,7 +809,7 @@ public final class Test {
         bitField0_ = (bitField0_ & ~0x00002000);
         bytes_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00004000);
-        enum_ = org.apache.avro.protobuf.Test.A.X;
+        enum_ = org.apache.avro.protobuf.Test.A.Z;
         bitField0_ = (bitField0_ & ~0x00008000);
         intArray_ = java.util.Collections.emptyList();;
         bitField0_ = (bitField0_ & ~0x00010000);
@@ -1595,8 +1595,8 @@ public final class Test {
         return this;
       }
       
-      // optional .org.apache.avro.protobuf.A enum = 16;
-      private org.apache.avro.protobuf.Test.A enum_ = org.apache.avro.protobuf.Test.A.X;
+      // optional .org.apache.avro.protobuf.A enum = 16 [default = Z];
+      private org.apache.avro.protobuf.Test.A enum_ = org.apache.avro.protobuf.Test.A.Z;
       public boolean hasEnum() {
         return ((bitField0_ & 0x00008000) == 0x00008000);
       }
@@ -1614,7 +1614,7 @@ public final class Test {
       }
       public Builder clearEnum() {
         bitField0_ = (bitField0_ & ~0x00008000);
-        enum_ = org.apache.avro.protobuf.Test.A.X;
+        enum_ = org.apache.avro.protobuf.Test.A.Z;
         onChanged();
         return this;
       }
@@ -2364,19 +2364,19 @@ public final class Test {
   static {
     java.lang.String[] descriptorData = {
       "\n\034src/test/protobuf/test.proto\022\030org.apac" +
-      "he.avro.protobuf\"\272\003\n\003Foo\022\r\n\005int32\030\001 \002(\005\022" +
+      "he.avro.protobuf\"\275\003\n\003Foo\022\r\n\005int32\030\001 \002(\005\022" +
       "\r\n\005int64\030\002 \001(\003\022\016\n\006uint32\030\003 \001(\r\022\016\n\006uint64" +
       "\030\004 \001(\004\022\016\n\006sint32\030\005 \001(\021\022\016\n\006sint64\030\006 \001(\022\022\017" +
       "\n\007fixed32\030\007 \001(\007\022\017\n\007fixed64\030\010 \001(\006\022\020\n\010sfix" +
       "ed32\030\t \001(\017\022\020\n\010sfixed64\030\n \001(\020\022\r\n\005float\030\013 " +
       "\001(\002\022\016\n\006double\030\014 \001(\001\022\014\n\004bool\030\r \001(\010\022\016\n\006str" +
-      "ing\030\016 \001(\t\022\r\n\005bytes\030\017 \001(\014\022)\n\004enum\030\020 \001(\0162\033" +
-      ".org.apache.avro.protobuf.A\022\020\n\010intArray\030" +
-      "\021 \003(\005\022/\n\010fooArray\030\024 \003(\0132\035.org.apache.avr",
-      "o.protobuf.Foo\022)\n\004syms\030\023 \003(\0162\033.org.apach" +
-      "e.avro.protobuf.A\022*\n\003foo\030\022 \001(\0132\035.org.apa" +
-      "che.avro.protobuf.Foo\"\017\n\001M\"\n\n\001N\022\005\n\001A\020\001*\030" +
-      "\n\001A\022\005\n\001X\020\001\022\005\n\001Y\020\002\022\005\n\001Z\020\003"
+      "ing\030\016 \001(\t\022\r\n\005bytes\030\017 \001(\014\022,\n\004enum\030\020 \001(\0162\033" +
+      ".org.apache.avro.protobuf.A:\001Z\022\020\n\010intArr" +
+      "ay\030\021 \003(\005\022/\n\010fooArray\030\024 \003(\0132\035.org.apache.",
+      "avro.protobuf.Foo\022)\n\004syms\030\023 \003(\0162\033.org.ap" +
+      "ache.avro.protobuf.A\022*\n\003foo\030\022 \001(\0132\035.org." +
+      "apache.avro.protobuf.Foo\"\017\n\001M\"\n\n\001N\022\005\n\001A\020" +
+      "\001*\030\n\001A\022\005\n\001X\020\001\022\005\n\001Y\020\002\022\005\n\001Z\020\003"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

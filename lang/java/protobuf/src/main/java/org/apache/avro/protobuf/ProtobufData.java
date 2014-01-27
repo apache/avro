@@ -311,7 +311,13 @@ public class ProtobufData extends GenericData {
       return null;
 
     if (f.hasDefaultValue()) {                    // parse spec'd default value
-      String json = toString(f.getDefaultValue());
+      Object value = f.getDefaultValue();
+      switch (f.getType()) {
+      case ENUM:
+        value = ((EnumValueDescriptor)value).getName();
+        break;
+      }
+      String json = toString(value);
       try {
         return MAPPER.readTree(FACTORY.createJsonParser(json));
       } catch (IOException e) {
