@@ -78,7 +78,7 @@ namespace Avro
             this.Doc = doc;
             this.Oneway = oneway;
 
-            if (error != null && error.CanRead(Schema.Parse("[\"string\"]")))
+            if (error != null && error.CanRead(Schema.Parse("string")))
             {
                 this.SupportedErrors = error;
             }

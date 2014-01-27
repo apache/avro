@@ -181,7 +181,15 @@ namespace Avro.ipc
                     WriteResponse(m.Response, response, output);
                 else
                 {
-                    WriteError(m.Error, error, output);
+                    try 
+                    {
+                        WriteError(m.SupportedErrors, error, output);
+                    } 
+                    catch (Exception)
+                    {    
+                        // Presumably no match on the exception, throw the original
+                        throw error;
+                    }
                 }
             }
             catch (Exception e)
@@ -215,18 +223,6 @@ namespace Avro.ipc
             return bbo.GetBufferList();
         }
 
-        static StringSchema errorSchema = new StringSchema();
-          private class StringSchema : Schema {
-              
-              public StringSchema() : base(Type.String, new PropertyMap())
-              {
-              }
-
-              public override string Name
-              {
-                  get { return "String"; }
-              }
-          }
-
+        static Schema errorSchema = Schema.Parse("[\"string\"]");
     }
 }

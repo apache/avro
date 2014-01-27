@@ -10,6 +10,9 @@ Trunk (not yet released)
 
   BUG FIXES
 
+    AVRO-1446. C#: Correctly handle system errors in RPC.
+    (David Taylor via cutting)
+
 Avro 1.7.6 (15 January 2014)
 
   NEW FEATURES

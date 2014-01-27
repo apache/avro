@@ -89,7 +89,11 @@ namespace Avro.ipc.Specific
         {
             var response = new SpecificReader<object>(writer, reader).Read(null, decoder);
 
-            throw (Exception) response;
+            var error = response as Exception;
+            if(error != null)
+                return error;
+
+            return new Exception(response.ToString());
         }
 
         private static bool LastArgumentIsCallback(object o)

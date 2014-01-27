@@ -559,22 +559,31 @@ namespace Avro.Test.Ipc
             Assert.IsNull(future2.Error);
         }
 
-        [Test]
-        public void Error()
+        [Test, TestCase(false, TestName = "Specific error"), TestCase(true, TestName = "System error")]
+        public void Error(bool systemError)
         {
+            Type expected;
+            
+            if(systemError)
+            {
+                expected = typeof(Exception);
+                SimpleImpl.throwSystemError = true;
+            }
+            else
+            {
+                expected = typeof(TestError);
+                SimpleImpl.throwSystemError = false;
+            }
+
             // Test synchronous RPC:
             try
             {
                 simpleClient.error();
-                Assert.Fail("Expected " + typeof (TestError).Name + " to be thrown");
-            }
-            catch (TestError)
-            {
-                // Expected
+                Assert.Fail("Expected " + expected.Name + " to be thrown");
             }
             catch (Exception e)
             {
-                Assert.Fail("Unexpected error: " + e);
+                Assert.AreEqual(expected, e.GetType());
             }
 
             // Test asynchronous RPC (future):
@@ -583,21 +592,22 @@ namespace Avro.Test.Ipc
             try
             {
                 future.WaitForResult(2000);
-                Assert.Fail("Expected " + typeof (TestError).Name + " to be thrown");
+                Assert.Fail("Expected " + expected.Name + " to be thrown");
             }
-            catch (TestError)
+            catch (Exception e)
             {
+                Assert.AreEqual(expected, e.GetType());
             }
 
             Assert.IsNotNull(future.Error);
-            Assert.AreEqual(typeof (TestError), future.Error.GetType());
+            Assert.AreEqual(expected, future.Error.GetType());
             Assert.IsNull(future.Result);
 
             // Test asynchronous RPC (callback):
             Exception errorRef = null;
             var latch = new CountdownLatch(1);
             simpleClient.error(new CallbackCallFuture<object>(
-                                   result => Assert.Fail("Expected " + typeof (TestError).Name),
+                                   result => Assert.Fail("Expected " + expected.Name),
                                    exception =>
                                        {
                                            errorRef = exception;
@@ -606,7 +616,7 @@ namespace Avro.Test.Ipc
 
             Assert.IsTrue(latch.Wait(2000), "Timed out waiting for error");
             Assert.IsNotNull(errorRef);
-            Assert.AreEqual(typeof (TestError), errorRef.GetType());
+            Assert.AreEqual(expected, errorRef.GetType());
         }
 
         [Test]
@@ -755,6 +765,8 @@ namespace Avro.Test.Ipc
 
         private class SimpleImpl : Simple
         {
+            public static bool throwSystemError = false;
+
             public override string hello(string greeting)
             {
                 return "Hello, " + greeting;
@@ -777,7 +789,10 @@ namespace Avro.Test.Ipc
 
             public override object error()
             {
-                throw new TestError { message = "Test Message" };
+                if(throwSystemError)
+                    throw new SystemException("System error");
+                else
+                    throw new TestError { message = "Test Message" };
             }
 
             public override void ack()
