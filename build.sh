@@ -101,7 +101,7 @@ case "$target" in
         (mvn -N -P copy-artifacts antrun:run) 
 
 	(cd lang/py; ant dist)
-	(cd lang/py3; python3 setup.py bdist; cp -r dist ../../dist/py3)
+	(cd lang/py3; python3 setup.py sdist; cp -r dist ../../dist/py3)
 
 	(cd lang/c; ./build.sh dist)
 

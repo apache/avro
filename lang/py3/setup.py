@@ -72,7 +72,7 @@ def Main():
   )
 
   setup(
-    name = 'avro',
+    name = 'avro-python3',
     version = avro_version,
     packages = ['avro'],
     package_dir = {'avro': 'avro'},
