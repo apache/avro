@@ -11,6 +11,9 @@ Trunk (not yet released)
     AVRO-1441. Java: Improve documentation for Maven configuration.
     (Jesse Anderson via cutting)
 
+    AVRO-1447. Java: Remove dead code from example in documentation.
+    (Jesse Anderson via cutting)
+
   BUG FIXES
 
     AVRO-1446. C#: Correctly handle system errors in RPC.

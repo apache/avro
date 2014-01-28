@@ -231,8 +231,7 @@ User user3 = User.newBuilder()
         Now let's serialize our <code>User</code>s to disk.
       </p>
       <source>
-// Serialize user1 and user2 to disk
-File file = new File("users.avro");
+// Serialize user1, user2 and user3 to disk
 DatumWriter&#60;User&#62; userDatumWriter = new SpecificDatumWriter&#60;User&#62;(User.class);
 DataFileWriter&#60;User&#62; dataFileWriter = new DataFileWriter&#60;User&#62;(userDatumWriter);
 dataFileWriter.create(user1.getSchema(), new File("users.avro"));
