@@ -100,7 +100,7 @@ public class TestDataFileConcat {
   public void testConcatenateFiles() throws IOException {
     System.out.println("SEED = "+SEED);
     System.out.println("COUNT = "+COUNT);
-    for (int k = 0; k < 60; k++) {
+    for (int k = 0; k < 5; k++) {
       int syncInterval = 460 +k;
       RandomData data1 = new RandomData(SCHEMA, COUNT, SEED);
       RandomData data2 = new RandomData(SCHEMA, COUNT, SEED+1);
