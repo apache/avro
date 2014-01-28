@@ -8,6 +8,9 @@ Trunk (not yet released)
 
   IMPROVEMENTS
 
+    AVRO-1441. Java: Improve documentation for Maven configuration.
+    (Jesse Anderson via cutting)
+
   BUG FIXES
 
     AVRO-1446. C#: Correctly handle system errors in RPC.

@@ -84,12 +84,19 @@
       &#60;/goals>
       &#60;configuration>
         &#60;sourceDirectory>${project.basedir}/../&#60;/sourceDirectory>
-        &#60;outputDirectory>${project.basedir}/src/main/java/&#60;/outputDirectory>
+        &#60;outputDirectory>${project.basedir}/target/generated-sources/&#60;/outputDirectory>
       &#60;/configuration>
     &#60;/execution>
   &#60;/executions>
 &#60;/plugin>
       </source>
+      <p>
+        If you do not configure the <em>sourceDirectory</em> and <em>outputDirectory</em> 
+        properties, the defaults will be used. The <em>sourceDirectory</em> property 
+        defaults to <em>src/main/avro</em>. The <em>outputDirectory</em> property 
+        defaults to <em>target/generated-sources</em>. You can change the paths to 
+        match your project layout.
+      </p>
       <p>
         Alternatively, Avro jars can be downloaded directly from the <a
         href="http://avro.apache.org/releases.html">Apache Avro&#153;
