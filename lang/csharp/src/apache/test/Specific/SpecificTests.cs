@@ -31,6 +31,13 @@ namespace Avro.Test
     [TestFixture]
     class SpecificTests
     {
+        // The dynamically created assembly used in the test below can only be created
+        // once otherwise repeated tests will fail as the same type name will exist in
+        // multiple assemblies and so the type in the test and the type found by ObjectCreator
+        // will differ.  This single CompilerResults only works so long as there is only one test.
+        // If additional tests are added then each test will need its own CompilerResults.
+        private static CompilerResults compres;
+
         [TestCase(@"{
   ""protocol"" : ""MyProtocol"",
   ""namespace"" : ""com.foo"",
@@ -154,6 +161,8 @@ namespace Avro.Test
 )]
         public void TestSpecific(string str, object[] result)
         {
+            if(compres == null)
+            {
             Protocol protocol = Protocol.Parse(str);
             var codegen = new CodeGen();
             codegen.AddProtocol(protocol);
@@ -186,14 +195,15 @@ namespace Avro.Test
             comparam.GenerateInMemory = true;
             var ccp = new Microsoft.CSharp.CSharpCodeProvider();
             var units = new CodeCompileUnit[] { compileUnit };
-            var compres = ccp.CompileAssemblyFromDom(comparam, units);
-            if (compres == null || compres.Errors.Count > 0)
+            compres = ccp.CompileAssemblyFromDom(comparam, units);
+            Assert.IsNotNull(compres);
+            if (compres.Errors.Count > 0)
             {
                 for (int i = 0; i < compres.Errors.Count; i++)
                     Console.WriteLine(compres.Errors[i]);
             }
-            if (null != compres)
-                Assert.IsTrue(compres.Errors.Count == 0);
+            Assert.IsTrue(compres.Errors.Count == 0);
+            }
 
             // create record
             ISpecificRecord rec = compres.CompiledAssembly.CreateInstance((string)result[1]) as ISpecificRecord;
