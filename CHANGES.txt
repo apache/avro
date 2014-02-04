@@ -4,6 +4,8 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-1439. Java: Add AvroMultipleInputs for mapred. (Harsh J via cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
