@@ -212,7 +212,7 @@ public class AvroMultipleInputs {
 
   private static String fromBase64(String base64String) {
     Base64 base64decoder = new Base64();
-    return new String(base64decoder.decode(base64String));
+    return new String(base64decoder.decode(base64String.getBytes()));
   }
 
 }
