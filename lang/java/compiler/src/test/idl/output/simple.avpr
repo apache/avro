@@ -31,10 +31,12 @@
       "order" : "descending"
     }, {
       "name" : "hash",
-      "type" : "MD5"
+      "type" : "MD5",
+      "default" : "0000000000000000"
     }, {
       "name" : "nullableHash",
-      "type" : [ "MD5", "null" ],
+      "type" : [ "null", "MD5" ],
+      "default" : null,
       "aliases" : [ "hash", "hsh" ]
     }, {
       "name" : "value",
@@ -70,7 +72,8 @@
         "name" : "record",
         "type" : "TestRecord",
         "default" : {
-          "name" : "bar"
+          "name" : "bar",
+          "kind" : "BAR"
         }
       } ],
       "response" : "TestRecord"

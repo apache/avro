@@ -66,10 +66,7 @@
         "type" : "array",
         "items" : "double"
       },
-      "default" : [ {
-        "label" : "foo",
-        "children" : [ ]
-      } ]
+      "default" : [ ]
     }, {
       "name" : "mapField",
       "type" : {
@@ -93,6 +90,5 @@
       "type" : "Node"
     } ]
   } ],
-  "messages" : {
-  }
+  "messages" : { }
 }

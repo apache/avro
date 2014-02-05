@@ -324,16 +324,18 @@ public class TestSchema {
     // test that erroneous default values cause errors
     for (String type : new String[]
           {"int", "long", "float", "double", "string", "bytes", "boolean"}) {
+      checkValidateDefaults("[\""+type+"\", \"null\"]", "null"); // schema parse time
       boolean error = false;
       try {
-        checkDefault("[\""+type+"\", \"null\"]", "null", 0);
+        checkDefault("[\""+type+"\", \"null\"]", "null", 0); // read time
       } catch (AvroTypeException e) {
         error = true;
       }
       assertTrue(error);
+      checkValidateDefaults("[\"null\", \""+type+"\"]", "0");  // schema parse time
       error = false;
       try {
-        checkDefault("[\"null\", \""+type+"\"]", "0", null);
+        checkDefault("[\"null\", \""+type+"\"]", "0", null); // read time
       } catch (AvroTypeException e) {
         error = true;
       }
@@ -818,6 +820,21 @@ public class TestSchema {
           new byte[0], null));
     assertEquals("Wrong default.", defaultValue, record.get("f"));
     assertEquals("Wrong toString", expected, Schema.parse(expected.toString()));
+  }
+
+  private static void checkValidateDefaults(String schemaJson, String defaultJson) {
+    try {
+      Schema.Parser parser = new Schema.Parser();
+      parser.setValidateDefaults(true);
+      String recordJson =
+          "{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[{\"name\":\"f\", "
+              +"\"type\":"+schemaJson+", "
+              +"\"default\":"+defaultJson+"}]}";
+      parser.parse(recordJson);
+      fail("Schema of type " + schemaJson + " should not have default " + defaultJson);
+    } catch (AvroTypeException e) {
+      return;
+    }
   }
 
   @Test(expected=AvroTypeException.class)

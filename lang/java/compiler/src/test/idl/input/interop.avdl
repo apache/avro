@@ -39,7 +39,7 @@ protocol InteropProtocol {
     float floatField = 0.0;
     double doubleField = -1.0e12;
     null nullField;
-    array<double> arrayField = [{"label":"foo", "children":[]}];
+    array<double> arrayField = [];
     map<Foo> mapField;
     union { boolean, double, array<bytes> } unionFIeld;
     Kind enumField;

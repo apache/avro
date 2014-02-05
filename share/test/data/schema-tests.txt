@@ -144,7 +144,7 @@
 
 // 026
 <<INPUT
-{ "fields":[{"type":"boolean", "aliases":[], "name":"f1", "default":"true"},
+{ "fields":[{"type":"boolean", "aliases":[], "name":"f1", "default":true},
             {"order":"descending","name":"f2","doc":"Hello","type":"int"}],
   "type":"record", "name":"foo"
 }

@@ -41,9 +41,9 @@ protocol Simple {
     /** The kind of record. */
     Kind @order("descending") kind;
 
-    @foo("bar") MD5 hash;
+    @foo("bar") MD5 hash = "0000000000000000";
 
-    union { MD5, null} @aliases(["hash", "hsh"]) nullableHash;
+    union {null, MD5} @aliases(["hash", "hsh"]) nullableHash = null;
 
     double value = NaN;
     float average = -Infinity;
@@ -55,7 +55,7 @@ protocol Simple {
 
   /** method 'hello' takes @parameter 'greeting' */
   string hello(string greeting);
-  TestRecord echo(TestRecord `record` = {"name": "bar"});
+  TestRecord echo(TestRecord `record` = {"name":"bar","kind":"BAR"});
   /** method 'add' takes @parameter 'arg1' @parameter 'arg2' */
   @specialProp("test")
   int add(int arg1, int arg2 = 0);

@@ -372,7 +372,7 @@ public abstract class Schema extends JsonProperties {
       this.name = validateName(name);
       this.schema = schema;
       this.doc = doc;
-      this.defaultValue = defaultValue;
+      this.defaultValue = validateDefault(name, schema, defaultValue);
       this.order = order;
     }
     public String name() { return name; };
@@ -890,6 +890,7 @@ public abstract class Schema extends JsonProperties {
   public static class Parser {
     private Names names = new Names();
     private boolean validate = true;
+    private boolean validateDefaults = false;
 
     /** Adds the provided types to the set of defined, named types known to
      * this parser. */
@@ -915,6 +916,15 @@ public abstract class Schema extends JsonProperties {
 
     /** True iff names are validated.  True by default. */
     public boolean getValidate() { return this.validate; }
+
+    /** Enable or disable default value validation. */
+    public Parser setValidateDefaults(boolean validateDefaults) {
+      this.validateDefaults = validateDefaults;
+      return this;
+    }
+
+    /** True iff default values are validated.  False by default. */
+    public boolean getValidateDefaults() { return this.validateDefaults; }
 
     /** Parse a schema from the provided file.
      * If named, the schema is added to the names known to this parser. */
@@ -948,13 +958,16 @@ public abstract class Schema extends JsonProperties {
 
     private Schema parse(JsonParser parser) throws IOException {
       boolean saved = validateNames.get();
+      boolean savedValidateDefaults = VALIDATE_DEFAULTS.get();
       try {
         validateNames.set(validate);
+        VALIDATE_DEFAULTS.set(validateDefaults);
         return Schema.parse(MAPPER.readTree(parser), names);
       } catch (JsonParseException e) {
         throw new SchemaParseException(e);
       } finally {
         validateNames.set(saved);
+        VALIDATE_DEFAULTS.set(savedValidateDefaults);
       }
     }
   }
@@ -1068,6 +1081,75 @@ public abstract class Schema extends JsonProperties {
         throw new SchemaParseException("Illegal character in: "+name);
     }
     return name;
+  }
+
+  private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS
+    = new ThreadLocal<Boolean>() {
+    @Override protected Boolean initialValue() {
+      return false;
+    }
+  };
+    
+  private static JsonNode validateDefault(String fieldName, Schema schema,
+                                          JsonNode defaultValue) {
+    if ((defaultValue != null)
+        && !isValidDefault(schema, defaultValue)) { // invalid default
+      String message = "Invalid default for field "+fieldName
+        +": "+defaultValue+" not a "+schema;
+      if (VALIDATE_DEFAULTS.get())
+        throw new AvroTypeException(message);     // throw exception
+      System.err.println("[WARNING] Avro: "+message); // or log warning
+    }
+    return defaultValue;
+  }
+
+  private static boolean isValidDefault(Schema schema, JsonNode defaultValue) {
+    if (defaultValue == null)
+      return false;
+    switch (schema.getType()) {
+    case STRING:  
+    case BYTES:
+    case ENUM:
+    case FIXED:
+      return defaultValue.isTextual();
+    case INT:
+    case LONG:
+    case FLOAT:
+    case DOUBLE:
+      return defaultValue.isNumber();
+    case BOOLEAN:
+      return defaultValue.isBoolean();
+    case NULL:
+      return defaultValue.isNull();
+    case ARRAY:
+      if (!defaultValue.isArray())
+        return false;
+      for (JsonNode element : defaultValue)
+        if (!isValidDefault(schema.getElementType(), element))
+          return false;
+      return true;
+    case MAP:
+      if (!defaultValue.isObject())
+        return false;
+      for (JsonNode value : defaultValue)
+        if (!isValidDefault(schema.getValueType(), value))
+          return false;
+      return true;
+    case UNION:                                   // union default: first branch
+      return isValidDefault(schema.getTypes().get(0), defaultValue);
+    case RECORD:
+      if (!defaultValue.isObject())
+        return false;
+      for (Field field : schema.getFields())
+        if (!isValidDefault(field.schema(),
+                            defaultValue.has(field.name())
+                            ? defaultValue.get(field.name())
+                            : field.defaultValue()))
+          return false;
+      return true;
+    default:
+      return false;
+    }
   }
 
   /** @see #parse(String) */
