@@ -6,6 +6,8 @@ Trunk (not yet released)
 
     AVRO-1439. Java: Add AvroMultipleInputs for mapred. (Harsh J via cutting)
 
+    AVRO-974. Add a Perl implementation of Avro. (Yann Kerhervé & John Karp)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

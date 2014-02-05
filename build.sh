@@ -49,6 +49,7 @@ case "$target" in
 	(cd lang/js; ./build.sh test)
 	(cd lang/ruby; ./build.sh test)
 	(cd lang/php; ./build.sh test)
+	(cd lang/perl; perl ./Makefile.PL && make test)
 
 	# create interop test data
         mkdir -p build/interop/data
@@ -115,6 +116,10 @@ case "$target" in
 
 	(cd lang/php; ./build.sh dist)
 
+        mkdir -p dist/perl
+	(cd lang/perl; make dist)
+        cp lang/perl/Avro-$VERSION.tar.gz dist/perl/
+
 	# build docs
 	(cd doc; ant)
 	(cd build; tar czf ../dist/avro-doc-$VERSION.tar.gz avro-doc-$VERSION)
@@ -163,6 +168,8 @@ case "$target" in
 	(cd lang/ruby; ./build.sh clean)
 
 	(cd lang/php; ./build.sh clean)
+
+	(cd lang/perl; make clean)
 	;;
 
     *)
