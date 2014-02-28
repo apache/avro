@@ -31,6 +31,9 @@ Trunk (not yet released)
 
     AVRO-1436. C#: Fix tests to run multiple times. (David Taylor via cutting)
 
+    AVRO-1458. Java: Setting char record field via reflection affects other
+    fields. (tomwhite)
+
 Avro 1.7.6 (15 January 2014)
 
   NEW FEATURES

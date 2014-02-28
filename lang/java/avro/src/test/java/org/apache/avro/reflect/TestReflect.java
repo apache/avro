@@ -79,6 +79,11 @@ public class TestReflect {
     check(Short.class, "{\"type\":\"int\",\"java-class\":\"java.lang.Short\"}");
   }
 
+  @Test public void testChar() {
+    check(Character.TYPE, "{\"type\":\"int\",\"java-class\":\"java.lang.Character\"}");
+    check(Character.class, "{\"type\":\"int\",\"java-class\":\"java.lang.Character\"}");
+  }
+
   @Test public void testLong() {
     check(Long.TYPE, "\"long\"");
     check(Long.class, "\"long\"");
@@ -208,6 +213,7 @@ public class TestReflect {
     public short value;
     public short[] shorts;
     public byte b;
+    public char c;
     
     @Override
     public boolean equals(Object o) {
@@ -215,7 +221,8 @@ public class TestReflect {
       R4 that = (R4)o;
       return this.value == that.value
         && Arrays.equals(this.shorts, that.shorts)
-        && this.b == that.b;
+        && this.b == that.b
+        && this.c == that.c;
     }
   }
 
@@ -226,6 +233,7 @@ public class TestReflect {
     r5.value = 1;
     r5.shorts = new short[] {3,255,256,Short.MAX_VALUE,Short.MIN_VALUE};
     r5.b = 99;
+    r5.c = 'a';
     checkReadWrite(r5);
   }
 
@@ -457,6 +465,16 @@ public class TestReflect {
       reader.read(null, DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
     assertEquals(object, after);
+
+    // check reflective setField works for records
+    if (s.getType().equals(Schema.Type.RECORD)) {
+      Object copy = object.getClass().newInstance();
+      for (Field f : s.getFields()) {
+        Object val = ReflectData.get().getField(object, f.name(), f.pos());
+        ReflectData.get().setField(copy, f.name(), f.pos(), val);
+      }
+      assertEquals("setField", object, copy);
+    }
   }
 
   public static enum E { A, B };

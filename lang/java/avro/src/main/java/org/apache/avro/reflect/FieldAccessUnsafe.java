@@ -236,7 +236,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putInt(object, offset, (Character) value);
+      UNSAFE.putChar(object, offset, (Character) value);
     }
 
     @Override
