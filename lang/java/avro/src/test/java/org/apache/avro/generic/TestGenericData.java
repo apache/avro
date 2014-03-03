@@ -318,6 +318,16 @@ public class TestGenericData {
     mapper.readTree(parser);
   }
 
+  @Test public void testToStringNanInfinity() throws Exception {
+    GenericData data = GenericData.get();
+    assertEquals("\"Infinity\"",data.toString(Float.POSITIVE_INFINITY));
+    assertEquals("\"-Infinity\"",data.toString(Float.NEGATIVE_INFINITY));
+    assertEquals("\"NaN\"", data.toString(Float.NaN));
+    assertEquals("\"Infinity\"",data.toString(Double.POSITIVE_INFINITY));
+    assertEquals("\"-Infinity\"",data.toString(Double.NEGATIVE_INFINITY));
+    assertEquals("\"NaN\"", data.toString(Double.NaN));
+  }
+
   @Test
   public void testCompare() {
     // Prepare a schema for testing.

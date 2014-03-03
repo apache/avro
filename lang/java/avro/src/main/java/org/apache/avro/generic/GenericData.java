@@ -464,6 +464,13 @@ public class GenericData {
       for (int i = bytes.position(); i < bytes.limit(); i++)
         buffer.append((char)bytes.get(i));
       buffer.append("\"}");
+    } else if (((datum instanceof Float) &&       // quote Nan & Infinity
+                (((Float)datum).isInfinite() || ((Float)datum).isNaN()))
+               || ((datum instanceof Double) &&
+                   (((Double)datum).isInfinite() || ((Double)datum).isNaN()))) {
+      buffer.append("\"");
+      buffer.append(datum);
+      buffer.append("\"");
     } else {
       buffer.append(datum);
     }

@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.FileReader;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileSplit;
@@ -75,7 +76,7 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
         key.set(bytes);
       }
     } else {
-      key.set(datum.toString());
+      key.set(GenericData.get().toString(datum));
     }
     return true;
   }
