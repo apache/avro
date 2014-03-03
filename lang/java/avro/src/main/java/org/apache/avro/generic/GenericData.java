@@ -921,7 +921,7 @@ public class GenericData {
         }
         return (T)arrayCopy;
       case BOOLEAN:
-        return (T)new Boolean((Boolean)value);
+        return value; // immutable
       case BYTES:
         ByteBuffer byteBufferValue = (ByteBuffer) value;
         int start = byteBufferValue.position();
@@ -931,18 +931,18 @@ public class GenericData {
         byteBufferValue.position(start);
         return (T)ByteBuffer.wrap(bytesCopy, 0, length);
       case DOUBLE:
-        return (T)new Double((Double)value);
+        return value; // immutable
       case ENUM:
         // Enums are immutable; shallow copy will suffice
         return value;
       case FIXED:
         return (T)createFixed(null, ((GenericFixed) value).bytes(), schema);
       case FLOAT:
-        return (T)new Float((Float)value);
+        return value; // immutable
       case INT:
-        return (T)new Integer((Integer)value);
+        return value; // immutable
       case LONG:
-        return (T)new Long((Long)value);
+        return value; // immutable
       case MAP:
         Map<CharSequence, Object> mapValue = (Map) value;
         Map<CharSequence, Object> mapCopy = 

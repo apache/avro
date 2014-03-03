@@ -69,7 +69,8 @@ public class TestDeepCopy {
     interopBuilder.setRecordField(rootBuilder.build());
     
     interopBuilder.setStringField("Hello");
-    interopBuilder.setUnionField(true);
+    interopBuilder.setUnionField(Arrays.asList(new ByteBuffer[] {
+        ByteBuffer.wrap(new byte[] { 1, 2 }) }));
     
     Interop interop = interopBuilder.build();
     
@@ -90,6 +91,11 @@ public class TestDeepCopy {
       // Original field and deep copy should be different instances:
       if ((field.schema().getType() != Type.ENUM)
            && (field.schema().getType() != Type.NULL)
+           && (field.schema().getType() != Type.BOOLEAN)
+           && (field.schema().getType() != Type.INT)
+           && (field.schema().getType() != Type.LONG)
+           && (field.schema().getType() != Type.FLOAT)
+           && (field.schema().getType() != Type.DOUBLE)
            && (field.schema().getType() != Type.STRING)) {
         assertFalse("Field " + field.name() + " is same instance in deep copy",
             interop.get(field.pos()) == 

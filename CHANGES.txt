@@ -10,6 +10,9 @@ Trunk (not yet released)
 
   OPTIMIZATIONS
 
+    AVRO-1455. Deep copy does not need to create new instances for primitives.
+    (tomwhite)
+
   IMPROVEMENTS
 
     AVRO-1441. Java: Improve documentation for Maven configuration.
