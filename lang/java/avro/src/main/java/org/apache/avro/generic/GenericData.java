@@ -636,7 +636,9 @@ public class GenericData {
       return Type.DOUBLE.getName();
     if (isBoolean(datum))
       return Type.BOOLEAN.getName();
-    throw new AvroRuntimeException("Unknown datum type: "+datum);
+    throw new AvroRuntimeException
+      (String.format("Unknown datum type %s: %s",
+                     datum.getClass().getName(), datum));
  }
 
   /** Called by {@link #resolveUnion(Schema,Object)}.  May be overridden for

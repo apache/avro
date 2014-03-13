@@ -27,6 +27,9 @@ Trunk (not yet released)
     AVRO-1472. Java: Clarify parse method in getting started guide.
     (Michael Knapp via cutting)
 
+    AVRO-1465. Java: Improve the error message when union dispatch fails.
+    (Gabriel Reid via cutting)
+
   BUG FIXES
 
     AVRO-1446. C#: Correctly handle system errors in RPC.
