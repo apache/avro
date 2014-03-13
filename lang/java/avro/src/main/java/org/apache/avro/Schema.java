@@ -422,7 +422,7 @@ public abstract class Schema extends JsonProperties {
     }
   }
 
-  private static class Name {
+  static class Name {
     private final String name;
     private final String space;
     private final String full;
@@ -1041,6 +1041,8 @@ public abstract class Schema extends JsonProperties {
         Type primitive = PRIMITIVES.get((String)o);
         if (primitive != null) return Schema.create(primitive);
         name = new Name((String)o, space);
+        if (!containsKey(name))                   // if not in default
+          name = new Name((String)o, "");         // try anonymous
       } else {
         name = (Name)o;
       }

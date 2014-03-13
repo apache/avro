@@ -43,6 +43,9 @@ Trunk (not yet released)
     AVRO-1454. Java: Fix GenericData#toString and AvroAsTextRecordReader
     to generate valid Json for NaN and infinities.  (cutting)
 
+    AVRO-1473. Java: Fix references to names in the empty namespace.
+    (Gabriel Reid via cutting)
+
 Avro 1.7.6 (15 January 2014)
 
   NEW FEATURES

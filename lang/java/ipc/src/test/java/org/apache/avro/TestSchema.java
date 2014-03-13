@@ -17,10 +17,10 @@
  */
 package org.apache.avro;
 
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
@@ -29,28 +29,28 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Collection;
-import java.util.Collections;
 
-import org.codehaus.jackson.JsonNode;
-
-import org.apache.avro.Schema.Type;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.compiler.specific.TestSpecificCompiler;
+import org.apache.avro.data.Json;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.data.Json;
-import org.apache.avro.compiler.specific.TestSpecificCompiler;
 import org.apache.avro.util.Utf8;
+import org.codehaus.jackson.JsonNode;
+import org.junit.Test;
 
 public class TestSchema {
 
@@ -479,6 +479,27 @@ public class TestSchema {
       Schema.parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
     Schema outer = Schema.createRecord("Outer", null, "space", false);
     outer.setFields(Arrays.asList(new Field("f", inner, null, null)));
+    assertEquals(outer, Schema.parse(outer.toString()));
+  }
+
+  @Test
+  public void testNestedNullNamespaceReferencing() {
+    Schema inner =
+        Schema.parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
+    Schema outer = Schema.createRecord("Outer", null, "space", false);
+    outer.setFields(Arrays.asList(new Field("f1", inner, null, null),
+                                  new Field("f2", inner, null, null)));
+    assertEquals(outer, Schema.parse(outer.toString()));
+  }
+
+  @Test
+  public void testNestedNullNamespaceReferencingWithUnion() {
+    Schema inner =
+        Schema.parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
+    Schema innerUnion = Schema.createUnion(Arrays.asList(inner, Schema.create(Type.NULL)));
+    Schema outer = Schema.createRecord("Outer", null, "space", false);
+    outer.setFields(Arrays.asList(new Field("f1", innerUnion, null, null),
+                                  new Field("f2", innerUnion, null, null)));
     assertEquals(outer, Schema.parse(outer.toString()));
   }
 
@@ -960,5 +981,33 @@ public class TestSchema {
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList10() {
     lockedArrayList().remove(1);
+  }
+
+  @Test
+  public void testNames_GetWithInheritedNamespace() {
+    Schema schema = Schema.create(Type.STRING);
+    Schema.Names names = new Schema.Names("space");
+    names.put(new Schema.Name("Name", "space"), schema);
+
+    assertEquals(schema, names.get(new Schema.Name("Name", "space")));
+    assertEquals(schema, names.get("Name"));
+  }
+
+  @Test
+  public void testNames_GetWithNullNamespace() {
+    Schema schema = Schema.create(Type.STRING);
+    Schema.Names names = new Schema.Names("space");
+    names.put(new Schema.Name("Name", ""), schema);
+
+    assertEquals(schema, names.get(new Schema.Name("Name", "")));
+    assertEquals(schema, names.get("Name"));
+  }
+
+  @Test
+  public void testNames_GetNotFound() {
+    Schema.Names names = new Schema.Names("space");
+    names.put(new Schema.Name("Name", "otherspace"), Schema.create(Type.STRING));
+
+    assertNull(names.get("Name"));
   }
 }
