@@ -24,6 +24,9 @@ Trunk (not yet released)
     AVRO-1449. Java: Optionally validate default values while reading schemas.
     (cutting)    
 
+    AVRO-1472. Java: Clarify parse method in getting started guide.
+    (Michael Knapp via cutting)
+
   BUG FIXES
 
     AVRO-1446. C#: Correctly handle system errors in RPC.

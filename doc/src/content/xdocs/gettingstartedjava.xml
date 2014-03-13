@@ -342,7 +342,7 @@ $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain
           create a <code>Schema</code> object.
         </p>
         <source>
-Schema schema = new Parser().parse(new File("user.avsc"));
+Schema schema = new Schema.Parser().parse(new File("user.avsc"));
         </source>
         <p>
           Using this schema, let's create some users.
