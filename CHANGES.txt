@@ -33,6 +33,9 @@ Trunk (not yet released)
     AVRO-1465. Java: Improve the error message when union dispatch fails.
     (Gabriel Reid via cutting)
 
+    AVRO-1482. In specification, place "null" first in unions as best practice.
+    (cutting)
+
   BUG FIXES
 
     AVRO-1446. C#: Correctly handle system errors in RPC.

@@ -150,7 +150,7 @@
   "aliases": ["LinkedLongs"],                      // old name for this
   "fields" : [
     {"name": "value", "type": "long"},             // each element has a long
-    {"name": "next", "type": ["LongList", "null"]} // optional next element
+    {"name": "next", "type": ["null", "LongList"]} // optional next element
   ]
 }
 	  </source>
@@ -210,8 +210,14 @@
         <section>
           <title>Unions</title>
           <p>Unions, as mentioned above, are represented using JSON
-          arrays.  For example, <code>["string", "null"]</code>
-          declares a schema which may be either a string or null.</p>
+          arrays.  For example, <code>["null", "string"]</code>
+          declares a schema which may be either a null or string.</p>
+          <p>(Note that when a <a href="#schema_record">default
+          value</a> is specified for a record field whose type is a
+          union, the type of the default value must match the
+          <em>first</em> element of the union.  Thus, for unions
+          containing "null", the "null" is usually listed first, since
+          the default value of such unions is typically null.)</p>
 	  <p>Unions may not contain more than one schema with the same
 	  type, except for the named types record, fixed and enum.  For
 	  example, unions containing two array types or two map types
@@ -497,14 +503,14 @@
               union of the schema of its value.  The value is then
               encoded per the indicated schema within the union.</p>
             <p>For example, the union
-              schema <code>["string","null"]</code> would encode:</p>
+              schema <code>["null","string"]</code> would encode:</p>
             <ul>
-              <li><code>null</code> as the integer 1 (the index of
-                "null" in the union, encoded as
-                hex <code>02</code>): <source>02</source></li>
-              <li>the string <code>"a"</code> as zero (the index of
-                "string" in the union), followed by the serialized string:
-                <source>00 02 61</source></li>
+              <li><code>null</code> as zero (the index of "null" in the union):
+                <source>00</source></li>
+              <li>the string <code>"a"</code> as one (the index of
+                "string" in the union, encoded as hex <code>02</code>),
+                followed by the serialized string:
+                <source>02 02 61</source></li>
             </ul>
           </section>
 
