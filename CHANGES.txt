@@ -8,6 +8,9 @@ Trunk (not yet released)
 
     AVRO-974. Add a Perl implementation of Avro. (Yann Kerhervé & John Karp)
 
+    AVRO-1471. Java: Permit writing generated code in different
+    character encodings. (Eugene Mustaphin via cutting)
+
   OPTIMIZATIONS
 
     AVRO-1455. Deep copy does not need to create new instances for primitives.

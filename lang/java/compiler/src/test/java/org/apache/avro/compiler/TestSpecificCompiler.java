@@ -20,12 +20,17 @@ package org.apache.avro.compiler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 
 import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
@@ -171,5 +176,27 @@ public class TestSpecificCompiler {
       assertFalse("No line should include the setter: " + line,
         line.startsWith("public void setValue("));
     }
+  }
+
+  @Test
+  public void testSettingOutputCharacterEncoding() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    // Generated file in default encoding
+    compiler.compileToDestination(this.src, this.outputDir);
+    byte[] fileInDefaultEncoding = new byte[(int) this.outputFile.length()];
+    new FileInputStream(this.outputFile).read(fileInDefaultEncoding);
+    this.outputFile.delete();
+    // Generate file in another encoding (make sure it has different number of bytes per character)
+    String differentEncoding = Charset.defaultCharset().equals(Charset.forName("UTF-16")) ? "UTF-32" : "UTF-16";
+    compiler.setOutputCharacterEncoding(differentEncoding);
+    compiler.compileToDestination(this.src, this.outputDir);
+    byte[] fileInDifferentEncoding = new byte[(int) this.outputFile.length()];
+    new FileInputStream(this.outputFile).read(fileInDifferentEncoding);
+    // Compare as bytes
+    assertThat("Generated file should contain different bytes after setting non-default encoding",
+      fileInDefaultEncoding, not(equalTo(fileInDifferentEncoding)));
+    // Compare as strings
+    assertThat("Generated files should contain the same characters in the proper encodings",
+      new String(fileInDefaultEncoding), equalTo(new String(fileInDifferentEncoding, differentEncoding)));
   }
 }

@@ -18,6 +18,9 @@
 package org.apache.avro.compiler.specific;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -65,6 +68,7 @@ public class SpecificCompiler {
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
   private boolean createSetters = true;
+  private String outputCharacterEncoding;
 
   /* List of Java reserved words from
    * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
@@ -208,6 +212,7 @@ public class SpecificCompiler {
   static class OutputFile {
     String path;
     String contents;
+    String outputCharacterEncoding;
 
     /**
      * Writes output to path destination directory when it is newer than src,
@@ -218,7 +223,12 @@ public class SpecificCompiler {
       if (src != null && f.exists() && f.lastModified() >= src.lastModified())
         return f;                                 // already up to date: ignore
       f.getParentFile().mkdirs();
-      FileWriter fw = new FileWriter(f);
+      Writer fw;
+      if (outputCharacterEncoding != null) {
+        fw = new OutputStreamWriter(new FileOutputStream(f), outputCharacterEncoding);
+      } else {
+        fw = new FileWriter(f);
+      }
       try {
         fw.write(FILE_HEADER);
         fw.write(contents);
@@ -345,6 +355,7 @@ public class SpecificCompiler {
     String mangledName = mangle(protocol.getName());
     outputFile.path = makePath(mangledName, protocol.getNamespace());
     outputFile.contents = out;
+    outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
   }
 
@@ -384,6 +395,7 @@ public class SpecificCompiler {
     String name = mangle(schema.getName());
     outputFile.path = makePath(name, schema.getNamespace());
     outputFile.contents = output;
+    outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
   }
 
@@ -788,5 +800,11 @@ public class SpecificCompiler {
     }
   }
 
+  /** Sets character encoding for generated java file
+  * @param outputCharacterEncoding Character encoding for output files (defaults to system encoding)
+  */
+  public void setOutputCharacterEncoding(String outputCharacterEncoding) {
+    this.outputCharacterEncoding = outputCharacterEncoding;
+  }
 }
 
