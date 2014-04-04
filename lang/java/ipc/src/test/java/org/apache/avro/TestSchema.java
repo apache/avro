@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +43,7 @@ import org.apache.avro.data.Json;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.DecimalRecordMapping;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
@@ -538,6 +540,40 @@ public class TestSchema {
     } catch (NullPointerException e) {
       assertEquals("null of string in field x of Test", e.getMessage());
     }
+  }
+
+  @Test
+  public void testDecimalRecordMapping() throws Exception {
+    String recordJson = "{\"type\":\"record\"," +
+        "\"name\":\"org.apache.avro.Decimal\"," +
+        "\"fields\":[\n" +
+        "  {\"name\":\"scale\",\"type\":\"int\"},\n" +
+        "  {\"name\":\"value\",\"type\":\"bytes\"}\n" +
+        "]}";
+    Schema schema = Schema.parse(recordJson);
+    BigDecimal decimal = new BigDecimal("12.45");
+    GenericData data = new GenericData();
+    data.addRecordMapping(new DecimalRecordMapping());
+    checkBinary(schema, decimal,
+        new GenericDatumWriter<Object>(schema, data),
+        new GenericDatumReader<Object>(schema, schema, data));
+  }
+
+  @Test
+  public void testDecimalRecordMappingUnion() throws Exception {
+    String recordJson = "{\"type\":\"record\"," +
+        "\"name\":\"org.apache.avro.Decimal\"," +
+        "\"fields\":[\n" +
+        "  {\"name\":\"scale\",\"type\":\"int\"},\n" +
+        "  {\"name\":\"value\",\"type\":\"bytes\"}\n" +
+        "]}";
+    Schema schema = Schema.parse("[\"null\",\"string\"," + recordJson + "]");
+    BigDecimal decimal = new BigDecimal("12.45");
+    GenericData data = new GenericData();
+    data.addRecordMapping(new DecimalRecordMapping());
+    checkBinary(schema, decimal,
+        new GenericDatumWriter<Object>(schema, data),
+        new GenericDatumReader<Object>(schema, schema, data));
   }
 
   private static void checkParseError(String json) {

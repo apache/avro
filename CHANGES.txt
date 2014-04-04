@@ -11,6 +11,8 @@ Trunk (not yet released)
     AVRO-1471. Java: Permit writing generated code in different
     character encodings. (Eugene Mustaphin via cutting)
 
+    AVRO-1402. Support for DECIMAL type (as a record mapping). (tomwhite)
+
   OPTIMIZATIONS
 
     AVRO-1455. Deep copy does not need to create new instances for primitives.

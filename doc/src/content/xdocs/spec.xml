@@ -1336,6 +1336,34 @@ void initFPTable() {
       </section>
     </section>
 
+    <section>
+      <title>Record Mappings</title>
+
+      <p>Implementations may optionally map the following record schemas to an appropriate
+        native type.</p>
+
+      <section>
+        <title>Decimal</title>
+        <p>The <code>Decimal</code> type represents arbitrary-precision signed decimal
+          numbers. A <code>Decimal</code> is encoded as an <code>int</code> <em>scale</em>
+          followed by a <code>bytes</code> <em>value</em> field containing the
+          two's-complement representation of the unscaled integer value in big-endian
+          byte order.</p>
+        <p>The value of the number represented by this <code>Decimal</code> type is
+          <em>value &#215; 10<sup>-scale</sup></em>.</p>
+        <source>
+{
+  "type": "record",
+  "name": "org.apache.avro.Decimal",
+  "fields": [
+    {"name": "scale", "type": "int"},
+    {"name": "value", "type": "bytes"}
+  ]
+}
+        </source>
+      </section>
+    </section>
+
   <p><em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
    trademarks of The Apache Software Foundation.</em></p>
 
