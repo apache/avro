@@ -170,10 +170,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representations.*/
   protected Object readRecord(Object old, Schema expected, 
       ResolvingDecoder in) throws IOException {
-    RecordMapping<?> recordMapping = data.getRecordMapping(expected);
-    if (recordMapping != null) {
-      return recordMapping.read(old, in);
-    }
     Object r = data.newRecord(old, expected);
     Object state = data.getRecordState(r, expected);
     

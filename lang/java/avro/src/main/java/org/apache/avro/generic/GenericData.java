@@ -64,12 +64,6 @@ public class GenericData {
 
   private final ClassLoader classLoader;
 
-  private final Map<String, RecordMapping<?>> recordMappings =
-      new HashMap<String, RecordMapping<?>>();
-
-  private final Map<Class<?>, RecordMapping<?>> recordMappingClasses =
-      new HashMap<Class<?>, RecordMapping<?>>();
-
   /** Set the Java type to be used when reading this schema.  Meaningful only
    * only string schemas and map schemas (for the keys). */
   public static void setStringType(Schema s, StringType stringType) {
@@ -96,22 +90,6 @@ public class GenericData {
 
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() { return classLoader; }
-
-  /** Register a {@link org.apache.avro.generic.RecordMapping} to be used when reading or
-   * writing records using {@link org.apache.avro.generic.GenericDatumReader} or
-   * {@link org.apache.avro.generic.GenericDatumWriter}.
-   */
-  public <T> void addRecordMapping(RecordMapping<T> recordMapping) {
-    recordMappings.put(recordMapping.getSchema().getFullName(), recordMapping);
-    recordMappingClasses.put(recordMapping.getRecordClass(), recordMapping);
-  }
-
-  /** Return the  {@link org.apache.avro.generic.RecordMapping} for the given record
-   * schema, or <code>null</code> if there is no mapping registered.
-   */
-  public RecordMapping<?> getRecordMapping(Schema schema) {
-    return recordMappings.get(schema.getFullName());
-  }
 
   /** Default implementation of {@link GenericRecord}. Note that this implementation
    * does not fill in default values for fields if they are not specified; use {@link
@@ -699,25 +677,14 @@ public class GenericData {
 
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isRecord(Object datum) {
-    return datum instanceof IndexedRecord || isRecordMapping(datum);
-  }
-
-  /** Return true if the given <code>datum</code> has a registered record mapping class.
-   * Called by the default implementation of {@link #isRecord(Object)}.
-   */
-  protected boolean isRecordMapping(Object datum) {
-    return datum != null && recordMappingClasses.containsKey(datum.getClass());
+    return datum instanceof IndexedRecord;
   }
 
   /** Called to obtain the schema of a record.  By default calls
-   * {@link GenericContainer#getSchema()}, or uses a registered record mapper if not a
-   * {@link GenericContainer}. May be overridden for alternate
-   * record representations. */
+   * {GenericContainer#getSchema().  May be overridden for alternate record
+   * representations. */
   protected Schema getRecordSchema(Object record) {
-    if (record instanceof GenericContainer) {
-      return ((GenericContainer) record).getSchema();
-    }
-    return recordMappingClasses.get(record.getClass()).getSchema();
+    return ((GenericContainer)record).getSchema();
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/
