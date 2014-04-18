@@ -1336,6 +1336,73 @@ void initFPTable() {
       </section>
     </section>
 
+    <section>
+      <title>Logical Types</title>
+
+      <p>A logical type is an Avro primitive or complex type with extra attributes to
+        represent a derived type. The attribute <code>logicalType</code> must
+        always be present for a logical type, and is a string with the name of one of
+        the logical types listed later in this section. Other attributes may be defined
+        for particular logical types.</p>
+
+      <p>A logical type is always serialized using its underlying Avro type so
+        that values are encoded in exactly the same way as the equivalent Avro
+        type that does not have a <code>logicalType</code> attribute. Language
+        implementations may choose to represent logical types with an
+        appropriate native type, although this is not required.</p>
+
+      <p>Language implementations must ignore unknown logical types when
+        reading, and should use the underlying Avro type. If a logical type is
+        invalid, for example a decimal with scale greater than its precision,
+        then implementations should ignore the logical type and use the
+        underlying Avro type.</p>
+
+      <section>
+        <title>Decimal</title>
+        <p>The <code>decimal</code> logical type represents an arbitrary-precision signed
+          decimal number of the form <em>unscaled &#215; 10<sup>-scale</sup></em>.</p>
+
+        <p>A <code>decimal</code> logical type annotates Avro
+          <code>bytes</code> or <code>fixed</code> types. The byte array must
+          contain the two's-complement representation of the unscaled integer
+          value in big-endian byte order. The scale is fixed, and is specified
+          using an attribute.</p>
+
+        <p>The following attributes are supported:</p>
+        <ul>
+          <li><code>scale</code>, a JSON integer representing the scale
+            (optional). If not specified the scale is 0.</li>
+          <li><code>precision</code>, a JSON integer representing the (maximum)
+            precision of decimals stored in this type (required).</li>
+        </ul>
+
+        <p>For example, the following schema represents decimal numbers with a
+          maximum precision of 4 and a scale of 2:</p>
+        <source>
+{
+  "type": "bytes",
+  "logicalType": "decimal",
+  "precision": 4,
+  "scale": 2
+}
+</source>
+
+        <p>Precision must be a positive integer greater than zero. If the
+          underlying type is a <code>fixed</code>, then the precision is
+          limited by its size. An array of length <code>n</code> can store at
+          most <em>floor(log_10(2<sup>8 &#215; n - 1</sup> - 1))</em>
+          base-10 digits of precision.</p>
+
+        <p>Scale must be zero or a positive integer less than or equal to the
+          precision.</p>
+
+        <p>For the purposes of schema resolution, two schemas that are
+          <code>decimal</code> logical types <em>match</em> if their scales and
+          precisions match.</p>
+
+      </section>
+    </section>
+
   <p><em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
    trademarks of The Apache Software Foundation.</em></p>
 
