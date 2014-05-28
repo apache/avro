@@ -40,8 +40,10 @@ Trunk (not yet released)
     AVRO-1482. In specification, place "null" first in unions as best practice.
     (cutting)
 
-    AVRO-1476. Remove transient declaration from Schema.Field#position.
+    AVRO-1476. Java: Remove transient declaration from Schema.Field#position.
     (Robert Chu via cutting)
+
+    AVRO-1512. Java: Support Thrift unions. (cutting)
 
   BUG FIXES
 

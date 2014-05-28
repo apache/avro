@@ -28,6 +28,12 @@ struct Nested {
   1: i32 x
 }
 
+union FooOrBar {
+  1: string foo;
+  2: string bar;
+}
+
+
 // contains each primitive type
 struct Test {
   1: bool boolField
@@ -43,6 +49,7 @@ struct Test {
  11: set<i32> setField
  12: E enumField
  13: Nested structField
+ 14: FooOrBar fooOrBar
 }
 
 exception Error {

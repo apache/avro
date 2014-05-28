@@ -36,6 +36,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   private static final org.apache.thrift.protocol.TField SET_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("setField", org.apache.thrift.protocol.TType.SET, (short)11);
   private static final org.apache.thrift.protocol.TField ENUM_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("enumField", org.apache.thrift.protocol.TType.I32, (short)12);
   private static final org.apache.thrift.protocol.TField STRUCT_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("structField", org.apache.thrift.protocol.TType.STRUCT, (short)13);
+  private static final org.apache.thrift.protocol.TField FOO_OR_BAR_FIELD_DESC = new org.apache.thrift.protocol.TField("fooOrBar", org.apache.thrift.protocol.TType.STRUCT, (short)14);
 
   private boolean boolField; // required
   private byte byteField; // required
@@ -50,6 +51,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   private Set<Integer> setField; // required
   private E enumField; // required
   private Nested structField; // required
+  private FooOrBar fooOrBar; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -69,7 +71,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
      * @see E
      */
     ENUM_FIELD((short)12, "enumField"),
-    STRUCT_FIELD((short)13, "structField");
+    STRUCT_FIELD((short)13, "structField"),
+    FOO_OR_BAR((short)14, "fooOrBar");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -110,6 +113,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
           return ENUM_FIELD;
         case 13: // STRUCT_FIELD
           return STRUCT_FIELD;
+        case 14: // FOO_OR_BAR
+          return FOO_OR_BAR;
         default:
           return null;
       }
@@ -191,6 +196,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, E.class)));
     tmpMap.put(_Fields.STRUCT_FIELD, new org.apache.thrift.meta_data.FieldMetaData("structField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Nested.class)));
+    tmpMap.put(_Fields.FOO_OR_BAR, new org.apache.thrift.meta_data.FieldMetaData("fooOrBar", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FooOrBar.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Test.class, metaDataMap);
   }
@@ -209,7 +216,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     List<Integer> listField,
     Set<Integer> setField,
     E enumField,
-    Nested structField)
+    Nested structField,
+    FooOrBar fooOrBar)
   {
     this();
     this.boolField = boolField;
@@ -228,6 +236,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     this.setField = setField;
     this.enumField = enumField;
     this.structField = structField;
+    this.fooOrBar = fooOrBar;
   }
 
   /**
@@ -284,6 +293,9 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     if (other.isSetStructField()) {
       this.structField = new Nested(other.structField);
     }
+    if (other.isSetFooOrBar()) {
+      this.fooOrBar = new FooOrBar(other.fooOrBar);
+    }
   }
 
   public Test deepCopy() {
@@ -311,6 +323,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     this.setField = null;
     this.enumField = null;
     this.structField = null;
+    this.fooOrBar = null;
   }
 
   public boolean isBoolField() {
@@ -664,6 +677,29 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     }
   }
 
+  public FooOrBar getFooOrBar() {
+    return this.fooOrBar;
+  }
+
+  public void setFooOrBar(FooOrBar fooOrBar) {
+    this.fooOrBar = fooOrBar;
+  }
+
+  public void unsetFooOrBar() {
+    this.fooOrBar = null;
+  }
+
+  /** Returns true if field fooOrBar is set (has been assigned a value) and false otherwise */
+  public boolean isSetFooOrBar() {
+    return this.fooOrBar != null;
+  }
+
+  public void setFooOrBarIsSet(boolean value) {
+    if (!value) {
+      this.fooOrBar = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case BOOL_FIELD:
@@ -770,6 +806,14 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       }
       break;
 
+    case FOO_OR_BAR:
+      if (value == null) {
+        unsetFooOrBar();
+      } else {
+        setFooOrBar((FooOrBar)value);
+      }
+      break;
+
     }
   }
 
@@ -814,6 +858,9 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     case STRUCT_FIELD:
       return getStructField();
 
+    case FOO_OR_BAR:
+      return getFooOrBar();
+
     }
     throw new IllegalStateException();
   }
@@ -851,6 +898,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       return isSetEnumField();
     case STRUCT_FIELD:
       return isSetStructField();
+    case FOO_OR_BAR:
+      return isSetFooOrBar();
     }
     throw new IllegalStateException();
   }
@@ -982,6 +1031,15 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       if (!(this_present_structField && that_present_structField))
         return false;
       if (!this.structField.equals(that.structField))
+        return false;
+    }
+
+    boolean this_present_fooOrBar = true && this.isSetFooOrBar();
+    boolean that_present_fooOrBar = true && that.isSetFooOrBar();
+    if (this_present_fooOrBar || that_present_fooOrBar) {
+      if (!(this_present_fooOrBar && that_present_fooOrBar))
+        return false;
+      if (!this.fooOrBar.equals(that.fooOrBar))
         return false;
     }
 
@@ -1127,6 +1185,16 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     }
     if (isSetStructField()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.structField, typedOther.structField);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetFooOrBar()).compareTo(typedOther.isSetFooOrBar());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetFooOrBar()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.fooOrBar, typedOther.fooOrBar);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1278,6 +1346,14 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
           }
           break;
+        case 14: // FOO_OR_BAR
+          if (field.type == org.apache.thrift.protocol.TType.STRUCT) {
+            this.fooOrBar = new FooOrBar();
+            this.fooOrBar.read(iprot);
+          } else { 
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
         default:
           org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
       }
@@ -1370,6 +1446,11 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       this.structField.write(oprot);
       oprot.writeFieldEnd();
     }
+    if (this.fooOrBar != null) {
+      oprot.writeFieldBegin(FOO_OR_BAR_FIELD_DESC);
+      this.fooOrBar.write(oprot);
+      oprot.writeFieldEnd();
+    }
     oprot.writeFieldStop();
     oprot.writeStructEnd();
   }
@@ -1460,6 +1541,14 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       sb.append("null");
     } else {
       sb.append(this.structField);
+    }
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("fooOrBar:");
+    if (this.fooOrBar == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.fooOrBar);
     }
     first = false;
     sb.append(")");

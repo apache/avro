@@ -29,6 +29,7 @@ import org.apache.avro.io.EncoderFactory;
 import static org.junit.Assert.assertEquals;
 
 import org.apache.avro.thrift.test.Test;
+import org.apache.avro.thrift.test.FooOrBar;
 import org.apache.avro.thrift.test.E;
 import org.apache.avro.thrift.test.Nested;
 
@@ -52,6 +53,7 @@ public class TestThrift {
     test.setSetField(Collections.singleton(8));
     test.setEnumField(E.X);
     test.setStructField(new Nested(9));
+    test.setFooOrBar(FooOrBar.foo("x"));
 
     System.out.println(test);
 
