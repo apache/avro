@@ -355,7 +355,7 @@ public abstract class Schema extends JsonProperties {
     };
 
     private final String name;    // name of the field.
-    private transient int position = -1;
+    private int position = -1;
     private final Schema schema;
     private final String doc;
     private final JsonNode defaultValue;
