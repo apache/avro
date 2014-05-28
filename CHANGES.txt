@@ -62,6 +62,9 @@ Trunk (not yet released)
     AVRO-1459. Ruby: Fix a typo in Rakefile that breaks 'gem install'.
     (Tomas Svarovsky via cutting)
 
+    AVRO-1457. Java: Fix Encoder so that offset in non-array-backed
+    ByteBuffers is not altered when written. (Rob Turner via cutting)
+
 Avro 1.7.6 (15 January 2014)
 
   NEW FEATURES

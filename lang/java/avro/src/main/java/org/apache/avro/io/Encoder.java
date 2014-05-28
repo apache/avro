@@ -174,7 +174,7 @@ public abstract class Encoder implements Flushable {
       writeFixed(bytes.array(), bytes.arrayOffset() + pos, len);
     } else {
       byte[] b = new byte[len];
-      bytes.get(b, 0, len);
+      bytes.duplicate().get(b, 0, len);
       writeFixed(b, 0, len);
     }
   }

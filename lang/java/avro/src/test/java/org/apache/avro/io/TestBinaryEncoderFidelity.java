@@ -32,19 +32,27 @@ public class TestBinaryEncoderFidelity {
   static byte[] legacydata;
   static byte[] complexdata;
   EncoderFactory factory = EncoderFactory.get();
-  public static void generateData(Encoder e) throws IOException {
+  public static void generateData(Encoder e, boolean useReadOnlyByteBuffer) throws IOException {
     // generate a bunch of data that should test the bounds of a BinaryEncoder
     Random r = new Random(665321);
     e.writeNull();
     e.writeBoolean(true);
     e.writeBoolean(false);
     byte[] bytes = new byte[10];
+    ByteBuffer bb;
+    if (useReadOnlyByteBuffer) {
+      bb = ByteBuffer.wrap(bytes, 4, 4).asReadOnlyBuffer();
+    } else {
+      bb = ByteBuffer.wrap(bytes, 4, 4);
+    }
     r.nextBytes(bytes);
     e.writeBytes(bytes);
     e.writeBytes(new byte[0]);
     e.writeBytes(bytes, 3, 3);
     e.writeBytes(new byte[0], 0, 0);
     e.writeBytes(ByteBuffer.wrap(bytes, 2, 2));
+    e.writeBytes(bb);
+    e.writeBytes(bb);
     e.writeDouble(0.0);
     e.writeDouble(-0.0);
     e.writeDouble(Double.NaN);
@@ -133,7 +141,7 @@ public class TestBinaryEncoderFidelity {
   public static void generateLegacyData() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Encoder e = new LegacyBinaryEncoder(baos);
-    generateData(e);
+    generateData(e, false);
     legacydata = baos.toByteArray();
     baos.reset();
     generateComplexData(e);
@@ -144,7 +152,7 @@ public class TestBinaryEncoderFidelity {
   public void testBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     BinaryEncoder e = factory.binaryEncoder(baos, null);
-    generateData(e);
+    generateData(e, true);
     byte[] result = baos.toByteArray();
     Assert.assertEquals(legacydata.length, result.length);
     Assert.assertArrayEquals(legacydata, result);
@@ -159,7 +167,7 @@ public class TestBinaryEncoderFidelity {
   public void testDirectBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     BinaryEncoder e = factory.directBinaryEncoder(baos, null);
-    generateData(e);
+    generateData(e, true);
     byte[] result = baos.toByteArray();
     Assert.assertEquals(legacydata.length, result.length);
     Assert.assertArrayEquals(legacydata, result);
@@ -175,7 +183,7 @@ public class TestBinaryEncoderFidelity {
   public void testBlockingBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     BinaryEncoder e = factory.blockingBinaryEncoder(baos, null);
-    generateData(e);
+    generateData(e, true);
     byte[] result = baos.toByteArray();
     Assert.assertEquals(legacydata.length, result.length);
     Assert.assertArrayEquals(legacydata, result);
