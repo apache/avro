@@ -167,6 +167,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       case ARRAY:
       case MAP:
       case RECORD:
+      case FIXED:
         break;
       default:
         throw new RuntimeException("Unexpected schema type: " + readerType);
