@@ -32,6 +32,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.hadoop.util.AvroCharSequenceComparator;
@@ -389,6 +390,9 @@ public class SortedKeyValueFile {
       /** The model for the data. */
       private GenericData model = SpecificData.get();
 
+      /** The compression codec for the data. */
+      private CodecFactory codec = CodecFactory.nullCodec();
+
       /**
        * Sets the key schema.
        *
@@ -502,6 +506,23 @@ public class SortedKeyValueFile {
       public GenericData getDataModel() {
         return model;
       }
+
+      /** Set the compression codec. */
+      public Options withCodec(String codec) {
+          this.codec = CodecFactory.fromString(codec);
+          return this;
+      }
+
+      /** Set the compression codec. */
+      public Options withCodec(CodecFactory codec) {
+          this.codec = codec;
+          return this;
+      }
+
+      /** Return the compression codec. */
+      public CodecFactory getCodec() {
+          return this.codec;
+      }
     }
 
     /**
@@ -549,6 +570,7 @@ public class SortedKeyValueFile {
       mDataFileWriter = new DataFileWriter<GenericRecord>(datumWriter)
           .setSyncInterval(1 << 20)  // Set the auto-sync interval sufficiently large, since
                                      // we will manually sync every mIndexInterval records.
+          .setCodec(options.getCodec())
           .create(mRecordSchema, dataOutputStream);
 
       // Open a writer for the index file.

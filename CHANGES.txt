@@ -15,6 +15,9 @@ Trunk (not yet released)
     including a subtype of bytes and fixed for decimal values.
     (tomwhite & Ryan Blue via cutting)
 
+    AVRO-1522. Java: Add support for compression codecs to SortedKeyValueFile.
+    (Steven Willis via cutting)
+
   OPTIMIZATIONS
 
     AVRO-1455. Deep copy does not need to create new instances for primitives.

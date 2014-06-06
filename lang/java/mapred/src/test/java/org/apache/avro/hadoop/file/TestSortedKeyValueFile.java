@@ -25,12 +25,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.specific.SpecificData;
 import org.apache.avro.hadoop.io.AvroKeyValue;
+import org.apache.avro.mapred.FsInput;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.util.Utf8;
@@ -70,6 +74,83 @@ public class TestSortedKeyValueFile {
       writer.append(key.set("apple"), "Apple");  // Ruh, roh!
     } finally {
       writer.close();
+    }
+  }
+
+  @Test
+  public void testNamedCodecs() throws IOException {
+    Configuration conf = new Configuration();
+    Path myfile = new Path(mTempDir.getRoot().getPath(), "myfile");
+    Schema key = Schema.create(Schema.Type.STRING);
+    Schema value = Schema.create(Schema.Type.STRING);
+    Schema recordSchema = AvroKeyValue.getSchema(key, value);
+    DatumReader<GenericRecord> datumReader = SpecificData.get().createDatumReader(recordSchema);
+    DataFileReader<GenericRecord> reader;
+
+    SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
+        .withKeySchema(key)
+        .withValueSchema(value)
+        .withConfiguration(conf)
+        .withPath(myfile);
+
+    SortedKeyValueFile.Writer<CharSequence, CharSequence> writer;
+
+    for(String codec : new String[]{"null", "deflate", "snappy", "bzip2"}) {
+        LOG.debug("Using " + codec + "codec for a SortedKeyValueFile...");
+
+        options.withCodec(codec);
+
+        writer = new SortedKeyValueFile.Writer<CharSequence, CharSequence>(options);
+        writer.close();
+
+        reader = new DataFileReader<GenericRecord>(
+            new FsInput(new Path(myfile,SortedKeyValueFile.DATA_FILENAME), conf),
+            datumReader);
+
+        assertEquals(codec, reader.getMetaString("avro.codec"));
+        reader.close();
+    }
+  }
+
+  @Test
+  public void testDeflateClassCodec() throws IOException {
+    Configuration conf = new Configuration();
+    Path myfile = new Path(mTempDir.getRoot().getPath(), "myfile");
+    Schema key = Schema.create(Schema.Type.STRING);
+    Schema value = Schema.create(Schema.Type.STRING);
+    Schema recordSchema = AvroKeyValue.getSchema(key, value);
+    DatumReader<GenericRecord> datumReader = SpecificData.get().createDatumReader(recordSchema);
+    DataFileReader<GenericRecord> reader;
+
+    LOG.debug("Using CodecFactory.deflateCodec() for a SortedKeyValueFile...");
+    SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
+        .withKeySchema(key)
+        .withValueSchema(value)
+        .withConfiguration(conf)
+        .withPath(myfile)
+        .withCodec(CodecFactory.deflateCodec(9));
+
+    SortedKeyValueFile.Writer<CharSequence, CharSequence> writer =
+        new SortedKeyValueFile.Writer<CharSequence, CharSequence>(options);
+    writer.close();
+
+    reader = new DataFileReader<GenericRecord>(
+        new FsInput(new Path(myfile,SortedKeyValueFile.DATA_FILENAME), conf),
+        datumReader);
+
+    assertEquals("deflate", reader.getMetaString("avro.codec"));
+    reader.close();
+  }
+
+  @Test
+  public void testBadCodec() throws IOException {
+    LOG.debug("Using a bad codec for a SortedKeyValueFile...");
+
+    try {
+      SortedKeyValueFile.Writer.Options options =
+          new SortedKeyValueFile.Writer.Options().withCodec("foobar");
+    } catch (AvroRuntimeException e) {
+        assertEquals("Unrecognized codec: foobar", e.getMessage());
     }
   }
 
