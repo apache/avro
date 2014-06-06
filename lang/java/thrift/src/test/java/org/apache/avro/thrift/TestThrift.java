@@ -43,6 +43,7 @@ public class TestThrift {
     test.setBoolField(true);
     test.setByteField((byte)2);
     test.setI16Field((short)3);
+    test.setI16OptionalField((short)14);
     test.setI32Field(4);
     test.setI64Field(5L);
     test.setDoubleField(2.0);

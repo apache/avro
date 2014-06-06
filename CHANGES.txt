@@ -76,6 +76,9 @@ Trunk (not yet released)
     AVRO-1442. Java: Fix ResolvingGrammarGenerator to work with fixed type.
     (Jim Pivarski via cutting)
 
+    AVRO-1500. Java: Fix bug in handling of Thrift shorts in unions.
+    (Michael Pershyn via cutting)
+
 Avro 1.7.6 (15 January 2014)
 
   NEW FEATURES

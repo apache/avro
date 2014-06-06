@@ -39,6 +39,7 @@ struct Test {
   1: bool boolField
   2: byte byteField
   3: i16 i16Field
+ 15: optional i16 i16OptionalField
   4: optional i32 i32Field
   5: i64 i64Field
   6: double doubleField
