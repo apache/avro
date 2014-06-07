@@ -18,9 +18,9 @@ repositories {
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile "org.apache.avro:avro-compiler:1.7.5"
+    compile "org.apache.avro:avro-compiler:1.7.6"
     compile "org.apache.commons:commons-io:1.3.2"
-    testCompile "org.spockframework:spock-core:0.6-groovy-1.8"
+    testCompile "org.spockframework:spock-core:0.7-groovy-1.8"
 }
 
 sourceCompatibility = 1.7
