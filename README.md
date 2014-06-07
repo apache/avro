@@ -16,7 +16,7 @@ buildscript {
     }
 }
 
-apply plugin: "avro"
+apply plugin: "com.commercehub.gradle.plugin.avro"
 ```
 
 Optionally, configure the string type to `charSequence`, `string` (the default), or `utf8`.

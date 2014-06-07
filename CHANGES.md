@@ -3,6 +3,8 @@
 * 0.2.0
     * Build against Gradle 1.12
     * Compile using Avro 1.7.6
+    * Support for qualified plugin ID
+    * Deprecate unqualified plugin ID
 
 * 0.1.3
     * Always regenerate all Java classes when any schema file changes to avoid some classes having outdated schema information.
