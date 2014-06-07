@@ -19,11 +19,22 @@ buildscript {
 apply plugin: "avro"
 ```
 
-Optionally, configure the string type to `charSequence` (the default), `string`, or `utf8`.
+Optionally, configure the string type to `charSequence`, `string` (the default), or `utf8`.
 
 ```groovy
 avro {
     stringType = "string"
+}
+```
+
+Additionally, ensure that you have a compile dependency on avro, such as:
+
+```groovy
+repositories {
+    jcenter()
+}
+dependencies {
+    compile "org.apache.avro:avro:1.7.6"
 }
 ```
 
