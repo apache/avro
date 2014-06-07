@@ -7,6 +7,12 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 Add the following to your `build.gradle` file.  Substitute the desired version based on [CHANGES.md](https://github.com/commercehub-oss/gradle-avro-plugin/blob/master/CHANGES.md).
 
 ```groovy
+// Gradle 2.1 and later
+plugins {
+  id "com.commercehub.gradle.plugin.avro" version "VERSION"
+}
+
+// Earlier versions of Gradle
 buildscript {
     repositories {
         jcenter()
@@ -15,7 +21,6 @@ buildscript {
         classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:VERSION"
     }
 }
-
 apply plugin: "com.commercehub.gradle.plugin.avro"
 ```
 
