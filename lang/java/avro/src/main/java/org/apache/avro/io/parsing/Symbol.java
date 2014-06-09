@@ -349,6 +349,45 @@ public abstract class Symbol {
     }
 
   }
+  
+  /**
+   * Returns true if the Parser contains any Error symbol, indicating that it may fail 
+   * for some inputs.
+   */
+  public static boolean hasErrors(Symbol symbol) {
+    switch(symbol.kind) {
+    case ALTERNATIVE:
+      return hasErrors(symbol, ((Alternative) symbol).symbols);
+    case EXPLICIT_ACTION:
+      return false;
+    case IMPLICIT_ACTION:
+      return symbol instanceof ErrorAction;
+    case REPEATER:
+      Repeater r = (Repeater) symbol;
+      return hasErrors(r.end) || hasErrors(symbol, r.production);
+    case ROOT:
+    case SEQUENCE:
+      return hasErrors(symbol, symbol.production);
+    case TERMINAL:
+      return false;
+    default:
+      throw new RuntimeException("unknown symbol kind: " + symbol.kind);
+    }
+  }
+  
+  private static boolean hasErrors(Symbol root, Symbol[] symbols) {
+    if(null != symbols) {
+      for(Symbol s: symbols) {
+        if (s == root) {
+          continue;
+        }
+        if (hasErrors(s)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
     
   public static class Alternative extends Symbol {
     public final Symbol[] symbols;
