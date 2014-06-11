@@ -84,7 +84,7 @@ sub encode_null {
 sub encode_boolean {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    $cb->( $data ? \0x1 : \0x0 );
+    $cb->( $data ? \"\x1" : \"\x0" );
 }
 
 sub encode_int {

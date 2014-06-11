@@ -44,6 +44,9 @@ sub primitive_ok {
     primitive_ok null    =>    undef, '';
     primitive_ok null    => 'whatev', '';
 
+    primitive_ok boolean => 0, "\x0";
+    primitive_ok boolean => 1, "\x1";
+
     ## - high-bit of each byte should be set except for last one
     ## - rest of bits are:
     ## - little endian
