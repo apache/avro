@@ -22,6 +22,7 @@ use warnings;
 use Config;
 use Encode();
 use Error::Simple;
+use Regexp::Common qw(number);
 
 our $max64;
 our $complement = ~0x7F;
@@ -89,7 +90,10 @@ sub encode_boolean {
 sub encode_int {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    if ($data !~ /^-?\d+$/ || abs($data) > 0x7fffffff) {
+    if ($data !~ /^$RE{num}{int}$/) {
+        throw Avro::BinaryEncoder::Error("cannot convert '$data' to integer");
+    }
+    if (abs($data) > 0x7fffffff) {
         throw Avro::BinaryEncoder::Error("int ($data) should be <= 32bits");
     }
 
@@ -100,7 +104,10 @@ sub encode_int {
 sub encode_long {
     my $class = shift;
     my ($schema, $data, $cb) = @_;
-    if ($data !~ /^-?\d+$/ || abs($data) > $max64) {
+    if ($data !~ /^$RE{num}{int}$/) {
+        throw Avro::BinaryEncoder::Error("cannot convert '$data' to long integer");
+    }
+    if (abs($data) > $max64) {
         throw Avro::BinaryEncoder::Error("int ($data) should be <= 64bits");
     }
     my $enc = unsigned_varint(zigzag($data));

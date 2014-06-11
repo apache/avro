@@ -81,10 +81,17 @@ sub primitive_ok {
     } "Avro::BinaryEncoder::Error", "65 bits";
 
     for (qw(long int)) {
-        dies_ok {
+        throws_ok {
             primitive_ok $_ =>  "x", undef;
-        } "numeric values only";
-    }
+        } 'Avro::BinaryEncoder::Error', 'numeric values only';
+    };
+    # In Unicode, there are decimals that aren't 0-9.
+    # Make sure we handle non-ascii decimals cleanly.
+    for (qw(long int)) {
+        throws_ok {
+            primitive_ok $_ =>  "\N{U+0661}", undef;
+        } 'Avro::BinaryEncoder::Error', 'ascii decimals only';
+    };
 }
 
 ## spec examples
