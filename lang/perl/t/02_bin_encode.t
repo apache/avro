@@ -21,7 +21,7 @@ use strict;
 use warnings;
 use Avro::Schema;
 use Config;
-use Test::More tests => 24;
+use Test::More;
 use Test::Exception;
 use Math::BigInt;
 

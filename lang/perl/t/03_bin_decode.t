@@ -21,7 +21,7 @@ use strict;
 use warnings;
 use Avro::Schema;
 use Avro::BinaryEncoder;
-use Test::More tests => 21;
+use Test::More;
 use Test::Exception;
 use IO::String;
 

@@ -19,7 +19,6 @@ use strict;
 use warnings;
 
 use Test::More;
-plan tests => 95;
 use Test::Exception;
 use_ok 'Avro::Schema';
 

@@ -20,7 +20,7 @@
 use strict;
 use warnings;
 use Test::Exception;
-use Test::More tests => 18;
+use Test::More;
 
 use_ok 'Avro::Protocol';
 

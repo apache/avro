@@ -25,7 +25,7 @@ use Avro::BinaryDecoder;
 use Avro::Schema;
 use File::Temp;
 use Test::Exception;
-use Test::More tests => 12;
+use Test::More;
 
 use_ok 'Avro::DataFileReader';
 use_ok 'Avro::DataFileWriter';
