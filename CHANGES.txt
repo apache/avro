@@ -89,6 +89,8 @@ Trunk (not yet released)
 
     AVRO-1470. Perl: Fix encoding of boolean values. (John Karp via cutting)
 
+    AVRO-1525. Java: ReflectData cannot resolve union with fixed. (tomwhite)
+
 Avro 1.7.6 (15 January 2014)
 
   NEW FEATURES
