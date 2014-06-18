@@ -2,6 +2,7 @@
 
 * 0.3.0
     * IntelliJ: register generated source directories even if they don't already exist.
+    * Add avro-base plugin, which exposes tasks and the extension without creating tasks, defaults, etc.
 
 * 0.2.0
     * Build against Gradle 1.12

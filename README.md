@@ -44,3 +44,11 @@ dependencies {
 ```
 
 If you now run `gradle build`, Java classes will be compiled from Avro files in `src/main/avro`.  Actually, it will attempt to process an "avro" directory in every `SourceSet` (main, test, etc.)
+
+# IntelliJ Integration
+
+The plugin attempts to make IntelliJ play more smoothly with generated sources when using Gradle-generated project files.  However, there are still some rough edges.  It will work best if you first run `gradle build`, and _after_ that run `gradle idea`.  If you do it in the other order, IntelliJ may not properly exclude some directories within your `build` directory.
+
+# Alternate Usage
+
+If the defaults used by the plugin don't work for you, you can still use the tasks by themselves.  In this case, use the "com.commercehub.gradle.plugin.avro" plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
