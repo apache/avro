@@ -52,3 +52,21 @@ The plugin attempts to make IntelliJ play more smoothly with generated sources w
 # Alternate Usage
 
 If the defaults used by the plugin don't work for you, you can still use the tasks by themselves.  In this case, use the "com.commercehub.gradle.plugin.avro" plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
+
+Here's a short example of what this might look like:
+
+```groovy
+apply plugin: "java"
+apply plugin: "com.commercehub.gradle.plugin.avro-base"
+
+dependencies {
+    compile "org.apache.avro:avro:1.7.6"
+}
+
+task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+    source("src/avro")
+    outputDir = file("dest/avro")
+}
+
+compileJava.source(generateAvro.outputs)
+```
