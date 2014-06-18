@@ -1,5 +1,8 @@
 # Change Log
 
+* 0.3.0
+    * IntelliJ: register generated source directories even if they don't already exist.
+
 * 0.2.0
     * Build against Gradle 1.12
     * Compile using Avro 1.7.6

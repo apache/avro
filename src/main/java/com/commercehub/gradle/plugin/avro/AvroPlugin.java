@@ -4,6 +4,7 @@ import org.apache.avro.generic.GenericData;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.internal.ConventionMapping;
 import org.gradle.api.internal.IConventionAware;
 import org.gradle.api.plugins.JavaPlugin;
@@ -11,6 +12,7 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.SourceTask;
+import org.gradle.plugins.ide.idea.GenerateIdeaModule;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModule;
 
@@ -65,16 +67,30 @@ public class AvroPlugin implements Plugin<Project> {
             public void execute(IdeaPlugin ideaPlugin) {
                 SourceSet mainSourceSet = getMainSourceSet(project);
                 SourceSet testSourceSet = getTestSourceSet(project);
+                final File mainGeneratedOutputDir = getGeneratedOutputDir(project, mainSourceSet, JAVA_EXTENSION);
+                final File testGeneratedOutputDir = getGeneratedOutputDir(project, testSourceSet, JAVA_EXTENSION);
+                project.getTasks().withType(GenerateIdeaModule.class).all(new Action<GenerateIdeaModule>() {
+                    @Override
+                    public void execute(GenerateIdeaModule generateIdeaModule) {
+                        generateIdeaModule.doFirst(new Action<Task>() {
+                            @Override
+                            public void execute(Task task) {
+                                project.mkdir(mainGeneratedOutputDir);
+                                project.mkdir(testGeneratedOutputDir);
+                            }
+                        });
+                    }
+                });
                 IdeaModule module = ideaPlugin.getModel().getModule();
                 module.setSourceDirs(new SetBuilder<File>()
                         .addAll(module.getSourceDirs())
                         .add(getAvroSourceDir(project, mainSourceSet))
-                        .add(getGeneratedOutputDir(project, mainSourceSet, JAVA_EXTENSION))
+                        .add(mainGeneratedOutputDir)
                         .build());
                 module.setTestSourceDirs(new SetBuilder<File>()
                         .addAll(module.getTestSourceDirs())
                         .add(getAvroSourceDir(project, testSourceSet))
-                        .add(getGeneratedOutputDir(project, testSourceSet, JAVA_EXTENSION))
+                        .add(testGeneratedOutputDir)
                         .build());
                 // IntelliJ doesn't allow source directories beneath an excluded directory.
                 // Thus, we remove the build directory exclude and add all non-generated sub-directories as excludes.
