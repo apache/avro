@@ -352,6 +352,7 @@ static vector<string>::const_iterator skipCalls(Scanner& sc, Decoder& d,
             break;
         case 's':
         case 'N':
+        case 'R':
             break;
         default:
             BOOST_FAIL("Don't know how to skip: " << c);
@@ -754,6 +755,9 @@ template<typename CodecFactory>
 void testGeneric(const TestData& td) {
     static int testNo = 0;
     testNo++;
+    BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
+        << " schema: " << td.schema
+        << " calls: " << td.calls);
 
     ValidSchema vs = makeValidSchema(td.schema);
 
@@ -1183,7 +1187,6 @@ static const TestData4 data4[] = {
         "{\"name\":\"f1\", \"type\":\"long\"}]}", "RLS10",
         { "10", "hello", NULL }, 1 },
 
-    /*
     // Default values
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
         { NULL },
@@ -1215,16 +1218,44 @@ static const TestData4 data4[] = {
 
     // Default value for a record.
     { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-        "{\"name\": \"g2\", \"type\": \"long\"}]}", "L",
-        { "11", NULL },
+        "{\"name\": \"g1\", "
+        "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
+        "{\"name\":\"f1\", \"type\":\"long\" },"
+        "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
+        "{\"name\": \"g2\", \"type\": \"long\"}]}", "LIL",
+        { "10", "12", "13", NULL },
         "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
             "{\"name\": \"g1\", "
-            "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
-            "{\"name\":\"f1\", \"type\":\"int\" },"
+            "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
+            "{\"name\":\"f1\", \"type\":\"long\" },"
+            "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
+            "{\"name\": \"g2\", \"type\": \"long\"},"
+            "{\"name\": \"g3\", "
+            "\"type\":{\"type\":\"record\",\"name\":\"inner2\",\"fields\":["
+            "{\"name\":\"f1\", \"type\":\"long\" },"
             "{\"name\":\"f2\", \"type\":\"int\"}] }, "
-            "\"default\": { \"f1\": 10, \"f2\": 101 } }, "
-            "{\"name\": \"g2\", \"type\": \"long\"}]}", "RLRII",
-        { "11", "10", "101", NULL}, 1 },
+            "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
+            "RRLILRLI",
+        { "10", "12", "13", "15", "101", NULL}, 1 },
+
+    { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+        "{\"name\": \"g1\", "
+        "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
+        "{\"name\":\"f1\", \"type\":\"long\" },"
+        "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
+        "{\"name\": \"g2\", \"type\": \"long\"}]}", "LIL",
+        { "10", "12", "13", NULL },
+        "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+            "{\"name\": \"g1\", "
+            "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
+            "{\"name\":\"f1\", \"type\":\"long\" },"
+            "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
+            "{\"name\": \"g2\", \"type\": \"long\"},"
+            "{\"name\": \"g3\", "
+            "\"type\":\"inner1\", "
+            "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
+            "RRLILRLI",
+        { "10", "12", "13", "15", "101", NULL}, 1 },
 
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
         { NULL },
@@ -1234,14 +1265,14 @@ static const TestData4 data4[] = {
         { "100", NULL }, 1 },
 
     { "{ \"type\": \"array\", \"items\": {\"type\":\"record\","
-        "\"name\":\"r\",\"fields\":[]} }", "[c1s]",
-        { NULL },
+        "\"name\":\"r\",\"fields\":["
+        "{\"name\":\"f0\", \"type\": \"int\"}]} }", "[c1sI]",
+        { "99", NULL },
         "{ \"type\": \"array\", \"items\": {\"type\":\"record\","
         "\"name\":\"r\",\"fields\":["
         "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]} }",
-        "[c1sI]",
+        "[Rc1sI]",
         { "100", NULL }, 1 },
-        */
 
     // Enum resolution
     { "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"x\",\"y\",\"z\"]}",

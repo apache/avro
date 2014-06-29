@@ -123,7 +123,8 @@ ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr& n,
         }
     case AVRO_MAP:
         {
-            ProductionPtr v = doGenerate(n->leafAt(1), m);
+            ProductionPtr pp = doGenerate(n->leafAt(1), m);
+			ProductionPtr v(new Production(*pp));
             v->push_back(Symbol::stringSymbol());
             ProductionPtr result = make_shared<Production>();
             result->push_back(Symbol::mapEndSymbol());

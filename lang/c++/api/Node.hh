@@ -32,6 +32,7 @@
 namespace avro {
 
 class Node;
+class GenericDatum;
 
 typedef boost::shared_ptr<Node> NodePtr;
 
@@ -122,6 +123,9 @@ class AVRO_DECL Node : private boost::noncopyable
     }
     virtual size_t leaves() const = 0;
     virtual const NodePtr& leafAt(int index) const = 0;
+    virtual const GenericDatum& defaultValueAt(int index) {
+        throw Exception(boost::format("No default value at: %1%") % index);
+    }
 
     void addName(const std::string &name) {
         checkLock();

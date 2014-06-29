@@ -63,6 +63,8 @@ const char* Symbol::stringValues[] = {
     "Record",
     "SizeList",
     "WriterUnion",
+    "DefaultStart",
+    "DefaultEnd",
     "ImplicitActionHigh",
     "Error"
 };
@@ -74,7 +76,6 @@ Symbol Symbol::enumAdjustSymbol(const NodePtr& writer, const NodePtr& reader)
     for (size_t i = 0; i < rc; ++i) {
         rs.push_back(reader->nameAt(i));
     }
-    sort(rs.begin(), rs.end());
 
     size_t wc = writer->names();
     vector<int> adj;

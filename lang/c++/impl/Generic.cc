@@ -17,7 +17,6 @@
  */
 
 #include "Generic.hh"
-#include "NodeImpl.hh"
 #include <sstream>
 
 namespace avro {
@@ -32,80 +31,6 @@ void GenericContainer::assertType(const NodePtr& schema, Type type) {
     if (schema->type() != type) {
         throw Exception(boost::format("Schema type %1 expected %2") %
             toString(schema->type()) % toString(type));
-    }
-}
-
-GenericDatum::GenericDatum(const ValidSchema& schema) :
-    type_(schema.root()->type())
-{
-    init(schema.root());
-}
-
-GenericDatum::GenericDatum(const NodePtr& schema) : type_(schema->type())
-{
-    init(schema);
-}
-
-void GenericDatum::init(const NodePtr& schema)
-{
-    NodePtr sc = schema;
-    if (type_ == AVRO_SYMBOLIC) {
-        sc = resolveSymbol(schema);
-        type_ = sc->type();
-    }
-    switch (type_) {
-    case AVRO_NULL:
-        break;
-    case AVRO_BOOL:
-        value_ = bool();
-        break;
-    case AVRO_INT:
-        value_ = int32_t();
-        break;
-    case AVRO_LONG:
-        value_ = int64_t();
-        break;
-    case AVRO_FLOAT:
-        value_ = float();
-        break;
-    case AVRO_DOUBLE:
-        value_ = double();
-        break;
-    case AVRO_STRING:
-        value_ = string();
-        break;
-    case AVRO_BYTES:
-        value_ = vector<uint8_t>();
-        break;
-    case AVRO_FIXED:
-        value_ = GenericFixed(sc);
-        break;
-    case AVRO_RECORD:
-        value_ = GenericRecord(sc);
-        break;
-    case AVRO_ENUM:
-        value_ = GenericEnum(sc);
-        break;
-    case AVRO_ARRAY:
-        value_ = GenericArray(sc);
-        break;
-    case AVRO_MAP:
-        value_ = GenericMap(sc);
-        break;
-    case AVRO_UNION:
-        value_ = GenericUnion(sc);
-        break;
-    default:
-        throw Exception(boost::format("Unknown schema type %1%") %
-            toString(type_));
-    }
-}
-
-GenericRecord::GenericRecord(const NodePtr& schema) :
-    GenericContainer(AVRO_RECORD, schema) {
-    fields_.resize(schema->leaves());
-    for (size_t i = 0; i < schema->leaves(); ++i) {
-        fields_[i] = GenericDatum(schema->leafAt(i));
     }
 }
 
@@ -133,6 +58,8 @@ void GenericReader::read(GenericDatum& datum, Decoder& d, bool isResolving)
 {
     if (datum.isUnion()) {
         datum.selectBranch(d.decodeUnionIndex());
+        read(datum.value<GenericUnion>().datum(), d, isResolving);
+        return;
     }
     switch (datum.type()) {
     case AVRO_NULL:
@@ -249,6 +176,8 @@ void GenericWriter::write(const GenericDatum& datum, Encoder& e)
 {
     if (datum.isUnion()) {
         e.encodeUnionIndex(datum.unionBranch());
+        write(datum.value<GenericUnion>().datum(), e);
+        return;
     }
     switch (datum.type()) {
     case AVRO_NULL:

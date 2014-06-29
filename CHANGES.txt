@@ -20,6 +20,8 @@ Trunk (not yet released)
     AVRO-1522. Java: Add support for compression codecs to SortedKeyValueFile.
     (Steven Willis via cutting)
 
+    AVRO-1474. C++ resolvind decoder doesn't work when reader schema has more fields than writer schema. (thiru with help from Ramana Suvarapu)
+
   OPTIMIZATIONS
 
     AVRO-1455. Deep copy does not need to create new instances for primitives.

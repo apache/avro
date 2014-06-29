@@ -20,6 +20,7 @@
 #define avro_NodeImpl_hh__
 
 #include "Config.hh"
+#include "GenericDatum.hh"
 
 #include <limits>
 #include <set>
@@ -261,26 +262,27 @@ class AVRO_DECL NodeSymbolic : public NodeImplSymbolic
 
 };
 
-class AVRO_DECL NodeRecord : public NodeImplRecord
-{
-  public:
-
-    NodeRecord() :
-        NodeImplRecord(AVRO_RECORD) 
-    { }
-
-    NodeRecord(const HasName &name, const MultiLeaves &fields, const LeafNames &fieldsNames) :
-        NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize())
-    { 
-        for(size_t i=0; i < leafNameAttributes_.size(); ++i) {
-            if(!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-                 throw Exception(boost::format("Cannot add duplicate name: %1%") % leafNameAttributes_.get(i));
+class AVRO_DECL NodeRecord : public NodeImplRecord {
+    std::vector<GenericDatum> defaultValues;
+public:
+    NodeRecord() : NodeImplRecord(AVRO_RECORD) { } 
+    NodeRecord(const HasName &name, const MultiLeaves &fields,
+        const LeafNames &fieldsNames,
+        const std::vector<GenericDatum>& dv) :
+        NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize()),
+        defaultValues(dv) { 
+        for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
+            if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
+                throw Exception(boost::format(
+                    "Cannot add duplicate name: %1%") %
+                    leafNameAttributes_.get(i));
             }
         }
     }
 
     void swap(NodeRecord& r) {
         NodeImplRecord::swap(r);
+        defaultValues.swap(r.defaultValues);
     }
 
     SchemaResolution resolve(const Node &reader)  const;
@@ -288,10 +290,12 @@ class AVRO_DECL NodeRecord : public NodeImplRecord
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
-        return (
-                (nameAttribute_.size() == 1) && 
-                (leafAttributes_.size() == leafNameAttributes_.size())
-               );
+        return ((nameAttribute_.size() == 1) && 
+            (leafAttributes_.size() == leafNameAttributes_.size()));
+    }
+
+    const GenericDatum& defaultValueAt(int index) {
+        return defaultValues[index];
     }
 };
 

@@ -141,6 +141,13 @@ AVRO_DECL std::auto_ptr<InputStream> memoryInputStream(const uint8_t* data, size
 AVRO_DECL std::auto_ptr<InputStream> memoryInputStream(const OutputStream& source);
 
 /**
+ * Returns the contents written so far into the output stream, which should
+ * be a memory output stream. That is it must have been returned by a pervious
+ * call to memoryOutputStream().
+ */
+AVRO_DECL boost::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source);
+
+/**
  * Returns a new OutputStream whose contents would be stored in a file.
  * Data is written in chunks of given buffer size.
  *

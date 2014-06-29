@@ -25,19 +25,20 @@
 
 #include "json/JsonDom.hh"
 
-extern void yyparse(void *ctx);
-
 using std::string;
 using std::map;
 using std::vector;
+using std::pair;
+using std::make_pair;
 
 namespace avro {
+using json::Entity;
 using json::Object;
 using json::Array;
+using json::EntityType;
 
 typedef map<Name, NodePtr> SymbolTable;
 
-using json::Entity;
 
 // #define DEBUG_VERBOSE
 
@@ -92,7 +93,7 @@ static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
     }
     Name n = getName(t, ns);
 
-    map<Name, NodePtr>::const_iterator it = st.find(n);
+    SymbolTable::const_iterator it = st.find(n);
     if (it != st.end()) {
         return NodePtr(new NodeSymbolic(asSingleAttribute(n), it->second));
     }
@@ -145,16 +146,189 @@ const int64_t getLongField(const Entity& e, const Object& m,
     
 struct Field {
     const string& name;
-    const NodePtr value;
-    Field(const string& n, const NodePtr& v) : name(n), value(v) { }
+    const NodePtr schema;
+    const GenericDatum defaultValue;
+    Field(const string& n, const NodePtr& v, GenericDatum dv) :
+        name(n), schema(v), defaultValue(dv) { }
 };
+
+static void assertType(const Entity& e, EntityType et)
+{
+    if (e.type() != et) {
+        throw Exception(boost::format("Unexpected type for default value: "
+            "Expected %1%, but found %2%") % et % e.type());
+    }
+}
+
+static vector<uint8_t> toBin(const std::string& s)
+{
+    vector<uint8_t> result;
+    result.resize(s.size());
+    std::copy(s.c_str(), s.c_str() + s.size(), &result[0]);
+    return result;
+}
+
+static string nameof(const NodePtr& n)
+{
+    Type t = n->type();
+    switch (t) {
+    case AVRO_STRING:
+        return "string";
+    case AVRO_BYTES:
+        return "bytes";
+    case AVRO_INT:
+        return "int";
+    case AVRO_LONG:
+        return "long";
+    case AVRO_FLOAT:
+        return "float";
+    case AVRO_DOUBLE:
+        return "double";
+    case AVRO_BOOL:
+        return "boolean";
+    case AVRO_NULL:
+        return "null";
+    case AVRO_RECORD:
+    case AVRO_ENUM:
+    case AVRO_FIXED:
+    case AVRO_SYMBOLIC:
+        return n->name().fullname();
+    case AVRO_ARRAY:
+        return "array";
+    case AVRO_MAP:
+        return "map";
+    case AVRO_UNION:
+        return "union";
+    default:
+        throw Exception(boost::format("Unknown type: %1%") % t);
+    }
+}
+
+static GenericDatum makeGenericDatum(NodePtr n, const Entity& e,
+    const SymbolTable& st)
+{
+    Type t = n->type();
+    if (t == AVRO_SYMBOLIC) {
+        n = st.find(n->name())->second;
+        t = n->type();
+    }
+    switch (t) {
+    case AVRO_STRING:
+        assertType(e, json::etString);
+        return GenericDatum(e.stringValue());
+    case AVRO_BYTES:
+        assertType(e, json::etString);
+        return GenericDatum(toBin(e.stringValue()));
+    case AVRO_INT:
+        assertType(e, json::etLong);
+        return GenericDatum(static_cast<int32_t>(e.longValue()));
+    case AVRO_LONG:
+        assertType(e, json::etLong);
+        return GenericDatum(e.longValue());
+    case AVRO_FLOAT:
+        assertType(e, json::etDouble);
+        return GenericDatum(static_cast<float>(e.doubleValue()));
+    case AVRO_DOUBLE:
+        assertType(e, json::etDouble);
+        return GenericDatum(e.doubleValue());
+    case AVRO_BOOL:
+        assertType(e, json::etBool);
+        return GenericDatum(e.boolValue());
+    case AVRO_NULL:
+        assertType(e, json::etNull);
+        return GenericDatum();
+    case AVRO_RECORD:
+    {
+        assertType(e, json::etObject);
+        GenericRecord result(n);
+        const map<string, Entity>& v = e.objectValue();
+        for (size_t i = 0; i < n->leaves(); ++i) {
+            map<string, Entity>::const_iterator it = v.find(n->nameAt(i));
+            if (it == v.end()) {
+                throw Exception(boost::format(
+                    "No value found in default for %1%") % n->nameAt(i));
+            }
+            result.setFieldAt(i,
+                makeGenericDatum(n->leafAt(i), it->second, st));
+        }
+        return GenericDatum(n, result);
+    }
+    case AVRO_ENUM:
+        assertType(e, json::etString);
+        return GenericDatum(n, GenericEnum(n, e.stringValue()));
+    case AVRO_ARRAY:
+    {
+        assertType(e, json::etArray);
+        GenericArray result(n);
+        const vector<Entity>& elements = e.arrayValue();
+        for (vector<Entity>::const_iterator it = elements.begin();
+            it != elements.end(); ++it) {
+            result.value().push_back(makeGenericDatum(n->leafAt(0), *it, st));
+        }
+        return GenericDatum(n, result);
+    }
+    case AVRO_MAP:
+    {
+        assertType(e, json::etObject);
+        GenericMap result(n);
+        const map<string, Entity>& v = e.objectValue();
+        for (map<string, Entity>::const_iterator it = v.begin();
+            it != v.end(); ++it) {
+            result.value().push_back(make_pair(it->first,
+                makeGenericDatum(n->leafAt(1), it->second, st)));
+        }
+        return GenericDatum(n, result);
+    }
+    case AVRO_UNION:
+    {
+        GenericUnion result(n);
+        string name;
+        Entity e2;
+        if (e.type() == json::etNull) {
+            name = "null";
+            e2 = e;
+        } else {
+            assertType(e, json::etObject);
+            const map<string, Entity>& v = e.objectValue();
+            if (v.size() != 1) {
+                throw Exception(boost::format("Default value for "
+                    "union has more than one field: %1%") % e.toString());
+            }
+            map<string, Entity>::const_iterator it = v.begin();
+            name = it->first;
+            e2 = it->second;
+        }
+        for (int i = 0; i < n->leaves(); ++i) {
+            const NodePtr& b = n->leafAt(i);
+            if (nameof(b) == name) {
+                result.selectBranch(i);
+                result.datum() = makeGenericDatum(b, e2, st);
+                return GenericDatum(n, result);
+            }
+        }
+        throw Exception(boost::format("Invalid default value %1%") %
+            e.toString());
+    }
+    case AVRO_FIXED:
+        assertType(e, json::etString);
+        return GenericDatum(n, GenericFixed(n, toBin(e.stringValue())));
+    default:
+        throw Exception(boost::format("Unknown type: %1%") % t);
+    }
+    return GenericDatum();
+}
+
 
 static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
 {
     const Object& m = e.objectValue();
     const string& n = getStringField(e, m, "name");
     Object::const_iterator it = findField(e, m, "type");
-    return Field(n, makeNode(it->second, st, ns));
+    map<string, Entity>::const_iterator it2 = m.find("default");
+    NodePtr node = makeNode(it->second, st, ns);
+    GenericDatum d = (it2 == m.end()) ? GenericDatum() :
+        makeGenericDatum(node, it2->second, st);
+    return Field(n, node, d);
 }
 
 static NodePtr makeRecordNode(const Entity& e,
@@ -163,14 +337,16 @@ static NodePtr makeRecordNode(const Entity& e,
     const Array& v = getArrayField(e, m, "fields");
     concepts::MultiAttribute<string> fieldNames;
     concepts::MultiAttribute<NodePtr> fieldValues;
+    vector<GenericDatum> defaultValues;
     
     for (Array::const_iterator it = v.begin(); it != v.end(); ++it) {
         Field f = makeField(*it, st, ns);
         fieldNames.add(f.name);
-        fieldValues.add(f.value);
+        fieldValues.add(f.schema);
+        defaultValues.push_back(f.defaultValue);
     }
     return NodePtr(new NodeRecord(asSingleAttribute(name),
-        fieldValues, fieldNames));
+        fieldValues, fieldNames, defaultValues));
 }
 
 static NodePtr makeEnumNode(const Entity& e,
@@ -300,6 +476,12 @@ AVRO_DECL ValidSchema compileJsonSchemaFromStream(InputStream& is)
     SymbolTable st;
     NodePtr n = makeNode(e, st, "");
     return ValidSchema(n);
+}
+
+AVRO_DECL ValidSchema compileJsonSchemaFromFile(const char* filename)
+{
+    std::auto_ptr<InputStream> s = fileInputStream(filename);
+    return compileJsonSchemaFromStream(*s);
 }
 
 AVRO_DECL ValidSchema compileJsonSchemaFromMemory(const uint8_t* input, size_t len)

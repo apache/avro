@@ -85,6 +85,8 @@ public:
         sRecord,
         sSizeList,
         sWriterUnion,
+        sDefaultStart,  // extra has default value in Avro binary encoding
+        sDefaultEnd,
         sImplicitActionHigh,
         sError
     };
@@ -215,6 +217,16 @@ public:
         return Symbol(sRepeater, boost::make_tuple(s, isArray, read, skip));
     }
 
+    static Symbol defaultStartAction(boost::shared_ptr<std::vector<uint8_t> > bb)
+    {
+        return Symbol(sDefaultStart, bb);
+    }
+ 
+    static Symbol defaultEndAction()
+    {
+        return Symbol(sDefaultEnd);
+    }
+
     static Symbol alternative(
         const std::vector<ProductionPtr>& branches)
     {
@@ -287,6 +299,10 @@ public:
 
 };
 
+/**
+ * Recursively replaces all placeholders in the production with the
+ * corresponding values.
+ */
 template<typename T>
 void fixup(const ProductionPtr& p,
            const std::map<T, ProductionPtr> &m)
@@ -298,6 +314,10 @@ void fixup(const ProductionPtr& p,
 }
     
 
+/**
+ * Recursively replaces all placeholders in the symbol with the values with the
+ * corresponding values.
+ */
 template<typename T>
 void fixup_internal(const ProductionPtr& p,
                     const std::map<T, ProductionPtr> &m,
@@ -335,11 +355,16 @@ void fixup(Symbol& s, const std::map<T, ProductionPtr> &m,
             fixup_internal(boost::tuples::get<2>(ri), m, seen);
             fixup_internal(boost::tuples::get<3>(ri), m, seen);
         }
-    
         break;
     case Symbol::sPlaceholder:
-        s = Symbol::symbolic(boost::weak_ptr<Production>(
-            m.find(s.extra<T>())->second));
+        {
+            typename std::map<T, boost::shared_ptr<Production> >::const_iterator it =
+                m.find(s.extra<T>());
+            if (it == m.end()) {
+                throw Exception("Placeholder symbol cannot be resolved");
+            }
+            s = Symbol::symbolic(boost::weak_ptr<Production>(it->second));
+        }
         break;
     case Symbol::sUnionAdjust:
         fixup_internal(s.extrap<std::pair<size_t, ProductionPtr> >()->second,
@@ -450,11 +475,12 @@ public:
                     break;
                 default:
                     if (s.isImplicitAction()) {
-                        Symbol ss = s;
-                        parsingStack.pop();
-                        size_t n = handler_.handle(ss);
-                        if (ss.kind() == Symbol::sWriterUnion) {
+                        size_t n = handler_.handle(s);
+                        if (s.kind() == Symbol::sWriterUnion) {
+                            parsingStack.pop();
                             selectBranch(n); 
+                        } else {
+                            parsingStack.pop();
                         }
                     } else {
                         std::ostringstream oss;
@@ -730,6 +756,42 @@ public:
 
 };
 
+inline std::ostream& operator<<(std::ostream& os, const Symbol s);
+
+inline std::ostream& operator<<(std::ostream& os, const Production p)
+{
+    os << '(';
+    for (Production::const_iterator it = p.begin(); it != p.end(); ++it) {
+        os << *it << ", ";
+    }
+    os << ')';
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Symbol s)
+{
+        switch (s.kind()) {
+        case Symbol::sRepeater:
+            {
+                const RepeaterInfo& ri = *s.extrap<RepeaterInfo>();
+                os << '(' << Symbol::toString(s.kind())
+                    << boost::tuples::get<2>(ri)
+                    << boost::tuples::get<3>(ri)
+                    << ')';
+            }
+            break;
+        case Symbol::sIndirect:
+            {
+                os << '(' << Symbol::toString(s.kind()) << ' '
+                << *s.extra<boost::shared_ptr<Production> >() << ')';
+            }
+            break;
+        default:
+            os << Symbol::toString(s.kind());
+            break;
+        }
+        return os;
+    }
 }   // namespace parsing
 }   // namespace avro
 

@@ -533,10 +533,27 @@ void CodeGen::generateRecordTraits(const NodePtr& n)
 
     os_ << "    }\n"
         << "    static void decode(Decoder& d, " << fn << "& v) {\n";
+    os_ << "        if (avro::ResolvingDecoder *rd =\n";
+    os_ << "            dynamic_cast<avro::ResolvingDecoder *>(&d)) {\n";
+    os_ << "            const std::vector<size_t> fo = rd->fieldOrder();\n";
+    os_ << "            for (std::vector<size_t>::const_iterator it = fo.begin();\n";
+    os_ << "                it != fo.end(); ++it) {\n";
+    os_ << "                switch (*it) {\n";
+    for (size_t i = 0; i < c; ++i) {
+        os_ << "                case " << i << ":\n";
+        os_ << "                    avro::decode(d, v." << n->nameAt(i) << ");\n";
+        os_ << "                    break;\n";
+    }
+    os_ << "                default:\n";
+    os_ << "                    break;\n";
+    os_ << "                }\n";
+    os_ << "            }\n";
+    os_ << "        } else {\n";
 
     for (size_t i = 0; i < c; ++i) {
-        os_ << "        avro::decode(d, v." << n->nameAt(i) << ");\n";
+        os_ << "            avro::decode(d, v." << n->nameAt(i) << ");\n";
     }
+    os_ << "        }\n";
 
     os_ << "    }\n"
         << "};\n\n";

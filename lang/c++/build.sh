@@ -79,7 +79,6 @@ case "$target" in
     (cd build && make && cd .. \
         && ./build/buffertest \
         && ./build/unittest \
-        && ./build/testgentest \
         && ./build/CodecTests \
         && ./build/StreamTests \
         && ./build/SpecificTests \

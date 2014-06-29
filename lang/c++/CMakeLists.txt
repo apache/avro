@@ -42,6 +42,7 @@ add_definitions (
     -DBOOST_REGEX_DYN_LINK
     -DBOOST_FILESYSTEM_DYN_LINK
     -DBOOST_SYSTEM_DYN_LINK
+    -DBOOST_IOSTREAMS_DYN_LINK
     -DBOOST_PROGRAM_OPTIONS_DYN_LINK
     -DBOOST_ALL_NO_LIB)
 endif()
@@ -64,7 +65,7 @@ set (AVRO_SOURCE_FILES
         impl/Types.cc impl/ValidSchema.cc impl/Zigzag.cc
         impl/BinaryEncoder.cc impl/BinaryDecoder.cc
         impl/Stream.cc impl/FileStream.cc
-        impl/Generic.cc
+        impl/Generic.cc impl/GenericDatum.cc
         impl/DataFile.cc
         impl/parsing/Symbol.cc
         impl/parsing/ValidatingCodec.cc
@@ -97,21 +98,6 @@ add_executable (precompile test/precompile.cc)
 
 target_link_libraries (precompile avrocpp_s ${Boost_LIBRARIES})
 
-macro (gencpp file ns)
-    add_custom_command (OUTPUT ${ns}.hh
-        COMMAND precompile ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file}
-            ${file}
-        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen-cppcode.py
-            -n ${ns} -i ${file} -o ${ns}.hh
-        DEPENDS precompile ${CMAKE_CURRENT_SOURCE_DIR}/jsonschemas/${file})
-    add_custom_target(${ns} DEPENDS ${ns}.hh)
-endmacro (gencpp)
-
-if (CYGWIN OR NOT WIN32)
-    gencpp (bigrecord testgen)
-    gencpp (bigrecord2 testgen2)
-endif ()
-
 macro (gen file ns)
     add_custom_command (OUTPUT ${file}.hh
         COMMAND avrogencpp
@@ -124,6 +110,7 @@ endmacro (gen)
 
 gen (empty_record empty)
 gen (bigrecord testgen)
+gen (bigrecord_r testgen_r)
 gen (bigrecord2 testgen2)
 gen (tweet testgen3)
 gen (union_array_union uau)
@@ -156,12 +143,8 @@ unittest (DataFileTests)
 unittest (JsonTests)
 unittest (AvrogencppTests)
 
-if (CYGWIN OR NOT WIN32)
-    unittest (testgentest)
-    add_dependencies (testgentest testgen testgen2)
-endif()
-
-add_dependencies (AvrogencppTests bigrecord_hh bigrecord2_hh tweet_hh
+add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
+    tweet_hh
     union_array_union_hh union_map_union_hh union_conflict_hh
     recursive_hh reuse_hh circulardep_hh empty_record_hh)
 

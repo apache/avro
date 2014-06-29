@@ -21,6 +21,8 @@
 
 namespace avro {
 
+using std::vector;
+
 class MemoryInputStream : public InputStream {
     const std::vector<uint8_t*>& data_;
     const size_t chunkSize_;
@@ -174,6 +176,22 @@ std::auto_ptr<InputStream> memoryInputStream(const OutputStream& source)
         std::auto_ptr<InputStream>(new MemoryInputStream(mos.data_,
             mos.chunkSize_,
             (mos.chunkSize_ - mos.available_)));
+}
+
+boost::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source)
+{
+    const MemoryOutputStream& mos =
+        dynamic_cast<const MemoryOutputStream&>(source);
+    boost::shared_ptr<std::vector<uint8_t> > result(new std::vector<uint8_t>());
+    size_t c = mos.byteCount_;
+    result->reserve(mos.byteCount_);
+    for (vector<uint8_t*>::const_iterator it = mos.data_.begin();
+        it != mos.data_.end(); ++it) {
+        size_t n = std::min(c, mos.chunkSize_);
+        std::copy(*it, *it + n, std::back_inserter(*result));
+        c -= n;
+    }
+    return result;
 }
 
 }   // namespace avro
