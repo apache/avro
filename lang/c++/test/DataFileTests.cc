@@ -95,6 +95,18 @@ template <> struct codec_traits<Double> {
     }
 };
 
+template<> struct codec_traits<uint32_t> {
+    static void encode(Encoder& e, const uint32_t& v) {
+      e.encodeFixed( (uint8_t *) &v,sizeof(uint32_t));
+    }
+
+    static void decode(Decoder& d, uint32_t& v) {
+        std::vector <uint8_t> value;
+        d.decodeFixed(sizeof(uint32_t),value);
+        memcpy(&v,&(value[0]),sizeof(uint32_t));
+    }
+};
+
 }
 
 static ValidSchema makeValidSchema(const char* schema)
@@ -123,6 +135,8 @@ static const char dblsch[] = "{\"type\": \"record\","
     "\"name\":\"ComplexDouble\", \"fields\": ["
         "{\"name\":\"re\", \"type\":\"double\"}"
     "]}";
+static const char fsch[] = "{\"type\": \"fixed\","
+    "\"name\":\"Fixed_32\", \"size\":4}";
 
 
 string toString(const ValidSchema& s)
@@ -419,6 +433,21 @@ public:
             }
         }
     }
+
+    void testSchemaReadWrite() {
+    uint32_t a=42;
+    {
+            avro::DataFileWriter<uint32_t> df(filename, writerSchema);
+        df.write(a);    
+        }
+
+        {
+        avro::DataFileReader<uint32_t> df(filename);
+        uint32_t b;
+            df.read(b);
+            BOOST_CHECK_EQUAL(b, a);
+    }
+    }
 };
 
 void addReaderTests(test_suite* ts, const shared_ptr<DataFileTest>& t)
@@ -464,6 +493,9 @@ init_unit_test_suite( int argc, char* argv[] )
     shared_ptr<DataFileTest> t6(new DataFileTest("test6.df", dsch, dblsch));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZip, t6));
 
+    shared_ptr<DataFileTest> t7(new DataFileTest("test7.df",fsch,fsch));
+    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWrite,t7));
+    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup,t7));
 
     return ts;
 }

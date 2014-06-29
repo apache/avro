@@ -274,8 +274,8 @@ NodeFixed::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
-    os << indent(depth) << "\"size\": " << sizeAttribute_.get() << ",\n";
     printName(os, nameAttribute_.get(), depth);
+    os << indent(depth) << "\"size\": " << sizeAttribute_.get() << "\n";
     os << indent(--depth) << '}';
 }
 
