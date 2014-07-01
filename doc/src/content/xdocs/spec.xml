@@ -259,6 +259,8 @@
           <li>subsequently contain only <code>[A-Za-z0-9_]</code></li>
 	</ul>
         <p>A namespace is a dot-separated sequence of such names.
+        The empty string may also be used as a namespace to indicate the
+        null namespace.
         Equality of names (including field names and enum symbols)
         as well as fullnames is case-sensitive.</p>
         <p>In record, enum and fixed definitions, the fullname is
@@ -279,7 +281,8 @@
 	  if <code>"name": "X"</code> is specified, and this occurs
 	  within a field of the record definition
 	  of <code>org.foo.Y</code>, then the fullname
-	  is <code>org.foo.X</code>.</li>
+	  is <code>org.foo.X</code>. If there is no enclosing
+	  namespace then the null namespace is used.</li>
 	</ul>
 	<p>References to previously defined names are as in the latter
 	two cases above: if they contain a dot they are a fullname, if

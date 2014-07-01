@@ -526,6 +526,17 @@ public class TestSchema {
   }
 
   @Test
+  public void testNullNamespaceAlias() throws Exception {
+    Schema s =
+      Schema.parse("{\"type\":\"record\",\"name\":\"Z\",\"fields\":[]}");
+    Schema t =
+      Schema.parse("{\"type\":\"record\",\"name\":\"x.Y\",\"aliases\":[\".Z\"],"
+                   +"\"fields\":[]}");
+    Schema u = Schema.applyAliases(s, t);
+    assertEquals("x.Y", u.getFullName());
+  }
+
+  @Test
   public void testNullPointer() throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
       +"[{\"name\":\"x\", \"type\":\"string\"}]}";

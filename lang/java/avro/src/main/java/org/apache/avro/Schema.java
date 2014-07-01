@@ -432,15 +432,15 @@ public abstract class Schema extends JsonProperties {
         return;
       }
       int lastDot = name.lastIndexOf('.');
-      if ("".equals(space))
-        space = null;
       if (lastDot < 0) {                          // unqualified name
-        this.space = space;                       // use default space
         this.name = validateName(name);
       } else {                                    // qualified name
-        this.space = name.substring(0, lastDot);  // get space from name
+        space = name.substring(0, lastDot);       // get space from name
         this.name = validateName(name.substring(lastDot+1, name.length()));
       }
+      if ("".equals(space))
+        space = null;
+      this.space = space;
       this.full = (this.space == null) ? this.name : this.space+"."+this.name;
     }
     public boolean equals(Object o) {
