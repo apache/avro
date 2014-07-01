@@ -18,11 +18,14 @@
 package org.apache.avro.io;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.io.parsing.Symbol;
+import org.apache.avro.util.Utf8;
 
 /**
  * {@link Decoder} that performs type-resolution between the reader's and
@@ -188,6 +191,64 @@ public class ResolvingDecoder extends ValidatingDecoder {
     }
   }
   
+  @Override
+  public Utf8 readString(Utf8 old) throws IOException {
+    Symbol actual = parser.advance(Symbol.STRING);
+    if (actual == Symbol.BYTES) {
+      return new Utf8(in.readBytes(null).array());
+    } else {
+      assert actual == Symbol.STRING;
+      return in.readString(old);
+    }
+  }
+
+  private static final Charset UTF8 = Charset.forName("UTF-8");
+
+  @Override
+  public String readString() throws IOException {
+    Symbol actual = parser.advance(Symbol.STRING);
+    if (actual == Symbol.BYTES) {
+      return new String(in.readBytes(null).array(), UTF8);
+    } else {
+      assert actual == Symbol.STRING;
+      return in.readString();
+    }
+  }
+
+  @Override
+  public void skipString() throws IOException {
+    Symbol actual = parser.advance(Symbol.STRING);
+    if (actual == Symbol.BYTES) {
+      in.skipBytes();
+    } else {
+      assert actual == Symbol.STRING;
+      in.skipString();
+    }
+  }
+
+  @Override
+  public ByteBuffer readBytes(ByteBuffer old) throws IOException {
+    Symbol actual = parser.advance(Symbol.BYTES);
+    if (actual == Symbol.STRING) {
+      Utf8 s = in.readString(null);
+      return ByteBuffer.wrap(s.getBytes(), 0, s.getByteLength());
+    } else {
+      assert actual == Symbol.BYTES;
+      return in.readBytes(old);
+    }
+  }
+
+  @Override
+  public void skipBytes() throws IOException {
+    Symbol actual = parser.advance(Symbol.BYTES);
+    if (actual == Symbol.STRING) {
+      in.skipString();
+    } else {
+      assert actual == Symbol.BYTES;
+      in.skipBytes();
+    }
+  }
+
   @Override
   public int readEnum() throws IOException {
     parser.advance(Symbol.ENUM);

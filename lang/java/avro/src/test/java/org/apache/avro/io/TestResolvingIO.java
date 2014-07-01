@@ -184,12 +184,14 @@ public class TestResolvingIO {
           + "{\"name\":\"f0\", \"type\":\"boolean\"},"
           + "{\"name\":\"f1\", \"type\":\"int\"},"
           + "{\"name\":\"f2\", \"type\":\"float\"},"
-          + "{\"name\":\"f3\", \"type\":\"string\"}]}", "BIFS",
+          + "{\"name\":\"f3\", \"type\":\"bytes\"},"
+          + "{\"name\":\"f4\", \"type\":\"string\"}]}", "BIFbS",
           "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
           + "{\"name\":\"f0\", \"type\":\"boolean\"},"
           + "{\"name\":\"f1\", \"type\":\"long\"},"
           + "{\"name\":\"f2\", \"type\":\"double\"},"
-          + "{\"name\":\"f3\", \"type\":\"string\"}]}", "BLDS" },
+          + "{\"name\":\"f3\", \"type\":\"string\"},"
+          + "{\"name\":\"f4\", \"type\":\"bytes\"}]}", "BLDSb" },
 
         { "[\"int\"]", "U0I",
               "[\"long\"]", "U0L" },

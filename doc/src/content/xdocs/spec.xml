@@ -1079,6 +1079,8 @@
                 <li>int is promotable to long, float, or double</li>
                 <li>long is promotable to float or double</li>
                 <li>float is promotable to double</li>
+                <li>string is promotable to bytes</li>
+                <li>bytes is promotable to string</li>
                 </ul>
             </li>
           </ul>

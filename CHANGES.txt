@@ -27,6 +27,9 @@ Trunk (not yet released)
     AVRO-1352. Schema for fixed types corrupted when writing out in
     JSON format (Steve Roehrs via thiru)
 
+    AVRO-1533. Java: In schema resolution, permit conversion between
+    bytes and string. (cutting)
+
   OPTIMIZATIONS
 
     AVRO-1455. Deep copy does not need to create new instances for primitives.

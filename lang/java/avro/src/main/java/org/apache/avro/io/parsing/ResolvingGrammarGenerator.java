@@ -151,6 +151,20 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         }
         break;
   
+      case BYTES:
+        switch (writerType) {
+        case STRING:
+          return Symbol.resolve(super.generate(writer, seen), Symbol.BYTES);
+        }
+        break;
+  
+      case STRING:
+        switch (writerType) {
+        case BYTES:
+          return Symbol.resolve(super.generate(writer, seen), Symbol.STRING);
+        }
+        break;
+  
       case UNION:
         int j = bestBranch(reader, writer);
         if (j >= 0) {
@@ -161,8 +175,6 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       case NULL:
       case BOOLEAN:
       case INT:
-      case STRING:
-      case BYTES:
       case ENUM:
       case ARRAY:
       case MAP:
@@ -446,6 +458,18 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         case FLOAT:
           switch (b.getType()) {
           case DOUBLE:
+            return j;
+          }
+          break;
+        case STRING:
+          switch (b.getType()) {
+          case BYTES:
+            return j;
+          }
+          break;
+        case BYTES:
+          switch (b.getType()) {
+          case STRING:
             return j;
           }
           break;
