@@ -104,7 +104,7 @@ module Avro
       hsh['types'] = types.map{|t| t.to_avro(names) } if types
 
       if messages
-        hsh['messages'] = messages.collect_hash{|k,t| [k, t.to_avro(names)] }
+        hsh['messages'] = messages.inject({}) {|h, (k,t)| h[k] = t.to_avro(names); h }
       end
 
       hsh

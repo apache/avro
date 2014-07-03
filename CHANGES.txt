@@ -63,6 +63,9 @@ Trunk (not yet released)
     AVRO-1535. Java: Make the name .X to refer to X in the null namespace.
     This permits aliases to names in the null namespace. (cutting)
 
+    AVRO-1536. Ruby: Remove monkeypatching of Enumerable.
+    (Willem van Bergen via martinkl)
+
   BUG FIXES
 
     AVRO-1446. C#: Correctly handle system errors in RPC.
