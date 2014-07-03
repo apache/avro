@@ -33,8 +33,11 @@ class ReflectionUtil {
   private ReflectionUtil() {
   }
 
-  private static final FieldAccess FIELD_ACCESS;
+  private static FieldAccess fieldAccess;
   static {
+    resetFieldAccess();
+  }
+  static void resetFieldAccess() {
     // load only one implementation of FieldAccess
     // so it is monomorphic and the JIT can inline
     FieldAccess access = null;
@@ -60,7 +63,7 @@ class ReflectionUtil {
             "Unable to load a functional FieldAccess class!");
       }
     }
-    FIELD_ACCESS = access;
+    fieldAccess = access;
   }
 
   private static <T> T load(String name, Class<T> type) throws Exception {
@@ -69,7 +72,7 @@ class ReflectionUtil {
   }
 
   public static FieldAccess getFieldAccess() {
-    return FIELD_ACCESS;
+    return fieldAccess;
   }
 
   private static boolean validate(FieldAccess access) throws Exception {

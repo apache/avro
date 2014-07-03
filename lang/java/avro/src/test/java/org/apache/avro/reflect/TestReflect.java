@@ -719,6 +719,24 @@ public class TestReflect {
     assertEquals(b, decoded);
   }
 
+  @Test public void testDisableUnsafe() throws Exception {
+    String saved = System.getProperty("avro.disable.unsafe");
+    try {
+      System.setProperty("avro.disable.unsafe", "true");
+      ReflectData.ACCESSOR_CACHE.clear();
+      ReflectionUtil.resetFieldAccess();
+      testMultipleAnnotations();
+      testRecordWithNullIO();
+    } finally {
+      if (saved == null)
+        System.clearProperty("avro.disable.unsafe");
+      else
+        System.setProperty("avro.disable.unsafe", saved);
+      ReflectData.ACCESSOR_CACHE.clear();
+      ReflectionUtil.resetFieldAccess();
+    }
+  }
+
   public static class SampleRecord {
     public int x = 1;
     private int y = 2;

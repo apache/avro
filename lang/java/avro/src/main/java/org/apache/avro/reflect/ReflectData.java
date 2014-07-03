@@ -206,7 +206,7 @@ public class ReflectData extends SpecificData {
     }
   }
   
-  private static final ConcurrentHashMap<Class<?>, ClassAccessorData> 
+  static final ConcurrentHashMap<Class<?>, ClassAccessorData> 
     ACCESSOR_CACHE = new ConcurrentHashMap<Class<?>, ClassAccessorData>();
 
   private static class ClassAccessorData {
