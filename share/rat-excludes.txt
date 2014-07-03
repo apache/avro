@@ -49,4 +49,7 @@ lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/*.css
 lang/java/protobuf/src/test/java/org/apache/avro/protobuf/Test.java
 lang/java/thrift/src/test/java/org/apache/avro/thrift/test/*.java
 lang/java/tools/src/test/compiler/output*/**
+lang/perl/.shipit
+lang/perl/Changes
+lang/perl/MANIFEST*
 share/test/data/test.avro12
