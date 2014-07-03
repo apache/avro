@@ -117,7 +117,7 @@ case "$target" in
 	(cd lang/php; ./build.sh dist)
 
         mkdir -p dist/perl
-	(cd lang/perl; make dist)
+	(cd lang/perl; perl ./Makefile.PL && make dist)
         cp lang/perl/Avro-$VERSION.tar.gz dist/perl/
 
 	# build docs
@@ -169,7 +169,7 @@ case "$target" in
 
 	(cd lang/php; ./build.sh clean)
 
-	(cd lang/perl; make clean)
+	(cd lang/perl; [ -f Makefile ] && make clean)
 	;;
 
     *)
