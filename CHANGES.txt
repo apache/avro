@@ -44,7 +44,7 @@ Trunk (not yet released)
     (Jesse Anderson via cutting)
 
     AVRO-1449. Java: Optionally validate default values while reading schemas.
-    (cutting)    
+    (cutting)
 
     AVRO-1472. Java: Clarify parse method in getting started guide.
     (Michael Knapp via cutting)
@@ -112,6 +112,8 @@ Trunk (not yet released)
 
     AVRO-1498. Java: Fix custom encodings to work in reflect without
     Unsafe access. (Christopher Mann via cutting)
+
+    AVRO-1448. Python3: Fix setup.py installation through PyPI. (taton)
 
 Avro 1.7.6 (15 January 2014)
 
@@ -328,7 +330,7 @@ Avro 1.7.5 (12 August 2013)
     AVRO-1261. Clarify in documentation that generated no-arg
     constructors do not use default values from schema. (cutting)
 
-    AVRO-1297. NettyTransceiver: Provide overloaded 
+    AVRO-1297. NettyTransceiver: Provide overloaded
     close(boolean awaitCompletion). (jbaldassari)
 
     AVRO-1279. C: Treat missing codec in data files as null codec.
@@ -490,7 +492,7 @@ Avro 1.7.3 (6 December 2012)
 
   NEW FEATURES
 
-    AVRO-485.  JavaScript: Add validator. (Quinn Slack via cutting) 
+    AVRO-485.  JavaScript: Add validator. (Quinn Slack via cutting)
 
     AVRO-1157. Java: Extend schema and protocol property support from
     string-only to full JSON. (cutting)
@@ -934,7 +936,7 @@ Avro 1.6.2 (13 February 2012)
 
     AVRO-956. Remove dependency on Flex/Bison. (thiru)
 
-    AVRO-1011. Improve POM structure. (Lars Francke via scottcarey) 
+    AVRO-1011. Improve POM structure. (Lars Francke via scottcarey)
 
     AVRO-1016. Java: Add Field#getAliases() method to better permit
     copying of schemas. (cutting)
@@ -982,7 +984,7 @@ Avro 1.6.2 (13 February 2012)
     AVRO-966. Java: Fix ReflectDatumWriter to be able to correctly
     write unions containing Collection and/or ByteBuffer. (cutting)
 
-    AVRO-977. Java: Fix codegen to not generate deprecated code. 
+    AVRO-977. Java: Fix codegen to not generate deprecated code.
     (Hamed Asghari via cutting)
 
     AVRO-978. Java: Fix reflect to better handle Byte type.  (cutting)
@@ -996,10 +998,10 @@ Avro 1.6.2 (13 February 2012)
     AVRO-984. C: Resolved writers initialize complex array values
     correctly. (Vivek Nadkarni via dcreager)
 
-    AVRO-994. Java: TestFileSpanStorage.testTonsOfSpans() fails on my 
+    AVRO-994. Java: TestFileSpanStorage.testTonsOfSpans() fails on my
     slow VM. (jbaldassari)
 
-    AVRO-993. Java: Add methods back to GenericDatumReader that were 
+    AVRO-993. Java: Add methods back to GenericDatumReader that were
     removed in AVRO-839. (jbaldassari)
 
     AVRO-1000. Java: Remove incompatible implementations of equals()
@@ -1022,7 +1024,7 @@ Avro 1.6.2 (13 February 2012)
     AVRO-1014. C: Check for errors producing JSON output in avrocat.
     (Lucas Martin-King via dcreager)
 
-    AVRO-996. Java: SpecificRecord builder pattern object copy fails 
+    AVRO-996. Java: SpecificRecord builder pattern object copy fails
     with unions in some cases. (scottcarey and jbaldassari)
 
     AVRO-1020. Java: Fix builder API to correctly handle default
@@ -1175,7 +1177,7 @@ Avro 1.6.0 (2 November 2011)
     AVRO-874. Remove experimental disclaimer from IDL documentation. (cutting)
 
     AVRO-891. Java: In SpecificDatumReader, when no reader schema is
-    specified, use schema of currently loaded class.  (cutting) 
+    specified, use schema of currently loaded class.  (cutting)
 
     AVRO-865. C: Upgrade Jansson to 2.1. (dcreager)
 
@@ -1469,8 +1471,8 @@ Avro 1.5.0 (10 March 2011)
     AVRO-647. Java: Break avro.jar up into multiple parts: avro.jar,
     avro-compiler.jar, avro-ipc.jar, avro-mapred.jar, avro-tools.jar,
     and avro-maven-plugin.jar.
-    
-    Summary of artifacts: 
+
+    Summary of artifacts:
     * avro.jar
       Contains 'core' avro features:  schemas, data files,
       specific, generic, and reflect APIs.
@@ -1495,16 +1497,16 @@ Avro 1.5.0 (10 March 2011)
     (scottcarey)
 
     AVRO-737. Java: Improve correlation between packages and modules.
-    Each module introduced by AVRO-647 now exclusively provides 
+    Each module introduced by AVRO-647 now exclusively provides
     different java packages.  This required moving several classes
     around into new packages and will therefore require users to
     change their package imports when upgrading to Avro 1.5.0.
     Summary of changes:
     * AvroRemoteException has moved to org.apache.avro
-    * ByteBufferInputStream and ByteBufferInputStream have moved 
+    * ByteBufferInputStream and ByteBufferInputStream have moved
       to org.apache.avro.util
     * InduceSchemaTool has moved to org.apache.avro.tools
-    * SpecificCompiler, SchemaTask, and ProtocolTask have moved 
+    * SpecificCompiler, SchemaTask, and ProtocolTask have moved
       to org.apache.avro.compiler.specific
     * The Idl compiler has moved to org.apache.avro.compiler.idl
     * ReflectRequestor and ReflectResponder have moved to
@@ -1517,20 +1519,20 @@ Avro 1.5.0 (10 March 2011)
 
     AVRO-753. Java: Improve BinaryEncoder Performance.
     The Encoder API has several resulting changes:
-    * Construction and configuration is handled by EncoderFactory.  All 
+    * Construction and configuration is handled by EncoderFactory.  All
       Constructors are hidden, and Encoder.init(OutputStream) is removed.
     * Some Encoders previously did not buffer output.  Users must call
       Encoder.flush() to ensure output is written unless the EncoderFactory
       method used to construct an instance explicitly states that the Encoder
-      does not buffer output. 
+      does not buffer output.
     (scottcarey)
 
     AVRO-769. Java: Align Decoder/Encoder APIs for consistency and long term
-    stability.  Avro's Decoder and Encoder APIs are aligned and now consist of 
+    stability.  Avro's Decoder and Encoder APIs are aligned and now consist of
     only read and write operations.  EncoderFactory and DecoderFactory handle
     all construction and common configuration.  Some specialized implementations
-    have separate configuration APIs. 
-     
+    have separate configuration APIs.
+
     (scottcarey)
 
     AVRO-670. Allow DataFileWriteTool to accept schema files as input with new
@@ -1544,7 +1546,7 @@ Avro 1.5.0 (10 March 2011)
     GenericData, potentially breaking subclasses. (cutting)
 
     AVRO-696. Java: Make DataFileWriter.setMetaInternal(String,String)
-    private. (Patrick Linehan via cutting)    
+    private. (Patrick Linehan via cutting)
 
     AVRO-741. C: Minor API change to handling of bytes data.
     (Douglas Creager via brucem)
@@ -1607,7 +1609,7 @@ Avro 1.5.0 (10 March 2011)
 
     AVRO-765. Java: Improvement to BinaryDecoder readLong performance
     (scottcarey)
-  
+
     AVRO-716. Java: integrate AVRO-647 changes with top level build
     (scottcarey)
 
@@ -1685,7 +1687,7 @@ Avro 1.5.0 (10 March 2011)
     AVRO-764. Java: Bug in BinaryData.compare() with offset comparison.
     (Harsh J Chouraria via scottcarey)
 
-    AVRO-743. Java: Performance Regression and memory pressure with 
+    AVRO-743. Java: Performance Regression and memory pressure with
     GenericDatumReader. (scottcarey)
 
     AVRO-675. C: Bytes and fixed setters don't update datum size.
@@ -1715,7 +1717,7 @@ Avro 1.5.0 (10 March 2011)
     (Bo Shi via cutting)
 
     AVRO-713. Java: Fix GenericData.Record#toString() to produce valid
-    JSON for enum symbols. (Jay Kreps via cutting)    
+    JSON for enum symbols. (Jay Kreps via cutting)
 
     AVRO-643. Java: Fix intermittent failures in TestTraceCollection. (cutting)
 
@@ -1863,7 +1865,7 @@ Avro 1.4.0 (31 August 2010)
 
   IMPROVEMENTS
 
-    AVRO-636. Expose Singleton Method for TracePlugin. (Patrick Wendell via 
+    AVRO-636. Expose Singleton Method for TracePlugin. (Patrick Wendell via
     philz)
 
     AVRO-614. Improve Trace frontend UI. (Patrick Wendell via philz)
@@ -1877,7 +1879,7 @@ Avro 1.4.0 (31 August 2010)
     AVRO-584. Update Histogram for Stats Plugin
     (Patrick Wendell via philz)
 
-    AVRO-501. missing function in C api to access array elements after 
+    AVRO-501. missing function in C api to access array elements after
     decoding an array. (Bruce Mitchener via massie)
 
     AVRO-497. Minor changes to C++ autotools, makefiles, and code
@@ -1963,7 +1965,7 @@ Avro 1.4.0 (31 August 2010)
 
     AVRO-622. python avro.ipc doesn't work with python2.4 (philz)
 
-    AVRO-620. Python implementation doesn't stringify sub-schemas 
+    AVRO-620. Python implementation doesn't stringify sub-schemas
     correctly. (philz)
 
     AVRO-618. Avro doesn't work with python 2.4 (philz)
@@ -1978,7 +1980,7 @@ Avro 1.4.0 (31 August 2010)
     AVRO-566. Java: fix so that JAVA_HOME is bound by build.xml for
     test_tools.sh.  (cutting)
 
-    AVRO-571. Fix how we handle out-of-bounds indexes for union and 
+    AVRO-571. Fix how we handle out-of-bounds indexes for union and
     enum parsing in Python (hammer)
 
     AVRO-589. ClassCastException:
@@ -2030,7 +2032,7 @@ Avro 1.3.3 (7 June 2010)
 
     AVRO-486. DataFile.open for the ruby side (jmhodges)
 
-    AVRO-559. Handle read_union error where the list index of the union branch 
+    AVRO-559. Handle read_union error where the list index of the union branch
     to follow exceeds the size of the union schema (hammer)
 
     AVRO-491. Doing doubles and floats better in the ruby impl. (jmhodges)
@@ -2067,7 +2069,7 @@ Avro 1.3.3 (7 June 2010)
 
     AVRO-562 ruby side had busted client handshaking. (jmhodges)
 
-    AVRO-517. Resolving Decoder fails in some cases. (thiru) 
+    AVRO-517. Resolving Decoder fails in some cases. (thiru)
 
     AVRO-524. DataFileWriter.appendTo leads to intermittent IOException during write() (thiru)
 
@@ -2082,14 +2084,14 @@ Avro 1.3.3 (7 June 2010)
     AVRO-500. ruby side dev packaging (jmhodges)
 
     AVRO-516. ruby: buffer length should not be little-endian in socket rpc (jmhodges)
- 
+
 Avro 1.3.2 (31 March 2010)
 
   IMPROVEMENTS
 
     AVRO-449. CMake-based build system for Avro/C (Bruce Mitchener via massie)
 
-    AVRO-418. avro.h generates errors when included in C++ code 
+    AVRO-418. avro.h generates errors when included in C++ code
     (Bruce Mitchener via massie)
 
     AVRO-480. avro_flush() is in the header, but not implemented
@@ -2106,7 +2108,7 @@ Avro 1.3.2 (31 March 2010)
     AVRO-490. Add Ant task to deploy Java artifacts to Maven repo. (cutting)
 
   BUG FIXES
- 
+
     AVRO-479. Fix 'sign' target in top-level build.sh to generate md5
     checksums. (cutting)
 
@@ -2128,15 +2130,15 @@ Avro 1.3.1 (16 March 2010)
 
     AVRO-438. Clarify spec.  (Amichai Rothman via cutting)
 
-    AVRO-445. avro_size_data() to pre-calculate the size of an 
+    AVRO-445. avro_size_data() to pre-calculate the size of an
     avro_datum_t in serialized form (Bruce Mitchener via massie)
 
-    AVRO-443. Endianness is determined at configure time rather 
+    AVRO-443. Endianness is determined at configure time rather
     than compile time (Bruce Mitchener via massie)
-  
+
     AVRO-448. encoding_binary.c doesn't build on big endian platforms
     (Bruce Mitchener via massie)
- 
+
     AVRO-442. sizeof void* and sizeof long detected at configure time
     (Bruce Mitchener via massie)
 
@@ -2226,7 +2228,7 @@ Avro 1.3.0 (24 February 2010)
       - jsontofrag Renders a JSON-encoded Avro datum as binary.
     (Philip Zeyliger via cutting)
 
-    AVRO-272. Extend RPCContext to include message. 
+    AVRO-272. Extend RPCContext to include message.
     (Philip Zeyliger via cutting)
 
     AVRO-258. Add GenAvro language tool.  (Todd Lipcon via cutting)
@@ -2243,20 +2245,20 @@ Avro 1.3.0 (24 February 2010)
     protocols, and messages. (Philip Zeyliger via cutting)
 
     AVRO-274. Make Java's data file sync interval configurable.  (cutting)
-  
+
     AVRO-346. Add function to validate a datum against a schema. (massie)
 
     AVRO-306. Add Ruby implementation. (Jeff Hodges via cutting)
-    
+
     AVRO-135. Add compression to data files. (philz)
 
-    AVRO-368. Reserve avro.* in object container files, and 
+    AVRO-368. Reserve avro.* in object container files, and
     rename existing reserved words. (philz)
 
     AVRO-380. Avro Container File format change: add block size to block
     descriptor.  (Scott Carey via philz)
 
-    AVRO-322. Add a working client and server to Python implementation 
+    AVRO-322. Add a working client and server to Python implementation
     using HTTP as a transport (hammer)
 
     AVRO-287. Make RPC interop tests work with new Python implementation
@@ -2295,7 +2297,7 @@ Avro 1.3.0 (24 February 2010)
     AVRO-149. Add Java command-line executable, "avroj".
     (Philip Zeyliger via cutting)
 
-    AVRO-175. Split the avro_io interface into two interfaces: avro_reader 
+    AVRO-175. Split the avro_io interface into two interfaces: avro_reader
     and avro_writer (massie)
 
     AVRO-179. Add units tests for all Avro C primitives (massie)
@@ -2306,7 +2308,7 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-186. Full read-path interoperability test (massie)
 
-    AVRO-187. Move top-level source files into separate directories 
+    AVRO-187. Move top-level source files into separate directories
     for easier maintenance (massie)
 
     AVRO-188. Need to update svn ignores (massie)
@@ -2349,7 +2351,7 @@ Avro 1.3.0 (24 February 2010)
     AVRO-236. Add protocol support to avroj induce tool.  (cutting)
 
     AVRO-234. C++ code cleanup. (sbanacho)
-    
+
     AVRO-240. In Python, if simplejson is not available, try using
     2.6's built-in json module. (Jeff Hammerbacher via cutting)
 
@@ -2363,7 +2365,7 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-247. In reflection, add Stringable annotation to indicate
     classes that can be represented by an Avro string.  (cutting)
-    
+
     AVRO-246 Java schema parser should take schema from InputStream
     in addition to file. (thiru)
 
@@ -2448,12 +2450,12 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-377. Add getters and setters for all Avro datum types (massie)
 
-    AVRO-378. Add example code to the C implementation and update 
+    AVRO-378. Add example code to the C implementation and update
               documentation (massie)
 
     AVRO-379. Changed record getter/setter API to match other datatypes (massie)
 
-    AVRO-381. Update documentation to talk about reference counting and 
+    AVRO-381. Update documentation to talk about reference counting and
               memory management (massie)
 
     AVRO-384. Add schema projection to the C implementation (massie)
@@ -2482,7 +2484,7 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-321. Restore Java RPC interop tests. (cutting)
 
-    AVRO-402. Add method for writing avro_schema_t structure to an 
+    AVRO-402. Add method for writing avro_schema_t structure to an
               avro_writer_t (massie)
 
     AVRO-398. avro_read_file doesn't detect eof (Eli Collins via massie)
@@ -2491,7 +2493,7 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-400. Adding warning for unused parameters (Eli Collins via massie)
 
-    AVRO-409. Update contact database example to use a file object 
+    AVRO-409. Update contact database example to use a file object
               container for C implementation (massie)
 
     AVRO-420. Add namespace support to C implementation (massie)
@@ -2525,7 +2527,7 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-345. Optimization for ResolvingDecoder (thiru)
 
-    AVRO-363. estSchema had two tests disabled; new test for named schemas 
+    AVRO-363. estSchema had two tests disabled; new test for named schemas
     named after primitives. (philz)
 
     AVRO-354. Performance improvement to BinaryDecoder.readInt() (Kevin Oliver via thiru)
@@ -2543,7 +2545,7 @@ Avro 1.3.0 (24 February 2010)
     performance.  (Scott Carey via cutting)
 
   BUG FIXES
- 
+
     AVRO-176. Safeguard against bad istreams before reading. (sbanacho)
 
     AVRO-141.  Fix a NullPointerException in ReflectData#isRecord().
@@ -2572,7 +2574,7 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-194. C++ varint encoding buffer too small. (sbanacho)
 
-    AVRO-210. Memory leak with recursive schemas when constructed 
+    AVRO-210. Memory leak with recursive schemas when constructed
     by hand. (sbanacho)
 
     AVRO-211. Nested schema does not get parsed in C++. (sbanacho)
@@ -2582,7 +2584,7 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-223. Fix test-avroj on Mac OS X.  (Philip Zeyliger via cutting)
 
-    AVRO-224. Code cleanup: cleaner distinction between public and private 
+    AVRO-224. Code cleanup: cleaner distinction between public and private
     methods (massie)
 
     AVRO-221. Mangle Java reserved words in generated code to avoid
@@ -2612,7 +2614,7 @@ Avro 1.3.0 (24 February 2010)
 
     AVRO-280. Fix file header schema in specification.  Also fix
     "forrestdoc" build target to work on clean checkout.
-    (Jeff Hammerbacher & cutting)	 
+    (Jeff Hammerbacher & cutting)
 
     AVRO-292. Fix Python skipping of ints and longs.
     (Jeff Hammerbacher via cutting)
@@ -2632,7 +2634,7 @@ Avro 1.3.0 (24 February 2010)
     AVRO-47. Use void* for byte sequences. (sbanacho)
 
     AVRO-337. ant test-java fails in Cygwin due to CRLF v LF problem (thiru)
- 
+
     AVRO-347. Add the --unsafe flag to asciidoc in order to include source/header files (massie)
 
     AVRO-352. Incorrect binary encoding for strings and bytes (massie)
@@ -2648,7 +2650,7 @@ Avro 1.3.0 (24 February 2010)
     AVRO-382. Avro hashCode throws a NullPointerException when fields are uninitialized (Michael Armbrust via philz)
 
     AVRO-385. Initializing uninizialized BlockingBinaryEncoder fails (thiru)
-    
+
     AVRO-389. ResolvingDecoder does not resolve enum well (thiru)
 
     AVRO-390. ResolvingDecoder does not handle default values for records well (thiru)
@@ -2942,7 +2944,7 @@ Avro 1.0.0 -- 9 July 2009
 
     AVRO-13. Use dictionary instead of if-else in validate. (sharad)
 
-    AVRO-5. Add java versus python RPC interoperability tests. 
+    AVRO-5. Add java versus python RPC interoperability tests.
     (sharad)
 
     AVRO-16.  Minor documentation improvements.  (cutting)
@@ -2976,7 +2978,7 @@ Avro 1.0.0 -- 9 July 2009
     AVRO-68. Add license headers to C sources and improve C packaging.
     (Matt Massie via cutting)
 
-    AVRO-351. Shorten induce tool description; add check to avoid overly verbose 
+    AVRO-351. Shorten induce tool description; add check to avoid overly verbose
     descriptions. (philz)
 
   OPTIMIZATIONS
@@ -2985,7 +2987,7 @@ Avro 1.0.0 -- 9 July 2009
 
     AVRO-3. Fix ValueReader to throw an exception at EOF.
     (Pat Hunt via cutting)
-    
+
     AVRO-4. Fix so that specific code generation works under Eclipse.
     (Pat Hunt via cutting)
 
@@ -3014,7 +3016,7 @@ Avro 1.0.0 -- 9 July 2009
     AVRO-45. Fix c++ compliation so that python script need not be
     made executable.  (Scott Banachowski via cutting)
 
-    AVRO-51. Fix testio.py to exit correctly. (Philip Zeyliger 
+    AVRO-51. Fix testio.py to exit correctly. (Philip Zeyliger
     via sharad)
 
     AVRO-55. Fix two spec document typos.  (cutting)

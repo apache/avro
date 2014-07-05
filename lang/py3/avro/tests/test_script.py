@@ -108,8 +108,8 @@ def RunScript(*args, stdin=None):
 # The trailing spaces are expected when pretty-printing JSON with json.dumps():
 _JSON_PRETTY = '\n'.join([
     '{',
-    '    "first": "daffy", ',
-    '    "last": "duck", ',
+    '    "first": "daffy",',
+    '    "last": "duck",',
     '    "type": "duck"',
     '}',
 ])
