@@ -115,6 +115,8 @@ Trunk (not yet released)
 
     AVRO-1448. Python3: Fix setup.py installation through PyPI. (taton)
 
+    AVRO-1540. C++ doesn't build in Ubuntu. (thiru)
+
 Avro 1.7.6 (15 January 2014)
 
   NEW FEATURES

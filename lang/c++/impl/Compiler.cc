@@ -298,7 +298,7 @@ static GenericDatum makeGenericDatum(NodePtr n, const Entity& e,
             name = it->first;
             e2 = it->second;
         }
-        for (int i = 0; i < n->leaves(); ++i) {
+        for (size_t i = 0; i < n->leaves(); ++i) {
             const NodePtr& b = n->leafAt(i);
             if (nameof(b) == name) {
                 result.selectBranch(i);
