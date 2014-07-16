@@ -105,14 +105,11 @@ def RunScript(*args, stdin=None):
   return out
 
 
-# The trailing spaces are expected when pretty-printing JSON with json.dumps():
-_JSON_PRETTY = '\n'.join([
-    '{',
-    '    "first": "daffy",',
-    '    "last": "duck",',
-    '    "type": "duck"',
-    '}',
-])
+_TEST_JSON_VALUE = {
+  'first': 'daffy',
+  'last': 'duck',
+  'type': 'duck',
+}
 
 
 # ------------------------------------------------------------------------------
@@ -193,12 +190,12 @@ class TestCat(unittest.TestCase):
   def testJsonPretty(self):
     out = self._RunCat('--format', 'json-pretty', '-n', '1')
     self.assertEqual(
-        out.strip(),
-        _JSON_PRETTY.strip(),
+        json.loads(out),
+        _TEST_JSON_VALUE,
         'Output mismatch\n'
         'Expect: %r\n'
         'Actual: %r'
-        % (_JSON_PRETTY.strip(), out.strip()))
+        % (_TEST_JSON_VALUE, out))
 
   def testVersion(self):
     out = RunScript('cat', '--version').decode('utf-8')
