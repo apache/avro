@@ -318,6 +318,11 @@ public class TestGenericData {
     mapper.readTree(parser);
   }
 
+  @Test public void testToStringDoesNotEscapeForwardSlash() throws Exception {
+    GenericData data = GenericData.get();
+    assertEquals("\"/\"", data.toString("/"));
+  }
+
   @Test public void testToStringNanInfinity() throws Exception {
     GenericData data = GenericData.get();
     assertEquals("\"Infinity\"",data.toString(Float.POSITIVE_INFINITY));

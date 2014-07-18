@@ -502,9 +502,6 @@ public class GenericData {
         case '\t':
           builder.append("\\t");
           break;
-        case '/':
-          builder.append("\\/");
-          break;
         default:
           // Reference: http://www.unicode.org/versions/Unicode5.1.0/
           if((ch>='\u0000' && ch<='\u001F') || (ch>='\u007F' && ch<='\u009F') || (ch>='\u2000' && ch<='\u20FF')){
