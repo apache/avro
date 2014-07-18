@@ -1,6 +1,6 @@
 Avro Change Log
 
-Trunk (not yet released)
+Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
 
