@@ -66,6 +66,9 @@ Avro 1.7.7 (23 July 2014)
     AVRO-1536. Ruby: Remove monkeypatching of Enumerable.
     (Willem van Bergen via martinkl)
 
+    AVRO-1546. Java: Change GenericData.Record#toString() to not
+    escape forward slashes. (Brandon Forehand via cutting)
+
   BUG FIXES
 
     AVRO-1446. C#: Correctly handle system errors in RPC.
