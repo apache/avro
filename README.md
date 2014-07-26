@@ -34,6 +34,14 @@ avro {
 }
 ```
 
+Optionally, you can also configure the output character encoding.
+
+```groovy
+avro {
+    encoding = "UTF-8"
+}
+```
+
 Additionally, ensure that you have a compile dependency on avro, such as:
 
 ```groovy
