@@ -10,6 +10,8 @@ Trunk (not yet released)
 
   BUG FIXES
 
+    AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

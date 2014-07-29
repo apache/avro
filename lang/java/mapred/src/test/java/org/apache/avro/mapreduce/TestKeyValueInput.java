@@ -148,7 +148,7 @@ public class TestKeyValueInput {
     // Run the job.
     assertTrue(job.waitForCompletion(true));
 
-    // Verify that the output Avro container file as the expected data.
+    // Verify that the output Avro container file has the expected data.
     File avroFile = new File(outputPath.toString(), "part-r-00000.avro");
     DatumReader<GenericRecord> datumReader = new SpecificDatumReader<GenericRecord>(
         AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING),
@@ -184,6 +184,69 @@ public class TestKeyValueInput {
     List<Integer> carrotDocs = carrotRecord.getValue();
     assertEquals(1, carrotDocs.size());
     assertTrue(carrotDocs.contains(1));
+
+    assertFalse(avroFileReader.hasNext());
+    avroFileReader.close();
+  }
+
+  @Test
+  public void testKeyValueInputMapOnly()
+      throws ClassNotFoundException, IOException, InterruptedException {
+    // Create a test input file.
+    File inputFile = createInputFile();
+
+    // Configure the job input.
+    Job job = new Job();
+    FileInputFormat.setInputPaths(job, new Path(inputFile.getAbsolutePath()));
+    job.setInputFormatClass(AvroKeyValueInputFormat.class);
+    AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.INT));
+    AvroJob.setInputValueSchema(job, Schema.create(Schema.Type.STRING));
+
+    // Configure the identity mapper.
+    AvroJob.setMapOutputKeySchema(job, Schema.create(Schema.Type.INT));
+    AvroJob.setMapOutputValueSchema(job, Schema.create(Schema.Type.STRING));
+
+    // Configure zero reducers.
+    job.setNumReduceTasks(0);
+    job.setOutputKeyClass(AvroKey.class);
+    job.setOutputValueClass(AvroValue.class);
+
+    // Configure the output format.
+    job.setOutputFormatClass(AvroKeyValueOutputFormat.class);
+    Path outputPath = new Path(mTempDir.getRoot().getPath(), "out-index");
+    FileOutputFormat.setOutputPath(job, outputPath);
+
+    // Run the job.
+    assertTrue(job.waitForCompletion(true));
+
+    // Verify that the output Avro container file has the expected data.
+    File avroFile = new File(outputPath.toString(), "part-m-00000.avro");
+    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<GenericRecord>(
+        AvroKeyValue.getSchema(Schema.create(Schema.Type.INT),
+            Schema.create(Schema.Type.STRING)));
+    DataFileReader<GenericRecord> avroFileReader
+        = new DataFileReader<GenericRecord>(avroFile, datumReader);
+    assertTrue(avroFileReader.hasNext());
+
+    AvroKeyValue<Integer, CharSequence> record1
+        = new AvroKeyValue<Integer, CharSequence>(avroFileReader.next());
+    assertNotNull(record1.get());
+    assertEquals(1, record1.getKey().intValue());
+    assertEquals("apple banana carrot", record1.getValue().toString());
+
+    assertTrue(avroFileReader.hasNext());
+    AvroKeyValue<Integer, CharSequence> record2
+        = new AvroKeyValue<Integer, CharSequence>(avroFileReader.next());
+    assertNotNull(record2.get());
+    assertEquals(2, record2.getKey().intValue());
+    assertEquals("apple banana", record2.getValue().toString());
+
+    assertTrue(avroFileReader.hasNext());
+    AvroKeyValue<Integer, CharSequence> record3
+        = new AvroKeyValue<Integer, CharSequence>(avroFileReader.next());
+    assertNotNull(record3.get());
+    assertEquals(3, record3.getKey().intValue());
+    assertEquals("apple", record3.getValue().toString());
 
     assertFalse(avroFileReader.hasNext());
     avroFileReader.close();
