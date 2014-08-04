@@ -106,6 +106,7 @@
     <Compile Include="Ipc\GeneratedFiles\org\apache\avro\test\TestRecord.cs" />
     <Compile Include="Ipc\GeneratedFiles\org\apache\avro\test\TestRecordExtensions.cs" />
     <Compile Include="Ipc\GeneratedFiles\org\apache\avro\test\TestRecordWithUnion.cs" />
+    <Compile Include="Ipc\HttpClientServerTest.cs" />
     <Compile Include="Ipc\LocalTransceiverTest.cs" />
     <Compile Include="Ipc\MailResponder.cs" />
     <Compile Include="Ipc\SerializationTest.cs" />

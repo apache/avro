@@ -4,6 +4,8 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

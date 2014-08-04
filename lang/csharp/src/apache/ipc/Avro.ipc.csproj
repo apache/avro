@@ -67,6 +67,8 @@
     <Compile Include="CountdownLatch.cs" />
     <Compile Include="Generic\GenericRequestor.cs" />
     <Compile Include="Generic\GenericResponder.cs" />
+    <Compile Include="HttpListenerServer.cs" />
+    <Compile Include="HttpTransceiver.cs" />
     <Compile Include="OutputStream.cs" />
     <Compile Include="RpcRequest.cs" />
     <Compile Include="SocketServer.cs" />
