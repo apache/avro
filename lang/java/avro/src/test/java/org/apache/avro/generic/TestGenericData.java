@@ -404,4 +404,40 @@ public class TestGenericData {
 
     assertEquals(buffer, buffer_copy);
   }
+
+  @Test
+  public void testValidateNullableEnum() {
+    List<Schema> unionTypes = new ArrayList<Schema>();
+    Schema schema;
+    Schema nullSchema = Schema.create(Type.NULL);
+    Schema enumSchema = Schema.createEnum("AnEnum", null, null, Arrays.asList("X","Y","Z"));
+    GenericEnumSymbol w = new GenericData.EnumSymbol(enumSchema, "W");
+    GenericEnumSymbol x = new GenericData.EnumSymbol(enumSchema, "X");
+    GenericEnumSymbol y = new GenericData.EnumSymbol(enumSchema, "Y");
+    GenericEnumSymbol z = new GenericData.EnumSymbol(enumSchema, "Z");
+
+    // null is first
+    unionTypes.clear();
+    unionTypes.add(nullSchema);
+    unionTypes.add(enumSchema);
+    schema = Schema.createUnion(unionTypes);
+
+    assertTrue(GenericData.get().validate(schema, z));
+    assertTrue(GenericData.get().validate(schema, y));
+    assertTrue(GenericData.get().validate(schema, x));
+    assertFalse(GenericData.get().validate(schema, w));
+    assertTrue(GenericData.get().validate(schema, null));
+
+    // null is last
+    unionTypes.clear();
+    unionTypes.add(enumSchema);
+    unionTypes.add(nullSchema);
+    schema = Schema.createUnion(unionTypes);
+
+    assertTrue(GenericData.get().validate(schema, z));
+    assertTrue(GenericData.get().validate(schema, y));
+    assertTrue(GenericData.get().validate(schema, x));
+    assertFalse(GenericData.get().validate(schema, w));
+    assertTrue(GenericData.get().validate(schema, null));
+  }
 }
