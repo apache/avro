@@ -65,15 +65,16 @@ import org.codehaus.jackson.node.DoubleNode;
  * A schema can be constructed using one of its static <tt>createXXX</tt>
  * methods, or more conveniently using {@link SchemaBuilder}. The schema objects are
  * <i>logically</i> immutable.
- * There are only two mutating methods - {@link #setFields(List)} and
- * {@link #addProp(String, String)}. The following restrictions apply on these
- * two methods.
+ * There are only three mutating methods - {@link #setFields(List)},
+ * {@link #addProp(String, String)}, and {@link #setLogicalType(LogicalType)}.
+ * The following restrictions apply on these methods.
  * <ul>
  * <li> {@link #setFields(List)}, can be called at most once. This method exists
  * in order to enable clients to build recursive schemas.
  * <li> {@link #addProp(String, String)} can be called with property names
  * that are not present already. It is not possible to change or delete an
  * existing property.
+ * <li> {@link #setLogicalType(LogicalType)} can be called at most once.
  * </ul>
  */
 public abstract class Schema extends JsonProperties {
@@ -97,10 +98,12 @@ public abstract class Schema extends JsonProperties {
   };
 
   private final Type type;
+  private LogicalType logicalType;
 
   Schema(Type type) {
     super(SCHEMA_RESERVED);
     this.type = type;
+    this.logicalType = null;
   }
 
   /** Create a schema for a primitive type. */
@@ -175,6 +178,32 @@ public abstract class Schema extends JsonProperties {
 
   /** Return the type of this schema. */
   public Type getType() { return type; }
+
+  /** Return the logical type annotation for this schema */
+  public LogicalType getLogicalType() { return logicalType; }
+
+  /** Set the logical type annotation for this schema */
+  public void setLogicalType(LogicalType logicalType) {
+    if (this.logicalType != null) {
+      throw new IllegalArgumentException(
+          "Cannot replace existing logical type");
+    }
+    logicalType.validate(this); // throws IllegalArgumentException if invalid
+    this.logicalType = logicalType;
+    this.hashCode = NO_HASHCODE;
+  }
+
+  protected void writeLogicalType(JsonGenerator gen) throws IOException {
+    if (logicalType != null)
+      logicalType.writeProps(gen);
+  }
+
+  protected boolean equalLogicalTypes(Schema other) {
+    if (logicalType == null) {
+      return other.logicalType == null;
+    }
+    return logicalType.equals(other.logicalType);
+  }
 
   /**
    * If this is a record, returns the Field with the
@@ -303,12 +332,13 @@ public abstract class Schema extends JsonProperties {
   }
 
   void toJson(Names names, JsonGenerator gen) throws IOException {
-    if (props.size() == 0) {                      // no props defined
-      gen.writeString(getName());                 // just write name
+    if (props.size() == 0 && logicalType == null) { // no props defined
+      gen.writeString(getName());                   // just write name
     } else {
       gen.writeStartObject();
       gen.writeStringField("type", getName());
       writeProps(gen);
+      writeLogicalType(gen);
       gen.writeEndObject();
     }
   }
@@ -322,7 +352,9 @@ public abstract class Schema extends JsonProperties {
     if (!(o instanceof Schema)) return false;
     Schema that = (Schema)o;
     if (!(this.type == that.type)) return false;
-    return equalCachedHash(that) && props.equals(that.props);
+    return equalCachedHash(that)
+        && equalLogicalTypes(that)
+        && props.equals(that.props);
   }
   public final int hashCode() {
     if (hashCode == NO_HASHCODE)
@@ -330,7 +362,10 @@ public abstract class Schema extends JsonProperties {
     return hashCode;
   }
 
-  int computeHash() { return getType().hashCode() + props.hashCode(); }
+  int computeHash() {
+    return getType().hashCode() + props.hashCode() +
+        (logicalType != null ? logicalType.hashCode() : 0);
+  }
 
   final boolean equalCachedHash(Schema other) {
     return (hashCode == other.hashCode)
@@ -602,6 +637,7 @@ public abstract class Schema extends JsonProperties {
       RecordSchema that = (RecordSchema)o;
       if (!equalCachedHash(that)) return false;
       if (!equalNames(that)) return false;
+      if (!equalLogicalTypes(that)) return false;
       if (!props.equals(that.props)) return false;
       Set seen = SEEN_EQUALS.get();
       SeenPair here = new SeenPair(this, o);
@@ -637,6 +673,7 @@ public abstract class Schema extends JsonProperties {
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
       writeProps(gen);
+      writeLogicalType(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
       names.space = savedSpace;                   // restore namespace
@@ -694,6 +731,7 @@ public abstract class Schema extends JsonProperties {
       EnumSchema that = (EnumSchema)o;
       return equalCachedHash(that)
         && equalNames(that)
+        && equalLogicalTypes(that)
         && symbols.equals(that.symbols)
         && props.equals(that.props);
     }
@@ -710,6 +748,7 @@ public abstract class Schema extends JsonProperties {
         gen.writeString(symbol);
       gen.writeEndArray();
       writeProps(gen);
+      writeLogicalType(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
     }
@@ -727,6 +766,7 @@ public abstract class Schema extends JsonProperties {
       if (!(o instanceof ArraySchema)) return false;
       ArraySchema that = (ArraySchema)o;
       return equalCachedHash(that)
+        && equalLogicalTypes(that)
         && elementType.equals(that.elementType)
         && props.equals(that.props);
     }
@@ -739,6 +779,7 @@ public abstract class Schema extends JsonProperties {
       gen.writeFieldName("items");
       elementType.toJson(names, gen);
       writeProps(gen);
+      writeLogicalType(gen);
       gen.writeEndObject();
     }
   }
@@ -755,6 +796,7 @@ public abstract class Schema extends JsonProperties {
       if (!(o instanceof MapSchema)) return false;
       MapSchema that = (MapSchema)o;
       return equalCachedHash(that)
+        && equalLogicalTypes(that)
         && valueType.equals(that.valueType)
         && props.equals(that.props);
     }
@@ -767,6 +809,7 @@ public abstract class Schema extends JsonProperties {
       gen.writeFieldName("values");
       valueType.toJson(names, gen);
       writeProps(gen);
+      writeLogicalType(gen);
       gen.writeEndObject();
     }
   }
@@ -796,6 +839,7 @@ public abstract class Schema extends JsonProperties {
       if (!(o instanceof UnionSchema)) return false;
       UnionSchema that = (UnionSchema)o;
       return equalCachedHash(that)
+        && equalLogicalTypes(that)
         && types.equals(that.types)
         && props.equals(that.props);
     }
@@ -834,6 +878,7 @@ public abstract class Schema extends JsonProperties {
       FixedSchema that = (FixedSchema)o;
       return equalCachedHash(that)
         && equalNames(that)
+        && equalLogicalTypes(that)
         && size == that.size
         && props.equals(that.props);
     }
@@ -847,6 +892,7 @@ public abstract class Schema extends JsonProperties {
         gen.writeStringField("doc", getDoc());
       gen.writeNumberField("size", size);
       writeProps(gen);
+      writeLogicalType(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
     }
@@ -1251,9 +1297,25 @@ public abstract class Schema extends JsonProperties {
         if (name != null) names.add(result);
       } else
         throw new SchemaParseException("Type not supported: "+type);
+      // parse the logical type
+      String logicalTypeName = getOptionalText(schema, "logicalType");
+      Set<String> logicalTypeReserved = null;
+      if (logicalTypeName != null) {
+        try {
+          LogicalType logicalType = LogicalType
+              .fromJsonNode(logicalTypeName, schema);
+          result.setLogicalType(logicalType);
+          // get the reserved properties for this logical type
+          logicalTypeReserved = logicalType.reserved();
+        } catch (IllegalArgumentException e) {
+          // bad logical type. will be handled as properties instead
+        }
+      }
       Iterator<String> i = schema.getFieldNames();
       while (i.hasNext()) {                       // add properties
         String prop = i.next();
+        if (logicalTypeReserved != null && logicalTypeReserved.contains(prop))
+          continue;
         if (!SCHEMA_RESERVED.contains(prop))      // ignore reserved
           result.addProp(prop, schema.get(prop));
       }
