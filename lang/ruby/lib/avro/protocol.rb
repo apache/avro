@@ -92,7 +92,8 @@ module Avro
         request  = body['request']
         response = body['response']
         errors   = body['errors']
-        message_objects[name] = Message.new(name, request, response, errors, names, namespace)
+        doc      = body['doc']
+        message_objects[name] = Message.new(name, request, response, errors, names, namespace, doc)
       end
       message_objects
     end
@@ -111,14 +112,15 @@ module Avro
     end
 
     class Message
-      attr_reader :name, :request, :response, :errors, :default_namespace
+      attr_reader :name, :request, :response, :errors, :default_namespace, :doc
 
-      def initialize(name, request, response, errors=nil, names=nil, default_namespace=nil)
+      def initialize(name, request, response, errors=nil, names=nil, default_namespace=nil, doc=nil)
         @name = name
         @default_namespace = default_namespace
         @request = parse_request(request, names)
         @response = parse_response(response, names)
         @errors = parse_errors(errors, names) if errors
+        @doc = doc
       end
 
       def to_avro(names=Set.new)
@@ -127,6 +129,7 @@ module Avro
           'response' => response.to_avro(names)
         }.tap do |hash|
           hash['errors'] = errors.to_avro(names) if errors
+          hash['doc'] = doc if doc
         end
       end
 
