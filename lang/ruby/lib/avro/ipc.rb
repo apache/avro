@@ -410,7 +410,7 @@ module Avro::IPC
     end
 
     def write_framed_message(message)
-      message_length = message.size
+      message_length = message.bytesize
       total_bytes_sent = 0
       while message_length - total_bytes_sent > 0
         if message_length - total_bytes_sent > BUFFER_SIZE
@@ -426,7 +426,7 @@ module Avro::IPC
     end
 
     def write_buffer(chunk)
-      buffer_length = chunk.size
+      buffer_length = chunk.bytesize
       write_buffer_length(buffer_length)
       total_bytes_sent = 0
       while total_bytes_sent < buffer_length
