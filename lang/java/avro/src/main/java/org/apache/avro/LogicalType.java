@@ -72,57 +72,58 @@ public abstract class LogicalType extends JsonProperties {
   private static final Logger LOG = Logger.getLogger(LogicalType.class.getName());
   
   static {
-      try {
-          final Constructor<Decimal> constructor = Decimal.class.getConstructor(JsonNode.class);
-          constructor.setAccessible(true);
-          LOGICAL_TYPE_TO_CLASS.put("decimal", constructor);
-      } catch (NoSuchMethodException ex) {
-          throw new RuntimeException(ex);
-      } catch (SecurityException ex) {
-          throw new RuntimeException(ex);
-      }
-      
-      Enumeration<URL> logTypesResources = null;
-      try {
-          logTypesResources =
-                  LogicalType.class.getClassLoader().getResources("org/apache/avro/logical_types.properties");
-      } catch (IOException ex) {
-          LOG.log(Level.INFO, "No external logical types registered", ex);
-      }
-      if (logTypesResources != null) {
-          while (logTypesResources.hasMoreElements()) {
-              URL url = logTypesResources.nextElement();
-              LOG.info("Loading logical type registrations from " + url);
+    try {
+      final Constructor<Decimal> constructor = Decimal.class.getConstructor(JsonNode.class);
+      constructor.setAccessible(true);
+      LOGICAL_TYPE_TO_CLASS.put("decimal", constructor);
+    } catch (NoSuchMethodException ex) {
+      throw new RuntimeException(ex);
+    } catch (SecurityException ex) {
+      throw new RuntimeException(ex);
+    }
+
+    Enumeration<URL> logTypesResources = null;
+    try {
+      logTypesResources
+              = LogicalType.class.getClassLoader().getResources("org/apache/avro/logical_types.properties");
+    } catch (IOException ex) {
+      LOG.log(Level.INFO, "No external logical types registered", ex);
+    }
+    if (logTypesResources != null) {
+      Properties props = new Properties();
+      while (logTypesResources.hasMoreElements()) {
+        URL url = logTypesResources.nextElement();
+        LOG.info("Loading logical type registrations from " + url);
+        try {
+          BufferedReader is
+                  = new BufferedReader(new InputStreamReader(url.openStream(), Charset.forName("US-ASCII")));
+          try {
+            props.load(is);
+            for (Map.Entry<Object, Object> entry : props.entrySet()) {
               try {
-                  BufferedReader is  =
-                          new BufferedReader(new InputStreamReader(url.openStream(), Charset.forName("US-ASCII")));
-                  try {
-                      Properties props = new Properties();
-                      props.load(is);
-                      for(Map.Entry<Object, Object> entry : props.entrySet()) {
-                          try {
-                              final Constructor<? extends LogicalType> constructor =
-                                      ((Class<? extends LogicalType>) Class.forName((String) entry.getValue())).
-                                      getConstructor(JsonNode.class);
-                              constructor.setAccessible(true);
-                              LOGICAL_TYPE_TO_CLASS.put((String) entry.getKey(), constructor);
-                          } catch (ClassNotFoundException ex) {
-                              throw new RuntimeException(ex);
-                          } catch (NoSuchMethodException ex) {
-                              throw new RuntimeException(ex);
-                          } catch (SecurityException ex) {
-                              throw new RuntimeException(ex);
-                          }
-                      }
-                  } finally {
-                      is.close();
-                  }
-              } catch (IOException ex) {
-                  throw new RuntimeException(ex);
+                final Constructor<? extends LogicalType> constructor
+                        = ((Class<? extends LogicalType>) Class.forName((String) entry.getValue())).
+                        getConstructor(JsonNode.class);
+                constructor.setAccessible(true);
+                LOGICAL_TYPE_TO_CLASS.put((String) entry.getKey(), constructor);
+              } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+              } catch (NoSuchMethodException ex) {
+                throw new RuntimeException(ex);
+              } catch (SecurityException ex) {
+                throw new RuntimeException(ex);
               }
+            }
+          } finally {
+            props.clear();
+            is.close();
           }
-      }      
-  }  
+        } catch (IOException ex) {
+          throw new RuntimeException(ex);
+        }
+      }
+    }
+  }
   
   public static LogicalType fromJsonNode(JsonNode node) {
     final JsonNode logicalTypeNode = node.get("logicalType");
