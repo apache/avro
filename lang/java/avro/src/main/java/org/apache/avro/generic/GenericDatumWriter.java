@@ -77,10 +77,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
         write(schema.getTypes().get(index), datum, out);
         break;
       case FIXED:   writeFixed(schema, datum, out);   break;
-      case STRING: writeString(schema, datum, out);   break;
+      case STRING:  writeString(schema, datum, out);  break;
       case BYTES:   writeBytes(datum, out);           break;
       case INT:     out.writeInt(((Number)datum).intValue()); break;
-      case LONG: out.writeLong((Long)datum); break;
+      case LONG:    out.writeLong((Long)datum);       break;
       case FLOAT:   out.writeFloat((Float)datum);     break;
       case DOUBLE:  out.writeDouble((Double)datum);   break;
       case BOOLEAN: out.writeBoolean((Boolean)datum); break;
