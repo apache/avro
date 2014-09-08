@@ -288,12 +288,21 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     isEmpty.clear(depth());
   }
 
+  public static boolean isNullableSingle(final Symbol.Alternative top) {
+    return top.size() == 2 && ("null".equals(top.getLabel(0)) || "null".equals(top.getLabel(1)));
+  }
+  
+  public static String getNullableSingle(final Symbol.Alternative top) {
+    final String label = top.getLabel(0);
+    return "null".equals(label) ? top.getLabel(1) : label;
+  }
+
   @Override
   public void writeIndex(int unionIndex) throws IOException {
     parser.advance(Symbol.UNION);
     Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
     Symbol symbol = top.getSymbol(unionIndex);
-    if (symbol != Symbol.NULL) {
+    if (symbol != Symbol.NULL && !isNullableSingle(top) ) {
       out.writeStartObject();
       out.writeFieldName(top.getLabel(unionIndex));
       parser.pushSymbol(Symbol.UNION_END);
