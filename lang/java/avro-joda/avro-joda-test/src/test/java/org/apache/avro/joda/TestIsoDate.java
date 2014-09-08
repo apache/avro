@@ -18,6 +18,7 @@ package org.apache.avro.joda;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import junit.framework.Assert;
 import org.apache.avro.AvroUtils;
 import org.apache.avro.LogicalType;
@@ -49,6 +50,7 @@ public class TestIsoDate {
         TestRecord record = TestRecord.newBuilder()
                 .setDecimalVal(new BigDecimal("3.14"))
                 .setDecimalVal2(new BigDecimal("3.14"))
+                .setDecimalVal3(new BigDecimal("3.14"))
                 .setIntVal(0)
                 .setDoubleVal(3.5).setDateVal(new LocalDate())
                 .setDateVal2(new LocalDate())
@@ -58,10 +60,35 @@ public class TestIsoDate {
         TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class);
         Assert.assertEquals(record, record2);
         result = AvroUtils.writeAvroJson(record);
+        System.out.println(new String(result, Charset.forName("UTF-8")));
         record2 = AvroUtils.readAvroJson(result, TestRecord.class);
         Assert.assertEquals(record, record2);
     }
 
+    
+    @Test
+    public void testSerialization2() throws IOException {
+        TestRecord record = TestRecord.newBuilder()
+                .setDecimalVal(new BigDecimal("3.14"))
+                .setDecimalVal2(new BigDecimal("3.14"))
+                .setDecimalVal3(null)
+                .setDecimalVal4(2)
+                .setIntVal(0)
+                .setDoubleVal(3.5).setDateVal(new LocalDate())
+                .setDateVal2(new LocalDate())
+                .setDateTimeVal(new DateTime())
+                .build();
+        byte [] result = AvroUtils.writeAvroBin(record);
+        TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class);
+        Assert.assertEquals(record, record2);
+        result = AvroUtils.writeAvroJson(record);
+        System.out.println(new String(result, Charset.forName("UTF-8")));
+        record2 = AvroUtils.readAvroJson(result, TestRecord.class);
+        Assert.assertEquals(record, record2);
+    }
+
+    
+    
     
     
 }
