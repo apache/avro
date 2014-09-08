@@ -61,7 +61,11 @@ public class TestSpecificCompiler {
   @After
   public void tearDow() {
     if (this.outputFile != null) {
-      this.outputFile.delete();
+      if (this.outputFile.exists()) {
+        if (!this.outputFile.delete()) {
+          throw new RuntimeException("cannot delete " + this.outputFile);
+        }
+      }
     }
   }
 
@@ -105,14 +109,18 @@ public class TestSpecificCompiler {
     compiler.compileToDestination(this.src, this.outputDir);
     assertTrue(this.outputFile.exists());
     BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // No line, once trimmed, should start with a deprecated field declaration
-      // nor a private field declaration.  Since the nested builder uses private
-      // fields, we cannot do the second check.
-      line = line.trim();
-      assertFalse("Line started with a deprecated field declaration: " + line,
-        line.startsWith("@Deprecated public int value"));
+    try {
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        // No line, once trimmed, should start with a deprecated field declaration
+        // nor a private field declaration.  Since the nested builder uses private
+        // fields, we cannot do the second check.
+        line = line.trim();
+        assertFalse("Line started with a deprecated field declaration: " + line,
+          line.startsWith("@Deprecated public int value"));
+      }
+    } finally {
+      reader.close();
     }
   }
 
@@ -125,12 +133,16 @@ public class TestSpecificCompiler {
     compiler.compileToDestination(this.src, this.outputDir);
     assertTrue(this.outputFile.exists());
     BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // No line, once trimmed, should start with a public field declaration
-      line = line.trim();
-      assertFalse("Line started with a public field declaration: " + line,
-        line.startsWith("public int value"));
+    try {
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        // No line, once trimmed, should start with a public field declaration
+        line = line.trim();
+        assertFalse("Line started with a public field declaration: " + line,
+          line.startsWith("public int value"));
+      }
+    } finally {
+      reader.close();
     }
   }
 
@@ -144,15 +156,19 @@ public class TestSpecificCompiler {
     compiler.compileToDestination(this.src, this.outputDir);
     assertTrue(this.outputFile.exists());
     BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // No line, once trimmed, should start with a public field declaration
-      // or with a deprecated public field declaration
-      line = line.trim();
-      assertFalse("Line started with a public field declaration: " + line,
-        line.startsWith("public int value"));
-      assertFalse("Line started with a deprecated field declaration: " + line,
-        line.startsWith("@Deprecated public int value"));
+    try {
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        // No line, once trimmed, should start with a public field declaration
+        // or with a deprecated public field declaration
+        line = line.trim();
+        assertFalse("Line started with a public field declaration: " + line,
+          line.startsWith("public int value"));
+        assertFalse("Line started with a deprecated field declaration: " + line,
+          line.startsWith("@Deprecated public int value"));
+      }
+    } finally {
+      reader.close();
     }
   }
 
@@ -163,16 +179,21 @@ public class TestSpecificCompiler {
     compiler.compileToDestination(this.src, this.outputDir);
     assertTrue(this.outputFile.exists());
     BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    int foundSetters = 0;
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // We should find the setter in the main class
-      line = line.trim();
-      if (line.startsWith("public void setValue(")) {
-        foundSetters++;
+    try {
+      int foundSetters = 0;
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        // We should find the setter in the main class
+        line = line.trim();
+        if (line.startsWith("public void setValue(")) {
+          foundSetters++;
+        }
       }
+      assertEquals("Found the wrong number of setters", 1, foundSetters);
+    } finally {
+      reader.close();
     }
-    assertEquals("Found the wrong number of setters", 1, foundSetters);
+    
   }
 
   @Test
@@ -183,12 +204,16 @@ public class TestSpecificCompiler {
     compiler.compileToDestination(this.src, this.outputDir);
     assertTrue(this.outputFile.exists());
     BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // No setter should be found
-      line = line.trim();
-      assertFalse("No line should include the setter: " + line,
-        line.startsWith("public void setValue("));
+    try {
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        // No setter should be found
+        line = line.trim();
+        assertFalse("No line should include the setter: " + line,
+          line.startsWith("public void setValue("));
+      }
+    } finally {
+      reader.close();
     }
   }
 
@@ -198,14 +223,26 @@ public class TestSpecificCompiler {
     // Generated file in default encoding
     compiler.compileToDestination(this.src, this.outputDir);
     byte[] fileInDefaultEncoding = new byte[(int) this.outputFile.length()];
-    new FileInputStream(this.outputFile).read(fileInDefaultEncoding);
-    this.outputFile.delete();
+    FileInputStream fis = new FileInputStream(this.outputFile);
+    try {
+      fis.read(fileInDefaultEncoding);
+    } finally {
+      fis.close();
+    }
+    if (!this.outputFile.delete()) {
+      throw new RuntimeException("Cannot delete " + this.outputFile);
+    }
     // Generate file in another encoding (make sure it has different number of bytes per character)
     String differentEncoding = Charset.defaultCharset().equals(Charset.forName("UTF-16")) ? "UTF-32" : "UTF-16";
     compiler.setOutputCharacterEncoding(differentEncoding);
     compiler.compileToDestination(this.src, this.outputDir);
     byte[] fileInDifferentEncoding = new byte[(int) this.outputFile.length()];
-    new FileInputStream(this.outputFile).read(fileInDifferentEncoding);
+    fis = new FileInputStream(this.outputFile);
+    try {
+      fis.read(fileInDifferentEncoding);
+    } finally {
+      fis.close();
+    }
     // Compare as bytes
     assertThat("Generated file should contain different bytes after setting non-default encoding",
       fileInDefaultEncoding, not(equalTo(fileInDifferentEncoding)));
