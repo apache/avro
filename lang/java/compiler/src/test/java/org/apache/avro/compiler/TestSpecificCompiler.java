@@ -75,6 +75,20 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testRecord() throws IOException, URISyntaxException{
+    File inputFile = new File("src/test/resources/test_record.avsc");    
+    Schema.Parser parser = new Schema.Parser();
+    Schema schema = parser.parse(inputFile);
+    SpecificCompiler compiler = new SpecificCompiler(schema);
+    compiler.setTemplateDir(this.velocityTemplateDir);
+    compiler.setStringType(StringType.CharSequence);
+    compiler.compileToDestination(inputFile, this.outputDir);    
+    System.out.println("Generate file to " + this.outputDir);
+  }
+  
+  
+  
+  @Test
   public void testCanReadTemplateFilesOnTheFilesystem() throws IOException, URISyntaxException{
     SpecificCompiler compiler = createCompiler();
     compiler.compileToDestination(this.src, this.outputDir);

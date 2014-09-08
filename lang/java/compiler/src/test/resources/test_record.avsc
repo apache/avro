@@ -1,0 +1,11 @@
+{
+	"type" : "record",
+	"namespace" : "org.apache.avro.test",
+	"name" : "TestRecord",
+	"fields" : [
+		{"name" : "intVal", "type" : "int" },
+		{"name" : "doubleVal", "type" : "double" },
+		{"name" : "decimalVal", "type" : {"type" : "bytes", "logicalType" : "decimal", "precision" : 36, "scale" : 16 } },
+                {"name" : "dateVal", "type" : {"type" : "string", "logicalType" : "isodate" } }
+	]	
+}

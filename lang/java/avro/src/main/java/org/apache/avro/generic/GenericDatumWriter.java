@@ -19,12 +19,12 @@ package org.apache.avro.generic;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Collection;
-
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumWriter;
@@ -62,6 +62,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected void write(Schema schema, Object datum, Encoder out)
     throws IOException {
     try {
+      LogicalType lType = schema.getLogicalType();
+      if (lType != null) {
+          datum = lType.serialize(schema.getType(), datum);
+      }
       switch (schema.getType()) {
       case RECORD: writeRecord(schema, datum, out); break;
       case ENUM:   writeEnum(schema, datum, out);   break;
@@ -73,10 +77,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
         write(schema.getTypes().get(index), datum, out);
         break;
       case FIXED:   writeFixed(schema, datum, out);   break;
-      case STRING:  writeString(schema, datum, out);  break;
+      case STRING: writeString(schema, datum, out);   break;
       case BYTES:   writeBytes(datum, out);           break;
       case INT:     out.writeInt(((Number)datum).intValue()); break;
-      case LONG:    out.writeLong((Long)datum);       break;
+      case LONG: out.writeLong((Long)datum); break;
       case FLOAT:   out.writeFloat((Float)datum);     break;
       case DOUBLE:  out.writeDouble((Double)datum);   break;
       case BOOLEAN: out.writeBoolean((Boolean)datum); break;

@@ -19,36 +19,35 @@ package org.apache.avro.compiler.specific;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.avro.specific.SpecificData;
-import org.codehaus.jackson.JsonNode;
-
+import org.apache.avro.JsonProperties;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.log.LogChute;
+import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -416,9 +415,10 @@ public class SpecificCompiler {
     for (Map.Entry<String,JsonNode> prop : p.getJsonProps().entrySet())
       newP.addProp(prop.getKey(), prop.getValue());   // copy props
 
-    // annotate types
-    Collection<Schema> namedTypes = new LinkedHashSet<Schema>();
-    for (Schema s : p.getTypes())
+    // annotate types\
+    final Collection<Schema> pTypes = p.getTypes();
+    Collection<Schema> namedTypes = new LinkedHashSet<Schema>(pTypes.size());      
+    for (Schema s : pTypes)
       namedTypes.add(addStringType(s, types));
     newP.setTypes(namedTypes);
 
@@ -434,7 +434,7 @@ public class SpecificCompiler {
                                     addStringType(m.getErrors(), types)));
     return newP;
   }
-
+  
   private Schema addStringType(Schema s) {
     if (stringType != StringType.String)
       return s;
@@ -506,6 +506,15 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the java type for a Schema. */
   public String javaType(Schema schema) {
+      LogicalType logicalType = schema.getLogicalType();
+      if (logicalType != null) {
+          return logicalType.getLogicalJavaType().getName();
+      } else {
+         return javaTypeInternal(schema);
+      }      
+  }
+  
+  public String javaTypeInternal(Schema schema) {
     switch (schema.getType()) {
     case RECORD:
     case ENUM:
@@ -538,11 +547,11 @@ public class SpecificCompiler {
   /** Utility for template use.  Returns the unboxed java type for a Schema. */
   public String javaUnbox(Schema schema) {
     switch (schema.getType()) {
-    case INT:     return "int";
-    case LONG:    return "long";
-    case FLOAT:   return "float";
-    case DOUBLE:  return "double";
-    case BOOLEAN: return "boolean";
+    case INT:     return schema.getLogicalType() == null ? "int" : javaType(schema);
+    case LONG:    return schema.getLogicalType() == null ? "long" : javaType(schema);
+    case FLOAT:   return schema.getLogicalType() == null ? "float" : javaType(schema);
+    case DOUBLE:  return schema.getLogicalType() == null ? "double" : javaType(schema);
+    case BOOLEAN: return schema.getLogicalType() == null ? "boolean" : javaType(schema);
     default:      return javaType(schema);
     }
   }

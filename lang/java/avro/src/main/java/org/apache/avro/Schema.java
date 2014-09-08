@@ -1274,7 +1274,7 @@ public abstract class Schema extends JsonProperties {
         JsonNode symbolsNode = schema.get("symbols");
         if (symbolsNode == null || !symbolsNode.isArray())
           throw new SchemaParseException("Enum has no symbols: "+schema);
-        LockableArrayList<String> symbols = new LockableArrayList<String>();
+        LockableArrayList<String> symbols = new LockableArrayList<String>(symbolsNode.size());
         for (JsonNode n : symbolsNode)
           symbols.add(n.getTextValue());
         result = new EnumSchema(name, doc, symbols);
@@ -1295,21 +1295,16 @@ public abstract class Schema extends JsonProperties {
           throw new SchemaParseException("Invalid or no size: "+schema);
         result = new FixedSchema(name, doc, sizeNode.getIntValue());
         if (name != null) names.add(result);
-      } else
+      } else {
         throw new SchemaParseException("Type not supported: "+type);
+      }
       // parse the logical type
-      String logicalTypeName = getOptionalText(schema, "logicalType");
+      LogicalType logicalType = LogicalType.fromJsonNode(schema);
       Set<String> logicalTypeReserved = null;
-      if (logicalTypeName != null) {
-        try {
-          LogicalType logicalType = LogicalType
-              .fromJsonNode(logicalTypeName, schema);
+      if (logicalType != null) {
           result.setLogicalType(logicalType);
           // get the reserved properties for this logical type
           logicalTypeReserved = logicalType.reserved();
-        } catch (IllegalArgumentException e) {
-          // bad logical type. will be handled as properties instead
-        }
       }
       Iterator<String> i = schema.getFieldNames();
       while (i.hasNext()) {                       // add properties

@@ -54,9 +54,6 @@
     </resources>
     <testResources>
       <testResource>
-        <directory>src/main/velocity</directory>
-      </testResource>
-      <testResource>
         <directory>src/test/idl</directory>
       </testResource>
     </testResources>

@@ -1,5 +1,6 @@
 package org.apache.avro;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +20,7 @@ public class TestLogicalType {
     node.put("logicalType", TextNode.valueOf("decimal"));
     node.put("precision", IntNode.valueOf(9));
     node.put("scale", IntNode.valueOf(2));
-    LogicalType decimal = LogicalType.fromJsonNode("decimal", node);
+    LogicalType decimal = LogicalType.fromJsonNode(node);
     Assert.assertTrue("Should be a Decimal",
         decimal instanceof LogicalType.Decimal);
     Assert.assertEquals("Should have correct precision",
@@ -42,12 +43,11 @@ public class TestLogicalType {
             Schema.createFixed("fixed", null, null, 4))),
         Schema.create(Schema.Type.BOOLEAN), Schema.create(Schema.Type.INT),
         Schema.create(Schema.Type.LONG), Schema.create(Schema.Type.FLOAT),
-        Schema.create(Schema.Type.DOUBLE), Schema.create(Schema.Type.NULL),
-        Schema.create(Schema.Type.STRING) };
+        Schema.create(Schema.Type.DOUBLE), Schema.create(Schema.Type.NULL)};
     for (final Schema schema : nonBytes) {
       assertThrows("Should reject type: " + schema.getType(),
           IllegalArgumentException.class,
-          "DECIMAL must be backed by fixed or bytes", new Callable() {
+          "decimal must be backed by fixed or bytes", new Callable() {
             @Override
             public Object call() throws Exception {
               schema.setLogicalType(decimal);
@@ -62,7 +62,7 @@ public class TestLogicalType {
     ObjectNode node = JsonNodeFactory.instance.objectNode();
     node.put("logicalType", TextNode.valueOf("unknown"));
     node.put("someProperty", IntNode.valueOf(34));
-    LogicalType logicalType = LogicalType.fromJsonNode("unknown", node);
+    LogicalType logicalType = LogicalType.fromJsonNode(node);
     Assert.assertNull("Should not return a LogicalType instance", logicalType);
   }
 
@@ -97,7 +97,7 @@ public class TestLogicalType {
   public void testDecimalFailsWithZeroPrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid DECIMAL precision: 0 (must be positive)", new Callable() {
+        "Invalid decimal precision: 0 (must be positive)", new Callable() {
           @Override
           public Object call() throws Exception {
             schema.setLogicalType(LogicalType.decimal(0));
@@ -112,7 +112,7 @@ public class TestLogicalType {
   public void testDecimalFailsWithNegativePrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid DECIMAL precision: -9 (must be positive)", new Callable() {
+        "Invalid decimal precision: -9 (must be positive)", new Callable() {
           @Override
           public Object call() throws Exception {
             schema.setLogicalType(LogicalType.decimal(-9));
@@ -127,7 +127,7 @@ public class TestLogicalType {
   public void testDecimalScaleBoundedByPrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid DECIMAL scale: 10 (greater than precision: 9)",
+        "Invalid decimal scale: 10 (greater than precision: 9)",
         new Callable() {
           @Override
           public Object call() throws Exception {
@@ -143,7 +143,7 @@ public class TestLogicalType {
   public void testDecimalFailsWithNegativeScale() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid DECIMAL scale: -2 (must be positive)", new Callable() {
+        "Invalid decimal scale: -2 (must be positive)", new Callable() {
           @Override
           public Object call() throws Exception {
             schema.setLogicalType(LogicalType.decimal(9, -2));
@@ -208,6 +208,21 @@ public class TestLogicalType {
 
       @Override
       public Set<String> reserved() { return new HashSet<String>(); }
+
+        @Override
+        public Class<?> getLogicalJavaType() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public Object deserialize(Schema.Type type, Object object) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public Object serialize(Schema.Type type, Object object) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     };
 
     LogicalType.Decimal decimal90 = LogicalType.decimal(9);
