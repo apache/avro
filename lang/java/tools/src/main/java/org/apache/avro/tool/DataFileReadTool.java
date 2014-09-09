@@ -17,6 +17,7 @@
  */
 package org.apache.avro.tool;
 
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -26,8 +27,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.FileReader;
-import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -59,30 +59,35 @@ public class DataFileReadTool implements Tool {
     List<String> nargs = optionSet.nonOptionArguments();
 
     if (nargs.size() != 1) {
-      // Unlike other commands, "-" can't be used for stdin, because
-      // we can only use seekable files.
-      err.println("tojson --pretty input-file");
-      err.println("   converts Avro data file to JSON.");
+      printHelp(err);
+      err.println();
       optionParser.printHelpOn(err);
       return 1;
     }
 
+    BufferedInputStream inStream = Util.fileOrStdin(nargs.get(0), stdin);
+
     GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    FileReader<Object> fileReader =
-      DataFileReader.openReader(Util.openSeekableFromFS(nargs.get(0)), reader);
+    DataFileStream<Object> streamReader = new DataFileStream<Object>(inStream, reader);
     try {
-      Schema schema = fileReader.getSchema();
+      Schema schema = streamReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
-      for (Object datum : fileReader)
+      for (Object datum : streamReader)
         writer.write(datum, encoder);
       encoder.flush();
       out.println();
       out.flush();
     } finally {
-      fileReader.close();
+      streamReader.close();
     }
     return 0;
   }
 
+  private void printHelp(PrintStream ps) {
+    ps.println("tojson --pretty input-file");
+    ps.println();
+    ps.println(getShortDescription());
+    ps.println("A dash ('-') can be given as an input file to use stdin");
+  }
 }

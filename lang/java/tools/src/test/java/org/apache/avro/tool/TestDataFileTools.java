@@ -23,9 +23,11 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.StringBufferInputStream;
 import java.util.ArrayList;
@@ -83,25 +85,35 @@ public class TestDataFileTools {
   }
   
   private String run(Tool tool, String... args) throws Exception {
+    return run(tool, null, args);
+  }
+
+  private String run(Tool tool, InputStream stdin, String... args) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(baos);
     tool.run(
-        null, // stdin
+        stdin,
         p, // stdout
         null, // stderr
         Arrays.asList(args));
     return baos.toString("UTF-8").replace("\r", "");
   }
-  
+
   @Test
   public void testRead() throws Exception {
-    assertEquals(jsonData.toString(),
+    assertEquals(jsonData,
         run(new DataFileReadTool(), sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadStdin() throws Exception {
+    FileInputStream stdin = new FileInputStream(sampleFile);
+    assertEquals(jsonData, run(new DataFileReadTool(), stdin, "-"));
   }
   
   @Test
   public void testReadToJsonPretty() throws Exception {
-    assertEquals(jsonData.toString(),
+    assertEquals(jsonData,
         run(new DataFileReadTool(), "--pretty", sampleFile.getPath()));
   }
   
