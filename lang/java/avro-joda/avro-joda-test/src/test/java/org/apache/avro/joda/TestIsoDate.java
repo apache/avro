@@ -23,6 +23,7 @@ import junit.framework.Assert;
 import org.apache.avro.AvroUtils;
 import org.apache.avro.LogicalType;
 import org.apache.avro.test.TestRecord;
+import org.apache.avro.test.TestRecord2;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.node.TextNode;
@@ -54,6 +55,7 @@ public class TestIsoDate {
                 .setIntVal(0)
                 .setDoubleVal(3.5).setDateVal(new LocalDate())
                 .setDateVal2(new LocalDate())
+                .setDateVal3(new LocalDate())
                 .setDateTimeVal(new DateTime())
                 .build();
         byte [] result = AvroUtils.writeAvroBin(record);
@@ -76,6 +78,7 @@ public class TestIsoDate {
                 .setIntVal(0)
                 .setDoubleVal(3.5).setDateVal(new LocalDate())
                 .setDateVal2(new LocalDate())
+                .setDateVal3(new LocalDate())
                 .setDateTimeVal(new DateTime())
                 .build();
         byte [] result = AvroUtils.writeAvroBin(record);
@@ -86,6 +89,31 @@ public class TestIsoDate {
         record2 = AvroUtils.readAvroJson(result, TestRecord.class);
         Assert.assertEquals(record, record2);
     }
+    
+        @Test
+    public void testSerializationFromIdl() throws IOException {
+        TestRecord2 record = TestRecord2.newBuilder()
+                .setDecimalVal(new BigDecimal("3.14"))
+                .setDecimalVal2(new BigDecimal("3.14"))
+                .setDecimalVal3(null)
+                .setDecimalVal4(2)
+                .setIntVal(0)
+                .setDoubleVal(3.5).setDateVal(new LocalDate())
+                .setDateVal2(new LocalDate())
+                .setDateVal3(new LocalDate())
+                .setDateTimeVal(new DateTime())
+                .build();
+        byte [] result = AvroUtils.writeAvroBin(record);
+        TestRecord2 record2 = AvroUtils.readAvroBin(result, TestRecord2.class);
+        Assert.assertEquals(record, record2);
+        result = AvroUtils.writeAvroJson(record);
+        System.out.println(new String(result, Charset.forName("UTF-8")));
+        record2 = AvroUtils.readAvroJson(result, TestRecord2.class);
+        Assert.assertEquals(record, record2);
+    }
+
+    
+    
 
     
     

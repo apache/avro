@@ -23,6 +23,7 @@ import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.ReadablePartial;
 import org.joda.time.format.DateTimeFormatter;
@@ -31,7 +32,7 @@ import org.joda.time.format.ISODateTimeFormat;
 public  class IsoDate extends LogicalType {
     private static final Set<String> RESERVED = Collections.EMPTY_SET;
     
-    private IsoDate(int precision, int scale) {
+    private IsoDate() {
       super(RESERVED, "isodate");
     }
 
@@ -42,10 +43,10 @@ public  class IsoDate extends LogicalType {
     @Override
     public void validate(Schema schema) {
       // validate the type
-      if (schema.getType() != Schema.Type.LONG &&
+      if (schema.getType() != Schema.Type.INT && schema.getType() != Schema.Type.LONG &&
           schema.getType() != Schema.Type.STRING) {
         throw new IllegalArgumentException(
-            "Logical type " + this + " must be backed by long or string");
+            "Logical type " + this + " must be backed by long or int or string");
       }
     }
 
@@ -61,13 +62,19 @@ public  class IsoDate extends LogicalType {
 
     private static final DateTimeFormatter FMT = ISODateTimeFormat.date();
     
+    // This can be anything really, the number serialized will be the number of days between this date and the date.
+    // this serialized number will be negative for anything before 1970-01-01.
+    private static final LocalDate EPOCH = new LocalDate(0L, DateTimeZone.UTC);
+    
     @Override
     public Object deserialize(Schema.Type type, Object object) {
                   switch (type) {
               case STRING:
                   return FMT.parseLocalDate(((CharSequence) object).toString());
-              case LONG:
+              case LONG: // start of day millis
                   return new DateTime((Long) object, DateTimeZone.UTC).toLocalDate();
+              case INT: // nr of days since epoch                  
+                return EPOCH.plusDays((Integer) object);
               default:
                   throw new UnsupportedOperationException();
           }
@@ -80,6 +87,8 @@ public  class IsoDate extends LogicalType {
                   return FMT.print((ReadablePartial) object);
               case LONG:
                   return ((LocalDate) object).toDateTimeAtStartOfDay(DateTimeZone.UTC).getMillis();                
+              case INT:
+                  return Days.daysBetween(EPOCH, (ReadablePartial) object).getDays();
               default:
                   throw new UnsupportedOperationException();
           }

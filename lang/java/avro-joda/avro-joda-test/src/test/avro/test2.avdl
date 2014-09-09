@@ -1,0 +1,17 @@
+
+protocol None {
+
+    @namespace("org.apache.avro.test")
+    record TestRecord2 {
+        int intVal;
+        double doubleVal;
+        @logicalType("decimal") @precision(36) @scale(16) string decimalVal;
+        @logicalType("decimal") @precision(36) @scale(16) bytes decimalVal2;
+        union {null, @logicalType("decimal") @precision(36) @scale(16) string} decimalVal3 = null;
+        union {null, int, @logicalType("decimal") @precision(36) @scale(16) string} decimalVal4 = null;
+        @logicalType("isodate") string dateVal;
+        @logicalType("isodate") long dateVal2;
+        @logicalType("isodate") int dateVal3;
+        @logicalType("isodatetime") long dateTimeVal;
+    }
+}

@@ -11,6 +11,7 @@
                 {"name" : "decimalVal4", "type" : ["null", "int", {"type" : "string", "logicalType" : "decimal", "precision" : 36, "scale" : 16 } ], "default" : null },
                 {"name" : "dateVal", "type" : {"type" : "string", "logicalType" : "isodate" } },
                 {"name" : "dateVal2", "type" : {"type" : "long", "logicalType" : "isodate" } },
+                {"name" : "dateVal3", "type" : {"type" : "int", "logicalType" : "isodate" } },
                 {"name" : "dateTimeVal", "type" : {"type" : "long", "logicalType" : "isodatetime" } }
 	]	
 }
