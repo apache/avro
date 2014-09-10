@@ -59,7 +59,7 @@ public class TestIsoDate {
                 .setDateTimeVal(new DateTime())
                 .build();
         byte [] result = AvroUtils.writeAvroBin(record);
-        TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class);
+        TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class, null);
         Assert.assertEquals(record, record2);
         result = AvroUtils.writeAvroJson(record);
         System.out.println(new String(result, Charset.forName("UTF-8")));
@@ -82,7 +82,7 @@ public class TestIsoDate {
                 .setDateTimeVal(new DateTime())
                 .build();
         byte [] result = AvroUtils.writeAvroBin(record);
-        TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class);
+        TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class, null);
         Assert.assertEquals(record, record2);
         result = AvroUtils.writeAvroJson(record);
         System.out.println(new String(result, Charset.forName("UTF-8")));
@@ -90,7 +90,7 @@ public class TestIsoDate {
         Assert.assertEquals(record, record2);
     }
     
-        @Test
+    @Test
     public void testSerializationFromIdl() throws IOException {
         TestRecord2 record = TestRecord2.newBuilder()
                 .setDecimalVal(new BigDecimal("3.14"))
@@ -104,19 +104,60 @@ public class TestIsoDate {
                 .setDateTimeVal(new DateTime())
                 .build();
         byte [] result = AvroUtils.writeAvroBin(record);
-        TestRecord2 record2 = AvroUtils.readAvroBin(result, TestRecord2.class);
+        TestRecord2 record2 = AvroUtils.readAvroBin(result, TestRecord2.class, null);
         Assert.assertEquals(record, record2);
         result = AvroUtils.writeAvroJson(record);
         System.out.println(new String(result, Charset.forName("UTF-8")));
         record2 = AvroUtils.readAvroJson(result, TestRecord2.class);
         Assert.assertEquals(record, record2);
     }
+    
+    
+    @Test
+    public void testSerializationCompatibility() throws IOException {
+        TestRecord2 record = TestRecord2.newBuilder()
+                .setDecimalVal(new BigDecimal("3.14"))
+                .setDecimalVal2(new BigDecimal("3.14"))
+                .setDecimalVal3(null)
+                .setDecimalVal4(2)
+                .setIntVal(0)
+                .setDoubleVal(3.5).setDateVal(new LocalDate())
+                .setDateVal2(new LocalDate())
+                .setDateVal3(new LocalDate())
+                .setDateTimeVal(new DateTime())
+                .build();
+        byte [] result = AvroUtils.writeAvroBin(record);
+        TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class, record.getSchema());
+        Assert.assertEquals(record.getDecimalVal4(), record2.getDecimalVal4());
+//        result = AvroUtils.writeAvroJson(record);
+//        System.out.println(new String(result, Charset.forName("UTF-8")));
+//        record2 = AvroUtils.readAvroJson(result, TestRecord.class);
+//        Assert.assertEquals(record.getDecimalVal(), record2.getDecimalVal());
+    }
+    
+    @Test
+    public void testSerializationCompatibility2() throws IOException {
+        TestRecord record = TestRecord.newBuilder()
+                .setDecimalVal(new BigDecimal("3.14"))
+                .setDecimalVal2(new BigDecimal("3.14"))
+                .setDecimalVal3(null)
+                .setDecimalVal4(2)
+                .setIntVal(0)
+                .setDoubleVal(3.5).setDateVal(new LocalDate())
+                .setDateVal2(new LocalDate())
+                .setDateVal3(new LocalDate())
+                .setDateTimeVal(new DateTime())
+                .build();
+        byte [] result = AvroUtils.writeAvroBin(record);
+        TestRecord2 record2 = AvroUtils.readAvroBin(result, TestRecord2.class, record.getSchema());
+        Assert.assertEquals(record.getDecimalVal4(), record2.getDecimalVal4());
+//        result = AvroUtils.writeAvroJson(record);
+//        System.out.println(new String(result, Charset.forName("UTF-8")));
+//        record2 = AvroUtils.readAvroJson(result, TestRecord2.class);
+//        Assert.assertEquals(record.getDecimalVal(), record2.getDecimalVal());
+    }
 
     
     
 
-    
-    
-    
-    
 }

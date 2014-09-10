@@ -71,15 +71,17 @@ public final class AvroUtils {
     reader.read(res, decoder);
   }
 
-  public static <T extends SpecificRecord> T readAvroBin(final byte[] bin, final Class<T> clasz) {
+  public static <T extends SpecificRecord> T readAvroBin(final byte[] bin, final Class<T> clasz,
+          final Schema writerSchema) {
     try {
-      return readAvroBin(new ByteArrayInputStream(bin), clasz);
+      return readAvroBin(new ByteArrayInputStream(bin), clasz, writerSchema);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  public static <T extends SpecificRecord> T readAvroBin(final InputStream input, final Class<T> clasz)
+  public static <T extends SpecificRecord> T readAvroBin(final InputStream input, final Class<T> clasz,
+          final Schema writerSchema)
           throws IOException {
     T res;
     try {
@@ -89,16 +91,22 @@ public final class AvroUtils {
     } catch (IllegalAccessException e) {
       throw new RuntimeException(e);
     }
-    readAvroBin(input, res);
+    readAvroBin(input, res, writerSchema);
     return res;
   }
 
-  private static <T extends SpecificRecord> void readAvroBin(final InputStream input, final T res)
+  private static <T extends SpecificRecord> void readAvroBin(final InputStream input,
+          final T res, final Schema writerSchema)
           throws IOException {
     @SuppressWarnings("unchecked")
-    DatumReader<T> reader = new SpecificDatumReader<T>((Class<T>) res.getClass());
+    DatumReader<T> reader;
+    if (writerSchema == null) {
+      reader = new SpecificDatumReader<T>(res.getSchema());
+    }   else {
+      reader = new SpecificDatumReader<T>(writerSchema, res.getSchema());
+    }
     DecoderFactory decoderFactory = DecoderFactory.get();
-    Decoder decoder = decoderFactory.validatingDecoder(res.getSchema(), decoderFactory.binaryDecoder(input, null));
+    Decoder decoder = decoderFactory.binaryDecoder(input, null);
     reader.read(res, decoder);
   }
 
