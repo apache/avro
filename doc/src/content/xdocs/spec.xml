@@ -1406,6 +1406,47 @@ void initFPTable() {
           precisions match.</p>
 
       </section>
+
+      <section>
+        <title>Date</title>
+        <p>
+          The <code>date</code> logical type represents a date within the calendar, with no reference to a particular time zone or time of day.
+        </p>
+        <p>
+          A <code>date</code> logical type annotates Avro <code>int</code> type, where the int stores the number of days from the unix epoch, 1 January 1970 (ISO calendar).
+        </p>
+      </section>
+
+      <section>
+        <title>Time (millisecond precision)</title>
+        <p>
+          The <code>time-millis</code> logical type represents a time of day, with no reference to a particular calendar, time zone or date, with a precision of one millisecond.
+        </p>
+        <p>
+          A <code>time-millis</code> logical type annotates Avro <code>int</code> type, where the int stores the number of milliseconds after midnight, 00:00:00.000.
+        </p>
+      </section>
+
+      <section>
+        <title>Timestamp (millisecond precision)</title>
+        <p>
+          The <code>timestamp-millis</code> logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond.
+        </p>
+        <p>
+          A <code>timestamp-millis</code> logical type annotates Avro <code>long</code> type, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
+        </p>
+      </section>
+
+      <section>
+        <title>Duration</title>
+        <p>
+          The <code>duration</code> logical type represents an amount of time defined by a number of months, days and milliseconds. This is not equivalent to a number of milliseconds, because, depending on the moment in time from which the duration is measured, the number of days in the month and number of milliseconds in a day may differ. Other standard periods such as years, quarters, hours and minutes can be expressed through these basic periods.
+        </p>
+        <p>
+          A <code>duration</code> logical type annotates Avro <code>fixed</code> type of size 12, which stores three little-endian unsigned integers that represent durations at different granularities of time. The first stores a number in months, the second stores a number in days, and the third stores a number in milliseconds.
+        </p>
+      </section>
+
     </section>
 
   <p><em>Apache Avro, Avro, Apache, and the Avro and Apache logos are
