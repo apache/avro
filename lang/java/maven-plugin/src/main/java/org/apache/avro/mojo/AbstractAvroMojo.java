@@ -40,25 +40,25 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * as classpath resources following the directory structure under the
    * source directory.
    *
-   * @parameter expression="${sourceDirectory}"
+   * @parameter property="sourceDirectory"
    *            default-value="${basedir}/src/main/avro"
    */
   private File sourceDirectory;
 
   /**
-   * @parameter expression="${outputDirectory}"
+   * @parameter property="outputDirectory"
    *            default-value="${project.build.directory}/generated-sources/avro"
    */
   private File outputDirectory;
 
   /**
-   * @parameter expression="${sourceDirectory}"
+   * @parameter property="sourceDirectory"
    *            default-value="${basedir}/src/test/avro"
    */
   private File testSourceDirectory;
 
   /**
-   * @parameter expression="${outputDirectory}"
+   * @parameter property="outputDirectory"
    *            default-value="${project.build.directory}/generated-test-sources/avro"
    */
   private File testOutputDirectory;
@@ -101,7 +101,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   /**  The Java type to use for Avro strings.  May be one of CharSequence,
    * String or Utf8.  CharSequence by default.
    *
-   * @parameter expression="${stringType}"
+   * @parameter property="stringType"
    */
   protected String stringType = "CharSequence";
 
@@ -110,7 +110,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * to use for code generation. The default value points to the templates included
    * with the avro-maven-plugin.
    *
-   * @parameter expression="${templateDirectory}"
+   * @parameter property="templateDirectory"
    */
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 

@@ -132,7 +132,7 @@ public class RpcReceiveTool implements Tool {
       .withRequiredArg()
       .ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
-    args = opts.nonOptionArguments();
+    args = (List<String>)opts.nonOptionArguments();
 
     if (args.size() != 3) {
       err.println("Usage: uri protocol_file message_name (-data d | -file f)");

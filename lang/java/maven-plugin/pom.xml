@@ -46,7 +46,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>2.9</version>
+        <version>${plugin-plugin.version}</version>
         <executions>
           <execution>
             <id>generated-helpmojo</id>

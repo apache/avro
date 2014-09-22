@@ -42,43 +42,44 @@
       To build the avro-mapred module against Hadoop 2 specify
       -Dhadoop.version=2 or leave unspecified to build against Hadoop 1
     -->
-    <hadoop1.version>0.20.205.0</hadoop1.version>
-    <hadoop2.version>2.0.1-alpha</hadoop2.version>
+    <hadoop1.version>1.2.1</hadoop1.version>
+    <hadoop2.version>2.5.0</hadoop2.version>
     <jackson.version>1.9.13</jackson.version>
     <jetty.version>6.1.26</jetty.version>
     <jetty-servlet-api.version>2.5-20081211</jetty-servlet-api.version>
-    <jopt-simple.version>4.1</jopt-simple.version>
-    <junit.version>4.10</junit.version>
-    <netty.version>3.4.0.Final</netty.version>
-    <paranamer.version>2.3</paranamer.version>
-    <protobuf.version>2.4.1</protobuf.version>
-    <thrift.version>0.7.0</thrift.version>
-    <slf4j.version>1.6.4</slf4j.version>
-    <snappy.version>1.0.5</snappy.version>
+    <jopt-simple.version>4.7</jopt-simple.version>
+    <junit.version>4.11</junit.version>
+    <netty.version>3.5.13.Final</netty.version>
+    <paranamer.version>2.7</paranamer.version>
+    <protobuf.version>2.5.0</protobuf.version>
+    <thrift.version>0.9.1</thrift.version>
+    <slf4j.version>1.7.7</slf4j.version>
+    <snappy.version>1.1.1.3</snappy.version>
     <velocity.version>1.7</velocity.version>
     <maven.version>2.0.10</maven.version>
-    <ant.version>1.8.2</ant.version>
+    <ant.version>1.9.0</ant.version>
     <commons-lang.version>2.6</commons-lang.version>
-    <commons-compress.version>1.4.1</commons-compress.version>
-    <easymock.version>3.0</easymock.version>
-    <hamcrest.version>1.1</hamcrest.version>
+    <commons-compress.version>1.8.1</commons-compress.version>
+    <tukaani.version>1.5</tukaani.version>
+    <easymock.version>3.2</easymock.version>
+    <hamcrest.version>1.3</hamcrest.version>
     <commons-httpclient.version>3.1</commons-httpclient.version>
 
     <!-- version properties for plugins -->
-    <checkstyle-plugin.version>2.8</checkstyle-plugin.version>
-    <bundle-plugin-version>2.1.0</bundle-plugin-version>
-    <compiler-plugin.version>2.3.2</compiler-plugin.version>
-    <exec-plugin.version>1.2.1</exec-plugin.version>
-    <jar-plugin.version>2.3.2</jar-plugin.version>
+    <checkstyle-plugin.version>2.12.1</checkstyle-plugin.version>
+    <bundle-plugin-version>2.5.3</bundle-plugin-version>
+    <compiler-plugin.version>3.1</compiler-plugin.version>
+    <exec-plugin.version>1.3.2</exec-plugin.version>
+    <jar-plugin.version>2.5</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
-    <javadoc-plugin.version>2.8</javadoc-plugin.version>
+    <javadoc-plugin.version>2.9.1</javadoc-plugin.version>
     <plugin-tools-javadoc.version>3.2</plugin-tools-javadoc.version>
-    <maven-site-plugin.version>3.1</maven-site-plugin.version>
-    <plugin-plugin.version>2.9</plugin-plugin.version>
-    <source-plugin.version>2.1.2</source-plugin.version>
-    <surefire-plugin.version>2.12</surefire-plugin.version>
+    <maven-site-plugin.version>3.3</maven-site-plugin.version>
+    <plugin-plugin.version>3.3</plugin-plugin.version>
+    <source-plugin.version>2.3</source-plugin.version>
+    <surefire-plugin.version>2.17</surefire-plugin.version>
     <file-management.version>1.2.1</file-management.version>
-    <shade-plugin.version>1.5</shade-plugin.version>
+    <shade-plugin.version>1.7.1</shade-plugin.version>
     <archetype-plugin.version>2.2</archetype-plugin.version>
   </properties>
 
@@ -465,7 +466,7 @@
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
-      <artifactId>junit-dep</artifactId>
+      <artifactId>junit</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>

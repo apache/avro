@@ -66,7 +66,7 @@ public class DataFileWriteTool implements Tool {
         .ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
 
-    List<String> nargs = opts.nonOptionArguments();
+    List<String> nargs = (List<String>)opts.nonOptionArguments();
     if (nargs.size() != 1) {
       err.println("Expected 1 arg: input_file");
       p.printHelpOn(err);

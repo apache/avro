@@ -68,7 +68,7 @@ public class CreateRandomFileTool implements Tool {
       p.printHelpOn(err);
       return 1;
     }
-    args = opts.nonOptionArguments();
+    args = (List<String>)opts.nonOptionArguments();
 
     String schemastr = inschema.value(opts);
     String schemafile = file.value(opts);

@@ -2,6 +2,10 @@ Avro Change Log
 
 Trunk (not yet released)
 
+  INCOMPATIBLE CHANGES
+
+    AVRO-1334. Java: Update versions of many dependencies. (scottcarey, cutting)
+
   NEW FEATURES
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)

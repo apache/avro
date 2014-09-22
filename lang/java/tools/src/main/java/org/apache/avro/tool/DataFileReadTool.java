@@ -56,7 +56,7 @@ public class DataFileReadTool implements Tool {
 
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean pretty = optionSet.has(prettyOption);
-    List<String> nargs = optionSet.nonOptionArguments();
+    List<String> nargs = (List<String>)optionSet.nonOptionArguments();
 
     if (nargs.size() != 1) {
       printHelp(err);
