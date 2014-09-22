@@ -73,6 +73,11 @@ public class ReflectData extends SpecificData {
     @Override
     protected Schema createFieldSchema(Field field, Map<String, Schema> names) {
       Schema schema = super.createFieldSchema(field, names);
+      if (field.getType().isPrimitive()) {
+        // for primitive values, such as int, a null will result in a
+        // NullPointerException at read time
+        return schema;
+      }
       return makeNullable(schema);
     }
   }
