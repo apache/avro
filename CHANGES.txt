@@ -23,6 +23,9 @@ Trunk (not yet released)
     AVRO-1583. Java: Add stdin support to the tojson tool.
     (Clément Mahtieu via cutting)
 
+    AVRO-1551. Java: Add an output encoding option to the compiler
+    command line tool. (Keegan Witt via cutting)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)

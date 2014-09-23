@@ -42,7 +42,7 @@ public class SpecificCompilerTool implements Tool {
       List<String> args) throws Exception {
     if (args.size() < 3) {
       System.err
-          .println("Usage: [-string] (schema|protocol) input... outputdir");
+          .println("Usage: [-encoding <outputencoding>] [-string] (schema|protocol) input... outputdir");
       System.err
           .println(" input - input files or directories");
       System.err
@@ -54,11 +54,19 @@ public class SpecificCompilerTool implements Tool {
     StringType stringType = StringType.CharSequence;
 
     int arg = 0;
+
+    String encoding = null;
+    if ("-encoding".equals(args.get(arg))) {
+      arg++;
+      encoding = args.get(arg);
+      arg++;
+    }
+
     if ("-string".equals(args.get(arg))) {
       stringType = StringType.String;
       arg++;
     }
-      
+
     String method = args.get(arg);
     List<File> inputs = new ArrayList<File>();
     File output = new File(args.get(args.size() - 1));
@@ -73,6 +81,9 @@ public class SpecificCompilerTool implements Tool {
         Schema schema = parser.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(schema);
         compiler.setStringType(stringType);
+        if (encoding != null) {
+          compiler.setOutputCharacterEncoding(encoding);
+        }
         compiler.compileToDestination(src, output);
       }
     } else if ("protocol".equals(method)) {
@@ -80,6 +91,9 @@ public class SpecificCompilerTool implements Tool {
         Protocol protocol = Protocol.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(protocol);
         compiler.setStringType(stringType);
+        if (encoding != null) {
+          compiler.setOutputCharacterEncoding(encoding);
+        }
         compiler.compileToDestination(src, output);
       }
     } else {
