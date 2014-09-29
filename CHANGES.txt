@@ -13,6 +13,10 @@ Trunk (not yet released)
     AVRO-739. Add date, time, timestamp, and duration binary types to
     specification. (Dmitry Kovalev and Ryan Blue via tomwhite)
 
+    AVRO-1590. Java: In resolving records in unions, permit structural
+    and shortname matches when fullname matching fails.
+    (Ryan Blue via cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
