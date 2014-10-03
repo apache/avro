@@ -21,6 +21,8 @@ Trunk (not yet released)
     and shortname matches when fullname matching fails.
     (Ryan Blue via cutting)
 
+    AVRO-1502. Java: Generated classes now implement Serializable. (cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

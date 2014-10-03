@@ -4,9 +4,11 @@
  * DO NOT EDIT DIRECTLY
  */
 package avro.examples.baseball;  
-@SuppressWarnings("all")/** 選手 is Japanese for player. */
+@SuppressWarnings("all")
+/** 選手 is Japanese for player. */
 @org.apache.avro.specific.AvroGenerated
 public class Player extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  private static final long serialVersionUID = 3865593031278745715L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Player\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"選手 is Japanese for player.\",\"fields\":[{\"name\":\"number\",\"type\":\"int\"},{\"name\":\"first_name\",\"type\":\"string\"},{\"name\":\"last_name\",\"type\":\"string\"},{\"name\":\"position\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"enum\",\"name\":\"Position\",\"symbols\":[\"P\",\"C\",\"B1\",\"B2\",\"B3\",\"SS\",\"LF\",\"CF\",\"RF\",\"DH\"]}}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   @Deprecated public int number;
@@ -300,4 +302,21 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       }
     }
   }
+
+  private static final org.apache.avro.io.DatumWriter
+    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);  
+
+  @Override public void writeExternal(java.io.ObjectOutput out)
+    throws java.io.IOException {
+    WRITER$.write(this, org.apache.avro.specific.SpecificData.getEncoder(out));
+  }
+
+  private static final org.apache.avro.io.DatumReader
+    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);  
+
+  @Override public void readExternal(java.io.ObjectInput in)
+    throws java.io.IOException {
+    READER$.read(this, org.apache.avro.specific.SpecificData.getDecoder(in));
+  }
+
 }
