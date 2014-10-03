@@ -42,6 +42,7 @@ import org.apache.avro.io.DirectBinaryEncoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonDecoder;
+import org.apache.avro.AvroTypeException;
 import org.junit.Test;
 import org.apache.avro.util.Utf8;
 
@@ -211,4 +212,49 @@ public class TestGenericDatumWriter {
     @Override
     public void writeIndex(int unionIndex) throws IOException { e.writeIndex(unionIndex); }
   };
+
+  @Test(expected=AvroTypeException.class)
+  public void writeDoesNotAllowStringForGenericEnum() throws IOException {
+    final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," +
+      "\"fields\": [ " +
+        "{\"name\": \"field\", \"type\": " +
+          "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": " +
+            "[\"ONE\",\"TWO\",\"THREE\"] " +
+          "}" +
+        "}" +
+      "]}";
+    Schema schema = Schema.parse(json);
+    GenericRecord record = new GenericData.Record(schema);
+    record.put("field", "ONE");
+
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> writer =
+      new GenericDatumWriter<GenericRecord>(schema);
+    Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
+
+    writer.write(record, encoder);
+  }
+
+  private enum AnEnum { ONE, TWO, THREE };
+  @Test(expected=AvroTypeException.class)
+  public void writeDoesNotAllowJavaEnumForGenericEnum() throws IOException {
+    final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," +
+      "\"fields\": [ " +
+        "{\"name\": \"field\", \"type\": " +
+          "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": " +
+            "[\"ONE\",\"TWO\",\"THREE\"] " +
+          "}" +
+        "}" +
+      "]}";
+    Schema schema = Schema.parse(json);
+    GenericRecord record = new GenericData.Record(schema);
+    record.put("field", AnEnum.ONE);
+
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> writer =
+      new GenericDatumWriter<GenericRecord>(schema);
+    Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
+
+    writer.write(record, encoder);
+  }
 }

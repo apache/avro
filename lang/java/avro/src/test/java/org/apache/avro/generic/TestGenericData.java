@@ -440,4 +440,19 @@ public class TestGenericData {
     assertFalse(GenericData.get().validate(schema, w));
     assertTrue(GenericData.get().validate(schema, null));
   }
+
+  private enum anEnum { ONE,TWO,THREE };
+  @Test
+  public void validateRequiresGenericSymbolForEnumSchema() {
+    final Schema schema = Schema.createEnum("my_enum", "doc", "namespace", Arrays.asList("ONE","TWO","THREE"));
+    final GenericData gd = GenericData.get();
+    
+    /* positive cases */
+    assertTrue(gd.validate(schema, new GenericData.EnumSymbol(schema, "ONE")));
+    assertTrue(gd.validate(schema, new GenericData.EnumSymbol(schema, anEnum.ONE)));
+
+    /* negative cases */
+    assertFalse("We don't expect GenericData to allow a String datum for an enum schema", gd.validate(schema, "ONE"));
+    assertFalse("We don't expect GenericData to allow a Java Enum for an enum schema", gd.validate(schema, anEnum.ONE));
+  }
 }

@@ -143,8 +143,12 @@ public class TestCompare {
 
   @Test
   public void testEnum() throws Exception {
-    check("{\"type\":\"enum\", \"name\":\"Test\",\"symbols\": [\"A\", \"B\"]}",
-          "A", "B");
+    String json =
+      "{\"type\":\"enum\", \"name\":\"Test\",\"symbols\": [\"A\", \"B\"]}";
+    Schema schema = Schema.parse(json);
+    check(json,
+          new GenericData.EnumSymbol(schema, "A"),
+          new GenericData.EnumSymbol(schema, "B"));
   }
 
   @Test

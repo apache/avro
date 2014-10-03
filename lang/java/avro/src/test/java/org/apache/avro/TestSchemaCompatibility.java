@@ -541,15 +541,15 @@ public class TestSchemaCompatibility {
       // new DecodingTestCase(LONG_SCHEMA, 1L, INT_SCHEMA, 1),  // should work in best-effort!
 
       new DecodingTestCase(
-          ENUM1_AB_SCHEMA, "A",
+          ENUM1_AB_SCHEMA, new EnumSymbol(ENUM1_AB_SCHEMA, "A"),
           ENUM1_ABC_SCHEMA, new EnumSymbol(ENUM1_ABC_SCHEMA, "A")),
 
       new DecodingTestCase(
-          ENUM1_ABC_SCHEMA, "A",
+          ENUM1_ABC_SCHEMA, new EnumSymbol(ENUM1_ABC_SCHEMA, "A"),
           ENUM1_AB_SCHEMA, new EnumSymbol(ENUM1_AB_SCHEMA, "A")),
 
       new DecodingTestCase(
-          ENUM1_ABC_SCHEMA, "B",
+          ENUM1_ABC_SCHEMA, new EnumSymbol(ENUM1_ABC_SCHEMA, "B"),
           ENUM1_BC_SCHEMA, new EnumSymbol(ENUM1_BC_SCHEMA, "B")),
 
       new DecodingTestCase(

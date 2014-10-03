@@ -6,6 +6,10 @@ Trunk (not yet released)
 
     AVRO-1334. Java: Update versions of many dependencies. (scottcarey, cutting)
 
+    AVRO-997. Java: For enum values, no longer sometimes permit any
+    Object whose toString() names an enum symbol, but rather always
+    require use of distinct enum types. (Sean Busbey via cutting)
+
   NEW FEATURES
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)
