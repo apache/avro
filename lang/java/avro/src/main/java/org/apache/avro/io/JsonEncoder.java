@@ -65,6 +65,12 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     this.parser =
       new Parser(new JsonGrammarGenerator().generate(sc), this);
   }
+  
+    
+  JsonEncoder(Parser parser, JsonGenerator out) throws IOException {
+    configure(out);
+    this.parser = parser;
+  }
 
   @Override
   public void flush() throws IOException {
