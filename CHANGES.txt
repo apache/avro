@@ -46,6 +46,9 @@ Trunk (not yet released)
     AVRO-1589. Java: Fix ReflectData.AllowNulls to not create unions
     for primitive types. (Ryan Blue via cutting)
 
+    AVRO-1591. Java: Fix specific RPC so that proxies implement hashCode(),
+    equals() and toString(). (Mark Spadoni via cutting)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
