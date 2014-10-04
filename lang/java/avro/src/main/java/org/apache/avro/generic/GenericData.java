@@ -874,10 +874,10 @@ public class GenericData {
     if (json == null)
       throw new AvroRuntimeException("Field " + field
                                      + " not set and has no default value");
-    if (json.isNull()
-        && (field.schema().getType() == Type.NULL
-            || (field.schema().getType() == Type.UNION
-                && field.schema().getTypes().get(0).getType() == Type.NULL))) {
+    final Schema schema = field.schema();
+    final Type type = schema.getType();
+    if (json.isNull() && (type == Type.NULL || (type == Type.UNION
+                && schema.getTypes().get(0).getType() == Type.NULL))) {
       return null;
     }
     
@@ -890,13 +890,10 @@ public class GenericData {
       try {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-        ResolvingGrammarGenerator.encode(encoder, field.schema(), json);
+        ResolvingGrammarGenerator.encode(encoder, schema, json);
         encoder.flush();
-        BinaryDecoder decoder =
-          DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-        defaultValue =
-          createDatumReader(field.schema()).read(null, decoder);
-
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
+        defaultValue = createDatumReader(schema).read(null, decoder); 
         defaultValueCache.put(field, defaultValue);
       } catch (IOException e) {
         throw new AvroRuntimeException(e);
@@ -985,8 +982,11 @@ public class GenericData {
           // Utf8 copy constructor is more efficient than converting 
           // to string and then back to Utf8
           return (T)new Utf8((Utf8)value);
+        } else if (value instanceof CharSequence) {
+          return (T) value.toString();
+        } else {
+          return (T) value;
         }
-        return (T)new Utf8(value.toString());
       case UNION:
         return deepCopy(
             schema.getTypes().get(resolveUnion(schema, value)), value);
