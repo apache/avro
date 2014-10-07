@@ -19,6 +19,8 @@ servers yet available.
 """
 import unittest
 
+import set_avro_test_path
+
 # This test does import this code, to make sure it at least passes
 # compilation.
 from avro import ipc

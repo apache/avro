@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,13 +44,15 @@ import org.apache.avro.ipc.SaslSocketServer;
 import org.apache.avro.ipc.SaslSocketTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
+import org.apache.avro.ipc.HttpServer;
+import org.apache.avro.ipc.HttpTransceiver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class TetheredProcess  {
 
-  static final Logger LOG = LoggerFactory.getLogger(TetherMapRunner.class);
+  static final Logger LOG = LoggerFactory.getLogger(TetheredProcess.class);
 
   private JobConf job;
 
@@ -59,15 +62,44 @@ class TetheredProcess  {
   Transceiver clientTransceiver;
   InputProtocol inputClient;
 
+  /**
+   * Enumeration defines which transport protocol to use to communicate between
+   * the map/reduce java daemons and the tethered proce
+   */
+  public enum Protocol {HTTP,SASL,NONE};
+
+  //which protocol we are using
+  Protocol proto;
+
   public TetheredProcess(JobConf job,
                           OutputCollector<TetherData, NullWritable> collector,
                           Reporter reporter) throws Exception {
     try {
       // start server
       this.outputService = new TetherOutputService(collector, reporter);
-      this.outputServer = new SaslSocketServer
-        (new SpecificResponder(OutputProtocol.class, outputService),
-         new InetSocketAddress(0));
+
+      proto=TetherJob.getProtocol(job);
+
+      InetSocketAddress iaddress;
+      switch (proto) {
+      case SASL:
+        iaddress=new InetSocketAddress(0);
+        this.outputServer = new SaslSocketServer
+            (new SpecificResponder(OutputProtocol.class, outputService),
+                iaddress);
+        break;
+      case HTTP:
+        iaddress=new InetSocketAddress(0);
+        //set it up for http
+        this.outputServer= new  HttpServer
+            (new SpecificResponder(OutputProtocol.class, outputService),
+                iaddress.getPort());
+        break;
+      case NONE:
+      default:
+        throw new RuntimeException("No transport protocol was specified in the job configuraiton");
+      }
+
       outputServer.start();
       
       // start sub-process, connecting back to server
@@ -85,8 +117,18 @@ class TetheredProcess  {
         LOG.error("Could not start subprocess");
         throw new RuntimeException("Could not start subprocess");
       }
-      this.clientTransceiver
-        = new SaslSocketTransceiver(new InetSocketAddress(outputService.inputPort()));
+      // open client, connecting to sub-process
+      switch (proto) {
+      case SASL:
+        this.clientTransceiver =new SaslSocketTransceiver(new InetSocketAddress(outputService.inputPort()));
+        break;
+      case HTTP:
+        this.clientTransceiver =new HttpTransceiver(new URL("http://127.0.0.1:"+outputService.inputPort()));
+        break;
+      default:
+        throw new RuntimeException("Error: code to handle this protocol is not implemented");
+      }
+
       this.inputClient =
         SpecificRequestor.getClient(InputProtocol.class, clientTransceiver);
 
@@ -131,17 +173,21 @@ class TetheredProcess  {
     command.add(executable);
 
     // Add the executable arguments. We assume the arguments are separated by
-    // spaces so we split the argument string based on spaces and add each
+    // newlines so we split the argument string based on newlines and add each
     // token to command We need to do it this way because
     // TaskLog.captureOutAndError will put quote marks around each argument so
     // if we pass a single string containing all arguments we get quoted
     // incorrectly
     String args=job.get(TetherJob.TETHER_EXEC_ARGS);
-    String[] aparams=args.split("\n");
-    for (int i=0;i<aparams.length; i++){            
-      aparams[i]=aparams[i].trim();
-      if (aparams[i].length()>0){
-        command.add(aparams[i]);
+
+    // args might be null if TETHER_EXEC_ARGS wasn't set.
+    if (args != null) {
+      String[] aparams=args.split("\n");
+      for (int i=0;i<aparams.length; i++){
+        aparams[i]=aparams[i].trim();
+        if (aparams[i].length()>0){
+          command.add(aparams[i]);
+        }
       }
     }
 
@@ -162,6 +208,18 @@ class TetheredProcess  {
     Map<String, String> env = new HashMap<String,String>();
     env.put("AVRO_TETHER_OUTPUT_PORT",
             Integer.toString(outputServer.getPort()));
+
+    // add an environment variable to specify what protocol to use for communication
+    env.put("AVRO_TETHER_PROTOCOL", job.get(TetherJob.TETHER_PROTOCOL));
+
+    // print an info message about the command
+    String imsg="";
+    for (int i=0; i<command.size();i++) {
+      imsg=command.get(i)+" ";
+    }
+    LOG.info("TetheredProcess.startSubprocess: command: "+imsg);
+    LOG.info("Tetheredprocess.startSubprocess: stdout logged to: " + stdout.toString()) ;
+    LOG.info("Tetheredprocess.startSubprocess: stderr logged to: " + stderr.toString()) ;
 
     // start child process
     ProcessBuilder builder = new ProcessBuilder(command);

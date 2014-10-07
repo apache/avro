@@ -41,6 +41,7 @@ public class TetherJob extends Configured {
   public static final String TETHER_EXEC="avro.tether.executable";
   public static final String TETHER_EXEC_ARGS="avro.tether.executable_args";
   public static final String TETHER_EXEC_CACHED="avro.tether.executable_cached";
+  public static final String TETHER_PROTOCOL="avro.tether.protocol";
   
   /** Get the URI of the application's executable. */
   public static URI getExecutable(JobConf job) {
@@ -61,20 +62,42 @@ public class TetherJob extends Configured {
    * and provides the mapper/reducer). 
    * @param job - Job
    * @param executable - The URI of the executable
-   * @param args - A string of additional arguments
+   * @param args - List of additional arguments; Null if no arguments
    * @param cached - If true, the executable URI is cached using DistributedCache
    *               - if false its not cached. I.e if the file is already stored on each local file system
    *                or if its on a NFS share
    */
   public static void setExecutable(JobConf job, File executable, List<String> args, boolean cached) {
         job.set(TETHER_EXEC, executable.toString());
-        StringBuilder sb = new StringBuilder();
-        for (String a : args) {
-          sb.append(a);
-          sb.append('\n');
+        if (args != null){
+          StringBuilder sb = new StringBuilder();
+          for (String a : args) {
+            sb.append(a);
+            sb.append('\n');
+          }
+          job.set(TETHER_EXEC_ARGS, sb.toString());
         }
-        job.set(TETHER_EXEC_ARGS, sb.toString());
         job.set(TETHER_EXEC_CACHED,  (new Boolean(cached)).toString());
+  }
+
+  /**
+   * Extract from the job configuration file an instance of the TRANSPROTO enumeration
+   * to represent the protocol to use for the communication
+   * @param job
+   * @return
+   */
+  public static TetheredProcess.Protocol getProtocol(JobConf job) {
+
+    if (job.get(TetherJob.TETHER_PROTOCOL)==null) {
+      return TetheredProcess.Protocol.NONE;
+    } else if (job.get(TetherJob.TETHER_PROTOCOL).equals("http")) {
+      return TetheredProcess.Protocol.HTTP;
+    } else if (job.get(TetherJob.TETHER_PROTOCOL).equals("sasl")) {
+      return TetheredProcess.Protocol.SASL;
+    } else {
+      throw new RuntimeException("Unknown value for protocol: " +job.get(TetherJob.TETHER_PROTOCOL));
+    }
+
   }
 
   /** Submit a job to the map/reduce cluster. All of the necessary
@@ -92,6 +115,24 @@ public class TetherJob extends Configured {
     return new JobClient(conf).submitJob(conf);
   }
   
+  /**
+   * Determines which transport protocol (e.g http or sasl) used to communicate
+   * between the parent and subprocess
+   *
+   * @param job - job configuration
+   * @param proto - String identifying the protocol currently http or sasl
+   */
+  public static void setProtocol(JobConf job, String proto) throws IOException {
+    proto=proto.trim().toLowerCase();
+
+    if (!(proto.equals("http") || proto.equals("sasl"))) {
+      throw new IOException("protocol must be 'http' or 'sasl'");
+    }
+
+    job.set(TETHER_PROTOCOL,proto);
+
+  }
+
   private static void setupTetherJob(JobConf job) throws IOException {
     job.setMapRunnerClass(TetherMapRunner.class);
     job.setPartitionerClass(TetherPartitioner.class);
@@ -107,6 +148,11 @@ public class TetherJob extends Configured {
     // set the map output key class to TetherData
     job.setMapOutputKeyClass(TetherData.class);
     
+    // if protocol isn't set
+    if (job.getStrings(TETHER_PROTOCOL)==null) {
+      job.set(TETHER_PROTOCOL, "sasl");
+    }
+
     // add TetherKeySerialization to io.serializations
     Collection<String> serializations =
       job.getStringCollection("io.serializations");

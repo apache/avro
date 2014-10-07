@@ -77,6 +77,12 @@
       <fileset dir="${lib.dir}" />
     </copy>
 
+    <!--Copy the protocols used for tethering -->
+    <copy todir="${build.dir}/src/avro/tether">
+        <fileset dir="${share.schema.dir}/org/apache/avro/mapred/tether/">
+    <include name="*.avpr"/>
+        </fileset>
+    </copy>
     <!-- Inline the handshake schemas -->
     <copy file="${src.dir}/avro/ipc.py"
           toFile="${build.dir}/src/avro/ipc.py"
@@ -120,6 +126,16 @@
         <filter token="INTEROP_DATA_DIR" value="${interop.data.dir}"/>
       </filterset>
     </copy>
+
+    <!-- Inline the location of the tools jar -->
+    <copy file="${test.dir}/test_tether_word_count.py"
+          toFile="${build.dir}/test/test_tether_word_count.py"
+          overwrite="true">
+      <filterset>
+  <filter token="AVRO_VERSION" value="${avro.version}"/>
+  <filter token="TOPDIR" value="${basedir}"/>
+      </filterset>
+    </copy>
   </target>
 
   <target name="test"
@@ -134,6 +150,22 @@
       </fileset>
     </py-test>
   </target>
+
+    <!--Created a unittest to run just the tests for tethered jobs.
+    -->
+    <target name="test-tether"
+          description="Run unit tests for a hadoop python-tethered job."
+          depends="build">
+    <taskdef name="py-test" classname="org.pyant.tasks.PythonTestTask"
+       classpathref="java.classpath"/>
+    <py-test python="${python}" pythonpathref="test.path">
+      <fileset dir="${build.dir}/test">
+        <include name="test_tether*.py"/>
+        <!--<exclude name="test_datafile_interop.py"/>-->
+      </fileset>
+    </py-test>
+  </target>
+
 
   <target name="interop-data-test"
           description="Run python interop data tests"

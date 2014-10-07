@@ -43,13 +43,19 @@ import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.specific.SpecificDatumReader;
 
+/**
+ * See also TestTetherTool for an example of how to submit jobs using the thether tool.
+ *
+ */
 public class TestWordCountTether {
 
 
-    @Test
-    @SuppressWarnings("deprecation")
-    public void testJob() throws Exception {
-
+  /**
+   * Run a job using the given transport protocol
+   * @param proto
+   */
+  private void _runjob(String proto)throws Exception {
+    // System.out.println(System.getProperty("java.class.path").replace(":", "\n"));
     System.out.println(System.getProperty("java.class.path"));
     JobConf job = new JobConf();
     String dir = System.getProperty("test.dir", ".") + "/mapred";
@@ -80,6 +86,7 @@ public class TestWordCountTether {
     AvroJob.setInputSchema(job, Schema.create(Schema.Type.STRING));
     job.set(AvroJob.OUTPUT_SCHEMA, outscheme.toString());
 
+    TetherJob.setProtocol(job, proto);
     TetherJob.runJob(job);
 
     // validate the output
@@ -100,5 +107,23 @@ public class TestWordCountTether {
 
   }
 
+  /**
+   * Test the job using the sasl protocol
+   * @throws Exception
+   */
+  @Test
+  @SuppressWarnings("deprecation")
+  public void testJob() throws Exception {
+      _runjob("sasl");
+  }
 
+  /**
+   * Test the job using the http protocol
+   * @throws Exception
+   */
+  @Test
+  @SuppressWarnings("deprecation")
+  public void testhtp() throws Exception {
+    _runjob("http");
+  }
 }

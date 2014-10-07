@@ -20,11 +20,8 @@ package org.apache.avro.tool;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
-
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 import org.apache.avro.Schema;
 import org.apache.avro.mapred.AvroJob;
@@ -33,6 +30,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
+
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+
 
 @SuppressWarnings("deprecation")
 public class TetherTool implements Tool {
@@ -52,38 +58,116 @@ public class TetherTool implements Tool {
   public int run(InputStream ins, PrintStream outs, PrintStream err,
       List<String> args) throws Exception {
 
-    OptionParser p = new OptionParser();
-    OptionSpec<File> exec = p
-        .accepts("program", "executable program, usually in HDFS")
-        .withRequiredArg().ofType(File.class);
-    OptionSpec<String> in = p.accepts("in", "comma-separated input paths")
-        .withRequiredArg().ofType(String.class);
-    OptionSpec<Path> out = p.accepts("out", "output directory")
-        .withRequiredArg().ofType(Path.class);
-    OptionSpec<File> outSchema = p.accepts("outschema", "output schema file")
-        .withRequiredArg().ofType(File.class);
-    OptionSpec<File> mapOutSchema = p
-        .accepts("outschemamap", "map output schema file, if different")
-        .withOptionalArg().ofType(File.class);
-    OptionSpec<Integer> reduces = p.accepts("reduces", "number of reduces")
-        .withOptionalArg().ofType(Integer.class);
+    String[] argarry = args.toArray(new String[0]);
+    Options opts = new Options();
+
+    Option helpopt = OptionBuilder.hasArg(false)
+        .withDescription("print this message")
+        .create("help");
+
+    Option inopt = OptionBuilder.hasArg()
+        .isRequired()
+        .withDescription("comma-separated input paths")
+        .create("in");
+
+    Option outopt = OptionBuilder.hasArg()
+        .isRequired()
+        .withDescription("The output path.")
+        .create("out");
+
+    Option pargs = OptionBuilder.hasArg()
+        .withDescription("A string containing the command line arguments to pass to the tethered process. String should be enclosed in quotes")
+        .create("exec_args");
+
+    Option popt = OptionBuilder.hasArg()
+        .isRequired()
+        .withDescription("executable program, usually in HDFS")
+        .create("program");
+
+    Option outscopt = OptionBuilder.withType(File.class).hasArg()
+        .isRequired()
+        .withDescription("schema file for output of reducer")
+        .create("outschema");
+
+    Option outscmapopt = OptionBuilder.withType(File.class).hasArg()
+        .withDescription("(optional) map output schema file,  if different from outschema")
+        .create("outschemamap");
+
+    Option redopt = OptionBuilder.withType(Integer.class).hasArg()
+        .withDescription("(optional) number of reducers")
+        .create("reduces");
+
+    Option cacheopt = OptionBuilder.withType(Boolean.class).hasArg()
+        .withDescription("(optional) boolean indicating whether or not the exectuable should be distributed via distributed cache")
+        .create("exec_cached");
+
+    Option protoopt = OptionBuilder.hasArg()
+        .withDescription("(optional) specifies the transport protocol 'http' or 'sasl'")
+        .create("protocol");
+
+    opts.addOption(redopt);
+    opts.addOption(outscopt);
+    opts.addOption(popt);
+    opts.addOption(pargs);
+    opts.addOption(inopt);
+    opts.addOption(outopt);
+    opts.addOption(helpopt);
+    opts.addOption(outscmapopt);
+    opts.addOption(cacheopt);
+    opts.addOption(protoopt);
+
+    CommandLineParser parser = new GnuParser();
+
+    String[] genargs = null;
+    CommandLine line = null;
+    HelpFormatter formatter = new HelpFormatter();
 
     JobConf job = new JobConf();
 
     try {
-      OptionSet opts = p.parse(args.toArray(new String[0]));
-      FileInputFormat.addInputPaths(job, in.value(opts));
-      FileOutputFormat.setOutputPath(job, out.value(opts));
-      TetherJob.setExecutable(job, exec.value(opts));
-      job.set(AvroJob.OUTPUT_SCHEMA, Schema.parse(outSchema.value(opts))
-          .toString());
-      if (opts.hasArgument(mapOutSchema))
+      line = parser.parse(opts, argarry);
+
+      if (line.hasOption("help")) {
+        formatter.printHelp("tether", opts );
+        return 0;
+      }
+
+      genargs = line.getArgs();
+
+      FileInputFormat.addInputPaths(job, line.getOptionValue("in"));
+      FileOutputFormat.setOutputPath(job,new Path (line.getOptionValue("out")));
+
+      List<String> exargs = null;
+      Boolean cached = false;
+
+      if (line.hasOption("exec_args")) {
+        String[] splitargs = line.getOptionValue("exec_args").split(" ");
+        exargs = new ArrayList<String>();
+        for (String item: splitargs){
+          exargs.add(item);
+        }
+      }
+      if (line.hasOption("exec_cached")) {
+        cached = Boolean.parseBoolean(line.getOptionValue("exec_cached"));
+      }
+      TetherJob.setExecutable(job, new File(line.getOptionValue("program")), exargs, cached);
+
+      File outschema = (File)line.getParsedOptionValue("outschema");
+      job.set(AvroJob.OUTPUT_SCHEMA, Schema.parse(outschema).toString());
+      if (line.hasOption("outschemamap")) {
         job.set(AvroJob.MAP_OUTPUT_SCHEMA,
-            Schema.parse(mapOutSchema.value(opts)).toString());
-      if (opts.hasArgument(reduces))
-        job.setNumReduceTasks(reduces.value(opts));
-    } catch (Exception e) {
-      p.printHelpOn(err);
+            Schema.parse((File)line.getParsedOptionValue("outschemamap")).toString());
+      }
+      if (line.hasOption("reduces")) {
+        job.setNumReduceTasks((Integer)line.getParsedOptionValue("reduces"));
+      }
+      if (line.hasOption("protocol")) {
+        TetherJob.setProtocol(job, line.getOptionValue("protocol"));
+      }
+    }
+    catch (Exception exp) {
+      System.out.println("Unexpected exception: " + exp.getMessage());
+      formatter.printHelp("tether", opts );
       return -1;
     }
 

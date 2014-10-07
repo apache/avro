@@ -23,6 +23,9 @@ Trunk (not yet released)
 
     AVRO-1502. Java: Generated classes now implement Serializable. (cutting)
 
+    AVRO-570. Python: Add connector for tethered mapreduce.
+    (Jeremy Lewi and Steven Willis via cutting)    
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

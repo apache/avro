@@ -24,11 +24,15 @@ import java.util.StringTokenizer;
 import org.apache.avro.mapred.Pair;
 import org.apache.avro.util.Utf8;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /** Example Java tethered mapreduce executable.  Implements map and reduce
  * functions for word count. */
 public class WordCountTask
   extends TetherTask<Utf8,Pair<Utf8,Long>,Pair<Utf8,Long>> {
   
+  static final Logger LOG = LoggerFactory.getLogger(WordCountTask.class);
   @Override public void map(Utf8 text, Collector<Pair<Utf8,Long>> collector)
     throws IOException {
     StringTokenizer tokens = new StringTokenizer(text.toString());
@@ -52,6 +56,7 @@ public class WordCountTask
 
   public static void main(String[] args) throws Exception {
     new TetherTaskRunner(new WordCountTask()).join();
+    LOG.info("WordCountTask finished");
   }
 
 }

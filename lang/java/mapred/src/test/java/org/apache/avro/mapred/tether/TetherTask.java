@@ -22,11 +22,13 @@ import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.net.InetSocketAddress;
+import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.avro.Schema;
+import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.SaslSocketTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
@@ -60,6 +62,8 @@ public abstract class TetherTask<IN,MID,OUT> {
   private MID midRecordSpare;
   private Collector<MID> midCollector;
   private Collector<OUT> outCollector;
+
+  private TetheredProcess.Protocol proto;
 
   private static class Buffer extends ByteArrayOutputStream {
     public ByteBuffer data() {
@@ -98,12 +102,37 @@ public abstract class TetherTask<IN,MID,OUT> {
   void open(int inputPort) throws IOException {
     // open output client, connecting to parent
     String clientPortString = System.getenv("AVRO_TETHER_OUTPUT_PORT");
+    String protocol = System.getenv("AVRO_TETHER_PROTOCOL");
     if (clientPortString == null)
       throw new RuntimeException("AVRO_TETHER_OUTPUT_PORT env var is null");
     int clientPort = Integer.parseInt(clientPortString);
-    this.clientTransceiver =
+
+    if (protocol == null) {
+      throw new RuntimeException("AVRO_TETHER_PROTOCOL env var is null");
+    }
+
+    protocol=protocol.trim().toLowerCase();
+
+    if (protocol.equals("http")) {
+      proto=TetheredProcess.Protocol.HTTP;
+    } else if (protocol.equals("sasl")) {
+      proto=TetheredProcess.Protocol.SASL;
+    } else {
+      throw new RuntimeException("AVROT_TETHER_PROTOCOL="+protocol+" but this protocol is unsupported");
+    }
+
+    switch (proto) {
+    case SASL:
+      this.clientTransceiver =
       new SaslSocketTransceiver(new InetSocketAddress(clientPort));
-    this.outputClient = SpecificRequestor.getClient(OutputProtocol.class, clientTransceiver);
+      this.outputClient = SpecificRequestor.getClient(OutputProtocol.class, clientTransceiver);
+      break;
+
+    case HTTP:
+      this.clientTransceiver =new HttpTransceiver(new URL("http://127.0.0.1:"+clientPort));
+      this.outputClient = SpecificRequestor.getClient(OutputProtocol.class, clientTransceiver);
+      break;
+    }
 
     // send inputPort to parent
     outputClient.configure(inputPort);
@@ -167,7 +196,9 @@ public abstract class TetherTask<IN,MID,OUT> {
         LOG.warn("failing: "+e, e);
         fail(e.toString());
       }
+    LOG.info("TetherTask: Sending complete to parent process.");
     outputClient.complete();
+    LOG.info("TetherTask: Done sending complete to parent process.");
   }
 
   /** Called with input values to generate intermediate values. */
@@ -197,6 +228,7 @@ public abstract class TetherTask<IN,MID,OUT> {
   }
 
   void close() {
+    LOG.info("Closing the transciever");
     if (clientTransceiver != null)
       try {
         clientTransceiver.close();
