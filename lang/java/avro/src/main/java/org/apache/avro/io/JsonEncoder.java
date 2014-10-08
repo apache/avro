@@ -82,7 +82,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
 
   // by default, one object per line.
   // with pretty option use default pretty printer with root line separator.
-  private static JsonGenerator getJsonGenerator(OutputStream out, boolean pretty)
+  static JsonGenerator getJsonGenerator(OutputStream out, boolean pretty)
       throws IOException {
     if (null == out)
       throw new NullPointerException("OutputStream cannot be null"); 

@@ -56,7 +56,7 @@ public class JsonDecoder extends ParsingDecoder
   Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
   ReorderBuffer currentReorderBuffer; 
   
-  private static class ReorderBuffer {
+  static class ReorderBuffer {
     public Map<String, List<JsonElement>> savedFields = new HashMap<String, List<JsonElement>>();
     public JsonParser origParser = null; 
   }
@@ -509,7 +509,7 @@ public class JsonDecoder extends ParsingDecoder
     return null;
   }
 
-  private static class JsonElement {
+  static class JsonElement {
     public final JsonToken token;
     public final String value;
     public JsonElement(JsonToken t, String value) {
@@ -522,7 +522,7 @@ public class JsonDecoder extends ParsingDecoder
     }
   }
   
-  private static List<JsonElement> getVaueAsTree(JsonParser in) throws IOException {
+  static List<JsonElement> getVaueAsTree(JsonParser in) throws IOException {
     int level = 0;
     List<JsonElement> result = new ArrayList<JsonElement>();
     do {
@@ -554,7 +554,7 @@ public class JsonDecoder extends ParsingDecoder
     return result;
   }
 
-  private JsonParser makeParser(final List<JsonElement> elements) throws IOException {
+  JsonParser makeParser(final List<JsonElement> elements) throws IOException {
     return new JsonParser() {
       int pos = 0;
 
@@ -695,7 +695,7 @@ public class JsonDecoder extends ParsingDecoder
     };
   }
 
-  private AvroTypeException error(String type) {
+  AvroTypeException error(String type) {
     return new AvroTypeException("Expected " + type +
         ". Got " + in.getCurrentToken());
   }
