@@ -46,7 +46,7 @@ import org.codehaus.jackson.util.MinimalPrettyPrinter;
 public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler {
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
   final Parser parser;
-  private JsonGenerator out;
+  JsonGenerator out;
   /**
    * Has anything been written into the collections?
    */
