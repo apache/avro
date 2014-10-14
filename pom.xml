@@ -50,6 +50,20 @@
     <enforcer-plugin.version>1.0.1</enforcer-plugin.version>
   </properties>
 
+
+  <distributionManagement>
+        <repository>
+            <id>prodart.pimco.imswest.sscims.com</id>
+            <name>prodart.pimco.imswest.sscims.com-releases</name>
+            <url>http://prodart:1977/artifactory/libs-release-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>prodart.pimco.imswest.sscims.com</id>
+            <name>prodart.pimco.imswest.sscims.com-snapshots</name>
+            <url>http://prodart:1977/artifactory/libs-snapshot-local</url>
+        </snapshotRepository>
+  </distributionManagement>
+
   <modules>
     <module>lang/java</module>
   </modules>
