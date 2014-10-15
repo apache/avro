@@ -68,11 +68,17 @@
     <module>lang/java</module>
   </modules>
 
+<!--
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/avro/trunk</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/avro/trunk</developerConnection>
     <url>http://svn.apache.org/viewvc/avro/trunk</url>
   </scm>
+  -->
+
+    <scm>
+        <developerConnection>scm:git:http://devpmapp1:8020/apache-avro</developerConnection>
+    </scm>  
 
   <issueManagement>
     <system>jira</system>
