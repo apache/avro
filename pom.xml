@@ -80,6 +80,8 @@
         <developerConnection>scm:git:http://devpmapp1:8020/apache-avro</developerConnection>
     </scm>  
 
+    
+
   <issueManagement>
     <system>jira</system>
     <url>http://issues.apache.org/jira/browse/AVRO</url>
@@ -112,6 +114,17 @@
   </mailingLists>
 
   <build>
+      <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                  <skipTests>true</skipTests>
+              </configuration>
+            </plugin>
+          </plugins>
+      </pluginManagement>
     <plugins>
        <plugin>
             <groupId>org.apache.maven.plugins</groupId>
