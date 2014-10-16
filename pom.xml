@@ -26,7 +26,7 @@
 
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-toplevel</artifactId>
-  <version>1.8.0.0.p-SNAPSHOT</version>
+  <version>1.8.0.0.p</version>
   <packaging>pom</packaging>
 
   <name>Apache Avro Toplevel</name>
@@ -77,7 +77,7 @@
 
     <scm>
         <developerConnection>scm:git:http://devpmapp1:8020/apache-avro</developerConnection>
-      <tag>avro-toplevel-1.8.0.p</tag>
+      <tag>avro-toplevel-1.8.0.0.p</tag>
   </scm>  
 
     
