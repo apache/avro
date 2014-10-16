@@ -15,15 +15,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<project
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-  xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.8.0.p-SNAPSHOT</version>
+    <version>1.8.0.p</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -55,16 +53,16 @@
                 <phase>generate-test-sources</phase>
                 <configuration>
                   <tasks>
-                    <mkdir dir="target/thrift-tmp"/>
+                    <mkdir dir="target/thrift-tmp" />
                     <exec executable="thrift">
-                      <arg value="--gen"/>
-                      <arg value="java:beans"/>
-                      <arg value="-o"/>
-                      <arg value="target/thrift-tmp"/>
-                      <arg value="src/test/thrift/test.thrift"/>
+                      <arg value="--gen" />
+                      <arg value="java:beans" />
+                      <arg value="-o" />
+                      <arg value="target/thrift-tmp" />
+                      <arg value="src/test/thrift/test.thrift" />
                     </exec>
                     <copy todir="src/test/java" overwrite="true">
-                      <fileset dir="target/thrift-tmp/gen-javabean"/>
+                      <fileset dir="target/thrift-tmp/gen-javabean" />
                     </copy>
                   </tasks>
                 </configuration>
