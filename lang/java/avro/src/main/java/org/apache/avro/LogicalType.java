@@ -47,8 +47,8 @@ public abstract class LogicalType extends JsonProperties {
   
   public abstract Object deserialize(Schema.Type type, Object object);
  
-  public abstract Object serialize(Schema.Type type, Object object);  
-  
+  public abstract Object serialize(Schema.Type type, Object object);
+            
   @Override
   public boolean equals(Object obj) {
     if (this == obj) return true;

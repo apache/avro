@@ -32,6 +32,7 @@ import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -599,9 +600,25 @@ public class GenericData {
   /** Return the index for a datum within a union.  Implemented with {@link
    * Schema#getIndexNamed(String)} and {@link #getSchemaName(Object)}.*/
   public int resolveUnion(Schema union, Object datum) {
-    Integer i = union.getIndexNamed(getSchemaName(datum));
-    if (i != null)
-      return i;
+    // TODO: see if this needs to be optimized
+    List<Schema> types = union.getTypes();
+    int i = 0;
+    for (Schema schema : types) {
+      if (datum == null && schema.getType() == Type.NULL) {
+        return i;
+      }
+      LogicalType ltype = schema.getLogicalType();
+      if (ltype != null) {
+        if (ltype.getLogicalJavaType().isAssignableFrom(datum.getClass())) {
+          return i;
+        }
+      }
+      i++;
+    }
+    Integer ii = union.getIndexNamed(getSchemaName(datum));
+    if (ii != null)
+      return ii;
+    
     throw new UnresolvedUnionException(union, datum);
   }
 

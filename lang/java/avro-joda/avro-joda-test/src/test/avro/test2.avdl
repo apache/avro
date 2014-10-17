@@ -10,7 +10,7 @@ protocol None {
         union {null, @logicalType("decimal") @precision(36) @scale(16) string} decimalVal3 = null;
         union {null, int, @logicalType("decimal") @precision(36) @scale(16) string} decimalVal4 = null;
         union {null, string} testField = null;
-        @logicalType("isodate") string dateVal;
+        union {null, @logicalType("isodate") string } dateVal;
         @logicalType("isodate") long dateVal2;
         @logicalType("isodate") int dateVal3;
         @logicalType("isodatetime") long dateTimeVal;
