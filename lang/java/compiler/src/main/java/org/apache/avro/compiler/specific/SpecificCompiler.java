@@ -448,7 +448,7 @@ public class SpecificCompiler {
     switch (s.getType()) {
     case STRING:
       result = Schema.create(Schema.Type.STRING);
-      GenericData.setStringType(result, stringType);
+      GenericData.setStringType(result, stringType);      
       break;
     case RECORD:
       result =
@@ -487,6 +487,10 @@ public class SpecificCompiler {
     }
     for (Map.Entry<String,JsonNode> p : s.getJsonProps().entrySet())
       result.addProp(p.getKey(), p.getValue());   // copy props
+    final LogicalType logicalType = s.getLogicalType();
+    if (result != s && logicalType != null) {
+      result.setLogicalType(logicalType);
+    }
     seen.put(s, result);
     return result;
   }
