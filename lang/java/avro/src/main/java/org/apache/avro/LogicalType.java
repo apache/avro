@@ -143,8 +143,9 @@ public abstract class LogicalType extends JsonProperties {
         } catch (InvocationTargetException ex) {
             throw new RuntimeException(ex);
         }
+    } else {
+      throw new RuntimeException("Undefined logical type " + logicalTypeNode.asText());
     }
-    return null;
   }
 
   /** Create a Decimal LogicalType with the given precision and scale 0 */
