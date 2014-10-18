@@ -1,5 +1,8 @@
 # Change Log
 
+* Unreleased
+    * Improve handling when custom buildDir is used
+
 * 0.3.1
     * Fix extension support for configuring encoding
     * Make default encoding UTF-8
