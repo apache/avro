@@ -15,6 +15,7 @@ import org.gradle.plugins.ide.idea.model.IdeaModule;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.concurrent.Callable;
 
 import static com.commercehub.gradle.plugin.avro.Constants.*;
 
@@ -80,8 +81,7 @@ public class AvroPlugin implements Plugin<Project> {
         });
     }
 
-    private static GenerateAvroProtocolTask configureProtocolGenerationTask(Project project, SourceSet sourceSet) {
-        File outputDir = getGeneratedOutputDir(project, sourceSet, PROTOCOL_EXTENSION);
+    private static GenerateAvroProtocolTask configureProtocolGenerationTask(final Project project, final SourceSet sourceSet) {
         String taskName = sourceSet.getTaskName("generate", "avroProtocol");
         GenerateAvroProtocolTask task = project.getTasks().create(taskName, GenerateAvroProtocolTask.class);
         task.setDescription(
@@ -89,13 +89,17 @@ public class AvroPlugin implements Plugin<Project> {
         task.setGroup(GROUP_SOURCE_GENERATION);
         task.source(getAvroSourceDir(project, sourceSet));
         task.include("*." + IDL_EXTENSION);
-        task.setOutputDir(outputDir);
+        task.getConventionMapping().map("outputDir", new Callable<File>() {
+            @Override
+            public File call() throws Exception {
+                return getGeneratedOutputDir(project, sourceSet, PROTOCOL_EXTENSION);
+            }
+        });
         return task;
     }
 
-    private static GenerateAvroJavaTask configureJavaGenerationTask(Project project, SourceSet sourceSet,
+    private static GenerateAvroJavaTask configureJavaGenerationTask(final Project project, final SourceSet sourceSet,
                                                                     GenerateAvroProtocolTask protoTask) {
-        File outputDir = getGeneratedOutputDir(project, sourceSet, JAVA_EXTENSION);
         String taskName = sourceSet.getTaskName("generate", "avroJava");
         GenerateAvroJavaTask task = project.getTasks().create(taskName, GenerateAvroJavaTask.class);
         task.setDescription(String.format("Generates %s Avro Java source files from schema/protocol definition files.",
@@ -104,7 +108,12 @@ public class AvroPlugin implements Plugin<Project> {
         task.source(getAvroSourceDir(project, sourceSet));
         task.source(protoTask.getOutputs());
         task.include("*." + SCHEMA_EXTENSION, "*." + PROTOCOL_EXTENSION);
-        task.setOutputDir(outputDir);
+        task.getConventionMapping().map("outputDir", new Callable<File>() {
+            @Override
+            public File call() throws Exception {
+                return getGeneratedOutputDir(project, sourceSet, JAVA_EXTENSION);
+            }
+        });
         getCompileJavaTask(project, sourceSet).source(task.getOutputs());
         return task;
     }
