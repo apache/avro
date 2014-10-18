@@ -19,7 +19,14 @@ public class AvroBasePlugin implements Plugin<Project> {
 
     private static void configureExtension(final Project project) {
         final AvroExtension avroExtension = project.getExtensions().create(AVRO_EXTENSION_NAME, DefaultAvroExtension.class);
-        conventionMapping(avroExtension).map("stringType", new Callable<String>() {
+        ConventionMapping extensionMapping = conventionMapping(avroExtension);
+        extensionMapping.map("encoding", new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return Constants.UTF8_ENCONDING;
+            }
+        });
+        extensionMapping.map("stringType", new Callable<String>() {
             @Override
             public String call() throws Exception {
                 return GenericData.StringType.String.name();
@@ -28,7 +35,14 @@ public class AvroBasePlugin implements Plugin<Project> {
         project.getTasks().withType(GenerateAvroJavaTask.class).all(new Action<GenerateAvroJavaTask>() {
             @Override
             public void execute(GenerateAvroJavaTask task) {
-                conventionMapping(task).map("stringType", new Callable<String>() {
+                ConventionMapping taskMapping = conventionMapping(task);
+                taskMapping.map("encoding", new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return avroExtension.getEncoding();
+                    }
+                });
+                taskMapping.map("stringType", new Callable<String>() {
                     @Override
                     public String call() throws Exception {
                         return avroExtension.getStringType();

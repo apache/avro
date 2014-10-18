@@ -25,7 +25,7 @@ import static com.commercehub.gradle.plugin.avro.Constants.*;
 public class GenerateAvroJavaTask extends OutputDirTask {
     private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
 
-    private String encoding;
+    private String encoding = Constants.UTF8_ENCONDING;
 
     private String stringType;
 
@@ -61,6 +61,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     @TaskAction
     protected void process() {
+        getLogger().debug("Using encoding {}", getEncoding());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         preClean();
@@ -109,9 +110,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             Protocol protocol = Protocol.parse(sourceFile);
             SpecificCompiler compiler = new SpecificCompiler(protocol);
             compiler.setStringType(parseStringType());
-            if (encoding != null) {
-                compiler.setOutputCharacterEncoding(encoding);
-            }
+            compiler.setOutputCharacterEncoding(getEncoding());
             compiler.compileToDestination(sourceFile, getOutputDir());
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile protocol definition file %s", sourceFile), ex);
@@ -140,9 +139,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                     Schema schema = parser.parse(sourceFile);
                     SpecificCompiler compiler = new SpecificCompiler(schema);
                     compiler.setStringType(parseStringType());
-                    if (encoding != null) {
-                        compiler.setOutputCharacterEncoding(encoding);
-                    }
+                    compiler.setOutputCharacterEncoding(getEncoding());
                     compiler.compileToDestination(sourceFile, getOutputDir());
                     types = parser.getTypes();
                     getLogger().info("Processed {}", sourceFile);

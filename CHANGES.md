@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.3.1
+    * Fix extension support for configuring encoding
+    * Make default encoding UTF-8
+
 * 0.3.0
     * IntelliJ: register generated source directories even if they don't already exist.
     * Add avro-base plugin, which exposes tasks and the extension without creating tasks, defaults, etc.
