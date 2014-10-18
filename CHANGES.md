@@ -1,6 +1,8 @@
 # Change Log
 
 * Unreleased
+
+* 0.3.2
     * Improve handling when custom buildDir is used
 
 * 0.3.1
