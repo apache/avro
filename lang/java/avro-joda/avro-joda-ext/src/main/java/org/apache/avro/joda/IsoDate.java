@@ -60,7 +60,7 @@ public  class IsoDate extends LogicalType {
         return LocalDate.class;
     }
 
-    private static final DateTimeFormatter FMT = ISODateTimeFormat.date();
+    public static final DateTimeFormatter FMT = ISODateTimeFormat.date();
     
     // This can be anything really, the number serialized will be the number of days between this date and the date.
     // this serialized number will be negative for anything before 1970-01-01.
