@@ -432,8 +432,6 @@ public class JsonDecoder extends ParsingDecoder
     String label;
     if (in.getCurrentToken() == JsonToken.VALUE_NULL) {
       label = "null";
-    } else if (JsonEncoder.isNullableSingle(a)) {
-      label = JsonEncoder.getNullableSingle(a);
     } else if (in.getCurrentToken() == JsonToken.START_OBJECT &&
                in.nextToken() == JsonToken.FIELD_NAME) {
       label = in.getText();
