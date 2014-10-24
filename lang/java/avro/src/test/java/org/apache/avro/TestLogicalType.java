@@ -57,7 +57,7 @@ public class TestLogicalType {
     }
   }
 
-  @Test
+  @Test(expected = RuntimeException.class)
   public void testUnknownFromJsonNode() {
     ObjectNode node = JsonNodeFactory.instance.objectNode();
     node.put("logicalType", TextNode.valueOf("unknown"));
@@ -211,17 +211,17 @@ public class TestLogicalType {
 
         @Override
         public Class<?> getLogicalJavaType() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet."); 
         }
 
         @Override
         public Object deserialize(Schema.Type type, Object object) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet."); 
         }
 
         @Override
         public Object serialize(Schema.Type type, Object object) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet."); 
         }
     };
 

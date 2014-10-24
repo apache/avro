@@ -190,12 +190,8 @@ public abstract class Schema extends JsonProperties {
     }
     logicalType.validate(this); // throws IllegalArgumentException if invalid
     this.logicalType = logicalType;
+    this.addJsonProps(logicalType.getJsonProps());    
     this.hashCode = NO_HASHCODE;
-  }
-
-  protected void writeLogicalType(JsonGenerator gen) throws IOException {
-    if (logicalType != null)
-      logicalType.writeProps(gen);
   }
 
   protected boolean equalLogicalTypes(Schema other) {
@@ -338,7 +334,6 @@ public abstract class Schema extends JsonProperties {
       gen.writeStartObject();
       gen.writeStringField("type", getName());
       writeProps(gen);
-      writeLogicalType(gen);
       gen.writeEndObject();
     }
   }
@@ -673,7 +668,6 @@ public abstract class Schema extends JsonProperties {
       gen.writeFieldName("fields");
       fieldsToJson(names, gen);
       writeProps(gen);
-      writeLogicalType(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
       names.space = savedSpace;                   // restore namespace
@@ -748,7 +742,6 @@ public abstract class Schema extends JsonProperties {
         gen.writeString(symbol);
       gen.writeEndArray();
       writeProps(gen);
-      writeLogicalType(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
     }
@@ -779,7 +772,6 @@ public abstract class Schema extends JsonProperties {
       gen.writeFieldName("items");
       elementType.toJson(names, gen);
       writeProps(gen);
-      writeLogicalType(gen);
       gen.writeEndObject();
     }
   }
@@ -809,7 +801,6 @@ public abstract class Schema extends JsonProperties {
       gen.writeFieldName("values");
       valueType.toJson(names, gen);
       writeProps(gen);
-      writeLogicalType(gen);
       gen.writeEndObject();
     }
   }
@@ -892,7 +883,6 @@ public abstract class Schema extends JsonProperties {
         gen.writeStringField("doc", getDoc());
       gen.writeNumberField("size", size);
       writeProps(gen);
-      writeLogicalType(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
     }

@@ -50,7 +50,7 @@ public abstract class JsonProperties {
    * Returns the value of the named property in this schema.
    * Returns <tt>null</tt> if there is no property with that name.
    */
-  public synchronized JsonNode getJsonProp(String name) {
+  public JsonNode getJsonProp(String name) {
     return props.get(name);
   }
 
@@ -76,7 +76,7 @@ public abstract class JsonProperties {
    * @param name The name of the property to add
    * @param value The value for the property to add
    */
-  public synchronized void addProp(String name, JsonNode value) {
+  public void addProp(String name, JsonNode value) {
     if (reserved.contains(name))
       throw new AvroRuntimeException("Can't set reserved property: " + name);
       
@@ -106,6 +106,10 @@ public abstract class JsonProperties {
       result.put(e.getKey(), TextNode.valueOf(e.getValue()));
     return result;
   }
+  
+  public void addJsonProps(Map<String,JsonNode> xtraProps) {
+    props.putAll(xtraProps);
+  }  
 
   /** Return the defined properties as an unmodifieable Map. */
   public Map<String,JsonNode> getJsonProps() {
