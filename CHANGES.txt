@@ -20,6 +20,9 @@ Trunk (not yet released)
     AVRO-1544. Java: Fix GenericData#validate for unions with null.
     (Matthew Hayes via cutting)
 
+    AVRO-1489. Java: Avro fails to build with OpenJDK 8. (Ricardo Arguello via
+    tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
