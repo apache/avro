@@ -16,7 +16,7 @@
    limitations under the License.
 -->
 
-<project name="Avro" default="dist">
+<project name="Avro" default="dist" xmlns:ivy="antlib:org.apache.ivy.ant">
  
   <!-- Load user's default properties. -->
   <property file="${user.home}/build.properties"/>
@@ -126,6 +126,10 @@
         <filter token="INTEROP_DATA_DIR" value="${interop.data.dir}"/>
       </filterset>
     </copy>
+
+    <!-- Ensure we have a local copy of the tools jar -->
+    <ivy:retrieve
+        pattern="${basedir}/../java/tools/target/[artifact]-[revision].[ext]"/>
 
     <!-- Inline the location of the tools jar -->
     <copy file="${test.dir}/test_tether_word_count.py"

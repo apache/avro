@@ -1,0 +1,9 @@
+<ivysettings>
+  <settings defaultResolver="repos" />
+  <resolvers>
+    <chain name="repos">
+      <ibiblio name="central" m2compatible="true"/>   
+      <ibiblio name="apache-snapshots" m2compatible="true" root="https://repository.apache.org/content/groups/snapshots"/>   
+    </chain>
+  </resolvers>
+</ivysettings>
