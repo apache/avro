@@ -36,6 +36,9 @@
   <property name="lib.dir" value="${basedir}/lib"/>
   <property name="test.dir" value="${basedir}/test"/>
 
+  <property name="ivy.version" value="2.2.0"/>
+  <property name="ivy.jar" value="${basedir}/lib/ivy-${ivy.version}.jar"/>
+
   <!-- Load shared properties -->
   <loadfile srcFile="${share.dir}/VERSION.txt" property="avro.version" />
   <loadfile srcFile="${share.schema.dir}/org/apache/avro/ipc/HandshakeRequest.avsc" property="handshake.request.json"/>
@@ -55,6 +58,17 @@
 
   <target name="init" description="Create the build directory.">
     <mkdir dir="${build.dir}"/>
+    <available file="${ivy.jar}" property="ivy.jar.found"/>
+    <antcall target="ivy-download"/>
+    <typedef uri="antlib:org.apache.ivy.ant">
+      <classpath>
+        <pathelement location="${ivy.jar}" />
+      </classpath>
+    </typedef>
+  </target>
+  
+  <target name="ivy-download" unless="ivy.jar.found" >
+    <get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar" dest="${ivy.jar}" usetimestamp="true" />
   </target>
 
   <target name="build"
