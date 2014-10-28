@@ -83,6 +83,14 @@ public abstract class Schema extends JsonProperties {
 
   private static final int NO_HASHCODE = Integer.MIN_VALUE;
 
+  public static final Schema fromString(final String schemaJson) {
+    return new Schema.Parser().parse(schemaJson);
+  }
+  
+  public static final Schema fromString(final String schemaJson, final String ... more) {
+    return new Schema.Parser().parse(schemaJson, more);
+  }
+  
   static {
     FACTORY.enable(JsonParser.Feature.ALLOW_COMMENTS);
     FACTORY.setCodec(MAPPER);
