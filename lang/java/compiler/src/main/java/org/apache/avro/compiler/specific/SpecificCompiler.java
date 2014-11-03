@@ -39,6 +39,8 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SchemaNormalization;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.specific.SpecificData;
@@ -638,6 +640,11 @@ public class SpecificCompiler {
     return word;
   }
   
+  /** Utility for use by templates. Return schema fingerprint as a long. */
+  public static long fingerprint64(Schema schema) {
+    return SchemaNormalization.parsingFingerprint64(schema);
+  }
+
   /**
    * Generates the name of a field accessor method.
    * @param schema the schema in which the field is defined.

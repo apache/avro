@@ -2,9 +2,29 @@ Avro Change Log
 
 Trunk (not yet released)
 
+  INCOMPATIBLE CHANGES
+
+    AVRO-1334. Java: Update versions of many dependencies. (scottcarey, cutting)
+
+    AVRO-997. Java: For enum values, no longer sometimes permit any
+    Object whose toString() names an enum symbol, but rather always
+    require use of distinct enum types. (Sean Busbey via cutting)
+
   NEW FEATURES
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)
+
+    AVRO-739. Add date, time, timestamp, and duration binary types to
+    specification. (Dmitry Kovalev and Ryan Blue via tomwhite)
+
+    AVRO-1590. Java: In resolving records in unions, permit structural
+    and shortname matches when fullname matching fails.
+    (Ryan Blue via cutting)
+
+    AVRO-1502. Java: Generated classes now implement Serializable. (cutting)
+
+    AVRO-570. Python: Add connector for tethered mapreduce.
+    (Jeremy Lewi and Steven Willis via cutting)    
 
   OPTIMIZATIONS
 
@@ -13,12 +33,27 @@ Trunk (not yet released)
     AVRO-843. C#: Change Visual Studio project files to specify .NET 3.5.
     (Dmitry Kovalev via cutting)
 
+    AVRO-1583. Java: Add stdin support to the tojson tool.
+    (Clément Mahtieu via cutting)
+
+    AVRO-1551. Java: Add an output encoding option to the compiler
+    command line tool. (Keegan Witt via cutting)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
 
     AVRO-1544. Java: Fix GenericData#validate for unions with null.
     (Matthew Hayes via cutting)
+
+    AVRO-1589. Java: Fix ReflectData.AllowNulls to not create unions
+    for primitive types. (Ryan Blue via cutting)
+
+    AVRO-1591. Java: Fix specific RPC so that proxies implement hashCode(),
+    equals() and toString(). (Mark Spadoni via cutting)
+
+    AVRO-1489. Java: Avro fails to build with OpenJDK 8. (Ricardo Arguello via
+    tomwhite)
 
 Avro 1.7.7 (23 July 2014)
 

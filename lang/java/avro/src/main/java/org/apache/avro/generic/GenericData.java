@@ -329,6 +329,14 @@ public class GenericData {
       this.symbol = symbol;
     }
 
+    /**
+     * Maps existing Objects into an Avro enum
+     * by calling toString(), eg for Java Enums
+     */
+    public EnumSymbol(Schema schema, Object symbol) {
+      this(schema, symbol.toString());
+    }
+
     @Override public Schema getSchema() { return schema; }
 
     @Override
@@ -376,7 +384,7 @@ public class GenericData {
       }
       return true;
     case ENUM:
-      if (datum == null) return false;
+      if (!isEnum(datum)) return false;
       return schema.getEnumSymbols().contains(datum.toString());
     case ARRAY:
       if (!(isArray(datum))) return false;

@@ -61,7 +61,7 @@ public class FromTextTool implements Tool {
 
     OptionSet opts = p.parse(args.toArray(new String[0]));
 
-    List<String> nargs = opts.nonOptionArguments();
+    List<String> nargs = (List<String>)opts.nonOptionArguments();
     if (nargs.size() != 2) {
       err.println("Expected 2 args: from_file to_file (local filenames," +
           " Hadoop URI's, or '-' for stdin/stdout");

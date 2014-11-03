@@ -23,6 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.TypeEnum;
 import org.codehaus.jackson.JsonFactory;
@@ -120,4 +125,23 @@ public class TestSpecificData {
     mapper.readTree(parser);
   }
 
+  @Test public void testExternalizeable() throws Exception {
+    TestRecord before = new TestRecord();
+    before.setName("foo");
+    before.setKind(Kind.BAR);
+    before.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(bytes);
+    out.writeObject(before);
+    out.close();
+
+    ObjectInputStream in =
+      new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+    TestRecord after = (TestRecord)in.readObject();
+
+    Assert.assertEquals(before, after);
+
+  }
+
 }
+

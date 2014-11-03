@@ -120,6 +120,13 @@ public class TestSpecificData {
     public Schema getSchema() {
       return SCHEMA;
     }
+
+    @Override public void writeExternal(java.io.ObjectOutput out) {
+      throw new UnsupportedOperationException();
+    }
+    @Override public void readExternal(java.io.ObjectInput in) {
+      throw new UnsupportedOperationException();
+    }
   }
 
   @Test

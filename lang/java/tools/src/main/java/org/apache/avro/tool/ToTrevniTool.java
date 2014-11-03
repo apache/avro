@@ -62,7 +62,7 @@ public class ToTrevniTool implements Tool {
       p.printHelpOn(err);
       return 1;
     }
-    args = opts.nonOptionArguments();
+    args = (List<String>)opts.nonOptionArguments();
 
     DataFileStream<Object> reader =
       new DataFileStream(Util.fileOrStdin(args.get(0), stdin),

@@ -72,7 +72,7 @@ public class CatTool implements Tool {
       .defaultsTo(new Double(1)); 
 
     OptionSet opts = optParser.parse(args.toArray(new String[0]));
-    List<String> nargs = opts.nonOptionArguments();
+    List<String> nargs = (List<String>)opts.nonOptionArguments();
     if (nargs.size() < 2) {
       printHelp(out);
       return 0;

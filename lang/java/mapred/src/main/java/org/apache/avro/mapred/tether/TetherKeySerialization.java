@@ -80,6 +80,7 @@ class TetherKeySerialization
 
     public void serialize(TetherData datum) throws IOException {
       encoder.writeBytes(datum.buffer());
+      encoder.flush(); //Flush shouldn't be required. Might be a bug in AVRO.
     }
 
     public void close() throws IOException {

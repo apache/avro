@@ -36,7 +36,7 @@ import org.apache.avro.mapred.AvroJob;
 class TetherMapRunner
   extends MapRunner<TetherData, NullWritable, TetherData, NullWritable> {
 
-  static final Logger LOG = LoggerFactory.getLogger(TetherMapRunner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TetherMapRunner.class);
 
   private JobConf job;
   private TetheredProcess process;
@@ -54,11 +54,13 @@ class TetherMapRunner
       process = new TetheredProcess(job, collector, reporter);
 
       // configure it
+      LOG.info("send configure to subprocess for map task");
       process.inputClient.configure
         (TaskType.MAP, 
          job.get(AvroJob.INPUT_SCHEMA),
          AvroJob.getMapOutputSchema(job).toString());
          
+      LOG.info("send partitions to subprocess for map task");
       process.inputClient.partitions(job.getNumReduceTasks());
 
       // run map
@@ -72,6 +74,7 @@ class TetherMapRunner
         if (process.outputService.isFinished())
           break;
       }
+      LOG.info("send complete to subprocess for map task");
       process.inputClient.complete();
 
       // wait for completion

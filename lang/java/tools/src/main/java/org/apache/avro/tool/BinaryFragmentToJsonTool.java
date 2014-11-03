@@ -50,7 +50,7 @@ public class BinaryFragmentToJsonTool implements Tool {
     
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean noPretty = optionSet.has(noPrettyOption);
-    List<String> nargs = optionSet.nonOptionArguments();
+    List<String> nargs = (List<String>)optionSet.nonOptionArguments();
     String schemaFile = schemaFileOption.value(optionSet);
     
     if (nargs.size() != (schemaFile == null ? 2 : 1)) {

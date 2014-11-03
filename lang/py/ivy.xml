@@ -1,0 +1,8 @@
+<ivy-module version="2.0">
+    <info organisation="org.apache.avro" module="python"/>
+    <configurations defaultconfmapping="default"/>
+    <dependencies>
+        <dependency org="org.apache.avro" name="avro-tools"
+                    rev="${avro.version}" transitive="false"/>
+    </dependencies>
+</ivy-module>

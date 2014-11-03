@@ -23,8 +23,9 @@ import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 
 /**
@@ -80,7 +81,7 @@ public class TestSpecificCompilerTool {
   @Test
   public void testCompileSchemaSingleFile() throws Exception {
 
-    doCompile(new String[]{"schema",
+    doCompile(new String[]{"-encoding", "UTF-8", "schema",
       TEST_INPUT_DIR.toString() + "/position.avsc",
       TEST_OUTPUT_DIR.getPath()});
     assertFileMatch(TEST_EXPECTED_POSITION, TEST_OUTPUT_POSITION);
@@ -89,7 +90,7 @@ public class TestSpecificCompilerTool {
   @Test
   public void testCompileSchemaTwoFiles() throws Exception {
 
-    doCompile(new String[]{"schema",
+    doCompile(new String[]{"-encoding", "UTF-8", "schema",
       TEST_INPUT_DIR.toString() + "/position.avsc",
       TEST_INPUT_DIR.toString() + "/player.avsc",
       TEST_OUTPUT_DIR.getPath()});
@@ -100,7 +101,7 @@ public class TestSpecificCompilerTool {
   @Test
   public void testCompileSchemaFileAndDirectory() throws Exception {
 
-    doCompile(new String[]{"schema",
+    doCompile(new String[]{"-encoding", "UTF-8", "schema",
       TEST_INPUT_DIR.toString() + "/position.avsc",
       TEST_INPUT_DIR.toString(),
       TEST_OUTPUT_DIR.getPath()});
@@ -111,7 +112,8 @@ public class TestSpecificCompilerTool {
   @Test
   public void testCompileSchemasUsingString() throws Exception {
 
-    doCompile(new String[]{"-string", "schema",
+    doCompile(new String[]{"-encoding", "UTF-8",
+      "-string", "schema",
       TEST_INPUT_DIR.toString() + "/position.avsc",
       TEST_INPUT_DIR.toString() + "/player.avsc",
       TEST_OUTPUT_STRING_DIR.getPath()});
@@ -145,7 +147,7 @@ public class TestSpecificCompilerTool {
    * file content and comparing provides nice diffs via JUnit when failures occur.
    */
   private static String readFile(File file) throws IOException {
-    BufferedReader reader = new BufferedReader(new FileReader(file));
+    BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
     StringBuilder sb = new StringBuilder();
     String line = null;
     boolean first = true;

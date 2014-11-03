@@ -28,6 +28,8 @@ import java.util.LinkedHashMap;
 import java.nio.ByteBuffer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol;
@@ -38,6 +40,10 @@ import org.apache.avro.util.ClassUtils;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.BinaryDecoder;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -337,5 +343,16 @@ public class SpecificData extends GenericData {
    * @see #newInstance
    */
   public interface SchemaConstructable {}
-  
+
+  /** Runtime utility used by generated classes. */
+  public static BinaryDecoder getDecoder(ObjectInput in) {
+    return DecoderFactory.get()
+      .directBinaryDecoder(new ExternalizableInput(in), null);
+  }
+  /** Runtime utility used by generated classes. */
+  public static BinaryEncoder getEncoder(ObjectOutput out) {
+    return EncoderFactory.get()
+      .directBinaryEncoder(new ExternalizableOutput(out), null);
+  }
+
 }
