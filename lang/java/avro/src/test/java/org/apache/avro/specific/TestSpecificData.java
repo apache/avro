@@ -24,7 +24,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +36,7 @@ import java.util.List;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -87,12 +92,14 @@ public class TestSpecificData {
     public void primitiveWrapper(Integer i) {}
   }
 
-  private static class TestRecord extends SpecificRecordBase {
+  public static class TestRecord extends SpecificRecordBase {
     private static final Schema SCHEMA = Schema.createRecord("TestRecord", null, null, false);
     static {
       List<Field> fields = new ArrayList<Field>();
       fields.add(new Field("x", Schema.create(Type.INT), null, null));
-      fields.add(new Field("y", Schema.create(Type.STRING), null, null));
+      Schema stringSchema = Schema.create(Type.STRING);
+      GenericData.setStringType(stringSchema, GenericData.StringType.String);
+      fields.add(new Field("y", stringSchema, null, null));
       SCHEMA.setFields(fields);
     }
     private int x;
@@ -121,12 +128,6 @@ public class TestSpecificData {
       return SCHEMA;
     }
 
-    @Override public void writeExternal(java.io.ObjectOutput out) {
-      throw new UnsupportedOperationException();
-    }
-    @Override public void readExternal(java.io.ObjectInput in) {
-      throw new UnsupportedOperationException();
-    }
   }
 
   @Test
@@ -136,6 +137,22 @@ public class TestSpecificData {
     record.put("y", "str");
     assertEquals(1, record.get("x"));
     assertEquals("str", record.get("y"));
+  }
+
+  @Test public void testExternalizeable() throws Exception {
+    final TestRecord before = new TestRecord();
+    before.put("x", 1);
+    before.put("y", "str");
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(bytes);
+    out.writeObject(before);
+    out.close();
+
+    ObjectInputStream in =
+      new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+    TestRecord after = (TestRecord)in.readObject();
+
+    assertEquals(before, after);
   }
 
   /** Tests that non Stringable datum are rejected by specific writers. */
