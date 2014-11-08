@@ -64,6 +64,9 @@ Trunk (not yet released)
     AVRO-1592. Java: Fix handling of Java reserved words as enum
     constants in generated code. (Lukas Steiblys via cutting)
 
+    AVRO-1597. Java: Random data tool writes corrupt files to standard out.
+    (cutting)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
