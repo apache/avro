@@ -17,6 +17,7 @@
  */
 package org.apache.avro.specific;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Collection;
@@ -58,6 +59,20 @@ public class SpecificData extends GenericData {
   public static final String CLASS_PROP = "java-class";
   public static final String KEY_CLASS_PROP = "java-key-class";
   public static final String ELEMENT_PROP = "java-element-class";
+
+  /** List of Java reserved words from
+   * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
+  public static final Set<String> RESERVED_WORDS = new HashSet<String>
+    (Arrays.asList(new String[] {
+        "abstract", "assert", "boolean", "break", "byte", "case", "catch",
+        "char", "class", "const", "continue", "default", "do", "double",
+        "else", "enum", "extends", "false", "final", "finally", "float",
+        "for", "goto", "if", "implements", "import", "instanceof", "int",
+        "interface", "long", "native", "new", "null", "package", "private",
+        "protected", "public", "return", "short", "static", "strictfp",
+        "super", "switch", "synchronized", "this", "throw", "throws",
+        "transient", "true", "try", "void", "volatile", "while"
+      }));
 
   /** Read/write some common builtin classes as strings.  Representing these as
    * strings isn't always best, as they aren't always ordered ideally, but at
@@ -109,6 +124,8 @@ public class SpecificData extends GenericData {
   public Object createEnum(String symbol, Schema schema) {
     Class c = getClass(schema);
     if (c == null) return super.createEnum(symbol, schema); // punt to generic
+    if (RESERVED_WORDS.contains(symbol))
+      symbol += "$";
     return Enum.valueOf(c, symbol);
   }
 

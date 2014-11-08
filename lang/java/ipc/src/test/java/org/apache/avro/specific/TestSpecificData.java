@@ -44,6 +44,7 @@ import org.apache.avro.TestSchema;
 import org.apache.avro.test.TestRecord;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.Kind;
+import org.apache.avro.test.Reserved;
 
 public class TestSpecificData {
   
@@ -141,6 +142,12 @@ public class TestSpecificData {
 
     Assert.assertEquals(before, after);
 
+  }
+
+  @Test public void testReservedEnumSymbol() throws Exception {
+    Assert.assertEquals(Reserved.default$,
+                        SpecificData.get().createEnum("default",
+                                                      Reserved.SCHEMA$));
   }
 
 }

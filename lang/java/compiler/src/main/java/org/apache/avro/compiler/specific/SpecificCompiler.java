@@ -53,6 +53,8 @@ import org.apache.velocity.runtime.log.LogChute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
+
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
  *
@@ -71,20 +73,6 @@ public class SpecificCompiler {
   private boolean createSetters = true;
   private String outputCharacterEncoding;
 
-  /* List of Java reserved words from
-   * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
-  private static final Set<String> RESERVED_WORDS = new HashSet<String>(
-      Arrays.asList(new String[] {
-          "abstract", "assert", "boolean", "break", "byte", "case", "catch",
-          "char", "class", "const", "continue", "default", "do", "double",
-          "else", "enum", "extends", "false", "final", "finally", "float",
-          "for", "goto", "if", "implements", "import", "instanceof", "int",
-          "interface", "long", "native", "new", "null", "package", "private",
-          "protected", "public", "return", "short", "static", "strictfp",
-          "super", "switch", "synchronized", "this", "throw", "throws",
-          "transient", "true", "try", "void", "volatile", "while"
-        }));
-  
   /* Reserved words for accessor/mutator methods */
   private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = 
       new HashSet<String>(Arrays.asList(new String[] {
