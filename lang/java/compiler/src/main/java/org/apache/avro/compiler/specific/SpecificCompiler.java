@@ -43,6 +43,7 @@ import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.specific.SpecificData;
+import org.apache.commons.compress.utils.Charsets;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -368,6 +369,46 @@ public class SpecificCompiler {
     }
   }
 
+  public static final ThreadLocal<File> SCHEMA_OUTPUT_DIR = new ThreadLocal<File>();
+  
+  private static void writeOutputSchema(Schema schema) {
+    File outputDir = SCHEMA_OUTPUT_DIR.get();
+    if (outputDir != null) {
+          String name = mangle(schema.getName());
+          String nameSpace = schema.getNamespace();
+          String path;
+          if (nameSpace == null || nameSpace.isEmpty()) {
+            path = name + ".avsc";
+          } else {
+            path = nameSpace.replace('.', File.separatorChar) + File.separatorChar + name
+                + ".avsc";
+          }
+          File destFile = new File(outputDir.getPath() + File.separatorChar + path);
+          File destFolder = destFile.getParentFile();
+          if (destFolder.exists()) {
+            if (!destFolder.isDirectory()) {
+              throw new RuntimeException(destFolder + " should be a folder");
+            }
+          } else {
+            if (!destFolder.mkdirs()) {
+              throw new RuntimeException("Cannot create folder " + destFolder);
+            }
+          }
+          try {
+            Writer writer = new OutputStreamWriter(new FileOutputStream(destFile),
+                    Charsets.UTF_8);
+            try {
+              writer.append(schema.toString());
+            } finally {
+              writer.close();
+            }
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }      
+    }          
+  }
+  
+  
   OutputFile compile(Schema schema) {
     schema = addStringType(schema);               // annotate schema as needed
     String output = "";
@@ -378,9 +419,11 @@ public class SpecificCompiler {
     switch (schema.getType()) {
     case RECORD:
       output = renderTemplate(templateDir+"record.vm", context);
+      writeOutputSchema(schema);
       break;
     case ENUM:
       output = renderTemplate(templateDir+"enum.vm", context);
+      writeOutputSchema(schema);      
       break;
     case FIXED:
       output = renderTemplate(templateDir+"fixed.vm", context);

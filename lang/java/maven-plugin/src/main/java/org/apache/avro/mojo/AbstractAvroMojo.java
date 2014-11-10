@@ -50,6 +50,12 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    *            default-value="${project.build.directory}/generated-sources/avro"
    */
   private File outputDirectory;
+  
+  /**
+   * @parameter property="schemaOutputDirectory"
+   *            default-value="${project.build.directory}/generated-sources/avsc"
+   */
+  private File schemaOutputDirectory;
 
   /**
    * @parameter property="sourceDirectory"
@@ -133,6 +139,9 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException {
+    
+    SpecificCompiler.SCHEMA_OUTPUT_DIR.set(this.schemaOutputDirectory);
+    
     boolean hasSourceDir = null != sourceDirectory
         && sourceDirectory.isDirectory();
     boolean hasImports = null != imports;
