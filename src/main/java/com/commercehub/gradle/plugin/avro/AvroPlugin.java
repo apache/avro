@@ -106,6 +106,7 @@ public class AvroPlugin implements Plugin<Project> {
                 sourceSet.getName()));
         task.setGroup(GROUP_SOURCE_GENERATION);
         task.source(getAvroSourceDir(project, sourceSet));
+        task.source(protoTask.getOutputDir());
         task.source(protoTask.getOutputs());
         task.include("*." + SCHEMA_EXTENSION, "*." + PROTOCOL_EXTENSION);
         task.getConventionMapping().map("outputDir", new Callable<File>() {
