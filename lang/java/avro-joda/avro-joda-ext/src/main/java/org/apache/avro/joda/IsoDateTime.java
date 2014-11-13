@@ -56,7 +56,7 @@ public  class IsoDateTime extends LogicalType {
         return DateTime.class;
     }
 
-    private static final DateTimeFormatter FMT = ISODateTimeFormat.dateTime();
+    public static final DateTimeFormatter FMT = ISODateTimeFormat.dateTime();
     
     @Override
     public Object deserialize(Schema.Type type, Object object) {
