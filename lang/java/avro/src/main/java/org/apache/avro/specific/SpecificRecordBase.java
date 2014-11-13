@@ -67,8 +67,17 @@ public abstract class SpecificRecordBase
     return SpecificData.get().toString(this);
   }
 
-  @Override public abstract void writeExternal(ObjectOutput out)
-    throws IOException;
-  @Override public abstract void readExternal(ObjectInput in)
-    throws IOException;
+  @Override
+  public void writeExternal(ObjectOutput out)
+    throws IOException {
+    new SpecificDatumWriter(getSchema())
+      .write(this, SpecificData.getEncoder(out));
+  }
+
+  @Override
+  public void readExternal(ObjectInput in)
+    throws IOException {
+    new SpecificDatumReader(getSchema())
+      .read(this, SpecificData.getDecoder(in));
+  }
 }

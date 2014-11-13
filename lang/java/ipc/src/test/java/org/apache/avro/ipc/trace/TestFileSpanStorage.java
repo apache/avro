@@ -41,11 +41,9 @@ public class TestFileSpanStorage {
     Span s = Util.createEventlessSpan(Util.idValue(1), Util.idValue(1), null);
     s.setMessageName(new String("message"));
     test.addSpan(s);
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+
+    waitForWrites(test);
+
     assertTrue(test.getAllSpans().contains(s));
     test.clear();
   }
@@ -62,15 +60,9 @@ public class TestFileSpanStorage {
       test.addSpan(s);
       spans.add(s);
     }
-    
-    // Try up to 10 times to get the expected number of spans
-    try {
-      for (int retries = 0; (retries < 10) && (test.getAllSpans().size() < 50000); retries++ ) {
-        Thread.sleep(1000);
-      }
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+
+    waitForWrites(test);
+
     assertEquals(50000, test.getAllSpans().size());
 
     // Test fewer spans but explicitly call containsAll
@@ -84,16 +76,14 @@ public class TestFileSpanStorage {
       test2.addSpan(s);
       spans.add(s);
     }
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+
+    waitForWrites(test);
+
     assertTrue(test.getAllSpans().containsAll(spans));
     test.clear();
     test2.clear();
   }
-  
+
   @Test
   public void testBasicMaxSpans() {
     TracePluginConfiguration conf = new TracePluginConfiguration();
@@ -114,18 +104,16 @@ public class TestFileSpanStorage {
       lastNine.add(s);
       test.addSpan(s);
     }
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+
+    waitForWrites(test);
+
     List<Span> retreived = test.getAllSpans();
     assertEquals(9, retreived.size());
     assertTrue(retreived.containsAll(lastNine));
     
     test.clear();
   }
-  
+
   @Test
   public void testRangeQuery1() {
     TracePluginConfiguration conf = new TracePluginConfiguration();
@@ -157,22 +145,16 @@ public class TestFileSpanStorage {
       s.setMessageName(new String("message"));
       test.addSpan(s);
       spans[i] = s;
-      
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-      
-      }
+
+      waitForWrites(test);
+
       if (i == numSpans - 2) {
         cutOff2 = (System.currentTimeMillis() - 20) * 1000000; 
       }
     }
-    
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException e) {
-    }
-    
+
+    waitForWrites(test);
+
     List<Span> retrieved = test.getSpansInRange(cutOff1, cutOff2);
     assertEquals(numSpans - 2, retrieved.size());
     
@@ -183,5 +165,19 @@ public class TestFileSpanStorage {
     assertFalse(retrieved.contains((spans[spans.length - 1])));
     
     test.clear();
+  }
+
+  private long MAX_WAIT_TIME_MS = 10000; // 10 seconds
+
+  private void waitForWrites(FileSpanStorage storage) {
+    long start = System.currentTimeMillis();
+    while ((storage.outstanding.size() > 0) &&
+        ((System.currentTimeMillis() - start) < MAX_WAIT_TIME_MS)) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        Thread.interrupted();
+      }
+    }
   }
 }
