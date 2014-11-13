@@ -2,6 +2,9 @@
 
 * Unreleased
 
+* 0.3.3
+    * Fix generation of Java files from .avdl files; contribution from [viacoban](https://github.com/viacoban)
+
 * 0.3.2
     * Improve handling when custom buildDir is used
 
