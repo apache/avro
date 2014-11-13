@@ -10,6 +10,9 @@ Trunk (not yet released)
     Object whose toString() names an enum symbol, but rather always
     require use of distinct enum types. (Sean Busbey via cutting)
 
+    AVRO-1602. Java: Remove Dapper-style RPC trace facility.  This
+    seems unused and has been a source of build problems.  (cutting)
+
   NEW FEATURES
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)
