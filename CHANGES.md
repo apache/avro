@@ -1,7 +1,10 @@
 # Change Log
 
 * Unreleased
+
+* 0.3.4
     * Fix registration of generated sources for compilation (#8)
+    * Change classloader handling to better support import of external dependencies (#9)
 
 * 0.3.3
     * Fix generation of Java files from .avdl files; contribution from [viacoban](https://github.com/viacoban)
