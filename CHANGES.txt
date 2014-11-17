@@ -29,6 +29,9 @@ Trunk (not yet released)
     AVRO-570. Python: Add connector for tethered mapreduce.
     (Jeremy Lewi and Steven Willis via cutting)    
 
+    AVRO-834. Java: Data File corruption recovery tool.
+    (scottcarey and tomwhite)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
