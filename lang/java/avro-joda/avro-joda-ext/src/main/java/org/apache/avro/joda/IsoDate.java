@@ -16,6 +16,9 @@
 
 package org.apache.avro.joda;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import java.util.Collections;
 import java.util.Set;
 import org.apache.avro.LogicalType;
@@ -66,11 +69,33 @@ public  class IsoDate extends LogicalType {
     // this serialized number will be negative for anything before 1970-01-01.
     private static final LocalDate EPOCH = new LocalDate(0L, DateTimeZone.UTC);
     
+    private static final LoadingCache<LocalDate, String> D2S_CONV_CACHE = CacheBuilder.newBuilder()
+            .maximumSize(2048)
+            .build(new CacheLoader<LocalDate, String> () {
+
+      @Override
+      public String load(final LocalDate key) throws Exception {
+        return FMT.print(key);
+      }
+    });
+    
+    
+    private static final LoadingCache<String, LocalDate> S2D_CONV_CACHE = CacheBuilder.newBuilder()
+            .maximumSize(2048)
+            .build(new CacheLoader<String, LocalDate> () {
+
+      @Override
+      public LocalDate load(final String key) throws Exception {
+        return FMT.parseLocalDate(key);
+      }
+    });
+        
+    
     @Override
     public Object deserialize(Schema.Type type, Object object) {
                   switch (type) {
               case STRING:
-                  return FMT.parseLocalDate(((CharSequence) object).toString());
+                  return S2D_CONV_CACHE.getUnchecked(object.toString());
               case LONG: // start of day millis
                   return new DateTime((Long) object, DateTimeZone.UTC).toLocalDate();
               case INT: // nr of days since epoch                  
@@ -84,7 +109,7 @@ public  class IsoDate extends LogicalType {
     public Object serialize(Schema.Type type, Object object) {
                   switch (type) {
               case STRING:
-                  return FMT.print((ReadablePartial) object);
+                  D2S_CONV_CACHE.getUnchecked((LocalDate) object);
               case LONG:
                   return ((LocalDate) object).toDateTimeAtStartOfDay(DateTimeZone.UTC).getMillis();                
               case INT:
