@@ -109,7 +109,7 @@ public  class IsoDate extends LogicalType {
     public Object serialize(Schema.Type type, Object object) {
                   switch (type) {
               case STRING:
-                  D2S_CONV_CACHE.getUnchecked((LocalDate) object);
+                  return D2S_CONV_CACHE.getUnchecked((LocalDate) object);
               case LONG:
                   return ((LocalDate) object).toDateTimeAtStartOfDay(DateTimeZone.UTC).getMillis();                
               case INT:
