@@ -289,9 +289,9 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     // throws if it can't read the size requested
     vin.readFixed(reuse.data, 0, reuse.blockSize);
     vin.readFixed(syncBuffer);
+    availableBlock = false;
     if (!Arrays.equals(syncBuffer, header.sync))
       throw new IOException("Invalid sync!");
-    availableBlock = false;
     return reuse;
   }
 
