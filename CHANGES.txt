@@ -6,6 +6,9 @@ Trunk (not yet released)
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)
 
+    AVRO-834. Java: Data File corruption recovery tool.
+    (scottcarey and tomwhite)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
@@ -22,6 +25,9 @@ Trunk (not yet released)
 
     AVRO-1489. Java: Avro fails to build with OpenJDK 8. (Ricardo Arguello via
     tomwhite)
+
+	AVRO-1596. Java: Cannot read past corrupted block in Avro data file.
+	(tomwhite)
 
 Avro 1.7.7 (23 July 2014)
 

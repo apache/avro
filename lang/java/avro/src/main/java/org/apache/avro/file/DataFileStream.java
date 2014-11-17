@@ -251,6 +251,9 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   /** Expert: Return the count of items in the current block. */
   public long getBlockCount() { return blockCount; }
 
+  /** Expert: Return the size in bytes (uncompressed) of the current block. */
+  public long getBlockSize() { return blockSize; }
+
   protected void blockFinished() throws IOException {
     // nothing for the stream impl
   }
