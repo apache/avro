@@ -1,6 +1,7 @@
 # Change Log
 
 * Unreleased
+    * Fix registration of generated sources for compilation (#8)
 
 * 0.3.3
     * Fix generation of Java files from .avdl files; contribution from [viacoban](https://github.com/viacoban)

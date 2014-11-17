@@ -115,7 +115,9 @@ public class AvroPlugin implements Plugin<Project> {
                 return getGeneratedOutputDir(project, sourceSet, JAVA_EXTENSION);
             }
         });
-        getCompileJavaTask(project, sourceSet).source(task.getOutputs());
+        SourceTask compileJavaTask = getCompileJavaTask(project, sourceSet);
+        compileJavaTask.source(task.getOutputDir());
+        compileJavaTask.source(task.getOutputs());
         return task;
     }
 
