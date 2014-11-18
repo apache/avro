@@ -47,7 +47,6 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.codehaus.jackson.node.JsonNodeFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,8 +60,7 @@ public class TestGenericJob {
     List<Field> fields = new ArrayList<Schema.Field>();
 
       
-    fields.add(new Field("Optional", createArraySchema(), "",
-                         JsonNodeFactory.instance.arrayNode()));
+    fields.add(new Field("Optional", createArraySchema(), "", new ArrayList<Object>()));
 
     Schema recordSchema =
       Schema.createRecord("Container", "", "org.apache.avro.mapred", false);
@@ -83,8 +81,7 @@ public class TestGenericJob {
   private static Schema createInnerSchema(String name) {
     Schema innerrecord = Schema.createRecord(name, "", "", false);
     innerrecord.setFields
-      (Arrays.asList(new Field(name, Schema.create(Type.LONG), "",
-                               JsonNodeFactory.instance.numberNode(0l))));
+      (Arrays.asList(new Field(name, Schema.create(Type.LONG), "", 0L)));
     return innerrecord;
   }
 

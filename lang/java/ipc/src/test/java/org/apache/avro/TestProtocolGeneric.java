@@ -44,8 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.codehaus.jackson.node.BooleanNode;
-
 public class TestProtocolGeneric {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolGeneric.class);
@@ -222,7 +220,7 @@ public class TestProtocolGeneric {
     for (Field f : PROTOCOL.getType("TestRecord").getFields())
       fields.add(new Field(f.name(), f.schema(), null, null));
     fields.add(new Field("extra", Schema.create(Schema.Type.BOOLEAN),
-                         null, BooleanNode.TRUE));
+                         null, true));
     Schema record =
       Schema.createRecord("TestRecord", null, "org.apache.avro.test", false);
     record.setFields(fields);

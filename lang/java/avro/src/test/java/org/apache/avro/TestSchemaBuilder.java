@@ -33,7 +33,6 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.codehaus.jackson.node.BooleanNode;
 import org.codehaus.jackson.node.NullNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -70,7 +69,7 @@ public class TestSchemaBuilder {
     types.add(Schema.create(Schema.Type.BOOLEAN));
     types.add(Schema.create(Schema.Type.NULL));
     Schema optional = Schema.createUnion(types);
-    Assert.assertEquals(new Schema.Field("f2", optional, null, BooleanNode.getTrue()),
+    Assert.assertEquals(new Schema.Field("f2", optional, null, true),
         fields.get(2));
   }
   

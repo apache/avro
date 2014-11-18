@@ -45,6 +45,8 @@ Trunk (not yet released)
     AVRO-1551. Java: Add an output encoding option to the compiler
     command line tool. (Keegan Witt via cutting)
 
+    AVRO-1585. Java: Deprecate Jackson classes in public API. (tomwhite)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)

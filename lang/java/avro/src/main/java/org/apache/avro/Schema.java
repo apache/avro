@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -128,6 +129,11 @@ public abstract class Schema extends JsonProperties {
   int hashCode = NO_HASHCODE;
 
   @Override public void addProp(String name, JsonNode value) {
+    super.addProp(name, value);
+    hashCode = NO_HASHCODE;
+  }
+
+  @Override public void addProp(String name, Object value) {
     super.addProp(name, value);
     hashCode = NO_HASHCODE;
   }
@@ -362,10 +368,14 @@ public abstract class Schema extends JsonProperties {
     private final Order order;
     private Set<String> aliases;
 
+    /** @deprecated use {@link #Field(String, Schema, String, Object)} */
+    @Deprecated
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue) {
       this(name, schema, doc, defaultValue, Order.ASCENDING);
     }
+    /** @deprecated use {@link #Field(String, Schema, String, Object, Order)} */
+    @Deprecated
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue, Order order) {
       super(FIELD_RESERVED);
@@ -375,6 +385,22 @@ public abstract class Schema extends JsonProperties {
       this.defaultValue = validateDefault(name, schema, defaultValue);
       this.order = order;
     }
+    /**
+     * @param defaultValue the default value for this field specified using the mapping
+     *  in {@link JsonProperties}
+     */
+    public Field(String name, Schema schema, String doc,
+        Object defaultValue) {
+      this(name, schema, doc, defaultValue, Order.ASCENDING);
+    }
+    /**
+     * @param defaultValue the default value for this field specified using the mapping
+     *  in {@link JsonProperties}
+     */
+    public Field(String name, Schema schema, String doc,
+        Object defaultValue, Order order) {
+      this(name, schema, doc, JacksonUtils.toJsonNode(defaultValue), order);
+    }
     public String name() { return name; };
     /** The position of this field within the record. */
     public int pos() { return position; }
@@ -382,7 +408,13 @@ public abstract class Schema extends JsonProperties {
     public Schema schema() { return schema; }
     /** Field's documentation within the record, if set. May return null. */
     public String doc() { return doc; }
-    public JsonNode defaultValue() { return defaultValue; }
+    /** @deprecated use {@link #defaultVal() } */
+    @Deprecated public JsonNode defaultValue() { return defaultValue; }
+    /**
+     * @return the default value for this field specified using the mapping
+     *  in {@link JsonProperties}
+     */
+    public Object defaultVal() { return JacksonUtils.toObject(defaultValue); }
     public Order order() { return order; }
     @Deprecated public Map<String,String> props() { return getProps(); }
     public void addAlias(String alias) {
@@ -1313,7 +1345,11 @@ public abstract class Schema extends JsonProperties {
     return jsonNode != null ? jsonNode.getTextValue() : null;
   }
 
-  /** Parses a string as Json. */
+  /**
+   * Parses a string as Json.
+   * @deprecated use {@link org.apache.avro.data.Json#parseJson(String)}
+   */
+  @Deprecated
   public static JsonNode parseJson(String s) {
     try {
       return MAPPER.readTree(FACTORY.createJsonParser(new StringReader(s)));
