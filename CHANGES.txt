@@ -16,6 +16,8 @@ Trunk (not yet released)
     AVRO-843. C#: Change Visual Studio project files to specify .NET 3.5.
     (Dmitry Kovalev via cutting)
 
+    AVRO-1585. Java: Deprecate Jackson classes in public API. (tomwhite)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)

@@ -248,6 +248,7 @@
                 <version>${plugin-tools-javadoc.version}</version>
               </tagletArtifact>
             </tagletArtifacts>
+            <excludePackageNames>org.apache.avro.compiler.idl,*.internal</excludePackageNames>
           </configuration>
         </plugin>
         <plugin>

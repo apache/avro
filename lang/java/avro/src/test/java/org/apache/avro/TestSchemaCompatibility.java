@@ -38,7 +38,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.node.IntNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,13 +117,13 @@ public class TestSchemaCompatibility {
         new Field("a", INT_SCHEMA, null, null),
         new Field("b", INT_SCHEMA, null, null)));
     A_DINT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, new IntNode(0))));
+        new Field("a", INT_SCHEMA, null, 0)));
     A_INT_B_DINT_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, null),
-        new Field("b", INT_SCHEMA, null, new IntNode(0))));
+        new Field("b", INT_SCHEMA, null, 0)));
     A_DINT_B_DINT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, new IntNode(0)),
-        new Field("b", INT_SCHEMA, null, new IntNode(0))));
+        new Field("a", INT_SCHEMA, null, 0),
+        new Field("b", INT_SCHEMA, null, 0)));
   }
 
   // Recursive records
@@ -221,7 +220,7 @@ public class TestSchemaCompatibility {
   public void testValidateSchemaNewFieldWithDefault() throws Exception {
     final List<Schema.Field> readerFields = list(
         new Schema.Field("oldfield1", INT_SCHEMA, null, null),
-        new Schema.Field("newfield1", INT_SCHEMA, null, IntNode.valueOf(42)));
+        new Schema.Field("newfield1", INT_SCHEMA, null, 42));
     final Schema reader = Schema.createRecord(readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult =
         new SchemaCompatibility.SchemaPairCompatibility(
