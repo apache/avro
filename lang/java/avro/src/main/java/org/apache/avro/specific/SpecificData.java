@@ -136,7 +136,7 @@ public class SpecificData extends GenericData {
       : super.getEnumSchema(datum);
   }
 
-  private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
+  private final Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
 
   private static final Class NO_CLASS = new Object(){}.getClass();
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
@@ -163,8 +163,13 @@ public class SpecificData extends GenericData {
     case MAP:     return Map.class;
     case UNION:
       List<Schema> types = schema.getTypes();     // elide unions with null
-      if ((types.size() == 2) && types.contains(NULL_SCHEMA))
-        return getWrapper(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
+      if ((types.size() == 2)) {
+        if (NULL_SCHEMA.equals(types.get(0))) {
+          return getWrapper(types.get(1));
+        } else if (NULL_SCHEMA.equals(types.get(1))) {
+           return getWrapper(types.get(0));
+        }
+      }
       return Object.class;
     case STRING:
       if (STRING_TYPE_STRING.equals(schema.getProp(STRING_PROP)))
