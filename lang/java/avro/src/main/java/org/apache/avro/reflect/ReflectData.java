@@ -546,8 +546,23 @@ public class ReflectData extends SpecificData {
 
   /** Create and return a union of the null schema and the provided schema. */
   public static Schema makeNullable(Schema schema) {
-    return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
-                                            schema));
+    if (schema.getType() == Schema.Type.UNION) {
+      // check to see if the union already contains NULL
+      for (Schema subType : schema.getTypes()) {
+        if (subType.getType() == Schema.Type.NULL) {
+          return schema;
+        }
+      }
+      // add null as the first type in a new union
+      List<Schema> withNull = new ArrayList<Schema>();
+      withNull.add(Schema.create(Schema.Type.NULL));
+      withNull.addAll(schema.getTypes());
+      return Schema.createUnion(withNull);
+    } else {
+      // create a union with null
+      return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+          schema));
+    }
   }
 
   private static final Map<Class<?>,Field[]> FIELDS_CACHE =

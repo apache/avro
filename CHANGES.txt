@@ -84,6 +84,9 @@ Trunk (not yet released)
     AVRO-1407: Java: Fix infinite loop on slow connect in NettyTransceiver.
     (Gareth Davis via cutting)
 
+    AVRO-1604. Java: Fix ReflectData.AllowNull to work with @Nullable
+    annotations. (Ryan Blue via cutting)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
