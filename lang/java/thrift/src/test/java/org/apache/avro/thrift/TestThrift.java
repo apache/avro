@@ -66,7 +66,9 @@ public class TestThrift {
     Test test = new Test();
     test.setBoolField(true);
     test.setByteField((byte)2);
+    test.setByteOptionalField((byte)4);
     test.setI16Field((short)3);
+    test.setI16OptionalField((short)15);
     test.setI64Field(5L);
     test.setDoubleField(2.0);
 
@@ -75,7 +77,6 @@ public class TestThrift {
     check(test);
   }
 
-
   private void check(Test test) throws Exception {
 
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
@@ -83,7 +84,7 @@ public class TestThrift {
     Encoder e = EncoderFactory.get().binaryEncoder(bao, null);
     w.write(test, e);
     e.flush();
-    
+
     Object o = new ThriftDatumReader<Test>(Test.class).read
       (null,
        DecoderFactory.get().createBinaryDecoder

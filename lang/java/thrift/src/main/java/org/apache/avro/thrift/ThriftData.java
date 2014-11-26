@@ -118,6 +118,11 @@ public class ThriftData extends GenericData {
     // to avro INT for thrift's optional fields
     if (datum instanceof Short)
       return Schema.Type.INT.getName();
+    // support implicit conversion from thrift's byte
+    // to avro INT for thrift's optional fields
+    if (datum instanceof Byte)
+      return Schema.Type.INT.getName();
+
     return super.getSchemaName(datum);
   }
 
