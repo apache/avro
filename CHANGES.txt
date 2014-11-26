@@ -81,6 +81,9 @@ Trunk (not yet released)
     AVRO-1564. Java: Fix handling of optional byte field in Thrift.
     (Michael Pershyn via cutting)
 
+    AVRO-1407: Java: Fix infinite loop on slow connect in NettyTransceiver.
+    (Gareth Davis via cutting)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

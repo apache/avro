@@ -204,6 +204,18 @@ public class NettyTransceiver extends Transceiver {
     stateLock.readLock().lock();
     try {
       getChannel();
+    } catch (Throwable e) {
+      // must attempt to clean up any allocated channel future
+      if (channelFuture != null) {
+        channelFuture.getChannel().close();
+      }
+
+      if (e instanceof IOException)
+        throw (IOException)e;
+      if (e instanceof RuntimeException)
+        throw (RuntimeException)e;
+      // all that's left is Error
+      throw (Error)e;
     } finally {
       stateLock.readLock().unlock();
     }
