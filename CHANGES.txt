@@ -50,6 +50,8 @@ Trunk (not yet released)
     AVRO-1619. Java: Improve javadoc comments in generated code.
     (Niels Basjes via cutting)
 
+    AVRO-1616. Add IntelliJ files to .gitignore. (Niels Basjes via cutting)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
