@@ -32,6 +32,10 @@ Trunk (not yet released)
     AVRO-834. Java: Data File corruption recovery tool.
     (scottcarey and tomwhite)
 
+    AVRO-1614. Java: In generated builder classes, add accessors to
+    field sub-builders, permitting easier creation of nested, optional
+    structures. (Niels Basjes via cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

@@ -61,7 +61,10 @@ public class SpecificData extends GenericData {
   public static final String ELEMENT_PROP = "java-element-class";
 
   /** List of Java reserved words from
-   * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
+   * http://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.9
+   * combined with the boolean and null literals.
+   * combined with the classnames used internally in the generated avro code.
+   */
   public static final Set<String> RESERVED_WORDS = new HashSet<String>
     (Arrays.asList(new String[] {
         "abstract", "assert", "boolean", "break", "byte", "case", "catch",
@@ -71,7 +74,9 @@ public class SpecificData extends GenericData {
         "interface", "long", "native", "new", "null", "package", "private",
         "protected", "public", "return", "short", "static", "strictfp",
         "super", "switch", "synchronized", "this", "throw", "throws",
-        "transient", "true", "try", "void", "volatile", "while"
+        "transient", "true", "try", "void", "volatile", "while",
+        /* classnames use internally by the avro code generator */
+        "Builder"
       }));
 
   /** Read/write some common builtin classes as strings.  Representing these as

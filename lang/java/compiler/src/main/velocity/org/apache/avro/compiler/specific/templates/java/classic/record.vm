@@ -150,6 +150,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
 #foreach ($field in $schema.getFields())
     private ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+#if (${this.hasBuilder($field.schema())})
+    private ${this.javaUnbox($field.schema())}.Builder ${this.mangle($field.name(), $schema.isError())}Builder;
+#end
 #end
 
     /** Creates a new Builder */
@@ -165,6 +168,11 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
         this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
         fieldSetFlags()[$field.pos()] = true;
       }
+#if (${this.hasBuilder($field.schema())})
+      if (other.${this.generateHasBuilderMethod($schema, $field)}()) {
+        this.${this.mangle($field.name(), $schema.isError())}Builder = ${this.javaType($field.schema())}.newBuilder(other.${this.generateGetBuilderMethod($schema, $field)}());
+      }
+#end
 #end
     }
     
@@ -177,6 +185,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
         this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
         fieldSetFlags()[$field.pos()] = true;
       }
+#if (${this.hasBuilder($field.schema())})
+      this.${this.mangle($field.name(), $schema.isError())}Builder = null;
+#end
 #end
     }
 #if ($schema.isError())
@@ -224,12 +235,15 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       */
     public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
       validate(fields()[$field.pos()], value);
+#if (${this.hasBuilder($field.schema())})
+      this.${this.mangle($field.name(), $schema.isError())}Builder = null;
+#end
       this.${this.mangle($field.name(), $schema.isError())} = value;
       fieldSetFlags()[$field.pos()] = true;
       return this; 
     }
 
-    /** 
+    /**
       * Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has been set.
 #if ($field.doc())      * $field.doc()
 #end
@@ -237,6 +251,40 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     public boolean ${this.generateHasMethod($schema, $field)}() {
       return fieldSetFlags()[$field.pos()];
     }
+
+#if (${this.hasBuilder($field.schema())})
+    /**
+     * Gets the Builder instance for the '${this.mangle($field.name(), $schema.isError())}' field and creates one if it doesn't exist yet.
+#if ($field.doc())     * $field.doc()
+#end
+     */
+    public ${this.javaType($field.schema())}.Builder ${this.generateGetBuilderMethod($schema, $field)}() {
+      if (${this.mangle($field.name(), $schema.isError())}Builder == null) {
+        ${this.generateSetBuilderMethod($schema, $field)}(${this.javaType($field.schema())}.newBuilder());
+      }
+      return ${this.mangle($field.name(), $schema.isError())}Builder;
+    }
+
+    /**
+     * Sets the Builder instance for the '${this.mangle($field.name(), $schema.isError())}' field
+#if ($field.doc())     * $field.doc()
+#end
+     */
+    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema())}.Builder value) {
+      ${this.generateClearMethod($schema, $field)}();
+      ${this.mangle($field.name(), $schema.isError())}Builder = value;
+      return this;
+    }
+
+    /**
+     * Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has an active Builder instance
+#if ($field.doc())     * $field.doc()
+#end
+     */
+    public boolean ${this.generateHasBuilderMethod($schema, $field)}() {
+      return ${this.mangle($field.name(), $schema.isError())}Builder != null;
+    }
+#end
 
     /**
       * Clears the value of the '${this.mangle($field.name(), $schema.isError())}' field.
@@ -246,6 +294,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
 #if (${this.isUnboxedJavaTypeNullable($field.schema())})
       ${this.mangle($field.name(), $schema.isError())} = null;
+#end
+#if (${this.hasBuilder($field.schema())})
+      ${this.mangle($field.name(), $schema.isError())}Builder = null;
 #end
       fieldSetFlags()[$field.pos()] = false;
       return this;
@@ -257,7 +308,15 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       try {
         ${this.mangle($schema.getName())} record = new ${this.mangle($schema.getName())}(#if ($schema.isError())getValue(), getCause()#end);
 #foreach ($field in $schema.getFields())
+#if (${this.hasBuilder($field.schema())})
+        if (${this.mangle($field.name(), $schema.isError())}Builder != null) {
+          record.${this.mangle($field.name(), $schema.isError())} = this.${this.mangle($field.name(), $schema.isError())}Builder.build();
+        } else {
+          record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
+        }
+#else
         record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
+#end
 #end
         return record;
       } catch (Exception e) {

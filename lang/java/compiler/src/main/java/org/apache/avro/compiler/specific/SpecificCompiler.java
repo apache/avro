@@ -605,6 +605,13 @@ public class SpecificCompiler {
   /** Utility for template use.  Adds a dollar sign to reserved words. */
   public static String mangle(String word, Set<String> reservedWords, 
       boolean isMethod) {
+    if (word.contains(".")) {
+      // If the 'word' is really a full path of a class we must mangle just the classname
+      int lastDot = word.lastIndexOf(".");
+      String packageName = word.substring(0, lastDot + 1);
+      String className = word.substring(lastDot + 1);
+      return packageName + mangle(className, reservedWords, isMethod);
+    }
     if (reservedWords.contains(word) || 
         (isMethod && reservedWords.contains(
             Character.toLowerCase(word.charAt(0)) + 
@@ -626,27 +633,27 @@ public class SpecificCompiler {
    * @return the name of the accessor method for the given field.
    */
   public static String generateGetMethod(Schema schema, Field field) {
-    return generateMethodName(schema, field, "get");
+    return generateMethodName(schema, field, "get", "");
   }
   
   /**
    * Generates the name of a field mutator method.
    * @param schema the schema in which the field is defined.
-   * @param field the field for which to generate the accessor name.
+   * @param field the field for which to generate the mutator name.
    * @return the name of the mutator method for the given field.
    */
   public static String generateSetMethod(Schema schema, Field field) {
-    return generateMethodName(schema, field, "set");
+    return generateMethodName(schema, field, "set", "");
   }
   
   /**
    * Generates the name of a field "has" method.
    * @param schema the schema in which the field is defined.
-   * @param field the field for which to generate the accessor name.
+   * @param field the field for which to generate the "has" method name.
    * @return the name of the has method for the given field.
    */
   public static String generateHasMethod(Schema schema, Field field) {
-    return generateMethodName(schema, field, "has");
+    return generateMethodName(schema, field, "has", "");
   }
   
   /**
@@ -656,18 +663,67 @@ public class SpecificCompiler {
    * @return the name of the has method for the given field.
    */
   public static String generateClearMethod(Schema schema, Field field) {
-    return generateMethodName(schema, field, "clear");
+    return generateMethodName(schema, field, "clear", "");
   }
   
+  /** Utility for use by templates. Does this schema have a Builder method? */
+  public static boolean hasBuilder(Schema schema) {
+    switch (schema.getType()) {
+      case RECORD:
+        return true;
+
+      case UNION:
+        List<Schema> types = schema.getTypes(); // elide unions with null
+        if ((types.size() == 2) && types.contains(NULL_SCHEMA)) {
+          return hasBuilder(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
+        }
+        return false;
+
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Generates the name of a field Builder accessor method.
+   * @param schema the schema in which the field is defined.
+   * @param field the field for which to generate the Builder accessor name.
+   * @return the name of the Builder accessor method for the given field.
+   */
+  public static String generateGetBuilderMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "get", "Builder");
+  }
+
+  /**
+   * Generates the name of a field Builder mutator method.
+   * @param schema the schema in which the field is defined.
+   * @param field the field for which to generate the Builder mutator name.
+   * @return the name of the Builder mutator method for the given field.
+   */
+  public static String generateSetBuilderMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "set", "Builder");
+  }
+
+  /**
+   * Generates the name of a field Builder "has" method.
+   * @param schema the schema in which the field is defined.
+   * @param field the field for which to generate the "has" Builder method name.
+   * @return the name of the "has" Builder method for the given field.
+   */
+  public static String generateHasBuilderMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "has", "Builder");
+  }
+
   /**
    * Generates a method name from a field name.
    * @param schema the schema in which the field is defined.
    * @param field the field for which to generate the accessor name.
    * @param prefix method name prefix, e.g. "get" or "set".
+   * @param postfix method name postfix, e.g. "" or "Builder".
    * @return the generated method name.
    */
   private static String generateMethodName(Schema schema, Field field, 
-      String prefix) {
+      String prefix, String postfix) {
 
     // Check for the special case in which the schema defines two fields whose 
     // names are identical except for the case of the first character:
@@ -695,6 +751,7 @@ public class SpecificCompiler {
         methodBuilder.append(fieldName.charAt(ii));
       }
     }
+    methodBuilder.append(postfix);
     
     // If there is a field name conflict append $0 or $1
     if (fieldNameConflict) {
