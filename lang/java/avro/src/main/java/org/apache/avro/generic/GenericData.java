@@ -400,10 +400,12 @@ public class GenericData {
           return false;
       return true;
     case UNION:
-      for (Schema type : schema.getTypes())
-        if (validate(type, datum))
-          return true;
-      return false;
+      try {
+        int i = resolveUnion(schema, datum);
+        return validate(schema.getTypes().get(i), datum);
+      } catch (UnresolvedUnionException e) {
+        return false;
+      }
     case FIXED:
       return datum instanceof GenericFixed
         && ((GenericFixed)datum).bytes().length==schema.getFixedSize();

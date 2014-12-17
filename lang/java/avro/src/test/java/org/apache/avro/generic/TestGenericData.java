@@ -33,6 +33,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
@@ -454,5 +455,27 @@ public class TestGenericData {
     /* negative cases */
     assertFalse("We don't expect GenericData to allow a String datum for an enum schema", gd.validate(schema, "ONE"));
     assertFalse("We don't expect GenericData to allow a Java Enum for an enum schema", gd.validate(schema, anEnum.ONE));
+  }
+
+  @Test
+  public void testValidateUnion() {
+      Schema type1Schema = SchemaBuilder.record("Type1")
+          .fields()
+          .requiredString("myString")
+          .requiredInt("myInt")
+          .endRecord();
+
+      Schema type2Schema = SchemaBuilder.record("Type2")
+          .fields()
+          .requiredString("myString")
+          .endRecord();
+
+      Schema unionSchema = SchemaBuilder.unionOf()
+          .type(type1Schema).and().type(type2Schema)
+          .endUnion();
+
+    GenericRecord record = new GenericData.Record(type2Schema);
+    record.put("myString", "myValue");
+    assertTrue(GenericData.get().validate(unionSchema, record));
   }
 }
