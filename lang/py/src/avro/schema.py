@@ -385,13 +385,13 @@ class Field(object):
 #
 class PrimitiveSchema(Schema):
   """Valid primitive types are in PRIMITIVE_TYPES."""
-  def __init__(self, type):
+  def __init__(self, type, other_props=None):
     # Ensure valid ctor args
     if type not in PRIMITIVE_TYPES:
       raise AvroException("%s is not a valid primitive type." % type)
 
     # Call parent ctor
-    Schema.__init__(self, type)
+    Schema.__init__(self, type, other_props=other_props)
 
     self.fullname = type
 
@@ -723,7 +723,7 @@ def make_avsc_object(json_data, names=None):
     type = json_data.get('type')
     other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
     if type in PRIMITIVE_TYPES:
-      return PrimitiveSchema(type)
+      return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')
       namespace = json_data.get('namespace', names.default_namespace)

@@ -643,7 +643,7 @@ class PrimitiveSchema(Schema):
   Valid primitive types are defined in PRIMITIVE_TYPES.
   """
 
-  def __init__(self, type):
+  def __init__(self, type, other_props=None):
     """Initializes a new schema object for the specified primitive type.
 
     Args:
@@ -651,7 +651,7 @@ class PrimitiveSchema(Schema):
     """
     if type not in PRIMITIVE_TYPES:
       raise AvroException('%r is not a valid primitive type.' % type)
-    super(PrimitiveSchema, self).__init__(type)
+    super(PrimitiveSchema, self).__init__(type, other_props=other_props)
 
   @property
   def name(self):
@@ -1153,7 +1153,7 @@ def _SchemaFromJSONObject(json_object, names):
 
   if type in PRIMITIVE_TYPES:
     # FIXME should not ignore other properties
-    return PrimitiveSchema(type)
+    return PrimitiveSchema(type, other_props=other_props)
 
   elif type in NAMED_TYPES:
     name = json_object.get('name')

@@ -96,6 +96,9 @@ Trunk (not yet released)
     AVRO-1604. Java: Fix ReflectData.AllowNull to work with @Nullable
     annotations. (Ryan Blue via cutting)
 
+    AVRO-1545. Python. Fix to retain schema properties on primitive types.
+    (Dustin Spicuzza via cutting)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
