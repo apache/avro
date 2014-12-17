@@ -56,6 +56,9 @@ Trunk (not yet released)
 
     AVRO-1616. Add IntelliJ files to .gitignore. (Niels Basjes via cutting)
 
+    AVRO-1539. Java: Add FileSystem based FsInput constructor.
+    (Allan Shoup via cutting)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)

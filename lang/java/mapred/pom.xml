@@ -121,6 +121,13 @@
       <classifier>tests</classifier>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>     
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
