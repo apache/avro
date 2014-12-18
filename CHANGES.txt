@@ -105,6 +105,8 @@ Trunk (not yet released)
     AVRO-1623. Java: Fix GenericData#validate to correctly resolve unions.
     (Jeffrey Mullins via cutting)
 
+    AVRO-1621. PHP: FloatIntEncodingTest fails for NAN. (tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
