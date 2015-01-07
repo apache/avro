@@ -107,6 +107,8 @@ Trunk (not yet released)
 
     AVRO-1621. PHP: FloatIntEncodingTest fails for NAN. (tomwhite)
 
+    AVRO-1573. Javascript. Upgrade to Grunt 0.4 for testing. (tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

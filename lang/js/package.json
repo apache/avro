@@ -24,7 +24,10 @@
     "underscore"   :  "*"
   },
   "devDependencies" : {
-    "grunt"        :  "*"
+    "grunt"        :  "*",
+    "grunt-contrib-jshint" : "*",
+    "grunt-contrib-nodeunit" : "*",
+    "grunt-contrib-watch" : "*"
   },
   "noAnalyze": true,
   "license": "Apache",
