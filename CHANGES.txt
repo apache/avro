@@ -113,6 +113,9 @@ Trunk (not yet released)
 
     AVRO-1573. Javascript. Upgrade to Grunt 0.4 for testing. (tomwhite)
 
+    AVRO-1624. Java. Surefire forkMode is deprecated. (Niels Basjes via
+    tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

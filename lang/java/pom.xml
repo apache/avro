@@ -210,7 +210,8 @@
             </excludes>
             <enableAssertions>false</enableAssertions>
             <!-- some IPC tests hang if not run in a separate JVM -->
-            <forkMode>always</forkMode>
+            <forkCount>1</forkCount>
+            <reuseForks>false</reuseForks>
             <!-- TestSpecificCompiler instantiates a Java compiler to test output results,
                  this does not work with a manifest-only-jar to set the classpath for the javac.
                  This may cause problems on some platforms.
@@ -350,6 +351,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire-plugin.version}</version>
             <configuration>
               <includes>
                 <include>**/DataFileInteropTest*</include>
@@ -357,7 +359,8 @@
               <excludes>
               </excludes>
               <enableAssertions>false</enableAssertions>
-              <forkMode>once</forkMode>
+              <forkCount>1</forkCount>
+              <reuseForks>true</reuseForks>
               <redirectTestOutputToFile>false</redirectTestOutputToFile>
               <systemPropertyVariables>
                 <test.dir>../../../build/interop/data/</test.dir>
