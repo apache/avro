@@ -8,6 +8,7 @@
 **/*.js
 **/*.la
 **/*.m4
+**/*.md
 **/*.md5
 **/*.pom
 **/*.properties

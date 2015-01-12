@@ -36,6 +36,10 @@ Trunk (not yet released)
     field sub-builders, permitting easier creation of nested, optional
     structures. (Niels Basjes via cutting)
 
+    AVRO-1537. Make it easier to set up a multi-language build environment.
+    Support for running a Docker container with all build dependencies.
+    (tomwhite)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
