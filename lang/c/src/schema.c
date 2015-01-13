@@ -575,6 +575,16 @@ avro_schema_enum_symbol_append(const avro_schema_t enum_schema,
 }
 
 int
+avro_schema_enum_number_of_symbols(const avro_schema_t enum_schema)
+{
+	check_param(EINVAL, is_avro_schema(enum_schema), "enum schema");
+	check_param(EINVAL, is_avro_enum(enum_schema), "enum schema");
+
+	struct avro_enum_schema_t *enump = avro_schema_to_enum(enum_schema);
+	return enump->symbols->num_entries;
+}
+
+int
 avro_schema_record_field_append(const avro_schema_t record_schema,
 				const char *field_name,
 				const avro_schema_t field_schema)
