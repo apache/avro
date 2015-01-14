@@ -174,6 +174,11 @@ public abstract class Schema extends JsonProperties {
   }
 
   /** Create a union schema. */
+  public static Schema createUnion(Schema... types) {
+    return createUnion(new LockableArrayList<Schema>(types));
+  }
+
+  /** Create a union schema. */
   public static Schema createFixed(String name, String doc, String space,
       int size) {
     return new FixedSchema(new Name(name, space), doc, size);
@@ -1522,6 +1527,11 @@ public abstract class Schema extends JsonProperties {
 
     public LockableArrayList(List<E> types) {
       super(types);
+    }
+
+    public LockableArrayList(E... types) {
+      super(types.length);
+      Collections.addAll(this, types);
     }
 
     public List<E> lock() {

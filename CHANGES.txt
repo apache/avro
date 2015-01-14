@@ -63,6 +63,9 @@ Trunk (not yet released)
     AVRO-1539. Java: Add FileSystem based FsInput constructor.
     (Allan Shoup via cutting)
 
+    AVRO-1628. Java: Add Schema#createUnion(Schema ...) convenience method.
+    (Clément Mahtieu via cutting)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
