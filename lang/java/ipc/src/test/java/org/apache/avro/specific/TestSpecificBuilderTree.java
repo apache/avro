@@ -116,6 +116,58 @@ public class TestSpecificBuilderTree {
     assertEquals("Bar",             request2.getHttpRequest().getURI().getParameters().get(0).getValue());
   }
 
+  @Test
+  public void createBuilderFromInstance(){
+    Request.Builder requestBuilder1 = createPartialBuilder();
+    requestBuilder1
+      .getConnectionBuilder()
+        .setNetworkAddress("1.1.1.1");
+
+    Request request1 = requestBuilder1.build();
+
+    Request.Builder requestBuilder2 = Request.newBuilder(request1);
+
+    requestBuilder2
+      .getConnectionBuilder()
+        .setNetworkAddress("2.2.2.2");
+
+    requestBuilder2
+      .getHttpRequestBuilder()
+        .getUserAgentBuilder()
+          .setId("Bar");
+
+    requestBuilder2
+      .getHttpRequestBuilder()
+        .getURIBuilder()
+          .setMethod(HttpMethod.POST);
+
+    requestBuilder2
+      .getHttpRequestBuilder()
+        .getUserAgentBuilder()
+          .setUseragent("Firefox 456");
+
+    Request request2 = requestBuilder2.build();
+
+    assertEquals(NetworkType.IPv4,  request1.getConnection().getNetworkType());
+    assertEquals("1.1.1.1",         request1.getConnection().getNetworkAddress());
+    assertEquals("Chrome 123",      request1.getHttpRequest().getUserAgent().getUseragent());
+    assertEquals("Foo",             request1.getHttpRequest().getUserAgent().getId());
+    assertEquals(HttpMethod.GET,    request1.getHttpRequest().getURI().getMethod());
+    assertEquals("/index.html",     request1.getHttpRequest().getURI().getPath());
+    assertEquals(1,                 request1.getHttpRequest().getURI().getParameters().size());
+    assertEquals("Foo",             request1.getHttpRequest().getURI().getParameters().get(0).getName());
+    assertEquals("Bar",             request1.getHttpRequest().getURI().getParameters().get(0).getValue());
+
+    assertEquals(NetworkType.IPv4,  request2.getConnection().getNetworkType());
+    assertEquals("2.2.2.2",         request2.getConnection().getNetworkAddress());
+    assertEquals("Firefox 456",     request2.getHttpRequest().getUserAgent().getUseragent());
+    assertEquals("Bar",             request2.getHttpRequest().getUserAgent().getId());
+    assertEquals(HttpMethod.POST,   request2.getHttpRequest().getURI().getMethod());
+    assertEquals("/index.html",     request2.getHttpRequest().getURI().getPath());
+    assertEquals(1,                 request2.getHttpRequest().getURI().getParameters().size());
+    assertEquals("Foo",             request2.getHttpRequest().getURI().getParameters().get(0).getName());
+    assertEquals("Bar",             request2.getHttpRequest().getURI().getParameters().get(0).getValue());
+  }
 
   private Request.Builder createLastOneTestsBuilder() {
     Request.Builder requestBuilder = Request.newBuilder();

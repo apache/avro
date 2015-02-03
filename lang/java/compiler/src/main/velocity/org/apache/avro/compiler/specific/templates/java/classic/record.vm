@@ -260,7 +260,11 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
      */
     public ${this.javaType($field.schema())}.Builder ${this.generateGetBuilderMethod($schema, $field)}() {
       if (${this.mangle($field.name(), $schema.isError())}Builder == null) {
-        ${this.generateSetBuilderMethod($schema, $field)}(${this.javaType($field.schema())}.newBuilder());
+        if (${this.generateHasMethod($schema, $field)}()) {
+          ${this.generateSetBuilderMethod($schema, $field)}(${this.javaType($field.schema())}.newBuilder(${this.mangle($field.name(), $schema.isError())}));
+        } else {
+          ${this.generateSetBuilderMethod($schema, $field)}(${this.javaType($field.schema())}.newBuilder());
+        }
       }
       return ${this.mangle($field.name(), $schema.isError())}Builder;
     }
