@@ -114,7 +114,7 @@ public class ProtobufData extends GenericData {
     new ConcurrentHashMap<Descriptor,FieldDescriptor[]>();
 
   @Override
-  protected Object getRecordState(Object r, Schema s) {
+  public Object getRecordState(Object r, Schema s) {
     Descriptor d = ((MessageOrBuilder)r).getDescriptorForType();
     FieldDescriptor[] fields = fieldCache.get(d);
     if (fields == null) {                         // cache miss

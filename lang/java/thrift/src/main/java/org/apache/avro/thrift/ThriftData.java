@@ -99,7 +99,7 @@ public class ThriftData extends GenericData {
 
   @Override
   @SuppressWarnings("unchecked")
-  protected Object getRecordState(Object r, Schema s) {
+  public Object getRecordState(Object r, Schema s) {
     TFieldIdEnum[] fields = fieldCache.get(s);
     if (fields == null) {                           // cache miss
       fields = new TFieldIdEnum[s.getFields().size()];

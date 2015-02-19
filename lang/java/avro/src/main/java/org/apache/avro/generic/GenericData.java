@@ -387,7 +387,7 @@ public class GenericData {
       return schema.getEnumSymbols().contains(datum.toString());
     case ARRAY:
       if (!(isArray(datum))) return false;
-      for (Object element : (Collection<?>)datum)
+      for (Object element : getArrayAsCollection(datum))
         if (!validate(schema.getElementType(), element))
           return false;
       return true;
@@ -442,7 +442,7 @@ public class GenericData {
       }
       buffer.append("}");
     } else if (isArray(datum)) {
-      Collection<?> array = (Collection<?>)datum;
+      Collection<?> array = getArrayAsCollection(datum);
       buffer.append("[");
       long last = array.size()-1;
       int i = 0;
@@ -534,7 +534,7 @@ public class GenericData {
       return getRecordSchema(datum);
     } else if (isArray(datum)) {
       Schema elementType = null;
-      for (Object element : (Collection<?>)datum) {
+      for (Object element : getArrayAsCollection(datum)) {
         if (elementType == null) {
           elementType = induce(element);
         } else if (!elementType.equals(induce(element))) {
@@ -594,7 +594,7 @@ public class GenericData {
   /** Produce state for repeated calls to {@link
    * #getField(Object,String,int,Object)} and {@link
    * #setField(Object,String,int,Object,Object)} on the same record.*/
-  protected Object getRecordState(Object record, Schema schema) { return null; }
+  public Object getRecordState(Object record, Schema schema) { return null; }
 
   /** Version of {@link #setField} that has state. */
   protected void setField(Object r, String n, int p, Object o, Object state) {
@@ -681,6 +681,11 @@ public class GenericData {
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isArray(Object datum) {
     return datum instanceof Collection;
+  }
+
+  /** Called to access an array as a collection. */
+  protected Collection getArrayAsCollection(Object datum) {
+    return (Collection)datum;
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/
