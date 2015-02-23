@@ -20,7 +20,6 @@ package org.apache.avro.reflect;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.ConcurrentModificationException;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -143,8 +142,10 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
         datum = (int)(char)(Character)datum;
     else if (datum instanceof Map)
       if (ReflectData.isMapWithNonStringKeysSchema(schema)) {
-        writeNonStringMap(schema, datum, out);
-        return;
+        // Maps with non-string keys are written as arrays.
+        // Schema for such maps is already changed. Here we
+        // just switch the map to a similar form too.
+        datum = ((Map)datum).entrySet();
       }
     try {
       super.write(schema, datum, out);
@@ -180,40 +181,5 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       }
     }
     super.writeField(record, f, out, state);
-  }
-
-  /**
-   * Encode maps with non-string keys as array of key/value pair records
-   * Example: MapFoo, Bar&gt; is written as:
-   *    [{"key": {Foo}, "value": {Bar}}, ...]
-   * This method writes the array part and calls
-   * {@link #writeNonStringMapEntry(Schema, Map.Entry, Encoder)}
-   * for writing a single map-entry as a record
-   */
-  private void writeNonStringMap(Schema schema, Object datum, Encoder out)
-    throws IOException {
-
-    Map map = (Map)datum; 
-    long size = map.size();
-    long actualSize = 0;
-    out.writeArrayStart();
-    out.setItemCount(size);
-
-    Schema mapEntrySchema = schema.getElementType();
-    Field keyField = mapEntrySchema.getField(ReflectData.NS_MAP_KEY);
-    Field valueField = mapEntrySchema.getField(ReflectData.NS_MAP_VALUE);
-
-    for (Object mapEntry : map.entrySet()) {
-      out.startItem();
-      Object state = getData().getRecordState(mapEntry, mapEntrySchema);
-      writeField(mapEntry, keyField, out, state);
-      writeField(mapEntry, valueField, out, state);
-      actualSize++;
-    }
-    out.writeArrayEnd();
-    if (actualSize != size) {
-      throw new ConcurrentModificationException("Size of map written was " +
-          size + ", but number of elements written was " + actualSize + ". ");
-    }
   }
 }
