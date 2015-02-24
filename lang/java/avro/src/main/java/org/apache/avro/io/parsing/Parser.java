@@ -54,7 +54,7 @@ public class Parser {
   public Parser(Symbol root, ActionHandler symbolHandler)
     throws IOException {
     this.symbolHandler = symbolHandler;
-    this.stack = new Symbol[5]; // Start small to make sure expansion code works
+    this.stack = new Symbol[8]; // Start small to make sure expansion code works
     this.stack[0] = root;
     this.pos = 1;
   }
