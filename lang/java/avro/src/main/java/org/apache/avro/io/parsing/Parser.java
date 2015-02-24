@@ -63,7 +63,7 @@ public class Parser {
    * If there is no sufficient room in the stack, use this expand it.
    */
   private void expandStack() {
-    stack = Arrays.copyOf(stack, stack.length+Math.max(stack.length,1024));
+    stack = Arrays.copyOf(stack, stack.length+Math.min(stack.length,1024));
   }
 
   /**
