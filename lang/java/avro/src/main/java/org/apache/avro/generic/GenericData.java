@@ -392,7 +392,7 @@ public class GenericData {
           return false;
       return true;
     case MAP:
-      if (!(isMap(datum))) return false;
+      if (!(isStringMap(datum))) return false;
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet())
@@ -452,7 +452,7 @@ public class GenericData {
           buffer.append(", ");
       }        
       buffer.append("]");
-    } else if (isMap(datum)) {
+    } else if (isStringMap(datum)) {
       buffer.append("{");
       int count = 0;
       @SuppressWarnings(value="unchecked")
@@ -546,7 +546,7 @@ public class GenericData {
       }
       return Schema.createArray(elementType);
 
-    } else if (isMap(datum)) {
+    } else if (isStringMap(datum)) {
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       Schema value = null;
@@ -626,7 +626,7 @@ public class GenericData {
       return getEnumSchema(datum).getFullName();
     if (isArray(datum))
       return Type.ARRAY.getName();
-    if (isMap(datum))
+    if (isStringMap(datum))
       return Type.MAP.getName();
     if (isFixed(datum))
       return getFixedSchema(datum).getFullName();
@@ -662,7 +662,7 @@ public class GenericData {
       if (!isEnum(datum)) return false;
       return schema.getFullName().equals(getEnumSchema(datum).getFullName());
     case ARRAY:   return isArray(datum);
-    case MAP:     return isMap(datum);
+    case MAP:     return isStringMap(datum);
     case FIXED:
       if (!isFixed(datum)) return false;
       return schema.getFullName().equals(getFixedSchema(datum).getFullName());
@@ -713,7 +713,7 @@ public class GenericData {
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/
-  protected boolean isMap(Object datum) {
+  protected boolean isStringMap(Object datum) {
     return datum instanceof Map;
   }
   

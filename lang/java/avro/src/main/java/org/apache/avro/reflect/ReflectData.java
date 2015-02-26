@@ -354,7 +354,7 @@ public class ReflectData extends SpecificData {
    * It returns false for non-string-maps because Avro writes out such maps
    * as an array of records. Even their JSON representation is an array.
    */
-  protected boolean isMap(Object datum) {
+  protected boolean isStringMap(Object datum) {
     return (datum instanceof Map) && !isNonStringMap(datum);
   }
 
