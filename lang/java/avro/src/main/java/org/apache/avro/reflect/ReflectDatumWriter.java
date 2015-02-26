@@ -140,8 +140,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       datum = ((Short)datum).intValue();
     else if (datum instanceof Character)
         datum = (int)(char)(Character)datum;
-    else if (datum instanceof Map)
-      if (ReflectData.isMapWithNonStringKeysSchema(schema)) {
+    else if (datum instanceof Map && ReflectData.isNonStringMapSchema(schema)) {
         // Maps with non-string keys are written as arrays.
         // Schema for such maps is already changed. Here we
         // just switch the map to a similar form too.

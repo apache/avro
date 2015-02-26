@@ -124,7 +124,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       Collection<Object> c = (Collection<Object>) array;
       return readCollection(c, expectedType, l, in);
     } else if (array instanceof Map 
-               && ReflectData.isMapWithNonStringKeysSchema(expected)) {
+               && ReflectData.isNonStringMapSchema(expected)) {
       Collection<Object> c = new ArrayList<Object> ();
       readCollection(c, expectedType, l, in);
       Map m = (Map)array;

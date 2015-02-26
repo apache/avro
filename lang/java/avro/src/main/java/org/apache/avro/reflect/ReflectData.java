@@ -465,7 +465,7 @@ public class ReflectData extends SpecificData {
     return NS_MAP_ARRAY_RECORD + fpString;
   }
 
-  static boolean isMapWithNonStringKeysSchema(Schema s) {
+  static boolean isNonStringMapSchema(Schema s) {
     if (s != null && s.getType() == Schema.Type.ARRAY) {
       Class c = getClassProp(s, CLASS_PROP);
       if (c != null && Map.class.isAssignableFrom (c))
