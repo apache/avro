@@ -442,13 +442,13 @@ public class ReflectData extends SpecificData {
   private String getNameForNonStringMapRecord(Type keyType, Type valueType,
                                   Schema keySchema, Schema valueSchema) {
     if (keyType instanceof Class && valueType instanceof Class) {
-        Class keyClass = (Class)keyType;
-        Class valueClass = (Class)valueType;
-        if (keyClass.getPackage().equals(JAVA_LANG_PKG) &&
-            valueClass.getPackage().equals(JAVA_LANG_PKG)) {
-            return NS_MAP_ARRAY_RECORD +
-                keyClass.getSimpleName() + valueClass.getSimpleName();
-        }
+      Class keyClass = (Class)keyType;
+      Class valueClass = (Class)valueType;
+      if (keyClass.getPackage().equals(JAVA_LANG_PKG) &&
+        valueClass.getPackage().equals(JAVA_LANG_PKG)) {
+        return NS_MAP_ARRAY_RECORD +
+          keyClass.getSimpleName() + valueClass.getSimpleName();
+      }
     }
 
     String name = keySchema.getFullName() + valueSchema.getFullName();
