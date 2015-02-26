@@ -265,15 +265,25 @@ public abstract class LogicalType extends JsonProperties {
 
     @Override
     public Object serialize(Schema.Type type, Object object) {
+      BigDecimal decimal = (BigDecimal) object;
       switch (type) {
         case STRING:
-          return object.toString();
+          if (decimal.scale() > scale) {
+            return decimal.setScale(scale, RoundingMode.HALF_DOWN).toPlainString();
+          } else {
+            return decimal.toPlainString();
+          }
         case BYTES:
-          BigDecimal decimal = (BigDecimal) object;
-          int scale = decimal.scale();
+          int lscale;
+          if (decimal.scale() > scale) {
+            lscale = scale;
+            decimal = decimal.setScale(lscale, RoundingMode.HALF_DOWN);
+          } else {
+            lscale = decimal.scale();
+          }
           byte[] unscaledValue = decimal.unscaledValue().toByteArray();
           ByteBuffer buf = ByteBuffer.allocate(4 + unscaledValue.length);
-          buf.putInt(scale);
+          buf.putInt(lscale);
           buf.put(unscaledValue);
           buf.rewind();
           return buf;
