@@ -19,8 +19,10 @@ package org.apache.avro.reflect;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
@@ -43,7 +45,8 @@ class FieldAccessUnsafe extends FieldAccess {
   }
 
   @Override
-  protected FieldAccessor getAccessor(Field field) {
+  protected FieldAccessor getAccessor(Field field,
+      Map <Class<?>, CustomEncoding<?>> typeSerializers) {
     AvroEncode enc = field.getAnnotation(AvroEncode.class);
     if (enc != null)
       try {
@@ -51,6 +54,12 @@ class FieldAccessUnsafe extends FieldAccess {
       } catch (Exception e) {
         throw new AvroRuntimeException("Could not instantiate custom Encoding");
       }
+    if (typeSerializers != null) {
+      CustomEncoding<?> encoder = typeSerializers.get(field.getType());
+      if (encoder != null) {
+        return new UnsafeCustomEncodedField(field, encoder);
+      }
+    }
     Class<?> c = field.getType();
     if (c == int.class)
       return new UnsafeIntField(field);
@@ -360,6 +369,10 @@ class FieldAccessUnsafe extends FieldAccess {
     
     protected boolean isCustomEncoded() {
       return true;
+    }
+    
+    protected Schema getSchema () {
+      return encoding.getSchema();
     }
   }
 }

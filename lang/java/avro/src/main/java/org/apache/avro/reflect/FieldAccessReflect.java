@@ -23,11 +23,13 @@ import org.apache.avro.io.Encoder;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Map;
 
 class FieldAccessReflect extends FieldAccess {
 
   @Override
-  protected FieldAccessor getAccessor(Field field) {
+  protected FieldAccessor getAccessor(Field field,
+      Map <Class<?>, CustomEncoding<?>> typeSerializers) {
     AvroEncode enc = field.getAnnotation(AvroEncode.class);
     if (enc != null)
       try {

@@ -22,8 +22,10 @@ import java.util.Collection;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.reflect.FieldAccessUnsafe.UnsafeCustomEncodedField;
 import org.apache.avro.specific.SpecificDatumWriter;
 
 /**
@@ -149,16 +151,42 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     }
   }
 
+  private void writeFieldWithAccessor(Object record, Field f,
+      Encoder out, Object state, FieldAccessor accessor)
+      throws IOException {
+
+    if (Schema.Type.UNION.equals(f.schema().getType())) {
+      Object fVal = null;
+      try {
+        fVal = accessor.get(record);
+      } catch (IllegalAccessException e) {
+        throw new AvroRuntimeException(e);
+      }
+      if (fVal == null) {
+        Integer index = f.schema().getIndexNamed(Schema.Type.NULL.getName());
+        if (index  == null) {
+          throw new UnresolvedUnionException(f.schema(), fVal);
+        }
+        out.writeIndex(index);
+        out.writeNull();
+        return;
+      } else {
+        Schema fieldSchema = ((UnsafeCustomEncodedField)accessor).getSchema();
+        Integer index = f.schema().getIndexNamed(fieldSchema.getType().getName());
+        out.writeIndex(index);
+      }
+    }
+    accessor.write(record, out);
+  }
+
   @Override
   protected void writeField(Object record, Field f, Encoder out, Object state)
       throws IOException {
     if (state != null) {
       FieldAccessor accessor = ((FieldAccessor[]) state)[f.pos()];
       if (accessor != null) {
-        if (accessor.supportsIO()
-            && (!Schema.Type.UNION.equals(f.schema().getType())
-                || accessor.isCustomEncoded())) {
-          accessor.write(record, out);
+        if (accessor.supportsIO() && accessor.isCustomEncoded()) {
+          writeFieldWithAccessor (record, f, out, state, accessor);
           return;
         }
         if (accessor.isStringable()) {

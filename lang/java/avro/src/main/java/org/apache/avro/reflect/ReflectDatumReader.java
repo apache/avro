@@ -202,16 +202,28 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     return value;
   }
 
+  private void readFieldWithAccessor(Object record, Field f,
+      Object oldDatum, ResolvingDecoder in, Object state,
+      FieldAccessor accessor) throws IOException {
+
+    if (Schema.Type.UNION.equals(f.schema().getType())) {
+      Schema unionField = f.schema().getTypes().get(in.readIndex());
+      if (unionField.getType().equals(Schema.Type.NULL)) {
+        in.readNull();
+        return;
+      }
+    }
+    accessor.read(record, in);
+  }
+
   @Override
   protected void readField(Object record, Field f, Object oldDatum,
       ResolvingDecoder in, Object state) throws IOException {
     if (state != null) {
       FieldAccessor accessor = ((FieldAccessor[]) state)[f.pos()];
       if (accessor != null) {
-        if (accessor.supportsIO()
-            && (!Schema.Type.UNION.equals(f.schema().getType())
-                || accessor.isCustomEncoded())) {
-          accessor.read(record, in);
+        if (accessor.supportsIO() && accessor.isCustomEncoded()) {
+          readFieldWithAccessor(record, f, oldDatum, in, state, accessor);
           return;
         }
         if (accessor.isStringable()) {

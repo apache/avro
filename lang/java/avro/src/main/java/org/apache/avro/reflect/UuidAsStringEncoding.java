@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,11 +17,28 @@
  */
 package org.apache.avro.reflect;
 
-import java.lang.reflect.Field;
-import java.util.Map;
+import java.io.IOException;
+import java.util.UUID;
 
-abstract class FieldAccess {
-  
-  protected abstract FieldAccessor getAccessor(Field field,
-              Map <Class<?>, CustomEncoding<?>> typeSerializers);
+import org.apache.avro.Schema;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
+
+public class UuidAsStringEncoding extends CustomEncoding<UUID> {
+  {
+    schema = Schema.create(Schema.Type.STRING);
+    schema.addProp("CustomEncoding", "UuidAsStringEncoding");
+  }
+
+  @Override
+  protected void write(Object datum, Encoder out) throws IOException {
+    out.writeString(((UUID)datum).toString());
+  }
+
+  @Override
+  protected UUID read(Object reuse, Decoder in) throws IOException {
+    UUID newId = UUID.fromString(in.readString());
+    return newId;
+  }
+
 }

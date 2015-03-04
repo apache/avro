@@ -35,6 +35,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avro.AvroRemoteException;
@@ -82,10 +83,37 @@ public class ReflectData extends SpecificData {
     }
   }
   
+  // Eager initialization is not costly and prevents null-checks later
+  // Also brings in thread-safety
+  private Map <Class<?>, CustomEncoding<?>> typeSerializers = 
+      new ConcurrentHashMap<Class<?>, CustomEncoding<?>>();
+
+  private void init () {
+    addCustomEncoder(UUID.class, new UuidAsStringEncoding());
+  }
+
+  public Map<Class<?>, CustomEncoding<?>> getTypeSerializers() {
+    return typeSerializers;
+  }
+
+  public void setTypeSerializers(
+      Map<Class<?>, CustomEncoding<?>> classBasedSerializers) {
+    this.typeSerializers = classBasedSerializers;
+  }
+
+  public CustomEncoding<?> addCustomEncoder
+      (Class<?> type, CustomEncoding<?> encoder) {
+    return typeSerializers.put(type, encoder);
+  }
+
+  public CustomEncoding<?> getCustomEncoder (Class<?> type) {
+    return typeSerializers.get(type);
+  }
+
   private static final ReflectData INSTANCE = new ReflectData();
 
   /** For subclasses.  Applications normally use {@link ReflectData#get()}. */
-  public ReflectData() {}
+  public ReflectData() {init();}
   
   /** Construct with a particular classloader. */
   public ReflectData(ClassLoader classLoader) {
@@ -221,13 +249,15 @@ public class ReflectData extends SpecificData {
     private final IdentityHashMap<Schema, FieldAccessor[]> bySchema =
         new IdentityHashMap<Schema, FieldAccessor[]>();
         
-    private ClassAccessorData(Class<?> c) {
+    private ClassAccessorData(Class<?> c,
+        Map <Class<?>, CustomEncoding<?>> typeSerializers) {
       clazz = c;
       for(Field f : getFields(c, false)) {
         if (f.isAnnotationPresent(AvroIgnore.class)) {
           continue;
         }
-        FieldAccessor accessor = ReflectionUtil.getFieldAccess().getAccessor(f);
+        FieldAccessor accessor = ReflectionUtil.getFieldAccess()
+                                   .getAccessor(f, typeSerializers);
         AvroName avroname = f.getAnnotation(AvroName.class);    
         byName.put( (avroname != null 
           ? avroname.value()
@@ -270,7 +300,7 @@ public class ReflectData extends SpecificData {
   private ClassAccessorData getClassAccessorData(Class<?> c) {
     ClassAccessorData data = ACCESSOR_CACHE.get(c);
     if(data == null && !IndexedRecord.class.isAssignableFrom(c)){
-      ClassAccessorData newData = new ClassAccessorData(c);
+      ClassAccessorData newData = new ClassAccessorData(c, getTypeSerializers());
       data = ACCESSOR_CACHE.putIfAbsent(c, newData);
       if (null == data) {
         data = newData;
@@ -609,6 +639,10 @@ public class ReflectData extends SpecificData {
     AvroSchema explicit = field.getAnnotation(AvroSchema.class);
     if (explicit != null)                                   // explicit schema
       return Schema.parse(explicit.value());
+
+    CustomEncoding<?> encoder = getCustomEncoder(field.getType());
+    if (encoder != null)
+      return encoder.getSchema();
 
     Schema schema = createSchema(field.getGenericType(), names);
     if (field.isAnnotationPresent(Stringable.class)) {      // Stringable

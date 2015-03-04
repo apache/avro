@@ -119,7 +119,7 @@ class ReflectionUtil {
 
     private FieldAccessor accessor(FieldAccess access, String name)
         throws Exception {
-      return access.getAccessor(this.getClass().getDeclaredField(name));
+      return access.getAccessor(this.getClass().getDeclaredField(name), null);
     }
   }
 
