@@ -60,6 +60,15 @@ import com.thoughtworks.paranamer.Paranamer;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
+
+  /** Lookup to store user specified schemas for classes */
+  private static final Map<Class<?>, Schema> CLASS_SCHEMAS =
+                                  new HashMap<Class<?>, Schema>();
+
+  /** Lookup to store user specified schemas for fields */
+  private static final Map<Field, Schema> FIELD_SCHEMAS =
+                                  new HashMap<Field, Schema>();
+
   /** {@link ReflectData} implementation that permits null field values.  The
    * schema generated for each field is a union of its declared type and
    * null. */
@@ -115,6 +124,14 @@ public class ReflectData extends SpecificData {
   @Override
   public DatumWriter createDatumWriter(Schema schema) {
     return new ReflectDatumWriter(schema, this);
+  }
+
+  public Schema setSchema (Class<?> clazz, Schema s) {
+    return CLASS_SCHEMAS.put (clazz, s);
+  }
+
+  public Schema setSchema (Field field, Schema s) {
+    return FIELD_SCHEMAS.put (field, s);
   }
 
   @Override
@@ -432,6 +449,8 @@ public class ReflectData extends SpecificData {
       AvroSchema explicit = c.getAnnotation(AvroSchema.class);
       if (explicit != null)                                  // explicit schema
         return Schema.parse(explicit.value());
+      if (CLASS_SCHEMAS.containsKey(c))        // Set explicitly by setSchema()
+        return CLASS_SCHEMAS.get(c);
       if (CharSequence.class.isAssignableFrom(c))            // String
         return Schema.create(Schema.Type.STRING);
       if (ByteBuffer.class.isAssignableFrom(c))              // bytes
@@ -609,6 +628,8 @@ public class ReflectData extends SpecificData {
     AvroSchema explicit = field.getAnnotation(AvroSchema.class);
     if (explicit != null)                                   // explicit schema
       return Schema.parse(explicit.value());
+    if (FIELD_SCHEMAS.containsKey(field))        // Set explicitly by setSchema()
+        return FIELD_SCHEMAS.get(field);
 
     Schema schema = createSchema(field.getGenericType(), names);
     if (field.isAnnotationPresent(Stringable.class)) {      // Stringable
