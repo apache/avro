@@ -202,7 +202,8 @@ module Avro
             name = field['name']
             default = field['default']
             order = field['order']
-            new_field = Field.new(type, name, default, order, names, namespace)
+            aliases = field['aliases']
+            new_field = Field.new(type, name, default, order, aliases, names, namespace)
             # make sure field name has not been used yet
             if field_names.include?(new_field.name)
               raise SchemaParseError, "Field name #{new_field.name.inspect} is already in use"
@@ -350,19 +351,21 @@ module Avro
     end
 
     class Field < Schema
-      attr_reader :type, :name, :default, :order
+      attr_reader :type, :name, :default, :order, :aliases
 
-      def initialize(type, name, default=nil, order=nil, names=nil, namespace=nil)
+      def initialize(type, name, default=nil, order=nil, aliases=nil, names=nil, namespace=nil)
         @type = subparse(type, names, namespace)
         @name = name
         @default = default
         @order = order
+        @aliases = aliases
       end
 
       def to_avro(names=Set.new)
         {'name' => name, 'type' => type.to_avro(names)}.tap do |avro|
           avro['default'] = default if default
           avro['order'] = order if order
+          avro['aliases'] = aliases if aliases
         end
       end
     end
