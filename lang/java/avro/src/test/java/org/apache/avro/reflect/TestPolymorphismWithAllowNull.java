@@ -58,8 +58,7 @@ public class TestPolymorphismWithAllowNull {
     fileWriter.append(pobj);
     fileWriter.close();
     byte[] bytes = baos.toByteArray();
-    assertTrue ("Unable to serialize circular references",
-        bytes.length > 0);
+    assertTrue ("Unable to serialize", bytes.length > 0);
 
     // Test deserialization
     List<GenericRecord> records = testGenericDatumRead (bytes);
