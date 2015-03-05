@@ -52,6 +52,7 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.UnresolvedUnionException;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.NullNode;
 
@@ -60,6 +61,7 @@ import com.thoughtworks.paranamer.Paranamer;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
+
   /** {@link ReflectData} implementation that permits null field values.  The
    * schema generated for each field is a union of its declared type and
    * null. */
@@ -161,6 +163,25 @@ public class ReflectData extends SpecificData {
       return ((FieldAccessor[])optionalState)[pos];
     }
     return getFieldAccessor(record.getClass(), name);
+  }
+
+  @Override
+  public int resolveUnion(Schema union, Object datum) {
+    try {
+      return super.resolveUnion(union, datum);
+    } catch (UnresolvedUnionException uue) {
+      if (isRecord(datum)) {
+        Class sc = datum.getClass().getSuperclass();
+        while (sc != Object.class) {
+          Schema s = getSchema(sc);
+          Integer i = union.getIndexNamed(s.getFullName());
+          if (i != null)
+            return i;
+          sc = sc.getSuperclass();
+        }
+      }
+      throw uue;
+    }
   }
 
   @Override
