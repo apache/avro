@@ -354,7 +354,7 @@ public class ReflectData extends SpecificData {
    * It returns false for non-string-maps because Avro writes out such maps
    * as an array of records. Even their JSON representation is an array.
    */
-  protected boolean isStringMap(Object datum) {
+  protected boolean isMap(Object datum) {
     return (datum instanceof Map) && !isNonStringMap(datum);
   }
 
@@ -407,7 +407,6 @@ public class ReflectData extends SpecificData {
     }
   }
 
-  static final Package JAVA_LANG_PKG = Package.getPackage("java.lang");
   static final String NS_MAP_ARRAY_RECORD =   // record name prefix
     "org.apache.avro.reflect.Pair";
   static final String NS_MAP_KEY = "key";     // name of key field
@@ -441,11 +440,17 @@ public class ReflectData extends SpecificData {
    */
   private String getNameForNonStringMapRecord(Type keyType, Type valueType,
                                   Schema keySchema, Schema valueSchema) {
+
+    // Generate a nice name for classes in java* package
     if (keyType instanceof Class && valueType instanceof Class) {
+
       Class keyClass = (Class)keyType;
       Class valueClass = (Class)valueType;
-      if (keyClass.getPackage().equals(JAVA_LANG_PKG) &&
-        valueClass.getPackage().equals(JAVA_LANG_PKG)) {
+      Package pkg1 = keyClass.getPackage();
+      Package pkg2 = valueClass.getPackage();
+
+      if (pkg1 != null && pkg1.getName().startsWith("java") &&
+        pkg2 != null && pkg2.getName().startsWith("java")) {
         return NS_MAP_ARRAY_RECORD +
           keyClass.getSimpleName() + valueClass.getSimpleName();
       }

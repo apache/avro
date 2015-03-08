@@ -123,18 +123,24 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       @SuppressWarnings("unchecked")
       Collection<Object> c = (Collection<Object>) array;
       return readCollection(c, expectedType, l, in);
-    } else if (array instanceof Map 
-               && ReflectData.isNonStringMapSchema(expected)) {
-      Collection<Object> c = new ArrayList<Object> ();
-      readCollection(c, expectedType, l, in);
-      Map m = (Map)array;
-      for (Object ele: c) {
-        IndexedRecord rec = ((IndexedRecord)ele);
-        Object key = rec.get(ReflectData.NS_MAP_KEY_INDEX);
-        Object value = rec.get(ReflectData.NS_MAP_VALUE_INDEX);
-        m.put (key, value);
+    } else if (array instanceof Map) {
+      // Only for non-string keys, we can use NS_MAP_* fields
+      // So we check the samee explicitly here
+      if (ReflectData.isNonStringMapSchema(expected)) {
+        Collection<Object> c = new ArrayList<Object> ();
+        readCollection(c, expectedType, l, in);
+        Map m = (Map)array;
+        for (Object ele: c) {
+          IndexedRecord rec = ((IndexedRecord)ele);
+          Object key = rec.get(ReflectData.NS_MAP_KEY_INDEX);
+          Object value = rec.get(ReflectData.NS_MAP_VALUE_INDEX);
+          m.put (key, value);
+        }
+        return array;
+      } else {
+        throw new AvroRuntimeException("Type of " + array +
+          " does not match schema " + expected);
       }
-      return array;
     } else {
       return readJavaArray(array, expectedType, l, in);
     }
