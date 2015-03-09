@@ -66,6 +66,40 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     super(data);
   }
 
+  private static final ThreadLocal<ArrayList<Object>> CIRCULAR_REFS
+    = new ThreadLocal<ArrayList<Object>>() {
+    @Override protected ArrayList<Object> initialValue() {
+      return new ArrayList<Object>();
+    }
+  };
+
+  @Override public T read(T reuse, Decoder in) throws IOException {
+    T result = super.read(reuse, in);
+    if (((ReflectData)getData()).isResolvingCircularRefs())
+      CIRCULAR_REFS.get().clear();                // clear refs
+    return result;
+  }
+
+  @Override protected Object readRecord(Object old, Schema expected, 
+                                        ResolvingDecoder in)
+    throws IOException {
+    Object result = super.readRecord(old, expected, in);
+    if (((ReflectData)getData()).isResolvingCircularRefs()
+        && result instanceof CircularRef) {
+      return CIRCULAR_REFS.get().get(((CircularRef)result).getId());
+    }
+    return result;
+  }
+
+  @Override protected Object newRecord(Object old, Schema schema) {
+    Object result = super.newRecord(old, schema);
+    if (((ReflectData)getData()).isResolvingCircularRefs()
+        && !(result instanceof CircularRef)) {
+      CIRCULAR_REFS.get().add(result);
+    }
+    return result;
+  }
+
   @Override
   protected Object newArray(Object old, int size, Schema schema) {
     Class<?> collectionClass =

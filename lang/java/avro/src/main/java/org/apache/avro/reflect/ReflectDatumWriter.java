@@ -19,6 +19,7 @@ package org.apache.avro.reflect;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.IdentityHashMap;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -53,6 +54,43 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   
   protected ReflectDatumWriter(ReflectData reflectData) {
     super(reflectData);
+  }
+
+  private static final ThreadLocal<IdentityHashMap<Object,CircularRef>>
+    CIRCULAR_REFS = new ThreadLocal<IdentityHashMap<Object,CircularRef>>() {
+    @Override protected IdentityHashMap<Object,CircularRef> initialValue() {
+        return new IdentityHashMap<Object,CircularRef>();
+    }
+  };
+
+  @Override
+  public void write(T datum, Encoder out) throws IOException {
+    super.write(datum, out);
+    if (((ReflectData)getData()).isResolvingCircularRefs())
+      CIRCULAR_REFS.get().clear();             // clear references after
+  }
+  
+  @Override
+  protected void writeRecord(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    if (((ReflectData)getData()).isResolvingCircularRefs()) {
+      if (CIRCULAR_REFS.get().containsKey(datum)) { // record seen
+        datum = CIRCULAR_REFS.get().get(datum);     // write ref
+      } else {                                      // not seen
+        CIRCULAR_REFS.get().put(datum,              // note it
+                                new CircularRef(CIRCULAR_REFS.get().size()));
+      }
+    }
+    super.writeRecord(schema, datum, out);
+  }
+
+  @Override
+  protected int resolveUnion(Schema union, Object datum) {
+    if (((ReflectData)getData()).isResolvingCircularRefs() 
+        && CIRCULAR_REFS.get().containsKey(datum)) { // circle found
+      datum = CIRCULAR_REFS.get().get(datum);
+    }
+    return super.resolveUnion(union, datum);
   }
 
   /** Called to write a array.  May be overridden for alternate array

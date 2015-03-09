@@ -84,6 +84,8 @@ public class ReflectData extends SpecificData {
   
   private static final ReflectData INSTANCE = new ReflectData();
 
+  private boolean resolvingCircularRefs;
+
   /** For subclasses.  Applications normally use {@link ReflectData#get()}. */
   public ReflectData() {}
   
@@ -100,6 +102,16 @@ public class ReflectData extends SpecificData {
   public ReflectData addStringable(Class c) {
     stringableClasses.add(c);
     return this;
+  }
+
+  public boolean isResolvingCircularRefs() {
+    return resolvingCircularRefs;
+  }
+
+  public void setResolvingCircularRefs(boolean resolvingCircularRefs) {
+    if (this == INSTANCE)
+      throw new AvroRuntimeException("Can't set singleton ReflectData.get().");
+    this.resolvingCircularRefs = resolvingCircularRefs;
   }
 
   @Override
@@ -373,7 +385,9 @@ public class ReflectData extends SpecificData {
       Type component = ((GenericArrayType)type).getGenericComponentType();
       if (component == Byte.TYPE)                            // byte array
         return Schema.create(Schema.Type.BYTES);           
-      Schema result = Schema.createArray(createSchema(component, names));
+      Schema elementSchema = createSchema(component, names);
+      Schema circularSchema = checkCircularRefSchema(elementSchema);
+      Schema result = Schema.createArray(circularSchema);
       setElement(result, component);
       return result;
     } else if (type instanceof ParameterizedType) {
@@ -381,7 +395,9 @@ public class ReflectData extends SpecificData {
       Class raw = (Class)ptype.getRawType();
       Type[] params = ptype.getActualTypeArguments();
       if (Map.class.isAssignableFrom(raw)) {                 // Map
-        Schema schema = Schema.createMap(createSchema(params[1], names));
+        Schema valueSchema = createSchema(params[1], names);
+        Schema circularSchema = checkCircularRefSchema(valueSchema);
+        Schema schema = Schema.createMap(circularSchema);
         Class key = (Class)params[0];
         if (isStringable(key)) {                             // Stringable key
           schema.addProp(KEY_CLASS_PROP, key.getName());
@@ -392,7 +408,9 @@ public class ReflectData extends SpecificData {
       } else if (Collection.class.isAssignableFrom(raw)) {   // Collection
         if (params.length != 1)
           throw new AvroTypeException("No array type specified.");
-        Schema schema = Schema.createArray(createSchema(params[0], names));
+        Schema elementSchema = createSchema(params[0], names);
+        Schema circularSchema = checkCircularRefSchema(elementSchema);
+        Schema schema = Schema.createArray(circularSchema);
         schema.addProp(CLASS_PROP, raw.getName());
         return schema;
       }
@@ -424,7 +442,9 @@ public class ReflectData extends SpecificData {
           result.addProp(CLASS_PROP, c.getName());
           return result;
         }
-        Schema result = Schema.createArray(createSchema(component, names));
+        Schema componentSchema = createSchema(component, names);
+        Schema circularSchema = checkCircularRefSchema(componentSchema);
+        Schema result = Schema.createArray(circularSchema);
         result.addProp(CLASS_PROP, c.getName());
         setElement(result, component);
         return result;
@@ -475,6 +495,8 @@ public class ReflectData extends SpecificData {
             if ((field.getModifiers()&(Modifier.TRANSIENT|Modifier.STATIC))==0 
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
               Schema fieldSchema = createFieldSchema(field, names);
+              if (c != CircularRef.class)
+                fieldSchema = checkCircularRefSchema(fieldSchema);
               AvroDefault defaultAnnotation
                 = field.getAnnotation(AvroDefault.class);
               JsonNode defaultValue = (defaultAnnotation == null)
@@ -517,6 +539,58 @@ public class ReflectData extends SpecificData {
       return schema;
     }
     return super.createSchema(type, names);
+  }
+
+  /**
+   * If circular references are expected, this schema changes the given
+   * schema into a union schema, one of whose element-types is circular-ref.
+   * This helps to put circular-referenced-entity as an ID
+   */
+  private Schema checkCircularRefSchema(Schema fieldSchema) {
+    if (!isResolvingCircularRefs())
+      return fieldSchema;
+
+    // Make every record schema a union schema of record and circular-ref
+    List<Schema> unionTypes;
+    if (canBeRecordWithCircularRefs(fieldSchema)) {
+      unionTypes = new ArrayList<Schema> (2);
+      unionTypes.add(fieldSchema);
+      unionTypes.add(getSchema(CircularRef.class));
+      return Schema.createUnion(unionTypes);
+    }
+
+    // Add circular-ref option to every union schema having a record option.
+    boolean addCircularRefSchema = false;
+    if (fieldSchema.getType() == Schema.Type.UNION) {
+      for (Schema s : fieldSchema.getTypes()) {
+        if (s.getType() == Schema.Type.RECORD)
+          if (s.getFullName().equals(CircularRef.class.getName()))
+          return fieldSchema; // Already present, no need to add again.
+        if (canBeRecordWithCircularRefs(s))
+          addCircularRefSchema = true;
+      }
+    }
+
+    if (addCircularRefSchema) {
+      unionTypes = new ArrayList<Schema> (fieldSchema.getTypes());
+      unionTypes.add(getSchema(CircularRef.class));
+      return Schema.createUnion(unionTypes);
+    }
+
+    // Neither record, nor union with record, return original schema
+    return fieldSchema;
+  }
+  
+  private boolean canBeRecordWithCircularRefs (Schema s) {
+    if (s.getType() == Schema.Type.RECORD && !s.isError()) {
+      // Skip java built-in classes.
+      // This prevents tempering with UUID and Date classes 
+      if (s.getNamespace() != null && s.getNamespace().startsWith("java."))
+        return false;
+      // for normal records, return true
+      return true;
+    }
+    return false;
   }
 
   @Override protected boolean isStringable(Class<?> c) {

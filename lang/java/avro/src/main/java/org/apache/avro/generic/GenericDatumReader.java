@@ -170,7 +170,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representations.*/
   protected Object readRecord(Object old, Schema expected, 
       ResolvingDecoder in) throws IOException {
-    Object r = data.newRecord(old, expected);
+    Object r = newRecord(old, expected);
     Object state = data.getRecordState(r, expected);
     
     for (Field f : in.readFieldOrder()) {
@@ -311,12 +311,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * different record implementation. The returned instance must conform to the
    * schema provided. If the old object contains fields not present in the
    * schema, they should either be removed from the old object, or it should
-   * create a new instance that conforms to the schema. By default, this returns
-   * a {@link GenericData.Record}.
-   * @deprecated As of Avro 1.6.0 this method has been moved to 
-   * {@link GenericData#newRecord(Object, Schema)}
+   * create a new instance that conforms to the schema. By default calls
+   * getData().newRecord().
    */
-  @Deprecated
   protected Object newRecord(Object old, Schema schema) {
     return data.newRecord(old, schema);
   }
