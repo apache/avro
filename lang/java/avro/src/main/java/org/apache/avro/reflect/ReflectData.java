@@ -846,7 +846,7 @@ public class ReflectData extends SpecificData {
   }
 
   @Override
-  public Object getRecordState(Object record, Schema schema) {
+  protected Object getRecordState(Object record, Schema schema) {
     return getFieldAccessors(record.getClass(), schema);
   }
   

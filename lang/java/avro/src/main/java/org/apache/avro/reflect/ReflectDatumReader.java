@@ -138,8 +138,8 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         }
         return array;
       } else {
-        throw new AvroRuntimeException("Type of " + array +
-          " does not match schema " + expected);
+        String msg = "Expected a schema of map with non-string keys but got " + expected;
+        throw new AvroRuntimeException(msg);
       }
     } else {
       return readJavaArray(array, expectedType, l, in);
