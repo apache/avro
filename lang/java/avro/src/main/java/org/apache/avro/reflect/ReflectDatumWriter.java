@@ -172,6 +172,10 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
         }  
       }
     }
+    if (ReflectData.isFieldSchemaCustomMapOrCollection(f.schema())) {
+      write (f.schema().getFields().get(0).schema(), record, out);
+      return;
+    }
     super.writeField(record, f, out, state);
   }
 }

@@ -46,7 +46,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.util.ClassUtils;
 import org.apache.avro.io.DatumReader;
@@ -131,44 +130,12 @@ public class ReflectData extends SpecificData {
       return;
     }
     try {
-      if (canSetCustomMapOrCollection(record, o))
-        return;
-      FieldAccessor accessor = getAccessorForField(record, name, pos, state);
-      accessor.set(record, o);
+      getAccessorForField(record, name, pos, state).set(record, o);
     } catch (IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
-  }
-
-  /**
-   * If the record is an instance of a class which extends a Map or a Collection,
-   * and the current field is an implicit map/collection field, then this
-   * implicit field cannot be set as a field in the record.
-   * We have to move all the values from the implicit field to the original
-   * instance extending map/collection
-   */
-  private boolean canSetCustomMapOrCollection(Object record, Object readField) {
-    if (!(readField instanceof GenericRecord))
-      return false;
-    GenericRecord rec = (GenericRecord)readField;
-
-    if (getBaseClassOfType(record.getClass(), Map.class) != null) {
-      Object mapField = rec.get(IMPLICIT_MAP_ACTUAL_FIELD);
-      if (isFieldSchemaCustomMap(rec.getSchema())) {
-        ((Map)record).putAll((Map)mapField);
-        return true;
-      }
-    }
-    else if (getBaseClassOfType(record.getClass(), Collection.class) != null) {
-      Object collectionField = rec.get(IMPLICIT_COLLECTION_ACTUAL_FIELD);
-      if (isFieldSchemaCustomCollection(rec.getSchema())) {
-        ((Collection)record).addAll((Collection)collectionField);
-        return true;
-      }
-    }
-    return false;
   }
 
   @Override
@@ -200,16 +167,8 @@ public class ReflectData extends SpecificData {
   protected boolean isRecord(Object datum) {
     if (datum == null) return false;
     if (super.isRecord(datum)) return true;
-    if (datum instanceof Collection) {
-      if (getBaseClassOfType(datum.getClass(), Collection.class) != null)
-        return true;
-      return false;
-    }
-    if (datum instanceof Map) {
-      if (getBaseClassOfType(datum.getClass(), Map.class) != null)
-        return true;
-      return false;
-    }
+    if (datum instanceof Collection) return false;
+    if (datum instanceof Map) return false;
     if (datum instanceof GenericFixed) return false;
     return getSchema(datum.getClass()).getType() == Schema.Type.RECORD;
   }
@@ -349,16 +308,6 @@ public class ReflectData extends SpecificData {
   private static final Map<String,Class> CLASS_CACHE =
                new ConcurrentHashMap<String, Class>();
 
-  // For a class extending map/collection, these are the names of the
-  // virtual-fields holding the map/collection 
-  public static final String IMPLICIT_MAP_VIRTUAL_FIELD = "_avro_implicit_map_";
-  public static final String IMPLICIT_COLLECTION_VIRTUAL_FIELD
-                                    = "_avro_implicit_collection_";
-  // For a class extending map/collection, these are the names of the fields
-  // inside the AvroMapContainer/AvroCollectionContainer
-  public static final String IMPLICIT_MAP_ACTUAL_FIELD = "map";
-  public static final String IMPLICIT_COLLECTION_ACTUAL_FIELD = "collection";
-
   static Class getClassProp(Schema schema, String prop) {
     String name = schema.getProp(prop);
     if (name == null) return null;
@@ -487,6 +436,8 @@ public class ReflectData extends SpecificData {
         return Schema.create(Schema.Type.STRING);
       if (ByteBuffer.class.isAssignableFrom(c))              // bytes
         return Schema.create(Schema.Type.BYTES);
+      if (Collection.class.isAssignableFrom(c))              // array
+        throw new AvroRuntimeException("Can't find element type of Collection");
       String fullName = c.getName();
       Schema schema = names.get(fullName);
       if (schema == null) {
@@ -556,7 +507,6 @@ public class ReflectData extends SpecificData {
           if (error)                              // add Throwable message
             fields.add(new Schema.Field("detailMessage", THROWABLE_MESSAGE,
                                         null, null));
-          addImplicitMapOrCollection(fields, c, names, space);
           schema.setFields(fields);
           AvroMeta meta = c.getAnnotation(AvroMeta.class);
           if (meta != null) 
@@ -567,173 +517,6 @@ public class ReflectData extends SpecificData {
       return schema;
     }
     return super.createSchema(type, names);
-  }
-
-  /**
-   * If the class itself is neither a Map nor a Collection, but
-   * extends a Map or a Collection, then it is implicitly holding a
-   * Map/Collection. For such a case, we need to add that implicit
-   * object as another field.
-   */
-  private void addImplicitMapOrCollection(
-      List<org.apache.avro.Schema.Field> fields,
-      Class<?> c,
-      Map<String, Schema> names,
-      String space) {
-
-    boolean isMap = false;
-    boolean isCollection = false;
-    Class<?> derivedClass = c;
-    Type superClass = c.getGenericSuperclass();
-
-    while (superClass != Object.class) {
-      // Base class should belong to java.* package
-      // While derived class should NOT belong to java.* package
-      // Only then the derived class is a custom implementation of an
-      // existing java class
-      Package pkg = derivedClass.getPackage();
-      if (pkg == null || pkg.getName().startsWith("java."))
-        break;
-      if (superClass instanceof ParameterizedType) {
-        ParameterizedType ptype = (ParameterizedType)superClass;
-        Class <?> rawClass = (Class<?>) ptype.getRawType();
-        if (Map.class.isAssignableFrom((Class<?>)rawClass)) {
-          isMap = true;
-          break;
-        }
-        else if (Collection.class.isAssignableFrom((Class<?>)rawClass)) {
-          isCollection = true;
-          break;
-        }
-        derivedClass = rawClass;
-      }
-      if (!(superClass instanceof Class))
-        break;
-      superClass = ((Class<?>)superClass).getGenericSuperclass();
-    }
-    if (isMap) {
-      Schema mapSchema = createSchema (superClass, names);
-      String mapName = null;
-      if (mapSchema.getType() == Schema.Type.ARRAY) {
-        mapName = mapSchema.getElementType().getName();
-      }
-      else {
-        mapName = mapSchema.getName();
-      }
-      String name = AvroMapContainer.class.getSimpleName();
-      String namespace = AvroMapContainer.class.getPackage().getName();
-      name = name + "For" + mapName;
-      Schema containerSchema = Schema.createRecord(name, null, namespace, false);
-      List<Schema.Field> containerFields =  new ArrayList<Schema.Field> ();
-      Schema.Field recordField = new Schema.Field(IMPLICIT_MAP_ACTUAL_FIELD,
-          mapSchema, null, null);
-      containerFields.add(recordField);
-      containerSchema.setFields(containerFields);
-      containerSchema.addProp(CLASS_PROP,
-          AvroMapContainer.class.getCanonicalName());
-      names.put(containerSchema.getFullName(), containerSchema);
-      fields.add(new Schema.Field(IMPLICIT_MAP_VIRTUAL_FIELD,
-          containerSchema, null, null));
-    }
-    else if (isCollection) {
-      Schema collectionSchema = createSchema (superClass, names);
-      String collectionName = null;
-      Schema elementSchema = collectionSchema.getElementType();
-      if (elementSchema.getType() == Schema.Type.UNION) {
-        List <Schema> nonAvroSchemas = getNonAvroSchemasFromUnion(elementSchema);
-        if (nonAvroSchemas.size() == 1) {
-          collectionName = nonAvroSchemas.get(0).getName();
-        } else {
-          throw new AvroRuntimeException(
-              "Unexpected schema for a custom-collection: " + elementSchema);
-        }
-      }
-      else {
-        collectionName = collectionSchema.getName();
-      }
-      String name = AvroCollectionContainer.class.getSimpleName();
-      String namespace = AvroCollectionContainer.class.getPackage().getName();
-      name = name + "For" + collectionName;
-      Schema containerSchema = Schema.createRecord(name, null, namespace, false);
-      List<Schema.Field> containerFields =  new ArrayList<Schema.Field> ();
-      Schema.Field recordField =
-          new Schema.Field(IMPLICIT_COLLECTION_ACTUAL_FIELD,
-                           collectionSchema, null, null);
-      containerFields.add(recordField);
-      containerSchema.setFields(containerFields);
-      containerSchema.addProp(CLASS_PROP,
-          AvroCollectionContainer.class.getCanonicalName());
-      names.put(containerSchema.getFullName(), containerSchema);
-      fields.add(new Schema.Field(IMPLICIT_COLLECTION_VIRTUAL_FIELD,
-          containerSchema, null, null));
-    }
-  }
-
-  private static List <Schema> getNonAvroSchemasFromUnion(Schema unionSchema) {
-    List <Schema> nonAvroSchemas = new ArrayList<Schema> ();
-    if (unionSchema.getType() != Schema.Type.UNION) {
-      nonAvroSchemas.add(unionSchema);
-    }
-    else {
-      for (Schema u: unionSchema.getTypes()) {
-        if (u.getType() == Schema.Type.NULL) {
-          continue;
-        }
-        nonAvroSchemas.add(u);
-      }
-    }
-    return nonAvroSchemas;
-  }
-
-  public static ParameterizedType getBaseClassOfType (
-      Class<?> c, Class<?> expectedBaseClass) {
-
-    Class<?> derivedClass = c;
-    Type superClass = c.getGenericSuperclass();
-
-    while (superClass != Object.class && superClass != null) {
-      // Base class should belong to java.* package
-      // While derived class should NOT belong to java.* package
-      // Only then the derived class is a custom implementation of
-      // an existing java class
-      Package pkg = derivedClass.getPackage();
-      if (pkg == null || pkg.getName().startsWith("java."))
-        break;
-      if (superClass instanceof ParameterizedType) {
-        ParameterizedType ptype = (ParameterizedType)superClass;
-        Class <?> rawClass = (Class<?>) ptype.getRawType();
-        if (expectedBaseClass.isAssignableFrom((Class<?>)rawClass)) {
-          return ptype;
-        }
-        derivedClass = rawClass;
-      }
-      if (!(superClass instanceof Class))
-        break;
-      superClass = ((Class<?>)superClass).getGenericSuperclass();
-    }
-    return null;
-  }
-
-  public static boolean isFieldSchemaCustomMap (Schema s) {
-    if (s.getType() == Schema.Type.RECORD) {
-      Class<?> c = ReflectData.getClassProp(s, ReflectData.CLASS_PROP);
-      if (c == AvroMapContainer.class)
-        return true;
-    }
-    return false;
-  }
-
-  public static boolean isFieldSchemaCustomCollection (Schema s) {
-    if (s.getType() == Schema.Type.RECORD) {
-      Class<?> c = ReflectData.getClassProp(s, ReflectData.CLASS_PROP);
-      if (c == AvroCollectionContainer.class)
-        return true;
-    }
-    return false;
-  }
-
-  public static boolean isFieldSchemaCustomMapOrCollection (Schema s) {
-    return isFieldSchemaCustomMap(s) || isFieldSchemaCustomCollection(s);
   }
 
   @Override protected boolean isStringable(Class<?> c) {
