@@ -131,4 +131,16 @@ class TestSchema < Test::Unit::TestCase
       ]
     }
   end
+
+  def test_unknown_named_type
+    error = assert_raise Avro::UnknownSchemaError do
+      Avro::Schema.parse <<-SCHEMA
+        {"type": "record", "name": "my.name.space.Record", "fields": [
+          {"name": "reference", "type": "MissingType"}
+        ]}
+      SCHEMA
+    end
+
+    assert_equal '"MissingType" is not a schema we know about.', error.message
+  end
 end
