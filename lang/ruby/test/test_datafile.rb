@@ -185,4 +185,17 @@ JSON
     end
     assert_equal records, ['a' * 10_000, 'b' * 10_000]
   end
+
+  def test_custom_meta
+    meta = { 'x.greeting' => 'yo' }
+
+    schema = Avro::Schema.parse('"string"')
+    writer = Avro::IO::DatumWriter.new(schema)
+    file = Avro::DataFile::Writer.new(File.open('data.avr', 'wb'), writer, schema, nil, meta)
+    file.close
+
+    Avro::DataFile.open('data.avr') do |reader|
+      assert_equal 'yo', reader.meta['x.greeting']
+    end
+  end
 end
