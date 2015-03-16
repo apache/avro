@@ -121,7 +121,7 @@ public class TestCircularReference {
         "MapCircularReferenceTest", entityObj1, entityObj2);
     assertEquals ("Unable to read all records", 2, records.size());
     SchoolSearchAgent record = (SchoolSearchAgent)records.get(0);
-	Object schoolsPerZipcode = record.getSchoolsPerZipcode();
+    Object schoolsPerZipcode = record.getSchoolsPerZipcode();
     assertNotNull ("Unable to read HashMap <String, List<School>>", schoolsPerZipcode);
     assertTrue (schoolsPerZipcode instanceof HashMap);
     HashMap <String, List<School>> m = (HashMap <String, List<School>>)schoolsPerZipcode;
@@ -152,6 +152,17 @@ public class TestCircularReference {
     assertEquals ("Unable to restore circular reference", s, school);
     Object childInParent = parent.getChild();
     assertEquals ("Unable to restore circular reference", child, childInParent);
+
+    County county = s.getCounty();
+    assertNotNull ("Unable to read county", county);
+    HashMap<School, List<Child>> students = county.getStudents();
+    assertNotNull ("Unable to read students", students);
+
+    School s2 = students.entrySet().iterator().next().getKey();
+    List<Child> childStudents = students.entrySet().iterator().next().getValue();
+    assertEquals ("Unable to restore circular reference", s, s2);
+    assertEquals ("Unable to restore circular reference", s.getChildren(), childStudents);
+    log ("Read " + childStudents.size() + " students for school " + s2 + " in the county");
   }
 
   @Test
@@ -226,33 +237,6 @@ public class TestCircularReference {
     return records;
   }
 
-  public <T> List<T> testReflectData (String testType, T ... entityObjs)
-      throws Exception {
-
-    log ("---- Beginning " + testType + " (ReflectData) ----");
-    T entityObj1 = entityObjs[0];
-
-    Schema schema = rdata.getSchema(entityObj1.getClass());
-    assertNotNull("Unable to get schema for circular reference in " + testType, schema);
-
-    ReflectDatumWriter<T> datumWriter =
-        new ReflectDatumWriter (entityObj1.getClass(), rdata);
-    DataFileWriter<T> fileWriter = new DataFileWriter<T> (datumWriter);
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    fileWriter.create(schema, baos);
-    for (T entityObj : entityObjs) {
-      fileWriter.append(entityObj);
-    }
-    fileWriter.close();
-
-    byte[] bytes = baos.toByteArray();
-    assertTrue ("Unable to serialize circular references in " + testType,
-        bytes.length > 0);
-
-    List<T> records = testReflectDataDeserialization(testType, bytes, entityObjs);
-    return records;
-  }
-  
   /**
    * Test that it is possible to deserialize an Avro output which originally had
    * circular references. Nothing special is required to deserialize since
@@ -290,34 +274,6 @@ public class TestCircularReference {
         entityObjs.length, i);
   }
 
-  private <T> List<T> testReflectDataDeserialization
-  (String testType, byte[] bytes, T ... entityObjs) throws IOException {
-    String avroString = new String (bytes);
-    log (testType + "(ReflectDataReader): " + avroString);
-
-    ReflectDatumReader<T> datumReader = new ReflectDatumReader<T> ();
-    SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
-    DataFileReader<T> fileReader =
-        new DataFileReader<T>(avroInputStream, datumReader);
-
-    Schema schema = fileReader.getSchema();
-    assertNotNull("Unable to get schema for circular reference in " + testType, schema);
-    log ("--- Read schema successfully ----");
-    List<T> records = new ArrayList<T> ();
-    T record = null;
-    int i=0;
-    while (fileReader.hasNext()) {
-      i++;
-      record = fileReader.next(record);
-      assertNotNull("Unable to read records for circular reference in " + testType, record);
-      log ("Avro record " + i + ") " + record.toString());
-      records.add(record);
-    }
-    assertEquals ("Unable to read same number of records as serialized",
-        entityObjs.length, i);
-    return records;
-  }
-  
   /**
    * This function tests that it is possible to generate the original circular reference
    * by using <i>ReflectData.setResolvingCircularRefs (true)</i><BR>
@@ -418,6 +374,11 @@ public class TestCircularReference {
       school.children.get(1).setSchool(null);
       school.children.get(1).setParent(null);
     }
+
+    County county = new County();
+    school.setCounty(county);
+    county.setStudents(new HashMap<School, List<Child>>());
+    county.getStudents().put(school, school.getChildren());
     return school;
   }
 
@@ -577,6 +538,7 @@ public class TestCircularReference {
     List<Child> children;
     Integer zipCode = 94086;
     SchoolSearchAgent agent;
+    County county;
 
     public String getName() {
       return name;
@@ -601,6 +563,12 @@ public class TestCircularReference {
     }
     public void setAgent(SchoolSearchAgent agent) {
       this.agent = agent;
+    }
+    public County getCounty() {
+      return county;
+    }
+    public void setCounty(County county) {
+      this.county = county;
     }
     @Override
     public String toString() {
@@ -640,6 +608,16 @@ public class TestCircularReference {
           + ", schoolsPerZipcode=" + (schoolsPerZipcode==null?"null":schoolsPerZipcode.size()) + "]";
     }
   };
+
+  private static class County { // Tests non-string map-keys with circular references
+    HashMap <School, List<Child>> students;
+    public HashMap<School, List<Child>> getStudents() {
+      return students;
+    }
+    public void setStudents(HashMap<School, List<Child>> students) {
+      this.students = students;
+    }
+  }
 
   private static class CircularList {
     String nodeData;
