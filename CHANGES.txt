@@ -40,6 +40,8 @@ Trunk (not yet released)
     Support for running a Docker container with all build dependencies.
     (tomwhite)
 
+    AVRO-680. Java: Support non-string map keys. (Sachin Goyal via Ryan Blue).
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
