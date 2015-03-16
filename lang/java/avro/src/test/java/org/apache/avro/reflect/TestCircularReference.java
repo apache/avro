@@ -463,205 +463,204 @@ public class TestCircularReference {
   private void log (String msg) {
     System.out.println (msg);
   }
-}
 
-class SimpleParent {
+  private static class SimpleParent {
   
-  String parentName = "John Sr";
-  SimpleChild child;
+    String parentName = "John Sr";
+    SimpleChild child;
   
-  public String getParentName() {
-    return parentName;
-  }
-  public void setParentName(String parentName) {
-    this.parentName = parentName;
-  }
-  public SimpleChild getChild() {
-    return child;
-  }
-  public void setChild(SimpleChild child) {
-    this.child = child;
-  }
-  @Override
-  public String toString() {
-    return "SimpleParent [parentName=" + parentName + 
-        ", child=" + (child==null?"null":child.childName) + "]";
-  }
-};
+    public String getParentName() {
+      return parentName;
+    }
+    public void setParentName(String parentName) {
+      this.parentName = parentName;
+    }
+    public SimpleChild getChild() {
+      return child;
+    }
+    public void setChild(SimpleChild child) {
+      this.child = child;
+    }
+    @Override
+    public String toString() {
+      return "SimpleParent [parentName=" + parentName + 
+          ", child=" + (child==null?"null":child.childName) + "]";
+    }
+  };
 
-class SimpleChild {
+  private static class SimpleChild {
   
-  String childName = "John Jr";
-  SimpleParent parent;
+    String childName = "John Jr";
+    SimpleParent parent;
   
-  public String getChildName() {
-    return childName;
-  }
-  public void setChildName(String childName) {
-    this.childName = childName;
-  }
-  public SimpleParent getParent() {
-    return parent;
-  }
-  public void setParent(SimpleParent parent) {
-    this.parent = parent;
-  }
-  @Override
-  public String toString() {
-    return "SimpleChild [childName=" + childName +
-        ", parent=" + (parent==null?"null":parent.parentName) + "]";
-  }
-};
+    public String getChildName() {
+      return childName;
+    }
+    public void setChildName(String childName) {
+      this.childName = childName;
+    }
+    public SimpleParent getParent() {
+      return parent;
+    }
+    public void setParent(SimpleParent parent) {
+      this.parent = parent;
+    }
+    @Override
+    public String toString() {
+      return "SimpleChild [childName=" + childName +
+          ", parent=" + (parent==null?"null":parent.parentName) + "]";
+    }
+  };
 
-class Parent {
+  private static class Parent {
 
-  String name = "John Sr";
-  Child child;
+    String name = "John Sr";
+    Child child;
 
-  public Child getChild() {
-    return child;
-  }
-  public void setChild(Child child) {
-    this.child = child;
-  }
-  public String getName() {
-    return name;
-  }
-  public void setName(String name) {
-    this.name = name;
-  }
-  @Override
-  public String toString() {
-    return "Parent [name=" + name + ", child=" + (child==null?"null":child.name) + "]";
-  }
-};
+    public Child getChild() {
+      return child;
+    }
+    public void setChild(Child child) {
+      this.child = child;
+    }
+    public String getName() {
+      return name;
+    }
+    public void setName(String name) {
+      this.name = name;
+    }
+    @Override
+    public String toString() {
+      return "Parent [name=" + name + ", child=" + (child==null?"null":child.name) + "]";
+    }
+  };
 
-class Child {
+  private static class Child {
 
-  String name = "John Jr";
-  Parent parent;
-  School school;
+    String name = "John Jr";
+    Parent parent;
+    School school;
 
-  public Child() {}
-  public Child(Parent parent) {
-    this.parent = parent;
-  }
-  public Parent getParent() {
-    return parent;
-  }
-  public void setParent(Parent parent) {
-    this.parent = parent;
-  }
-  public String getName() {
-    return name;
-  }
-  public void setName(String name) {
-    this.name = name;
-  }
-  public School getSchool() {
-    return school;
-  }
-  public void setSchool(School school) {
-    this.school = school;
-  }
-  @Override
-  public String toString() {
-    return "Child [name=" + name + 
-        ", parent=" + (parent==null?"null":parent.name) +
-        ", school=" + (school==null?"null":school.name) +
-        "]";
-  }
-};
+    public Child() {}
+    public Child(Parent parent) {
+      this.parent = parent;
+    }
+    public Parent getParent() {
+      return parent;
+    }
+    public void setParent(Parent parent) {
+      this.parent = parent;
+    }
+    public String getName() {
+      return name;
+    }
+    public void setName(String name) {
+      this.name = name;
+    }
+    public School getSchool() {
+      return school;
+    }
+    public void setSchool(School school) {
+      this.school = school;
+    }
+    @Override
+    public String toString() {
+      return "Child [name=" + name + 
+          ", parent=" + (parent==null?"null":parent.name) +
+          ", school=" + (school==null?"null":school.name) +
+          "]";
+    }
+  };
 
-class School {
-  String name = "Hogwarts School";
-  List<Child> children;
-  Integer zipCode = 94086;
-  SchoolSearchAgent agent;
+  private static class School {
+    String name = "Hogwarts School";
+    List<Child> children;
+    Integer zipCode = 94086;
+    SchoolSearchAgent agent;
 
-  public String getName() {
-    return name;
+    public String getName() {
+      return name;
+    }
+    public void setName(String name) {
+      this.name = name;
+    }
+    public List<Child> getChildren() {
+      return children;
+    }
+    public void setChildren(List<Child> children) {
+      this.children = children;
+    }
+    public Integer getZipCode() {
+      return zipCode;
+    }
+    public void setZipCode(Integer zipCode) {
+      this.zipCode = zipCode;
+    }
+    public SchoolSearchAgent getAgent() {
+      return agent;
+    }
+    public void setAgent(SchoolSearchAgent agent) {
+      this.agent = agent;
+    }
+    @Override
+    public String toString() {
+      return "School [name=" + name +
+          ", children=" + (children==null?"null":children.size()) +
+          ", zipCode=" + zipCode +
+          ", agent=" + (agent==null?"null":agent.agentName) + "]";
+    }
   }
-  public void setName(String name) {
-    this.name = name;
-  }
-  public List<Child> getChildren() {
-    return children;
-  }
-  public void setChildren(List<Child> children) {
-    this.children = children;
-  }
-  public Integer getZipCode() {
-    return zipCode;
-  }
-  public void setZipCode(Integer zipCode) {
-    this.zipCode = zipCode;
-  }
-  public SchoolSearchAgent getAgent() {
-    return agent;
-  }
-  public void setAgent(SchoolSearchAgent agent) {
-    this.agent = agent;
-  }
-  @Override
-  public String toString() {
-    return "School [name=" + name +
-        ", children=" + (children==null?"null":children.size()) +
-        ", zipCode=" + zipCode +
-        ", agent=" + (agent==null?"null":agent.agentName) + "]";
-  }
-  
-}
 
-class SchoolSearchAgent {
-  Integer agentId = 101;
-  String agentName = "Agent Foo";
-  HashMap <String, List<School>> schoolsPerZipcode;
+  private static class SchoolSearchAgent {
+    Integer agentId = 101;
+    String agentName = "Agent Foo";
+    HashMap <String, List<School>> schoolsPerZipcode;
 
-  public Integer getAgentId() {
-    return agentId;
-  }
-  public void setAgentId(Integer agentId) {
-    this.agentId = agentId;
-  }
-  public String getAgentName() {
-    return agentName;
-  }
-  public void setAgentName(String agentName) {
-    this.agentName = agentName;
-  }
-  public HashMap<String, List<School>> getSchoolsPerZipcode() {
-    return schoolsPerZipcode;
-  }
-  public void setSchoolsPerZipcode(HashMap<String, List<School>> schoolsPerZipcode) {
-    this.schoolsPerZipcode = schoolsPerZipcode;
-  }
-  @Override
-  public String toString() {
-    return "SchoolSearchAgent [agentId=" + agentId + ", agentName=" + agentName
-        + ", schoolsPerZipcode=" + (schoolsPerZipcode==null?"null":schoolsPerZipcode.size()) + "]";
-  }
-};
+    public Integer getAgentId() {
+      return agentId;
+    }
+    public void setAgentId(Integer agentId) {
+      this.agentId = agentId;
+    }
+    public String getAgentName() {
+      return agentName;
+    }
+    public void setAgentName(String agentName) {
+      this.agentName = agentName;
+    }
+    public HashMap<String, List<School>> getSchoolsPerZipcode() {
+      return schoolsPerZipcode;
+    }
+    public void setSchoolsPerZipcode(HashMap<String, List<School>> schoolsPerZipcode) {
+      this.schoolsPerZipcode = schoolsPerZipcode;
+    }
+    @Override
+    public String toString() {
+      return "SchoolSearchAgent [agentId=" + agentId + ", agentName=" + agentName
+          + ", schoolsPerZipcode=" + (schoolsPerZipcode==null?"null":schoolsPerZipcode.size()) + "]";
+    }
+  };
 
-class CircularList {
-  String nodeData;
-  CircularList next;
+  private static class CircularList {
+    String nodeData;
+    CircularList next;
 
-  public String getNodeData () {
-    return nodeData;
-  }
-  public void setNodeData (String nodeData) {
-    this.nodeData = nodeData;
-  }
-  public CircularList getNext() {
-    return next;
-  }
-  public void setNext (CircularList next) {
-    this.next = next;
-  }
-  @Override
-  public String toString() {
-    return "CircularList [nodeData=" + nodeData +
-        ", next=" + (next==null?"null":next.nodeData) + "]";
+    public String getNodeData () {
+      return nodeData;
+    }
+    public void setNodeData (String nodeData) {
+      this.nodeData = nodeData;
+    }
+    public CircularList getNext() {
+      return next;
+    }
+    public void setNext (CircularList next) {
+      this.next = next;
+    }
+    @Override
+    public String toString() {
+      return "CircularList [nodeData=" + nodeData +
+          ", next=" + (next==null?"null":next.nodeData) + "]";
+    }
   }
 }
