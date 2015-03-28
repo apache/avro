@@ -27,6 +27,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumReader;
@@ -147,6 +149,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read data.*/
   protected Object read(Object old, Schema expected,
       ResolvingDecoder in) throws IOException {
+    LogicalType logicalType = LogicalType.fromSchema(expected);
+    Conversion<?> conversion = getData().getConversionFor(logicalType);
+    Object datum = readWithoutConversion(old, expected, in);
+    if (conversion != null) {
+      return convert(datum, expected, logicalType, conversion);
+    }
+    return datum;
+  }
+
+  protected Object readWithoutConversion(Object old, Schema expected,
+      ResolvingDecoder in) throws IOException {
     switch (expected.getType()) {
     case RECORD:  return readRecord(old, expected, in);
     case ENUM:    return readEnum(expected, in);
@@ -165,7 +178,35 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     default: throw new AvroRuntimeException("Unknown type: " + expected);
     }
   }
-  
+
+  protected Object convert(Object datum, Schema schema, LogicalType type,
+                           Conversion<?> conversion) {
+    if (conversion == null) {
+      return datum;
+    }
+
+    try {
+      switch (schema.getType()) {
+      case RECORD:  return conversion.fromRecord((IndexedRecord) datum, schema, type);
+      case ENUM:    return conversion.fromEnumSymbol((GenericEnumSymbol) datum, schema, type);
+      case ARRAY:   return conversion.fromArray(getData().getArrayAsCollection(datum), schema, type);
+      case MAP:     return conversion.fromMap((Map<?, ?>) datum, schema, type);
+      case FIXED:   return conversion.fromFixed((GenericFixed) datum, schema, type);
+      case STRING:  return conversion.fromCharSequence((CharSequence) datum, schema, type);
+      case BYTES:   return conversion.fromBytes((ByteBuffer) datum, schema, type);
+      case INT:     return conversion.fromInt((Integer) datum, schema, type);
+      case LONG:    return conversion.fromLong((Long) datum, schema, type);
+      case FLOAT:   return conversion.fromFloat((Float) datum, schema, type);
+      case DOUBLE:  return conversion.fromDouble((Double) datum, schema, type);
+      case BOOLEAN: return conversion.fromBoolean((Boolean) datum, schema, type);
+      }
+      return datum;
+    } catch (ClassCastException e) {
+      throw new AvroRuntimeException("Cannot convert " + datum + ":" +
+          datum.getClass().getSimpleName() + ": expected generic type", e);
+    }
+  }
+
   /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
   protected Object readRecord(Object old, Schema expected, 

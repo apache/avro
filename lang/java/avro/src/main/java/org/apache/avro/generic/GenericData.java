@@ -32,6 +32,8 @@ import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -59,7 +61,7 @@ public class GenericData {
   /** Used to specify the Java type for a string schema. */
   public enum StringType { CharSequence, String, Utf8 };
 
-  protected static final String STRING_PROP = "avro.java.string";
+  public static final String STRING_PROP = "avro.java.string";
   protected static final String STRING_TYPE_STRING = "String";
 
   private final ClassLoader classLoader;
@@ -90,6 +92,45 @@ public class GenericData {
 
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() { return classLoader; }
+
+  public HashMap<String, Conversion<?>> conversions =
+      new HashMap<String, Conversion<?>>();
+
+  public void addLogicalTypeConversion(Conversion<?> conversion) {
+    conversions.put(conversion.getLogicalTypeName(), conversion);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> Conversion<? super T> getConversionFrom(
+      Class<T> datumClass, LogicalType logicalType) {
+    if (logicalType != null) {
+      Conversion<?> conversion = getConversionFor(logicalType);
+      if (conversion.getConvertedType().isAssignableFrom(datumClass)) {
+        return (Conversion<? super T>) conversion;
+      }
+    }
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> Conversion<? extends T> getConversionTo(
+      Class<T> datumClass, LogicalType logicalType) {
+    if (logicalType != null) {
+      Conversion<?> conversion = getConversionFor(logicalType);
+      if (datumClass.isAssignableFrom(conversion.getConvertedType())) {
+        return (Conversion<? extends T>) conversion;
+      }
+    }
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+    if (logicalType != null) {
+      return (Conversion<Object>) conversions.get(logicalType.getName());
+    }
+    return null;
+  }
 
   /** Default implementation of {@link GenericRecord}. Note that this implementation
    * does not fill in default values for fields if they are not specified; use {@link
