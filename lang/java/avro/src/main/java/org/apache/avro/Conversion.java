@@ -15,6 +15,8 @@ public abstract class Conversion<T> {
 
   public abstract Class<T> getConvertedType();
 
+  public abstract Schema getReflectSchema();
+
   public abstract String getLogicalTypeName();
 
   public T fromBoolean(Boolean value, Schema schema, LogicalType type) {
@@ -144,6 +146,11 @@ public abstract class Conversion<T> {
     }
 
     @Override
+    public Schema getReflectSchema() {
+      return LogicalType.uuid().addToSchema(Schema.create(Schema.Type.STRING));
+    }
+
+    @Override
     public String getLogicalTypeName() {
       return "uuid";
     }
@@ -163,6 +170,12 @@ public abstract class Conversion<T> {
     @Override
     public Class<BigDecimal> getConvertedType() {
       return BigDecimal.class;
+    }
+
+    @Override
+    public Schema getReflectSchema() {
+      throw new UnsupportedOperationException(
+          "No recommended schema for decimal (scale is required)");
     }
 
     @Override
@@ -220,28 +233,6 @@ public abstract class Conversion<T> {
       }
 
       return new GenericData.Fixed(schema, bytes);
-    }
-  }
-
-  public static class StringConversion extends Conversion<String> {
-    @Override
-    public Class<String> getConvertedType() {
-      return String.class;
-    }
-
-    @Override
-    public String getLogicalTypeName() {
-      return "string";
-    }
-
-    @Override
-    public CharSequence toCharSequence(String value, Schema schema, LogicalType type) {
-      return value;
-    }
-
-    @Override
-    public String fromCharSequence(CharSequence value, Schema schema, LogicalType type) {
-      return value.toString();
     }
   }
 
