@@ -7,13 +7,46 @@ import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 
+/**
+ * Conversion between generic and logical type instances.
+ * <p>
+ * Instances of this class are added to GenericData to convert a logical type
+ * to a particular representation.
+ * <p>
+ * Implementations must provide:
+ * * {@link #getConvertedType()}: get the Java class used for the logical type
+ * * {@link #getLogicalTypeName()}: get the logical type this implements
+ * <p>
+ * Subclasses must also override all of the conversion methods for Avro's base
+ * types that are valid for the logical type, or else risk causing
+ * {@code UnsupportedOperationException} at runtime.
+ * <p>
+ * Optionally, use {@link #getRecommendedSchema()} to provide a Schema that
+ * will be used when a Schema is generated for the class returned by
+ * {@code getConvertedType}.
+ *
+ * @param <T> a Java type that generic data is converted to
+ */
 public abstract class Conversion<T> {
 
+  /**
+   * Return the Java class representing the logical type.
+   *
+   * @return a Java class returned by from methods and accepted by to methods
+   */
   public abstract Class<T> getConvertedType();
 
-  public abstract Schema getRecommendedSchema();
-
+  /**
+   * Return the logical type this class converts.
+   *
+   * @return a String logical type name
+   */
   public abstract String getLogicalTypeName();
+
+  public Schema getRecommendedSchema() {
+    throw new UnsupportedOperationException(
+        "No recommended schema for " + getLogicalTypeName());
+  }
 
   public T fromBoolean(Boolean value, Schema schema, LogicalType type) {
     throw new UnsupportedOperationException(
