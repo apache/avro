@@ -42,7 +42,6 @@ import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
-import org.apache.avro.LogicalType;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
@@ -382,8 +381,7 @@ public class ReflectData extends SpecificData {
   @Override
   public Class getClass(Schema schema) {
     // see if the element class will be converted and use that class
-    LogicalType logicalType = LogicalType.fromSchema(schema);
-    Conversion<?> conversion = getConversionFor(logicalType);
+    Conversion<?> conversion = getConversionFor(schema);
     if (conversion != null) {
       return conversion.getConvertedType();
     }
@@ -563,7 +561,7 @@ public class ReflectData extends SpecificData {
         throw new AvroRuntimeException("Can't find element type of Collection");
       for (Conversion<?> conversion : conversions.values()) {  // logical type
         if (conversion.getConvertedType().isAssignableFrom(c)) {
-          return conversion.getReflectSchema();
+          return conversion.getRecommendedSchema();
         }
       }
       String fullName = c.getName();

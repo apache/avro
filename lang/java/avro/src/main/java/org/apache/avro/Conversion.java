@@ -15,7 +15,7 @@ public abstract class Conversion<T> {
 
   public abstract Class<T> getConvertedType();
 
-  public abstract Schema getReflectSchema();
+  public abstract Schema getRecommendedSchema();
 
   public abstract String getLogicalTypeName();
 
@@ -146,7 +146,7 @@ public abstract class Conversion<T> {
     }
 
     @Override
-    public Schema getReflectSchema() {
+    public Schema getRecommendedSchema() {
       return LogicalType.uuid().addToSchema(Schema.create(Schema.Type.STRING));
     }
 
@@ -173,7 +173,7 @@ public abstract class Conversion<T> {
     }
 
     @Override
-    public Schema getReflectSchema() {
+    public Schema getRecommendedSchema() {
       throw new UnsupportedOperationException(
           "No recommended schema for decimal (scale is required)");
     }

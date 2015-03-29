@@ -101,10 +101,10 @@ public class GenericData {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> Conversion<? super T> getConversionFrom(
-      Class<T> datumClass, LogicalType logicalType) {
-    if (logicalType != null) {
-      Conversion<?> conversion = getConversionFor(logicalType);
+  public <T> Conversion<? super T> getConversionFrom(Class<T> datumClass,
+                                                     Schema schema) {
+    Conversion<?> conversion = getConversionFor(schema);
+    if (conversion != null) {
       if (conversion.getConvertedType().isAssignableFrom(datumClass)) {
         return (Conversion<? super T>) conversion;
       }
@@ -113,10 +113,10 @@ public class GenericData {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> Conversion<? extends T> getConversionTo(
-      Class<T> datumClass, LogicalType logicalType) {
-    if (logicalType != null) {
-      Conversion<?> conversion = getConversionFor(logicalType);
+  public <T> Conversion<? extends T> getConversionTo(Class<T> datumClass,
+                                                     Schema schema) {
+    Conversion<?> conversion = getConversionFor(schema);
+    if (conversion != null) {
       if (datumClass.isAssignableFrom(conversion.getConvertedType())) {
         return (Conversion<? extends T>) conversion;
       }
@@ -125,9 +125,10 @@ public class GenericData {
   }
 
   @SuppressWarnings("unchecked")
-  public Conversion<Object> getConversionFor(LogicalType logicalType) {
-    if (logicalType != null) {
-      return (Conversion<Object>) conversions.get(logicalType.getName());
+  public Conversion<Object> getConversionFor(Schema schema) {
+    String logicalTypeName = schema.getProp(LogicalType.LOGICAL_TYPE_PROP);
+    if (logicalTypeName != null) {
+      return (Conversion<Object>) conversions.get(logicalTypeName);
     }
     return null;
   }
@@ -650,6 +651,16 @@ public class GenericData {
   /** Return the index for a datum within a union.  Implemented with {@link
    * Schema#getIndexNamed(String)} and {@link #getSchemaName(Object)}.*/
   public int resolveUnion(Schema union, Object datum) {
+    // if there is a logical type that works, use it first
+    // this allows logical type concrete classes to overlap with supported ones
+    // for example, a conversion could return a map
+    List<Schema> candidates = union.getTypes();
+    for (int i = 0; i < candidates.size(); i += 1) {
+      if (getConversionFrom(datum.getClass(), candidates.get(i)) != null) {
+        return i;
+      }
+    }
+
     Integer i = union.getIndexNamed(getSchemaName(datum));
     if (i != null)
       return i;

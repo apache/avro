@@ -149,10 +149,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read data.*/
   protected Object read(Object old, Schema expected,
       ResolvingDecoder in) throws IOException {
-    LogicalType logicalType = LogicalType.fromSchema(expected);
-    Conversion<?> conversion = getData().getConversionFor(logicalType);
+    Conversion<?> conversion = getData().getConversionFor(expected);
     Object datum = readWithoutConversion(old, expected, in);
     if (conversion != null) {
+      LogicalType logicalType = LogicalType.fromSchema(expected);
       return convert(datum, expected, logicalType, conversion);
     }
     return datum;

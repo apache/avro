@@ -80,8 +80,8 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     if (elementClass == null) {
       // see if the element class will be converted and use that class
       // logical types cannot conflict with java-element-class
-      LogicalType logicalType = LogicalType.fromSchema(schema.getElementType());
-      Conversion<?> elementConversion = getData().getConversionFor(logicalType);
+      Conversion<?> elementConversion = getData()
+          .getConversionFor(schema.getElementType());
       if (elementConversion != null) {
         elementClass = elementConversion.getConvertedType();
       }
@@ -257,18 +257,21 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
             throw new AvroRuntimeException("Failed to read Stringable", e);
           } 
         }
-        LogicalType type = LogicalType.fromSchema(f.schema());
         Conversion<?> conversion = getData().getConversionTo(
-            accessor.getField().getType(), type);
-        if (conversion != null) {
-          try {
-            accessor.set(record, convert(
-                readWithoutConversion(oldDatum, f.schema(), in),
-                f.schema(), type, conversion));
-            return;
-          } catch (IllegalAccessException e) {
-            throw new AvroRuntimeException("Failed to set " + f);
+            accessor.getField().getType(), f.schema());
+        try {
+          if (conversion != null) {
+            LogicalType logicalType = LogicalType.fromSchema(f.schema());
+              accessor.set(record, convert(
+                  readWithoutConversion(oldDatum, f.schema(), in),
+                  f.schema(), logicalType, conversion));
+          } else {
+            accessor.set(record,
+                readWithoutConversion(oldDatum, f.schema(), in));
           }
+          return;
+        } catch (IllegalAccessException e) {
+          throw new AvroRuntimeException("Failed to set " + f);
         }
       }
     }
