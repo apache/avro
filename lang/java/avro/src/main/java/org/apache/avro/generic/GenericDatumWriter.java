@@ -27,6 +27,7 @@ import java.util.Collection;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumWriter;
@@ -70,7 +71,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   private <T> Object convert(Schema schema, Conversion<T> conversion, Object datum) {
     if (conversion != null) {
-      LogicalType logicalType = LogicalType.fromSchema(schema);
+      LogicalType logicalType = LogicalTypes.fromSchema(schema);
       Class<T> fromClass = conversion.getConvertedType();
       switch (schema.getType()) {
       case RECORD:  return conversion.toRecord(fromClass.cast(datum), schema, logicalType);

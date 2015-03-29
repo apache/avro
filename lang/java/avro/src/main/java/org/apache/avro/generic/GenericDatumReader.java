@@ -29,6 +29,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumReader;
@@ -152,7 +153,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     Conversion<?> conversion = getData().getConversionFor(expected);
     Object datum = readWithoutConversion(old, expected, in);
     if (conversion != null) {
-      LogicalType logicalType = LogicalType.fromSchema(expected);
+      LogicalType logicalType = LogicalTypes.fromSchema(expected);
       return convert(datum, expected, logicalType, conversion);
     }
     return datum;

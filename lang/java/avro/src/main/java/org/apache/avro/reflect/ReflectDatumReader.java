@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.IndexedRecord;
@@ -261,7 +262,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
             accessor.getField().getType(), f.schema());
         try {
           if (conversion != null) {
-            LogicalType logicalType = LogicalType.fromSchema(f.schema());
+            LogicalType logicalType = LogicalTypes.fromSchema(f.schema());
               accessor.set(record, convert(
                   readWithoutConversion(oldDatum, f.schema(), in),
                   f.schema(), logicalType, conversion));

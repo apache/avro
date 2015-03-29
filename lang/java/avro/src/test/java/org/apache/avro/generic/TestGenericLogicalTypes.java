@@ -9,7 +9,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -31,14 +33,14 @@ public class TestGenericLogicalTypes {
 
   @BeforeClass
   public static void addDecimalAndUUID() {
-    GENERIC.addLogicalTypeConversion(new Conversion.DecimalConversion());
-    GENERIC.addLogicalTypeConversion(new Conversion.UUIDConversion());
+    GENERIC.addLogicalTypeConversion(new Conversions.DecimalConversion());
+    GENERIC.addLogicalTypeConversion(new Conversions.UUIDConversion());
   }
 
   @Test
   public void testReadUUID() throws IOException {
     Schema uuidSchema = Schema.create(Schema.Type.STRING);
-    LogicalType.uuid().addToSchema(uuidSchema);
+    LogicalTypes.uuid().addToSchema(uuidSchema);
 
     UUID u1 = UUID.randomUUID();
     UUID u2 = UUID.randomUUID();
@@ -55,7 +57,7 @@ public class TestGenericLogicalTypes {
     Schema stringSchema = Schema.create(Schema.Type.STRING);
     stringSchema.addProp(GenericData.STRING_PROP, "String");
     Schema uuidSchema = Schema.create(Schema.Type.STRING);
-    LogicalType.uuid().addToSchema(uuidSchema);
+    LogicalTypes.uuid().addToSchema(uuidSchema);
 
     UUID u1 = UUID.randomUUID();
     UUID u2 = UUID.randomUUID();
@@ -74,7 +76,7 @@ public class TestGenericLogicalTypes {
         Schema.create(Schema.Type.NULL), stringSchema);
 
     Schema uuidSchema = Schema.create(Schema.Type.STRING);
-    LogicalType.uuid().addToSchema(uuidSchema);
+    LogicalTypes.uuid().addToSchema(uuidSchema);
     Schema nullableUuidSchema = Schema.createUnion(
         Schema.create(Schema.Type.NULL), uuidSchema);
 
@@ -90,7 +92,7 @@ public class TestGenericLogicalTypes {
 
   @Test
   public void testReadDecimalFixed() throws IOException {
-    LogicalType decimal = LogicalType.decimal(9, 2);
+    LogicalType decimal = LogicalTypes.decimal(9, 2);
     Schema fixedSchema = Schema.createFixed("aFixed", null, null, 4);
     Schema decimalSchema = decimal.addToSchema(
         Schema.createFixed("aFixed", null, null, 4));
@@ -99,7 +101,7 @@ public class TestGenericLogicalTypes {
     BigDecimal d2 = new BigDecimal("117230.00");
     List<BigDecimal> expected = Arrays.asList(d1, d2);
 
-    Conversion<BigDecimal> conversion = new Conversion.DecimalConversion();
+    Conversion<BigDecimal> conversion = new Conversions.DecimalConversion();
 
     // use the conversion directly instead of relying on the write side
     GenericFixed d1fixed = conversion.toFixed(d1, fixedSchema, decimal);
@@ -112,7 +114,7 @@ public class TestGenericLogicalTypes {
 
   @Test
   public void testWriteDecimalFixed() throws IOException {
-    LogicalType decimal = LogicalType.decimal(9, 2);
+    LogicalType decimal = LogicalTypes.decimal(9, 2);
     Schema fixedSchema = Schema.createFixed("aFixed", null, null, 4);
     Schema decimalSchema = decimal.addToSchema(
         Schema.createFixed("aFixed", null, null, 4));
@@ -120,7 +122,7 @@ public class TestGenericLogicalTypes {
     BigDecimal d1 = new BigDecimal("-34.34");
     BigDecimal d2 = new BigDecimal("117230.00");
 
-    Conversion<BigDecimal> conversion = new Conversion.DecimalConversion();
+    Conversion<BigDecimal> conversion = new Conversions.DecimalConversion();
 
     GenericFixed d1fixed = conversion.toFixed(d1, fixedSchema, decimal);
     GenericFixed d2fixed = conversion.toFixed(d2, fixedSchema, decimal);
@@ -133,7 +135,7 @@ public class TestGenericLogicalTypes {
 
   @Test
   public void testReadDecimalBytes() throws IOException {
-    LogicalType decimal = LogicalType.decimal(9, 2);
+    LogicalType decimal = LogicalTypes.decimal(9, 2);
     Schema bytesSchema = Schema.create(Schema.Type.BYTES);
     Schema decimalSchema = decimal.addToSchema(Schema.create(Schema.Type.BYTES));
 
@@ -141,7 +143,7 @@ public class TestGenericLogicalTypes {
     BigDecimal d2 = new BigDecimal("117230.00");
     List<BigDecimal> expected = Arrays.asList(d1, d2);
 
-    Conversion<BigDecimal> conversion = new Conversion.DecimalConversion();
+    Conversion<BigDecimal> conversion = new Conversions.DecimalConversion();
 
     // use the conversion directly instead of relying on the write side
     ByteBuffer d1bytes = conversion.toBytes(d1, bytesSchema, decimal);
@@ -154,14 +156,14 @@ public class TestGenericLogicalTypes {
 
   @Test
   public void testWriteDecimalBytes() throws IOException {
-    LogicalType decimal = LogicalType.decimal(9, 2);
+    LogicalType decimal = LogicalTypes.decimal(9, 2);
     Schema bytesSchema = Schema.create(Schema.Type.BYTES);
     Schema decimalSchema = decimal.addToSchema(Schema.create(Schema.Type.BYTES));
 
     BigDecimal d1 = new BigDecimal("-34.34");
     BigDecimal d2 = new BigDecimal("117230.00");
 
-    Conversion<BigDecimal> conversion = new Conversion.DecimalConversion();
+    Conversion<BigDecimal> conversion = new Conversions.DecimalConversion();
 
     // use the conversion directly instead of relying on the write side
     ByteBuffer d1bytes = conversion.toBytes(d1, bytesSchema, decimal);
