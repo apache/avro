@@ -124,6 +124,8 @@ Trunk (not yet released)
     AVRO-1630. Java: Creating Builder from instance loses data. (Niels Basjes
     via tomwhite)
 
+    AVRO-1653. Fix typo in spec (lenghted => length). (Sehrope Sarkuni via blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

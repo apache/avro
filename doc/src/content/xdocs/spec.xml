@@ -871,7 +871,7 @@
               <li>that many bytes of <em>buffer data</em>.</li>
             </ul>
           </li>
-          <li>A message is always terminated by a zero-lenghted buffer.</li>
+          <li>A message is always terminated by a zero-length buffer.</li>
         </ul>
 
         <p>Framing is transparent to request and response message
