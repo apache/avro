@@ -70,6 +70,8 @@ Trunk (not yet released)
     AVRO-1485: Specification says Record field type can be record name but implementation allows any named type.
     (Nandor Kollar via gabor)
 
+    AVRO-1656. Fix 'How to Contribute' link. (Benjamin Clauss via blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
