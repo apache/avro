@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.nio.ByteBuffer;
@@ -45,6 +44,7 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.util.WeakIdentityConcurrentMap;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -207,8 +207,8 @@ public class SpecificData extends GenericData {
     return namespace + dot + name;
   }
 
-  private final WeakHashMap<java.lang.reflect.Type,Schema> schemaCache =
-    new WeakHashMap<java.lang.reflect.Type,Schema>();
+  private final WeakIdentityConcurrentMap<java.lang.reflect.Type,Schema> schemaCache =
+    new WeakIdentityConcurrentMap<java.lang.reflect.Type,Schema>();
 
   /** Find the schema for a Java type. */
   public Schema getSchema(java.lang.reflect.Type type) {

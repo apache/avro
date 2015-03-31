@@ -18,11 +18,11 @@
  */
 package org.apache.avro.util;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Implements a combination of WeakHashMap and IdentityHashMap.
- * Useful for caches that need to key off of a == comparison
+ * Implements a combination of IdentityHashMap and ConcurrentMap using
+ * WeakReference keys. Useful for caches that need to key off of a == comparison
  * instead of a .equals.
  * 
  * <b>
@@ -31,14 +31,12 @@ import java.util.HashMap;
  * Map's general contract, which mandates the use of the equals method
  * when comparing objects. This class is designed for use only in the
  * rare cases wherein reference-equality semantics are required.
- * 
- * Note that this implementation is not synchronized.
  * </b>
  */
-public class WeakIdentityHashMap<K, V> extends WeakIdentityMap<K, V> {
+public class WeakIdentityConcurrentMap<K, V> extends WeakIdentityMap<K, V> {
 
-  public WeakIdentityHashMap() {
-    super(new HashMap<IdentityWeakReference<K>, V>());
+  public WeakIdentityConcurrentMap() {
+    super(new ConcurrentHashMap<IdentityWeakReference<K>, V>());
   }
 
 }
