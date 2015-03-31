@@ -15,6 +15,7 @@
 # limitations under the License.
 
 require 'openssl'
+require 'snappy'
 
 module Avro
   module DataFile
@@ -334,8 +335,23 @@ module Avro
       end
     end
 
+    class SnappyCodec
+
+      def codec_name; 'snappy'; end
+
+      def decompress(data)
+        Snappy.inflate(data)
+      end
+
+      def compress(data)
+        Snappy.deflate(data)
+      end
+
+    end
+
     DataFile.register_codec NullCodec
     DataFile.register_codec DeflateCodec
+    DataFile.register_codec SnappyCodec
 
     # TODO this constant won't be updated if you register another codec.
     # Deprecated in favor of Avro::DataFile::codecs

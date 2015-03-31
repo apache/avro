@@ -185,4 +185,37 @@ JSON
     end
     assert_equal records, ['a' * 10_000, 'b' * 10_000]
   end
+
+  def test_snappy
+    Avro::DataFile.open('data.avr', 'w', '"string"', :snappy) do |writer|
+      writer << 'a' * 10_000
+    end
+    assert(File.size('data.avr') < 570)
+
+    records = []
+    Avro::DataFile.open('data.avr') do |reader|
+      reader.each {|record| records << record }
+    end
+    assert_equal records, ['a' * 10_000]
+  end
+
+  def test_append_to_snapped_file
+    schema = Avro::Schema.parse('"string"')
+    writer = Avro::IO::DatumWriter.new(schema)
+    file = Avro::DataFile::Writer.new(File.open('data.avr', 'wb'), writer, schema, :snappy)
+    file << 'a' * 10_000
+    file.close
+
+    file = Avro::DataFile::Writer.new(File.open('data.avr', 'a+b'), writer)
+    file << 'b' * 10_000
+    file.close
+    assert(File.size('data.avr') < 1_100) # slightly larger than deflate
+
+    records = []
+    Avro::DataFile.open('data.avr') do |reader|
+      reader.each {|record| records << record }
+    end
+    assert_equal records, ['a' * 10_000, 'b' * 10_000]
+  end
+
 end
