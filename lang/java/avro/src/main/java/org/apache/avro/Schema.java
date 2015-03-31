@@ -1131,13 +1131,11 @@ public abstract class Schema extends JsonProperties {
     
   private static JsonNode validateDefault(String fieldName, Schema schema,
                                           JsonNode defaultValue) {
-    if ((defaultValue != null)
+    if (VALIDATE_DEFAULTS.get() && (defaultValue != null)
         && !isValidDefault(schema, defaultValue)) { // invalid default
       String message = "Invalid default for field "+fieldName
         +": "+defaultValue+" not a "+schema;
-      if (VALIDATE_DEFAULTS.get())
-        throw new AvroTypeException(message);     // throw exception
-      System.err.println("[WARNING] Avro: "+message); // or log warning
+      throw new AvroTypeException(message);     // throw exception
     }
     return defaultValue;
   }

@@ -128,6 +128,9 @@ Trunk (not yet released)
 
     AVRO-1656. Fix 'How to Contribute' link. (Benjamin Clauss via blue)
 
+    AVRO-1652. Java: Do not warn or validate defaults if validation is off.
+    (Michael D'Angelo via blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
