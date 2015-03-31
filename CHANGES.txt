@@ -126,6 +126,8 @@ Trunk (not yet released)
 
     AVRO-1653. Fix typo in spec (lenghted => length). (Sehrope Sarkuni via blue)
 
+    AVRO-1656. Fix 'How to Contribute' link. (Benjamin Clauss via blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
