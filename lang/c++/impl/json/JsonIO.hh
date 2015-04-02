@@ -22,6 +22,7 @@
 #include <stack>
 #include <string>
 #include <sstream>
+#include <locale>
 #include <boost/utility.hpp>
 
 #include "Config.hh"
@@ -167,6 +168,7 @@ class AVRO_DECL JsonGenerator {
     }
 
     void doEncodeString(const std::string& s) {
+        std::locale cLocale("C");
         const char* b = &s[0];
         const char* e = b + s.size();
         out_.write('"');
@@ -193,7 +195,7 @@ class AVRO_DECL JsonGenerator {
                 escape('t', b, p);
                 break;
             default:
-                if (! iscntrl(*p)) {
+                if (! std::iscntrl(*p, cLocale)) {
                     continue;
                 }
                 write(b, p);
