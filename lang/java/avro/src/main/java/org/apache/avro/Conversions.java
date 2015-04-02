@@ -56,12 +56,8 @@ public class Conversions {
     @Override
     public BigDecimal fromBytes(ByteBuffer value, Schema schema, LogicalType type) {
       int scale = ((LogicalTypes.Decimal) type).getScale();
-      byte[] bytes;
-      if (value.hasArray()) {
-        bytes = value.array();
-      } else {
-        bytes = value.get(new byte[value.remaining()]).array();
-      }
+      // always copy the bytes out because BigInteger has no offset/length ctor
+      byte[] bytes = value.get(new byte[value.remaining()]).array();
       return new BigDecimal(new BigInteger(bytes), scale);
     }
 
