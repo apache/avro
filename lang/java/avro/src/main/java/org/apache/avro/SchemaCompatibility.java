@@ -60,29 +60,14 @@ public class SchemaCompatibility {
       final Schema reader,
       final Schema writer
   ) {
-    final SchemaCompatibilityType compatibility =
+    final SchemaCompatibilityResult compatibility =
         new ReaderWriterCompatiblityChecker()
-            .getCompatibility(reader, writer);
+            .getCompatibilityResult(reader, writer);
 
-    final String message;
-    switch (compatibility) {
-      case INCOMPATIBLE: {
-        message = String.format(
-            "Data encoded using writer schema:%n%s%n"
-            + "will or may fail to decode using reader schema:%n%s%n",
-            writer.toString(true),
-            reader.toString(true));
-        break;
-      }
-      case COMPATIBLE: {
-        message = READER_WRITER_COMPATIBLE_MESSAGE;
-        break;
-      }
-      default: throw new AvroRuntimeException("Unknown compatibility: " + compatibility);
-    }
+    final String message = compatibility.description(reader, writer);
 
     return new SchemaPairCompatibility(
-        compatibility,
+        compatibility.isCompatible() ? SchemaCompatibilityType.COMPATIBLE : SchemaCompatibilityType.INCOMPATIBLE,
         reader,
         writer,
         message);
