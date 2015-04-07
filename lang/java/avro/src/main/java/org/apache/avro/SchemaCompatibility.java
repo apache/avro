@@ -45,8 +45,6 @@ public class SchemaCompatibility {
   /** Message to annotate reader/writer schema pairs that are compatible. */
   public static final String READER_WRITER_COMPATIBLE_MESSAGE =
       "Reader schema can always successfully decode data written using the writer schema.";
-  public static final String READER_WRITER_INCOMPATABLE_MESSAGE =
-      "Data encoded using writer schema:%n%s%nwill or may fail to decode using reader schema:%n%s%n";
 
   /**
    * Validates that the provided reader schema can be used to decode avro data written with the
@@ -64,10 +62,28 @@ public class SchemaCompatibility {
         new ReaderWriterCompatiblityChecker()
             .getCompatibility(reader, writer);
 
+    final String message;
+    switch (compatibility) {
+      case INCOMPATIBLE: {
+        message = String.format(
+            "Data encoded using writer schema:%n%s%n"
+            + "will or may fail to decode using reader schema:%n%s%n",
+            writer.toString(true),
+            reader.toString(true));
+        break;
+      }
+      case COMPATIBLE: {
+        message = READER_WRITER_COMPATIBLE_MESSAGE;
+        break;
+      }
+      default: throw new AvroRuntimeException("Unknown compatibility: " + compatibility);
+    }
+
     return new SchemaPairCompatibility(
         compatibility,
         reader,
-        writer);
+        writer,
+        message);
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -266,29 +282,32 @@ public class SchemaCompatibility {
           case FIXED: {
             // fixed size and name must match:
             if (!schemaNameEquals(reader, writer)) {
-              return SchemaCompatibilityType.INCOMPATIBLE_NAME;
+              return SchemaCompatibilityType.INCOMPATIBLE;
             }
             if (reader.getFixedSize() != writer.getFixedSize()) {
-              return SchemaCompatibilityType.INCOMPATIBLE_SIZE;
+              return SchemaCompatibilityType.INCOMPATIBLE;
             }
             return SchemaCompatibilityType.COMPATIBLE;
           }
           case ENUM: {
             // enum names must match:
             if (!schemaNameEquals(reader, writer)) {
-              return SchemaCompatibilityType.INCOMPATIBLE_NAME;
+              return SchemaCompatibilityType.INCOMPATIBLE;
             }
             // reader symbols must contain all writer symbols:
             final Set<String> symbols = new HashSet<String>(writer.getEnumSymbols());
             symbols.removeAll(reader.getEnumSymbols());
+            // TODO: Report a human-readable error.
+            // if (!symbols.isEmpty()) {
+            // }
             return symbols.isEmpty()
                 ? SchemaCompatibilityType.COMPATIBLE
-                : SchemaCompatibilityType.INCOMPATIBLE_ENUM_MISSING_FIELDS;
+                : SchemaCompatibilityType.INCOMPATIBLE;
           }
           case RECORD: {
             // record names must match:
             if (!schemaNameEquals(reader, writer)) {
-              return SchemaCompatibilityType.INCOMPATIBLE_NAME;
+              return SchemaCompatibilityType.INCOMPATIBLE;
             }
 
             // Check that each field in the reader record can be populated from the writer record:
@@ -299,12 +318,12 @@ public class SchemaCompatibility {
                 // reader field must have a default value.
                 if (readerField.defaultValue() == null) {
                   // reader field has no default value
-                  return SchemaCompatibilityType.INCOMPATIBLE_MISSING_DEFAULT;
+                  return SchemaCompatibilityType.INCOMPATIBLE;
                 }
               } else {
-                SchemaCompatibilityType compatibilityType = getCompatibility(readerField.schema(), writerField.schema());
-                if (!compatibilityType.isCompatible()) {
-                    return compatibilityType;
+                if (getCompatibility(readerField.schema(), writerField.schema())
+                    == SchemaCompatibilityType.INCOMPATIBLE) {
+                  return SchemaCompatibilityType.INCOMPATIBLE;
                 }
               }
             }
@@ -315,9 +334,8 @@ public class SchemaCompatibility {
           case UNION: {
             // Check that each individual branch of the writer union can be decoded:
             for (final Schema writerBranch : writer.getTypes()) {
-              SchemaCompatibilityType schemaCompatibilityType = getCompatibility(reader, writerBranch);
-              if (!schemaCompatibilityType.isCompatible()) {
-                return schemaCompatibilityType;
+              if (getCompatibility(reader, writerBranch) == SchemaCompatibilityType.INCOMPATIBLE) {
+                return SchemaCompatibilityType.INCOMPATIBLE;
               }
             }
             // Each schema in the writer union can be decoded with the reader:
@@ -339,19 +357,19 @@ public class SchemaCompatibility {
         }
 
         switch (reader.getType()) {
-          case NULL: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
-          case BOOLEAN: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
-          case INT: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
+          case NULL: return SchemaCompatibilityType.INCOMPATIBLE;
+          case BOOLEAN: return SchemaCompatibilityType.INCOMPATIBLE;
+          case INT: return SchemaCompatibilityType.INCOMPATIBLE;
           case LONG: {
             return (writer.getType() == Type.INT)
                 ? SchemaCompatibilityType.COMPATIBLE
-                : SchemaCompatibilityType.INCOMPATIBLE_TYPE;
+                : SchemaCompatibilityType.INCOMPATIBLE;
           }
           case FLOAT: {
             return ((writer.getType() == Type.INT)
                 || (writer.getType() == Type.LONG))
                 ? SchemaCompatibilityType.COMPATIBLE
-                : SchemaCompatibilityType.INCOMPATIBLE_TYPE;
+                : SchemaCompatibilityType.INCOMPATIBLE;
 
           }
           case DOUBLE: {
@@ -359,15 +377,15 @@ public class SchemaCompatibility {
                 || (writer.getType() == Type.LONG)
                 || (writer.getType() == Type.FLOAT))
                 ? SchemaCompatibilityType.COMPATIBLE
-                : SchemaCompatibilityType.INCOMPATIBLE_TYPE;
+                : SchemaCompatibilityType.INCOMPATIBLE;
           }
-          case BYTES: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
-          case STRING: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
-          case ARRAY: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
-          case MAP: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
-          case FIXED: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
-          case ENUM: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
-          case RECORD: return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
+          case BYTES: return SchemaCompatibilityType.INCOMPATIBLE;
+          case STRING: return SchemaCompatibilityType.INCOMPATIBLE;
+          case ARRAY: return SchemaCompatibilityType.INCOMPATIBLE;
+          case MAP: return SchemaCompatibilityType.INCOMPATIBLE;
+          case FIXED: return SchemaCompatibilityType.INCOMPATIBLE;
+          case ENUM: return SchemaCompatibilityType.INCOMPATIBLE;
+          case RECORD: return SchemaCompatibilityType.INCOMPATIBLE;
           case UNION: {
             for (final Schema readerBranch : reader.getTypes()) {
               if (getCompatibility(readerBranch, writer) == SchemaCompatibilityType.COMPATIBLE) {
@@ -375,7 +393,7 @@ public class SchemaCompatibility {
               }
             }
             // No branch in the reader union has been found compatible with the writer schema:
-            return SchemaCompatibilityType.INCOMPATIBLE_TYPE;
+            return SchemaCompatibilityType.INCOMPATIBLE;
           }
 
           default: {
@@ -390,30 +408,11 @@ public class SchemaCompatibility {
    * Identifies the type of a schema compatibility result.
    */
   public static enum SchemaCompatibilityType {
-    COMPATIBLE(READER_WRITER_COMPATIBLE_MESSAGE),
-
-    INCOMPATIBLE_NAME(READER_WRITER_INCOMPATABLE_MESSAGE + "Schema names must match."),
-    INCOMPATIBLE_SIZE(READER_WRITER_INCOMPATABLE_MESSAGE + " Fixed schemas are no the same size."),
-    INCOMPATIBLE_ENUM_MISSING_FIELDS(READER_WRITER_INCOMPATABLE_MESSAGE + " Reader schema is missing ENUM values."),
-    INCOMPATIBLE_MISSING_DEFAULT(READER_WRITER_INCOMPATABLE_MESSAGE + " New fields must have a default value."),
-    INCOMPATIBLE_TYPE(READER_WRITER_INCOMPATABLE_MESSAGE + " Schema types are incompatable."),
+    COMPATIBLE,
+    INCOMPATIBLE,
 
     /** Used internally to tag a reader/writer schema pair and prevent recursion. */
-    RECURSION_IN_PROGRESS("");
-
-    private final String description;
-
-    SchemaCompatibilityType(String description) {
-      this.description = description;
-    }
-
-    protected String description(Schema reader, Schema writer) {
-      return String.format(description, writer.toString(true), reader.toString(true));
-    }
-
-    public boolean isCompatible() {
-      return this == COMPATIBLE;
-    }
+    RECURSION_IN_PROGRESS;
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -433,20 +432,26 @@ public class SchemaCompatibility {
     /** Validated writer schema. */
     private final Schema mWriter;
 
+    /** Human readable description of this result. */
+    private final String mDescription;
+
     /**
      * Constructs a new instance.
      *
      * @param type of the schema compatibility.
      * @param reader schema that was validated.
      * @param writer schema that was validated.
+     * @param description of this compatibility result.
      */
     public SchemaPairCompatibility(
         SchemaCompatibilityType type,
         Schema reader,
-        Schema writer) {
+        Schema writer,
+        String description) {
       mType = type;
       mReader = reader;
       mWriter = writer;
+      mDescription = description;
     }
 
     /**
@@ -482,7 +487,7 @@ public class SchemaCompatibility {
      * @return a human readable description of this validation result.
      */
     public String getDescription() {
-      return mType.description(mReader, mWriter);
+      return mDescription;
     }
 
     /** {@inheritDoc} */
@@ -490,7 +495,7 @@ public class SchemaCompatibility {
     public String toString() {
       return String.format(
           "SchemaPairCompatibility{type:%s, readerSchema:%s, writerSchema:%s, description:%s}",
-          mType, mReader, mWriter, mType.description(mReader, mWriter));
+          mType, mReader, mWriter, mDescription);
     }
 
     /** {@inheritDoc} */
@@ -500,7 +505,8 @@ public class SchemaCompatibility {
         final SchemaPairCompatibility result = (SchemaPairCompatibility) other;
         return objectsEqual(result.mType, mType)
             && objectsEqual(result.mReader, mReader)
-            && objectsEqual(result.mWriter, mWriter);
+            && objectsEqual(result.mWriter, mWriter)
+            && objectsEqual(result.mDescription, mDescription);
       } else {
         return false;
       }
@@ -509,7 +515,7 @@ public class SchemaCompatibility {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-      return Arrays.hashCode(new Object[]{mType, mReader, mWriter});
+      return Arrays.hashCode(new Object[]{mType, mReader, mWriter, mDescription});
     }
   }
 

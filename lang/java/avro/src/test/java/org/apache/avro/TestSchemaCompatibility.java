@@ -146,27 +146,19 @@ public class TestSchemaCompatibility {
   private static final class ReaderWriter {
     private final Schema mReader;
     private final Schema mWriter;
-    private final SchemaCompatibilityType mCompatibilityType;
 
-    public ReaderWriter(final Schema reader, final Schema writer, SchemaCompatibilityType schemaCompatibilityType) {
+    public ReaderWriter(final Schema reader, final Schema writer) {
       mReader = reader;
       mWriter = writer;
-      mCompatibilityType = schemaCompatibilityType;
     }
 
-      public ReaderWriter(final Schema reader, final Schema writer) {
-          this(reader, writer, SchemaCompatibilityType.COMPATIBLE);
-      }
-
-      public Schema getReader() {
+    public Schema getReader() {
       return mReader;
     }
 
     public Schema getWriter() {
       return mWriter;
     }
-
-    public SchemaCompatibilityType getSchemaCompatibilityType() { return mCompatibilityType; };
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -184,7 +176,8 @@ public class TestSchemaCompatibility {
         new SchemaCompatibility.SchemaPairCompatibility(
             SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE,
             reader,
-            WRITER_SCHEMA);
+            WRITER_SCHEMA,
+            SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
 
     // Test omitting a field.
     assertEquals(expectedResult, checkReaderWriterCompatibility(reader, WRITER_SCHEMA));
@@ -199,7 +192,8 @@ public class TestSchemaCompatibility {
         new SchemaCompatibility.SchemaPairCompatibility(
             SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE,
             reader,
-            WRITER_SCHEMA);
+            WRITER_SCHEMA,
+            SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
 
     // Test omitting other field.
     assertEquals(expectedResult, checkReaderWriterCompatibility(reader, WRITER_SCHEMA));
@@ -215,7 +209,8 @@ public class TestSchemaCompatibility {
         new SchemaCompatibility.SchemaPairCompatibility(
             SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE,
             reader,
-            WRITER_SCHEMA);
+            WRITER_SCHEMA,
+            SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
 
     // Test with all fields.
     assertEquals(expectedResult, checkReaderWriterCompatibility(reader, WRITER_SCHEMA));
@@ -231,7 +226,8 @@ public class TestSchemaCompatibility {
         new SchemaCompatibility.SchemaPairCompatibility(
             SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE,
             reader,
-            WRITER_SCHEMA);
+            WRITER_SCHEMA,
+            SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
 
     // Test new field with default value.
     assertEquals(expectedResult, checkReaderWriterCompatibility(reader, WRITER_SCHEMA));
@@ -245,9 +241,14 @@ public class TestSchemaCompatibility {
     final Schema reader = Schema.createRecord(readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult =
         new SchemaCompatibility.SchemaPairCompatibility(
-            SchemaCompatibilityType.INCOMPATIBLE_MISSING_DEFAULT,
+            SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE,
             reader,
-            WRITER_SCHEMA);
+            WRITER_SCHEMA,
+            String.format(
+                "Data encoded using writer schema:\n%s\n"
+                + "will or may fail to decode using reader schema:\n%s\n",
+                WRITER_SCHEMA.toString(true),
+                reader.toString(true)));
 
     // Test new field without default value.
     assertEquals(expectedResult, checkReaderWriterCompatibility(reader, WRITER_SCHEMA));
@@ -261,12 +262,18 @@ public class TestSchemaCompatibility {
         new SchemaCompatibility.SchemaPairCompatibility(
             SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE,
             validReader,
-            STRING_ARRAY_SCHEMA);
+            STRING_ARRAY_SCHEMA,
+            SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
     final SchemaCompatibility.SchemaPairCompatibility invalidResult =
         new SchemaCompatibility.SchemaPairCompatibility(
-            SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE_TYPE,
+            SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE,
             invalidReader,
-            STRING_ARRAY_SCHEMA);
+            STRING_ARRAY_SCHEMA,
+            String.format(
+                "Data encoded using writer schema:\n%s\n"
+                + "will or may fail to decode using reader schema:\n%s\n",
+                STRING_ARRAY_SCHEMA.toString(true),
+                invalidReader.toString(true)));
 
     assertEquals(
         validResult,
@@ -283,12 +290,18 @@ public class TestSchemaCompatibility {
         new SchemaCompatibility.SchemaPairCompatibility(
             SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE,
             validReader,
-            STRING_SCHEMA);
+            STRING_SCHEMA,
+            SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
     final SchemaCompatibility.SchemaPairCompatibility invalidResult =
         new SchemaCompatibility.SchemaPairCompatibility(
-            SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE_TYPE,
+            SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE,
             INT_SCHEMA,
-            STRING_SCHEMA);
+            STRING_SCHEMA,
+            String.format(
+                "Data encoded using writer schema:\n%s\n"
+                + "will or may fail to decode using reader schema:\n%s\n",
+                STRING_SCHEMA.toString(true),
+                INT_SCHEMA.toString(true)));
 
     assertEquals(
         validResult,
@@ -305,7 +318,7 @@ public class TestSchemaCompatibility {
     final Schema unionReader = Schema.createUnion(list(STRING_SCHEMA));
     final SchemaPairCompatibility result =
         checkReaderWriterCompatibility(unionReader, unionWriter);
-    assertEquals(SchemaCompatibilityType.INCOMPATIBLE_TYPE, result.getType());
+    assertEquals(SchemaCompatibilityType.INCOMPATIBLE, result.getType());
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -381,53 +394,54 @@ public class TestSchemaCompatibility {
 
   /** Collection of reader/writer schema pair that are incompatible. */
   public static final List<ReaderWriter> INCOMPATIBLE_READER_WRITER_TEST_CASES = list(
-      new ReaderWriter(NULL_SCHEMA, INT_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(NULL_SCHEMA, LONG_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(NULL_SCHEMA, INT_SCHEMA),
+      new ReaderWriter(NULL_SCHEMA, LONG_SCHEMA),
 
-      new ReaderWriter(BOOLEAN_SCHEMA, INT_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(BOOLEAN_SCHEMA, INT_SCHEMA),
 
-      new ReaderWriter(INT_SCHEMA, NULL_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(INT_SCHEMA, BOOLEAN_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(INT_SCHEMA, LONG_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(INT_SCHEMA, FLOAT_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(INT_SCHEMA, DOUBLE_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(INT_SCHEMA, NULL_SCHEMA),
+      new ReaderWriter(INT_SCHEMA, BOOLEAN_SCHEMA),
+      new ReaderWriter(INT_SCHEMA, LONG_SCHEMA),
+      new ReaderWriter(INT_SCHEMA, FLOAT_SCHEMA),
+      new ReaderWriter(INT_SCHEMA, DOUBLE_SCHEMA),
 
-      new ReaderWriter(LONG_SCHEMA, FLOAT_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(LONG_SCHEMA, DOUBLE_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(LONG_SCHEMA, FLOAT_SCHEMA),
+      new ReaderWriter(LONG_SCHEMA, DOUBLE_SCHEMA),
 
-      new ReaderWriter(FLOAT_SCHEMA, DOUBLE_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(FLOAT_SCHEMA, DOUBLE_SCHEMA),
 
-      new ReaderWriter(STRING_SCHEMA, BOOLEAN_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(STRING_SCHEMA, INT_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(STRING_SCHEMA, BYTES_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(STRING_SCHEMA, BOOLEAN_SCHEMA),
+      new ReaderWriter(STRING_SCHEMA, INT_SCHEMA),
+      new ReaderWriter(STRING_SCHEMA, BYTES_SCHEMA),
 
-      new ReaderWriter(BYTES_SCHEMA, NULL_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(BYTES_SCHEMA, INT_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(BYTES_SCHEMA, STRING_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(BYTES_SCHEMA, NULL_SCHEMA),
+      new ReaderWriter(BYTES_SCHEMA, INT_SCHEMA),
+      new ReaderWriter(BYTES_SCHEMA, STRING_SCHEMA),
 
-      new ReaderWriter(INT_ARRAY_SCHEMA, LONG_ARRAY_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(INT_MAP_SCHEMA, INT_ARRAY_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(INT_ARRAY_SCHEMA, INT_MAP_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(INT_MAP_SCHEMA, LONG_MAP_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(INT_ARRAY_SCHEMA, LONG_ARRAY_SCHEMA),
+      new ReaderWriter(INT_MAP_SCHEMA, INT_ARRAY_SCHEMA),
+      new ReaderWriter(INT_ARRAY_SCHEMA, INT_MAP_SCHEMA),
+      new ReaderWriter(INT_MAP_SCHEMA, LONG_MAP_SCHEMA),
 
-      new ReaderWriter(ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_ENUM_MISSING_FIELDS),
+      new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA),
+      new ReaderWriter(ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA),
 
-      new ReaderWriter(ENUM1_AB_SCHEMA, ENUM2_AB_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_NAME),
-      new ReaderWriter(INT_SCHEMA, ENUM2_AB_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(ENUM2_AB_SCHEMA, INT_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(ENUM1_AB_SCHEMA, ENUM2_AB_SCHEMA),
+      new ReaderWriter(INT_SCHEMA, ENUM2_AB_SCHEMA),
+      new ReaderWriter(ENUM2_AB_SCHEMA, INT_SCHEMA),
 
       // Tests involving unions:
-      new ReaderWriter(INT_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
-      new ReaderWriter(STRING_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(INT_UNION_SCHEMA, INT_STRING_UNION_SCHEMA),
+      new ReaderWriter(STRING_UNION_SCHEMA, INT_STRING_UNION_SCHEMA),
 
-      new ReaderWriter(EMPTY_RECORD2, EMPTY_RECORD1, SchemaCompatibilityType.INCOMPATIBLE_NAME),
-      new ReaderWriter(A_INT_RECORD1, EMPTY_RECORD1, SchemaCompatibilityType.INCOMPATIBLE_MISSING_DEFAULT),
-      new ReaderWriter(A_INT_B_DINT_RECORD1, EMPTY_RECORD1, SchemaCompatibilityType.INCOMPATIBLE_MISSING_DEFAULT),
+      new ReaderWriter(EMPTY_RECORD2, EMPTY_RECORD1),
+      new ReaderWriter(A_INT_RECORD1, EMPTY_RECORD1),
+      new ReaderWriter(A_INT_B_DINT_RECORD1, EMPTY_RECORD1),
 
-      new ReaderWriter(INT_LIST_RECORD, LONG_LIST_RECORD, SchemaCompatibilityType.INCOMPATIBLE_TYPE),
+      new ReaderWriter(INT_LIST_RECORD, LONG_LIST_RECORD),
 
       // Last check:
-      new ReaderWriter(NULL_SCHEMA, INT_SCHEMA, SchemaCompatibilityType.INCOMPATIBLE_TYPE)
+      new ReaderWriter(NULL_SCHEMA, INT_SCHEMA)
   );
 
   // -----------------------------------------------------------------------------------------------
@@ -444,7 +458,7 @@ public class TestSchemaCompatibility {
       assertEquals(String.format(
           "Expecting reader %s to be compatible with writer %s, but tested incompatible.",
           reader, writer),
-          readerWriter.getSchemaCompatibilityType(), result.getType());
+          SchemaCompatibilityType.COMPATIBLE, result.getType());
     }
   }
 
@@ -460,7 +474,7 @@ public class TestSchemaCompatibility {
       assertEquals(String.format(
           "Expecting reader %s to be incompatible with writer %s, but tested compatible.",
           reader, writer),
-          readerWriter.getSchemaCompatibilityType(), result.getType());
+          SchemaCompatibilityType.INCOMPATIBLE, result.getType());
     }
   }
 
