@@ -6,8 +6,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -16,6 +19,7 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificData;
@@ -96,7 +100,6 @@ public class TestReflectLogicalTypes {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testDecimalBytes() throws IOException {
     Schema schema = REFLECT.getSchema(DecimalRecordBytes.class);
     Assert.assertEquals("Should have the correct record name",
@@ -113,10 +116,9 @@ public class TestReflectLogicalTypes {
     record.decimal = new BigDecimal("3.14");
 
     File test = write(REFLECT, schema, record);
-    List<DecimalRecordBytes> actual = read(
-        REFLECT.<DecimalRecordBytes>createDatumReader(schema), test);
     Assert.assertEquals("Should match the decimal after round trip",
-        Arrays.asList(record), actual);
+        Arrays.asList(record),
+        read(REFLECT.createDatumReader(schema), test));
   }
 
   // this can be static because the schema only comes from reflection
@@ -157,7 +159,6 @@ public class TestReflectLogicalTypes {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testDecimalFixed() throws IOException {
     Schema schema = REFLECT.getSchema(DecimalRecordFixed.class);
     Assert.assertEquals("Should have the correct record name",
@@ -174,10 +175,133 @@ public class TestReflectLogicalTypes {
     record.decimal = new BigDecimal("3.14");
 
     File test = write(REFLECT, schema, record);
-    List<DecimalRecordFixed> actual = read(
-        REFLECT.<DecimalRecordFixed>createDatumReader(schema), test);
     Assert.assertEquals("Should match the decimal after round trip",
-        Arrays.asList(record), actual);
+        Arrays.asList(record),
+        read(REFLECT.createDatumReader(schema), test));
+  }
+
+  public static class Pair<X, Y> {
+    private final X first;
+    private final Y second;
+
+    private Pair(X first, Y second) {
+      this.first = first;
+      this.second = second;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      }
+
+      if (other == null || getClass() != other.getClass()) {
+        return false;
+      }
+
+      Pair<?, ?> that = (Pair<?, ?>) other;
+      if (first == null) {
+        if (that.first != null) {
+          return false;
+        }
+      } else if (first.equals(that.first)) {
+        return false;
+      }
+
+      if (second == null) {
+        if (that.second != null) {
+          return false;
+        }
+      } else if (second.equals(that.second)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(new Object[] {first, second});
+    }
+
+    public static <X, Y> Pair<X, Y> of(X first, Y second) {
+      return new Pair<X, Y>(first, second);
+    }
+  }
+
+  public static class PairRecord {
+    @AvroSchema("{" +
+        "\"name\": \"Pair\"," +
+        "\"type\": \"record\"," +
+        "\"fields\": [" +
+        "    {\"name\": \"x\", \"type\": \"long\"}," +
+        "    {\"name\": \"y\", \"type\": \"long\"}" +
+        "  ]," +
+        "\"logicalType\": \"pair\"" +
+        "}")
+    Pair<Long, Long> pair;
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testPairRecord() throws IOException {
+    ReflectData model = new ReflectData();
+    model.addLogicalTypeConversion(new Conversion<Pair>() {
+      @Override
+      public Class<Pair> getConvertedType() {
+        return Pair.class;
+      }
+
+      @Override
+      public String getLogicalTypeName() {
+        return "pair";
+      }
+
+      @Override
+      public Pair fromRecord(IndexedRecord value, Schema schema, LogicalType type) {
+        return Pair.of(value.get(0), value.get(1));
+      }
+
+      @Override
+      public IndexedRecord toRecord(Pair value, Schema schema, LogicalType type) {
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put(0, value.first);
+        record.put(1, value.second);
+        return record;
+      }
+    });
+
+    LogicalTypes.register("pair", new LogicalTypes.LogicalTypeFactory() {
+      private final LogicalType PAIR = new LogicalType("pair");
+      @Override
+      public LogicalType fromSchema(Schema schema) {
+        return PAIR;
+      }
+    });
+
+    Schema schema = model.getSchema(PairRecord.class);
+    Assert.assertEquals("Should have the correct record name",
+        "org.apache.avro.reflect.TestReflectLogicalTypes$",
+        schema.getNamespace());
+    Assert.assertEquals("Should have the correct record name",
+        "PairRecord",
+        schema.getName());
+    Assert.assertEquals("Should have the correct logical type",
+        "pair",
+        LogicalTypes.fromSchema(schema.getField("pair").schema()).getName());
+
+    PairRecord record = new PairRecord();
+    record.pair = Pair.of(34L, 35L);
+    List<PairRecord> expected = new ArrayList<PairRecord>();
+    expected.add(record);
+
+    File test = write(model, schema, record);
+    Pair<Long, Long> actual = TestReflectLogicalTypes.<PairRecord>read(
+        model.createDatumReader(schema), test).get(0).pair;
+    Assert.assertEquals("Data should match after serialization round-trip",
+        34L, (long) actual.first);
+    Assert.assertEquals("Data should match after serialization round-trip",
+        35L, (long) actual.second);
   }
 
   @Test
@@ -561,7 +685,7 @@ public class TestReflectLogicalTypes {
         read(REFLECT.createDatumReader(stringArraySchema), test).get(0));
   }
 
-  private <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
+  private static <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
     List<D> data = new ArrayList<D>();
     FileReader<D> fileReader = null;
 

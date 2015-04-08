@@ -1,12 +1,30 @@
 package org.apache.avro;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.avro.util.WeakIdentityHashMap;
 
 public class LogicalTypes {
 
   private static final Map<Schema, LogicalType> CACHE =
       new WeakIdentityHashMap<Schema, LogicalType>();
+
+  public static interface LogicalTypeFactory {
+    public LogicalType fromSchema(Schema schema);
+  }
+
+  private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES =
+      new ConcurrentHashMap<String, LogicalTypeFactory>();
+
+  public static void register(String logicalTypeName, LogicalTypeFactory factory) {
+    if (logicalTypeName == null) {
+      throw new NullPointerException("Invalid logical type name: null");
+    }
+    if (factory == null) {
+      throw new NullPointerException("Invalid logical type factory: null");
+    }
+    REGISTERED_TYPES.put(logicalTypeName, factory);
+  }
 
   /**
    * Returns the {@link LogicalType} from the schema, if one is present.
@@ -38,7 +56,9 @@ public class LogicalTypes {
       if ("decimal".equals(typeName)) {
         logicalType = new Decimal(schema);
       } else if ("uuid".equals(typeName)) {
-        logicalType = LogicalType.UUID_TYPE;
+        logicalType = UUID_TYPE;
+      } else if (REGISTERED_TYPES.containsKey(typeName)) {
+        logicalType = REGISTERED_TYPES.get(typeName).fromSchema(schema);
       } else {
         logicalType = null;
       }
@@ -68,8 +88,10 @@ public class LogicalTypes {
     return new Decimal(precision, scale);
   }
 
+  private static final LogicalType UUID_TYPE = new LogicalType("uuid");
+
   public static LogicalType uuid() {
-    return LogicalType.UUID_TYPE;
+    return UUID_TYPE;
   }
 
   /** Decimal represents arbitrary-precision fixed-scale decimal numbers  */

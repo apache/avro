@@ -20,11 +20,9 @@ public class LogicalType {
       SpecificData.KEY_CLASS_PROP, SpecificData.ELEMENT_PROP
   };
 
-  public static final LogicalType UUID_TYPE = new LogicalType("uuid");
-
   private final String name;
 
-  protected LogicalType(String logicalTypeName) {
+  public LogicalType(String logicalTypeName) {
     this.name = logicalTypeName;
   }
 
