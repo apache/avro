@@ -153,7 +153,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     Conversion<?> conversion = getData().getConversionFor(expected);
     Object datum = readWithoutConversion(old, expected, in);
     if (conversion != null) {
-      LogicalType logicalType = LogicalTypes.fromSchema(expected);
+      LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(expected);
       return convert(datum, expected, logicalType, conversion);
     }
     return datum;

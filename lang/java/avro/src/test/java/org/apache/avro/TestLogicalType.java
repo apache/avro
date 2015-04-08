@@ -13,7 +13,7 @@ public class TestLogicalType {
     schema.addProp("logicalType", "decimal");
     schema.addProp("precision", 9);
     schema.addProp("scale", 2);
-    LogicalType logicalType = LogicalTypes.fromSchema(schema);
+    LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(schema);
 
     Assert.assertTrue("Should be a Decimal",
         logicalType instanceof LogicalTypes.Decimal);
@@ -32,7 +32,7 @@ public class TestLogicalType {
     schema.addProp("scale", 2);
 
     Assert.assertNull("Should ignore invalid logical type",
-        LogicalTypes.fromSchema(schema));
+        LogicalTypes.fromSchemaIgnoreInvalid(schema));
   }
 
   @Test
@@ -69,7 +69,7 @@ public class TestLogicalType {
     Schema schema = Schema.create(Schema.Type.STRING);
     schema.addProp("logicalType", "unknown");
     schema.addProp("someProperty", 34);
-    LogicalType logicalType = LogicalTypes.fromSchema(schema);
+    LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(schema);
     Assert.assertNull("Should not return a LogicalType instance", logicalType);
   }
 
@@ -80,7 +80,7 @@ public class TestLogicalType {
     LogicalTypes.decimal(Integer.MAX_VALUE).addToSchema(schema);
     Assert.assertEquals("Precision should be an Integer.MAX_VALUE",
         Integer.MAX_VALUE,
-        ((LogicalTypes.Decimal) LogicalTypes.fromSchema(schema)).getPrecision());
+        ((LogicalTypes.Decimal) LogicalTypes.fromSchemaIgnoreInvalid(schema)).getPrecision());
   }
 
   @Test
@@ -97,7 +97,7 @@ public class TestLogicalType {
         }
     );
     Assert.assertNull("Invalid logical type should not be set on schema",
-        LogicalTypes.fromSchema(schema));
+        LogicalTypes.fromSchemaIgnoreInvalid(schema));
   }
 
   @Test
@@ -112,7 +112,7 @@ public class TestLogicalType {
           }
         });
     Assert.assertNull("Invalid logical type should not be set on schema",
-        LogicalTypes.fromSchema(schema));
+        LogicalTypes.fromSchemaIgnoreInvalid(schema));
   }
 
   @Test
@@ -127,7 +127,7 @@ public class TestLogicalType {
           }
         });
     Assert.assertNull("Invalid logical type should not be set on schema",
-        LogicalTypes.fromSchema(schema));
+        LogicalTypes.fromSchemaIgnoreInvalid(schema));
   }
 
   @Test
@@ -143,7 +143,7 @@ public class TestLogicalType {
           }
         });
     Assert.assertNull("Invalid logical type should not be set on schema",
-        LogicalTypes.fromSchema(schema));
+        LogicalTypes.fromSchemaIgnoreInvalid(schema));
   }
 
   @Test
@@ -158,7 +158,7 @@ public class TestLogicalType {
           }
         });
     Assert.assertNull("Invalid logical type should not be set on schema",
-        LogicalTypes.fromSchema(schema));
+        LogicalTypes.fromSchemaIgnoreInvalid(schema));
   }
 
   @Test
@@ -176,7 +176,7 @@ public class TestLogicalType {
         }
     );
     Assert.assertEquals("First logical type should still be set on schema",
-        LogicalTypes.decimal(9), LogicalTypes.fromSchema(schema));
+        LogicalTypes.decimal(9), LogicalTypes.fromSchemaIgnoreInvalid(schema));
   }
 
   @Test
@@ -186,7 +186,7 @@ public class TestLogicalType {
     LogicalTypes.decimal(9).addToSchema(schema);
     Assert.assertEquals("Scale should be a 0",
         0,
-        ((LogicalTypes.Decimal) LogicalTypes.fromSchema(schema)).getScale());
+        ((LogicalTypes.Decimal) LogicalTypes.fromSchemaIgnoreInvalid(schema)).getScale());
   }
 
   @Test

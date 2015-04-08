@@ -262,7 +262,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
             accessor.getField().getType(), f.schema());
         try {
           if (conversion != null) {
-            LogicalType logicalType = LogicalTypes.fromSchema(f.schema());
+            LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(f.schema());
               accessor.set(record, convert(
                   readWithoutConversion(oldDatum, f.schema(), in),
                   f.schema(), logicalType, conversion));

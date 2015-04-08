@@ -2,6 +2,7 @@ package org.apache.avro.reflect;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +26,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+/**
+ * Tests various logical types
+ * * string => UUID
+ * * fixed and bytes => Decimal
+ * * record => Pair
+ */
 public class TestReflectLogicalTypes {
   @Rule
   public TemporaryFolder temp = new TemporaryFolder();
@@ -34,6 +41,7 @@ public class TestReflectLogicalTypes {
   @BeforeClass
   public static void addUUID() {
     REFLECT.addLogicalTypeConversion(new Conversions.UUIDConversion());
+    REFLECT.addLogicalTypeConversion(new Conversions.DecimalConversion());
   }
 
   @Test
@@ -50,6 +58,126 @@ public class TestReflectLogicalTypes {
     Schema actual = REFLECT.getSchema(RecordWithUUIDList.class);
 
     Assert.assertEquals("Should use the UUID logical type", expected, actual);
+  }
+
+  // this can be static because the schema only comes from reflection
+  public static class DecimalRecordBytes {
+    // scale is required and will not be set by the conversion
+    @AvroSchema("{" +
+        "\"type\": \"bytes\"," +
+        "\"logicalType\": \"decimal\"," +
+        "\"precision\": 9," +
+        "\"scale\": 2" +
+        "}")
+    private BigDecimal decimal;
+
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      }
+
+      if (other == null || getClass() != other.getClass()) {
+        return false;
+      }
+
+      DecimalRecordBytes that = (DecimalRecordBytes) other;
+      if (decimal == null) {
+        return (that.decimal == null);
+      }
+
+      return decimal.equals(that.decimal);
+    }
+
+    @Override
+    public int hashCode() {
+      return decimal != null ? decimal.hashCode() : 0;
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testDecimalBytes() throws IOException {
+    Schema schema = REFLECT.getSchema(DecimalRecordBytes.class);
+    Assert.assertEquals("Should have the correct record name",
+        "org.apache.avro.reflect.TestReflectLogicalTypes$",
+        schema.getNamespace());
+    Assert.assertEquals("Should have the correct record name",
+        "DecimalRecordBytes",
+        schema.getName());
+    Assert.assertEquals("Should have the correct logical type",
+        LogicalTypes.decimal(9, 2),
+        LogicalTypes.fromSchema(schema.getField("decimal").schema()));
+
+    DecimalRecordBytes record = new DecimalRecordBytes();
+    record.decimal = new BigDecimal("3.14");
+
+    File test = write(REFLECT, schema, record);
+    List<DecimalRecordBytes> actual = read(
+        REFLECT.<DecimalRecordBytes>createDatumReader(schema), test);
+    Assert.assertEquals("Should match the decimal after round trip",
+        Arrays.asList(record), actual);
+  }
+
+  // this can be static because the schema only comes from reflection
+  public static class DecimalRecordFixed {
+    // scale is required and will not be set by the conversion
+    @AvroSchema("{" +
+        "\"name\": \"decimal_9\"," +
+        "\"type\": \"fixed\"," +
+        "\"size\": 4," +
+        "\"logicalType\": \"decimal\"," +
+        "\"precision\": 9," +
+        "\"scale\": 2" +
+        "}")
+    private BigDecimal decimal;
+
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      }
+
+      if (other == null || getClass() != other.getClass()) {
+        return false;
+      }
+
+      DecimalRecordFixed that = (DecimalRecordFixed) other;
+      if (decimal == null) {
+        return (that.decimal == null);
+      }
+
+      return decimal.equals(that.decimal);
+    }
+
+    @Override
+    public int hashCode() {
+      return decimal != null ? decimal.hashCode() : 0;
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testDecimalFixed() throws IOException {
+    Schema schema = REFLECT.getSchema(DecimalRecordFixed.class);
+    Assert.assertEquals("Should have the correct record name",
+        "org.apache.avro.reflect.TestReflectLogicalTypes$",
+        schema.getNamespace());
+    Assert.assertEquals("Should have the correct record name",
+        "DecimalRecordFixed",
+        schema.getName());
+    Assert.assertEquals("Should have the correct logical type",
+        LogicalTypes.decimal(9, 2),
+        LogicalTypes.fromSchema(schema.getField("decimal").schema()));
+
+    DecimalRecordFixed record = new DecimalRecordFixed();
+    record.decimal = new BigDecimal("3.14");
+
+    File test = write(REFLECT, schema, record);
+    List<DecimalRecordFixed> actual = read(
+        REFLECT.<DecimalRecordFixed>createDatumReader(schema), test);
+    Assert.assertEquals("Should match the decimal after round trip",
+        Arrays.asList(record), actual);
   }
 
   @Test
@@ -190,50 +318,64 @@ public class TestReflectLogicalTypes {
 
   @Test
   public void testReadUUIDMissingLogicalTypeUnsafe() throws IOException {
-    // only one FieldAccess can be set per JVM
-    System.clearProperty("avro.disable.unsafe");
-    Assume.assumeTrue(
-        ReflectionUtil.getFieldAccess() instanceof FieldAccessUnsafe);
+    String unsafeValue = System.getProperty("avro.disable.unsafe");
+    try {
+      // only one FieldAccess can be set per JVM
+      System.clearProperty("avro.disable.unsafe");
+      Assume.assumeTrue(
+          ReflectionUtil.getFieldAccess() instanceof FieldAccessUnsafe);
 
-    Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName())
-        .fields().requiredString("uuid").endRecord();
-    LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
+      Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName())
+          .fields().requiredString("uuid").endRecord();
+      LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
 
-    UUID u1 = UUID.randomUUID();
+      UUID u1 = UUID.randomUUID();
 
-    RecordWithStringUUID r1 = new RecordWithStringUUID();
-    r1.uuid = u1.toString();
+      RecordWithStringUUID r1 = new RecordWithStringUUID();
+      r1.uuid = u1.toString();
 
-    File test = write(
-        ReflectData.get().getSchema(RecordWithStringUUID.class), r1);
+      File test = write(
+          ReflectData.get().getSchema(RecordWithStringUUID.class), r1);
 
-    RecordWithUUID datum = (RecordWithUUID) read(
-        ReflectData.get().createDatumReader(uuidSchema), test).get(0);
-    Object uuid = datum.uuid;
-    Assert.assertTrue("UUID should be a String (unsafe)",
-        uuid instanceof String);
+      RecordWithUUID datum = (RecordWithUUID) read(
+          ReflectData.get().createDatumReader(uuidSchema), test).get(0);
+      Object uuid = datum.uuid;
+      Assert.assertTrue("UUID should be a String (unsafe)",
+          uuid instanceof String);
+    } finally {
+      if (unsafeValue != null) {
+        System.setProperty("avro.disable.unsafe", unsafeValue);
+      }
+    }
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testReadUUIDMissingLogicalTypeReflect() throws IOException {
-    // only one FieldAccess can be set per JVM
-    System.setProperty("avro.disable.unsafe", "true");
-    Assume.assumeTrue(
-        ReflectionUtil.getFieldAccess() instanceof FieldAccessReflect);
+    String unsafeValue = System.getProperty("avro.disable.unsafe");
+    try {
+      // only one FieldAccess can be set per JVM
+      System.setProperty("avro.disable.unsafe", "true");
+      Assume.assumeTrue(
+          ReflectionUtil.getFieldAccess() instanceof FieldAccessReflect);
 
-    Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName())
-        .fields().requiredString("uuid").endRecord();
-    LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
+      Schema uuidSchema = SchemaBuilder.record(RecordWithUUID.class.getName())
+          .fields().requiredString("uuid").endRecord();
+      LogicalTypes.uuid().addToSchema(uuidSchema.getField("uuid").schema());
 
-    UUID u1 = UUID.randomUUID();
+      UUID u1 = UUID.randomUUID();
 
-    RecordWithStringUUID r1 = new RecordWithStringUUID();
-    r1.uuid = u1.toString();
+      RecordWithStringUUID r1 = new RecordWithStringUUID();
+      r1.uuid = u1.toString();
 
-    File test = write(
-        ReflectData.get().getSchema(RecordWithStringUUID.class), r1);
+      File test = write(
+          ReflectData.get().getSchema(RecordWithStringUUID.class), r1);
 
-    read(ReflectData.get().createDatumReader(uuidSchema), test).get(0);
+      read(ReflectData.get().createDatumReader(uuidSchema), test).get(0);
+    } finally {
+      if (unsafeValue != null) {
+        System.setProperty("avro.disable.unsafe", unsafeValue);
+      }
+    }
   }
 
   @Test(expected = DataFileWriter.AppendWriteException.class)

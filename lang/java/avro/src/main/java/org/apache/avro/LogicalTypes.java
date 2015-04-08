@@ -1,25 +1,58 @@
 package org.apache.avro;
 
+import java.util.Map;
+import org.apache.avro.util.WeakIdentityHashMap;
+
 public class LogicalTypes {
 
+  private static final Map<Schema, LogicalType> CACHE =
+      new WeakIdentityHashMap<Schema, LogicalType>();
+
+  /**
+   * Returns the {@link LogicalType} from the schema, if one is present.
+   * @param schema
+   * @return
+   */
   public static LogicalType fromSchema(Schema schema) {
+    return fromSchemaImpl(schema, true);
+  }
+
+  public static LogicalType fromSchemaIgnoreInvalid(Schema schema) {
+    if (CACHE.containsKey(schema)) {
+      return CACHE.get(schema);
+    }
+
+    LogicalType logicalType = fromSchemaImpl(schema, false);
+
+    // add to the cache, even if it is null
+    CACHE.put(schema, logicalType);
+
+    return logicalType;
+  }
+
+  private static LogicalType fromSchemaImpl(Schema schema, boolean throwErrors) {
     String typeName = schema.getProp(LogicalType.LOGICAL_TYPE_PROP);
 
     LogicalType logicalType;
-    if ("decimal".equals(typeName)) {
-      logicalType = new Decimal(schema);
-    } else if ("uuid".equals(typeName)) {
-      logicalType = LogicalType.UUID_TYPE;
-    } else {
-      return null;
-    }
-
-    // make sure the type is valid before returning it
     try {
-      logicalType.validate(schema);
+      if ("decimal".equals(typeName)) {
+        logicalType = new Decimal(schema);
+      } else if ("uuid".equals(typeName)) {
+        logicalType = LogicalType.UUID_TYPE;
+      } else {
+        logicalType = null;
+      }
+
+      // make sure the type is valid before returning it
+      if (logicalType != null) {
+        logicalType.validate(schema);
+      }
     } catch (RuntimeException e) {
+      if (throwErrors) {
+        throw e;
+      }
       // ignore invalid types
-      return null;
+      logicalType = null;
     }
 
     return logicalType;
@@ -55,8 +88,18 @@ public class LogicalTypes {
 
     private Decimal(Schema schema) {
       super("decimal");
+      if (!hasProperty(schema, PRECISION_PROP)) {
+        throw new IllegalArgumentException(
+            "Invalid decimal: missing precision");
+      }
+
       this.precision = getInt(schema, PRECISION_PROP);
-      this.scale = getInt(schema, SCALE_PROP);
+
+      if (hasProperty(schema, SCALE_PROP)) {
+        this.scale = getInt(schema, SCALE_PROP);
+      } else {
+        this.scale = 0;
+      }
     }
 
     @Override
@@ -82,10 +125,10 @@ public class LogicalTypes {
       if (schema.getType() != Schema.Type.FIXED &&
           schema.getType() != Schema.Type.BYTES) {
         throw new IllegalArgumentException(
-            "Logical type DECIMAL must be backed by fixed or bytes");
+            "Logical type decimal must be backed by fixed or bytes");
       }
       if (precision <= 0) {
-        throw new IllegalArgumentException("Invalid DECIMAL precision: " +
+        throw new IllegalArgumentException("Invalid decimal precision: " +
             precision + " (must be positive)");
       } else if (precision > maxPrecision(schema)) {
         throw new IllegalArgumentException(
@@ -93,10 +136,10 @@ public class LogicalTypes {
                 precision + " digits (max " + maxPrecision(schema) + ")");
       }
       if (scale < 0) {
-        throw new IllegalArgumentException("Invalid DECIMAL scale: " +
+        throw new IllegalArgumentException("Invalid decimal scale: " +
             scale + " (must be positive)");
       } else if (scale > precision) {
-        throw new IllegalArgumentException("Invalid DECIMAL scale: " +
+        throw new IllegalArgumentException("Invalid decimal scale: " +
             scale + " (greater than precision: " + precision + ")");
       }
     }
@@ -115,6 +158,10 @@ public class LogicalTypes {
         // not valid for any other type
         return 0;
       }
+    }
+
+    private boolean hasProperty(Schema schema, String name) {
+      return (schema.getObjectProp(name) != null);
     }
 
     private int getInt(Schema schema, String name) {
