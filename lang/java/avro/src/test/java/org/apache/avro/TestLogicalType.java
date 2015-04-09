@@ -54,7 +54,7 @@ public class TestLogicalType {
     for (final Schema schema : nonBytes) {
       assertThrows("Should reject type: " + schema.getType(),
           IllegalArgumentException.class,
-          "DECIMAL must be backed by fixed or bytes", new Callable() {
+          "Logical type decimal must be backed by fixed or bytes", new Callable() {
             @Override
             public Object call() throws Exception {
               decimal.addToSchema(schema);
@@ -104,7 +104,7 @@ public class TestLogicalType {
   public void testDecimalFailsWithZeroPrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid DECIMAL precision: 0 (must be positive)", new Callable() {
+        "Invalid decimal precision: 0 (must be positive)", new Callable() {
           @Override
           public Object call() throws Exception {
             LogicalTypes.decimal(0).addToSchema(schema);
@@ -119,7 +119,7 @@ public class TestLogicalType {
   public void testDecimalFailsWithNegativePrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid DECIMAL precision: -9 (must be positive)", new Callable() {
+        "Invalid decimal precision: -9 (must be positive)", new Callable() {
           @Override
           public Object call() throws Exception {
             LogicalTypes.decimal(-9).addToSchema(schema);
@@ -134,7 +134,7 @@ public class TestLogicalType {
   public void testDecimalScaleBoundedByPrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid DECIMAL scale: 10 (greater than precision: 9)",
+        "Invalid decimal scale: 10 (greater than precision: 9)",
         new Callable() {
           @Override
           public Object call() throws Exception {
@@ -150,7 +150,7 @@ public class TestLogicalType {
   public void testDecimalFailsWithNegativeScale() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid DECIMAL scale: -2 (must be positive)", new Callable() {
+        "Invalid decimal scale: -2 (must be positive)", new Callable() {
           @Override
           public Object call() throws Exception {
             LogicalTypes.decimal(9, -2).addToSchema(schema);

@@ -654,10 +654,12 @@ public class GenericData {
     // if there is a logical type that works, use it first
     // this allows logical type concrete classes to overlap with supported ones
     // for example, a conversion could return a map
-    List<Schema> candidates = union.getTypes();
-    for (int i = 0; i < candidates.size(); i += 1) {
-      if (getConversionFrom(datum.getClass(), candidates.get(i)) != null) {
-        return i;
+    if (datum != null) {
+      List<Schema> candidates = union.getTypes();
+      for (int i = 0; i < candidates.size(); i += 1) {
+        if (getConversionFrom(datum.getClass(), candidates.get(i)) != null) {
+          return i;
+        }
       }
     }
 

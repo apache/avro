@@ -64,9 +64,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /** Called to write data.*/
   protected void write(Schema schema, Object datum, Encoder out)
       throws IOException {
-    Conversion<?> conversion = getData()
-        .getConversionFrom(datum.getClass(), schema);
-    writeWithoutConversion(schema, convert(schema, conversion, datum), out);
+    if (datum != null) {
+      Conversion<?> conversion = getData()
+          .getConversionFrom(datum.getClass(), schema);
+      writeWithoutConversion(schema, convert(schema, conversion, datum), out);
+    } else {
+      writeWithoutConversion(schema, null, out);
+    }
   }
 
   private <T> Object convert(Schema schema, Conversion<T> conversion, Object datum) {
