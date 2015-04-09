@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
@@ -296,8 +295,8 @@ public class TestReflectLogicalTypes {
     expected.add(record);
 
     File test = write(model, schema, record);
-    Pair<Long, Long> actual = TestReflectLogicalTypes.<PairRecord>read(
-        model.createDatumReader(schema), test).get(0).pair;
+    Pair<Long, Long> actual = ((PairRecord) TestReflectLogicalTypes.
+        <PairRecord>read(model.createDatumReader(schema), test).get(0)).pair;
     Assert.assertEquals("Data should match after serialization round-trip",
         34L, (long) actual.first);
     Assert.assertEquals("Data should match after serialization round-trip",

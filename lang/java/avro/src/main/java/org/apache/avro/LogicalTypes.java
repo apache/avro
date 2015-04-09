@@ -9,8 +9,8 @@ public class LogicalTypes {
   private static final Map<Schema, LogicalType> CACHE =
       new WeakIdentityHashMap<Schema, LogicalType>();
 
-  public static interface LogicalTypeFactory {
-    public LogicalType fromSchema(Schema schema);
+  public interface LogicalTypeFactory {
+    LogicalType fromSchema(Schema schema);
   }
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES =
