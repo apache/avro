@@ -19,10 +19,6 @@ class AvroSchemaBuilder(object):
     the schema building ends, it constructs the corresponding schema object
     which will validate the the syntax of the Avro json object.
 
-    For each schema type, it also has *_type property that returns a type
-    string and can be used to set `type` attribute of a schema. For example,
-    `null_type` is string `null` and `record_type` is string `record`.
-
     Usage: (unit tests cover more usages)
       ab = AvroSchemaBuilder()
 
