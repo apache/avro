@@ -124,17 +124,16 @@ class TestAvroSchemaBuilder(unittest.TestCase):
             with self.assertRaises(schema.SchemaParseException):
                 self.builder.begin_enum(invalid_name, self.enum_symbols).end()
 
-
     def test_create_enum_with_dup_name(self):
         with self.assertRaisesRegexp(
                 schema.SchemaParseException,
                 self.duplicate_name_err.format(self.name)
         ):
             self.builder.begin_record(self.name)
-            self.builder.begin_field(
+            self.builder.add_field(
                 self.another_name,
                 self.builder.begin_enum(self.name, self.enum_symbols).end()
-            ).end_field()
+            )
             self.builder.end()
 
     def test_create_enum_with_invalid_symbols(self):
@@ -191,10 +190,10 @@ class TestAvroSchemaBuilder(unittest.TestCase):
                 self.duplicate_name_err.format(self.name)
         ):
             self.builder.begin_record(self.name)
-            self.builder.begin_field(
+            self.builder.add_field(
                 self.another_name,
                 self.builder.begin_fixed(self.name, self.fixed_size).end()
-            ).end_field()
+            )
             self.builder.end()
 
     def test_create_fixed_with_invalid_size(self):
@@ -280,14 +279,14 @@ class TestAvroSchemaBuilder(unittest.TestCase):
 
     def test_create_record(self):
         self.builder.begin_record(self.name)
-        self.builder.begin_field(
+        self.builder.add_field(
             'bar1',
             self.builder.create_int()
-        ).end_field()
-        self.builder.begin_field(
+        )
+        self.builder.add_field(
             'bar2',
             self.builder.begin_map(self.builder.create_double()).end()
-        ).end_field()
+        )
         actual_json = self.builder.end()
 
         expected_json = {
@@ -308,10 +307,10 @@ class TestAvroSchemaBuilder(unittest.TestCase):
             doc=self.doc,
             **self.metadata
         )
-        self.builder.begin_field(
+        self.builder.add_field(
             self.another_name,
             self.builder.create_int()
-        ).end_field()
+        )
         actual_json = self.builder.end()
 
         expected_json = {
@@ -328,7 +327,7 @@ class TestAvroSchemaBuilder(unittest.TestCase):
 
     def test_create_field_with_optional_attributes(self):
         self.builder.begin_record(self.name)
-        self.builder.begin_field(
+        self.builder.add_field(
             self.another_name,
             self.builder.create_boolean(),
             has_default=True,
@@ -337,7 +336,7 @@ class TestAvroSchemaBuilder(unittest.TestCase):
             aliases=self.aliases,
             doc=self.doc,
             **self.metadata
-        ).end_field()
+        )
         actual_json = self.builder.end()
 
         expected_field = {
@@ -367,10 +366,10 @@ class TestAvroSchemaBuilder(unittest.TestCase):
             self.builder.clear()
             with self.assertRaises(schema.SchemaParseException):
                 self.builder.begin_record(invalid_name)
-                self.builder.begin_field(
+                self.builder.add_field(
                     self.another_name,
                     self.builder.create_int()
-                ).end_field()
+                )
                 self.builder.end()
 
     def test_create_record_with_dup_name(self):
@@ -379,14 +378,14 @@ class TestAvroSchemaBuilder(unittest.TestCase):
                 self.duplicate_name_err.format(self.name)
         ):
             self.builder.begin_record(self.another_name)
-            self.builder.begin_field(
+            self.builder.add_field(
                 'bar1',
                 self.builder.begin_enum(self.name, self.enum_symbols).end()
-            ).end_field()
-            self.builder.begin_field(
+            )
+            self.builder.add_field(
                 'bar2',
                 self.builder.begin_record(self.name).end()
-            ).end_field()
+            )
             self.builder.end()
 
     def test_create_record_with_dup_field_name(self):
@@ -395,14 +394,14 @@ class TestAvroSchemaBuilder(unittest.TestCase):
                 "{0} already in use.".format(self.another_name)
         ):
             self.builder.begin_record(self.name)
-            self.builder.begin_field(
+            self.builder.add_field(
                 self.another_name,
                 self.builder.create_int()
-            ).end_field()
-            self.builder.begin_field(
+            )
+            self.builder.add_field(
                 self.another_name,
                 self.builder.create_string()
-            ).end_field()
+            )
             self.builder.end()
 
     def test_create_field_with_invalid_type(self):
@@ -410,20 +409,20 @@ class TestAvroSchemaBuilder(unittest.TestCase):
             self.builder.clear()
             with self.assertRaises(schema.SchemaParseException):
                 self.builder.begin_record(self.name)
-                self.builder.begin_field(
+                self.builder.add_field(
                     self.another_name,
                     invalid_schema
-                ).end_field()
+                )
                 self.builder.end()
 
     def test_create_field_with_invalid_sort_order(self):
         with self.assertRaises(schema.SchemaParseException):
             self.builder.begin_record(self.name)
-            self.builder.begin_field(
+            self.builder.add_field(
                 self.another_name,
                 self.builder.create_int(),
                 sort_order='asc'
-            ).end_field()
+            )
             self.builder.end()
 
     def test_create_union(self):
@@ -543,10 +542,10 @@ class TestAvroSchemaBuilder(unittest.TestCase):
             ]
         }
         self.builder.begin_with_schema_json(schema_json)
-        self.builder.begin_field(
+        self.builder.add_field(
             'field_new',
             self.builder.create_int()
-        ).end_field()
+        )
         actual_json = self.builder.end()
 
         expected_json = schema_json.copy()
@@ -556,8 +555,8 @@ class TestAvroSchemaBuilder(unittest.TestCase):
 
     def test_removed_field(self):
         self.builder.begin_record(self.name)
-        self.builder.begin_field('bar1', self.builder.create_int()).end_field()
-        self.builder.begin_field('bar2', self.builder.create_int()).end_field()
+        self.builder.add_field('bar1', self.builder.create_int())
+        self.builder.add_field('bar2', self.builder.create_int())
         self.builder.remove_field('bar1')
         actual_json = self.builder.end()
 

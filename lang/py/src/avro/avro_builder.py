@@ -28,11 +28,11 @@ class AvroSchemaBuilder(object):
 
       - building a record schema:
         ab.begin_record('user', namespace='yelp')
-        ab.begin_field('id', ab.create_int()).end_field()
-        ab.begin_field(
+        ab.add_field('id', ab.create_int())
+        ab.add_field(
             'fav_color',
-            ab.begin_enum('color_enum', ['red', 'blue']
-        ).end_field()
+            ab.begin_enum('color_enum', ['red', 'blue']).end()
+        )
         record = ab.end()
 
       - building an enum schema:
@@ -135,8 +135,8 @@ class AvroSchemaBuilder(object):
         self._set_current_schema(record_schema)
         return self
 
-    def begin_field(self, name, typ, has_default=False, default_value=None,
-                    sort_order=None, aliases=None, doc=None, **metadata):
+    def add_field(self, name, typ, has_default=False, default_value=None,
+                  sort_order=None, aliases=None, doc=None, **metadata):
         field = {'name': name, 'type': typ}
         if has_default:
             field['default'] = default_value
@@ -148,13 +148,6 @@ class AvroSchemaBuilder(object):
             self._set_doc(field, doc)
         field.update(metadata)
 
-        self._save_current_schema()
-        self._set_current_schema(field)
-        return self
-
-    def end_field(self):
-        field = self._schema_json
-        self._restore_current_schema()
         self._schema_json['fields'].append(field)
 
     def begin_union(self, *avro_schemas):
