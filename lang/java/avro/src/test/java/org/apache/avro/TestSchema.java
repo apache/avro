@@ -75,4 +75,29 @@ public class TestSchema {
     Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
     assertEquals(expected, schema);
   }
+
+  @Test
+  public void testEmptyRecordSchema() {
+    Schema schema = Schema.createRecord("foobar", null, null, false);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+  }
+
+  @Test
+  public void testSchemaWithFields() {
+    List<Field> fields = new ArrayList<Field>();
+    fields.add(new Field("field_name1", Schema.create(Type.NULL), null, null));
+    fields.add(new Field("field_name2", Schema.create(Type.INT), null, null));
+    Schema schema = Schema.createRecord("foobar", null, null, false, fields);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+    assertEquals(2, schema.getFields().size());
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testSchemaWithNullFields() {
+    Schema.createRecord("foobar", null, null, false, null);
+  }
+
+
 }

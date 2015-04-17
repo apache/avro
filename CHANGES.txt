@@ -68,6 +68,9 @@ Trunk (not yet released)
     AVRO-1628. Java: Add Schema#createUnion(Schema ...) convenience method.
     (Clément Mahtieu via cutting)
 
+    AVRO-1655. Java: Add Schema.createRecord with field list.
+    (Lars Francke via blue)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
@@ -130,6 +133,9 @@ Trunk (not yet released)
 
     AVRO-1652. Java: Do not warn or validate defaults if validation is off.
     (Michael D'Angelo via blue)
+
+    AVRO-1655. Java: Fix NPE in RecordSchema#toString when fields are null.
+    (Lars Francke via blue)
 
 Avro 1.7.7 (23 July 2014)
 

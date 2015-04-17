@@ -151,6 +151,12 @@ public abstract class Schema extends JsonProperties {
     return new RecordSchema(new Name(name, namespace), doc, isError);
   }
 
+  /** Create a named record schema with fields already set. */
+  public static Schema createRecord(String name, String doc, String namespace,
+                                    boolean isError, List<Field> fields) {
+    return new RecordSchema(new Name(name, namespace), doc, isError, fields);
+  }
+
   /** Create an enum schema. */
   public static Schema createEnum(String name, String doc, String namespace,
                                   List<String> values) {
@@ -594,6 +600,14 @@ public abstract class Schema extends JsonProperties {
       super(Type.RECORD, name, doc);
       this.isError = isError;
     }
+
+    public RecordSchema(Name name, String doc, boolean isError,
+                        List<Field> fields) {
+      super(Type.RECORD, name, doc);
+      this.isError = isError;
+      setFields(fields);
+    }
+
     public boolean isError() { return isError; }
 
     @Override
@@ -671,8 +685,12 @@ public abstract class Schema extends JsonProperties {
       names.space = name.space;                   // set default namespace
       if (getDoc() != null)
         gen.writeStringField("doc", getDoc());
-      gen.writeFieldName("fields");
-      fieldsToJson(names, gen);
+
+      if (fields != null) {
+        gen.writeFieldName("fields");
+        fieldsToJson(names, gen);
+      }
+
       writeProps(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
