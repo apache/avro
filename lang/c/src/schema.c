@@ -938,8 +938,10 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 		{
 			json_t *json_name = json_object_get(json, "name");
 			json_t *json_symbols = json_object_get(json, "symbols");
+			json_t *json_namespace = json_object_get(json, "namespace");
 			const char *name;
 			unsigned int num_symbols;
+			const char* enum_namespace;
 
 			if (!json_is_string(json_name)) {
 				avro_set_error("Enum type must have a \"name\"");
@@ -949,11 +951,15 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 				avro_set_error("Enum type must have \"symbols\"");
 				return EINVAL;
 			}
-
 			name = json_string_value(json_name);
 			if (!name) {
 				avro_set_error("Enum type must have a \"name\"");
 				return EINVAL;
+			}
+			if (json_is_string(json_namespace)) {
+				enum_namespace = json_string_value(json_namespace);
+			} else {
+				enum_namespace = parent_namespace;
 			}
 			num_symbols = json_array_size(json_symbols);
 			if (num_symbols == 0) {
@@ -961,7 +967,7 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 				return EINVAL;
 			}
 			*schema = avro_schema_enum(name);
-			if (save_named_schemas(name, parent_namespace, *schema, named_schemas)) {
+			if (save_named_schemas(name, enum_namespace, *schema, named_schemas)) {
 				avro_set_error("Cannot save enum schema");
 				return ENOMEM;
 			}
