@@ -93,7 +93,6 @@ public abstract class LogicalType extends JsonProperties {
       Properties props = new Properties();
       while (logTypesResources.hasMoreElements()) {
         URL url = logTypesResources.nextElement();
-        LOG.info("Loading logical type registrations from " + url);
         try {
           BufferedReader is
                   = new BufferedReader(new InputStreamReader(url.openStream(), Charset.forName("US-ASCII")));

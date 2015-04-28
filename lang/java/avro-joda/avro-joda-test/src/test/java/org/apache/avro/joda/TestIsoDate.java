@@ -30,6 +30,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.node.TextNode;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -50,7 +51,7 @@ public class TestIsoDate {
     @Test
     public void testSerialization() throws IOException {
         TestRecord record = TestRecord.newBuilder()
-                .setDecimalVal(new BigDecimal("3.14"))
+                .setDecimalVal(new BigDecimal("3.123456789"))
                 .setDecimalVal2(new BigDecimal("3.14"))
                 .setDecimalVal3(new BigDecimal("3.14"))
                 .setIntVal(0)
@@ -61,12 +62,40 @@ public class TestIsoDate {
                 .build();
         byte [] result = AvroUtils.writeAvroBin(record);
         TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class, null);
+        record.setDecimalVal(new BigDecimal("3.12345679"));
         Assert.assertEquals(record, record2);
         result = AvroUtils.writeAvroJson(record);
         System.out.println(new String(result, Charset.forName("UTF-8")));
         record2 = AvroUtils.readAvroJson(result, TestRecord.class);
         Assert.assertEquals(record, record2);
     }
+
+
+    @Test
+    public void testSerializationJson() throws IOException {
+        TestRecord record = TestRecord.newBuilder()
+                .setDecimalVal(new BigDecimal("3.14"))
+                .setDecimalVal2(new BigDecimal("3.14"))
+                .setDecimalVal3(new BigDecimal("3.14"))
+                .setIntVal(0)
+                .setDoubleVal(3.5).setDateVal(new LocalDate())
+                .setDateVal2(new LocalDate())
+                .setDateVal3(new LocalDate())
+                .setDateTimeVal(new DateTime())
+                .setDateTimeStrVal(new DateTime(2014, 8, 15, 9, 0))
+                .build();
+        byte [] result = AvroUtils.writeAvroJson(record);
+        System.out.println("Test JSON String: " + new String(result, "UTF-8"));
+        TestRecord record2 = AvroUtils.readAvroJson(result, TestRecord.class);
+        Assert.assertEquals(record, record2);
+        result = AvroUtils.writeAvroJson(record);
+        System.out.println(new String(result, Charset.forName("UTF-8")));
+        record2 = AvroUtils.readAvroJson(result, TestRecord.class);
+        Assert.assertEquals(record, record2);
+    }
+
+
+
 
     
     @Test
@@ -160,6 +189,7 @@ public class TestIsoDate {
 
 
     @Test
+    @Ignore
     public void testSerializationCompatibility4() throws IOException {
         TestRecord3 record = TestRecord3.newBuilder()
                 .setDecimalVal(new BigDecimal("3.14"))

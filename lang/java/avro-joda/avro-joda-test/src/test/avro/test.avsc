@@ -5,13 +5,14 @@
 	"fields" : [
 		{"name" : "intVal", "type" : "int" },
 		{"name" : "doubleVal", "type" : "double" },
-		{"name" : "decimalVal", "type" : {"type" : "string", "logicalType" : "decimal", "precision" : 36, "scale" : 16 } },
+		{"name" : "decimalVal", "type" : {"type" : "string", "logicalType" : "decimal", "precision" : 16, "scale" : 8 } },
                 {"name" : "decimalVal2", "type" : {"type" : "bytes", "logicalType" : "decimal", "precision" : 36, "scale" : 16 } },
                 {"name" : "decimalVal3", "type" : ["null", {"type" : "string", "logicalType" : "decimal", "precision" : 36, "scale" : 16 } ], "default" : null },
                 {"name" : "decimalVal4", "type" : ["null", "int", {"type" : "string", "logicalType" : "decimal", "precision" : 36, "scale" : 16 } ], "default" : null },
                 {"name" : "dateVal", "type" : {"type" : "string", "logicalType" : "isodate" } },
                 {"name" : "dateVal2", "type" : {"type" : "long", "logicalType" : "isodate" } },
                 {"name" : "dateVal3", "type" : {"type" : "int", "logicalType" : "isodate" } },
-                {"name" : "dateTimeVal", "type" : {"type" : "long", "logicalType" : "isodatetime" } }
+                {"name" : "dateTimeVal", "type" : {"type" : "long", "logicalType" : "isodatetime" } },
+                {"name" : "dateTimeStrVal", "type" : {"type" : "string", "logicalType" : "isodatetime" }, "default" : "2014-08-15T09:00:00.000-07:00" }
 	]	
 }
