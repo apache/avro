@@ -10,6 +10,9 @@ Trunk (not yet released)
     Object whose toString() names an enum symbol, but rather always
     require use of distinct enum types. (Sean Busbey via cutting)
 
+    AVRO-1602. Java: Remove Dapper-style RPC trace facility.  This
+    seems unused and has been a source of build problems.  (cutting)
+
   NEW FEATURES
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)
@@ -26,6 +29,19 @@ Trunk (not yet released)
     AVRO-570. Python: Add connector for tethered mapreduce.
     (Jeremy Lewi and Steven Willis via cutting)    
 
+    AVRO-834. Java: Data File corruption recovery tool.
+    (scottcarey and tomwhite)
+
+    AVRO-1614. Java: In generated builder classes, add accessors to
+    field sub-builders, permitting easier creation of nested, optional
+    structures. (Niels Basjes via cutting)
+
+    AVRO-1537. Make it easier to set up a multi-language build environment.
+    Support for running a Docker container with all build dependencies.
+    (tomwhite)
+
+    AVRO-680. Java: Support non-string map keys. (Sachin Goyal via Ryan Blue).
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
@@ -38,6 +54,22 @@ Trunk (not yet released)
 
     AVRO-1551. Java: Add an output encoding option to the compiler
     command line tool. (Keegan Witt via cutting)
+
+    AVRO-1585. Java: Deprecate Jackson classes in public API. (tomwhite)
+
+    AVRO-1619. Java: Improve javadoc comments in generated code.
+    (Niels Basjes via cutting)
+
+    AVRO-1616. Add IntelliJ files to .gitignore. (Niels Basjes via cutting)
+
+    AVRO-1539. Java: Add FileSystem based FsInput constructor.
+    (Allan Shoup via cutting)
+
+    AVRO-1628. Java: Add Schema#createUnion(Schema ...) convenience method.
+    (Clément Mahtieu via cutting)
+
+    AVRO-1655. Java: Add Schema.createRecord with field list.
+    (Lars Francke via blue)
 
   BUG FIXES
 
@@ -66,6 +98,44 @@ Trunk (not yet released)
 
     AVRO-1597. Java: Random data tool writes corrupt files to standard out.
     (cutting)
+
+    AVRO-1596. Java: Cannot read past corrupted block in Avro data file.
+    (tomwhite)
+
+    AVRO-1564. Java: Fix handling of optional byte field in Thrift.
+    (Michael Pershyn via cutting)
+
+    AVRO-1407: Java: Fix infinite loop on slow connect in NettyTransceiver.
+    (Gareth Davis via cutting)
+
+    AVRO-1604. Java: Fix ReflectData.AllowNull to work with @Nullable
+    annotations. (Ryan Blue via cutting)
+
+    AVRO-1545. Python. Fix to retain schema properties on primitive types.
+    (Dustin Spicuzza via cutting)
+
+    AVRO-1623. Java: Fix GenericData#validate to correctly resolve unions.
+    (Jeffrey Mullins via cutting)
+
+    AVRO-1621. PHP: FloatIntEncodingTest fails for NAN. (tomwhite)
+
+    AVRO-1573. Javascript. Upgrade to Grunt 0.4 for testing. (tomwhite)
+
+    AVRO-1624. Java. Surefire forkMode is deprecated. (Niels Basjes via
+    tomwhite)
+
+    AVRO-1630. Java: Creating Builder from instance loses data. (Niels Basjes
+    via tomwhite)
+
+    AVRO-1653. Fix typo in spec (lenghted => length). (Sehrope Sarkuni via blue)
+
+    AVRO-1656. Fix 'How to Contribute' link. (Benjamin Clauss via blue)
+
+    AVRO-1652. Java: Do not warn or validate defaults if validation is off.
+    (Michael D'Angelo via blue)
+
+    AVRO-1655. Java: Fix NPE in RecordSchema#toString when fields are null.
+    (Lars Francke via blue)
 
 Avro 1.7.7 (23 July 2014)
 

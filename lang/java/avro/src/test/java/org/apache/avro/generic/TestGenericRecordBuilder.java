@@ -26,8 +26,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData.Record;
-import org.codehaus.jackson.node.TextNode;
-import org.codehaus.jackson.node.NullNode;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -100,13 +98,13 @@ public class TestGenericRecordBuilder {
   /** Creates a test record schema */
   private static Schema recordSchema() {
     List<Field> fields = new ArrayList<Field>();
-    fields.add(new Field("id", Schema.create(Type.STRING), null, new TextNode("0")));
+    fields.add(new Field("id", Schema.create(Type.STRING), null, "0"));
     fields.add(new Field("intField", Schema.create(Type.INT), null, null));
     fields.add(new Field("anArray", Schema.createArray(Schema.create(Type.STRING)), null, null));
     fields.add(new Field("optionalInt", Schema.createUnion
                          (Arrays.asList(Schema.create(Type.NULL),
                                         Schema.create(Type.INT))),
-                         null, NullNode.getInstance()));
+                         null, Schema.NULL_VALUE));
     Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
     schema.setFields(fields);
     return schema;

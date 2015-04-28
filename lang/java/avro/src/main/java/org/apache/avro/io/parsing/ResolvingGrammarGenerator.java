@@ -316,8 +316,9 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    * @param s The schema for the object being encoded.
    * @param n The Json node to encode.
    * @throws IOException
+   * @deprecated internal method
    */
-  
+  @Deprecated
   public static void encode(Encoder e, Schema s, JsonNode n)
     throws IOException {
     switch (s.getType()) {

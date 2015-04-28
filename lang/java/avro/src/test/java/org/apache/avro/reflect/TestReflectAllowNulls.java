@@ -45,6 +45,25 @@ public class TestReflectAllowNulls {
     Primitives anObject;
   }
 
+  private static class AllowNullWithNullable {
+    @Nullable
+    Double aDouble;
+
+    @AvroSchema("[\"double\", \"long\"]")
+    Object doubleOrLong;
+
+    @Nullable
+    @AvroSchema("[\"double\", \"long\"]")
+    Object doubleOrLongOrNull1;
+
+    @AvroSchema("[\"double\", \"long\", \"null\"]")
+    Object doubleOrLongOrNull2;
+
+    @Nullable
+    @AvroSchema("[\"double\", \"long\", \"null\"]")
+    Object doubleOrLongOrNull3;
+  }
+
   @Test
   public void testPrimitives() {
     // AllowNull only makes fields nullable, so testing must use a base record
@@ -85,6 +104,42 @@ public class TestReflectAllowNulls {
         wrappers.getField("aDouble").schema());
     Assert.assertEquals(nullableSchema(Primitives.class),
         wrappers.getField("anObject").schema());
+  }
+
+  @Test
+  public void testAllowNullWithNullableAnnotation() {
+    Schema withNullable = ReflectData.AllowNull.get()
+        .getSchema(AllowNullWithNullable.class);
+
+    Assert.assertEquals("Should produce a nullable double",
+        nullableSchema(double.class),
+        withNullable.getField("aDouble").schema());
+
+    Schema nullableDoubleOrLong = Schema.createUnion(Arrays.asList(
+            Schema.create(Schema.Type.NULL),
+            Schema.create(Schema.Type.DOUBLE),
+            Schema.create(Schema.Type.LONG)));
+
+    Assert.assertEquals("Should add null to a non-null union",
+        nullableDoubleOrLong,
+        withNullable.getField("doubleOrLong").schema());
+
+    Assert.assertEquals("Should add null to a non-null union",
+        nullableDoubleOrLong,
+        withNullable.getField("doubleOrLongOrNull1").schema());
+
+    Schema doubleOrLongOrNull = Schema.createUnion(Arrays.asList(
+        Schema.create(Schema.Type.DOUBLE),
+        Schema.create(Schema.Type.LONG),
+        Schema.create(Schema.Type.NULL)));
+
+    Assert.assertEquals("Should add null to a non-null union",
+        doubleOrLongOrNull,
+        withNullable.getField("doubleOrLongOrNull2").schema());
+
+    Assert.assertEquals("Should add null to a non-null union",
+        doubleOrLongOrNull,
+        withNullable.getField("doubleOrLongOrNull3").schema());
   }
 
   private Schema requiredSchema(Class<?> type) {

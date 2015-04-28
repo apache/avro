@@ -289,6 +289,10 @@ OTHER_PROP_EXAMPLES = [
      "symbols": [ "one", "two", "three" ],
      "cp_float" : 1.0 }
     """,True),
+  ExampleSchema("""\
+    {"type": "long",
+     "date": "true"}
+    """, True)
 ]
 
 EXAMPLES = PRIMITIVE_EXAMPLES

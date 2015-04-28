@@ -45,6 +45,7 @@ public class Main {
         new DataFileWriteTool(),
         new DataFileGetMetaTool(),
         new DataFileGetSchemaTool(),
+        new DataFileRepairTool(),
         new IdlTool(),
         new IdlToSchemataTool(),
         new RecodecTool(),

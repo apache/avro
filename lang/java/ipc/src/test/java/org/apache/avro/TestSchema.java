@@ -819,21 +819,21 @@ public class TestSchema {
   }
 
   public static void checkBinaryJson(String json) throws Exception {
-    JsonNode node = Schema.parseJson(json);
+    Object node = Json.parseJson(json);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    DatumWriter<JsonNode> writer = new Json.Writer();
+    DatumWriter<Object> writer = new Json.ObjectWriter();
     Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);
     encoder = EncoderFactory.get().validatingEncoder(Json.SCHEMA, encoder);
     writer.write(node, encoder);
     encoder.flush();
     byte[] bytes = out.toByteArray();
 
-    DatumReader<JsonNode> reader = new Json.Reader();
+    DatumReader<Object> reader = new Json.ObjectReader();
     Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
     decoder = DecoderFactory.get().validatingDecoder(Json.SCHEMA, decoder);
-    JsonNode decoded = reader.read(null, decoder);
+    Object decoded = reader.read(null, decoder);
 
-    assertEquals("Decoded json does not match.", node.toString(), decoded.toString());
+    assertEquals("Decoded json does not match.", Json.toString(node), Json.toString(decoded));
   }
 
   private static final Schema ACTUAL =            // an empty record schema

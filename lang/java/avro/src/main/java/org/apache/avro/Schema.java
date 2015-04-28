@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -143,6 +144,11 @@ public abstract class Schema extends JsonProperties {
     hashCode = NO_HASHCODE;
   }
 
+  @Override public void addProp(String name, Object value) {
+    super.addProp(name, value);
+    hashCode = NO_HASHCODE;
+  }
+
   /** Create an anonymous record schema. */
   public static Schema createRecord(List<Field> fields) {
     Schema result = createRecord(null, null, null, false);
@@ -154,6 +160,12 @@ public abstract class Schema extends JsonProperties {
   public static Schema createRecord(String name, String doc, String namespace,
                                     boolean isError) {
     return new RecordSchema(new Name(name, namespace), doc, isError);
+  }
+
+  /** Create a named record schema with fields already set. */
+  public static Schema createRecord(String name, String doc, String namespace,
+                                    boolean isError, List<Field> fields) {
+    return new RecordSchema(new Name(name, namespace), doc, isError, fields);
   }
 
   /** Create an enum schema. */
@@ -176,6 +188,11 @@ public abstract class Schema extends JsonProperties {
   /** Create a union schema. */
   public static Schema createUnion(List<Schema> types) {
     return new UnionSchema(new LockableArrayList<Schema>(types));
+  }
+
+  /** Create a union schema. */
+  public static Schema createUnion(Schema... types) {
+    return createUnion(new LockableArrayList<Schema>(types));
   }
 
   /** Create a union schema. */
@@ -400,10 +417,14 @@ public abstract class Schema extends JsonProperties {
     private final Order order;
     private Set<String> aliases;
 
+    /** @deprecated use {@link #Field(String, Schema, String, Object)} */
+    @Deprecated
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue) {
       this(name, schema, doc, defaultValue, Order.ASCENDING);
     }
+    /** @deprecated use {@link #Field(String, Schema, String, Object, Order)} */
+    @Deprecated
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue, Order order) {
       super(FIELD_RESERVED);
@@ -413,6 +434,22 @@ public abstract class Schema extends JsonProperties {
       this.defaultValue = validateDefault(name, schema, defaultValue);
       this.order = order;
     }
+    /**
+     * @param defaultValue the default value for this field specified using the mapping
+     *  in {@link JsonProperties}
+     */
+    public Field(String name, Schema schema, String doc,
+        Object defaultValue) {
+      this(name, schema, doc, defaultValue, Order.ASCENDING);
+    }
+    /**
+     * @param defaultValue the default value for this field specified using the mapping
+     *  in {@link JsonProperties}
+     */
+    public Field(String name, Schema schema, String doc,
+        Object defaultValue, Order order) {
+      this(name, schema, doc, JacksonUtils.toJsonNode(defaultValue), order);
+    }
     public String name() { return name; };
     /** The position of this field within the record. */
     public int pos() { return position; }
@@ -420,7 +457,13 @@ public abstract class Schema extends JsonProperties {
     public Schema schema() { return schema; }
     /** Field's documentation within the record, if set. May return null. */
     public String doc() { return doc; }
-    public JsonNode defaultValue() { return defaultValue; }
+    /** @deprecated use {@link #defaultVal() } */
+    @Deprecated public JsonNode defaultValue() { return defaultValue; }
+    /**
+     * @return the default value for this field specified using the mapping
+     *  in {@link JsonProperties}
+     */
+    public Object defaultVal() { return JacksonUtils.toObject(defaultValue); }
     public Order order() { return order; }
     @Deprecated public Map<String,String> props() { return getProps(); }
     public void addAlias(String alias) {
@@ -595,6 +638,14 @@ public abstract class Schema extends JsonProperties {
       super(Type.RECORD, name, doc);
       this.isError = isError;
     }
+
+    public RecordSchema(Name name, String doc, boolean isError,
+                        List<Field> fields) {
+      super(Type.RECORD, name, doc);
+      this.isError = isError;
+      setFields(fields);
+    }
+
     public boolean isError() { return isError; }
 
     @Override
@@ -673,8 +724,12 @@ public abstract class Schema extends JsonProperties {
       names.space = name.space;                   // set default namespace
       if (getDoc() != null)
         gen.writeStringField("doc", getDoc());
-      gen.writeFieldName("fields");
-      fieldsToJson(names, gen);
+
+      if (fields != null) {
+        gen.writeFieldName("fields");
+        fieldsToJson(names, gen);
+      }
+
       writeProps(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
@@ -1138,13 +1193,11 @@ public abstract class Schema extends JsonProperties {
     
   private static JsonNode validateDefault(String fieldName, Schema schema,
                                           JsonNode defaultValue) {
-    if ((defaultValue != null)
+    if (VALIDATE_DEFAULTS.get() && (defaultValue != null)
         && !isValidDefault(schema, defaultValue)) { // invalid default
       String message = "Invalid default for field "+fieldName
         +": "+defaultValue+" not a "+schema;
-      if (VALIDATE_DEFAULTS.get())
-        throw new AvroTypeException(message);     // throw exception
-      System.err.println("[WARNING] Avro: "+message); // or log warning
+      throw new AvroTypeException(message);     // throw exception
     }
     return defaultValue;
   }
@@ -1368,7 +1421,11 @@ public abstract class Schema extends JsonProperties {
     return jsonNode != null ? jsonNode.getTextValue() : null;
   }
 
-  /** Parses a string as Json. */
+  /**
+   * Parses a string as Json.
+   * @deprecated use {@link org.apache.avro.data.Json#parseJson(String)}
+   */
+  @Deprecated
   public static JsonNode parseJson(String s) {
     try {
       return MAPPER.readTree(FACTORY.createJsonParser(new StringReader(s)));
@@ -1541,6 +1598,11 @@ public abstract class Schema extends JsonProperties {
 
     public LockableArrayList(List<E> types) {
       super(types);
+    }
+
+    public LockableArrayList(E... types) {
+      super(types.length);
+      Collections.addAll(this, types);
     }
 
     public List<E> lock() {

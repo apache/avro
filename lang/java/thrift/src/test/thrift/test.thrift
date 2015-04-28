@@ -38,6 +38,7 @@ union FooOrBar {
 struct Test {
   1: bool boolField
   2: byte byteField
+ 16: optional byte byteOptionalField
   3: i16 i16Field
  15: optional i16 i16OptionalField
   4: optional i32 i32Field

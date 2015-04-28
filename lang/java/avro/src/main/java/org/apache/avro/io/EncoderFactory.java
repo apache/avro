@@ -320,7 +320,9 @@ public class EncoderFactory {
    *          The JsonGenerator to write with. Cannot be null.
    * @return A JsonEncoder configured with <i>gen</i> and <i>schema</i>
    * @throws IOException
+   * @deprecated internal method
    */
+  @Deprecated
   public JsonEncoder jsonEncoder(Schema schema, JsonGenerator gen)
       throws IOException {
     return new JsonEncoder(schema, gen);

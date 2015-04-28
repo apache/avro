@@ -37,6 +37,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
 
   private static final org.apache.thrift.protocol.TField BOOL_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("boolField", org.apache.thrift.protocol.TType.BOOL, (short)1);
   private static final org.apache.thrift.protocol.TField BYTE_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("byteField", org.apache.thrift.protocol.TType.BYTE, (short)2);
+  private static final org.apache.thrift.protocol.TField BYTE_OPTIONAL_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("byteOptionalField", org.apache.thrift.protocol.TType.BYTE, (short)16);
   private static final org.apache.thrift.protocol.TField I16_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("i16Field", org.apache.thrift.protocol.TType.I16, (short)3);
   private static final org.apache.thrift.protocol.TField I16_OPTIONAL_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("i16OptionalField", org.apache.thrift.protocol.TType.I16, (short)15);
   private static final org.apache.thrift.protocol.TField I32_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("i32Field", org.apache.thrift.protocol.TType.I32, (short)4);
@@ -59,6 +60,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
 
   private boolean boolField; // required
   private byte byteField; // required
+  private byte byteOptionalField; // optional
   private short i16Field; // required
   private short i16OptionalField; // optional
   private int i32Field; // optional
@@ -77,6 +79,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     BOOL_FIELD((short)1, "boolField"),
     BYTE_FIELD((short)2, "byteField"),
+    BYTE_OPTIONAL_FIELD((short)16, "byteOptionalField"),
     I16_FIELD((short)3, "i16Field"),
     I16_OPTIONAL_FIELD((short)15, "i16OptionalField"),
     I32_FIELD((short)4, "i32Field"),
@@ -112,6 +115,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
           return BOOL_FIELD;
         case 2: // BYTE_FIELD
           return BYTE_FIELD;
+        case 16: // BYTE_OPTIONAL_FIELD
+          return BYTE_OPTIONAL_FIELD;
         case 3: // I16_FIELD
           return I16_FIELD;
         case 15: // I16_OPTIONAL_FIELD
@@ -180,19 +185,22 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   // isset id assignments
   private static final int __BOOLFIELD_ISSET_ID = 0;
   private static final int __BYTEFIELD_ISSET_ID = 1;
-  private static final int __I16FIELD_ISSET_ID = 2;
-  private static final int __I16OPTIONALFIELD_ISSET_ID = 3;
-  private static final int __I32FIELD_ISSET_ID = 4;
-  private static final int __I64FIELD_ISSET_ID = 5;
-  private static final int __DOUBLEFIELD_ISSET_ID = 6;
+  private static final int __BYTEOPTIONALFIELD_ISSET_ID = 2;
+  private static final int __I16FIELD_ISSET_ID = 3;
+  private static final int __I16OPTIONALFIELD_ISSET_ID = 4;
+  private static final int __I32FIELD_ISSET_ID = 5;
+  private static final int __I64FIELD_ISSET_ID = 6;
+  private static final int __DOUBLEFIELD_ISSET_ID = 7;
   private byte __isset_bitfield = 0;
-  private _Fields optionals[] = {_Fields.I16_OPTIONAL_FIELD,_Fields.I32_FIELD,_Fields.BINARY_FIELD};
+  private _Fields optionals[] = {_Fields.BYTE_OPTIONAL_FIELD,_Fields.I16_OPTIONAL_FIELD,_Fields.I32_FIELD,_Fields.BINARY_FIELD};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.BOOL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("boolField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.BYTE_FIELD, new org.apache.thrift.meta_data.FieldMetaData("byteField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE)));
+    tmpMap.put(_Fields.BYTE_OPTIONAL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("byteOptionalField", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE)));
     tmpMap.put(_Fields.I16_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i16Field", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
@@ -272,6 +280,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     __isset_bitfield = other.__isset_bitfield;
     this.boolField = other.boolField;
     this.byteField = other.byteField;
+    this.byteOptionalField = other.byteOptionalField;
     this.i16Field = other.i16Field;
     this.i16OptionalField = other.i16OptionalField;
     this.i32Field = other.i32Field;
@@ -317,6 +326,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     this.boolField = false;
     setByteFieldIsSet(false);
     this.byteField = 0;
+    setByteOptionalFieldIsSet(false);
+    this.byteOptionalField = 0;
     setI16FieldIsSet(false);
     this.i16Field = 0;
     setI16OptionalFieldIsSet(false);
@@ -379,6 +390,28 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
 
   public void setByteFieldIsSet(boolean value) {
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __BYTEFIELD_ISSET_ID, value);
+  }
+
+  public byte getByteOptionalField() {
+    return this.byteOptionalField;
+  }
+
+  public void setByteOptionalField(byte byteOptionalField) {
+    this.byteOptionalField = byteOptionalField;
+    setByteOptionalFieldIsSet(true);
+  }
+
+  public void unsetByteOptionalField() {
+    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __BYTEOPTIONALFIELD_ISSET_ID);
+  }
+
+  /** Returns true if field byteOptionalField is set (has been assigned a value) and false otherwise */
+  public boolean isSetByteOptionalField() {
+    return EncodingUtils.testBit(__isset_bitfield, __BYTEOPTIONALFIELD_ISSET_ID);
+  }
+
+  public void setByteOptionalFieldIsSet(boolean value) {
+    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __BYTEOPTIONALFIELD_ISSET_ID, value);
   }
 
   public short getI16Field() {
@@ -751,6 +784,14 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       }
       break;
 
+    case BYTE_OPTIONAL_FIELD:
+      if (value == null) {
+        unsetByteOptionalField();
+      } else {
+        setByteOptionalField((Byte)value);
+      }
+      break;
+
     case I16_FIELD:
       if (value == null) {
         unsetI16Field();
@@ -866,6 +907,9 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     case BYTE_FIELD:
       return Byte.valueOf(getByteField());
 
+    case BYTE_OPTIONAL_FIELD:
+      return Byte.valueOf(getByteOptionalField());
+
     case I16_FIELD:
       return Short.valueOf(getI16Field());
 
@@ -920,6 +964,8 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       return isSetBoolField();
     case BYTE_FIELD:
       return isSetByteField();
+    case BYTE_OPTIONAL_FIELD:
+      return isSetByteOptionalField();
     case I16_FIELD:
       return isSetI16Field();
     case I16_OPTIONAL_FIELD:
@@ -978,6 +1024,15 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       if (!(this_present_byteField && that_present_byteField))
         return false;
       if (this.byteField != that.byteField)
+        return false;
+    }
+
+    boolean this_present_byteOptionalField = true && this.isSetByteOptionalField();
+    boolean that_present_byteOptionalField = true && that.isSetByteOptionalField();
+    if (this_present_byteOptionalField || that_present_byteOptionalField) {
+      if (!(this_present_byteOptionalField && that_present_byteOptionalField))
+        return false;
+      if (this.byteOptionalField != that.byteOptionalField)
         return false;
     }
 
@@ -1130,6 +1185,16 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     }
     if (isSetByteField()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.byteField, other.byteField);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetByteOptionalField()).compareTo(other.isSetByteOptionalField());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetByteOptionalField()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.byteOptionalField, other.byteOptionalField);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1291,6 +1356,12 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     sb.append("byteField:");
     sb.append(this.byteField);
     first = false;
+    if (isSetByteOptionalField()) {
+      if (!first) sb.append(", ");
+      sb.append("byteOptionalField:");
+      sb.append(this.byteOptionalField);
+      first = false;
+    }
     if (!first) sb.append(", ");
     sb.append("i16Field:");
     sb.append(this.i16Field);
@@ -1441,6 +1512,14 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.BYTE) {
               struct.byteField = iprot.readByte();
               struct.setByteFieldIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 16: // BYTE_OPTIONAL_FIELD
+            if (schemeField.type == org.apache.thrift.protocol.TType.BYTE) {
+              struct.byteOptionalField = iprot.readByte();
+              struct.setByteOptionalFieldIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1685,6 +1764,11 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         oprot.writeI16(struct.i16OptionalField);
         oprot.writeFieldEnd();
       }
+      if (struct.isSetByteOptionalField()) {
+        oprot.writeFieldBegin(BYTE_OPTIONAL_FIELD_FIELD_DESC);
+        oprot.writeByte(struct.byteOptionalField);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1709,51 +1793,57 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       if (struct.isSetByteField()) {
         optionals.set(1);
       }
-      if (struct.isSetI16Field()) {
+      if (struct.isSetByteOptionalField()) {
         optionals.set(2);
       }
-      if (struct.isSetI16OptionalField()) {
+      if (struct.isSetI16Field()) {
         optionals.set(3);
       }
-      if (struct.isSetI32Field()) {
+      if (struct.isSetI16OptionalField()) {
         optionals.set(4);
       }
-      if (struct.isSetI64Field()) {
+      if (struct.isSetI32Field()) {
         optionals.set(5);
       }
-      if (struct.isSetDoubleField()) {
+      if (struct.isSetI64Field()) {
         optionals.set(6);
       }
-      if (struct.isSetStringField()) {
+      if (struct.isSetDoubleField()) {
         optionals.set(7);
       }
-      if (struct.isSetBinaryField()) {
+      if (struct.isSetStringField()) {
         optionals.set(8);
       }
-      if (struct.isSetMapField()) {
+      if (struct.isSetBinaryField()) {
         optionals.set(9);
       }
-      if (struct.isSetListField()) {
+      if (struct.isSetMapField()) {
         optionals.set(10);
       }
-      if (struct.isSetSetField()) {
+      if (struct.isSetListField()) {
         optionals.set(11);
       }
-      if (struct.isSetEnumField()) {
+      if (struct.isSetSetField()) {
         optionals.set(12);
       }
-      if (struct.isSetStructField()) {
+      if (struct.isSetEnumField()) {
         optionals.set(13);
       }
-      if (struct.isSetFooOrBar()) {
+      if (struct.isSetStructField()) {
         optionals.set(14);
       }
-      oprot.writeBitSet(optionals, 15);
+      if (struct.isSetFooOrBar()) {
+        optionals.set(15);
+      }
+      oprot.writeBitSet(optionals, 16);
       if (struct.isSetBoolField()) {
         oprot.writeBool(struct.boolField);
       }
       if (struct.isSetByteField()) {
         oprot.writeByte(struct.byteField);
+      }
+      if (struct.isSetByteOptionalField()) {
+        oprot.writeByte(struct.byteOptionalField);
       }
       if (struct.isSetI16Field()) {
         oprot.writeI16(struct.i16Field);
@@ -1818,7 +1908,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, Test struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(15);
+      BitSet incoming = iprot.readBitSet(16);
       if (incoming.get(0)) {
         struct.boolField = iprot.readBool();
         struct.setBoolFieldIsSet(true);
@@ -1828,34 +1918,38 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         struct.setByteFieldIsSet(true);
       }
       if (incoming.get(2)) {
+        struct.byteOptionalField = iprot.readByte();
+        struct.setByteOptionalFieldIsSet(true);
+      }
+      if (incoming.get(3)) {
         struct.i16Field = iprot.readI16();
         struct.setI16FieldIsSet(true);
       }
-      if (incoming.get(3)) {
+      if (incoming.get(4)) {
         struct.i16OptionalField = iprot.readI16();
         struct.setI16OptionalFieldIsSet(true);
       }
-      if (incoming.get(4)) {
+      if (incoming.get(5)) {
         struct.i32Field = iprot.readI32();
         struct.setI32FieldIsSet(true);
       }
-      if (incoming.get(5)) {
+      if (incoming.get(6)) {
         struct.i64Field = iprot.readI64();
         struct.setI64FieldIsSet(true);
       }
-      if (incoming.get(6)) {
+      if (incoming.get(7)) {
         struct.doubleField = iprot.readDouble();
         struct.setDoubleFieldIsSet(true);
       }
-      if (incoming.get(7)) {
+      if (incoming.get(8)) {
         struct.stringField = iprot.readString();
         struct.setStringFieldIsSet(true);
       }
-      if (incoming.get(8)) {
+      if (incoming.get(9)) {
         struct.binaryField = iprot.readBinary();
         struct.setBinaryFieldIsSet(true);
       }
-      if (incoming.get(9)) {
+      if (incoming.get(10)) {
         {
           org.apache.thrift.protocol.TMap _map16 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I32, iprot.readI32());
           struct.mapField = new HashMap<String,Integer>(2*_map16.size);
@@ -1870,7 +1964,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         }
         struct.setMapFieldIsSet(true);
       }
-      if (incoming.get(10)) {
+      if (incoming.get(11)) {
         {
           org.apache.thrift.protocol.TList _list20 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, iprot.readI32());
           struct.listField = new ArrayList<Integer>(_list20.size);
@@ -1883,7 +1977,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         }
         struct.setListFieldIsSet(true);
       }
-      if (incoming.get(11)) {
+      if (incoming.get(12)) {
         {
           org.apache.thrift.protocol.TSet _set23 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.I32, iprot.readI32());
           struct.setField = new HashSet<Integer>(2*_set23.size);
@@ -1896,16 +1990,16 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         }
         struct.setSetFieldIsSet(true);
       }
-      if (incoming.get(12)) {
+      if (incoming.get(13)) {
         struct.enumField = E.findByValue(iprot.readI32());
         struct.setEnumFieldIsSet(true);
       }
-      if (incoming.get(13)) {
+      if (incoming.get(14)) {
         struct.structField = new Nested();
         struct.structField.read(iprot);
         struct.setStructFieldIsSet(true);
       }
-      if (incoming.get(14)) {
+      if (incoming.get(15)) {
         struct.fooOrBar = new FooOrBar();
         struct.fooOrBar.read(iprot);
         struct.setFooOrBarIsSet(true);

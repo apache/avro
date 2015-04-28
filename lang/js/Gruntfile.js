@@ -17,17 +17,16 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
-    test: {
+    pkg: grunt.file.readJSON('package.json'),
+    nodeunit: {
       files: ['test/**/*.js']
     },
-    lint: {
-      files: ['grunt.js', 'lib/**/*.js', 'test/**/*.js']
-    },
     watch: {
-      files: '<config:lint.files>',
-      tasks: 'lint:files test:files'
+      files: ['<%= jshint.files %>'],
+      tasks: ['jshint', 'nodeunit']
     },
     jshint: {
+      files: ['Gruntfile.js', 'lib/**/*.js', 'test/**/*.js'],
       options: {
         curly: true,
         eqeqeq: true,
@@ -47,6 +46,12 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('default', 'lint test');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-nodeunit');
+  grunt.loadNpmTasks('grunt-contrib-watch');
+
+  grunt.registerTask('default', ['jshint', 'nodeunit']);
+  grunt.registerTask('test', ['nodeunit']);
+  grunt.registerTask('lint', ['jshint']);
 
 };

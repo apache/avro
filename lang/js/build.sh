@@ -22,7 +22,7 @@ cd `dirname "$0"`
 case "$1" in
      test)
         npm install
-        node_modules/grunt/bin/grunt test
+        grunt test
        ;;
 
      dist)
