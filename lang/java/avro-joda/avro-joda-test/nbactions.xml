@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>CUSTOM-generate-sources</actionName>
+            <displayName>generate-sources</displayName>
+            <goals>
+                <goal>generate-sources</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-generate-test-sources</actionName>
+            <displayName>generate-test-sources</displayName>
+            <goals>
+                <goal>generate-test-sources</goal>
+            </goals>
+        </action>
+    </actions>
