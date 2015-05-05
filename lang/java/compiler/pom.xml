@@ -41,7 +41,7 @@
       org.apache.ant*,
       *
     </osgi.import>
-    <osgi.export>org.apache.avro.compiler*;version="${project.version}"</osgi.export>
+    <osgi.export>org.apache.avro*;version="${project.version}"</osgi.export>
   </properties>
 
   <build>
