@@ -190,8 +190,7 @@ public abstract class Symbol {
         List<Fixup> l = map2.get(s);
         if (l == null) {
           System.arraycopy(p, 0, out, j, p.length);
-          for (Map.Entry<Sequence, List<Fixup>> entry : map2.entrySet()) {
-              List<Fixup> value = entry.getValue();
+          for (List<Fixup> value : map2.values()) {
               for (Fixup fixup : value) {
                   if (fixup.symbols == p) {
                       fixup.symbols = out;
