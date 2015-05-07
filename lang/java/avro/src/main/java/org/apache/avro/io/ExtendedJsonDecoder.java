@@ -151,7 +151,7 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
                             if (currentReorderBuffer == null) {
                                 currentReorderBuffer = new JsonDecoder.ReorderBuffer();
                             }
-                            currentReorderBuffer.savedFields.put(fn, getVaueAsTree(in));
+                            currentReorderBuffer.savedFields.put(fn, getValueAsTree(in));
                         }
                     } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
                     if (injectDefaultValueIfAvailable(in)) {
@@ -204,7 +204,11 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
         JsonNode defVal = provider.getCurrentFieldDefault();
         if (null != defVal) {
             List<JsonElement> result = new ArrayList<JsonElement>(2);
-            result.add(new JsonElement(defVal.asToken(), defVal.asText()));
+              JsonParser traverse = defVal.traverse();
+              JsonToken nextToken;
+              while ((nextToken = traverse.nextToken()) != null) {
+                result.add(new JsonElement(nextToken));
+              }
             result.add(NULL_JSON_ELEMENT);
             if (currentReorderBuffer == null) {
                 currentReorderBuffer = new ReorderBuffer();

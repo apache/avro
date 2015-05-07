@@ -471,7 +471,7 @@ public class JsonDecoder extends ParsingDecoder
             if (currentReorderBuffer == null) {
               currentReorderBuffer = new ReorderBuffer();
             }
-            currentReorderBuffer.savedFields.put(fn, getVaueAsTree(in));
+            currentReorderBuffer.savedFields.put(fn, getValueAsTree(in));
           }
         } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
         throw new AvroTypeException("Expected field name not found: " + fa.fname);
@@ -520,7 +520,7 @@ public class JsonDecoder extends ParsingDecoder
     }
   }
   
-  static List<JsonElement> getVaueAsTree(JsonParser in) throws IOException {
+  static List<JsonElement> getValueAsTree(JsonParser in) throws IOException {
     int level = 0;
     List<JsonElement> result = new ArrayList<JsonElement>();
     do {
