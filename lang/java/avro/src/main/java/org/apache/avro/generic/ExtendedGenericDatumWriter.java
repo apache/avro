@@ -59,7 +59,6 @@ public class ExtendedGenericDatumWriter<D> extends GenericDatumWriter<D> {
                     switch (topSymbol.kind) {
                         case TERMINAL:
                         case IMPLICIT_ACTION:
-                        case REPEATER:
                             break;
                         default:
                             // expand production
@@ -80,14 +79,17 @@ public class ExtendedGenericDatumWriter<D> extends GenericDatumWriter<D> {
                     Symbol advanceTo = null;
                     boolean done = false;
                     while (!done) {
-                        Symbol currentSymbol = parser.popSymbol();
-                        if (currentSymbol instanceof Symbol.FieldAdjustAction
-                                && ((Symbol.FieldAdjustAction) currentSymbol).fname.equals(f.name())
-                                && ((Symbol.FieldAdjustAction) currentSymbol).rindex == f.pos()) {
-                            advanceTo = currentSymbol;
-                            done = true;
+                        if (parser.depth() > 0) {
+                          advanceTo = parser.popSymbol();
+                          if (advanceTo instanceof Symbol.FieldAdjustAction
+                                  && ((Symbol.FieldAdjustAction) advanceTo).fname.equals(f.name())
+                                  && ((Symbol.FieldAdjustAction) advanceTo).rindex == f.pos()) {
+                              done = true;
+                          }
+                          holdings.add(advanceTo);
+                        } else {
+                          done = true;
                         }
-                        holdings.add(currentSymbol);
                     }
                     for (int i = holdings.size() - 1; i >= 0; i--) {
                         parser.pushSymbol(holdings.get(i));
