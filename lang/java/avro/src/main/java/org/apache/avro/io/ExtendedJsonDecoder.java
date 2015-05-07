@@ -207,7 +207,11 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
               JsonParser traverse = defVal.traverse();
               JsonToken nextToken;
               while ((nextToken = traverse.nextToken()) != null) {
-                result.add(new JsonElement(nextToken));
+                if (nextToken.isScalarValue()) {
+                  result.add(new JsonElement(nextToken, traverse.getText()));
+                } else {
+                  result.add(new JsonElement(nextToken));
+                }
               }
             result.add(NULL_JSON_ELEMENT);
             if (currentReorderBuffer == null) {
