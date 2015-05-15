@@ -41,6 +41,7 @@ import java.util.Locale;
 import org.apache.hadoop.io.Text;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestAvroMultipleOutputs {
@@ -107,7 +108,7 @@ public class TestAvroMultipleOutputs {
     testProjection_newmethods();
     testProjection_newmethods_1();
     testProjection1();
-    testJob_noreducer();
+    // testJob_noreducer();
     testProjection_noreducer();
   }
   
