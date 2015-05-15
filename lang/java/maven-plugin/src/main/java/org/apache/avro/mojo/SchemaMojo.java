@@ -25,35 +25,37 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.codehaus.jackson.JsonParseException;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * Generate Java classes from Avro schema files (.avsc)
- * 
+ *
  * @goal schema
  * @phase generate-sources
  * @threadSafe
  */
 public class SchemaMojo extends AbstractAvroMojo {
   /**
-   * A parser used to parse all schema files. Using a common parser will 
+   * A parser used to parse all schema files. Using a common parser will
    * facilitate the import of external schemas.
    */
    private Schema.Parser schemaParser = new Schema.Parser();
-  
+
    /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avsc</code> is used to select grammar files.
-   * 
+   *
    * @parameter
    */
   private String[] includes = new String[] { "**/*.avsc" };
-  
+
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avsc</code> is used to select grammar files.
-   * 
+   *
    * @parameter
    */
   private String[] testIncludes = new String[] { "**/*.avsc" };
@@ -61,25 +63,34 @@ public class SchemaMojo extends AbstractAvroMojo {
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
-    Schema schema;
+    try {
+      Schema schema;
 
-    // This is necessary to maintain backward-compatibility. If there are  
-    // no imported files then isolate the schemas from each other, otherwise
-    // allow them to share a single schema so resuse and sharing of schema
-    // is possible.
-    if (imports == null) {
-      schema = new Schema.Parser().parse(src);
-    } else {
-      schema = schemaParser.parse(src);
+      // This is necessary to maintain backward-compatibility. If there are
+      // no imported files then isolate the schemas from each other, otherwise
+      // allow them to share a single schema so resuse and sharing of schema
+      // is possible.
+      if (imports == null) {
+        schema = new Schema.Parser().parse(src);
+      } else {
+        schema = schemaParser.parse(src);
+      }
+
+      SpecificCompiler compiler = new SpecificCompiler(schema);
+      compiler.setTemplateDir(templateDirectory);
+      compiler.setStringType(StringType.valueOf(stringType));
+      compiler.setFieldVisibility(getFieldVisibility());
+      compiler.setCreateSetters(createSetters);
+      compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
+      compiler.compileToDestination(src, outputDirectory);
+    } catch (JsonParseException e) {
+      if (buildContext.isIncremental()) {
+        buildContext.addMessage(src, e.getLocation().getLineNr(), e.getLocation().getColumnNr(),
+            e.getLocalizedMessage(), BuildContext.SEVERITY_ERROR, e);
+      } else {
+        throw e;
+      }
     }
-    
-    SpecificCompiler compiler = new SpecificCompiler(schema);
-    compiler.setTemplateDir(templateDirectory);
-    compiler.setStringType(StringType.valueOf(stringType));
-    compiler.setFieldVisibility(getFieldVisibility());
-    compiler.setCreateSetters(createSetters);
-    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-    compiler.compileToDestination(src, outputDirectory);
   }
 
   @Override
