@@ -96,16 +96,22 @@ public final class SchemaResolver {
                     createRecord.addJsonProps(schema.getJsonProps());
                     return createRecord;
                 case MAP:
-                    return Schema.createMap(resolve(schema.getValueType(), protocol, processed));
+                    Schema result = Schema.createMap(resolve(schema.getValueType(), protocol, processed));
+                    result.addJsonProps(schema.getJsonProps());
+                    return result;
                 case ARRAY:
-                    return Schema.createArray(resolve(schema.getElementType(), protocol, processed));
+                    Schema aresult = Schema.createArray(resolve(schema.getElementType(), protocol, processed));
+                    aresult.addJsonProps(schema.getJsonProps());
+                    return aresult;
                 case UNION:
                     final List<Schema> uTypes = schema.getTypes();
                     List<Schema> newTypes = new ArrayList<Schema>(uTypes.size());
                     for (Schema s : uTypes) {
                         newTypes.add(resolve(s, protocol, processed));
                     }
-                    return Schema.createUnion(newTypes);
+                    Schema bresult =  Schema.createUnion(newTypes);
+                    bresult.addJsonProps(schema.getJsonProps());
+                    return bresult;
                 case ENUM:
                 case FIXED:
                 case STRING:
