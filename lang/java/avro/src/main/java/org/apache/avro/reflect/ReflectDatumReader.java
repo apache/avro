@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.IndexedRecord;
@@ -82,7 +81,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       // see if the element class will be converted and use that class
       // logical types cannot conflict with java-element-class
       Conversion<?> elementConversion = getData()
-          .getConversionFor(schema.getElementType());
+          .getConversionFor(schema.getElementType().getLogicalType());
       if (elementConversion != null) {
         elementClass = elementConversion.getConvertedType();
       }
@@ -258,18 +257,24 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
             throw new AvroRuntimeException("Failed to read Stringable", e);
           } 
         }
-        Conversion<?> conversion = getData().getConversionTo(
-            accessor.getField().getType(), f.schema());
-        try {
+        LogicalType logicalType = f.schema().getLogicalType();
+        if (logicalType != null) {
+          Conversion<?> conversion = getData().getConversionTo(
+              accessor.getField().getType(), logicalType);
           if (conversion != null) {
-            LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(f.schema());
+            try {
               accessor.set(record, convert(
                   readWithoutConversion(oldDatum, f.schema(), in),
                   f.schema(), logicalType, conversion));
-          } else {
-            accessor.set(record,
-                readWithoutConversion(oldDatum, f.schema(), in));
+            } catch (IllegalAccessException e) {
+              throw new AvroRuntimeException("Failed to set " + f);
+            }
+            return;
           }
+        }
+        try {
+          accessor.set(record,
+              readWithoutConversion(oldDatum, f.schema(), in));
           return;
         } catch (IllegalAccessException e) {
           throw new AvroRuntimeException("Failed to set " + f);

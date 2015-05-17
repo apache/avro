@@ -93,11 +93,12 @@ public abstract class Schema extends JsonProperties {
     RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES,
       INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
     private String name;
-    private Type() { this.name = this.name().toLowerCase(); }
+    private Type() { this.name = this.name().toLowerCase().intern(); }
     public String getName() { return name; }
   };
 
   private final Type type;
+  private LogicalType logicalType = null;
 
   Schema(Type type) {
     super(SCHEMA_RESERVED);
@@ -136,6 +137,14 @@ public abstract class Schema extends JsonProperties {
   @Override public void addProp(String name, Object value) {
     super.addProp(name, value);
     hashCode = NO_HASHCODE;
+  }
+
+  public LogicalType getLogicalType() {
+    return logicalType;
+  }
+
+  void setLogicalType(LogicalType logicalType) {
+    this.logicalType = logicalType;
   }
 
   /** Create an anonymous record schema. */
@@ -477,8 +486,8 @@ public abstract class Schema extends JsonProperties {
       }
       if ("".equals(space))
         space = null;
-      this.space = space;
-      this.full = (this.space == null) ? this.name : this.space+"."+this.name;
+      this.space = space == null ? null : space.intern();
+      this.full = ((this.space == null) ? this.name : this.space+"."+this.name).intern();
     }
     public boolean equals(Object o) {
       if (o == this) return true;
@@ -1119,7 +1128,7 @@ public abstract class Schema extends JsonProperties {
       if (!(Character.isLetterOrDigit(c) || c == '_'))
         throw new SchemaParseException("Illegal character in: "+name);
     }
-    return name;
+    return name.intern();
   }
 
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS
@@ -1200,7 +1209,7 @@ public abstract class Schema extends JsonProperties {
       return result;
     } else if (schema.isObject()) {
       Schema result;
-      String type = getRequiredText(schema, "type", "No type");
+      String type = getRequiredText(schema, "type", "No type").intern();
       Name name = null;
       String savedSpace = names.space();
       String doc = null;
@@ -1267,7 +1276,7 @@ public abstract class Schema extends JsonProperties {
           throw new SchemaParseException("Enum has no symbols: "+schema);
         LockableArrayList<String> symbols = new LockableArrayList<String>();
         for (JsonNode n : symbolsNode)
-          symbols.add(n.getTextValue());
+          symbols.add(n.getTextValue().intern());
         result = new EnumSchema(name, doc, symbols);
         if (name != null) names.add(result);
       } else if (type.equals("array")) {          // array
@@ -1290,10 +1299,12 @@ public abstract class Schema extends JsonProperties {
         throw new SchemaParseException("Type not supported: "+type);
       Iterator<String> i = schema.getFieldNames();
       while (i.hasNext()) {                       // add properties
-        String prop = i.next();
+        String prop = i.next().intern();
         if (!SCHEMA_RESERVED.contains(prop))      // ignore reserved
           result.addProp(prop, schema.get(prop));
       }
+      // parse logical type if present
+      result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
       names.space(savedSpace);                  // restore space
       if (result instanceof NamedSchema) {
         Set<String> aliases = parseAliases(schema);
@@ -1323,7 +1334,7 @@ public abstract class Schema extends JsonProperties {
     for (JsonNode aliasNode : aliasesNode) {
       if (!aliasNode.isTextual())
         throw new SchemaParseException("alias not a string: "+aliasNode);
-      aliases.add(aliasNode.getTextValue());
+      aliases.add(aliasNode.getTextValue().intern());
     }
     return aliases;  
   }

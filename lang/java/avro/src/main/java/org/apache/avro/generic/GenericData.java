@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.WeakHashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -93,44 +94,45 @@ public class GenericData {
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() { return classLoader; }
 
-  public HashMap<String, Conversion<?>> conversions =
+  public Map<String, Conversion<?>> conversions =
       new HashMap<String, Conversion<?>>();
+
+  public Map<Class<?>, Conversion<?>> conversionsByClass =
+      new IdentityHashMap<Class<?>, Conversion<?>>();
 
   public void addLogicalTypeConversion(Conversion<?> conversion) {
     conversions.put(conversion.getLogicalTypeName(), conversion);
+    conversionsByClass.put(conversion.getConvertedType(), conversion);
   }
 
   @SuppressWarnings("unchecked")
   public <T> Conversion<? super T> getConversionFrom(Class<T> datumClass,
-                                                     Schema schema) {
-    Conversion<?> conversion = getConversionFor(schema);
-    if (conversion != null) {
-      if (conversion.getConvertedType().isAssignableFrom(datumClass)) {
-        return (Conversion<? super T>) conversion;
-      }
+                                                     LogicalType logicalType) {
+    Conversion<?> conversion = conversionsByClass.get(datumClass);
+    if (conversion != null &&
+        conversion.getLogicalTypeName().equals(logicalType.getName())) {
+      return (Conversion<T>) conversion;
     }
     return null;
   }
 
   @SuppressWarnings("unchecked")
   public <T> Conversion<? extends T> getConversionTo(Class<T> datumClass,
-                                                     Schema schema) {
-    Conversion<?> conversion = getConversionFor(schema);
-    if (conversion != null) {
-      if (datumClass.isAssignableFrom(conversion.getConvertedType())) {
-        return (Conversion<? extends T>) conversion;
-      }
+                                                     LogicalType logicalType) {
+    Conversion<?> conversion = conversionsByClass.get(datumClass);
+    if (conversion != null &&
+        conversion.getLogicalTypeName().equals(logicalType.getName())) {
+      return (Conversion<T>) conversion;
     }
     return null;
   }
 
   @SuppressWarnings("unchecked")
-  public Conversion<Object> getConversionFor(Schema schema) {
-    String logicalTypeName = schema.getProp(LogicalType.LOGICAL_TYPE_PROP);
-    if (logicalTypeName != null) {
-      return (Conversion<Object>) conversions.get(logicalTypeName);
+  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+    if (logicalType == null) {
+      return null;
     }
-    return null;
+    return (Conversion<Object>) conversions.get(logicalType.getName());
   }
 
   /** Default implementation of {@link GenericRecord}. Note that this implementation
@@ -655,10 +657,16 @@ public class GenericData {
     // this allows logical type concrete classes to overlap with supported ones
     // for example, a conversion could return a map
     if (datum != null) {
-      List<Schema> candidates = union.getTypes();
-      for (int i = 0; i < candidates.size(); i += 1) {
-        if (getConversionFrom(datum.getClass(), candidates.get(i)) != null) {
-          return i;
+      Conversion<?> conversion = conversionsByClass.get(datum.getClass());
+      if (conversion != null) {
+        String logicalTypeName = conversion.getLogicalTypeName();
+        List<Schema> candidates = union.getTypes();
+        for (int i = 0; i < candidates.size(); i += 1) {
+          LogicalType candidateLogicalType = candidates.get(i).getLogicalType();
+          if (candidateLogicalType != null &&
+              logicalTypeName.equals(candidateLogicalType.getName())) {
+            return i;
+          }
         }
       }
     }

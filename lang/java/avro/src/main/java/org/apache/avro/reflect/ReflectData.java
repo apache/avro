@@ -42,6 +42,7 @@ import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
@@ -382,7 +383,7 @@ public class ReflectData extends SpecificData {
   @Override
   public Class getClass(Schema schema) {
     // see if the element class will be converted and use that class
-    Conversion<?> conversion = getConversionFor(schema);
+    Conversion<?> conversion = getConversionFor(schema.getLogicalType());
     if (conversion != null) {
       return conversion.getConvertedType();
     }
@@ -877,9 +878,12 @@ public class ReflectData extends SpecificData {
   public Object createFixed(Object old, Schema schema) {
     // SpecificData will try to instantiate the type returned by getClass, but
     // that is the converted class and can't be constructed.
-    Conversion<?> conversion = getConversionFor(schema);
-    if (conversion != null) {
-      return new GenericData.Fixed(schema);
+    LogicalType logicalType = schema.getLogicalType();
+    if (logicalType != null) {
+      Conversion<?> conversion = getConversionFor(schema.getLogicalType());
+      if (conversion != null) {
+        return new GenericData.Fixed(schema);
+      }
     }
     return super.createFixed(old, schema);
   }
@@ -888,9 +892,12 @@ public class ReflectData extends SpecificData {
   public Object newRecord(Object old, Schema schema) {
     // SpecificData will try to instantiate the type returned by getClass, but
     // that is the converted class and can't be constructed.
-    Conversion<?> conversion = getConversionFor(schema);
-    if (conversion != null) {
-      return new GenericData.Record(schema);
+    LogicalType logicalType = schema.getLogicalType();
+    if (logicalType != null) {
+      Conversion<?> conversion = getConversionFor(schema.getLogicalType());
+      if (conversion != null) {
+        return new GenericData.Record(schema);
+      }
     }
     return super.newRecord(old, schema);
   }

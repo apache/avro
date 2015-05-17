@@ -23,7 +23,7 @@ public class LogicalType {
   private final String name;
 
   public LogicalType(String logicalTypeName) {
-    this.name = logicalTypeName;
+    this.name = logicalTypeName.intern();
   }
 
   /**
@@ -51,6 +51,7 @@ public class LogicalType {
   public Schema addToSchema(Schema schema) {
     validate(schema);
     schema.addProp(LOGICAL_TYPE_PROP, name);
+    schema.setLogicalType(this);
     return schema;
   }
 
