@@ -151,13 +151,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       ResolvingDecoder in) throws IOException {
     Object datum = readWithoutConversion(old, expected, in);
     LogicalType logicalType = expected.getLogicalType();
-    if (datum != null && logicalType != null) {
+    if (logicalType != null) {
       Conversion<?> conversion = getData().getConversionFor(logicalType);
       if (conversion != null) {
         return convert(datum, expected, logicalType, conversion);
       }
     }
     return datum;
+  }
+
+  protected Object readWithConversion(Object old, Schema expected,
+                                      LogicalType logicalType,
+                                      Conversion<?> conversion,
+                                      ResolvingDecoder in) throws IOException {
+    return convert(readWithoutConversion(old, expected, in),
+        expected, logicalType, conversion);
   }
 
   protected Object readWithoutConversion(Object old, Schema expected,
@@ -252,10 +260,20 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long l = in.readArrayStart();
     long base = 0;
     if (l > 0) {
+      LogicalType logicalType = expectedType.getLogicalType();
+      Conversion<?> conversion = getData().getConversionFor(logicalType);
       Object array = newArray(old, (int) l, expected);
       do {
-        for (long i = 0; i < l; i++) {
-          addToArray(array, base + i, read(peekArray(array), expectedType, in));
+        if (logicalType != null && conversion != null) {
+          for (long i = 0; i < l; i++) {
+            addToArray(array, base + i, readWithConversion(
+                peekArray(array), expectedType, logicalType, conversion, in));
+          }
+        } else {
+          for (long i = 0; i < l; i++) {
+            addToArray(array, base + i, readWithoutConversion(
+                peekArray(array), expectedType, in));
+          }
         }
         base += l;
       } while ((l = in.arrayNext()) > 0);
@@ -288,11 +306,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       ResolvingDecoder in) throws IOException {
     Schema eValue = expected.getValueType();
     long l = in.readMapStart();
+    LogicalType logicalType = eValue.getLogicalType();
+    Conversion<?> conversion = getData().getConversionFor(logicalType);
     Object map = newMap(old, (int) l);
     if (l > 0) {
       do {
-        for (int i = 0; i < l; i++) {
-          addToMap(map, readMapKey(null, expected, in), read(null, eValue, in));
+        if (logicalType != null && conversion != null) {
+          for (int i = 0; i < l; i++) {
+            addToMap(map, readMapKey(null, expected, in),
+                readWithConversion(null, eValue, logicalType, conversion, in));
+          }
+        } else {
+          for (int i = 0; i < l; i++) {
+            addToMap(map, readMapKey(null, expected, in),
+                readWithoutConversion(null, eValue, in));
+          }
         }
       } while ((l = in.mapNext()) > 0);
     }

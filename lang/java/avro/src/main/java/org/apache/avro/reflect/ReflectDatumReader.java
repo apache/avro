@@ -175,26 +175,52 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
 
   private Object readObjectArray(Object[] array, Schema expectedType, long l,
       ResolvingDecoder in) throws IOException {
+    LogicalType logicalType = expectedType.getLogicalType();
+    Conversion<?> conversion = getData().getConversionFor(logicalType);
     int index = 0;
-    do {
-      int limit = index + (int) l;
-      while (index < limit) {
-        Object element = read(null, expectedType, in);
-        array[index] = element;
-        index++;
-      }
-    } while ((l = in.arrayNext()) > 0);
+    if (logicalType != null && conversion != null) {
+      do {
+        int limit = index + (int) l;
+        while (index < limit) {
+          Object element = readWithConversion(
+              null, expectedType, logicalType, conversion, in);
+          array[index] = element;
+          index++;
+        }
+      } while ((l = in.arrayNext()) > 0);
+    } else {
+      do {
+        int limit = index + (int) l;
+        while (index < limit) {
+          Object element = readWithoutConversion(null, expectedType, in);
+          array[index] = element;
+          index++;
+        }
+      } while ((l = in.arrayNext()) > 0);
+    }
     return array;
   }
 
   private Object readCollection(Collection<Object> c, Schema expectedType,
       long l, ResolvingDecoder in) throws IOException {
-    do {
-      for (int i = 0; i < l; i++) {
-        Object element = read(null, expectedType, in);
-        c.add(element);
-      }
-    } while ((l = in.arrayNext()) > 0);
+    LogicalType logicalType = expectedType.getLogicalType();
+    Conversion<?> conversion = getData().getConversionFor(logicalType);
+    if (logicalType != null && conversion != null) {
+      do {
+        for (int i = 0; i < l; i++) {
+          Object element = readWithConversion(
+              null, expectedType, logicalType, conversion, in);
+          c.add(element);
+        }
+      } while ((l = in.arrayNext()) > 0);
+    } else {
+      do {
+        for (int i = 0; i < l; i++) {
+          Object element = readWithoutConversion(null, expectedType, in);
+          c.add(element);
+        }
+      } while ((l = in.arrayNext()) > 0);
+    }
     return c;
   }
 
