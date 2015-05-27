@@ -41,10 +41,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericContainer;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryData;
@@ -379,6 +382,12 @@ public class ReflectData extends SpecificData {
 
   @Override
   public Class getClass(Schema schema) {
+    // see if the element class will be converted and use that class
+    Conversion<?> conversion = getConversionFor(schema.getLogicalType());
+    if (conversion != null) {
+      return conversion.getConvertedType();
+    }
+
     switch (schema.getType()) {
     case ARRAY:
       Class collectionClass = getClassProp(schema, CLASS_PROP);
@@ -552,6 +561,11 @@ public class ReflectData extends SpecificData {
         return Schema.create(Schema.Type.BYTES);
       if (Collection.class.isAssignableFrom(c))              // array
         throw new AvroRuntimeException("Can't find element type of Collection");
+      for (Conversion<?> conversion : conversions.values()) {  // logical type
+        if (conversion.getConvertedType().isAssignableFrom(c)) {
+          return conversion.getRecommendedSchema();
+        }
+      }
       String fullName = c.getName();
       Schema schema = names.get(fullName);
       if (schema == null) {
@@ -859,5 +873,32 @@ public class ReflectData extends SpecificData {
       schema.addAlias(alias.alias(), space);
     }
   }
-  
+
+  @Override
+  public Object createFixed(Object old, Schema schema) {
+    // SpecificData will try to instantiate the type returned by getClass, but
+    // that is the converted class and can't be constructed.
+    LogicalType logicalType = schema.getLogicalType();
+    if (logicalType != null) {
+      Conversion<?> conversion = getConversionFor(schema.getLogicalType());
+      if (conversion != null) {
+        return new GenericData.Fixed(schema);
+      }
+    }
+    return super.createFixed(old, schema);
+  }
+
+  @Override
+  public Object newRecord(Object old, Schema schema) {
+    // SpecificData will try to instantiate the type returned by getClass, but
+    // that is the converted class and can't be constructed.
+    LogicalType logicalType = schema.getLogicalType();
+    if (logicalType != null) {
+      Conversion<?> conversion = getConversionFor(schema.getLogicalType());
+      if (conversion != null) {
+        return new GenericData.Record(schema);
+      }
+    }
+    return super.newRecord(old, schema);
+  }
 }

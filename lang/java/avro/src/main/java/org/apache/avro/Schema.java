@@ -98,6 +98,7 @@ public abstract class Schema extends JsonProperties {
   };
 
   private final Type type;
+  private LogicalType logicalType = null;
 
   Schema(Type type) {
     super(SCHEMA_RESERVED);
@@ -136,6 +137,14 @@ public abstract class Schema extends JsonProperties {
   @Override public void addProp(String name, Object value) {
     super.addProp(name, value);
     hashCode = NO_HASHCODE;
+  }
+
+  public LogicalType getLogicalType() {
+    return logicalType;
+  }
+
+  void setLogicalType(LogicalType logicalType) {
+    this.logicalType = logicalType;
   }
 
   /** Create an anonymous record schema. */
@@ -1310,6 +1319,8 @@ public abstract class Schema extends JsonProperties {
         if (!SCHEMA_RESERVED.contains(prop))      // ignore reserved
           result.addProp(prop, schema.get(prop));
       }
+      // parse logical type if present
+      result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
       names.space(savedSpace);                  // restore space
       if (result instanceof NamedSchema) {
         Set<String> aliases = parseAliases(schema);

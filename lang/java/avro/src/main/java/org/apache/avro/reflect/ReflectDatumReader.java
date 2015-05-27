@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.IndexedRecord;
@@ -74,6 +76,16 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       ReflectData.getClassProp(schema, SpecificData.CLASS_PROP);
     Class<?> elementClass =
       ReflectData.getClassProp(schema, SpecificData.ELEMENT_PROP);
+
+    if (elementClass == null) {
+      // see if the element class will be converted and use that class
+      // logical types cannot conflict with java-element-class
+      Conversion<?> elementConversion = getData()
+          .getConversionFor(schema.getElementType().getLogicalType());
+      if (elementConversion != null) {
+        elementClass = elementConversion.getConvertedType();
+      }
+    }
 
     if (collectionClass == null && elementClass == null)
       return super.newArray(old, size, schema);   // use specific/generic
@@ -163,26 +175,52 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
 
   private Object readObjectArray(Object[] array, Schema expectedType, long l,
       ResolvingDecoder in) throws IOException {
+    LogicalType logicalType = expectedType.getLogicalType();
+    Conversion<?> conversion = getData().getConversionFor(logicalType);
     int index = 0;
-    do {
-      int limit = index + (int) l;
-      while (index < limit) {
-        Object element = read(null, expectedType, in);
-        array[index] = element;
-        index++;
-      }
-    } while ((l = in.arrayNext()) > 0);
+    if (logicalType != null && conversion != null) {
+      do {
+        int limit = index + (int) l;
+        while (index < limit) {
+          Object element = readWithConversion(
+              null, expectedType, logicalType, conversion, in);
+          array[index] = element;
+          index++;
+        }
+      } while ((l = in.arrayNext()) > 0);
+    } else {
+      do {
+        int limit = index + (int) l;
+        while (index < limit) {
+          Object element = readWithoutConversion(null, expectedType, in);
+          array[index] = element;
+          index++;
+        }
+      } while ((l = in.arrayNext()) > 0);
+    }
     return array;
   }
 
   private Object readCollection(Collection<Object> c, Schema expectedType,
       long l, ResolvingDecoder in) throws IOException {
-    do {
-      for (int i = 0; i < l; i++) {
-        Object element = read(null, expectedType, in);
-        c.add(element);
-      }
-    } while ((l = in.arrayNext()) > 0);
+    LogicalType logicalType = expectedType.getLogicalType();
+    Conversion<?> conversion = getData().getConversionFor(logicalType);
+    if (logicalType != null && conversion != null) {
+      do {
+        for (int i = 0; i < l; i++) {
+          Object element = readWithConversion(
+              null, expectedType, logicalType, conversion, in);
+          c.add(element);
+        }
+      } while ((l = in.arrayNext()) > 0);
+    } else {
+      do {
+        for (int i = 0; i < l; i++) {
+          Object element = readWithoutConversion(null, expectedType, in);
+          c.add(element);
+        }
+      } while ((l = in.arrayNext()) > 0);
+    }
     return c;
   }
 
@@ -244,6 +282,28 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
           } catch (Exception e) {
             throw new AvroRuntimeException("Failed to read Stringable", e);
           } 
+        }
+        LogicalType logicalType = f.schema().getLogicalType();
+        if (logicalType != null) {
+          Conversion<?> conversion = getData().getConversionTo(
+              accessor.getField().getType(), logicalType);
+          if (conversion != null) {
+            try {
+              accessor.set(record, convert(
+                  readWithoutConversion(oldDatum, f.schema(), in),
+                  f.schema(), logicalType, conversion));
+            } catch (IllegalAccessException e) {
+              throw new AvroRuntimeException("Failed to set " + f);
+            }
+            return;
+          }
+        }
+        try {
+          accessor.set(record,
+              readWithoutConversion(oldDatum, f.schema(), in));
+          return;
+        } catch (IllegalAccessException e) {
+          throw new AvroRuntimeException("Failed to set " + f);
         }
       }
     }

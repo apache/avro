@@ -27,6 +27,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumReader;
@@ -147,6 +149,27 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Called to read data.*/
   protected Object read(Object old, Schema expected,
       ResolvingDecoder in) throws IOException {
+    Object datum = readWithoutConversion(old, expected, in);
+    LogicalType logicalType = expected.getLogicalType();
+    if (logicalType != null) {
+      Conversion<?> conversion = getData().getConversionFor(logicalType);
+      if (conversion != null) {
+        return convert(datum, expected, logicalType, conversion);
+      }
+    }
+    return datum;
+  }
+
+  protected Object readWithConversion(Object old, Schema expected,
+                                      LogicalType logicalType,
+                                      Conversion<?> conversion,
+                                      ResolvingDecoder in) throws IOException {
+    return convert(readWithoutConversion(old, expected, in),
+        expected, logicalType, conversion);
+  }
+
+  protected Object readWithoutConversion(Object old, Schema expected,
+      ResolvingDecoder in) throws IOException {
     switch (expected.getType()) {
     case RECORD:  return readRecord(old, expected, in);
     case ENUM:    return readEnum(expected, in);
@@ -165,7 +188,31 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     default: throw new AvroRuntimeException("Unknown type: " + expected);
     }
   }
-  
+
+  protected Object convert(Object datum, Schema schema, LogicalType type,
+                           Conversion<?> conversion) {
+    try {
+      switch (schema.getType()) {
+      case RECORD:  return conversion.fromRecord((IndexedRecord) datum, schema, type);
+      case ENUM:    return conversion.fromEnumSymbol((GenericEnumSymbol) datum, schema, type);
+      case ARRAY:   return conversion.fromArray(getData().getArrayAsCollection(datum), schema, type);
+      case MAP:     return conversion.fromMap((Map<?, ?>) datum, schema, type);
+      case FIXED:   return conversion.fromFixed((GenericFixed) datum, schema, type);
+      case STRING:  return conversion.fromCharSequence((CharSequence) datum, schema, type);
+      case BYTES:   return conversion.fromBytes((ByteBuffer) datum, schema, type);
+      case INT:     return conversion.fromInt((Integer) datum, schema, type);
+      case LONG:    return conversion.fromLong((Long) datum, schema, type);
+      case FLOAT:   return conversion.fromFloat((Float) datum, schema, type);
+      case DOUBLE:  return conversion.fromDouble((Double) datum, schema, type);
+      case BOOLEAN: return conversion.fromBoolean((Boolean) datum, schema, type);
+      }
+      return datum;
+    } catch (ClassCastException e) {
+      throw new AvroRuntimeException("Cannot convert " + datum + ":" +
+          datum.getClass().getSimpleName() + ": expected generic type", e);
+    }
+  }
+
   /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
   protected Object readRecord(Object old, Schema expected, 
@@ -213,10 +260,20 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long l = in.readArrayStart();
     long base = 0;
     if (l > 0) {
+      LogicalType logicalType = expectedType.getLogicalType();
+      Conversion<?> conversion = getData().getConversionFor(logicalType);
       Object array = newArray(old, (int) l, expected);
       do {
-        for (long i = 0; i < l; i++) {
-          addToArray(array, base + i, read(peekArray(array), expectedType, in));
+        if (logicalType != null && conversion != null) {
+          for (long i = 0; i < l; i++) {
+            addToArray(array, base + i, readWithConversion(
+                peekArray(array), expectedType, logicalType, conversion, in));
+          }
+        } else {
+          for (long i = 0; i < l; i++) {
+            addToArray(array, base + i, readWithoutConversion(
+                peekArray(array), expectedType, in));
+          }
         }
         base += l;
       } while ((l = in.arrayNext()) > 0);
@@ -249,11 +306,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       ResolvingDecoder in) throws IOException {
     Schema eValue = expected.getValueType();
     long l = in.readMapStart();
+    LogicalType logicalType = eValue.getLogicalType();
+    Conversion<?> conversion = getData().getConversionFor(logicalType);
     Object map = newMap(old, (int) l);
     if (l > 0) {
       do {
-        for (int i = 0; i < l; i++) {
-          addToMap(map, readMapKey(null, expected, in), read(null, eValue, in));
+        if (logicalType != null && conversion != null) {
+          for (int i = 0; i < l; i++) {
+            addToMap(map, readMapKey(null, expected, in),
+                readWithConversion(null, eValue, logicalType, conversion, in));
+          }
+        } else {
+          for (int i = 0; i < l; i++) {
+            addToMap(map, readMapKey(null, expected, in),
+                readWithoutConversion(null, eValue, in));
+          }
         }
       } while ((l = in.mapNext()) > 0);
     }

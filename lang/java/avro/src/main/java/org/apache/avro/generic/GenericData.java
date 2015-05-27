@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.WeakHashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -32,6 +33,8 @@ import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -59,7 +62,7 @@ public class GenericData {
   /** Used to specify the Java type for a string schema. */
   public enum StringType { CharSequence, String, Utf8 };
 
-  protected static final String STRING_PROP = "avro.java.string";
+  public static final String STRING_PROP = "avro.java.string";
   protected static final String STRING_TYPE_STRING = "String";
 
   private final ClassLoader classLoader;
@@ -90,6 +93,47 @@ public class GenericData {
 
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() { return classLoader; }
+
+  public Map<String, Conversion<?>> conversions =
+      new HashMap<String, Conversion<?>>();
+
+  public Map<Class<?>, Conversion<?>> conversionsByClass =
+      new IdentityHashMap<Class<?>, Conversion<?>>();
+
+  public void addLogicalTypeConversion(Conversion<?> conversion) {
+    conversions.put(conversion.getLogicalTypeName(), conversion);
+    conversionsByClass.put(conversion.getConvertedType(), conversion);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> Conversion<? super T> getConversionFrom(Class<T> datumClass,
+                                                     LogicalType logicalType) {
+    Conversion<?> conversion = conversionsByClass.get(datumClass);
+    if (conversion != null &&
+        conversion.getLogicalTypeName().equals(logicalType.getName())) {
+      return (Conversion<T>) conversion;
+    }
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> Conversion<? extends T> getConversionTo(Class<T> datumClass,
+                                                     LogicalType logicalType) {
+    Conversion<?> conversion = conversionsByClass.get(datumClass);
+    if (conversion != null &&
+        conversion.getLogicalTypeName().equals(logicalType.getName())) {
+      return (Conversion<T>) conversion;
+    }
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+    if (logicalType == null) {
+      return null;
+    }
+    return (Conversion<Object>) conversions.get(logicalType.getName());
+  }
 
   /** Default implementation of {@link GenericRecord}. Note that this implementation
    * does not fill in default values for fields if they are not specified; use {@link
@@ -609,6 +653,24 @@ public class GenericData {
   /** Return the index for a datum within a union.  Implemented with {@link
    * Schema#getIndexNamed(String)} and {@link #getSchemaName(Object)}.*/
   public int resolveUnion(Schema union, Object datum) {
+    // if there is a logical type that works, use it first
+    // this allows logical type concrete classes to overlap with supported ones
+    // for example, a conversion could return a map
+    if (datum != null) {
+      Conversion<?> conversion = conversionsByClass.get(datum.getClass());
+      if (conversion != null) {
+        String logicalTypeName = conversion.getLogicalTypeName();
+        List<Schema> candidates = union.getTypes();
+        for (int i = 0; i < candidates.size(); i += 1) {
+          LogicalType candidateLogicalType = candidates.get(i).getLogicalType();
+          if (candidateLogicalType != null &&
+              logicalTypeName.equals(candidateLogicalType.getName())) {
+            return i;
+          }
+        }
+      }
+    }
+
     Integer i = union.getIndexNamed(getSchemaName(datum));
     if (i != null)
       return i;

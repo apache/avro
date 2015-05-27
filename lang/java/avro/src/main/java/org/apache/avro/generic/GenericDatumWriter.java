@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Collection;
 
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumWriter;
@@ -57,9 +59,46 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   public void write(D datum, Encoder out) throws IOException {
     write(root, datum, out);
   }
-  
+
   /** Called to write data.*/
   protected void write(Schema schema, Object datum, Encoder out)
+      throws IOException {
+    LogicalType logicalType = schema.getLogicalType();
+    if (datum != null && logicalType != null) {
+      Conversion<?> conversion = getData()
+          .getConversionFrom(datum.getClass(), logicalType);
+      writeWithoutConversion(schema,
+          convert(schema, logicalType, conversion, datum), out);
+    } else {
+      writeWithoutConversion(schema, datum, out);
+    }
+  }
+
+  private <T> Object convert(Schema schema, LogicalType logicalType,
+                             Conversion<T> conversion, Object datum) {
+    if (conversion == null) {
+      return datum;
+    }
+    Class<T> fromClass = conversion.getConvertedType();
+    switch (schema.getType()) {
+    case RECORD:  return conversion.toRecord(fromClass.cast(datum), schema, logicalType);
+    case ENUM:    return conversion.toEnumSymbol(fromClass.cast(datum), schema, logicalType);
+    case ARRAY:   return conversion.toArray(fromClass.cast(datum), schema, logicalType);
+    case MAP:     return conversion.toMap(fromClass.cast(datum), schema, logicalType);
+    case FIXED:   return conversion.toFixed(fromClass.cast(datum), schema, logicalType);
+    case STRING:  return conversion.toCharSequence(fromClass.cast(datum), schema, logicalType);
+    case BYTES:   return conversion.toBytes(fromClass.cast(datum), schema, logicalType);
+    case INT:     return conversion.toInt(fromClass.cast(datum), schema, logicalType);
+    case LONG:    return conversion.toLong(fromClass.cast(datum), schema, logicalType);
+    case FLOAT:   return conversion.toFloat(fromClass.cast(datum), schema, logicalType);
+    case DOUBLE:  return conversion.toDouble(fromClass.cast(datum), schema, logicalType);
+    case BOOLEAN: return conversion.toBoolean(fromClass.cast(datum), schema, logicalType);
+    }
+    return datum;
+  }
+
+  /** Called to write data.*/
+  protected void writeWithoutConversion(Schema schema, Object datum, Encoder out)
     throws IOException {
     try {
       switch (schema.getType()) {

@@ -42,6 +42,8 @@ Trunk (not yet released)
 
     AVRO-680. Java: Support non-string map keys. (Sachin Goyal via Ryan Blue).
 
+    AVRO-1497. Java: Add support for logical types. (blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
