@@ -46,6 +46,14 @@
       "name" : "average",
       "type" : "float",
       "default" : "-Infinity"
+    }, {
+      "name": "d",
+      "type": {"type": "int", "logicalType": "date"},
+      "default": 0
+    }, {
+      "name": "t",
+      "type": {"type": "int", "logicalType": "time-millis"},
+      "default": 0
     } ],
     "my-property" : {
       "key" : 3

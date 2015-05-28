@@ -126,6 +126,10 @@
       <!-- can only be used from within ant -->
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+    </dependency>
   </dependencies>
 
 </project>

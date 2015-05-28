@@ -34,6 +34,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.data.TimeConversions.DateConversion;
+import org.apache.avro.data.TimeConversions.TimeConversion;
+import org.apache.avro.data.TimeConversions.TimestampConversion;
 import org.apache.avro.specific.SpecificData;
 import org.codehaus.jackson.JsonNode;
 
@@ -63,6 +68,13 @@ import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
 public class SpecificCompiler {
   public static enum FieldVisibility {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
+  }
+
+  private static final SpecificData SPECIFIC = new SpecificData();
+  static {
+    SPECIFIC.addLogicalTypeConversion(new DateConversion());
+    SPECIFIC.addLogicalTypeConversion(new TimeConversion());
+    SPECIFIC.addLogicalTypeConversion(new TimestampConversion());
   }
 
   private final Set<Schema> queue = new HashSet<Schema>();
@@ -495,6 +507,12 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the java type for a Schema. */
   public String javaType(Schema schema) {
+    Conversion<?> conversion = SPECIFIC
+        .getConversionFor(schema.getLogicalType());
+    if (conversion != null) {
+      return conversion.getConvertedType().getName();
+    }
+
     switch (schema.getType()) {
     case RECORD:
     case ENUM:
@@ -526,6 +544,12 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the unboxed java type for a Schema. */
   public String javaUnbox(Schema schema) {
+    Conversion<?> conversion = SPECIFIC
+        .getConversionFor(schema.getLogicalType());
+    if (conversion != null) {
+      return conversion.getConvertedType().getName();
+    }
+
     switch (schema.getType()) {
     case INT:     return "int";
     case LONG:    return "long";
@@ -534,6 +558,26 @@ public class SpecificCompiler {
     case BOOLEAN: return "boolean";
     default:      return javaType(schema);
     }
+  }
+
+  public boolean hasLogicalTypeField(Schema schema) {
+    for (Schema.Field field : schema.getFields()) {
+      if (field.schema().getLogicalType() != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public String conversionInstance(Schema schema) {
+    if (LogicalTypes.date().equals(schema.getLogicalType())) {
+      return "DATE_CONVERSION";
+    } else if (LogicalTypes.timeMillis().equals(schema.getLogicalType())) {
+      return "TIME_CONVERSION";
+    } else if (LogicalTypes.timestampMillis().equals(schema.getLogicalType())) {
+      return "TIMESTAMP_CONVERSION";
+    }
+    return "null";
   }
 
   /** Utility for template use.  Returns the java annotations for a schema. */

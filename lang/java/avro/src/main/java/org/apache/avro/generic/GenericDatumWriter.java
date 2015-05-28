@@ -74,8 +74,8 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     }
   }
 
-  private <T> Object convert(Schema schema, LogicalType logicalType,
-                             Conversion<T> conversion, Object datum) {
+  protected <T> Object convert(Schema schema, LogicalType logicalType,
+                               Conversion<T> conversion, Object datum) {
     if (conversion == null) {
       return datum;
     }
