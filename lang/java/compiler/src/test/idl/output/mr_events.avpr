@@ -52,7 +52,7 @@
       "type" : "string"
     }, {
       "name" : "finishTime",
-      "type" : "long"
+      "type" : {"type": "long", "logicalType": "timestamp-millis"}
     }, {
       "name" : "finishedMaps",
       "type" : "int"
@@ -83,7 +83,7 @@
       "type" : "string"
     }, {
       "name" : "launchTime",
-      "type" : "long"
+      "type" : {"type": "long", "logicalType": "timestamp-millis"}
     }, {
       "name" : "totalMaps",
       "type" : "int"
@@ -108,7 +108,7 @@
       "type" : "string"
     }, {
       "name" : "submitTime",
-      "type" : "long"
+      "type" : {"type": "long", "logicalType": "timestamp-millis"}
     }, {
       "name" : "jobConfPath",
       "type" : "string"

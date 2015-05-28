@@ -17,10 +17,13 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.ClassUtils;
+import java.io.IOException;
 
 /** {@link org.apache.avro.io.DatumReader DatumReader} for generated Java classes. */
 public class SpecificDatumReader<T> extends GenericDatumReader<T> {
@@ -98,5 +101,26 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     }
   }
 
+  @Override
+  protected void readField(Object r, Schema.Field f, Object oldDatum,
+                           ResolvingDecoder in, Object state)
+      throws IOException {
+    if (r instanceof SpecificRecordBase) {
+      Conversion<?> conversion = ((SpecificRecordBase) r).getConversion(f.pos());
+
+      Object datum;
+      if (conversion != null) {
+        datum = readWithConversion(
+            oldDatum, f.schema(), f.schema().getLogicalType(), conversion, in);
+      } else {
+        datum = readWithoutConversion(oldDatum, f.schema(), in);
+      }
+
+      getData().setField(r, f.name(), f.pos(), datum);
+
+    } else {
+      super.readField(r, f, oldDatum, in, state);
+    }
+  }
 }
 

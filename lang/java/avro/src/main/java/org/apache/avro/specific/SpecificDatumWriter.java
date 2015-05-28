@@ -19,6 +19,8 @@ package org.apache.avro.specific;
 
 import java.io.IOException;
 
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
@@ -69,5 +71,24 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
     writeString(datum, out);
   }
 
+  @Override
+  protected void writeField(Object datum, Schema.Field f, Encoder out,
+                            Object state) throws IOException {
+    if (datum instanceof SpecificRecordBase) {
+      Conversion<?> conversion = ((SpecificRecordBase) datum).getConversion(f.pos());
+      Schema fieldSchema = f.schema();
+      LogicalType logicalType = fieldSchema.getLogicalType();
+
+      Object value = getData().getField(datum, f.name(), f.pos());
+      if (conversion != null && logicalType != null) {
+        value = convert(fieldSchema, logicalType, conversion, value);
+      }
+
+      writeWithoutConversion(fieldSchema, value, out);
+
+    } else {
+      super.writeField(datum, f, out, state);
+    }
+  }
 }
 

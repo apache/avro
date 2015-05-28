@@ -35,11 +35,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.common.io.Resources;
 import org.apache.avro.AvroTestUtil;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData.StringType;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -294,5 +297,36 @@ public class TestSpecificCompiler {
     // Compare as strings
     assertThat("Generated files should contain the same characters in the proper encodings",
       new String(fileInDefaultEncoding), equalTo(new String(fileInDifferentEncoding, differentEncoding)));
+  }
+
+  @Test
+  public void testLogicalTypes() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+
+    Schema dateSchema = LogicalTypes.date()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeSchema = LogicalTypes.timeMillis()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+    Schema decimalSchema = LogicalTypes.decimal(9,2)
+        .addToSchema(Schema.create(Schema.Type.BYTES));
+
+    Assert.assertEquals("Should use Joda LocalDate for date type",
+        "org.joda.time.LocalDate", compiler.javaType(dateSchema));
+    Assert.assertEquals("Should use Joda LocalTime for time-millis type",
+        "org.joda.time.LocalTime", compiler.javaType(timeSchema));
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type",
+        "org.joda.time.DateTime", compiler.javaType(timestampSchema));
+    Assert.assertEquals("Should use underlying type when missing conversion",
+        "java.nio.ByteBuffer", compiler.javaType(decimalSchema));
+  }
+
+  @Test
+  public void testLogicalTypesWithMultipleFields() throws Exception {
+    Schema logicalTypesWithMultipleFields = new Schema.Parser().parse(
+        new File("src/test/resources/simple_record.avsc"));
+    assertCompilesWithJavaCompiler(
+        new SpecificCompiler(logicalTypesWithMultipleFields).compile());
   }
 }
