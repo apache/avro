@@ -47,6 +47,8 @@ protocol Simple {
 
     double value = NaN;
     float average = -Infinity;
+    date d = 0;
+    time_ms t = 0;
   }
 
   error TestError {
