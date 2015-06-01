@@ -240,12 +240,12 @@
             <executions>
               <execution>
                 <id>sign-artifacts</id>
-                <phase>none</phase>
+                <phase>verify</phase>
                 <goals>
                   <goal>sign</goal>
                 </goals>
               <configuration>
-                  <skip>${gpg-plugin-skip}</skip>
+                  <skip>true</skip>
               </configuration>              
               </execution>
             </executions>
