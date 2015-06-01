@@ -79,9 +79,9 @@
   </scm>
   -->
 
-    <scm>
-        <developerConnection>scm:git:http://devpmapp1:8020/apache-avro</developerConnection>
-      <tag>avro-toplevel-1.8.0.1.p</tag>
+  <scm>
+    <developerConnection>scm:git:https://github.com/zolyfarkas/avro.git</developerConnection>
+    <tag>avro-toplevel-1.8.0.1.p</tag>
   </scm>  
 
     
