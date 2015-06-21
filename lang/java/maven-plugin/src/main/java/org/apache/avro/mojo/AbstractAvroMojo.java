@@ -19,16 +19,16 @@
 package org.apache.avro.mojo;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.Scanner;
-import org.sonatype.plexus.build.incremental.BuildContext;
+import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
 
 /**
  * Base for Avro Compiler Mojos.
@@ -50,6 +50,12 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    *            default-value="${project.build.directory}/generated-sources/avro"
    */
   private File outputDirectory;
+  
+  /**
+   * @parameter property="schemaOutputDirectory"
+   *            default-value="${project.build.directory}/generated-sources/avsc"
+   */
+  private File schemaOutputDirectory;
 
   /**
    * @parameter property="sourceDirectory"
@@ -76,15 +82,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * A list of files or directories that should be compiled first thus making
    * them importable by subsequently compiled schemas. Note that imported files
    * should not reference each other.
-   * @parameter
+   * @parameter 
    */
   protected String[] imports;
-
+  
   /**
    * A set of Ant-like exclusion patterns used to prevent certain files from
    * being processed. By default, this set is empty such that no files are
    * excluded.
-   *
+   * 
    * @parameter
    */
   protected String[] excludes = new String[0];
@@ -93,7 +99,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * A set of Ant-like exclusion patterns used to prevent certain files from
    * being processed. By default, this set is empty such that no files are
    * excluded.
-   *
+   * 
    * @parameter
    */
   protected String[] testExcludes = new String[0];
@@ -124,18 +130,18 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   /**
    * The current Maven project.
-   *
+   * 
    * @parameter default-value="${project}"
    * @readonly
    * @required
    */
   protected MavenProject project;
 
-  /** @component */
-  protected BuildContext buildContext;
-
   @Override
   public void execute() throws MojoExecutionException {
+    
+    SpecificCompiler.SCHEMA_OUTPUT_DIR.set(this.schemaOutputDirectory);
+    
     boolean hasSourceDir = null != sourceDirectory
         && sourceDirectory.isDirectory();
     boolean hasImports = null != imports;
@@ -167,11 +173,11 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
           sourceDirectory.getAbsolutePath(), excludes, getIncludes());
       compileFiles(includedFiles, sourceDirectory, outputDirectory);
     }
-
+    
     if (hasImports || hasSourceDir) {
       project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
     }
-
+    
     if (hasTestDir) {
       String[] includedFiles = getIncludedFiles(
           testSourceDirectory.getAbsolutePath(), testExcludes,
@@ -183,9 +189,12 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   private String[] getIncludedFiles(String absPath, String[] excludes,
       String[] includes) {
+    FileSetManager fileSetManager = new FileSetManager();
+    FileSet fs = new FileSet();
+    fs.setDirectory(absPath);
+    fs.setFollowSymlinks(false);
+    
     //exclude imports directory since it has already been compiled.
-    List<String> allExcludes = new ArrayList<String>();
-    allExcludes.addAll(Arrays.asList(excludes));
     if (imports != null) {
       String importExclude = null;
 
@@ -198,33 +207,25 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
           importExclude = "**/" + file.getName();
         }
 
-        allExcludes.add(importExclude);
+        fs.addExclude(importExclude);
       }
     }
-
-    Scanner scanner = buildContext.newScanner(new File(absPath));
-    scanner.setIncludes(includes);
-    scanner.setExcludes(allExcludes.toArray(new String[0]));
-    scanner.scan();
-    return scanner.getIncludedFiles();
+    for (String include : includes) {
+      fs.addInclude(include);
+    }
+    for (String exclude : excludes) {
+      fs.addExclude(exclude);
+    }
+    return fileSetManager.getIncludedFiles(fs);
   }
 
   private void compileFiles(String[] files, File sourceDir, File outDir) throws MojoExecutionException {
     for (String filename : files) {
-      File file = new File(sourceDir, filename);
       try {
-        if (!buildContext.isIncremental() || buildContext.hasDelta(file)) {
-          buildContext.removeMessages(file); // remove all messages
-          doCompile(filename, sourceDir, outDir);
-          buildContext.refresh(outDir);
-        }
-      } catch (Exception e) {
-        if (buildContext.isIncremental()) {
-          buildContext.addMessage(file, 0, 0, e.getLocalizedMessage(), BuildContext.SEVERITY_ERROR, e);
-        } else {
-          throw new MojoExecutionException("Error compiling protocol file "
-                  + filename + " to " + outDir, e);
-        }
+        doCompile(filename, sourceDir, outDir);
+      } catch (IOException e) {
+        throw new MojoExecutionException("Error compiling protocol file "
+            + filename + " to " + outDir, e);
       }
     }
   }
@@ -238,7 +239,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     }
   }
 
-  protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws Exception;
+  protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException;
 
   protected abstract String[] getIncludes();
 
