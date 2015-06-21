@@ -21,7 +21,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.8.0.10p</version>
+    <version>1.8.0.10p-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -78,16 +78,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>avro-compiler</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.sonatype.plexus</groupId>
-      <artifactId>plexus-build-api</artifactId>
-      <version>0.0.7</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-utils</artifactId>
-      <version>2.0.7</version>
     </dependency>
     <!-- test-->
     <dependency>
