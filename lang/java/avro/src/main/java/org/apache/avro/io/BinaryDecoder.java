@@ -24,6 +24,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.util.Utf8;
+import org.spf4j.base.Arrays;
+import org.spf4j.base.Strings;
 
 /** An {@link Decoder} for binary-format data.
  * <p/>
@@ -264,12 +266,18 @@ public class BinaryDecoder extends Decoder {
     }
     return result;
   }
-  
-  private final Utf8 scratchUtf8 = new Utf8();
 
   @Override
   public String readString() throws IOException {
-    return readString(scratchUtf8).toString();
+    int length = readInt();
+    if (length == 0) {
+      return "";
+    } if (length < 0) {
+      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
+    }
+    byte [] tlBytes = Arrays.getBytesTmp(length);
+    doReadBytes(tlBytes, 0, length);
+    return Strings.fromUtf8(tlBytes, 0, length);
   }
 
   @Override

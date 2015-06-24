@@ -19,8 +19,10 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.CharsetEncoder;
 
 import org.apache.avro.util.Utf8;
+import org.spf4j.base.Strings;
 
 /**
  * An abstract {@link Encoder} for Avro's binary encoding.
@@ -50,9 +52,12 @@ public abstract class BinaryEncoder extends Encoder {
       writeZero();
       return;
     }
-    byte[] bytes = string.getBytes("UTF-8");
-    writeInt(bytes.length);
-    writeFixed(bytes, 0, bytes.length);
+    CharsetEncoder utf8CharsetEncoder = Strings.getUTF8CharsetEncoder();
+    int nrChars = string.length();
+    byte[] tlArray = org.spf4j.base.Arrays.getBytesTmp(Strings.getmaxNrBytes(utf8CharsetEncoder, nrChars));
+    int nrBytes = Strings.encode(utf8CharsetEncoder, Strings.steal(string), 0, nrChars, tlArray);
+    writeInt(nrBytes);
+    writeFixed(tlArray, 0, nrBytes);
   }
 
   @Override

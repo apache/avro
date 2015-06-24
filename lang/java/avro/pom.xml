@@ -21,7 +21,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.8.0.11p</version>
+    <version>1.8.0.12p-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -153,6 +153,12 @@
       <groupId>org.xerial.snappy</groupId>
       <artifactId>snappy-java</artifactId>
     </dependency>
+    <dependency>
+        <groupId>org.spf4j</groupId>
+        <artifactId>spf4j-core</artifactId>
+        <version>7.2.9-SNAPSHOT</version>
+    </dependency>
+    
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
