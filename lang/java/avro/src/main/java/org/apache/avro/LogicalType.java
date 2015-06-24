@@ -64,6 +64,9 @@ public abstract class LogicalType extends JsonProperties {
     return props.hashCode();
   }
 
+  public String getLogicalTypeName() {
+    return logicalTypeName;
+  }
   
   private static final Map<String, Constructor<? extends LogicalType>> LOGICAL_TYPE_TO_CLASS =
           new HashMap<String, Constructor<? extends LogicalType>>();
