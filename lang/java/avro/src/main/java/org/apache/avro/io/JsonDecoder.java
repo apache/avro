@@ -56,7 +56,7 @@ import org.codehaus.jackson.ObjectCodec;
  * */
 public class JsonDecoder extends ParsingDecoder
   implements Parser.ActionHandler {
-  private JsonParser in;
+  protected JsonParser in;
   private static JsonFactory jsonFactory = new JsonFactory();
   Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
   ReorderBuffer currentReorderBuffer; 
@@ -159,7 +159,7 @@ public class JsonDecoder extends ParsingDecoder
     return this;
   }
 
-  private void advance(Symbol symbol) throws IOException {
+  protected void advance(Symbol symbol) throws IOException {
     this.parser.processTrailingImplicitActions();
     if (in.getCurrentToken() == null && this.parser.depth() == 1)
       throw new EOFException();

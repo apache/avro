@@ -24,9 +24,6 @@ import org.codehaus.jackson.JsonToken;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,27 +36,6 @@ import java.util.List;
  * next field isn't there! More info to come as we remember how it works!
  */
 public final class ExtendedJsonDecoder extends JsonDecoder {
-
-    private static final Method ADVANCE;
-    private static final Method ERROR;
-    private static final Field IN;
-
-    static {
-        try {
-            ADVANCE = JsonDecoder.class.getDeclaredMethod("advance", Symbol.class);
-            ERROR = JsonDecoder.class.getDeclaredMethod("error", String.class);
-            IN = JsonDecoder.class.getDeclaredField("in");
-            ADVANCE.setAccessible(true);
-            ERROR.setAccessible(true);
-            IN.setAccessible(true);
-        } catch (NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
-        } catch (SecurityException ex) {
-            throw new RuntimeException(ex);
-        } catch (NoSuchFieldException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
 
     private final DefaultValueProvider provider;
 
@@ -83,8 +59,8 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
     @Override
     public int readIndex() throws IOException {
         try {
-            ADVANCE.invoke(this, Symbol.UNION);
-            JsonParser lin = getParser();
+            super.advance(Symbol.UNION);
+            JsonParser lin = this.in;
             Symbol.Alternative a = (Symbol.Alternative) parser.popSymbol();
 
             String label;
@@ -99,7 +75,7 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
                 lin.nextToken();
                 parser.pushSymbol(Symbol.UNION_END);
             } else {
-                throw (AvroTypeException) ERROR.invoke(this, "start-union");
+                throw (AvroTypeException) error("start-union");
             }
             int n = a.findLabel(label);
             if (n < 0) {
@@ -107,11 +83,7 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
             }
             parser.pushSymbol(a.getSymbol(n));
             return n;
-        } catch (IllegalAccessException ex) {
-          throw new RuntimeException(ex);
         } catch (IllegalArgumentException ex) {
-          throw new RuntimeException(ex);
-        } catch (InvocationTargetException ex) {
           throw new RuntimeException(ex);
         }
     }
@@ -128,7 +100,7 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
     @Override
     public Symbol doAction(final Symbol input, final Symbol top) throws IOException {
         try {
-            JsonParser in = getParser();
+            JsonParser in = this.in;
             if (top instanceof Symbol.FieldAdjustAction) {
                 Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
                 String name = fa.fname;
@@ -137,7 +109,7 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
                     if (node != null) {
                         currentReorderBuffer.savedFields.remove(name);
                         currentReorderBuffer.origParser = in;
-                        setParser(makeParser(node));
+                        this.in = makeParser(node);
                         return null;
                     }
                 }
@@ -166,7 +138,7 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
                 }
             } else if (top == Symbol.FIELD_END) {
                 if (currentReorderBuffer != null && currentReorderBuffer.origParser != null) {
-                    setParser(currentReorderBuffer.origParser);
+                    this.in = currentReorderBuffer.origParser;
                     currentReorderBuffer.origParser = null;
                 }
             } else if (top == Symbol.RECORD_START) {
@@ -218,17 +190,10 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
                 currentReorderBuffer = new ReorderBuffer();
             }
             currentReorderBuffer.origParser = in;
-            setParser(makeParser(result));
+            this.in = makeParser(result);
             return true;
         }
         return false;
     }
 
-    private JsonParser getParser() throws IllegalAccessException {
-        return (JsonParser) IN.get(this);
-    }
-
-    private void setParser(final JsonParser parser) throws IllegalAccessException {
-        IN.set(this, parser);
-    }
 }
