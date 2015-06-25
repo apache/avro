@@ -124,19 +124,31 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     return this;
   }
 
-  /** Open a new file for data matching a schema. */
+  /** Open a new file for data matching a schema with a random sync. */
   public DataFileWriter<D> create(Schema schema, File file) throws IOException {
-    return create(schema, new SyncableFileOutputStream(file));
+    return create(schema, new SyncableFileOutputStream(file), null);
   }
 
-  /** Open a new file for data matching a schema. */
+  /** Open a new file for data matching a schema with a random sync. */
   public DataFileWriter<D> create(Schema schema, OutputStream outs)
+    throws IOException {
+    return create(schema, outs, null);
+  }
+
+  /** Open a new file for data matching a schema with an explicit sync. */
+  public DataFileWriter<D> create(Schema schema, OutputStream outs, byte[] sync)
     throws IOException {
     assertNotOpen();
 
     this.schema = schema;
     setMetaInternal(DataFileConstants.SCHEMA, schema.toString());
-    this.sync = generateSync();
+    if (sync == null ) {
+      this.sync = generateSync();
+    } else if (sync.length == 16) {
+      this.sync = sync;
+    } else {
+      throw new IOException("sync must be exactly 16 bytes");
+    }
 
     init(outs);
 
@@ -150,7 +162,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       vout.writeBytes(entry.getValue());
     }
     vout.writeMapEnd();
-    vout.writeFixed(sync);                       // write initial sync
+    vout.writeFixed(this.sync); // write initial sync
     vout.flush(); //vout may be buffered, flush before writing to out
     return this;
   }
