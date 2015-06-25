@@ -142,6 +142,8 @@ Trunk (not yet released)
     AVRO-1655. Java: Fix NPE in RecordSchema#toString when fields are null.
     (Lars Francke via blue)
 
+    AVRO-1689. Update Dockerfile to use official Java repository. (tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
