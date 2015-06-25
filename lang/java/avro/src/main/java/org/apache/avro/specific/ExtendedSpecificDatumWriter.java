@@ -24,7 +24,7 @@ public class ExtendedSpecificDatumWriter<T> extends ExtendedGenericDatumWriter<T
     }
 
     public ExtendedSpecificDatumWriter(final Schema root) {
-        super(root);
+        super(root, SpecificData.get());
     }
 
     public ExtendedSpecificDatumWriter(final Schema root, final GenericData data) {
