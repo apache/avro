@@ -478,8 +478,12 @@ public class Protocol extends JsonProperties {
       if (fieldTypeNode == null)
         throw new SchemaParseException("No param type: "+field);
       String name = fieldNameNode.getTextValue();
+      String fieldDoc = null;
+      JsonNode fieldDocNode = field.get("doc");
+      if (fieldDocNode != null)
+        fieldDoc = fieldDocNode.getTextValue();
       fields.add(new Field(name, Schema.parse(fieldTypeNode,types),
-                           null /* message fields don't have docs */,
+                           fieldDoc,
                            field.get("default")));
     }
     Schema request = Schema.createRecord(fields);

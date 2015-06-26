@@ -38,7 +38,10 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     super();
   }
   
-  /** Creates a new ${this.mangle($schema.getName())} with the given bytes */
+  /**
+   * Creates a new ${this.mangle($schema.getName())} with the given bytes.
+   * @param bytes The bytes to create the new ${this.mangle($schema.getName())}. 
+   */
   public ${this.mangle($schema.getName())}(byte[] bytes) {
     super(bytes);
   }

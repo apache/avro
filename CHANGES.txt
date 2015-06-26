@@ -79,6 +79,9 @@ Trunk (not yet released)
     AVRO-1655. Java: Add Schema.createRecord with field list.
     (Lars Francke via blue)
 
+    AVRO-1681. Improve generated JavaDocs.
+    (Charles Gariépy-Ikeson via tomwhite)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)

@@ -33,9 +33,15 @@ public interface $this.mangle($protocol.getName()) {
 #set ($name = $e.getKey())
 #set ($message = $e.getValue())
 #set ($response = $message.getResponse())
+  /**
 #if ($message.getDoc())
-  /** $this.escapeForJavadoc($message.getDoc()) */
+   * $this.escapeForJavadoc($message.getDoc())
 #end
+#foreach ($p in $message.getRequest().getFields())##
+#if ($p.doc())   * @param ${this.mangle($p.name())} $p.doc()
+#end
+#end
+   */
 #foreach ($annotation in $this.javaAnnotations($message))
   @$annotation
 #end
@@ -67,9 +73,16 @@ public interface $this.mangle($protocol.getName()) {
 #set ($response = $message.getResponse())
 ## Generate callback method if the message is not one-way:
 #if (! $message.isOneWay())
+    /**
 #if ($message.getDoc())
-    /** $this.escapeForJavadoc($message.getDoc()) */
+     * $this.escapeForJavadoc($message.getDoc())
 #end
+#foreach ($p in $message.getRequest().getFields())##
+#if ($p.doc())     * @param ${this.mangle($p.name())} $p.doc()
+#end
+#end
+     * @throws java.io.IOException The async call could not be completed.
+     */
     void ${this.mangle($name)}(##
 #foreach ($p in $message.getRequest().getFields())##
 #*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($velocityHasNext), #end
