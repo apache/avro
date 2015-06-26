@@ -47,6 +47,9 @@ Trunk (not yet released)
     AVRO-1685. Java: Allow specifying sync in DataFileWriter.create
     (Sehrope Sarkuni via tomwhite)
 
+    AVRO-1683. Add microsecond time and timestamp logical types to the
+    specification. (blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

@@ -1413,7 +1413,7 @@ void initFPTable() {
           The <code>date</code> logical type represents a date within the calendar, with no reference to a particular time zone or time of day.
         </p>
         <p>
-          A <code>date</code> logical type annotates Avro <code>int</code> type, where the int stores the number of days from the unix epoch, 1 January 1970 (ISO calendar).
+          A <code>date</code> logical type annotates an Avro <code>int</code>, where the int stores the number of days from the unix epoch, 1 January 1970 (ISO calendar).
         </p>
       </section>
 
@@ -1423,7 +1423,17 @@ void initFPTable() {
           The <code>time-millis</code> logical type represents a time of day, with no reference to a particular calendar, time zone or date, with a precision of one millisecond.
         </p>
         <p>
-          A <code>time-millis</code> logical type annotates Avro <code>int</code> type, where the int stores the number of milliseconds after midnight, 00:00:00.000.
+          A <code>time-millis</code> logical type annotates an Avro <code>int</code>, where the int stores the number of milliseconds after midnight, 00:00:00.000.
+        </p>
+      </section>
+
+      <section>
+        <title>Time (microsecond precision)</title>
+        <p>
+          The <code>time-micros</code> logical type represents a time of day, with no reference to a particular calendar, time zone or date, with a precision of one microsecond.
+        </p>
+        <p>
+          A <code>time-micros</code> logical type annotates an Avro <code>long</code>, where the long stores the number of microseconds after midnight, 00:00:00.000000.
         </p>
       </section>
 
@@ -1433,7 +1443,17 @@ void initFPTable() {
           The <code>timestamp-millis</code> logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond.
         </p>
         <p>
-          A <code>timestamp-millis</code> logical type annotates Avro <code>long</code> type, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
+          A <code>timestamp-millis</code> logical type annotates an Avro <code>long</code>, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
+        </p>
+      </section>
+
+      <section>
+        <title>Timestamp (microsecond precision)</title>
+        <p>
+          The <code>timestamp-micros</code> logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one microsecond.
+        </p>
+        <p>
+          A <code>timestamp-micros</code> logical type annotates an Avro <code>long</code>, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
         </p>
       </section>
 
