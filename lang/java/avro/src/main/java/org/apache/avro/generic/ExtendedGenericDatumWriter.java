@@ -35,6 +35,16 @@ public class ExtendedGenericDatumWriter<D> extends GenericDatumWriter<D> {
         return (a == b) || (a != null && a.equals(b));
     }
 
+
+   private static final ThreadLocal<List<Symbol>> HOLDINGS = new ThreadLocal<List<Symbol>>() {
+
+      @Override
+      protected List<Symbol> initialValue() {
+        return new ArrayList(8);
+      }
+
+   };
+
     /**
      * Overwritten to skip serializing fields that have default values.
      *
@@ -75,7 +85,8 @@ public class ExtendedGenericDatumWriter<D> extends GenericDatumWriter<D> {
                             }
                             parser.pushSymbol(nextSymbol);
                     }
-                    List<Symbol> holdings = new ArrayList<Symbol>(4);
+                    List<Symbol> holdings = HOLDINGS.get();
+                    holdings.clear();
                     Symbol advanceTo = null;
                     boolean done = false;
                     while (!done) {
