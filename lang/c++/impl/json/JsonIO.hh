@@ -193,7 +193,7 @@ class AVRO_DECL JsonGenerator {
                 escape('t', b, p);
                 break;
             default:
-                if (! iscntrl(*p)) {
+                if (! iscntrl((uint8_t) *p)) {
                     continue;
                 }
                 write(b, p);
