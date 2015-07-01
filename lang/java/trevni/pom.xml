@@ -47,6 +47,7 @@
           <version>${surefire-plugin.version}</version>
           <configuration>
             <failIfNoTests>false</failIfNoTests>
+            <skip>true</skip>
           </configuration>
         </plugin>
         <plugin>
