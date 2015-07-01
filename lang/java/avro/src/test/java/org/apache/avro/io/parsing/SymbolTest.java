@@ -31,6 +31,7 @@ public class SymbolTest {
             + "\"namespace\":\"org.spf4j.ssdump2.avro\",\n" +
 " \"fields\":[\n" +
 "    {\"name\":\"count\",\"type\":\"int\",\"default\":0},\n" +
+"    {\"name\":\"otherNode\",\"type\":[\"null\",\"SampleNode\"], \"default\" : null},\n" +
 "    {\"name\":\"subNodes\",\"type\":\n" +
 "       {\"type\":\"array\",\"items\":{\n" +
 "           \"type\":\"record\",\"name\":\"SamplePair\",\n" +
@@ -41,11 +42,12 @@ public class SymbolTest {
 "                     {\"name\":\"declaringClass\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},\n" +
 "                     {\"name\":\"methodName\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}\n" +
 "                  ]}},\n" +
-"              {\"name\":\"node\",\"type\":\"SampleNode\"}]}}}]}";
+"              {\"name\":\"node\",\"type\":\"SampleNode\"},"
+            + "{\"name\":\"otherNode\",\"type\":\"SampleNode\"}]}}}]}";
 
 
     @Test
-    public void testSomeMethod() throws IOException {
+    public void testValidSymboTree() throws IOException {
 
         Schema schema = new Schema.Parser().parse(SCHEMA);
 
