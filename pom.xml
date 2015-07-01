@@ -145,6 +145,10 @@
             <version>2.5.2</version>
             <configuration>
                    <autoversionsubmodules>true</autoversionsubmodules>
+                   <checkModificationExcludes>
+                       <checkModificationExclude>**/lang/csharp/**</checkModificationExclude>
+                       <checkModificationExclude>**/lang/php/**</checkModificationExclude>
+                   </checkModificationExcludes>
             </configuration>
        </plugin>        
       <plugin>
