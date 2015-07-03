@@ -53,14 +53,18 @@ public class LogicalTypes {
     try {
       if (TIMESTAMP_MILLIS.equals(typeName)) {
         logicalType = TIMESTAMP_MILLIS_TYPE;
-      } else if (DATE.equals(typeName)) {
-        logicalType = DATE_TYPE;
-      } else if (TIME_MILLIS.equals(typeName)) {
-        logicalType = TIME_MILLIS_TYPE;
       } else if (DECIMAL.equals(typeName)) {
         logicalType = new Decimal(schema);
       } else if (UUID.equals(typeName)) {
         logicalType = UUID_TYPE;
+      } else if (DATE.equals(typeName)) {
+        logicalType = DATE_TYPE;
+      } else if (TIMESTAMP_MICROS.equals(typeName)) {
+        logicalType = TIMESTAMP_MICROS_TYPE;
+      } else if (TIME_MILLIS.equals(typeName)) {
+        logicalType = TIME_MILLIS_TYPE;
+      } else if (TIME_MICROS.equals(typeName)) {
+        logicalType = TIME_MICROS_TYPE;
       } else if (REGISTERED_TYPES.containsKey(typeName)) {
         logicalType = REGISTERED_TYPES.get(typeName).fromSchema(schema);
       } else {
@@ -86,7 +90,9 @@ public class LogicalTypes {
   private static final String UUID = "uuid";
   private static final String DATE = "date";
   private static final String TIME_MILLIS = "time-millis";
+  private static final String TIME_MICROS = "time-micros";
   private static final String TIMESTAMP_MILLIS = "timestamp-millis";
+  private static final String TIMESTAMP_MICROS = "timestamp-micros";
 
   /** Create a Decimal LogicalType with the given precision and scale 0 */
   public static Decimal decimal(int precision) {
@@ -116,11 +122,24 @@ public class LogicalTypes {
     return TIME_MILLIS_TYPE;
   }
 
+  private static final TimeMicros TIME_MICROS_TYPE = new TimeMicros();
+
+  public static TimeMicros timeMicros() {
+    return TIME_MICROS_TYPE;
+  }
+
   private static final TimestampMillis TIMESTAMP_MILLIS_TYPE =
       new TimestampMillis();
 
   public static TimestampMillis timestampMillis() {
     return TIMESTAMP_MILLIS_TYPE;
+  }
+
+  private static final TimestampMicros TIMESTAMP_MICROS_TYPE =
+      new TimestampMicros();
+
+  public static TimestampMicros timestampMicros() {
+    return TIMESTAMP_MICROS_TYPE;
   }
 
   /** Decimal represents arbitrary-precision fixed-scale decimal numbers  */
@@ -277,6 +296,22 @@ public class LogicalTypes {
     }
   }
 
+  /** TimeMicros represents a time in microseconds without a date */
+  public static class TimeMicros extends LogicalType {
+    private TimeMicros() {
+      super(TIME_MICROS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException(
+            "Time (micros) can only be used with an underlying long type");
+      }
+    }
+  }
+
   /** TimestampMillis represents a date and time in milliseconds */
   public static class TimestampMillis extends LogicalType {
     private TimestampMillis() {
@@ -289,6 +324,22 @@ public class LogicalTypes {
       if (schema.getType() != Schema.Type.LONG) {
         throw new IllegalArgumentException(
             "Timestamp (millis) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  /** TimestampMicros represents a date and time in microseconds */
+  public static class TimestampMicros extends LogicalType {
+    private TimestampMicros() {
+      super(TIMESTAMP_MICROS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException(
+            "Timestamp (micros) can only be used with an underlying long type");
       }
     }
   }

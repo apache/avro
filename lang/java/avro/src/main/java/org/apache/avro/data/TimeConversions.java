@@ -56,6 +56,30 @@ public class TimeConversions {
     }
   }
 
+  public static class TimeMicrosConversion extends Conversion<LocalTime> {
+    @Override
+    public Class<LocalTime> getConvertedType() {
+      return LocalTime.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "time-micros";
+    }
+
+    @Override
+    public LocalTime fromLong(Long microsFromMidnight, Schema schema, LogicalType type) {
+      return LocalTime.fromMillisOfDay(microsFromMidnight / 1000);
+    }
+  }
+
+  public static class LossyTimeMicrosConversion extends TimeMicrosConversion {
+    @Override
+    public Long toLong(LocalTime time, Schema schema, LogicalType type) {
+      return 1000 * (long) time.millisOfDay().get();
+    }
+  }
+
   public static class TimestampConversion extends Conversion<DateTime> {
     @Override
     public Class<DateTime> getConvertedType() {
@@ -75,6 +99,30 @@ public class TimeConversions {
     @Override
     public Long toLong(DateTime timestamp, Schema schema, LogicalType type) {
       return timestamp.getMillis();
+    }
+  }
+
+  public static class TimestampMicrosConversion extends Conversion<DateTime> {
+    @Override
+    public Class<DateTime> getConvertedType() {
+      return DateTime.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "timestamp-micros";
+    }
+
+    @Override
+    public DateTime fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
+      return new DateTime(microsFromEpoch / 1000, DateTimeZone.UTC);
+    }
+  }
+
+  public static class LossyTimestampMicrosConversion extends TimestampMicrosConversion {
+    @Override
+    public Long toLong(DateTime timestamp, Schema schema, LogicalType type) {
+      return 1000 * timestamp.getMillis();
     }
   }
 }
