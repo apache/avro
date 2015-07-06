@@ -66,7 +66,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     LogicalType logicalType = schema.getLogicalType();
     if (datum != null && logicalType != null) {
       Conversion<?> conversion = getData()
-          .getConversionFrom(datum.getClass(), logicalType);
+          .getConversionByClass(datum.getClass(), logicalType);
       writeWithoutConversion(schema,
           convert(schema, logicalType, conversion, datum), out);
     } else {
