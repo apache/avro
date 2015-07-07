@@ -97,7 +97,7 @@ module Avro
         # A string is encoded as a long followed by that many bytes of
         # UTF-8 encoded character data.
         read_bytes.tap do |string|
-          string.force_encoding("UTF-8")
+          string.force_encoding("UTF-8") if string.respond_to? :force_encoding
         end
       end
 
