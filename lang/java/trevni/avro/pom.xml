@@ -77,11 +77,12 @@
   <profiles>
      <profile>
       <id>hadoop1</id>
-      <activation>
-        <property>
-          <name>!hadoop.version</name> <!-- if no hadoop.version is set -->
-        </property>
-      </activation>
+       <activation>
+         <property>
+           <name>hadoop.version</name>
+           <value>2</value>
+         </property>
+       </activation>
       <properties>
         <envClassifier>hadoop1</envClassifier>
       </properties>
@@ -107,8 +108,7 @@
       <id>hadoop2</id>
       <activation>
         <property>
-          <name>hadoop.version</name>
-          <value>2</value>
+          <name>!hadoop.version</name> <!-- if no hadoop.version is set -->
         </property>
       </activation>
       <properties>
@@ -122,18 +122,6 @@
           <!-- hadoop's execution environment provides its own jars, usurping any others.
             So we should not include it here -->
           <scope>provided</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-mapreduce-client-common</artifactId>
-        <version>${hadoop2.version}</version>
-          <scope>test</scope> <!-- for LocalJobRunner -->
-        </dependency>
-        <dependency>
-          <groupId>commons-httpclient</groupId>
-          <artifactId>commons-httpclient</artifactId>
-          <version>${commons-httpclient.version}</version>
-          <scope>test</scope> <!-- for LocalJobRunner -->
         </dependency>
         <dependency>
           <groupId>org.apache.avro</groupId>

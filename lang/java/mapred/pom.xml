@@ -159,7 +159,8 @@
       <id>hadoop1</id>
       <activation>
         <property>
-          <name>!hadoop.version</name> <!-- if no hadoop.version is set -->
+          <name>hadoop.version</name>
+          <value>1</value>
         </property>
       </activation>
       <properties>
@@ -179,8 +180,7 @@
       <id>hadoop2</id>
       <activation>
         <property>
-          <name>hadoop.version</name>
-          <value>2</value>
+          <name>!hadoop.version</name> <!-- if no hadoop.version is set -->
         </property>
       </activation>
       <properties>
@@ -193,16 +193,6 @@
           <!-- hadoop's execution environment provides its own jars, usurping any others.
             So we should not include it here -->
           <scope>provided</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-mapreduce-client-common</artifactId>
-          <scope>test</scope> <!-- for LocalJobRunner -->
-        </dependency>
-        <dependency>
-          <groupId>commons-httpclient</groupId>
-          <artifactId>commons-httpclient</artifactId>
-          <scope>test</scope> <!-- for LocalJobRunner -->
         </dependency>
       </dependencies>
     </profile>

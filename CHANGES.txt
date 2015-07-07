@@ -13,6 +13,11 @@ Trunk (not yet released)
     AVRO-1602. Java: Remove Dapper-style RPC trace facility.  This
     seems unused and has been a source of build problems.  (cutting)
 
+    AVRO-1586. Build against Hadoop 2. With this change the avro-mapred and
+    trevni-avro JARs without a hadoop1 or hadoop2 Maven classifier are Hadoop 2
+    artifacts. To use with Hadoop 1, set the classifier to hadoop1.
+    (tomwhite)
+
   NEW FEATURES
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)

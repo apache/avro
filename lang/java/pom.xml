@@ -39,11 +39,11 @@
     <!-- version properties for dependencies -->
     
     <!--
-      To build the avro-mapred module against Hadoop 2 specify
-      -Dhadoop.version=2 or leave unspecified to build against Hadoop 1
+      To build the avro-mapred module against Hadoop 1 specify
+      -Dhadoop.version=1 or leave unspecified to build against Hadoop 2
     -->
     <hadoop1.version>1.2.1</hadoop1.version>
-    <hadoop2.version>2.5.0</hadoop2.version>
+    <hadoop2.version>2.5.1</hadoop2.version>
     <jackson.version>1.9.13</jackson.version>
     <jetty.version>6.1.26</jetty.version>
     <jetty-servlet-api.version>2.5-20081211</jetty-servlet-api.version>
@@ -446,17 +446,6 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-client</artifactId>
         <version>${hadoop2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-mapreduce-client-common</artifactId>
-        <version>${hadoop2.version}</version>
-      </dependency>
-      <dependency>
-        <!-- for Hadoop's LocalJobRunner -->
-        <groupId>commons-httpclient</groupId>
-        <artifactId>commons-httpclient</artifactId>
-        <version>${commons-httpclient.version}</version>
       </dependency>
       <dependency>
         <groupId>org.easymock</groupId>
