@@ -19,9 +19,8 @@ require 'openssl'
 module Avro
   module DataFile
     VERSION = 1
-    MAGIC = "Obj" + [VERSION].pack('c')
-    MAGIC.force_encoding('BINARY') if MAGIC.respond_to?(:force_encoding)
-    MAGIC_SIZE = MAGIC.respond_to?(:bytesize) ? MAGIC.bytesize : MAGIC.size
+    MAGIC = ("Obj" + [VERSION].pack('c')).force_encoding('BINARY')
+    MAGIC_SIZE = MAGIC.bytesize
     SYNC_SIZE = 16
     SYNC_INTERVAL = 4000 * SYNC_SIZE
     META_SCHEMA = Schema.parse('{"type": "map", "values": "bytes"}')
@@ -183,7 +182,7 @@ module Avro
           # write number of items in block and block size in bytes
           encoder.write_long(block_count)
           to_write = codec.compress(buffer_writer.string)
-          encoder.write_long(to_write.respond_to?(:bytesize) ? to_write.bytesize : to_write.size)
+          encoder.write_long(to_write.bytesize)
 
           # write block contents
           writer.write(to_write)

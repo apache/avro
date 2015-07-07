@@ -18,6 +18,8 @@ Trunk (not yet released)
     artifacts. To use with Hadoop 1, set the classifier to hadoop1.
     (tomwhite)
 
+    AVRO-1559. Drop support for Ruby 1.8. (Willem van Bergen via tomwhite)
+
   NEW FEATURES
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)
