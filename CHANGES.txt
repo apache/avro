@@ -150,6 +150,9 @@ Trunk (not yet released)
 
     AVRO-1689. Update Dockerfile to use official Java repository. (tomwhite)
 
+    AVRO-1576. TestSchemaCompatibility is platform dependant.
+    (Stevo Slavic via tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
