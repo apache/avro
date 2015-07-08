@@ -87,6 +87,9 @@ Trunk (not yet released)
     AVRO-1681. Improve generated JavaDocs.
     (Charles Gariépy-Ikeson via tomwhite)
 
+    AVRO-1645. Ruby: Improved handling of missing named types.
+    (Daniel Schierbeck via tomwhite)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
