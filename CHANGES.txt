@@ -90,6 +90,9 @@ Trunk (not yet released)
     AVRO-1645. Ruby: Improved handling of missing named types.
     (Daniel Schierbeck via tomwhite)
 
+    AVRO-1693. Ruby: Allow writing arbitrary metadata to data files.
+    (Daniel Schierbeck via tomwhite)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
