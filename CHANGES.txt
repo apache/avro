@@ -55,6 +55,8 @@ Trunk (not yet released)
     AVRO-1683. Add microsecond time and timestamp logical types to the
     specification. (blue)
 
+    AVRO-1672. Java: Add date/time logical types and conversions. (blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

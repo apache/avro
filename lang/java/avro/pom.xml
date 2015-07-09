@@ -164,6 +164,11 @@
       <artifactId>xz</artifactId>
       <version>${tukaani.version}</version>
     </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <optional>true</optional>
+    </dependency>
   </dependencies>
 
 </project>
