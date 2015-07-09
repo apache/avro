@@ -68,6 +68,7 @@
     <easymock.version>3.2</easymock.version>
     <hamcrest.version>1.3</hamcrest.version>
     <commons-httpclient.version>3.1</commons-httpclient.version>
+    <joda.version>2.7</joda.version>
 
     <!-- version properties for plugins -->
     <checkstyle-plugin.version>2.12.1</checkstyle-plugin.version>
@@ -466,6 +467,12 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
         <version>${commons-compress.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>${joda.version}</version>
+        <optional>true</optional>
       </dependency>
     </dependencies>
   </dependencyManagement>
