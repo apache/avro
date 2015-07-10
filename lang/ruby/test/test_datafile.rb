@@ -167,6 +167,19 @@ JSON
     assert_equal records, ['a' * 10_000]
   end
 
+  def test_snappy
+    Avro::DataFile.open('data.avr', 'w', '"string"', :snappy) do |writer|
+      writer << 'a' * 10_000
+    end
+    assert(File.size('data.avr') < 600)
+
+    records = []
+    Avro::DataFile.open('data.avr') do |reader|
+      reader.each {|record| records << record }
+    end
+    assert_equal records, ['a' * 10_000]
+  end
+
   def test_append_to_deflated_file
     schema = Avro::Schema.parse('"string"')
     writer = Avro::IO::DatumWriter.new(schema)
