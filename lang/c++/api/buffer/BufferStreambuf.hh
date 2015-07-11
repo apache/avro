@@ -17,7 +17,7 @@
  */
 
 #ifndef avro_BufferStreambuf_hh__
-#define avro_BufferStreambuf_HH__
+#define avro_BufferStreambuf_hh__
 
 #include "Buffer.hh"
 
