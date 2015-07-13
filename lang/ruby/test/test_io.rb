@@ -21,45 +21,55 @@ class TestIO < Test::Unit::TestCase
   Schema = Avro::Schema
 
   def test_null
+    check('"null"')
     check_default('"null"', "null", nil)
   end
 
   def test_boolean
+    check('"boolean"')
     check_default('"boolean"', "true", true)
     check_default('"boolean"', "false", false)
   end
 
   def test_string
+    check('"string"')
     check_default('"string"', '"foo"', "foo")
   end
 
   def test_bytes
+    check('"bytes"')
     check_default('"bytes"', '"foo"', "foo")
   end
 
   def test_int
+    check('"int"')
     check_default('"int"', "5", 5)
   end
 
   def test_long
+    check('"long"')
     check_default('"long"', "9", 9)
   end
 
   def test_float
+    check('"float"')
     check_default('"float"', "1.2", 1.2)
   end
 
   def test_double
+    check('"double"')
     check_default('"double"', "1.2", 1.2)
   end
 
   def test_array
     array_schema = '{"type": "array", "items": "long"}'
+    check(array_schema)
     check_default(array_schema, "[1]", [1])
   end
 
   def test_map
     map_schema = '{"type": "map", "values": "long"}'
+    check(map_schema)
     check_default(map_schema, '{"a": 1}', {"a" => 1})
   end
 
@@ -70,6 +80,7 @@ class TestIO < Test::Unit::TestCase
        "fields": [{"name": "f",
                    "type": "long"}]}
 EOS
+    check(record_schema)
     check_default(record_schema, '{"f": 11}', {"f" => 11})
   end
 
@@ -80,11 +91,13 @@ EOS
        "fields": [{"name": "message",
                    "type": "string"}]}
 EOS
+    check(error_schema)
     check_default(error_schema, '{"message": "boom"}', {"message" => "boom"})
   end
 
   def test_enum
     enum_schema = '{"type": "enum", "name": "Test","symbols": ["A", "B"]}'
+    check(enum_schema)
     check_default(enum_schema, '"B"', "B")
   end
 
@@ -129,6 +142,7 @@ EOS
 
   def test_fixed
     fixed_schema = '{"type": "fixed", "name": "Test", "size": 1}'
+    check(fixed_schema)
     check_default(fixed_schema, '"a"', "a")
   end
 
@@ -284,7 +298,6 @@ EOS
   private
 
   def check_default(schema_json, default_json, default_value)
-    check(schema_json)
     actual_schema = '{"type": "record", "name": "Foo", "fields": []}'
     actual = Avro::Schema.parse(actual_schema)
 

@@ -169,6 +169,8 @@ Trunk (not yet released)
     AVRO-1576. TestSchemaCompatibility is platform dependant.
     (Stevo Slavic via tomwhite)
 
+    AVRO-1688. Ruby test_union(TestIO) is failing. (tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
