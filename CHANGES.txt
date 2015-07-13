@@ -36,6 +36,8 @@ Trunk (not yet released)
 
     AVRO-1813: Incorrect link to build instructions in Java Getting Started (Pietro Menna via gabor)
 
+    AVRO-1688. Ruby test_union(TestIO) is failing. (tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
