@@ -324,5 +324,13 @@ public class ResolvingDecoder extends ValidatingDecoder {
       in = backup;
     }
   }
+
+  @Override
+  public ValidatingDecoder configure(Decoder in) throws IOException {
+    ValidatingDecoder configured = super.configure(in);
+    this.backup = in;
+    return configured;
+  }
+
 }
 
