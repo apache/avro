@@ -98,6 +98,9 @@ Trunk (not yet released)
     AVRO-1697. Ruby: Add support for the Snappy codec to the Ruby library.
     (Daniel Schierbeck via tomwhite)
 
+    AVRO-1692. Allow more than one logical type for a Java class. (blue via
+    tomwhite)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)

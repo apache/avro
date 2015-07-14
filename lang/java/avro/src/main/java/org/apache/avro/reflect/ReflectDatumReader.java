@@ -285,7 +285,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         }
         LogicalType logicalType = f.schema().getLogicalType();
         if (logicalType != null) {
-          Conversion<?> conversion = getData().getConversionTo(
+          Conversion<?> conversion = getData().getConversionByClass(
               accessor.getField().getType(), logicalType);
           if (conversion != null) {
             try {
