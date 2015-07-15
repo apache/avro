@@ -42,7 +42,7 @@ case "$1" in
         # build binary tarball
 	xbuild
 	mkdir -p $ROOT/dist
-        (cd build; tar czf $ROOT/../dist/avro-csharp-$VERSION.tar.gz main codegen)
+        (cd build; tar czf $ROOT/../dist/avro-csharp-$VERSION.tar.gz main codegen ipc)
 
         # build documentation
         doxygen Avro.dox
@@ -51,7 +51,7 @@ case "$1" in
 	;;
 
     clean)
-	rm -rf src/apache/{main,test,codegen}/obj
+	rm -rf src/apache/{main,test,codegen,ipc}/obj
         rm -rf build
 	;;
 
