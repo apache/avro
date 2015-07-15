@@ -752,7 +752,7 @@ class EnumSchema(NamedSchema):
         other_props=other_props,
     )
 
-    self._props['symbols'] = tuple(sorted(symbol_set))
+    self._props['symbols'] = symbols
     if doc is not None:
       self._props['doc'] = doc
 
