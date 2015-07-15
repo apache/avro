@@ -179,7 +179,7 @@ Trunk (not yet released)
     (Marcin Białoń via tomwhite)
 
     AVRO-1491. Avro.ipc.dll not included in release zip/build file.
-    (Alex Ausch via tomwhite)
+    (Dmitry Kovalev via tomwhite)
 
 Avro 1.7.7 (23 July 2014)
 
