@@ -333,31 +333,8 @@ module Avro
       end
     end
 
-    class SnappyCodec
-      def codec_name; 'snappy'; end
-
-      def decompress(data)
-        load_snappy!
-        Snappy.inflate(data)
-      end
-
-      def compress(data)
-        load_snappy!
-        Snappy.deflate(data)
-      end
-
-      private
-
-      def load_snappy!
-        require 'snappy' unless defined?(Snappy)
-      rescue LoadError
-        raise LoadError, "Snappy compression is not available, please install the `snappy` gem."
-      end
-    end
-
     DataFile.register_codec NullCodec
     DataFile.register_codec DeflateCodec
-    DataFile.register_codec SnappyCodec
 
     # TODO this constant won't be updated if you register another codec.
     # Deprecated in favor of Avro::DataFile::codecs
