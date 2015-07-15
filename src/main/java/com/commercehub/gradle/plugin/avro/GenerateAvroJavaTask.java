@@ -29,6 +29,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     private String stringType;
 
+    private String fieldVisibility;
+
     @Input
     public String getEncoding() {
         return encoding;
@@ -47,6 +49,13 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.stringType = stringType;
     }
 
+    @Input
+    public String getFieldVisibility() { return fieldVisibility; }
+
+    public void setFieldVisibility(String fieldVisibility) {
+        this.fieldVisibility = fieldVisibility;
+    }
+
     private GenericData.StringType parseStringType() {
         String stringType = getStringType();
         for (GenericData.StringType type : GenericData.StringType.values()) {
@@ -59,9 +68,27 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     }
 
+    private SpecificCompiler.FieldVisibility parseFieldVisibility() {
+        getLogger().debug("Parsing fieldVisibility {}", getFieldVisibility());
+        SpecificCompiler.FieldVisibility viz = null;
+
+        if(getFieldVisibility() == null) {
+            return SpecificCompiler.FieldVisibility.PUBLIC_DEPRECATED;
+        }
+
+        try {
+            viz = SpecificCompiler.FieldVisibility.valueOf(getFieldVisibility());
+        } catch(Exception ex) {
+            throw new IllegalArgumentException(String.format("Invalid fieldVisibility '%s'.", getFieldVisibility()));
+        }
+
+        return viz;
+    }
+
     @TaskAction
     protected void process() {
         getLogger().debug("Using encoding {}", getEncoding());
+        getLogger().debug("Using fieldVisibility {}", getFieldVisibility());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         preClean();
@@ -111,6 +138,9 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             SpecificCompiler compiler = new SpecificCompiler(protocol);
             compiler.setStringType(parseStringType());
             compiler.setOutputCharacterEncoding(getEncoding());
+            getLogger().debug("Setting fieldVisibility to {}", parseFieldVisibility().toString());
+            SpecificCompiler.FieldVisibility visibility = parseFieldVisibility();
+            compiler.setFieldVisibility(visibility);
             compiler.compileToDestination(sourceFile, getOutputDir());
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile protocol definition file %s", sourceFile), ex);
@@ -140,6 +170,9 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                     SpecificCompiler compiler = new SpecificCompiler(schema);
                     compiler.setStringType(parseStringType());
                     compiler.setOutputCharacterEncoding(getEncoding());
+                    getLogger().debug("Setting fieldVisibility to {}", parseFieldVisibility().toString());
+                    SpecificCompiler.FieldVisibility visibility = parseFieldVisibility();
+                    compiler.setFieldVisibility(visibility);
                     compiler.compileToDestination(sourceFile, getOutputDir());
                     types = parser.getTypes();
                     getLogger().info("Processed {}", sourceFile);
