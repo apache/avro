@@ -1,6 +1,7 @@
 # Change Log
 
 * Unreleased
+    * Add ability to specify fieldVisibility for generated Java source; contribution from [wooder79](https://github.com/wooder79)
 
 * 0.3.4
     * Fix registration of generated sources for compilation (#8)

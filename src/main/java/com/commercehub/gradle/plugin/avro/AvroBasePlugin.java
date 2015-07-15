@@ -32,6 +32,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                 return GenericData.StringType.String.name();
             }
         });
+        extensionMapping.map("fieldVisibility", new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return "PUBLIC_DEPRECATED";
+            }
+        });
         project.getTasks().withType(GenerateAvroJavaTask.class).all(new Action<GenerateAvroJavaTask>() {
             @Override
             public void execute(GenerateAvroJavaTask task) {
@@ -46,6 +52,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                     @Override
                     public String call() throws Exception {
                         return avroExtension.getStringType();
+                    }
+                });
+                taskMapping.map("fieldVisibility", new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return avroExtension.getFieldVisibility();
                     }
                 });
             }

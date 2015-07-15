@@ -42,6 +42,14 @@ avro {
 }
 ```
 
+Optionally, you can also configure the visibility of generated fields.
+
+```groovy
+avro {
+    fieldVisibility = "PRIVATE"
+}
+```
+
 Additionally, ensure that you have a compile dependency on avro, such as:
 
 ```groovy
