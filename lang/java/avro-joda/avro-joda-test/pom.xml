@@ -21,7 +21,7 @@
     <parent>
         <artifactId>avro-joda</artifactId>
         <groupId>org.apache.avro</groupId>
-        <version>1.8.0.15p-SNAPSHOT</version>
+        <version>1.8.0.15p</version>
         <relativePath>../</relativePath>
     </parent>
 
