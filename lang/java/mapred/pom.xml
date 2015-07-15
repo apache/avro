@@ -40,7 +40,10 @@
       org.apache.hadoop*,
       *
     </osgi.import>
-    <osgi.export>org.apache.avro.mapred*;version="${project.version}"</osgi.export>
+    <osgi.export>
+      org.apache.avro.mapred*;version="${project.version}",
+      org.apache.avro.hadoop*;version="${project.version}",
+    </osgi.export>
   </properties>
 
   <build>

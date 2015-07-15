@@ -80,7 +80,7 @@
        <activation>
          <property>
            <name>hadoop.version</name>
-           <value>2</value>
+           <value>1</value>
          </property>
        </activation>
       <properties>
