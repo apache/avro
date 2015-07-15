@@ -18,6 +18,9 @@ Trunk (not yet released)
     artifacts. To use with Hadoop 1, set the classifier to hadoop1.
     (tomwhite)
 
+    AVRO-1502. Java: Generated classes now implement Serializable.
+    Generated classes need to be regenerated to use this release. (cutting)
+
   NEW FEATURES
 
     AVRO-1555.  C#: Add support for RPC over HTTP. (Dmitry Kovalev via cutting)
@@ -28,8 +31,6 @@ Trunk (not yet released)
     AVRO-1590. Java: In resolving records in unions, permit structural
     and shortname matches when fullname matching fails.
     (Ryan Blue via cutting)
-
-    AVRO-1502. Java: Generated classes now implement Serializable. (cutting)
 
     AVRO-570. Python: Add connector for tethered mapreduce.
     (Jeremy Lewi and Steven Willis via cutting)    
