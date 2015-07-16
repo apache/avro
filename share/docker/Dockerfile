@@ -31,7 +31,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   perl \
   php5 phpunit php5-gmp \
   python python-setuptools python3-setuptools \
-  ruby ruby-dev rake
+  ruby ruby-dev rake \
+  libsnappy1 libsnappy-dev
 
 # Install Forrest
 RUN mkdir -p /usr/local/apache-forrest
