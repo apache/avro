@@ -31,6 +31,7 @@ module Avro
         encoder = IO::BinaryEncoder.new(buffer)
 
         buffer.write([VERSION].pack("c"))
+        buffer.write([@schema.md5_fingerprint].pack("Q>"))
         @writer.write(datum, encoder)
 
         buffer.string
@@ -38,9 +39,9 @@ module Avro
     end
 
     class Reader
-      def initialize(schema)
-        @schema = schema
-        @reader = Avro::IO::DatumReader.new(schema, schema)
+      def initialize(schema_store, reader_schema = nil)
+        @schema_store = schema_store
+        @reader_schema = reader_schema
       end
 
       def read(encoded_datum)
@@ -51,9 +52,13 @@ module Avro
           raise "unsupported version #{version}"
         end
 
+        writer_schema_fingerprint = buffer.read(8).unpack("Q>").first
+        writer_schema = @schema_store.lookup(writer_schema_fingerprint)
+
         decoder = IO::BinaryDecoder.new(buffer)
 
-        @reader.read(decoder)
+        reader = Avro::IO::DatumReader.new(writer_schema, @reader_schema)
+        reader.read(decoder)
       end
     end
   end

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,32 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'test_help'
-require 'avro/message'
-require 'avro/schema_store'
+module Avro
+  NoSuchSchema = Class.new(StandardError)
 
-class TestMessage < Test::Unit::TestCase
-  def test_encoding_and_decoding
-    schema = Avro::Schema.parse(<<-JSON)
-      {
-        "type": "record",
-        "name": "Pageview",
-        "fields" : [
-          { "name": "url", "type": "string" }
-        ]
-      }
-    JSON
+  module SchemaStore
+    def self.new
+      Memory.new
+    end
 
-    schema_store = Avro::SchemaStore.new
-    schema_store.register(schema)
+    class Memory
+      def initialize
+        @schemas = {}
+      end
 
-    message_writer = Avro::Message::Writer.new(schema)
-    message_reader = Avro::Message::Reader.new(schema_store)
+      def register(schema)
+        @schemas[schema.md5_fingerprint] = schema
+      end
 
-    datum = { "url" => "http://example.com/test" }
-    encoded_datum = message_writer.write(datum)
-    decoded_datum = message_reader.read(encoded_datum)
-
-    assert_equal datum, decoded_datum
+      def lookup(fingerprint)
+        @schemas.fetch(fingerprint) { raise NoSuchSchema, "no schema with fingerprint `#{fingerprint}`" }
+      end
+    end
   end
 end
