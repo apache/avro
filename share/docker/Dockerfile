@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   mono-devel mono-gmcs nunit \
   nodejs nodejs-legacy npm \
   perl \
-  php5 phpunit php5-gmp \
+  php5 phpunit php5-gmp bzip2 \
   python python-setuptools python3-setuptools \
   ruby ruby-dev rake \
   libsnappy1 libsnappy-dev
@@ -39,6 +39,9 @@ RUN mkdir -p /usr/local/apache-forrest
 RUN curl -O http://archive.apache.org/dist/forrest/0.8/apache-forrest-0.8.tar.gz
 RUN tar xzf *forrest* --strip-components 1 -C /usr/local/apache-forrest
 RUN echo 'forrest.home=/usr/local/apache-forrest' > build.properties
+RUN chmod -R 0777 /usr/local/apache-forrest/build /usr/local/apache-forrest/main \
+  /usr/local/apache-forrest/plugins
+ENV FORREST_HOME /usr/local/apache-forrest
 
 # Install Perl modules
 RUN curl -L http://cpanmin.us | perl - --self-upgrade # non-interactive cpan

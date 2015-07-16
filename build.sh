@@ -170,7 +170,7 @@ case "$target" in
 
 	(cd lang/php; ./build.sh clean)
 
-	(cd lang/perl; [ -f Makefile ] && make clean)
+	(cd lang/perl; [ ! -f Makefile ] || make clean)
 	;;
 
     docker)
@@ -198,6 +198,7 @@ UserSpecificDocker
           -v ${PWD}:/home/${USER_NAME}/avro \
           -w /home/${USER_NAME}/avro \
           -v ${HOME}/.m2:/home/${USER_NAME}/.m2 \
+          -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg \
           -u ${USER_NAME} \
           avro-build-${USER_NAME}
         ;;

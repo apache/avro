@@ -27,6 +27,9 @@ from setuptools import setup
 
 VERSION_FILE_NAME = 'VERSION.txt'
 
+# The following prevents distutils from using hardlinks (which may not always be
+# available, e.g. on a Docker volume). See http://bugs.python.org/issue8876
+del os.link
 
 def RunsFromSourceDist():
   """Tests whether setup.py is invoked from a source distribution.
