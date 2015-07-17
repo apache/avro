@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'avro/logical_types'
+
 module Avro
   class Schema
     # Sets of strings, for backwards compatibility. See below for sets of symbols,
@@ -33,7 +35,10 @@ module Avro
     LONG_MAX_VALUE = (1 << 63) - 1
 
     def self.parse(json_string)
-      real_parse(MultiJson.load(json_string), {})
+      json_obj = MultiJson.load(json_string)
+      schema = real_parse(json_obj, {})
+      schema.logical_type = LogicalTypes.parse(json_obj) if json_obj.is_a?(Hash)
+      schema
     end
 
     # Build Avro Schema from data parsed out of JSON string.
@@ -132,10 +137,15 @@ module Avro
     end
 
     attr_reader :type_sym
+    attr_writer :logical_type
 
     # Returns the type as a string (rather than a symbol), for backwards compatibility.
     # Deprecated in favor of {#type_sym}.
     def type; @type_sym.to_s; end
+
+    def logical_type
+      @logical_type || LogicalTypes::Identity
+    end
 
     def ==(other, seen=nil)
       other.is_a?(Schema) && type_sym == other.type_sym

@@ -293,7 +293,7 @@ module Avro
 
         # function dispatch for reading data based on type of writer's
         # schema
-        case writers_schema.type_sym
+        datum = case writers_schema.type_sym
         when :null;    decoder.read_null
         when :boolean; decoder.read_boolean
         when :string;  decoder.read_string
@@ -311,6 +311,8 @@ module Avro
         else
           raise AvroError, "Cannot read unknown schema type: #{writers_schema.type}"
         end
+
+        readers_schema.logical_type.decode(datum)
       end
 
       def read_fixed(writers_schema, readers_schema, decoder)
@@ -538,7 +540,9 @@ module Avro
         write_data(writers_schema, datum, encoder)
       end
 
-      def write_data(writers_schema, datum, encoder)
+      def write_data(writers_schema, logical_datum, encoder)
+        datum = writers_schema.logical_type.encode(logical_datum)
+
         unless Schema.validate(writers_schema, datum)
           raise AvroTypeError.new(writers_schema, datum)
         end
