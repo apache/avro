@@ -329,20 +329,24 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     }
   }
 
-  private static final org.apache.avro.io.DatumWriter
-    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);  
+  public static final class Lazy {
+    public static final org.apache.avro.io.DatumWriter
+      WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);  
+
+
+    public static final org.apache.avro.io.DatumReader
+      READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$); 
+  }
+
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
-    WRITER$.write(this, org.apache.avro.specific.SpecificData.getEncoder(out));
-  }
-
-  private static final org.apache.avro.io.DatumReader
-    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);  
+     Lazy.WRITER$.write(this, org.apache.avro.specific.SpecificData.getEncoder(out));
+   } 
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
-    READER$.read(this, org.apache.avro.specific.SpecificData.getDecoder(in));
+     Lazy.READER$.read(this, org.apache.avro.specific.SpecificData.getDecoder(in));
   }
 
 }

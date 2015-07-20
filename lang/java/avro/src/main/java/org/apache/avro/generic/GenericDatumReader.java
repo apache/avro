@@ -18,6 +18,7 @@
 package org.apache.avro.generic;
 
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
@@ -44,7 +45,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private Schema expected;
   
   private ResolvingDecoder creatorResolver = null;
-  private final Thread creator;
+  private final SoftReference<Thread> creator;
 
   public GenericDatumReader() {
     this(null, null, GenericData.get());
@@ -68,7 +69,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   protected GenericDatumReader(GenericData data) {
     this.data = data;
-    this.creator = Thread.currentThread();
+    this.creator = new SoftReference<Thread>(Thread.currentThread());
   }
 
   /** Return the {@link GenericData} implementation. */
@@ -112,7 +113,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     throws IOException {
     Thread currThread = Thread.currentThread();
     ResolvingDecoder resolver;
-    if (currThread == creator && creatorResolver != null) {
+    if (currThread == creator.get() && creatorResolver != null) {
       return creatorResolver;
     } 
 
@@ -128,7 +129,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       cache.put(expected, resolver);
     }
     
-    if (currThread == creator){
+    if (currThread == creator.get()){
       creatorResolver = resolver;
     }
 
