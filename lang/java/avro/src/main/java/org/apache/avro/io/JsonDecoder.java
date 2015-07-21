@@ -17,14 +17,12 @@
  */
 package org.apache.avro.io;
 
-import com.google.common.base.Equivalence;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -89,21 +87,14 @@ public class JsonDecoder extends ParsingDecoder
   private static final LoadingCache<Schema, Symbol> SYMBOL_CACHE;
 
   static {
-    CacheBuilder<Object, Object> newBuilder = CacheBuilder.newBuilder();
-    try {
-      Method method = newBuilder.getClass().getDeclaredMethod("keyEquivalence", Equivalence.class);
-      method.setAccessible(true);
-      method.invoke(newBuilder, Equivalence.identity());
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
 
-    SYMBOL_CACHE = newBuilder
+    SYMBOL_CACHE = CacheBuilder.newBuilder()
+            .concurrencyLevel(16)
             .build(new CacheLoader<Schema, Symbol>() {
 
               @Override
-              public Symbol load(final Schema key) throws Exception {
-                return new JsonGrammarGenerator().generate(key);
+              public Symbol load(final Schema schema) throws Exception {
+                return new JsonGrammarGenerator().generate(schema);
               }
             });
   }
@@ -112,7 +103,7 @@ public class JsonDecoder extends ParsingDecoder
     if (null == schema) {
       throw new NullPointerException("Schema cannot be null!");
     }
-    return SYMBOL_CACHE.getUnchecked(schema);
+    return SYMBOL_CACHE.getUnchecked(schema);    
   }
 
   /**

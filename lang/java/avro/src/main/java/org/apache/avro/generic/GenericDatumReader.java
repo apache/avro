@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
@@ -36,7 +37,6 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.Utf8;
-import org.apache.avro.util.WeakIdentityHashMap;
 
 /** {@link DatumReader} for generic Java objects. */
 public class GenericDatumReader<D> implements DatumReader<D> {
@@ -100,7 +100,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     RESOLVER_CACHE =
     new ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>() {
     protected Map<Schema,Map<Schema,ResolvingDecoder>> initialValue() {
-      return new WeakIdentityHashMap<Schema,Map<Schema,ResolvingDecoder>>();
+      return new WeakHashMap<Schema,Map<Schema,ResolvingDecoder>>();
     }
   };
 
@@ -119,7 +119,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
     Map<Schema,ResolvingDecoder> cache = RESOLVER_CACHE.get().get(actual);
     if (cache == null) {
-      cache = new WeakIdentityHashMap<Schema,ResolvingDecoder>();
+      cache = new WeakHashMap<Schema,ResolvingDecoder>();
       RESOLVER_CACHE.get().put(actual, cache);
     }
     resolver = cache.get(expected);
