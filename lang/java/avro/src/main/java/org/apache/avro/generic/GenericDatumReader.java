@@ -18,7 +18,7 @@
 package org.apache.avro.generic;
 
 import java.io.IOException;
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
@@ -45,7 +45,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private Schema expected;
   
   private ResolvingDecoder creatorResolver = null;
-  private final SoftReference<Thread> creator;
+  private final WeakReference<Thread> creator;
 
   public GenericDatumReader() {
     this(null, null, GenericData.get());
@@ -69,7 +69,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   protected GenericDatumReader(GenericData data) {
     this.data = data;
-    this.creator = new SoftReference<Thread>(Thread.currentThread());
+    this.creator = new WeakReference<Thread>(Thread.currentThread());
   }
 
   /** Return the {@link GenericData} implementation. */
