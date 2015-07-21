@@ -98,6 +98,11 @@ void setRecord(testgen::RootRecord &myRecord)
     myRecord.bytes.push_back(20);
 }
 
+bool enumCompare(int lhs, int rhs)
+{
+	return lhs == rhs;
+}
+
 template <typename T1, typename T2>
 void checkRecord(const T1& r1, const T2& r2)
 {
@@ -121,7 +126,7 @@ void checkRecord(const T1& r1, const T2& r2)
     BOOST_CHECK_EQUAL(r1.bytes.size(), r2.bytes.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(r1.bytes.begin(), r1.bytes.end(),
         r2.bytes.begin(), r2.bytes.end());
-    BOOST_CHECK_EQUAL(r1.myenum, r2.myenum);
+    BOOST_CHECK(enumCompare(r1.myenum, r2.myenum));
 }
 
 void checkDefaultValues(const testgen_r::RootRecord& r)
@@ -130,7 +135,6 @@ void checkDefaultValues(const testgen_r::RootRecord& r)
     BOOST_CHECK_EQUAL(r.withDefaultValue.i1, 99);
     BOOST_CHECK_CLOSE(r.withDefaultValue.d1, 5.67, 1e-10);
 }
-
 
 void testEncoding()
 {
