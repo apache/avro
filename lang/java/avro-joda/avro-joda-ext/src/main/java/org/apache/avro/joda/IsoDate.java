@@ -70,6 +70,7 @@ public  class IsoDate extends LogicalType {
     private static final LocalDate EPOCH = new LocalDate(0L, DateTimeZone.UTC);
     
     private static final LoadingCache<LocalDate, String> D2S_CONV_CACHE = CacheBuilder.newBuilder()
+            .concurrencyLevel(16)
             .maximumSize(2048)
             .build(new CacheLoader<LocalDate, String> () {
 
@@ -81,6 +82,7 @@ public  class IsoDate extends LogicalType {
     
     
     private static final LoadingCache<String, LocalDate> S2D_CONV_CACHE = CacheBuilder.newBuilder()
+            .concurrencyLevel(16)
             .maximumSize(2048)
             .build(new CacheLoader<String, LocalDate> () {
 
