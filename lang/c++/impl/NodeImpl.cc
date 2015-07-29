@@ -145,12 +145,12 @@ NodeSymbolic::resolve(const Node &reader) const
     return node->resolve(reader);
 }
 
-// Wrap an indentation in a struct for ostream operator<< 
-struct indent { 
+// Wrap an indentation in a struct for ostream operator<<
+struct indent {
     indent(int depth) :
         d(depth)
     { }
-    int d; 
+    int d;
 };
 
 /// ostream operator for indent
@@ -163,13 +163,43 @@ std::ostream& operator <<(std::ostream &os, indent x)
     return os;
 }
 
+static void printLogicalType(std::ostream& os,
+        const LogicalTypePtr& logicalType, int depth)
+{
+    os << indent(depth) << "\"logicalType\": \"" << logicalType->getName() << "\",\n";
+
+    std::vector<std::string> requiredFields;
+    logicalType->getRequiredFields(requiredFields);
+    for (std::vector<std::string>::iterator it = requiredFields.begin();
+            it != requiredFields.end(); ++it)
+    {
+        const std::string value = logicalType->getFieldValue(*it);
+        // required field value can't be empty
+        os << indent(depth) << '\"' + *it + "\": \"" << value << "\",\n";
+    }
+
+    std::vector<std::string> optionalFields;
+    logicalType->getOptionalFields(optionalFields);
+    for (std::vector<std::string>::iterator it = optionalFields.begin();
+            it != optionalFields.end(); ++it)
+    {
+        const std::string value = logicalType->getFieldValue(*it);
+        // print optional field is its value is not empty
+        if (!value.empty())
+        {
+            os << indent(depth) << '\"' + *it + "\": \"" << value << "\",\n";
+        }
+    }
+}
+
 void 
 NodePrimitive::printJson(std::ostream &os, int depth) const
 {
     os << '\"' << type() << '\"';
+    printLogicalType(os, logicalTypeAttribute_.get(), depth);
 }
 
-void 
+void
 NodeSymbolic::printJson(std::ostream &os, int depth) const
 {
     os << '\"' << nameAttribute_.get() << '\"';
@@ -183,12 +213,13 @@ static void printName(std::ostream& os, const Name& n, int depth)
     os << indent(depth) << "\"name\": \"" << n.simpleName() << "\",\n";
 }
 
-void 
+void
 NodeRecord::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
     printName(os, nameAttribute_.get(), depth);
+    printLogicalType(os, logicalTypeAttribute_.get(), depth);
     os << indent(depth) << "\"fields\": [\n";
 
     int fields = leafAttributes_.size();
@@ -215,6 +246,7 @@ NodeEnum::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(++depth) << "\"type\": \"enum\",\n";
     printName(os, nameAttribute_.get(), depth);
+    printLogicalType(os, logicalTypeAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
 
     int names = leafNameAttributes_.size();
@@ -235,6 +267,7 @@ NodeArray::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(depth+1) << "\"type\": \"array\",\n";
+    printLogicalType(os, logicalTypeAttribute_.get(), depth);
     os << indent(depth+1) <<  "\"items\": ";
     leafAttributes_.get()->printJson(os, depth+1);
     os << '\n';
@@ -246,6 +279,7 @@ NodeMap::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(depth+1) <<"\"type\": \"map\",\n";
+    printLogicalType(os, logicalTypeAttribute_.get(), depth);
     os << indent(depth+1) << "\"values\": ";
     leafAttributes_.get(1)->printJson(os, depth+1);
     os << '\n';
@@ -256,6 +290,7 @@ void
 NodeUnion::printJson(std::ostream &os, int depth) const
 {
     os << "[\n";
+    printLogicalType(os, logicalTypeAttribute_.get(), depth);
     int fields = leafAttributes_.size();
     ++depth;
     for(int i = 0; i < fields; ++i) {
@@ -275,6 +310,7 @@ NodeFixed::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
     printName(os, nameAttribute_.get(), depth);
+    printLogicalType(os, logicalTypeAttribute_.get(), depth);
     os << indent(depth) << "\"size\": " << sizeAttribute_.get() << "\n";
     os << indent(--depth) << '}';
 }

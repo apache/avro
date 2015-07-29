@@ -51,7 +51,8 @@ class NodeImpl : public Node
         nameAttribute_(),
         leafAttributes_(),
         leafNameAttributes_(),
-        sizeAttribute_()
+        sizeAttribute_(),
+        logicalTypeAttribute_()
     { }
 
     NodeImpl(Type type, 
@@ -63,7 +64,8 @@ class NodeImpl : public Node
         nameAttribute_(name),
         leafAttributes_(leaves),
         leafNameAttributes_(leafNames),
-        sizeAttribute_(size)
+        sizeAttribute_(size),
+        logicalTypeAttribute_()
     { }
 
     void swap(NodeImpl& impl) {
@@ -125,6 +127,14 @@ class NodeImpl : public Node
         return sizeAttribute_.get();
     }
 
+    void doAddLogicalType(const LogicalTypePtr& logicalType) {
+        logicalTypeAttribute_.add(logicalType);
+    }
+
+    const LogicalTypePtr& getLogicalType() const {
+        return logicalTypeAttribute_.get();
+    }
+
     virtual bool isValid() const = 0;
 
     void printBasicInfo(std::ostream &os) const;
@@ -172,6 +182,7 @@ class NodeImpl : public Node
     LeavesConcept leafAttributes_;
     LeafNamesConcept leafNameAttributes_;
     SizeConcept sizeAttribute_;
+    concepts::SingleAttribute<LogicalTypePtr> logicalTypeAttribute_;
     concepts::NameIndexConcept<LeafNamesConcept> nameIndex_;
 };
 

@@ -51,7 +51,6 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-Wall")
 endif ()
 
-
 find_package (Boost 1.38 REQUIRED
     COMPONENTS filesystem system program_options iostreams)
 
@@ -74,6 +73,7 @@ set (AVRO_SOURCE_FILES
         impl/json/JsonIO.cc
         impl/json/JsonDom.cc
         impl/Resolver.cc impl/Validator.cc
+        impl/LogicalType.cc
         )
 
 add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})
@@ -142,6 +142,7 @@ unittest (SpecificTests)
 unittest (DataFileTests)
 unittest (JsonTests)
 unittest (AvrogencppTests)
+unittest (LogicalTypeTests)
 
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh

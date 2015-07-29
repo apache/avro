@@ -22,7 +22,7 @@
 #include "Schema.hh"
 #include "ValidSchema.hh"
 #include "Stream.hh"
-
+#include "LogicalType.hh"
 #include "json/JsonDom.hh"
 
 using std::string;
@@ -142,6 +142,37 @@ const int64_t getLongField(const Entity& e, const Object& m,
     Object::const_iterator it = findField(e, m, fieldName);
     ensureType<int64_t>(it->second, fieldName);
     return it->second.longValue();
+}
+
+void addLogicalTypeIfExist(NodePtr node, const Entity& e, const Object& m)
+{
+    if (m.find("logicalType") != m.end()) {
+        const string logicalTypeName = getStringField(e, m, "logicalType");
+        LogicalTypePtr logicalType = logicalTypes.createLogicalType(logicalTypeName);
+        std::vector<std::string> requiredFields;
+        logicalType->getRequiredFields(requiredFields);
+        for (std::vector<std::string>::iterator it = requiredFields.begin();
+                it != requiredFields.end(); ++it)
+        {
+            // exception will be thrown if any required field is not found
+            logicalType->setFieldValue(*it, getStringField(e, m, *it));
+        }
+
+        std::vector<std::string> optionalFields;
+        logicalType->getOptionalFields(optionalFields);
+        for (std::vector<std::string>::iterator it = optionalFields.begin();
+                it != optionalFields.end(); ++it)
+        {
+            // set the optional field if exists
+            if (m.find(*it) != m.end())
+            {
+                logicalType->setFieldValue(*it, getStringField(e, m, *it));
+            }
+        }
+        //call validate after set the required and optional fields
+        logicalType->validate(node->type());
+        node->addLogicalType(logicalType);
+    }
 }
     
 struct Field {
@@ -345,6 +376,7 @@ static NodePtr makeRecordNode(const Entity& e,
         fieldValues.add(f.schema);
         defaultValues.push_back(f.defaultValue);
     }
+
     return NodePtr(new NodeRecord(asSingleAttribute(name),
         fieldValues, fieldNames, defaultValues));
 }
@@ -418,13 +450,12 @@ static Name getName(const Entity& e, const Object& m, const string& ns)
 static NodePtr makeNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
+    NodePtr result;
     const string& type = getStringField(e, m, "type");
-    if (NodePtr result = makePrimitive(type)) {
-        return result;
-    } else if (type == "record" || type == "error" ||
-        type == "enum" || type == "fixed") {
+    if (type == "record" || type == "error" ||
+        type == "enum" || type == "fixed")
+    {
         Name nm = getName(e, m, ns);
-        NodePtr result;
         if (type == "record" || type == "error") {
             result = NodePtr(new NodeRecord());
             st[nm] = result;
@@ -436,14 +467,21 @@ static NodePtr makeNode(const Entity& e, const Object& m,
                 makeFixedNode(e, nm, m);
             st[nm] = result;
         }
-        return result;
     } else if (type == "array") {
-        return makeArrayNode(e, m, st, ns);
+        result = makeArrayNode(e, m, st, ns);
     } else if (type == "map") {
-        return makeMapNode(e, m, st, ns);
+        result = makeMapNode(e, m, st, ns);
+    } else {
+        result = makePrimitive(type);
     }
-    throw Exception(boost::format("Unknown type definition: %1%")
-        % e.toString());
+
+    if (!result)
+    {
+        throw Exception(boost::format("Unknown type definition: %1%")
+            % e.toString());
+    }
+    addLogicalTypeIfExist(result, e, m);
+    return result;
 }
 
 static NodePtr makeNode(const Entity& e, const Array& m,

@@ -27,6 +27,7 @@
 
 #include "Exception.hh"
 #include "Types.hh"
+#include "LogicalType.hh"
 #include "SchemaResolution.hh"
 
 namespace avro {
@@ -142,6 +143,13 @@ class AVRO_DECL Node : private boost::noncopyable
     }
     virtual int fixedSize() const = 0;
 
+    virtual void addLogicalType(const LogicalTypePtr& logicalType) {
+        checkLock();
+        doAddLogicalType(logicalType);
+    }
+
+    virtual const LogicalTypePtr& getLogicalType() const = 0;
+
     virtual bool isValid() const = 0;
 
     virtual SchemaResolution resolve(const Node &reader) const = 0;
@@ -168,7 +176,7 @@ class AVRO_DECL Node : private boost::noncopyable
     virtual void doAddLeaf(const NodePtr &newLeaf) = 0;
     virtual void doAddName(const std::string &name) = 0;
     virtual void doSetFixedSize(int size) = 0;
-
+    virtual void doAddLogicalType(const LogicalTypePtr& logicalType) = 0;
   private:
 
     const Type type_;
