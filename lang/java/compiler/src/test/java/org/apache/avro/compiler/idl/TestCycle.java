@@ -26,9 +26,7 @@ import java.util.Map;
 import junit.framework.Assert;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.compiler.specific.SchemaResolver;
 import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.generic.ExtendedGenericDatumReader;
 import org.apache.avro.generic.ExtendedGenericDatumWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -41,8 +39,6 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.ExtendedJsonDecoder;
 import org.apache.avro.io.ExtendedJsonEncoder;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.junit.Test;
 
 /**
@@ -118,8 +114,8 @@ public class TestCycle {
         writer.write(data, encoder);
         encoder.flush();
         ByteArrayInputStream bis = new ByteArrayInputStream(bab.toByteArray(), 0, bab.size());
-        ExtendedGenericDatumReader reader = new ExtendedGenericDatumReader(data.getSchema());
-        ExtendedJsonDecoder directBinaryDecoder = new ExtendedJsonDecoder(data.getSchema(), bis, reader);
+        GenericDatumReader reader = new GenericDatumReader(data.getSchema());
+        ExtendedJsonDecoder directBinaryDecoder = new ExtendedJsonDecoder(data.getSchema(), bis);
         GenericData.Record read = (GenericData.Record) reader.read(null, directBinaryDecoder);
         Assert.assertEquals(data.toString(), read.toString());
     }

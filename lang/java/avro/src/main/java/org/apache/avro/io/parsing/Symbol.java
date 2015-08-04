@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.avro.Schema;
+import org.codehaus.jackson.JsonNode;
 
 /**
  * Symbol is the base of all symbols (terminals and non-terminals) of
@@ -516,16 +517,19 @@ public abstract class Symbol {
 
   }
 
-  public static FieldAdjustAction fieldAdjustAction(int rindex, String fname) {
-    return new FieldAdjustAction(rindex, fname);
+  public static FieldAdjustAction fieldAdjustAction(int rindex, String fname, JsonNode defaultValue) {
+    return new FieldAdjustAction(rindex, fname, defaultValue);
   }
 
   public static class FieldAdjustAction extends ImplicitAction {
     public final int rindex;
     public final String fname;
-    @Deprecated public FieldAdjustAction(int rindex, String fname) {
+    public final JsonNode defaultValue;
+
+    @Deprecated public FieldAdjustAction(int rindex, String fname, JsonNode defaultValue) {
       this.rindex = rindex;
       this.fname = fname;
+      this.defaultValue = defaultValue;
     }
   }
 

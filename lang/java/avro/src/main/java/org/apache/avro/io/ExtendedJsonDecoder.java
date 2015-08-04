@@ -15,7 +15,6 @@ package org.apache.avro.io;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.DefaultValueProvider;
 import org.apache.avro.io.parsing.Symbol;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
@@ -36,18 +35,16 @@ import java.util.List;
  * next field isn't there! More info to come as we remember how it works!
  */
 public final class ExtendedJsonDecoder extends JsonDecoder {
+   
 
-    private final DefaultValueProvider provider;
-
-    public ExtendedJsonDecoder(final Schema schema, final InputStream in, final DefaultValueProvider provider)
+    public ExtendedJsonDecoder(final Schema schema, final InputStream in)
             throws IOException {
         super(schema, in);
-        this.provider = provider;
     }
 
-    public ExtendedJsonDecoder(final Schema schema, final String in, final DefaultValueProvider provider)
+    public ExtendedJsonDecoder(final Schema schema, final String in)
             throws IOException {
-        this(schema, new ByteArrayInputStream(in.getBytes(Charset.forName("UTF-8"))), provider);
+        this(schema, new ByteArrayInputStream(in.getBytes(Charset.forName("UTF-8"))));
     }
 
     /**
@@ -126,12 +123,12 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
                             currentReorderBuffer.savedFields.put(fn, getValueAsTree(in));
                         }
                     } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
-                    if (injectDefaultValueIfAvailable(in)) {
+                    if (injectDefaultValueIfAvailable(in, fa)) {
                         return null;
                     }
                     throw new AvroTypeException("Expected field name not found: " + fa.fname);
                 } else {
-                    if (injectDefaultValueIfAvailable(in)) {
+                    if (injectDefaultValueIfAvailable(in, fa)) {
                         return null;
                     }
                     throw new AvroTypeException("Expected field name not found: " + fa.fname);
@@ -172,8 +169,9 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
 
     private static final JsonElement NULL_JSON_ELEMENT = new JsonElement(null);
 
-    private boolean injectDefaultValueIfAvailable(final JsonParser in) throws IOException, IllegalAccessException {
-        JsonNode defVal = provider.getCurrentFieldDefault();
+    private boolean injectDefaultValueIfAvailable(final JsonParser in, Symbol.FieldAdjustAction action)
+            throws IOException, IllegalAccessException {
+        JsonNode defVal = action.defaultValue;
         if (null != defVal) {
             List<JsonElement> result = new ArrayList<JsonElement>(2);
               JsonParser traverse = defVal.traverse();

@@ -33,15 +33,14 @@ import org.apache.avro.rules.GpRule;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.ExtendedJsonDecoder;
 import org.apache.avro.io.ExtendedJsonEncoder;
-import org.apache.avro.specific.ExtendedSpecificDatumReader;
 import org.apache.avro.specific.ExtendedSpecificDatumWriter;
+import org.apache.avro.specific.SpecificDatumReader;
 import org.joda.time.LocalDate;
 import org.junit.Assert;
 import org.junit.Test;
@@ -62,8 +61,8 @@ public class TestComplex {
       writer.write(rule, encoder);
       encoder.flush();
       System.out.println("Json:" + bos.toString("UTF-8"));
-      ExtendedSpecificDatumReader<GpRule> reader = new ExtendedSpecificDatumReader<GpRule>(rule.getSchema());
-      Decoder decoder = new ExtendedJsonDecoder(rule.getSchema(), new ByteArrayInputStream(bos.toByteArray()), reader);
+      SpecificDatumReader<GpRule> reader = new SpecificDatumReader<GpRule>(rule.getSchema());
+      Decoder decoder = new ExtendedJsonDecoder(rule.getSchema(), new ByteArrayInputStream(bos.toByteArray()));
       GpRule read = reader.read(null, decoder);
       Assert.assertEquals(rule, read);
   }

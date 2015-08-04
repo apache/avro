@@ -610,6 +610,7 @@ public class JsonDecoder extends ParsingDecoder
             break;
           }
         } while (level > 0);
+        pos--;
         return this;
       }
 
