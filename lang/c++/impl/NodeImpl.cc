@@ -166,9 +166,9 @@ std::ostream& operator <<(std::ostream &os, indent x)
 static void printLogicalType(std::ostream& os,
         const LogicalTypePtr& logicalType, int depth)
 {
-	if (logicalType == NULL){
-		return;
-	}
+    if (logicalType == NULL){
+        return;
+    }
     os << indent(depth) << "\"logicalType\": \"" << logicalType->getName() << "\",\n";
 
     std::vector<std::string> requiredFields;
