@@ -85,7 +85,7 @@
                 <include>**/mapred/tether/*.avpr</include>
               </includes>
               <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>a
+              <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
             </configuration>
           </execution>
         </executions>
