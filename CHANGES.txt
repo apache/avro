@@ -1,6 +1,6 @@
 Avro Change Log
 
-Trunk (not yet released)
+Avro 1.8.0 (10 August 2014)
 
   INCOMPATIBLE CHANGES
 
