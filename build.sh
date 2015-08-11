@@ -97,7 +97,8 @@ case "$target" in
 	# build lang-specific artifacts
         
 	(cd lang/java; mvn package -DskipTests -Dhadoop.version=1;
-	  rm -rf mapred/target/classes/; rm -rf trevni/avro/target/classes/;
+	  rm -rf mapred/target/{classes,test-classes}/;
+	  rm -rf trevni/avro/target/{classes,test-classes}/;
 	  mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate)
         (cd lang/java/trevni/doc; mvn site)
         (mvn -N -P copy-artifacts antrun:run) 

@@ -16,10 +16,15 @@
 -->
 <ivysettings>
   <settings defaultResolver="repos" />
+  <property name="m2-pattern" value="${user.home}/.m2/repository/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]" override="false" />
   <resolvers>
     <chain name="repos">
       <ibiblio name="central" m2compatible="true"/>   
-      <ibiblio name="apache-snapshots" m2compatible="true" root="https://repository.apache.org/content/groups/snapshots"/>   
+      <ibiblio name="apache-snapshots" m2compatible="true" root="https://repository.apache.org/content/groups/snapshots"/> 
+      <filesystem name="local-maven2" m2compatible="true"> <!-- needed when building non-snapshot version for release -->
+        <artifact pattern="${m2-pattern}"/>
+        <ivy pattern="${m2-pattern}"/>
+      </filesystem>
     </chain>
   </resolvers>
 </ivysettings>
