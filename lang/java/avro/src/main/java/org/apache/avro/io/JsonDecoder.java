@@ -24,11 +24,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.avro.AvroFieldNotFound;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.parsing.JsonGrammarGenerator;
@@ -54,20 +56,20 @@ public class JsonDecoder extends ParsingDecoder
   private JsonParser in;
   private static JsonFactory jsonFactory = new JsonFactory();
   Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
-  ReorderBuffer currentReorderBuffer; 
-  
+  ReorderBuffer currentReorderBuffer;
+
   private static class ReorderBuffer {
     public Map<String, List<JsonElement>> savedFields = new HashMap<String, List<JsonElement>>();
-    public JsonParser origParser = null; 
+    public JsonParser origParser = null;
   }
-  
+
   static final String CHARSET = "ISO-8859-1";
 
   private JsonDecoder(Symbol root, InputStream in) throws IOException {
     super(root);
     configure(in);
   }
-  
+
   private JsonDecoder(Symbol root, String in) throws IOException {
     super(root);
     configure(in);
@@ -76,11 +78,11 @@ public class JsonDecoder extends ParsingDecoder
   JsonDecoder(Schema schema, InputStream in) throws IOException {
     this(getSymbol(schema), in);
   }
-  
+
   JsonDecoder(Schema schema, String in) throws IOException {
     this(getSymbol(schema), in);
   }
-  
+
   private static Symbol getSymbol(Schema schema) {
     if (null == schema) {
       throw new NullPointerException("Schema cannot be null!");
@@ -109,7 +111,7 @@ public class JsonDecoder extends ParsingDecoder
     this.in.nextToken();
     return this;
   }
-  
+
   /**
    * Reconfigures this JsonDecoder to use the String provided for input.
    * <p/>
@@ -152,7 +154,7 @@ public class JsonDecoder extends ParsingDecoder
   @Override
   public boolean readBoolean() throws IOException {
     advance(Symbol.BOOLEAN);
-    JsonToken t = in.getCurrentToken(); 
+    JsonToken t = in.getCurrentToken();
     if (t == JsonToken.VALUE_TRUE || t == JsonToken.VALUE_FALSE) {
       in.nextToken();
       return t == JsonToken.VALUE_TRUE;
@@ -172,7 +174,7 @@ public class JsonDecoder extends ParsingDecoder
       throw error("int");
     }
   }
-    
+
   @Override
   public long readLong() throws IOException {
     advance(Symbol.LONG);
@@ -208,7 +210,7 @@ public class JsonDecoder extends ParsingDecoder
       throw error("double");
     }
   }
-    
+
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
     return new Utf8(readString());
@@ -284,7 +286,7 @@ public class JsonDecoder extends ParsingDecoder
         top.size + " but received " + size + " bytes.");
     }
   }
-    
+
   @Override
   public void readFixed(byte[] bytes, int start, int len) throws IOException {
     checkFixed(len);
@@ -377,7 +379,7 @@ public class JsonDecoder extends ParsingDecoder
     if (in.getCurrentToken() == JsonToken.START_ARRAY) {
       in.skipChildren();
       in.nextToken();
-      advance(Symbol.ARRAY_END);    
+      advance(Symbol.ARRAY_END);
     } else {
       throw error("array-start");
     }
@@ -417,7 +419,7 @@ public class JsonDecoder extends ParsingDecoder
     if (in.getCurrentToken() == JsonToken.START_OBJECT) {
       in.skipChildren();
       in.nextToken();
-      advance(Symbol.MAP_END);    
+      advance(Symbol.MAP_END);
     } else {
       throw error("map-start");
     }
@@ -428,7 +430,7 @@ public class JsonDecoder extends ParsingDecoder
   public int readIndex() throws IOException {
     advance(Symbol.UNION);
     Symbol.Alternative a = (Symbol.Alternative) parser.popSymbol();
-    
+
     String label;
     if (in.getCurrentToken() == JsonToken.VALUE_NULL) {
       label = "null";
@@ -437,6 +439,8 @@ public class JsonDecoder extends ParsingDecoder
       label = in.getText();
       in.nextToken();
       parser.pushSymbol(Symbol.UNION_END);
+    } else if (in.getCurrentToken() == JsonToken.END_OBJECT) {
+      throw new AvroFieldNotFound("Found object-end. Expected union: " + Arrays.toString(a.labels));
     } else {
       throw error("start-union");
     }
@@ -474,7 +478,7 @@ public class JsonDecoder extends ParsingDecoder
             currentReorderBuffer.savedFields.put(fn, getVaueAsTree(in));
           }
         } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
-        throw new AvroTypeException("Expected field name not found: " + fa.fname);
+        return null;
       }
     } else if (top == Symbol.FIELD_END) {
       if (currentReorderBuffer != null && currentReorderBuffer.origParser != null) {

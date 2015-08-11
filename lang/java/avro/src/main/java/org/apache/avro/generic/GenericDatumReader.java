@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import org.apache.avro.AvroFieldNotFound;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
@@ -175,7 +176,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case ENUM:    return readEnum(expected, in);
     case ARRAY:   return readArray(old, expected, in);
     case MAP:     return readMap(old, expected, in);
-    case UNION:   return read(old, expected.getTypes().get(in.readIndex()), in);
+    case UNION:   return readUnion(old, expected, in);
     case FIXED:   return readFixed(old, expected, in);
     case STRING:  return readString(old, expected, in);
     case BYTES:   return readBytes(old, expected, in);
@@ -509,6 +510,18 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected Object readInt(Object old, Schema expected, Decoder in)
     throws IOException {
     return in.readInt();
+  }
+
+  protected Object readUnion(Object old, Schema expected, ResolvingDecoder in) throws IOException {
+    try {
+      int idx = in.readIndex();
+      return read(old, expected.getTypes().get(idx), in);
+    } catch (AvroFieldNotFound ex) {
+      if (expected.getTypes().get(0).getType() == Schema.Type.NULL) {
+        return null;
+      }
+      throw ex;
+    }
   }
 
   /** Called to create byte arrays from default values.  Subclasses may
