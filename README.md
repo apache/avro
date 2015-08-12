@@ -4,6 +4,12 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 [![Build Status](https://travis-ci.org/commercehub-oss/gradle-avro-plugin.svg?branch=master)](https://travis-ci.org/commercehub-oss/gradle-avro-plugin)
 
+# Compatibility
+
+* Currently tested against Gradle 2.6; other versions may be compatible
+* Currently tested against Avro 1.7.7; other versions may be compatible
+* Java 7 or higher required
+
 # Usage
 
 Add the following to your `build.gradle` file.  Substitute the desired version based on [CHANGES.md](https://github.com/commercehub-oss/gradle-avro-plugin/blob/master/CHANGES.md).
@@ -57,7 +63,7 @@ repositories {
     jcenter()
 }
 dependencies {
-    compile "org.apache.avro:avro:1.7.6"
+    compile "org.apache.avro:avro:1.7.7"
 }
 ```
 
@@ -78,7 +84,7 @@ apply plugin: "java"
 apply plugin: "com.commercehub.gradle.plugin.avro-base"
 
 dependencies {
-    compile "org.apache.avro:avro:1.7.6"
+    compile "org.apache.avro:avro:1.7.7"
 }
 
 task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {

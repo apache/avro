@@ -1,7 +1,13 @@
 # Change Log
 
 * Unreleased
+
+* 0.4.0
     * Add ability to specify fieldVisibility for generated Java source; contribution from [wooder79](https://github.com/wooder79)
+    * Removed support for unqualified plugin ID (just "avro")
+    * Published via new mechanism to [Gradle plugin portal](https://plugins.gradle.org)
+    * Stopped publishing to previous location on Bintray
+    * Built against Gradle 2.6; uses [test kit](https://docs.gradle.org/current/userguide/test_kit.html) for functional testing
 
 * 0.3.4
     * Fix registration of generated sources for compilation (#8)

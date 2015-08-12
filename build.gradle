@@ -1,15 +1,8 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3"
-        classpath "com.github.townsfolk:gradle-release:1.2"
-    }
+plugins {
+    id "groovy"
+    id "idea"
+    id "com.gradle.plugin-publish" version "0.9.1"
 }
-
-apply plugin: "groovy"
-apply plugin: "idea"
 
 repositories {
     jcenter()
@@ -20,49 +13,50 @@ dependencies {
     compile localGroovy()
     compile "org.apache.avro:avro-compiler:1.7.7"
     compile "org.apache.commons:commons-io:1.3.2"
-    testCompile "org.spockframework:spock-core:0.7-groovy-1.8"
+    testCompile "org.spockframework:spock-core:1.0-groovy-2.3"
+    testCompile gradleTestKit()
 }
 
 sourceCompatibility = 1.7
 
-group = "com.commercehub.gradle.plugin"
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    from sourceSets.main.allSource
-    classifier "sources"
-    extension "jar"
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    from javadoc.destinationDir
-    classifier "javadoc"
-    extension "jar"
-}
-
-apply plugin: "maven-publish"
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
+pluginBundle {
+    website = "https://github.com/commercehub-oss/gradle-avro-plugin"
+    vcsUrl = "https://github.com/commercehub-oss/gradle-avro-plugin"
+    description = "A Gradle plugin to allow easily performing Java code generation for Apache Avro. It supports JSON schema declaration files, JSON protocol declaration files, and Avro IDL files."
+    tags = ["serialization", "avro"]
+    version = "0.4.0"
+    plugins {
+        avro {
+            id = "com.commercehub.gradle.plugin.avro"
+            displayName = "Avro Plugin"
+        }
+        avroBase {
+            id = "com.commercehub.gradle.plugin.avro-base"
+            displayName = "Avro Base Plugin"
         }
     }
 }
 
-apply plugin: "release"
-apply plugin: "bintray"
-def project = this
-bintray {
-    user = project.hasProperty("bintrayUserName") ? bintrayUserName : null
-    key = project.hasProperty("bintrayApiKey") ? bintrayApiKey : null
-    publications = ["mavenJava"]
-    pkg {
-        repo = "main"
-        userOrg = "commercehub-oss"
-        name = project.name
-        licenses = ["Apache-2.0"]
+idea.project.ipr {
+    withXml { provider ->
+        provider.node.component.find { it.@name == "VcsDirectoryMappings" }.mapping.@vcs = "Git"
     }
 }
-bintrayUpload.dependsOn build, sourcesJar, javadocJar
-createReleaseTag.dependsOn bintrayUpload
+
+// Write the plugin's classpath to a file to share with the tests
+task createClasspathManifest {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
+    }
+}
+
+// Add the classpath file to the test runtime classpath
+dependencies {
+    testRuntime files(createClasspathManifest)
+}
