@@ -35,6 +35,10 @@ pluginBundle {
             displayName = "Avro Base Plugin"
         }
     }
+    mavenCoordinates {
+        groupId = "com.commercehub.gradle.plugin"
+        artifactId = "gradle-avro-plugin"
+    }
 }
 
 idea.project.ipr {
