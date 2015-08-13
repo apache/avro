@@ -23,7 +23,9 @@ plugins {
 // Earlier versions of Gradle
 buildscript {
     repositories {
-        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
     dependencies {
         classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:VERSION"
