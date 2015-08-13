@@ -41,9 +41,9 @@ pluginBundle {
     }
 }
 
-idea.project.ipr {
-    withXml { provider ->
-        provider.node.component.find { it.@name == "VcsDirectoryMappings" }.mapping.@vcs = "Git"
+idea {
+    project {
+        vcs = "Git"
     }
 }
 
