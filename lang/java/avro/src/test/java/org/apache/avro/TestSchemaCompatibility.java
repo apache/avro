@@ -244,11 +244,8 @@ public class TestSchemaCompatibility {
             SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE,
             reader,
             WRITER_SCHEMA,
-            String.format(
-                "Data encoded using writer schema:%n%s%n"
-                + "will or may fail to decode using reader schema:%n%s%n",
-                WRITER_SCHEMA.toString(true),
-                reader.toString(true)));
+            SchemaCompatibility.SchemaCompatibilityResult.INCOMPATIBLE_MISSING_DEFAULT.description(reader,WRITER_SCHEMA)
+        );
 
     // Test new field without default value.
     assertEquals(expectedResult, checkReaderWriterCompatibility(reader, WRITER_SCHEMA));
@@ -269,11 +266,8 @@ public class TestSchemaCompatibility {
             SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE,
             invalidReader,
             STRING_ARRAY_SCHEMA,
-            String.format(
-                "Data encoded using writer schema:%n%s%n"
-                + "will or may fail to decode using reader schema:%n%s%n",
-                STRING_ARRAY_SCHEMA.toString(true),
-                invalidReader.toString(true)));
+            SchemaCompatibility.SchemaCompatibilityResult.INCOMPATIBLE_TYPE
+                        .description(invalidReader, STRING_ARRAY_SCHEMA));
 
     assertEquals(
         validResult,
@@ -297,11 +291,8 @@ public class TestSchemaCompatibility {
             SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE,
             INT_SCHEMA,
             STRING_SCHEMA,
-            String.format(
-                "Data encoded using writer schema:%n%s%n"
-                + "will or may fail to decode using reader schema:%n%s%n",
-                STRING_SCHEMA.toString(true),
-                INT_SCHEMA.toString(true)));
+            SchemaCompatibility.SchemaCompatibilityResult.INCOMPATIBLE_TYPE
+                    .description(INT_SCHEMA, STRING_SCHEMA));
 
     assertEquals(
         validResult,

@@ -427,11 +427,11 @@ public class SchemaCompatibility {
   public static enum SchemaCompatibilityResult {
     COMPATIBLE(READER_WRITER_COMPATIBLE_MESSAGE),
 
-    INCOMPATIBLE_NAME(READER_WRITER_INCOMPATABLE_MESSAGE + "Schema names must match."),
-    INCOMPATIBLE_SIZE(READER_WRITER_INCOMPATABLE_MESSAGE + " Fixed schemas are no the same size."),
-    INCOMPATIBLE_ENUM_MISSING_FIELDS(READER_WRITER_INCOMPATABLE_MESSAGE + " Reader schema is missing ENUM values."),
-    INCOMPATIBLE_MISSING_DEFAULT(READER_WRITER_INCOMPATABLE_MESSAGE + " New fields must have a default value."),
-    INCOMPATIBLE_TYPE(READER_WRITER_INCOMPATABLE_MESSAGE + " Schema types are incompatable."),
+    INCOMPATIBLE_NAME(READER_WRITER_INCOMPATABLE_MESSAGE + ". Schema names must match."),
+    INCOMPATIBLE_SIZE(READER_WRITER_INCOMPATABLE_MESSAGE + ". Fixed schemas are no the same size."),
+    INCOMPATIBLE_ENUM_MISSING_FIELDS(READER_WRITER_INCOMPATABLE_MESSAGE + ". Reader schema is missing ENUM values."),
+    INCOMPATIBLE_MISSING_DEFAULT(READER_WRITER_INCOMPATABLE_MESSAGE + ". New fields must have a default value."),
+    INCOMPATIBLE_TYPE(READER_WRITER_INCOMPATABLE_MESSAGE + ". Schema types are incompatible."),
 
     /** Used internally to tag a reader/writer schema pair and prevent recursion. */
     RECURSION_IN_PROGRESS("");
