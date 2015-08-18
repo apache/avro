@@ -88,7 +88,7 @@ public class AvroPlugin implements Plugin<Project> {
                 String.format("Generates %s Avro protocol definition files from IDL files.", sourceSet.getName()));
         task.setGroup(GROUP_SOURCE_GENERATION);
         task.source(getAvroSourceDir(project, sourceSet));
-        task.include("*." + IDL_EXTENSION);
+        task.include("**/*." + IDL_EXTENSION);
         task.getConventionMapping().map("outputDir", new Callable<File>() {
             @Override
             public File call() throws Exception {
@@ -108,7 +108,7 @@ public class AvroPlugin implements Plugin<Project> {
         task.source(getAvroSourceDir(project, sourceSet));
         task.source(protoTask.getOutputDir());
         task.source(protoTask.getOutputs());
-        task.include("*." + SCHEMA_EXTENSION, "*." + PROTOCOL_EXTENSION);
+        task.include("**/*." + SCHEMA_EXTENSION, "**/*." + PROTOCOL_EXTENSION);
         task.getConventionMapping().map("outputDir", new Callable<File>() {
             @Override
             public File call() throws Exception {

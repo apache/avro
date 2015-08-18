@@ -1,6 +1,7 @@
 # Change Log
 
 * Unreleased
+    * Add support for schemas/protocols/IDL in subdirectories of `src/main/avro`, etc. (#11)
 
 * 0.4.0
     * Add ability to specify fieldVisibility for generated Java source; contribution from [wooder79](https://github.com/wooder79)

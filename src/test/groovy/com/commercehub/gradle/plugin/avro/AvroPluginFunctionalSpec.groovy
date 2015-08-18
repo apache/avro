@@ -18,10 +18,12 @@ class AvroPluginFunctionalSpec extends Specification {
 
     File buildFile
     File avroDir
+    File avroSubDir
 
     def setup() {
         buildFile = testProjectDir.newFile('build.gradle')
         avroDir = testProjectDir.newFolder("src", "main", "avro")
+        avroSubDir = testProjectDir.newFolder("src", "main", "avro", "foo")
 
         def pluginClasspathResource = getClass().classLoader.findResource("plugin-classpath.txt")
         if (pluginClasspathResource == null) {
@@ -79,6 +81,54 @@ class AvroPluginFunctionalSpec extends Specification {
     def "can generate and compile java files from IDL"() {
         given:
         copyResource("interop.avdl", avroDir)
+
+        when:
+        def result = GradleRunner.create().withProjectDir(testProjectDir.root).withArguments("build").build()
+
+        then:
+        result.task(":generateAvroProtocol").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
+        Files.exists(projectPath("build/classes/main/org/apache/avro/Foo.class"))
+        Files.exists(projectPath("build/classes/main/org/apache/avro/Interop.class"))
+        Files.exists(projectPath("build/classes/main/org/apache/avro/Kind.class"))
+        Files.exists(projectPath("build/classes/main/org/apache/avro/MD5.class"))
+        Files.exists(projectPath("build/classes/main/org/apache/avro/Node.class"))
+    }
+
+    def "supports json schema files in subdirectories"() {
+        given:
+        copyResource("user.avsc", avroSubDir)
+
+        when:
+        def result = GradleRunner.create().withProjectDir(testProjectDir.root).withArguments("build").build()
+
+        then:
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
+        Files.exists(projectPath("build/classes/main/example/avro/User.class"))
+    }
+
+    def "supports json protocol files in subdirectories"() {
+        given:
+        buildFile << """
+            dependencies { compile "org.apache.avro:avro-ipc:${AVRO_VERSION}" }
+        """
+        copyResource("mail.avpr", avroSubDir)
+
+        when:
+        def result = GradleRunner.create().withProjectDir(testProjectDir.root).withArguments("build").build()
+
+        then:
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
+        Files.exists(projectPath("build/classes/main/org/apache/avro/test/Mail.class"))
+        Files.exists(projectPath("build/classes/main/org/apache/avro/test/Message.class"))
+    }
+
+    def "supports IDL files in subdirectories"() {
+        given:
+        copyResource("interop.avdl", avroSubDir)
 
         when:
         def result = GradleRunner.create().withProjectDir(testProjectDir.root).withArguments("build").build()
