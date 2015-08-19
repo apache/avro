@@ -1,0 +1,73 @@
+Record(
+    'myname',
+    'my.namespace',
+    [
+        Record(
+            'myembeddedrecord',
+            'my.namespace',
+            [
+                Primitive(
+                    'string',
+                    name='mystring',
+                    default="defaultValue"
+                )
+            ],
+            default={"mystring": "defaultValue"}
+        ),
+        Union(
+            [
+                Array(
+                    Primitive(
+                        'int'
+                    )
+                ),
+                Primitive(
+                    'float'
+                ),
+                Enum(
+                    'myembeddedenum',
+                    'my.namespace',
+                    [u'A', u'B', u'C']
+                ),
+                Fixed(
+                    'myembeddedfixed',
+                    'my.namespace',
+                    16
+                )
+            ],
+            name='myunion',
+            default=24
+        ),
+        Map(
+            Primitive(
+                'string'
+            ),
+            name='mymap',
+            default={"a": "a1", "b": "b1"}
+        ),
+        Array(
+            Primitive(
+                'long'
+            ),
+            name='myarray',
+            default=[]
+        ),
+        Fixed(
+            'myfixed',
+            'my.namespace',
+            16,
+            default="\u00ff\u00ff\u00ff\u00ff"
+        ),
+        Enum(
+            'myenum',
+            'my.namespace',
+            [u'S0', u'S1', u'S3', u'S4'],
+            default="S3"
+        ),
+        Primitive(
+            'string',
+            name='mystring',
+            default="defaultValue"
+        )
+    ]
+)

@@ -1,0 +1,96 @@
+{
+    "fields": [
+        {
+            "name": "myembeddedrecord",
+            "type": {
+                "fields": [
+                    {
+                        "name": "mystring",
+                        "type": "string",
+                        "default": "defaultValue"
+                    }
+                ],
+                "name": "myembeddedrecord",
+                "namespace": "my.namespace",
+                "type": "record"
+            },
+            "default": {"mystring": "defaultValue"}
+        },
+        {
+            "name": "myunion",
+            "type": [
+                {
+                    "items": "int",
+                    "type": "array"
+                },
+                "float",
+                {
+                    "name": "myembeddedenum",
+                    "namespace": "my.namespace",
+                    "symbols": [
+                        "A",
+                        "B",
+                        "C"
+                    ],
+                    "type": "enum"
+                },
+                {
+                    "name": "myembeddedfixed",
+                    "namespace": "my.namespace",
+                    "size": 16,
+                    "type": "fixed"
+                }
+            ],
+            "default": 24
+        },
+        {
+            "name": "mymap",
+            "type": {
+                "type": "map",
+                "values": "string"
+            },
+            "default": {"a":"a1", "b":"b1"}
+        },
+        {
+            "name": "myarray",
+            "type": {
+                "items": "long",
+                "type": "array"
+            },
+            "default": []
+        },
+        {
+            "name": "myfixed",
+            "type": {
+                "name": "myfixed",
+                "namespace": "my.namespace",
+                "size": 16,
+                "type": "fixed"
+            },
+            "default": "\u00ff\u00ff\u00ff\u00ff"
+        },
+        {
+            "name": "myenum",
+            "type": {
+                "name": "myenum",
+                "namespace": "my.namespace",
+                "symbols": [
+                    "S0",
+                    "S1",
+                    "S3",
+                    "S4"
+                ],
+                "type": "enum"
+            },
+            "default": "S3"
+        },
+        {
+            "name": "mystring",
+            "type": "string",
+            "default": "defaultValue"
+        }
+    ],
+    "name": "myname",
+    "namespace": "my.namespace",
+    "type": "record"
+}

@@ -20,6 +20,7 @@
 from avro.io import DatumReader, DatumWriter
 from avro.datafile import DataFileReader, DataFileWriter
 import avro.schema
+from avro.avpyIDL import *
 
 try:
     import json
@@ -202,6 +203,23 @@ def write(opts, files):
 
     writer.close()
 
+
+def idlToJson(input_file, output_file):
+    print("Input: %s Output: %s" % (input_file, output_file))
+    input_string = ""
+    with open(input_file) as input_file:
+        input_string = input_file.read()
+    idl_schema = eval(input_string)
+    with open(output_file, "w") as output:
+        output.write(json.dumps(idl_schema.toJson()))
+
+def jsonToIdl(input_file, output_file):
+    print("Input: %s Output: %s" % (input_file, output_file))
+    idl_schema = AvpySchema.fromJson(input_file)
+    with open(output_file, "w") as output:
+        output.write(idl_schema.toIdlString())
+
+
 def main(argv=None):
     import sys
     from optparse import OptionParser, OptionGroup
@@ -240,9 +258,15 @@ def main(argv=None):
     write_options.add_option("-o", "--output", help="output file", default="-")
     parser.add_option_group(write_options)
 
+    # idl options
+    idl_options = OptionGroup(parser, "idl options")
+    idl_options.add_option("--input-file", help="The file containing the input json or idl schema.")
+    idl_options.add_option("--output-file", help="The file to write the ouput json or idl schema to.")
+    parser.add_option_group(idl_options)
+
     opts, args = parser.parse_args(argv[1:])
     if len(args) < 1:
-        parser.error("You much specify `cat` or `write`")  # Will exit
+        parser.error("You much specify `cat`, `write`, `jsonToIdl`, or `idlToJson`")  # Will exit
 
     command = args.pop(0)
     try:
@@ -250,6 +274,10 @@ def main(argv=None):
             cat(opts, args)
         elif command == "write":
             write(opts, args)
+        elif command == "jsonToIdl":
+            jsonToIdl(opts.input_file, opts.output_file)
+        elif command == "idlToJson":
+            idlToJson(opts.input_file, opts.output_file)
         else:
             raise AvroError("Unknown command - %s" % command)
     except AvroError, e:

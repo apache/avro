@@ -1,0 +1,5 @@
+Convert json schema to avpy idl:
+avro jsonToIdl --input-file=default.avsc --output-file=default.avpy
+
+Convert avpy idl schema to json:
+avro idlToJson --input-file=default.avpy --output-file=default.avsc
