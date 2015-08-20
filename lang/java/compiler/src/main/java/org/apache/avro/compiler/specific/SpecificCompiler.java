@@ -726,8 +726,7 @@ public class SpecificCompiler {
   public static boolean hasBuilder(Schema schema) {
     switch (schema.getType()) {
       case RECORD:
-        return true;
-
+        return schema.getLogicalType() == null;
       case UNION:
         List<Schema> types = schema.getTypes(); // elide unions with null
         if ((types.size() == 2) && types.contains(NULL_SCHEMA)) {

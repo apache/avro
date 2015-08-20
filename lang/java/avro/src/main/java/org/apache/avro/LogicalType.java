@@ -146,7 +146,11 @@ public abstract class LogicalType extends JsonProperties {
             throw new RuntimeException(ex);
         }
     } else {
-      throw new RuntimeException("Undefined logical type " + logicalTypeNode.asText());
+      if (Boolean.getBoolean("allowUndefinedLogicalTypes"))  {
+        return null;
+      } else {
+        throw new RuntimeException("Undefined logical type " + logicalTypeNode.asText());
+      }
     }
   }
 

@@ -137,9 +137,20 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    */
   protected MavenProject project;
 
+
+
+  /**
+   * Allow undefined logical types, please change this only if you know what your doing.
+   *
+   * @parameter default-value="false"
+   */
+  protected boolean allowUndefinedLogicalTypes;
+
+
   @Override
   public void execute() throws MojoExecutionException {
-    
+
+    System.setProperty("allowUndefinedLogicalTypes", Boolean.toString(allowUndefinedLogicalTypes));
     SpecificCompiler.SCHEMA_OUTPUT_DIR.set(this.schemaOutputDirectory);
     
     boolean hasSourceDir = null != sourceDirectory
