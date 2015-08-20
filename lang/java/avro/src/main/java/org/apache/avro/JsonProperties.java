@@ -184,7 +184,7 @@ public abstract class JsonProperties {
     if (old == null)
       props.put(name, value);
     else if (!old.equals(value))
-      throw new AvroRuntimeException("Can't overwrite property: " + name);
+      throw new AvroRuntimeException("Can't overwrite property: " + name + " old = " + old + ", value = " + value );
   }
 
   public synchronized void addProp(String name, Object value) {
