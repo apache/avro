@@ -122,10 +122,10 @@ int ResolvingGrammarGenerator::bestBranch(const NodePtr& writer,
         if (t == r->type()) {
             if (r->hasName()) {
                 if (r->name() == writer->name()) {
-                    return j;
+                    return (int) j;
                 }
             } else {
-                return j;
+                return (int) j;
             }
         }
     }
@@ -136,13 +136,13 @@ int ResolvingGrammarGenerator::bestBranch(const NodePtr& writer,
         switch (t) {
         case AVRO_INT:
             if (rt == AVRO_LONG || rt == AVRO_DOUBLE || rt == AVRO_FLOAT) {
-                return j;
+                return (int) j;
             }
             break;
         case AVRO_LONG:
         case AVRO_FLOAT:
             if (rt == AVRO_DOUBLE) {
-                return j;
+                return (int) j;
             }
             break;
         default:

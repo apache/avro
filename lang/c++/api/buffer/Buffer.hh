@@ -152,7 +152,7 @@ class AVRO_DECL OutputBuffer
 
     size_type wroteTo(size_type size) 
     {
-        int wrote = 0;
+        size_t wrote = 0;
         if(size) {
             if(size > freeSpace()) {
                 throw std::length_error("Impossible to write more data than free space");
@@ -288,7 +288,7 @@ class AVRO_DECL OutputBuffer
      * Returns the number of chunks that contain free space.  
      **/
 
-    int numChunks() const {
+    size_t numChunks() const {
         return  pimpl_->numFreeChunks();
     }
 
@@ -296,7 +296,7 @@ class AVRO_DECL OutputBuffer
      * Returns the number of chunks that contain data
      **/
 
-    int numDataChunks() const {
+    size_t numDataChunks() const {
         return  pimpl_->numDataChunks();
     }
 
@@ -405,7 +405,7 @@ class AVRO_DECL InputBuffer
      * Returns the number of chunks containing data.
      **/
 
-    int numChunks() const {
+    size_t numChunks() const {
         return pimpl_->numDataChunks();
     }
 

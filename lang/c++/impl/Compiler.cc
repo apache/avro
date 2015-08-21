@@ -373,7 +373,7 @@ static NodePtr makeFixedNode(const Entity& e,
             e.toString());
     }
     return NodePtr(new NodeFixed(asSingleAttribute(name),
-        asSingleAttribute(v)));
+        asSingleAttribute((size_t) v)));
 }
 
 static NodePtr makeArrayNode(const Entity& e, const Object& m,

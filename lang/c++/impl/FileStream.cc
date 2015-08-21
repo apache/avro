@@ -62,14 +62,14 @@ struct FileBufferCopyIn : public BufferCopyIn {
     }
 
     void seek(size_t len) {
-        if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) != INVALID_SET_FILE_POINTER) {
+        if (::SetFilePointer(h_, (LONG) len, NULL, FILE_CURRENT) != INVALID_SET_FILE_POINTER) {
             throw Exception(boost::format("Cannot skip file: %1%") % ::GetLastError());
         }
     }
 
     bool read(uint8_t* b, size_t toRead, size_t& actual) {
         DWORD dw = 0;
-        if (! ::ReadFile(h_, b, toRead, &dw, NULL)) {
+        if (! ::ReadFile(h_, b, (DWORD) toRead, &dw, NULL)) {
             throw Exception(boost::format("Cannot read file: %1%") % ::GetLastError());
         }
         actual = static_cast<size_t>(dw);
@@ -226,7 +226,7 @@ struct FileBufferCopyOut : public BufferCopyOut {
     void write(const uint8_t* b, size_t len) {
         while (len > 0) {
             DWORD dw = 0;
-            if (! ::WriteFile(h_, b, len, &dw, NULL)) {
+            if (! ::WriteFile(h_, b, (DWORD) len, &dw, NULL)) {
                 throw Exception(boost::format("Cannot read file: %1%") % ::GetLastError());
             }
             b += dw;

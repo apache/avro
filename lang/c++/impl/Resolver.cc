@@ -513,7 +513,7 @@ class FixedSkipper : public Resolver
 
   protected:
 
-    int size_;
+    size_t size_;
     
 };
 
@@ -537,7 +537,7 @@ class FixedParser : public Resolver
 
   protected:
 
-    int size_;
+    size_t size_;
     size_t offset_;
     
 };

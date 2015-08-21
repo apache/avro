@@ -87,11 +87,11 @@ Symbol Symbol::enumAdjustSymbol(const NodePtr& writer, const NodePtr& reader)
         const string& s = writer->nameAt(i);
         vector<string>::const_iterator it = find(rs.begin(), rs.end(), s);
         if (it == rs.end()) {
-            int pos = err.size() + 1;
+            int pos = (int) err.size() + 1;
             adj.push_back(-pos);
             err.push_back(s);
         } else {
-            adj.push_back(it - rs.begin());
+            adj.push_back((int) (it - rs.begin()));
         }
     }
     return Symbol(sEnumAdjust, make_pair(adj, err));

@@ -46,7 +46,7 @@ class AVRO_DECL NullValidator : private boost::noncopyable
         return AVRO_UNKNOWN;
     }
 
-    int nextSizeExpected() const {
+    size_t nextSizeExpected() const {
         return 0;
     }
 
@@ -59,7 +59,7 @@ class AVRO_DECL NullValidator : private boost::noncopyable
     }
 
     void checkTypeExpected(Type type) { }
-    void checkFixedSizeExpected(int size) { }
+    void checkFixedSizeExpected(size_t size) { }
 
 
 };
@@ -86,7 +86,7 @@ class AVRO_DECL Validator : private boost::noncopyable
         return nextType_;
     }
 
-    int nextSizeExpected() const;
+    size_t nextSizeExpected() const;
 
     bool getCurrentRecordName(std::string &name) const;
     bool getNextFieldName(std::string &name) const;
@@ -101,7 +101,7 @@ class AVRO_DECL Validator : private boost::noncopyable
         advance();
     }
 
-    void checkFixedSizeExpected(int size) { 
+    void checkFixedSizeExpected(size_t size) { 
         if( nextSizeExpected() != size) {
             throw Exception(
                 boost::format("Wrong size for fixed, got %1%, expected %2%") 

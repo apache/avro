@@ -191,9 +191,9 @@ NodeRecord::printJson(std::ostream &os, int depth) const
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"fields\": [\n";
 
-    int fields = leafAttributes_.size();
+    size_t fields = leafAttributes_.size();
     ++depth;
-    for(int i = 0; i < fields; ++i) {
+    for(int i = 0; i < (int) fields; ++i) {
         if(i > 0) {
             os << indent(depth) << "},\n";
         }
@@ -217,9 +217,9 @@ NodeEnum::printJson(std::ostream &os, int depth) const
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
 
-    int names = leafNameAttributes_.size();
+    size_t names = leafNameAttributes_.size();
     ++depth;
-    for(int i = 0; i < names; ++i) {
+    for (size_t i = 0; i < names; ++i) {
         if(i > 0) {
             os << ",\n";
         }
@@ -256,9 +256,9 @@ void
 NodeUnion::printJson(std::ostream &os, int depth) const
 {
     os << "[\n";
-    int fields = leafAttributes_.size();
+    size_t fields = leafAttributes_.size();
     ++depth;
-    for(int i = 0; i < fields; ++i) {
+    for (size_t i = 0; i < fields; ++i) {
         if(i > 0) {
             os << ",\n";
         }

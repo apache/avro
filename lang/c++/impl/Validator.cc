@@ -93,7 +93,7 @@ Validator::countingAdvance()
         }
         else {
             compoundStack_.back().pos = 0;
-            int count = --counters_.back();
+            size_t count = --counters_.back();
             if(count == 0) {
                 counters_.pop_back();
                 compoundStarted_ = true;
@@ -140,7 +140,7 @@ Validator::fixedAdvance()
     compoundStack_.pop_back();
 }
 
-int 
+size_t 
 Validator::nextSizeExpected() const
 {
     return compoundStack_.back().node->fixedSize();
@@ -268,10 +268,10 @@ Validator::getCurrentRecordName(std::string &name) const
     int idx = -1;
     // if the top of the stack is a record I want this record name
     if(!compoundStack_.empty() && (isPrimitive(nextType_) || nextType_ == AVRO_RECORD)) {
-        idx = compoundStack_.size() -1;
+        idx = ((int) compoundStack_.size()) -1;
     }
     else {
-        idx = compoundStack_.size() -2;
+        idx = ((int) compoundStack_.size()) -2;
     }
     
     if(idx >= 0 && compoundStack_[idx].node->type() == AVRO_RECORD) {

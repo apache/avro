@@ -94,7 +94,7 @@ class NodeImpl : public Node
         return leafAttributes_.size();
     }
 
-    const NodePtr &leafAt(int index) const { 
+    const NodePtr &leafAt(size_t index) const {
         return leafAttributes_.get(index);
     }
 
@@ -109,7 +109,7 @@ class NodeImpl : public Node
         return leafNameAttributes_.size();
     }
 
-    const std::string &nameAt(int index) const { 
+    const std::string &nameAt(size_t index) const {
         return leafNameAttributes_.get(index);
     }
 
@@ -117,11 +117,11 @@ class NodeImpl : public Node
         return nameIndex_.lookup(name, index);
     }
 
-    void doSetFixedSize(int size) {
+    void doSetFixedSize(size_t size) {
         sizeAttribute_.add(size);
     }
 
-    int fixedSize() const {
+    size_t fixedSize() const {
         return sizeAttribute_.get();
     }
 
@@ -129,7 +129,7 @@ class NodeImpl : public Node
 
     void printBasicInfo(std::ostream &os) const;
 
-    void setLeafToSymbolic(int index, const NodePtr &node);
+    void setLeafToSymbolic(size_t index, const NodePtr &node);
    
     SchemaResolution furtherResolution(const Node &reader) const {
         SchemaResolution match = RESOLVE_NO_MATCH;
@@ -185,8 +185,8 @@ typedef concepts::MultiAttribute<NodePtr>   MultiLeaves;
 typedef concepts::NoAttribute<std::string>     NoLeafNames;
 typedef concepts::MultiAttribute<std::string>  LeafNames;
 
-typedef concepts::NoAttribute<int>     NoSize;
-typedef concepts::SingleAttribute<int> HasSize;
+typedef concepts::NoAttribute<size_t>     NoSize;
+typedef concepts::SingleAttribute<size_t> HasSize;
 
 typedef NodeImpl< NoName,  NoLeaves,    NoLeafNames,  NoSize  > NodeImplPrimitive;
 typedef NodeImpl< HasName, NoLeaves,    NoLeafNames,  NoSize  > NodeImplSymbolic;
@@ -481,7 +481,7 @@ class AVRO_DECL NodeFixed : public NodeImplFixed
 
 template < class A, class B, class C, class D >
 inline void 
-NodeImpl<A,B,C,D>::setLeafToSymbolic(int index, const NodePtr &node)
+NodeImpl<A, B, C, D>::setLeafToSymbolic(size_t index, const NodePtr &node)
 {
     if(!B::hasAttribute) {
         throw Exception("Cannot change leaf node for nonexistent leaf");
@@ -513,7 +513,7 @@ NodeImpl<A,B,C,D>::printBasicInfo(std::ostream &os) const
         os << " " << sizeAttribute_.get();
     }
     os << '\n';
-    int count = leaves();
+    size_t count = leaves();
     count = count ? count : names();
     for(int i= 0; i < count; ++i) {
         if( C::hasAttribute ) {
