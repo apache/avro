@@ -29,6 +29,7 @@ import java.util.WeakHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -845,6 +846,9 @@ public class GenericData {
     if (o1 == o2) return 0;
     switch (s.getType()) {
     case RECORD:
+      if (s.getLogicalType() != null) {
+        return (Objects.equals(o1, o2)) ? 0 : 1;
+      }
       for (Field f : s.getFields()) {
         if (f.order() == Field.Order.IGNORE)
           continue;                               // ignore this field
