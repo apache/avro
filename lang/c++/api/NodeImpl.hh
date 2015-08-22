@@ -208,7 +208,7 @@ class AVRO_DECL NodePrimitive : public NodeImplPrimitive
 
     SchemaResolution resolve(const Node &reader)  const;
 
-    void printJson(std::ostream &os, int depth) const;
+    void printJson(std::ostream &os, size_t depth) const;
 
     bool isValid() const {
         return true;
@@ -234,7 +234,7 @@ class AVRO_DECL NodeSymbolic : public NodeImplSymbolic
     { }
     SchemaResolution resolve(const Node &reader)  const;
 
-    void printJson(std::ostream &os, int depth) const;
+	void printJson(std::ostream &os, size_t depth) const;
 
     bool isValid() const {
         return (nameAttribute_.size() == 1);
@@ -287,7 +287,7 @@ public:
 
     SchemaResolution resolve(const Node &reader)  const;
 
-    void printJson(std::ostream &os, int depth) const;
+	void printJson(std::ostream &os, size_t depth) const;
 
     bool isValid() const {
         return ((nameAttribute_.size() == 1) && 
@@ -319,7 +319,7 @@ class AVRO_DECL NodeEnum : public NodeImplEnum
         
     SchemaResolution resolve(const Node &reader)  const;
 
-    void printJson(std::ostream &os, int depth) const;
+	void printJson(std::ostream &os, size_t depth) const;
 
     bool isValid() const {
         return (
@@ -343,7 +343,7 @@ class AVRO_DECL NodeArray : public NodeImplArray
 
     SchemaResolution resolve(const Node &reader)  const;
 
-    void printJson(std::ostream &os, int depth) const;
+	void printJson(std::ostream &os, size_t depth) const;
 
     bool isValid() const {
         return (leafAttributes_.size() == 1);
@@ -374,7 +374,7 @@ class AVRO_DECL NodeMap : public NodeImplMap
 
     SchemaResolution resolve(const Node &reader)  const;
 
-    void printJson(std::ostream &os, int depth) const;
+	void printJson(std::ostream &os, size_t depth) const;
 
     bool isValid() const {
         return (leafAttributes_.size() == 2);
@@ -395,7 +395,7 @@ class AVRO_DECL NodeUnion : public NodeImplUnion
 
     SchemaResolution resolve(const Node &reader)  const;
 
-    void printJson(std::ostream &os, int depth) const;
+	void printJson(std::ostream &os, size_t depth) const;
 
     bool isValid() const {
         std::set<std::string> seen;
@@ -469,7 +469,7 @@ class AVRO_DECL NodeFixed : public NodeImplFixed
 
     SchemaResolution resolve(const Node &reader)  const;
 
-    void printJson(std::ostream &os, int depth) const;
+	void printJson(std::ostream &os, size_t depth) const;
 
     bool isValid() const {
         return (

@@ -146,7 +146,7 @@ class AVRO_DECL Node : private boost::noncopyable
 
     virtual SchemaResolution resolve(const Node &reader) const = 0;
 
-    virtual void printJson(std::ostream &os, int depth) const = 0;
+    virtual void printJson(std::ostream &os, size_t depth) const = 0;
 
     virtual void printBasicInfo(std::ostream &os) const = 0;
 

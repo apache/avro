@@ -164,18 +164,18 @@ std::ostream& operator <<(std::ostream &os, indent x)
 }
 
 void 
-NodePrimitive::printJson(std::ostream &os, int depth) const
+NodePrimitive::printJson(std::ostream &os, size_t depth) const
 {
     os << '\"' << type() << '\"';
 }
 
 void 
-NodeSymbolic::printJson(std::ostream &os, int depth) const
+NodeSymbolic::printJson(std::ostream &os, size_t depth) const
 {
     os << '\"' << nameAttribute_.get() << '\"';
 }
 
-static void printName(std::ostream& os, const Name& n, int depth)
+static void printName(std::ostream& os, const Name& n, size_t depth)
 {
     if (!n.ns().empty()) {
         os << indent(depth) << "\"namespace\": \"" << n.ns() << "\",\n";
@@ -184,7 +184,7 @@ static void printName(std::ostream& os, const Name& n, int depth)
 }
 
 void 
-NodeRecord::printJson(std::ostream &os, int depth) const
+NodeRecord::printJson(std::ostream &os, size_t depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
@@ -210,7 +210,7 @@ NodeRecord::printJson(std::ostream &os, int depth) const
 }
 
 void 
-NodeEnum::printJson(std::ostream &os, int depth) const
+NodeEnum::printJson(std::ostream &os, size_t depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"enum\",\n";
@@ -231,7 +231,7 @@ NodeEnum::printJson(std::ostream &os, int depth) const
 }
 
 void 
-NodeArray::printJson(std::ostream &os, int depth) const
+NodeArray::printJson(std::ostream &os, size_t depth) const
 {
     os << "{\n";
     os << indent(depth+1) << "\"type\": \"array\",\n";
@@ -242,7 +242,7 @@ NodeArray::printJson(std::ostream &os, int depth) const
 }
 
 void 
-NodeMap::printJson(std::ostream &os, int depth) const
+NodeMap::printJson(std::ostream &os, size_t depth) const
 {
     os << "{\n";
     os << indent(depth+1) <<"\"type\": \"map\",\n";
@@ -253,7 +253,7 @@ NodeMap::printJson(std::ostream &os, int depth) const
 }
 
 void 
-NodeUnion::printJson(std::ostream &os, int depth) const
+NodeUnion::printJson(std::ostream &os, size_t depth) const
 {
     os << "[\n";
     size_t fields = leafAttributes_.size();
@@ -270,7 +270,7 @@ NodeUnion::printJson(std::ostream &os, int depth) const
 }
 
 void 
-NodeFixed::printJson(std::ostream &os, int depth) const
+NodeFixed::printJson(std::ostream &os, size_t depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
