@@ -1049,8 +1049,7 @@ public class GenericData {
       case DOUBLE:
         return value; // immutable
       case ENUM:
-        // Enums are immutable; shallow copy will suffice
-        return value;
+        return (T)createEnum(value.toString(), schema);
       case FIXED:
         return (T)createFixed(null, ((GenericFixed) value).bytes(), schema);
       case FLOAT:

@@ -46,6 +46,8 @@ import org.apache.avro.test.MD5;
 import org.apache.avro.test.Kind;
 import org.apache.avro.test.Reserved;
 
+import org.apache.avro.generic.GenericRecord;
+
 public class TestSpecificData {
   
   @Test
@@ -100,6 +102,16 @@ public class TestSpecificData {
         new SpecificDatumWriter<Object>(),
         new SpecificDatumReader<Object>());
 }
+
+  @Test public void testConvertGenericToSpecific() {
+    GenericRecord generic = new GenericData.Record(TestRecord.SCHEMA$);
+    generic.put("name", "foo");
+    generic.put("kind", new GenericData.EnumSymbol(Kind.SCHEMA$, "BAR"));
+    generic.put("hash", new GenericData.Fixed
+                (MD5.SCHEMA$, new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    TestRecord specific =
+      (TestRecord)SpecificData.get().deepCopy(TestRecord.SCHEMA$, generic);
+  }
 
   @Test public void testGetClassSchema() throws Exception {
     Assert.assertEquals(TestRecord.getClassSchema(), TestRecord.SCHEMA$);
