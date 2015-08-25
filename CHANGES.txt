@@ -184,6 +184,9 @@ Avro 1.8.0 (10 August 2014)
     AVRO-1491. Avro.ipc.dll not included in release zip/build file.
     (Dmitry Kovalev via tomwhite)
 
+    AVRO-1676. Java: Do not treat enum symbols as immutable when deep copying.
+    (Mike Rodriguez via tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
