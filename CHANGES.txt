@@ -190,6 +190,9 @@ Avro 1.8.0 (10 August 2014)
     AVRO-1593. C++: Use classic locale to escape control chars.
     (Hatem Helal via blue)
 
+    AVRO-1700. C++: Fix avro_BufferStreambuf_hh__ header guard.
+    (Liu Yanbo via blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
