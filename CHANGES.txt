@@ -9,6 +9,8 @@ Trunk (not yet released)
     AVRO-834. Java: Data File corruption recovery tool.
     (scottcarey and tomwhite)
 
+    AVRO-1719: C++: Fix tests with Boost >= 1.59. (Romain Geissler via blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
