@@ -15,6 +15,8 @@ Trunk (not yet released)
     AVRO-1889: Update maven-shade-plugin to enable building in Java 8 on Mac.
     (Sachin Goyal via blue)
 
+    AVRO-1719: C++: Fix tests with Boost >= 1.59. (Romain Geissler via blue)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
