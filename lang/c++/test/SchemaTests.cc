@@ -138,19 +138,19 @@ const char* basicSchemaErrors[] = {
 
 static void testBasic(const char* schema)
 {
-    BOOST_CHECKPOINT(schema);
+    BOOST_TEST_CHECKPOINT(schema);
     compileJsonSchemaFromString(schema);
 }
 
 static void testBasic_fail(const char* schema)
 {
-    BOOST_CHECKPOINT(schema);
+    BOOST_TEST_CHECKPOINT(schema);
     BOOST_CHECK_THROW(compileJsonSchemaFromString(schema), Exception);
 }
 
 static void testCompile(const char* schema)
 {
-    BOOST_CHECKPOINT(schema);
+    BOOST_TEST_CHECKPOINT(schema);
     compileJsonSchemaFromString(std::string(schema));
 }
 

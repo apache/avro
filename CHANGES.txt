@@ -18,6 +18,8 @@ Trunk (not yet released)
     AVRO-1695. Java: Fix GenericData#deepCopy() to support logical types.
     (cutting)
 
+    AVRO-1719: C++: Fix tests with Boost >= 1.59. (Romain Geissler via blue)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
