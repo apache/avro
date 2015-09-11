@@ -1,0 +1,12 @@
+{
+    "namespace": "example.avro",
+    "type": "record",
+    "name": "Test",
+    "fields": [
+        {
+            "name": "gender",
+            "type": "enum",
+            "symbols": ["MALE", "FEMALE"]
+        }
+    ]
+}

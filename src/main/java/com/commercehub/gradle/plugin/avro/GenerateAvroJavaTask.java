@@ -13,14 +13,11 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
-import static com.commercehub.gradle.plugin.avro.Constants.*;
+import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
+import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
+import static java.lang.System.lineSeparator;
 
 public class GenerateAvroJavaTask extends OutputDirTask {
     private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
@@ -151,6 +148,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         int processedTotal = 0;
         int processedThisPass = -1;
         Map<String, Schema> types = new HashMap<>();
+        Map<String, String> errors = new HashMap<>(); // file path to error message
         Queue<File> nextPass = new LinkedList<>(filterSources(new FileExtensionSpec(SCHEMA_EXTENSION)).getFiles());
         Queue<File> thisPass = new LinkedList<>();
         while (processedThisPass != 0) {
@@ -162,7 +160,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             nextPass.clear();
             File sourceFile = thisPass.poll();
             while (sourceFile != null) {
-                getLogger().debug("Processing {}", sourceFile);
+                String path = getProject().relativePath(sourceFile);
+                getLogger().debug("Processing {}", path);
                 try {
                     Schema.Parser parser = new Schema.Parser();
                     parser.addTypes(types);
@@ -175,26 +174,34 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                     compiler.setFieldVisibility(visibility);
                     compiler.compileToDestination(sourceFile, getOutputDir());
                     types = parser.getTypes();
-                    getLogger().info("Processed {}", sourceFile);
+                    getLogger().info("Processed {}", path);
                     processedThisPass++;
+                    errors.remove(path);
                 } catch (SchemaParseException ex) {
-                    if (ex.getMessage().matches("(?i).*(undefined name|not a defined name).*")) {
-                        getLogger().debug("Found undefined name in {}; will try again later", sourceFile);
+                    String errorMessage = ex.getMessage();
+                    if (errorMessage.matches("(?i).*(undefined name|not a defined name).*")) {
+                        getLogger().debug("Found undefined name in {} ({}); will try again later", path, errorMessage);
                         nextPass.add(sourceFile);
+                        errors.put(path, ex.getMessage());
                     } else {
-                        throw new GradleException(String.format("Failed to compile schema definition file %s", sourceFile), ex);
+                        throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
                     }
                 } catch (NullPointerException ex) {
-                    getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency); will try again later", sourceFile);
+                    getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency); will try again later", path);
                     nextPass.add(sourceFile);
+                    errors.put(path, ex.getMessage());
                 } catch (IOException ex) {
-                    throw new GradleException(String.format("Failed to compile schema definition file %s", sourceFile), ex);
+                    throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
                 }
                 sourceFile = thisPass.poll();
             }
         }
         if (!nextPass.isEmpty()) {
-            throw new GradleException(String.format("Failed to compile schema definition files due to undefined names: %s", nextPass));
+            StringBuilder errorMessage = new StringBuilder("Could not compile schema definition files:");
+            for (Map.Entry<String, String> error : errors.entrySet()) {
+                errorMessage.append(lineSeparator()).append("* ").append(error.getKey()).append(": ").append(error.getValue());
+            }
+            throw new GradleException(errorMessage.toString());
         }
         return processedTotal;
     }
