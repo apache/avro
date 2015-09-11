@@ -999,7 +999,7 @@ Protocol CompilationUnit():
   ( < "\u001a" > )?
   ( <STUFF_TO_IGNORE: ~[]> )?
   <EOF>
-  { return org.apache.avro.compiler.specific.SchemaResolver.resolve(p); }
+  { return SchemaResolver.resolve(p); }
 }
 
 /*
@@ -1467,7 +1467,7 @@ Schema ReferenceType():
     if (type == null)
       //throw error("Undefined name '" + name + "'", token);
     {
-      type = new org.apache.avro.UnresolvedSchema(name);
+      type = SchemaResolver.unresolvedSchema(name);
     }
     return type;
   }
