@@ -1,6 +1,8 @@
 # Change Log
 
 * Unreleased
+
+* 0.5.0
     * Add support for schemas/protocols/IDL in subdirectories of `src/main/avro`, etc. (#11)
     * Expose original error messages from `avro-compiler` when compilation fails
 
