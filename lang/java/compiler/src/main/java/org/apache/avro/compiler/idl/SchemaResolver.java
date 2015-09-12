@@ -90,9 +90,10 @@ final class SchemaResolver {
         if (fullName != null && processed.containsKey(fullName)) {
             return processed.get(schema.getFullName());
         } else if (isUnresolvedSchema(schema)) {
-            Schema type = protocol.getType(getUnresolvedSchemaName(schema));
+            final String unresolvedSchemaName = getUnresolvedSchemaName(schema);
+            Schema type = protocol.getType(unresolvedSchemaName);
             if (type == null) {
-                throw new IllegalArgumentException("Cannot resolve " + schema);
+                throw new IllegalArgumentException("Cannot resolve " + unresolvedSchemaName);
             }
             return resolve(type, protocol, processed);
         } else {
