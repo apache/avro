@@ -14,29 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'multi_json'
-require 'set'
-require 'digest/md5'
-require 'net/http'
-require 'stringio'
-require 'zlib'
+require 'test_help'
 
-module Avro
-  VERSION = "FIXME"
+class TestFingerprints < Test::Unit::TestCase
+  def test_md5_fingerprint
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "int" }
+    SCHEMA
 
-  class AvroError < StandardError; end
+    assert_equal 318112854175969537208795771590915775282,
+      schema.md5_fingerprint
+  end
 
-  class AvroTypeError < Avro::AvroError
-    def initialize(schm=nil, datum=nil, msg=nil)
-      msg ||= "Not a #{schm.to_s}: #{datum}"
-      super(msg)
-    end
+  def test_sha256_fingerprint
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "int" }
+    SCHEMA
+
+    assert_equal 28572620203319713300323544804233350633246234624932075150020181448463213378117,
+      schema.sha256_fingerprint
   end
 end
-
-require 'avro/schema'
-require 'avro/io'
-require 'avro/data_file'
-require 'avro/protocol'
-require 'avro/ipc'
-require 'avro/schema_normalization'
