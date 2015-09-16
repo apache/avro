@@ -1,6 +1,7 @@
 # Change Log
 
 * Unreleased
+    * Add ability to set source directory for the Avro compiler's Velocity templates.
 
 * 0.5.0
     * Add support for schemas/protocols/IDL in subdirectories of `src/main/avro`, etc. (#11)

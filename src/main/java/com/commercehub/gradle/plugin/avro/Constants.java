@@ -1,7 +1,9 @@
 package com.commercehub.gradle.plugin.avro;
 
 class Constants {
-    static final String UTF8_ENCONDING = "UTF-8";
+    static final String UTF8_ENCODING = "UTF-8";
+
+    public static final String DEFAULT_TEMPLATE_DIR = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
     static final String SCHEMA_EXTENSION = "avsc";
     static final String PROTOCOL_EXTENSION = "avpr";
