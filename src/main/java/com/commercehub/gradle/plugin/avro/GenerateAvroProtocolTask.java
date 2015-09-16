@@ -55,7 +55,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
                 FilenameUtils.getBaseName(idlFile.getName()) + "." + PROTOCOL_EXTENSION);
         try (Idl idl = new Idl(idlFile, loader)) {
             String protoJson = idl.CompilationUnit().toString(true);
-            FileUtils.writeStringToFile(protoFile, protoJson, Constants.UTF8_ENCONDING);
+            FileUtils.writeStringToFile(protoFile, protoJson, Constants.UTF8_ENCODING);
         } catch (IOException | ParseException ex) {
             throw new GradleException(String.format("Failed to compile IDL file %s", idlFile), ex);
         }

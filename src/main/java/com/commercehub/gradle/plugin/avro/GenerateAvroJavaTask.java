@@ -13,7 +13,12 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
@@ -22,11 +27,13 @@ import static java.lang.System.lineSeparator;
 public class GenerateAvroJavaTask extends OutputDirTask {
     private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
 
-    private String encoding = Constants.UTF8_ENCONDING;
+    private String encoding = Constants.UTF8_ENCODING;
 
     private String stringType;
 
     private String fieldVisibility;
+
+    private String templateDirectory;
 
     @Input
     public String getEncoding() {
@@ -39,6 +46,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     @Input
     public String getStringType() {
+        System.out.println("StringType was get: " + stringType);
         return stringType;
     }
 
@@ -51,6 +59,13 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     public void setFieldVisibility(String fieldVisibility) {
         this.fieldVisibility = fieldVisibility;
+    }
+
+    @Input
+    public String getTemplateDirectory() { return templateDirectory; }
+
+    public void setTemplateDirectory(String templateDirectory) {
+        this.templateDirectory = templateDirectory;
     }
 
     private GenericData.StringType parseStringType() {
@@ -86,6 +101,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     protected void process() {
         getLogger().debug("Using encoding {}", getEncoding());
         getLogger().debug("Using fieldVisibility {}", getFieldVisibility());
+        getLogger().debug("Using template directory '{}'", getTemplateDirectory());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         preClean();
@@ -138,6 +154,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             getLogger().debug("Setting fieldVisibility to {}", parseFieldVisibility().toString());
             SpecificCompiler.FieldVisibility visibility = parseFieldVisibility();
             compiler.setFieldVisibility(visibility);
+            compiler.setTemplateDir(getTemplateDirectory());
             compiler.compileToDestination(sourceFile, getOutputDir());
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile protocol definition file %s", sourceFile), ex);
@@ -172,6 +189,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                     getLogger().debug("Setting fieldVisibility to {}", parseFieldVisibility().toString());
                     SpecificCompiler.FieldVisibility visibility = parseFieldVisibility();
                     compiler.setFieldVisibility(visibility);
+                    getLogger().info("Setting templateDirectory to '{}'", getTemplateDirectory());
+                    compiler.setTemplateDir(getTemplateDirectory());
                     compiler.compileToDestination(sourceFile, getOutputDir());
                     types = parser.getTypes();
                     getLogger().info("Processed {}", path);

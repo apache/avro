@@ -58,6 +58,15 @@ avro {
 }
 ```
 
+Optionally, you can also configure the source directory for the Velocity templates that the Avro compiler uses to
+generate Java files.
+
+```groovy
+avro {
+    templateDirectory = "/path/to/velocity/templates"
+}
+```
+
 Additionally, ensure that you have a compile dependency on avro, such as:
 
 ```groovy
