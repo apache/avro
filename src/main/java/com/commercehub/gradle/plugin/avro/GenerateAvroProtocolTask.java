@@ -23,6 +23,9 @@ import java.util.List;
 import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 
+/**
+ * Task to convert Avro IDL files into Avro protocol files using {@link Idl}.
+ */
 public class GenerateAvroProtocolTask extends OutputDirTask {
     @TaskAction
     protected void process() {
@@ -55,7 +58,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
                 FilenameUtils.getBaseName(idlFile.getName()) + "." + PROTOCOL_EXTENSION);
         try (Idl idl = new Idl(idlFile, loader)) {
             String protoJson = idl.CompilationUnit().toString(true);
-            FileUtils.writeStringToFile(protoFile, protoJson, Constants.UTF8_ENCONDING);
+            FileUtils.writeStringToFile(protoFile, protoJson, Constants.UTF8_ENCODING);
         } catch (IOException | ParseException ex) {
             throw new GradleException(String.format("Failed to compile IDL file %s", idlFile), ex);
         }

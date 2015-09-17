@@ -4,6 +4,7 @@ public class DefaultAvroExtension implements AvroExtension {
     private String encoding;
     private String stringType;
     private String fieldVisibility;
+    private String templateDirectory;
 
     @Override
     public String getEncoding() {
@@ -29,4 +30,12 @@ public class DefaultAvroExtension implements AvroExtension {
     public void setFieldVisibility(String fieldVisibility) {
         this.fieldVisibility = fieldVisibility;
     }
+
+    @Override
+    public String getTemplateDirectory() { return templateDirectory; }
+
+    public void setTemplateDirectory(String templateDirectory) {
+        this.templateDirectory = templateDirectory;
+    }
+
 }
