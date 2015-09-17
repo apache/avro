@@ -46,6 +46,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     @Input
     public String getStringType() {
+        System.out.println("StringType was get: " + stringType);
         return stringType;
     }
 
