@@ -1,6 +1,5 @@
 package com.commercehub.gradle.plugin.avro;
 
-import org.apache.avro.generic.GenericData;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -9,11 +8,9 @@ import org.gradle.api.internal.IConventionAware;
 
 import java.util.concurrent.Callable;
 
-import static com.commercehub.gradle.plugin.avro.Constants.AVRO_EXTENSION_NAME;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_TEMPLATE_DIR;
+import static com.commercehub.gradle.plugin.avro.Constants.*;
 
 public class AvroBasePlugin implements Plugin<Project> {
-
     @Override
     public void apply(final Project project) {
         configureExtension(project);
@@ -25,19 +22,19 @@ public class AvroBasePlugin implements Plugin<Project> {
         extensionMapping.map("encoding", new Callable<String>() {
             @Override
             public String call() throws Exception {
-                return Constants.UTF8_ENCODING;
+                return DEFAULT_ENCODING;
             }
         });
         extensionMapping.map("stringType", new Callable<String>() {
             @Override
             public String call() throws Exception {
-                return GenericData.StringType.String.name();
+                return DEFAULT_STRING_TYPE;
             }
         });
         extensionMapping.map("fieldVisibility", new Callable<String>() {
             @Override
             public String call() throws Exception {
-                return "PUBLIC_DEPRECATED";
+                return DEFAULT_FIELD_VISIBILITY;
             }
         });
         extensionMapping.map("templateDirectory", new Callable<String>() {
@@ -72,7 +69,6 @@ public class AvroBasePlugin implements Plugin<Project> {
                 taskMapping.map("templateDirectory", new Callable<String>() {
                     @Override
                     public String call() throws Exception {
-
                         return avroExtension.getTemplateDirectory();
                     }
                 });

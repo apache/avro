@@ -23,6 +23,9 @@ import java.util.List;
 import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 
+/**
+ * Task to convert Avro IDL files into Avro protocol files using {@link Idl}.
+ */
 public class GenerateAvroProtocolTask extends OutputDirTask {
     @TaskAction
     protected void process() {

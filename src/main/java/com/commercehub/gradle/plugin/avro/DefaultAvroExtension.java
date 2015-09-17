@@ -38,5 +38,4 @@ public class DefaultAvroExtension implements AvroExtension {
         this.templateDirectory = templateDirectory;
     }
 
-
 }
