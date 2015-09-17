@@ -17,7 +17,7 @@ Add the following to your `build.gradle` file.  Substitute the desired version b
 ```groovy
 // Gradle 2.1 and later
 plugins {
-  id "com.commercehub.gradle.plugin.avro" version "VERSION"
+    id "com.commercehub.gradle.plugin.avro" version "VERSION"
 }
 
 // Earlier versions of Gradle
@@ -42,7 +42,7 @@ avro {
 }
 ```
 
-Optionally, you can also configure the output character encoding.
+Optionally, you can also configure the output character encoding (default `UTF-8`).
 
 ```groovy
 avro {
@@ -50,7 +50,8 @@ avro {
 }
 ```
 
-Optionally, you can also configure the visibility of generated fields.
+Optionally, you can also configure the visibility of generated fields to `PRIVATE`, `PUBLIC_DEPRECATED` (the default)
+or `PUBLIC`.
 
 ```groovy
 avro {

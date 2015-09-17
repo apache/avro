@@ -55,11 +55,11 @@ abstract class FunctionalSpec extends Specification {
         return testProjectDir.root.toPath().resolve(path)
     }
 
-    protected BuildResult runBuild() {
-        return GradleRunner.create().withProjectDir(testProjectDir.root).withArguments("--info", "build").build()
+    protected BuildResult runBuild(String... args = ["build"]) {
+        return GradleRunner.create().withProjectDir(testProjectDir.root).withArguments(args).build()
     }
 
-    protected BuildResult buildAndFail() {
-        return GradleRunner.create().withProjectDir(testProjectDir.root).withArguments("--info", "build").buildAndFail()
+    protected BuildResult buildAndFail(String... args = ["build"]) {
+        return GradleRunner.create().withProjectDir(testProjectDir.root).withArguments(args).buildAndFail()
     }
 }
