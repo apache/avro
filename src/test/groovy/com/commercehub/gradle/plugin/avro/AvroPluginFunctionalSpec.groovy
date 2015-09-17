@@ -13,7 +13,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         copyResource("user.avsc", avroDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -29,7 +29,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         copyResource("mail.avpr", avroDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -43,7 +43,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         copyResource("interop.avdl", avroDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroProtocol").outcome == SUCCESS
@@ -61,7 +61,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         copyResource("user.avsc", avroSubDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -77,7 +77,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         copyResource("mail.avpr", avroSubDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -91,7 +91,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         copyResource("interop.avdl", avroSubDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroProtocol").outcome == SUCCESS
@@ -109,7 +109,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         copyResource("enumMalformed.avsc", avroDir)
 
         when:
-        def result = buildAndFail()
+        def result = runAndFail()
 
         then:
         result.task(":generateAvroJava").outcome == FAILED

@@ -5,6 +5,7 @@ import org.apache.avro.generic.GenericData.StringType
 import spock.lang.Unroll
 
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENCODING
+import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 class OptionsFunctionalSpec extends FunctionalSpec {
@@ -13,7 +14,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         copyResource("user.avsc", avroDir)
 
         when:
-        def result = runBuild("generateAvroJava")
+        def result = run("generateAvroJava")
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -42,7 +43,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         |""".stripMargin()
 
         when:
-        def result = runBuild("generateAvroJava")
+        def result = run("generateAvroJava")
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -57,12 +58,12 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         copyResource("user.avsc", avroDir)
         buildFile << """
         |avro {
-        |    stringType = "${stringType.name()}"
+        |    stringType = "${stringType}"
         |}
         |""".stripMargin()
 
         when:
-        def result = runBuild("generateAvroJava")
+        def result = run("generateAvroJava")
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -72,10 +73,12 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         content.contains(expectedContent)
 
         where:
-        stringType              | expectedContent
-        StringType.String       | "public java.lang.String getName()"
-        StringType.CharSequence | "public java.lang.CharSequence getName()"
-        StringType.Utf8         | "public org.apache.avro.util.Utf8 getName()"
+        stringType                           | expectedContent
+        StringType.String.name()             | "public java.lang.String getName()"
+        StringType.CharSequence.name()       | "public java.lang.CharSequence getName()"
+        StringType.Utf8.name()               | "public org.apache.avro.util.Utf8 getName()"
+        StringType.Utf8.name().toUpperCase() | "public org.apache.avro.util.Utf8 getName()"
+        StringType.Utf8.name().toLowerCase() | "public org.apache.avro.util.Utf8 getName()"
     }
 
     @Unroll
@@ -84,12 +87,12 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         copyResource("user.avsc", avroDir)
         buildFile << """
         |avro {
-        |    fieldVisibility = "${fieldVisibility.name()}"
+        |    fieldVisibility = "${fieldVisibility}"
         |}
         |""".stripMargin()
 
         when:
-        def result = runBuild("generateAvroJava")
+        def result = run("generateAvroJava")
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -99,10 +102,11 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         content.contains(expectedContent)
 
         where:
-        fieldVisibility                   | expectedContent
-        FieldVisibility.PRIVATE           | "private java.lang.String name;"
-        FieldVisibility.PUBLIC            | "public java.lang.String name;"
-        FieldVisibility.PUBLIC_DEPRECATED | "@Deprecated public java.lang.String name;"
+        fieldVisibility                              | expectedContent
+        FieldVisibility.PRIVATE.name().toLowerCase() | "private java.lang.String name;"
+        FieldVisibility.PRIVATE.name()               | "private java.lang.String name;"
+        FieldVisibility.PUBLIC.name()                | "public java.lang.String name;"
+        FieldVisibility.PUBLIC_DEPRECATED.name()     | "@Deprecated public java.lang.String name;"
     }
 
     def "supports configuring templateDirectory"() {
@@ -122,7 +126,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         |""".stripMargin()
 
         when:
-        def result = runBuild("generateAvroJava")
+        def result = run("generateAvroJava")
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -132,5 +136,37 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         content.contains("Custom template")
     }
 
-    // TODO: invalid value handling
+    def "rejects unsupported stringType values"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    stringType = "badValue"
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = runAndFail("generateAvroJava")
+
+        then:
+        result.task(":generateAvroJava").outcome == FAILED
+        result.standardError.contains("Invalid stringType 'badValue'.  Value values are: [CharSequence, String, Utf8]")
+    }
+
+    def "rejects unsupported fieldVisibility values"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    fieldVisibility = "badValue"
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = runAndFail("generateAvroJava")
+
+        then:
+        result.task(":generateAvroJava").outcome == FAILED
+        result.standardError.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PUBLIC_DEPRECATED, PRIVATE]")
+    }
 }

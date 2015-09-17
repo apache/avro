@@ -10,7 +10,7 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         copyResource("enumSimple.avsc", avroDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -23,7 +23,7 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         copyResource("enumField.avsc", avroDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -37,7 +37,7 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         copyResource("enumUnion.avsc", avroDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
@@ -52,7 +52,7 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         copyResource("enumUseSimple.avsc", avroDir)
 
         when:
-        def result = runBuild()
+        def result = run()
 
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
