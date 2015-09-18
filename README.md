@@ -106,3 +106,52 @@ task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask)
 
 compileJava.source(generateAvro.outputs)
 ```
+
+# Handling dependencies
+
+If you have record/enum/fixed types that are referenced in other record types, just define the shared type in a separate file rather than inline in the definition of each record type that uses it.  The plugin will automatically recognize the dependency and compile the files in the correct order.  For example, instead of `Cat.avsc`:
+
+```json
+{
+    "name": "Cat",
+    "namespace": "example",
+    "type": "record",
+    "fields" : [
+        {
+            "name": "breed",
+            "type": {
+                "name": "Breed",
+                "type": "enum",
+                "symbols" : [
+                    "ABYSSINIAN", "AMERICAN_SHORTHAIR", "BIRMAN", "MAINE_COON", "ORIENTAL", "PERSIAN", "RAGDOLL", "SIAMESE", "SPHYNX"
+                ]
+            }
+        }
+    ]
+}
+```
+
+use `Breed.avsc`:
+
+```json
+{
+    "name": "Breed",
+    "namespace": "example",
+    "type": "enum",
+    "symbols" : ["ABYSSINIAN", "AMERICAN_SHORTHAIR", "BIRMAN", "MAINE_COON", "ORIENTAL", "PERSIAN", "RAGDOLL", "SIAMESE", "SPHYNX"]
+}
+```
+
+
+and `Cat.avsc`:
+
+```json
+{
+    "name": "Cat",
+    "namespace": "example",
+    "type": "record",
+    "fields" : [
+        {"name": "breed", "type": "Breed"}
+    ]
+}
+```
