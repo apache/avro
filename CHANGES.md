@@ -4,6 +4,8 @@
     * Add ability to set source directory for the Avro compiler's Velocity templates.
     * Matching of fieldVisibility settings is now case-insensitive.
     * Removed some excessive debug logging
+    * Built against Gradle 2.7
+    * Added Checkstyle and Codenarc to build
 
 * 0.5.0
     * Add support for schemas/protocols/IDL in subdirectories of `src/main/avro`, etc. (#11)

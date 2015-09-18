@@ -74,7 +74,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
                 getLogger().debug(e.getMessage());
             }
         }
-        return urls.isEmpty() ? ClassLoader.getSystemClassLoader() :
-                new URLClassLoader(urls.toArray(new URL[urls.size()]), ClassLoader.getSystemClassLoader());
+        return urls.isEmpty() ? ClassLoader.getSystemClassLoader()
+                : new URLClassLoader(urls.toArray(new URL[urls.size()]), ClassLoader.getSystemClassLoader());
     }
 }

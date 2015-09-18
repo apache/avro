@@ -1,5 +1,6 @@
 package com.commercehub.gradle.plugin.avro;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
@@ -24,7 +25,7 @@ import static java.lang.System.lineSeparator;
  * {@link SpecificCompiler}.
  */
 public class GenerateAvroJavaTask extends OutputDirTask {
-    private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
+    private static Set<String> SUPPORTED_EXTENSIONS = ImmutableSet.of(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
 
     private String encoding = Constants.DEFAULT_ENCODING;
     private String stringType = Constants.DEFAULT_STRING_TYPE;
@@ -52,14 +53,18 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     @Input
-    public String getFieldVisibility() { return fieldVisibility; }
+    public String getFieldVisibility() {
+        return fieldVisibility;
+    }
 
     public void setFieldVisibility(String fieldVisibility) {
         this.fieldVisibility = fieldVisibility;
     }
 
     @Input
-    public String getTemplateDirectory() { return templateDirectory; }
+    public String getTemplateDirectory() {
+        return templateDirectory;
+    }
 
     public void setTemplateDirectory(String templateDirectory) {
         this.templateDirectory = templateDirectory;
@@ -161,7 +166,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                         throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
                     }
                 } catch (NullPointerException ex) {
-                    getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency); will try again later", path);
+                    getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency);"
+                            + " will try again later", path);
                     nextPass.add(sourceFile);
                     errors.put(path, ex.getMessage());
                 } catch (IOException ex) {

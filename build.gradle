@@ -1,5 +1,7 @@
 plugins {
     id "groovy"
+    id "checkstyle"
+    id "codenarc"
     id "idea"
     id "com.gradle.plugin-publish" version "0.9.1"
 }
@@ -44,6 +46,22 @@ pluginBundle {
 idea {
     project {
         vcs = "Git"
+        ipr {
+            withXml { provider ->
+                def node = provider.asNode()
+                node.append(new XmlParser().parseText("""
+                <component name="ProjectCodeStyleSettingsManager">
+                    <option name="PER_PROJECT_SETTINGS">
+                        <value>
+                            <option name="LINE_SEPARATOR" value="&#10;"/>
+                            <option name="RIGHT_MARGIN" value="140"/>
+                        </value>
+                    </option>
+                    <option name="USE_PER_PROJECT_SETTINGS" value="true"/>
+                </component>
+                """.stripIndent()))
+            }
+        }
     }
 }
 
@@ -63,4 +81,21 @@ task createClasspathManifest {
 // Add the classpath file to the test runtime classpath
 dependencies {
     testRuntime files(createClasspathManifest)
+}
+
+checkstyle {
+    toolVersion = "6.10.1"
+}
+// Nasty workaround for https://issues.gradle.org/browse/GRADLE-2888
+def checkstyleWarningsFile = "build/reports/checkstyle/main.xml"
+checkstyleMain << {
+    File warningsFile = file(checkstyleWarningsFile)
+    if (warningsFile.exists() && warningsFile.text.contains("<error ")) {
+        throw new GradleException("There were checkstyle warnings! For more info check ${warningsFile}")
+    }
+}
+
+codenarc {
+    toolVersion = "0.24.1"
+    config = project.resources.text.fromFile("config/codenarc/codenarc.groovy")
 }

@@ -12,7 +12,7 @@ class AvroPluginSpec extends Specification {
         project.apply(plugin: AvroPlugin)
 
         then: "avro protocol generation tasks are registered with the project with appropriate configuration"
-        project.tasks.withType(GenerateAvroProtocolTask).collect {it.name}.sort() == ["generateAvroProtocol", "generateTestAvroProtocol"]
+        project.tasks.withType(GenerateAvroProtocolTask)*.name.sort() == ["generateAvroProtocol", "generateTestAvroProtocol"]
         mainGenerateAvroProtoTask.description == "Generates main Avro protocol definition files from IDL files."
         testGenerateAvroProtoTask.description == "Generates test Avro protocol definition files from IDL files."
         mainGenerateAvroProtoTask.group == Constants.GROUP_SOURCE_GENERATION
@@ -27,7 +27,7 @@ class AvroPluginSpec extends Specification {
         project.apply(plugin: AvroPlugin)
 
         then: "avro java generation tasks are registered with the project with appropriate configuration"
-        project.tasks.withType(GenerateAvroJavaTask).collect {it.name}.sort() == ["generateAvroJava", "generateTestAvroJava"]
+        project.tasks.withType(GenerateAvroJavaTask)*.name.sort() == ["generateAvroJava", "generateTestAvroJava"]
         mainGenerateAvroJavaTask.description == "Generates main Avro Java source files from schema/protocol definition files."
         testGenerateAvroJavaTask.description == "Generates test Avro Java source files from schema/protocol definition files."
         mainGenerateAvroJavaTask.group == Constants.GROUP_SOURCE_GENERATION

@@ -79,7 +79,8 @@ public class AvroBasePlugin implements Plugin<Project> {
     private static ConventionMapping conventionMapping(Object conventionAware) {
         // TODO: try other alternatives to convention mapping
         // Convention mapping is an internal API.
-        // Other options here: http://forums.gradle.org/gradle/topics/how_can_i_do_convention_mappings_from_java_without_depending_on_an_internal_api
+        // Other options here:
+        // http://forums.gradle.org/gradle/topics/how_can_i_do_convention_mappings_from_java_without_depending_on_an_internal_api
         return ((IConventionAware) conventionAware).getConventionMapping();
     }
 }

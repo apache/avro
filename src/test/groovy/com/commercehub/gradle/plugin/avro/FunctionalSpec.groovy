@@ -28,10 +28,8 @@ abstract class FunctionalSpec extends Specification {
             throw new IllegalStateException("Did not find plugin classpath resource, run `testClasses` build task.")
         }
 
-        def pluginClasspath = pluginClasspathResource.readLines()
-            .collect { it.replace('\\', '\\\\') } // escape backslashes in Windows paths
-            .collect { "'$it'" }
-            .join(", ")
+         // escape backslashes in Windows paths and assemble
+        def pluginClasspath = pluginClasspathResource.readLines()*.replace('\\', '\\\\').collect { "'$it'" }.join(", ")
 
         // Add the logic under test to the test build
         buildFile << """
