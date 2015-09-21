@@ -6,6 +6,7 @@
     * Removed some excessive debug logging
     * Built against Gradle 2.7
     * Added Checkstyle and Codenarc to build
+    * Add ability to suppress the Avro compiler's creation of setters in created domain objects.
 
 * 0.5.0
     * Add support for schemas/protocols/IDL in subdirectories of `src/main/avro`, etc. (#11)

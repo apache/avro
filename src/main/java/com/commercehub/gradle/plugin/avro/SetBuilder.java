@@ -40,6 +40,6 @@ class SetBuilder<T> {
 
     @SafeVarargs
     static <T> Set<T> build(T... c) {
-        return new SetBuilder<T>().addAll(c).build();
+        return Sets.newHashSet(c);
     }
 }

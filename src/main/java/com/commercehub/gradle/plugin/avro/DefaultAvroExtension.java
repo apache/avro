@@ -5,6 +5,7 @@ public class DefaultAvroExtension implements AvroExtension {
     private String stringType;
     private String fieldVisibility;
     private String templateDirectory;
+    private boolean createSetters;
 
     @Override
     public String getEncoding() {
@@ -42,4 +43,16 @@ public class DefaultAvroExtension implements AvroExtension {
         this.templateDirectory = templateDirectory;
     }
 
+    @Override
+    public Boolean isCreateSetters() {
+        return createSetters;
+    }
+
+    public void setCreateSetters(boolean createSetters) {
+        this.createSetters = createSetters;
+    }
+
+    public void setCreateSetters(String createSetters) {
+        this.createSetters = Boolean.parseBoolean(createSetters);
+    }
 }

@@ -19,57 +19,69 @@ public class AvroBasePlugin implements Plugin<Project> {
     private static void configureExtension(final Project project) {
         final AvroExtension avroExtension = project.getExtensions().create(AVRO_EXTENSION_NAME, DefaultAvroExtension.class);
         ConventionMapping extensionMapping = conventionMapping(avroExtension);
-        extensionMapping.map("encoding", new Callable<String>() {
+        extensionMapping.map(OPTION_ENCODING, new Callable<String>() {
             @Override
             public String call() throws Exception {
                 return DEFAULT_ENCODING;
             }
         });
-        extensionMapping.map("stringType", new Callable<String>() {
+        extensionMapping.map(OPTION_STRING_TYPE, new Callable<String>() {
             @Override
             public String call() throws Exception {
                 return DEFAULT_STRING_TYPE;
             }
         });
-        extensionMapping.map("fieldVisibility", new Callable<String>() {
+        extensionMapping.map(OPTION_FIELD_VISIBILITY, new Callable<String>() {
             @Override
             public String call() throws Exception {
                 return DEFAULT_FIELD_VISIBILITY;
             }
         });
-        extensionMapping.map("templateDirectory", new Callable<String>() {
+        extensionMapping.map(OPTION_TEMPLATE_DIR, new Callable<String>() {
             @Override
             public String call() throws Exception {
                 return DEFAULT_TEMPLATE_DIR;
 
             }
         });
+        extensionMapping.map(OPTION_CREATE_SETTERS, new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return DEFAULT_CREATE_SETTERS;
+            }
+        });
         project.getTasks().withType(GenerateAvroJavaTask.class).all(new Action<GenerateAvroJavaTask>() {
             @Override
             public void execute(GenerateAvroJavaTask task) {
                 ConventionMapping taskMapping = conventionMapping(task);
-                taskMapping.map("encoding", new Callable<String>() {
+                taskMapping.map(OPTION_ENCODING, new Callable<String>() {
                     @Override
                     public String call() throws Exception {
                         return avroExtension.getEncoding();
                     }
                 });
-                taskMapping.map("stringType", new Callable<String>() {
+                taskMapping.map(OPTION_STRING_TYPE, new Callable<String>() {
                     @Override
                     public String call() throws Exception {
                         return avroExtension.getStringType();
                     }
                 });
-                taskMapping.map("fieldVisibility", new Callable<String>() {
+                taskMapping.map(OPTION_FIELD_VISIBILITY, new Callable<String>() {
                     @Override
                     public String call() throws Exception {
                         return avroExtension.getFieldVisibility();
                     }
                 });
-                taskMapping.map("templateDirectory", new Callable<String>() {
+                taskMapping.map(OPTION_TEMPLATE_DIR, new Callable<String>() {
                     @Override
                     public String call() throws Exception {
                         return avroExtension.getTemplateDirectory();
+                    }
+                });
+                taskMapping.map(Constants.OPTION_CREATE_SETTERS, new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        return avroExtension.isCreateSetters();
                     }
                 });
             }

@@ -109,6 +109,34 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         FieldVisibility.PUBLIC_DEPRECATED.name()     | "@Deprecated public java.lang.String name;"
     }
 
+    @Unroll
+    def "supports configuring createSetters to #createSetters"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    createSetters = ${createSetters}
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_ENCODING)
+
+        and: "the specified createSetters is used"
+        content.contains(expectedContent) == createSetters
+
+        where:
+        createSetters  | expectedContent
+        Boolean.TRUE   | "public void setName(java.lang.String value)"
+        Boolean.FALSE  | "public void setName(java.lang.String value)"
+        true           | "public void setName(java.lang.String value)"
+        false          | "public void setName(java.lang.String value)"
+    }
+
     def "supports configuring templateDirectory"() {
         given:
         def templatesDir = testProjectDir.newFolder("templates", "alternateTemplates")
