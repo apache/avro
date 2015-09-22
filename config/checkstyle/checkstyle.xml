@@ -4,10 +4,7 @@
 <module name="Checker">
 
     <module name="TreeWalker">
-        <module name="Indentation">
-            <property name="basicOffset" value="4"/>
-            <property name="throwsIndent" value="8"/>
-        </module>
+        <module name="Indentation"/>
 
         <!-- Annotations -->
         <module name="AnnotationUseStyle"/>

@@ -30,6 +30,9 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "the default template is used"
         !content.contains("Custom template")
+
+        and: "createSetters is enabled"
+        content.contains("public void setName(java.lang.String value)")
     }
 
     def "supports configuring encoding"() {
@@ -107,6 +110,34 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         FieldVisibility.PRIVATE.name()               | "private java.lang.String name;"
         FieldVisibility.PUBLIC.name()                | "public java.lang.String name;"
         FieldVisibility.PUBLIC_DEPRECATED.name()     | "@Deprecated public java.lang.String name;"
+    }
+
+    @Unroll
+    def "supports configuring createSetters to #createSetters"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    createSetters = ${createSetters}
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_ENCODING)
+
+        and: "the specified createSetters is used"
+        content.contains("public void setName(java.lang.String value)") == expectedPresent
+
+        where:
+        createSetters   | expectedPresent
+        "Boolean.TRUE"  | true
+        "Boolean.FALSE" | false
+        "true"          | true
+        "false"         | false
     }
 
     def "supports configuring templateDirectory"() {

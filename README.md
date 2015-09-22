@@ -68,6 +68,14 @@ avro {
 }
 ```
 
+Optionally, you can suppress the creation of setter methods in created domain objects.
+
+```groovy
+avro {
+    createSetters = false
+}
+```
+
 Additionally, ensure that you have a compile dependency on avro, such as:
 
 ```groovy

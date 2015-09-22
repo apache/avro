@@ -31,6 +31,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private String stringType = Constants.DEFAULT_STRING_TYPE;
     private String fieldVisibility = Constants.DEFAULT_FIELD_VISIBILITY;
     private String templateDirectory = DEFAULT_TEMPLATE_DIR;
+    private boolean createSetters = DEFAULT_CREATE_SETTERS;
+
     private transient StringType parsedStringType;
     private transient FieldVisibility parsedFieldVisibility;
 
@@ -70,15 +72,29 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.templateDirectory = templateDirectory;
     }
 
+    @Input
+    public Boolean isCreateSetters() {
+        return createSetters;
+    }
+
+    public void setCreateSetters(boolean createSetters) {
+        this.createSetters = createSetters;
+    }
+
+    public void setCreateSetters(String createSetters) {
+        this.createSetters = Boolean.parseBoolean(createSetters);
+    }
+
     @TaskAction
     protected void process() {
-        parsedStringType = Enums.parseCaseInsensitive("stringType", StringType.values(), getStringType());
+        parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
         parsedFieldVisibility =
-                Enums.parseCaseInsensitive("fieldVisibility", FieldVisibility.values(), getFieldVisibility());
+            Enums.parseCaseInsensitive(OPTION_FIELD_VISIBILITY, FieldVisibility.values(), getFieldVisibility());
         getLogger().debug("Using encoding {}", getEncoding());
         getLogger().debug("Using stringType {}", parsedStringType.name());
         getLogger().debug("Using fieldVisibility {}", parsedFieldVisibility.name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
+        getLogger().debug("Using createSetters {}", isCreateSetters());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         preClean();
@@ -89,17 +105,16 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         FileCollection unsupportedFiles = filterSources(new NotSpec<>(new FileExtensionSpec(SUPPORTED_EXTENSIONS)));
         if (!unsupportedFiles.isEmpty()) {
             throw new GradleException(
-                    String.format("Unsupported file extension for the following files: %s", unsupportedFiles));
+                String.format("Unsupported file extension for the following files: %s", unsupportedFiles));
         }
     }
 
     /**
      * We need to remove all previously generated Java classes.  Otherwise, when we call
-     * {@link SpecificCompiler#compileToDestination(java.io.File, java.io.File)}, it will skip generating classes for
-     * any schema files where the generated class is newer than the schema file.  That seems like a useful performance
-     * optimization, but it can cause problems in the case where the schema file for this class hasn't changed, but
-     * the schema definition for one of the types it depends on has, resulting in some usages of a type now having
-     * outdated schema.
+     * {@link SpecificCompiler#compileToDestination(java.io.File, java.io.File)}, it will skip generating classes for any schema files where
+     * the generated class is newer than the schema file.  That seems like a useful performance optimization, but it can cause problems in
+     * the case where the schema file for this class hasn't changed, but the schema definition for one of the types it depends on has,
+     * resulting in some usages of a type now having outdated schema.
      */
     private void preClean() {
         getProject().delete(getOutputDir());
@@ -199,6 +214,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         compiler.setStringType(parsedStringType);
         compiler.setFieldVisibility(parsedFieldVisibility);
         compiler.setTemplateDir(getTemplateDirectory());
+        compiler.setCreateSetters(isCreateSetters());
         compiler.compileToDestination(sourceFile, getOutputDir());
     }
 }

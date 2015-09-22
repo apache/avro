@@ -16,7 +16,8 @@ class Constants {
     static final String DEFAULT_STRING_TYPE = StringType.String.name();
     static final String DEFAULT_FIELD_VISIBILITY = FieldVisibility.PUBLIC_DEPRECATED.name();
     static final String DEFAULT_TEMPLATE_DIR = System.getProperty("org.apache.avro.specific.templates",
-                         "/org/apache/avro/compiler/specific/templates/java/classic/");
+                                                                  "/org/apache/avro/compiler/specific/templates/java/classic/");
+    static final boolean DEFAULT_CREATE_SETTERS = true;
 
     static final String SCHEMA_EXTENSION = "avsc";
     static final String PROTOCOL_EXTENSION = "avpr";
@@ -26,4 +27,10 @@ class Constants {
     static final String GROUP_SOURCE_GENERATION = "Source Generation";
 
     static final String AVRO_EXTENSION_NAME = "avro";
+
+    static final String OPTION_CREATE_SETTERS = "createSetters";
+    static final String OPTION_TEMPLATE_DIRECTORY = "templateDirectory";
+    static final String OPTION_FIELD_VISIBILITY = "fieldVisibility";
+    static final String OPTION_STRING_TYPE = "stringType";
+    static final String OPTION_ENCODING = "encoding";
 }
