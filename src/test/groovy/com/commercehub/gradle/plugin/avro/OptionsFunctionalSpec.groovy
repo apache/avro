@@ -30,6 +30,9 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "the default template is used"
         !content.contains("Custom template")
+
+        and: "createSetters is enabled"
+        content.contains("public void setName(java.lang.String value)")
     }
 
     def "supports configuring encoding"() {
@@ -127,14 +130,14 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_ENCODING)
 
         and: "the specified createSetters is used"
-        content.contains(expectedContent) == createSetters
+        content.contains("public void setName(java.lang.String value)") == expectedPresent
 
         where:
-        createSetters  | expectedContent
-        Boolean.TRUE   | "public void setName(java.lang.String value)"
-        Boolean.FALSE  | "public void setName(java.lang.String value)"
-        true           | "public void setName(java.lang.String value)"
-        false          | "public void setName(java.lang.String value)"
+        createSetters   | expectedPresent
+        "Boolean.TRUE"  | true
+        "Boolean.FALSE" | false
+        "true"          | true
+        "false"         | false
     }
 
     def "supports configuring templateDirectory"() {

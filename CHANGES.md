@@ -1,12 +1,12 @@
 # Change Log
 
 * Unreleased
-    * Add ability to set source directory for the Avro compiler's Velocity templates.
+    * Add new configuration option "templateDirectory" to set source directory for the Avro compiler's Velocity templates.
+    * Add new configuration option "createSetters" to allow suppressing the Avro compiler's creation of setters in created domain objects.
     * Matching of fieldVisibility settings is now case-insensitive.
     * Removed some excessive debug logging
     * Built against Gradle 2.7
     * Added Checkstyle and Codenarc to build
-    * Add ability to suppress the Avro compiler's creation of setters in created domain objects.
 
 * 0.5.0
     * Add support for schemas/protocols/IDL in subdirectories of `src/main/avro`, etc. (#11)

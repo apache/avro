@@ -37,7 +37,7 @@ public class AvroBasePlugin implements Plugin<Project> {
                 return DEFAULT_FIELD_VISIBILITY;
             }
         });
-        extensionMapping.map(OPTION_TEMPLATE_DIR, new Callable<String>() {
+        extensionMapping.map(OPTION_TEMPLATE_DIRECTORY, new Callable<String>() {
             @Override
             public String call() throws Exception {
                 return DEFAULT_TEMPLATE_DIR;
@@ -72,13 +72,13 @@ public class AvroBasePlugin implements Plugin<Project> {
                         return avroExtension.getFieldVisibility();
                     }
                 });
-                taskMapping.map(OPTION_TEMPLATE_DIR, new Callable<String>() {
+                taskMapping.map(OPTION_TEMPLATE_DIRECTORY, new Callable<String>() {
                     @Override
                     public String call() throws Exception {
                         return avroExtension.getTemplateDirectory();
                     }
                 });
-                taskMapping.map(Constants.OPTION_CREATE_SETTERS, new Callable<Boolean>() {
+                taskMapping.map(OPTION_CREATE_SETTERS, new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
                         return avroExtension.isCreateSetters();

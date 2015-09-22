@@ -44,7 +44,7 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
-    public Boolean isCreateSetters() {
+    public boolean isCreateSetters() {
         return createSetters;
     }
 

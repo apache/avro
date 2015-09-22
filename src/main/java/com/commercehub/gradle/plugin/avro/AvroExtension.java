@@ -5,5 +5,5 @@ public interface AvroExtension {
     String getStringType();
     String getFieldVisibility();
     String getTemplateDirectory();
-    Boolean isCreateSetters();
+    boolean isCreateSetters();
 }

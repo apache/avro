@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.Set;
 
 class SetBuilder<T> {
-    private Set<T> set = newHashSet();
+    private Set<T> set = Sets.newHashSet();
 
     SetBuilder<T> add(T e) {
         set.add(e);
@@ -32,14 +32,5 @@ class SetBuilder<T> {
 
     Set<T> build() {
         return set;
-    }
-
-    static <T> Set<T> newHashSet() {
-        return Sets.newHashSet();
-    }
-
-    @SafeVarargs
-    static <T> Set<T> build(T... c) {
-        return Sets.newHashSet(c);
     }
 }

@@ -15,91 +15,78 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_TEMPLATE_DIR;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILITY;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
-import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
-import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
+import static com.commercehub.gradle.plugin.avro.Constants.*;
 import static java.lang.System.lineSeparator;
 
 /**
  * Task to generate Java source files based on Avro protocol files and Avro schema files using {@link Protocol} and
  * {@link SpecificCompiler}.
  */
-public class GenerateAvroJavaTask
-    extends OutputDirTask {
-
+public class GenerateAvroJavaTask extends OutputDirTask {
     private static Set<String> SUPPORTED_EXTENSIONS = ImmutableSet.of(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
 
     private String encoding = Constants.DEFAULT_ENCODING;
     private String stringType = Constants.DEFAULT_STRING_TYPE;
     private String fieldVisibility = Constants.DEFAULT_FIELD_VISIBILITY;
     private String templateDirectory = DEFAULT_TEMPLATE_DIR;
-    private Boolean createSetters = DEFAULT_CREATE_SETTERS;
+    private boolean createSetters = DEFAULT_CREATE_SETTERS;
 
     private transient StringType parsedStringType;
     private transient FieldVisibility parsedFieldVisibility;
 
     @Input
     public String getEncoding() {
-
         return encoding;
     }
 
     public void setEncoding(String encoding) {
-
         this.encoding = encoding;
     }
 
     @Input
     public String getStringType() {
-
         return stringType;
     }
 
     public void setStringType(String stringType) {
-
         this.stringType = stringType;
     }
 
     @Input
     public String getFieldVisibility() {
-
         return fieldVisibility;
     }
 
     public void setFieldVisibility(String fieldVisibility) {
-
         this.fieldVisibility = fieldVisibility;
     }
 
     @Input
     public String getTemplateDirectory() {
-
         return templateDirectory;
+    }
+
+    public void setTemplateDirectory(String templateDirectory) {
+        this.templateDirectory = templateDirectory;
     }
 
     @Input
     public Boolean isCreateSetters() {
-
         return createSetters;
     }
 
-    public void setTemplateDirectory(String templateDirectory) {
+    public void setCreateSetters(boolean createSetters) {
+        this.createSetters = createSetters;
+    }
 
-        this.templateDirectory = templateDirectory;
+    public void setCreateSetters(String createSetters) {
+        this.createSetters = Boolean.parseBoolean(createSetters);
     }
 
     @TaskAction
     protected void process() {
-
         parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
         parsedFieldVisibility =
             Enums.parseCaseInsensitive(OPTION_FIELD_VISIBILITY, FieldVisibility.values(), getFieldVisibility());
@@ -107,7 +94,7 @@ public class GenerateAvroJavaTask
         getLogger().debug("Using stringType {}", parsedStringType.name());
         getLogger().debug("Using fieldVisibility {}", parsedFieldVisibility.name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
-        getLogger().debug("{}creating setters in domain classes.", isCreateSetters() ? "" : "not ");
+        getLogger().debug("Using createSetters {}", isCreateSetters());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         preClean();
@@ -115,30 +102,25 @@ public class GenerateAvroJavaTask
     }
 
     private void failOnUnsupportedFiles() {
-
         FileCollection unsupportedFiles = filterSources(new NotSpec<>(new FileExtensionSpec(SUPPORTED_EXTENSIONS)));
         if (!unsupportedFiles.isEmpty()) {
             throw new GradleException(
-                                         String.format("Unsupported file extension for the following files: %s",
-                                                       unsupportedFiles));
+                String.format("Unsupported file extension for the following files: %s", unsupportedFiles));
         }
     }
 
     /**
-     * We need to remove all previously generated Java classes.  Otherwise, when we call {@link
-     * SpecificCompiler#compileToDestination(java.io.File, java.io.File)}, it will skip generating classes for any
-     * schema files where the generated class is newer than the schema file.  That seems like a useful performance
-     * optimization, but it can cause problems in the case where the schema file for this class hasn't changed, but the
-     * schema definition for one of the types it depends on has, resulting in some usages of a type now having outdated
-     * schema.
+     * We need to remove all previously generated Java classes.  Otherwise, when we call
+     * {@link SpecificCompiler#compileToDestination(java.io.File, java.io.File)}, it will skip generating classes for any schema files where
+     * the generated class is newer than the schema file.  That seems like a useful performance optimization, but it can cause problems in
+     * the case where the schema file for this class hasn't changed, but the schema definition for one of the types it depends on has,
+     * resulting in some usages of a type now having outdated schema.
      */
     private void preClean() {
-
         getProject().delete(getOutputDir());
     }
 
     private void processFiles() {
-
         int processedFileCount = 0;
         processedFileCount += processProtoFiles();
         processedFileCount += processSchemaFiles();
@@ -146,7 +128,6 @@ public class GenerateAvroJavaTask
     }
 
     private int processProtoFiles() {
-
         int processedFileCount = 0;
         for (File sourceFile : filterSources(new FileExtensionSpec(PROTOCOL_EXTENSION))) {
             processProtoFile(sourceFile);
@@ -156,7 +137,6 @@ public class GenerateAvroJavaTask
     }
 
     private void processProtoFile(File sourceFile) {
-
         getLogger().info("Processing {}", sourceFile);
         try {
             compile(Protocol.parse(sourceFile), sourceFile);
@@ -166,7 +146,6 @@ public class GenerateAvroJavaTask
     }
 
     private int processSchemaFiles() {
-
         int processedTotal = 0;
         int processedThisPass = -1;
         Map<String, Schema> types = new HashMap<>();
@@ -199,12 +178,11 @@ public class GenerateAvroJavaTask
                         nextPass.add(sourceFile);
                         errors.put(path, ex.getMessage());
                     } else {
-                        throw new GradleException(String.format("Failed to compile schema definition file %s", path),
-                                                  ex);
+                        throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
                     }
                 } catch (NullPointerException ex) {
                     getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency);"
-                                          + " will try again later", path);
+                            + " will try again later", path);
                     nextPass.add(sourceFile);
                     errors.put(path, ex.getMessage());
                 } catch (IOException ex) {
@@ -224,17 +202,14 @@ public class GenerateAvroJavaTask
     }
 
     private void compile(Protocol protocol, File sourceFile) throws IOException {
-
         compile(new SpecificCompiler(protocol), sourceFile);
     }
 
     private void compile(Schema schema, File sourceFile) throws IOException {
-
         compile(new SpecificCompiler(schema), sourceFile);
     }
 
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
-
         compiler.setOutputCharacterEncoding(getEncoding());
         compiler.setStringType(parsedStringType);
         compiler.setFieldVisibility(parsedFieldVisibility);
