@@ -997,9 +997,11 @@ public abstract class Schema extends JsonProperties {
     }
 
     /** Parse a schema from the provided stream.
-     * If named, the schema is added to the names known to this parser. */
+     * If named, the schema is added to the names known to this parser.
+     * The input stream stays open after the parsing. */
     public Schema parse(InputStream in) throws IOException {
-      return parse(FACTORY.createJsonParser(in));
+      return parse(FACTORY.createJsonParser(in).disable(
+              JsonParser.Feature.AUTO_CLOSE_SOURCE));
     }
 
     /** Read a schema from one or more json strings */
@@ -1030,6 +1032,7 @@ public abstract class Schema extends JsonProperties {
       } catch (JsonParseException e) {
         throw new SchemaParseException(e);
       } finally {
+        parser.close();
         validateNames.set(saved);
         VALIDATE_DEFAULTS.set(savedValidateDefaults);
       }

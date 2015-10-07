@@ -153,6 +153,21 @@ class Util {
     }
   }
   
+  /**
+   * Parses a schema from the specified file.
+   * @param filename The file name to parse
+   * @return The parsed schema
+   * @throws IOException
+   */
+  static Schema parseSchemaFromFS(String filename) throws IOException {
+    InputStream stream = openFromFS(filename);
+    try {
+      return new Schema.Parser().parse(stream);
+    } finally {
+      close(stream);
+    }
+  }
+
   /**If pathname is a file, this method returns a list with a single absolute Path to that file,
    * if pathname is a directory, this method returns a list of Pathes to all the files within
    * this directory.
