@@ -102,8 +102,10 @@ Avro 1.8.0 (10 August 2014)
     AVRO-1692. Allow more than one logical type for a Java class. (blue via
     tomwhite)
 
-	AVRO-1697. Ruby: Add support for the Snappy codec to the Ruby library.
-	(Daniel Schierbeck via tomwhite)
+    AVRO-1697. Ruby: Add support for the Snappy codec to the Ruby library.
+    (Daniel Schierbeck via tomwhite)
+
+    AVRO-1739. Update Avro URLs and mailing lists. (Gabor Liptak via blue)
 
   BUG FIXES
 

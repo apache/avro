@@ -32,7 +32,7 @@
     directory (ends in '/'), in which case /index.html will be added
   -->
 
-  <tab label="Project" href="http://hadoop.apache.org/avro/" />
+  <tab label="Project" href="http://avro.apache.org/" />
   <tab label="Wiki" href="http://wiki.apache.org/hadoop/Avro/" />
   <tab label="Avro &AvroVersion; Documentation" dir="" />  
   

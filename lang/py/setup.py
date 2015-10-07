@@ -38,11 +38,11 @@ setup(
 
   # metadata for upload to PyPI
   author = 'Apache Avro',
-  author_email = 'avro-dev@hadoop.apache.org',
+  author_email = 'dev@avro.apache.org',
   description = 'Avro is a serialization and RPC framework.',
   license = 'Apache License 2.0',
   keywords = 'avro serialization rpc',
-  url = 'http://hadoop.apache.org/avro',
+  url = 'http://avro.apache.org/',
   extras_require = {
     'snappy': ['python-snappy'],
   },

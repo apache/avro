@@ -22,7 +22,7 @@ Echoe.new('avro', VERSION) do |p|
   p.email = "avro-dev@hadoop.apache.org"
   p.summary = "Apache Avro for Ruby"
   p.description = "Avro is a data serialization and RPC format"
-  p.url = "http://hadoop.apache.org/avro/"
+  p.url = "http://avro.apache.org/"
   p.runtime_dependencies = %w[multi_json]
 end
 
