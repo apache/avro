@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.6.1
 * Add Checkstyle ImportControl to prevent accidentally adding dependencies on libraries that Gradle makes available for build but not runtime.
 * Remove usage of Guava.
 
