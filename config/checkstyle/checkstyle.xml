@@ -54,6 +54,9 @@
             <property name="ordered" value="true"/>
             <property name="separated" value="false"/>
         </module>
+        <module name="ImportControl">
+            <property name="file" value="import-control.xml"/>
+        </module>
 
         <!-- Modifiers -->
         <module name="ModifierOrder"/>

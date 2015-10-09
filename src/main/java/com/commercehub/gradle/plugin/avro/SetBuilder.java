@@ -1,13 +1,12 @@
 package com.commercehub.gradle.plugin.avro;
 
-import com.google.common.collect.Sets;
-
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 class SetBuilder<T> {
-    private Set<T> set = Sets.newHashSet();
+    private Set<T> set = new HashSet<>();
 
     SetBuilder<T> add(T e) {
         set.add(e);
@@ -32,5 +31,10 @@ class SetBuilder<T> {
 
     Set<T> build() {
         return set;
+    }
+
+    @SafeVarargs
+    static <T> Set<T> build(T... c) {
+        return new SetBuilder<T>().addAll(c).build();
     }
 }

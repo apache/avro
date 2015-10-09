@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+* Add Checkstyle ImportControl to prevent accidentally adding dependencies on libraries that Gradle makes available for build but not runtime.
+* Remove usage of Guava.
 
 ## 0.6.0
 * Add new configuration option "templateDirectory" to set source directory for the Avro compiler's Velocity templates.
@@ -9,6 +11,7 @@
 * Removed some excessive debug logging
 * Built against Gradle 2.7
 * Added Checkstyle and Codenarc to build
+* Known Bug: doesn't work properly unless you manually add a dependency on guava; please upgrade to 0.6.1
 
 ## 0.5.0
 * Add support for schemas/protocols/IDL in subdirectories of `src/main/avro`, etc. (#11)
