@@ -76,7 +76,7 @@ avro {
 }
 ```
 
-Additionally, ensure that you have a compile dependency on avro, such as:
+Additionally, ensure that you have a compile dependency on Avro, such as:
 
 ```groovy
 repositories {
