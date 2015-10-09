@@ -1,10 +1,11 @@
 # Change Log
 
 ## Unreleased
+* Remove usage of Apache Commons IO (#19)
 
 ## 0.6.1
 * Add Checkstyle ImportControl to prevent accidentally adding dependencies on libraries that Gradle makes available for build but not runtime.
-* Remove usage of Guava.
+* Remove usage of Guava (#18)
 
 ## 0.6.0
 * Add new configuration option "templateDirectory" to set source directory for the Avro compiler's Velocity templates.

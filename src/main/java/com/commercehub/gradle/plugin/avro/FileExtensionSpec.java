@@ -1,6 +1,5 @@
 package com.commercehub.gradle.plugin.avro;
 
-import org.apache.commons.io.FilenameUtils;
 import org.gradle.api.specs.Spec;
 
 import java.io.File;

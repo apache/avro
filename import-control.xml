@@ -15,8 +15,6 @@
     <allow pkg="org.apache.avro.compiler.specific"/>
     <allow pkg="org.apache.avro.generic"/>
 
-    <allow pkg="org.apache.commons.io"/>
-
     <allow pkg="org.gradle.api"/>
     <allow pkg="org.gradle.plugins.ide.idea"/>
     <!-- Ideally using internal packages wouldn't be needed -->
