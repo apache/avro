@@ -35,10 +35,6 @@ class FileState implements Comparable<FileState> {
         duplicateTypeNames.add(typeName);
     }
 
-    boolean isFailed() {
-        return errorMessage != null;
-    }
-
     public String getPath() {
         return path;
     }
