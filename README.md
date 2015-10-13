@@ -34,48 +34,6 @@ buildscript {
 apply plugin: "com.commercehub.gradle.plugin.avro"
 ```
 
-Optionally, configure the string type to `charSequence`, `string` (the default), or `utf8`.
-
-```groovy
-avro {
-    stringType = "string"
-}
-```
-
-Optionally, you can also configure the output character encoding (default `UTF-8`).
-
-```groovy
-avro {
-    encoding = "UTF-8"
-}
-```
-
-Optionally, you can also configure the visibility of generated fields to `PRIVATE`, `PUBLIC_DEPRECATED` (the default)
-or `PUBLIC`.
-
-```groovy
-avro {
-    fieldVisibility = "PRIVATE"
-}
-```
-
-Optionally, you can also configure the source directory for the Velocity templates that the Avro compiler uses to
-generate Java files.
-
-```groovy
-avro {
-    templateDirectory = "/path/to/velocity/templates"
-}
-```
-
-Optionally, you can suppress the creation of setter methods in created domain objects.
-
-```groovy
-avro {
-    createSetters = false
-}
-```
-
 Additionally, ensure that you have a compile dependency on Avro, such as:
 
 ```groovy
@@ -87,15 +45,99 @@ dependencies {
 }
 ```
 
-If you now run `gradle build`, Java classes will be compiled from Avro files in `src/main/avro`.  Actually, it will attempt to process an "avro" directory in every `SourceSet` (main, test, etc.)
+If you now run `gradle build`, Java classes will be compiled from Avro files in `src/main/avro`.
+Actually, it will attempt to process an "avro" directory in every `SourceSet` (main, test, etc.)
+
+# Configuration
+
+There are a number of configuration options supported in the `avro` block.
+
+| option            | default               | description                                       |
+| ----------------- | --------------------- | ------------------------------------------------- |
+| createSetters     | `true`                | `createSetters` passed to Avro compiler           |
+| encoding          | `"UTF-8"`             | `outputCharacterEncoding` passed to Avro compiler |
+| fieldVisibility   | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler         |
+| stringType        | `"String"`            | `stringType` passed to Avro compiler              |
+| templateDirectory | see below             | `templateDir` passed to Avro compiler             |
+
+## createSetters
+
+Valid values: `true` (default), `false`
+
+Set to `false` to not create setter methods in the generated classes.
+
+Example:
+
+```groovy
+avro {
+    createSetters = false
+}
+```
+
+## encoding
+
+Valid values: any charset name supported by [Charset](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html), default `"UTF-8"`
+
+By default, the plugin will output generated Java files in UTF-8.
+If desired, you can specify an alternate encoding.
+
+Example:
+
+```groovy
+avro {
+    encoding = "UTF-8"
+}
+```
+
+## fieldVisibility
+
+Valid values (matched case-insensitively): `"PUBLIC"`, `"PUBLIC_DEPRECATED"` (default), `"PRIVATE"`
+
+By default, the fields in generated Java files will have public visibility and be annotated with `@Deprecated`.
+Set to `"PRIVATE"` to restrict visibility of the fields, or `"PUBLIC"` to remove the `@Deprecated` annotations.
+
+Example:
+
+```groovy
+avro {
+    fieldVisibility = "PRIVATE"
+}
+```
+
+## stringType
+
+Valid values (matched case-insensitively): `"CharSequence"`, `"String"` (default), `"Utf8"`
+
+By default, the generated Java files will use [`java.lang.String`](http://docs.oracle.com/javase/7/docs/api/java/lang/String.html) to represent string types.
+Alternatively, you can set it to `"Utf8"` to use [`org.apache.avro.util.Utf8`](https://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/util/Utf8.html) or `"charSequence"` to use [`java.lang.CharSequence`](http://docs.oracle.com/javase/7/docs/api/java/lang/CharSequence.html).
+
+```groovy
+avro {
+    stringType = "CharSequence"
+}
+```
+
+## templateDirectory
+
+By default, files will be generated using Avro's default templates.
+If desired, you can override the template set used by either setting this property or the `"org.apache.avro.specific.templates"` System property.
+
+```groovy
+avro {
+    templateDirectory = "/path/to/velocity/templates"
+}
+```
 
 # IntelliJ Integration
 
-The plugin attempts to make IntelliJ play more smoothly with generated sources when using Gradle-generated project files.  However, there are still some rough edges.  It will work best if you first run `gradle build`, and _after_ that run `gradle idea`.  If you do it in the other order, IntelliJ may not properly exclude some directories within your `build` directory.
+The plugin attempts to make IntelliJ play more smoothly with generated sources when using Gradle-generated project files.
+However, there are still some rough edges.  It will work best if you first run `gradle build`, and _after_ that run `gradle idea`.
+If you do it in the other order, IntelliJ may not properly exclude some directories within your `build` directory.
 
 # Alternate Usage
 
-If the defaults used by the plugin don't work for you, you can still use the tasks by themselves.  In this case, use the "com.commercehub.gradle.plugin.avro" plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
+If the defaults used by the plugin don't work for you, you can still use the tasks by themselves.
+In this case, use the "com.commercehub.gradle.plugin.avro" plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
 
 Here's a short example of what this might look like:
 
@@ -115,9 +157,12 @@ task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask)
 compileJava.source(generateAvro.outputs)
 ```
 
-# Handling dependencies
+# File Processing
 
-If you have record/enum/fixed types that are referenced in other record types, just define the shared type in a separate file rather than inline in the definition of each record type that uses it.  The plugin will automatically recognize the dependency and compile the files in the correct order.  For example, instead of `Cat.avsc`:
+When using this plugin, it is recommended to define each record/enum/fixed type in its own file rather than using inline type definitions.
+This approach allows defining any type of schema structure, and eliminates the potential for conflicting definitions of a type between multiple files.
+The plugin will automatically recognize the dependency and compile the files in the correct order.
+For example, instead of `Cat.avsc`:
 
 ```json
 {
@@ -163,3 +208,7 @@ and `Cat.avsc`:
     ]
 }
 ```
+
+There may be cases where the schema files contain inline type definitions and it is undesirable to modify them.
+In this case, the plugin will automatically recognize any duplicate type definitions and check if they match.
+If any conflicts are identified, it will cause a build failure.
