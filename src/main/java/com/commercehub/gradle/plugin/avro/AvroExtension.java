@@ -6,5 +6,4 @@ public interface AvroExtension {
     String getFieldVisibility();
     String getTemplateDirectory();
     boolean isCreateSetters();
-    boolean isRetryDuplicateTypes();
 }

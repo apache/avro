@@ -12,39 +12,6 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
  * are used in more than one file.</p>
  */
 class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
-    def "Duplicate enum definition fails if handling disabled"() {
-        given:
-        disableRetryDuplicateTypes()
-        copyIdenticalEnum()
-
-        when:
-        def result = runAndFail()
-
-        then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.standardError.contains("Failed to compile schema definition file src/main/avro/duplicate/Person.avsc"
-            + " due to duplicate definition of type example.Gender")
-        result.standardError.contains("This can be resolved by either declaring example.Gender in its own schema file,"
-            + " or enabling the retryDuplicateTypes option")
-    }
-
-    def "Duplicate record definition fails if handling disabled"() {
-        given:
-        disableRetryDuplicateTypes()
-        copyIdenticalRecord()
-
-        when:
-        def result = runAndFail()
-
-        then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.standardError.contains("Failed to compile schema definition file src/main/avro/duplicate/Person.avsc"
-            + " due to duplicate definition of type example.Person")
-        result.standardError.contains("This can be resolved by either declaring example.Person in its own schema file,"
-            + " or enabling the retryDuplicateTypes option")
-    }
-
-
     def "Duplicate enum definition succeeds if definition identical"() {
         given:
         copyIdenticalEnum()
@@ -99,14 +66,6 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         result.task(":generateAvroJava").outcome == FAILED
         result.standardError.contains("Found conflicting definition of type example.Person in "
             + "[src/main/avro/duplicate/Person.avsc, src/main/avro/duplicate/Spider.avsc]")
-    }
-
-    private void disableRetryDuplicateTypes() {
-        buildFile << """
-            avro {
-                retryDuplicateTypes = false
-            }
-        """
     }
 
     private void copyIdenticalEnum() {

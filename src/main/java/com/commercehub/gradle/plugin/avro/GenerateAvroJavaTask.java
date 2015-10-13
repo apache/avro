@@ -37,7 +37,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private String fieldVisibility = DEFAULT_FIELD_VISIBILITY;
     private String templateDirectory = DEFAULT_TEMPLATE_DIR;
     private boolean createSetters = DEFAULT_CREATE_SETTERS;
-    private boolean retryDuplicateTypes = DEFAULT_RETRY_DUPLICATE_TYPES;
 
     private transient StringType parsedStringType;
     private transient FieldVisibility parsedFieldVisibility;
@@ -91,19 +90,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.createSetters = Boolean.parseBoolean(createSetters);
     }
 
-    @Input
-    public boolean isRetryDuplicateTypes() {
-        return retryDuplicateTypes;
-    }
-
-    public void setRetryDuplicateTypes(boolean retryDuplicateTypes) {
-        this.retryDuplicateTypes = retryDuplicateTypes;
-    }
-
-    public void setRetryDuplicateTypes(String retryDuplicateTypes) {
-        this.retryDuplicateTypes = Boolean.parseBoolean(retryDuplicateTypes);
-    }
-
     @TaskAction
     protected void process() {
         parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
@@ -114,7 +100,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using fieldVisibility {}", parsedFieldVisibility.name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
         getLogger().debug("Using createSetters {}", isCreateSetters());
-        getLogger().debug("Using retryDuplicateTypes {}", isRetryDuplicateTypes());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         preClean();
@@ -169,54 +154,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         Set<File> files = filterSources(new FileExtensionSpec(SCHEMA_EXTENSION)).getFiles();
         ProcessingState processingState = new ProcessingState(files, getProject());
         while (processingState.isWorkRemaining()) {
-            FileState fileState = processingState.nextFileState();
-            String path = fileState.getPath();
-            getLogger().debug("Processing {}, excluding types {}", path, fileState.getDuplicateTypeNames());
-            File sourceFile = fileState.getFile();
-            Map<String, Schema> parserTypes = processingState.determineParserTypes(fileState);
-            try {
-                Schema.Parser parser = new Schema.Parser();
-                parser.addTypes(parserTypes);
-                compile(parser.parse(sourceFile), sourceFile);
-                Map<String, Schema> typesDefinedInFile = asymmetricDifference(parser.getTypes(), parserTypes);
-                processingState.processTypeDefinitions(fileState, typesDefinedInFile);
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("Processed {}; contained types {}", path, typesDefinedInFile.keySet());
-                } else {
-                    getLogger().info("Processed {}", path);
-                }
-            } catch (SchemaParseException ex) {
-                String errorMessage = ex.getMessage();
-                Matcher unknownTypeMatcher = ERROR_UNKNOWN_TYPE.matcher(errorMessage);
-                Matcher duplicateTypeMatcher = ERROR_DUPLICATE_TYPE.matcher(errorMessage);
-                if (unknownTypeMatcher.matches()) {
-                    fileState.setError(ex);
-                    processingState.queueForDelayedProcessing(fileState);
-                    getLogger().debug("Found undefined name in {} ({}); will try again", path, errorMessage);
-                } else if (duplicateTypeMatcher.matches()) {
-                    String typeName = duplicateTypeMatcher.group(1);
-                    if (isRetryDuplicateTypes()) {
-                        fileState.setError(ex);
-                        fileState.addDuplicateTypeName(typeName);
-                        processingState.queueForProcessing(fileState);
-                        getLogger().debug("Identified duplicate type {} in {}; will re-process excluding it", typeName, path);
-                    } else {
-                        throw new GradleException(String.format(
-                            "Failed to compile schema definition file %s due to duplicate definition of type %s;"
-                                + " This can be resolved by either declaring %s in its own schema file, or enabling the %s option",
-                            path, typeName, typeName, OPTION_RETRY_DUPLICATE_TYPES), ex);
-                    }
-                } else {
-                    throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
-                }
-            } catch (NullPointerException ex) {
-                fileState.setError(ex);
-                processingState.queueForDelayedProcessing(fileState);
-                getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency);"
-                    + " will try again", path);
-            } catch (IOException ex) {
-                throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
-            }
+            processSchemaFile(processingState, processingState.nextFileState());
         }
         Set<FileState> failedFiles = processingState.getFailedFiles();
         if (!failedFiles.isEmpty()) {
@@ -229,6 +167,48 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             throw new GradleException(errorMessage.toString());
         }
         return processingState.getProcessedTotal();
+    }
+
+    private void processSchemaFile(ProcessingState processingState, FileState fileState) {
+        String path = fileState.getPath();
+        getLogger().debug("Processing {}, excluding types {}", path, fileState.getDuplicateTypeNames());
+        File sourceFile = fileState.getFile();
+        Map<String, Schema> parserTypes = processingState.determineParserTypes(fileState);
+        try {
+            Schema.Parser parser = new Schema.Parser();
+            parser.addTypes(parserTypes);
+            compile(parser.parse(sourceFile), sourceFile);
+            Map<String, Schema> typesDefinedInFile = asymmetricDifference(parser.getTypes(), parserTypes);
+            processingState.processTypeDefinitions(fileState, typesDefinedInFile);
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("Processed {}; contained types {}", path, typesDefinedInFile.keySet());
+            } else {
+                getLogger().info("Processed {}", path);
+            }
+        } catch (SchemaParseException ex) {
+            String errorMessage = ex.getMessage();
+            Matcher unknownTypeMatcher = ERROR_UNKNOWN_TYPE.matcher(errorMessage);
+            Matcher duplicateTypeMatcher = ERROR_DUPLICATE_TYPE.matcher(errorMessage);
+            if (unknownTypeMatcher.matches()) {
+                fileState.setError(ex);
+                processingState.queueForDelayedProcessing(fileState);
+                getLogger().debug("Found undefined name in {} ({}); will try again", path, errorMessage);
+            } else if (duplicateTypeMatcher.matches()) {
+                String typeName = duplicateTypeMatcher.group(1);
+                fileState.setError(ex);
+                fileState.addDuplicateTypeName(typeName);
+                processingState.queueForProcessing(fileState);
+                getLogger().debug("Identified duplicate type {} in {}; will re-process excluding it", typeName, path);
+            } else {
+                throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
+            }
+        } catch (NullPointerException ex) {
+            fileState.setError(ex);
+            processingState.queueForDelayedProcessing(fileState);
+            getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency); will try again", path);
+        } catch (IOException ex) {
+            throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
+        }
     }
 
     private void compile(Protocol protocol, File sourceFile) throws IOException {
