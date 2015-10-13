@@ -113,10 +113,6 @@ class SchemaNormalization:
         @return: canonical avro schema string
         """
         
-
-        #print jsonobj
-        #print type(jsonobj)
-             
         o=""
         firstTime = True;
         st=""
