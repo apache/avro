@@ -56,7 +56,7 @@ There are a number of configuration options supported in the `avro` block.
 | ----------------------- | --------------------- | ------------------------------------------------- |
 | createSetters           | `true`                | `createSetters` passed to Avro compiler           |
 | fieldVisibility         | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler         |
-| outputCharacterEncoding | `"UTF-8"`             | `outputCharacterEncoding` passed to Avro compiler |
+| outputCharacterEncoding | see below             | `outputCharacterEncoding` passed to Avro compiler |
 | stringType              | `"String"`            | `stringType` passed to Avro compiler              |
 | templateDirectory       | see below             | `templateDir` passed to Avro compiler             |
 
@@ -91,14 +91,20 @@ avro {
 
 ## outputCharacterEncoding
 
-Valid values: any [Charset](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html) or equivalent `String` name, default `"UTF-8"`
+Valid values: any [Charset](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html) or equivalent `String` name
 
-By default, the plugin will output generated Java files in UTF-8.
-If desired, you can specify an alternate encoding.
+Controls the character encoding of generated Java files.
+If the associated `JavaCompile` task has a configured encoding, it will be used automatically.
+Otherwise, it will use the value configured in the `avro` block, defaulting to `"UTF-8"`.
 
-Example:
+Examples:
 
 ```groovy
+// Option 1: configure compilation task (avro plugin will automatically match)
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+// Option 2: just configure avro plugin
 avro {
     outputCharacterEncoding = "UTF-8"
 }

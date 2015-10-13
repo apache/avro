@@ -53,13 +53,33 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         result.task(":generateAvroJava").outcome == SUCCESS
 
         and: "the specified encoding is used"
-        projectPath("build/generated-main-avro-java/example/avro/User.java").getText(expectedEncoding)
+        projectPath("build/generated-main-avro-java/example/avro/User.java").getText(expectedEncoding).contains("public class User")
 
         where:
         outputCharacterEncoding           | expectedEncoding
         "'UTF-16'"                        | "UTF-16"
         "'utf-32'"                        | "UTF-32"
         "${StandardCharsets.name}.UTF_16" | "UTF-16"
+    }
+
+    def "uses encoding from java compilation task by default"() {
+        given:
+        def encoding = "UTF-16"
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |compileJava {
+        |    options.encoding = '${encoding}'
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        result.task(":generateAvroJava").outcome == SUCCESS
+
+        and: "the specified encoding is used"
+        projectPath("build/generated-main-avro-java/example/avro/User.java").getText(encoding).contains("public class User")
     }
 
     @Unroll

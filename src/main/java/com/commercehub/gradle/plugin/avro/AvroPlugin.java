@@ -4,11 +4,13 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.internal.ConventionMapping;
+import org.gradle.api.internal.IConventionAware;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.SourceTask;
+import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.plugins.ide.idea.GenerateIdeaModule;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModule;
@@ -59,15 +61,15 @@ public class AvroPlugin implements Plugin<Project> {
                 });
                 IdeaModule module = ideaPlugin.getModel().getModule();
                 module.setSourceDirs(new SetBuilder<File>()
-                        .addAll(module.getSourceDirs())
-                        .add(getAvroSourceDir(project, mainSourceSet))
-                        .add(mainGeneratedOutputDir)
-                        .build());
+                    .addAll(module.getSourceDirs())
+                    .add(getAvroSourceDir(project, mainSourceSet))
+                    .add(mainGeneratedOutputDir)
+                    .build());
                 module.setTestSourceDirs(new SetBuilder<File>()
-                        .addAll(module.getTestSourceDirs())
-                        .add(getAvroSourceDir(project, testSourceSet))
-                        .add(testGeneratedOutputDir)
-                        .build());
+                    .addAll(module.getTestSourceDirs())
+                    .add(getAvroSourceDir(project, testSourceSet))
+                    .add(testGeneratedOutputDir)
+                    .build());
                 // IntelliJ doesn't allow source directories beneath an excluded directory.
                 // Thus, we remove the build directory exclude and add all non-generated sub-directories as excludes.
                 SetBuilder<File> excludeDirs = new SetBuilder<>();
@@ -85,7 +87,7 @@ public class AvroPlugin implements Plugin<Project> {
         String taskName = sourceSet.getTaskName("generate", "avroProtocol");
         GenerateAvroProtocolTask task = project.getTasks().create(taskName, GenerateAvroProtocolTask.class);
         task.setDescription(
-                String.format("Generates %s Avro protocol definition files from IDL files.", sourceSet.getName()));
+            String.format("Generates %s Avro protocol definition files from IDL files.", sourceSet.getName()));
         task.setGroup(GROUP_SOURCE_GENERATION);
         task.source(getAvroSourceDir(project, sourceSet));
         task.include("**/*." + IDL_EXTENSION);
@@ -103,7 +105,7 @@ public class AvroPlugin implements Plugin<Project> {
         String taskName = sourceSet.getTaskName("generate", "avroJava");
         GenerateAvroJavaTask task = project.getTasks().create(taskName, GenerateAvroJavaTask.class);
         task.setDescription(String.format("Generates %s Avro Java source files from schema/protocol definition files.",
-                sourceSet.getName()));
+            sourceSet.getName()));
         task.setGroup(GROUP_SOURCE_GENERATION);
         task.source(getAvroSourceDir(project, sourceSet));
         task.source(protoTask.getOutputDir());
@@ -115,9 +117,21 @@ public class AvroPlugin implements Plugin<Project> {
                 return getGeneratedOutputDir(project, sourceSet, JAVA_EXTENSION);
             }
         });
-        SourceTask compileJavaTask = getCompileJavaTask(project, sourceSet);
+
+        final JavaCompile compileJavaTask = getCompileJavaTask(project, sourceSet);
         compileJavaTask.source(task.getOutputDir());
         compileJavaTask.source(task.getOutputs());
+
+        final AvroExtension avroExtension = project.getExtensions().findByType(AvroExtension.class);
+        ConventionMapping taskMapping = conventionMapping(task);
+        taskMapping.map(OPTION_OUTPUT_CHARACTER_ENCODING, new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                String compilationEncoding = compileJavaTask.getOptions().getEncoding();
+                String extensionEncoding = avroExtension.getOutputCharacterEncoding();
+                return compilationEncoding != null ? compilationEncoding : extensionEncoding;
+            }
+        });
         return task;
     }
 
@@ -129,8 +143,8 @@ public class AvroPlugin implements Plugin<Project> {
         return new File(project.getBuildDir(), String.format("generated-%s-avro-%s", sourceSet.getName(), extension));
     }
 
-    private static SourceTask getCompileJavaTask(Project project, SourceSet sourceSet) {
-        return (SourceTask) project.getTasks().getByName(sourceSet.getCompileJavaTaskName());
+    private static JavaCompile getCompileJavaTask(Project project, SourceSet sourceSet) {
+        return (JavaCompile) project.getTasks().getByName(sourceSet.getCompileJavaTaskName());
     }
 
     private static SourceSetContainer getSourceSets(Project project) {
@@ -143,6 +157,14 @@ public class AvroPlugin implements Plugin<Project> {
 
     private static SourceSet getTestSourceSet(Project project) {
         return getSourceSets(project).getByName(SourceSet.TEST_SOURCE_SET_NAME);
+    }
+
+    private static ConventionMapping conventionMapping(Object conventionAware) {
+        // TODO: try other alternatives to convention mapping
+        // Convention mapping is an internal API.
+        // Other options here:
+        // http://forums.gradle.org/gradle/topics/how_can_i_do_convention_mappings_from_java_without_depending_on_an_internal_api
+        return ((IConventionAware) conventionAware).getConventionMapping();
     }
 
     private static class NonGeneratedDirectoryFileFilter implements FileFilter {
