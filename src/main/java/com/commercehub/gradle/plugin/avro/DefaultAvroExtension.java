@@ -6,6 +6,7 @@ public class DefaultAvroExtension implements AvroExtension {
     private String fieldVisibility;
     private String templateDirectory;
     private boolean createSetters;
+    private boolean retryDuplicateTypes;
 
     @Override
     public String getEncoding() {
@@ -54,5 +55,18 @@ public class DefaultAvroExtension implements AvroExtension {
 
     public void setCreateSetters(String createSetters) {
         this.createSetters = Boolean.parseBoolean(createSetters);
+    }
+
+    @Override
+    public boolean isRetryDuplicateTypes() {
+        return retryDuplicateTypes;
+    }
+
+    public void setRetryDuplicateTypes(boolean retryDuplicateTypes) {
+        this.retryDuplicateTypes = retryDuplicateTypes;
+    }
+
+    public void setRetryDuplicateTypes(String retryDuplicateTypes) {
+        this.retryDuplicateTypes = Boolean.parseBoolean(retryDuplicateTypes);
     }
 }

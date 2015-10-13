@@ -140,6 +140,28 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "false"         | false
     }
 
+    @Unroll
+    def "supports configuring retryDuplicateTypes to #retryDuplicateTypes"() {
+        given:
+        copyResource("duplicate/Person.avsc", avroDir)
+        copyResource("duplicate/Cat.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    retryDuplicateTypes = ${retryDuplicateTypes}
+        |}
+        |""".stripMargin()
+
+        expect:
+        expectedSuccess ? run("generateAvroJava") : runAndFail("generateAvroJava")
+
+        where:
+        retryDuplicateTypes | expectedSuccess
+        "Boolean.TRUE"      | true
+        "Boolean.FALSE"     | false
+        "true"              | true
+        "false"             | false
+    }
+
     def "supports configuring templateDirectory"() {
         given:
         def templatesDir = testProjectDir.newFolder("templates", "alternateTemplates")

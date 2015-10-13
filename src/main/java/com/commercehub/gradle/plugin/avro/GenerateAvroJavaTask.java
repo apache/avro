@@ -14,9 +14,13 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.commercehub.gradle.plugin.avro.Constants.*;
+import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
 import static java.lang.System.lineSeparator;
 
 /**
@@ -24,13 +28,16 @@ import static java.lang.System.lineSeparator;
  * {@link SpecificCompiler}.
  */
 public class GenerateAvroJavaTask extends OutputDirTask {
+    private static Pattern ERROR_UNKNOWN_TYPE = Pattern.compile("(?i).*(undefined name|not a defined name).*");
+    private static Pattern ERROR_DUPLICATE_TYPE = Pattern.compile("Can't redefine: (.*)");
     private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
 
-    private String encoding = Constants.DEFAULT_ENCODING;
-    private String stringType = Constants.DEFAULT_STRING_TYPE;
-    private String fieldVisibility = Constants.DEFAULT_FIELD_VISIBILITY;
+    private String encoding = DEFAULT_ENCODING;
+    private String stringType = DEFAULT_STRING_TYPE;
+    private String fieldVisibility = DEFAULT_FIELD_VISIBILITY;
     private String templateDirectory = DEFAULT_TEMPLATE_DIR;
     private boolean createSetters = DEFAULT_CREATE_SETTERS;
+    private boolean retryDuplicateTypes = DEFAULT_RETRY_DUPLICATE_TYPES;
 
     private transient StringType parsedStringType;
     private transient FieldVisibility parsedFieldVisibility;
@@ -72,7 +79,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     @Input
-    public Boolean isCreateSetters() {
+    public boolean isCreateSetters() {
         return createSetters;
     }
 
@@ -82,6 +89,19 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     public void setCreateSetters(String createSetters) {
         this.createSetters = Boolean.parseBoolean(createSetters);
+    }
+
+    @Input
+    public boolean isRetryDuplicateTypes() {
+        return retryDuplicateTypes;
+    }
+
+    public void setRetryDuplicateTypes(boolean retryDuplicateTypes) {
+        this.retryDuplicateTypes = retryDuplicateTypes;
+    }
+
+    public void setRetryDuplicateTypes(String retryDuplicateTypes) {
+        this.retryDuplicateTypes = Boolean.parseBoolean(retryDuplicateTypes);
     }
 
     @TaskAction
@@ -94,6 +114,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using fieldVisibility {}", parsedFieldVisibility.name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
         getLogger().debug("Using createSetters {}", isCreateSetters());
+        getLogger().debug("Using retryDuplicateTypes {}", isRetryDuplicateTypes());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         preClean();
@@ -145,59 +166,69 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private int processSchemaFiles() {
-        int processedTotal = 0;
-        int processedThisPass = -1;
-        Map<String, Schema> types = new HashMap<>();
-        Map<String, String> errors = new HashMap<>(); // file path to error message
-        Queue<File> nextPass = new LinkedList<>(filterSources(new FileExtensionSpec(SCHEMA_EXTENSION)).getFiles());
-        Queue<File> thisPass = new LinkedList<>();
-        while (processedThisPass != 0) {
-            if (processedThisPass > 0) {
-                processedTotal += processedThisPass;
-            }
-            processedThisPass = 0;
-            thisPass.addAll(nextPass);
-            nextPass.clear();
-            File sourceFile = thisPass.poll();
-            while (sourceFile != null) {
-                String path = getProject().relativePath(sourceFile);
-                getLogger().debug("Processing {}", path);
-                try {
-                    Schema.Parser parser = new Schema.Parser();
-                    parser.addTypes(types);
-                    compile(parser.parse(sourceFile), sourceFile);
-                    types = parser.getTypes();
+        Set<File> files = filterSources(new FileExtensionSpec(SCHEMA_EXTENSION)).getFiles();
+        ProcessingState processingState = new ProcessingState(files, getProject());
+        while (processingState.isWorkRemaining()) {
+            FileState fileState = processingState.nextFileState();
+            String path = fileState.getPath();
+            getLogger().debug("Processing {}, excluding types {}", path, fileState.getDuplicateTypeNames());
+            File sourceFile = fileState.getFile();
+            Map<String, Schema> parserTypes = processingState.determineParserTypes(fileState);
+            try {
+                Schema.Parser parser = new Schema.Parser();
+                parser.addTypes(parserTypes);
+                compile(parser.parse(sourceFile), sourceFile);
+                Map<String, Schema> typesDefinedInFile = asymmetricDifference(parser.getTypes(), parserTypes);
+                processingState.processTypeDefinitions(fileState, typesDefinedInFile);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("Processed {}; contained types {}", path, typesDefinedInFile.keySet());
+                } else {
                     getLogger().info("Processed {}", path);
-                    processedThisPass++;
-                    errors.remove(path);
-                } catch (SchemaParseException ex) {
-                    String errorMessage = ex.getMessage();
-                    if (errorMessage.matches("(?i).*(undefined name|not a defined name).*")) {
-                        getLogger().debug("Found undefined name in {} ({}); will try again later", path, errorMessage);
-                        nextPass.add(sourceFile);
-                        errors.put(path, ex.getMessage());
+                }
+            } catch (SchemaParseException ex) {
+                String errorMessage = ex.getMessage();
+                Matcher unknownTypeMatcher = ERROR_UNKNOWN_TYPE.matcher(errorMessage);
+                Matcher duplicateTypeMatcher = ERROR_DUPLICATE_TYPE.matcher(errorMessage);
+                if (unknownTypeMatcher.matches()) {
+                    fileState.setError(ex);
+                    processingState.queueForDelayedRetry(fileState);
+                    getLogger().debug("Found undefined name in {} ({}); will try again", path, errorMessage);
+                } else if (duplicateTypeMatcher.matches()) {
+                    String typeName = duplicateTypeMatcher.group(1);
+                    if (isRetryDuplicateTypes()) {
+                        fileState.setError(ex);
+                        fileState.addDuplicateTypeName(typeName);
+                        processingState.queueForImmediateRetry(fileState);
+                        getLogger().debug("Identified duplicate type {} in {}; will re-process excluding it", typeName, path);
                     } else {
-                        throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
+                        throw new GradleException(String.format(
+                            "Failed to compile schema definition file %s due to duplicate definition of type %s;"
+                                + " This can be resolved by either declaring %s in its own schema file, or enabling the %s option",
+                            path, typeName, typeName, OPTION_RETRY_DUPLICATE_TYPES), ex);
                     }
-                } catch (NullPointerException ex) {
-                    getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency);"
-                            + " will try again later", path);
-                    nextPass.add(sourceFile);
-                    errors.put(path, ex.getMessage());
-                } catch (IOException ex) {
+                } else {
                     throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
                 }
-                sourceFile = thisPass.poll();
+            } catch (NullPointerException ex) {
+                fileState.setError(ex);
+                processingState.queueForDelayedRetry(fileState);
+                getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency);"
+                    + " will try again", path);
+            } catch (IOException ex) {
+                throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
             }
         }
-        if (!nextPass.isEmpty()) {
+        Set<FileState> failedFiles = processingState.getFailedFiles();
+        if (!failedFiles.isEmpty()) {
             StringBuilder errorMessage = new StringBuilder("Could not compile schema definition files:");
-            for (Map.Entry<String, String> error : errors.entrySet()) {
-                errorMessage.append(lineSeparator()).append("* ").append(error.getKey()).append(": ").append(error.getValue());
+            for (FileState fileState : failedFiles) {
+                String path = fileState.getPath();
+                String fileErrorMessage = fileState.getErrorMessage();
+                errorMessage.append(lineSeparator()).append("* ").append(path).append(": ").append(fileErrorMessage);
             }
             throw new GradleException(errorMessage.toString());
         }
-        return processedTotal;
+        return processingState.getProcessedTotal();
     }
 
     private void compile(Protocol protocol, File sourceFile) throws IOException {

@@ -50,6 +50,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                 return DEFAULT_CREATE_SETTERS;
             }
         });
+        extensionMapping.map(OPTION_RETRY_DUPLICATE_TYPES, new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return DEFAULT_RETRY_DUPLICATE_TYPES;
+            }
+        });
         project.getTasks().withType(GenerateAvroJavaTask.class).all(new Action<GenerateAvroJavaTask>() {
             @Override
             public void execute(GenerateAvroJavaTask task) {
@@ -82,6 +88,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                     @Override
                     public Boolean call() throws Exception {
                         return avroExtension.isCreateSetters();
+                    }
+                });
+                taskMapping.map(OPTION_RETRY_DUPLICATE_TYPES, new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        return avroExtension.isRetryDuplicateTypes();
                     }
                 });
             }

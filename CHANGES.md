@@ -2,6 +2,7 @@
 
 ## Unreleased
 * Remove usage of Apache Commons IO (#19)
+* Add ability to retry duplicate type definitions, with new configuration option "retryDuplicateTypes" (#13)
 
 ## 0.6.1
 * Add Checkstyle ImportControl to prevent accidentally adding dependencies on libraries that Gradle makes available for build but not runtime.

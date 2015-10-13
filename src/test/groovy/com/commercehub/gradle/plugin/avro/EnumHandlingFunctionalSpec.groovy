@@ -4,6 +4,9 @@ import java.nio.file.Files
 
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
+/**
+ * Functional tests relating to handling of enums.
+ */
 class EnumHandlingFunctionalSpec extends FunctionalSpec {
     def "supports simple enums"() {
         given:
