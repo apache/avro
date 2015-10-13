@@ -191,14 +191,14 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                 Matcher duplicateTypeMatcher = ERROR_DUPLICATE_TYPE.matcher(errorMessage);
                 if (unknownTypeMatcher.matches()) {
                     fileState.setError(ex);
-                    processingState.queueForDelayedRetry(fileState);
+                    processingState.queueForDelayedProcessing(fileState);
                     getLogger().debug("Found undefined name in {} ({}); will try again", path, errorMessage);
                 } else if (duplicateTypeMatcher.matches()) {
                     String typeName = duplicateTypeMatcher.group(1);
                     if (isRetryDuplicateTypes()) {
                         fileState.setError(ex);
                         fileState.addDuplicateTypeName(typeName);
-                        processingState.queueForImmediateRetry(fileState);
+                        processingState.queueForProcessing(fileState);
                         getLogger().debug("Identified duplicate type {} in {}; will re-process excluding it", typeName, path);
                     } else {
                         throw new GradleException(String.format(
@@ -211,7 +211,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                 }
             } catch (NullPointerException ex) {
                 fileState.setError(ex);
-                processingState.queueForDelayedRetry(fileState);
+                processingState.queueForDelayedProcessing(fileState);
                 getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency);"
                     + " will try again", path);
             } catch (IOException ex) {

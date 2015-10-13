@@ -7,18 +7,15 @@ import java.io.File;
 import java.util.*;
 
 class ProcessingState {
-    private final Set<FileState> fileStates = new TreeSet<>();
     private final Map<String, TypeState> typeStates = new HashMap<>();
-    private final Queue<FileState> nextPass = new LinkedList<>();
-    private final Queue<FileState> thisPass = new LinkedList<>();
+    private final Set<FileState> delayedFiles = new LinkedHashSet<>();
+    private final Queue<FileState> filesToProcess = new LinkedList<>();
     private int processedTotal = 0;
-    private int processedThisPass = 0;
 
     ProcessingState(Set<File> files, Project project) {
         for (File file : files) {
-            fileStates.add(new FileState(file, project.relativePath(file)));
+            filesToProcess.add(new FileState(file, project.relativePath(file)));
         }
-        thisPass.addAll(fileStates);
     }
 
     Map<String, Schema> determineParserTypes(FileState fileState) {
@@ -41,18 +38,12 @@ class ProcessingState {
             getTypeState(typeName).processTypeDefinition(path, schema);
         }
         fileState.clearError();
-        processedThisPass++;
         processedTotal++;
+        queueDelayedFilesForProcessing();
     }
 
     Set<FileState> getFailedFiles() {
-        Set<FileState> failedFiles = new LinkedHashSet<>();
-        for (FileState fileState : fileStates) {
-            if (fileState.isFailed()) {
-                failedFiles.add(fileState);
-            }
-        }
-        return failedFiles;
+        return delayedFiles;
     }
 
     TypeState getTypeState(String typeName) {
@@ -64,36 +55,28 @@ class ProcessingState {
         return typeState;
     }
 
-    void queueForImmediateRetry(FileState fileState) {
-        thisPass.add(fileState);
+    void queueForProcessing(FileState fileState) {
+        filesToProcess.add(fileState);
     }
 
-    void queueForDelayedRetry(FileState fileState) {
-        nextPass.add(fileState);
+    void queueForDelayedProcessing(FileState fileState) {
+        delayedFiles.add(fileState);
+    }
+
+    private void queueDelayedFilesForProcessing() {
+        filesToProcess.addAll(delayedFiles);
+        delayedFiles.clear();
     }
 
     FileState nextFileState() {
-        FileState fileState = thisPass.poll();
-        if (fileState != null) {
-            return fileState;
-        }
-        nextPass();
-        return thisPass.poll();
+        return filesToProcess.poll();
     }
 
     boolean isWorkRemaining() {
-        return !thisPass.isEmpty() || (processedThisPass > 0 && !nextPass.isEmpty());
+        return !filesToProcess.isEmpty();
     }
 
     int getProcessedTotal() {
         return processedTotal;
-    }
-
-    private void nextPass() {
-        if (processedThisPass > 0) {
-            thisPass.addAll(nextPass);
-            nextPass.clear();
-            processedThisPass = 0;
-        }
     }
 }
