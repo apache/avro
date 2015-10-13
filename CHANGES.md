@@ -3,6 +3,11 @@
 ## Unreleased
 * Remove usage of Apache Commons IO (#19)
 * Add ability to retry processing of duplicate type definitions (#13)
+* Renamed "encoding" option to "outputCharacterEncoding" to match Avro compiler
+* Allowed setting "outputCharacterEncoding" to a `java.nio.charset.Charset` (in addition to a `String` charset name)
+* Allowed setting "stringType" to a `org.apache.avro.generic.GenericData.StringType` (in addition to a String)
+* Allowed setting "fieldVisibility" to a `org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility` (in addition to a String)
+* Fixed handling of non-"true" String settings for "createSetters" option
 
 ## 0.6.1
 * Add Checkstyle ImportControl to prevent accidentally adding dependencies on libraries that Gradle makes available for build but not runtime.

@@ -1,7 +1,7 @@
 package com.commercehub.gradle.plugin.avro;
 
 public interface AvroExtension {
-    String getEncoding();
+    String getOutputCharacterEncoding();
     String getStringType();
     String getFieldVisibility();
     String getTemplateDirectory();

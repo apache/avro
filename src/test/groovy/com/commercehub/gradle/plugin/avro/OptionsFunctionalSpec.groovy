@@ -4,7 +4,9 @@ import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData.StringType
 import spock.lang.Unroll
 
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENCODING
+import java.nio.charset.StandardCharsets
+
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_OUTPUT_CHARACTER_ENCODING
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
@@ -20,7 +22,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         result.task(":generateAvroJava").outcome == SUCCESS
 
         and: "the encoding is the default"
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
 
         and: "the stringType is string"
         content.contains("public java.lang.String getName()")
@@ -35,13 +37,12 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         content.contains("public void setName(java.lang.String value)")
     }
 
-    def "supports configuring encoding"() {
+    def "supports configuring outputCharacterEncoding to #outputCharacterEncoding"() {
         given:
-        def encoding = "UTF-16"
         copyResource("user.avsc", avroDir)
         buildFile << """
         |avro {
-        |    encoding = "${encoding}"
+        |    outputCharacterEncoding = ${outputCharacterEncoding}
         |}
         |""".stripMargin()
 
@@ -52,7 +53,13 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         result.task(":generateAvroJava").outcome == SUCCESS
 
         and: "the specified encoding is used"
-        projectPath("build/generated-main-avro-java/example/avro/User.java").getText(encoding)
+        projectPath("build/generated-main-avro-java/example/avro/User.java").getText(expectedEncoding)
+
+        where:
+        outputCharacterEncoding           | expectedEncoding
+        "'UTF-16'"                        | "UTF-16"
+        "'utf-32'"                        | "UTF-32"
+        "${StandardCharsets.name}.UTF_16" | "UTF-16"
     }
 
     @Unroll
@@ -61,7 +68,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         copyResource("user.avsc", avroDir)
         buildFile << """
         |avro {
-        |    stringType = "${stringType}"
+        |    stringType = ${stringType}
         |}
         |""".stripMargin()
 
@@ -70,18 +77,19 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
 
         and: "the specified stringType is used"
         content.contains(expectedContent)
 
         where:
-        stringType                           | expectedContent
-        StringType.String.name()             | "public java.lang.String getName()"
-        StringType.CharSequence.name()       | "public java.lang.CharSequence getName()"
-        StringType.Utf8.name()               | "public org.apache.avro.util.Utf8 getName()"
-        StringType.Utf8.name().toUpperCase() | "public org.apache.avro.util.Utf8 getName()"
-        StringType.Utf8.name().toLowerCase() | "public org.apache.avro.util.Utf8 getName()"
+        stringType                                     | expectedContent
+        "'${StringType.String.name()}'"                | "public java.lang.String getName()"
+        "'${StringType.CharSequence.name()}'"          | "public java.lang.CharSequence getName()"
+        "'${StringType.Utf8.name()}'"                  | "public org.apache.avro.util.Utf8 getName()"
+        "'${StringType.Utf8.name().toUpperCase()}'"    | "public org.apache.avro.util.Utf8 getName()"
+        "'${StringType.Utf8.name().toLowerCase()}'"    | "public org.apache.avro.util.Utf8 getName()"
+        "${StringType.name}.${StringType.Utf8.name()}" | "public org.apache.avro.util.Utf8 getName()"
     }
 
     @Unroll
@@ -99,7 +107,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
 
         and: "the specified fieldVisibility is used"
         content.contains(expectedContent)
@@ -127,7 +135,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
 
         and: "the specified createSetters is used"
         content.contains("public void setName(java.lang.String value)") == expectedPresent
@@ -138,6 +146,8 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "Boolean.FALSE" | false
         "true"          | true
         "false"         | false
+        "'true'"        | true
+        "'false'"       | false
     }
 
     def "supports configuring templateDirectory"() {
@@ -161,7 +171,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
 
         and: "the specified templates are used"
         content.contains("Custom template")

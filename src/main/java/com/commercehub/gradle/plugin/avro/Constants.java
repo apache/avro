@@ -12,7 +12,7 @@ import org.apache.avro.generic.GenericData.StringType;
 class Constants {
     static final String UTF8_ENCODING = "UTF-8";
 
-    static final String DEFAULT_ENCODING = UTF8_ENCODING;
+    static final String DEFAULT_OUTPUT_CHARACTER_ENCODING = UTF8_ENCODING;
     static final String DEFAULT_STRING_TYPE = StringType.String.name();
     static final String DEFAULT_FIELD_VISIBILITY = FieldVisibility.PUBLIC_DEPRECATED.name();
     static final String DEFAULT_TEMPLATE_DIR = System.getProperty("org.apache.avro.specific.templates",
@@ -32,5 +32,5 @@ class Constants {
     static final String OPTION_TEMPLATE_DIRECTORY = "templateDirectory";
     static final String OPTION_FIELD_VISIBILITY = "fieldVisibility";
     static final String OPTION_STRING_TYPE = "stringType";
-    static final String OPTION_ENCODING = "encoding";
+    static final String OPTION_OUTPUT_CHARACTER_ENCODING = "outputCharacterEncoding";
 }

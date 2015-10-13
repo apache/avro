@@ -19,10 +19,10 @@ public class AvroBasePlugin implements Plugin<Project> {
     private static void configureExtension(final Project project) {
         final AvroExtension avroExtension = project.getExtensions().create(AVRO_EXTENSION_NAME, DefaultAvroExtension.class);
         ConventionMapping extensionMapping = conventionMapping(avroExtension);
-        extensionMapping.map(OPTION_ENCODING, new Callable<String>() {
+        extensionMapping.map(OPTION_OUTPUT_CHARACTER_ENCODING, new Callable<String>() {
             @Override
             public String call() throws Exception {
-                return DEFAULT_ENCODING;
+                return DEFAULT_OUTPUT_CHARACTER_ENCODING;
             }
         });
         extensionMapping.map(OPTION_STRING_TYPE, new Callable<String>() {
@@ -54,10 +54,10 @@ public class AvroBasePlugin implements Plugin<Project> {
             @Override
             public void execute(GenerateAvroJavaTask task) {
                 ConventionMapping taskMapping = conventionMapping(task);
-                taskMapping.map(OPTION_ENCODING, new Callable<String>() {
+                taskMapping.map(OPTION_OUTPUT_CHARACTER_ENCODING, new Callable<String>() {
                     @Override
                     public String call() throws Exception {
-                        return avroExtension.getEncoding();
+                        return avroExtension.getOutputCharacterEncoding();
                     }
                 });
                 taskMapping.map(OPTION_STRING_TYPE, new Callable<String>() {

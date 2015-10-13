@@ -5,6 +5,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
@@ -14,6 +15,7 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -32,7 +34,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private static Pattern ERROR_DUPLICATE_TYPE = Pattern.compile("Can't redefine: (.*)");
     private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
 
-    private String encoding = DEFAULT_ENCODING;
+    private String outputCharacterEncoding = DEFAULT_OUTPUT_CHARACTER_ENCODING;
     private String stringType = DEFAULT_STRING_TYPE;
     private String fieldVisibility = DEFAULT_FIELD_VISIBILITY;
     private String templateDirectory = DEFAULT_TEMPLATE_DIR;
@@ -42,17 +44,25 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private transient FieldVisibility parsedFieldVisibility;
 
     @Input
-    public String getEncoding() {
-        return encoding;
+    public String getOutputCharacterEncoding() {
+        return outputCharacterEncoding;
     }
 
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
+    public void setOutputCharacterEncoding(String outputCharacterEncoding) {
+        this.outputCharacterEncoding = outputCharacterEncoding;
+    }
+
+    public void setOutputCharacterEncoding(Charset outputCharacterEncoding) {
+        setOutputCharacterEncoding(outputCharacterEncoding.name());
     }
 
     @Input
     public String getStringType() {
         return stringType;
+    }
+
+    public void setStringType(GenericData.StringType stringType) {
+        setStringType(stringType.name());
     }
 
     public void setStringType(String stringType) {
@@ -66,6 +76,10 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     public void setFieldVisibility(String fieldVisibility) {
         this.fieldVisibility = fieldVisibility;
+    }
+
+    public void setFieldVisibility(SpecificCompiler.FieldVisibility fieldVisibility) {
+        setFieldVisibility(fieldVisibility.name());
     }
 
     @Input
@@ -82,10 +96,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         return createSetters;
     }
 
-    public void setCreateSetters(boolean createSetters) {
-        this.createSetters = createSetters;
-    }
-
     public void setCreateSetters(String createSetters) {
         this.createSetters = Boolean.parseBoolean(createSetters);
     }
@@ -95,7 +105,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
         parsedFieldVisibility =
             Enums.parseCaseInsensitive(OPTION_FIELD_VISIBILITY, FieldVisibility.values(), getFieldVisibility());
-        getLogger().debug("Using encoding {}", getEncoding());
+        getLogger().debug("Using outputCharacterEncoding {}", getOutputCharacterEncoding());
         getLogger().debug("Using stringType {}", parsedStringType.name());
         getLogger().debug("Using fieldVisibility {}", parsedFieldVisibility.name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
@@ -220,7 +230,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
-        compiler.setOutputCharacterEncoding(getEncoding());
+        compiler.setOutputCharacterEncoding(getOutputCharacterEncoding());
         compiler.setStringType(parsedStringType);
         compiler.setFieldVisibility(parsedFieldVisibility);
         compiler.setTemplateDir(getTemplateDirectory());

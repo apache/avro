@@ -52,17 +52,17 @@ Actually, it will attempt to process an "avro" directory in every `SourceSet` (m
 
 There are a number of configuration options supported in the `avro` block.
 
-| option            | default               | description                                       |
-| ----------------- | --------------------- | ------------------------------------------------- |
-| createSetters     | `true`                | `createSetters` passed to Avro compiler           |
-| encoding          | `"UTF-8"`             | `outputCharacterEncoding` passed to Avro compiler |
-| fieldVisibility   | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler         |
-| stringType        | `"String"`            | `stringType` passed to Avro compiler              |
-| templateDirectory | see below             | `templateDir` passed to Avro compiler             |
+| option                  | default               | description                                       |
+| ----------------------- | --------------------- | ------------------------------------------------- |
+| createSetters           | `true`                | `createSetters` passed to Avro compiler           |
+| fieldVisibility         | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler         |
+| outputCharacterEncoding | `"UTF-8"`             | `outputCharacterEncoding` passed to Avro compiler |
+| stringType              | `"String"`            | `stringType` passed to Avro compiler              |
+| templateDirectory       | see below             | `templateDir` passed to Avro compiler             |
 
 ## createSetters
 
-Valid values: `true` (default), `false`
+Valid values: `true` (default), `false`; supports equivalent `String` values
 
 Set to `false` to not create setter methods in the generated classes.
 
@@ -74,24 +74,9 @@ avro {
 }
 ```
 
-## encoding
-
-Valid values: any charset name supported by [Charset](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html), default `"UTF-8"`
-
-By default, the plugin will output generated Java files in UTF-8.
-If desired, you can specify an alternate encoding.
-
-Example:
-
-```groovy
-avro {
-    encoding = "UTF-8"
-}
-```
-
 ## fieldVisibility
 
-Valid values (matched case-insensitively): `"PUBLIC"`, `"PUBLIC_DEPRECATED"` (default), `"PRIVATE"`
+Valid values: any [FieldVisibility](http://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/compiler/specific/SpecificCompiler.FieldVisibility.html) or equivalent `String` name (matched case-insensitively); default `"PUBLIC_DEPRECATED"` (default)
 
 By default, the fields in generated Java files will have public visibility and be annotated with `@Deprecated`.
 Set to `"PRIVATE"` to restrict visibility of the fields, or `"PUBLIC"` to remove the `@Deprecated` annotations.
@@ -104,9 +89,24 @@ avro {
 }
 ```
 
+## outputCharacterEncoding
+
+Valid values: any [Charset](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html) or equivalent `String` name, default `"UTF-8"`
+
+By default, the plugin will output generated Java files in UTF-8.
+If desired, you can specify an alternate encoding.
+
+Example:
+
+```groovy
+avro {
+    outputCharacterEncoding = "UTF-8"
+}
+```
+
 ## stringType
 
-Valid values (matched case-insensitively): `"CharSequence"`, `"String"` (default), `"Utf8"`
+Valid values: any [StringType](http://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/generic/GenericData.StringType.html) or equivalent `String` name (matched case-insensitively); default `"String"` (default)
 
 By default, the generated Java files will use [`java.lang.String`](http://docs.oracle.com/javase/7/docs/api/java/lang/String.html) to represent string types.
 Alternatively, you can set it to `"Utf8"` to use [`org.apache.avro.util.Utf8`](https://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/util/Utf8.html) or `"charSequence"` to use [`java.lang.CharSequence`](http://docs.oracle.com/javase/7/docs/api/java/lang/CharSequence.html).
