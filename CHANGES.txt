@@ -46,6 +46,8 @@ Trunk (not yet released)
 
     AVRO-1960: Add log4j properties for avro-tools
 
+    AVRO-1748. Add Snappy Compression to C++ DataFile (J. Langley via thiru)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
