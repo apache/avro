@@ -406,7 +406,7 @@ public:
      * Test writing DataFiles into other streams operations.
      */
     void testZip() {
-        const size_t number_of_objects = 100;
+        const size_t number_of_objects = 1000;
         // first create a large file
         ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
         {
@@ -434,11 +434,41 @@ public:
         }
     }
 
+    void testSnappy() {
+        const size_t number_of_objects = 1000000;
+        // first create a large file
+        ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
+        {
+            avro::DataFileWriter<ComplexInteger> writer(
+              filename, dschema, 16 * 1024, avro::SNAPPY_CODEC);
+
+            for (size_t i = 0; i < number_of_objects; ++i) {
+                ComplexInteger d;
+                d.re = i;
+                d.im = 2 * i;
+                writer.write(d);
+            }
+        }
+        {
+            avro::DataFileReader<ComplexInteger> reader(filename, dschema);
+            sleep(1);
+            std::vector<int64_t> found;
+            ComplexInteger record;
+            while (reader.read(record)) {
+                found.push_back(record.re);
+            }
+            BOOST_CHECK_EQUAL(found.size(), number_of_objects);
+            for (unsigned int i = 0; i < found.size(); ++i) {
+                BOOST_CHECK_EQUAL(found[i], i);
+            }
+        }
+    }
+
     void testSchemaReadWrite() {
     uint32_t a=42;
     {
             avro::DataFileWriter<uint32_t> df(filename, writerSchema);
-        df.write(a);    
+        df.write(a);
         }
 
         {
@@ -492,6 +522,9 @@ init_unit_test_suite( int argc, char* argv[] )
 
     shared_ptr<DataFileTest> t6(new DataFileTest("test6.df", dsch, dblsch));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZip, t6));
+    shared_ptr<DataFileTest> t8(new DataFileTest("test8.df", dsch, dblsch));
+    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSnappy, t8));
+
 
     shared_ptr<DataFileTest> t7(new DataFileTest("test7.df",fsch,fsch));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWrite,t7));
