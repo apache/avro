@@ -406,7 +406,7 @@ public:
      * Test writing DataFiles into other streams operations.
      */
     void testZip() {
-        const size_t number_of_objects = 1000;
+        const size_t number_of_objects = 100;
         // first create a large file
         ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
         {
@@ -435,6 +435,7 @@ public:
     }
 
     void testSnappy() {
+    	// Add enough objects to span multiple blocks
         const size_t number_of_objects = 1000000;
         // first create a large file
         ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
@@ -468,7 +469,7 @@ public:
     uint32_t a=42;
     {
             avro::DataFileWriter<uint32_t> df(filename, writerSchema);
-        df.write(a);
+        df.write(a);    
         }
 
         {
