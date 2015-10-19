@@ -19,11 +19,12 @@ require 'echoe'
 VERSION = File.open('../../share/VERSION.txt').read.sub('-SNAPSHOT', '.pre1').chomp
 Echoe.new('avro', VERSION) do |p|
   p.author = "Apache Software Foundation"
-  p.email = "avro-dev@hadoop.apache.org"
+  p.email = "dev@avro.apache.org"
   p.summary = "Apache Avro for Ruby"
   p.description = "Avro is a data serialization and RPC format"
   p.url = "http://avro.apache.org/"
   p.runtime_dependencies = %w[multi_json]
+  p.licenses = ["Apache License 2.0 (Apache-2.0)"]
 end
 
 t = Rake::TestTask.new(:interop)

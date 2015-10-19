@@ -198,6 +198,8 @@ Avro 1.8.0 (10 August 2014)
     AVRO-1715. Java: Close files opened by the Schema parser.
     (Pavel Safrata via blue)
 
+    AVRO-1729: Ruby: Add LICENSE and NOTICE to ruby gems. (blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
