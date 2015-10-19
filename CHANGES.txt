@@ -47,6 +47,8 @@ Trunk (not yet released)
 
     AVRO-1729: Ruby: Add LICENSE and NOTICE to ruby gems. (blue)
 
+    AVRO-1732: C++: Add LICENSE and NOTICE to binary distribution. (blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
