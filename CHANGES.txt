@@ -45,6 +45,8 @@ Trunk (not yet released)
     AVRO-1772. Ruby: load error in rubygem when loading schema normalization.
     (blue and martinkl via tomwhite)
 
+    AVRO-1729: Ruby: Add LICENSE and NOTICE to ruby gems. (blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
