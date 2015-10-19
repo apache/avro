@@ -202,6 +202,8 @@ Avro 1.8.0 (10 August 2014)
 
     AVRO-1732: C++: Add LICENSE and NOTICE to binary distribution. (blue)
 
+    AVRO-1733: C#: Add LICENSE and NOTICE to binary distribution. (blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

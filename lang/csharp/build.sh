@@ -41,8 +41,10 @@ case "$1" in
     dist)
         # build binary tarball
 	xbuild
-	mkdir -p $ROOT/dist
-        (cd build; tar czf $ROOT/../dist/avro-csharp-$VERSION.tar.gz main codegen ipc)
+  # add the binary LICENSE and NOTICE to the tarball
+  cp LICENSE NOTICE build/
+	mkdir -p $ROOT/dist/csharp
+        (cd build; tar czf $ROOT/../dist/csharp/avro-csharp-$VERSION.tar.gz main codegen ipc LICENSE NOTICE)
 
         # build documentation
         doxygen Avro.dox
