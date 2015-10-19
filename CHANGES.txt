@@ -45,6 +45,26 @@ Trunk (not yet released)
     AVRO-1772. Ruby: load error in rubygem when loading schema normalization.
     (blue and martinkl via tomwhite)
 
+    AVRO-1729: Ruby: Add LICENSE and NOTICE to ruby gems. (blue)
+
+    AVRO-1732: C++: Add LICENSE and NOTICE to binary distribution. (blue)
+
+    AVRO-1733: C#: Add LICENSE and NOTICE to binary distribution. (blue)
+
+    AVRO-1731: C: Add LICENSE and NOTICE to binary distribution. (blue)
+
+    AVRO-1735: Perl: Add LICENSE and NOTICE to distribution. (blue)
+
+    AVRO-1736: PHP: Add LICENSE and NOTICE to distribution. (blue)
+
+    AVRO-1730: Python 2, 3: Add LICENSE and NOTICE to distribution. (blue)
+
+    AVRO-1722: Update root LICENSE.txt and NOTICE.txt. (blue)
+
+    AVRO-1728: Java: Add LICENSE and NOTICE files to jars. (blue)
+
+    AVRO-1771. Add LICENSE and NOTICE to avro-doc artifact. (blue via tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

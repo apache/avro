@@ -26,6 +26,8 @@ from setuptools import setup
 
 
 VERSION_FILE_NAME = 'VERSION.txt'
+LICENSE_FILE_NAME = 'LICENSE'
+NOTICE_FILE_NAME = 'NOTICE'
 
 
 def RunsFromSourceDist():
@@ -131,6 +133,8 @@ def Main():
               'HandshakeRequest.avsc',
               'HandshakeResponse.avsc',
               VERSION_FILE_NAME,
+              LICENSE_FILE_NAME,
+              NOTICE_FILE_NAME,
           ],
       },
 

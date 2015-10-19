@@ -37,7 +37,7 @@ function dist {
     mkdir -p "$build_dir/$libname" "$lib_dir/examples"
     cp -pr lib "$lib_dir"
     cp -pr examples/*.php "$lib_dir/examples"
-    cp README.txt ../../LICENSE.txt ../../NOTICE.txt "$lib_dir"
+    cp README.txt LICENSE NOTICE "$lib_dir"
     cd "$build_dir"
     tar -cjf "$tarball" "$libname"
     mkdir -p "../$dist_dir"
