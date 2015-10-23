@@ -149,52 +149,53 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException {
+    synchronized (AbstractAvroMojo.class) {
+      System.setProperty("allowUndefinedLogicalTypes", Boolean.toString(allowUndefinedLogicalTypes));
+      SpecificCompiler.SCHEMA_OUTPUT_DIR.set(this.schemaOutputDirectory);
 
-    System.setProperty("allowUndefinedLogicalTypes", Boolean.toString(allowUndefinedLogicalTypes));
-    SpecificCompiler.SCHEMA_OUTPUT_DIR.set(this.schemaOutputDirectory);
-    
-    boolean hasSourceDir = null != sourceDirectory
-        && sourceDirectory.isDirectory();
-    boolean hasImports = null != imports;
-    boolean hasTestDir = null != testSourceDirectory
-        && testSourceDirectory.isDirectory();
-    if (!hasSourceDir && !hasTestDir) {
-      throw new MojoExecutionException("neither sourceDirectory: "
-          + sourceDirectory + " or testSourceDirectory: " + testSourceDirectory
-          + " are directories");
-    }
+      boolean hasSourceDir = null != sourceDirectory
+          && sourceDirectory.isDirectory();
+      boolean hasImports = null != imports;
+      boolean hasTestDir = null != testSourceDirectory
+          && testSourceDirectory.isDirectory();
+      if (!hasSourceDir && !hasTestDir) {
+        throw new MojoExecutionException("neither sourceDirectory: "
+            + sourceDirectory + " or testSourceDirectory: " + testSourceDirectory
+            + " are directories");
+      }
 
-    if (hasImports) {
-      for (String importedFile : imports) {
-        File file = new File(importedFile);
-        if (file.isDirectory()) {
-          String[] includedFiles = getIncludedFiles(file.getAbsolutePath(), excludes, getIncludes());
-          getLog().info("Importing Directory: " + file.getAbsolutePath());
-          getLog().debug("Importing Directory Files: " + Arrays.toString(includedFiles));
-          compileFiles(includedFiles, file, outputDirectory);
-        } else if (file.isFile()) {
-          getLog().info("Importing File: " + file.getAbsolutePath());
-          compileFiles(new String[]{file.getName()}, file.getParentFile(), outputDirectory);
+      if (hasImports) {
+        for (String importedFile : imports) {
+          File file = new File(importedFile);
+          if (file.isDirectory()) {
+            String[] includedFiles = getIncludedFiles(file.getAbsolutePath(), excludes, getIncludes());
+            getLog().info("Importing Directory: " + file.getAbsolutePath());
+            getLog().debug("Importing Directory Files: " + Arrays.toString(includedFiles));
+            compileFiles(includedFiles, file, outputDirectory);
+          } else if (file.isFile()) {
+            getLog().info("Importing File: " + file.getAbsolutePath());
+            compileFiles(new String[]{file.getName()}, file.getParentFile(), outputDirectory);
+          }
         }
       }
-    }
 
-    if (hasSourceDir) {
-      String[] includedFiles = getIncludedFiles(
-          sourceDirectory.getAbsolutePath(), excludes, getIncludes());
-      compileFiles(includedFiles, sourceDirectory, outputDirectory);
-    }
-    
-    if (hasImports || hasSourceDir) {
-      project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
-    }
-    
-    if (hasTestDir) {
-      String[] includedFiles = getIncludedFiles(
-          testSourceDirectory.getAbsolutePath(), testExcludes,
-          getTestIncludes());
-      compileFiles(includedFiles, testSourceDirectory, testOutputDirectory);
-      project.addTestCompileSourceRoot(testOutputDirectory.getAbsolutePath());
+      if (hasSourceDir) {
+        String[] includedFiles = getIncludedFiles(
+            sourceDirectory.getAbsolutePath(), excludes, getIncludes());
+        compileFiles(includedFiles, sourceDirectory, outputDirectory);
+      }
+
+      if (hasImports || hasSourceDir) {
+        project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
+      }
+
+      if (hasTestDir) {
+        String[] includedFiles = getIncludedFiles(
+            testSourceDirectory.getAbsolutePath(), testExcludes,
+            getTestIncludes());
+        compileFiles(includedFiles, testSourceDirectory, testOutputDirectory);
+        project.addTestCompileSourceRoot(testOutputDirectory.getAbsolutePath());
+      }
     }
   }
 
