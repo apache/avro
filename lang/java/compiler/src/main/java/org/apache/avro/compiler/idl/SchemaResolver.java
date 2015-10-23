@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.compiler.specific;
+package org.apache.avro.compiler.idl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,17 +22,39 @@ import java.util.List;
 import java.util.Map;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.UnresolvedSchema;
 
 /**
  *
  * @author zoly
  */
-public final class SchemaResolver {
+final class SchemaResolver {
 
     private SchemaResolver() { }
 
-    public static Protocol resolve(final Protocol protocol) {
+    private static final String UR_SCHEMA_ATTR = "org.apache.avro.compiler.idl.unresolved.name";
+
+    static Schema unresolvedSchema(final String name) {
+        Schema schema = Schema.create(Schema.Type.NULL);
+        schema.addProp(UR_SCHEMA_ATTR, name);
+        return schema;
+    }
+
+    static boolean isUnresolvedSchema(final Schema schema) {
+        return (schema.getType() == Schema.Type.NULL && schema.getProp(UR_SCHEMA_ATTR) != null);
+    }
+
+    static String getUnresolvedSchemaName(final Schema schema) {
+        String name = schema.getProp(UR_SCHEMA_ATTR);
+        if (name == null) {
+            throw new IllegalArgumentException("Schema " + schema + " is not a unresolved schema");
+        } else {
+            return name;
+        }
+    }
+
+
+
+    static Protocol resolve(final Protocol protocol) {
         Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
         final Collection<Schema> types = protocol.getTypes();
         List<Schema> newSchemas = new ArrayList(types.size());
@@ -63,14 +85,15 @@ public final class SchemaResolver {
         return result;
     }
 
-    public static Schema resolve(final Schema schema, final Protocol protocol, final Map<String, Schema> processed) {
+    static Schema resolve(final Schema schema, final Protocol protocol, final Map<String, Schema> processed) {
         final String fullName = schema.getFullName();
         if (fullName != null && processed.containsKey(fullName)) {
             return processed.get(schema.getFullName());
-        } else if (schema instanceof UnresolvedSchema) {
-            Schema type = protocol.getType(schema.getFullName());
+        } else if (isUnresolvedSchema(schema)) {
+            final String unresolvedSchemaName = getUnresolvedSchemaName(schema);
+            Schema type = protocol.getType(unresolvedSchemaName);
             if (type == null) {
-                throw new IllegalArgumentException("Cannot resolve " + schema);
+                throw new IllegalArgumentException("Cannot resolve " + unresolvedSchemaName);
             }
             return resolve(type, protocol, processed);
         } else {
