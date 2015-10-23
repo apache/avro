@@ -17,6 +17,7 @@ package org.apache.avro.compiler.idl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,13 +35,14 @@ final class SchemaResolver {
     private static final String UR_SCHEMA_ATTR = "org.apache.avro.compiler.idl.unresolved.name";
 
     static Schema unresolvedSchema(final String name) {
-        Schema schema = Schema.create(Schema.Type.NULL);
+        Schema schema = Schema.createRecord("UnresolvedSchema", "unresolved schema",
+                "org.apache.avro.compiler", false, Collections.EMPTY_LIST);
         schema.addProp(UR_SCHEMA_ATTR, name);
         return schema;
     }
 
     static boolean isUnresolvedSchema(final Schema schema) {
-        return (schema.getType() == Schema.Type.NULL && schema.getProp(UR_SCHEMA_ATTR) != null);
+        return (schema.getType() == Schema.Type.RECORD && schema.getProp(UR_SCHEMA_ATTR) != null);
     }
 
     static String getUnresolvedSchemaName(final Schema schema) {
