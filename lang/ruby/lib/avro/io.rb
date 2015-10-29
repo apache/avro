@@ -376,13 +376,16 @@ module Avro
         read_data(selected_writers_schema, readers_schema, decoder)
       end
 
+      def read_record_data(field, readers_field, decoder)
+        read_data(field.type, readers_field.type, decoder)
+      end
+
       def read_record(writers_schema, readers_schema, decoder)
         readers_fields_hash = readers_schema.fields_hash
         read_record = {}
         writers_schema.fields.each do |field|
           if readers_field = readers_fields_hash[field.name]
-            field_val = read_data(field.type, readers_field.type, decoder)
-            read_record[field.name] = field_val
+            read_record[field.name] = read_record_data(field, readers_field, decoder)
           else
             skip_data(field.type, decoder)
           end
