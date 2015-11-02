@@ -152,7 +152,7 @@ class SchemaParseException(AvroException):
 # ------------------------------------------------------------------------------
 
 
-class ImmutableDict(dict):
+class ImmutableDict(collections.OrderedDict):
   """Dictionary guaranteed immutable.
 
   All mutations raise an exception.
@@ -166,10 +166,11 @@ class ImmutableDict(dict):
     else:
       super(ImmutableDict, self).__init__(**kwargs)
 
-  def __setitem__(self, key, value):
-    raise Exception(
-        'Attempting to map key %r to value %r in ImmutableDict %r'
-        % (key, value, self))
+# Zubair: OrderedDict internally invokes this in its constructor so no can do!
+#   def __setitem__(self, key, value):
+#     raise Exception(
+#         'Attempting to map key %r to value %r in ImmutableDict %r'
+#         % (key, value, self))
 
   def __delitem__(self, key):
     raise Exception(
@@ -209,13 +210,18 @@ class Schema(object, metaclass=abc.ABCMeta):
       raise SchemaParseException('%r is not a valid Avro type.' % type)
 
     # All properties of this schema, as a map: property name -> property value
-    self._props = {}
+    self._props = collections.OrderedDict()
 
-    self._props['type'] = type
-    self._type = type
+# Zubair: we prefer to have the field at the end
+#     self._props['type'] = type
+#     self._type = type
 
     if other_props:
       self._props.update(other_props)
+
+    # Zubair: we prefer to have the field at the end
+    self._props['type'] = type
+    self._type = type
 
   @property
   def name(self):
@@ -559,7 +565,7 @@ class Field(object):
       raise SchemaParseException('Invalid record field order: %r.' % order)
 
     # All properties of this record field:
-    self._props = {}
+    self._props = collections.OrderedDict()
 
     self._has_default = has_default
     if other_props:
@@ -956,8 +962,9 @@ class RecordSchema(NamedSchema):
         json_data=field_desc['type'],
         names=names,
     )
-    other_props = (
-        dict(FilterKeysOut(items=field_desc, keys=FIELD_RESERVED_PROPS)))
+    #Zubair: commented out to maintain the order of props
+    #other_props = (
+    #    collections.OrderedDict(FilterKeysOut(items=field_desc, keys=FIELD_RESERVED_PROPS)))
     return Field(
         type=field_schema,
         name=field_desc['name'],
@@ -967,7 +974,7 @@ class RecordSchema(NamedSchema):
         order=field_desc.get('order', None),
         names=names,
         doc=field_desc.get('doc', None),
-        other_props=other_props,
+        other_props=field_desc
     )
 
   @staticmethod
@@ -1148,8 +1155,10 @@ def _SchemaFromJSONObject(json_object, names):
     raise SchemaParseException(
         'Avro schema JSON descriptor has no "type" property: %r' % json_object)
 
-  other_props = dict(
-      FilterKeysOut(items=json_object, keys=SCHEMA_RESERVED_PROPS))
+  # Zubair: commented out to preserve props order
+  #other_props = collections.OrderedDict(
+  #    FilterKeysOut(items=json_object, keys=SCHEMA_RESERVED_PROPS))
+  other_props = collections.OrderedDict(json_object)
 
   if type in PRIMITIVE_TYPES:
     # FIXME should not ignore other properties
@@ -1229,6 +1238,7 @@ _JSONDataParserTypeMap = {
   str: _SchemaFromJSONString,
   list: _SchemaFromJSONArray,
   dict: _SchemaFromJSONObject,
+  collections.OrderedDict: _SchemaFromJSONObject,
 }
 
 
