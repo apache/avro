@@ -5,3 +5,8 @@ env:
   - TERM=dumb
 install: true
 script: ./gradlew build
+jdk:
+  - oraclejdk8
+  - oraclejdk7
+  - openjdk7
+  # - openjdk6
