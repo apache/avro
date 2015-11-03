@@ -11,7 +11,7 @@
 * Allowed setting "fieldVisibility" to a `org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility` (in addition to a String)
 * Fixed handling of non-"true" String settings for "createSetters" option
 * Automatically use encoding from `JavaCompile` task as "outputCharacterEncoding", if set
-* Change default "outputCharacterEncoding" to system default to match `JavaCompile` task behavior
+* Change default "outputCharacterEncoding" to system default to match `JavaCompile` task behavior (#20)
 
 ## 0.6.1
 * Add Checkstyle ImportControl to prevent accidentally adding dependencies on libraries that Gradle makes available for build but not runtime.
