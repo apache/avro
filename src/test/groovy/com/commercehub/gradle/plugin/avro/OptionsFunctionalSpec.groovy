@@ -4,12 +4,12 @@ import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData.StringType
 import spock.lang.Unroll
 
-import java.nio.charset.StandardCharsets
-
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_OUTPUT_CHARACTER_ENCODING
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
+/**
+ * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}.
+ */
 class OptionsFunctionalSpec extends FunctionalSpec {
     def "works with default options"() {
         given:
@@ -20,9 +20,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-
-        and: "the encoding is the default"
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the stringType is string"
         content.contains("public java.lang.String getName()")
@@ -35,51 +33,6 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "createSetters is enabled"
         content.contains("public void setName(java.lang.String value)")
-    }
-
-    def "supports configuring outputCharacterEncoding to #outputCharacterEncoding"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        buildFile << """
-        |avro {
-        |    outputCharacterEncoding = ${outputCharacterEncoding}
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
-
-        and: "the specified encoding is used"
-        projectPath("build/generated-main-avro-java/example/avro/User.java").getText(expectedEncoding).contains("public class User")
-
-        where:
-        outputCharacterEncoding           | expectedEncoding
-        "'UTF-16'"                        | "UTF-16"
-        "'utf-32'"                        | "UTF-32"
-        "${StandardCharsets.name}.UTF_16" | "UTF-16"
-    }
-
-    def "uses encoding from java compilation task by default"() {
-        given:
-        def encoding = "UTF-16"
-        copyResource("user.avsc", avroDir)
-        buildFile << """
-        |compileJava {
-        |    options.encoding = '${encoding}'
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
-
-        and: "the specified encoding is used"
-        projectPath("build/generated-main-avro-java/example/avro/User.java").getText(encoding).contains("public class User")
     }
 
     @Unroll
@@ -97,7 +50,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified stringType is used"
         content.contains(expectedContent)
@@ -127,7 +80,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified fieldVisibility is used"
         content.contains(expectedContent)
@@ -155,7 +108,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified createSetters is used"
         content.contains("public void setName(java.lang.String value)") == expectedPresent
@@ -191,7 +144,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").getText(DEFAULT_OUTPUT_CHARACTER_ENCODING)
+        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified templates are used"
         content.contains("Custom template")

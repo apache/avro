@@ -11,6 +11,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -34,15 +35,16 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private static Pattern ERROR_DUPLICATE_TYPE = Pattern.compile("Can't redefine: (.*)");
     private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
 
-    private String outputCharacterEncoding = DEFAULT_OUTPUT_CHARACTER_ENCODING;
+    private String outputCharacterEncoding;
     private String stringType = DEFAULT_STRING_TYPE;
     private String fieldVisibility = DEFAULT_FIELD_VISIBILITY;
-    private String templateDirectory = DEFAULT_TEMPLATE_DIR;
+    private String templateDirectory;
     private boolean createSetters = DEFAULT_CREATE_SETTERS;
 
     private transient StringType parsedStringType;
     private transient FieldVisibility parsedFieldVisibility;
 
+    @Optional
     @Input
     public String getOutputCharacterEncoding() {
         return outputCharacterEncoding;
@@ -82,6 +84,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         setFieldVisibility(fieldVisibility.name());
     }
 
+    @Optional
     @Input
     public String getTemplateDirectory() {
         return templateDirectory;
@@ -230,10 +233,13 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
+        String templateDirectory = getTemplateDirectory();
         compiler.setOutputCharacterEncoding(getOutputCharacterEncoding());
         compiler.setStringType(parsedStringType);
         compiler.setFieldVisibility(parsedFieldVisibility);
-        compiler.setTemplateDir(getTemplateDirectory());
+        if (templateDirectory != null) {
+            compiler.setTemplateDir(templateDirectory);
+        }
         compiler.setCreateSetters(isCreateSetters());
         compiler.compileToDestination(sourceFile, getOutputDir());
     }

@@ -56,7 +56,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
                 FilenameUtils.getBaseName(idlFile.getName()) + "." + PROTOCOL_EXTENSION);
         try (Idl idl = new Idl(idlFile, loader)) {
             String protoJson = idl.CompilationUnit().toString(true);
-            FileUtils.writeStringToFile(protoFile, protoJson, Constants.UTF8_ENCODING);
+            writeJsonFile(protoFile, protoJson);
         } catch (IOException | ParseException ex) {
             throw new GradleException(String.format("Failed to compile IDL file %s", idlFile), ex);
         }
@@ -74,5 +74,15 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
         }
         return urls.isEmpty() ? ClassLoader.getSystemClassLoader()
                 : new URLClassLoader(urls.toArray(new URL[urls.size()]), ClassLoader.getSystemClassLoader());
+    }
+
+    /**
+     * Writes a file in a manner appropriate for a JSON file.  UTF-8 will be used, as it is the default encoding for JSON, and should be
+     * maximally interoperable.
+     *
+     * @see <a href="https://tools.ietf.org/html/rfc7159#section-8.1">JSON Character Encoding</a>
+     */
+    private void writeJsonFile(File file, String data) throws IOException {
+        FileUtils.writeStringToFile(file, data, Constants.UTF8_ENCODING);
     }
 }

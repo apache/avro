@@ -19,12 +19,6 @@ public class AvroBasePlugin implements Plugin<Project> {
     private static void configureExtension(final Project project) {
         final AvroExtension avroExtension = project.getExtensions().create(AVRO_EXTENSION_NAME, DefaultAvroExtension.class);
         ConventionMapping extensionMapping = conventionMapping(avroExtension);
-        extensionMapping.map(OPTION_OUTPUT_CHARACTER_ENCODING, new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return DEFAULT_OUTPUT_CHARACTER_ENCODING;
-            }
-        });
         extensionMapping.map(OPTION_STRING_TYPE, new Callable<String>() {
             @Override
             public String call() throws Exception {
@@ -35,13 +29,6 @@ public class AvroBasePlugin implements Plugin<Project> {
             @Override
             public String call() throws Exception {
                 return DEFAULT_FIELD_VISIBILITY;
-            }
-        });
-        extensionMapping.map(OPTION_TEMPLATE_DIRECTORY, new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return DEFAULT_TEMPLATE_DIR;
-
             }
         });
         extensionMapping.map(OPTION_CREATE_SETTERS, new Callable<Boolean>() {

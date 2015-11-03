@@ -12,11 +12,8 @@ import org.apache.avro.generic.GenericData.StringType;
 class Constants {
     static final String UTF8_ENCODING = "UTF-8";
 
-    static final String DEFAULT_OUTPUT_CHARACTER_ENCODING = UTF8_ENCODING;
     static final String DEFAULT_STRING_TYPE = StringType.String.name();
     static final String DEFAULT_FIELD_VISIBILITY = FieldVisibility.PUBLIC_DEPRECATED.name();
-    static final String DEFAULT_TEMPLATE_DIR = System.getProperty("org.apache.avro.specific.templates",
-                                                                  "/org/apache/avro/compiler/specific/templates/java/classic/");
     static final boolean DEFAULT_CREATE_SETTERS = true;
 
     static final String SCHEMA_EXTENSION = "avsc";

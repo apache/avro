@@ -19,6 +19,9 @@ dependencies {
     testCompile gradleTestKit()
 }
 
+tasks.withType(AbstractCompile) {
+    options.encoding = "UTF-8"
+}
 sourceCompatibility = 1.7
 
 version = "0.7.0-SNAPSHOT"
