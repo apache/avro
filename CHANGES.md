@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.7.0
 * Remove usage of Apache Commons IO (#19)
 * Add ability to retry processing of duplicate type definitions (#13)
 * Renamed "encoding" option to "outputCharacterEncoding" to match Avro compiler
