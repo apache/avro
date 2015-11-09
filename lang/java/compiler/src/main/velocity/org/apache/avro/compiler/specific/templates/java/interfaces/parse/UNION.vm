@@ -1,0 +1,74 @@
+##
+## Licensed to the Apache Software Foundation (ASF) under one
+## or more contributor license agreements.  See the NOTICE file
+## distributed with this work for additional information
+## regarding copyright ownership.  The ASF licenses this file
+## to you under the Apache License, Version 2.0 (the
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## @formatter:off
+#if($this.javaType($fieldSchema) != "java.lang.Object") ## this means it is a simple nullable field
+#foreach($unionType in $fieldSchema.getTypes())
+#if($unionType.getType().name() != "NULL")
+#set($fieldSchema = $unionType)
+#set($fieldType = $fieldSchema.getType())
+#end
+#end
+#set($__template = $this.getTemplateDir() + "parse/" + $fieldType.name() + ".vm")
+#parse($__template)
+#else ## this means it is a complex union of different types
+              {
+#set($unionCount = $unionCount + 1)
+#set($innerUnionVariable = "union" + $unionCount)
+#set($resolvedUnionVariable = "resolved" + $unionCount)
+#if($sourceNullableStack.get(0))
+                java.lang.Object $innerUnionVariable = ($sourceVariable == null)
+                        ? null
+                        : $sourceExpression;
+#else
+                java.lang.Object $innerUnionVariable = $sourceExpression;
+#end
+                if ($innerUnionVariable == null) {
+                  $targetVariable = null;
+                }
+#foreach($unionType in $fieldSchema.getTypes())
+#set($fieldSchema = $unionType)
+#set($fieldType = $fieldSchema.getType())
+#set($targetVariable = $resolvedUnionVariable)
+#set($__ignore = $targetVariableStack.add(0, $targetVariable))
+#set($sourceVariable = $innerUnionVariable)
+#set($__ignore = $sourceVariableStack.add(0, $sourceVariable))
+#set($sourceExpression = "(" + $this.ifaceType($fieldSchema) + ")" + $sourceExpression)
+#set($__ignore = $sourceExpressionStack.add(0, $sourceExpression))
+#set($__ignore = $sourceNullableStack.add(0, false))
+                else if ($innerUnionVariable instanceof ${this.ifaceRawType($fieldSchema)}) {
+                  ${this.javaType($fieldSchema)} $targetVariable;
+#set($__template = $this.getTemplateDir() + "parse/" + $fieldType.name() + ".vm")
+#parse($__template)
+#set($targetVariableStack = $targetVariableStack.subList(1, $targetVariableStack.size()))
+#set($targetVariable = $targetVariableStack.get(0))
+#set($sourceVariableStack = $sourceVariableStack.subList(1, $sourceVariableStack.size()))
+#set($sourceVariable = $sourceVariableStack.get(0))
+#set($sourceExpressionStack = $sourceExpressionStack.subList(1, $sourceExpressionStack.size()))
+#set($sourceExpression = $sourceExpressionStack.get(0))
+#set($sourceNullableStack = $sourceNullableStack.subList(1, $sourceNullableStack.size()))
+                  $targetVariable = $resolvedUnionVariable;
+                }
+#end
+                else {
+                  $targetVariable = null;
+                }
+              }
+#set($unionCount = $unionCount + 1)
+#set($innerUnionVariable = "union" + $unionCount)
+#set($resolvedUnionVariable = "resolved" + $unionCount)
+#end

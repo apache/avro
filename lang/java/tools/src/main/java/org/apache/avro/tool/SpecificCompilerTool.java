@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.compiler.specific.CommonCompiler;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
@@ -42,7 +43,7 @@ public class SpecificCompilerTool implements Tool {
       List<String> args) throws Exception {
     if (args.size() < 3) {
       System.err
-          .println("Usage: [-string] (schema|protocol) input... outputdir");
+          .println("Usage: [-string] [-common] (schema|protocol) input... outputdir");
       System.err
           .println(" input - input files or directories");
       System.err
@@ -58,6 +59,14 @@ public class SpecificCompilerTool implements Tool {
       stringType = StringType.String;
       arg++;
     }
+
+    final boolean isCommon;
+    if ("-common".equals(args.get(arg))) {
+      isCommon = true;
+      arg++;
+    } else {
+      isCommon = false;
+    }
       
     String method = args.get(arg);
     List<File> inputs = new ArrayList<File>();
@@ -71,14 +80,18 @@ public class SpecificCompilerTool implements Tool {
       Schema.Parser parser = new Schema.Parser();
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
-        SpecificCompiler compiler = new SpecificCompiler(schema);
+        SpecificCompiler compiler = isCommon
+                ? new CommonCompiler(schema)
+                : new SpecificCompiler(schema);
         compiler.setStringType(stringType);
         compiler.compileToDestination(src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
-        SpecificCompiler compiler = new SpecificCompiler(protocol);
+        SpecificCompiler compiler = isCommon
+                ? new CommonCompiler(protocol)
+                : new SpecificCompiler(protocol);
         compiler.setStringType(stringType);
         compiler.compileToDestination(src, output);
       }

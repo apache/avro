@@ -1,0 +1,63 @@
+##
+## Licensed to the Apache Software Foundation (ASF) under one
+## or more contributor license agreements.  See the NOTICE file
+## distributed with this work for additional information
+## regarding copyright ownership.  The ASF licenses this file
+## to you under the Apache License, Version 2.0 (the
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## @formatter:off
+      {
+#set($listCount = $listCount + 1)
+#set($innerArrayVariable = "array" + $listCount)
+#set($innerSourceElementVariable = "element" + $listCount)
+#set($innerTargetElementVariable = "parsed" + $listCount)
+#set($fieldSchema = $fieldSchema.getElementType())
+#set($fieldType = $fieldSchema.getType())
+#set($targetSchemaExpression = $targetSchemaExpression + ".getElementType()")
+#set($__ignore = $targetSchemaExpressionStack.add(0, $targetSchemaExpression))
+        java.util.List<? extends $this.ifaceType($fieldSchema)> $innerArrayVariable = ${sourceExpression};
+        if ($innerArrayVariable == null) {
+          $targetVariable = null;
+        } else {
+          $targetVariable = new org.apache.avro.generic.GenericData.Array<${this.javaType($fieldSchema)}>(${innerArrayVariable}.size(), $targetSchemaExpression);
+        }
+#set($__template = $this.getTemplateDir() + "parse/" + $fieldType.name() + ".vm")
+        if($innerArrayVariable != null) {
+          for ($this.ifaceType($fieldSchema) $innerSourceElementVariable : $innerArrayVariable) {
+            ${this.javaUnbox($fieldSchema)} $innerTargetElementVariable;
+#set($targetVariable = $innerTargetElementVariable)
+#set($__ignore = $targetVariableStack.add(0, $targetVariable))
+#set($sourceVariable = $innerSourceElementVariable)
+#set($__ignore = $sourceVariableStack.add(0, $sourceVariable))
+#set($sourceExpression = $innerSourceElementVariable)
+#set($__ignore = $sourceExpressionStack.add(0, $sourceExpression))
+#set($__ignore = $sourceNullableStack.add(0, true))
+#parse($__template)
+#set($targetVariableStack = $targetVariableStack.subList(1, $targetVariableStack.size()))
+#set($targetVariable = $targetVariableStack.get(0))
+#set($targetSchemaExpressionStack = $targetSchemaExpressionStack.subList(1, $targetSchemaExpressionStack.size()))
+#set($targetSchemaExpression = $targetSchemaExpressionStack.get(0))
+#set($sourceVariableStack = $sourceVariableStack.subList(1, $sourceVariableStack.size()))
+#set($sourceVariable = $sourceVariableStack.get(0))
+#set($sourceExpressionStack = $sourceExpressionStack.subList(1, $sourceExpressionStack.size()))
+#set($sourceExpression = $sourceExpressionStack.get(0))
+#set($sourceNullableStack = $sourceNullableStack.subList(1, $sourceNullableStack.size()))
+
+            ${targetVariable}.add($innerTargetElementVariable);
+#set($listCount = $listCount - 1)
+#set($innerArrayVariable = "array" + $listCount)
+#set($innerSourceElementVariable = "element" + $listCount)
+#set($innerTargetElementVariable = "parsed" + $listCount)
+          }
+        }
+      }

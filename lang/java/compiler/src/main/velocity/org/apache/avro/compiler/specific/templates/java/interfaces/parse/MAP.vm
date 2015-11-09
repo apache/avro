@@ -1,0 +1,66 @@
+##
+## Licensed to the Apache Software Foundation (ASF) under one
+## or more contributor license agreements.  See the NOTICE file
+## distributed with this work for additional information
+## regarding copyright ownership.  The ASF licenses this file
+## to you under the Apache License, Version 2.0 (the
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## @formatter:off
+      {
+#set($mapCount = $mapCount + 1)
+#set($innerMapVariable = "map" + $mapCount)
+#set($innerKvpVariable = "entry" + $mapCount)
+#set($innerSourceKvpVariable = "entryValue" + $mapCount)
+#set($innerTargetKvpVariable = "parsedValue" + $mapCount)
+#set($fieldSchema = $fieldSchema.getValueType())
+#set($fieldType = $fieldSchema.getType())
+#set($targetSchemaExpression = $targetSchemaExpression + ".getValueType()")
+#set($__ignore = $targetSchemaExpressionStack.add(0, $targetSchemaExpression))
+        java.util.Map<$this.getStringType(), ? extends $this.ifaceType($fieldSchema)> $innerMapVariable = ${sourceExpression};
+        if ($innerMapVariable == null) {
+          $targetVariable = null;
+        } else {
+          $targetVariable = new java.util.HashMap<$this.getStringType(), ${this.javaType($fieldSchema)}>(${innerMapVariable}.size());
+        }
+#set($__template = $this.getTemplateDir() + "parse/" + $fieldType.name() + ".vm")
+        if($innerMapVariable != null) {
+          for (java.util.Map.Entry<$this.getStringType(), ? extends $this.ifaceType($fieldSchema)> $innerKvpVariable : ${innerMapVariable}.entrySet()) {
+            $this.ifaceType($fieldSchema) $innerSourceKvpVariable = ${innerKvpVariable}.getValue();
+            ${this.javaUnbox($fieldSchema)} $innerTargetKvpVariable;
+#set($targetVariable = $innerTargetKvpVariable)
+#set($__ignore = $targetVariableStack.add(0, $targetVariable))
+#set($sourceVariable = $innerSourceKvpVariable)
+#set($__ignore = $sourceVariableStack.add(0, $sourceVariable))
+#set($sourceExpression = $innerSourceKvpVariable)
+#set($__ignore = $sourceExpressionStack.add(0, $sourceExpression))
+#set($__ignore = $sourceNullableStack.add(0, true))
+#parse($__template)
+#set($targetVariableStack = $targetVariableStack.subList(1, $targetVariableStack.size()))
+#set($targetVariable = $targetVariableStack.get(0))
+#set($targetSchemaExpressionStack = $targetSchemaExpressionStack.subList(1, $targetSchemaExpressionStack.size()))
+#set($targetSchemaExpression = $targetSchemaExpressionStack.get(0))
+#set($sourceVariableStack = $sourceVariableStack.subList(1, $sourceVariableStack.size()))
+#set($sourceVariable = $sourceVariableStack.get(0))
+#set($sourceExpressionStack = $sourceExpressionStack.subList(1, $sourceExpressionStack.size()))
+#set($sourceExpression = $sourceExpressionStack.get(0))
+#set($sourceNullableStack = $sourceNullableStack.subList(1, $sourceNullableStack.size()))
+
+            ${targetVariable}.put(${innerKvpVariable}.getKey(), $innerTargetKvpVariable);
+#set($mapCount = $mapCount - 1)
+#set($innerMapVariable = "map" + $mapCount)
+#set($innerKvpVariable = "entry" + $mapCount)
+#set($innerSourceKvpVariable = "entryValue" + $mapCount)
+#set($innerTargetKvpVariable = "parsedValue" + $mapCount)
+          }
+        }
+      }
