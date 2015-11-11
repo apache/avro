@@ -40,7 +40,8 @@ namespace avro {
 /** Specify type of compression to use when writing data files. */
 enum Codec {
   NULL_CODEC,
-  DEFLATE_CODEC
+  DEFLATE_CODEC,
+  SNAPPY_CODEC
 };
 
 /**
@@ -185,7 +186,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     // for compressed buffer
     boost::scoped_ptr<boost::iostreams::filtering_istream> os_;
     std::vector<char> compressed_;
-
+    std::string uncompressed; // for snappy
     void readHeader();
 
     bool readDataBlock();
