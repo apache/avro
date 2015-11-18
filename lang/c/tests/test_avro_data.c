@@ -142,7 +142,7 @@ static void test_json(avro_datum_t datum, const char *expected)
 {
 	char  *json = NULL;
 	avro_datum_to_json(datum, 1, &json);
-	if (strcmp(json, expected) != 0) {
+	if (strcasecmp(json, expected) != 0) {
 		fprintf(stderr, "Unexpected JSON encoding: %s\n", json);
 		exit(EXIT_FAILURE);
 	}
