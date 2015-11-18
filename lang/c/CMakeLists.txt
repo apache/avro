@@ -122,8 +122,17 @@ if(UNIX AND THREADSAFE AND CMAKE_COMPILER_IS_GNUCC)
     set(THREADS_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
 endif(UNIX AND THREADSAFE AND CMAKE_COMPILER_IS_GNUCC)
 
+# Jansson JSON library
+find_package(Jansson)
+if (JANSSON_FOUND)
+    set(JANSSON_PKG libjansson)
+    include_directories(${JANSSON_INCLUDE_DIR})
+  else (JANSSON_FOUND)
+    message(FATAL_ERROR "libjansson not found")
+endif (JANSSON_FOUND)
+
+
 include_directories(${AvroC_SOURCE_DIR}/src)
-include_directories(${AvroC_SOURCE_DIR}/jansson/src)
 
 
 # Enable codecs

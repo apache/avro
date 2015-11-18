@@ -37,8 +37,8 @@ ____
 The C implementation has been tested on +MacOSX+ and +Linux+ but, over
 time, the number of support OSes should grow.  Please let us know if
 you're using +Avro C+ on other systems. There are no dependencies on 
-external libraries.  We embedded http://www.digip.org/jansson/[Jansson] into
-+Avro C+ for parsing JSON into schema structures.  
+external libraries. The JSON library http://www.digip.org/jansson/[Jansson]
+is required for parsing JSON into schema structures.
 
 The C implementation supports:
 
