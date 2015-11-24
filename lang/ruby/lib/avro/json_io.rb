@@ -95,7 +95,7 @@ module Avro
         end
       end
 
-      def read_record_data(field, readers_field, decoder)
+      def read_field_data(field, readers_field, decoder)
         field_data = decoder.data ? decoder.data[field.name] : nil
         field_decoder = decoder.class.new
         field_decoder.data = field_data
@@ -224,7 +224,8 @@ module Avro
       end
     end # JsonEncoder
 
-    # Unlike DatumWriter, JsonDatumWriter writes the encoded data in memory. At the end, it writes the data to the writer.
+    # Unlike DatumWriter, JsonDatumWriter writes the encoded data in memory.
+    # At the end, it writes the data to the writer.
     class JsonDatumWriter < DatumWriter
       def write(datum, encoder)
         super
