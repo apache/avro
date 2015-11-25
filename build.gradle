@@ -22,7 +22,7 @@ dependencies {
 tasks.withType(AbstractCompile) {
     options.encoding = "UTF-8"
 }
-sourceCompatibility = 1.7
+sourceCompatibility = 1.6
 
 version = "0.8.0-SNAPSHOT"
 group = "com.commercehub.gradle.plugin"
@@ -89,7 +89,7 @@ dependencies {
 }
 
 checkstyle {
-    toolVersion = "6.10.1"
+    toolVersion = "6.1.1" // Last version of checkstyle to support Java 6
 }
 // Nasty workaround for https://issues.gradle.org/browse/GRADLE-2888
 def checkstyleWarningsFile = "build/reports/checkstyle/main.xml"

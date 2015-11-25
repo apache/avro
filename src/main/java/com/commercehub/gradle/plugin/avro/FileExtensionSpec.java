@@ -12,11 +12,11 @@ class FileExtensionSpec implements Spec<File> {
     private final Set<String> extensions;
 
     FileExtensionSpec(String... extensions) {
-        this.extensions = new HashSet<>(Arrays.asList(extensions));
+        this.extensions = new HashSet<String>(Arrays.asList(extensions));
     }
 
     FileExtensionSpec(Collection<String> extensions) {
-        this.extensions = new HashSet<>(extensions);
+        this.extensions = new HashSet<String>(extensions);
     }
 
     @Override

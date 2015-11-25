@@ -7,9 +7,9 @@ import java.io.File;
 import java.util.*;
 
 class ProcessingState {
-    private final Map<String, TypeState> typeStates = new HashMap<>();
-    private final Set<FileState> delayedFiles = new LinkedHashSet<>();
-    private final Queue<FileState> filesToProcess = new LinkedList<>();
+    private final Map<String, TypeState> typeStates = new HashMap<String, TypeState>();
+    private final Set<FileState> delayedFiles = new LinkedHashSet<FileState>();
+    private final Queue<FileState> filesToProcess = new LinkedList<FileState>();
     private int processedTotal = 0;
 
     ProcessingState(Set<File> files, Project project) {
@@ -20,7 +20,7 @@ class ProcessingState {
 
     Map<String, Schema> determineParserTypes(FileState fileState) {
         Set<String> duplicateTypeNames = fileState.getDuplicateTypeNames();
-        Map<String, Schema> types = new HashMap<>();
+        Map<String, Schema> types = new HashMap<String, Schema>();
         for (TypeState typeState : typeStates.values()) {
             String typeName = typeState.getName();
             if (!duplicateTypeNames.contains(typeName)) {

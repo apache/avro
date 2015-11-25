@@ -12,7 +12,10 @@
         <module name="MissingOverride"/>
 
         <!-- Blocks -->
-        <module name="EmptyBlock"/>
+        <module name="EmptyBlock">
+            <!-- Explicitly configure to avoid checking for catch blocks, which is handled differently in later versions -->
+            <property name="tokens" value="LITERAL_WHILE,LITERAL_TRY,LITERAL_FINALLY,LITERAL_DO,LITERAL_IF,LITERAL_ELSE,LITERAL_FOR,STATIC_INIT,LITERAL_SWITCH"/>
+        </module>
         <module name="LeftCurly">
             <property name="maxLineLength" value="140"/>
         </module>

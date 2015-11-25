@@ -3,7 +3,6 @@ package com.commercehub.gradle.plugin.avro
 import spock.lang.Unroll
 
 import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
@@ -25,7 +24,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         result.task(":compileJava").outcome == SUCCESS
 
         and: "the system default encoding is used"
-        def content = projectPath("build/generated-main-avro-java/example/avro/Idioma.java").text
+        def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").text
         LANGUAGES.collect { content.contains(it) }.every { it }
     }
 
@@ -46,14 +45,14 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         result.task(":generateAvroJava").outcome == SUCCESS
 
         and: "the specified encoding is used"
-        def content = projectPath("build/generated-main-avro-java/example/avro/Idioma.java").getText(expectedEncoding)
+        def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(expectedEncoding)
         LANGUAGES.collect { content.contains(it) }.every { it }
 
         where:
-        outputCharacterEncoding           | expectedEncoding
-        "'UTF-16'"                        | "UTF-16"
-        "'utf-8'"                         | "UTF-8"
-        "${StandardCharsets.name}.UTF_16" | "UTF-16"
+        outputCharacterEncoding                      | expectedEncoding
+        "'UTF-16'"                                   | "UTF-16"
+        "'utf-8'"                                    | "UTF-8"
+        "java.nio.charset.Charset.forName('UTF-16')" | "UTF-16"
     }
 
     @Unroll
@@ -74,7 +73,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         result.task(":compileJava").outcome == SUCCESS
 
         and: "the specified encoding is used"
-        def content = projectPath("build/generated-main-avro-java/example/avro/Idioma.java").getText(encoding)
+        def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(encoding)
         LANGUAGES.collect { content.contains(it) }.every { it }
 
         where:

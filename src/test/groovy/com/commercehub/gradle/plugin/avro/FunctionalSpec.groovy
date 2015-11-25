@@ -6,8 +6,6 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
-import java.nio.file.Path
-
 abstract class FunctionalSpec extends Specification {
     protected static final String AVRO_VERSION = "1.7.7" // TODO: externalize
 
@@ -50,8 +48,8 @@ abstract class FunctionalSpec extends Specification {
         file << getClass().getResourceAsStream(name)
     }
 
-    protected Path projectPath(String path) {
-        return testProjectDir.root.toPath().resolve(path)
+    protected File projectFile(String path) {
+        return new File(testProjectDir.root, path)
     }
 
     protected BuildResult run(String... args = ["build"]) {

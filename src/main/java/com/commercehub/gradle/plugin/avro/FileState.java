@@ -8,7 +8,7 @@ class FileState implements Comparable<FileState> {
     private final File file;
     private final String path;
     private String errorMessage;
-    private Set<String> duplicateTypeNames = new TreeSet<>();
+    private Set<String> duplicateTypeNames = new TreeSet<String>();
 
     FileState(File file, String path) {
         this.file = file;

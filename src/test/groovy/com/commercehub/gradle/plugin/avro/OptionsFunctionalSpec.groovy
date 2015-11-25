@@ -20,7 +20,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the stringType is string"
         content.contains("public java.lang.String getName()")
@@ -50,7 +50,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified stringType is used"
         content.contains(expectedContent)
@@ -80,7 +80,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified fieldVisibility is used"
         content.contains(expectedContent)
@@ -108,7 +108,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified createSetters is used"
         content.contains("public void setName(java.lang.String value)") == expectedPresent
@@ -144,7 +144,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectPath("build/generated-main-avro-java/example/avro/User.java").text
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified templates are used"
         content.contains("Custom template")

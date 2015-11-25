@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Add support for Java 6 (#21)
 
 ## 0.7.0
 * Remove usage of Apache Commons IO (#19)

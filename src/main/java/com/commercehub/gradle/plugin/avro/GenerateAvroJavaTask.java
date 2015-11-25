@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 
 import static com.commercehub.gradle.plugin.avro.Constants.*;
 import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
-import static java.lang.System.lineSeparator;
 
 /**
  * Task to generate Java source files based on Avro protocol files and Avro schema files using {@link Protocol} and
@@ -120,7 +119,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private void failOnUnsupportedFiles() {
-        FileCollection unsupportedFiles = filterSources(new NotSpec<>(new FileExtensionSpec(SUPPORTED_EXTENSIONS)));
+        FileCollection unsupportedFiles = filterSources(new NotSpec<File>(new FileExtensionSpec(SUPPORTED_EXTENSIONS)));
         if (!unsupportedFiles.isEmpty()) {
             throw new GradleException(
                 String.format("Unsupported file extension for the following files: %s", unsupportedFiles));

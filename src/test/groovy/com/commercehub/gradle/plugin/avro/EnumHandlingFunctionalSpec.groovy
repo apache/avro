@@ -1,7 +1,5 @@
 package com.commercehub.gradle.plugin.avro
 
-import java.nio.file.Files
-
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 /**
@@ -18,7 +16,7 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
-        Files.exists(projectPath("build/classes/main/example/avro/MyEnum.class"))
+        projectFile("build/classes/main/example/avro/MyEnum.class").file
     }
 
     def "supports enums defined within a record field"() {
@@ -31,8 +29,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
-        Files.exists(projectPath("build/classes/main/example/avro/Test.class"))
-        Files.exists(projectPath("build/classes/main/example/avro/Gender.class"))
+        projectFile("build/classes/main/example/avro/Test.class").file
+        projectFile("build/classes/main/example/avro/Gender.class").file
     }
 
     def "supports enums defined within a union"() {
@@ -45,8 +43,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
-        Files.exists(projectPath("build/classes/main/example/avro/Test.class"))
-        Files.exists(projectPath("build/classes/main/example/avro/Kind.class"))
+        projectFile("build/classes/main/example/avro/Test.class").file
+        projectFile("build/classes/main/example/avro/Kind.class").file
     }
 
     def "supports using enums defined in a separate schema file"() {
@@ -60,7 +58,7 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
-        Files.exists(projectPath("build/classes/main/example/avro/User.class"))
-        Files.exists(projectPath("build/classes/main/example/avro/MyEnum.class"))
+        projectFile("build/classes/main/example/avro/User.class").file
+        projectFile("build/classes/main/example/avro/MyEnum.class").file
     }
 }

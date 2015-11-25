@@ -33,7 +33,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
     }
 
     private void failOnUnsupportedFiles() {
-        FileCollection unsupportedFiles = filterSources(new NotSpec<>(new FileExtensionSpec(IDL_EXTENSION)));
+        FileCollection unsupportedFiles = filterSources(new NotSpec<File>(new FileExtensionSpec(IDL_EXTENSION)));
         if (!unsupportedFiles.isEmpty()) {
             throw new GradleException(
                     String.format("Unsupported file extension for the following files: %s", unsupportedFiles));
@@ -54,16 +54,28 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
         getLogger().info("Processing {}", idlFile);
         File protoFile = new File(getOutputDir(),
                 FilenameUtils.getBaseName(idlFile.getName()) + "." + PROTOCOL_EXTENSION);
-        try (Idl idl = new Idl(idlFile, loader)) {
+        Idl idl = null;
+        try {
+            idl = new Idl(idlFile, loader);
             String protoJson = idl.CompilationUnit().toString(true);
             writeJsonFile(protoFile, protoJson);
-        } catch (IOException | ParseException ex) {
+        } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile IDL file %s", idlFile), ex);
+        } catch (ParseException ex) {
+            throw new GradleException(String.format("Failed to compile IDL file %s", idlFile), ex);
+        } finally {
+            if (idl != null) {
+                try {
+                    idl.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
         }
     }
 
     private ClassLoader getRuntimeClassLoader(Project project) {
-        List<URL> urls = new LinkedList<>();
+        List<URL> urls = new LinkedList<URL>();
         Configuration configuration = project.getConfigurations().getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME);
         for (File file : configuration) {
             try {

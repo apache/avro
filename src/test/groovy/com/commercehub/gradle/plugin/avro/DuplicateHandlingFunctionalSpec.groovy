@@ -1,7 +1,5 @@
 package com.commercehub.gradle.plugin.avro
 
-import java.nio.file.Files
-
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
@@ -22,9 +20,9 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
-        Files.exists(projectPath("build/classes/main/example/Person.class"))
-        Files.exists(projectPath("build/classes/main/example/Cat.class"))
-        Files.exists(projectPath("build/classes/main/example/Gender.class"))
+        projectFile("build/classes/main/example/Person.class").file
+        projectFile("build/classes/main/example/Cat.class").file
+        projectFile("build/classes/main/example/Gender.class").file
     }
 
     def "Duplicate record definition succeeds if definition identical"() {
@@ -37,9 +35,9 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
-        Files.exists(projectPath("build/classes/main/example/Person.class"))
-        Files.exists(projectPath("build/classes/main/example/Fish.class"))
-        Files.exists(projectPath("build/classes/main/example/Gender.class"))
+        projectFile("build/classes/main/example/Person.class").file
+        projectFile("build/classes/main/example/Fish.class").file
+        projectFile("build/classes/main/example/Gender.class").file
     }
 
     def "Duplicate enum definition fails if definition differs"() {

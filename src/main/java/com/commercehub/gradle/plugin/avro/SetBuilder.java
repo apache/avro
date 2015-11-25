@@ -6,14 +6,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 class SetBuilder<T> {
-    private Set<T> set = new HashSet<>();
+    private Set<T> set = new HashSet<T>();
 
     SetBuilder<T> add(T e) {
         set.add(e);
         return this;
     }
 
-    @SafeVarargs
     final SetBuilder<T> addAll(T... c) {
         Collections.addAll(set, c);
         return this;
@@ -33,7 +32,6 @@ class SetBuilder<T> {
         return set;
     }
 
-    @SafeVarargs
     static <T> Set<T> build(T... c) {
         return new SetBuilder<T>().addAll(c).build();
     }
