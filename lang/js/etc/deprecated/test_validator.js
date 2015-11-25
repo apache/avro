@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var validator = require('../lib/validator.js');
+var validator = require('./validator');
 var Validator = validator.Validator;
 var ProtocolValidator = validator.ProtocolValidator;
 
