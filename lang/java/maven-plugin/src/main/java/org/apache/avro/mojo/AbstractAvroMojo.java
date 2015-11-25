@@ -120,6 +120,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
   /**
+   * The qualified names of classes which the plugin will look up, instantiate
+   * (through an empty constructor that must exist) and set up to be injected
+   * into Velocity templates by Avro compiler.
+   *
+   * @parameter property="velocityToolsClassesNames"
+   */
+  protected String[] velocityToolsClassesNames = new String[0];
+
+  /**
    * The createOptionalGetters parameter enables generating the getOptional...
    * methods that return an Optional of the requested type. This works ONLY on
    * Java 8+
@@ -284,6 +293,20 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
           + DateTimeLogicalTypeImplementation.DEFAULT.name().toLowerCase() + "' instead");
       return DateTimeLogicalTypeImplementation.DEFAULT;
     }
+  }
+
+  protected Object[] instantiateAdditionalVelocityTools() {
+    Object[] velocityTools = new Object[velocityToolsClassesNames.length];
+    for(int i = 0; i < velocityTools.length; i++) {
+      String velocityToolClassName = velocityToolsClassesNames[i];
+      try {
+        Class klass = Class.forName(velocityToolClassName);
+        velocityTools[i] = klass.newInstance();
+      } catch(Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return velocityTools;
   }
 
   protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException;

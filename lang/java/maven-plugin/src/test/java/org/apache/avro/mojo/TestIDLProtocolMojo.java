@@ -58,4 +58,13 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
     assertTrue(idlUserContent.contains("java.time.Instant"));
   }
+
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    testPom = new File(getBasedir(),
+      "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
+    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+  }
 }

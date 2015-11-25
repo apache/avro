@@ -136,6 +136,7 @@ public class SpecificCompiler {
   private boolean enableDecimalLogicalType = false;
   private final DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation;
   private String suffix = ".java";
+  private Object[] additionalVelocityTools = new Object[0];
 
   /*
    * Used in the record.vm template.
@@ -210,6 +211,14 @@ public class SpecificCompiler {
         "/org/apache/avro/compiler/specific/templates/java/classic/");
     initializeVelocity();
     initializeSpecificData();
+  }
+
+  /**
+   * Set additional Velocity tools (simple POJOs) to be injected into the
+   * Velocity template context.
+   */
+  public void setAdditionalVelocityTools(Object[] additionalVelocityTools) {
+    this.additionalVelocityTools = additionalVelocityTools;
   }
 
   /**
@@ -549,6 +558,10 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("protocol", protocol);
     context.put("this", this);
+    for(Object velocityTool : additionalVelocityTools) {
+      String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
+      context.put(toolName, velocityTool);
+    }
     String out = renderTemplate(templateDir + "protocol.vm", context);
 
     OutputFile outputFile = new OutputFile();
@@ -600,6 +613,10 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("this", this);
     context.put("schema", schema);
+    for(Object velocityTool : additionalVelocityTools) {
+      String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
+      context.put(toolName, velocityTool);
+    }
 
     switch (schema.getType()) {
     case RECORD:
