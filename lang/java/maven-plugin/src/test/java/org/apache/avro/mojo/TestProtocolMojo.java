@@ -41,4 +41,13 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
 
     assertFilesExist(outputDir, generatedFiles);
   }
+
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    testPom = new File(getBasedir(),
+      "src/test/resources/unit/protocol/pom-injecting-velocity-tools.xml");
+    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", testPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+  }
 }

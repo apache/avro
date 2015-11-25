@@ -41,4 +41,13 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
     assertFilesExist(outputDir, generatedFiles);
   }
+
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    testPom = new File(getBasedir(),
+      "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
+    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+  }
 }

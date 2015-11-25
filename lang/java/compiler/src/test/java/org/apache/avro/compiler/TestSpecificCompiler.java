@@ -199,4 +199,14 @@ public class TestSpecificCompiler {
     assertThat("Generated files should contain the same characters in the proper encodings",
       new String(fileInDefaultEncoding), equalTo(new String(fileInDifferentEncoding, differentEncoding)));
   }
+
+  @Test
+  public void testAdditionalToolsAreInjectedIntoTemplate() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    Object[] customTools = new Object[]{ new String() };
+    compiler.setAdditionalVelocityTools(customTools);
+    compiler.setTemplateDir("src/test/resources/templates_with_custom_tools/");
+    compiler.compileToDestination(this.src, this.outputDir);
+    assertTrue(this.outputFile.exists());
+  }
 }

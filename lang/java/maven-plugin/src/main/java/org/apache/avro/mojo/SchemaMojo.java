@@ -79,6 +79,7 @@ public class SchemaMojo extends AbstractAvroMojo {
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateSetters(createSetters);
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
+    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
     compiler.compileToDestination(src, outputDirectory);
   }
 

@@ -115,6 +115,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
   /**
+   * The qualified names of classes which the plugin will look up, instantiate
+   * (through an empty constructor that must exist) and set up to be injected
+   * into Velocity templates by Avro compiler.
+   *
+   * @parameter property="velocityToolsClassesNames"
+   */
+  protected String[] velocityToolsClassesNames = new String[0];
+
+  /**
    * Determines whether or not to create setters for the fields of the record.
    * The default is to create setters.
    *
@@ -228,6 +237,20 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     } catch (IllegalArgumentException e) {
       return SpecificCompiler.FieldVisibility.PUBLIC_DEPRECATED;
     }
+  }
+
+  protected Object[] instantiateAdditionalVelocityTools() {
+    Object[] velocityTools = new Object[velocityToolsClassesNames.length];
+    for(int i = 0; i < velocityTools.length; i++) {
+      String velocityToolClassName = velocityToolsClassesNames[i];
+      try {
+        Class klass = Class.forName(velocityToolClassName);
+        velocityTools[i] = klass.newInstance();
+      } catch(Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return velocityTools;
   }
 
   protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException;

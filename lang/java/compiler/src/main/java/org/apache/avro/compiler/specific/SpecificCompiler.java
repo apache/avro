@@ -72,6 +72,7 @@ public class SpecificCompiler {
   private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
   private boolean createSetters = true;
   private String outputCharacterEncoding;
+  private Object[] additionalVelocityTools = new Object[0];
 
   /* Reserved words for accessor/mutator methods */
   private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = 
@@ -118,6 +119,14 @@ public class SpecificCompiler {
       System.getProperty("org.apache.avro.specific.templates",
                          "/org/apache/avro/compiler/specific/templates/java/classic/");
     initializeVelocity();
+  }
+
+  /**
+   * Set additional Velocity tools (simple POJOs) to be injected into the
+   * Velocity template context.
+   */
+  public void setAdditionalVelocityTools(Object[] additionalVelocityTools) {
+    this.additionalVelocityTools = additionalVelocityTools;
   }
 
   /** Set the resource directory where templates reside. First, the compiler checks
@@ -338,6 +347,10 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("protocol", protocol);
     context.put("this", this);
+    for(Object velocityTool : additionalVelocityTools) {
+      String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
+      context.put(toolName, velocityTool);
+    }
     String out = renderTemplate(templateDir+"protocol.vm", context);
 
     OutputFile outputFile = new OutputFile();
@@ -363,6 +376,10 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("this", this);
     context.put("schema", schema);
+    for(Object velocityTool : additionalVelocityTools) {
+      String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
+      context.put(toolName, velocityTool);
+    }
 
     switch (schema.getType()) {
     case RECORD:
