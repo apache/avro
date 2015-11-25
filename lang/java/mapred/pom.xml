@@ -123,6 +123,7 @@
       <artifactId>avro-ipc</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
