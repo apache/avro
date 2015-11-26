@@ -207,6 +207,8 @@ Avro 1.8.0 (10 August 2014)
     AVRO-1755. Java: avro-mapred should not depend on avro-ipc:test.
     (Clément MAHTIEU via tomwhite)
 
+    AVRO-1754. C++ ValiditingDecoder handles null incorrectly. (John McClean via thiru)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

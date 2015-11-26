@@ -215,6 +215,7 @@ template <typename P>
 void ValidatingDecoder<P>::decodeNull()
 {
     parser.advance(Symbol::sNull);
+    base->decodeNull();
 }
 
 template <typename P>
