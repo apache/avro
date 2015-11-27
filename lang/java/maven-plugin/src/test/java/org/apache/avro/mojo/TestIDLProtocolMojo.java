@@ -26,19 +26,25 @@ import java.io.File;
  */
 public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
-  protected File testPom = new File(getBasedir(),
-          "src/test/resources/unit/idl/pom.xml");
+  protected IDLProtocolMojo mojo() throws Exception {
+    return (IDLProtocolMojo) lookupMojo(name(), testPom());
+  }
 
-  public void testIdlProtocolMojo() throws Exception {
-    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
+  protected File outputDir() {
+    return new File(getBasedir(), "target/test-harness/idl/test");
+  }
 
-    assertNotNull(mojo);
-    mojo.execute();
+  protected String[] generatedFiles() {
+    return new String[] {
+      "IdlPrivacy.java", "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"
+    };
+  }
 
-    File outputDir = new File(getBasedir(), "target/test-harness/idl/test");
-    String[] generatedFiles = new String[]{"IdlPrivacy.java",
-      "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"};
+  private String name() {
+    return "idl-protocol";
+  }
 
-    assertFilesExist(outputDir, generatedFiles);
+  private File testPom() {
+    return new File(getBasedir(), "src/test/resources/unit/idl/pom.xml");
   }
 }

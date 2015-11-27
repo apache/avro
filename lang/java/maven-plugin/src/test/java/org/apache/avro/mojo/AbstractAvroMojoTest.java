@@ -23,11 +23,11 @@ import java.util.List;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
 /**
- * Base class for all Arvo mojo test classes.
+ * Base class for all Avro mojo test classes.
  *
  * @author saden
  */
-public class AbstractAvroMojoTest extends AbstractMojoTestCase {
+public abstract class AbstractAvroMojoTest extends AbstractMojoTestCase {
 
   @Override
   protected void setUp() throws Exception {
@@ -38,6 +38,10 @@ public class AbstractAvroMojoTest extends AbstractMojoTestCase {
   protected void tearDown() throws Exception {
     super.tearDown();
   }
+
+  protected abstract AbstractAvroMojo mojo() throws Exception;
+  protected abstract File outputDir();
+  protected abstract String[] generatedFiles();
 
   /**
    * Assert the existence files in the given given directory.
@@ -56,5 +60,14 @@ public class AbstractAvroMojoTest extends AbstractMojoTestCase {
     for (String file : files) {
       assertTrue("File " + file + " does not exist.", dirList.contains(file));
     }
+  }
+
+  public void testMojoExecutionCreatesProperFiles() throws Exception {
+    AbstractAvroMojo mojo = mojo();
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    assertFilesExist(outputDir(), generatedFiles());
   }
 }
