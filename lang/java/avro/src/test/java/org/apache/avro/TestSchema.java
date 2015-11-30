@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -99,5 +101,14 @@ public class TestSchema {
     Schema.createRecord("foobar", null, null, false, null);
   }
 
+  @Test
+  public void testRecordMetadadaLoad() throws IOException {
+    Schema.metadataDirectory = "src/test/resources/record-metadata";
+    File file = new File("src/test/resources/SchemaBuilder.avsc");
+    Schema schema = new Schema.Parser().parse(file);
+
+    assertNotNull(schema);
+    assertNotNull(schema.getMetadata());
+  }
 
 }

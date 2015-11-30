@@ -18,13 +18,12 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.Schema;
+import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData.StringType;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.avro.Schema;
-import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
  * Generate Java classes from Avro schema files (.avsc)
@@ -61,18 +60,8 @@ public class SchemaMojo extends AbstractAvroMojo {
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
-    Schema schema;
+    Schema schema = parseSrc(src);
 
-    // This is necessary to maintain backward-compatibility. If there are  
-    // no imported files then isolate the schemas from each other, otherwise
-    // allow them to share a single schema so resuse and sharing of schema
-    // is possible.
-    if (imports == null) {
-      schema = new Schema.Parser().parse(src);
-    } else {
-      schema = schemaParser.parse(src);
-    }
-    
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
@@ -90,5 +79,22 @@ public class SchemaMojo extends AbstractAvroMojo {
   @Override
   protected String[] getTestIncludes() {
     return testIncludes;
+  }
+
+  private Schema parseSrc(File src) throws IOException {
+    Schema.metadataDirectory = this.metadataDirectory;
+    Schema schema;
+
+    // This is necessary to maintain backward-compatibility. If there are
+    // no imported files then isolate the schemas from each other, otherwise
+    // allow them to share a single schema so reuse and sharing of schema
+    // is possible.
+    if (imports == null) {
+      schema = new Schema.Parser().parse(src);
+    } else {
+      schema = schemaParser.parse(src);
+    }
+
+    return schema;
   }
 }

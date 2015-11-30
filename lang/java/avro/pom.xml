@@ -169,6 +169,11 @@
       <artifactId>joda-time</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>1.16</version>
+    </dependency>
   </dependencies>
 
 </project>

@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -43,6 +45,7 @@ import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.DoubleNode;
+import org.yaml.snakeyaml.Yaml;
 
 /** An abstract data type.
  * <p>A schema may be one of:
@@ -82,6 +85,7 @@ public abstract class Schema extends JsonProperties {
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
   private static final int NO_HASHCODE = Integer.MIN_VALUE;
+  public static String metadataDirectory = "";
 
   static {
     FACTORY.enable(JsonParser.Feature.ALLOW_COMMENTS);
@@ -280,6 +284,16 @@ public abstract class Schema extends JsonProperties {
 
   /** Returns true if this record is an error type. */
   public boolean isError() {
+    throw new AvroRuntimeException("Not a record: "+this);
+  }
+
+  /** If this is a record and there is a metadata return metadata */
+  public Map getMetadata() {
+    throw new AvroRuntimeException("Not a record: "+this);
+  }
+
+  /** If this is a record set metadata for this record. **/
+  public void setMetadata(Map metadata) {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
@@ -605,6 +619,8 @@ public abstract class Schema extends JsonProperties {
     private List<Field> fields;
     private Map<String, Field> fieldMap;
     private final boolean isError;
+    private Map metadata;
+
     public RecordSchema(Name name, String doc, boolean isError) {
       super(Type.RECORD, name, doc);
       this.isError = isError;
@@ -656,6 +672,18 @@ public abstract class Schema extends JsonProperties {
       this.fields = ff.lock();
       this.hashCode = NO_HASHCODE;
     }
+
+    @Override
+    public Map getMetadata() {
+      return metadata;
+    }
+
+    @Override
+    public void setMetadata(Map metadata) {
+      this.metadata = metadata;
+
+    }
+
     public boolean equals(Object o) {
       if (o == this) return true;
       if (!(o instanceof RecordSchema)) return false;
@@ -1249,6 +1277,7 @@ public abstract class Schema extends JsonProperties {
       } else if (type.equals("record") || type.equals("error")) { // record
         List<Field> fields = new ArrayList<Field>();
         result = new RecordSchema(name, doc, type.equals("error"));
+        result.setMetadata(getMetadataFromRecord(name.name));
         if (name != null) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())
@@ -1341,6 +1370,25 @@ public abstract class Schema extends JsonProperties {
     } else {
       throw new SchemaParseException("Schema not yet supported: "+schema);
     }
+  }
+
+  private static Map getMetadataFromRecord(String fileName) {
+    Map map = null;
+    String nameWithExtension = fileName + ".yml";
+    File metadataFileFromRecord = new File(Schema.metadataDirectory + "/" + nameWithExtension);
+
+    if(metadataFileFromRecord.exists()) {
+      try {
+        FileInputStream metadataInputStream = new FileInputStream(metadataFileFromRecord);
+        Yaml yaml = new Yaml();
+        map = (Map) yaml.load(metadataInputStream);
+
+      } catch (FileNotFoundException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    return map;
   }
 
   private static Set<String> parseAliases(JsonNode node) {

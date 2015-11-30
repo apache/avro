@@ -18,17 +18,16 @@
 
 package org.apache.avro.mojo;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-
 import org.apache.avro.compiler.specific.SpecificCompiler;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Base for Avro Compiler Mojos.
@@ -113,6 +112,13 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter property="templateDirectory"
    */
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
+
+  /**
+   * The directory that contains yaml files to be used as Metadata attribute in RecordSchema.
+   *
+   * @parameter property="metadataDirectory"
+   */
+  protected String metadataDirectory = "";
 
   /**
    * Determines whether or not to create setters for the fields of the record.

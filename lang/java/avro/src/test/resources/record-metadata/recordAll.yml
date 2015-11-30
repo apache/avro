@@ -1,0 +1,3 @@
+persistence:
+  db:
+    database: 'foobar'
