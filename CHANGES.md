@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.8.0
 * Add support for Java 6 (#21)
 
 ## 0.7.0
