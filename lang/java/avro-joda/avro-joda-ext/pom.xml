@@ -29,7 +29,7 @@
     <osgi.import>
       *
     </osgi.import>
-    <osgi.export>org.apache.avro*;version="${project.version}"</osgi.export>
+    <osgi.export>org.apache.avro.joda.*, ;version="${project.version}"</osgi.export>
   </properties>
 
   <artifactId>avro-joda-ext</artifactId>
