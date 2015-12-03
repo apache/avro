@@ -20,7 +20,8 @@ lib/Avro/Schema.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
-NOTICE.txt
+LICENSE
+NOTICE
 README
 t/00_compile.t
 t/01_names.t
