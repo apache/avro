@@ -209,7 +209,9 @@ Avro 1.8.0 (10 August 2014)
 
     AVRO-1754. C++ ValiditingDecoder handles null incorrectly. (John McClean via thiru)
 
-    AVRO-1733: C: Add LICENSE and NOTICE to binary distribution. (blue)
+    AVRO-1731: C: Add LICENSE and NOTICE to binary distribution. (blue)
+
+    AVRO-1735: Perl: Add LICENSE and NOTICE to distribution. (blue)
 
 Avro 1.7.7 (23 July 2014)
 
