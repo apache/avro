@@ -13,9 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-if (typeof require !== 'undefined') {
-  var _ = require("underscore");
-}
+var _ = require("underscore"),
+    util = require('util');
+
+var WARNING = 'Validator API is deprecated. Please use the type API instead.';
+Validator = util.deprecate(Validator, WARNING);
+ProtocolValidator = util.deprecate(ProtocolValidator, WARNING);
 
 var AvroSpec = {
   PrimitiveTypes: ['null', 'boolean', 'int', 'long', 'float', 'double', 'bytes', 'string'],
@@ -409,7 +412,7 @@ function Validator(schema, namespace, namedTypes) {
 
 Validator.validate = function(schema, obj) {
   return (new Validator(schema)).validate(obj);
-};
+}
 
 function ProtocolValidator(protocol) {
   this.validate = function(typeName, obj) {

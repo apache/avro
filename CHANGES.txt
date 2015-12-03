@@ -61,6 +61,8 @@ Avro 1.8.0 (10 August 2014)
 
     AVRO-1672. Java: Add date/time logical types and conversions. (blue)
 
+    AVRO-1747. JS: Add Javascript IO implementation. (Matthieu Monsch via blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
