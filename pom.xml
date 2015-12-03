@@ -226,6 +226,10 @@
                 <!-- build or test files -->
                 <!-- <exclude>**/target/**</exclude> -->
                 <exclude>**/*.log</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/Position.java</exclude>
                 <exclude>lang/csharp/src/apache/test/Ipc/GeneratedFiles/**/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/perf/com/foo/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/ipc/org/apache/avro/ipc/*.cs</exclude>
