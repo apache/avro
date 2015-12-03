@@ -52,6 +52,8 @@ using boost::lexical_cast;
 using avro::ValidSchema;
 using avro::compileJsonSchema;
 
+void makeCanonical(string& s, bool foldCase);
+
 struct PendingSetterGetter {
     string structName;
     string type;
@@ -82,6 +84,7 @@ class CodeGen {
     const bool noUnion_;
     const std::string guardString_;
     boost::mt19937 random_;
+    const bool use_struct_ifdef_guard_;
 
     vector<PendingSetterGetter> pendingGettersAndSetters;
     vector<PendingConstructor> pendingConstructors;
@@ -108,12 +111,14 @@ public:
     CodeGen(std::ostream& os, const std::string& ns,
         const std::string& schemaFile, const std::string& headerFile,
         const std::string& guardString,
-        const std::string& includePrefix, bool noUnion) :
+        const std::string& includePrefix, bool noUnion, bool use_struct_ifdef_guard) :
         unionNumber_(0), os_(os), inNamespace_(false), ns_(ns),
         schemaFile_(schemaFile), headerFile_(headerFile),
         includePrefix_(includePrefix), noUnion_(noUnion),
         guardString_(guardString),
-        random_(static_cast<uint32_t>(::time(0))) { }
+        random_(static_cast<uint32_t>(::time(0))),
+        use_struct_ifdef_guard_(use_struct_ifdef_guard)
+        { }
     void generate(const ValidSchema& schema);
 };
 
@@ -226,6 +231,17 @@ string CodeGen::generateRecordType(const NodePtr& n)
     }
 
     string decoratedName = decorate(n->name());
+
+    if (use_struct_ifdef_guard_)
+    {
+      /* guard for struct redefinitions */
+      std::string ifdef_decorated_name = fullname(decoratedName);
+      makeCanonical(ifdef_decorated_name, true);
+
+      os_ << "#ifndef " << ifdef_decorated_name << "_STRUCT_GUARD_" << "\n";
+      os_ << "#define " << ifdef_decorated_name << "_STRUCT_GUARD_" << "\n";
+    }
+
     os_ << "struct " << decoratedName << " {\n";
     if (! noUnion_) {
         for (size_t i = 0; i < c; ++i) {
@@ -264,6 +280,13 @@ string CodeGen::generateRecordType(const NodePtr& n)
     }
     os_ << "        { }\n";
     os_ << "};\n\n";
+
+    /* guard for struct redefinitions */
+    if (use_struct_ifdef_guard_)
+    {
+      os_ << "#endif\n";
+    }
+
     return decorate(n->name());
 }
 
@@ -475,45 +498,45 @@ string CodeGen::generateDeclaration(const NodePtr& n)
 
 void CodeGen::generateEnumTraits(const NodePtr& n)
 {
-	string dname = decorate(n->name());
-	string fn = fullname(dname);
-	size_t c = n->names();
-	string first; 
-	string last;
-	if (!ns_.empty())
-	{
-		first = ns_;
-		first += "::";
-		first += n->nameAt(0);
+        string dname = decorate(n->name());
+        string fn = fullname(dname);
+        size_t c = n->names();
+        string first;
+        string last;
+        if (!ns_.empty())
+        {
+                first = ns_;
+                first += "::";
+                first += n->nameAt(0);
 
-		last = ns_;
-		last += "::";
-		last += n->nameAt(c-1);
-	} else {
-		first = n->nameAt(0);
-		last = n->nameAt(c-1);
-	}
-	os_ << "template<> struct codec_traits<" << fn << "> {\n"
-		<< "    static void encode(Encoder& e, " << fn << " v) {\n"
-		<< "		if (v < "  << first << " || v > " << last << ")\n" 
-		<< "		{\n"
-		<< "			std::ostringstream error;\n"
-		<< "			error << \"enum value \" << v << \" is out of bound for " << fn << " and cannot be encoded\";\n"
-		<< "			throw avro::Exception(error.str());\n"
-		<< "		}\n"
-		<< "        e.encodeEnum(v);\n"
-		<< "    }\n"
-		<< "    static void decode(Decoder& d, " << fn << "& v) {\n"
-		<< "		size_t index = d.decodeEnum();\n"
-		<< "		if (index < " << first << " || index > " << last << ")\n" 
-		<< "		{\n"
-		<< "			std::ostringstream error;\n"
-		<< "			error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"
-		<< "			throw avro::Exception(error.str());\n"
-		<< "		}\n"
-		<< "        v = static_cast<" << fn << ">(index);\n"
-		<< "    }\n"
-		<< "};\n\n";
+                last = ns_;
+                last += "::";
+                last += n->nameAt(c-1);
+        } else {
+                first = n->nameAt(0);
+                last = n->nameAt(c-1);
+        }
+        os_ << "template<> struct codec_traits<" << fn << "> {\n"
+                << "    static void encode(Encoder& e, " << fn << " v) {\n"
+                << "            if (v < "  << first << " || v > " << last << ")\n"
+                << "            {\n"
+                << "                    std::ostringstream error;\n"
+                << "                    error << \"enum value \" << v << \" is out of bound for " << fn << " and cannot be encoded\";\n"
+                << "                    throw avro::Exception(error.str());\n"
+                << "            }\n"
+                << "        e.encodeEnum(v);\n"
+                << "    }\n"
+                << "    static void decode(Decoder& d, " << fn << "& v) {\n"
+                << "            size_t index = d.decodeEnum();\n"
+                << "            if (index < " << first << " || index > " << last << ")\n"
+                << "            {\n"
+                << "                    std::ostringstream error;\n"
+                << "                    error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"
+                << "                    throw avro::Exception(error.str());\n"
+                << "            }\n"
+                << "        v = static_cast<" << fn << ">(index);\n"
+                << "    }\n"
+                << "};\n\n";
 }
 
 void CodeGen::generateRecordTraits(const NodePtr& n)
@@ -524,6 +547,16 @@ void CodeGen::generateRecordTraits(const NodePtr& n)
     }
 
     string fn = fullname(decorate(n->name()));
+
+    if (use_struct_ifdef_guard_)
+    {
+      /* guard for struct redefinitions */
+      std::string ifdef_guard_str = fn;
+      makeCanonical(ifdef_guard_str, true);
+      os_ << "#ifndef " << ifdef_guard_str << "_CODEC_GUARD_" << "\n";
+      os_ << "#define " << ifdef_guard_str << "_CODEC_GUARD_" << "\n";
+    }
+
     os_ << "template<> struct codec_traits<" << fn << "> {\n"
         << "    static void encode(Encoder& e, const " << fn << "& v) {\n";
 
@@ -557,6 +590,12 @@ void CodeGen::generateRecordTraits(const NodePtr& n)
 
     os_ << "    }\n"
         << "};\n\n";
+
+    if (use_struct_ifdef_guard_)
+    {
+      /* guard for redefinitions */
+      os_ << "#endif\n";
+    }
 }
 
 void CodeGen::generateUnionTraits(const NodePtr& n)
@@ -777,7 +816,8 @@ int main(int argc, char** argv)
         ("no-union-typedef,U", "do not generate typedefs for unions in records")
         ("namespace,n", po::value<string>(), "set namespace for generated code")
         ("input,i", po::value<string>(), "input file")
-        ("output,o", po::value<string>(), "output file to generate");
+        ("output,o", po::value<string>(), "output file to generate")
+        ("guard,g", "Add struct and codec ifdef guards");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -794,6 +834,8 @@ int main(int argc, char** argv)
     string inf = vm.count(IN) > 0 ? vm[IN].as<string>() : string();
     string incPrefix = vm[INCLUDE_PREFIX].as<string>();
     bool noUnion = vm.count(NO_UNION_TYPEDEF) != 0;
+    bool guard = static_cast<bool>(vm.count("guard"));
+
     if (incPrefix == "-") {
         incPrefix.clear();
     } else if (*incPrefix.rbegin() != '/') {
@@ -813,9 +855,9 @@ int main(int argc, char** argv)
         if (! outf.empty()) {
             string g = readGuard(outf);
             ofstream out(outf.c_str());
-            CodeGen(out, ns, inf, outf, g, incPrefix, noUnion).generate(schema);
+            CodeGen(out, ns, inf, outf, g, incPrefix, noUnion, guard).generate(schema);
         } else {
-            CodeGen(std::cout, ns, inf, outf, "", incPrefix, noUnion).
+            CodeGen(std::cout, ns, inf, outf, "", incPrefix, noUnion, guard).
                 generate(schema);
         }
         return 0;
