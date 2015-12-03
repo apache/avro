@@ -213,6 +213,8 @@ Avro 1.8.0 (10 August 2014)
 
     AVRO-1735: Perl: Add LICENSE and NOTICE to distribution. (blue)
 
+    AVRO-1736: PHP: Add LICENSE and NOTICE to distribution. (blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
