@@ -52,6 +52,7 @@
     <!-- plugin versions -->
     <antrun-plugin.version>1.7</antrun-plugin.version>
     <enforcer-plugin.version>1.3.1</enforcer-plugin.version>
+    <rat.version>0.9</rat.version>
   </properties>
 
   <modules>
@@ -204,31 +205,80 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <version>${antrun-plugin.version}</version>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <version>${rat.version}</version>
+            <executions>
+              <execution>
+                <phase>test</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
             <configuration>
-              <target name="rat">
-                <rat:report xmlns:rat="antlib:org.apache.rat.anttasks"
-                            reportFile="build/rat-report.log">
-                  <fileset dir="build/avro-src-${project.version}/"
-                           excludesfile="share/rat-excludes.txt"/>
-                </rat:report>
-                <condition property="rat.passed">
-                  <isfileselected file="build/rat-report.log">
-                    <containsregexp expression="^0 Unknown Licenses"/>
-                  </isfileselected>
-                </condition>
-                <fail unless="rat.passed">Unknown licenses: See build/rat-report.log.</fail>
-              </target>
+              <excludeSubProjects>false</excludeSubProjects>
+              <excludes>
+                <!-- version control files -->
+                <!-- may not be in the root folder if using git-svn -->
+                <exclude>**/.git/**</exclude>
+                <exclude>**/.gitignore</exclude>
+                <!-- build or test files -->
+                <!-- <exclude>**/target/**</exclude> -->
+                <exclude>**/*.log</exclude>
+                <exclude>lang/csharp/src/apache/test/Ipc/GeneratedFiles/**/*.cs</exclude>
+                <exclude>lang/csharp/src/apache/perf/com/foo/*.cs</exclude>
+                <exclude>lang/csharp/src/apache/ipc/org/apache/avro/ipc/*.cs</exclude>
+                <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.txt</exclude>
+                <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/_SUCCESS</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/Test.java</exclude>
+                <!-- data and schema files -->
+                <exclude>**/*.avro</exclude> <!-- binary format -->
+                <exclude>**/*.avsc</exclude> <!-- does not allow comments -->
+                <exclude>**/*.avpr</exclude> <!-- does not allow comments -->
+                <exclude>**/*.json</exclude> <!-- does not allow comments -->
+                <exclude>lang/c/tests/schema_tests/fail/*</exclude> <!-- C test cases -->
+                <exclude>lang/c/tests/schema_tests/pass/*</exclude> <!-- C test cases -->
+                <exclude>lang/c++/jsonschemas/*</exclude> <!-- C++ test cases -->
+                <!-- IDE settings and files -->
+                <exclude>**/.classpath</exclude>
+                <exclude>**/.project</exclude>
+                <exclude>**/.settings/**</exclude>
+                <exclude>**/.idea/**</exclude>
+                <exclude>**/*.iml</exclude>
+                <exclude>lang/csharp/Avro.sln</exclude> <!-- visual studio -->
+                <!-- build-related files -->
+                <exclude>BUILD.txt</exclude>
+                <exclude>share/VERSION.txt</exclude>
+                <exclude>lang/perl/.shipit</exclude>
+                <exclude>lang/c/src/avro-c.pc.in</exclude>
+                <exclude>lang/ruby/Manifest</exclude>
+                <exclude>lang/java/tools/userlogs/**</exclude>
+                <exclude>lang/java/mapred/userlogs/**</exclude>
+                <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/goal.txt</exclude>
+                <exclude>lang/java/tools/dependency-reduced-pom.xml</exclude>
+                <!-- text documentation files -->
+                <exclude>CHANGES.txt</exclude>
+                <exclude>DIST_README.txt</exclude>
+                <exclude>lang/perl/Changes</exclude>
+                <exclude>lang/c/README.maintaining_win32.txt</exclude>
+                <exclude>lang/c/docs/index.txt</exclude>
+                <exclude>lang/csharp/README</exclude>
+                <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/archetype.properties</exclude> <!-- used to generate user projects -->
+                <!-- files and directories covered by LICENSE.txt -->
+                <exclude>lang/py/lib/simplejson/**</exclude>
+                <exclude>lang/c/jansson/**</exclude>
+                <exclude>lang/c/src/avro/msinttypes.h</exclude>
+                <exclude>lang/c/src/avro/msstdint.h</exclude>
+                <exclude>lang/c/src/st.c</exclude>
+                <exclude>lang/c/src/st.h</exclude>
+                <exclude>lang/c/tests/msdirent.h</exclude>
+                <exclude>lang/c++/m4/*.m4</exclude>
+                <exclude>lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/protovis-r3.2.js</exclude>
+                <exclude>lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/g.bar.js</exclude>
+                <exclude>lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/jquery-1.4.2.min.js</exclude>
+              </excludes>
             </configuration>
-            <dependencies>
-              <dependency>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-tasks</artifactId>
-                <version>${apache-rat-tasks.version}</version>
-              </dependency>
-            </dependencies>
           </plugin>
         </plugins>
       </build>

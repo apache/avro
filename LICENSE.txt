@@ -204,80 +204,222 @@
 ----------------------------------------------------------------------
 License for the Jansson C JSON parser used in the C implementation:
 
-Copyright (c) 2009 Petri Lehtinen <petri@digip.org>
+Copyright (c) 2009-2011 Petri Lehtinen <petri@digip.org>
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Some files include an additional copyright notice:
+* lang/c/jansson/src/pack_unpack.c
+  Copyright (c) 2011 Graeme Smecher <graeme.smecher@mail.mcgill.ca>
+* lang/c/jansson/test/suites/api/test_unpack.c
+  Copyright (c) 2011 Graeme Smecher <graeme.smecher@mail.mcgill.ca>
+* lang/c/jansson/src/memory.c
+  Copyright (c) 2011 Basile Starynkevitch  <basile@starynkevitch.net>
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
-----------------------------------------------------------------------
-License for the Json.NET used in the C# implementation:
-
-Copyright (c) 2007 James Newton-King
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+| Permission is hereby granted, free of charge, to any person obtaining a copy
+| of this software and associated documentation files (the "Software"), to deal
+| in the Software without restriction, including without limitation the rights
+| to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+| copies of the Software, and to permit persons to whom the Software is
+| furnished to do so, subject to the following conditions:
+|
+| The above copyright notice and this permission notice shall be included in
+| all copies or substantial portions of the Software.
+|
+| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+| IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+| FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+| AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+| LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+| OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+| THE SOFTWARE.
 
 ----------------------------------------------------------------------
-License for msinttypes used in the C implementation:
+License for the libtool scripts used in the Jansson C JSON parser: 
+
+libtool (GNU libtool) 2.2.10
+Written by Gordon Matzigkeit <gord@gnu.ai.mit.edu>, 1996
+
+Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2006,
+2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+
+Included under the terms of the Apache License version 2.0.
+
+| GNU Libtool is free software; you can redistribute it and/or modify
+| it under the terms of the GNU General Public License as published by
+| the Free Software Foundation; either version 2 of the License, or
+| (at your option) any later version.
+|
+| As a special exception to the GNU General Public License,
+| if you distribute this file as part of a program or library that
+| is built using GNU Libtool, you may include this file under the
+| same distribution terms that you use for the rest of that program.
+|
+| GNU Libtool is distributed in the hope that it will be useful, but
+| WITHOUT ANY WARRANTY; without even the implied warranty of
+| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+| General Public License for more details.
+|
+| You should have received a copy of the GNU General Public License
+| along with GNU Libtool; see the file COPYING.  If not, a copy
+| can be downloaded from http://www.gnu.org/licenses/gpl.html,
+| or obtained by writing to the Free Software Foundation, Inc.,
+| 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+----------------------------------------------------------------------
+License for the configure script used in the Jansson C JSON parser: 
+
+Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
+2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
+Foundation, Inc.
+
+| This configure script is free software; the Free Software Foundation
+| gives unlimited permission to copy, distribute and modify it.
+
+Portions of the configure script are from libtool (see above) and are
+included under the terms of the Apache License version 2.0.
+
+----------------------------------------------------------------------
+License for the install-sh script used in the Jansson C JSON parser: 
+
+Copyright (C) 1994 X Consortium
+
+| This originates from X11R5 (mit/util/scripts/install.sh), which was
+| later released in X11R6 (xc/config/util/install.sh) with the
+| following copyright and license.
+|
+| Permission is hereby granted, free of charge, to any person obtaining a copy
+| of this software and associated documentation files (the "Software"), to
+| deal in the Software without restriction, including without limitation the
+| rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+| sell copies of the Software, and to permit persons to whom the Software is
+| furnished to do so, subject to the following conditions:
+|
+| The above copyright notice and this permission notice shall be included in
+| all copies or substantial portions of the Software.
+|
+| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+| IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+| FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+| X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+| AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNEC-
+| TION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+|
+| Except as contained in this notice, the name of the X Consortium shall not
+| be used in advertising or otherwise to promote the sale, use or other deal-
+| ings in this Software without prior written authorization from the X Consor-
+| tium.
+|
+| FSF changes to this file are in the public domain.
+
+----------------------------------------------------------------------
+License for the aclocal.m4 script used in the Jansson C JSON parser: 
+
+Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005,
+2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+
+| This file is free software; the Free Software Foundation
+| gives unlimited permission to copy and/or distribute it,
+| with or without modifications, as long as this notice is preserved.
+|
+| This program is distributed in the hope that it will be useful,
+| but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+| even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+| PARTICULAR PURPOSE.
+
+Portions of the aclocal.m4 file are from libtool (see above) and are
+included under the terms of the Apache License version 2.0.
+
+----------------------------------------------------------------------
+License for build scripts used in the Jansson C JSON parser: 
+
+* config.guess
+  Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
+  2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation, Inc.
+* missing
+  Copyright (C) 1996, 1997, 1999, 2000, 2002, 2003, 2004, 2005, 2006
+  Free Software Foundation, Inc.
+  Originally by Fran,cois Pinard <pinard@iro.umontreal.ca>, 1996.
+* config.sub
+  Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+  2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation,
+  Inc.
+* depcomp
+  Copyright (C) 1999, 2000, 2003, 2004, 2005, 2006 Free Software
+  Foundation, Inc.
+  Originally written by Alexandre Oliva <oliva@dcc.unicamp.br>.
+
+Included under the terms of the Apache License version 2.0.
+
+| This file is free software; you can redistribute it and/or modify it
+| under the terms of the GNU General Public License as published by
+| the Free Software Foundation; either version 2 of the License, or
+| (at your option) any later version.
+|
+| This program is distributed in the hope that it will be useful, but
+| WITHOUT ANY WARRANTY; without even the implied warranty of
+| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+| General Public License for more details.
+|
+| You should have received a copy of the GNU General Public License
+| along with this program; if not, write to the Free Software
+| Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
+| 02110-1301, USA.
+|
+| As a special exception to the GNU General Public License, if you
+| distribute this file as part of a program that contains a
+| configuration script generated by Autoconf, you may include it under
+| the same distribution terms that you use for the rest of that program.
+
+----------------------------------------------------------------------
+License for Makefile.in files used in the Jansson C JSON parser: 
+
+Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
+2003, 2004, 2005, 2006  Free Software Foundation, Inc.
+
+| This Makefile.in is free software; the Free Software Foundation
+| gives unlimited permission to copy and/or distribute it,
+| with or without modifications, as long as this notice is preserved.
+|
+| This program is distributed in the hope that it will be useful,
+| but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+| even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+| PARTICULAR PURPOSE.
+
+----------------------------------------------------------------------
+License for msinttypes.h and msstdint.h used in the C implementation:
 Source from:
 http://code.google.com/p/msinttypes/downloads/detail?name=msinttypes-r26.zip
 
 Copyright (c) 2006-2008 Alexander Chemeris
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+| Redistribution and use in source and binary forms, with or without
+| modification, are permitted provided that the following conditions are met:
+|
+|   1. Redistributions of source code must retain the above copyright notice,
+|      this list of conditions and the following disclaimer.
+|
+|   2. Redistributions in binary form must reproduce the above copyright
+|      notice, this list of conditions and the following disclaimer in the
+|      documentation and/or other materials provided with the distribution.
+|
+|   3. The name of the author may be used to endorse or promote products
+|      derived from this software without specific prior written permission.
+|
+| THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+| WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+| MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+| EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+| SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+| PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+| OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+| WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+| OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+| ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-  1. Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+----------------------------------------------------------------------
+License for st.c and st.h used in the C implementation:
 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-
-  3. The name of the author may be used to endorse or promote products
-     derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
-WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+| This is a public domain general purpose hash table package written by
+| Peter Moore @ UCB. 
 
 ----------------------------------------------------------------------
 License for Dirent API for Microsoft Visual Studio used in the C implementation:
@@ -286,23 +428,327 @@ http://www.softagalleria.net/download/dirent/dirent-1.11.zip
 
 Copyright (C) 2006 Toni Ronkko
 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-``Software''), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL TONI RONKKO BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
+| Permission is hereby granted, free of charge, to any person obtaining
+| a copy of this software and associated documentation files (the
+| ``Software''), to deal in the Software without restriction, including
+| without limitation the rights to use, copy, modify, merge, publish,
+| distribute, sublicense, and/or sell copies of the Software, and to
+| permit persons to whom the Software is furnished to do so, subject to
+| the following conditions:
+|
+| The above copyright notice and this permission notice shall be included
+| in all copies or substantial portions of the Software.
+|
+| THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY KIND, EXPRESS
+| OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+| MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+| IN NO EVENT SHALL TONI RONKKO BE LIABLE FOR ANY CLAIM, DAMAGES OR
+| OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+| ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+| OTHER DEALINGS IN THE SOFTWARE.
 
 ----------------------------------------------------------------------
+License for simplejson used in the python implementation:
+
+Source from: https://github.com/simplejson/simplejson
+
+Copyright (c) 2006 Bob Ippolito
+
+| Permission is hereby granted, free of charge, to any person obtaining a copy of
+| this software and associated documentation files (the "Software"), to deal in
+| the Software without restriction, including without limitation the rights to
+| use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+| of the Software, and to permit persons to whom the Software is furnished to do
+| so, subject to the following conditions:
+|
+| The above copyright notice and this permission notice shall be included in all
+| copies or substantial portions of the Software.
+|
+| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+| IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+| FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+| AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+| LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+| OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+| SOFTWARE.
+
+----------------------------------------------------------------------
+License for ivy-2.2.0.jar used in the python implementation:
+
+Apache License version 2.0 (see above)
+
+----------------------------------------------------------------------
+License for pyAntTasks-1.3.jar used in the python implementation:
+
+Apache License version 2.0 (see above)
+
+----------------------------------------------------------------------
+License for NUnit binary included with the C# implementation:
+File: nunit.framework.dll
+
+| NUnit License
+|
+| Copyright © 2002-2015 Charlie Poole
+| Copyright © 2002-2004 James W. Newkirk, Michael C. Two, Alexei A. Vorontsov
+| Copyright © 2000-2002 Philip A. Craig
+|
+| This software is provided 'as-is', without any express or implied warranty. In
+| no event will the authors be held liable for any damages arising from the use
+| of this software.
+|
+| Permission is granted to anyone to use this software for any purpose, including
+| commercial applications, and to alter it and redistribute it freely, subject to
+| the following restrictions:
+|
+| The origin of this software must not be misrepresented; you must not claim that
+| you wrote the original software. If you use this software in a product, an
+| acknowledgment (see the following) in the product documentation is required. 
+|
+| Portions Copyright © 2002-2012 Charlie Poole or Copyright © 2002-2004 James W.
+| Newkirk, Michael C. Two, Alexei A. Vorontsov or Copyright © 2000-2002 Philip A.
+| Craig 
+|
+| Altered source versions must be plainly marked as such, and must not be
+| misrepresented as being the original software. 
+|
+| This notice may not be removed or altered from any source distribution.
+| License Note
+|
+| This license is based on the open source zlib/libpng license. The idea was to
+| keep the license as simple as possible to encourage use of NUnit in free and
+| commercial applications and libraries, but to keep the source code together and
+| to give credit to the NUnit contributors for their efforts. While this license
+| allows shipping NUnit in source and binary form, if shipping a NUnit variant is
+| the sole purpose of your product, please let us know.
+
+----------------------------------------------------------------------
+License for the Json.NET binary included with the C# implementation:
+File: Newtonsoft.Json.dll
+
+Copyright (c) 2007 James Newton-King
+
+| Permission is hereby granted, free of charge, to any person obtaining
+| a copy of this software and associated documentation files (the
+| "Software"), to deal in the Software without restriction, including
+| without limitation the rights to use, copy, modify, merge, publish,
+| distribute, sublicense, and/or sell copies of the Software, and to
+| permit persons to whom the Software is furnished to do so, subject to
+| the following conditions:
+|
+| The above copyright notice and this permission notice shall be
+| included in all copies or substantial portions of the Software.
+|
+| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+| EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+| MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+| NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+| LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+| OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+| WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+----------------------------------------------------------------------
+License for the Castle Core binary included with the C# implementation:
+File: Castle.Core.dll
+
+Copyright (c) 2004-2015 Castle Project
+
+License: Apache License version 2.0 (see above)
+URL: http://opensource.org/licenses/Apache-2.0
+
+----------------------------------------------------------------------
+License for the log4net binary included with the C# implementation:
+File: log4net.dll
+
+Copyright 2004-2015 The Apache Software Foundation.
+
+License: Apache License version 2.0 (see above)
+
+----------------------------------------------------------------------
+License for the m4 macros used by the C++ implementation:
+
+Files:
+* lang/c++/m4/m4_ax_boost_system.m4
+  Copyright (c) 2008 Thomas Porschberg <thomas@randspringer.de>
+  Copyright (c) 2008 Michael Tindal
+  Copyright (c) 2008 Daniel Casimiro <dan.casimiro@gmail.com>
+* lang/c++/m4/m4_ax_boost_asio.m4
+  Copyright (c) 2008 Thomas Porschberg <thomas@randspringer.de>
+  Copyright (c) 2008 Pete Greenwell <pete@mu.org>
+* lang/c++/m4/m4_ax_boost_filesystem.m4
+  Copyright (c) 2009 Thomas Porschberg <thomas@randspringer.de>
+  Copyright (c) 2009 Michael Tindal
+  Copyright (c) 2009 Roman Rybalko <libtorrent@romanr.info>
+* lang/c++/m4/m4_ax_boost_thread.m4
+  Copyright (c) 2009 Thomas Porschberg <thomas@randspringer.de>
+  Copyright (c) 2009 Michael Tindal
+* lang/c++/m4/m4_ax_boost_regex.m4
+  Copyright (c) 2008 Thomas Porschberg <thomas@randspringer.de>
+  Copyright (c) 2008 Michael Tindal
+* lang/c++/m4/m4_ax_boost_base.m4
+  Copyright (c) 2008 Thomas Porschberg <thomas@randspringer.de>
+
+License text:
+| Copying and distribution of this file, with or without modification, are
+| permitted in any medium without royalty provided the copyright notice
+| and this notice are preserved. This file is offered as-is, without any
+| warranty.
+
+----------------------------------------------------------------------
+License for the AVRO_BOOT_NO_TRAIT code in the C++ implementation:
+File: lang/c++/api/Boost.hh
+
+| Boost Software License - Version 1.0 - August 17th, 2003
+|
+| Permission is hereby granted, free of charge, to any person or organization
+| obtaining a copy of the software and accompanying documentation covered by
+| this license (the "Software") to use, reproduce, display, distribute,
+| execute, and transmit the Software, and to prepare derivative works of the
+| Software, and to permit third-parties to whom the Software is furnished to
+| do so, all subject to the following:
+|
+| The copyright notices in the Software and this entire statement, including
+| the above license grant, this restriction and the following disclaimer,
+| must be included in all copies of the Software, in whole or in part, and
+| all derivative works of the Software, unless such copies or derivative
+| works are solely in the form of machine-executable object code generated by
+| a source language processor.
+|
+| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+| IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+| FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+| SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+| FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+| ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+| DEALINGS IN THE SOFTWARE.
+
+----------------------------------------------------------------------
+License for portions of the mapreduce API included in the Java implementation:
+
+Copyright 2011-2012 Odiago, Inc.
+
+License: Apache License version 2.0 (see above)
+
+----------------------------------------------------------------------
+License for jquery.tipsy.js, tipsy.js, and tipsy.css used by the Java IPC implementation:
+
+Copyright (c) 2008 Jason Frame (jason@onehackoranother.com)
+
+| Permission is hereby granted, free of charge, to any person obtaining a copy
+| of this software and associated documentation files (the "Software"), to deal
+| in the Software without restriction, including without limitation the rights
+| to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+| copies of the Software, and to permit persons to whom the Software is
+| furnished to do so, subject to the following conditions:
+| 
+| The above copyright notice and this permission notice shall be included in
+| all copies or substantial portions of the Software.
+| 
+| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+| IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+| FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+| AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+| LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+| OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+| THE SOFTWARE.
+
+----------------------------------------------------------------------
+License for protovis-r3.2.js used by the Java IPC implementation:
+
+Copyright (c) 2010, Stanford Visualization Group
+All rights reserved.
+
+| Redistribution and use in source and binary forms, with or without modification,
+| are permitted provided that the following conditions are met:
+| 
+|   * Redistributions of source code must retain the above copyright notice,
+|     this list of conditions and the following disclaimer.
+| 
+|   * Redistributions in binary form must reproduce the above copyright notice,
+|     this list of conditions and the following disclaimer in the documentation
+|     and/or other materials provided with the distribution.
+| 
+|   * Neither the name of Stanford University nor the names of its contributors
+|     may be used to endorse or promote products derived from this software
+|     without specific prior written permission.
+| 
+| THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+| ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+| WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+| DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+| ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+| (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+| LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+| ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+| (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+| SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+----------------------------------------------------------------------
+License for g.Raphael 0.4.1 used by the Java IPC implementation:
+
+Copyright (c) 2009 Dmitry Baranovskiy (http://g.raphaeljs.com)
+Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
+
+----------------------------------------------------------------------
+License for jQuery v1.4.2 used by the Java IPC implementation:
+
+Copyright 2010, John Resig
+Dual licensed under the MIT or GPL Version 2 licenses.
+http://jquery.org/license
+
+jQuery includes Sizzle.js
+http://sizzlejs.com/
+Copyright 2010, The Dojo Foundation
+Released under the MIT, BSD, and GPL Licenses.
+
+Both are included under the terms of the MIT license:
+
+| Permission is hereby granted, free of charge, to any person obtaining a copy
+| of this software and associated documentation files (the "Software"), to deal
+| in the Software without restriction, including without limitation the rights
+| to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+| copies of the Software, and to permit persons to whom the Software is
+| furnished to do so, subject to the following conditions:
+|
+| The above copyright notice and this permission notice shall be included in
+| all copies or substantial portions of the Software.
+|
+| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+| IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+| FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+| AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+| LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+| OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+| THE SOFTWARE.
+
+----------------------------------------------------------------------
+License for portions of idl.jj in the Java IPC implementation:
+
+Portions of idl.jj were modeled after the example Java 1.5
+parser included with JavaCC. For those portions:
+
+Copyright (c) 2006, Sun Microsystems, Inc.
+All rights reserved.
+
+| Redistribution and use in source and binary forms, with or without
+| modification, are permitted provided that the following conditions are met:
+|
+|     * Redistributions of source code must retain the above copyright notice,
+|       this list of conditions and the following disclaimer.
+|     * Redistributions in binary form must reproduce the above copyright
+|       notice, this list of conditions and the following disclaimer in the
+|       documentation and/or other materials provided with the distribution.
+|     * Neither the name of the Sun Microsystems, Inc. nor the names of its
+|       contributors may be used to endorse or promote products derived from
+|       this software without specific prior written permission.
+|
+| THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+| AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+| IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+| ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+| LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+| CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+| SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+| INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+| CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+| ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+| THE POSSIBILITY OF SUCH DAMAGE.
