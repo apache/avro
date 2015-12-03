@@ -54,7 +54,7 @@ public class Parser {
   public Parser(Symbol root, ActionHandler symbolHandler)
     throws IOException {
     this.symbolHandler = symbolHandler;
-    this.stack = new Symbol[8]; // Start small to make sure expansion code works
+    this.stack = new Symbol[10];
     this.stack[0] = root;
     this.pos = 1;
   }
@@ -62,9 +62,18 @@ public class Parser {
   /**
    * If there is no sufficient room in the stack, use this expand it.
    */
-  private void expandStack() {
-    stack = Arrays.copyOf(stack, stack.length+Math.min(stack.length,1024));
+  private void ensureCapacity(int minCapacity) {
+    int oldCapacity = stack.length;
+    if (minCapacity > oldCapacity) {
+        int newCapacity = oldCapacity + (oldCapacity >> 1);
+        if (newCapacity - minCapacity < 0) {
+            newCapacity = minCapacity;
+        }
+        stack = Arrays.copyOf(stack, newCapacity);
+    }
   }
+
+
 
   /**
    * Recursively replaces the symbol at the top of the stack with its
@@ -147,11 +156,10 @@ public class Parser {
    */
   public final void pushProduction(Symbol sym) {
     Symbol[] p = sym.production;
-    while (pos + p.length > stack.length) {
-      expandStack();
-    }
-    System.arraycopy(p, 0, stack, pos, p.length);
-    pos += p.length;
+    int l = p.length;
+    ensureCapacity(pos + l);
+    System.arraycopy(p, 0, stack, pos, l);
+    pos += l;
   }
 
   /**
@@ -172,10 +180,10 @@ public class Parser {
    * Pushes <tt>sym</tt> on to the stack.
    */
   public void pushSymbol(Symbol sym) {
-    if (pos == stack.length) {
-      expandStack();
-    }
-    stack[pos++] = sym;
+    int opos = pos;
+    pos++;
+    ensureCapacity(pos);
+    stack[opos] = sym;
   }
   
   /**
