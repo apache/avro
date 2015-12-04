@@ -109,6 +109,8 @@ Avro 1.8.0 (10 August 2014)
 
     AVRO-1739. Update Avro URLs and mailing lists. (Gabor Liptak via blue)
 
+    AVRO-1765: JS: Update node.js version in docker to 4.x. (blue)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
