@@ -115,10 +115,7 @@ function createType(attrs, opts) {
       try {
         return new DerivedType(attrs, opts);
       } catch (err) {
-        if (opts.assertLogicalType) {
-          // The spec mandates that we fall through to the underlying type if
-          // the logical type is invalid. We provide this option to ease
-          // debugging.
+        if (opts.assertLogicalTypes) {
           throw err;
         }
         LOGICAL_TYPE = null;
@@ -305,7 +302,9 @@ Type.prototype.compareBuffers = function (buf1, buf2) {
   return this._match(new Tap(buf1), new Tap(buf2));
 };
 
-Type.prototype.getName = function () { return this._name; };
+Type.prototype.getName = function (noRef) {
+  return noRef ? getTypeName(this) : this._name;
+};
 
 Type.prototype.getSchema = function (noDeref) {
   // Since JS objects are unordered, this implementation (unfortunately)
@@ -870,19 +869,9 @@ UnionType.prototype._copy = function (val, opts) {
   if (val === null && this._indices['null'] !== undefined) {
     return null;
   }
+
   var i, l, obj;
-  if (wrap === 1) {
-    // Promote into first match (convenience, slow).
-    i = 0;
-    l = this._types.length;
-    while (i < l && obj === undefined) {
-      try {
-        obj = this._types[i]._copy(val, opts);
-      } catch (err) {
-        i++;
-      }
-    }
-  } else if (typeof val == 'object') {
+  if (typeof val == 'object') {
     var keys = Object.keys(val);
     if (keys.length === 1) {
       var name = keys[0];
@@ -902,6 +891,18 @@ UnionType.prototype._copy = function (val, opts) {
       }
       if (i !== undefined) {
         obj = this._types[i]._copy(val[name], opts);
+      }
+    }
+  }
+  if (wrap === 1 && obj === undefined) {
+    // Try promoting into first match (convenience, slow).
+    i = 0;
+    l = this._types.length;
+    while (i < l && obj === undefined) {
+      try {
+        obj = this._types[i]._copy(val, opts);
+      } catch (err) {
+        i++;
       }
     }
   }
@@ -1801,23 +1802,31 @@ LogicalType.prototype._read = function (tap) {
   return this._fromValue(this._underlyingType._read(tap));
 };
 
-LogicalType.prototype._write = function (tap, val) {
-  this._underlyingType._write(tap, this._toValue(val));
+LogicalType.prototype._write = function (tap, any) {
+  this._underlyingType._write(tap, this._toValue(any));
 };
 
-LogicalType.prototype._check = function (val, cb) {
-  return this._underlyingType._check(this._toValue(val), cb);
+LogicalType.prototype._check = function (any, cb) {
+  try {
+    var val = this._toValue(any);
+  } catch (err) {
+    if (cb) {
+      cb(PATH.slice(), any, this);
+    }
+    return false;
+  }
+  return this._underlyingType._check(val, cb);
 };
 
-LogicalType.prototype._copy = function (val, opts) {
+LogicalType.prototype._copy = function (any, opts) {
   var type = this._underlyingType;
   switch (opts && opts.coerce) {
     case 3: // To string.
-      return type._copy(this._toValue(val), opts);
+      return type._copy(this._toValue(any), opts);
     case 2: // From string.
-      return this._fromValue(type._copy(val, opts));
+      return this._fromValue(type._copy(any, opts));
     default: // Normal copy.
-      return this._fromValue(type._copy(this._toValue(val), opts));
+      return this._fromValue(type._copy(this._toValue(any), opts));
   }
 };
 

@@ -33,12 +33,17 @@ limitations under the License.
     `'./Schema.avsc'`).
   + A decoded schema object (e.g. `{type: 'array', items: 'int'}`).
 + `opts` {Object} Parsing options. The following keys are currently supported:
+  + `namespace` {String} Optional parent namespace.
+  + `registry` {Object} Registry of predefined type names. This can for example
+    be used to override the types used for primitives or to split a schema
+    declaration over multiple files.
   + `logicalTypes` {Object} Optional dictionary of
     [`LogicalType`](#class-logicaltypeattrs-opts-types). This can be used to
     support serialization and deserialization of arbitrary native objects.
-  + `namespace` {String} Optional parent namespace.
-  + `registry` {Object} Optional registry of predefined type names. This can
-    for example be used to override the types used for primitives.
+  + `assertLogicalTypes` {Boolean} The Avro specification mandates that we fall
+    through to the underlying type if a logical type is invalid. When set, this
+    option will override this behavior and throw an error when a logical type
+    can't be applied.
   + `typeHook(attrs, opts)` {Function} Function called before each new type is
     instantiated. The relevant decoded schema is available as first argument
     and the parsing options as second. This function can optionally return a
@@ -336,7 +341,10 @@ evolution can be used to significantly speed up decoding.
 
 Returns a random value of `type`.
 
-##### `type.getName()`
+##### `type.getName([noRef])`
+
++ `noRef` {Boolean} Return built-in names (e.g. `'record'`, `'map'`,
+  `'boolean'`) rather than user-specified references.
 
 Returns `type`'s fully qualified name if it exists, `undefined` otherwise.
 

@@ -63,6 +63,8 @@ Avro 1.8.0 (10 August 2014)
 
     AVRO-1747. JS: Add Javascript IO implementation. (Matthieu Monsch via blue)
 
+    AVRO-1767. JS: Fall back to unwrapped union values. (Matthieu Monsch via blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
