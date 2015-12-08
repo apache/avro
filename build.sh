@@ -22,7 +22,11 @@ cd `dirname "$0"`				  # connect to root
 VERSION=`cat share/VERSION.txt`
 
 function usage {
+<<<<<<< HEAD
   echo "Usage: $0 {test|dist|sign|clean}"
+=======
+  echo "Usage: $0 {test|dist|sign|clean|docker|rat}"
+>>>>>>> 80ba788... AVRO-1722 ADDENDUM: Add last license doc changes, rat helper.
   exit 1
 }
 
@@ -172,6 +176,39 @@ case "$target" in
 	(cd lang/perl; [ -f Makefile ] && make clean)
 	;;
 
+    docker)
+        docker build -t avro-build share/docker
+        if [ "$(uname -s)" == "Linux" ]; then
+          USER_NAME=${SUDO_USER:=$USER}
+          USER_ID=$(id -u $USER_NAME)
+          GROUP_ID=$(id -g $USER_NAME)
+        else # boot2docker uid and gid
+          USER_NAME=$USER
+          USER_ID=1000
+          GROUP_ID=50
+        fi
+        docker build -t avro-build-${USER_NAME} - <<UserSpecificDocker
+FROM avro-build
+RUN groupadd -g ${GROUP_ID} ${USER_NAME} || true
+RUN useradd -g ${GROUP_ID} -u ${USER_ID} -k /root -m ${USER_NAME}
+ENV HOME /home/${USER_NAME}
+UserSpecificDocker
+        # By mapping the .m2 directory you can do an mvn install from
+        # within the container and use the result on your normal
+        # system.  And this also is a significant speedup in subsequent
+        # builds because the dependencies are downloaded only once.
+        docker run --rm=true -t -i \
+          -v ${PWD}:/home/${USER_NAME}/avro \
+          -w /home/${USER_NAME}/avro \
+          -v ${HOME}/.m2:/home/${USER_NAME}/.m2 \
+          -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg \
+          -u ${USER_NAME} \
+          avro-build-${USER_NAME}
+        ;;
+
+    rat)
+        mvn test -Dmaven.main.skip=true -Dmaven.test.skip=true -DskipTests=true -P rat -pl :avro-toplevel
+        ;;
     *)
         usage
         ;;

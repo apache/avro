@@ -10,9 +10,12 @@ NUnit license acknowledgement:
 | W. Newkirk, Michael C. Two, Alexei A. Vorontsov or Copyright © 2000-2002
 | Philip A. Craig 
 
-Portions of the mapreduce API included in the Java implementation are licensed
-to Odiago, Inc. and were contributed by Odiago to Apache Avro. The original
-file header text is:
+Based upon the representations of upstream licensors, it is understood that
+portions of the mapreduce API included in the Java implementation are licensed
+from various contributors under one or more contributor license agreements to
+Odiago, Inc. and were then contributed by Odiago to Apache Avro, which has now
+made them available under the Apache 2.0 license. The original file header text
+is:
 
 | Licensed to Odiago, Inc. under one or more contributor license
 | agreements.  See the NOTICE file distributed with this work for
@@ -36,6 +39,12 @@ The Odiago NOTICE at the time of the contribution:
 
 Apache Ivy includes the following in its NOTICE file:
 
+| Apache Ivy
+| Copyright 2007-2010 The Apache Software Foundation
+|
+| This product includes software developed by
+| The Apache Software Foundation (http://www.apache.org/).
+|
 | Portions of Ivy were originally developed by
 | Jayasoft SARL (http://www.jayasoft.fr/)
 | and are licensed to the Apache Software Foundation under the
@@ -46,3 +55,11 @@ Apache Ivy includes the following in its NOTICE file:
 | the terms of a BSD style license.  
 | The original software and related information is available
 | at http://www.jcraft.com/jsch/. 
+
+Apache Log4Net includes the following in its NOTICE file:
+
+| Apache log4net
+| Copyright 2004-2015 The Apache Software Foundation
+|
+| This product includes software developed at
+| The Apache Software Foundation (http://www.apache.org/).
