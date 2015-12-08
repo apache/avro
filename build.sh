@@ -22,7 +22,7 @@ cd `dirname "$0"`				  # connect to root
 VERSION=`cat share/VERSION.txt`
 
 function usage {
-  echo "Usage: $0 {test|dist|sign|clean|docker}"
+  echo "Usage: $0 {test|dist|sign|clean|docker|rat}"
   exit 1
 }
 
@@ -202,6 +202,10 @@ UserSpecificDocker
           -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg \
           -u ${USER_NAME} \
           avro-build-${USER_NAME}
+        ;;
+
+    rat)
+        mvn test -Dmaven.main.skip=true -Dmaven.test.skip=true -DskipTests=true -P rat -pl :avro-toplevel
         ;;
 
     *)
