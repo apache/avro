@@ -2,6 +2,9 @@ Avro Change Log
 
 Trunk (not yet released)
 
+    AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
+    now consistent regardless of the environment's locale.
+
 
 Avro 1.8.0 (10 August 2014)
 
@@ -36,7 +39,7 @@ Avro 1.8.0 (10 August 2014)
     (Ryan Blue via cutting)
 
     AVRO-570. Python: Add connector for tethered mapreduce.
-    (Jeremy Lewi and Steven Willis via cutting)    
+    (Jeremy Lewi and Steven Willis via cutting)
 
     AVRO-834. Java: Data File corruption recovery tool.
     (scottcarey and tomwhite)
