@@ -36,7 +36,6 @@ end
 
 require 'avro/schema'
 require 'avro/io'
-require 'avro/json_io'
 require 'avro/data_file'
 require 'avro/protocol'
 require 'avro/ipc'
