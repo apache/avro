@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ module Avro
       def byte!
         @reader.read(1).unpack('C').first
       end
-      
+
       def read_null
         # null is written as zero byte's
         nil
@@ -106,6 +106,38 @@ module Avro
         @reader.read(len)
       end
 
+      def read_array_start
+        read_item_count
+      end
+
+      def read_array_next
+        read_item_count
+      end
+
+      def read_map_start
+        read_item_count
+      end
+
+      def read_map_next
+        read_item_count
+      end
+
+      def read_index
+        read_long
+      end
+
+      def read_enum
+        read_int
+      end
+
+      def read_item_count
+        block_count = read_long
+        if block_count < 0
+          block_count = -block_count
+        end
+        block_count
+      end
+
       def skip_null
         nil
       end
@@ -159,7 +191,7 @@ module Avro
         nil
       end
 
-      # a boolean is written as a single byte 
+      # a boolean is written as a single byte
       # whose value is either 0 (false) or 1 (true).
       def write_boolean(datum)
         on_disk = datum ? 1.chr : 0.chr
@@ -318,7 +350,7 @@ module Avro
       end
 
       def read_enum(writers_schema, readers_schema, decoder)
-        index_of_symbol = decoder.read_int
+        index_of_symbol = decoder.read_enum
         read_symbol = writers_schema.symbols[index_of_symbol]
 
         # TODO(jmhodges): figure out what unset means for resolution
@@ -332,18 +364,14 @@ module Avro
 
       def read_array(writers_schema, readers_schema, decoder)
         read_items = []
-        block_count = decoder.read_long
-        while block_count != 0
-          if block_count < 0
-            block_count = -block_count
-            block_size = decoder.read_long
-          end
-          block_count.times do
+        items_count = decoder.read_array_start
+        while items_count != 0
+          items_count.times do
             read_items << read_data(writers_schema.items,
                                     readers_schema.items,
                                     decoder)
           end
-          block_count = decoder.read_long
+          items_count = decoder.read_array_next
         end
 
         read_items
@@ -351,26 +379,22 @@ module Avro
 
       def read_map(writers_schema, readers_schema, decoder)
         read_items = {}
-        block_count = decoder.read_long
-        while block_count != 0
-          if block_count < 0
-            block_count = -block_count
-            block_size = decoder.read_long
-          end
-          block_count.times do
+        items_count = decoder.read_map_start
+        while items_count != 0
+          items_count.times do
             key = decoder.read_string
             read_items[key] = read_data(writers_schema.values,
                                         readers_schema.values,
                                         decoder)
           end
-          block_count = decoder.read_long
+          items_count = decoder.read_map_next
         end
 
         read_items
       end
 
       def read_union(writers_schema, readers_schema, decoder)
-        index_of_schema = decoder.read_long
+        index_of_schema = decoder.read_index
         selected_writers_schema = writers_schema.schemas[index_of_schema]
 
         read_data(selected_writers_schema, readers_schema, decoder)
