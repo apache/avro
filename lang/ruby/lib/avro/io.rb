@@ -134,6 +134,9 @@ module Avro
         block_count = read_long
         if block_count < 0
           block_count = -block_count
+
+          # consume byte-count when present
+          read_long
         end
         block_count
       end
@@ -364,14 +367,14 @@ module Avro
 
       def read_array(writers_schema, readers_schema, decoder)
         read_items = []
-        items_count = decoder.read_array_start
-        while items_count != 0
-          items_count.times do
+        block_count = decoder.read_array_start
+        while block_count != 0
+          block_count.times do
             read_items << read_data(writers_schema.items,
                                     readers_schema.items,
                                     decoder)
           end
-          items_count = decoder.read_array_next
+          block_count = decoder.read_array_next
         end
 
         read_items
@@ -379,15 +382,15 @@ module Avro
 
       def read_map(writers_schema, readers_schema, decoder)
         read_items = {}
-        items_count = decoder.read_map_start
-        while items_count != 0
-          items_count.times do
+        block_count = decoder.read_map_start
+        while block_count != 0
+          block_count.times do
             key = decoder.read_string
             read_items[key] = read_data(writers_schema.values,
                                         readers_schema.values,
                                         decoder)
           end
-          items_count = decoder.read_map_next
+          block_count = decoder.read_map_next
         end
 
         read_items
