@@ -17,11 +17,12 @@
  */
 package org.apache.avro.tool;
 
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 
 /** Reads a data file to get its schema. */
@@ -41,13 +42,14 @@ public class DataFileGetSchemaTool implements Tool {
   public int run(InputStream stdin, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
     if (args.size() != 1) {
-      err.println("Expected 1 argument: input_file");
+      err.println("Expected 1 argument: input_file or -");
       return 1;
     }
-    DataFileReader<Void> reader =
-      new DataFileReader<Void>(Util.openSeekableFromFS(args.get(0)),
-                               new GenericDatumReader<Void>());
-    out.println(reader.getSchema().toString(true));
+    BufferedInputStream inStream = Util.fileOrStdin(args.get(0), stdin);
+
+    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+    DataFileStream<Object> streamReader = new DataFileStream<Object>(inStream, reader);
+    out.println(streamReader.getSchema().toString(true));
     return 0;
   }
 }

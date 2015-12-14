@@ -136,7 +136,14 @@ public class TestDataFileTools {
     assertEquals(schema.toString() + "\n",
         run(new DataFileGetSchemaTool(), sampleFile.getPath()));
   }
-  
+
+  @Test
+  public void testGetSchemaStdin() throws Exception {
+    FileInputStream stdin = new FileInputStream(sampleFile);
+    assertEquals(schema.toString() + "\n",
+        run(new DataFileGetSchemaTool(), stdin, "-"));
+  }
+
   @Test
   public void testWriteWithDeflate() throws Exception {
     testWrite("deflate", Arrays.asList("--codec", "deflate"), "deflate");
