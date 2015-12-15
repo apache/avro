@@ -622,13 +622,6 @@ File: lang/c++/api/Boost.hh
 | DEALINGS IN THE SOFTWARE.
 
 ----------------------------------------------------------------------
-License for portions of the mapreduce API included in the Java implementation:
-
-Copyright 2011-2012 Odiago, Inc.
-
-License: Apache License version 2.0 (see above)
-
-----------------------------------------------------------------------
 License for jquery.tipsy.js, tipsy.js, and tipsy.css used by the Java IPC implementation:
 
 Copyright (c) 2008 Jason Frame (jason@onehackoranother.com)
@@ -721,7 +714,7 @@ Both are included under the terms of the MIT license:
 | THE SOFTWARE.
 
 ----------------------------------------------------------------------
-License for portions of idl.jj in the Java IPC implementation:
+License for portions of idl.jj in the Java compiler implementation:
 
 Portions of idl.jj were modeled after the example Java 1.5
 parser included with JavaCC. For those portions:
