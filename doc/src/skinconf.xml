@@ -31,7 +31,7 @@ which will be used to configure the chosen Forrest skin.
     In other words google will search the @domain for the query string.
 
   -->
-  <search name="Avro" domain="hadoop.apache.org" provider="google"/>
+  <search name="Avro" domain="avro.apache.org" provider="google"/>
 
   <!-- Disable the print link? If enabled, invalid HTML 4.0.1 -->
   <disable-print-link>true</disable-print-link>  

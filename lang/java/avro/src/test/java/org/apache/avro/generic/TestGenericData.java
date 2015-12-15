@@ -319,6 +319,18 @@ public class TestGenericData {
     mapper.readTree(parser);
   }
 
+  @Test public void testToStringEscapesControlCharsInBytes() throws Exception {
+    GenericData data = GenericData.get();
+    assertEquals("{\"bytes\": \"a\\nb\"}", data.toString(ByteBuffer.wrap(new byte[] {'a', '\n', 'b'})));
+  }
+
+  @Test public void testToStringFixed() throws Exception {
+    GenericData data = GenericData.get();
+    assertEquals("[97, 10, 98]", data.toString(new GenericData.Fixed(
+        Schema.createFixed("test", null, null, 3),
+        new byte[] {'a', '\n', 'b'})));
+  }
+
   @Test public void testToStringDoesNotEscapeForwardSlash() throws Exception {
     GenericData data = GenericData.get();
     assertEquals("\"/\"", data.toString("/"));

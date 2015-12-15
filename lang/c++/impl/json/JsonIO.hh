@@ -19,6 +19,7 @@
 #ifndef avro_json_JsonIO_hh__
 #define avro_json_JsonIO_hh__
 
+#include <locale>
 #include <stack>
 #include <string>
 #include <sstream>
@@ -193,7 +194,7 @@ class AVRO_DECL JsonGenerator {
                 escape('t', b, p);
                 break;
             default:
-                if (! iscntrl(*p)) {
+                if (! std::iscntrl(*p, std::locale::classic())) {
                     continue;
                 }
                 write(b, p);

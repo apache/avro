@@ -66,7 +66,7 @@ public class BinaryFragmentToJsonTool implements Tool {
       schema = new Schema.Parser().parse(nargs.get(0));
       inputFile = nargs.get(1);
     } else {
-      schema = new Schema.Parser().parse(Util.openFromFS(schemaFile));
+      schema = Util.parseSchemaFromFS(schemaFile);
       inputFile = nargs.get(0);
     }
     InputStream input = Util.fileOrStdin(inputFile, stdin);

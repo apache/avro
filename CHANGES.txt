@@ -1,6 +1,9 @@
 Avro Change Log
 
-Avro 1.8.0 (10 August 2014)
+Trunk (not yet released)
+
+
+Avro 1.8.0 (15 December 2015)
 
   INCOMPATIBLE CHANGES
 
@@ -58,6 +61,10 @@ Avro 1.8.0 (10 August 2014)
 
     AVRO-1672. Java: Add date/time logical types and conversions. (blue)
 
+    AVRO-1747. JS: Add Javascript IO implementation. (Matthieu Monsch via blue)
+
+    AVRO-1767. JS: Fall back to unwrapped union values. (Matthieu Monsch via blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
@@ -99,8 +106,12 @@ Avro 1.8.0 (10 August 2014)
     AVRO-1692. Allow more than one logical type for a Java class. (blue via
     tomwhite)
 
-	AVRO-1697. Ruby: Add support for the Snappy codec to the Ruby library.
-	(Daniel Schierbeck via tomwhite)
+    AVRO-1697. Ruby: Add support for the Snappy codec to the Ruby library.
+    (Daniel Schierbeck via tomwhite)
+
+    AVRO-1739. Update Avro URLs and mailing lists. (Gabor Liptak via blue)
+
+    AVRO-1765: JS: Update node.js version in docker to 4.x. (blue)
 
   BUG FIXES
 
@@ -184,8 +195,39 @@ Avro 1.8.0 (10 August 2014)
     AVRO-1676. Java: Do not treat enum symbols as immutable when deep copying.
     (Mike Rodriguez via tomwhite)
 
+    AVRO-1593. C++: Use classic locale to escape control chars.
+    (Hatem Helal via blue)
+
+    AVRO-1700. C++: Fix avro_BufferStreambuf_hh__ header guard.
+    (Liu Yanbo via blue)
+
+    AVRO-1715. Java: Close files opened by the Schema parser.
+    (Pavel Safrata via blue)
+
+    AVRO-1729: Ruby: Add LICENSE and NOTICE to ruby gems. (blue)
+
+    AVRO-1732: C++: Add LICENSE and NOTICE to binary distribution. (blue)
+
+    AVRO-1733: C#: Add LICENSE and NOTICE to binary distribution. (blue)
+
     AVRO-1755. Java: avro-mapred should not depend on avro-ipc:test.
     (Clément MAHTIEU via tomwhite)
+
+    AVRO-1754. C++ ValiditingDecoder handles null incorrectly. (John McClean via thiru)
+
+    AVRO-1731: C: Add LICENSE and NOTICE to binary distribution. (blue)
+
+    AVRO-1735: Perl: Add LICENSE and NOTICE to distribution. (blue)
+
+    AVRO-1736: PHP: Add LICENSE and NOTICE to distribution. (blue)
+
+    AVRO-1730: Python 2, 3: Add LICENSE and NOTICE to distribution. (blue)
+
+    AVRO-1722: Update root LICENSE.txt and NOTICE.txt. (blue)
+
+    AVRO-1584: Java: Escape characters not allowed in JSON in toString. (blue)
+
+    AVRO-1728: Java: Add LICENSE and NOTICE files to jars. (blue)
 
 Avro 1.7.7 (23 July 2014)
 

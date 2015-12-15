@@ -21,13 +21,16 @@ FROM java:7-jdk
 
 WORKDIR /root
 
+# Add the repository for node.js 4.x
+RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
+
 # Install dependencies from packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
   git subversion curl ant make maven \
   gcc cmake asciidoc source-highlight \
   g++ flex bison libboost-all-dev doxygen \
   mono-devel mono-gmcs nunit \
-  nodejs nodejs-legacy npm \
+  nodejs \
   perl \
   php5 phpunit php5-gmp bzip2 \
   python python-setuptools python3-setuptools \

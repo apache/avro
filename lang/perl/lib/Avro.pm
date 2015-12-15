@@ -38,7 +38,7 @@ Avro - official Perl API for the Avro serialization and RPC framework
 
 =head1 AUTHOR
 
-Apache Avro <avro-dev@hadoop.apache.org>
+Apache Avro <dev@avro.apache.org>
 
 =head1 HISTORY
 

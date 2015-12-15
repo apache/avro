@@ -78,7 +78,7 @@ public class CreateRandomFileTool implements Tool {
         return 1;
     }
     Schema schema = (schemafile != null)
-        ? new Schema.Parser().parse(Util.openFromFS(schemafile))
+        ? Util.parseSchemaFromFS(schemafile)
         : new Schema.Parser().parse(schemastr);
 
     DataFileWriter<Object> writer =

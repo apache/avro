@@ -22,7 +22,7 @@
 <h2>Introduction to Avro C++</h2>
 
 <p>Avro is a data serialization system. See
-<a href="http://hadoop.apache.org/avro/docs/current/">http://avro.apache.org/docs/current/</a>
+<a href="http://avro.apache.org/docs/current/">http://avro.apache.org/docs/current/</a>
 for background information.</p>
 <p>Avro C++ is a C++ library which implementats parts of the <a href="http://avro.apache.org/docs/current/spec.html"> Avro Specification</a>. The library includes the following functionality:</p>
 <ul>

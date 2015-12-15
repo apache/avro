@@ -57,13 +57,13 @@ See http://forrest.apache.org/docs/linking.html for more info
   </docs>
   
   <external-refs>
-    <site      href="http://hadoop.apache.org/avro/"/>
-    <lists     href="http://hadoop.apache.org/avro/mailing_lists.html"/>
+    <site      href="http://avro.apache.org/"/>
+    <lists     href="http://avro.apache.org/mailing_lists.html"/>
     <archive   href="http://mail-archives.apache.org/mod_mbox/hadoop-avro-commits/"/>
-    <releases  href="http://hadoop.apache.org/avro/releases.html">
+    <releases  href="http://avro.apache.org/releases.html">
       <download href="#Download" />
     </releases>
-    <jira      href="http://hadoop.apache.org/avro/issue_tracking.html"/>
+    <jira      href="http://avro.apache.org/issue_tracking.html"/>
     <wiki      href="http://wiki.apache.org/hadoop/Avro/" />
     <faq       href="http://wiki.apache.org/hadoop/Avro/FAQ" />
     <json      href="http://www.json.org/" />
