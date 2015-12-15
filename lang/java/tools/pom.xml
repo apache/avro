@@ -42,13 +42,53 @@
         <directory>../../../share/</directory>
       </resource>
       <resource>
-        <includes>
-          <include>NOTICE.txt</include>
-        </includes>
-        <directory>../../../</directory>
+        <directory>src/main/resources</directory>
       </resource>
     </resources>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <configuration>
+            <excludes>
+              <exclude>META-INF/LICENSE</exclude>
+              <exclude>META-INF/NOTICE</exclude>
+              <exclude>META-INF/*.text</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
+      <!-- Update the LICENSE and NOTICE used for Javadoc jars -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>license-javadocs</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/apidocs</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/javadoc/META-INF/</directory>
+                  <targetPath>META-INF/</targetPath>
+                  <includes>
+                    <include>LICENSE</include>
+                    <include>NOTICE</include>
+                  </includes>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -60,6 +100,19 @@
             </goals>
             <configuration>
               <createDependencyReducedPom>false</createDependencyReducedPom>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>LICENSE*</exclude>
+                    <exclude>NOTICE*</exclude>
+                    <exclude>META-INF/ASL2.0</exclude>
+                    <exclude>META-INF/LICENSE.txt</exclude>
+                    <exclude>META-INF/NOTICE.txt</exclude>
+                    <exclude>META-INF/license/*</exclude>
+                  </excludes>
+                </filter>
+              </filters>
               <transformers>
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -77,12 +130,41 @@
         <!-- 'nodeps' artifact is standalone -->
         <executions>
           <execution>
+            <id>nodeps</id>
             <phase>package</phase>
             <goals>
               <goal>jar</goal>
             </goals>
             <configuration>
               <classifier>nodeps</classifier>
+              <excludes>
+                <exclude>META-INF/LICENSE</exclude>
+                <exclude>META-INF/NOTICE</exclude>
+                <exclude>META-INF/*.text</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${enforcer-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-banned-dependencies</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>com.google.code.findbugs:jsr305</exclude> <!-- GPL -->
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+              <fail>true</fail>
             </configuration>
           </execution>
         </executions>
@@ -174,12 +256,24 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
       <optional>true</optional>
+      <exclusions>
+        <exclusion> <!-- GPL -->
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>net.sf.jopt-simple</groupId>
       <artifactId>jopt-simple</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.github.stephenc.findbugs</groupId>
+      <artifactId>findbugs-annotations</artifactId>
+      <version>${findbugs-annotations.version}</version>
+    </dependency>
   </dependencies>
+
 
 </project>
 
