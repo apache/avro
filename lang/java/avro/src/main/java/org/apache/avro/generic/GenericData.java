@@ -20,6 +20,7 @@ package org.apache.avro.generic;
 import java.nio.ByteBuffer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -547,8 +548,7 @@ public class GenericData {
     } else if (isBytes(datum)) {
       buffer.append("{\"bytes\": \"");
       ByteBuffer bytes = (ByteBuffer)datum;
-      for (int i = bytes.position(); i < bytes.limit(); i++)
-        buffer.append((char)bytes.get(i));
+      writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
       buffer.append("\"}");
     } else if (((datum instanceof Float) &&       // quote Nan & Infinity
                 (((Float)datum).isInfinite() || ((Float)datum).isNaN()))
@@ -563,7 +563,7 @@ public class GenericData {
   }
   
   /* Adapted from http://code.google.com/p/json-simple */
-  private void writeEscapedString(String string, StringBuilder builder) {
+  private void writeEscapedString(CharSequence string, StringBuilder builder) {
     for(int i = 0; i < string.length(); i++){
       char ch = string.charAt(i);
       switch(ch){

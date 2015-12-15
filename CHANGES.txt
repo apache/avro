@@ -225,6 +225,8 @@ Avro 1.8.0 (10 August 2014)
 
     AVRO-1722: Update root LICENSE.txt and NOTICE.txt. (blue)
 
+    AVRO-1584: Java: Escape characters not allowed in JSON in toString. (blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
