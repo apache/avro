@@ -38,6 +38,7 @@ case "$1" in
        ;;
 
      clean)
+        bundle install
         bundle exec rake clean
        ;;
 
