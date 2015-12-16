@@ -2,6 +2,16 @@ Avro Change Log
 
 Trunk (not yet released)
 
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
+  BUG FIXES
+
 
 Avro 1.8.0 (15 December 2015)
 
