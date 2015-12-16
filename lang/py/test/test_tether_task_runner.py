@@ -59,6 +59,9 @@ class TestTetherTaskRunner(unittest.TestCase):
 
       runner.start(outputport=parent_port,join=False)
 
+      # Wait for the server to start
+      time.sleep(1)
+
       # Test sending various messages to the server and ensuring they are
       # processed correctly
       requestor=HTTPRequestor("localhost",runner.server.server_address[1],inputProtocol)

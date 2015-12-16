@@ -189,6 +189,7 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
 
 
       proc.wait()
+      time.sleep(1) # wait a bit longer to clean up
 
       # read the output
       with file(os.path.join(outpath,"part-00000.avro")) as hf:
