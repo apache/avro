@@ -1,0 +1,13 @@
+*.iml
+*.ipr
+*.iws
+.idea/
+.project
+.settings
+.classpath
+target
+*.pyc
+.svn
+/build
+test-output
+/dist
