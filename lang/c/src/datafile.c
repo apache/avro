@@ -439,7 +439,15 @@ static int file_read_block_count(avro_file_reader_t r)
 	int rval;
 	int64_t len;
 	const avro_encoding_t *enc = &avro_binary_encoding;
-	check_prefix(rval, enc->read_long(r->reader, &r->blocks_total),
+
+	/* For a correctly formatted file, EOF will occur here */
+	rval = enc->read_long(r->reader, &r->blocks_total);
+
+	if (rval == EILSEQ && avro_reader_is_eof(r->reader)) {
+		return EOF;
+	}
+
+	check_prefix(rval, rval,
 		     "Cannot read file block count: ");
 	check_prefix(rval, enc->read_long(r->reader, &len),
 		     "Cannot read file block size: ");
@@ -710,16 +718,13 @@ avro_file_reader_read_value(avro_file_reader_t r, avro_value_t *value)
 	check_param(EINVAL, value, "value");
 
 	if (r->blocks_read == r->blocks_total) {
+		/* reads sync bytes and buffers further bytes */
 		check(rval, avro_read(r->reader, sync, sizeof(sync)));
 		if (memcmp(r->sync, sync, sizeof(r->sync)) != 0) {
 			/* wrong sync bytes */
 			avro_set_error("Incorrect sync bytes");
 			return EILSEQ;
 		}
-
-		/* Did we just hit the end of the file? */
-		if (avro_reader_is_eof(r->reader))
-			return EOF;
 
 		check(rval, file_read_block_count(r));
 	}

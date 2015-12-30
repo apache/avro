@@ -239,6 +239,9 @@ Avro 1.8.0 (15 December 2015)
 
     AVRO-1728: Java: Add LICENSE and NOTICE files to jars. (blue)
 
+    AVRO-1572: C: Fix EOF handling on data files that are multiples of
+    4096 bytes. (Ben Walsh via martinkl)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
