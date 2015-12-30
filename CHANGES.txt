@@ -245,6 +245,8 @@ Avro 1.8.0 (15 December 2015)
     AVRO-1617: C: Fix equality checking of record schemas. (Skye
     Wanderman-Milne via martinkl)
 
+    AVRO-1560: C: Fix build for custom libsnappy location. (Ujjwal via martinkl)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

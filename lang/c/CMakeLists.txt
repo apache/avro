@@ -144,6 +144,7 @@ find_package(Snappy)
 if (SNAPPY_FOUND AND ZLIB_FOUND)  # Snappy borrows crc32 from zlib
     set(SNAPPY_PKG libsnappy)
     add_definitions(-DSNAPPY_CODEC)
+    include_directories(${SNAPPY_INCLUDE_DIR})
     message("Enabled snappy codec")
 else (SNAPPY_FOUND AND ZLIB_FOUND)
     set(SNAPPY_PKG "")
