@@ -59,12 +59,6 @@ def SetupSources():
   # Avro top-level source directory:
   root_dir = os.path.dirname(os.path.dirname(py3_dir))
 
-  # Copy README.txt from Avro top-level directory:
-  shutil.copy(
-      src=os.path.join(root_dir, 'README.txt'),
-      dst=os.path.join(py3_dir, 'README.txt'),
-  )
-
   # Read and copy Avro version:
   version_file_path = os.path.join(root_dir, 'share', VERSION_FILE_NAME)
   with open(version_file_path, 'r') as f:
