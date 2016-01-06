@@ -26,10 +26,10 @@ export PATH="$PATH:.gem/bin"
 
 # bootstrap bundler
 gem install --no-rdoc --no-ri bundler
+bundle install
 
 case "$1" in
      test)
-        bundle install
         bundle exec rake test
        ;;
 
