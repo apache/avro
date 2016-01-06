@@ -61,6 +61,10 @@ Trunk (not yet released)
 
     AVRO-1722: Update root LICENSE.txt and NOTICE.txt. (blue)
 
+    AVRO-1728: Java: Add LICENSE and NOTICE files to jars. (blue)
+
+    AVRO-1771. Add LICENSE and NOTICE to avro-doc artifact. (blue via tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
