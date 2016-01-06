@@ -251,6 +251,9 @@ Avro 1.8.0 (15 December 2015)
 
     AVRO-1771. Add LICENSE and NOTICE to avro-doc artifact. (blue via tomwhite)
 
+    AVRO-1772. Ruby: load error in rubygem when loading schema normalization.
+    (blue and martinkl via tomwhite)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
