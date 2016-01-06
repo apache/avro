@@ -84,6 +84,7 @@ case "$target" in
         mkdir -p build
 
         SRC_DIR=avro-src-$VERSION
+        DOC_DIR=avro-doc-$VERSION
 
 	rm -rf build/${SRC_DIR}
 	svn export --force . build/${SRC_DIR}
@@ -124,7 +125,10 @@ case "$target" in
 
 	# build docs
 	(cd doc; ant)
-	(cd build; tar czf ../dist/avro-doc-$VERSION.tar.gz avro-doc-$VERSION)
+        # add LICENSE and NOTICE for docs
+        cp doc/LICENSE $DOC_DIR
+        cp doc/NOTICE $DOC_DIR
+	(cd build; tar czf ../dist/avro-doc-$VERSION.tar.gz $DOC_DIR)
 
 	cp DIST_README.txt dist/README.txt
 	;;
