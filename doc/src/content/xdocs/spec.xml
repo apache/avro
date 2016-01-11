@@ -171,7 +171,9 @@
 	    user of this schema (optional).</li>
 	    <li><code>symbols</code>: a JSON array, listing symbols,
 	    as JSON strings (required).  All symbols in an enum must
-	    be unique; duplicates are prohibited.</li>
+	    be unique; duplicates are prohibited.  Every symbol must
+	    match the regular expression <code>[A-Za-z_][A-Za-z0-9_]*</code>
+	    (the same requirement as for <a href="#names">names</a>).</li>
 	  </ul>
 	  <p>For example, playing card suits might be defined with:</p>
 	  <source>
@@ -246,7 +248,7 @@
 
       </section> <!-- end complex types -->
 
-      <section>
+      <section id="names">
 	<title>Names</title>
         <p>Record, enums and fixed are named types.  Each has
           a <em>fullname</em> that is composed of two parts;
