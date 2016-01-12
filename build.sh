@@ -126,8 +126,9 @@ case "$target" in
 	# build docs
 	(cd doc; ant)
         # add LICENSE and NOTICE for docs
-        cp doc/LICENSE $DOC_DIR
-        cp doc/NOTICE $DOC_DIR
+        mkdir -p build/$DOC_DIR
+        cp doc/LICENSE build/$DOC_DIR
+        cp doc/NOTICE build/$DOC_DIR
 	(cd build; tar czf ../dist/avro-doc-$VERSION.tar.gz $DOC_DIR)
 
 	cp DIST_README.txt dist/README.txt
