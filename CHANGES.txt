@@ -38,6 +38,8 @@ Trunk (not yet released)
 
     AVRO-1688. Ruby test_union(TestIO) is failing. (tomwhite)
 
+    AVRO-1782. Ruby: Fix unit test failures in new versions of Ruby. (martinkl)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
