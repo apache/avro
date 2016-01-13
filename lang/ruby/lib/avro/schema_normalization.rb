@@ -25,7 +25,7 @@ module Avro
     end
 
     def to_parsing_form(schema)
-      JSON.dump(normalize_schema(schema))
+      MultiJson.dump(normalize_schema(schema))
     end
 
     private
