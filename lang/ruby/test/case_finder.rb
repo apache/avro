@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+require 'strscan'
+
 class CaseFinder
   PATH = File.expand_path("../../../../share/test/data/schema-tests.txt", __FILE__)
 
