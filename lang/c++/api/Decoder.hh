@@ -153,6 +153,8 @@ public:
 
     /// Decodes a branch of a union. The actual value is to follow.
     virtual size_t decodeUnionIndex() = 0;
+
+    virtual void decodeUnionEnd() {}
 };
 
 /**
@@ -194,6 +196,7 @@ AVRO_DECL DecoderPtr validatingDecoder(const ValidSchema& schema,
  *  Returns an decoder that can decode Avro standard for JSON.
  */
 AVRO_DECL DecoderPtr jsonDecoder(const ValidSchema& schema);
+AVRO_DECL DecoderPtr jsonDecoderEx(const ValidSchema& schema);
 
 /**
  *  Returns a decoder that decodes avro data from base written according to
