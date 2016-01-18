@@ -1,3 +1,4 @@
+.gem/
 tmp
 data.avr
 Gemfile.lock

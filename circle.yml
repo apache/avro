@@ -1,0 +1,3 @@
+test:
+  override:
+    - 'cd lang/ruby && ./build.sh test'
