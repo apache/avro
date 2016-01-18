@@ -24,11 +24,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
-import java.util.WeakHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +50,8 @@ import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.util.Utf8;
 
 import org.codehaus.jackson.JsonNode;
+
+import com.google.common.collect.MapMaker;
 
 /** Utilities for generic Java data. See {@link GenericRecordBuilder} for a convenient
  * way to build {@link GenericRecord} instances.
@@ -969,7 +969,7 @@ public class GenericData {
   }
 
   private final Map<Field, Object> defaultValueCache
-    = Collections.synchronizedMap(new WeakHashMap<Field, Object>());
+    = new MapMaker().weakKeys().makeMap();
 
   /**
    * Gets the default value of the given field, if any.
