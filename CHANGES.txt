@@ -270,6 +270,9 @@ Avro 1.8.0 (15 December 2015)
     AVRO-1769. C: Use operating system's libjansson instead of bundling
     it with Avro. (Magnus Edenhill via martinkl)
 
+    AVRO-1691. C: Allow schemas consisting only of a primitive type.
+    (Magnus Edenhill via martinkl)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
