@@ -276,6 +276,8 @@ Avro 1.8.0 (15 December 2015)
     AVRO-1663. C: Fix handling of namespaces for enum and fixed types.
     (martinkl)
 
+    AVRO-1775. Ruby: Use test-unit gem for running tests. (martinkl)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
