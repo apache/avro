@@ -27,13 +27,13 @@ class TestSchema < Test::Unit::TestCase
       ]}
     SCHEMA
 
-    assert_equal schema.name, 'OuterRecord'
-    assert_equal schema.fullname, 'OuterRecord'
+    assert_equal 'OuterRecord', schema.name
+    assert_equal 'OuterRecord', schema.fullname
     assert_nil schema.namespace
 
     schema.fields.each do |field|
-      assert_equal field.type.name, 'InnerRecord'
-      assert_equal field.type.fullname, 'InnerRecord'
+      assert_equal 'InnerRecord', field.type.name
+      assert_equal 'InnerRecord', field.type.fullname
       assert_nil field.type.namespace
     end
   end
@@ -50,13 +50,13 @@ class TestSchema < Test::Unit::TestCase
       ]}
     SCHEMA
 
-    assert_equal schema.name, 'OuterRecord'
-    assert_equal schema.fullname, 'my.name.space.OuterRecord'
-    assert_equal schema.namespace, 'my.name.space'
+    assert_equal 'OuterRecord', schema.name
+    assert_equal 'my.name.space.OuterRecord', schema.fullname
+    assert_equal 'my.name.space', schema.namespace
     schema.fields.each do |field|
-      assert_equal field.type.name, 'InnerRecord'
-      assert_equal field.type.fullname, 'my.name.space.InnerRecord'
-      assert_equal field.type.namespace, 'my.name.space'
+      assert_equal 'InnerRecord', field.type.name
+      assert_equal 'my.name.space.InnerRecord', field.type.fullname
+      assert_equal 'my.name.space', field.type.namespace
     end
   end
 
@@ -71,13 +71,13 @@ class TestSchema < Test::Unit::TestCase
       ]}
     SCHEMA
 
-    assert_equal schema.name, 'OuterRecord'
-    assert_equal schema.fullname, 'my.name.space.OuterRecord'
-    assert_equal schema.namespace, 'my.name.space'
+    assert_equal 'OuterRecord', schema.name
+    assert_equal 'my.name.space.OuterRecord', schema.fullname
+    assert_equal 'my.name.space', schema.namespace
     schema.fields.each do |field|
-      assert_equal field.type.name, 'InnerEnum'
-      assert_equal field.type.fullname, 'my.name.space.InnerEnum'
-      assert_equal field.type.namespace, 'my.name.space'
+      assert_equal 'InnerEnum', field.type.name
+      assert_equal 'my.name.space.InnerEnum', field.type.fullname
+      assert_equal 'my.name.space', field.type.namespace
     end
   end
 
@@ -96,18 +96,18 @@ class TestSchema < Test::Unit::TestCase
       ]}
     SCHEMA
 
-    assert_equal schema.name, 'OuterRecord'
-    assert_equal schema.fullname, 'outer.OuterRecord'
-    assert_equal schema.namespace, 'outer'
+    assert_equal 'OuterRecord', schema.name
+    assert_equal 'outer.OuterRecord', schema.fullname
+    assert_equal 'outer', schema.namespace
     middle = schema.fields.first.type
-    assert_equal middle.name, 'MiddleRecord'
-    assert_equal middle.fullname, 'middle.MiddleRecord'
-    assert_equal middle.namespace, 'middle'
+    assert_equal 'MiddleRecord', middle.name
+    assert_equal 'middle.MiddleRecord', middle.fullname
+    assert_equal 'middle', middle.namespace
     inner = middle.fields.first.type
-    assert_equal inner.name, 'InnerRecord'
-    assert_equal inner.fullname, 'middle.InnerRecord'
-    assert_equal inner.namespace, 'middle'
-    assert_equal inner.fields.first.type, middle
+    assert_equal 'InnerRecord', inner.name
+    assert_equal 'middle.InnerRecord', inner.fullname
+    assert_equal 'middle', inner.namespace
+    assert_equal middle, inner.fields.first.type
   end
 
   def test_to_avro_includes_namespaces
@@ -120,7 +120,7 @@ class TestSchema < Test::Unit::TestCase
       ]}
     SCHEMA
 
-    assert_equal schema.to_avro, {
+    assert_equal({
       'type' => 'record', 'name' => 'OuterRecord', 'namespace' => 'my.name.space',
       'fields' => [
         {'name' => 'definition', 'type' => {
@@ -129,7 +129,7 @@ class TestSchema < Test::Unit::TestCase
         }},
         {'name' => 'reference', 'type' => 'my.name.space.InnerFixed'}
       ]
-    }
+    }, schema.to_avro)
   end
 
   def test_unknown_named_type
