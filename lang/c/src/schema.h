@@ -43,6 +43,7 @@ struct avro_record_schema_t {
 struct avro_enum_schema_t {
 	struct avro_obj_t obj;
 	char *name;
+	char *space;
 	st_table *symbols;
 	st_table *symbols_byname;
 };
@@ -66,6 +67,7 @@ struct avro_union_schema_t {
 struct avro_fixed_schema_t {
 	struct avro_obj_t obj;
 	const char *name;
+	const char *space;
 	int64_t size;
 };
 

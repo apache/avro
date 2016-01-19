@@ -273,6 +273,9 @@ Avro 1.8.0 (15 December 2015)
     AVRO-1691. C: Allow schemas consisting only of a primitive type.
     (Magnus Edenhill via martinkl)
 
+    AVRO-1663. C: Fix handling of namespaces for enum and fixed types.
+    (martinkl)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES

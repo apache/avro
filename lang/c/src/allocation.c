@@ -88,6 +88,19 @@ char *avro_strdup(const char *str)
 	return new_str;
 }
 
+char *avro_strndup(const char *str, size_t size)
+{
+	if (str == NULL) {
+		return NULL;
+	}
+
+	char *new_str = avro_str_alloc(size + 1);
+	memcpy(new_str, str, size);
+	new_str[size] = '\0';
+
+	return new_str;
+}
+
 void avro_str_free(char *str)
 {
 	size_t  *size = ((size_t *) str) - 1;
