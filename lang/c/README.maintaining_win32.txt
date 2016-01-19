@@ -143,10 +143,10 @@ Instructions for Maintenance
     include msdirent.h. See example in test_avro_schema.c.
 
 16. If _WIN32 is defined, define snprintf() to_snprintf(), which MS
-    Visual C++ recognizes. See jansson_private.h for an example.
+    Visual C++ recognizes.
 
 17. MSVC++ does not recognize strtoll(). Define it to _strtoi64()
-    instead. See jansson/src/load.c for an example.
+    instead.
 
 18. Old-style C function declarations are not allowed in C++. See the
     changes in st.c and st.h -- which were converted to new-style

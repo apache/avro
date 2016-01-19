@@ -267,6 +267,9 @@ Avro 1.8.0 (15 December 2015)
 
     AVRO-1782. Ruby: Fix unit test failures in new versions of Ruby. (martinkl)
 
+    AVRO-1769. C: Use operating system's libjansson instead of bundling
+    it with Avro. (Magnus Edenhill via martinkl)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
