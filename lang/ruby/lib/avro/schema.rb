@@ -108,7 +108,7 @@ module Avro
       when :float, :double
         datum.is_a?(Float) || datum.is_a?(Fixnum) || datum.is_a?(Bignum)
       when :fixed
-        datum.is_a?(String) && datum.size == expected_schema.size
+        datum.is_a?(String) && datum.bytesize == expected_schema.size
       when :enum
         expected_schema.symbols.include? datum
       when :array
