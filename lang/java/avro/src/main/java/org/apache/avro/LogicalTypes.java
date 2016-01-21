@@ -20,14 +20,8 @@ package org.apache.avro;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import com.google.common.base.Optional;
-import com.google.common.collect.MapMaker;
 
 public class LogicalTypes {
-
-  private static final Map<Schema, Optional<LogicalType>> CACHE = new MapMaker()
-      .weakKeys()
-      .makeMap();
 
   public interface LogicalTypeFactory {
     LogicalType fromSchema(Schema schema);
@@ -54,16 +48,7 @@ public class LogicalTypes {
   }
 
   public static LogicalType fromSchemaIgnoreInvalid(Schema schema) {
-    if (CACHE.containsKey(schema)) {
-      return CACHE.get(schema).orNull();
-    }
-
-    LogicalType logicalType = fromSchemaImpl(schema, false);
-
-    // add to the cache, even if it is null
-    CACHE.put(schema, Optional.fromNullable(logicalType));
-
-    return logicalType;
+    return fromSchemaImpl(schema, false);
   }
 
   private static LogicalType fromSchemaImpl(Schema schema, boolean throwErrors) {
