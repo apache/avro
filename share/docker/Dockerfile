@@ -27,7 +27,7 @@ RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 # Install dependencies from packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
   git subversion curl ant make maven \
-  gcc cmake asciidoc source-highlight \
+  gcc cmake libjansson-dev asciidoc source-highlight \
   g++ flex bison libboost-all-dev doxygen \
   mono-devel mono-gmcs nunit \
   nodejs \

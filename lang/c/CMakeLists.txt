@@ -123,7 +123,6 @@ if(UNIX AND THREADSAFE AND CMAKE_COMPILER_IS_GNUCC)
 endif(UNIX AND THREADSAFE AND CMAKE_COMPILER_IS_GNUCC)
 
 include_directories(${AvroC_SOURCE_DIR}/src)
-include_directories(${AvroC_SOURCE_DIR}/jansson/src)
 
 
 # Enable codecs
@@ -168,6 +167,16 @@ endif (LZMA_FOUND)
 
 set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES} ${SNAPPY_LIBRARIES})
 set(CODEC_PKG "@ZLIB_PKG@ @LZMA_PKG@ @SNAPPY_PKG@")
+
+# Jansson JSON library
+pkg_check_modules(JANSSON jansson>=2.3)
+if (JANSSON_FOUND)
+    set(JANSSON_PKG libjansson)
+    include_directories(${JANSSON_INCLUDE_DIR})
+    link_directories(${JANSSON_LIBRARY_DIRS})
+else (JANSSON_FOUND)
+    message(FATAL_ERROR "libjansson >=2.3 not found")
+endif (JANSSON_FOUND)
 
 
 add_subdirectory(src)
