@@ -82,6 +82,7 @@ void *avro_calloc(size_t count, size_t size);
 
 char *avro_str_alloc(size_t str_size);
 char *avro_strdup(const char *str);
+char *avro_strndup(const char *str, size_t size);
 void avro_str_free(char *str);
 
 CLOSE_EXTERN
