@@ -13,7 +13,7 @@ Trunk (not yet released)
   BUG FIXES
 
 
-Avro 1.8.0 (15 December 2015)
+Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES
 
