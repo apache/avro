@@ -1,3 +1,10 @@
 test:
   override:
     - 'cd lang/ruby && ./build.sh test'
+
+deployment:
+  gemfury:
+    tag: /.*/
+    commands:
+      - 'cd lang/ruby && ./build.sh dist'
+      - 'cd lang/ruby/pkg && curl --fail --form package=@$(ls -t1 | grep "\.gem$" | head -1) ${GEMFURY_PUSH_URI}'
