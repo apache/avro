@@ -63,14 +63,16 @@ static string toString(const ValidSchema& schema)
     return oss.str();
 }
 
-DataFileWriterBase::DataFileWriterBase(const char* filename,
+DataFileWriterBase::DataFileWriterBase(OutputStream *outputStream,
     const ValidSchema& schema, size_t syncInterval, Codec codec) :
-    filename_(filename), schema_(schema), encoderPtr_(binaryEncoder()),
+    schema_(schema), 
+    encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
     codec_(codec),
-    stream_(fileOutputStream(filename)),
+    stream_(outputStream),
     buffer_(memoryOutputStream()),
-    sync_(makeSync()), objectCount_(0)
+    sync_(makeSync()), 
+    objectCount_(0)
 {
     if (syncInterval < minSyncInterval || syncInterval > maxSyncInterval) {
         throw Exception(boost::format("Invalid sync interval: %1%. "
@@ -92,17 +94,9 @@ DataFileWriterBase::DataFileWriterBase(const char* filename,
     encoderPtr_->init(*buffer_);
 }
 
-DataFileWriterBase::~DataFileWriterBase()
-{
-    if (stream_.get()) {
-        close();
-    }
-}
-
 void DataFileWriterBase::close()
 {
     flush();
-    stream_.reset();
 }
 
 void DataFileWriterBase::sync()

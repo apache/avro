@@ -60,7 +60,7 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
     const size_t syncInterval_;
     Codec codec_;
 
-    std::auto_ptr<OutputStream> stream_;
+    OutputStream* stream_;
     std::auto_ptr<OutputStream> buffer_;
     const DataFileSync sync_;
     int64_t objectCount_;
@@ -98,13 +98,14 @@ public:
     void incr() {
         ++objectCount_;
     }
+
     /**
-     * Constructs a data file writer with the given sync interval and name.
+     * Constructs a data file writer with the given stream, schema, 
+     * sync interval, and name
      */
-    DataFileWriterBase(const char* filename, const ValidSchema& schema,
+    DataFileWriterBase(OutputStream *outputStream, const ValidSchema& schema,
         size_t syncInterval, Codec codec = NULL_CODEC);
 
-    ~DataFileWriterBase();
     /**
      * Closes the current file. Once closed this datafile object cannot be
      * used for writing any more.
@@ -128,14 +129,33 @@ public:
 template <typename T>
 class DataFileWriter : boost::noncopyable {
     std::auto_ptr<DataFileWriterBase> base_;
+    std::auto_ptr<OutputStream> filestream_;
 public:
     /**
      * Constructs a new data file.
      */
     DataFileWriter(const char* filename, const ValidSchema& schema,
-        size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
-        base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) { }
+        size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC)
+    {
+        filestream_ = fileOutputStream(filename);
+        base_ = std::auto_ptr<DataFileWriterBase>(new DataFileWriterBase(filestream_.get(), schema, syncInterval, codec));
+    }
 
+    /**
+     * Constructs a new data file using an OutputStream
+     */
+    DataFileWriter(OutputStream *outputStream, const ValidSchema& schema,
+        size_t syncInterval = 16 * 1024, Codec code = NULL_CODEC) :
+        base_(new DataFileWriterBase(outputStream, schema, syncInterval, code)) { }
+
+    
+    ~DataFileWriter()
+    {
+        if (filestream_.get()) {
+            close();
+        }
+    }
+    
     /**
      * Writes the given piece of data into the file.
      */
@@ -149,7 +169,9 @@ public:
      * Closes the current file. Once closed this datafile object cannot be
      * used for writing any more.
      */
-    void close() { base_->close(); }
+    void close() {
+        base_->close();
+    }
 
     /**
      * Returns the schema for this data file.

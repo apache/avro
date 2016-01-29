@@ -70,7 +70,7 @@ public:
     /**
      * Returns the number of bytes read from this stream so far.
      * All the bytes made available through next are considered
-     * to be used unless, retutned back using backup.
+     * to be used unless, returned back using backup.
      */
     virtual size_t byteCount() const = 0;
 };
@@ -108,7 +108,7 @@ public:
     /**
      * Number of bytes written so far into this stream. The whole buffer
      * returned by next() is assumed to be written unless some of
-     * it was retutned using backup().
+     * it was returned using backup().
      */
     virtual uint64_t byteCount() const = 0;
 
@@ -265,7 +265,7 @@ struct StreamReader {
     }
 
     /**
-     * Get as many byes from the underlying stream as possible in a single
+     * Get as many bytes from the underlying stream as possible in a single
      * chunk.
      * \return true if some data could be obtained. False is no more
      * data is available on the stream.
