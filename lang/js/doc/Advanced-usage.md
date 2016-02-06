@@ -20,6 +20,7 @@ limitations under the License.
 + [Schema evolution](#schema-evolution)
 + [Logical types](#logical-types)
 + [Custom long types](#custom-long-types)
++ [Remote procedure calls](#remote-procedure-calls)
 
 
 ## Schema evolution
@@ -352,8 +353,131 @@ and unpacking routine (for example when using a native C++ addon), we can
 disable this behavior by setting `LongType.using`'s `noUnpack` argument to
 `true`.
 
+
+# Remote procedure calls
+
+`avro-js` provides an efficient and "type-safe" API for communicating with
+remote node processes via [`Protocol`s](Api#class-protocol).
+
+To enable this, we first declare the types involved inside an [Avro
+protocol][protocol-declaration]. For example, consider the following simple
+protocol which supports two calls (saved as `./math.avpr`):
+
+```json
+{
+  "protocol": "Math",
+  "doc": "A sample interface for performing math.",
+  "messages": {
+    "multiply": {
+      "doc": "A call for multiplying doubles.",
+      "request": [
+        {"name": "numbers", "type": {"type": "array", "items": "double"}}
+      ],
+      "response": "double"
+    },
+    "add": {
+      "doc": "A call which adds integers, optionally after some delay.",
+      "request": [
+        {"name": "numbers", "type": {"type": "array", "items": "int"}},
+        {"name": "delay", "type": "float", "default": 0}
+      ],
+      "response": "int"
+    }
+  }
+}
+```
+
+Servers and clients then share the same protocol and respectively:
+
++ Implement interface calls (servers):
+
+  ```javascript
+  var protocol = avro.parse('./math.avpr')
+    .on('add', function (req, ee, cb) {
+      var sum = req.numbers.reduce(function (agg, el) { return agg + el; }, 0);
+      setTimeout(function () { cb(null, sum); }, 1000 * req.delay);
+    })
+    .on('multiply', function (req, ee, cb) {
+      var prod = req.numbers.reduce(function (agg, el) { return agg * el; }, 1);
+      cb(null, prod);
+    });
+  ```
+
++ Call the interface (clients):
+
+  ```javascript
+  var protocol = avro.parse('./math.avpr');
+  var ee; // Message emitter, see below for various instantiation examples.
+
+  protocol.emit('add', {numbers: [1, 3, 5], delay: 2}, ee, function (err, res) {
+    console.log(res); // 9!
+  });
+  protocol.emit('multiply', {numbers: [4, 2]}, ee, function (err, res) {
+    console.log(res); // 8!
+  });
+  ```
+
+`avro-js` supports communication  between any two node processes connected by
+binary streams. See below for a few different common use-cases.
+
+## Persistent streams
+
+E.g. UNIX sockets, TCP sockets, WebSockets, (and even stdin/stdout).
+
+### Client
+
+```javascript
+var net = require('net');
+
+var ee = protocol.createEmitter(net.createConnection({port: 8000}));
+```
+
+### Server
+
+```javascript
+var net = require('net');
+
+net.createServer()
+  .on('connection', function (con) { protocol.createListener(con); })
+  .listen(8000);
+```
+
+## Transient streams
+
+For example HTTP requests/responses.
+
+### Client
+
+```javascript
+var http = require('http');
+
+var ee = protocol.createEmitter(function (cb) {
+  return http.request({
+    port: 3000,
+    headers: {'content-type': 'avro/binary'},
+    method: 'POST'
+  }).on('response', function (res) { cb(res); });
+});
+```
+
+### Server
+
+Using [express][] for example:
+
+```javascript
+var app = require('express')();
+
+app.post('/', function (req, res) {
+  protocol.createListener(function (cb) { cb(res); return req; });
+});
+
+app.listen(3000);
+```
+
+
 [parse-api]: API#parseschema-opts
 [create-resolver-api]: API#typecreateresolverwritertype
 [logical-type-api]: API#class-logicaltypeattrs-opts-types
 [decimal-type]: https://avro.apache.org/docs/current/spec.html#Decimal
 [schema-resolution]: https://avro.apache.org/docs/current/spec.html#Schema+Resolution
+[protocol-declaration]: https://avro.apache.org/docs/current/spec.html#Protocol+Declaration

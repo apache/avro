@@ -13,6 +13,8 @@ Trunk (not yet released)
     AVRO-1793. Python2: Retain stack trace and original exception when failing
     to parse schemas. Contributed by Jakob Homan (jghoman).
 
+    AVRO-1778: JavaScript: Add IPC/RPC support. (mtth)
+
   BUG FIXES
 
 

@@ -1926,6 +1926,17 @@ suite('types', function () {
       assert.deepEqual(person.age, 12);
       assert.deepEqual(person.time, date);
       assert.throws(function () { derived.toBuffer({age: -1, date: date}); });
+
+      var invalid = {age: -1, time: date};
+      assert.throws(function () { derived.toBuffer(invalid); });
+      var hasError = false;
+      derived.isValid(invalid, {errorHook: function (path, any, type) {
+        hasError = true;
+        assert.deepEqual(path, ['age']);
+        assert.equal(any, -1);
+        assert(type instanceof AgeType);
+      }});
+      assert(hasError);
     });
 
     test('recursive', function () {

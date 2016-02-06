@@ -29,11 +29,14 @@
  */
 
 var files = require('./files'),
+    protocols = require('./protocols'),
     schemas = require('./schemas'),
     deprecated = require('../etc/deprecated/validator');
 
 
 module.exports = {
+  Type: schemas.Type,
+  Protocol: protocols.Protocol,
   parse: files.parse,
   createFileDecoder: files.createFileDecoder,
   createFileEncoder: files.createFileEncoder,

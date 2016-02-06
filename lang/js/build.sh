@@ -22,7 +22,7 @@ cd `dirname "$0"`
 case "$1" in
   test)
     npm install
-    npm test
+    npm run cover
     ;;
   dist)
     npm pack

@@ -21,7 +21,8 @@
 
 'use strict';
 
-var schemas = require('./schemas'),
+var protocols = require('./protocols'),
+    schemas = require('./schemas'),
     utils = require('./utils'),
     fs = require('fs'),
     stream = require('stream'),
@@ -66,7 +67,10 @@ var Tap = utils.Tap;
  *
  */
 function parse(schema, opts) {
-  return schemas.createType(loadSchema(schema), opts);
+  var attrs = loadSchema(schema);
+  return attrs.protocol ?
+    protocols.createProtocol(attrs, opts) :
+    schemas.createType(attrs, opts);
 }
 
 
