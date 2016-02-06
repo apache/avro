@@ -443,7 +443,7 @@ class EnumSchema(NamedSchema):
       fail_msg = 'Enum Schema requires a JSON array for the symbols property.'
       raise AvroException(fail_msg)
     elif False in [isinstance(s, basestring) for s in symbols]:
-      fail_msg = 'Enum Schems requires All symbols to be JSON strings.'
+      fail_msg = 'Enum Schema requires all symbols to be JSON strings.'
       raise AvroException(fail_msg)
     elif len(set(symbols)) < len(symbols):
       fail_msg = 'Duplicate symbol: %s' % symbols
@@ -770,12 +770,13 @@ def make_avsc_object(json_data, names=None):
 # TODO(hammer): make method for reading from a file?
 def parse(json_string):
   """Constructs the Schema from the JSON text."""
-  # TODO(hammer): preserve stack trace from JSON parse
   # parse the JSON
   try:
     json_data = json.loads(json_string)
-  except:
-    raise SchemaParseException('Error parsing JSON: %s' % json_string)
+  except Exception, e:
+    import sys
+    raise SchemaParseException('Error parsing JSON: %s, error = %s'
+                               % (json_string, e)), None, sys.exc_info()[2]
 
   # Initialize the names object
   names = Names()

@@ -1,5 +1,19 @@
 Avro Change Log
 
+Trunk (not yet released)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
+    AVRO-1793. Python2: Retain stack trace and original exception when failing
+    to parse schemas. Contributed by Jakob Homan (jghoman).
+
+  BUG FIXES
 
 Avro 1.8.0 (22 January 2016)
 
