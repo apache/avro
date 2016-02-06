@@ -477,5 +477,19 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(type(v), list)
     self.assertEqual(correct,len(OTHER_PROP_EXAMPLES))
 
+  def test_exception_is_not_swallowed_on_parse_error(self):
+    print_test_name('TEST EXCEPTION NOT SWALLOWED ON PARSE ERROR')
+
+    try:
+        schema.parse('/not/a/real/file')
+        caught_exception = False
+    except schema.SchemaParseException, e:
+        expected_message = 'Error parsing JSON: /not/a/real/file, error = ' \
+                           'No JSON object could be decoded'
+        self.assertEqual(expected_message, e.args[0])
+        caught_exception = True
+
+    self.assertTrue(caught_exception, 'Exception was not caught')
+
 if __name__ == '__main__':
   unittest.main()

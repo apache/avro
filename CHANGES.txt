@@ -10,6 +10,9 @@ Trunk (not yet released)
 
   IMPROVEMENTS
 
+    AVRO-1793. Python2: Retain stack trace and original exception when failing
+    to parse schemas. Contributed by Jakob Homan (jghoman).
+
   BUG FIXES
 
 
