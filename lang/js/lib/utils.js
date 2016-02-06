@@ -21,6 +21,9 @@
 
 'use strict';
 
+var crypto = require('crypto');
+
+
 /**
  * Uppercase the first letter of a string.
  *
@@ -37,6 +40,20 @@ function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
  *
  */
 function compare(n1, n2) { return n1 === n2 ? 0 : (n1 < n2 ? -1 : 1); }
+
+/**
+ * Compute a string's hash.
+ *
+ * @param str {String} The string to hash.
+ * @param algorithm {String} The algorithm used. Defaults to MD5.
+ *
+ */
+function getHash(str, algorithm) {
+  algorithm = algorithm || 'md5';
+  var hash = crypto.createHash(algorithm);
+  hash.end(str);
+  return hash.read();
+}
 
 /**
  * Find index of value in array.
@@ -277,6 +294,12 @@ function Tap(buf, pos) {
  *
  */
 Tap.prototype.isValid = function () { return this.pos <= this.buf.length; };
+
+/**
+ * Returns the contents of the tap up to the current position.
+ *
+ */
+Tap.prototype.getValue = function () { return this.buf.slice(0, this.pos); };
 
 // Read, skip, write methods.
 //
@@ -623,6 +646,7 @@ module.exports = {
   abstractFunction: abstractFunction,
   capitalize: capitalize,
   compare: compare,
+  getHash: getHash,
   toMap: toMap,
   singleIndexOf: singleIndexOf,
   hasDuplicates: hasDuplicates,

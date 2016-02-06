@@ -22,6 +22,7 @@
 'use strict';
 
 var files = require('../lib/files'),
+    protocols = require('../lib/protocols'),
     schemas = require('../lib/schemas'),
     assert = require('assert'),
     fs = require('fs'),
@@ -43,13 +44,18 @@ suite('files', function () {
 
     var parse = files.parse;
 
-    test('object', function () {
+    test('type object', function () {
       var obj = {
         type: 'record',
         name: 'Person',
         fields: [{name: 'so', type: 'Person'}]
       };
       assert(parse(obj) instanceof types.RecordType);
+    });
+
+    test('protocol object', function () {
+      var obj = {protocol: 'Foo'};
+      assert(parse(obj) instanceof protocols.Protocol);
     });
 
     test('schema instance', function () {

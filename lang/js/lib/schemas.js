@@ -23,7 +23,6 @@
 
 var utils = require('./utils'),
     buffer = require('buffer'), // For `SlowBuffer`.
-    crypto = require('crypto'),
     util = require('util');
 
 // Convenience imports.
@@ -45,6 +44,7 @@ var TYPES = {
   'map': MapType,
   'null': NullType,
   'record': RecordType,
+  'request': RecordType,
   'string': StringType,
   'union': UnionType
 };
@@ -307,31 +307,11 @@ Type.prototype.getName = function (noRef) {
 };
 
 Type.prototype.getSchema = function (noDeref) {
-  // Since JS objects are unordered, this implementation (unfortunately)
-  // relies on engines returning properties in the same order that they are
-  // inserted in. This is not in the JS spec, but can be "somewhat" safely
-  // assumed (more here: http://stackoverflow.com/q/5525795/1062617).
-  return (function (type, registry) {
-    return JSON.stringify(type, function (key, value) {
-      if (value instanceof Field) {
-        return {name: value._name, type: value._type};
-      } else if (value && value.name) {
-        var name = value.name;
-        if (noDeref || registry[name]) {
-          return name;
-        }
-        registry[name] = true;
-      }
-      return value;
-    });
-  })(this, {});
+  return stringify(this, noDeref);
 };
 
 Type.prototype.getFingerprint = function (algorithm) {
-  algorithm = algorithm || 'md5';
-  var hash = crypto.createHash(algorithm);
-  hash.end(this.getSchema());
-  return hash.read();
+  return utils.getHash(this.getSchema(), algorithm);
 };
 
 Type.prototype.inspect = function () {
@@ -1434,7 +1414,9 @@ function RecordType(attrs, opts) {
   var resolutions = resolveNames(attrs, opts.namespace);
   this._name = resolutions.name;
   this._aliases = resolutions.aliases;
-  Type.call(this, opts.registry);
+  this._type = attrs.type;
+  // Requests shouldn't be registered since their name is only a placeholder.
+  Type.call(this, this._type === 'request' ? undefined : opts.registry);
 
   if (!(attrs.fields instanceof Array)) {
     throw new Error(f('non-array %s fields', this._name));
@@ -2156,6 +2138,37 @@ function readArraySize(tap) {
 }
 
 /**
+ * Correctly stringify an object which contains types.
+ *
+ * @param obj {Object} The object to stringify. Typically, a type itself or an
+ * object containing types. Any types inside will be expanded only once then
+ * referenced by name.
+ * @param noDeref {Boolean} Always reference types by name when possible,
+ * rather than expand it the first time it is encountered.
+ *
+ */
+function stringify(obj, noDeref) {
+  // Since JS objects are unordered, this implementation (unfortunately)
+  // relies on engines returning properties in the same order that they are
+  // inserted in. This is not in the JS spec, but can be "somewhat" safely
+  // assumed (more here: http://stackoverflow.com/q/5525795/1062617).
+  return (function (registry) {
+    return JSON.stringify(obj, function (key, value) {
+      if (value instanceof Field) {
+        return {name: value._name, type: value._type};
+      } else if (value && value.name) {
+        var name = value.name;
+        if (noDeref || registry[name]) {
+          return name;
+        }
+        registry[name] = true;
+      }
+      return value;
+    });
+  })({});
+}
+
+/**
  * Check whether a long can be represented without precision loss.
  *
  * @param n {Number} The number.
@@ -2192,6 +2205,7 @@ function throwInvalidError(path, val, type) {
 module.exports = {
   createType: createType,
   resolveNames: resolveNames, // Protocols use the same name resolution logic.
+  stringify: stringify,
   types: (function () {
     // Export the base types along with all concrete implementations.
     var obj = {Type: Type, LogicalType: LogicalType};

@@ -34,8 +34,9 @@
     "crypto": "./etc/browser/crypto.js"
   },
   "scripts": {
-    "test": "mocha --ui tdd --reporter dot",
-    "clean": "rm -rf node_modules"
+    "cover": "istanbul cover _mocha",
+    "test": "mocha",
+    "clean": "rm -rf coverage node_modules"
   },
   "dependencies": {
     "underscore": "*"

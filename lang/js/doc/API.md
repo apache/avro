@@ -21,6 +21,7 @@ limitations under the License.
 + [Avro types](#avro-types)
 + [Records](#records)
 + [Files and streams](#files-and-streams)
++ [IPC & RPC](#ipc--rpc)
 
 
 ## Parsing schemas
@@ -758,9 +759,197 @@ The encoding equivalent of `RawDecoder`.
 + `data` {Buffer} Serialized bytes.
 
 
+# IPC & RPC
+
+Avro also defines a way of executing remote procedure calls. We expose this via
+an API modeled after node.js' core [`EventEmitter`][event-emitter].
+
+#### Class `Protocol`
+
+`Protocol` instances are obtained by [`parse`](#parseschema-opts)-ing a
+[protocol declaration][protocol-declaration] and provide a way of sending
+remote messages (for example to another machine, or another process on the same
+machine). For this reason, instances of this class are very similar to
+`EventEmitter`s, exposing both [`emit`](#protocolemitname-req-emitter-cb) and
+[`on`](#protocolonname-handler) methods.
+
+Being able to send remote messages (and to do so efficiently) introduces a few
+differences however:
+
++ The types used in each event (for both the emitted message and its response)
+  must be defined upfront in the protocol's declaration.
++ The arguments emitted with each event must match the ones defined in the
+  protocol. Similarly, handlers are guaranteed to be called only with these
+  matching arguments.
++ Events are one-to-one: they have exactly one response (unless they are
+  declared as one-way, in which case they have none).
+
+##### `protocol.emit(name, req, emitter, cb)`
+
++ `name` {String} Name of the message to emit. If this message is sent to a
+  `Protocol` instance with no handler defined for this name, an "unsupported
+  message" error will be returned.
++ `req` {Object} Request value, must correspond to the message's declared
+  request type.
++ `emitter` {MessageEmitter} Emitter used to send the message. See
+  [`createEmitter`](#protocolcreateemittertransport-opts-cb) for how to obtain
+  one.
++ `cb(err, res)` {Function} Function called with the remote call's response
+  (and eventual error) when available. This can be omitted when the message is
+  one way.
+
+Send a message. This is always done asynchronously.
+
+##### `protocol.on(name, handler)`
+
++ `name` {String} Message name to add the handler for. An error will be thrown
+  if this name isn't defined in the protocol. At most one handler can exist for
+  a given name (any previously defined handler will be overwritten).
++ `handler(req, listener, cb)` {Function} Handler, called each time a message
+  with matching name is received. The `listener` argument will be the
+  corresponding `MessageListener` instance. The final callback argument
+  `cb(err, res)` should be called to send the response back to the emitter
+  (except when the message is one way, in which case `cb` will be `undefined`).
+
+Add a handler for a given message.
+
+##### `protocol.createEmitter(transport, [opts,] [cb])`
+
++ `transport` {Duplex|Object|Function} The transport used to communicate with
+  the remote listener. Multiple argument types are supported, see below.
++ `opts` {Object} Options.
+  + `IdType` {LogicalType} Metadata logical type.
+  + `bufferSize` {Number} Internal serialization buffer size (in bytes).
+    Defaults to 2048.
+  + `frameSize` {Number} Size used when [framing messages][framing-messages].
+    Defaults to 2048.
++ `cb(pending)` {Function} End of transmission callback.
+
+Generate a [`MessageEmitter`](#class-messageemitter) for this protocol. This
+emitter can then be used to communicate with a remote server of compatible
+protocol.
+
+There are two major types of transports:
+
++ Stateful
+
+  A pair of binary streams `{readable, writable}`.
+
+  As a convenience passing a single duplex stream is also supported and
+  equivalent to passing `{readable: duplex, writable: duplex}`.
+
++ Stateless
+
+  Stream factory `fn(cb)` which should return a writable stream and call its
+  callback argument with a readable stream (when available).
+
+##### `protocol.createListener(transport, [opts,] [cb])`
+
++ `transport` {Duplex|Object|Function} Similar to [`createEmitter`](#)'s
+  corresponding argument, except that readable and writable roles are reversed
+  for stateless transports.
++ `opts` {Object} Identical to `createEmitter`'s options.
+  + `IdType` {LogicalType} Metadata logical type.
+  + `bufferSize` {Number} Internal serialization buffer size (in bytes).
+    Defaults to 2048.
+  + `frameSize` {Number} Size used when [framing messages][framing-messages].
+    Defaults to 2048.
++ `cb(pending)` {Function} End of transmission callback.
+
+Generate a [`MessageListener`](#class-messagelistener) for this protocol. This
+listener can be used to respond to messages emitted from compatible protocols.
+
+##### `protocol.subprotocol()`
+
+Returns a copy of the original protocol, which inherits all its handlers.
+
+##### `protocol.getMessages()`
+
+Retrieve all the messages defined in the protocol. Each message is an object
+with the following (read-only) properties:
+
++ `name` {String}
++ `requestType` {Type}
++ `responseType` {Type}
++ `errorType` {Type}
++ `oneWay` {Boolean}
+
+##### `protocol.getName()`
+
+Returns the protocol's fully qualified name.
+
+##### `protocol.getType(name)`
+
++ `name` {String} A type's fully qualified name.
+
+Convenience function to retrieve a type defined inside this protocol. Returns
+`undefined` if no type exists for the given name.
+
+
+#### Class `MessageEmitter`
+
+Instance of this class are [`EventEmitter`s][event-emitter], with the following
+events:
+
+##### Event `'handshake'`
+
++ `request` {Object} Handshake request.
++ `response` {Object} Handshake response.
+
+Emitted when the server's handshake response is received.
+
+##### Event `'eot'`
+
++ `pending` {Number} Number of interrupted requests. This will always be zero,
+  unless the emitter was destroyed with `noWait` set.
+
+End of transmission event, emitted after the client is destroyed and there are
+no more pending requests.
+
+##### `emitter.destroy([noWait])`
+
++ `noWait` {Boolean} Cancel any pending requests. By default pending requests
+  will still be honored.
+
+Disable the emitter.
+
+
+#### Class `MessageListener`
+
+Listeners are the receiving-side equivalent of `MessageEmitter`s and are also
+[`EventEmitter`s][event-emitter], with the following events:
+
+##### Event `'handshake'`
+
++ `request` {Object} Handshake request.
++ `response` {Object} Handshake response.
+
+Emitted right before the server sends a handshake response.
+
+##### Event `'eot'`
+
++ `pending` {Number} Number of cancelled pending responses. This will always be
+  zero, unless the listener was destroyed with `noWait` set.
+
+End of transmission event, emitted after the listener is destroyed and there are
+no more responses to send.
+
+##### `listener.destroy([noWait])`
+
++ `noWait` {Boolean} Don't wait for all pending responses to have been sent.
+
+Disable this listener and release underlying streams. In general you shouldn't
+need to call this: stateless listeners will be destroyed automatically when a
+response is sent, and stateful listeners are best destroyed from the client's
+side.
+
+
 [canonical-schema]: https://avro.apache.org/docs/current/spec.html#Parsing+Canonical+Form+for+Schemas
 [schema-resolution]: https://avro.apache.org/docs/current/spec.html#Schema+Resolution
 [sort-order]: https://avro.apache.org/docs/current/spec.html#order
 [fingerprint]: https://avro.apache.org/docs/current/spec.html#Schema+Fingerprints
 [custom-long]: Advanced-usage#custom-long-types
 [logical-types]: Advanced-usage#logical-types
+[framing-messages]: https://avro.apache.org/docs/current/spec.html#Message+Framing
+[event-emitter]: https://nodejs.org/api/events.html#events_class_events_eventemitter
+[protocol-declaration]: https://avro.apache.org/docs/current/spec.html#Protocol+Declaration
