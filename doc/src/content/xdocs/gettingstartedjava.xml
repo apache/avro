@@ -427,6 +427,7 @@ while (dataFileReader.hasNext()) {
 // many items.
 user = dataFileReader.next(user);
 System.out.println(user);
+}
         </source>
         <p>This outputs:</p>
         <source>
