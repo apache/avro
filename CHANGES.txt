@@ -4,6 +4,28 @@ Trunk (not yet released)
 
   INCOMPATIBLE CHANGES
 
+  NEW FEATURES
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
+    AVRO-1793. Python2: Retain stack trace and original exception when failing
+    to parse schemas. Contributed by Jakob Homan (jghoman).
+
+    AVRO-1778: JavaScript: Add IPC/RPC support. (mtth)
+
+  BUG FIXES
+
+    AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
+    now consistent regardless of the environment's locale.
+
+    AVRO-1799: Fix GenericRecord#toString ByteBuffer handling. (blue)
+
+Avro 1.8.0 (22 January 2016)
+
+  INCOMPATIBLE CHANGES
+
     AVRO-1334. Java: Update versions of many dependencies. (scottcarey, cutting)
 
     AVRO-997. Java: For enum values, no longer sometimes permit any
