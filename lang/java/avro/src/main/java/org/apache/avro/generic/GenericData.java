@@ -547,7 +547,7 @@ public class GenericData {
       buffer.append("\"");
     } else if (isBytes(datum)) {
       buffer.append("{\"bytes\": \"");
-      ByteBuffer bytes = (ByteBuffer)datum;
+      ByteBuffer bytes = ((ByteBuffer) datum).duplicate();
       writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
       buffer.append("\"}");
     } else if (((datum instanceof Float) &&       // quote Nan & Infinity

@@ -321,7 +321,9 @@ public class TestGenericData {
 
   @Test public void testToStringEscapesControlCharsInBytes() throws Exception {
     GenericData data = GenericData.get();
-    assertEquals("{\"bytes\": \"a\\nb\"}", data.toString(ByteBuffer.wrap(new byte[] {'a', '\n', 'b'})));
+    ByteBuffer bytes = ByteBuffer.wrap(new byte[] {'a', '\n', 'b'});
+    assertEquals("{\"bytes\": \"a\\nb\"}", data.toString(bytes));
+    assertEquals("{\"bytes\": \"a\\nb\"}", data.toString(bytes));
   }
 
   @Test public void testToStringFixed() throws Exception {

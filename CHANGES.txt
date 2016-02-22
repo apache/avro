@@ -20,6 +20,8 @@ Trunk (not yet released)
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
     now consistent regardless of the environment's locale.
 
+    AVRO-1799: Fix GenericRecord#toString ByteBuffer handling. (blue)
+
 Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES
