@@ -21,7 +21,7 @@
   <parent>
     <artifactId>avro-joda</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.8.0.21p-SNAPSHOT</version>
+    <version>1.8.0.21p</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -29,7 +29,7 @@
     <osgi.import>
       *
     </osgi.import>
-    <osgi.export>org.apache.avro*;version="${project.version}"</osgi.export>
+    <osgi.export>org.apache.avro.joda.*, ;version="${project.version}"</osgi.export>
   </properties>
 
   <artifactId>avro-joda-ext</artifactId>
