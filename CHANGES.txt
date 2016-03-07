@@ -22,6 +22,9 @@ Trunk (not yet released)
 
     AVRO-1799: Fix GenericRecord#toString ByteBuffer handling. (blue)
 
+    AVRO-1667: Fix parser grammar flattening for recursive cases.
+    (Zoltan Farkas via blue)
+
 Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES

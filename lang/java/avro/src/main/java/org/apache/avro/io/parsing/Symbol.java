@@ -68,7 +68,7 @@ public abstract class Symbol {
    * problem, we initialize the symbol with an array of nulls. Later we
    * fill the symbols. Not clean, but works. The other option is to not have
    * this field a final. But keeping it final and thus keeping symbol immutable
-   * gives some confort. See various generators how we generate records.
+   * gives some comfort. See various generators how we generate records.
    */
   public final Symbol[] production;
   /**
@@ -190,12 +190,26 @@ public abstract class Symbol {
         List<Fixup> l = map2.get(s);
         if (l == null) {
           System.arraycopy(p, 0, out, j, p.length);
+          // Copy any fixups that will be applied to p to add missing symbols
+          for (List<Fixup> fixups : map2.values()) {
+            copyFixups(fixups, out, j, p);
+          }
         } else {
           l.add(new Fixup(out, j));
         }
         j += p.length;
       } else {
         out[j++] = s;
+      }
+    }
+  }
+
+  private static void copyFixups(List<Fixup> fixups, Symbol[] out, int outPos,
+                                 Symbol[] toCopy) {
+    for (int i = 0, n = fixups.size(); i < n; i += 1) {
+      Fixup fixup = fixups.get(i);
+      if (fixup.symbols == toCopy) {
+        fixups.add(new Fixup(out, fixup.pos + outPos));
       }
     }
   }
