@@ -128,7 +128,16 @@ public abstract class Requestor {
     throws Exception {
     request(new Request(messageName, request, new RPCContext()), callback);
   }
-  
+
+  protected void lockHandshake() {
+    handshakeLock.lock();
+  }
+
+  protected void unlockHandshake() {
+    if (handshakeLock.isHeldByCurrentThread())
+      handshakeLock.unlock();
+  }
+
   /** Writes a request message and returns the result through a Callback. */
   <T> void request(Request request, Callback<T> callback)
     throws Exception {
@@ -136,12 +145,12 @@ public abstract class Requestor {
     if (!t.isConnected()) {
       // Acquire handshake lock so that only one thread is performing the
       // handshake and other threads block until the handshake is completed
-      handshakeLock.lock();
+      lockHandshake();
       try {
         if (t.isConnected()) {
           // Another thread already completed the handshake; no need to hold
           // the write lock
-          handshakeLock.unlock();
+          unlockHandshake();
         } else {
           CallFuture<T> callFuture = new CallFuture<T>(callback);
           t.transceive(request.getBytes(),
@@ -161,9 +170,7 @@ public abstract class Requestor {
           return;
         }
       } finally{
-        if (handshakeLock.isHeldByCurrentThread()) {
-          handshakeLock.unlock();
-        }
+        unlockHandshake();
       }
     }
     
@@ -272,7 +279,7 @@ public abstract class Requestor {
       remote = REMOTE_PROTOCOLS.get(remoteHash);
       if (remote != null) return remote;            // already cached
     }
-    handshakeLock.lock();
+    lockHandshake();
     try {
       // force handshake
       ByteBufferOutputStream bbo = new ByteBufferOutputStream();
@@ -289,7 +296,7 @@ public abstract class Requestor {
       readHandshake(in);
       return this.remote;
     } finally {
-      handshakeLock.unlock();
+      unlockHandshake();
     }
   }
 
