@@ -546,7 +546,7 @@ public class GenericData {
       buffer.append("\"");
     } else if (isBytes(datum)) {
       buffer.append("{\"bytes\": \"");
-      ByteBuffer bytes = ((ByteBuffer)datum).duplicate();
+      ByteBuffer bytes = (ByteBuffer)datum;
       for (int i = bytes.position(); i < bytes.limit(); i++)
         buffer.append((char)bytes.get(i));
       buffer.append("\"}");
