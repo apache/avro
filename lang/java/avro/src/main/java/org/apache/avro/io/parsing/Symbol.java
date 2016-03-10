@@ -131,8 +131,8 @@ public abstract class Symbol {
   }
   
   private static class Fixup {
-    public final Symbol[] symbols;
-    public final int pos;
+    private final Symbol[] symbols;
+    private final int pos;
     
     public Fixup(Symbol[] symbols, int pos) {
       this.symbols = symbols;
@@ -190,12 +190,27 @@ public abstract class Symbol {
         List<Fixup> l = map2.get(s);
         if (l == null) {
           System.arraycopy(p, 0, out, j, p.length);
+          // Fixups need to be relocated!
+           for (List<Fixup> fixups : map2.values()) {
+              copyFixups(fixups, out, j, p);
+           }
         } else {
           l.add(new Fixup(out, j));
         }
         j += p.length;
       } else {
         out[j++] = s;
+      }
+    }
+  }
+
+  private static void copyFixups(List<Fixup> fixups, Symbol[] out, int outPos,
+                                 Symbol[] toCopy) {
+    final int nrFixups = fixups.size();
+    for (int i = 0; i < nrFixups; i++) {
+      Fixup fixup = fixups.get(i);
+      if (fixup.symbols == toCopy) {
+        fixups.add(new Fixup(out, fixup.pos + outPos));
       }
     }
   }
