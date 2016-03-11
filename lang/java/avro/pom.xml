@@ -156,7 +156,7 @@
     <dependency>
         <groupId>org.spf4j</groupId>
         <artifactId>spf4j-core</artifactId>
-        <version>7.2.21</version>
+        <version>7.2.23</version>
     </dependency>
     
     <dependency>
