@@ -21,6 +21,7 @@ package org.apache.avro.mojo;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import org.apache.avro.LogicalType;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
@@ -149,7 +150,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException {
-    synchronized (AbstractAvroMojo.class) {
+    synchronized (LogicalType.class) {
       System.setProperty("allowUndefinedLogicalTypes", Boolean.toString(allowUndefinedLogicalTypes));
       SpecificCompiler.SCHEMA_OUTPUT_DIR.set(this.schemaOutputDirectory);
 
