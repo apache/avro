@@ -29,6 +29,7 @@ import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -100,6 +101,12 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /** Called to write data.*/
   protected void writeWithoutConversion(Schema schema, Object datum, Encoder out)
     throws IOException {
+	
+	if(datum == null && schema.getType() != Type.NULL
+			&& schema.getType() != Type.UNION){
+	  throw new NullPointerException("null of "+schema.getFullName());
+	}
+	  	  
     try {
       switch (schema.getType()) {
       case RECORD: writeRecord(schema, datum, out); break;
