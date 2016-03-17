@@ -131,8 +131,8 @@ public abstract class Symbol {
   }
 
   private static class Fixup {
-    public  Symbol[] symbols;
-    public  int pos;
+    public final Symbol[] symbols;
+    public final int pos;
 
     public Fixup(Symbol[] symbols, int pos) {
       this.symbols = symbols;
@@ -638,4 +638,3 @@ public abstract class Symbol {
   public static final Symbol MAP_KEY_MARKER =
     new Symbol.Terminal("map-key-marker");
 }
-
