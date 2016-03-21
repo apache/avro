@@ -44,9 +44,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private Schema actual;
   private Schema expected;
   
-  private ResolvingDecoder creatorResolver = null;
-  private final Thread creator;
-
   public GenericDatumReader() {
     this(null, null, GenericData.get());
   }
@@ -69,7 +66,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   protected GenericDatumReader(GenericData data) {
     this.data = data;
-    this.creator = Thread.currentThread();
   }
 
   /** Return the {@link GenericData} implementation. */
@@ -84,7 +80,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (expected == null) {
       expected = actual;
     }
-    creatorResolver = null;
   }
 
   /** Get the reader's schema. */
@@ -93,7 +88,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /** Set the reader's schema. */
   public void setExpected(Schema reader) {
     this.expected = reader;
-    creatorResolver = null;
   }
 
   private static final ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>
@@ -111,28 +105,18 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   protected final ResolvingDecoder getResolver(Schema actual, Schema expected)
     throws IOException {
-    Thread currThread = Thread.currentThread();
-    ResolvingDecoder resolver;
-    if (currThread == creator && creatorResolver != null) {
-      return creatorResolver;
-    } 
-
     Map<Schema,ResolvingDecoder> cache = RESOLVER_CACHE.get().get(actual);
     if (cache == null) {
       cache = new WeakIdentityHashMap<Schema,ResolvingDecoder>();
       RESOLVER_CACHE.get().put(actual, cache);
     }
-    resolver = cache.get(expected);
+    ResolvingDecoder resolver = cache.get(expected);
     if (resolver == null) {
       resolver = DecoderFactory.get().resolvingDecoder(
           Schema.applyAliases(actual, expected), expected, null);
       cache.put(expected, resolver);
     }
     
-    if (currThread == creator){
-      creatorResolver = resolver;
-    }
-
     return resolver;
   }
 
