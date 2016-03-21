@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
+
+from decimal import Decimal
+
 try:
   from cStringIO import StringIO
 except ImportError:
@@ -35,6 +38,24 @@ SCHEMAS_TO_VALIDATE = (
   ('"float"', 1234.0),
   ('"double"', 1234.0),
   ('{"type": "fixed", "name": "Test", "size": 1}', 'B'),
+  ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 4}', 3.1415),
+  ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 4}', -3.1415),
+  ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 0}', 31415),
+  ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 0}', -31415),
+  ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 0}', 31415L),
+  ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 0}', -31415L),
+  ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 3, "scale": 2}',
+   Decimal('3.12')),
+  ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 3, "scale": 2}',
+   Decimal('-3.12')),
+  ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', 3.1415),
+  ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', -3.1415),
+  ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 0}', 31415),
+  ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 0}', -31415),
+  ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 0}', 31415L),
+  ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 0}', -31415L),
+  ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', Decimal('3.1415')),
+  ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', Decimal('-3.1415')),
   ('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', 'B'),
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
   ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),
@@ -199,6 +220,9 @@ class TestIO(unittest.TestCase):
       round_trip_datum = read_datum(writer, writers_schema)
 
       print 'Round Trip Datum: %s' % round_trip_datum
+      if isinstance(round_trip_datum, Decimal):
+        round_trip_datum = round_trip_datum.to_eng_string()
+        datum = str(datum)
       if datum == round_trip_datum: correct += 1
     self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
 
