@@ -485,7 +485,7 @@ class BytesDecimalSchema(DecimalSchema):
 #
 
 class FixedDecimalSchema(DecimalSchema):
-  def __init__(self, schema_type, precision, scale, size, other_props):
+  def __init__(self, schema_type, precision, scale, size, name, namespace, other_props):
     if schema_type != 'fixed':
       raise SchemaParseException('Logical type DECIMAL must be backed by fixed or bytes.')
     if size < 0:
@@ -498,8 +498,8 @@ class FixedDecimalSchema(DecimalSchema):
 
     DecimalSchema.__init__(self, schema_type, precision, scale)
     self.set_prop('size', size)
-    self.set_prop('name', other_props.get('name'))
-    self.set_prop('namespace', other_props.get('namespace'))
+    self.set_prop('name', name)
+    self.set_prop('namespace', namespace)
     self.set_prop('fullname', other_props.get('fullname'))
 
   # read-only properties
@@ -857,7 +857,7 @@ def make_avsc_object(json_data, names=None):
         if logical_type == 'decimal':
           precision = json_data.get('precision')
           scale = 0 if json_data.get('scale') is None else json_data.get('scale')
-          return FixedDecimalSchema(type, precision, scale, size, other_props)
+          return FixedDecimalSchema(type, precision, scale, size, name, namespace, other_props)
         return FixedSchema(name, namespace, size, names, other_props)
       elif type == 'enum':
         symbols = json_data.get('symbols')

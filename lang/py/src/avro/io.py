@@ -116,8 +116,7 @@ def validate(expected_schema, datum):
   elif schema_type == 'bytes':
     if (hasattr(expected_schema, 'logical_type') and
             expected_schema.logical_type == 'decimal'):
-      return (isinstance(datum, Decimal) or isinstance(datum, int)
-             or isinstance(datum, long) or isinstance(datum, float))
+      return isinstance(datum, Decimal)
     return isinstance(datum, str)
   elif schema_type == 'int':
     return ((isinstance(datum, int) or isinstance(datum, long)) 
@@ -132,8 +131,7 @@ def validate(expected_schema, datum):
   elif schema_type == 'fixed':
     if (hasattr(expected_schema, 'logical_type') and
                     expected_schema.logical_type == 'decimal'):
-      return (isinstance(datum, Decimal) or isinstance(datum, int)
-             or isinstance(datum, long) or isinstance(datum, float))
+      return isinstance(datum, Decimal)
     return isinstance(datum, str) and len(datum) == expected_schema.size
   elif schema_type == 'enum':
     return datum in expected_schema.symbols
@@ -239,19 +237,8 @@ class BinaryDecoder(object):
     Decimal bytes are decoded as signed short, int or long depending on the
     size of bytes.
     """
-    datum = self.read(self.read_long())
-    if len(datum) == 2:
-      unpacked_datum = STRUCT_SIGNED_SHORT.unpack(datum)[0]
-    elif len(datum) == 4:
-      unpacked_datum = STRUCT_SIGNED_INT.unpack(datum)[0]
-    else:
-      unpacked_datum = STRUCT_SIGNED_LONG.unpack(datum)[0]
-
-    original_prec = getcontext().prec
-    getcontext().prec = precision
-    scaled_datum = Decimal(unpacked_datum) / Decimal(pow(10, scale))
-    getcontext().prec = original_prec
-    return scaled_datum
+    size = self.read_long()
+    return self.read_decimal_from_fixed(precision, scale, size)
 
   def read_decimal_from_fixed(self, precision, scale, size):
     """
@@ -407,53 +394,65 @@ class BinaryEncoder(object):
     Decimal in bytes are encoded as long. Since size of packed value in bytes for
     signed long is 8, 8 bytes are written.
     """
-    if isinstance(datum, Decimal):
-      datum = datum.to_eng_string()
-    else:
-      datum = str(datum)
-    decimal_place = datum.find('.')
-    if decimal_place == -1:
-      mantissa = 0
-    else:
-      mantissa = len(datum[decimal_place+1:])
-    if mantissa != scale:
+    sign, digits, exp = datum.as_tuple()
+    if exp > scale:
       raise AvroTypeException('Scale provided in schema does not match the decimal')
-    unscaled_datum = datum.replace('.', '')
-    unscaled_int_datum = long(unscaled_datum)
-    packed_bytes = STRUCT_SIGNED_LONG.pack(unscaled_int_datum)
-    self.write_long(8)
-    for i in range(8):
-      self.write(packed_bytes[i])
+
+    unscaled_datum = 0
+    for digit in digits:
+      unscaled_datum = (unscaled_datum * 10) + digit
+
+    bits_req = unscaled_datum.bit_length()
+    if sign:
+      bits_req += 1
+      unscaled_datum = (1 << bits_req) - unscaled_datum
+
+    bytes_req = bits_req // 8
+    padding_bits = ~((1 << bits_req) - 1) if sign else 0
+    packed_bits = padding_bits | unscaled_datum
+
+    bytes_req += 1 if (bytes_req << 3) < bits_req else 0
+    self.write_long(bytes_req)
+    for index in range(bytes_req-1, -1, -1):
+      bits_to_write = packed_bits >> (8 * index)
+      self.write(chr(bits_to_write & 0xff))
 
   def write_decimal_fixed(self, datum, scale, size):
     """
     Decimal in fixed are encoded as size of fixed bytes.
     """
-    if isinstance(datum, Decimal):
-      datum = datum.to_eng_string()
-    else:
-      datum = str(datum)
-    decimal_place = datum.find('.')
-    if decimal_place == -1:
-      mantissa = 0
-    else:
-      mantissa = len(datum[decimal_place+1:])
-    if mantissa != scale:
+    sign, digits, exp = datum.as_tuple()
+    if exp > scale:
       raise AvroTypeException('Scale provided in schema does not match the decimal')
-    unscaled_datum = datum.replace('.', '')
-    unscaled_long_datum = long(unscaled_datum)
-    if unscaled_long_datum < 0:
-      fill_byte = '\xff'
+
+    unscaled_datum = 0
+    for digit in digits:
+      unscaled_datum = (unscaled_datum * 10) + digit
+
+    bits_req = unscaled_datum.bit_length()
+    if sign:
+      bits_req += 1
+      unscaled_datum = (1 << bits_req) - unscaled_datum
+
+    bytes_req = bits_req // 8
+    padding_bits = ~((1 << bits_req) - 1) if sign else 0
+    packed_bits = padding_bits | unscaled_datum
+
+    bytes_req += 1 if (bytes_req << 3) < bits_req else 0
+    if bytes_req > size:
+      raise AvroTypeException('Size provided in schema cannot hold the decimal')
+
+    offset_size = size - bytes_req
+    if sign:
+      for i in range(offset_size):
+        self.write('\xff')
     else:
-      fill_byte = '\x00'
-    packed_bytes = STRUCT_SIGNED_LONG.pack(unscaled_long_datum)
-    offset_bytes = size - len(packed_bytes)
-    padded_bytes = (fill_byte * offset_bytes) + packed_bytes
-    for i in range(size):
-      if padded_bytes[i] == '\x00':
+      for i in range(offset_size):
         self.write(chr(0))
-      else:
-        self.write(padded_bytes[i])
+
+    for index in range(bytes_req-1, -1, -1):
+      bits_to_write = packed_bits >> (8 * index)
+      self.write(chr(bits_to_write & 0xff))
 
   def write_bytes(self, datum):
     """
