@@ -70,6 +70,12 @@ public class Protocol extends JsonProperties {
                        "doc", "response","request", "errors", "one-way");
   }
 
+  private static final Set<String> FIELD_RESERVED = new HashSet<String>();
+  static {
+    Collections.addAll(FIELD_RESERVED,
+                       "name", "type", "doc", "default", "aliases");
+  }
+
   /** A protocol message. */
   public class Message extends JsonProperties {
     private String name;
@@ -482,9 +488,21 @@ public class Protocol extends JsonProperties {
       JsonNode fieldDocNode = field.get("doc");
       if (fieldDocNode != null)
         fieldDoc = fieldDocNode.getTextValue();
-      fields.add(new Field(name, Schema.parse(fieldTypeNode,types),
-                           fieldDoc,
-                           field.get("default")));
+      Field newField = new Field(name, Schema.parse(fieldTypeNode,types),
+                                 fieldDoc, field.get("default"));
+      Set<String> aliases = Schema.parseAliases(field);
+      if (aliases != null) {                      // add aliases
+        for (String alias : aliases)
+          newField.addAlias(alias);
+      }
+
+      Iterator<String> i = field.getFieldNames();
+      while (i.hasNext()) {                       // add properties
+        String prop = i.next();
+        if (!FIELD_RESERVED.contains(prop))      // ignore reserved
+          newField.addProp(prop, field.get(prop));
+      }
+      fields.add(newField);
     }
     Schema request = Schema.createRecord(fields);
     

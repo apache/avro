@@ -24,6 +24,9 @@ Trunk (not yet released)
 
     AVRO-1825: Allow running build.sh dist under git (nielsbasjes)
 
+    AVRO-1819, AVRO-1820: Java: Add aliases, custom properties to Protocol.
+    (Konstantin Usachev via blue)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
