@@ -1344,7 +1344,7 @@ public abstract class Schema extends JsonProperties {
     }
   }
 
-  private static Set<String> parseAliases(JsonNode node) {
+  static Set<String> parseAliases(JsonNode node) {
     JsonNode aliasesNode = node.get("aliases");
     if (aliasesNode == null)
       return null;
