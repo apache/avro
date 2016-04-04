@@ -315,17 +315,41 @@ class NamedSchema(Schema):
   namespace = property(lambda self: self.get_prop('namespace'))
   fullname = property(lambda self: self._fullname)
 
+#
 # Logical type class
-class LogicalSchema(Schema):
-  def __init__(self, type, logical_type, other_props=None):
+#
+
+class LogicalSchema(object):
+  def __init__(self, logical_type):
     self.logical_type = logical_type
 
-    # Call parent ctor
-    Schema.__init__(self, type, other_props)
-    self.set_prop('logicalType', logical_type)
+#
+# Decimal logical schema
+#
 
-  def validate(self, validation_props=None):
+class DecimalLogicalSchema(LogicalSchema):
+  def __init__(self, precision, scale=0):
+    max_precision = self._max_precision()
+    if not isinstance(precision, int) or precision <= 0:
+      raise SchemaParseException("""Precision is required for logical type
+                                DECIMAL and must be a positive integer but
+                                is %s.""" % precision)
+    elif precision > max_precision:
+      raise SchemaParseException("Cannot store precision digits. Max is %s"
+                                 %(max_precision))
+
+    if not isinstance(scale, int) or scale < 0:
+      raise SchemaParseException("Scale %s must be a positive Integer." % scale)
+
+    elif scale > precision:
+      raise SchemaParseException("Invalid DECIMAL scale %s. Cannot be greater than precision %s"
+                                 %(scale, precision))
+
+    LogicalSchema.__init__(self, 'decimal')
+
+  def _max_precision(self):
     raise NotImplementedError()
+
 
 class Field(object):
   def __init__(self, type, name, has_default, default=None,
@@ -420,104 +444,30 @@ class PrimitiveSchema(Schema):
     return self.props == that.props
 
 #
-# Decimal Type
-#
-class DecimalSchema(LogicalSchema):
-  def __init__(self, decimal_type, precision, scale):
-    LogicalSchema.__init__(self, decimal_type, 'decimal')
-    self.set_prop('precision', precision)
-    self.set_prop('scale', scale)
-
-  def validate(self, validation_props=None):
-    if not isinstance(validation_props.get('precision'), int):
-      raise SchemaParseException('Precision (Integer) is required for logical type DECIMAL.')
-
-    precision = validation_props.get('precision')
-    if precision <= 0:
-      raise SchemaParseException("Invalid DECIMAL precision %s. Must be positive."
-                                 % precision)
-    elif precision > validation_props.get('max_precision'):
-      raise SchemaParseException("Fixed %s cannot store precision digits. Max is %s"
-                                 %(validation_props.get('size'),
-                                   validation_props.get('max_precision')))
-
-    if not isinstance(validation_props.get('scale'), int):
-      raise SchemaParseException('Scale must be of type Integer.')
-
-    scale = validation_props.get('scale')
-    if scale < 0:
-      raise SchemaParseException("Invalid DECIMAL scale %s. Must be positive"
-                                 % scale)
-    elif scale > precision:
-      raise SchemaParseException("Invalid DECIMAL scale %s. Cannot be greater than precision %s"
-                                 %(scale, precision))
-
-#
 # Decimal Bytes Type
 #
 
-class BytesDecimalSchema(DecimalSchema):
-  def __init__(self, schema_type, precision, scale):
-    if schema_type != 'bytes':
-      raise SchemaParseException('Logical type DECIMAL must be backed by fixed or bytes.')
+class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
+  def __init__(self, precision, scale=0, other_props=None):
+    DecimalLogicalSchema.__init__(self, precision, scale)
+    PrimitiveSchema.__init__(self, 'bytes', other_props)
+    self.set_prop('precision', precision)
+    self.set_prop('scale', scale)
 
-    self.validate({'max_precision': self._max_precision(),
-                   'precision': precision,
-                   'scale': scale})
-
-    DecimalSchema.__init__(self, schema_type, precision, scale)
+  # read-only properties
+  precision = property(lambda self: self.get_prop('precision'))
+  scale = property(lambda self: self.get_prop('scale'))
 
   def _max_precision(self):
     # Considering the max 32 bit integer value
     return (1 << 31) - 1
 
   def to_json(self, names=None):
-    if len(self.props) == 1:
-      return self.get_prop('type')
-    else:
-      return self.props
+    return self.props
 
   def __eq__(self, that):
     return self.props == that.props
 
-#
-# Decimal Fixed Type
-#
-
-class FixedDecimalSchema(DecimalSchema):
-  def __init__(self, schema_type, precision, scale, size, name, namespace, other_props):
-    if schema_type != 'fixed':
-      raise SchemaParseException('Logical type DECIMAL must be backed by fixed or bytes.')
-    if size < 0:
-      raise SchemaParseException('Size of a fixed length should be greater than 0')
-
-    self.validate({'max_precision': self._max_precision(size),
-                   'precision': precision,
-                   'scale': scale,
-                   'size': size})
-
-    DecimalSchema.__init__(self, schema_type, precision, scale)
-    self.set_prop('size', size)
-    self.set_prop('name', name)
-    self.set_prop('namespace', namespace)
-    self.set_prop('fullname', other_props.get('fullname'))
-
-  # read-only properties
-  size = property(lambda self: self.get_prop('size'))
-  name = property(lambda self: self.get_prop('name'))
-  namespace = property(lambda self: self.get_prop('namespace'))
-  fullname = property(lambda self: self.get_prop('fullname'))
-
-  def _max_precision(self, size):
-    return round(floor(log10(pow(2, (8 * size) - 1) - 1)))
-
-  def to_json(self, names=None):
-    new_props = self.props
-    new_props.update(self.other_props)
-    return new_props
-
-  def __eq__(self, that):
-    return self.props == that.props
 
 #
 # Complex Types (non-recursive)
@@ -526,8 +476,8 @@ class FixedDecimalSchema(DecimalSchema):
 class FixedSchema(NamedSchema):
   def __init__(self, name, namespace, size, names=None, other_props=None):
     # Ensure valid ctor args
-    if not isinstance(size, int):
-      fail_msg = 'Fixed Schema requires a valid integer for size property.'
+    if not isinstance(size, int) or size < 0:
+      fail_msg = 'Fixed Schema requires a valid positive integer for size property.'
       raise AvroException(fail_msg)
 
     # Call parent ctor
@@ -550,6 +500,31 @@ class FixedSchema(NamedSchema):
 
   def __eq__(self, that):
     return self.props == that.props
+
+#
+# Decimal Fixed Type
+#
+
+class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
+  def __init__(self, size, name, precision, scale=0, namespace=None, names=None, other_props=None):
+    FixedSchema.__init__(self, name, namespace, size, names, other_props)
+    DecimalLogicalSchema.__init__(self, precision, scale)
+    self.set_prop('precision', precision)
+    self.set_prop('scale', scale)
+
+  # read-only properties
+  precision = property(lambda self: self.get_prop('precision'))
+  scale = property(lambda self: self.get_prop('scale'))
+
+  def _max_precision(self):
+    return round(floor(log10(pow(2, (8 * self.size) - 1) - 1)))
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
 
 class EnumSchema(NamedSchema):
   def __init__(self, name, namespace, symbols, names=None, doc=None, other_props=None):
@@ -847,7 +822,7 @@ def make_avsc_object(json_data, names=None):
         if logical_type == 'decimal':
           precision = json_data.get('precision')
           scale = 0 if json_data.get('scale') is None else json_data.get('scale')
-          return BytesDecimalSchema(type, precision, scale)
+          return BytesDecimalSchema(precision, scale, other_props)
       return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')
@@ -857,7 +832,7 @@ def make_avsc_object(json_data, names=None):
         if logical_type == 'decimal':
           precision = json_data.get('precision')
           scale = 0 if json_data.get('scale') is None else json_data.get('scale')
-          return FixedDecimalSchema(type, precision, scale, size, name, namespace, other_props)
+          return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
         return FixedSchema(name, namespace, size, names, other_props)
       elif type == 'enum':
         symbols = json_data.get('symbols')
