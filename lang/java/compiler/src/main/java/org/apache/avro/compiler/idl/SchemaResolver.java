@@ -174,7 +174,7 @@ final class SchemaResolver {
       switch (schema.getType()) {
         case RECORD:
           Schema createRecord = Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(),
-                  schema.isError());
+              schema.isError());
           processed.put(schema.getFullName(), createRecord);
           final List<Schema.Field> currFields = schema.getFields();
           List<Schema.Field> newFields = new ArrayList<Schema.Field>(currFields.size());
