@@ -216,7 +216,9 @@ public abstract class Schema extends JsonProperties {
     }
     logicalType.validate(this); // throws IllegalArgumentException if invalid
     this.logicalType = logicalType;
-    this.addJsonProps(logicalType.getJsonProps());    
+    for (Map.Entry<String, Object> prop : logicalType.getProperties().entrySet()) {
+      this.addProp(prop.getKey(), prop.getValue());
+    }
     this.hashCode = NO_HASHCODE;
   }
 
@@ -1351,7 +1353,7 @@ public abstract class Schema extends JsonProperties {
         throw new SchemaParseException("Type not supported: "+type);
       }
       // parse the logical type
-      LogicalType logicalType = LogicalType.fromJsonNode(schema);
+      LogicalType logicalType = AbstractLogicalType.fromJsonNode(schema, result.getType());
       Set<String> logicalTypeReserved = null;
       if (logicalType != null) {
           result.setLogicalType(logicalType);

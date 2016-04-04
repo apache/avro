@@ -16,36 +16,58 @@
    limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <artifactId>avro-joda</artifactId>
-    <groupId>org.apache.avro</groupId>
-    <version>1.8.0.23p</version>
-    <relativePath>../</relativePath>
-  </parent>
+    <parent>
+        <artifactId>avro-joda</artifactId>
+        <groupId>org.apache.avro</groupId>
+        <version>1.8.0.24p-SNAPSHOT</version>
+        <relativePath>../</relativePath>
+    </parent>
 
-  <properties>
-    <osgi.import>
-      *
-    </osgi.import>
-    <osgi.export>org.apache.avro.joda.*, ;version="${project.version}"</osgi.export>
-  </properties>
+    <properties>
+        <osgi.import>
+            *
+        </osgi.import>
+        <osgi.export>META-INF.services.*,org.apache.avro.joda.*;version="${project.version}"</osgi.export>
+    </properties>
 
-  <artifactId>avro-joda-ext</artifactId>
+    <artifactId>avro-joda-ext</artifactId>
 
-  <name>Apache Avro Joda Ext jar</name>
-  <url>http://avro.apache.org</url>
-  <description>Avro joda logical type extensions</description>
-  <packaging>bundle</packaging>
+    <name>Apache Avro Joda Ext jar</name>
+    <url>http://avro.apache.org</url>
+    <description>Avro joda logical type extensions</description>
+    <packaging>bundle</packaging>
   
-  <dependencies>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>17.0</version>
-      </dependency>
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>17.0</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>eu.somatik.serviceloader-maven-plugin</groupId>
+                <artifactId>serviceloader-maven-plugin</artifactId>
+                <version>1.0.7</version>
+                <configuration>
+                    <services>
+                        <param>org.apache.avro.LogicalTypeFactory</param>
+                    </services>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
 

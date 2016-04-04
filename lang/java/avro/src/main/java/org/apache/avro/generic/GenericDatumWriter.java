@@ -64,7 +64,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     try {
       LogicalType lType = schema.getLogicalType();
       if (lType != null) {
-          datum = lType.serialize(schema.getType(), datum);
+          datum = lType.serialize(datum);
       }
       switch (schema.getType()) {
       case RECORD: writeRecord(schema, datum, out); break;

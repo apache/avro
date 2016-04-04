@@ -170,7 +170,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
     LogicalType logicalType = expected.getLogicalType();
     if (logicalType != null) {
-      result = logicalType.deserialize(type, result);
+      result = logicalType.deserialize(result);
     }
     return result;
   }
