@@ -66,6 +66,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    * one should use <code>newBuilder()</code>. 
    */
   public ${this.mangle($schema.getName())}() {}
+#if ($this.isCreateAllArgsConstructor())
 
   /**
    * All-args constructor.
@@ -79,6 +80,14 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     this.${this.mangle($field.name())} = ${this.mangle($field.name())};
 #end
   }
+#else
+  /**
+   * This schema contains more than 254 fields which exceeds the maximum number
+   * of permitted constructor parameters in the JVM. An all-args constructor
+   * will not be generated. Please use <code>newBuilder()</code> to instantiate
+   * objects instead.
+   */
+#end
 #end
 
 #end
