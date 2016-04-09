@@ -68,8 +68,9 @@ For Ubuntu Linux, for example, you can have these by doing
 \li g++
 \li libboost-dev
 \li libboost-filesystem-dev
-\li libboost-system-dev
+\li libboost-iostreams-dev
 \li libboost-program-options-dev
+\li libboost-system-dev
 
 For Windows native builds, you need to install the following:
 \ul
