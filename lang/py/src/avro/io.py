@@ -263,7 +263,7 @@ class BinaryDecoder(object):
 
     original_prec = getcontext().prec
     getcontext().prec = precision
-    scaled_datum = Decimal(unscaled_datum) / Decimal(pow(10, scale))
+    scaled_datum = Decimal(unscaled_datum).scaleb(scale)
     getcontext().prec = original_prec
     return scaled_datum
 
@@ -402,9 +402,8 @@ class BinaryEncoder(object):
     for digit in digits:
       unscaled_datum = (unscaled_datum * 10) + digit
 
-    bits_req = unscaled_datum.bit_length()
+    bits_req = unscaled_datum.bit_length() + 1
     if sign:
-      bits_req += 1
       unscaled_datum = (1 << bits_req) - unscaled_datum
 
     bytes_req = bits_req // 8
@@ -429,30 +428,34 @@ class BinaryEncoder(object):
     for digit in digits:
       unscaled_datum = (unscaled_datum * 10) + digit
 
-    bits_req = unscaled_datum.bit_length()
-    if sign:
-      bits_req += 1
-      unscaled_datum = (1 << bits_req) - unscaled_datum
+    bits_req = unscaled_datum.bit_length() + 1
+    size_in_bits = size * 8
+    offset_bits = size_in_bits - bits_req
 
-    bytes_req = bits_req // 8
-    padding_bits = ~((1 << bits_req) - 1) if sign else 0
-    packed_bits = padding_bits | unscaled_datum
+    mask = 2 ** size_in_bits - 1
+    bit = 1
+    for i in range(bits_req):
+      mask ^= bit
+      bit <<= 1
 
-    bytes_req += 1 if (bytes_req << 3) < bits_req else 0
-    if bytes_req > size:
-      raise AvroTypeException('Size provided in schema cannot hold the decimal')
-
-    offset_size = size - bytes_req
-    if sign:
-      for i in range(offset_size):
-        self.write('\xff')
+    if bits_req < 8:
+      bytes_req = 1
     else:
-      for i in range(offset_size):
+      bytes_req = bits_req // 8
+      if bits_req % 8 != 0:
+        bytes_req += 1
+    if sign:
+      unscaled_datum = (1 << bits_req) - unscaled_datum
+      unscaled_datum = mask | unscaled_datum
+      for index in range(size-1, -1, -1):
+        bits_to_write = unscaled_datum >> (8 * index)
+        self.write(chr(bits_to_write & 0xff))
+    else:
+      for i in range(offset_bits/8):
         self.write(chr(0))
-
-    for index in range(bytes_req-1, -1, -1):
-      bits_to_write = packed_bits >> (8 * index)
-      self.write(chr(bits_to_write & 0xff))
+      for index in range(bytes_req-1, -1, -1):
+        bits_to_write = unscaled_datum >> (8 * index)
+        self.write(chr(bits_to_write & 0xff))
 
   def write_bytes(self, datum):
     """

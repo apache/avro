@@ -517,7 +517,7 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
   scale = property(lambda self: self.get_prop('scale'))
 
   def _max_precision(self):
-    return round(floor(log10(pow(2, (8 * self.size) - 1) - 1)))
+    return round(floor(log10(pow(2, (8 * self.size - 1)) - 1)))
 
   def to_json(self, names=None):
     return self.props
