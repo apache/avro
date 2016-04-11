@@ -56,7 +56,7 @@ public class IsoInstant extends AbstractLogicalType {
 
   @Override
   public Object deserialize(Object object) {
-    return new Instant(object);
+    return new Instant((Long) object);
   }
 
   @Override
