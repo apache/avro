@@ -18,7 +18,7 @@
 
 /** NOTE: This structure is intended to contain names that are likely to cause collisions with the generated code. */
 
-@namespace("org.apache.avro.test.specialtypes")
+@namespace("avro.test.specialtypes")
 protocol LetsBreakIt {
 
     enum Enum {
@@ -93,6 +93,14 @@ protocol LetsBreakIt {
       string builderBuilder;
       string String;
       string value;
+    }
+
+    record TopLevelDomainNames {
+      string org;
+      string avro;
+      string com;
+      string net;
+      string nl;
     }
 
 }
