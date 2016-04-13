@@ -121,7 +121,13 @@ void checkRecord(const T1& r1, const T2& r2)
     BOOST_CHECK_EQUAL(r1.bytes.size(), r2.bytes.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(r1.bytes.begin(), r1.bytes.end(),
         r2.bytes.begin(), r2.bytes.end());
-    BOOST_CHECK_EQUAL(r1.myenum, r2.myenum);
+    /**
+     * Usually, comparing two different enums is not reliable. But here it fine because we
+     * know the generated code and are merely checking if Avro did the right job.
+     * Also, converting enum into unsigned int is not always safe. There are cases there could be
+     * truncation. Again, we have a controlled situation and it is safe here.
+     */
+    BOOST_CHECK_EQUAL(static_cast<unsigned int>(r1.myenum), static_cast<unsigned int>(r2.myenum));
 }
 
 void checkDefaultValues(const testgen_r::RootRecord& r)
