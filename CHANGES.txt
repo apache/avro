@@ -89,6 +89,8 @@ Avro 1.8.0 (22 January 2016)
 
     AVRO-1767. JS: Fall back to unwrapped union values. (Matthieu Monsch via blue)
 
+    AVRO-1784. C++: Should have a json encoder that pretty prints. (John McClean via thiru)
+
   OPTIMIZATIONS
 
     AVRO-1760. Java: Thread scalability problem with the use of SynchronizedMap

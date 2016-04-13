@@ -23,6 +23,7 @@
 #include <stack>
 #include <string>
 #include <sstream>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/utility.hpp>
 
 #include "Config.hh"
@@ -132,8 +133,58 @@ public:
     }
 };
 
+struct AVRO_DECL JsonNullFormatter {
+    JsonNullFormatter(StreamWriter&) { }
+
+    void handleObjectStart() {}
+    void handleObjectEnd() {}
+    void handleValueEnd() {}
+    void handleColon() {}
+};
+
+class AVRO_DECL JsonPrettyFormatter {
+    StreamWriter& out_;
+    size_t level_;
+    std::vector<uint8_t> indent_;
+
+    static const int CHARS_PER_LEVEL = 2;
+
+    void printIndent() {
+        size_t charsToIndent = level_ * CHARS_PER_LEVEL;
+        if (indent_.size() < charsToIndent) {
+            indent_.resize(charsToIndent * 2, ' ');
+        }
+        out_.writeBytes(&(indent_[0]), charsToIndent);
+    }
+public:
+    JsonPrettyFormatter(StreamWriter& out) : out_(out), level_(0), indent_(10, ' ') { }
+
+    void handleObjectStart() {
+        out_.write('\n');
+        ++level_;
+        printIndent();
+    }
+
+    void handleObjectEnd() {
+        out_.write('\n');
+        --level_;
+        printIndent();
+    }
+
+    void handleValueEnd() {
+        out_.write('\n');
+        printIndent();
+    }
+
+    void handleColon() {
+        out_.write(' ');
+    }
+};
+
+template <class F>
 class AVRO_DECL JsonGenerator {
     StreamWriter out_;
+    F formatter_;
     enum State {
         stStart,
         stArray0,
@@ -210,6 +261,7 @@ class AVRO_DECL JsonGenerator {
     void sep() {
         if (top == stArrayN) {
             out_.write(',');
+            formatter_.handleValueEnd();
         } else if (top == stArray0) {
             top = stArrayN;
         }
@@ -222,7 +274,7 @@ class AVRO_DECL JsonGenerator {
     }
 
 public:
-    JsonGenerator() : top(stStart) { }
+    JsonGenerator() : formatter_(out_), top(stStart) { }
 
     void init(OutputStream& os) {
         out_.reset(os);
@@ -258,13 +310,30 @@ public:
         sep2();
     }
 
-    void encodeNumber(double t);
+    void encodeNumber(double t) {
+        sep();
+        std::ostringstream oss;
+        if (boost::math::isfinite(t)) {
+            oss << t;
+        } else if (boost::math::isnan(t)) {
+            oss << "NaN";
+        } else if (t == std::numeric_limits<double>::infinity()) {
+            oss << "Infinity";
+        } else {
+            oss << "-Infinity";
+        }
+        const std::string& s = oss.str();
+        out_.writeBytes(reinterpret_cast<const uint8_t*>(&s[0]), s.size());
+        sep2();
+    }
+
 
     void encodeString(const std::string& s) {
         if (top == stMap0) {
             top = stKey;
         } else if (top == stMapN) {
             out_.write(',');
+            formatter_.handleValueEnd();
             top = stKey;
         } else if (top == stKey) {
             top = stMapN;
@@ -274,6 +343,7 @@ public:
         doEncodeString(s);
         if (top == stKey) {
             out_.write(':');
+            formatter_.handleColon();
         }
     }
 
@@ -293,11 +363,13 @@ public:
         stateStack.push(top);
         top = stArray0;
         out_.write('[');
+        formatter_.handleObjectStart();
     }
 
     void arrayEnd() {
         top = stateStack.top();
         stateStack.pop();
+        formatter_.handleObjectEnd();
         out_.write(']');
         sep2();
     }
@@ -307,11 +379,13 @@ public:
         stateStack.push(top);
         top = stMap0;
         out_.write('{');
+        formatter_.handleObjectStart();
     }
 
     void objectEnd() {
         top = stateStack.top();
         stateStack.pop();
+        formatter_.handleObjectEnd();
         out_.write('}');
         sep2();
     }
