@@ -29,6 +29,8 @@ Trunk (not yet released)
     AVRO-1667: Fix parser grammar flattening for recursive cases.
     (Zoltan Farkas via blue)
 
+    AVRO-1829. C++ documentation improvements (William S Fulton via thiru)
+
 Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES
