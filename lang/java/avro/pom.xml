@@ -198,6 +198,11 @@
       <artifactId>joda-time</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>
