@@ -38,6 +38,9 @@ Trunk (not yet released)
     AVRO-1821: Java: Fix possible memory leak in ReflectData accessor cache.
     (Bryan Harclerode via blue)
 
+    AVRO-1821: Java: Fix possible memory leak in ReflectData accessor cache.
+    (Bryan Harclerode via blue)
+
 Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES
