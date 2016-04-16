@@ -99,7 +99,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     try {
       vin.readFixed(magic);                         // read magic
     } catch (IOException e) {
-      throw new IOException("Not a data file.");
+      throw new IOException("Not a data file.", e);
     }
     if (!Arrays.equals(DataFileConstants.MAGIC, magic))
       throw new IOException("Not a data file.");

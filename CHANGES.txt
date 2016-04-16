@@ -15,6 +15,13 @@ Trunk (not yet released)
 
     AVRO-1778: JavaScript: Add IPC/RPC support. (mtth)
 
+    AVRO-1824: C++: Fix docs for building Avro C++. (William S. Fulton via blue)
+
+    AVRO-1701: Fix for "warning: comparison between 'const enum testgen_r::ExampleEnum' and 'const enum testgen::ExampleEnum'" (peter liu via thiru)
+
+    AVRO-1823: Java: Do not swallow IOException while reading magic bytes.
+    (Koji Noguchi via blue)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
