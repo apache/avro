@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.MapMaker;
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -49,6 +51,7 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.WeakIdentityHashMap;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
@@ -227,13 +230,12 @@ public class ReflectData extends SpecificData {
   static final ConcurrentHashMap<Class<?>, ClassAccessorData> 
     ACCESSOR_CACHE = new ConcurrentHashMap<Class<?>, ClassAccessorData>();
 
-  private static class ClassAccessorData {
+  static class ClassAccessorData {
     private final Class<?> clazz;
     private final Map<String, FieldAccessor> byName =
         new HashMap<String, FieldAccessor>();
-    private final IdentityHashMap<Schema, FieldAccessor[]> bySchema =
-        new IdentityHashMap<Schema, FieldAccessor[]>();
-        
+    final Map<Schema, FieldAccessor[]> bySchema = new MapMaker().weakKeys().makeMap();
+
     private ClassAccessorData(Class<?> c) {
       clazz = c;
       for(Field f : getFields(c, false)) {
