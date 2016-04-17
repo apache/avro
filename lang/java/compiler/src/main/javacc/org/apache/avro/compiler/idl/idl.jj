@@ -1465,7 +1465,6 @@ Schema ReferenceType():
       name = namespace + "." + name;
     Schema type = names.get(name);
     if (type == null)
-      //throw error("Undefined name '" + name + "'", token);
     {
       type = SchemaResolver.unresolvedSchema(name);
     }
