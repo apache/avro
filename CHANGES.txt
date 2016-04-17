@@ -42,6 +42,8 @@ Trunk (not yet released)
     AVRO-1642: Java: Do not generate invalid all-args constructor.
     (Prateek Rungta and Barry Jones via blue)
 
+    AVRO-1826: build.sh rat fails over extra license files and many others (nielsbasjes).
+
 Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES
