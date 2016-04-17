@@ -87,7 +87,17 @@ case "$target" in
         DOC_DIR=avro-doc-$VERSION
 
 	rm -rf build/${SRC_DIR}
-	svn export --force . build/${SRC_DIR}
+	if [ -d .svn ];
+	then
+		svn export --force . build/${SRC_DIR}
+	elif [ -d .git ];
+	then
+		mkdir -p build/${SRC_DIR}
+		git archive HEAD | tar -x -C build/${SRC_DIR}
+	else
+		echo "Not SVN and not GIT .. cannot continue"
+		exit -1;
+	fi
 
 	#runs RAT on artifacts
         mvn -N -P rat antrun:run

@@ -22,6 +22,8 @@ Trunk (not yet released)
     AVRO-1823: Java: Do not swallow IOException while reading magic bytes.
     (Koji Noguchi via blue)
 
+    AVRO-1825: Allow running build.sh dist under git (nielsbasjes)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
