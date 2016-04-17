@@ -17,29 +17,29 @@
  */
 package org.apache.avro.tool;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.File;
 import java.net.URI;
 import java.util.List;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
 import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.ipc.Ipc;
 import org.apache.avro.ipc.generic.GenericRequestor;
 
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 /**
  * Sends a single RPC message.
@@ -107,7 +107,7 @@ public class RpcSendTool implements Tool {
   throws IOException {
     DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
     JsonGenerator g =
-      new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
+      new JsonFactory().createGenerator(out, JsonEncoding.UTF8);
     g.useDefaultPrettyPrinter();
     writer.write(datum, EncoderFactory.get().jsonEncoder(schema, g));
     g.flush();

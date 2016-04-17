@@ -33,9 +33,10 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.codehaus.jackson.node.NullNode;
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.fasterxml.jackson.databind.node.NullNode;
 
 public class TestSchemaBuilder {
 

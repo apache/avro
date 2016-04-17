@@ -17,36 +17,32 @@
  */
 package org.apache.avro.specific;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 import org.apache.avro.FooBarSpecificRecord;
-import org.apache.avro.TypeEnum;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Test;
-import org.junit.Assert;
-
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.util.Utf8;
-
 import org.apache.avro.TestSchema;
-import org.apache.avro.test.TestRecord;
-import org.apache.avro.test.MD5;
-import org.apache.avro.test.Kind;
-import org.apache.avro.test.Reserved;
-
+import org.apache.avro.TypeEnum;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.test.Kind;
+import org.apache.avro.test.MD5;
+import org.apache.avro.test.Reserved;
+import org.apache.avro.test.TestRecord;
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestSpecificData {
   
@@ -131,7 +127,7 @@ public class TestSpecificData {
 
     String json = foo.toString();
     JsonFactory factory = new JsonFactory();
-    JsonParser parser = factory.createJsonParser(json);
+    JsonParser parser = factory.createParser(json);
     ObjectMapper mapper = new ObjectMapper();
 
     // will throw exception if string is not parsable json

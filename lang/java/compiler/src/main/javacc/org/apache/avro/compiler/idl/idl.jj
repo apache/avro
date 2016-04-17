@@ -60,23 +60,35 @@ PARSER_BEGIN(Idl)
 
 package org.apache.avro.compiler.idl;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.net.URL;
 
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
-import org.apache.avro.Protocol.*;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.*;
-
+import org.apache.avro.Protocol.Message;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Parser;
+import org.apache.avro.Schema.Type;
 import org.apache.commons.lang.StringEscapeUtils;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.LongNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * Grammar to parse a higher-level language into an Avro Schema.
@@ -131,7 +143,7 @@ public class Idl implements Closeable {
                              Token token) throws ParseException {
     JsonNode value = props.get(key);
     if (value.isTextual())
-      return value.getTextValue();
+      return value.textValue();
     throw error(key+" property must be textual: "+value, token);
   }
 
@@ -143,7 +155,7 @@ public class Idl implements Closeable {
     List<String> values = new ArrayList<String>();
     for (JsonNode n : value)
       if (n.isTextual())
-        values.add(n.getTextValue());
+        values.add(n.textValue());
       else
         throw error(key+" values must be textual: "+n, token);
     return values;

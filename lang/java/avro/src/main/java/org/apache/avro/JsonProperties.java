@@ -17,16 +17,17 @@
  */
 package org.apache.avro;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.io.IOException;
 
 import org.apache.avro.util.internal.JacksonUtils;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.node.TextNode;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * Base class for objects that have JSON-valued properties. Avro and JSON values are
@@ -128,7 +129,7 @@ public abstract class JsonProperties {
    */
   public String getProp(String name) {
     JsonNode value = getJsonProp(name);
-    return value != null && value.isTextual() ? value.getTextValue() : null;
+    return value != null && value.isTextual() ? value.textValue() : null;
   }
 
   /**
@@ -196,7 +197,7 @@ public abstract class JsonProperties {
     Map<String,String> result = new LinkedHashMap<String,String>();
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       if (e.getValue().isTextual())
-        result.put(e.getKey(), e.getValue().getTextValue());
+        result.put(e.getKey(), e.getValue().textValue());
     return result;
   }
 

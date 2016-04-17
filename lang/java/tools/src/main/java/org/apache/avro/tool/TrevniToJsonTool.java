@@ -22,15 +22,15 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.apache.trevni.Input;
 import org.apache.trevni.ColumnFileReader;
 import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnValues;
+import org.apache.trevni.Input;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.util.MinimalPrettyPrinter;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 
 /** Tool to read Trevni files and print them as JSON.
  * This can read any Trevni file.  Nested structure is reconstructed from the
@@ -77,7 +77,7 @@ public class TrevniToJsonTool implements Tool {
   /** Read a Trevni file and print each row as a JSON object. */
   public void toJson(Input input, PrintStream out, boolean pretty)
     throws IOException {
-    this.generator = FACTORY.createJsonGenerator(out, JsonEncoding.UTF8);
+    this.generator = FACTORY.createGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       generator.useDefaultPrettyPrinter();
     } else {                                      // ensure newline separation

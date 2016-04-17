@@ -35,13 +35,18 @@ import org.apache.avro.io.parsing.JsonGrammarGenerator;
 import org.apache.avro.io.parsing.Parser;
 import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.Base64Variant;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonLocation;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonStreamContext;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.ObjectCodec;
+
+import com.fasterxml.jackson.core.Base64Variant;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonStreamContext;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.core.base.ParserMinimalBase;
+
 
 /** A {@link Decoder} for Avro's JSON data encoding. 
  * </p>
@@ -553,7 +558,7 @@ public class JsonDecoder extends ParsingDecoder
   }
 
   private JsonParser makeParser(final List<JsonElement> elements) throws IOException {
-    return new JsonParser() {
+    return new ParserMinimalBase() {
       int pos = 0;
 
       @Override
@@ -689,6 +694,31 @@ public class JsonDecoder extends ParsingDecoder
       @Override
       public JsonToken getCurrentToken() {
         return elements.get(pos).token;
+      }
+
+      @SuppressWarnings(value="checkstyle:methodname")
+      @Override
+      protected void _handleEOF() throws JsonParseException {
+      }
+
+      @Override
+      public void overrideCurrentName(String name) {
+          throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean hasTextCharacters() {
+          return false;
+      }
+
+      @Override
+      public Version version() {
+          throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public Object getEmbeddedObject() throws IOException {
+          throw new UnsupportedOperationException();
       }
     };
   }

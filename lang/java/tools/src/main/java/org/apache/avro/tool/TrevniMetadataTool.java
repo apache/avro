@@ -23,15 +23,15 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.trevni.Input;
 import org.apache.trevni.ColumnFileReader;
-import org.apache.trevni.MetaData;
 import org.apache.trevni.ColumnMetaData;
+import org.apache.trevni.Input;
+import org.apache.trevni.MetaData;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.util.MinimalPrettyPrinter;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 
 /** Tool to print Trevni file metadata as JSON. */
 public class TrevniMetadataTool implements Tool {
@@ -73,7 +73,7 @@ public class TrevniMetadataTool implements Tool {
   /** Read a Trevni file and print each row as a JSON object. */
   public void dump(Input input, PrintStream out, boolean pretty)
     throws IOException {
-    this.generator = FACTORY.createJsonGenerator(out, JsonEncoding.UTF8);
+    this.generator = FACTORY.createGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       generator.useDefaultPrettyPrinter();
     } else {                                      // ensure newline separation

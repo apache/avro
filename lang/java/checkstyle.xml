@@ -22,12 +22,16 @@
     "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
 
 <module name="Checker">
+
+    <module name="SuppressWarningsFilter" />
     <module name="FileTabCharacter"/>
     <module name="NewlineAtEndOfFile">
         <property name="lineSeparator" value="lf"/>
     </module>
 
     <module name="TreeWalker">
+        <module name="SuppressWarningsHolder"/>
+
         <module name="ConstantName"/>
         <module name="LocalFinalVariableName"/>
         <module name="LocalVariableName"/>

@@ -34,10 +34,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.avro.Protocol;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Simple test harness for Idl.

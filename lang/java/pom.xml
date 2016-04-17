@@ -44,7 +44,7 @@
     -->
     <hadoop1.version>1.2.1</hadoop1.version>
     <hadoop2.version>2.5.1</hadoop2.version>
-    <jackson.version>1.9.13</jackson.version>
+    <jackson.version>2.7.0</jackson.version>
     <jetty.version>6.1.26</jetty.version>
     <jetty-servlet-api.version>2.5-20081211</jetty-servlet-api.version>
     <jopt-simple.version>4.7</jopt-simple.version>
@@ -260,7 +260,8 @@
           <version>${javadoc-plugin.version}</version>
           <configuration>
             <links>
-              <link>http://jackson.codehaus.org/1.9.4/javadoc/</link>
+              <link>http://http://fasterxml.github.io/jackson-core/javadoc/2.7/</link>
+              <link>http://http://fasterxml.github.io/jackson-databind/javadoc/2.7/</link>
               <link>http://java.sun.com/products/servlet/2.3/javadoc/</link>
               <link>http://hadoop.apache.org/common/docs/current/api/</link>
             </links>
@@ -408,13 +409,13 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-core-asl</artifactId>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
         <version>${jackson.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-mapper-asl</artifactId>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
       </dependency>
       <dependency>

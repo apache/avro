@@ -19,25 +19,26 @@ package org.apache.avro;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
-import java.util.HashSet;
 
 import org.apache.avro.Schema.Field;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.node.TextNode;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /** A set of messages forming an application protocol.
  * <p> A protocol consists of:
@@ -387,7 +388,7 @@ public class Protocol extends JsonProperties {
   private static Protocol parse(JsonParser parser) {
     try {
       Protocol protocol = new Protocol();
-      protocol.parse(Schema.MAPPER.readTree(parser));
+      protocol.parse(Schema.MAPPER.<JsonNode>readTree(parser));
       return protocol;
     } catch (IOException e) {
       throw new SchemaParseException(e);
@@ -406,7 +407,7 @@ public class Protocol extends JsonProperties {
   private void parseNamespace(JsonNode json) {
     JsonNode nameNode = json.get("namespace");
     if (nameNode == null) return;                 // no namespace defined
-    this.namespace = nameNode.getTextValue();
+    this.namespace = nameNode.textValue();
     types.space(this.namespace);
   }
   
@@ -417,14 +418,14 @@ public class Protocol extends JsonProperties {
   private String parseDocNode(JsonNode json) {
     JsonNode nameNode = json.get("doc");
     if (nameNode == null) return null;                 // no doc defined
-    return nameNode.getTextValue();
+    return nameNode.textValue();
   }
 
   private void parseName(JsonNode json) {
     JsonNode nameNode = json.get("protocol");
     if (nameNode == null)
       throw new SchemaParseException("No protocol name specified: "+json);
-    this.name = nameNode.getTextValue();
+    this.name = nameNode.textValue();
   }
 
   private void parseTypes(JsonNode json) {
@@ -440,7 +441,7 @@ public class Protocol extends JsonProperties {
   }
 
   private void parseProps(JsonNode json) {
-    for (Iterator<String> i = json.getFieldNames(); i.hasNext();) {
+    for (Iterator<String> i = json.fieldNames(); i.hasNext();) {
       String p = i.next();                        // add non-reserved as props
       if (!PROTOCOL_RESERVED.contains(p))
         this.addProp(p, json.get(p));
@@ -450,7 +451,7 @@ public class Protocol extends JsonProperties {
   private void parseMessages(JsonNode json) {
     JsonNode defs = json.get("messages");
     if (defs == null) return;                    // no messages defined
-    for (Iterator<String> i = defs.getFieldNames(); i.hasNext();) {
+    for (Iterator<String> i = defs.fieldNames(); i.hasNext();) {
       String prop = i.next();
       this.messages.put(prop, parseMessage(prop, defs.get(prop)));
     }
@@ -460,7 +461,7 @@ public class Protocol extends JsonProperties {
     String doc = parseDocNode(json);
 
     Map<String,JsonNode> mProps = new LinkedHashMap<String,JsonNode>();
-    for (Iterator<String> i = json.getFieldNames(); i.hasNext();) {
+    for (Iterator<String> i = json.fieldNames(); i.hasNext();) {
       String p = i.next();                        // add non-reserved as props
       if (!MESSAGE_RESERVED.contains(p))
         mProps.put(p, json.get(p));
@@ -477,11 +478,11 @@ public class Protocol extends JsonProperties {
       JsonNode fieldTypeNode = field.get("type");
       if (fieldTypeNode == null)
         throw new SchemaParseException("No param type: "+field);
-      String name = fieldNameNode.getTextValue();
+      String name = fieldNameNode.textValue();
       String fieldDoc = null;
       JsonNode fieldDocNode = field.get("doc");
       if (fieldDocNode != null)
-        fieldDoc = fieldDocNode.getTextValue();
+        fieldDoc = fieldDocNode.textValue();
       fields.add(new Field(name, Schema.parse(fieldTypeNode,types),
                            fieldDoc,
                            field.get("default")));
@@ -493,7 +494,7 @@ public class Protocol extends JsonProperties {
     if (oneWayNode != null) {
       if (!oneWayNode.isBoolean())
         throw new SchemaParseException("one-way must be boolean: "+json);
-      oneWay = oneWayNode.getBooleanValue();
+      oneWay = oneWayNode.booleanValue();
     }
 
     JsonNode responseNode = json.get("response");
@@ -519,7 +520,7 @@ public class Protocol extends JsonProperties {
       if (!decls.isArray())
         throw new SchemaParseException("Errors not an array: "+json);
       for (JsonNode decl : decls) {
-        String name = decl.getTextValue();
+        String name = decl.textValue();
         Schema schema = this.types.get(name);
         if (schema == null)
           throw new SchemaParseException("Undefined error: "+name);

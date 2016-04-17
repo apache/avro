@@ -22,7 +22,8 @@ import java.io.OutputStream;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.codehaus.jackson.JsonGenerator;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
  * A factory for creating and configuring {@link Encoder} instances.

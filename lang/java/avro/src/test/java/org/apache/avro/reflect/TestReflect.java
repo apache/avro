@@ -46,8 +46,9 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
-import org.codehaus.jackson.node.NullNode;
 import org.junit.Test;
+
+import com.fasterxml.jackson.databind.node.NullNode;
 
 public class TestReflect {
   
