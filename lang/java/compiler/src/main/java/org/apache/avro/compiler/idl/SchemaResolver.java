@@ -38,9 +38,15 @@ final class SchemaResolver {
 
   private static final String UR_SCHEMA_ATTR = "org.apache.avro.compiler.idl.unresolved.name";
 
+  private static final String UR_SCHEMA_NAME = "UnresolvedSchema";
+  
+  private static final String UR_SCHEMA_NS = "org.apache.avro.compiler";  
+  
   static Schema unresolvedSchema(final String name) {
-    Schema schema = Schema.createRecord("UnresolvedSchema", "unresolved schema",
-            "org.apache.avro.compiler", false, Collections.EMPTY_LIST);
+    
+    
+    Schema schema = Schema.createRecord(UR_SCHEMA_NAME, "unresolved schema",
+            UR_SCHEMA_NS, false, Collections.EMPTY_LIST);
     schema.addProp(UR_SCHEMA_ATTR, name);
     return schema;
   }
@@ -50,9 +56,13 @@ final class SchemaResolver {
   }
 
   static String getUnresolvedSchemaName(final Schema schema) {
+    if (schema.getType() != Schema.Type.RECORD || !UR_SCHEMA_NAME.equals(schema.getName())
+            || !UR_SCHEMA_NS.equals(schema.getNamespace())) {
+      throw new IllegalArgumentException("Not a unresolved schema: " + schema);
+    }
     String name = schema.getProp(UR_SCHEMA_ATTR);
     if (name == null) {
-      throw new IllegalArgumentException("Schema " + schema + " is not a unresolved schema");
+      throw new IllegalArgumentException("Schema " + schema + " must have attribute: " + UR_SCHEMA_ATTR);
     } else {
       return name;
     }
