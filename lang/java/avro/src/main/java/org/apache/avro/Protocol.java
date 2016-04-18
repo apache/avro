@@ -490,11 +490,11 @@ public class Protocol extends JsonProperties {
         fieldDoc = fieldDocNode.getTextValue();
       Field newField = new Field(name, Schema.parse(fieldTypeNode,types),
                                  fieldDoc, field.get("default"));
-      JsonNode aliasesNode = field.get("aliases");
-      if (aliasesNode != null && aliasesNode.isArray()) {
-        for (JsonNode aliasNode : aliasesNode)
-          newField.addAlias(aliasNode.getTextValue());
-      }
+      Set<String> aliases = Schema.parseAliases(field);
+      if (aliases != null)                      // add aliases
+        for (String alias : aliases)
+          newField.addAlias(alias);
+
       Iterator<String> i = field.getFieldNames();
       while (i.hasNext()) {                       // add properties
         String prop = i.next();
