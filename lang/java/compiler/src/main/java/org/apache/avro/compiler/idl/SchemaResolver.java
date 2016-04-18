@@ -58,15 +58,20 @@ final class SchemaResolver {
     }
   }
 
+  /**
+   * Resolve all unresolved schema references from a protocol.
+   * @param protocol - the protocol with unresolved schema references.
+   * @return - a new protocol instance based on the provided protocol with all unresolved schema references resolved.
+   */
   static Protocol resolve(final Protocol protocol) {
     Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
     final Collection<Schema> types = protocol.getTypes();
     List<Schema> newSchemas = new ArrayList(types.size());
-    Map<String, Schema> processed = new HashMap<String, Schema>();
+    Map<String, Schema> resolved = new HashMap<String, Schema>();
     for (Schema schema : types) {
-      newSchemas.add(resolve(schema, protocol, processed));
+      newSchemas.add(resolve(schema, protocol, resolved));
     }
-    result.setTypes(newSchemas);
+    result.setTypes(newSchemas); // replace types with resolved ones
 
     for (Map.Entry<String, Protocol.Message> entry : protocol.getMessages().entrySet()) {
       Protocol.Message value = entry.getValue();
@@ -74,14 +79,14 @@ final class SchemaResolver {
       if (value.isOneWay()) {
         Schema request = value.getRequest();
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-                value.getObjectProps(), intern(request, processed));
+                value.getObjectProps(), getResolvedSchema(request, resolved));
       } else {
         Schema request = value.getRequest();
         Schema response = value.getResponse();
         Schema errors = value.getErrors();
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-                value.getObjectProps(), intern(request, processed),
-                intern(response, processed), intern(errors, processed));
+                value.getObjectProps(), getResolvedSchema(request, resolved),
+                getResolvedSchema(response, resolved), getResolvedSchema(errors, resolved));
       }
       result.getMessages().put(entry.getKey(), nvalue);
     }
@@ -95,27 +100,35 @@ final class SchemaResolver {
     }
   }
 
-  static Schema resolve(final Schema schema, final Protocol protocol, final Map<String, Schema> processed) {
+  /**
+   * Resolve all unresolved schema references.
+   * @param schema - the schema to resolved references for.
+   * @param protocol - the protocol we resolve the schema's for.
+   * (we lookup all unresolved schema references in the protocol)
+   * @param resolved - a map of all resolved schema's so far.
+   * @return - a instance of the resolved schema.
+   */
+  static Schema resolve(final Schema schema, final Protocol protocol, final Map<String, Schema> resolved) {
     final String fullName = schema.getFullName();
-    if (fullName != null && processed.containsKey(fullName)) {
-      return processed.get(schema.getFullName());
+    if (fullName != null && resolved.containsKey(fullName)) {
+      return resolved.get(schema.getFullName());
     } else if (isUnresolvedSchema(schema)) {
       final String unresolvedSchemaName = getUnresolvedSchemaName(schema);
       Schema type = protocol.getType(unresolvedSchemaName);
       if (type == null) {
         throw new IllegalArgumentException("Cannot resolve " + unresolvedSchemaName);
       }
-      return resolve(type, protocol, processed);
+      return resolve(type, protocol, resolved);
     } else {
       switch (schema.getType()) {
         case RECORD:
           Schema createRecord = Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(),
                   schema.isError());
-          processed.put(schema.getFullName(), createRecord);
+          resolved.put(schema.getFullName(), createRecord);
           final List<Schema.Field> currFields = schema.getFields();
           List<Schema.Field> newFields = new ArrayList<Schema.Field>(currFields.size());
           for (Schema.Field field : currFields) {
-            Schema.Field nf = new Schema.Field(field.name(), resolve(field.schema(), protocol, processed),
+            Schema.Field nf = new Schema.Field(field.name(), resolve(field.schema(), protocol, resolved),
                     field.doc(), field.defaultVal(), field.order());
             for (String alias : field.aliases()) {
               nf.addAlias(alias);
@@ -130,18 +143,18 @@ final class SchemaResolver {
           copyProps(schema, createRecord);
           return createRecord;
         case MAP:
-          Schema result = Schema.createMap(resolve(schema.getValueType(), protocol, processed));
+          Schema result = Schema.createMap(resolve(schema.getValueType(), protocol, resolved));
           copyProps(schema, result);
           return result;
         case ARRAY:
-          Schema aresult = Schema.createArray(resolve(schema.getElementType(), protocol, processed));
+          Schema aresult = Schema.createArray(resolve(schema.getElementType(), protocol, resolved));
           copyProps(schema, aresult);
           return aresult;
         case UNION:
           final List<Schema> uTypes = schema.getTypes();
           List<Schema> newTypes = new ArrayList<Schema>(uTypes.size());
           for (Schema s : uTypes) {
-            newTypes.add(resolve(s, protocol, processed));
+            newTypes.add(resolve(s, protocol, resolved));
           }
           Schema bresult = Schema.createUnion(newTypes);
           copyProps(schema, bresult);
@@ -163,23 +176,29 @@ final class SchemaResolver {
     }
   }
 
-  public static Schema intern(final Schema schema, final Map<String, Schema> processed) {
+  /**
+   * get the resolved schema.
+   * @param schema - the schema we want to get the resolved equivalent for.
+   * @param resolved - a Map wil all resolved schemas
+   * @return - the resolved schema.
+   */
+  public static Schema getResolvedSchema(final Schema schema, final Map<String, Schema> resolved) {
     if (schema == null) {
       return null;
     }
     final String fullName = schema.getFullName();
-    if (fullName != null && processed.containsKey(fullName)) {
-      return processed.get(schema.getFullName());
+    if (fullName != null && resolved.containsKey(fullName)) {
+      return resolved.get(schema.getFullName());
     } else {
       switch (schema.getType()) {
         case RECORD:
           Schema createRecord = Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(),
               schema.isError());
-          processed.put(schema.getFullName(), createRecord);
+          resolved.put(schema.getFullName(), createRecord);
           final List<Schema.Field> currFields = schema.getFields();
           List<Schema.Field> newFields = new ArrayList<Schema.Field>(currFields.size());
           for (Schema.Field field : currFields) {
-            Schema.Field nf = new Schema.Field(field.name(), intern(field.schema(), processed),
+            Schema.Field nf = new Schema.Field(field.name(), getResolvedSchema(field.schema(), resolved),
                     field.doc(), field.defaultVal(), field.order());
             for (String alias : field.aliases()) {
               nf.addAlias(alias);
@@ -194,14 +213,14 @@ final class SchemaResolver {
           copyProps(schema, createRecord);
           return createRecord;
         case MAP:
-          return Schema.createMap(intern(schema.getValueType(), processed));
+          return Schema.createMap(getResolvedSchema(schema.getValueType(), resolved));
         case ARRAY:
-          return Schema.createArray(intern(schema.getElementType(), processed));
+          return Schema.createArray(getResolvedSchema(schema.getElementType(), resolved));
         case UNION:
           final List<Schema> uTypes = schema.getTypes();
           List<Schema> newTypes = new ArrayList<Schema>(uTypes.size());
           for (Schema s : uTypes) {
-            newTypes.add(intern(s, processed));
+            newTypes.add(getResolvedSchema(s, resolved));
           }
           return Schema.createUnion(newTypes);
         case ENUM:
