@@ -18,6 +18,7 @@
 package org.apache.avro.specific;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -127,6 +128,7 @@ public class TestSpecificData {
       .setNicknames(Arrays.asList("bar"))
       .setRelatedids(Arrays.asList(1, 2, 3))
       .setTypeEnum(TypeEnum.c)
+      .setTestBytes(ByteBuffer.wrap("test bytes".getBytes()))
       .build();
 
     String json = foo.toString();
@@ -136,6 +138,22 @@ public class TestSpecificData {
 
     // will throw exception if string is not parsable json
     mapper.readTree(parser);
+  }
+
+  @Test
+  public void testSpecificRecordWithByteBufferToString() throws IOException {
+    FooBarSpecificRecord foo = FooBarSpecificRecord.newBuilder()
+            .setId(123)
+            .setName("foo")
+            .setNicknames(Arrays.asList("bar"))
+            .setRelatedids(Arrays.asList(1, 2, 3))
+            .setTypeEnum(TypeEnum.c)
+            .setTestBytes(ByteBuffer.wrap("test bytes".getBytes()))
+            .build();
+    int positionBefore = foo.getTestBytes().position();
+    foo.toString();
+    int positionAfter = foo.getTestBytes().position();
+    Assert.assertEquals(positionBefore, positionAfter);
   }
 
   @Test public void testExternalizeable() throws Exception {
