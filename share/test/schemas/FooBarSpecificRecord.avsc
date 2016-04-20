@@ -17,6 +17,7 @@
                     "symbols" : ["a","b", "c"]
                 }],
             "default": null
-        }
+        },
+        {"name": "testBytes", "type": "bytes"}
     ]
 }
