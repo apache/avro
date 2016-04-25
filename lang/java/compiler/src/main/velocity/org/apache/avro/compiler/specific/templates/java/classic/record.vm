@@ -72,6 +72,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    * All-args constructor.
 #foreach ($field in $schema.getFields())
 #if ($field.doc())   * @param ${this.mangle($field.name())} $field.doc()
+#else   * @param ${this.mangle($field.name())} The new value for ${field.name()}
 #end
 #end
    */
@@ -120,6 +121,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #if ($field.doc())   * @return $field.doc()
+#else   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #end
    */
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
@@ -310,6 +312,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
      * Sets the Builder instance for the '${this.mangle($field.name(), $schema.isError())}' field
 #if ($field.doc())     * $field.doc()
 #end
+     * @param value The builder instance that must be set.
      * @return This builder.
      */
     public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema())}.Builder value) {

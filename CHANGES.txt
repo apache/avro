@@ -27,6 +27,8 @@ Trunk (not yet released)
     AVRO-1819, AVRO-1820: Java: Add aliases, custom properties to Protocol.
     (Konstantin Usachev via blue)
 
+    AVRO-1834: Lower the Javadoc warnings on the generated code. (nielsbasjes)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are

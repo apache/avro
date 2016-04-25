@@ -27,6 +27,9 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   /**
    * All-args constructor.
    * @param number The number of the player
+   * @param first_name The new value for first_name
+   * @param last_name The new value for last_name
+   * @param position The new value for position
    */
   public Player(java.lang.Integer number, java.lang.String first_name, java.lang.String last_name, java.util.List<avro.examples.baseball.Position> position) {
     this.number = number;
@@ -77,6 +80,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
   /**
    * Gets the value of the 'first_name' field.
+   * @return The value of the 'first_name' field.
    */
   public java.lang.String getFirstName() {
     return first_name;
@@ -92,6 +96,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
   /**
    * Gets the value of the 'last_name' field.
+   * @return The value of the 'last_name' field.
    */
   public java.lang.String getLastName() {
     return last_name;
@@ -107,6 +112,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
   /**
    * Gets the value of the 'position' field.
+   * @return The value of the 'position' field.
    */
   public java.util.List<avro.examples.baseball.Position> getPosition() {
     return position;
