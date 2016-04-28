@@ -105,6 +105,8 @@ Avro 1.8.1 (14 May 2016)
     AVRO-1821: Java: Fix possible memory leak in ReflectData accessor cache.
     (Bryan Harclerode via blue)
 
+    AVRO-1814: Generated java code fails on variables with a TLD name like 'org' (nielsbasjes)
+
 Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES
