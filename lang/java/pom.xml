@@ -227,7 +227,8 @@
                  rather than the console. -->
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <failIfNoTests>false</failIfNoTests>
-            <argLine>-Xmx1000m -XX:MaxPermSize=200m</argLine>
+            <!-- The correct argLine value depends on the JDK version -->
+            <argLine>${surefire.argline}</argLine>
             <systemPropertyVariables>
               <test.dir>${project.basedir}/target/</test.dir>
             </systemPropertyVariables>
@@ -399,6 +400,28 @@
         </plugins>
       </build>
     </profile>
+
+    <!--In JDK 1.8 and newer the PermGem has been removed. -->
+    <!--These two profiles are to handle the differences between the before and after 1.8 -->
+    <profile>
+      <id>old-jdk</id>
+      <activation>
+        <jdk>(,1.8)</jdk>
+      </activation>
+      <properties>
+        <surefire.argline>-Xmx1000m -XX:MaxPermSize=200m</surefire.argline>
+      </properties>
+    </profile>
+    <profile>
+      <id>new-jdk</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <properties>
+        <surefire.argline>-Xmx1000m</surefire.argline>
+      </properties>
+    </profile>
+
   </profiles>
 
   <!-- dependencyManagement can be used to define dependency versions, scopes, and
