@@ -4,6 +4,9 @@
  * DO NOT EDIT DIRECTLY
  */
 package avro.examples.baseball;  
+
+import org.apache.avro.specific.SpecificData;
+
 @SuppressWarnings("all")
 /** 選手 is Japanese for player. */
 @org.apache.avro.specific.AvroGenerated
@@ -166,7 +169,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
     /** Creates a new Builder */
     private Builder() {
-      super(avro.examples.baseball.Player.SCHEMA$);
+      super(SCHEMA$);
     }
     
     /**
@@ -198,7 +201,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.Player other) {
-            super(avro.examples.baseball.Player.SCHEMA$);
+            super(SCHEMA$);
       if (isValidValue(fields()[0], other.number)) {
         this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;
@@ -396,7 +399,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
-    WRITER$.write(this, org.apache.avro.specific.SpecificData.getEncoder(out));
+    WRITER$.write(this, SpecificData.getEncoder(out));
   }
 
   private static final org.apache.avro.io.DatumReader
@@ -404,7 +407,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
-    READER$.read(this, org.apache.avro.specific.SpecificData.getDecoder(in));
+    READER$.read(this, SpecificData.getDecoder(in));
   }
 
 }
