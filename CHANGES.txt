@@ -29,6 +29,8 @@ Trunk (not yet released)
 
     AVRO-1834: Lower the Javadoc warnings on the generated code. (nielsbasjes)
 
+    AVRO-1835: Running tests using JDK 1.8 complains about MaxPermSize (nielsbasjes)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
