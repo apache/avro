@@ -19,6 +19,7 @@ try:
 except ImportError:
   from StringIO import StringIO
 from binascii import hexlify
+import datetime
 
 import set_avro_test_path
 
@@ -35,6 +36,7 @@ SCHEMAS_TO_VALIDATE = (
   ('"float"', 1234.0),
   ('"double"', 1234.0),
   ('{"type": "fixed", "name": "Test", "size": 1}', 'B'),
+  ('{"type": "int", "logicalType": "date"}', datetime.date(2000, 1, 1)),
   ('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', 'B'),
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
   ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),

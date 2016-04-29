@@ -312,6 +312,18 @@ class NamedSchema(Schema):
   namespace = property(lambda self: self.get_prop('namespace'))
   fullname = property(lambda self: self._fullname)
 
+# Logical type class
+class LogicalSchema(Schema):
+  def __init__(self, type, logical_type, other_props=None):
+    self.logical_type = logical_type
+
+    # Call parent ctor
+    Schema.__init__(self, type, other_props)
+    self.set_prop('logicalType', logical_type)
+
+  def validate(self, validation_props=None):
+    raise NotImplementedError()
+
 class Field(object):
   def __init__(self, type, name, has_default, default=None,
                order=None,names=None, doc=None, other_props=None):
@@ -400,6 +412,20 @@ class PrimitiveSchema(Schema):
       return self.fullname
     else:
       return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# Date Type
+#
+
+class DateSchema(LogicalSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, 'int', 'date', other_props=other_props)
+
+  def to_json(self):
+    return self.props
 
   def __eq__(self, that):
     return self.props == that.props
@@ -722,7 +748,14 @@ def make_avsc_object(json_data, names=None):
   if hasattr(json_data, 'get') and callable(json_data.get):
     type = json_data.get('type')
     other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
+    logical_type = None
+    if 'logicalType' in json_data:
+      logical_type = json_data.get('logicalType')
+      if logical_type not in ['date']:
+        raise SchemaParseException("Currently does not support %s logical type" % logical_type)
     if type in PRIMITIVE_TYPES:
+      if type == 'int' and logical_type == 'date':
+        return DateSchema(other_props)
       return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')

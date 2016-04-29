@@ -45,6 +45,7 @@ try:
 	import json
 except ImportError:
 	import simplejson as json
+import datetime
 
 #
 # Constants
@@ -110,8 +111,12 @@ def validate(expected_schema, datum):
   elif schema_type == 'bytes':
     return isinstance(datum, str)
   elif schema_type == 'int':
-    return ((isinstance(datum, int) or isinstance(datum, long)) 
-            and INT_MIN_VALUE <= datum <= INT_MAX_VALUE)
+    if (hasattr(expected_schema, 'logical_type') and
+        expected_schema.logical_type == 'date'):
+      return isinstance(datum, datetime.date)
+    else:
+      return ((isinstance(datum, int) or isinstance(datum, long))
+              and INT_MIN_VALUE <= datum <= INT_MAX_VALUE)
   elif schema_type == 'long':
     return ((isinstance(datum, int) or isinstance(datum, long)) 
             and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
@@ -231,6 +236,15 @@ class BinaryDecoder(object):
     that many bytes of UTF-8 encoded character data.
     """
     return unicode(self.read_bytes(), "utf-8")
+
+  def read_date_from_int(self):
+    """
+    Decode python date object from int
+    int stores the number of days from
+    the unix epoch, 1 January 1970 (ISO calendar).
+    """
+    days_since_epoc = self.read_int()
+    return datetime.date(1970, 1, 1) + datetime.timedelta(days_since_epoc)
 
   def check_crc32(self, bytes):
     checksum = STRUCT_CRC32.unpack(self.read(4))[0];
@@ -362,6 +376,15 @@ class BinaryEncoder(object):
     """
     self.write(STRUCT_CRC32.pack(crc32(bytes) & 0xffffffff));
 
+  def write_date_int(self, datum):
+    """
+    Encode python date object as int
+    int stores the number of days from
+    the unix epoch, 1 January 1970 (ISO calendar).
+    """
+    delta_date = datum - datetime.date(1970, 1, 1)
+    self.write_int(delta_date.days)
+
 #
 # DatumReader/Writer
 #
@@ -467,7 +490,10 @@ class DatumReader(object):
     elif writers_schema.type == 'string':
       return decoder.read_utf8()
     elif writers_schema.type == 'int':
-      return decoder.read_int()
+      if hasattr(writers_schema, 'logical_type') and writers_schema.logical_type == 'date':
+        return decoder.read_date_from_int()
+      else:
+        return decoder.read_int()
     elif writers_schema.type == 'long':
       return decoder.read_long()
     elif writers_schema.type == 'float':
@@ -779,7 +805,10 @@ class DatumWriter(object):
     elif writers_schema.type == 'string':
       encoder.write_utf8(datum)
     elif writers_schema.type == 'int':
-      encoder.write_int(datum)
+      if hasattr(writers_schema, 'logical_type') and writers_schema.logical_type == 'date':
+        encoder.write_date_int(datum)
+      else:
+        encoder.write_int(datum)
     elif writers_schema.type == 'long':
       encoder.write_long(datum)
     elif writers_schema.type == 'float':

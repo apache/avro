@@ -295,6 +295,15 @@ OTHER_PROP_EXAMPLES = [
     """, True)
 ]
 
+DATE_LOGICAL_TYPE = [
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "date"} """, True),
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "date1"} """, False),
+]
+
 EXAMPLES = PRIMITIVE_EXAMPLES
 EXAMPLES += FIXED_EXAMPLES
 EXAMPLES += ENUM_EXAMPLES
@@ -303,6 +312,7 @@ EXAMPLES += MAP_EXAMPLES
 EXAMPLES += UNION_EXAMPLES
 EXAMPLES += RECORD_EXAMPLES
 EXAMPLES += DOC_EXAMPLES
+EXAMPLES += DATE_LOGICAL_TYPE
 
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 
