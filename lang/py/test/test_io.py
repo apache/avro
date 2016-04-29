@@ -37,6 +37,7 @@ SCHEMAS_TO_VALIDATE = (
   ('"double"', 1234.0),
   ('{"type": "fixed", "name": "Test", "size": 1}', 'B'),
   ('{"type": "int", "logicalType": "date"}', datetime.date(2000, 1, 1)),
+  ('{"type": "int", "logicalType": "time-millis"}', datetime.time(2, 2, 1, 4000)),
   ('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', 'B'),
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
   ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),

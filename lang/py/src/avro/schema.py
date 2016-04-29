@@ -431,6 +431,20 @@ class DateSchema(LogicalSchema):
     return self.props == that.props
 
 #
+# time-millis Type
+#
+
+class TimeMillisSchema(LogicalSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, 'int', 'time-millis', other_props=other_props)
+
+  def to_json(self):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
 # Complex Types (non-recursive)
 #
 
@@ -751,11 +765,13 @@ def make_avsc_object(json_data, names=None):
     logical_type = None
     if 'logicalType' in json_data:
       logical_type = json_data.get('logicalType')
-      if logical_type not in ['date']:
+      if logical_type not in ['date', 'time-millis']:
         raise SchemaParseException("Currently does not support %s logical type" % logical_type)
     if type in PRIMITIVE_TYPES:
       if type == 'int' and logical_type == 'date':
         return DateSchema(other_props)
+      elif type == 'int' and logical_type == 'time-millis':
+        return TimeMillisSchema(other_props)
       return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')

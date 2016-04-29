@@ -111,9 +111,13 @@ def validate(expected_schema, datum):
   elif schema_type == 'bytes':
     return isinstance(datum, str)
   elif schema_type == 'int':
-    if (hasattr(expected_schema, 'logical_type') and
-        expected_schema.logical_type == 'date'):
-      return isinstance(datum, datetime.date)
+    if hasattr(expected_schema, 'logical_type'):
+      if expected_schema.logical_type == 'date':
+        return isinstance(datum, datetime.date)
+      elif expected_schema.logical_type == 'time-millis':
+        return isinstance(datum, datetime.time)
+      else:
+        return False
     else:
       return ((isinstance(datum, int) or isinstance(datum, long))
               and INT_MIN_VALUE <= datum <= INT_MAX_VALUE)
@@ -245,6 +249,29 @@ class BinaryDecoder(object):
     """
     days_since_epoc = self.read_int()
     return datetime.date(1970, 1, 1) + datetime.timedelta(days_since_epoc)
+
+  def read_time_millis_from_int(self):
+    """
+    Decode python time object from int
+    int stores the number of milliseconds after midnight, 00:00:00.000
+    """
+    milisec = self.read_int()
+    hrs = int(milisec / 3600000)
+    milisec = milisec % 3600000
+
+    minutes = int(milisec / 60000)
+    milisec = milisec % 60000
+
+    seconds = int(milisec / 1000)
+    milisec = milisec % 1000
+
+    microseconds = milisec * 1000
+    return datetime.time(
+      hour=hrs,
+      minute=minutes,
+      second=seconds,
+      microsecond=microseconds
+    )
 
   def check_crc32(self, bytes):
     checksum = STRUCT_CRC32.unpack(self.read(4))[0];
@@ -385,6 +412,14 @@ class BinaryEncoder(object):
     delta_date = datum - datetime.date(1970, 1, 1)
     self.write_int(delta_date.days)
 
+  def write_time_millis_int(self, datum):
+    """
+    Encode python time object as int
+    int stores the number of days from midnight, 00:00:00.000
+    """
+    delta_time = datum.hour*3600000 + datum.minute * 60000 + datum.second * 1000 + datum.microsecond / 1000
+    self.write_int(int(delta_time))
+
 #
 # DatumReader/Writer
 #
@@ -490,8 +525,14 @@ class DatumReader(object):
     elif writers_schema.type == 'string':
       return decoder.read_utf8()
     elif writers_schema.type == 'int':
-      if hasattr(writers_schema, 'logical_type') and writers_schema.logical_type == 'date':
-        return decoder.read_date_from_int()
+      if hasattr(writers_schema, 'logical_type'):
+        if writers_schema.logical_type == 'date':
+          return decoder.read_date_from_int()
+        elif writers_schema.logical_type == 'time-millis':
+          return decoder.read_time_millis_from_int()
+        else:
+          fail_msg = "Cannot read unknown schema type: %s logicalType %s" % (writers_schema.type, writers_schema.logical_type)
+          raise schema.AvroException(fail_msg)
       else:
         return decoder.read_int()
     elif writers_schema.type == 'long':
@@ -805,8 +846,14 @@ class DatumWriter(object):
     elif writers_schema.type == 'string':
       encoder.write_utf8(datum)
     elif writers_schema.type == 'int':
-      if hasattr(writers_schema, 'logical_type') and writers_schema.logical_type == 'date':
-        encoder.write_date_int(datum)
+      if hasattr(writers_schema, 'logical_type'):
+        if writers_schema.logical_type == 'date':
+          encoder.write_date_int(datum)
+        elif writers_schema.logical_type == 'time-millis':
+          encoder.write_time_millis_int(datum)
+        else:
+          fail_msg = 'Unknown type: %s, logicalType %s' % (writers_schema.type, writers_schema.logical_type)
+          raise schema.AvroException(fail_msg)
       else:
         encoder.write_int(datum)
     elif writers_schema.type == 'long':

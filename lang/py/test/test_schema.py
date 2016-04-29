@@ -304,6 +304,15 @@ DATE_LOGICAL_TYPE = [
   "logicalType": "date1"} """, False),
 ]
 
+TIMEMILLIS_LOGICAL_TYPE = [
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "time-millis"} """, True),
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "time-milis"} """, False),
+]
+
 EXAMPLES = PRIMITIVE_EXAMPLES
 EXAMPLES += FIXED_EXAMPLES
 EXAMPLES += ENUM_EXAMPLES
