@@ -44,7 +44,7 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String,byte[]> {
     setReserved(CODEC_KEY, codec);
     return (T)this;
   }
-   
+
   /** Return the checksum algorithm name. */
   public String getChecksum() { return getString(CHECKSUM_KEY); }
 

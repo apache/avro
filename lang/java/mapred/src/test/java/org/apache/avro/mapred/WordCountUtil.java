@@ -104,7 +104,7 @@ public class WordCountUtil {
       out.append(ByteBuffer.wrap(line.getBytes("UTF-8")));
     out.close();
   }
-  
+
   public static void writeLinesTextFile() throws IOException {
     FileUtil.fullyDelete(DIR);
     LINES_FILE.getParentFile().mkdirs();
@@ -130,7 +130,7 @@ public class WordCountUtil {
     in.close();
     assertEquals(COUNTS.size(), numWords);
   }
-  
+
   public static void validateSortedFile() throws Exception {
     DatumReader<ByteBuffer> reader = new GenericDatumReader<ByteBuffer>();
     InputStream in = new BufferedInputStream(
@@ -150,12 +150,12 @@ public class WordCountUtil {
     }
     assertFalse(lines.hasNext());
   }
-  
+
   // metadata tests
   private static final String STRING_KEY = "string-key";
   private static final String LONG_KEY = "long-key";
   private static final String BYTES_KEY = "bytes-key";
-  
+
   private static final String STRING_META_VALUE = "value";
   private static final long LONG_META_VALUE = 666;
   private static final byte[] BYTES_META_VALUE

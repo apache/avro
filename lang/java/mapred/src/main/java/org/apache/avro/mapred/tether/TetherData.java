@@ -33,7 +33,7 @@ class TetherData {
 
   /** Set the count of records in the buffer.  Used for task input only. */
   public void count(int count) { this.count = count; }
-    
+
   /** Return the buffer. */
   public ByteBuffer buffer() { return buffer; }
 

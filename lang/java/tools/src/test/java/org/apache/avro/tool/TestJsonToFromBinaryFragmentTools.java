@@ -37,22 +37,22 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Tests both {@link JsonToBinaryFragmentTool} 
+ * Tests both {@link JsonToBinaryFragmentTool}
  * and {@link BinaryFragmentToJsonTool}.
  */
 public class TestJsonToFromBinaryFragmentTools {
   private static final String STRING_SCHEMA = Schema.create(Type.STRING).toString();
   private static final String UTF8 = "utf-8";
-  private static final String AVRO = 
+  private static final String AVRO =
     "ZLong string implies readable length encoding.";
-  private static final String JSON = 
+  private static final String JSON =
     "\"Long string implies readable length encoding.\"\n";
 
   @Test
   public void testBinaryToJson() throws Exception {
     binaryToJson(AVRO, JSON, STRING_SCHEMA);
   }
-  
+
   @Test
     public void testJsonToBinary() throws Exception {
     jsonToBinary(JSON, AVRO, STRING_SCHEMA);
@@ -82,7 +82,7 @@ public class TestJsonToFromBinaryFragmentTools {
   public void testBinaryToJsonSchemaFile() throws Exception {
     binaryToJson(AVRO, JSON, "--schema-file", schemaFile());
   }
-  
+
   @Test
     public void testJsonToBinarySchemaFile() throws Exception {
     jsonToBinary(JSON, AVRO, "--schema-file", schemaFile());
@@ -91,7 +91,7 @@ public class TestJsonToFromBinaryFragmentTools {
   private void binaryToJson(String avro, String json, String... options) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(new BufferedOutputStream(baos));
-    
+
     List<String> args = new ArrayList<String>();
     args.addAll(Arrays.asList(options));
     args.add("-");

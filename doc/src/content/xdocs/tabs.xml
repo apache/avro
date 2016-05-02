@@ -34,6 +34,6 @@
 
   <tab label="Project" href="http://avro.apache.org/" />
   <tab label="Wiki" href="http://wiki.apache.org/hadoop/Avro/" />
-  <tab label="Avro &AvroVersion; Documentation" dir="" />  
-  
+  <tab label="Avro &AvroVersion; Documentation" dir="" />
+
 </tabs>

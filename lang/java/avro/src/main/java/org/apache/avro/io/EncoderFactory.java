@@ -30,7 +30,7 @@ import org.codehaus.jackson.JsonGenerator;
  * Factory methods that create Encoder instances are thread-safe.
  * Multiple instances with different configurations can be cached
  * by an application.
- * 
+ *
  * @see Encoder
  * @see BinaryEncoder
  * @see JsonEncoder
@@ -46,9 +46,9 @@ public class EncoderFactory {
   private static final int MIN_BLOCK_BUFFER_SIZE = 64;
   private static final int MAX_BLOCK_BUFFER_SIZE = 1024 * 1024 * 1024;
 
-  private static final EncoderFactory DEFAULT_FACTORY = 
+  private static final EncoderFactory DEFAULT_FACTORY =
     new DefaultEncoderFactory();
-  
+
   protected int binaryBufferSize = DEFAULT_BUFFER_SIZE;
   protected int binaryBlockSize = DEFAULT_BLOCK_BUFFER_SIZE;
 
@@ -59,12 +59,12 @@ public class EncoderFactory {
   public static EncoderFactory get() {
     return DEFAULT_FACTORY;
   }
-  
+
   /**
    * Configures this factory to use the specified buffer size when creating
    * Encoder instances that buffer their output. The default buffer size is 2048
    * bytes.
-   * 
+   *
    * @param size
    *          The buffer size to configure new instances with. Valid values are
    *          in the range [32, 16*1024*1024]. Values outside this range are set
@@ -86,7 +86,7 @@ public class EncoderFactory {
     this.binaryBufferSize = size;
     return this;
   }
-  
+
   /**
    * Returns this factory's configured default buffer size.  Used when creating
    * Encoder instances that buffer writes.
@@ -101,7 +101,7 @@ public class EncoderFactory {
   /**
    * Configures this factory to construct blocking BinaryEncoders with the
    * specified block buffer size. The default buffer size is 64 * 1024 bytes.
-   * 
+   *
    * @param size
    *          The preferred block size for array blocking. Arrays larger than
    *          this size will be segmented into blocks according to the Avro
@@ -115,7 +115,7 @@ public class EncoderFactory {
    * @see #blockingBinaryEncoder(OutputStream, BinaryEncoder)
    */
   public EncoderFactory configureBlockSize(int size) {
-    if (size < MIN_BLOCK_BUFFER_SIZE) 
+    if (size < MIN_BLOCK_BUFFER_SIZE)
       size = MIN_BLOCK_BUFFER_SIZE;
     if (size > MAX_BLOCK_BUFFER_SIZE)
       size = MAX_BLOCK_BUFFER_SIZE;
@@ -124,7 +124,7 @@ public class EncoderFactory {
   }
 
   /**
-   * Returns this factory's configured default block buffer size.  
+   * Returns this factory's configured default block buffer size.
    * {@link BinaryEncoder} instances created with
    * #blockingBinaryEncoder(OutputStream, BinaryEncoder)
    * will have block buffers of this size.
@@ -136,7 +136,7 @@ public class EncoderFactory {
   public int getBlockSize() {
     return this.binaryBlockSize;
   }
-  
+
   /**
    * Creates or reinitializes a {@link BinaryEncoder} with the OutputStream
    * provided as the destination for written data. If <i>reuse</i> is provided,
@@ -147,11 +147,11 @@ public class EncoderFactory {
    * Data may not appear on the underlying OutputStream until
    * {@link Encoder#flush()} is called.  The buffer size is configured with
    * {@link #configureBufferSize(int)}.
-   * </p>  If buffering is not desired, and lower performance is acceptable, use 
+   * </p>  If buffering is not desired, and lower performance is acceptable, use
    * {@link #directBinaryEncoder(OutputStream, BinaryEncoder)}
    * <p/>
    * {@link BinaryEncoder} instances returned by this method are not thread-safe
-   * 
+   *
    * @param out
    *          The OutputStream to write to.  Cannot be null.
    * @param reuse
@@ -163,7 +163,7 @@ public class EncoderFactory {
    *         <i>reuse</i> is null, this will be a new instance. If <i>reuse</i>
    *         is not null, then the returned instance may be a new instance or
    *         <i>reuse</i> reconfigured to use <i>out</i>.
-   * @throws IOException 
+   * @throws IOException
    * @see BufferedBinaryEncoder
    * @see Encoder
    */
@@ -193,7 +193,7 @@ public class EncoderFactory {
    * would not be useful.
    * <p/>
    * {@link BinaryEncoder} instances returned by this method are not thread-safe.
-   * 
+   *
    * @param out
    *          The OutputStream to initialize to. Cannot be null.
    * @param reuse
@@ -215,7 +215,7 @@ public class EncoderFactory {
       return ((DirectBinaryEncoder)reuse).configure(out);
     }
   }
-  
+
   /**
    * Creates or reinitializes a {@link BinaryEncoder} with the OutputStream
    * provided as the destination for written data. If <i>reuse</i> is provided,
@@ -230,10 +230,10 @@ public class EncoderFactory {
    * delimited with byte sizes for Arrays and Maps.  This allows for some decoders
    * to skip over large Arrays or Maps without decoding the contents, but adds
    * some overhead.  The default block size is configured with
-   * {@link #configureBlockSize(int)} 
+   * {@link #configureBlockSize(int)}
    * <p/>
    * {@link BinaryEncoder} instances returned by this method are not thread-safe.
-   * 
+   *
    * @param out
    *          The OutputStream to initialize to. Cannot be null.
    * @param reuse
@@ -269,7 +269,7 @@ public class EncoderFactory {
    * underlying OutputStream until {@link Encoder#flush()} is called.
    * <p/>
    * {@link JsonEncoder} is not thread-safe.
-   * 
+   *
    * @param schema
    *          The Schema for data written to this JsonEncoder. Cannot be null.
    * @param out
@@ -290,7 +290,7 @@ public class EncoderFactory {
    * underlying OutputStream until {@link Encoder#flush()} is called.
    * <p/>
    * {@link JsonEncoder} is not thread-safe.
-   * 
+   *
    * @param schema
    *          The Schema for data written to this JsonEncoder. Cannot be null.
    * @param out
@@ -313,7 +313,7 @@ public class EncoderFactory {
    * underlying output until {@link Encoder#flush()} is called.
    * <p/>
    * {@link JsonEncoder} is not thread-safe.
-   * 
+   *
    * @param schema
    *          The Schema for data written to this JsonEncoder. Cannot be null.
    * @param gen
@@ -327,7 +327,7 @@ public class EncoderFactory {
       throws IOException {
     return new JsonEncoder(schema, gen);
   }
-  
+
   /**
    * Creates a {@link ValidatingEncoder} that wraps the Encoder provided.
    * This ValidatingEncoder will ensure that operations against it conform
@@ -337,7 +337,7 @@ public class EncoderFactory {
    * underlying output until {@link Encoder#flush()} is called.
    * <p/>
    * {@link ValidatingEncoder} is not thread-safe.
-   * 
+   *
    * @param schema
    *          The Schema to validate operations against. Cannot be null.
    * @param encoder
@@ -350,7 +350,7 @@ public class EncoderFactory {
       throws IOException {
     return new ValidatingEncoder(schema, encoder);
   }
-  
+
   // default encoder is not mutable
   private static class DefaultEncoderFactory extends EncoderFactory {
     @Override

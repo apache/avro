@@ -41,7 +41,7 @@ public class TestEncoders {
     BinaryEncoder enc = factory.binaryEncoder(out, null);
     Assert.assertTrue(enc == factory.binaryEncoder(out, enc));
   }
-  
+
   @Test(expected=NullPointerException.class)
   public void testBadBinaryEncoderInit() {
     factory.binaryEncoder(null, null);
@@ -53,21 +53,21 @@ public class TestEncoders {
     BinaryEncoder reuse = null;
     reuse = factory.blockingBinaryEncoder(out, reuse);
     Assert.assertTrue(reuse == factory.blockingBinaryEncoder(out, reuse));
-    // comparison 
+    // comparison
   }
-  
+
   @Test(expected=NullPointerException.class)
   public void testBadBlockintBinaryEncoderInit() {
     factory.binaryEncoder(null, null);
   }
-  
+
   @Test
   public void testDirectBinaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
     BinaryEncoder enc = factory.directBinaryEncoder(out, null);
     Assert.assertTrue(enc ==  factory.directBinaryEncoder(out, enc));
   }
-  
+
   @Test(expected=NullPointerException.class)
   public void testBadDirectBinaryEncoderInit() {
     factory.directBinaryEncoder(null, null);
@@ -82,12 +82,12 @@ public class TestEncoders {
         new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8));
     enc.configure(out);
   }
-  
+
   @Test(expected=NullPointerException.class)
   public void testBadJsonEncoderInitOS() throws IOException {
     factory.jsonEncoder(Schema.create(Type.INT), (OutputStream)null);
   }
-  
+
   @Test(expected=NullPointerException.class)
   public void testBadJsonEncoderInit() throws IOException {
     factory.jsonEncoder(Schema.create(Type.INT), (JsonGenerator)null);
@@ -119,7 +119,7 @@ public class TestEncoders {
     String value = "{\"b\": 2, \"a\": 1}";
     Schema schema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [" +
         "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": \"int\"}" +
-    		"]}");
+        "]}");
     GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
     Decoder decoder = DecoderFactory.get().jsonDecoder(schema, value);
     Object o = reader.read(null, decoder);

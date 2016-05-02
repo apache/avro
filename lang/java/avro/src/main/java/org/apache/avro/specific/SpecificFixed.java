@@ -35,9 +35,9 @@ public abstract class SpecificFixed
   public SpecificFixed() {
     bytes(new byte[getSchema().getFixedSize()]);
   }
-  
+
   public SpecificFixed(byte[] bytes) {
-    bytes(bytes); 
+    bytes(bytes);
   }
 
   public void bytes(byte[] bytes) { this.bytes = bytes; }

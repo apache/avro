@@ -16,8 +16,8 @@
 ## limitations under the License.
 ##
 #if ($schema.getNamespace())
-package $schema.getNamespace();  
-#end  
+package $schema.getNamespace();
+#end
 @SuppressWarnings("all")
 #if ($schema.getDoc())
 /** $schema.getDoc() */
@@ -26,7 +26,7 @@ package $schema.getNamespace();
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public enum ${this.mangle($schema.getName())} { 
+public enum ${this.mangle($schema.getName())} {
   #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($velocityHasNext), #end#end
   ;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");

@@ -52,7 +52,7 @@ public class TestCatTool {
   private static final int LIMIT_OUT_OF_INPUT_BOUNDS = 100001;
   private static final double SAMPLERATE = .01;
   private static final double SAMPLERATE_TOO_SMALL = .00000001;
-  
+
   private final Schema INTSCHEMA = new Schema.Parser().parse(
     "{\"type\":\"record\", " +
     "\"name\":\"myRecord\", " +
@@ -66,7 +66,7 @@ public class TestCatTool {
     "]}");
   private static final CodecFactory DEFLATE = CodecFactory.deflateCodec(9);
   private static final CodecFactory SNAPPY = CodecFactory.snappyCodec();
-  
+
 
   private GenericRecord aDatum(Type ofType, int forRow) {
     GenericRecord record = null;
@@ -78,7 +78,7 @@ public class TestCatTool {
       case INT:
         record = new GenericData.Record(INTSCHEMA);
         record.put("value", forRow);
-        return record;      
+        return record;
       default:
        throw new AssertionError("I can't generate data for this type");
     }
@@ -95,7 +95,7 @@ public class TestCatTool {
     if(type.equals(Schema.Type.STRING)) {
       schema = STRINGSCHEMA;
     }
-       
+
     DataFileWriter<Object> writer = new DataFileWriter<Object>(
               new GenericDatumWriter<Object>(schema));
     for(Entry<String, String> metadatum : metadata.entrySet()) {
@@ -111,10 +111,10 @@ public class TestCatTool {
 
     return inputFile;
   }
- 
-  
+
+
   private int getFirstIntDatum(File file) throws Exception {
-    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>( new FileInputStream(file) , 
+    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>( new FileInputStream(file) ,
       new GenericDatumReader<GenericRecord>());
 
     int result = (Integer) reader.next().get(0);
@@ -166,7 +166,7 @@ public class TestCatTool {
     assertEquals(0, returnCode);
 
     assertEquals(LIMIT_WITHIN_INPUT_BOUNDS, numRowsInFile(output));
-    
+
 //    folder input
     args = asList(
       input1.getParentFile().getAbsolutePath(),
@@ -182,7 +182,7 @@ public class TestCatTool {
     assertEquals(LIMIT_WITHIN_INPUT_BOUNDS, numRowsInFile(output));
   }
 
-  
+
   @Test
   public void testLimitOutOfBounds() throws Exception {
     Map<String, String> metadata = new HashMap<String, String>();
@@ -203,9 +203,9 @@ public class TestCatTool {
       System.err,
       args);
     assertEquals(0, returnCode);
-    assertEquals(ROWS_IN_INPUT_FILES - OFFSET, numRowsInFile(output)); 
+    assertEquals(ROWS_IN_INPUT_FILES - OFFSET, numRowsInFile(output));
   }
-  
+
   @Test
   public void testSamplerateAccuracy() throws Exception {
     Map<String, String> metadata = new HashMap<String, String>();
@@ -226,9 +226,9 @@ public class TestCatTool {
       System.err,
       args);
     assertEquals(0, returnCode);
-    
+
     assertTrue("Outputsize is not roughly (Inputsize - Offset) * samplerate",
-      (ROWS_IN_INPUT_FILES - OFFSET)*SAMPLERATE - numRowsInFile(output) < 2);    
+      (ROWS_IN_INPUT_FILES - OFFSET)*SAMPLERATE - numRowsInFile(output) < 2);
     assertTrue("", (ROWS_IN_INPUT_FILES - OFFSET)*SAMPLERATE - numRowsInFile(output) > -2);
   }
 
@@ -256,7 +256,7 @@ public class TestCatTool {
     assertEquals("output does not start at offset",
       OFFSET, getFirstIntDatum(output));
   }
-  
+
   @Test
   public void testOffsetBiggerThanInput() throws Exception{
     Map<String, String> metadata = new HashMap<String, String>();
@@ -279,7 +279,7 @@ public class TestCatTool {
     assertEquals("output is not empty",
       0, numRowsInFile(output));
   }
-  
+
   @Test
   public void testSamplerateSmallerThanInput() throws Exception{
     Map<String, String> metadata = new HashMap<String, String>();
@@ -300,12 +300,12 @@ public class TestCatTool {
       System.err,
       args);
     assertEquals(0, returnCode);
-    
+
     assertEquals("output should only contain the record at offset",
       (int) OFFSET, getFirstIntDatum(output));
   }
-  
-  
+
+
   @Test(expected = IOException.class)
   public void testDifferentSchemasFail() throws Exception {
     Map<String, String> metadata = new HashMap<String, String>();

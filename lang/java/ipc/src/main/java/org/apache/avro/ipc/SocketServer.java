@@ -83,7 +83,7 @@ public class SocketServer extends Thread implements Server {
   }
 
   public void close() {
-    this.interrupt(); 
+    this.interrupt();
     group.interrupt();
   }
 
@@ -128,7 +128,7 @@ public class SocketServer extends Thread implements Server {
     }
 
   }
-  
+
   public static void main(String[] arg) throws Exception {
     Responder responder =
       new GenericResponder(Protocol.parse("{\"protocol\": \"X\"}")) {

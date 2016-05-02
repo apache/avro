@@ -32,7 +32,7 @@ import org.junit.Test;
 
 public class DataFileInteropTest {
 
-  private static final File DATAFILE_DIR = 
+  private static final File DATAFILE_DIR =
     new File(System.getProperty("test.dir", "/tmp"));
 
   @BeforeClass
@@ -45,8 +45,8 @@ public class DataFileInteropTest {
   public void testGeneratedGeneric() throws IOException {
     System.out.println("Reading with generic:");
     DatumReaderProvider<Object> provider = new DatumReaderProvider<Object>() {
-      @Override public DatumReader<Object> get() { 
-        return new GenericDatumReader<Object>(); 
+      @Override public DatumReader<Object> get() {
+        return new GenericDatumReader<Object>();
         }
       };
     readFiles(provider);
@@ -56,15 +56,15 @@ public class DataFileInteropTest {
   public void testGeneratedSpecific() throws IOException {
     System.out.println("Reading with specific:");
     DatumReaderProvider<Interop> provider = new DatumReaderProvider<Interop>() {
-      @Override public DatumReader<Interop> get() { 
-        return new SpecificDatumReader<Interop>(); 
+      @Override public DatumReader<Interop> get() {
+        return new SpecificDatumReader<Interop>();
         }
       };
     readFiles(provider);
   }
 
   // Can't use same Interop.java as specific for reflect.
-  // This used to be the case because one used Utf8 and the other Sring, but 
+  // This used to be the case because one used Utf8 and the other Sring, but
   // we use CharSequence now.
   // The current incompatibility is now that one uses byte[] and the other ByteBuffer
 
@@ -78,8 +78,8 @@ public class DataFileInteropTest {
 //   @Test
 //   public void testGeneratedReflect() throws IOException {
 //     DatumReaderProvider<Interop> provider = new DatumReaderProvider<Interop>() {
-//       @Override public DatumReader<Interop> get() { 
-//         return new ReflectDatumReader<Interop>(Interop.class); 
+//       @Override public DatumReader<Interop> get() {
+//         return new ReflectDatumReader<Interop>(Interop.class);
 //         }
 //       };
 //     readFiles(provider);
@@ -95,7 +95,7 @@ public class DataFileInteropTest {
       }
     }
   }
-  
+
   interface DatumReaderProvider<T extends Object> {
     public DatumReader<T> get();
   }

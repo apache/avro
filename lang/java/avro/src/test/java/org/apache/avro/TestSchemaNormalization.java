@@ -111,7 +111,7 @@ public class TestSchemaNormalization {
                            s.getBytes("UTF-8"));
       return altExtend(SchemaNormalization.EMPTY64, 64, tmp, POSTFIX);
     } catch (java.io.UnsupportedEncodingException e)
-      { throw new RuntimeException(e); } 
+      { throw new RuntimeException(e); }
   }
 
   private static long altExtend(long poly, int degree, long fp, byte[] b) {

@@ -15,13 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e						  # exit on error
+set -e                          # exit on error
 
-cd `dirname "$0"`/../../../..			  # connect to root
+cd `dirname "$0"`/../../../..   # connect to root
 
 VERSION=`cat share/VERSION.txt`
 
-#set -x						  # echo commands
+#set -x                          # echo commands
 
 java_client="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcsend"
 java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive"
@@ -32,7 +32,7 @@ py_server="python lang/py/build/src/avro/tool.py rpcreceive"
 ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
 ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
 
-export PYTHONPATH=lang/py/build/src	  # path to avro Python module
+export PYTHONPATH=lang/py/build/src      # path to avro Python module
 
 clients=("$java_client" "$py_client" "$ruby_client")
 servers=("$java_server" "$py_server" "$ruby_server")
@@ -42,41 +42,41 @@ proto=share/test/schemas/simple.avpr
 portfile=/tmp/interop_$$
 
 function cleanup() {
-    rm -rf $portfile
-    for job in `jobs -p` ; do kill $job; done
+  rm -rf $portfile
+  for job in `jobs -p` ; do kill $job; done
 }
 
 trap 'cleanup' EXIT
 
 for server in "${servers[@]}"
 do
-    for msgDir in share/test/interop/rpc/*
+  for msgDir in share/test/interop/rpc/*
+  do
+    msg=`basename "$msgDir"`
+    for c in ${msgDir}/*
     do
-	msg=`basename "$msgDir"`
-	for c in ${msgDir}/*
-	do
-	    echo TEST: $c
-	    for client in "${clients[@]}"
-	    do
+      echo TEST: $c
+      for client in "${clients[@]}"
+      do
         rm -rf $portfile
-		$server http://127.0.0.1:0/ $proto $msg -file $c/response.avro \
-		    > $portfile &
+        $server http://127.0.0.1:0/ $proto $msg -file $c/response.avro \
+            > $portfile &
         count=0
         while [ ! -s $portfile ]
         do
-            sleep 1
-            if [ $count -ge 10 ]
-            then
-                echo $server did not start.
-                exit 1
-            fi
-            count=`expr $count + 1`
+          sleep 1
+          if [ $count -ge 10 ]
+          then
+            echo $server did not start.
+            exit 1
+          fi
+          count=`expr $count + 1`
         done
-		read ignore port < $portfile
-	    	$client http://127.0.0.1:$port $proto $msg -file $c/request.avro
-		wait
-	    done
-	done
+        read ignore port < $portfile
+        $client http://127.0.0.1:$port $proto $msg -file $c/request.avro
+        wait
+        done
+    done
     done
 done
 

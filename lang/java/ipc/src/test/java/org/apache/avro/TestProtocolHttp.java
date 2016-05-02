@@ -42,12 +42,12 @@ public class TestProtocolHttp extends TestProtocolSpecific {
   public Server createServer(Responder testResponder) throws Exception {
     return new HttpServer(testResponder, 0);
   }
-  
+
   @Override
   public Transceiver createTransceiver() throws Exception{
     return new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
   }
- 
+
   protected int getExpectedHandshakeCount() {
     return REPEATING;
   }

@@ -40,7 +40,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     this.length = bytes.length;
     this.string = string;
   }
-  
+
   public Utf8(Utf8 other) {
     this.length = other.length;
     this.bytes = new byte[other.length];

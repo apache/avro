@@ -30,5 +30,5 @@ public enum ValueType {
   public static ValueType forName(String name) {
     return valueOf(name.toUpperCase());
   }
- 
+
 }

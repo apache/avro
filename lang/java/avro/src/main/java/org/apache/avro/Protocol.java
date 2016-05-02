@@ -110,7 +110,7 @@ public class Protocol extends JsonProperties {
     public Schema getErrors() {
       return Schema.createUnion(new ArrayList<Schema>());
     }
-    
+
     /** Returns true if this is a one-way message, with no response or errors.*/
     public boolean isOneWay() { return true; }
 
@@ -161,7 +161,7 @@ public class Protocol extends JsonProperties {
   private class TwoWayMessage extends Message {
     private Schema response;
     private Schema errors;
-    
+
     /** Construct a message. */
     private TwoWayMessage(String name, String doc, Map<String,?> propMap,
                           Schema request, Schema response, Schema errors) {
@@ -245,7 +245,7 @@ public class Protocol extends JsonProperties {
 
   /** The namespace of this protocol.  Qualifies its name. */
   public String getNamespace() { return namespace; }
-  
+
   /** Doc string for this protocol. */
   public String getDoc() { return doc; }
 
@@ -300,7 +300,7 @@ public class Protocol extends JsonProperties {
       && this.messages.equals(that.messages)
       && this.props.equals(that.props);
   }
-  
+
   public int hashCode() {
     return name.hashCode() + namespace.hashCode()
       + types.hashCode() + messages.hashCode() + props.hashCode();
@@ -340,7 +340,7 @@ public class Protocol extends JsonProperties {
       if (!resolved.contains(type))
         type.toJson(resolved, gen);
     gen.writeEndArray();
-    
+
     gen.writeObjectFieldStart("messages");
     for (Map.Entry<String,Message> e : messages.entrySet()) {
       gen.writeFieldName(e.getKey());
@@ -379,7 +379,7 @@ public class Protocol extends JsonProperties {
       b.append(part);
     return parse(b.toString());
   }
-      
+
   /** Read a protocol from a Json string. */
   public static Protocol parse(String string) {
     try {
@@ -415,7 +415,7 @@ public class Protocol extends JsonProperties {
     this.namespace = nameNode.getTextValue();
     types.space(this.namespace);
   }
-  
+
   private void parseDoc(JsonNode json) {
     this.doc = parseDocNode(json);
   }
@@ -505,7 +505,7 @@ public class Protocol extends JsonProperties {
       fields.add(newField);
     }
     Schema request = Schema.createRecord(fields);
-    
+
     boolean oneWay = false;
     JsonNode oneWayNode = json.get("one-way");
     if (oneWayNode != null) {

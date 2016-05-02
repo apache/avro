@@ -80,10 +80,10 @@ public abstract class Responder {
   /** Return the remote protocol.  Accesses a {@link ThreadLocal} that's set
    * around calls to {@link #respond(Protocol.Message, Object)}. */
   public static Protocol getRemote() { return REMOTE.get(); }
-  
+
   /** Return the local protocol. */
   public Protocol getLocal() { return local; }
-  
+
   /**
    * Adds a new plugin to manipulate per-call metadata.  Plugins
    * are executed in the order that they are added.
@@ -98,7 +98,7 @@ public abstract class Responder {
   public List<ByteBuffer> respond(List<ByteBuffer> buffers) throws IOException {
     return respond(buffers, null);
   }
-  
+
   /** Called by a server to deserialize a request, compute and serialize a
    * response or error.  Transciever is used by connection-based servers to
    * track handshake status of connection. */
@@ -119,7 +119,7 @@ public abstract class Responder {
       if (remote == null)                        // handshake failed
         return bbo.getBufferList();
       handshake = bbo.getBufferList();
-      
+
       // read request using remote protocol specification
       context.setRequestCallMeta(META_READER.read(null, in));
       String messageName = in.readString(null).toString();
@@ -134,7 +134,7 @@ public abstract class Responder {
                                        +" in "+getLocal());
 
       Object request = readRequest(rm.getRequest(), m.getRequest(), in);
-      
+
       context.setMessage(rm);
       for (RPCPlugin plugin : rpcMetaPlugins) {
         plugin.serverReceiveRequest(context);
@@ -145,7 +145,7 @@ public abstract class Responder {
         throw new AvroRuntimeException("Not both one-way: "+messageName);
 
       Object response = null;
-      
+
       try {
         REMOTE.set(remote);
         response = respond(m, request);
@@ -157,7 +157,7 @@ public abstract class Responder {
       } finally {
         REMOTE.set(null);
       }
-      
+
       if (m.isOneWay() && wasConnected)           // no response data
         return null;
 
@@ -183,7 +183,7 @@ public abstract class Responder {
     }
     out.flush();
     payload = bbo.getBufferList();
-    
+
     // Grab meta-data from plugins
     context.setResponsePayload(payload);
     for (RPCPlugin plugin : rpcMetaPlugins) {
@@ -225,7 +225,7 @@ public abstract class Responder {
       response.serverProtocol = local.toString();
       response.serverHash = localHash;
     }
-    
+
     RPCContext context = new RPCContext();
     context.setHandshakeRequest(request);
     context.setHandshakeResponse(response);

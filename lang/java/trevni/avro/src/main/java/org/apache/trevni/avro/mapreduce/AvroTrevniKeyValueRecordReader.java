@@ -41,7 +41,7 @@ public class AvroTrevniKeyValueRecordReader<K, V> extends AvroTrevniRecordReader
   private final AvroKey<K> mCurrentKey = new AvroKey<K>();
   /** The current value the reader is on. */
   private final AvroValue<V> mCurrentValue = new AvroValue<V>();
-  
+
   /** {@inheritDoc} */
   @Override
   public AvroKey<K> getCurrentKey() throws IOException,

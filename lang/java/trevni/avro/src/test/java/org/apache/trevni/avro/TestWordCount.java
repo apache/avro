@@ -62,7 +62,7 @@ public class TestWordCount {
         collector.collect(new Pair<String,Long>(tokens.nextToken(),1L));
     }
   }
-  
+
   public static class ReduceImpl
     extends AvroReducer<String, Long, Pair<String, Long> > {
     @Override
@@ -74,7 +74,7 @@ public class TestWordCount {
         sum += count;
       collector.collect(new Pair<String,Long>(word, sum));
     }
-  }    
+  }
 
   @Test public void runTestsInOrder() throws Exception {
     testOutputFormat();
@@ -87,26 +87,26 @@ public class TestWordCount {
 
   public void testOutputFormat() throws Exception {
     JobConf job = new JobConf();
-    
+
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapredTest");
-    
+
     wordCountUtil.writeLinesFile();
-    
+
     AvroJob.setInputSchema(job, STRING);
     AvroJob.setOutputSchema(job, Pair.getPairSchema(STRING,LONG));
-    
-    AvroJob.setMapperClass(job, MapImpl.class);        
+
+    AvroJob.setMapperClass(job, MapImpl.class);
     AvroJob.setCombinerClass(job, ReduceImpl.class);
     AvroJob.setReducerClass(job, ReduceImpl.class);
-    
+
     FileInputFormat.setInputPaths(job, new Path(wordCountUtil.getDir().toString() + "/in"));
     FileOutputFormat.setOutputPath(job, new Path(wordCountUtil.getDir().toString() + "/out"));
     FileOutputFormat.setCompressOutput(job, true);
-    
+
     job.setOutputFormat(AvroTrevniOutputFormat.class);
 
     JobClient.runJob(job);
-    
+
     wordCountUtil.validateCountsFile();
   }
 
@@ -118,20 +118,20 @@ public class TestWordCount {
       total += (Long)r.get("value");
     }
   }
-  
+
   public void testInputFormat() throws Exception {
     JobConf job = new JobConf();
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapredTest");
-    
-    
+
+
     Schema subSchema = Schema.parse("{\"type\":\"record\"," +
                                     "\"name\":\"PairValue\","+
-                                    "\"fields\": [ " + 
-                                    "{\"name\":\"value\", \"type\":\"long\"}" + 
+                                    "\"fields\": [ " +
+                                    "{\"name\":\"value\", \"type\":\"long\"}" +
                                     "]}");
     AvroJob.setInputSchema(job, subSchema);
-    AvroJob.setMapperClass(job, Counter.class);        
+    AvroJob.setMapperClass(job, Counter.class);
     FileInputFormat.setInputPaths(job, new Path(wordCountUtil.getDir().toString() + "/out/*"));
     job.setInputFormat(AvroTrevniInputFormat.class);
 

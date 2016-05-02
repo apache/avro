@@ -143,10 +143,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       writeField(datum, f, out, state);
     }
   }
-  
-  /** Called to write a single field of a record. May be overridden for more 
+
+  /** Called to write a single field of a record. May be overridden for more
    * efficient or alternate implementations.*/
-  protected void writeField(Object datum, Field f, Encoder out, Object state) 
+  protected void writeField(Object datum, Field f, Encoder out, Object state)
       throws IOException {
     Object value = data.getField(datum, f.name(), f.pos(), state);
     try {
@@ -155,7 +155,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       throw npe(e, " in field " + f.name());
     }
   }
-  
+
   /** Called to write an enum value.  May be overridden for alternate enum
    * representations.*/
   protected void writeEnum(Schema schema, Object datum, Encoder out)
@@ -164,7 +164,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       throw new AvroTypeException("Not an enum: "+datum);
     out.writeEnum(schema.getEnumOrdinal(datum.toString()));
   }
-  
+
   /** Called to write a array.  May be overridden for alternate array
    * representations.*/
   protected void writeArray(Schema schema, Object datum, Encoder out)
@@ -205,7 +205,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected Iterator<? extends Object> getArrayElements(Object array) {
     return ((Collection) array).iterator();
   }
-  
+
   /** Called to write a map.  May be overridden for alternate map
    * representations.*/
   protected void writeMap(Schema schema, Object datum, Encoder out)
@@ -241,7 +241,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected Iterable<Map.Entry<Object,Object>> getMapEntries(Object map) {
     return ((Map) map).entrySet();
   }
-  
+
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
   protected void writeString(Schema schema, Object datum, Encoder out)
@@ -266,7 +266,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     throws IOException {
     out.writeFixed(((GenericFixed)datum).bytes(), 0, schema.getFixedSize());
   }
-  
+
   private void error(Schema schema, Object datum) {
     throw new AvroTypeException("Not a "+schema+": "+datum);
   }

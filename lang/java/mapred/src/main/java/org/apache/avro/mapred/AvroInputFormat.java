@@ -33,7 +33,7 @@ import org.apache.hadoop.mapred.RecordReader;
 
 /**
  * An {@link org.apache.hadoop.mapred.InputFormat} for Avro data files.
- * 
+ *
  * By default, when pointed at a directory, this will silently skip over any
  * files in it that do not have .avro extension. To instead include all files,
  * set the avro.mapred.ignore.inputs.without.extension property to false.
@@ -44,11 +44,11 @@ public class AvroInputFormat<T>
   /** Whether to silently ignore input files without the .avro extension */
   public static final String IGNORE_FILES_WITHOUT_EXTENSION_KEY =
       "avro.mapred.ignore.inputs.without.extension";
-  
+
   /** Default of whether to silently ignore input files without the .avro
    * extension. */
   public static final boolean IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT = true;
-  
+
   @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
     if (job.getBoolean(IGNORE_FILES_WITHOUT_EXTENSION_KEY,

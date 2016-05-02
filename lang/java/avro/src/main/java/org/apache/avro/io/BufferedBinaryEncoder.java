@@ -38,7 +38,7 @@ import org.apache.avro.AvroRuntimeException;
  * To construct or reconfigure, use
  * {@link EncoderFactory#binaryEncoder(OutputStream, BinaryEncoder)}.
  * <p/>
- * To change the buffer size, configure the factory instance used to 
+ * To change the buffer size, configure the factory instance used to
  * create instances with {@link EncoderFactory#configureBufferSize(int)}
  *  @see Encoder
  *  @see EncoderFactory
@@ -54,7 +54,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   BufferedBinaryEncoder(OutputStream out, int bufferSize) {
     configure(out, bufferSize);
   }
-  
+
   BufferedBinaryEncoder configure(OutputStream out, int bufferSize) {
     if (null == out)
       throw new NullPointerException("OutputStream cannot be null!");
@@ -85,7 +85,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     sink.innerFlush();
   }
 
-  /** Flushes the internal buffer to the underlying output. 
+  /** Flushes the internal buffer to the underlying output.
    * Does not flush the underlying output.
    */
   private void flushBuffer() throws IOException {
@@ -154,7 +154,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     System.arraycopy(bytes, start, buf, pos, len);
     pos += len;
   }
-  
+
   @Override
   public void writeFixed(ByteBuffer bytes) throws IOException {
     if (!bytes.hasArray() && bytes.remaining() > bulkLimit) {
@@ -169,7 +169,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   protected void writeZero() throws IOException {
     writeByte(0);
   }
-  
+
   private void writeByte(int b) throws IOException {
     if (pos == buf.length) {
       flushBuffer();
@@ -195,13 +195,13 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     protected ByteSink() {}
     /** Write data from bytes, starting at off, for len bytes **/
     protected abstract void innerWrite(byte[] bytes, int off, int len) throws IOException;
-    
+
     protected abstract void innerWrite(ByteBuffer buff) throws IOException;
-    
+
     /** Flush the underlying output, if supported **/
     protected abstract void innerFlush() throws IOException;
   }
-  
+
   static class OutputStreamSink extends ByteSink {
     private final OutputStream out;
     private final WritableByteChannel channel;

@@ -252,7 +252,7 @@ public class TestDataFile {
     } finally {
       reader.close();
     }
-  }  
+  }
 
   public void testReadWithHeader() throws IOException {
     File file = makeFile();

@@ -49,15 +49,15 @@ public class AvroUtf8InputFormat
     RecordReader<AvroWrapper<Utf8>, NullWritable> {
 
     private LineRecordReader lineRecordReader;
-    
+
     private LongWritable currentKeyHolder = new LongWritable();
     private Text currentValueHolder = new Text();
-    
-    public Utf8LineRecordReader(Configuration job, 
+
+    public Utf8LineRecordReader(Configuration job,
         FileSplit split) throws IOException {
       this.lineRecordReader = new LineRecordReader(job, split);
     }
-    
+
     public void close() throws IOException {
       lineRecordReader.close();
     }

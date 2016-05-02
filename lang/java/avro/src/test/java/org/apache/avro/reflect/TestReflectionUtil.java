@@ -35,13 +35,13 @@ public class TestReflectionUtil {
     Class<?> testerClass = cl.loadClass(Tester.class.getName());
     testerClass.getDeclaredMethod("checkUnsafe").invoke(testerClass.newInstance());
   }
-  
+
   public static final class Tester {
     public Tester() {}
     public void checkUnsafe() {
       ReflectionUtil.getFieldAccess();
     }
-    
+
   }
 
   private static final class NoUnsafe extends ClassLoader {

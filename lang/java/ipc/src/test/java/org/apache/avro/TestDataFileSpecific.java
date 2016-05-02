@@ -68,7 +68,7 @@ public class TestDataFileSpecific {
     DataFileReader<Foo> reader =
       new DataFileReader<Foo>(FILE, new SpecificDatumReader<Foo>());
     int i = 0;
-    for (Foo f : reader) 
+    for (Foo f : reader)
       Assert.assertEquals(""+(i++), f.getLabel().toString());
     Assert.assertEquals(10, i);
     reader.close();

@@ -59,7 +59,7 @@ public class TestGenericJob {
   private static Schema createSchema() {
     List<Field> fields = new ArrayList<Schema.Field>();
 
-      
+
     fields.add(new Field("Optional", createArraySchema(), "", new ArrayList<Object>()));
 
     Schema recordSchema =
@@ -73,7 +73,7 @@ public class TestGenericJob {
     for (int i = 0; i < 5; i++) {
       schemas.add(createInnerSchema("optional_field_" + i));
     }
-        
+
     Schema unionSchema = Schema.createUnion(schemas);
     return Schema.createArray(unionSchema);
   }
@@ -96,7 +96,7 @@ public class TestGenericJob {
     file.writeChars("aa bb cc\ndd ee ff\n");
     file.close();
   }
-    
+
   @After
     public void tearDown() throws IOException {
     FileUtil.fullyDelete(new File(dir));
@@ -106,9 +106,9 @@ public class TestGenericJob {
     extends MapReduceBase
     implements Mapper<LongWritable, Text,
                AvroWrapper<Pair<Long, GenericData.Record>>, NullWritable> {
-      
-    public void map(LongWritable key, Text value, 
-                    OutputCollector<AvroWrapper<Pair<Long,GenericData.Record>>,NullWritable> out, 
+
+    public void map(LongWritable key, Text value,
+                    OutputCollector<AvroWrapper<Pair<Long,GenericData.Record>>,NullWritable> out,
                     Reporter reporter) throws IOException {
       GenericData.Record optional_entry =
         new GenericData.Record(createInnerSchema("optional_field_1"));
@@ -124,7 +124,7 @@ public class TestGenericJob {
                   (new Pair<Long,GenericData.Record>(key.get(), container)),
                   NullWritable.get());
     }
-  }  
+  }
 
 
   @Test
@@ -132,10 +132,10 @@ public class TestGenericJob {
     JobConf job = new JobConf();
     Path outputPath = new Path(dir + "/out");
     outputPath.getFileSystem(job).delete(outputPath);
-        
+
     job.setInputFormat(TextInputFormat.class);
     FileInputFormat.setInputPaths(job, dir + "/in");
-        
+
     job.setMapperClass(AvroTestConverter.class);
     job.setNumReduceTasks(0);
 

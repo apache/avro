@@ -35,7 +35,7 @@ public abstract class ParsingDecoder extends Decoder
   }
 
   protected abstract void skipFixed() throws IOException;
-  
+
   @Override
   public void skipAction() throws IOException {
     parser.popSymbol();
@@ -72,6 +72,6 @@ public abstract class ParsingDecoder extends Decoder
       skipMap();
     }
   }
-  
+
 }
 

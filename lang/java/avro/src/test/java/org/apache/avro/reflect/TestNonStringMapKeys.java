@@ -59,7 +59,7 @@ public class TestNonStringMapKeys {
     String testType = "NonStringKeysTest";
     Company [] entityObjs = {entityObj1, entityObj2};
     byte[] bytes = testSerialization(testType, entityObj1, entityObj2);
-    List<GenericRecord> records = 
+    List<GenericRecord> records =
       (List<GenericRecord>) testGenericDatumRead(testType, bytes, entityObjs);
 
     GenericRecord record = records.get(0);
@@ -76,7 +76,7 @@ public class TestNonStringMapKeys {
     Object id = ((GenericRecord)key).get("id");
     Object name = ((GenericRecord)value).get("name").toString();
     assertTrue (
-      (id.equals(1) && name.equals("Foo")) || 
+      (id.equals(1) && name.equals("Foo")) ||
       (id.equals(2) && name.equals("Bar"))
     );
 
@@ -92,7 +92,7 @@ public class TestNonStringMapKeys {
       id = e.getKey().getId();
       name = e.getValue().getName();
       assertTrue (
-        (id.equals(1) && name.equals("Foo")) || 
+        (id.equals(1) && name.equals("Foo")) ||
         (id.equals(2) && name.equals("Bar"))
       );
     }
@@ -103,7 +103,7 @@ public class TestNonStringMapKeys {
     GenericRecord jsonRecord = testJsonDecoder(testType, jsonBytes, entityObj1);
     assertEquals ("JSON decoder output not same as Binary Decoder", record, jsonRecord);
   }
-  
+
   @Test
   public void testNonStringMapKeysInNestedMaps() throws Exception {
 
@@ -119,7 +119,7 @@ public class TestNonStringMapKeys {
     Object employees = record.get("employees");
     assertTrue ("Unable to read 'employees' map", employees instanceof GenericArray);
     GenericArray employeesMapArray = ((GenericArray)employees);
-    
+
     Object employeeMapElement = employeesMapArray.get(0);
     assertTrue (employeeMapElement instanceof GenericRecord);
     Object key = ((GenericRecord)employeeMapElement).get(ReflectData.NS_MAP_KEY);
@@ -129,11 +129,11 @@ public class TestNonStringMapKeys {
     GenericRecord employeeInfo = (GenericRecord)value;
     Object name = employeeInfo.get("name").toString();
     assertEquals ("Foo", name);
-    
+
     Object companyMap = employeeInfo.get("companyMap");
     assertTrue (companyMap instanceof GenericArray);
     GenericArray companyMapArray = (GenericArray)companyMap;
-    
+
     Object companyMapElement = companyMapArray.get(0);
     assertTrue (companyMapElement instanceof GenericRecord);
     key = ((GenericRecord)companyMapElement).get(ReflectData.NS_MAP_KEY);
@@ -142,7 +142,7 @@ public class TestNonStringMapKeys {
     if (value instanceof Utf8)
       value = ((Utf8)value).toString();
     assertEquals ("CompanyFoo", value);
-    
+
     List<Company2> records2 =
       (List<Company2>) testReflectDatumRead(testType, bytes, entityObjs);
     Company2 co = records2.get(0);
@@ -180,7 +180,7 @@ public class TestNonStringMapKeys {
     Object map1obj = record.get("map1");
     assertTrue ("Unable to read map1", map1obj instanceof GenericArray);
     GenericArray map1array = ((GenericArray)map1obj);
-    
+
     Object map1element = map1array.get(0);
     assertTrue (map1element instanceof GenericRecord);
     Object key = ((GenericRecord)map1element).get(ReflectData.NS_MAP_KEY);
@@ -190,7 +190,7 @@ public class TestNonStringMapKeys {
 
     Object map2obj = record.get("map2");
     assertEquals (map1obj, map2obj);
-    
+
     List<SameMapSignature> records2 =
       (List<SameMapSignature>) testReflectDatumRead(testType, bytes, entityObjs);
     SameMapSignature entity = records2.get(0);
@@ -221,9 +221,9 @@ public class TestNonStringMapKeys {
     byte[] jsonBytes = testJsonEncoder (testType, entityObj1);
     assertNotNull ("Unable to serialize using jsonEncoder", jsonBytes);
     GenericRecord jsonRecord = testJsonDecoder(testType, jsonBytes, entityObj1);
-    assertEquals ("JSON decoder output not same as Binary Decoder", 
+    assertEquals ("JSON decoder output not same as Binary Decoder",
       record.get("map1"), jsonRecord.get("map1"));
-    assertEquals ("JSON decoder output not same as Binary Decoder", 
+    assertEquals ("JSON decoder output not same as Binary Decoder",
       record.get("map2"), jsonRecord.get("map2"));
   }
 
@@ -280,7 +280,7 @@ public class TestNonStringMapKeys {
   /**
    * Test that non-string map-keys are readable through ReflectDatumReader
    * This methoud should form the original map and should not return any
-   * array of {key, value} as done by {@link #testGenericDatumRead()} 
+   * array of {key, value} as done by {@link #testGenericDatumRead()}
    */
   private <T> List<T> testReflectDatumRead
     (String testType, byte[] bytes, T ... entityObjs) throws IOException {
@@ -349,15 +349,15 @@ public class TestNonStringMapKeys {
     Company2 co = new Company2 ();
     HashMap<Integer, EmployeeInfo2> employees = new HashMap<Integer, EmployeeInfo2>();
     co.setEmployees(employees);
-    
+
     EmployeeId2 empId = new EmployeeId2(1);
     EmployeeInfo2 empInfo = new EmployeeInfo2("Foo");
     HashMap<Integer, String> companyMap = new HashMap<Integer, String>();
     empInfo.setCompanyMap(companyMap);
     companyMap.put(14, "CompanyFoo");
-    
+
     employees.put(11, empInfo);
-    
+
     return co;
   }
 

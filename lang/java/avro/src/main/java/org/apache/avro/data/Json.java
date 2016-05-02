@@ -73,7 +73,7 @@ public class Json {
       if (!SCHEMA.equals(schema))
         throw new RuntimeException("Not the Json schema: "+schema);
     }
-    
+
     @Override
     public void write(JsonNode datum, Encoder out) throws IOException {
       Json.write(datum, out);
@@ -173,7 +173,7 @@ public class Json {
 
   /** Note: this enum must be kept aligned with the union in Json.avsc. */
   private enum JsonType { LONG, DOUBLE, STRING, BOOLEAN, NULL, ARRAY, OBJECT }
-  
+
   /**
    * Write Json data as Avro data.
    * @deprecated internal method

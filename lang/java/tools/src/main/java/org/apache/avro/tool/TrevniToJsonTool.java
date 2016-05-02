@@ -68,7 +68,7 @@ public class TrevniToJsonTool implements Tool {
       err.println("Usage: [-pretty] input");
       return 1;
     }
-    
+
     toJson(TrevniUtil.input(filename), out, pretty);
 
     return 0;
@@ -109,7 +109,7 @@ public class TrevniToJsonTool implements Tool {
     out.println();
     reader.close();
   }
-  
+
   private void valueToJson(ColumnMetaData column) throws IOException {
     generator.writeFieldName(shortNames[column.getNumber()]);
     ColumnValues in = values[column.getNumber()];
@@ -138,7 +138,7 @@ public class TrevniToJsonTool implements Tool {
     }
   }
 
-  private void primitiveToJson(ColumnMetaData column, Object value) 
+  private void primitiveToJson(ColumnMetaData column, Object value)
     throws IOException {
     switch (column.getType()) {
     case NULL:

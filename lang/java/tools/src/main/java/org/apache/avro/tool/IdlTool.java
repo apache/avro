@@ -57,7 +57,7 @@ public class IdlTool implements Tool {
     } else {
       parser = new Idl(in);
     }
-    
+
     if (args.size() == 2 && ! "-".equals(args.get(1))) {
       parseOut = new PrintStream(new FileOutputStream(args.get(1)));
     }

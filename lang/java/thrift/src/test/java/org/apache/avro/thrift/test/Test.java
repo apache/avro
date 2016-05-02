@@ -91,7 +91,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     LIST_FIELD((short)10, "listField"),
     SET_FIELD((short)11, "setField"),
     /**
-     * 
+     *
      * @see E
      */
     ENUM_FIELD((short)12, "enumField"),
@@ -196,41 +196,41 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.BOOL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("boolField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.BOOL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("boolField", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
-    tmpMap.put(_Fields.BYTE_FIELD, new org.apache.thrift.meta_data.FieldMetaData("byteField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.BYTE_FIELD, new org.apache.thrift.meta_data.FieldMetaData("byteField", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE)));
-    tmpMap.put(_Fields.BYTE_OPTIONAL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("byteOptionalField", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.BYTE_OPTIONAL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("byteOptionalField", org.apache.thrift.TFieldRequirementType.OPTIONAL,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE)));
-    tmpMap.put(_Fields.I16_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i16Field", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.I16_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i16Field", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
-    tmpMap.put(_Fields.I16_OPTIONAL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i16OptionalField", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.I16_OPTIONAL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i16OptionalField", org.apache.thrift.TFieldRequirementType.OPTIONAL,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
-    tmpMap.put(_Fields.I32_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i32Field", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.I32_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i32Field", org.apache.thrift.TFieldRequirementType.OPTIONAL,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-    tmpMap.put(_Fields.I64_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i64Field", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.I64_FIELD, new org.apache.thrift.meta_data.FieldMetaData("i64Field", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.DOUBLE_FIELD, new org.apache.thrift.meta_data.FieldMetaData("doubleField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.DOUBLE_FIELD, new org.apache.thrift.meta_data.FieldMetaData("doubleField", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.DOUBLE)));
-    tmpMap.put(_Fields.STRING_FIELD, new org.apache.thrift.meta_data.FieldMetaData("stringField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.STRING_FIELD, new org.apache.thrift.meta_data.FieldMetaData("stringField", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.BINARY_FIELD, new org.apache.thrift.meta_data.FieldMetaData("binaryField", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.BINARY_FIELD, new org.apache.thrift.meta_data.FieldMetaData("binaryField", org.apache.thrift.TFieldRequirementType.OPTIONAL,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
-    tmpMap.put(_Fields.MAP_FIELD, new org.apache.thrift.meta_data.FieldMetaData("mapField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
-            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
+    tmpMap.put(_Fields.MAP_FIELD, new org.apache.thrift.meta_data.FieldMetaData("mapField", org.apache.thrift.TFieldRequirementType.DEFAULT,
+        new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING),
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32))));
-    tmpMap.put(_Fields.LIST_FIELD, new org.apache.thrift.meta_data.FieldMetaData("listField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+    tmpMap.put(_Fields.LIST_FIELD, new org.apache.thrift.meta_data.FieldMetaData("listField", org.apache.thrift.TFieldRequirementType.DEFAULT,
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST,
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32))));
-    tmpMap.put(_Fields.SET_FIELD, new org.apache.thrift.meta_data.FieldMetaData("setField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
+    tmpMap.put(_Fields.SET_FIELD, new org.apache.thrift.meta_data.FieldMetaData("setField", org.apache.thrift.TFieldRequirementType.DEFAULT,
+        new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET,
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32))));
-    tmpMap.put(_Fields.ENUM_FIELD, new org.apache.thrift.meta_data.FieldMetaData("enumField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.ENUM_FIELD, new org.apache.thrift.meta_data.FieldMetaData("enumField", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, E.class)));
-    tmpMap.put(_Fields.STRUCT_FIELD, new org.apache.thrift.meta_data.FieldMetaData("structField", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.STRUCT_FIELD, new org.apache.thrift.meta_data.FieldMetaData("structField", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Nested.class)));
-    tmpMap.put(_Fields.FOO_OR_BAR, new org.apache.thrift.meta_data.FieldMetaData("fooOrBar", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.FOO_OR_BAR, new org.apache.thrift.meta_data.FieldMetaData("fooOrBar", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, FooOrBar.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Test.class, metaDataMap);
@@ -690,7 +690,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   }
 
   /**
-   * 
+   *
    * @see E
    */
   public E getEnumField() {
@@ -698,7 +698,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   }
 
   /**
-   * 
+   *
    * @see E
    */
   public void setEnumField(E enumField) {
@@ -1496,7 +1496,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       while (true)
       {
         schemeField = iprot.readFieldBegin();
-        if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+        if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
           break;
         }
         switch (schemeField.id) {
@@ -1504,7 +1504,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
               struct.boolField = iprot.readBool();
               struct.setBoolFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1512,7 +1512,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.BYTE) {
               struct.byteField = iprot.readByte();
               struct.setByteFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1520,7 +1520,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.BYTE) {
               struct.byteOptionalField = iprot.readByte();
               struct.setByteOptionalFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1528,7 +1528,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.I16) {
               struct.i16Field = iprot.readI16();
               struct.setI16FieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1536,7 +1536,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.I16) {
               struct.i16OptionalField = iprot.readI16();
               struct.setI16OptionalFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1544,7 +1544,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
               struct.i32Field = iprot.readI32();
               struct.setI32FieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1552,7 +1552,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
               struct.i64Field = iprot.readI64();
               struct.setI64FieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1560,7 +1560,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.DOUBLE) {
               struct.doubleField = iprot.readDouble();
               struct.setDoubleFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1568,7 +1568,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.stringField = iprot.readString();
               struct.setStringFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1576,7 +1576,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.binaryField = iprot.readBinary();
               struct.setBinaryFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1596,7 +1596,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
                 iprot.readMapEnd();
               }
               struct.setMapFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1614,7 +1614,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
                 iprot.readListEnd();
               }
               struct.setListFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1632,7 +1632,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
                 iprot.readSetEnd();
               }
               struct.setSetFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1640,7 +1640,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
               struct.enumField = E.findByValue(iprot.readI32());
               struct.setEnumFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1649,7 +1649,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
               struct.structField = new Nested();
               struct.structField.read(iprot);
               struct.setStructFieldIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
@@ -1658,7 +1658,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
               struct.fooOrBar = new FooOrBar();
               struct.fooOrBar.read(iprot);
               struct.setFooOrBarIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;

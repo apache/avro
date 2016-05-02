@@ -51,7 +51,7 @@ public abstract class SpecificRecordBase
     if (this.getClass() != that.getClass()) return false; // not same schema
     return SpecificData.get().compare(this, that, this.getSchema(), true) == 0;
   }
-    
+
   @Override
   public int hashCode() {
     return SpecificData.get().hashCode(this, this.getSchema());

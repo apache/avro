@@ -81,7 +81,7 @@ public class TestReflectJob {
                                                new Count(1L)));
     }
   }
-  
+
   public static class ReduceImpl
     extends AvroReducer<Text, Count, WordCount> {
     @Override
@@ -93,7 +93,7 @@ public class TestReflectJob {
         sum += count.count;
       collector.collect(new WordCount(word.text, sum));
     }
-  }    
+  }
 
   @Test
   @SuppressWarnings("deprecation")
@@ -107,25 +107,25 @@ public class TestReflectJob {
     inputPath.getFileSystem(job).delete(inputPath);
 
     writeLinesFile(new File(dir+"/in"));
-    
+
     job.setJobName("reflect");
-    
+
     AvroJob.setInputSchema(job, ReflectData.get().getSchema(Text.class));
     AvroJob.setMapOutputSchema
       (job, new Pair(new Text(""), new Count(0L)).getSchema());
     AvroJob.setOutputSchema(job, ReflectData.get().getSchema(WordCount.class));
-    
-    AvroJob.setMapperClass(job, MapImpl.class);        
+
+    AvroJob.setMapperClass(job, MapImpl.class);
     //AvroJob.setCombinerClass(job, ReduceImpl.class);
     AvroJob.setReducerClass(job, ReduceImpl.class);
-    
+
     FileInputFormat.setInputPaths(job, inputPath);
     FileOutputFormat.setOutputPath(job, outputPath);
 
     AvroJob.setReflect(job);                      // use reflection
 
     JobClient.runJob(job);
-    
+
     validateCountsFile(new File(new File(dir, "out"), "part-00000.avro"));
   }
 
@@ -139,7 +139,7 @@ public class TestReflectJob {
       out.append(new Text(line));
     out.close();
   }
-  
+
   private void validateCountsFile(File file) throws Exception {
     DatumReader<WordCount> reader = new ReflectDatumReader<WordCount>();
     InputStream in = new BufferedInputStream(new FileInputStream(file));
