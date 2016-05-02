@@ -37,7 +37,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- version properties for dependencies -->
-    
+
     <!--
       To build the avro-mapred module against Hadoop 1 specify
       -Dhadoop.version=1 or leave unspecified to build against Hadoop 2
@@ -387,7 +387,7 @@
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId> 
+            <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <systemPropertyVariables>
                 <test.dir>${project.basedir}/target/</test.dir>

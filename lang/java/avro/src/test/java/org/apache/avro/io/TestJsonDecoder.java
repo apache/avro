@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.Assert;
 
 public class TestJsonDecoder {
-  
+
   @Test public void testInt() throws Exception {
     checkNumeric("int", 1);
   }
@@ -44,7 +44,7 @@ public class TestJsonDecoder {
   }
 
   private void checkNumeric(String type, Object value) throws Exception {
-    String def = 
+    String def =
       "{\"type\":\"record\",\"name\":\"X\",\"fields\":"
       +"[{\"type\":\""+type+"\",\"name\":\"n\"}]}";
     Schema schema = Schema.parse(def);

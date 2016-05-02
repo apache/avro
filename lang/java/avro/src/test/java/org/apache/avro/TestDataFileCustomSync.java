@@ -64,7 +64,7 @@ public class TestDataFileCustomSync {
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
     }
-  }  
+  }
 
   @Test(expected = IOException.class)
   public void testInvalidSync() throws IOException {

@@ -28,8 +28,8 @@ public interface Server {
 
   /** Stop this server. */
   void close();
-  
+
   /** Wait for this server to exit. */
   void join() throws InterruptedException;
-  
+
 }

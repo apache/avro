@@ -48,10 +48,10 @@ public class TestValidatingIO {
     BLOCKING_BINARY,
     JSON,
   }
-  
+
   private static final Logger LOG =
       LoggerFactory.getLogger(TestValidatingIO.class);
-  
+
   private Encoding eEnc;
   private int iSkipL;
   private String sJsSch;
@@ -64,7 +64,7 @@ public class TestValidatingIO {
     this.sCl = cls;
   }
   private static final int COUNT = 1;
-  
+
   @Test
   public void testMain() throws IOException {
     for (int i = 0; i < COUNT; i++) {
@@ -98,7 +98,7 @@ public class TestValidatingIO {
       bvo = factory.jsonEncoder(sc, ba);
       break;
     }
-        
+
     Encoder vo = factory.validatingEncoder(sc, bvo);
     generate(vo, calls, values);
     vo.flush();
@@ -108,22 +108,22 @@ public class TestValidatingIO {
   public static class InputScanner {
     private final char[] chars;
     private int cpos = 0;
-    
+
     public InputScanner(char[] chars) {
       this.chars = chars;
     }
-    
+
     public boolean next() {
       if (cpos < chars.length) {
         cpos++;
       }
       return cpos != chars.length;
     }
-    
+
     public char cur() {
       return chars[cpos];
     }
-    
+
     public boolean isDone() {
       return cpos == chars.length;
     }
@@ -319,7 +319,7 @@ public class TestValidatingIO {
     Decoder vi = new ValidatingDecoder(sc, bvi);
     check(vi, calls, values, skipLevel);
   }
-  
+
   public static void check(Decoder vi, String calls,
       Object[] values, final int skipLevel) throws IOException {
     InputScanner cs = new InputScanner(calls.toCharArray());
@@ -523,16 +523,16 @@ public class TestValidatingIO {
   public static Collection<Object[]> data() {
     return Arrays.asList(convertTo2dArray(encodings, skipLevels, testSchemas()));
   }
-  
+
   private static Object[][] encodings = new Object[][] {
       { Encoding.BINARY }, { Encoding.BLOCKING_BINARY },
       { Encoding.JSON }
-    }; 
+    };
 
   private static Object[][] skipLevels = new Object[][] {
       { -1 }, { 0 }, { 1 }, { 2 },
   };
-  
+
   public static Object[][] convertTo2dArray(final Object[][]... values) {
     ArrayList<Object[]> ret = new ArrayList<Object[]>();
 
@@ -582,7 +582,7 @@ public class TestValidatingIO {
       }
     };
   }
-  
+
   /**
    * Concatenates the input sequences in order and forms a longer sequence.
    */
@@ -730,7 +730,7 @@ public class TestValidatingIO {
           + "{\"name\":\"f6\", \"type\":\"string\"},"
           + "{\"name\":\"f7\", \"type\":\"bytes\"}]}",
             "NBILFDS10b25" },
-        
+
         // record of records
         { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
           + "{\"name\":\"f1\", \"type\":{\"type\":\"record\", "
@@ -796,14 +796,14 @@ public class TestValidatingIO {
 
         { "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]",
             "U1[c1sI]" },
-          
+
         // Recursion
         { "{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
           + "{\"name\":\"label\", \"type\":\"string\"},"
           + "{\"name\":\"children\", \"type\":"
           + "{\"type\": \"array\", \"items\": \"Node\" }}]}",
           "S10[c1sS10[]]" },
-          
+
         { "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
           + "{\"name\":\"value\", \"type\":[\"null\", \"string\","
           + "{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
@@ -822,16 +822,16 @@ public class TestValidatingIO {
           + "{\"name\":\"car\", \"type\":\"Lisp\"},"
           + "{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
           "U2U1S10U0N"},
-          
+
         // Deep recursion
         { "{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
           + "{\"name\":\"children\", \"type\":"
           + "{\"type\": \"array\", \"items\": \"Node\" }}]}",
           "[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[c1s[]]]]]]]]]]]]" },
-              
+
     };
   }
-  
+
   static void dump(byte[] bb) {
     int col = 0;
     for (byte b : bb) {
@@ -844,17 +844,17 @@ public class TestValidatingIO {
     System.out.println();
   }
 
-  static void print(Encoding encoding, int skipLevel, Schema writerSchema, 
+  static void print(Encoding encoding, int skipLevel, Schema writerSchema,
       Schema readerSchema, Object[] writtenValues, Object[] expectedValues) {
-    LOG.debug("{} Skip Level {}", encoding, skipLevel); 
+    LOG.debug("{} Skip Level {}", encoding, skipLevel);
     printSchemaAndValues("Writer", writerSchema, writtenValues);
     printSchemaAndValues("Reader", readerSchema, expectedValues);
   }
 
   private static void printSchemaAndValues(String schemaType, Schema schema, Object[] values) {
-    LOG.debug("{} Schema {}", schemaType, schema); 
+    LOG.debug("{} Schema {}", schemaType, schema);
     for (Object value : values) {
       LOG.debug("{} -> {}", value, value.getClass().getSimpleName());
     }
-  }  
+  }
 }

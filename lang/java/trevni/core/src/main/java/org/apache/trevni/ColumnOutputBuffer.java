@@ -90,9 +90,9 @@ class ColumnOutputBuffer {
          ? firstValues.get(firstValues.size()-1).length
          : 0)
       + data.position();                         // data
-    
+
     writer.incrementSize(sizeIncrement);
-    size += sizeIncrement;                         
+    size += sizeIncrement;
 
     buffer = new OutputBuffer();
     rowCount = 0;

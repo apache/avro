@@ -104,7 +104,7 @@ public class TestSequenceFileReader {
     Path output = new Path(System.getProperty("test.dir",".")+"/seq-out");
 
     output.getFileSystem(job).delete(output);
-    
+
     // configure input for Avro from sequence file
     AvroJob.setInputSequenceFile(job);
     FileInputFormat.setInputPaths(job, FILE.toURI().toString());
@@ -116,7 +116,7 @@ public class TestSequenceFileReader {
     // configure output for avro
     AvroJob.setOutputSchema(job, SCHEMA);
     FileOutputFormat.setOutputPath(job, output);
-    
+
     JobClient.runJob(job);
 
     checkFile(new DataFileReader<Pair<Long,CharSequence>>
@@ -127,9 +127,9 @@ public class TestSequenceFileReader {
   private static class NonAvroMapper
     extends MapReduceBase
     implements Mapper<LongWritable,Text,AvroKey<Long>,AvroValue<Utf8>> {
-    
-    public void map(LongWritable key, Text value, 
-                  OutputCollector<AvroKey<Long>,AvroValue<Utf8>> out, 
+
+    public void map(LongWritable key, Text value,
+                  OutputCollector<AvroKey<Long>,AvroValue<Utf8>> out,
                   Reporter reporter) throws IOException {
       out.collect(new AvroKey<Long>(key.get()),
                   new AvroValue<Utf8>(new Utf8(value.toString())));
@@ -142,7 +142,7 @@ public class TestSequenceFileReader {
     Path output = new Path(System.getProperty("test.dir",".")+"/seq-out");
 
     output.getFileSystem(job).delete(output);
-    
+
     // configure input for non-Avro sequence file
     job.setInputFormat(SequenceFileInputFormat.class);
     FileInputFormat.setInputPaths(job, FILE.toURI().toString());
@@ -166,9 +166,9 @@ public class TestSequenceFileReader {
   private static class NonAvroOnlyMapper
     extends MapReduceBase
     implements Mapper<LongWritable,Text,AvroWrapper<Pair<Long,Utf8>>,NullWritable> {
-    
-    public void map(LongWritable key, Text value, 
-                    OutputCollector<AvroWrapper<Pair<Long,Utf8>>,NullWritable> out, 
+
+    public void map(LongWritable key, Text value,
+                    OutputCollector<AvroWrapper<Pair<Long,Utf8>>,NullWritable> out,
                     Reporter reporter) throws IOException {
       out.collect(new AvroWrapper<Pair<Long,Utf8>>(new Pair<Long,Utf8>(key.get(), new Utf8(value.toString()))),
                   NullWritable.get());
@@ -181,7 +181,7 @@ public class TestSequenceFileReader {
     Path output = new Path(System.getProperty("test.dir",".")+"/seq-out");
 
     output.getFileSystem(job).delete(output);
-    
+
 
     // configure input for non-Avro sequence file
     job.setInputFormat(SequenceFileInputFormat.class);
@@ -205,9 +205,9 @@ public class TestSequenceFileReader {
   private static class NonAvroReducer
     extends MapReduceBase
     implements Reducer<AvroKey<Long>,AvroValue<Utf8>,LongWritable,Text> {
-    
+
     public void reduce(AvroKey<Long> key, Iterator<AvroValue<Utf8>> values,
-                       OutputCollector<LongWritable, Text> out, 
+                       OutputCollector<LongWritable, Text> out,
                        Reporter reporter) throws IOException {
       while (values.hasNext()) {
         AvroValue<Utf8> value = values.next();
@@ -223,7 +223,7 @@ public class TestSequenceFileReader {
     Path output = new Path(System.getProperty("test.dir",".")+"/seq-out");
 
     output.getFileSystem(job).delete(output);
-    
+
     // configure input for Avro from sequence file
     AvroJob.setInputSequenceFile(job);
     AvroJob.setInputSchema(job, SCHEMA);

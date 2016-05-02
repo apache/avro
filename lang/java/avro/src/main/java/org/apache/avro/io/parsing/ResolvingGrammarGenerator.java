@@ -39,29 +39,29 @@ import org.codehaus.jackson.JsonNode;
 public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
-   * <tt>reader</tt> and returns the start symbol for the grammar generated. 
+   * <tt>reader</tt> and returns the start symbol for the grammar generated.
    * @param writer    The schema used by the writer
    * @param reader    The schema used by the reader
    * @return          The start symbol for the resolving grammar
-   * @throws IOException 
+   * @throws IOException
    */
   public final Symbol generate(Schema writer, Schema reader)
     throws IOException {
     return Symbol.root(generate(writer, reader, new HashMap<LitS, Symbol>()));
   }
-  
+
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
    * <tt>reader</tt> and returns the start symbol for the grammar generated.
    * If there is already a symbol in the map <tt>seen</tt> for resolving the
    * two schemas, then that symbol is returned. Otherwise a new symbol is
-   * generated and returnd. 
+   * generated and returnd.
    * @param writer    The schema used by the writer
    * @param reader    The schema used by the reader
    * @param seen      The &lt;reader-schema, writer-schema&gt; to symbol
    * map of start symbols of resolving grammars so far.
    * @return          The start symbol for the resolving grammar
-   * @throws IOException 
+   * @throws IOException
    */
   public Symbol generate(Schema writer, Schema reader,
                                 Map<LitS, Symbol> seen) throws IOException
@@ -108,7 +108,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
                 generate(writer.getElementType(),
                 reader.getElementType(), seen)),
             Symbol.ARRAY_START);
-      
+
       case MAP:
         return Symbol.seq(Symbol.repeat(Symbol.MAP_END,
                 generate(writer.getValueType(),
@@ -125,7 +125,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       if (writerType == Schema.Type.UNION) {
         return resolveUnion(writer, reader, seen);
       }
-  
+
       switch (readerType) {
       case LONG:
         switch (writerType) {
@@ -133,7 +133,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
           return Symbol.resolve(super.generate(writer, seen), Symbol.LONG);
         }
         break;
-  
+
       case FLOAT:
         switch (writerType) {
         case INT:
@@ -141,7 +141,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
           return Symbol.resolve(super.generate(writer, seen), Symbol.FLOAT);
         }
         break;
-  
+
       case DOUBLE:
         switch (writerType) {
         case INT:
@@ -150,21 +150,21 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
           return Symbol.resolve(super.generate(writer, seen), Symbol.DOUBLE);
         }
         break;
-  
+
       case BYTES:
         switch (writerType) {
         case STRING:
           return Symbol.resolve(super.generate(writer, seen), Symbol.BYTES);
         }
         break;
-  
+
       case STRING:
         switch (writerType) {
         case BYTES:
           return Symbol.resolve(super.generate(writer, seen), Symbol.STRING);
         }
         break;
-  
+
       case UNION:
         int j = bestBranch(reader, writer, seen);
         if (j >= 0) {
@@ -308,7 +308,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     e.flush();
     return out.toByteArray();
   }
-  
+
   /**
    * Encodes the given Json node <tt>n</tt> on to the encoder <tt>e</tt>
    * according to the schema <tt>s</tt>.

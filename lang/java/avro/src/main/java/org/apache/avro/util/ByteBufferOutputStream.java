@@ -51,7 +51,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
     buffers.addAll(0, lists);
   }
-  
+
   /** Append a list of ByteBuffers to this stream. */
   public void append(List<ByteBuffer> lists) {
     for (ByteBuffer buffer: lists) {
@@ -59,7 +59,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
     buffers.addAll(lists);
   }
-  
+
   public void reset() {
     buffers = new LinkedList<ByteBuffer>();
     buffers.add(ByteBuffer.allocate(BUFFER_SIZE));

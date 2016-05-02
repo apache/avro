@@ -49,7 +49,7 @@ import org.apache.avro.test.Reserved;
 import org.apache.avro.generic.GenericRecord;
 
 public class TestSpecificData {
-  
+
   @Test
   /** Make sure that even with nulls, hashCode() doesn't throw NPE. */
   public void testHashCode() {

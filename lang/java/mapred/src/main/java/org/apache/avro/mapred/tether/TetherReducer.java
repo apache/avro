@@ -40,7 +40,7 @@ class TetherReducer
     this.job = job;
   }
 
-  public void reduce(TetherData datum, Iterator<NullWritable> ignore, 
+  public void reduce(TetherData datum, Iterator<NullWritable> ignore,
                      OutputCollector<TetherData, NullWritable> collector,
                      Reporter reporter) throws IOException {
     try {

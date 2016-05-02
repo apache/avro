@@ -107,7 +107,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("message", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("message", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Error.class, metaDataMap);
@@ -313,7 +313,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
       while (true)
       {
         schemeField = iprot.readFieldBegin();
-        if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+        if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
           break;
         }
         switch (schemeField.id) {
@@ -321,7 +321,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.message = iprot.readString();
               struct.setMessageIsSet(true);
-            } else { 
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;

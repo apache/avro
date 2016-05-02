@@ -32,19 +32,19 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
   public SpecificDatumWriter(Class<T> c) {
     super(SpecificData.get().getSchema(c), SpecificData.get());
   }
-  
+
   public SpecificDatumWriter(Schema schema) {
     super(schema, SpecificData.get());
   }
-  
+
   public SpecificDatumWriter(Schema root, SpecificData specificData) {
     super(root, specificData);
   }
-  
+
   protected SpecificDatumWriter(SpecificData specificData) {
     super(specificData);
   }
-  
+
   /** Returns the {@link SpecificData} implementation used by this writer. */
   public SpecificData getSpecificData() {
     return (SpecificData) getData();

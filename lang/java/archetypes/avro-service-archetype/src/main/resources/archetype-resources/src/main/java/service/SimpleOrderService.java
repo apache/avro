@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SimpleOrderService implements OrderProcessingService {
 
-	private Logger log = LoggerFactory.getLogger(SimpleOrderService.class);
+  private Logger log = LoggerFactory.getLogger(SimpleOrderService.class);
 
   @Override
   public Confirmation submitOrder(Order order) throws AvroRemoteException, OrderFailure {

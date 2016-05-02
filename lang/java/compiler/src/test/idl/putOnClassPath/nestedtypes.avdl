@@ -18,6 +18,6 @@
 
 @namespace("org.on.the.classpath")
 protocol OnTheClasspathTypes {
-	record NestedType {
-	}
+  record NestedType {
+  }
 }

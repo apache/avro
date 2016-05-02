@@ -67,9 +67,9 @@ public class TestByteBuffer {
   @Test public void test() throws Exception{
     Schema schema = ReflectData.get().getSchema(X.class);
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    writeOneXAsAvro(schema, bout);		
+    writeOneXAsAvro(schema, bout);
     X record = readOneXFromAvro(schema, bout);
-		
+
     String expected = getmd5(content);
     String actual = getmd5(record.content);
     assertEquals("md5 for result differed from input",expected,actual);

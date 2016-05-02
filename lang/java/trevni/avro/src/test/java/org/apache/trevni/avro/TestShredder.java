@@ -78,7 +78,7 @@ public class TestShredder {
   }
 
   @Test public void testDefaultValue() throws Exception {
-    String s = 
+    String s =
       "{\"type\":\"record\",\"name\":\"R\",\"fields\":["
       +SIMPLE_FIELDS+","
       +"{\"name\":\"z\",\"type\":\"int\","
@@ -89,7 +89,7 @@ public class TestShredder {
   }
 
   @Test public void testNestedRecord() throws Exception {
-    String s = 
+    String s =
       "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
       +"{\"name\":\"x\",\"type\":\"int\"},"
       +"{\"name\":\"R\",\"type\":"+SIMPLE_RECORD+"},"
@@ -103,25 +103,25 @@ public class TestShredder {
   }
 
   @Test public void testNamedRecord() throws Exception {
-	    String s = 
-	      "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
-	      +"{\"name\":\"R1\",\"type\":"+SIMPLE_RECORD+"},"
-	      +"{\"name\":\"R2\",\"type\":\"R\"}"
-	      +"]}";
-	    check(Schema.parse(s),
-	          new ColumnMetaData("R1#x", ValueType.INT),
-	          new ColumnMetaData("R1#y", ValueType.STRING),
-	          new ColumnMetaData("R2#x", ValueType.INT),
-	          new ColumnMetaData("R2#y", ValueType.STRING));
-	  }
-  
+    String s =
+      "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
+      +"{\"name\":\"R1\",\"type\":"+SIMPLE_RECORD+"},"
+      +"{\"name\":\"R2\",\"type\":\"R\"}"
+      +"]}";
+    check(Schema.parse(s),
+      new ColumnMetaData("R1#x", ValueType.INT),
+      new ColumnMetaData("R1#y", ValueType.STRING),
+      new ColumnMetaData("R2#x", ValueType.INT),
+      new ColumnMetaData("R2#y", ValueType.STRING));
+  }
+
   @Test public void testSimpleArray() throws Exception {
     String s = "{\"type\":\"array\",\"items\":\"long\"}";
     check(Schema.parse(s),
           new ColumnMetaData("[]", ValueType.LONG).isArray(true));
   }
 
-  private static final String RECORD_ARRAY = 
+  private static final String RECORD_ARRAY =
     "{\"type\":\"array\",\"items\":"+SIMPLE_RECORD+"}";
 
   @Test public void testArray() throws Exception {
@@ -157,7 +157,7 @@ public class TestShredder {
   }
 
   @Test public void testNestedArray() throws Exception {
-    String s = 
+    String s =
       "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
       +"{\"name\":\"x\",\"type\":\"int\"},"
       +"{\"name\":\"A\",\"type\":"+RECORD_ARRAY+"},"
@@ -173,7 +173,7 @@ public class TestShredder {
   }
 
   @Test public void testNestedUnion() throws Exception {
-    String s = 
+    String s =
       "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
       +"{\"name\":\"x\",\"type\":\"int\"},"
       +"{\"name\":\"u\",\"type\":"+UNION+"},"
@@ -190,7 +190,7 @@ public class TestShredder {
   }
 
   @Test public void testUnionInArray() throws Exception {
-    String s = 
+    String s =
       "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
       +"{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":"+UNION+"}}"
       +"]}";
@@ -209,7 +209,7 @@ public class TestShredder {
   }
 
   @Test public void testArrayInUnion() throws Exception {
-    String s = 
+    String s =
       "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
       +"{\"name\":\"a\",\"type\":[\"int\","+RECORD_ARRAY+"]}]}";
     ColumnMetaData q = new ColumnMetaData("a/array",ValueType.NULL)

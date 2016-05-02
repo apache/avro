@@ -38,7 +38,7 @@ public class TestBlockingIO2 {
   private final Decoder decoder;
   private final String calls;
   private Object[] values;
-  
+
   public TestBlockingIO2 (int bufferSize, int skipLevel, String calls)
     throws IOException {
 
@@ -50,13 +50,13 @@ public class TestBlockingIO2 {
 
     TestValidatingIO.generate(encoder, calls, values);
     encoder.flush();
-    
+
     byte[] bb = os.toByteArray();
-    
+
     decoder = DecoderFactory.get().binaryDecoder(bb, null);
     this.calls = calls;
   }
-    
+
   @Test
   public void testScan() throws IOException {
     TestValidatingIO.check(decoder, calls, values, -1);

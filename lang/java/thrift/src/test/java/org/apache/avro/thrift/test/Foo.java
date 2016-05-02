@@ -347,7 +347,7 @@ public class Foo {
 
       public AsyncMethodCallback<Void> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
-        return new AsyncMethodCallback<Void>() { 
+        return new AsyncMethodCallback<Void>() {
           public void onComplete(Void o) {
             ping_result result = new ping_result();
             try {
@@ -397,7 +397,7 @@ public class Foo {
 
       public AsyncMethodCallback<Integer> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
-        return new AsyncMethodCallback<Integer>() { 
+        return new AsyncMethodCallback<Integer>() {
           public void onComplete(Integer o) {
             add_result result = new add_result();
             result.success = o;
@@ -449,7 +449,7 @@ public class Foo {
 
       public AsyncMethodCallback<Void> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
-        return new AsyncMethodCallback<Void>() { 
+        return new AsyncMethodCallback<Void>() {
           public void onComplete(Void o) {
           }
           public void onError(Exception e) {
@@ -668,7 +668,7 @@ public class Foo {
         while (true)
         {
           schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
@@ -912,7 +912,7 @@ public class Foo {
         while (true)
         {
           schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
@@ -1039,9 +1039,9 @@ public class Foo {
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.NUM1, new org.apache.thrift.meta_data.FieldMetaData("num1", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+      tmpMap.put(_Fields.NUM1, new org.apache.thrift.meta_data.FieldMetaData("num1", org.apache.thrift.TFieldRequirementType.DEFAULT,
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-      tmpMap.put(_Fields.NUM2, new org.apache.thrift.meta_data.FieldMetaData("num2", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+      tmpMap.put(_Fields.NUM2, new org.apache.thrift.meta_data.FieldMetaData("num2", org.apache.thrift.TFieldRequirementType.DEFAULT,
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(add_args.class, metaDataMap);
@@ -1309,7 +1309,7 @@ public class Foo {
         while (true)
         {
           schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
@@ -1317,7 +1317,7 @@ public class Foo {
               if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
                 struct.num1 = iprot.readI32();
                 struct.setNum1IsSet(true);
-              } else { 
+              } else {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
@@ -1325,7 +1325,7 @@ public class Foo {
               if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
                 struct.num2 = iprot.readI32();
                 struct.setNum2IsSet(true);
-              } else { 
+              } else {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
@@ -1475,7 +1475,7 @@ public class Foo {
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT,
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(add_result.class, metaDataMap);
@@ -1679,7 +1679,7 @@ public class Foo {
         while (true)
         {
           schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
@@ -1687,7 +1687,7 @@ public class Foo {
               if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
                 struct.success = iprot.readI32();
                 struct.setSuccessIsSet(true);
-              } else { 
+              } else {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
@@ -1949,7 +1949,7 @@ public class Foo {
         while (true)
         {
           schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {

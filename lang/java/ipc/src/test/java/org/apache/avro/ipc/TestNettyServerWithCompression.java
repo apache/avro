@@ -60,7 +60,7 @@ public class TestNettyServerWithCompression extends TestNettyServer{
         channelFactory, new CompressionChannelPipelineFactory(),
         null);
   }
-  
+
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
     return  new NettyTransceiver(new InetSocketAddress(serverPort),
         new CompressionChannelFactory(),

@@ -34,15 +34,15 @@ public class ThriftDatumWriter<T> extends GenericDatumWriter<T> {
   public ThriftDatumWriter(Class<T> c) {
     super(ThriftData.get().getSchema(c), ThriftData.get());
   }
-  
+
   public ThriftDatumWriter(Schema schema) {
     super(schema, ThriftData.get());
   }
-  
+
   protected ThriftDatumWriter(Schema root, ThriftData thriftData) {
     super(root, thriftData);
   }
-  
+
   protected ThriftDatumWriter(ThriftData thriftData) {
     super(thriftData);
   }

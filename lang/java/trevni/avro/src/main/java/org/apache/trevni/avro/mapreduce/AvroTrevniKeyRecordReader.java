@@ -29,10 +29,10 @@ import org.apache.hadoop.io.NullWritable;
  * @param <T> The (java) type of data in Trevni container file.
  */
 public class AvroTrevniKeyRecordReader<T> extends AvroTrevniRecordReaderBase<AvroKey<T>, NullWritable, T> {
-  
+
   /** A reusable object to hold records of the Avro container file. */
   private final AvroKey<T> mCurrentKey = new AvroKey<T>();
-  
+
   /** {@inheritDoc} */
   @Override
   public AvroKey<T> getCurrentKey() throws IOException,

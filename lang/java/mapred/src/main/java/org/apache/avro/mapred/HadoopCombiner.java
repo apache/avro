@@ -41,7 +41,7 @@ class HadoopCombiner<K,V>
     private final AvroKey<K> keyWrapper = new AvroKey<K>(null);
     private final AvroValue<V> valueWrapper = new AvroValue<V>(null);
     private OutputCollector<AvroKey<K>,AvroValue<V>> collector;
-  
+
     public PairCollector(OutputCollector<AvroKey<K>,AvroValue<V>> collector) {
       this.collector = collector;
     }

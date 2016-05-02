@@ -55,7 +55,7 @@ public class SaslSocketTransceiver extends Transceiver {
   private boolean saslResponsePiggybacked;
 
   private Protocol remote;
-  
+
   private ByteBuffer readHeader = ByteBuffer.allocate(4);
   private ByteBuffer writeHeader = ByteBuffer.allocate(4);
   private ByteBuffer zeroHeader = ByteBuffer.allocate(4).putInt(0);
@@ -128,7 +128,7 @@ public class SaslSocketTransceiver extends Transceiver {
       if (sasl.isComplete())
         saslResponsePiggybacked = true;
     }
-    
+
     while (!sasl.isComplete()) {
       Status status  = readStatus();
       ByteBuffer frame = readFrame();
@@ -140,7 +140,7 @@ public class SaslSocketTransceiver extends Transceiver {
           write(Status.FAIL, "Wrong mechanism: "+mechanism);
           throw new SaslException("Wrong mechanism: "+mechanism);
         }
-      case CONTINUE: 
+      case CONTINUE:
         byte[] response;
         try {
           response = sasl.evaluate(frame.array());
@@ -213,7 +213,7 @@ public class SaslSocketTransceiver extends Transceiver {
     read(buffer);
     return buffer;
   }
-  
+
   private void read(ByteBuffer buffer) throws IOException {
     buffer.clear();
     while (buffer.hasRemaining())

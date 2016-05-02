@@ -56,7 +56,7 @@ public class TestCreateRandomFileTool {
     }
     return baos.toByteArray();
   }
-  
+
   public void check(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<String>();
     args.addAll(Arrays.asList(new String[] {
@@ -69,7 +69,7 @@ public class TestCreateRandomFileTool {
 
     DataFileReader<Object> reader =
       new DataFileReader(OUT_FILE, new GenericDatumReader<Object>());
-    
+
     Iterator<Object> found = reader.iterator();
     for (Object expected :
            new RandomData(Schema.parse(SCHEMA_FILE), Integer.parseInt(COUNT)))
@@ -94,11 +94,11 @@ public class TestCreateRandomFileTool {
     byte[] file =
       run(Arrays.asList(new String[]
         { "-", "--count", COUNT, "--schema-file", SCHEMA_FILE.toString() }));
-    
+
     DataFileStream<Object> reader =
       new DataFileStream(new ByteArrayInputStream(file),
                          new GenericDatumReader<Object>());
-    
+
     Iterator<Object> found = reader.iterator();
     for (Object expected :
            new RandomData(Schema.parse(SCHEMA_FILE), Integer.parseInt(COUNT)))

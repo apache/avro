@@ -47,7 +47,7 @@ import org.junit.runners.Parameterized;
 public class TestResolvingGrammarGenerator {
   private final Schema schema;
   private final JsonNode data;
-  
+
   public TestResolvingGrammarGenerator(String jsonSchema, String jsonData)
     throws IOException {
     this.schema = Schema.parse(jsonSchema);
@@ -61,9 +61,9 @@ public class TestResolvingGrammarGenerator {
   public void test() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     EncoderFactory factory = EncoderFactory.get();
-    Encoder e = factory.validatingEncoder(schema, 
+    Encoder e = factory.validatingEncoder(schema,
         factory.binaryEncoder(baos, null));
-    
+
     ResolvingGrammarGenerator.encode(e, schema, data);
     e.flush();
   }
@@ -91,7 +91,7 @@ public class TestResolvingGrammarGenerator {
           "Found ns.MyRecord, expecting ns.MyRecord, missing required field field2", typeException.getMessage());
     }
   }
-  
+
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
     Collection<Object[]> ret = Arrays.asList(

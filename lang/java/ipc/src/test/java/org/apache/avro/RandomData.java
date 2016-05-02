@@ -47,7 +47,7 @@ public class RandomData implements Iterable<Object> {
     this.seed = seed;
     this.count = count;
   }
-  
+
   public Iterator<Object> iterator() {
     return new Iterator<Object>() {
       private int n;
@@ -60,7 +60,7 @@ public class RandomData implements Iterable<Object> {
       public void remove() { throw new UnsupportedOperationException(); }
     };
   }
-  
+
   @SuppressWarnings(value="unchecked")
   private static Object generate(Schema schema, Random random, int d) {
     switch (schema.getType()) {

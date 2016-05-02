@@ -54,7 +54,7 @@ public class TestProtocolReflect {
     byte[] echoBytes(byte[] data);
     void error() throws SimpleException;
   }
-  
+
   private static boolean throwUndeclaredError;
 
   public static class TestImpl implements Simple {

@@ -159,7 +159,7 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-    <dependency>     
+    <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
       <scope>test</scope>
@@ -184,7 +184,7 @@
       <version>${commons-codec.version}</version>
     </dependency>
   </dependencies>
-  
+
   <profiles>
      <profile>
       <id>hadoop1</id>

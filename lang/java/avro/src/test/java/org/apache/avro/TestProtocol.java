@@ -32,19 +32,19 @@ public class TestProtocol {
     p2.addProp("a","2");
     assertFalse(p1.equals(p2));
   }
-  
+
   @Test
   public void testSplitProtocolBuild() {
     Protocol p = new Protocol("P", null, "foo");
     p.addProp("property", "some value");
-     
+
     String protocolString = p.toString();
     final int mid = protocolString.length() / 2;
     String[] parts = {
       protocolString.substring(0, mid),
       protocolString.substring(mid),
-    }; 
-    
+    };
+
     Protocol parsedStringProtocol = org.apache.avro.Protocol.parse(protocolString);
     Protocol parsedArrayOfStringProtocol =
       org.apache.avro.Protocol.parse(protocolString.substring(0, mid),

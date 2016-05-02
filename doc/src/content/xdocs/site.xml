@@ -24,13 +24,13 @@ This file contains an outline of the site's information content.  It is used to:
 <link href="site:changes"> links to changes.html (or ../changes.html if in
   subdir).
 - Provide aliases for external URLs in the external-refs section.  Eg, <link
-  href="ext:cocoon"> links to http://cocoon.apache.org/ 
+  href="ext:cocoon"> links to http://cocoon.apache.org/
 
 See http://forrest.apache.org/docs/linking.html for more info
 -->
 <!-- The label attribute of the outer "site" element will only show
   in the linkmap (linkmap.html).
-  Use elements project-name and group-name in skinconfig to change name of 
+  Use elements project-name and group-name in skinconfig to change name of
   your site or project that is usually shown at the top of page.
   No matter what you configure for the href attribute, Forrest will
   always use index.html when you request http://yourHost/
@@ -39,7 +39,7 @@ See http://forrest.apache.org/docs/linking.html for more info
 
 <site label="Avro" href="" xmlns="http://apache.org/forrest/linkmap/1.0">
 
-  <docs label="Documentation"> 
+  <docs label="Documentation">
     <overview   label="Overview"          href="index.html" />
     <gettingstartedjava label="Getting started (Java)" href="gettingstartedjava.html" />
     <gettingstartedpython label="Getting started (Python)" href="gettingstartedpython.html" />
@@ -55,7 +55,7 @@ See http://forrest.apache.org/docs/linking.html for more info
     <wiki       label="Wiki"              href="ext:wiki" />
     <faq        label="FAQ"               href="ext:faq" />
   </docs>
-  
+
   <external-refs>
     <site      href="http://avro.apache.org/"/>
     <lists     href="http://avro.apache.org/mailing_lists.html"/>
@@ -87,5 +87,5 @@ See http://forrest.apache.org/docs/linking.html for more info
       <spec href="spec.html"/>
     </trevni>
   </external-refs>
- 
+
 </site>

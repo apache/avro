@@ -35,9 +35,9 @@ public class TestUtf8 {
       assertEquals(bs[i], u.getBytes()[i]);
     }
   }
-  
+
   @Test public void testArrayReusedWhenLargerThanRequestedSize() throws UnsupportedEncodingException {
-    byte[] bs = "55555".getBytes("UTF-8");    
+    byte[] bs = "55555".getBytes("UTF-8");
     Utf8 u = new Utf8(bs);
     assertEquals(5, u.getByteLength());
     byte[] content = u.getBytes();

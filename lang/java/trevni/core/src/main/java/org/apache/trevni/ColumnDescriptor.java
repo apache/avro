@@ -76,7 +76,7 @@ class ColumnDescriptor<T extends Comparable> {
         firstValues[i] = in.<T>readValue(metaData.getType());
     }
     dataStart = in.tell();
-    
+
     // compute blockStarts and firstRows
     Checksum checksum = Checksum.get(metaData);
     blockStarts = new long[blocks.length];

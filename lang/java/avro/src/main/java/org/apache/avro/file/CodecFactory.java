@@ -67,11 +67,11 @@ public abstract class CodecFactory {
 
   /** Creates internal Codec. */
   protected abstract Codec createInstance();
-  
-  /** Mapping of string names (stored as metas) and codecs. 
+
+  /** Mapping of string names (stored as metas) and codecs.
    * Note that currently options (like compression level)
    * are not recoverable. */
-  private static final Map<String, CodecFactory> REGISTERED = 
+  private static final Map<String, CodecFactory> REGISTERED =
     new HashMap<String, CodecFactory>();
 
   public static final int DEFAULT_DEFLATE_LEVEL = Deflater.DEFAULT_COMPRESSION;
@@ -103,7 +103,7 @@ public abstract class CodecFactory {
     }
     return o;
   }
-  
+
 
 
   /** Adds a new codec implementation.  If name already had
@@ -111,11 +111,11 @@ public abstract class CodecFactory {
   public static CodecFactory addCodec(String name, CodecFactory c) {
     return REGISTERED.put(name, c);
   }
-  
+
   @Override
   public String toString() {
     Codec instance = this.createInstance();
     return instance.toString();
   }
-  
+
 }

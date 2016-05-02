@@ -34,7 +34,7 @@ public class ColumnValues<T extends Comparable>
   private InputBuffer values;
   private int block = -1;
   private long row = 0;
-  private T previous; 
+  private T previous;
 
   private int arrayLength;
 
