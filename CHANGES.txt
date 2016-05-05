@@ -33,6 +33,8 @@ Trunk (not yet released)
 
     AVRO-1828: Add EditorConfig file and cleanup of whitespace violations (nielsbasjes)
 
+    AVRO-1839: Update the gitignore files to hide generated files (nielsbasjes)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
