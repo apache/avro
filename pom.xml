@@ -242,6 +242,7 @@
                 <exclude>lang/ruby/avro.gemspec</exclude>
                 <exclude>lang/ruby/.gem/**</exclude>
                 <exclude>lang/ruby/pkg/**</exclude>
+                <exclude>lang/ruby/.bundle/**</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>

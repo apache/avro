@@ -17,3 +17,6 @@
 /.classpath
 /.eclipse
 /.project
+dependency-reduced-pom.xml
+mapred/userlogs/
+tools/userlogs/
