@@ -44,6 +44,7 @@
        Java artifacts are copied to the final build destination with a custom profile.
        -->
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <avro.distDir>dist</avro.distDir>
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
     <!-- dependency plugin versions -->
@@ -53,9 +54,11 @@
     <antrun-plugin.version>1.7</antrun-plugin.version>
     <enforcer-plugin.version>1.3.1</enforcer-plugin.version>
     <rat.version>0.9</rat.version>
+    <checkstyle-plugin.version>2.17</checkstyle-plugin.version>
   </properties>
 
   <modules>
+    <module>dev-tools</module>
     <module>lang/java</module>
   </modules>
 
@@ -117,6 +120,35 @@
           </rules>
           <fail>true</fail>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${checkstyle-plugin.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>dev-tools</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <consoleOutput>true</consoleOutput>
+          <configLocation>checkstyle/checkstyle.xml</configLocation>
+          <suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>
+        </configuration>
+        <!-- Runs by default in the verify phase  (mvn verify or later in the build cycle)
+             the 'check' goal will fail the build if it does not pass.  "mvn checkstyle:check"
+             will do this alone, or "mvn checkstyle:checkstyle" will report but not break  -->
+        <executions>
+          <execution>
+            <id>checkstyle-check</id>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

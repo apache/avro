@@ -35,6 +35,9 @@ Trunk (not yet released)
 
     AVRO-1839: Update the gitignore files to hide generated files (nielsbasjes)
 
+    AVRO-1838: Java: Update checkstyle to catch trailing whitespace.
+    (nielsbasjes via blue)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
