@@ -69,7 +69,6 @@
     <commons-httpclient.version>3.1</commons-httpclient.version>
 
     <!-- version properties for plugins -->
-    <checkstyle-plugin.version>2.12.1</checkstyle-plugin.version>
     <bundle-plugin-version>2.5.3</bundle-plugin-version>
     <compiler-plugin.version>3.1</compiler-plugin.version>
     <exec-plugin.version>1.3.2</exec-plugin.version>
@@ -230,27 +229,6 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>${checkstyle-plugin.version}</version>
-          <configuration>
-            <consoleOutput>true</consoleOutput>
-            <configLocation>checkstyle.xml</configLocation>
-          </configuration>
-          <!-- Runs by default in the verify phase  (mvn verify or later in the build cycle)
-               the 'check' goal will fail the build if it does not pass.  "mvn checkstyle:check"
-               will do this alone, or "mvn checkstyle:checkstyle" will report but not break  -->
-          <executions>
-            <execution>
-              <id>checkstyle-check</id>
-              <phase>test</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>${javadoc-plugin.version}</version>
           <configuration>
@@ -301,10 +279,6 @@
       </plugins>
     </pluginManagement>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>

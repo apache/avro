@@ -70,6 +70,22 @@ Avro 1.8.1 (14 May 2016)
     AVRO-1823: Java: Do not swallow IOException while reading magic bytes.
     (Koji Noguchi via blue)
 
+    AVRO-1825: Allow running build.sh dist under git (nielsbasjes)
+
+    AVRO-1819, AVRO-1820: Java: Add aliases, custom properties to Protocol.
+    (Konstantin Usachev via blue)
+
+    AVRO-1834: Lower the Javadoc warnings on the generated code. (nielsbasjes)
+
+    AVRO-1835: Running tests using JDK 1.8 complains about MaxPermSize (nielsbasjes)
+
+    AVRO-1828: Add EditorConfig file and cleanup of whitespace violations (nielsbasjes)
+
+    AVRO-1839: Update the gitignore files to hide generated files (nielsbasjes)
+
+    AVRO-1838: Java: Update checkstyle to catch trailing whitespace.
+    (nielsbasjes via blue)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
