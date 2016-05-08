@@ -25,6 +25,9 @@ Trunk (not yet released)
     AVRO-1642: Java: Do not generate invalid all-args constructor.
     (Prateek Rungta and Barry Jones via blue)
 
+    AVRO-1711: Java: Fix JsonParser#skipChildren to implement its defined contract.
+    (Zoltan Farkas and Thiruvalluvan M. G. via blue)
+
 Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES
