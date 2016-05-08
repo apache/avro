@@ -57,6 +57,9 @@ Trunk (not yet released)
 
     AVRO-1814: Generated java code fails on variables with a TLD name like 'org' (nielsbasjes)
 
+    AVRO-1711: Java: Fix JsonParser#skipChildren to implement its defined contract.
+    (Zoltan Farkas and Thiruvalluvan M. G. via blue)
+
 Avro 1.8.0 (22 January 2016)
 
   INCOMPATIBLE CHANGES

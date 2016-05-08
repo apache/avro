@@ -579,9 +579,10 @@ public class JsonDecoder extends ParsingDecoder
 
       @Override
       public JsonParser skipChildren() throws IOException {
-        int level = 0;
-        do {
-          switch(elements.get(pos++).token) {
+        JsonToken tkn = elements.get(pos).token;
+        int level = (tkn == JsonToken.START_ARRAY || tkn == JsonToken.END_ARRAY) ? 1 : 0;
+        while (level > 0) {
+          switch(elements.get(++pos).token) {
           case START_ARRAY:
           case START_OBJECT:
             level++;
@@ -591,7 +592,7 @@ public class JsonDecoder extends ParsingDecoder
             level--;
             break;
           }
-        } while (level > 0);
+        }
         return this;
       }
 
