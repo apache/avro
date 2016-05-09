@@ -83,6 +83,8 @@ public class JacksonUtils {
       generator.writeNumber((Integer) datum);
     } else if (datum instanceof Boolean) { // boolean
       generator.writeBoolean((Boolean) datum);
+    } else {
+      throw new AvroRuntimeException("Unknown datum class: " + datum.getClass());
     }
   }
 
