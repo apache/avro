@@ -167,9 +167,20 @@ do
       (cd doc; ant clean)
 
       (mvn clean)
+      rm -rf lang/java/*/userlogs/
+      rm -rf lang/java/*/dependency-reduced-pom.xml
 
       (cd lang/py; ant clean)
+      rm -rf lang/py/userlogs/
+
       (cd lang/py3; python3 setup.py clean)
+      rm -rf lang/py3/dist
+      rm -rf lang/py3/avro_python3.egg-info
+      rm -f  lang/py3/avro/*.avsc
+      rm -f  lang/py3/avro/VERSION.txt
+      rm -rf lang/py3/avro/__pycache__/
+      rm -f  lang/py3/avro/tests/interop.avsc
+      rm -rf lang/py3/avro/tests/__pycache__/
 
       (cd lang/c; ./build.sh clean)
 
@@ -184,6 +195,10 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; [ ! -f Makefile ] || make clean)
+      rm -f  lang/perl/Avro-*.tar.gz
+      rm -f  lang/perl/META.yml
+      rm -f  lang/perl/Makefile.old
+      rm -rf lang/perl/inc/
       ;;
 
     docker)
