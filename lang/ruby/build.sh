@@ -40,6 +40,7 @@ case "$1" in
      clean)
         bundle install
         bundle exec rake clean
+        rm -rf tmp avro.gemspec data.avr
        ;;
 
      *)

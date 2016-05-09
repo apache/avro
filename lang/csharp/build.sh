@@ -53,8 +53,9 @@ case "$1" in
     ;;
 
   clean)
-    rm -rf src/apache/{main,test,codegen,ipc}/obj
+    rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/obj
     rm -rf build
+    rm -f  TestResult.xml
     ;;
 
   *)

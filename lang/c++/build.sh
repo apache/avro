@@ -97,6 +97,7 @@ case "$target" in
 
   clean)
     (cd build && make clean)
+    rm -rf doc test.avro test6.df
     ;;
 
   install)
