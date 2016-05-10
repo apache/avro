@@ -328,15 +328,19 @@
     <section>
       <title>Data Serialization</title>
 
-      <p>Avro data is always serialized with its schema.  Files that
-	store Avro data should always also include the schema for that
-	data in the same file.  Avro-based remote procedure call (RPC)
-	systems must also guarantee that remote recipients of data
-	have a copy of the schema used to write that data.</p>
+      <p>Avro data does not include type information.
+  The binary encoding does not include field names, either. As a
+  result, the original schema of the writer is always required in
+  order to read Avro data accurately.</p>
 
-      <p>Because the schema used to write data is always available
-	when the data is read, Avro data itself is not tagged with
-	type information.  The schema is required to parse data.</p>
+      <p>Therefore, files that store Avro data should always include the
+  schema for that data in the same file.  Avro-based remote procedure
+  call (RPC) systems must also guarantee that remote recipients of data
+	have a copy of the schema used to write that data.  In general, any
+  reader of Avro data must have the same schema (as defined more fully
+  in <a href="#Parsing+Canonical+Form+for+Schemas">Parsing
+  Canonical Form for Schemas</a>) that was used to write the data in
+  order to deserialize it correctly.</p>
 
       <p>In general, both serialization and deserialization proceed as
       a depth-first, left-to-right traversal of the schema,
@@ -353,6 +357,10 @@
 
       <section id="binary_encoding">
         <title>Binary Encoding</title>
+        <p>Binary encoding does not include field names, self-contained
+          information about the types of individual bytes, nor field or
+          record separators. Therefore readers are wholly reliant on
+          the schema used when the data was encoded.</p>
 
 	<section id="binary_encode_primitive">
           <title>Primitive Types</title>
@@ -487,18 +495,18 @@
               value, followed by that many key/value pairs.  A block
               with count zero indicates the end of the map.  Each item
               is encoded per the map's value schema.</p>
-	
+
             <p>If a block's count is negative, its absolute value is used,
               and the count is followed immediately by a <code>long</code>
               block <em>size</em> indicating the number of bytes in the
               block.  This block size permits fast skipping through data,
               e.g., when projecting a record to a subset of its fields.</p>
-	
+
             <p>The blocked representation permits one to read and write
               maps larger than can be buffered in memory, since one can
               start writing items without knowing the full length of the
               map.</p>
-	
+
 	  </section>
 
           <section id="union_encoding">
@@ -560,8 +568,8 @@
           Foo instance.</li>
         </ul>
 
-        <p>Note that a schema is still required to correctly process
-        JSON-encoded data.  For example, the JSON encoding does not
+        <p>Note that the original schema is still required to correctly
+        process JSON-encoded data.  For example, the JSON encoding does not
         distinguish between <code>int</code>
         and <code>long</code>, <code>float</code>
         and <code>double</code>, records and maps, enums and strings,
@@ -581,8 +589,9 @@
         operation.  Note also that Avro binary-encoded data can be
         efficiently ordered without deserializing it to objects.</p>
 
-      <p>Data items may only be compared if they have identical
-        schemas.  Pairwise comparisons are implemented recursively
+      <p>Data items may only be compared if they have
+        <a href="#Parsing+Canonical+Form+for+Schemas">identical
+        schemas</a>.  Pairwise comparisons are implemented recursively
         with a depth-first, left-to-right traversal of the schema.
         The first mismatch encountered determines the order of the
         items.</p>
@@ -1052,17 +1061,21 @@
       <title>Schema Resolution</title>
 
       <p>A reader of Avro data, whether from an RPC or a file, can
-        always parse that data because its schema is provided.  But
-        that schema may not be exactly the schema that was expected.
+        always parse that data because the original schema must be
+        provided along with the data.  However, the reader may be
+        programmed to read data into a different schema.
         For example, if the data was written with a different version
-        of the software than it is read, then records may have had
-        fields added or removed.  This section specifies how such
+        of the software than it is read, then fields may have been
+        added or removed from records.  This section specifies how such
         schema differences should be resolved.</p>
 
-      <p>We call the schema used to write the data as
+      <p>We refer to the schema used to write the data as
         the <em>writer's</em> schema, and the schema that the
-        application expects the <em>reader's</em> schema.  Differences
-        between these should be resolved as follows:</p>
+        application expects the <em>reader's</em> schema.  In order
+        to resolve differences between the two, implementations must
+        generally first read serialized data with the writer's schema,
+        then convert it into the reader's schema, resolving differences
+        between the two schemas according to the following rules:</p>
 
       <ul>
         <li><p>It is an error if the two schemas do not <em>match</em>.</p>
@@ -1155,8 +1168,9 @@
       <title>Parsing Canonical Form for Schemas</title>
 
       <p>One of the defining characteristics of Avro is that a reader
-      is assumed to have the "same" schema used by the writer of the
-      data the reader is reading.  This assumption leads to a data
+      must read serialized data with the "same" schema used by the
+      writer of the data before it can use or convert it to another
+      schema.  This assumption results in a data
       format that's compact and also amenable to many forms of schema
       evolution.  However, the specification so far has not defined
       what it means for the reader to have the "same" schema as the
