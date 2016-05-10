@@ -22,7 +22,7 @@ cd `dirname "$0"`     # connect to root
 VERSION=`cat share/VERSION.txt`
 
 function usage {
-  echo "Usage: $0 {test|dist|sign|clean|docker|rat}"
+  echo "Usage: $0 {test|dist|sign|clean|docker|rat|githooks}"
   exit 1
 }
 
@@ -233,6 +233,12 @@ UserSpecificDocker
 
     rat)
       mvn test -Dmaven.main.skip=true -Dmaven.test.skip=true -DskipTests=true -P rat -pl :avro-toplevel
+      ;;
+
+    githooks)
+      echo "Installing AVRO git hooks."
+      cp share/githooks/* .git/hooks
+      find .git/hooks/ -type f | fgrep -v sample | xargs chmod 755
       ;;
 
     *)

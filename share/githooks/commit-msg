@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# Client side pre-commit hook to assist the committers to ensure the commit messages
+# follow the chosen convention.
+
+LOGMESSAGE_FORMAT='^AVRO-[1-9][0-9]*: .*'
+COMMIT_MSG_FILE=$1
+
+echo "=========================="
+echo "Doing basic commit validation"
+
+echo -n "= Single line commit message: "
+COMMIT_LINES=$(cat ${COMMIT_MSG_FILE} | wc -l)
+if [ ${COMMIT_LINES} -eq 1 ];
+then
+  echo "Ok"
+else
+  echo "Fail: Found ${COMMIT_LINES} lines"
+  exit 1
+fi
+
+echo -n "= Commit message format: "
+if grep -q "${LOGMESSAGE_FORMAT}" ${COMMIT_MSG_FILE}
+then
+    echo "Ok"
+else
+    echo "Fail: Must be in this format: ${LOGMESSAGE_FORMAT}"
+    exit 1
+fi
+
+ISSUE_ID=$(head -1 ${COMMIT_MSG_FILE} | cut -d':' -f1)
+
+echo -n "= CHANGES.txt mentions ${ISSUE_ID}: "
+if grep -q "${ISSUE_ID}[^0-9]" CHANGES.txt
+then
+    echo "Ok"
+else
+    echo "Fail"
+    exit 1
+fi
+echo "=========================="
+
+exit 0
