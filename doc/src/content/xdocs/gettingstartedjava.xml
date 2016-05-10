@@ -288,7 +288,13 @@ System.out.println(user);
           class, in this case <code>User</code>.  We pass the
           <code>DatumReader</code> and the previously created <code>File</code>
           to a <code>DataFileReader</code>, analogous to the
-          <code>DataFileWriter</code>, which reads the data file on disk.
+          <code>DataFileWriter</code>, which reads both the schema used by the
+          writer as well as the data from the file on disk. The data will be
+          read using the schema included in the file, and converted to the
+          schema provided in the <code>User</code> class. If there are
+          differences between the two schemas, they are resolved according to
+          the <a href="spec.html#Schema+Resolution">Schema Resolution</a>
+          specification.
         </p>
         <p>
           Next we use the <code>DataFileReader</code> to iterate through the
@@ -440,7 +446,13 @@ System.out.println(user);
           converts in-memory serialized items into <code>GenericRecords</code>.
           We pass the <code>DatumReader</code> and the previously created
           <code>File</code> to a <code>DataFileReader</code>, analogous to the
-          <code>DataFileWriter</code>, which reads the data file on disk.
+          <code>DataFileWriter</code>, which reads both the schema used by the
+          writer as well as the data from the file on disk. The data will be
+          read using the schema included in the file, and converted to the
+          schema provided to the <code>GenericDatumReader</code>. If there are
+          differences between the two schemas, they are resolved according to
+          the <a href="spec.html#Schema+Resolution">Schema Resolution</a>
+          specification.
         </p>
         <p>
           Next, we use the <code>DataFileReader</code> to iterate through the
