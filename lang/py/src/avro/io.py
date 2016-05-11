@@ -263,7 +263,7 @@ class BinaryDecoder(object):
 
     original_prec = getcontext().prec
     getcontext().prec = precision
-    scaled_datum = Decimal(unscaled_datum).scaleb(scale)
+    scaled_datum = Decimal(unscaled_datum).scaleb(-scale)
     getcontext().prec = original_prec
     return scaled_datum
 
