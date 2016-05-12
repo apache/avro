@@ -94,6 +94,10 @@ class SchemaResolutionException(schema.AvroException):
     if readers_schema: fail_msg += "\nReader's Schema: %s" % pretty_readers
     schema.AvroException.__init__(self, fail_msg)
 
+class RecordInitializationException(schema.AvroException):
+    def __init__(self, fail_msg):
+        schema.AvroException.__init__(self, fail_msg)
+
 #
 # Validate
 #
@@ -132,6 +136,8 @@ def validate(expected_schema, datum):
         [validate(expected_schema.values, v) for v in datum.values()])
   elif schema_type in ['union', 'error_union']:
     return True in [validate(s, datum) for s in expected_schema.schemas]
+  elif schema_type == 'record' and isinstance(datum, GenericRecord):
+      return expected_schema == datum.schema
   elif schema_type in ['record', 'error', 'request']:
     return (isinstance(datum, dict) and
       False not in
@@ -683,7 +689,7 @@ class DatumReader(object):
     """
     # schema resolution
     readers_fields_dict = readers_schema.fields_dict
-    read_record = {}
+    read_record = GenericRecord(readers_schema)
     for field in writers_schema.fields:
       readers_field = readers_fields_dict.get(field.name)
       if readers_field is not None:
@@ -888,3 +894,23 @@ class DatumWriter(object):
     """
     for field in writers_schema.fields:
       self.write_data(field.type, datum.get(field.name), encoder)
+
+class GenericRecord(dict):
+
+    def __init__(self, record_schema, lst = []):
+        if (record_schema is None or
+                not isinstance(record_schema, schema.Schema)):
+            raise RecordInitializationException(
+                    "Cannot initialize a record with schema: {sc}".format(sc = record_schema))
+        dict.__init__(self, lst)
+        self.schema = record_schema
+
+    def __eq__(self, other):
+        if other is None or not isinstance(other, dict):
+            return False
+        if not dict.__eq__(self, other):
+            return False
+        if isinstance(other, GenericRecord):
+            return self.schema == other.schema
+        else:
+            return True
