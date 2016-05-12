@@ -199,11 +199,6 @@ class TestIO(unittest.TestCase):
             return type(round_trip_datum) == bool
         else:
             return True
-    def is_boolean_int(datum, round_trip_datum):
-        datum_type = type(datum)
-        round_trip_datum_type = type(round_trip_datum)
-        return ((datum_type == bool and round_trip_datum_type == int) or
-                (round_trip_datum_type == bool and datum_type == int))
     for example_schema, datum in SCHEMAS_TO_VALIDATE:
       print 'Schema: %s' % example_schema
       print 'Datum: %s' % datum
