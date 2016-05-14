@@ -10,6 +10,18 @@ Trunk (not yet released)
 
   IMPROVEMENTS
 
+  BUG FIXES
+
+Avro 1.8.1 (14 May 2016)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
     AVRO-1793. Python2: Retain stack trace and original exception when failing
     to parse schemas. Contributed by Jakob Homan (jghoman).
 
