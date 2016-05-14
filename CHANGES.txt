@@ -1,17 +1,5 @@
 Avro Change Log
 
-Trunk (not yet released)
-
-  INCOMPATIBLE CHANGES
-
-  NEW FEATURES
-
-  OPTIMIZATIONS
-
-  IMPROVEMENTS
-
-  BUG FIXES
-
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
