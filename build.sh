@@ -105,10 +105,7 @@ do
 
       # build lang-specific artifacts
 
-      # install dev-tools for checkstyle configs
-      (cd dev-tools; mvn clean install)
-      (mvn package -DskipTests -Dhadoop.version=1;
-      cd lang/java;
+      (cd lang/java; mvn package -DskipTests -Dhadoop.version=1;
       rm -rf mapred/target/{classes,test-classes}/;
       rm -rf trevni/avro/target/{classes,test-classes}/;
       mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate)

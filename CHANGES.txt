@@ -35,9 +35,6 @@ Avro 1.8.1 (14 May 2016)
 
     AVRO-1839: Update the gitignore files to hide generated files (nielsbasjes)
 
-    AVRO-1838: Java: Update checkstyle to catch trailing whitespace.
-    (nielsbasjes via blue)
-
     AVRO-1840: Ensure that build.sh clean really cleans all generated files (nielsbasjes)
 
     AVRO-1841: Add clientside githooks to do basic commit validation (nielsbasjes) 
