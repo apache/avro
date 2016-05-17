@@ -114,14 +114,17 @@ def validate(expected_schema, datum):
   elif schema_type == 'bytes':
     return isinstance(datum, str)
   elif schema_type == 'int':
-    return ((isinstance(datum, int) or isinstance(datum, long)) 
-            and INT_MIN_VALUE <= datum <= INT_MAX_VALUE)
+    return (((isinstance(datum, int) and not isinstance(datum, bool)) or
+            isinstance(datum, long)) and
+            INT_MIN_VALUE <= datum <= INT_MAX_VALUE)
   elif schema_type == 'long':
-    return ((isinstance(datum, int) or isinstance(datum, long)) 
-            and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
+    return (((isinstance(datum, int) and not isinstance(datum, bool)) or
+            isinstance(datum, long)) and
+            LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
   elif schema_type in ['float', 'double']:
-    return (isinstance(datum, int) or isinstance(datum, long)
-            or isinstance(datum, float))
+    return (isinstance(datum, long) or
+            (isinstance(datum, int) and not isinstance(datum, bool)) or
+            isinstance(datum, float))
   elif schema_type == 'fixed':
     return isinstance(datum, str) and len(datum) == expected_schema.size
   elif schema_type == 'enum':
