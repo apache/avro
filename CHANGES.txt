@@ -32,6 +32,9 @@ Trunk (not yet released)
 
     AVRO-1888: Java: Fix single-record encoding marker check. (blue)
 
+    AVRO-1848: Ruby: Fix handling of falsey default values.
+    (Brian McKelvey via blue)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES

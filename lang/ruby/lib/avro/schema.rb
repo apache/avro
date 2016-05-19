@@ -211,7 +211,7 @@ module Avro
           if field.respond_to?(:[]) # TODO(jmhodges) wtffffff
             type = field['type']
             name = field['name']
-            default = field['default']
+            default = field.key?('default') ? field['default'] : :no_default
             order = field['order']
             new_field = Field.new(type, name, default, order, names, namespace)
             # make sure field name has not been used yet
@@ -363,7 +363,7 @@ module Avro
     class Field < Schema
       attr_reader :type, :name, :default, :order
 
-      def initialize(type, name, default=nil, order=nil, names=nil, namespace=nil)
+      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil)
         @type = subparse(type, names, namespace)
         @name = name
         @default = default
@@ -372,7 +372,7 @@ module Avro
 
       def to_avro(names=Set.new)
         {'name' => name, 'type' => type.to_avro(names)}.tap do |avro|
-          avro['default'] = default if default
+          avro['default'] = default unless default == :no_default
           avro['order'] = order if order
         end
       end
