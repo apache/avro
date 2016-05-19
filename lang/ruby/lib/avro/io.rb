@@ -407,6 +407,10 @@ module Avro
       end
 
       def read_default_value(field_schema, default_value)
+        if default_value == :no_default
+          raise AvroError, "Missing data for #{field_schema} with no default"
+        end
+
         # Basically a JSON Decoder?
         case field_schema.type_sym
         when :null

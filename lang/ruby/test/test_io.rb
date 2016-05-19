@@ -342,6 +342,24 @@ EOS
   end
   private
 
+  def check_no_default(schema_json)
+    actual_schema = '{"type": "record", "name": "Foo", "fields": []}'
+    actual = Avro::Schema.parse(actual_schema)
+
+    expected_schema = <<EOS
+      {"type": "record",
+       "name": "Foo",
+       "fields": [{"name": "f", "type": #{schema_json}}]}
+EOS
+    expected = Avro::Schema.parse(expected_schema)
+
+    reader = Avro::IO::DatumReader.new(actual, expected)
+    assert_raise Avro::AvroError do
+      value = reader.read(Avro::IO::BinaryDecoder.new(StringIO.new))
+      assert_not_equal(value, :no_default) # should never return this
+    end
+  end
+
   def check_default(schema_json, default_json, default_value)
     actual_schema = '{"type": "record", "name": "Foo", "fields": []}'
     actual = Avro::Schema.parse(actual_schema)
@@ -381,6 +399,9 @@ EOS
 
     # test writing of data to file
     check_datafile(schema)
+
+    # check that AvroError is raised when there is no default
+    check_no_default(str)
   end
 
   def checkser(schm, randomdata)
