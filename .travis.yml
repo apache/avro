@@ -1,0 +1,9 @@
+language: java
+
+jdk:
+  - oraclejdk7
+  - oraclejdk8
+
+install: mvn install --batch-mode -DskipTests=true -Dmaven.javadoc.skip=true -Dsource.skip=true > mvn_install.log || mvn install --batch-mode -DskipTests=true -Dmaven.javadoc.skip=true -Dsource.skip=true -V > mvn_install.log || (cat mvn_install.log && false)
+
+script: mvn test -Dmaven.main.skip=true
