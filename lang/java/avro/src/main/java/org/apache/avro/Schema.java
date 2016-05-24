@@ -20,6 +20,7 @@ package org.apache.avro;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
@@ -63,7 +64,7 @@ import org.codehaus.jackson.node.DoubleNode;
  * <li>A <i>boolean</i>; or
  * <li><i>null</i>.
  * </ul>
- * 
+ *
  * A schema can be constructed using one of its static <tt>createXXX</tt>
  * methods, or more conveniently using {@link SchemaBuilder}. The schema objects are
  * <i>logically</i> immutable.
@@ -79,7 +80,27 @@ import org.codehaus.jackson.node.DoubleNode;
  * <li> {@link #setLogicalType(LogicalType)} can be called at most once.
  * </ul>
  */
-public abstract class Schema extends JsonProperties {
+public abstract class Schema extends JsonProperties implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
+  protected Object writeReplace() {
+    SerializableSchema ss = new SerializableSchema();
+    ss.schemaString = toString();
+    return ss;
+  }
+
+  private static final class SerializableSchema implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String schemaString;
+
+    private Object readResolve() {
+      return new Schema.Parser().parse(schemaString);
+    }
+  }
+
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
@@ -88,11 +109,11 @@ public abstract class Schema extends JsonProperties {
   public static final Schema fromString(final String schemaJson) {
     return new Schema.Parser().parse(schemaJson);
   }
-  
+
   public static final Schema fromString(final String schemaJson, final String ... more) {
     return new Schema.Parser().parse(schemaJson, more);
   }
-  
+
   static {
     FACTORY.enable(JsonParser.Feature.ALLOW_COMMENTS);
     FACTORY.setCodec(MAPPER);
@@ -257,13 +278,13 @@ public abstract class Schema extends JsonProperties {
   /** If this is an enum, return its symbols. */
   public List<String> getEnumSymbols() {
     throw new AvroRuntimeException("Not an enum: "+this);
-  }    
+  }
 
   /** If this is an enum, return a symbol's ordinal value. */
   public int getEnumOrdinal(String symbol) {
     throw new AvroRuntimeException("Not an enum: "+this);
-  }    
-  
+  }
+
   /** If this is an enum, returns true if it contains given symbol. */
   public boolean hasEnumSymbol(String symbol) {
     throw new AvroRuntimeException("Not an enum: "+this);
@@ -491,7 +512,7 @@ public abstract class Schema extends JsonProperties {
         props.equals(that.props);
     }
     public int hashCode() { return name.hashCode() + schema.computeHash(); }
-    
+
     private boolean defaultValueEquals(JsonNode thatDefaultValue) {
       if (defaultValue == null)
         return thatDefaultValue == null;
@@ -906,12 +927,12 @@ public abstract class Schema extends JsonProperties {
         hash += type.computeHash();
       return hash;
     }
-    
+
     @Override
     public void addProp(String name, String value) {
       throw new AvroRuntimeException("Can't set properties on a union: "+this);
     }
-    
+
     void toJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartArray();
       for (Schema type : types)
@@ -981,7 +1002,7 @@ public abstract class Schema extends JsonProperties {
   private static class BooleanSchema extends Schema {
     public BooleanSchema() { super(Type.BOOLEAN); }
   }
-  
+
   private static class NullSchema extends Schema {
     public NullSchema() { super(Type.NULL); }
   }
@@ -1047,7 +1068,7 @@ public abstract class Schema extends JsonProperties {
         b.append(part);
       return parse(b.toString());
     }
-      
+
     /** Parse a schema from the provided string.
      * If named, the schema is added to the names known to this parser. */
     public Schema parse(String s) {
@@ -1163,14 +1184,14 @@ public abstract class Schema extends JsonProperties {
       return super.put(name, schema);
     }
   }
-  
+
   private static ThreadLocal<Boolean> validateNames
     = new ThreadLocal<Boolean>() {
     @Override protected Boolean initialValue() {
       return true;
     }
   };
-    
+
   private static String validateName(String name) {
     if (!validateNames.get()) return name;        // not validating names
     int length = name.length();
@@ -1193,7 +1214,7 @@ public abstract class Schema extends JsonProperties {
       return false;
     }
   };
-    
+
   private static JsonNode validateDefault(String fieldName, Schema schema,
                                           JsonNode defaultValue) {
     if (VALIDATE_DEFAULTS.get() && (defaultValue != null)
@@ -1209,7 +1230,7 @@ public abstract class Schema extends JsonProperties {
     if (defaultValue == null)
       return false;
     switch (schema.getType()) {
-    case STRING:  
+    case STRING:
     case BYTES:
     case ENUM:
     case FIXED:
@@ -1399,7 +1420,7 @@ public abstract class Schema extends JsonProperties {
         throw new SchemaParseException("alias not a string: "+aliasNode);
       aliases.add(aliasNode.getTextValue());
     }
-    return aliases;  
+    return aliases;
   }
 
   /** Extracts text value associated to key from the container JsonNode,
@@ -1456,7 +1477,7 @@ public abstract class Schema extends JsonProperties {
 
     if (aliases.size() == 0 && fieldAliases.size() == 0)
       return writer;                              // no aliases
-    
+
     seen.clear();
     return applyAliases(writer, seen, aliases, fieldAliases);
   }
@@ -1576,13 +1597,13 @@ public abstract class Schema extends JsonProperties {
    * called on it.
    * @param <E>
    */
-  
+
   /*
    * This class keeps a boolean variable <tt>locked</tt> which is set
    * to <tt>true</tt> in the lock() method. It's legal to call
    * lock() any number of times. Any lock() other than the first one
    * is a no-op.
-   * 
+   *
    * This class throws <tt>IllegalStateException</tt> if a mutating
    * operation is performed after being locked. Since modifications through
    * iterator also use the list's mutating operations, this effectively
@@ -1591,7 +1612,7 @@ public abstract class Schema extends JsonProperties {
   static class LockableArrayList<E> extends ArrayList<E> {
     private static final long serialVersionUID = 1L;
     private boolean locked = false;
-    
+
     public LockableArrayList() {
     }
 
@@ -1623,42 +1644,42 @@ public abstract class Schema extends JsonProperties {
       ensureUnlocked();
       return super.add(e);
     }
-    
+
     public boolean remove(Object o) {
       ensureUnlocked();
       return super.remove(o);
     }
-    
+
     public E remove(int index) {
       ensureUnlocked();
       return super.remove(index);
     }
-      
+
     public boolean addAll(Collection<? extends E> c) {
       ensureUnlocked();
       return super.addAll(c);
     }
-    
+
     public boolean addAll(int index, Collection<? extends E> c) {
       ensureUnlocked();
       return super.addAll(index, c);
     }
-    
+
     public boolean removeAll(Collection<?> c) {
       ensureUnlocked();
       return super.removeAll(c);
     }
-    
+
     public boolean retainAll(Collection<?> c) {
       ensureUnlocked();
       return super.retainAll(c);
     }
-    
+
     public void clear() {
       ensureUnlocked();
       super.clear();
     }
 
   }
-  
+
 }

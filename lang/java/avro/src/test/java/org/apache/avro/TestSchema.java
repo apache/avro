@@ -17,6 +17,11 @@
  */
 package org.apache.avro;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -27,9 +32,10 @@ import java.util.List;
 
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.junit.Assert;
 import org.junit.Test;
 
-public class TestSchema {  
+public class TestSchema {
   @Test
   public void testSplitSchemaBuild() {
     Schema s = SchemaBuilder
@@ -38,10 +44,10 @@ public class TestSchema {
          .name("clientProtocol").type().optional().stringType()
          .name("meta").type().optional().map().values().bytesType()
          .endRecord();
-    
+
     String schemaString = s.toString();
     final int mid = schemaString.length() / 2;
-    
+
     Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
     Schema parsedArrayOfStringSchema =
       new org.apache.avro.Schema.Parser().parse
@@ -98,6 +104,28 @@ public class TestSchema {
   public void testSchemaWithNullFields() {
     Schema.createRecord("foobar", null, null, false, null);
   }
+
+
+
+    @Test
+  public void testSerialization() throws IOException, ClassNotFoundException {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(bos);
+    Schema payload = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"KeyValue\",\"namespace\":\"org.apache.avro\","
+            + "\"doc\":\"generic key value type\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"string\","
+            + "\"avro.java.string\":\"String\"},\"doc\":\"generic key type\"},"
+            + "{\"name\":\"value\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],"
+            + "\"doc\":\"generic value type\"}]}");
+
+    oos.writeObject(payload);
+    oos.close();
+    ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+    ObjectInputStream ois = new ObjectInputStream(bis);
+    Schema sp = (Schema) ois.readObject();
+    Assert.assertEquals(payload, sp);
+    ois.close();
+  }
+
 
 
 }
