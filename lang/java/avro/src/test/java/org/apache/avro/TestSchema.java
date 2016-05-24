@@ -19,6 +19,7 @@ package org.apache.avro;
 
 import static org.junit.Assert.*;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -175,6 +176,26 @@ public class TestSchema {
 
   private Schema createDefaultRecord() {
     return Schema.createRecord("name", "doc", "namespace", false);
+  }
+
+  @Test
+  public void testSerialization() throws IOException, ClassNotFoundException {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(bos);
+    Schema payload = new Schema.Parser()
+        .parse("{\"type\":\"record\",\"name\":\"KeyValue\",\"namespace\":\"org.apache.avro\","
+            + "\"doc\":\"generic key value type\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"string\","
+            + "\"avro.java.string\":\"String\"},\"doc\":\"generic key type\"},"
+            + "{\"name\":\"value\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],"
+            + "\"doc\":\"generic value type\"}]}");
+
+    oos.writeObject(payload);
+    oos.close();
+    ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+    ObjectInputStream ois = new ObjectInputStream(bis);
+    Schema sp = (Schema) ois.readObject();
+    assertEquals(payload, sp);
+    ois.close();
   }
 
 }
