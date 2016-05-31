@@ -1,4 +1,4 @@
-package com.commercehub.gradle.plugin.avro
+ package com.commercehub.gradle.plugin.avro
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -7,7 +7,7 @@ import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
 abstract class FunctionalSpec extends Specification {
-    protected static final String AVRO_VERSION = "1.7.7" // TODO: externalize
+    protected static final String AVRO_VERSION = "1.8.1" // TODO: externalize
 
     @Rule
     TemporaryFolder testProjectDir
