@@ -7,7 +7,7 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 # Compatibility
 
 * Currently tested against Gradle 2.7; other versions may be compatible
-* Currently tested against Avro 1.7.7; other versions may be compatible
+* Currently tested against Avro 1.8.1; other versions may be compatible
 * Java 6 or higher required
 
 # Usage
@@ -41,7 +41,7 @@ repositories {
     jcenter()
 }
 dependencies {
-    compile "org.apache.avro:avro:1.7.7"
+    compile "org.apache.avro:avro:1.8.1"
 }
 ```
 
@@ -76,7 +76,7 @@ avro {
 
 ## fieldVisibility
 
-Valid values: any [FieldVisibility](http://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/compiler/specific/SpecificCompiler.FieldVisibility.html) or equivalent `String` name (matched case-insensitively); default `"PUBLIC_DEPRECATED"` (default)
+Valid values: any [FieldVisibility](http://avro.apache.org/docs/1.8.1/api/java/org/apache/avro/compiler/specific/SpecificCompiler.FieldVisibility.html) or equivalent `String` name (matched case-insensitively); default `"PUBLIC_DEPRECATED"` (default)
 
 By default, the fields in generated Java files will have public visibility and be annotated with `@Deprecated`.
 Set to `"PRIVATE"` to restrict visibility of the fields, or `"PUBLIC"` to remove the `@Deprecated` annotations.
@@ -112,10 +112,10 @@ avro {
 
 ## stringType
 
-Valid values: any [StringType](http://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/generic/GenericData.StringType.html) or equivalent `String` name (matched case-insensitively); default `"String"` (default)
+Valid values: any [StringType](http://avro.apache.org/docs/1.8.1/api/java/org/apache/avro/generic/GenericData.StringType.html) or equivalent `String` name (matched case-insensitively); default `"String"` (default)
 
 By default, the generated Java files will use [`java.lang.String`](http://docs.oracle.com/javase/7/docs/api/java/lang/String.html) to represent string types.
-Alternatively, you can set it to `"Utf8"` to use [`org.apache.avro.util.Utf8`](https://avro.apache.org/docs/1.7.7/api/java/org/apache/avro/util/Utf8.html) or `"charSequence"` to use [`java.lang.CharSequence`](http://docs.oracle.com/javase/7/docs/api/java/lang/CharSequence.html).
+Alternatively, you can set it to `"Utf8"` to use [`org.apache.avro.util.Utf8`](https://avro.apache.org/docs/1.8.1/api/java/org/apache/avro/util/Utf8.html) or `"charSequence"` to use [`java.lang.CharSequence`](http://docs.oracle.com/javase/7/docs/api/java/lang/CharSequence.html).
 
 ```groovy
 avro {
@@ -152,7 +152,7 @@ apply plugin: "java"
 apply plugin: "com.commercehub.gradle.plugin.avro-base"
 
 dependencies {
-    compile "org.apache.avro:avro:1.7.7"
+    compile "org.apache.avro:avro:1.8.1"
 }
 
 task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
