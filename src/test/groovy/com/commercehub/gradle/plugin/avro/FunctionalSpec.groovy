@@ -1,4 +1,4 @@
- package com.commercehub.gradle.plugin.avro
+package com.commercehub.gradle.plugin.avro
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner

@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Update Avro to 0.8.1 (#23)
 
 ## 0.8.0
 * Add support for Java 6 (#21)
