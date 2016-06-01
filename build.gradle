@@ -128,6 +128,10 @@ test {
                 avroVersion: avroVersion,
                 gradleVersion: gradleVersion,
             ]
+            reports {
+                html.destination = file("$buildDir/reports/tests-${avroVersion}-${gradleVersion}")
+                junitXml.destination = file("$buildDir/reports/tests-${avroVersion}-${gradleVersion}")
+            }
         }
         testVersionCompatibility.dependsOn newTask
     }
