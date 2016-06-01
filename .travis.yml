@@ -3,9 +3,9 @@ language: java
 env:
   global:
     - TERM=dumb
-    - GRADLE_OPTS=-Xmx386m -Xms386m -Dorg.gradle.parallel.intra=true
+    - GRADLE_OPTS=-Xmx386m -Xms386m
 install: true
-script: ./gradlew --parallel --max-workers=2 build testVersionCompatibility
+script: ./gradlew build testRecentVersionCompatibility
 jdk:
   - oraclejdk8
   - oraclejdk7
