@@ -12,15 +12,15 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/example/avro/User.class").file
     }
 
     def "can generate and compile java files from json protocol"() {
         given:
         buildFile << """
-            dependencies { compile "org.apache.avro:avro-ipc:${AVRO_VERSION}" }
+            dependencies { compile "org.apache.avro:avro-ipc:${avroVersion}" }
         """
         copyResource("mail.avpr", avroDir)
 
@@ -28,8 +28,8 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/org/apache/avro/test/Mail.class").file
         projectFile("build/classes/main/org/apache/avro/test/Message.class").file
     }
@@ -42,9 +42,9 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroProtocol").outcome == SUCCESS
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroProtocol").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/org/apache/avro/Foo.class").file
         projectFile("build/classes/main/org/apache/avro/Interop.class").file
         projectFile("build/classes/main/org/apache/avro/Kind.class").file
@@ -60,15 +60,15 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/example/avro/User.class").file
     }
 
     def "supports json protocol files in subdirectories"() {
         given:
         buildFile << """
-            dependencies { compile "org.apache.avro:avro-ipc:${AVRO_VERSION}" }
+            dependencies { compile "org.apache.avro:avro-ipc:${avroVersion}" }
         """
         copyResource("mail.avpr", avroSubDir)
 
@@ -76,8 +76,8 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/org/apache/avro/test/Mail.class").file
         projectFile("build/classes/main/org/apache/avro/test/Message.class").file
     }
@@ -90,9 +90,9 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroProtocol").outcome == SUCCESS
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroProtocol").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/org/apache/avro/Foo.class").file
         projectFile("build/classes/main/org/apache/avro/Interop.class").file
         projectFile("build/classes/main/org/apache/avro/Kind.class").file
@@ -108,9 +108,9 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = runAndFail()
 
         then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.standardError.contains("> Could not compile schema definition files:")
-        result.standardError.contains("* src/main/avro/enumMalformed.avsc: \"enum\" is not a defined name. The type of the \"gender\" " +
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.output.contains("> Could not compile schema definition files:")
+        result.output.contains("* src/main/avro/enumMalformed.avsc: \"enum\" is not a defined name. The type of the \"gender\" " +
                 "field must be a defined name or a {\"type\": ...} expression.")
     }
 }

@@ -2,9 +2,9 @@ sudo: false
 language: java
 env:
   global:
-  - TERM=dumb
+    - TERM=dumb
 install: true
-script: ./gradlew build
+script: ./gradlew build testVersionCompatibility
 jdk:
   - oraclejdk8
   - oraclejdk7

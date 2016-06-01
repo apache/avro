@@ -6,9 +6,13 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 # Compatibility
 
-* Currently tested against Gradle 2.7; other versions may be compatible
-* Currently tested against Avro 1.8.1; other versions may be compatible
 * Java 6 or higher required
+* Currently built against Gradle 2.13
+    * Currently tested against Gradle 2.0-2.13; other versions may be compatible, but 1.x versions are unlikely to work
+* Currently built against Avro 1.8.1
+    * Currently tested against Avro 1.8.0-1.8.1; other versions may be compatible
+    * If you need support for Avro 1.7.x, try plugin version 0.8.0; versions of Avro before that are unlikely to work
+* Currently tested against Avro 1.8.1; other versions may be compatible
 
 # Usage
 

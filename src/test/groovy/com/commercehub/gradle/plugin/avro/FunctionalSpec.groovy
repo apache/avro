@@ -1,13 +1,17 @@
 package com.commercehub.gradle.plugin.avro
 
+import org.gradle.testkit.jarjar.org.gradle.util.GradleVersion
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.internal.feature.TestKitFeature
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
+@SuppressWarnings(["Println"])
 abstract class FunctionalSpec extends Specification {
-    protected static final String AVRO_VERSION = "1.8.1" // TODO: externalize
+    protected final String avroVersion = System.getProperty("avroVersion")
+    protected final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion"))
 
     @Rule
     TemporaryFolder testProjectDir
@@ -17,6 +21,9 @@ abstract class FunctionalSpec extends Specification {
     File avroSubDir
 
     def setup() {
+        println "Testing using Avro version ${avroVersion}."
+        println "Testing using Gradle version ${gradleVersion}."
+
         buildFile = testProjectDir.newFile('build.gradle')
         avroDir = testProjectDir.newFolder("src", "main", "avro")
         avroSubDir = testProjectDir.newFolder("src", "main", "avro", "foo")
@@ -38,7 +45,7 @@ abstract class FunctionalSpec extends Specification {
             }
             apply plugin: "com.commercehub.gradle.plugin.avro"
             repositories { jcenter() }
-            dependencies { compile "org.apache.avro:avro:${AVRO_VERSION}" }
+            dependencies { compile "org.apache.avro:avro:${avroVersion}" }
         """
     }
 
@@ -52,11 +59,19 @@ abstract class FunctionalSpec extends Specification {
         return new File(testProjectDir.root, path)
     }
 
+    protected GradleRunner createGradleRunner() {
+        return GradleRunner.create().withProjectDir(testProjectDir.root).withGradleVersion(gradleVersion.version)
+    }
+
     protected BuildResult run(String... args = ["build"]) {
-        return GradleRunner.create().withProjectDir(testProjectDir.root).withArguments(args).build()
+        return createGradleRunner().withArguments(args).build()
     }
 
     protected BuildResult runAndFail(String... args = ["build"]) {
-        return GradleRunner.create().withProjectDir(testProjectDir.root).withArguments(args).buildAndFail()
+        return createGradleRunner().withArguments(args).buildAndFail()
+    }
+
+    protected boolean isTaskInfoAbsent() {
+        return gradleVersion < TestKitFeature.CAPTURE_BUILD_RESULT_TASKS.since
     }
 }

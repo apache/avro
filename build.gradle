@@ -11,11 +11,15 @@ repositories {
     jcenter()
 }
 
+def compileAvroVersion = "1.8.1"
+
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile "org.apache.avro:avro-compiler:1.8.1"
-    testCompile "org.spockframework:spock-core:1.0-groovy-2.3"
+    compile "org.apache.avro:avro-compiler:${compileAvroVersion}"
+    testCompile("org.spockframework:spock-core:1.0-groovy-2.4") {
+        exclude module: "groovy-all"
+    }
     testCompile gradleTestKit()
 }
 
@@ -103,4 +107,28 @@ checkstyleMain << {
 codenarc {
     toolVersion = "0.24.1"
     config = project.resources.text.fromFile("config/codenarc/codenarc.groovy")
+}
+
+tasks.create("testVersionCompatibility") {
+    description = "Tests cross-compatibility of the plugin with different versions of Avro and Gradle"
+}
+
+test {
+    systemProperties = [
+        avroVersion: compileAvroVersion,
+        gradleVersion: gradle.gradleVersion,
+    ]
+}
+
+["1.8.0", "1.8.1"].each { def avroVersion ->
+    ["2.0", "2.1", "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13"].each { def gradleVersion ->
+        def newTask = tasks.create(name: "testAvro${avroVersion}Gradle${gradleVersion}", type: Test) {
+            description = "Test cross-compatibility of the plugin with Avro ${avroVersion} and Gradle ${gradleVersion}"
+            systemProperties = [
+                avroVersion: avroVersion,
+                gradleVersion: gradleVersion,
+            ]
+        }
+        testVersionCompatibility.dependsOn newTask
+    }
 }

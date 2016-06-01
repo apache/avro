@@ -14,8 +14,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/example/avro/MyEnum.class").file
     }
 
@@ -27,8 +27,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/example/avro/Test.class").file
         projectFile("build/classes/main/example/avro/Gender.class").file
     }
@@ -41,8 +41,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/example/avro/Test.class").file
         projectFile("build/classes/main/example/avro/Kind.class").file
     }
@@ -56,8 +56,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/example/avro/User.class").file
         projectFile("build/classes/main/example/avro/MyEnum.class").file
     }

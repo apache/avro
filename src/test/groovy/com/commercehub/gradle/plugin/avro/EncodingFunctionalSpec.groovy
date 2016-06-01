@@ -20,8 +20,8 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then: "compilation succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
 
         and: "the system default encoding is used"
         def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").text
@@ -42,7 +42,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "compilation succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
 
         and: "the specified encoding is used"
         def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(expectedEncoding)
@@ -69,8 +69,8 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then: "compilation succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
 
         and: "the specified encoding is used"
         def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(encoding)

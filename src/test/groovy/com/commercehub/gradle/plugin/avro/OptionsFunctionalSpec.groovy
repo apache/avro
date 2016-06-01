@@ -19,7 +19,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the stringType is string"
@@ -49,7 +49,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified stringType is used"
@@ -79,7 +79,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified fieldVisibility is used"
@@ -107,7 +107,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified createSetters is used"
@@ -143,7 +143,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified templates are used"
@@ -163,8 +163,8 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = runAndFail("generateAvroJava")
 
         then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.standardError.contains("Invalid stringType 'badValue'.  Value values are: [CharSequence, String, Utf8]")
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.output.contains("Invalid stringType 'badValue'.  Value values are: [CharSequence, String, Utf8]")
     }
 
     def "rejects unsupported fieldVisibility values"() {
@@ -180,7 +180,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = runAndFail("generateAvroJava")
 
         then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.standardError.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PUBLIC_DEPRECATED, PRIVATE]")
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.output.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PUBLIC_DEPRECATED, PRIVATE]")
     }
 }

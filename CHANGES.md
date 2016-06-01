@@ -1,7 +1,9 @@
 # Change Log
 
 ## Unreleased
-* Update Avro to 0.8.1 (#23)
+* Built using Avro 0.8.1 (#23)
+* Built using Gradle 2.13
+* Added version cross-compatibility testing
 
 ## 0.8.0
 * Add support for Java 6 (#21)

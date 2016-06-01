@@ -18,8 +18,8 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/example/Person.class").file
         projectFile("build/classes/main/example/Cat.class").file
         projectFile("build/classes/main/example/Gender.class").file
@@ -33,8 +33,8 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        result.task(":generateAvroJava").outcome == SUCCESS
-        result.task(":compileJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
         projectFile("build/classes/main/example/Person.class").file
         projectFile("build/classes/main/example/Fish.class").file
         projectFile("build/classes/main/example/Gender.class").file
@@ -48,8 +48,8 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = runAndFail()
 
         then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.standardError.contains("Found conflicting definition of type example.Gender in "
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.output.contains("Found conflicting definition of type example.Gender in "
             + "[src/main/avro/duplicate/Dog.avsc, src/main/avro/duplicate/Person.avsc]")
     }
 
@@ -61,8 +61,8 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = runAndFail()
 
         then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.standardError.contains("Found conflicting definition of type example.Person in "
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.output.contains("Found conflicting definition of type example.Person in "
             + "[src/main/avro/duplicate/Person.avsc, src/main/avro/duplicate/Spider.avsc]")
     }
 
