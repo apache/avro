@@ -49,7 +49,7 @@ public class TestWordCount {
         collector.collect(new Pair<Utf8,Long>(new Utf8(tokens.nextToken()),1L));
     }
   }
-  
+
   public static class ReduceImpl
     extends AvroReducer<Utf8, Long, Pair<Utf8, Long> > {
     @Override
@@ -61,7 +61,7 @@ public class TestWordCount {
         sum += count;
       collector.collect(new Pair<Utf8,Long>(word, sum));
     }
-  }    
+  }
 
   @Test public void runTestsInOrder() throws Exception {
     testJob();
@@ -73,59 +73,59 @@ public class TestWordCount {
     JobConf job = new JobConf();
     String dir = System.getProperty("test.dir", ".") + "/mapred";
     Path outputPath = new Path(dir + "/out");
-    
+
     outputPath.getFileSystem(job).delete(outputPath);
     WordCountUtil.writeLinesFile();
-    
+
     job.setJobName("wordcount");
-    
+
     AvroJob.setInputSchema(job, Schema.create(Schema.Type.STRING));
     AvroJob.setOutputSchema(job,
                             new Pair<Utf8,Long>(new Utf8(""), 0L).getSchema());
-    
-    AvroJob.setMapperClass(job, MapImpl.class);        
+
+    AvroJob.setMapperClass(job, MapImpl.class);
     AvroJob.setCombinerClass(job, ReduceImpl.class);
     AvroJob.setReducerClass(job, ReduceImpl.class);
-    
+
     FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
     FileOutputFormat.setOutputPath(job, outputPath);
     FileOutputFormat.setCompressOutput(job, true);
-    
+
     WordCountUtil.setMeta(job);
 
     JobClient.runJob(job);
-    
+
     WordCountUtil.validateCountsFile();
   }
-  
+
   @SuppressWarnings("deprecation")
   public void testProjection() throws Exception {
     JobConf job = new JobConf();
-    
+
     Integer defaultRank = new Integer(-1);
-    
-    String jsonSchema = 
+
+    String jsonSchema =
       "{\"type\":\"record\"," +
       "\"name\":\"org.apache.avro.mapred.Pair\","+
-      "\"fields\": [ " + 
+      "\"fields\": [ " +
         "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," +
-        "{\"name\":\"value\", \"type\":\"long\"}" + 
+        "{\"name\":\"value\", \"type\":\"long\"}" +
       "]}";
-    
+
     Schema readerSchema = Schema.parse(jsonSchema);
-    
+
     AvroJob.setInputSchema(job, readerSchema);
-    
+
     String dir = System.getProperty("test.dir", ".") + "/mapred";
     Path inputPath = new Path(dir + "/out" + "/part-00000" + AvroOutputFormat.EXT);
     FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
     FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
-    
+
     AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<Pair<Integer, Long>>(job, fileSplit);
-    
+
     AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<Pair<Integer, Long>>(null);
     NullWritable ignore = NullWritable.get();
-    
+
     long sumOfCounts = 0;
     long numOfCounts = 0;
     while(recordReader.next(inputPair, ignore)) {
@@ -133,14 +133,14 @@ public class TestWordCount {
       sumOfCounts += (Long) inputPair.datum().get(1);
       numOfCounts++;
     }
-    
+
     Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
-    
+
     long actualSumOfCounts = 0;
     for(Long count : WordCountUtil.COUNTS.values()) {
       actualSumOfCounts += count;
     }
-    
+
     Assert.assertEquals(sumOfCounts, actualSumOfCounts);
   }
 

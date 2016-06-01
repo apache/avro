@@ -44,8 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.codehaus.jackson.node.BooleanNode;
-
 public class TestProtocolGeneric {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolGeneric.class);
@@ -92,7 +90,7 @@ public class TestProtocolGeneric {
         error.put("message", new Utf8("an error"));
         throw new AvroRemoteException(error);
       }
-      
+
       throw new AvroRuntimeException("unexpected message: "+message.getName());
     }
 
@@ -113,7 +111,7 @@ public class TestProtocolGeneric {
 
   @Test
   public void testHello() throws IOException {
-    GenericRecord params = 
+    GenericRecord params =
       new GenericData.Record(PROTOCOL.getMessages().get("hello").getRequest());
     params.put("greeting", new Utf8("bob"));
     Utf8 response = (Utf8)requestor.request("hello", params);
@@ -222,7 +220,7 @@ public class TestProtocolGeneric {
     for (Field f : PROTOCOL.getType("TestRecord").getFields())
       fields.add(new Field(f.name(), f.schema(), null, null));
     fields.add(new Field("extra", Schema.create(Schema.Type.BOOLEAN),
-                         null, BooleanNode.TRUE));
+                         null, true));
     Schema record =
       Schema.createRecord("TestRecord", null, "org.apache.avro.test", false);
     record.setFields(fields);

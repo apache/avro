@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.7.7</version>
+    <version>1.8.1</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -40,13 +40,13 @@
   <properties>
     <pluginTestingVersion>1.3</pluginTestingVersion>
   </properties>
-  
+
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>2.9</version>
+        <version>${plugin-plugin.version}</version>
         <executions>
           <execution>
             <id>generated-helpmojo</id>

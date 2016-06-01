@@ -385,13 +385,13 @@ class Field(object):
 #
 class PrimitiveSchema(Schema):
   """Valid primitive types are in PRIMITIVE_TYPES."""
-  def __init__(self, type):
+  def __init__(self, type, other_props=None):
     # Ensure valid ctor args
     if type not in PRIMITIVE_TYPES:
       raise AvroException("%s is not a valid primitive type." % type)
 
     # Call parent ctor
-    Schema.__init__(self, type)
+    Schema.__init__(self, type, other_props=other_props)
 
     self.fullname = type
 
@@ -443,7 +443,7 @@ class EnumSchema(NamedSchema):
       fail_msg = 'Enum Schema requires a JSON array for the symbols property.'
       raise AvroException(fail_msg)
     elif False in [isinstance(s, basestring) for s in symbols]:
-      fail_msg = 'Enum Schems requires All symbols to be JSON strings.'
+      fail_msg = 'Enum Schema requires all symbols to be JSON strings.'
       raise AvroException(fail_msg)
     elif len(set(symbols)) < len(symbols):
       fail_msg = 'Duplicate symbol: %s' % symbols
@@ -723,7 +723,7 @@ def make_avsc_object(json_data, names=None):
     type = json_data.get('type')
     other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
     if type in PRIMITIVE_TYPES:
-      return PrimitiveSchema(type)
+      return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')
       namespace = json_data.get('namespace', names.default_namespace)
@@ -770,12 +770,13 @@ def make_avsc_object(json_data, names=None):
 # TODO(hammer): make method for reading from a file?
 def parse(json_string):
   """Constructs the Schema from the JSON text."""
-  # TODO(hammer): preserve stack trace from JSON parse
   # parse the JSON
   try:
     json_data = json.loads(json_string)
-  except:
-    raise SchemaParseException('Error parsing JSON: %s' % json_string)
+  except Exception, e:
+    import sys
+    raise SchemaParseException('Error parsing JSON: %s, error = %s'
+                               % (json_string, e)), None, sys.exc_info()[2]
 
   # Initialize the names object
   names = Names()

@@ -44,6 +44,9 @@ typedef std::vector<Entity> Array;
 typedef std::map<std::string, Entity> Object;
     
 class AVRO_DECL JsonParser;
+class JsonNullFormatter;
+
+template<typename F = JsonNullFormatter>
 class AVRO_DECL JsonGenerator;
 
 enum EntityType {
@@ -144,7 +147,7 @@ AVRO_DECL Entity loadEntity(InputStream& in);
 AVRO_DECL Entity loadEntity(const char* text);
 AVRO_DECL Entity loadEntity(const uint8_t* text, size_t len);
 
-void writeEntity(JsonGenerator& g, const Entity& n);
+void writeEntity(JsonGenerator<JsonNullFormatter>& g, const Entity& n);
 
 }
 }

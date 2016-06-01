@@ -20,18 +20,21 @@ package org.apache.avro.generic;
 import java.nio.ByteBuffer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.WeakHashMap;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -48,6 +51,8 @@ import org.apache.avro.util.Utf8;
 
 import org.codehaus.jackson.JsonNode;
 
+import com.google.common.collect.MapMaker;
+
 /** Utilities for generic Java data. See {@link GenericRecordBuilder} for a convenient
  * way to build {@link GenericRecord} instances.
  * @see GenericRecordBuilder
@@ -55,11 +60,11 @@ import org.codehaus.jackson.JsonNode;
 public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
-  
+
   /** Used to specify the Java type for a string schema. */
   public enum StringType { CharSequence, String, Utf8 };
 
-  protected static final String STRING_PROP = "avro.java.string";
+  public static final String STRING_PROP = "avro.java.string";
   protected static final String STRING_TYPE_STRING = "String";
 
   private final ClassLoader classLoader;
@@ -90,6 +95,77 @@ public class GenericData {
 
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() { return classLoader; }
+
+  private Map<String, Conversion<?>> conversions =
+      new HashMap<String, Conversion<?>>();
+
+  private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass =
+      new IdentityHashMap<Class<?>, Map<String, Conversion<?>>>();
+
+  /**
+   * Registers the given conversion to be used when reading and writing with
+   * this data model.
+   *
+   * @param conversion a logical type Conversion.
+   */
+  public void addLogicalTypeConversion(Conversion<?> conversion) {
+    conversions.put(conversion.getLogicalTypeName(), conversion);
+    Class<?> type = conversion.getConvertedType();
+    if (conversionsByClass.containsKey(type)) {
+      conversionsByClass.get(type).put(
+          conversion.getLogicalTypeName(), conversion);
+    } else {
+      Map<String, Conversion<?>> conversions = new LinkedHashMap<String, Conversion<?>>();
+      conversions.put(conversion.getLogicalTypeName(), conversion);
+      conversionsByClass.put(type, conversions);
+    }
+  }
+
+  /**
+   * Returns the first conversion found for the given class.
+   *
+   * @param datumClass a Class
+   * @return the first registered conversion for the class, or null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> Conversion<T> getConversionByClass(Class<T> datumClass) {
+    Map<String, Conversion<?>> conversions = conversionsByClass.get(datumClass);
+    if (conversions != null) {
+      return (Conversion<T>) conversions.values().iterator().next();
+    }
+    return null;
+  }
+
+  /**
+   * Returns the conversion for the given class and logical type.
+   *
+   * @param datumClass a Class
+   * @param logicalType a LogicalType
+   * @return the conversion for the class and logical type, or null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> Conversion<T> getConversionByClass(Class<T> datumClass,
+                                                LogicalType logicalType) {
+    Map<String, Conversion<?>> conversions = conversionsByClass.get(datumClass);
+    if (conversions != null) {
+      return (Conversion<T>) conversions.get(logicalType.getName());
+    }
+    return null;
+  }
+
+  /**
+   * Returns the Conversion for the given logical type.
+   *
+   * @param logicalType a logical type
+   * @return the conversion for the logical type, or null
+   */
+  @SuppressWarnings("unchecked")
+  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+    if (logicalType == null) {
+      return null;
+    }
+    return (Conversion<Object>) conversions.get(logicalType.getName());
+  }
 
   /** Default implementation of {@link GenericRecord}. Note that this implementation
    * does not fill in default values for fields if they are not specified; use {@link
@@ -246,12 +322,12 @@ public class GenericData {
     public void reverse() {
       int left = 0;
       int right = elements.length - 1;
-      
+
       while (left < right) {
         Object tmp = elements[left];
         elements[left] = elements[right];
         elements[right] = tmp;
-        
+
         left++;
         right--;
       }
@@ -328,6 +404,14 @@ public class GenericData {
       this.symbol = symbol;
     }
 
+    /**
+     * Maps existing Objects into an Avro enum
+     * by calling toString(), eg for Java Enums
+     */
+    public EnumSymbol(Schema schema, Object symbol) {
+      this(schema, symbol.toString());
+    }
+
     @Override public Schema getSchema() { return schema; }
 
     @Override
@@ -375,10 +459,11 @@ public class GenericData {
       }
       return true;
     case ENUM:
+      if (!isEnum(datum)) return false;
       return schema.getEnumSymbols().contains(datum.toString());
     case ARRAY:
       if (!(isArray(datum))) return false;
-      for (Object element : (Collection<?>)datum)
+      for (Object element : getArrayAsCollection(datum))
         if (!validate(schema.getElementType(), element))
           return false;
       return true;
@@ -391,10 +476,12 @@ public class GenericData {
           return false;
       return true;
     case UNION:
-      for (Schema type : schema.getTypes())
-        if (validate(type, datum))
-          return true;
-      return false;
+      try {
+        int i = resolveUnion(schema, datum);
+        return validate(schema.getTypes().get(i), datum);
+      } catch (UnresolvedUnionException e) {
+        return false;
+      }
     case FIXED:
       return datum instanceof GenericFixed
         && ((GenericFixed)datum).bytes().length==schema.getFixedSize();
@@ -431,7 +518,7 @@ public class GenericData {
       }
       buffer.append("}");
     } else if (isArray(datum)) {
-      Collection<?> array = (Collection<?>)datum;
+      Collection<?> array = getArrayAsCollection(datum);
       buffer.append("[");
       long last = array.size()-1;
       int i = 0;
@@ -439,7 +526,7 @@ public class GenericData {
         toString(element, buffer);
         if (i++ < last)
           buffer.append(", ");
-      }        
+      }
       buffer.append("]");
     } else if (isMap(datum)) {
       buffer.append("{");
@@ -460,9 +547,8 @@ public class GenericData {
       buffer.append("\"");
     } else if (isBytes(datum)) {
       buffer.append("{\"bytes\": \"");
-      ByteBuffer bytes = (ByteBuffer)datum;
-      for (int i = bytes.position(); i < bytes.limit(); i++)
-        buffer.append((char)bytes.get(i));
+      ByteBuffer bytes = ((ByteBuffer) datum).duplicate();
+      writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
       buffer.append("\"}");
     } else if (((datum instanceof Float) &&       // quote Nan & Infinity
                 (((Float)datum).isInfinite() || ((Float)datum).isNaN()))
@@ -475,9 +561,9 @@ public class GenericData {
       buffer.append(datum);
     }
   }
-  
+
   /* Adapted from http://code.google.com/p/json-simple */
-  private void writeEscapedString(String string, StringBuilder builder) {
+  private void writeEscapedString(CharSequence string, StringBuilder builder) {
     for(int i = 0; i < string.length(); i++){
       char ch = string.charAt(i);
       switch(ch){
@@ -523,7 +609,7 @@ public class GenericData {
       return getRecordSchema(datum);
     } else if (isArray(datum)) {
       Schema elementType = null;
-      for (Object element : (Collection<?>)datum) {
+      for (Object element : getArrayAsCollection(datum)) {
         if (elementType == null) {
           elementType = induce(element);
         } else if (!elementType.equals(induce(element))) {
@@ -572,7 +658,7 @@ public class GenericData {
   public void setField(Object record, String name, int position, Object o) {
     ((IndexedRecord)record).put(position, o);
   }
-  
+
   /** Called by {@link GenericDatumReader#readRecord} to retrieve a record
    * field value from a reused instance.  The default implementation is for
    * {@link IndexedRecord}.*/
@@ -589,7 +675,7 @@ public class GenericData {
   protected void setField(Object r, String n, int p, Object o, Object state) {
     setField(r, n, p, o);
   }
-  
+
   /** Version of {@link #getField} that has state. */
   protected Object getField(Object record, String name, int pos, Object state) {
     return getField(record, name, pos);
@@ -598,6 +684,25 @@ public class GenericData {
   /** Return the index for a datum within a union.  Implemented with {@link
    * Schema#getIndexNamed(String)} and {@link #getSchemaName(Object)}.*/
   public int resolveUnion(Schema union, Object datum) {
+    // if there is a logical type that works, use it first
+    // this allows logical type concrete classes to overlap with supported ones
+    // for example, a conversion could return a map
+    if (datum != null) {
+      Map<String, Conversion<?>> conversions = conversionsByClass.get(datum.getClass());
+      if (conversions != null) {
+        List<Schema> candidates = union.getTypes();
+        for (int i = 0; i < candidates.size(); i += 1) {
+          LogicalType candidateType = candidates.get(i).getLogicalType();
+          if (candidateType != null) {
+            Conversion<?> conversion = conversions.get(candidateType.getName());
+            if (conversion != null) {
+              return i;
+            }
+          }
+        }
+      }
+    }
+
     Integer i = union.getIndexNamed(getSchemaName(datum));
     if (i != null)
       return i;
@@ -672,6 +777,11 @@ public class GenericData {
     return datum instanceof Collection;
   }
 
+  /** Called to access an array as a collection. */
+  protected Collection getArrayAsCollection(Object datum) {
+    return (Collection)datum;
+  }
+
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isRecord(Object datum) {
     return datum instanceof IndexedRecord;
@@ -688,7 +798,7 @@ public class GenericData {
   protected boolean isEnum(Object datum) {
     return datum instanceof GenericEnumSymbol;
   }
-  
+
   /** Called to obtain the schema of a enum.  By default calls
    * {GenericContainer#getSchema().  May be overridden for alternate enum
    * representations. */
@@ -700,7 +810,7 @@ public class GenericData {
   protected boolean isMap(Object datum) {
     return datum instanceof Map;
   }
-  
+
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isFixed(Object datum) {
     return datum instanceof GenericFixed;
@@ -757,7 +867,7 @@ public class GenericData {
   protected boolean isBoolean(Object datum) {
     return datum instanceof Boolean;
   }
-   
+
 
   /** Compute a hash code according to a schema, consistent with {@link
    * #compare(Object,Object,Schema)}. */
@@ -859,16 +969,16 @@ public class GenericData {
   }
 
   private final Map<Field, Object> defaultValueCache
-    = Collections.synchronizedMap(new WeakHashMap<Field, Object>());
+    = new MapMaker().weakKeys().makeMap();
 
   /**
    * Gets the default value of the given field, if any.
    * @param field the field whose default value should be retrieved.
-   * @return the default value associated with the given field, 
+   * @return the default value associated with the given field,
    * or null if none is specified in the schema.
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public Object getDefaultValue(Field field) {    
+  public Object getDefaultValue(Field field) {
     JsonNode json = field.defaultValue();
     if (json == null)
       throw new AvroRuntimeException("Field " + field
@@ -879,10 +989,10 @@ public class GenericData {
                 && field.schema().getTypes().get(0).getType() == Type.NULL))) {
       return null;
     }
-    
+
     // Check the cache
     Object defaultValue = defaultValueCache.get(field);
-    
+
     // If not cached, get the default Java value by encoding the default JSON
     // value and then decoding it:
     if (defaultValue == null)
@@ -939,8 +1049,7 @@ public class GenericData {
       case DOUBLE:
         return value; // immutable
       case ENUM:
-        // Enums are immutable; shallow copy will suffice
-        return value;
+        return (T)createEnum(value.toString(), schema);
       case FIXED:
         return (T)createFixed(null, ((GenericFixed) value).bytes(), schema);
       case FLOAT:
@@ -951,7 +1060,7 @@ public class GenericData {
         return value; // immutable
       case MAP:
         Map<CharSequence, Object> mapValue = (Map) value;
-        Map<CharSequence, Object> mapCopy = 
+        Map<CharSequence, Object> mapCopy =
           new HashMap<CharSequence, Object>(mapValue.size());
         for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
           mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
@@ -977,11 +1086,11 @@ public class GenericData {
         if (value instanceof String) {
           return (T)value;
         }
-        
-        // Some CharSequence subclasses are mutable, so we still need to make 
+
+        // Some CharSequence subclasses are mutable, so we still need to make
         // a copy
         else if (value instanceof Utf8) {
-          // Utf8 copy constructor is more efficient than converting 
+          // Utf8 copy constructor is more efficient than converting
           // to string and then back to Utf8
           return (T)new Utf8((Utf8)value);
         }
@@ -995,7 +1104,7 @@ public class GenericData {
             value + "\"");
     }
   }
-  
+
   /** Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   public Object createFixed(Object old, Schema schema) {
@@ -1004,7 +1113,7 @@ public class GenericData {
       return old;
     return new GenericData.Fixed(schema);
   }
-  
+
   /** Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   public Object createFixed(Object old, byte[] bytes, Schema schema) {
@@ -1012,7 +1121,7 @@ public class GenericData {
     System.arraycopy(bytes, 0, fixed.bytes(), 0, schema.getFixedSize());
     return fixed;
   }
-  
+
   /** Called to create an enum value. May be overridden for alternate enum
    * representations.  By default, returns a GenericEnumSymbol. */
   public Object createEnum(String symbol, Schema schema) {
@@ -1035,5 +1144,5 @@ public class GenericData {
     }
     return new GenericData.Record(schema);
   }
-  
+
 }

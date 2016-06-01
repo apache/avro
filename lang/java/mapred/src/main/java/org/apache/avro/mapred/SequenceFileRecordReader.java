@@ -31,6 +31,6 @@ public class SequenceFileRecordReader<K,V> extends AvroRecordReader<Pair<K,V>> {
     super(new SequenceFileReader<K,V>(split.getPath().toUri(), job),
           split);
   }
-  
+
 }
 

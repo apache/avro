@@ -80,7 +80,7 @@ public class AvroDatumConverterFactory extends Configured {
   public <IN, OUT> AvroDatumConverter<IN, OUT> create(Class<IN> inputClass) {
     boolean isMapOnly = ((JobConf)getConf()).getNumReduceTasks() == 0;
     if (AvroKey.class.isAssignableFrom(inputClass)) {
-      Schema schema = null;
+      Schema schema;
       if (isMapOnly) {
         schema = AvroJob.getMapOutputKeySchema(getConf());
         if (null == schema) {
@@ -97,9 +97,9 @@ public class AvroDatumConverterFactory extends Configured {
       return (AvroDatumConverter<IN, OUT>) new AvroWrapperConverter(schema);
     }
     if (AvroValue.class.isAssignableFrom(inputClass)) {
-      Schema schema = null;
+      Schema schema;
       if (isMapOnly) {
-        AvroJob.getMapOutputValueSchema(getConf());
+        schema = AvroJob.getMapOutputValueSchema(getConf());
         if (null == schema) {
           schema = AvroJob.getOutputValueSchema(getConf());
         }

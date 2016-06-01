@@ -72,36 +72,67 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args)
     throws Throwable {
-    try {
-      // Check if this is a callback-based RPC:
-      Type[] parameterTypes = method.getParameterTypes();
-      if ((parameterTypes.length > 0) &&
-          (parameterTypes[parameterTypes.length - 1] instanceof Class) &&
-          Callback.class.isAssignableFrom(((Class<?>)parameterTypes[parameterTypes.length - 1]))) {
-        // Extract the Callback from the end of of the argument list
-        Object[] finalArgs = Arrays.copyOf(args, args.length - 1);
-        Callback<?> callback = (Callback<?>)args[args.length - 1];
-        request(method.getName(), finalArgs, callback);
-        return null;
-      }
-      else {
-        return request(method.getName(), args);
-      }
-    } catch (Exception e) {
-      // Check if this is a declared Exception:
-      for (Class<?> exceptionClass : method.getExceptionTypes()) {
-        if (exceptionClass.isAssignableFrom(e.getClass())) {
-          throw e;
+    String name = method.getName();
+    if (name.equals("hashCode")) {
+      return hashCode();
+    }
+    else if (name.equals("equals")) {
+      Object obj = args[0];
+      return (proxy == obj) || (obj != null && Proxy.isProxyClass(obj.getClass())
+                                && this.equals(Proxy.getInvocationHandler(obj)));
+    }
+    else if (name.equals("toString")) {
+      String protocol = "unknown";
+      String remote = "unknown";
+      Class<?>[] interfaces = proxy.getClass().getInterfaces();
+      if (interfaces.length > 0) {
+        try {
+          protocol = Class.forName(interfaces[0].getName()).getSimpleName();
+        } catch (ClassNotFoundException e) {
+        }
+
+        InvocationHandler handler = Proxy.getInvocationHandler(proxy);
+        if (handler instanceof Requestor) {
+          try {
+            remote = ((Requestor) handler).getTransceiver().getRemoteName();
+          } catch (IOException e) {
+          }
         }
       }
-      
-      // Next, check for RuntimeExceptions:
-      if (e instanceof RuntimeException) {
-        throw e;
+      return "Proxy[" + protocol + "," + remote + "]";
+    }
+    else {
+      try {
+        // Check if this is a callback-based RPC:
+        Type[] parameterTypes = method.getParameterTypes();
+        if ((parameterTypes.length > 0) &&
+            (parameterTypes[parameterTypes.length - 1] instanceof Class) &&
+            Callback.class.isAssignableFrom(((Class<?>)parameterTypes[parameterTypes.length - 1]))) {
+          // Extract the Callback from the end of of the argument list
+          Object[] finalArgs = Arrays.copyOf(args, args.length - 1);
+          Callback<?> callback = (Callback<?>)args[args.length - 1];
+          request(method.getName(), finalArgs, callback);
+          return null;
+        }
+        else {
+          return request(method.getName(), args);
+        }
+      } catch (Exception e) {
+        // Check if this is a declared Exception:
+        for (Class<?> exceptionClass : method.getExceptionTypes()) {
+          if (exceptionClass.isAssignableFrom(e.getClass())) {
+            throw e;
+          }
+        }
+
+        // Next, check for RuntimeExceptions:
+        if (e instanceof RuntimeException) {
+          throw e;
+        }
+
+        // Not an expected Exception, so wrap it in AvroRemoteException:
+        throw new AvroRemoteException(e);
       }
-      
-      // Not an expected Exception, so wrap it in AvroRemoteException:
-      throw new AvroRemoteException(e);
     }
   }
 
@@ -126,7 +157,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     for (Schema.Field param : schema.getFields())
       getDatumWriter(param.schema()).write(args[i++], out);
   }
-    
+
   @Override
   public Object readResponse(Schema writer, Schema reader, Decoder in)
     throws IOException {
@@ -172,7 +203,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   /** Return the remote protocol for a proxy. */
   public static Protocol getRemote(Object proxy) throws IOException {
     return ((Requestor)Proxy.getInvocationHandler(proxy)).getRemote();
-    
+
   }
 
 }

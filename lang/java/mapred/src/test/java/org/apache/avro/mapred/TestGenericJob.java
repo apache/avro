@@ -47,7 +47,6 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.codehaus.jackson.node.JsonNodeFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,9 +59,8 @@ public class TestGenericJob {
   private static Schema createSchema() {
     List<Field> fields = new ArrayList<Schema.Field>();
 
-      
-    fields.add(new Field("Optional", createArraySchema(), "",
-                         JsonNodeFactory.instance.arrayNode()));
+
+    fields.add(new Field("Optional", createArraySchema(), "", new ArrayList<Object>()));
 
     Schema recordSchema =
       Schema.createRecord("Container", "", "org.apache.avro.mapred", false);
@@ -75,7 +73,7 @@ public class TestGenericJob {
     for (int i = 0; i < 5; i++) {
       schemas.add(createInnerSchema("optional_field_" + i));
     }
-        
+
     Schema unionSchema = Schema.createUnion(schemas);
     return Schema.createArray(unionSchema);
   }
@@ -83,8 +81,7 @@ public class TestGenericJob {
   private static Schema createInnerSchema(String name) {
     Schema innerrecord = Schema.createRecord(name, "", "", false);
     innerrecord.setFields
-      (Arrays.asList(new Field(name, Schema.create(Type.LONG), "",
-                               JsonNodeFactory.instance.numberNode(0l))));
+      (Arrays.asList(new Field(name, Schema.create(Type.LONG), "", 0L)));
     return innerrecord;
   }
 
@@ -99,7 +96,7 @@ public class TestGenericJob {
     file.writeChars("aa bb cc\ndd ee ff\n");
     file.close();
   }
-    
+
   @After
     public void tearDown() throws IOException {
     FileUtil.fullyDelete(new File(dir));
@@ -109,9 +106,9 @@ public class TestGenericJob {
     extends MapReduceBase
     implements Mapper<LongWritable, Text,
                AvroWrapper<Pair<Long, GenericData.Record>>, NullWritable> {
-      
-    public void map(LongWritable key, Text value, 
-                    OutputCollector<AvroWrapper<Pair<Long,GenericData.Record>>,NullWritable> out, 
+
+    public void map(LongWritable key, Text value,
+                    OutputCollector<AvroWrapper<Pair<Long,GenericData.Record>>,NullWritable> out,
                     Reporter reporter) throws IOException {
       GenericData.Record optional_entry =
         new GenericData.Record(createInnerSchema("optional_field_1"));
@@ -127,7 +124,7 @@ public class TestGenericJob {
                   (new Pair<Long,GenericData.Record>(key.get(), container)),
                   NullWritable.get());
     }
-  }  
+  }
 
 
   @Test
@@ -135,10 +132,10 @@ public class TestGenericJob {
     JobConf job = new JobConf();
     Path outputPath = new Path(dir + "/out");
     outputPath.getFileSystem(job).delete(outputPath);
-        
+
     job.setInputFormat(TextInputFormat.class);
     FileInputFormat.setInputPaths(job, dir + "/in");
-        
+
     job.setMapperClass(AvroTestConverter.class);
     job.setNumReduceTasks(0);
 

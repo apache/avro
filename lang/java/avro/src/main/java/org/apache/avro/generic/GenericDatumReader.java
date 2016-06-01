@@ -27,6 +27,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumReader;
@@ -41,7 +43,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private final GenericData data;
   private Schema actual;
   private Schema expected;
-  
+
   private ResolvingDecoder creatorResolver = null;
   private final Thread creator;
 
@@ -113,7 +115,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     ResolvingDecoder resolver;
     if (currThread == creator && creatorResolver != null) {
       return creatorResolver;
-    } 
+    }
 
     Map<Schema,ResolvingDecoder> cache = RESOLVER_CACHE.get().get(actual);
     if (cache == null) {
@@ -126,7 +128,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
           Schema.applyAliases(actual, expected), expected, null);
       cache.put(expected, resolver);
     }
-    
+
     if (currThread == creator){
       creatorResolver = resolver;
     }
@@ -143,9 +145,30 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     resolver.drain();
     return result;
   }
-  
+
   /** Called to read data.*/
   protected Object read(Object old, Schema expected,
+      ResolvingDecoder in) throws IOException {
+    Object datum = readWithoutConversion(old, expected, in);
+    LogicalType logicalType = expected.getLogicalType();
+    if (logicalType != null) {
+      Conversion<?> conversion = getData().getConversionFor(logicalType);
+      if (conversion != null) {
+        return convert(datum, expected, logicalType, conversion);
+      }
+    }
+    return datum;
+  }
+
+  protected Object readWithConversion(Object old, Schema expected,
+                                      LogicalType logicalType,
+                                      Conversion<?> conversion,
+                                      ResolvingDecoder in) throws IOException {
+    return convert(readWithoutConversion(old, expected, in),
+        expected, logicalType, conversion);
+  }
+
+  protected Object readWithoutConversion(Object old, Schema expected,
       ResolvingDecoder in) throws IOException {
     switch (expected.getType()) {
     case RECORD:  return readRecord(old, expected, in);
@@ -165,14 +188,38 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     default: throw new AvroRuntimeException("Unknown type: " + expected);
     }
   }
-  
+
+  protected Object convert(Object datum, Schema schema, LogicalType type,
+                           Conversion<?> conversion) {
+    try {
+      switch (schema.getType()) {
+      case RECORD:  return conversion.fromRecord((IndexedRecord) datum, schema, type);
+      case ENUM:    return conversion.fromEnumSymbol((GenericEnumSymbol) datum, schema, type);
+      case ARRAY:   return conversion.fromArray(getData().getArrayAsCollection(datum), schema, type);
+      case MAP:     return conversion.fromMap((Map<?, ?>) datum, schema, type);
+      case FIXED:   return conversion.fromFixed((GenericFixed) datum, schema, type);
+      case STRING:  return conversion.fromCharSequence((CharSequence) datum, schema, type);
+      case BYTES:   return conversion.fromBytes((ByteBuffer) datum, schema, type);
+      case INT:     return conversion.fromInt((Integer) datum, schema, type);
+      case LONG:    return conversion.fromLong((Long) datum, schema, type);
+      case FLOAT:   return conversion.fromFloat((Float) datum, schema, type);
+      case DOUBLE:  return conversion.fromDouble((Double) datum, schema, type);
+      case BOOLEAN: return conversion.fromBoolean((Boolean) datum, schema, type);
+      }
+      return datum;
+    } catch (ClassCastException e) {
+      throw new AvroRuntimeException("Cannot convert " + datum + ":" +
+          datum.getClass().getSimpleName() + ": expected generic type", e);
+    }
+  }
+
   /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
-  protected Object readRecord(Object old, Schema expected, 
+  protected Object readRecord(Object old, Schema expected,
       ResolvingDecoder in) throws IOException {
     Object r = data.newRecord(old, expected);
     Object state = data.getRecordState(r, expected);
-    
+
     for (Field f : in.readFieldOrder()) {
       int pos = f.pos();
       String name = f.name();
@@ -185,14 +232,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
     return r;
   }
-  
-  /** Called to read a single field of a record. May be overridden for more 
+
+  /** Called to read a single field of a record. May be overridden for more
    * efficient or alternate implementations.*/
   protected void readField(Object r, Field f, Object oldDatum,
     ResolvingDecoder in, Object state) throws IOException {
     data.setField(r, f.name(), f.pos(), read(oldDatum, f.schema(), in), state);
   }
-  
+
   /** Called to read an enum value. May be overridden for alternate enum
    * representations.  By default, returns a GenericEnumSymbol. */
   protected Object readEnum(Schema expected, Decoder in) throws IOException {
@@ -213,10 +260,20 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long l = in.readArrayStart();
     long base = 0;
     if (l > 0) {
+      LogicalType logicalType = expectedType.getLogicalType();
+      Conversion<?> conversion = getData().getConversionFor(logicalType);
       Object array = newArray(old, (int) l, expected);
       do {
-        for (long i = 0; i < l; i++) {
-          addToArray(array, base + i, read(peekArray(array), expectedType, in));
+        if (logicalType != null && conversion != null) {
+          for (long i = 0; i < l; i++) {
+            addToArray(array, base + i, readWithConversion(
+                peekArray(array), expectedType, logicalType, conversion, in));
+          }
+        } else {
+          for (long i = 0; i < l; i++) {
+            addToArray(array, base + i, readWithoutConversion(
+                peekArray(array), expectedType, in));
+          }
         }
         base += l;
       } while ((l = in.arrayNext()) > 0);
@@ -242,18 +299,28 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected void addToArray(Object array, long pos, Object e) {
     ((Collection) array).add(e);
   }
-  
+
   /** Called to read a map instance.  May be overridden for alternate map
    * representations.*/
   protected Object readMap(Object old, Schema expected,
       ResolvingDecoder in) throws IOException {
     Schema eValue = expected.getValueType();
     long l = in.readMapStart();
+    LogicalType logicalType = eValue.getLogicalType();
+    Conversion<?> conversion = getData().getConversionFor(logicalType);
     Object map = newMap(old, (int) l);
     if (l > 0) {
       do {
-        for (int i = 0; i < l; i++) {
-          addToMap(map, readMapKey(null, expected, in), read(null, eValue, in));
+        if (logicalType != null && conversion != null) {
+          for (int i = 0; i < l; i++) {
+            addToMap(map, readMapKey(null, expected, in),
+                readWithConversion(null, eValue, logicalType, conversion, in));
+          }
+        } else {
+          for (int i = 0; i < l; i++) {
+            addToMap(map, readMapKey(null, expected, in),
+                readWithoutConversion(null, eValue, in));
+          }
         }
       } while ((l = in.mapNext()) > 0);
     }
@@ -274,7 +341,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected void addToMap(Object map, Object key, Object value) {
     ((Map) map).put(key, value);
   }
-  
+
   /** Called to read a fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   protected Object readFixed(Object old, Schema expected, Decoder in)
@@ -283,11 +350,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     in.readFixed(fixed.bytes(), 0, expected.getFixedSize());
     return fixed;
   }
-  
-  /** 
+
+  /**
    * Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}.
-   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * @deprecated As of Avro 1.6.0 this method has been moved to
    * {@link GenericData#createFixed(Object, Schema)}
    */
   @Deprecated
@@ -295,17 +362,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return data.createFixed(old, schema);
   }
 
-  /** 
+  /**
    * Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}.
-   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * @deprecated As of Avro 1.6.0 this method has been moved to
    * {@link GenericData#createFixed(Object, byte[], Schema)}
    */
   @Deprecated
   protected Object createFixed(Object old, byte[] bytes, Schema schema) {
     return data.createFixed(old, bytes, schema);
   }
-  
+
   /**
    * Called to create new record instances. Subclasses may override to use a
    * different record implementation. The returned instance must conform to the
@@ -313,7 +380,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * schema, they should either be removed from the old object, or it should
    * create a new instance that conforms to the schema. By default, this returns
    * a {@link GenericData.Record}.
-   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * @deprecated As of Avro 1.6.0 this method has been moved to
    * {@link GenericData#newRecord(Object, Schema)}
    */
   @Deprecated
@@ -354,7 +421,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (stringClass == CharSequence.class)
       return readString(old, in);
     return newInstanceFromString(stringClass, in.readString());
-  }                  
+  }
 
   /** Called to read strings.  Subclasses may override to use a different
    * string representation.  By default, this calls {@link

@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 
 /** Implements "null" (pass through) codec. */
 final class NullCodec extends Codec {
-  
+
   private static final NullCodec INSTANCE = new NullCodec();
 
   static class Option extends CodecFactory {

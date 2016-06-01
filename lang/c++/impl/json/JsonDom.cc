@@ -110,7 +110,7 @@ Entity loadEntity(const uint8_t* text, size_t len)
     return loadEntity(*in);
 }
 
-void writeEntity(JsonGenerator& g, const Entity& n)
+void writeEntity(JsonGenerator<JsonNullFormatter>& g, const Entity& n)
 {
     switch (n.type()) {
     case etNull:
@@ -166,7 +166,7 @@ void Entity::ensureType(EntityType type) const
 std::string Entity::toString() const
 {
     std::auto_ptr<OutputStream> out = memoryOutputStream();
-    JsonGenerator g;
+    JsonGenerator<JsonNullFormatter> g;
     g.init(*out);
     writeEntity(g, *this);
     g.flush();

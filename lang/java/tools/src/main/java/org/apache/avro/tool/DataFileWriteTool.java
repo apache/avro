@@ -66,7 +66,7 @@ public class DataFileWriteTool implements Tool {
         .ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
 
-    List<String> nargs = opts.nonOptionArguments();
+    List<String> nargs = (List<String>)opts.nonOptionArguments();
     if (nargs.size() != 1) {
       err.println("Expected 1 arg: input_file");
       p.printHelpOn(err);
@@ -80,9 +80,9 @@ public class DataFileWriteTool implements Tool {
         return 1;
     }
     Schema schema = (schemafile != null)
-        ? new Schema.Parser().parse(Util.openFromFS(schemafile))
+        ? Util.parseSchemaFromFS(schemafile)
         : new Schema.Parser().parse(schemastr);
-    
+
     DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
 
     InputStream input = Util.fileOrStdin(nargs.get(0), stdin);

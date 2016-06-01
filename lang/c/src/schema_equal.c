@@ -33,6 +33,10 @@ schema_record_equal(struct avro_record_schema_t *a,
 	if (nullstrcmp(a->space, b->space)) {
 		return 0;
 	}
+	if (a->fields->num_entries != b->fields->num_entries) {
+		/* They have different numbers of fields */
+		return 0;
+	}
 	for (i = 0; i < a->fields->num_entries; i++) {
 		union {
 			st_data_t data;
@@ -68,6 +72,9 @@ schema_enum_equal(struct avro_enum_schema_t *a, struct avro_enum_schema_t *b)
 		 */
 		return 0;
 	}
+	if (nullstrcmp(a->space, b->space)) {
+		return 0;
+	}
 	for (i = 0; i < a->symbols->num_entries; i++) {
 		union {
 			st_data_t data;
@@ -94,6 +101,9 @@ schema_fixed_equal(struct avro_fixed_schema_t *a, struct avro_fixed_schema_t *b)
 		/*
 		 * They have different names 
 		 */
+		return 0;
+	}
+	if (nullstrcmp(a->space, b->space)) {
 		return 0;
 	}
 	return (a->size == b->size);

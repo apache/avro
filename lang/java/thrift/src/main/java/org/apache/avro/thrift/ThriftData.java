@@ -55,7 +55,7 @@ public class ThriftData extends GenericData {
   private static final ThriftData INSTANCE = new ThriftData();
 
   protected ThriftData() {}
-  
+
   /** Return the singleton instance. */
   public static ThriftData get() { return INSTANCE; }
 
@@ -98,12 +98,14 @@ public class ThriftData extends GenericData {
     new ConcurrentHashMap<Schema,TFieldIdEnum[]>();
 
   @Override
+  @SuppressWarnings("unchecked")
   protected Object getRecordState(Object r, Schema s) {
     TFieldIdEnum[] fields = fieldCache.get(s);
     if (fields == null) {                           // cache miss
       fields = new TFieldIdEnum[s.getFields().size()];
       Class c = r.getClass();
-      for (TFieldIdEnum f : FieldMetaData.getStructMetaDataMap(c).keySet())
+      for (TFieldIdEnum f :
+          FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).keySet())
         fields[s.getField(f.getFieldName()).pos()] = f;
       fieldCache.put(s, fields);                  // update cache
     }
@@ -116,6 +118,11 @@ public class ThriftData extends GenericData {
     // to avro INT for thrift's optional fields
     if (datum instanceof Short)
       return Schema.Type.INT.getName();
+    // support implicit conversion from thrift's byte
+    // to avro INT for thrift's optional fields
+    if (datum instanceof Byte)
+      return Schema.Type.INT.getName();
+
     return super.getSchemaName(datum);
   }
 
@@ -166,6 +173,7 @@ public class ThriftData extends GenericData {
     = new ConcurrentHashMap<Class,Schema>();
 
   /** Return a record schema given a thrift generated class. */
+  @SuppressWarnings("unchecked")
   public Schema getSchema(Class c) {
     Schema schema = schemaCache.get(c);
 
@@ -181,7 +189,7 @@ public class ThriftData extends GenericData {
                                        Throwable.class.isAssignableFrom(c));
           List<Field> fields = new ArrayList<Field>();
           for (FieldMetaData f :
-                 FieldMetaData.getStructMetaDataMap(c).values()) {
+                 FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).values()) {
             Schema s = getSchema(f.valueMetaData);
             if (f.requirementType == TFieldRequirementType.OPTIONAL
                 && (s.getType() != Schema.Type.UNION))

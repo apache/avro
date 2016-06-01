@@ -60,13 +60,13 @@ public class WordCountUtil {
   public WordCountUtil (String testName) {
     this(testName, "part-00000");
   }
-  
+
   public WordCountUtil (String testName, String partDirName) {
     dir = new File("target/wc", testName);
     linesFiles = new File(new File(dir, "in"), "lines.avro");
     countFiles = new File(new File(dir, "out"), partDirName + "/part-0.trv");
   }
-  
+
   public static final String[] LINES = new String[] {
     "the quick brown fox jumps over the lazy dog",
     "the cow jumps over the moon",
@@ -93,7 +93,7 @@ public class WordCountUtil {
   public File getDir() {
     return dir;
   }
-  
+
   public void writeLinesFile() throws IOException {
     FileUtil.fullyDelete(dir);
     DatumWriter<String> writer = new GenericDatumWriter<String>();
@@ -117,7 +117,7 @@ public class WordCountUtil {
     reader.close();
     assertEquals(COUNTS.size(), numWords);
   }
-  
+
   public void validateCountsFileGenericRecord() throws Exception {
     AvroColumnReader<GenericRecord > reader =
       new AvroColumnReader<GenericRecord >

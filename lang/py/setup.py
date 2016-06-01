@@ -32,17 +32,20 @@ setup(
   package_dir = {'avro': 'src/avro'},
   scripts = ["./scripts/avro"],
 
+  #include_package_data=True,
+  package_data={'avro': ['LICENSE', 'NOTICE']},
+
   # Project uses simplejson, so ensure that it gets installed or upgraded
   # on the target machine
   install_requires = install_requires,
 
   # metadata for upload to PyPI
   author = 'Apache Avro',
-  author_email = 'avro-dev@hadoop.apache.org',
+  author_email = 'dev@avro.apache.org',
   description = 'Avro is a serialization and RPC framework.',
   license = 'Apache License 2.0',
   keywords = 'avro serialization rpc',
-  url = 'http://hadoop.apache.org/avro',
+  url = 'http://avro.apache.org/',
   extras_require = {
     'snappy': ['python-snappy'],
   },

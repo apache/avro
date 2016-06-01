@@ -20,8 +20,8 @@ package org.apache.avro.ipc;
 
 /**
  * Interface for receiving asynchronous callbacks.
- * For each request with an asynchronous callback, 
- * either {@link #handleResult(Object)} or {@link #handleError(Throwable)} 
+ * For each request with an asynchronous callback,
+ * either {@link #handleResult(Object)} or {@link #handleError(Throwable)}
  * will be invoked.
  */
 public interface Callback<T> {
@@ -30,7 +30,7 @@ public interface Callback<T> {
    * @param result the result returned in the callback.
    */
   void handleResult(T result);
-  
+
   /**
    * Receives an error.
    * @param error the error returned in the callback.

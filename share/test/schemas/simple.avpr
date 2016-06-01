@@ -40,7 +40,7 @@
 
      "hello": {
          "doc": "Send a greeting",
-         "request": [{"name": "greeting", "type": "string"}],
+         "request": [{"name": "greeting", "type": "string", "aliases" : [ "salute" ], "customProp" : "customValue"}],
          "response": "string"
      },
 

@@ -39,7 +39,7 @@ public class GenerateBlockingData {
   private static final int SYNC_INTERVAL = 1000;
   private static ByteArrayOutputStream buffer =
                       new ByteArrayOutputStream(2*SYNC_INTERVAL);
-  
+
   private static EncoderFactory factory = EncoderFactory.get();
   private static Encoder bufOut = EncoderFactory.get().blockingBinaryEncoder(
       buffer, null);
@@ -53,24 +53,24 @@ public class GenerateBlockingData {
     buffer.reset();
     blockCount = 0;
   }
-  
+
   public static void main(String[] args) throws Exception {
     if(args.length != 3) {
       System.out.println(
           "Usage: GenerateBlockingData <schemafile> <outputfile> <count>");
       System.exit(-1);
     }
-    
+
     Schema sch = Schema.parse(new File(args[0]));
     File outputFile = new File(args[1]);
     int numObjects = Integer.parseInt(args[2]);
-    
+
     FileOutputStream out = new FileOutputStream(outputFile, false);
     DatumWriter<Object> dout = new GenericDatumWriter<Object>();
     dout.setSchema(sch);
     Encoder vout = factory.directBinaryEncoder(out, null);
     vout.writeLong(numObjects); // metadata:the count of objects in the file
-    
+
     for (Object datum : new RandomData(sch, numObjects)) {
       dout.write(datum, bufOut);
       blockCount++;

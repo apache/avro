@@ -20,21 +20,21 @@ set -e
 cd `dirname "$0"`
 
 case "$1" in
-     test)
-        npm install
-        node_modules/grunt/bin/grunt test
-       ;;
-
-     dist)
-       ;;
-
-     clean)
-       ;;
-
-     *)
-       echo "Usage: $0 {test|dist|clean}"
-       exit 1
-
+  test)
+    npm install
+    npm run cover
+    ;;
+  dist)
+    npm pack
+    mkdir -p ../../dist/js
+    mv avro-js-*.tgz ../../dist/js
+    ;;
+  clean)
+    rm -rf coverage
+    ;;
+  *)
+    echo "Usage: $0 {test|dist|clean}" >&2
+    exit 1
 esac
 
 exit 0

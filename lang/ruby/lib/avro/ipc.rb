@@ -100,7 +100,7 @@ module Avro::IPC
     def request(message_name, request_datum)
       # Writes a request message and reads a response or error message.
       # build handshake and call request
-      buffer_writer = StringIO.new('', 'w+')
+      buffer_writer = StringIO.new(''.force_encoding('BINARY'))
       buffer_encoder = Avro::IO::BinaryEncoder.new(buffer_writer)
       write_handshake_request(buffer_encoder)
       write_call_request(message_name, request_datum, buffer_encoder)
@@ -244,7 +244,7 @@ module Avro::IPC
     # a response or error. Compare to 'handle()' in Thrift.
     def respond(call_request, transport=nil)
       buffer_decoder = Avro::IO::BinaryDecoder.new(StringIO.new(call_request))
-      buffer_writer = StringIO.new('', 'w+')
+      buffer_writer = StringIO.new(''.force_encoding('BINARY'))
       buffer_encoder = Avro::IO::BinaryEncoder.new(buffer_writer)
       error = nil
       response_metadata = {}
@@ -294,6 +294,7 @@ module Avro::IPC
         end
       rescue Avro::AvroError => e
         error = AvroRemoteException.new(e.to_s)
+        # TODO does the stuff written here ever get used?
         buffer_encoder = Avro::IO::BinaryEncoder.new(StringIO.new)
         META_WRITER.write(response_metadata, buffer_encoder)
         buffer_encoder.write_boolean(true)
@@ -393,7 +394,7 @@ module Avro::IPC
     def read_framed_message
       message = []
       loop do
-        buffer = StringIO.new
+        buffer = StringIO.new(''.force_encoding('BINARY'))
         buffer_length = read_buffer_length
         if buffer_length == 0
           return message.join
@@ -410,7 +411,7 @@ module Avro::IPC
     end
 
     def write_framed_message(message)
-      message_length = message.size
+      message_length = message.bytesize
       total_bytes_sent = 0
       while message_length - total_bytes_sent > 0
         if message_length - total_bytes_sent > BUFFER_SIZE
@@ -426,7 +427,7 @@ module Avro::IPC
     end
 
     def write_buffer(chunk)
-      buffer_length = chunk.size
+      buffer_length = chunk.bytesize
       write_buffer_length(buffer_length)
       total_bytes_sent = 0
       while total_bytes_sent < buffer_length
@@ -467,7 +468,7 @@ module Avro::IPC
     end
 
     def write_framed_message(message)
-      message_size = message.size
+      message_size = message.bytesize
       total_bytes_sent = 0
       while message_size - total_bytes_sent > 0
         if message_size - total_bytes_sent > BUFFER_SIZE
@@ -485,7 +486,7 @@ module Avro::IPC
 
     private
     def write_buffer(chunk)
-      buffer_size = chunk.size
+      buffer_size = chunk.bytesize
       write_buffer_size(buffer_size)
       writer << chunk
     end
@@ -505,13 +506,13 @@ module Avro::IPC
     def read_framed_message
       message = []
       loop do
-        buffer = ""
+        buffer = ''.force_encoding('BINARY')
         buffer_size = read_buffer_size
 
         return message.join if buffer_size == 0
 
-        while buffer.size < buffer_size
-          chunk = reader.read(buffer_size - buffer.size)
+        while buffer.bytesize < buffer_size
+          chunk = reader.read(buffer_size - buffer.bytesize)
           chunk_error?(chunk)
           buffer << chunk
         end
@@ -541,7 +542,7 @@ module Avro::IPC
     end
 
     def transceive(message)
-      writer = FramedWriter.new(StringIO.new)
+      writer = FramedWriter.new(StringIO.new(''.force_encoding('BINARY')))
       writer.write_framed_message(message)
       resp = @conn.post('/', writer.to_s, {'Content-Type' => 'avro/binary'})
       FramedReader.new(StringIO.new(resp.body)).read_framed_message

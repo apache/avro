@@ -60,7 +60,7 @@ static const unsigned int count = 10;
 
 /**
  * A bunch of tests that share quite a lot of infrastructure between them.
- * The basic idea is to generate avro data for according to a schema and
+ * The basic idea is to generate avro data according to a schema and
  * then read back and compare the data with the original. But quite a few
  * variations are possible:
  * 1. While reading back, one can skip different data elements
@@ -1385,6 +1385,15 @@ struct JsonCodec {
     }
 };
 
+struct JsonPrettyCodec {
+    static EncoderPtr newEncoder(const ValidSchema& schema) {
+        return jsonPrettyEncoder(schema);
+    }
+    static DecoderPtr newDecoder(const ValidSchema& schema) {
+        return jsonDecoder(schema);
+    }
+};
+
 struct BinaryEncoderResolvingDecoderFactory : public BinaryEncoderFactory {
     static DecoderPtr newDecoder(const ValidSchema& schema) {
         return resolvingDecoder(schema, schema, binaryDecoder());
@@ -1415,6 +1424,7 @@ void add_tests(boost::unit_test::test_suite& ts)
     ADD_TESTS(ts, BinaryCodecFactory, testCodec, data);
     ADD_TESTS(ts, ValidatingCodecFactory, testCodec, data);
     ADD_TESTS(ts, JsonCodec, testCodec, data);
+    ADD_TESTS(ts, JsonPrettyCodec, testCodec, data);
     ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory, testCodec, data);
     ADD_TESTS(ts, ValidatingCodecFactory, testReaderFail, data2);
     ADD_TESTS(ts, ValidatingCodecFactory, testWriterFail, data2);
@@ -1500,6 +1510,7 @@ static void testLimitsJsonCodec()
     "]}";
     ValidSchema schema = parsing::makeValidSchema(s);
     testLimits(jsonEncoder(schema), jsonDecoder(schema));
+    testLimits(jsonPrettyEncoder(schema), jsonDecoder(schema));
 }
 
 struct JsonData {
@@ -1522,7 +1533,6 @@ static void testJson(const JsonData& data)
 {
     ValidSchema schema = parsing::makeValidSchema(data.schema);
     EncoderPtr e = jsonEncoder(schema);
-    
 }
 
 }   // namespace avro

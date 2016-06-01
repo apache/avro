@@ -20,13 +20,19 @@ package org.apache.avro.mapred.tether;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.nio.ByteBuffer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.avro.ipc.HttpServer;
+import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.SaslSocketServer;
+import org.apache.avro.ipc.SaslSocketTransceiver;
+import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
+import org.apache.avro.ipc.Server;
 
 /** Java implementation of a tether executable.  Useless except for testing,
  * since it's already possible to write Java MapReduce programs without
@@ -35,16 +41,52 @@ import org.apache.avro.ipc.specific.SpecificResponder;
 public class TetherTaskRunner implements InputProtocol {
   static final Logger LOG = LoggerFactory.getLogger(TetherTaskRunner.class);
 
-  private SaslSocketServer inputServer;
+  private Server inputServer;
   private TetherTask task;
+
+  private TetheredProcess.Protocol proto;
 
   public TetherTaskRunner(TetherTask task) throws IOException {
     this.task = task;
 
-    // start input server
-    this.inputServer = new SaslSocketServer
+    //determine what protocol we are using
+    String protocol = System.getenv("AVRO_TETHER_PROTOCOL");
+    if (protocol == null) {
+      throw new RuntimeException("AVRO_TETHER_PROTOCOL env var is null");
+    }
+
+    protocol=protocol.trim().toLowerCase();
+
+    if (protocol.equals("http")) {
+      LOG.info("Use HTTP protocol");
+      proto=TetheredProcess.Protocol.HTTP;
+    } else if (protocol.equals("sasl")) {
+      LOG.info("Use SASL protocol");
+      proto=TetheredProcess.Protocol.SASL;
+    } else {
+      throw new RuntimeException("AVRO_TETHER_PROTOCOL="+protocol+" but this protocol is unsupported");
+    }
+
+    InetSocketAddress iaddress=new InetSocketAddress(0);
+
+    switch(proto) {
+    case SASL:
+      // start input server
+      this.inputServer = new SaslSocketServer
       (new SpecificResponder(InputProtocol.class, this),
-       new InetSocketAddress(0));
+          iaddress);
+      LOG.info("Started SaslSocketServer on port:"+iaddress.getPort());
+      break;
+
+    case HTTP:
+      this.inputServer=new  HttpServer
+      (new SpecificResponder(InputProtocol.class, this),
+          iaddress.getPort());
+
+      LOG.info("Started HttpServer on port:"+iaddress.getPort());
+      break;
+    }
+
     inputServer.start();
 
     // open output to parent
@@ -74,16 +116,19 @@ public class TetherTaskRunner implements InputProtocol {
   @Override public synchronized void complete() {
     LOG.info("got input complete");
     task.complete();
-    close();
   }
 
   /** Wait for task to complete. */
   public void join() throws InterruptedException {
+    LOG.info("TetherTaskRunner: Start join.");
     inputServer.join();
+    LOG.info("TetherTaskRunner: Finish join.");
   }
 
   private void close() {
+    LOG.info("Closing the task");
     task.close();
+    LOG.info("Finished closing the task.");
     if (inputServer != null)
       inputServer.close();
   }

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Formatter;
+import java.util.Locale;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,6 +69,26 @@ public class TestSchemaNormalization {
     }
   }
 
+  // see AVRO-1493
+  @RunWith(Parameterized.class)
+  public static class TestFingerprintInternationalization {
+    String input, expectedOutput;
+    public TestFingerprintInternationalization(String i, String o) { input=i; expectedOutput=o; }
+
+    @Parameters public static List<Object[]> cases() throws IOException
+    { return CaseFinder.find(data(),"fingerprint",new ArrayList<Object[]>()); }
+
+    @Test public void testCanonicalization() throws Exception {
+      Locale originalDefaultLocale = Locale.getDefault();
+      Locale.setDefault(Locale.forLanguageTag("tr"));
+      Schema s = Schema.parse(input);
+      long carefulFP = altFingerprint(SchemaNormalization.toParsingForm(s));
+      assertEquals(carefulFP, Long.parseLong(expectedOutput));
+      assertEqHex(carefulFP, SchemaNormalization.parsingFingerprint64(s));
+      Locale.setDefault(originalDefaultLocale);
+    }
+  }
+
   private static String DATA_FILE =
     (System.getProperty("share.dir", "../../../share")
      + "/test/data/schema-tests.txt");
@@ -90,7 +111,7 @@ public class TestSchemaNormalization {
                            s.getBytes("UTF-8"));
       return altExtend(SchemaNormalization.EMPTY64, 64, tmp, POSTFIX);
     } catch (java.io.UnsupportedEncodingException e)
-      { throw new RuntimeException(e); } 
+      { throw new RuntimeException(e); }
   }
 
   private static long altExtend(long poly, int degree, long fp, byte[] b) {

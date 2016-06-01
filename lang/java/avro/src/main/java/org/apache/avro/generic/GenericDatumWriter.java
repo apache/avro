@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Collection;
 
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.DatumWriter;
@@ -57,9 +59,46 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   public void write(D datum, Encoder out) throws IOException {
     write(root, datum, out);
   }
-  
+
   /** Called to write data.*/
   protected void write(Schema schema, Object datum, Encoder out)
+      throws IOException {
+    LogicalType logicalType = schema.getLogicalType();
+    if (datum != null && logicalType != null) {
+      Conversion<?> conversion = getData()
+          .getConversionByClass(datum.getClass(), logicalType);
+      writeWithoutConversion(schema,
+          convert(schema, logicalType, conversion, datum), out);
+    } else {
+      writeWithoutConversion(schema, datum, out);
+    }
+  }
+
+  protected <T> Object convert(Schema schema, LogicalType logicalType,
+                               Conversion<T> conversion, Object datum) {
+    if (conversion == null) {
+      return datum;
+    }
+    Class<T> fromClass = conversion.getConvertedType();
+    switch (schema.getType()) {
+    case RECORD:  return conversion.toRecord(fromClass.cast(datum), schema, logicalType);
+    case ENUM:    return conversion.toEnumSymbol(fromClass.cast(datum), schema, logicalType);
+    case ARRAY:   return conversion.toArray(fromClass.cast(datum), schema, logicalType);
+    case MAP:     return conversion.toMap(fromClass.cast(datum), schema, logicalType);
+    case FIXED:   return conversion.toFixed(fromClass.cast(datum), schema, logicalType);
+    case STRING:  return conversion.toCharSequence(fromClass.cast(datum), schema, logicalType);
+    case BYTES:   return conversion.toBytes(fromClass.cast(datum), schema, logicalType);
+    case INT:     return conversion.toInt(fromClass.cast(datum), schema, logicalType);
+    case LONG:    return conversion.toLong(fromClass.cast(datum), schema, logicalType);
+    case FLOAT:   return conversion.toFloat(fromClass.cast(datum), schema, logicalType);
+    case DOUBLE:  return conversion.toDouble(fromClass.cast(datum), schema, logicalType);
+    case BOOLEAN: return conversion.toBoolean(fromClass.cast(datum), schema, logicalType);
+    }
+    return datum;
+  }
+
+  /** Called to write data.*/
+  protected void writeWithoutConversion(Schema schema, Object datum, Encoder out)
     throws IOException {
     try {
       switch (schema.getType()) {
@@ -104,10 +143,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       writeField(datum, f, out, state);
     }
   }
-  
-  /** Called to write a single field of a record. May be overridden for more 
+
+  /** Called to write a single field of a record. May be overridden for more
    * efficient or alternate implementations.*/
-  protected void writeField(Object datum, Field f, Encoder out, Object state) 
+  protected void writeField(Object datum, Field f, Encoder out, Object state)
       throws IOException {
     Object value = data.getField(datum, f.name(), f.pos(), state);
     try {
@@ -116,14 +155,16 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       throw npe(e, " in field " + f.name());
     }
   }
-  
+
   /** Called to write an enum value.  May be overridden for alternate enum
    * representations.*/
   protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
+    if (!data.isEnum(datum))
+      throw new AvroTypeException("Not an enum: "+datum);
     out.writeEnum(schema.getEnumOrdinal(datum.toString()));
   }
-  
+
   /** Called to write a array.  May be overridden for alternate array
    * representations.*/
   protected void writeArray(Schema schema, Object datum, Encoder out)
@@ -164,7 +205,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected Iterator<? extends Object> getArrayElements(Object array) {
     return ((Collection) array).iterator();
   }
-  
+
   /** Called to write a map.  May be overridden for alternate map
    * representations.*/
   protected void writeMap(Schema schema, Object datum, Encoder out)
@@ -200,7 +241,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected Iterable<Map.Entry<Object,Object>> getMapEntries(Object map) {
     return ((Map) map).entrySet();
   }
-  
+
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
   protected void writeString(Schema schema, Object datum, Encoder out)
@@ -225,7 +266,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     throws IOException {
     out.writeFixed(((GenericFixed)datum).bytes(), 0, schema.getFixedSize());
   }
-  
+
   private void error(Schema schema, Object datum) {
     throw new AvroTypeException("Not a "+schema+": "+datum);
   }

@@ -34,6 +34,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.data.TimeConversions.DateConversion;
+import org.apache.avro.data.TimeConversions.TimeConversion;
+import org.apache.avro.data.TimeConversions.TimestampConversion;
 import org.apache.avro.specific.SpecificData;
 import org.codehaus.jackson.JsonNode;
 
@@ -41,6 +46,7 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SchemaNormalization;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
@@ -52,14 +58,44 @@ import org.apache.velocity.runtime.log.LogChute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
+
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
  *
  * Java reserved keywords are mangled to preserve compilation.
  */
 public class SpecificCompiler {
+
+  /*
+   * From Section 4.10 of the Java VM Specification:
+   *    A method descriptor is valid only if it represents method parameters with a total length of 255 or less,
+   *    where that length includes the contribution for this in the case of instance or interface method invocations.
+   *    The total length is calculated by summing the contributions of the individual parameters, where a parameter
+   *    of type long or double contributes two units to the length and a parameter of any other type contributes one unit.
+   *
+   * Arguments of type Double/Float contribute 2 "parameter units" to this limit, all other types contribute 1
+   * "parameter unit". All instance methods for a class are passed a reference to the instance (`this), and hence,
+   * they are permitted at most `JVM_METHOD_ARG_LIMIT-1` "parameter units" for their arguments.
+   *
+   * @see <a href="http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10">JVM Spec: Section 4.10</a>
+   */
+  private static final int JVM_METHOD_ARG_LIMIT = 255;
+
+  /*
+   * Note: This is protected instead of private only so it's visible for testing.
+   */
+  protected static final int MAX_FIELD_PARAMETER_UNIT_COUNT = JVM_METHOD_ARG_LIMIT - 1;
+
   public static enum FieldVisibility {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
+  }
+
+  private static final SpecificData SPECIFIC = new SpecificData();
+  static {
+    SPECIFIC.addLogicalTypeConversion(new DateConversion());
+    SPECIFIC.addLogicalTypeConversion(new TimeConversion());
+    SPECIFIC.addLogicalTypeConversion(new TimestampConversion());
   }
 
   private final Set<Schema> queue = new HashSet<Schema>();
@@ -68,24 +104,18 @@ public class SpecificCompiler {
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
   private boolean createSetters = true;
+  private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
 
-  /* List of Java reserved words from
-   * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
-  private static final Set<String> RESERVED_WORDS = new HashSet<String>(
-      Arrays.asList(new String[] {
-          "abstract", "assert", "boolean", "break", "byte", "case", "catch",
-          "char", "class", "const", "continue", "default", "do", "double",
-          "else", "enum", "extends", "false", "final", "finally", "float",
-          "for", "goto", "if", "implements", "import", "instanceof", "int",
-          "interface", "long", "native", "new", "null", "package", "private",
-          "protected", "public", "return", "short", "static", "strictfp",
-          "super", "switch", "synchronized", "this", "throw", "throws",
-          "transient", "true", "try", "void", "volatile", "while"
-        }));
-  
+  /*
+   * Used in the record.vm template.
+   */
+  public boolean isCreateAllArgsConstructor() {
+    return createAllArgsConstructor;
+  }
+
   /* Reserved words for accessor/mutator methods */
-  private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = 
+  private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS =
       new HashSet<String>(Arrays.asList(new String[] {
             "class", "schema", "classSchema"
           }));
@@ -93,7 +123,7 @@ public class SpecificCompiler {
     // Add reserved words to accessor/mutator reserved words
     ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
   }
-  
+
   /* Reserved words for error types */
   private static final Set<String> ERROR_RESERVED_WORDS = new HashSet<String>(
       Arrays.asList(new String[] { "message", "cause" }));
@@ -101,14 +131,14 @@ public class SpecificCompiler {
     // Add accessor/mutator reserved words to error reserved words
     ERROR_RESERVED_WORDS.addAll(ACCESSOR_MUTATOR_RESERVED_WORDS);
   }
-  
-  private static final String FILE_HEADER = 
+
+  private static final String FILE_HEADER =
       "/**\n" +
       " * Autogenerated by Avro\n" +
-      " * \n" +
+      " *\n" +
       " * DO NOT EDIT DIRECTLY\n" +
       " */\n";
-  
+
   public SpecificCompiler(Protocol protocol) {
     this();
     // enqueue all types
@@ -123,7 +153,7 @@ public class SpecificCompiler {
     enqueue(schema);
     this.protocol = null;
   }
-  
+
   SpecificCompiler() {
     this.templateDir =
       System.getProperty("org.apache.avro.specific.templates",
@@ -188,7 +218,7 @@ public class SpecificCompiler {
     velocityEngine.addProperty("resource.loader", "class, file");
     velocityEngine.addProperty("class.resource.loader.class",
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-    velocityEngine.addProperty("file.resource.loader.class", 
+    velocityEngine.addProperty("file.resource.loader.class",
         "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
     velocityEngine.addProperty("file.resource.loader.path", "/, .");
     velocityEngine.setProperty("runtime.references.strict", true);
@@ -368,6 +398,33 @@ public class SpecificCompiler {
     }
   }
 
+  /**
+   * Returns the number of parameter units required by fields for the
+   * AllArgsConstructor.
+   *
+   * @param record a Record schema
+   */
+  protected int calcAllArgConstructorParameterUnits(Schema record) {
+
+    if (record.getType() != Schema.Type.RECORD)
+      throw new RuntimeException("This method must only be called for record schemas.");
+
+    return record.getFields().size();
+  }
+
+  protected void validateRecordForCompilation(Schema record) {
+    this.createAllArgsConstructor =
+        calcAllArgConstructorParameterUnits(record) <= MAX_FIELD_PARAMETER_UNIT_COUNT;
+
+    if (!this.createAllArgsConstructor)
+      new Slf4jLogChute().log(LogChute.WARN_ID, "Record '" + record.getFullName() +
+              "' contains more than " + MAX_FIELD_PARAMETER_UNIT_COUNT +
+              " parameters which exceeds the JVM " +
+              "spec for the number of permitted constructor arguments. Clients must " +
+              "rely on the builder pattern to create objects instead. For more info " +
+              "see JIRA ticket AVRO-1642.");
+  }
+
   OutputFile compile(Schema schema) {
     schema = addStringType(schema);               // annotate schema as needed
     String output = "";
@@ -377,6 +434,7 @@ public class SpecificCompiler {
 
     switch (schema.getType()) {
     case RECORD:
+      validateRecordForCompilation(schema);
       output = renderTemplate(templateDir+"record.vm", context);
       break;
     case ENUM:
@@ -501,11 +559,17 @@ public class SpecificCompiler {
     default: throw new RuntimeException("Unknown string type: "+stringType);
    }
   }
- 
+
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
   /** Utility for template use.  Returns the java type for a Schema. */
   public String javaType(Schema schema) {
+    Conversion<?> conversion = SPECIFIC
+        .getConversionFor(schema.getLogicalType());
+    if (conversion != null) {
+      return conversion.getConvertedType().getName();
+    }
+
     switch (schema.getType()) {
     case RECORD:
     case ENUM:
@@ -537,6 +601,12 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the unboxed java type for a Schema. */
   public String javaUnbox(Schema schema) {
+    Conversion<?> conversion = SPECIFIC
+        .getConversionFor(schema.getLogicalType());
+    if (conversion != null) {
+      return conversion.getConvertedType().getName();
+    }
+
     switch (schema.getType()) {
     case INT:     return "int";
     case LONG:    return "long";
@@ -545,6 +615,26 @@ public class SpecificCompiler {
     case BOOLEAN: return "boolean";
     default:      return javaType(schema);
     }
+  }
+
+  public boolean hasLogicalTypeField(Schema schema) {
+    for (Schema.Field field : schema.getFields()) {
+      if (field.schema().getLogicalType() != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public String conversionInstance(Schema schema) {
+    if (LogicalTypes.date().equals(schema.getLogicalType())) {
+      return "DATE_CONVERSION";
+    } else if (LogicalTypes.timeMillis().equals(schema.getLogicalType())) {
+      return "TIME_CONVERSION";
+    } else if (LogicalTypes.timestampMillis().equals(schema.getLogicalType())) {
+      return "TIMESTAMP_CONVERSION";
+    }
+    return "null";
   }
 
   /** Utility for template use.  Returns the java annotations for a schema. */
@@ -582,7 +672,7 @@ public class SpecificCompiler {
     b.append("\"");                               // final quote
     return b.toString();
   }
-  
+
   /** Utility for template use.  Escapes quotes and backslashes. */
   public static String javaEscape(Object o) {
       return o.toString().replace("\\","\\\\").replace("\"", "\\\"");
@@ -592,7 +682,7 @@ public class SpecificCompiler {
   public static String escapeForJavadoc(String s) {
       return s.replace("*/", "*&#47;");
   }
-  
+
   /** Utility for template use.  Returns empty string for null. */
   public static String nullToEmpty(String x) {
     return x == null ? "" : x;
@@ -602,29 +692,41 @@ public class SpecificCompiler {
   public static String mangle(String word) {
     return mangle(word, false);
   }
-  
+
   /** Utility for template use.  Adds a dollar sign to reserved words. */
   public static String mangle(String word, boolean isError) {
     return mangle(word, isError ? ERROR_RESERVED_WORDS : RESERVED_WORDS);
   }
-  
+
   /** Utility for template use.  Adds a dollar sign to reserved words. */
   public static String mangle(String word, Set<String> reservedWords) {
     return mangle(word, reservedWords, false);
   }
-  
+
   /** Utility for template use.  Adds a dollar sign to reserved words. */
-  public static String mangle(String word, Set<String> reservedWords, 
+  public static String mangle(String word, Set<String> reservedWords,
       boolean isMethod) {
-    if (reservedWords.contains(word) || 
+    if (word.contains(".")) {
+      // If the 'word' is really a full path of a class we must mangle just the classname
+      int lastDot = word.lastIndexOf(".");
+      String packageName = word.substring(0, lastDot + 1);
+      String className = word.substring(lastDot + 1);
+      return packageName + mangle(className, reservedWords, isMethod);
+    }
+    if (reservedWords.contains(word) ||
         (isMethod && reservedWords.contains(
-            Character.toLowerCase(word.charAt(0)) + 
+            Character.toLowerCase(word.charAt(0)) +
             ((word.length() > 1) ? word.substring(1) : "")))) {
       return word + "$";
     }
     return word;
   }
-  
+
+  /** Utility for use by templates. Return schema fingerprint as a long. */
+  public static long fingerprint64(Schema schema) {
+    return SchemaNormalization.parsingFingerprint64(schema);
+  }
+
   /**
    * Generates the name of a field accessor method.
    * @param schema the schema in which the field is defined.
@@ -632,29 +734,29 @@ public class SpecificCompiler {
    * @return the name of the accessor method for the given field.
    */
   public static String generateGetMethod(Schema schema, Field field) {
-    return generateMethodName(schema, field, "get");
+    return generateMethodName(schema, field, "get", "");
   }
-  
+
   /**
    * Generates the name of a field mutator method.
    * @param schema the schema in which the field is defined.
-   * @param field the field for which to generate the accessor name.
+   * @param field the field for which to generate the mutator name.
    * @return the name of the mutator method for the given field.
    */
   public static String generateSetMethod(Schema schema, Field field) {
-    return generateMethodName(schema, field, "set");
+    return generateMethodName(schema, field, "set", "");
   }
-  
+
   /**
    * Generates the name of a field "has" method.
    * @param schema the schema in which the field is defined.
-   * @param field the field for which to generate the accessor name.
+   * @param field the field for which to generate the "has" method name.
    * @return the name of the has method for the given field.
    */
   public static String generateHasMethod(Schema schema, Field field) {
-    return generateMethodName(schema, field, "has");
+    return generateMethodName(schema, field, "has", "");
   }
-  
+
   /**
    * Generates the name of a field "clear" method.
    * @param schema the schema in which the field is defined.
@@ -662,30 +764,79 @@ public class SpecificCompiler {
    * @return the name of the has method for the given field.
    */
   public static String generateClearMethod(Schema schema, Field field) {
-    return generateMethodName(schema, field, "clear");
+    return generateMethodName(schema, field, "clear", "");
   }
-  
+
+  /** Utility for use by templates. Does this schema have a Builder method? */
+  public static boolean hasBuilder(Schema schema) {
+    switch (schema.getType()) {
+      case RECORD:
+        return true;
+
+      case UNION:
+        List<Schema> types = schema.getTypes(); // elide unions with null
+        if ((types.size() == 2) && types.contains(NULL_SCHEMA)) {
+          return hasBuilder(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
+        }
+        return false;
+
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Generates the name of a field Builder accessor method.
+   * @param schema the schema in which the field is defined.
+   * @param field the field for which to generate the Builder accessor name.
+   * @return the name of the Builder accessor method for the given field.
+   */
+  public static String generateGetBuilderMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "get", "Builder");
+  }
+
+  /**
+   * Generates the name of a field Builder mutator method.
+   * @param schema the schema in which the field is defined.
+   * @param field the field for which to generate the Builder mutator name.
+   * @return the name of the Builder mutator method for the given field.
+   */
+  public static String generateSetBuilderMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "set", "Builder");
+  }
+
+  /**
+   * Generates the name of a field Builder "has" method.
+   * @param schema the schema in which the field is defined.
+   * @param field the field for which to generate the "has" Builder method name.
+   * @return the name of the "has" Builder method for the given field.
+   */
+  public static String generateHasBuilderMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "has", "Builder");
+  }
+
   /**
    * Generates a method name from a field name.
    * @param schema the schema in which the field is defined.
    * @param field the field for which to generate the accessor name.
    * @param prefix method name prefix, e.g. "get" or "set".
+   * @param postfix method name postfix, e.g. "" or "Builder".
    * @return the generated method name.
    */
-  private static String generateMethodName(Schema schema, Field field, 
-      String prefix) {
+  private static String generateMethodName(Schema schema, Field field,
+      String prefix, String postfix) {
 
-    // Check for the special case in which the schema defines two fields whose 
+    // Check for the special case in which the schema defines two fields whose
     // names are identical except for the case of the first character:
     char firstChar = field.name().charAt(0);
     String conflictingFieldName = (Character.isLowerCase(firstChar) ?
         Character.toUpperCase(firstChar) : Character.toLowerCase(firstChar)) +
         (field.name().length() > 1 ? field.name().substring(1) : "");
     boolean fieldNameConflict = schema.getField(conflictingFieldName) != null;
-    
+
     StringBuilder methodBuilder = new StringBuilder(prefix);
-    String fieldName = mangle(field.name(), 
-        schema.isError() ? ERROR_RESERVED_WORDS : 
+    String fieldName = mangle(field.name(),
+        schema.isError() ? ERROR_RESERVED_WORDS :
           ACCESSOR_MUTATOR_RESERVED_WORDS, true);
 
     boolean nextCharToUpper = true;
@@ -701,7 +852,8 @@ public class SpecificCompiler {
         methodBuilder.append(fieldName.charAt(ii));
       }
     }
-    
+    methodBuilder.append(postfix);
+
     // If there is a field name conflict append $0 or $1
     if (fieldNameConflict) {
       if (methodBuilder.charAt(methodBuilder.length() - 1) != '$') {
@@ -712,7 +864,7 @@ public class SpecificCompiler {
 
     return methodBuilder.toString();
   }
-  
+
   /** Tests whether an unboxed Java type can be set to null */
   public static boolean isUnboxedJavaTypeNullable(Schema schema) {
     switch (schema.getType()) {
@@ -730,7 +882,7 @@ public class SpecificCompiler {
     //compileSchema(new File(args[0]), new File(args[1]));
     compileProtocol(new File(args[0]), new File(args[1]));
   }
-  
+
   public static final class Slf4jLogChute implements LogChute {
     private Logger logger = LoggerFactory.getLogger("AvroVelocityLogChute");
     @Override

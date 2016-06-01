@@ -21,32 +21,32 @@ import org.mortbay.jetty.servlet.Context;
 import org.mortbay.jetty.servlet.ServletHolder;
 
 /* This is a server that displays live information from a StatsPlugin.
- * 
+ *
  *  Typical usage is as follows:
- *    StatsPlugin plugin = new StatsPlugin(); 
+ *    StatsPlugin plugin = new StatsPlugin();
  *    requestor.addPlugin(plugin);
  *    StatsServer server = new StatsServer(plugin, 8080);
- *    
+ *
  *  */
 public class StatsServer {
   Server httpServer;
   StatsPlugin plugin;
-  
-  /* Start a stats server on the given port, 
+
+  /* Start a stats server on the given port,
    * responsible for the given plugin. */
   public StatsServer(StatsPlugin plugin, int port) throws Exception {
     this.httpServer = new Server(port);
     this.plugin = plugin;
-    
+
     Context staticContext = new Context(httpServer, "/static");
     staticContext.addServlet(new ServletHolder(new StaticServlet()), "/");
-    
+
     Context context = new Context(httpServer, "/");
     context.addServlet(new ServletHolder(new StatsServlet(plugin)), "/");
-    
+
     httpServer.start();
   }
-  
+
   /* Stops this server. */
   public void stop() throws Exception {
     this.httpServer.stop();

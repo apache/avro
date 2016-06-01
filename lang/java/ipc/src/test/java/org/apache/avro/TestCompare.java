@@ -143,8 +143,12 @@ public class TestCompare {
 
   @Test
   public void testEnum() throws Exception {
-    check("{\"type\":\"enum\", \"name\":\"Test\",\"symbols\": [\"A\", \"B\"]}",
-          "A", "B");
+    String json =
+      "{\"type\":\"enum\", \"name\":\"Test\",\"symbols\": [\"A\", \"B\"]}";
+    Schema schema = Schema.parse(json);
+    check(json,
+          new GenericData.EnumSymbol(schema, "A"),
+          new GenericData.EnumSymbol(schema, "B"));
   }
 
   @Test
@@ -180,7 +184,7 @@ public class TestCompare {
     s2.setKind(Kind.BAZ);
     check(schema, s1, s2, true, new SpecificDatumWriter<TestRecord>(schema),
           SpecificData.get());
-  }  
+  }
 
   private static <T> void check(String schemaJson, T o1, T o2)
     throws Exception {

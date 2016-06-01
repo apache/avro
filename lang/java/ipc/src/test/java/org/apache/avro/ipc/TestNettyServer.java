@@ -49,31 +49,31 @@ public class TestNettyServer {
   public static class MailImpl implements Mail {
 
     private CountDownLatch allMessages = new CountDownLatch(5);
-    
+
     // in this simple example just return details of the message
     public String send(Message message) {
-      return "Sent message to ["+ message.getTo().toString() + 
-          "] from [" + message.getFrom().toString() + "] with body [" + 
+      return "Sent message to ["+ message.getTo().toString() +
+          "] from [" + message.getFrom().toString() + "] with body [" +
           message.getBody().toString() + "]";
     }
-    
+
     public void fireandforget(Message message) {
       allMessages.countDown();
     }
-    
+
     private void awaitMessages() throws InterruptedException {
       allMessages.await(2, TimeUnit.SECONDS);
     }
-    
+
     private void assertAllMessagesReceived() {
       assertEquals(0, allMessages.getCount());
     }
 
     public void reset() {
-      allMessages = new CountDownLatch(5);      
+      allMessages = new CountDownLatch(5);
     }
   }
-  
+
   @BeforeClass
   public static void initializeConnections()throws Exception {
     // start server
@@ -82,23 +82,23 @@ public class TestNettyServer {
     Responder responder = new SpecificResponder(Mail.class, mailService);
     server = initializeServer(responder);
     server.start();
-  
+
     int serverPort = server.getPort();
     System.out.println("server port : " + serverPort);
 
     transceiver = initializeTransceiver(serverPort);
     proxy = SpecificRequestor.getClient(Mail.class, transceiver);
   }
-  
+
   protected static Server initializeServer(Responder responder) {
     return new NettyServer(responder, new InetSocketAddress(0));
   }
-  
+
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
     return new NettyTransceiver(new InetSocketAddress(
         serverPort), CONNECT_TIMEOUT_MILLIS);
   }
-  
+
   @AfterClass
   public static void tearDownConnections() throws Exception{
     transceiver.close();
@@ -117,7 +117,7 @@ public class TestNettyServer {
         "Sent message to [wife] from [husband] with body [I love you!]",
         result.toString());
   }
-  
+
   @Test
   public void testOneway() throws Exception {
     for (int x = 0; x < 5; x++) {
@@ -126,7 +126,7 @@ public class TestNettyServer {
     mailService.awaitMessages();
     mailService.assertAllMessagesReceived();
   }
-  
+
   @Test
   public void testMixtureOfRequests() throws Exception {
     mailService.reset();

@@ -46,7 +46,7 @@ public class RecodecTool implements Tool {
     OptionSpec<Integer> levelOpt = Util.compressionLevelOption(optParser);
     OptionSet opts = optParser.parse(args.toArray(new String[0]));
 
-    List<String> nargs = opts.nonOptionArguments();
+    List<String> nargs = (List<String>)opts.nonOptionArguments();
     if (nargs.size() > 2) {
       err.println("Expected at most an input file and output file.");
       optParser.printHelpOn(err);

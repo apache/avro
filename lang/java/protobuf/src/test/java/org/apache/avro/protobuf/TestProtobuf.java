@@ -75,7 +75,7 @@ public class TestProtobuf {
     Encoder e = EncoderFactory.get().binaryEncoder(bao, null);
     w.write(foo, e);
     e.flush();
-    
+
     Object o = new ProtobufDatumReader<Foo>(Foo.class).read
       (null,
        DecoderFactory.get().createBinaryDecoder

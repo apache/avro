@@ -39,7 +39,7 @@ import org.apache.hadoop.mapred.Reporter;
  * <p>
  * This {@link org.apache.hadoop.mapred.InputFormat} is useful for applications
  * that wish to process Avro data using tools like MapReduce Streaming.
- * 
+ *
  * By default, when pointed at a directory, this will silently skip over any
  * files in it that do not have .avro extension. To instead include all files,
  * set the avro.mapred.ignore.inputs.without.extension property to false.
@@ -59,7 +59,7 @@ public class AvroAsTextInputFormat extends FileInputFormat<Text, Text> {
       return super.listStatus(job);
     }
   }
-  
+
   @Override
   public RecordReader<Text, Text>
     getRecordReader(InputSplit split, JobConf job, Reporter reporter)

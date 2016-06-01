@@ -68,18 +68,18 @@ public class TestWeather {
     String inDir = System.getProperty("share.dir","../../../share")+"/test/data";
     Path input = new Path(inDir+"/weather.avro");
     Path output = new Path(System.getProperty("test.dir","target/test")+"/weather-ident");
-    
+
     output.getFileSystem(job).delete(output);
-    
+
     job.setJobName("identity map weather");
-    
+
     AvroJob.setInputSchema(job, Weather.SCHEMA$);
     AvroJob.setOutputSchema(job, Weather.SCHEMA$);
 
     FileInputFormat.setInputPaths(job, input);
     FileOutputFormat.setOutputPath(job, output);
     FileOutputFormat.setCompressOutput(job, true);
-    
+
     job.setNumReduceTasks(0);                     // map-only
 
     JobClient.runJob(job);
@@ -145,24 +145,24 @@ public class TestWeather {
     String inDir = System.getProperty("share.dir","../../../share")+"/test/data";
     Path input = new Path(inDir+"/weather.avro");
     Path output = new Path(System.getProperty("test.dir","target/test")+"/weather-sort");
-    
+
     output.getFileSystem(job).delete(output);
-    
+
     job.setJobName("sort weather");
-    
+
     AvroJob.setInputSchema(job, Weather.SCHEMA$);
     AvroJob.setMapOutputSchema
       (job, Pair.getPairSchema(Weather.SCHEMA$, Schema.create(Type.NULL)));
     AvroJob.setOutputSchema(job, Weather.SCHEMA$);
-    
-    AvroJob.setMapperClass(job, SortMapper.class);        
+
+    AvroJob.setMapperClass(job, SortMapper.class);
     AvroJob.setReducerClass(job, SortReducer.class);
 
     FileInputFormat.setInputPaths(job, input);
     FileOutputFormat.setOutputPath(job, output);
     FileOutputFormat.setCompressOutput(job, true);
     AvroJob.setOutputCodec(job, SNAPPY_CODEC);
-    
+
     JobClient.runJob(job);
 
     // check output is correct

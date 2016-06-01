@@ -38,7 +38,7 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.junit.Test;
 
 public class TestAvroTextOutputFormat {
-  
+
   private static final String UTF8 = "UTF-8";
 
   @Test
@@ -52,12 +52,12 @@ public class TestAvroTextOutputFormat {
     fileWriter.create(schema, file);
     RecordWriter<Object, Object> rw = new AvroTextOutputFormat<Object, Object>()
       .new AvroTextRecordWriter(fileWriter, "\t".getBytes(UTF8));
-    
+
     rw.write(null, null);
     rw.write(null, NullWritable.get());
     rw.write(NullWritable.get(), null);
     rw.write(NullWritable.get(), NullWritable.get());
-    
+
     rw.write("k1", null);
     rw.write("k2", NullWritable.get());
 
@@ -66,7 +66,7 @@ public class TestAvroTextOutputFormat {
 
     rw.write("k3", "v3");
     rw.write(new Text("k4"), new Text("v4"));
-    
+
     rw.close(null);
 
     DatumReader<ByteBuffer> reader = new GenericDatumReader<ByteBuffer>();
@@ -80,7 +80,7 @@ public class TestAvroTextOutputFormat {
     assertEquals("k4\tv4", asString(fileReader.next()));
     assertFalse("End", fileReader.hasNext());
   }
-  
+
   private String asString(ByteBuffer buf) throws UnsupportedEncodingException {
     byte[] b = new byte[buf.remaining()];
     buf.get(b);

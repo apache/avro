@@ -69,6 +69,7 @@ import java.util.Map;
 import java.net.URL;
 
 import org.apache.avro.Schema;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
@@ -236,6 +237,9 @@ TOKEN :
 | < TRUE: "true" >
 | < UNION: "union" >
 | < VOID: "void" >
+| < DATE: "date" >
+| < TIME: "time_ms" >
+| < TIMESTAMP: "timestamp_ms" >
 }
 
 /* LITERALS */
@@ -1481,6 +1485,9 @@ Schema PrimitiveType():
 | "double" { return Schema.create(Type.DOUBLE); }
 | "long" { return Schema.create(Type.LONG); }
 | "null" { return Schema.create(Type.NULL); }
+| "date" { return LogicalTypes.date().addToSchema(Schema.create(Type.INT)); }
+| "time_ms" { return LogicalTypes.timeMillis().addToSchema(Schema.create(Type.INT)); }
+| "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
 }
 
 /**
@@ -1545,6 +1552,9 @@ Token AnyIdentifier():
    t = <TRUE> |
    t = <UNION> |
    t = <VOID> |
+   t = <DATE> |
+   t = <TIME> |
+   t = <TIMESTAMP> |
    t = <IDENTIFIER>)
   {
     return t;

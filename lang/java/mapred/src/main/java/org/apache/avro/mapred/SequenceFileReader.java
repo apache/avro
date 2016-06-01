@@ -148,7 +148,7 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
       reader.sync(position);
     ready = false;
   }
-  
+
   @Override public boolean pastSync(long position) throws IOException {
     return reader.getPosition() >= position && reader.syncSeen();
   }
@@ -179,7 +179,7 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
   private static class WritableData extends ReflectData {
     private static final WritableData INSTANCE = new WritableData();
     protected WritableData() {}
-    
+
     /** Return the singleton instance. */
     public static WritableData get() { return INSTANCE; }
 
@@ -194,7 +194,7 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
   private interface Converter<T> {
     T convert(Writable o);
   }
-  
+
   private static final Map<Type,Converter> WRITABLE_CONVERTERS =
     new HashMap<Type,Converter>();
   static {

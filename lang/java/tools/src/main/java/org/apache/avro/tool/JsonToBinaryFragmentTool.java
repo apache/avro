@@ -44,11 +44,11 @@ public class JsonToBinaryFragmentTool implements Tool {
         .accepts("schema-file", "File containing schema, must not occur with inline schema.")
         .withOptionalArg()
         .ofType(String.class);
-    
+
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
-    List<String> nargs = optionSet.nonOptionArguments();
+    List<String> nargs = (List<String>)optionSet.nonOptionArguments();
     String schemaFile = schemaFileOption.value(optionSet);
-    
+
     if (nargs.size() != (schemaFile == null ? 2 : 1)) {
       err.println("jsontofrag --schema-file <file> [inline-schema] input-file");
       err.println("   converts JSON to Avro fragments.");
@@ -62,18 +62,18 @@ public class JsonToBinaryFragmentTool implements Tool {
       schema = new Schema.Parser().parse(nargs.get(0));
       inputFile = nargs.get(1);
     } else {
-      schema = new Schema.Parser().parse(Util.openFromFS(schemaFile));
+      schema = Util.parseSchemaFromFS(schemaFile);
       inputFile = nargs.get(0);
     }
     InputStream input = Util.fileOrStdin(inputFile, stdin);
 
     try {
-      GenericDatumReader<Object> reader = 
+      GenericDatumReader<Object> reader =
           new GenericDatumReader<Object>(schema);
-    
-      JsonDecoder jsonDecoder = 
+
+      JsonDecoder jsonDecoder =
       DecoderFactory.get().jsonDecoder(schema, input);
-      GenericDatumWriter<Object> writer = 
+      GenericDatumWriter<Object> writer =
           new GenericDatumWriter<Object>(schema);
       Encoder e = EncoderFactory.get().binaryEncoder(out, null);
       Object datum = null;

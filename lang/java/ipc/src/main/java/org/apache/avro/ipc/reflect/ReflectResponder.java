@@ -35,7 +35,7 @@ public class ReflectResponder extends SpecificResponder {
   public ReflectResponder(Class iface, Object impl) {
     this(iface, impl, new ReflectData(impl.getClass().getClassLoader()));
   }
-  
+
   public ReflectResponder(Protocol protocol, Object impl) {
     this(protocol, impl, new ReflectData(impl.getClass().getClassLoader()));
   }

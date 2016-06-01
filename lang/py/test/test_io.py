@@ -19,6 +19,9 @@ try:
 except ImportError:
   from StringIO import StringIO
 from binascii import hexlify
+
+import set_avro_test_path
+
 from avro import schema
 from avro import io
 

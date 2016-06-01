@@ -59,7 +59,7 @@ public class TestLocalTransceiver {
         "m").getRequest());
     params.put("x", new Utf8("hello"));
     GenericRequestor r = new GenericRequestor(protocol, t);
-    
+
     for(int x = 0; x < 5; x++)
       assertEquals(new Utf8("there"), r.request("m", params));
   }

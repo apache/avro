@@ -136,14 +136,14 @@ import avro.schema
 from avro.datafile import DataFileReader, DataFileWriter
 from avro.io import DatumReader, DatumWriter
 
-schema = avro.schema.parse(open("user.avsc").read())
+schema = avro.schema.parse(open("user.avsc", "rb").read())
 
-writer = DataFileWriter(open("users.avro", "w"), DatumWriter(), schema)
+writer = DataFileWriter(open("users.avro", "wb"), DatumWriter(), schema)
 writer.append({"name": "Alyssa", "favorite_number": 256})
 writer.append({"name": "Ben", "favorite_number": 7, "favorite_color": "red"})
 writer.close()
 
-reader = DataFileReader(open("users.avro", "r"), DatumReader())
+reader = DataFileReader(open("users.avro", "rb"), DatumReader())
 for user in reader:
     print user
 reader.close()
@@ -154,10 +154,18 @@ reader.close()
 {u'favorite_color': u'red', u'favorite_number': 7, u'name': u'Ben'}
       </source>
       <p>
+        Do make sure that you open your files in binary mode (i.e. using the modes
+        <code>wb</code> or <code>rb</code> respectively). Otherwise you might
+        generate corrupt files due to
+        <a href="http://docs.python.org/library/functions.html#open">
+        automatic replacement</a> of newline characters with the
+        platform-specific representations.
+      </p>
+      <p>
         Let's take a closer look at what's going on here.
       </p>
       <source>
-schema = avro.schema.parse(open("user.avsc").read())
+schema = avro.schema.parse(open("user.avsc", "rb").read())
       </source>
       <p>
         <code>avro.schema.parse</code> takes a string containing a JSON schema
@@ -167,7 +175,7 @@ schema = avro.schema.parse(open("user.avsc").read())
         user.avsc schema file here.
       </p>
       <source>
-writer = DataFileWriter(open("users.avro", "w"), DatumWriter(), schema)
+writer = DataFileWriter(open("users.avro", "wb"), DatumWriter(), schema)
       </source>
       <p>
         We create a <code>DataFileWriter</code>, which we'll use to write
@@ -201,7 +209,7 @@ writer.append({"name": "Ben", "favorite_number": 7, "favorite_color": "red"})
           ignored.
         </p>
         <source>
-reader = DataFileReader(open("users.avro", "r"), DatumReader())
+reader = DataFileReader(open("users.avro", "rb"), DatumReader())
         </source>
         <p>
           We open the file again, this time for reading back from disk.  We use

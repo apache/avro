@@ -57,7 +57,7 @@ public class TestTextFileTools {
   static ByteBuffer[] lines;
   static Schema schema;
   static File schemaFile;
-  
+
   @BeforeClass
   public static void writeRandomFile() throws IOException {
     schema = Schema.create(Type.BYTES);
@@ -82,7 +82,7 @@ public class TestTextFileTools {
     }
     out.close();
   }
-  
+
   private void fromText(String name, String... args) throws Exception {
     File avroFile = AvroTestUtil.tempFile(getClass(), name + ".avro");
 
@@ -92,7 +92,7 @@ public class TestTextFileTools {
     arglist.add(avroFile.toString());
 
     new FromTextTool().run(null, null, null, arglist);
-    
+
     // Read it back, and make sure it's valid.
     DataFileReader<ByteBuffer> file = new DataFileReader<ByteBuffer>
       (avroFile, new GenericDatumReader<ByteBuffer>());
@@ -104,7 +104,7 @@ public class TestTextFileTools {
     }
     assertEquals(COUNT, i);
   }
-  
+
   @Test
   public void testFromText() throws Exception {
     fromText("null", "--codec", "null");
@@ -128,7 +128,7 @@ public class TestTextFileTools {
     arglist.add(outFile.toString());
 
     new ToTextTool().run(null, null, null, arglist);
-    
+
     // Read it back, and make sure it's valid.
     InputStream orig = new BufferedInputStream(new FileInputStream(linesFile));
     InputStream after = new BufferedInputStream(new FileInputStream(outFile));

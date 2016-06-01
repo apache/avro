@@ -18,17 +18,22 @@
 
 package org.apache.avro.specific;
 
+import java.io.Externalizable;
+import java.io.ObjectOutput;
+import java.io.ObjectInput;
+import java.io.IOException;
+
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Schema;
 
 /** Base class for specific exceptions. */
 public abstract class SpecificExceptionBase extends AvroRemoteException
-  implements SpecificRecord {
+  implements SpecificRecord, Externalizable {
 
   public SpecificExceptionBase() {
     super();
   }
-  
+
   public SpecificExceptionBase(Throwable value) {
     super(value);
   }
@@ -36,7 +41,7 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
   public SpecificExceptionBase(Object value) {
     super(value);
   }
-  
+
   public SpecificExceptionBase(Object value, Throwable cause) {
     super(value, cause);
   }
@@ -56,5 +61,9 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
     return SpecificData.get().hashCode(this, this.getSchema());
   }
 
-}
+  @Override public abstract void writeExternal(ObjectOutput out)
+    throws IOException;
+  @Override public abstract void readExternal(ObjectInput in)
+    throws IOException;
 
+}

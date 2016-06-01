@@ -40,7 +40,7 @@ import test.StringablesRecord;
 public class TestSpecificDatumReader {
 
   public static byte[] serializeRecord(FooBarSpecificRecord fooBarSpecificRecord) throws IOException {
-    SpecificDatumWriter<FooBarSpecificRecord> datumWriter = 
+    SpecificDatumWriter<FooBarSpecificRecord> datumWriter =
         new SpecificDatumWriter<FooBarSpecificRecord>(FooBarSpecificRecord.SCHEMA$);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
@@ -67,14 +67,14 @@ public class TestSpecificDatumReader {
     newBuilder.setNicknames(Arrays.asList("bar"));
     newBuilder.setRelatedids(Arrays.asList(1,2,3));
     FooBarSpecificRecord specificRecord = newBuilder.build();
-    
+
     byte[] recordBytes = serializeRecord(specificRecord);
-    
+
     Decoder decoder = DecoderFactory.get().binaryDecoder(recordBytes, null);
     SpecificDatumReader<FooBarSpecificRecord> specificDatumReader = new SpecificDatumReader<FooBarSpecificRecord>(FooBarSpecificRecord.SCHEMA$);
     FooBarSpecificRecord deserialized = new FooBarSpecificRecord();
     specificDatumReader.read(deserialized, decoder);
-    
+
     assertEquals(specificRecord, deserialized);
   }
 

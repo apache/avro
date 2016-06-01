@@ -23,6 +23,8 @@ import java.nio.ByteBuffer;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class TetherOutputService implements OutputProtocol {
   private Reporter reporter;
@@ -31,6 +33,11 @@ class TetherOutputService implements OutputProtocol {
   private boolean complete;
   private String error;
 
+  private static final Logger LOG = LoggerFactory.getLogger(TetherOutputService.class);
+
+  // timeout when waiting for messages in seconds.
+  // what is a good value?
+  public static final long TIMEOUT=10*1000;
   public TetherOutputService(OutputCollector<TetherData,NullWritable> collector,
                              Reporter reporter) {
     this.reporter = reporter;
@@ -38,15 +45,20 @@ class TetherOutputService implements OutputProtocol {
   }
 
   public synchronized void configure(int inputPort) {
-    TetherMapRunner.LOG.info("got input port from child");
+    LOG.info("got input port from child: inputport="+inputPort);
     this.inputPort = inputPort;
     notify();
   }
 
-  public synchronized int inputPort() throws InterruptedException {
-    while (inputPort == 0) {
-      TetherMapRunner.LOG.info("waiting for input port from child");
-      wait();
+  public synchronized int inputPort() throws Exception {
+    if (inputPort==0) {
+      LOG.info("waiting for input port from child");
+      wait(TIMEOUT);
+    }
+
+    if (inputPort==0) {
+      LOG.error("Parent process timed out waiting for subprocess to send input port. Check the job log files for more info.");
+      throw new Exception("Parent process timed out waiting for subprocess to send input port");
     }
     return inputPort;
   }
@@ -55,7 +67,7 @@ class TetherOutputService implements OutputProtocol {
     try {
       collector.collect(new TetherData(datum), NullWritable.get());
     } catch (Throwable e) {
-      TetherMapRunner.LOG.warn("Error: "+e, e);
+      LOG.warn("Error: "+e, e);
       synchronized (this) {
         error = e.toString();
       }
@@ -75,13 +87,13 @@ class TetherOutputService implements OutputProtocol {
   }
 
   public synchronized void fail(String message) {
-    TetherMapRunner.LOG.warn("Failing: "+message);
+    LOG.warn("Failing: "+message);
     error = message.toString();
     notify();
   }
 
   public synchronized void complete() {
-    TetherMapRunner.LOG.info("got task complete");
+    LOG.info("got task complete");
     complete = true;
     notify();
   }

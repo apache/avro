@@ -21,7 +21,7 @@ import java.io.File;
 
 /**
  * Test the Protocol Mojo.
- * 
+ *
  * @author saden
  */
 public class TestProtocolMojo extends AbstractAvroMojoTest {

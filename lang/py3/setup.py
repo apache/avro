@@ -26,7 +26,12 @@ from setuptools import setup
 
 
 VERSION_FILE_NAME = 'VERSION.txt'
+LICENSE_FILE_NAME = 'LICENSE'
+NOTICE_FILE_NAME = 'NOTICE'
 
+# The following prevents distutils from using hardlinks (which may not always be
+# available, e.g. on a Docker volume). See http://bugs.python.org/issue8876
+del os.link
 
 def RunsFromSourceDist():
   """Tests whether setup.py is invoked from a source distribution.
@@ -53,12 +58,6 @@ def SetupSources():
 
   # Avro top-level source directory:
   root_dir = os.path.dirname(os.path.dirname(py3_dir))
-
-  # Copy README.txt from Avro top-level directory:
-  shutil.copy(
-      src=os.path.join(root_dir, 'README.txt'),
-      dst=os.path.join(py3_dir, 'README.txt'),
-  )
 
   # Read and copy Avro version:
   version_file_path = os.path.join(root_dir, 'share', VERSION_FILE_NAME)
@@ -120,7 +119,7 @@ def Main():
   avro_version = ReadVersion()
 
   setup(
-      name = 'avro-python3-snapshot',
+      name = 'avro-python3',
       version = avro_version,
       packages = ['avro'],
       package_dir = {'avro': 'avro'},
@@ -131,6 +130,8 @@ def Main():
               'HandshakeRequest.avsc',
               'HandshakeResponse.avsc',
               VERSION_FILE_NAME,
+              LICENSE_FILE_NAME,
+              NOTICE_FILE_NAME,
           ],
       },
 
@@ -139,11 +140,11 @@ def Main():
 
       # metadata for upload to PyPI
       author = 'Apache Avro',
-      author_email = 'avro-dev@hadoop.apache.org',
+      author_email = 'dev@avro.apache.org',
       description = 'Avro is a serialization and RPC framework.',
       license = 'Apache License 2.0',
       keywords = 'avro serialization rpc',
-      url = 'http://hadoop.apache.org/avro',
+      url = 'http://avro.apache.org/',
   )
 
 

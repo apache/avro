@@ -94,10 +94,8 @@ class FloatIntEncodingTest extends PHPUnit_Framework_TestCase
   function special_vals_provider()
   {
     self::make_special_vals();
-    return array(array(self::DOUBLE_TYPE, self::$DOUBLE_NAN, self::$LONG_BITS_NAN),
-                 array(self::DOUBLE_TYPE, self::$DOUBLE_POS_INF, self::$LONG_BITS_POS_INF),
+    return array(array(self::DOUBLE_TYPE, self::$DOUBLE_POS_INF, self::$LONG_BITS_POS_INF),
                  array(self::DOUBLE_TYPE, self::$DOUBLE_NEG_INF, self::$LONG_BITS_NEG_INF),
-                 array(self::FLOAT_TYPE, self::$FLOAT_NAN, self::$INT_BITS_NAN),
                  array(self::FLOAT_TYPE, self::$FLOAT_POS_INF, self::$INT_BITS_POS_INF),
                  array(self::FLOAT_TYPE, self::$FLOAT_NEG_INF, self::$INT_BITS_NEG_INF));
   }
@@ -108,6 +106,21 @@ class FloatIntEncodingTest extends PHPUnit_Framework_TestCase
   function test_encoding_special_values($type, $val, $bits)
   {
     $this->assert_encode_values($type, $val, $bits);
+  }
+
+  function nan_vals_provider()
+  {
+    self::make_special_vals();
+    return array(array(self::DOUBLE_TYPE, self::$DOUBLE_NAN, self::$LONG_BITS_NAN),
+                 array(self::FLOAT_TYPE, self::$FLOAT_NAN, self::$INT_BITS_NAN));
+  }
+
+  /**
+   * @dataProvider nan_vals_provider
+   */
+  function test_encoding_nan_values($type, $val, $bits)
+  {
+    $this->assert_encode_nan_values($type, $val, $bits);
   }
 
   function normal_vals_provider()
@@ -240,6 +253,37 @@ _RUBY;
     $this->assertEquals($val, $round_trip_value,
                         sprintf("%s\n expected: '%f'\n     given: '%f'",
                                 'ROUND TRIP BITS', $val, $round_trip_value));
+  }
+
+  function assert_encode_nan_values($type, $val, $bits)
+  {
+    if (self::FLOAT_TYPE == $type)
+    {
+      $decoder = array('AvroIOBinaryDecoder', 'int_bits_to_float');
+      $encoder = array('AvroIOBinaryEncoder', 'float_to_int_bits');
+    }
+    else
+    {
+      $decoder = array('AvroIOBinaryDecoder', 'long_bits_to_double');
+      $encoder = array('AvroIOBinaryEncoder', 'double_to_long_bits');
+    }
+
+    $decoded_bits_val = call_user_func($decoder, $bits);
+    $this->assertTrue(is_nan($decoded_bits_val),
+                      sprintf("%s\n expected: '%f'\n    given: '%f'",
+                              'DECODED BITS', $val, $decoded_bits_val));
+
+    $encoded_val_bits = call_user_func($encoder, $val);
+    $this->assertEquals($bits, $encoded_val_bits,
+                        sprintf("%s\n expected: '%s'\n    given: '%s'",
+                                'ENCODED VAL',
+                                AvroDebug::hex_string($bits),
+                                AvroDebug::hex_string($encoded_val_bits)));
+
+    $round_trip_value = call_user_func($decoder, $encoded_val_bits);
+    $this->assertTrue(is_nan($round_trip_value),
+                      sprintf("%s\n expected: '%f'\n     given: '%f'",
+                              'ROUND TRIP BITS', $val, $round_trip_value));
   }
 
 }

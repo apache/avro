@@ -29,7 +29,7 @@ import org.apache.avro.io.BinaryData;
 import org.apache.avro.mapred.AvroJob;
 
 class TetherPartitioner implements Partitioner<TetherData, NullWritable> {
-  
+
   private static final ThreadLocal<Integer> CACHE = new ThreadLocal<Integer>();
 
   private Schema schema;

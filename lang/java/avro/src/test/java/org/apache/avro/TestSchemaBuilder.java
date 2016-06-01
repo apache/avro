@@ -33,7 +33,6 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.codehaus.jackson.node.BooleanNode;
 import org.codehaus.jackson.node.NullNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -70,16 +69,16 @@ public class TestSchemaBuilder {
     types.add(Schema.create(Schema.Type.BOOLEAN));
     types.add(Schema.create(Schema.Type.NULL));
     Schema optional = Schema.createUnion(types);
-    Assert.assertEquals(new Schema.Field("f2", optional, null, BooleanNode.getTrue()),
+    Assert.assertEquals(new Schema.Field("f2", optional, null, true),
         fields.get(2));
   }
-  
+
   @Test
   public void testDoc() {
     Schema s = SchemaBuilder.fixed("myfixed").doc("mydoc").size(1);
     Assert.assertEquals("mydoc", s.getDoc());
   }
-  
+
   @Test
   public void testProps() {
     Schema s = SchemaBuilder.builder().intBuilder()
@@ -114,7 +113,7 @@ public class TestSchemaBuilder {
       .fields()
         .name("myint").type().intType().noDefault()
         .endRecord();
-    
+
     Assert.assertEquals("myrecord", s1.getName());
     Assert.assertEquals("myrecord", s2.getName());
     Assert.assertEquals("myrecord", s3.getName());
@@ -138,7 +137,7 @@ public class TestSchemaBuilder {
         .name("f0").type().stringType().noDefault()
         .endRecord();
   }
-  
+
   @Test
   public void testBoolean() {
     Schema.Type type = Schema.Type.BOOLEAN;
@@ -148,7 +147,7 @@ public class TestSchemaBuilder {
         .booleanBuilder().prop("p", "v").endBoolean();
     Assert.assertEquals(expected, built1);
   }
-  
+
   @Test
   public void testInt() {
     Schema.Type type = Schema.Type.INT;
@@ -158,7 +157,7 @@ public class TestSchemaBuilder {
         .intBuilder().prop("p", "v").endInt();
     Assert.assertEquals(expected, built1);
   }
-  
+
   @Test
   public void testLong() {
     Schema.Type type = Schema.Type.LONG;
@@ -168,7 +167,7 @@ public class TestSchemaBuilder {
         .longBuilder().prop("p", "v").endLong();
     Assert.assertEquals(expected, built1);
   }
-  
+
   @Test
   public void testFloat() {
     Schema.Type type = Schema.Type.FLOAT;
@@ -178,7 +177,7 @@ public class TestSchemaBuilder {
         .floatBuilder().prop("p", "v").endFloat();
     Assert.assertEquals(expected, built1);
   }
-  
+
   @Test
   public void testDuble() {
     Schema.Type type = Schema.Type.DOUBLE;
@@ -188,7 +187,7 @@ public class TestSchemaBuilder {
         .doubleBuilder().prop("p", "v").endDouble();
     Assert.assertEquals(expected, built1);
   }
-  
+
   @Test
   public void testString() {
     Schema.Type type = Schema.Type.STRING;
@@ -198,7 +197,7 @@ public class TestSchemaBuilder {
         .stringBuilder().prop("p", "v").endString();
     Assert.assertEquals(expected, built1);
   }
-  
+
   @Test
   public void testBytes() {
     Schema.Type type = Schema.Type.BYTES;
@@ -208,7 +207,7 @@ public class TestSchemaBuilder {
         .bytesBuilder().prop("p", "v").endBytes();
     Assert.assertEquals(expected, built1);
   }
-  
+
   @Test
   public void testNull() {
     Schema.Type type = Schema.Type.NULL;
@@ -219,7 +218,7 @@ public class TestSchemaBuilder {
     Assert.assertEquals(expected, built1);
   }
 
-  
+
   private Schema primitive(Schema.Type type, Schema bare) {
     // test creation of bare schema by name
     Schema bareByName = SchemaBuilder.builder().type(type.getName());
@@ -230,7 +229,7 @@ public class TestSchemaBuilder {
     p.addProp("p", "v");
     return p;
   }
-  
+
 
 //  @Test
 //  public void testError() {
@@ -329,16 +328,16 @@ public class TestSchemaBuilder {
     types.add(Schema.create(Schema.Type.LONG));
     types.add(Schema.create(Schema.Type.NULL));
     Schema expected = Schema.createUnion(types);
-    
+
     Schema schema = SchemaBuilder.unionOf()
         .longType().and()
         .nullType().endUnion();
     Assert.assertEquals(expected, schema);
-    
+
     schema = SchemaBuilder.nullable().longType();
     Assert.assertEquals(expected, schema);
   }
-  
+
   @Test
   public void testFields() {
     Schema rec = SchemaBuilder.record("Rec").fields()
@@ -354,7 +353,7 @@ public class TestSchemaBuilder {
     Assert.assertEquals(Order.IGNORE, rec.getField("ignored").order());
     Assert.assertTrue(rec.getField("aliased").aliases().contains("anAlias"));
   }
-  
+
   @Test
   public void testFieldShortcuts() {
     Schema full = SchemaBuilder.record("Blah").fields()
@@ -380,7 +379,7 @@ public class TestSchemaBuilder {
         .name("obytes").type().optional().bytesType()
         .name("nbytes").type().nullable().bytesType().bytesDefault(new byte[] {1,2,3})
         .endRecord();
-    
+
     Schema shortcut = SchemaBuilder.record("Blah").fields()
         .requiredBoolean("rbool")
         .optionalBoolean("obool")
@@ -404,10 +403,10 @@ public class TestSchemaBuilder {
         .optionalBytes("obytes")
         .nullableBytes("nbytes", new byte[] {1,2,3})
         .endRecord();
-    
+
     Assert.assertEquals(full, shortcut);
   }
-  
+
   @Test
   public void testNames() {
     // no contextual namespace
@@ -426,11 +425,11 @@ public class TestSchemaBuilder {
     checkField(r, expected, "f3");
     checkField(r, expected, "f4");
     checkField(r, expected, "f5");
-    
+
     // context namespace
     Schema f = SchemaBuilder.builder("").fixed("Foo").size(1);
     Assert.assertEquals(Schema.createFixed("Foo", null, null, 1), f);
-   
+
     // context namespace from record matches
     r = SchemaBuilder.record("Rec").namespace("org.foo").fields()
         .name("f0").type().fixed("MyFixed").size(1).noDefault()
@@ -466,7 +465,7 @@ public class TestSchemaBuilder {
     checkField(r, expected, "f3");
     checkField(r, expected, "f4");
     checkField(r, expected, "f5");
-    
+
     // context namespace from record, nested has no namespace
     expected = Schema.createFixed("MyFixed", null, null, 1);
     r = SchemaBuilder.record("Rec").namespace("org.rec").fields()
@@ -475,18 +474,18 @@ public class TestSchemaBuilder {
         .endRecord();
     checkField(r, expected, "f0");
     checkField(r, expected, "f1");
-    
+
     // mimic names of primitives, but with a namesapce.  This is OK
     SchemaBuilder.fixed("org.test.long").size(1);
     SchemaBuilder.fixed("long").namespace("org.test").size(1);
     SchemaBuilder.builder("org.test").fixed("long").size(1);
 
   }
-  
+
   private void checkField(Schema r, Schema expected, String name) {
     Assert.assertEquals(expected, r.getField(name).schema());
   }
-  
+
   @Test(expected=SchemaParseException.class)
   public void testNamesFailRedefined() {
     SchemaBuilder.record("Rec").fields()
@@ -499,12 +498,12 @@ public class TestSchemaBuilder {
   public void testNamesFailAbsent() {
     SchemaBuilder.builder().type("notdefined");
   }
-  
+
   @Test(expected=AvroTypeException.class)
   public void testNameReserved() {
     SchemaBuilder.fixed("long").namespace("").size(1);
   }
-  
+
   @Test
   public void testFieldTypesAndDefaultValues() {
     byte[] bytedef = new byte[]{3};
@@ -514,21 +513,21 @@ public class TestSchemaBuilder {
     mapdef.put("a", "A");
     ArrayList<String> arrdef = new ArrayList<String>();
     arrdef.add("arr");
-    
+
     Schema rec = SchemaBuilder.record("inner").fields()
       .name("f").type().intType().noDefault()
       .endRecord();
-    
+
     Schema rec2 = SchemaBuilder.record("inner2").fields()
       .name("f2").type().intType().noDefault()
       .endRecord();
-    
-    GenericData.Record recdef = 
+
+    GenericData.Record recdef =
         new GenericRecordBuilder(rec).set("f", 1).build();
-        
+
     GenericData.Record recdef2 =
         new GenericRecordBuilder(rec2).set("f2", 2).build();
-    
+
     Schema r = SchemaBuilder.record("r").fields()
       .name("boolF").type().booleanType().booleanDefault(false)
       .name("intF").type().intType().intDefault(1)
@@ -581,10 +580,10 @@ public class TestSchemaBuilder {
         .name("f2").type().intType().noDefault()
         .endRecord().and().intType().endUnion().recordDefault(recdef2)
       .endRecord();
-    
+
     GenericData.Record newRec =
         new GenericRecordBuilder(r).build();
-    
+
     Assert.assertEquals(false, newRec.get("boolF"));
     Assert.assertEquals(false, newRec.get("boolU"));
     Assert.assertEquals(1, newRec.get("intF"));
@@ -603,18 +602,18 @@ public class TestSchemaBuilder {
     Assert.assertEquals(bufdef, newRec.get("bytesU"));
     Assert.assertNull(newRec.get("nullF"));
     Assert.assertNull(newRec.get("nullU"));
-    Assert.assertArrayEquals(bytedef, 
+    Assert.assertArrayEquals(bytedef,
         ((GenericData.Fixed)newRec.get("fixedF1")).bytes());
-    Assert.assertArrayEquals(bytedef, 
+    Assert.assertArrayEquals(bytedef,
         ((GenericData.Fixed)newRec.get("fixedF2")).bytes());
-    Assert.assertArrayEquals(bytedef, 
+    Assert.assertArrayEquals(bytedef,
         ((GenericData.Fixed)newRec.get("fixedF3")).bytes());
-    Assert.assertArrayEquals(bytedef, 
+    Assert.assertArrayEquals(bytedef,
         ((GenericData.Fixed)newRec.get("fixedU")).bytes());
     Assert.assertEquals("S", newRec.get("enumF").toString());
     Assert.assertEquals("SS", newRec.get("enumU").toString());
     @SuppressWarnings("unchecked")
-    Map<CharSequence, CharSequence> map = 
+    Map<CharSequence, CharSequence> map =
       (Map<CharSequence, CharSequence>) newRec.get("mapF");
     Assert.assertEquals(mapdef.size(), map.size());
     for(Map.Entry<CharSequence, CharSequence> e : map.entrySet()) {
@@ -623,7 +622,7 @@ public class TestSchemaBuilder {
     }
     Assert.assertEquals(newRec.get("mapF"), newRec.get("mapU"));
     @SuppressWarnings("unchecked")
-    GenericData.Array<CharSequence> arr = 
+    GenericData.Array<CharSequence> arr =
       (GenericData.Array<CharSequence>) newRec.get("arrayF");
     Assert.assertEquals(arrdef.size(), arr.size());
     for(CharSequence c : arr) {
@@ -634,15 +633,15 @@ public class TestSchemaBuilder {
     Assert.assertEquals(recdef2, newRec.get("recordU"));
     Assert.assertEquals("S", newRec.get("byName").toString());
   }
-  
+
   @Test(expected=SchemaBuilderException.class)
   public void testBadDefault() {
     SchemaBuilder.record("r").fields()
       .name("f").type(Schema.create(Schema.Type.INT)).withDefault(new Object())
       .endRecord();
   }
-  
-  @Test 
+
+  @Test
   public void testUnionFieldBuild() {
     SchemaBuilder.record("r").fields()
       .name("allUnion").type().unionOf()

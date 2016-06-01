@@ -156,9 +156,14 @@ AVRO_DECL EncoderPtr validatingEncoder(const ValidSchema& schema,
     const EncoderPtr& base);
 
 /**
- *  Returns an encoder that can encode Avro standard for JSON.
+ *  Returns an encoder that encodes Avro standard for JSON.
  */
 AVRO_DECL EncoderPtr jsonEncoder(const ValidSchema& schema);
+
+/**
+ *  Returns an encoder that encodes Avro standard for pretty printed JSON.
+ */
+AVRO_DECL EncoderPtr jsonPrettyEncoder(const ValidSchema& schema);
 
 }   // namespace avro
 

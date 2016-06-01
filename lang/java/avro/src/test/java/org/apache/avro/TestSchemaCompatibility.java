@@ -38,7 +38,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.node.IntNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,13 +117,13 @@ public class TestSchemaCompatibility {
         new Field("a", INT_SCHEMA, null, null),
         new Field("b", INT_SCHEMA, null, null)));
     A_DINT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, new IntNode(0))));
+        new Field("a", INT_SCHEMA, null, 0)));
     A_INT_B_DINT_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, null),
-        new Field("b", INT_SCHEMA, null, new IntNode(0))));
+        new Field("b", INT_SCHEMA, null, 0)));
     A_DINT_B_DINT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, new IntNode(0)),
-        new Field("b", INT_SCHEMA, null, new IntNode(0))));
+        new Field("a", INT_SCHEMA, null, 0),
+        new Field("b", INT_SCHEMA, null, 0)));
   }
 
   // Recursive records
@@ -221,7 +220,7 @@ public class TestSchemaCompatibility {
   public void testValidateSchemaNewFieldWithDefault() throws Exception {
     final List<Schema.Field> readerFields = list(
         new Schema.Field("oldfield1", INT_SCHEMA, null, null),
-        new Schema.Field("newfield1", INT_SCHEMA, null, IntNode.valueOf(42)));
+        new Schema.Field("newfield1", INT_SCHEMA, null, 42));
     final Schema reader = Schema.createRecord(readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult =
         new SchemaCompatibility.SchemaPairCompatibility(
@@ -246,8 +245,8 @@ public class TestSchemaCompatibility {
             reader,
             WRITER_SCHEMA,
             String.format(
-                "Data encoded using writer schema:\n%s\n"
-                + "will or may fail to decode using reader schema:\n%s\n",
+                "Data encoded using writer schema:%n%s%n"
+                + "will or may fail to decode using reader schema:%n%s%n",
                 WRITER_SCHEMA.toString(true),
                 reader.toString(true)));
 
@@ -271,8 +270,8 @@ public class TestSchemaCompatibility {
             invalidReader,
             STRING_ARRAY_SCHEMA,
             String.format(
-                "Data encoded using writer schema:\n%s\n"
-                + "will or may fail to decode using reader schema:\n%s\n",
+                "Data encoded using writer schema:%n%s%n"
+                + "will or may fail to decode using reader schema:%n%s%n",
                 STRING_ARRAY_SCHEMA.toString(true),
                 invalidReader.toString(true)));
 
@@ -299,8 +298,8 @@ public class TestSchemaCompatibility {
             INT_SCHEMA,
             STRING_SCHEMA,
             String.format(
-                "Data encoded using writer schema:\n%s\n"
-                + "will or may fail to decode using reader schema:\n%s\n",
+                "Data encoded using writer schema:%n%s%n"
+                + "will or may fail to decode using reader schema:%n%s%n",
                 STRING_SCHEMA.toString(true),
                 INT_SCHEMA.toString(true)));
 
@@ -541,15 +540,15 @@ public class TestSchemaCompatibility {
       // new DecodingTestCase(LONG_SCHEMA, 1L, INT_SCHEMA, 1),  // should work in best-effort!
 
       new DecodingTestCase(
-          ENUM1_AB_SCHEMA, "A",
+          ENUM1_AB_SCHEMA, new EnumSymbol(ENUM1_AB_SCHEMA, "A"),
           ENUM1_ABC_SCHEMA, new EnumSymbol(ENUM1_ABC_SCHEMA, "A")),
 
       new DecodingTestCase(
-          ENUM1_ABC_SCHEMA, "A",
+          ENUM1_ABC_SCHEMA, new EnumSymbol(ENUM1_ABC_SCHEMA, "A"),
           ENUM1_AB_SCHEMA, new EnumSymbol(ENUM1_AB_SCHEMA, "A")),
 
       new DecodingTestCase(
-          ENUM1_ABC_SCHEMA, "B",
+          ENUM1_ABC_SCHEMA, new EnumSymbol(ENUM1_ABC_SCHEMA, "B"),
           ENUM1_BC_SCHEMA, new EnumSymbol(ENUM1_BC_SCHEMA, "B")),
 
       new DecodingTestCase(

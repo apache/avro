@@ -64,7 +64,7 @@ public abstract class Requestor {
   private volatile boolean sendLocalText;
   private final Transceiver transceiver;
   private final ReentrantLock handshakeLock = new ReentrantLock();
-  
+
   protected final List<RPCPlugin> rpcMetaPlugins;
 
   public Protocol getLocal() { return local; }
@@ -77,7 +77,7 @@ public abstract class Requestor {
     this.rpcMetaPlugins =
       new CopyOnWriteArrayList<RPCPlugin>();
   }
-  
+
   /**
    * Adds a new plugin to manipulate RPC metadata.  Plugins
    * are executed in the order that they are added.
@@ -88,7 +88,7 @@ public abstract class Requestor {
   }
 
   private static final EncoderFactory ENCODER_FACTORY = new EncoderFactory();
-  
+
   /** Writes a request message and reads a response or error message. */
   public Object request(String messageName, Object request)
     throws Exception {
@@ -96,10 +96,10 @@ public abstract class Requestor {
     Request rpcRequest = new Request(messageName, request, new RPCContext());
     CallFuture<Object> future = /* only need a Future for two-way messages */
       rpcRequest.getMessage().isOneWay() ? null : new CallFuture<Object>();
-    
+
     // Send request
     request(rpcRequest, future);
-    
+
     if (future == null)        // the message is one-way, so return immediately
       return null;
     try {                      // the message is two-way, wait for the result
@@ -112,7 +112,7 @@ public abstract class Requestor {
       }
     }
   }
-  
+
   /**
    * Writes a request message and returns the result through a Callback.
    * Clients can also use a Future interface by creating a new CallFuture<T>,
@@ -120,15 +120,15 @@ public abstract class Requestor {
    * @param <T> the return type of the message.
    * @param messageName the name of the message to invoke.
    * @param request the request data to send.
-   * @param callback the callback which will be invoked when the response is returned 
+   * @param callback the callback which will be invoked when the response is returned
    * or an error occurs.
    * @throws Exception if an error occurs sending the message.
    */
-  public <T> void request(String messageName, Object request, Callback<T> callback) 
+  public <T> void request(String messageName, Object request, Callback<T> callback)
     throws Exception {
     request(new Request(messageName, request, new RPCContext()), callback);
   }
-  
+
   /** Writes a request message and returns the result through a Callback. */
   <T> void request(Request request, Callback<T> callback)
     throws Exception {
@@ -166,7 +166,7 @@ public abstract class Requestor {
         }
       }
     }
-    
+
     if (request.getMessage().isOneWay()) {
       t.lockChannel();
       try {
@@ -181,7 +181,7 @@ public abstract class Requestor {
       t.transceive(request.getBytes(),
                    new TransceiverCallback<T>(request, callback));
     }
-    
+
   }
 
   private static final ConcurrentMap<String,MD5> REMOTE_HASHES =
@@ -212,14 +212,14 @@ public abstract class Requestor {
     handshake.serverHash = remoteHash;
     if (sendLocalText)
       handshake.clientProtocol = local.toString();
-    
+
     RPCContext context = new RPCContext();
     context.setHandshakeRequest(handshake);
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.clientStartConnect(context);
     }
     handshake.meta = context.requestHandshakeMeta();
-    
+
     HANDSHAKE_WRITER.write(handshake, out);
   }
 
@@ -246,7 +246,7 @@ public abstract class Requestor {
     default:
       throw new AvroRuntimeException("Unexpected match: "+handshake.match);
     }
-    
+
     RPCContext context = new RPCContext();
     context.setHandshakeResponse(handshake);
     for (RPCPlugin plugin : rpcMetaPlugins) {
@@ -315,14 +315,14 @@ public abstract class Requestor {
   /** Reads an error message. */
   public abstract Exception readError(Schema writer, Schema reader, Decoder in)
     throws IOException;
-  
+
   /**
    * Handles callbacks from transceiver invocations.
    */
   protected class TransceiverCallback<T> implements Callback<List<ByteBuffer>> {
     private final Request request;
     private final Callback<T> callback;
-    
+
     /**
      * Creates a TransceiverCallback.
      * @param request the request to set.
@@ -332,7 +332,7 @@ public abstract class Requestor {
       this.request = request;
       this.callback = callback;
     }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public void handleResult(List<ByteBuffer> responseBytes) {
@@ -350,7 +350,7 @@ public abstract class Requestor {
       } catch (Exception e) {
         LOG.error("Error handling transceiver callback: " + e, e);
       }
-      
+
       // Read response; invoke callback
       Response response = new Response(request, in);
       Object responseObject;
@@ -370,13 +370,13 @@ public abstract class Requestor {
         LOG.error("Error in callback handler: " + t, t);
       }
     }
-    
+
     @Override
     public void handleError(Throwable error) {
       callback.handleError(error);
     }
   }
-  
+
   /**
    * Encapsulates/generates a request.
    */
@@ -387,7 +387,7 @@ public abstract class Requestor {
     private final BinaryEncoder encoder;
     private Message message;
     private List<ByteBuffer> requestBytes;
-    
+
     /**
      * Creates a Request.
      * @param messageName the name of the message to invoke.
@@ -397,7 +397,7 @@ public abstract class Requestor {
     public Request(String messageName, Object request, RPCContext context) {
       this(messageName, request, context, null);
     }
-    
+
     /**
      * Creates a Request.
      * @param messageName the name of the message to invoke.
@@ -413,7 +413,7 @@ public abstract class Requestor {
       this.encoder =
         ENCODER_FACTORY.binaryEncoder(new ByteBufferOutputStream(), encoder);
     }
-    
+
     /**
      * Copy constructor.
      * @param other Request from which to copy fields.
@@ -424,7 +424,7 @@ public abstract class Requestor {
       this.context = other.context;
       this.encoder = other.encoder;
     }
-    
+
     /**
      * Gets the message name.
      * @return the message name.
@@ -432,7 +432,7 @@ public abstract class Requestor {
     public String getMessageName() {
       return messageName;
     }
-    
+
     /**
      * Gets the RPC context.
      * @return the RPC context.
@@ -440,7 +440,7 @@ public abstract class Requestor {
     public RPCContext getContext() {
       return context;
     }
-    
+
     /**
      * Gets the Message associated with this request.
      * @return this request's message.
@@ -454,13 +454,13 @@ public abstract class Requestor {
       }
       return message;
     }
-    
+
     /**
      * Gets the request data, generating it first if necessary.
      * @return the request data.
      * @throws Exception if an error occurs generating the request data.
      */
-    public List<ByteBuffer> getBytes() 
+    public List<ByteBuffer> getBytes()
       throws Exception {
       if (requestBytes == null) {
         ByteBufferOutputStream bbo = new ByteBufferOutputStream();
@@ -493,14 +493,14 @@ public abstract class Requestor {
       return requestBytes;
     }
   }
-  
+
   /**
    * Encapsulates/parses a response.
    */
   class Response {
     private final Request request;
     private final BinaryDecoder in;
-    
+
     /**
      * Creates a Response.
      * @param request the Request associated with this response.
@@ -508,7 +508,7 @@ public abstract class Requestor {
     public Response(Request request) {
       this(request, null);
     }
-    
+
     /**
      * Creates a Creates a Response.
      * @param request the Request associated with this response.
@@ -518,13 +518,13 @@ public abstract class Requestor {
       this.request = request;
       this.in = in;
     }
-    
+
     /**
      * Gets the RPC response, reading/deserializing it first if necessary.
      * @return the RPC response.
      * @throws Exception if an error occurs reading/deserializing the response.
      */
-    public Object getResponse() 
+    public Object getResponse()
       throws Exception {
       Message lm = request.getMessage();
       Message rm = remote.getMessages().get(request.getMessageName());
@@ -538,7 +538,7 @@ public abstract class Requestor {
           ("Not both one-way messages: "+request.getMessageName());
 
       if (lm.isOneWay() && t.isConnected()) return null; // one-way w/ handshake
-      
+
       RPCContext context = request.getContext();
       context.setResponseCallMeta(META_READER.read(null, in));
 

@@ -29,7 +29,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.junit.Test;
 
-public class TestSchema {  
+public class TestSchema {
   @Test
   public void testSplitSchemaBuild() {
     Schema s = SchemaBuilder
@@ -38,10 +38,10 @@ public class TestSchema {
          .name("clientProtocol").type().optional().stringType()
          .name("meta").type().optional().map().values().bytesType()
          .endRecord();
-    
+
     String schemaString = s.toString();
     final int mid = schemaString.length() / 2;
-    
+
     Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
     Schema parsedArrayOfStringSchema =
       new org.apache.avro.Schema.Parser().parse
@@ -64,4 +64,40 @@ public class TestSchema {
       assertTrue(are.getMessage().contains("Duplicate field field_name in record RecordName"));
     }
   }
+
+  @Test
+  public void testCreateUnionVarargs() {
+    List<Schema> types = new ArrayList<Schema>();
+    types.add(Schema.create(Type.NULL));
+    types.add(Schema.create(Type.LONG));
+    Schema expected = Schema.createUnion(types);
+
+    Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
+    assertEquals(expected, schema);
+  }
+
+  @Test
+  public void testEmptyRecordSchema() {
+    Schema schema = Schema.createRecord("foobar", null, null, false);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+  }
+
+  @Test
+  public void testSchemaWithFields() {
+    List<Field> fields = new ArrayList<Field>();
+    fields.add(new Field("field_name1", Schema.create(Type.NULL), null, null));
+    fields.add(new Field("field_name2", Schema.create(Type.INT), null, null));
+    Schema schema = Schema.createRecord("foobar", null, null, false, fields);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+    assertEquals(2, schema.getFields().size());
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testSchemaWithNullFields() {
+    Schema.createRecord("foobar", null, null, false, null);
+  }
+
+
 }

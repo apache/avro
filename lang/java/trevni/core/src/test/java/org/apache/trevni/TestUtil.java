@@ -39,13 +39,17 @@ public class TestUtil {
       String configured = System.getProperty("test.seed");
       if (configured != null)
         seed = Long.valueOf(configured);
-      else 
+      else
         seed = System.currentTimeMillis();
-      System.out.println("test.seed="+seed);
+      System.err.println("test.seed="+seed);
       seedSet = true;
     }
     return seed;
  }
+
+  public static void resetRandomSeed() {
+    seedSet = false;
+  }
 
   public static Random createRandom() {
     return new Random(getRandomSeed());

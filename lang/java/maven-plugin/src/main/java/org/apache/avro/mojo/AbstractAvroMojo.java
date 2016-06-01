@@ -40,25 +40,25 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * as classpath resources following the directory structure under the
    * source directory.
    *
-   * @parameter expression="${sourceDirectory}"
+   * @parameter property="sourceDirectory"
    *            default-value="${basedir}/src/main/avro"
    */
   private File sourceDirectory;
 
   /**
-   * @parameter expression="${outputDirectory}"
+   * @parameter property="outputDirectory"
    *            default-value="${project.build.directory}/generated-sources/avro"
    */
   private File outputDirectory;
 
   /**
-   * @parameter expression="${sourceDirectory}"
+   * @parameter property="sourceDirectory"
    *            default-value="${basedir}/src/test/avro"
    */
   private File testSourceDirectory;
 
   /**
-   * @parameter expression="${outputDirectory}"
+   * @parameter property="outputDirectory"
    *            default-value="${project.build.directory}/generated-test-sources/avro"
    */
   private File testOutputDirectory;
@@ -76,15 +76,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * A list of files or directories that should be compiled first thus making
    * them importable by subsequently compiled schemas. Note that imported files
    * should not reference each other.
-   * @parameter 
+   * @parameter
    */
   protected String[] imports;
-  
+
   /**
    * A set of Ant-like exclusion patterns used to prevent certain files from
    * being processed. By default, this set is empty such that no files are
    * excluded.
-   * 
+   *
    * @parameter
    */
   protected String[] excludes = new String[0];
@@ -93,7 +93,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * A set of Ant-like exclusion patterns used to prevent certain files from
    * being processed. By default, this set is empty such that no files are
    * excluded.
-   * 
+   *
    * @parameter
    */
   protected String[] testExcludes = new String[0];
@@ -101,7 +101,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   /**  The Java type to use for Avro strings.  May be one of CharSequence,
    * String or Utf8.  CharSequence by default.
    *
-   * @parameter expression="${stringType}"
+   * @parameter property="stringType"
    */
   protected String stringType = "CharSequence";
 
@@ -110,7 +110,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * to use for code generation. The default value points to the templates included
    * with the avro-maven-plugin.
    *
-   * @parameter expression="${templateDirectory}"
+   * @parameter property="templateDirectory"
    */
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
@@ -124,7 +124,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   /**
    * The current Maven project.
-   * 
+   *
    * @parameter default-value="${project}"
    * @readonly
    * @required
@@ -164,11 +164,11 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
           sourceDirectory.getAbsolutePath(), excludes, getIncludes());
       compileFiles(includedFiles, sourceDirectory, outputDirectory);
     }
-    
+
     if (hasImports || hasSourceDir) {
       project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
     }
-    
+
     if (hasTestDir) {
       String[] includedFiles = getIncludedFiles(
           testSourceDirectory.getAbsolutePath(), testExcludes,
@@ -184,7 +184,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     FileSet fs = new FileSet();
     fs.setDirectory(absPath);
     fs.setFollowSymlinks(false);
-    
+
     //exclude imports directory since it has already been compiled.
     if (imports != null) {
       String importExclude = null;

@@ -88,7 +88,7 @@ namespace Avro.Test.Ipc
             return bytes;
         }
 
-        private static GenericRecord CreateMessage()
+        public static GenericRecord CreateMessage()
         {
             // The first and only type in the list is the Message type.
             var recordSchema = (RecordSchema) MailResponder.Protocol.Types[0];
@@ -101,7 +101,7 @@ namespace Avro.Test.Ipc
             return record;
         }
 
-        private static void VerifyResponse(string result)
+        public static void VerifyResponse(string result)
         {
             Assert.AreEqual(
                 "Sent message to [wife] from [husband] with body [I love you!]",

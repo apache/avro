@@ -58,7 +58,7 @@ public class ProtobufData extends GenericData {
   private static final ProtobufData INSTANCE = new ProtobufData();
 
   protected ProtobufData() {}
-  
+
   /** Return the singleton instance. */
   public static ProtobufData get() { return INSTANCE; }
 
@@ -108,7 +108,7 @@ public class ProtobufData extends GenericData {
     default:
       return m.getField(f);
     }
-  }    
+  }
 
   private final Map<Descriptor,FieldDescriptor[]> fieldCache =
     new ConcurrentHashMap<Descriptor,FieldDescriptor[]>();
@@ -203,7 +203,7 @@ public class ProtobufData extends GenericData {
                             false);
 
       seen.put(descriptor, result);
-        
+
       List<Field> fields = new ArrayList<Field>();
       for (FieldDescriptor f : descriptor.getFields())
         fields.add(new Field(f.getName(), getSchema(f), null, getDefault(f)));
@@ -342,7 +342,7 @@ public class ProtobufData extends GenericData {
     default:
       throw new RuntimeException("Unexpected type: "+f.getType());
     }
-    
+
   }
 
 }

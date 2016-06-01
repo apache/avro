@@ -23,8 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that an annotated class is an Avro generated class. All Avro 
- * generated classes will be annotated with this annotation. 
+ * Indicates that an annotated class is an Avro generated class. All Avro
+ * generated classes will be annotated with this annotation.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

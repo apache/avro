@@ -66,7 +66,7 @@ public class DatagramServer extends Thread implements Server {
       }
     }
   }
-  
+
   public void close() { this.interrupt(); }
 
   public static void main(String[] arg) throws Exception {

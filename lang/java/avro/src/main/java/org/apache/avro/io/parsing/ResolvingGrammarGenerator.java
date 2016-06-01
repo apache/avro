@@ -39,29 +39,29 @@ import org.codehaus.jackson.JsonNode;
 public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
-   * <tt>reader</tt> and returns the start symbol for the grammar generated. 
+   * <tt>reader</tt> and returns the start symbol for the grammar generated.
    * @param writer    The schema used by the writer
    * @param reader    The schema used by the reader
    * @return          The start symbol for the resolving grammar
-   * @throws IOException 
+   * @throws IOException
    */
   public final Symbol generate(Schema writer, Schema reader)
     throws IOException {
     return Symbol.root(generate(writer, reader, new HashMap<LitS, Symbol>()));
   }
-  
+
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
    * <tt>reader</tt> and returns the start symbol for the grammar generated.
    * If there is already a symbol in the map <tt>seen</tt> for resolving the
    * two schemas, then that symbol is returned. Otherwise a new symbol is
-   * generated and returnd. 
+   * generated and returnd.
    * @param writer    The schema used by the writer
    * @param reader    The schema used by the reader
    * @param seen      The &lt;reader-schema, writer-schema&gt; to symbol
    * map of start symbols of resolving grammars so far.
    * @return          The start symbol for the resolving grammar
-   * @throws IOException 
+   * @throws IOException
    */
   public Symbol generate(Schema writer, Schema reader,
                                 Map<LitS, Symbol> seen) throws IOException
@@ -108,7 +108,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
                 generate(writer.getElementType(),
                 reader.getElementType(), seen)),
             Symbol.ARRAY_START);
-      
+
       case MAP:
         return Symbol.seq(Symbol.repeat(Symbol.MAP_END,
                 generate(writer.getValueType(),
@@ -125,7 +125,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       if (writerType == Schema.Type.UNION) {
         return resolveUnion(writer, reader, seen);
       }
-  
+
       switch (readerType) {
       case LONG:
         switch (writerType) {
@@ -133,7 +133,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
           return Symbol.resolve(super.generate(writer, seen), Symbol.LONG);
         }
         break;
-  
+
       case FLOAT:
         switch (writerType) {
         case INT:
@@ -141,7 +141,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
           return Symbol.resolve(super.generate(writer, seen), Symbol.FLOAT);
         }
         break;
-  
+
       case DOUBLE:
         switch (writerType) {
         case INT:
@@ -150,23 +150,23 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
           return Symbol.resolve(super.generate(writer, seen), Symbol.DOUBLE);
         }
         break;
-  
+
       case BYTES:
         switch (writerType) {
         case STRING:
           return Symbol.resolve(super.generate(writer, seen), Symbol.BYTES);
         }
         break;
-  
+
       case STRING:
         switch (writerType) {
         case BYTES:
           return Symbol.resolve(super.generate(writer, seen), Symbol.STRING);
         }
         break;
-  
+
       case UNION:
-        int j = bestBranch(reader, writer);
+        int j = bestBranch(reader, writer, seen);
         if (j >= 0) {
           Symbol s = generate(writer, reader.getTypes().get(j), seen);
           return Symbol.seq(Symbol.unionAdjustAction(j, s), Symbol.UNION);
@@ -308,7 +308,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     e.flush();
     return out.toByteArray();
   }
-  
+
   /**
    * Encodes the given Json node <tt>n</tt> on to the encoder <tt>e</tt>
    * according to the schema <tt>s</tt>.
@@ -316,8 +316,9 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    * @param s The schema for the object being encoded.
    * @param n The Json node to encode.
    * @throws IOException
+   * @deprecated internal method
    */
-  
+  @Deprecated
   public static void encode(Encoder e, Schema s, JsonNode n)
     throws IOException {
     switch (s.getType()) {
@@ -426,23 +427,63 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     return Symbol.enumAdjustAction(rsymbols.size(), adjustments);
   }
 
-  private static int bestBranch(Schema r, Schema w) {
+  /**
+   * This checks if the symbol itself is an error or if there is an error in
+   * its production.
+   *
+   * When the symbol is created for a record, this checks whether the record
+   * fields are present (the symbol is not an error action) and that all of the
+   * fields have a non-error action. Record fields may have nested error
+   * actions.
+   *
+   * @return true if the symbol is an error or if its production has an error
+   */
+  private boolean hasMatchError(Symbol sym) {
+    if (sym instanceof Symbol.ErrorAction) {
+      return true;
+    } else {
+      for (int i = 0; i < sym.production.length; i += 1) {
+        if (sym.production[i] instanceof Symbol.ErrorAction) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private int bestBranch(Schema r, Schema w, Map<LitS, Symbol> seen) throws IOException {
     Schema.Type vt = w.getType();
       // first scan for exact match
       int j = 0;
+      int structureMatch = -1;
       for (Schema b : r.getTypes()) {
         if (vt == b.getType())
-          if (vt == Schema.Type.RECORD || vt == Schema.Type.ENUM || 
+          if (vt == Schema.Type.RECORD || vt == Schema.Type.ENUM ||
               vt == Schema.Type.FIXED) {
             String vname = w.getFullName();
             String bname = b.getFullName();
-            if ((vname != null && vname.equals(bname))
-                || vname == bname && vt == Schema.Type.RECORD)
+            // return immediately if the name matches exactly according to spec
+            if (vname != null && vname.equals(bname))
               return j;
+
+            if (vt == Schema.Type.RECORD &&
+                !hasMatchError(resolveRecords(w, b, seen))) {
+              String vShortName = w.getName();
+              String bShortName = b.getName();
+              // use the first structure match or one where the name matches
+              if ((structureMatch < 0) ||
+                  (vShortName != null && vShortName.equals(bShortName))) {
+                structureMatch = j;
+              }
+            }
           } else
             return j;
         j++;
       }
+
+      // if there is a record structure match, return it
+      if (structureMatch >= 0)
+        return structureMatch;
 
       // then scan match via numeric promotion
       j = 0;

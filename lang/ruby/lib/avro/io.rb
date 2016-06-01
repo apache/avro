@@ -209,7 +209,7 @@ module Avro
       # A string is encoded as a long followed by that many bytes of
       # UTF-8 encoded character data
       def write_string(datum)
-        # FIXME utf-8 encode this in 1.9
+        datum = datum.encode('utf-8') if datum.respond_to? :encode
         write_bytes(datum)
       end
 

@@ -86,8 +86,7 @@ module Avro
       elsif PRIMITIVE_TYPES.include? json_obj
         return PrimitiveSchema.new(json_obj)
       else
-        msg = "#{json_obj.inspect} is not a schema we know about."
-        raise SchemaParseError.new(msg)
+        raise UnknownSchemaError.new(json_obj)
       end
     end
 
@@ -109,7 +108,7 @@ module Avro
       when :float, :double
         datum.is_a?(Float) || datum.is_a?(Fixnum) || datum.is_a?(Bignum)
       when :fixed
-        datum.is_a?(String) && datum.size == expected_schema.size
+        datum.is_a?(String) && datum.bytesize == expected_schema.size
       when :enum
         expected_schema.symbols.include? datum
       when :array
@@ -137,6 +136,18 @@ module Avro
     # Returns the type as a string (rather than a symbol), for backwards compatibility.
     # Deprecated in favor of {#type_sym}.
     def type; @type_sym.to_s; end
+
+    # Returns the MD5 fingerprint of the schema as an Integer.
+    def md5_fingerprint
+      parsing_form = SchemaNormalization.to_parsing_form(self)
+      Digest::MD5.hexdigest(parsing_form).to_i(16)
+    end
+
+    # Returns the SHA-256 fingerprint of the schema as an Integer.
+    def sha256_fingerprint
+      parsing_form = SchemaNormalization.to_parsing_form(self)
+      Digest::SHA256.hexdigest(parsing_form).to_i(16)
+    end
 
     def ==(other, seen=nil)
       other.is_a?(Schema) && type_sym == other.type_sym
@@ -369,6 +380,15 @@ module Avro
   end
 
   class SchemaParseError < AvroError; end
+
+  class UnknownSchemaError < SchemaParseError
+    attr_reader :type_name
+
+    def initialize(type)
+      @type_name = type
+      super("#{type.inspect} is not a schema we know about.")
+    end
+  end
 
   module Name
     def self.extract_namespace(name, namespace)

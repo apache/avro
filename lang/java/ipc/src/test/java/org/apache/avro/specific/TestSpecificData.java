@@ -23,6 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.TypeEnum;
 import org.codehaus.jackson.JsonFactory;
@@ -39,9 +44,12 @@ import org.apache.avro.TestSchema;
 import org.apache.avro.test.TestRecord;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.Kind;
+import org.apache.avro.test.Reserved;
+
+import org.apache.avro.generic.GenericRecord;
 
 public class TestSpecificData {
-  
+
   @Test
   /** Make sure that even with nulls, hashCode() doesn't throw NPE. */
   public void testHashCode() {
@@ -95,6 +103,16 @@ public class TestSpecificData {
         new SpecificDatumReader<Object>());
 }
 
+  @Test public void testConvertGenericToSpecific() {
+    GenericRecord generic = new GenericData.Record(TestRecord.SCHEMA$);
+    generic.put("name", "foo");
+    generic.put("kind", new GenericData.EnumSymbol(Kind.SCHEMA$, "BAR"));
+    generic.put("hash", new GenericData.Fixed
+                (MD5.SCHEMA$, new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    TestRecord specific =
+      (TestRecord)SpecificData.get().deepCopy(TestRecord.SCHEMA$, generic);
+  }
+
   @Test public void testGetClassSchema() throws Exception {
     Assert.assertEquals(TestRecord.getClassSchema(), TestRecord.SCHEMA$);
     Assert.assertEquals(MD5.getClassSchema(), MD5.SCHEMA$);
@@ -120,4 +138,29 @@ public class TestSpecificData {
     mapper.readTree(parser);
   }
 
+  @Test public void testExternalizeable() throws Exception {
+    TestRecord before = new TestRecord();
+    before.setName("foo");
+    before.setKind(Kind.BAR);
+    before.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(bytes);
+    out.writeObject(before);
+    out.close();
+
+    ObjectInputStream in =
+      new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+    TestRecord after = (TestRecord)in.readObject();
+
+    Assert.assertEquals(before, after);
+
+  }
+
+  @Test public void testReservedEnumSymbol() throws Exception {
+    Assert.assertEquals(Reserved.default$,
+                        SpecificData.get().createEnum("default",
+                                                      Reserved.SCHEMA$));
+  }
+
 }
+

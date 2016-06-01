@@ -20,6 +20,7 @@ package org.apache.avro;
 
 import java.util.ArrayList;
 
+import org.apache.avro.reflect.ReflectData;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -117,6 +118,48 @@ public class TestSchemaValidation {
   @Test(expected=AvroRuntimeException.class)
   public void testInvalidBuild() {
     builder.strategy(null).validateAll();
+  }
+
+  public static class Point {
+    double x;
+    double y;
+  }
+
+  public static class Circle {
+    Point center;
+    double radius;
+  }
+
+  public static final Schema circleSchema = SchemaBuilder.record("Circle")
+      .fields()
+      .name("center").type().record("Point")
+          .fields()
+          .requiredDouble("x")
+          .requiredDouble("y")
+          .endRecord().noDefault()
+      .requiredDouble("radius")
+      .endRecord();
+
+  public static final Schema circleSchemaDifferentNames = SchemaBuilder
+      .record("crcl").fields()
+      .name("center").type().record("pt")
+      .fields()
+      .requiredDouble("x")
+      .requiredDouble("y")
+      .endRecord().noDefault()
+      .requiredDouble("radius")
+      .endRecord();
+
+  @Test
+  public void testReflectMatchStructure() throws SchemaValidationException {
+    testValidatorPasses(builder.canBeReadStrategy().validateAll(),
+        circleSchemaDifferentNames, ReflectData.get().getSchema(Circle.class));
+  }
+
+  @Test
+  public void testReflectWithAllowNullMatchStructure() throws SchemaValidationException {
+    testValidatorPasses(builder.canBeReadStrategy().validateAll(),
+        circleSchemaDifferentNames, ReflectData.AllowNull.get().getSchema(Circle.class));
   }
 
   private void testValidatorPasses(SchemaValidator validator,

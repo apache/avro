@@ -29,9 +29,9 @@ fi
 
 if [ -f VERSION.txt ]
 then
-VERSION=`cat VERSION.txt`
+  VERSION=`cat VERSION.txt`
 else
-VERSION=`cat ../../share/VERSION.txt`
+  VERSION=`cat ../../share/VERSION.txt`
 fi
 
 BUILD=../../build
@@ -42,65 +42,70 @@ BUILD_CPP=$BUILD/$AVRO_CPP
 DIST_DIR=../../dist/$AVRO_CPP
 DOC_CPP=$BUILD/$AVRO_DOC/api/cpp
 DIST_DIR=../../dist/cpp
-TARFILE=../dist/cpp/$AVRO_CPP.tar.gz 
+TARFILE=../dist/cpp/$AVRO_CPP.tar.gz
 
 (mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
 for target in "$@"
 do
 
 function do_doc() {
-    doxygen
-    if [ -d doc ]
-    then
-        mkdir -p $DOC_CPP
-        cp -R doc/* $DOC_CPP
-    else
-        exit 1
-    fi
+  doxygen
+  if [ -d doc ]
+  then
+    mkdir -p $DOC_CPP
+    cp -R doc/* $DOC_CPP
+  else
+    exit 1
+  fi
 }
 function do_dist() {
-    rm -rf $BUILD_CPP/
-    mkdir -p $BUILD_CPP
-    cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
-        COPYING impl jsonschemas NEWS parser README scripts test examples \
-        $BUILD_CPP
-    find $BUILD_CPP -name '.svn' | xargs rm -rf
-    cp ../../share/VERSION.txt $BUILD_CPP
-    mkdir -p $DIST_DIR
-    (cd $BUILD_DIR; tar cvzf $TARFILE $AVRO_CPP && cp $TARFILE $AVRO_CPP )
-    if [ ! -f $DIST_FILE ]
-    then
-        exit 1
-    fi
+  rm -rf $BUILD_CPP/
+  mkdir -p $BUILD_CPP
+  cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
+    LICENSE NOTICE impl jsonschemas NEWS parser README scripts test examples \
+    $BUILD_CPP
+  find $BUILD_CPP -name '.svn' | xargs rm -rf
+  cp ../../share/VERSION.txt $BUILD_CPP
+  mkdir -p $DIST_DIR
+  (cd $BUILD_DIR; tar cvzf $TARFILE $AVRO_CPP && cp $TARFILE $AVRO_CPP )
+  if [ ! -f $DIST_FILE ]
+  then
+    exit 1
+  fi
 }
 
 case "$target" in
-    test)
+  test)
     (cd build && make && cd .. \
-        && ./build/buffertest \
-        && ./build/unittest \
-        && ./build/CodecTests \
-        && ./build/StreamTests \
-        && ./build/SpecificTests \
-        && ./build/AvrogencppTests \
-        && ./build/DataFileTests)
-	;;
-
-    dist)
-        do_dist
-        do_doc
+      && ./build/buffertest \
+      && ./build/unittest \
+      && ./build/CodecTests \
+      && ./build/StreamTests \
+      && ./build/SpecificTests \
+      && ./build/AvrogencppTests \
+      && ./build/DataFileTests)
     ;;
 
-    clean)
-    (cd build && make clean)
-	;;
+  dist)
+    do_dist
+    do_doc
+    ;;
 
-    install)
+  doc)
+    do_doc
+    ;;
+
+  clean)
+    (cd build && make clean)
+    rm -rf doc test.avro test6.df
+    ;;
+
+  install)
     (cd build && make install)
     ;;
 
-    *)
-        usage
+  *)
+    usage
 esac
 
 done

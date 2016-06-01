@@ -57,12 +57,12 @@ public class TestProtocolHttps extends TestProtocolSpecific {
     connector.setNeedClientAuth(false);
     return new HttpServer(testResponder, connector);
   }
-  
+
   @Override
   public Transceiver createTransceiver() throws Exception{
     return new HttpTransceiver(new URL("https://localhost:"+server.getPort()+"/"));
   }
- 
+
   protected int getExpectedHandshakeCount() {
     return REPEATING;
   }

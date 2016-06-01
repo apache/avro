@@ -426,6 +426,11 @@ OTHER_PROP_EXAMPLES = [
     """,
     valid=True,
   ),
+  ExampleSchema("""
+    {"type": "long", "date": "true"}
+    """,
+    valid=True,
+  ),
 ]
 
 EXAMPLES = PRIMITIVE_EXAMPLES

@@ -82,7 +82,7 @@ public class TestAvroKeyRecordWriter {
 
     dataFileReader.close();
   }
-  
+
   @Test
   public void testSycnableWrite() throws IOException {
     Schema writerSchema = Schema.create(Schema.Type.INT);
@@ -105,20 +105,20 @@ public class TestAvroKeyRecordWriter {
     verify(context);
 
     // Verify that the file was written as expected.
-	Configuration conf = new Configuration();
-	conf.set("fs.default.name", "file:///");
-	Path avroFile = new Path("target/temp.avro");
-	DataFileReader<GenericData.Record> dataFileReader = new DataFileReader<GenericData.Record>(new FsInput(avroFile,
-			conf), new SpecificDatumReader<GenericData.Record>());
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    Path avroFile = new Path("target/temp.avro");
+    DataFileReader<GenericData.Record> dataFileReader = new DataFileReader<GenericData.Record>(new FsInput(avroFile,
+      conf), new SpecificDatumReader<GenericData.Record>());
 
     dataFileReader.seek(positionTwo);
     assertTrue(dataFileReader.hasNext());  // Record 2.
     assertEquals(2, dataFileReader.next());
 
-	dataFileReader.seek(positionOne);
+    dataFileReader.seek(positionOne);
     assertTrue(dataFileReader.hasNext());  // Record 1.
     assertEquals(1, dataFileReader.next());
-    
+
     dataFileReader.close();
-  }  
+  }
 }

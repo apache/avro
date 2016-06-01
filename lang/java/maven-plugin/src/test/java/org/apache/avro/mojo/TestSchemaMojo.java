@@ -21,7 +21,7 @@ import java.io.File;
 
 /**
  * Test the Schema Mojo.
- * 
+ *
  * @author saden
  */
 public class TestSchemaMojo extends AbstractAvroMojoTest {

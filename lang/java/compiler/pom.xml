@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.7.7</version>
+    <version>1.8.1</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -48,6 +48,9 @@
 
   <build>
     <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
       <resource>
         <directory>src/main/velocity</directory>
       </resource>
@@ -125,6 +128,22 @@
       <version>${ant.version}</version>
       <!-- can only be used from within ant -->
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion> <!-- GPL -->
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 

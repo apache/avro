@@ -29,7 +29,7 @@ public interface SchemaValidationStrategy {
 
   /**
    * Validates that one schema is compatible with another.
-   * 
+   *
    * @throws SchemaValidationException if the schemas are not compatible.
    */
   void validate(Schema toValidate, Schema existing)

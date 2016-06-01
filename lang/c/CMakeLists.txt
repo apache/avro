@@ -123,7 +123,6 @@ if(UNIX AND THREADSAFE AND CMAKE_COMPILER_IS_GNUCC)
 endif(UNIX AND THREADSAFE AND CMAKE_COMPILER_IS_GNUCC)
 
 include_directories(${AvroC_SOURCE_DIR}/src)
-include_directories(${AvroC_SOURCE_DIR}/jansson/src)
 
 
 # Enable codecs
@@ -144,6 +143,7 @@ find_package(Snappy)
 if (SNAPPY_FOUND AND ZLIB_FOUND)  # Snappy borrows crc32 from zlib
     set(SNAPPY_PKG libsnappy)
     add_definitions(-DSNAPPY_CODEC)
+    include_directories(${SNAPPY_INCLUDE_DIR})
     message("Enabled snappy codec")
 else (SNAPPY_FOUND AND ZLIB_FOUND)
     set(SNAPPY_PKG "")
@@ -167,6 +167,16 @@ endif (LZMA_FOUND)
 
 set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES} ${SNAPPY_LIBRARIES})
 set(CODEC_PKG "@ZLIB_PKG@ @LZMA_PKG@ @SNAPPY_PKG@")
+
+# Jansson JSON library
+pkg_check_modules(JANSSON jansson>=2.3)
+if (JANSSON_FOUND)
+    set(JANSSON_PKG libjansson)
+    include_directories(${JANSSON_INCLUDE_DIR})
+    link_directories(${JANSSON_LIBRARY_DIRS})
+else (JANSSON_FOUND)
+    message(FATAL_ERROR "libjansson >=2.3 not found")
+endif (JANSSON_FOUND)
 
 
 add_subdirectory(src)

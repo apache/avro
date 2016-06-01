@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.7.7</version>
+    <version>1.8.1</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -40,7 +40,10 @@
       org.apache.hadoop*,
       *
     </osgi.import>
-    <osgi.export>org.apache.avro.mapred*;version="${project.version}"</osgi.export>
+    <osgi.export>
+      org.apache.avro.mapred*;version="${project.version}",
+      org.apache.avro.hadoop*;version="${project.version}",
+    </osgi.export>
   </properties>
 
   <build>
@@ -82,7 +85,7 @@
                 <include>**/mapred/tether/*.avpr</include>
               </includes>
               <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>a
+              <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
             </configuration>
           </execution>
         </executions>
@@ -106,6 +109,33 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.4.1</version>
+        <executions>
+          <execution>
+            <id>enforce-banned-dependencies</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <!-- Ban all versions of Guava other than 11.0.2 that Hadoop uses -->
+                  <excludes>
+                    <exclude>com.google.guava:guava</exclude>
+                  </excludes>
+                  <includes>
+                    <include>com.google.guava:guava:11.0.2</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -120,15 +150,24 @@
       <artifactId>avro-ipc</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
-    <dependency>     
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-all</artifactId>
+      <artifactId>hamcrest-library</artifactId>
+      <version>${hamcrest.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -139,14 +178,20 @@
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-mapper-asl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>${commons-codec.version}</version>
+    </dependency>
   </dependencies>
-  
+
   <profiles>
      <profile>
       <id>hadoop1</id>
       <activation>
         <property>
-          <name>!hadoop.version</name> <!-- if no hadoop.version is set -->
+          <name>hadoop.version</name>
+          <value>1</value>
         </property>
       </activation>
       <properties>
@@ -166,8 +211,7 @@
       <id>hadoop2</id>
       <activation>
         <property>
-          <name>hadoop.version</name>
-          <value>2</value>
+          <name>!hadoop.version</name> <!-- if no hadoop.version is set -->
         </property>
       </activation>
       <properties>
@@ -180,16 +224,6 @@
           <!-- hadoop's execution environment provides its own jars, usurping any others.
             So we should not include it here -->
           <scope>provided</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-mapreduce-client-common</artifactId>
-          <scope>test</scope> <!-- for LocalJobRunner -->
-        </dependency>
-        <dependency>
-          <groupId>commons-httpclient</groupId>
-          <artifactId>commons-httpclient</artifactId>
-          <scope>test</scope> <!-- for LocalJobRunner -->
         </dependency>
       </dependencies>
     </profile>

@@ -64,7 +64,7 @@ public class TrevniMetadataTool implements Tool {
       err.println("Usage: [-pretty] input");
       return 1;
     }
-    
+
     dump(TrevniUtil.input(filename), out, pretty);
 
     return 0;

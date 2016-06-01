@@ -27,7 +27,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
 public class TestAvroTextSort {
-  
+
   @Test
   /**
    * Run the identity job on a "bytes" Avro file using AvroAsTextInputFormat
@@ -37,19 +37,19 @@ public class TestAvroTextSort {
     JobConf job = new JobConf();
     String dir = System.getProperty("test.dir", ".") + "/mapred";
     Path outputPath = new Path(dir + "/out");
-    
+
     outputPath.getFileSystem(job).delete(outputPath);
     WordCountUtil.writeLinesBytesFile();
-    
+
     job.setInputFormat(AvroAsTextInputFormat.class);
     job.setOutputFormat(AvroTextOutputFormat.class);
     job.setOutputKeyClass(Text.class);
-    
+
     FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
     FileOutputFormat.setOutputPath(job, outputPath);
-    
+
     JobClient.runJob(job);
-    
+
     WordCountUtil.validateSortedFile();
   }
 

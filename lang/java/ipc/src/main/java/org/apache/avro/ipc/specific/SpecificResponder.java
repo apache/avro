@@ -42,7 +42,7 @@ public class SpecificResponder extends GenericResponder {
   public SpecificResponder(Class iface, Object impl) {
     this(iface, impl, new SpecificData(impl.getClass().getClassLoader()));
   }
-    
+
   public SpecificResponder(Protocol protocol, Object impl) {
     this(protocol, impl, new SpecificData(impl.getClass().getClassLoader()));
   }

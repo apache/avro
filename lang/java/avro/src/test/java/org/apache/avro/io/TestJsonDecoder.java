@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.Assert;
 
 public class TestJsonDecoder {
-  
+
   @Test public void testInt() throws Exception {
     checkNumeric("int", 1);
   }
@@ -44,7 +44,7 @@ public class TestJsonDecoder {
   }
 
   private void checkNumeric(String type, Object value) throws Exception {
-    String def = 
+    String def =
       "{\"type\":\"record\",\"name\":\"X\",\"fields\":"
       +"[{\"type\":\""+type+"\",\"name\":\"n\"}]}";
     Schema schema = Schema.parse(def);
@@ -60,4 +60,21 @@ public class TestJsonDecoder {
     }
   }
 
+  // Ensure that even if the order of fields in JSON is different from the order in schema,
+  // it works.
+  @Test public void testReorderFields() throws Exception {
+    String w =
+      "{\"type\":\"record\",\"name\":\"R\",\"fields\":"
+      +"[{\"type\":\"long\",\"name\":\"l\"},"
+      +"{\"type\":{\"type\":\"array\",\"items\":\"int\"},\"name\":\"a\"}"
+      +"]}";
+    Schema ws = Schema.parse(w);
+    DecoderFactory df = DecoderFactory.get();
+    String data = "{\"a\":[1,2],\"l\":100}{\"l\": 200, \"a\":[1,2]}";
+    JsonDecoder in = df.jsonDecoder(ws, data);
+    Assert.assertEquals(100, in.readLong());
+    in.skipArray();
+    Assert.assertEquals(200, in.readLong());
+    in.skipArray();
+  }
 }

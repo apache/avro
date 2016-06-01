@@ -95,23 +95,23 @@ public class TestProtocolSpecific {
     responder = new SpecificResponder(Simple.class, new TestImpl());
     server = createServer(responder);
     server.start();
-    
+
     client = createTransceiver();
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);
     addRpcPlugins(req);
     proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
-    
+
     monitor = new HandshakeMonitor();
     responder.addRPCPlugin(monitor);
   }
-  
+
   public void addRpcPlugins(Requestor requestor){}
-  
+
   public Server createServer(Responder testResponder) throws Exception{
     return server = new SocketServer(testResponder,
-                              new InetSocketAddress(0));   
+                              new InetSocketAddress(0));
   }
-  
+
   public Transceiver createTransceiver() throws Exception{
     return new SocketTransceiver(new InetSocketAddress(server.getPort()));
   }
@@ -218,14 +218,14 @@ public class TestProtocolSpecific {
     try { Thread.sleep(100); } catch (InterruptedException e) {}
     assertEquals(2, ackCount);
   }
-  
+
   @Test
   public void testRepeatedAccess() throws Exception {
     for (int x = 0; x < 1000; x++) {
       proxy.hello("hi!");
     }
   }
-  
+
   @Test(expected = Exception.class)
   public void testConnectionRefusedOneWay() throws IOException {
     Transceiver client = new HttpTransceiver(new URL("http://localhost:4444"));
@@ -277,12 +277,12 @@ public class TestProtocolSpecific {
     server.close();
     server = null;
   }
-  
+
   public class HandshakeMonitor extends RPCPlugin{
-    
+
     private int handshakes;
     private HashSet<String> seenProtocols = new HashSet<String>();
-    
+
     @Override
     public void serverConnecting(RPCContext context) {
       handshakes++;
@@ -299,7 +299,7 @@ public class TestProtocolSpecific {
         seenProtocols.add(clientProtocol);
       }
     }
-    
+
     public void assertHandshake(){
       int expected = getExpectedHandshakeCount();
       if(expected != REPEATING){
@@ -307,7 +307,7 @@ public class TestProtocolSpecific {
       }
     }
   }
-  
+
   protected int getExpectedHandshakeCount() {
    return 3;
   }
