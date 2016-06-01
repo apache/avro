@@ -3,6 +3,7 @@ language: java
 env:
   global:
     - TERM=dumb
+    - GRADLE_OPTS=-Xmx386m -Xms386m
 install: true
 script: ./gradlew build testVersionCompatibility
 jdk:
