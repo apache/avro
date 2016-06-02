@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.9.0
 * Built using Avro 0.8.1 (#23)
 * Built using Gradle 2.13
 * Added version cross-compatibility testing

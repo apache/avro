@@ -28,7 +28,7 @@ tasks.withType(AbstractCompile) {
 }
 sourceCompatibility = 1.6
 
-version = "0.9.0-SNAPSHOT"
+version = "0.9.0"
 group = "com.commercehub.gradle.plugin"
 
 pluginBundle {
