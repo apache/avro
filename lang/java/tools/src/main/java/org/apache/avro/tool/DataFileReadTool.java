@@ -20,6 +20,7 @@ package org.apache.avro.tool;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import joptsimple.OptionParser;
@@ -36,6 +37,7 @@ import org.apache.avro.io.JsonEncoder;
 
 /** Reads a data file and dumps to JSON */
 public class DataFileReadTool implements Tool {
+  private static final int DEFAULT_HEAD_COUNT = 10;
 
   @Override
   public String getName() {
@@ -53,10 +55,14 @@ public class DataFileReadTool implements Tool {
     OptionParser optionParser = new OptionParser();
     OptionSpec<Void> prettyOption = optionParser
         .accepts("pretty", "Turns on pretty printing.");
+    String headDesc = String.format("Converts the first X records (default is %d).", DEFAULT_HEAD_COUNT);
+    OptionSpec<String> headOption = optionParser.accepts("head", headDesc).withOptionalArg();
 
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean pretty = optionSet.has(prettyOption);
-    List<String> nargs = (List<String>)optionSet.nonOptionArguments();
+    List<String> nargs = new ArrayList<String>((List<String>)optionSet.nonOptionArguments());
+
+    int headCount = getHeadCount(optionSet, headOption, nargs);
 
     if (nargs.size() != 1) {
       printHelp(err);
@@ -73,8 +79,12 @@ public class DataFileReadTool implements Tool {
       Schema schema = streamReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
-      for (Object datum : streamReader)
+      int recordCount = 0;
+      for (Object datum : streamReader) {
         writer.write(datum, encoder);
+        recordCount++;
+        if(recordCount == headCount) break;
+      }
       encoder.flush();
       out.println();
       out.flush();
@@ -84,8 +94,27 @@ public class DataFileReadTool implements Tool {
     return 0;
   }
 
+  private static int getHeadCount(OptionSet optionSet, OptionSpec<String> headOption, List<String> nargs) {
+    int headCount = Integer.MAX_VALUE;
+    if(optionSet.has(headOption)) {
+      headCount = DEFAULT_HEAD_COUNT;
+      List<String> headValues = optionSet.valuesOf(headOption);
+      if(headValues.size() > 0) {
+        // if the value parses to int, assume it's meant to go with --head
+        // otherwise assume it was an optionSet.nonOptionArgument and add back to the list
+        // TODO: support input filenames whose whole path+name is int parsable?
+        try {
+          headCount = Integer.parseInt(headValues.get(0));
+        } catch(NumberFormatException ex) {
+          nargs.addAll(headValues);
+        }
+      }
+    }
+    return headCount;
+  }
+
   private void printHelp(PrintStream ps) {
-    ps.println("tojson --pretty input-file");
+    ps.println("tojson [--pretty] [--head[=X]] input-file");
     ps.println();
     ps.println(getShortDescription());
     ps.println("A dash ('-') can be given as an input file to use stdin");
