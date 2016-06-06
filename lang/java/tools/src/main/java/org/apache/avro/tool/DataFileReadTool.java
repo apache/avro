@@ -37,7 +37,7 @@ import org.apache.avro.io.JsonEncoder;
 
 /** Reads a data file and dumps to JSON */
 public class DataFileReadTool implements Tool {
-  private static final int DEFAULT_HEAD_COUNT = 10;
+  private static final long DEFAULT_HEAD_COUNT = 10;
 
   @Override
   public String getName() {
@@ -62,7 +62,7 @@ public class DataFileReadTool implements Tool {
     Boolean pretty = optionSet.has(prettyOption);
     List<String> nargs = new ArrayList<String>((List<String>)optionSet.nonOptionArguments());
 
-    int headCount = getHeadCount(optionSet, headOption, nargs);
+    long headCount = getHeadCount(optionSet, headOption, nargs);
 
     if (nargs.size() != 1) {
       printHelp(err);
@@ -79,7 +79,7 @@ public class DataFileReadTool implements Tool {
       Schema schema = streamReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
-      int recordCount = 0;
+      long recordCount = 0;
       for (Object datum : streamReader) {
         writer.write(datum, encoder);
         recordCount++;
@@ -94,8 +94,8 @@ public class DataFileReadTool implements Tool {
     return 0;
   }
 
-  private static int getHeadCount(OptionSet optionSet, OptionSpec<String> headOption, List<String> nargs) {
-    int headCount = Integer.MAX_VALUE;
+  private static long getHeadCount(OptionSet optionSet, OptionSpec<String> headOption, List<String> nargs) {
+    long headCount = Long.MAX_VALUE;
     if(optionSet.has(headOption)) {
       headCount = DEFAULT_HEAD_COUNT;
       List<String> headValues = optionSet.valuesOf(headOption);
@@ -104,7 +104,7 @@ public class DataFileReadTool implements Tool {
         // otherwise assume it was an optionSet.nonOptionArgument and add back to the list
         // TODO: support input filenames whose whole path+name is int parsable?
         try {
-          headCount = Integer.parseInt(headValues.get(0));
+          headCount = Long.parseLong(headValues.get(0));
         } catch(NumberFormatException ex) {
           nargs.addAll(headValues);
         }

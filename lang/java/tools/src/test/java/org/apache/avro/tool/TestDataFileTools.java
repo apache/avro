@@ -139,6 +139,12 @@ public class TestDataFileTools {
   }
 
   @Test
+  public void testReadHeadLongCount() throws Exception {
+    assertEquals(jsonData,
+      run(new DataFileReadTool(), "--head=3000000000", sampleFile.getPath()));
+  }
+
+  @Test
   public void testGetMeta() throws Exception {
     String output = run(new DataFileGetMetaTool(), sampleFile.getPath());
     assertTrue(output, output.contains("avro.schema\t"+schema.toString()+"\n"));
