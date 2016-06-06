@@ -47,7 +47,7 @@ import org.junit.Test;
 
 @SuppressWarnings("deprecation")
 public class TestDataFileTools {
-  static final int COUNT = 10;
+  static final int COUNT = 15;
   static File sampleFile;
   static String jsonData;
   static Schema schema;
@@ -115,6 +115,27 @@ public class TestDataFileTools {
   public void testReadToJsonPretty() throws Exception {
     assertEquals(jsonData,
         run(new DataFileReadTool(), "--pretty", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadHeadDefaultCount() throws Exception {
+    String expectedJson = jsonData.substring(0, 20); // first 10 numbers
+    assertEquals(expectedJson,
+      run(new DataFileReadTool(), "--head", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadHeadEquals3Count() throws Exception {
+    String expectedJson = jsonData.substring(0, 6); // first 3 numbers
+    assertEquals(expectedJson,
+      run(new DataFileReadTool(), "--head=3", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadHeadSpace5Count() throws Exception {
+    String expectedJson = jsonData.substring(0, 10); // first 5 numbers
+    assertEquals(expectedJson,
+      run(new DataFileReadTool(), "--head", "5", sampleFile.getPath()));
   }
 
   @Test
