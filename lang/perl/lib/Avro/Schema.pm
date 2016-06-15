@@ -309,6 +309,7 @@ sub is_data_valid {
         return defined $data ? 0 : 1;
     }
     if ($type eq 'boolean') {
+        return 1 if $data == 0 || $data == 1;
         return 0 if ref $data; # sometimes risky
         return 1 if $data =~ m{yes|no|y|n|t|f|true|false}i;
         return 0;
