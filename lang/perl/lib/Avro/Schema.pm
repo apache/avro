@@ -524,7 +524,7 @@ sub new {
         my $is_valid = $type->is_data_valid($struct->{default});
         my $t = $type->type;
         throw Avro::Schema::Error::Parse(
-            "default value doesn't validate $t: '$struct->{default}'"
+            "default value for field $name doesn't validate $t: '$struct->{default}'"
         ) unless $is_valid;
 
         ## small Perlish special case
