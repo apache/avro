@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -189,28 +190,19 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
   }
 
+  /**
+   * Convert a underlying representation of a logical type (such as a
+   * ByteBuffer) to a higher level object (such as a BigDecimal).
+   * @throws IllegalArgumentException if a null schema or logicalType is passed
+   * in while datum and conversion are not null. Please be noticed that
+   * the exception type has changed. With version 1.8.0 and earlier, in above
+   * circumstance, the exception thrown out depends on the implementation
+   * of conversion (most likely a NullPointerException). Now, an
+   * IllegalArgumentException will be thrown out instead.
+   */
   protected Object convert(Object datum, Schema schema, LogicalType type,
                            Conversion<?> conversion) {
-    try {
-      switch (schema.getType()) {
-      case RECORD:  return conversion.fromRecord((IndexedRecord) datum, schema, type);
-      case ENUM:    return conversion.fromEnumSymbol((GenericEnumSymbol) datum, schema, type);
-      case ARRAY:   return conversion.fromArray(getData().getArrayAsCollection(datum), schema, type);
-      case MAP:     return conversion.fromMap((Map<?, ?>) datum, schema, type);
-      case FIXED:   return conversion.fromFixed((GenericFixed) datum, schema, type);
-      case STRING:  return conversion.fromCharSequence((CharSequence) datum, schema, type);
-      case BYTES:   return conversion.fromBytes((ByteBuffer) datum, schema, type);
-      case INT:     return conversion.fromInt((Integer) datum, schema, type);
-      case LONG:    return conversion.fromLong((Long) datum, schema, type);
-      case FLOAT:   return conversion.fromFloat((Float) datum, schema, type);
-      case DOUBLE:  return conversion.fromDouble((Double) datum, schema, type);
-      case BOOLEAN: return conversion.fromBoolean((Boolean) datum, schema, type);
-      }
-      return datum;
-    } catch (ClassCastException e) {
-      throw new AvroRuntimeException("Cannot convert " + datum + ":" +
-          datum.getClass().getSimpleName() + ": expected generic type", e);
-    }
+    return Conversions.convertToLogicalType(datum, schema, type, conversion);
   }
 
   /** Called to read a record instance. May be overridden for alternate record

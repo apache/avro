@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.TimeConversions.DateConversion;
 import org.apache.avro.data.TimeConversions.TimeConversion;
@@ -96,6 +97,7 @@ public class SpecificCompiler {
     SPECIFIC.addLogicalTypeConversion(new DateConversion());
     SPECIFIC.addLogicalTypeConversion(new TimeConversion());
     SPECIFIC.addLogicalTypeConversion(new TimestampConversion());
+    SPECIFIC.addLogicalTypeConversion(new Conversions.DecimalConversion());
   }
 
   private final Set<Schema> queue = new HashSet<Schema>();
@@ -106,6 +108,7 @@ public class SpecificCompiler {
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
+  private boolean enableDecimalLogicalType = false;
 
   /*
    * Used in the record.vm template.
@@ -206,6 +209,14 @@ public class SpecificCompiler {
    */
   public void setCreateSetters(boolean createSetters) {
     this.createSetters = createSetters;
+  }
+
+  /**
+   * Set to true to use {@link java.math.BigDecimal} instead of
+   * {@link java.nio.ByteBuffer} for logical type "decimal"
+   */
+  public void setEnableDecimalLogicalType(boolean enableDecimalLogicalType) {
+    this.enableDecimalLogicalType = enableDecimalLogicalType;
   }
 
   private static String logChuteName = null;
@@ -564,10 +575,13 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the java type for a Schema. */
   public String javaType(Schema schema) {
-    Conversion<?> conversion = SPECIFIC
-        .getConversionFor(schema.getLogicalType());
-    if (conversion != null) {
-      return conversion.getConvertedType().getName();
+    if (enableDecimalLogicalType
+        || !(schema.getLogicalType() instanceof LogicalTypes.Decimal)) {
+      Conversion<?> conversion = SPECIFIC
+          .getConversionFor(schema.getLogicalType());
+      if (conversion != null) {
+        return conversion.getConvertedType().getName();
+      }
     }
 
     switch (schema.getType()) {
@@ -601,12 +615,6 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the unboxed java type for a Schema. */
   public String javaUnbox(Schema schema) {
-    Conversion<?> conversion = SPECIFIC
-        .getConversionFor(schema.getLogicalType());
-    if (conversion != null) {
-      return conversion.getConvertedType().getName();
-    }
-
     switch (schema.getType()) {
     case INT:     return "int";
     case LONG:    return "long";
@@ -627,13 +635,20 @@ public class SpecificCompiler {
   }
 
   public String conversionInstance(Schema schema) {
+    if (schema == null || schema.getLogicalType() == null) {
+      return "null";
+    }
+
     if (LogicalTypes.date().equals(schema.getLogicalType())) {
       return "DATE_CONVERSION";
     } else if (LogicalTypes.timeMillis().equals(schema.getLogicalType())) {
       return "TIME_CONVERSION";
     } else if (LogicalTypes.timestampMillis().equals(schema.getLogicalType())) {
       return "TIMESTAMP_CONVERSION";
+    } else if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass())) {
+      return enableDecimalLogicalType ? "DECIMAL_CONVERSION" : "null";
     }
+
     return "null";
   }
 
