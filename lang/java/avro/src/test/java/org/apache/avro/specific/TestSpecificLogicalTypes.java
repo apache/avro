@@ -1,5 +1,7 @@
 package org.apache.avro.specific;
 
+import org.apache.avro.Conversions;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.data.TimeConversions.DateConversion;
 import org.apache.avro.data.TimeConversions.TimeConversion;
@@ -19,6 +21,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,7 +53,8 @@ public class TestSpecificLogicalTypes {
         null,
         LocalDate.now(),
         LocalTime.now(),
-        DateTime.now().withZone(DateTimeZone.UTC)
+        DateTime.now().withZone(DateTimeZone.UTC),
+        new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
     File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
@@ -78,7 +82,10 @@ public class TestSpecificLogicalTypes {
         new DateConversion().toInt(LocalDate.now(), null, null),
         new TimeConversion().toInt(LocalTime.now(), null, null),
         new TimestampConversion().toLong(
-            DateTime.now().withZone(DateTimeZone.UTC), null, null)
+            DateTime.now().withZone(DateTimeZone.UTC), null, null),
+        new Conversions.DecimalConversion().toBytes(
+            new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN), null,
+            LogicalTypes.decimal(9, 2))
     );
 
     File data = write(TestRecordWithoutLogicalTypes.getClassSchema(), record);
@@ -93,6 +100,7 @@ public class TestSpecificLogicalTypes {
     LocalDate date = LocalDate.now();
     LocalTime time = LocalTime.now();
     DateTime timestamp = DateTime.now().withZone(DateTimeZone.UTC);
+    BigDecimal decimal = new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN);
 
     TestRecordWithoutLogicalTypes record = new TestRecordWithoutLogicalTypes(
         true,
@@ -103,7 +111,8 @@ public class TestSpecificLogicalTypes {
         null,
         new DateConversion().toInt(date, null, null),
         new TimeConversion().toInt(time, null, null),
-        new TimestampConversion().toLong(timestamp, null, null)
+        new TimestampConversion().toLong(timestamp, null, null),
+        new Conversions.DecimalConversion().toBytes(decimal, null, LogicalTypes.decimal(9, 2))
     );
 
     File data = write(TestRecordWithoutLogicalTypes.getClassSchema(), record);
@@ -120,7 +129,8 @@ public class TestSpecificLogicalTypes {
         null,
         date,
         time,
-        timestamp
+        timestamp,
+        decimal
     );
 
     Assert.assertEquals("Should match written record", expected, actual.get(0));
@@ -131,6 +141,7 @@ public class TestSpecificLogicalTypes {
     LocalDate date = LocalDate.now();
     LocalTime time = LocalTime.now();
     DateTime timestamp = DateTime.now().withZone(DateTimeZone.UTC);
+    BigDecimal decimal = new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN);
 
     TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
         true,
@@ -141,7 +152,8 @@ public class TestSpecificLogicalTypes {
         null,
         date,
         time,
-        timestamp
+        timestamp,
+        decimal
     );
 
     File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
@@ -158,7 +170,8 @@ public class TestSpecificLogicalTypes {
         null,
         new DateConversion().toInt(date, null, null),
         new TimeConversion().toInt(time, null, null),
-        new TimestampConversion().toLong(timestamp, null, null)
+        new TimestampConversion().toLong(timestamp, null, null),
+        new Conversions.DecimalConversion().toBytes(decimal, null, LogicalTypes.decimal(9, 2))
     );
 
     Assert.assertEquals("Should match written record", expected, actual.get(0));
