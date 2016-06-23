@@ -4,7 +4,7 @@ plugins {
     id "codenarc"
     id "idea"
     id "maven"
-    id "com.gradle.plugin-publish" version "0.9.1"
+    id "com.gradle.plugin-publish" version "0.9.4"
 }
 
 repositories {
@@ -125,7 +125,7 @@ test {
 }
 
 def avroVersions = ["1.8.0", "1.8.1"]
-def gradleVersions = ["2.0", "2.1", "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13"]
+def gradleVersions = ["2.0", "2.1", "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14"]
 
 avroVersions.each { def avroVersion ->
     gradleVersions.each { def gradleVersion ->

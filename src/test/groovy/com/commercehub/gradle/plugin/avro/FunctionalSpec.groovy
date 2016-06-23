@@ -1,9 +1,9 @@
 package com.commercehub.gradle.plugin.avro
 
-import org.gradle.testkit.jarjar.org.gradle.util.GradleVersion
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.internal.feature.TestKitFeature
+import org.gradle.util.GradleVersion
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification

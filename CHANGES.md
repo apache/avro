@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Built using Gradle 2.14
 
 ## 0.9.0
 * Built using Avro 1.8.1 (#23)
