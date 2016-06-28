@@ -15,6 +15,8 @@ Trunk (not yet released)
     AVRO-1741: Python3: Fix error when codec is not in the header.
     (Matthew Hayes via blue)
 
+    AVRO-1869: Java: Fix Decimal conversion from ByteBuffer. (blue)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
