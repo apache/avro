@@ -20,6 +20,8 @@ package $schema.getNamespace();
 #end
 
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.message.BinaryMessageEncoder;
+import org.apache.avro.message.BinaryMessageDecoder;
 
 @SuppressWarnings("all")
 #if ($schema.getDoc())
@@ -33,6 +35,28 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  private static SpecificData MODEL$ = new SpecificData();
+
+#if (!$schema.isError())
+  private static final BinaryMessageEncoder<${this.mangle($schema.getName())}> ENCODER =
+      new BinaryMessageEncoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
+
+  private static final BinaryMessageDecoder<${this.mangle($schema.getName())}> DECODER =
+      new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
+
+  /** Serializes this ${schema.getName()} to a ByteBuffer. */
+  public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
+    return ENCODER.encode(this);
+  }
+
+  /** Deserializes a ${schema.getName()} from a ByteBuffer. */
+  public static ${this.mangle($schema.getName())} fromByteBuffer(
+      java.nio.ByteBuffer b) throws java.io.IOException {
+    return DECODER.decode(b);
+  }
+#end
+
 #foreach ($field in $schema.getFields())
 #if ($field.doc())
   /** $field.doc() */
@@ -405,7 +429,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   }
 
   private static final org.apache.avro.io.DatumWriter
-    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);
+    WRITER$ = MODEL$.createDatumWriter(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -413,7 +437,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   }
 
   private static final org.apache.avro.io.DatumReader
-    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
+    READER$ = MODEL$.createDatumReader(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
