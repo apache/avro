@@ -516,4 +516,8 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(uuidSchema));
   }
+
+  public void testToFromByteBuffer() {
+
+  }
 }

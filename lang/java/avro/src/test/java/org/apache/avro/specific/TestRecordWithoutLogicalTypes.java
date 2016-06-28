@@ -5,6 +5,8 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.BinaryMessageEncoder;
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("all")
@@ -12,6 +14,26 @@ import java.nio.ByteBuffer;
 public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TestRecordWithoutLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"b\",\"type\":\"boolean\"},{\"name\":\"i32\",\"type\":\"int\"},{\"name\":\"i64\",\"type\":\"long\"},{\"name\":\"f32\",\"type\":\"float\"},{\"name\":\"f64\",\"type\":\"double\"},{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"dec\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  private static SpecificData MODEL$ = new SpecificData();
+
+  private static final BinaryMessageEncoder<TestRecordWithoutLogicalTypes> ENCODER =
+      new BinaryMessageEncoder<TestRecordWithoutLogicalTypes>(MODEL$, SCHEMA$);
+
+  private static final BinaryMessageDecoder<TestRecordWithoutLogicalTypes> DECODER =
+      new BinaryMessageDecoder<TestRecordWithoutLogicalTypes>(MODEL$, SCHEMA$);
+
+  /** Serializes this ${schema.getName()} to a ByteBuffer. */
+  public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
+    return ENCODER.encode(this);
+  }
+
+  /** Deserializes a ${schema.getName()} from a ByteBuffer. */
+  public static TestRecordWithoutLogicalTypes fromByteBuffer(
+      java.nio.ByteBuffer b) throws java.io.IOException {
+    return DECODER.decode(b);
+  }
+
    private boolean b;
    private int i32;
    private long i64;

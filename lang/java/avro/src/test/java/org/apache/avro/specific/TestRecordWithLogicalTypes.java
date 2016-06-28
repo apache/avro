@@ -5,7 +5,8 @@
  */
 package org.apache.avro.specific;
 
-import org.apache.avro.Conversions;
+import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.BinaryMessageEncoder;
 
 import java.math.BigDecimal;
 
@@ -15,6 +16,26 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   private static final long serialVersionUID = -4211233492739285532L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TestRecordWithLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"b\",\"type\":\"boolean\"},{\"name\":\"i32\",\"type\":\"int\"},{\"name\":\"i64\",\"type\":\"long\"},{\"name\":\"f32\",\"type\":\"float\"},{\"name\":\"f64\",\"type\":\"double\"},{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"dec\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  private static SpecificData MODEL$ = new SpecificData();
+
+  private static final BinaryMessageEncoder<TestRecordWithLogicalTypes> ENCODER =
+      new BinaryMessageEncoder<TestRecordWithLogicalTypes>(MODEL$, SCHEMA$);
+
+  private static final BinaryMessageDecoder<TestRecordWithLogicalTypes> DECODER =
+      new BinaryMessageDecoder<TestRecordWithLogicalTypes>(MODEL$, SCHEMA$);
+
+  /** Serializes this ${schema.getName()} to a ByteBuffer. */
+  public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
+    return ENCODER.encode(this);
+  }
+
+  /** Deserializes a ${schema.getName()} from a ByteBuffer. */
+  public static TestRecordWithLogicalTypes fromByteBuffer(
+      java.nio.ByteBuffer b) throws java.io.IOException {
+    return DECODER.decode(b);
+  }
+
   @Deprecated public boolean b;
   @Deprecated public int i32;
   @Deprecated public long i64;
@@ -757,7 +778,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   }
 
   private static final org.apache.avro.io.DatumWriter
-    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);  
+      WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -765,7 +786,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   }
 
   private static final org.apache.avro.io.DatumReader
-    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);  
+      READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
