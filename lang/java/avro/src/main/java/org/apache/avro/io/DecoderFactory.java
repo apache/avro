@@ -269,6 +269,44 @@ public class DecoderFactory {
   }
 
   /**
+   * Creates a {@link JsonDecoder} using the InputStrim provided for reading
+   * data that conforms to the Schema provided.
+   * <p/>
+   *
+   * @param schema
+   *          The Schema for data read from this JsonEncoder. Cannot be null.
+   * @param input
+   *          The InputStream to read from. Cannot be null.
+   * @param decodeBase64
+   *          Decode byte arrays with Base64.
+   * @return A JsonEncoder configured with <i>input</i> and <i>schema</i>
+   * @throws IOException
+   */
+  public JsonDecoder jsonDecoder(Schema schema, InputStream input, boolean decodeBase64)
+    throws IOException {
+    return new JsonDecoder(schema, input, decodeBase64);
+  }
+
+  /**
+   * Creates a {@link JsonDecoder} using the String provided for reading data
+   * that conforms to the Schema provided.
+   * <p/>
+   *
+   * @param schema
+   *          The Schema for data read from this JsonEncoder. Cannot be null.
+   * @param input
+   *          The String to read from. Cannot be null.
+   * @param decodeBase64
+   *          Decode byte arrays with Base64.
+   * @return A JsonEncoder configured with <i>input</i> and <i>schema</i>
+   * @throws IOException
+   */
+  public JsonDecoder jsonDecoder(Schema schema, String input, boolean decodeBase64)
+    throws IOException {
+    return new JsonDecoder(schema, input, decodeBase64);
+  }
+
+  /**
    * Creates a {@link ValidatingDecoder} wrapping the Decoder provided. This
    * ValidatingDecoder will ensure that operations against it conform to the
    * schema provided.
