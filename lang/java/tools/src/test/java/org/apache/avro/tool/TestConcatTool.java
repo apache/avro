@@ -137,7 +137,7 @@ public class TestConcatTool {
   }
 
   @Test
-  @Ignore
+  @Ignore // AVRO-1856, see note below
   // theoretically this test should test the append scenario
   // the problem is, FileSystem.append does not work for local filesystems
   // (note: or maybe doing dev on Windows is the problem??)
