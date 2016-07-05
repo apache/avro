@@ -137,7 +137,7 @@ public class TestConcatTool {
   }
 
   @Test
-  @Ignore // AVRO-1876 is in JIRA to improve this test to use MiniDFSCluster, the following describes current state
+  @Ignore("AVRO-1876 is in JIRA to improve this test to use MiniDFSCluster, see method comment for details")
   // theoretically this test should test the append scenario
   // the problem is, FileSystem.append does not work for local filesystems
   // (note: or maybe doing dev on Windows is the problem??)
