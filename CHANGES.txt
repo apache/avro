@@ -42,6 +42,9 @@ Trunk (not yet released)
     AVRO-1848: Ruby: Fix handling of falsey default values.
     (Brian McKelvey via blue)
 
+    AVRO-1874: Py3: Use recommended module-level logging.
+    (Torgeir Børresen via blue)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
