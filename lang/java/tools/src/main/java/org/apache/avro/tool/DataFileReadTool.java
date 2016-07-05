@@ -27,6 +27,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.io.DatumWriter;
@@ -79,11 +80,9 @@ public class DataFileReadTool implements Tool {
       Schema schema = streamReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
-      long recordCount = 0;
-      for (Object datum : streamReader) {
+      for(long recordCount = 0; streamReader.hasNext() && recordCount < headCount; recordCount++) {
+        Object datum = streamReader.next();
         writer.write(datum, encoder);
-        recordCount++;
-        if(recordCount == headCount) break;
       }
       encoder.flush();
       out.println();
@@ -105,6 +104,7 @@ public class DataFileReadTool implements Tool {
         // TODO: support input filenames whose whole path+name is int parsable?
         try {
           headCount = Long.parseLong(headValues.get(0));
+          if(headCount < 0) throw new AvroRuntimeException("--head count must not be negative");
         } catch(NumberFormatException ex) {
           nargs.addAll(headValues);
         }

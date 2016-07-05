@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
@@ -142,6 +143,16 @@ public class TestDataFileTools {
   public void testReadHeadLongCount() throws Exception {
     assertEquals(jsonData,
       run(new DataFileReadTool(), "--head=3000000000", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadHeadEqualsZeroCount() throws Exception {
+    assertEquals("\n", run(new DataFileReadTool(), "--head=0", sampleFile.getPath()));
+  }
+
+  @Test(expected = AvroRuntimeException.class)
+  public void testReadHeadNegativeCount() throws Exception {
+    assertEquals("\n", run(new DataFileReadTool(), "--head=-5", sampleFile.getPath()));
   }
 
   @Test
