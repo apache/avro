@@ -69,11 +69,6 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
       new Parser(new JsonGrammarGenerator().generate(sc), this);
   }
 
-  JsonEncoder(boolean encodeBase64, Schema sc, OutputStream out) throws IOException {
-    this(sc, getJsonGenerator(out, false));
-    this.encodeBase64 = encodeBase64;
-  }
-
   JsonEncoder(Schema sc, OutputStream out, boolean pretty, boolean encodeBase64) throws IOException {
     this(sc, getJsonGenerator(out, pretty));
     this.encodeBase64 = encodeBase64;

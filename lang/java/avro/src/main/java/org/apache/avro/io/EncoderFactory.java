@@ -330,29 +330,6 @@ public class EncoderFactory {
 
   /**
    * Creates a {@link JsonEncoder} using the OutputStream provided for writing
-   * data conforming to the Schema provided.
-   * <p/>
-   * {@link JsonEncoder} buffers its output. Data may not appear on the
-   * underlying OutputStream until {@link Encoder#flush()} is called.
-   * <p/>
-   * {@link JsonEncoder} is not thread-safe.
-   *
-   * @param encodeBase64
-   *          Encode byte arrays with Base64.
-   * @param schema
-   *          The Schema for data written to this JsonEncoder. Cannot be null.
-   * @param out
-   *          The OutputStream to write to. Cannot be null.
-   * @return A JsonEncoder configured with <i>out</i> and <i>schema</i>
-   * @throws IOException
-   */
-  public JsonEncoder jsonEncoder(boolean encodeBase64, Schema schema, OutputStream out)
-    throws IOException {
-    return new JsonEncoder(encodeBase64, schema, out);
-  }
-
-  /**
-   * Creates a {@link JsonEncoder} using the OutputStream provided for writing
    * data conforming to the Schema provided with optional pretty printing.
    * <p/>
    * {@link JsonEncoder} buffers its output. Data may not appear on the
