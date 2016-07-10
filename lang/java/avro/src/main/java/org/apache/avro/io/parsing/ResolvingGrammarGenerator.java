@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -223,17 +224,19 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       Field[] reordered = new Field[rfields.size()];
       int ridx = 0;
       int count = 1 + wfields.size();
+      Map<String, Field> found = Maps.newHashMap();
 
       for (Field f : wfields) {
         Field rdrField = reader.getField(f.name());
         if (rdrField != null) {
           reordered[ridx++] = rdrField;
+          found.put(rdrField.name(), f);
         }
       }
 
       for (Field rf : rfields) {
         String fname = rf.name();
-        if (writer.getField(fname) == null) {
+        if (!found.containsKey(fname)) {
           if (rf.defaultValue() == null) {
             result = Symbol.error("Found " + writer.getFullName()
                                   + ", expecting " + reader.getFullName()
@@ -280,7 +283,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       // Add default values for fields missing from Writer
       for (Field rf : rfields) {
         String fname = rf.name();
-        Field wf = writer.getField(fname);
+        Field wf = found.get(fname);
         if (wf == null) {
           byte[] bb = getBinary(rf.schema(), rf.defaultValue());
           production[--count] = Symbol.defaultStartAction(bb);

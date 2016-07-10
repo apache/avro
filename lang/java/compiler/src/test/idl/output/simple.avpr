@@ -37,7 +37,7 @@
       "name" : "nullableHash",
       "type" : [ "null", "MD5" ],
       "default" : null,
-      "aliases" : [ "hash", "hsh" ]
+      "aliases" : [ "hsh" ]
     }, {
       "name" : "value",
       "type" : "double",

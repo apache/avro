@@ -43,7 +43,7 @@ protocol Simple {
 
     @foo("bar") MD5 hash = "0000000000000000";
 
-    union {null, MD5} @aliases(["hash", "hsh"]) nullableHash = null;
+    union {null, MD5} @aliases(["hsh"]) nullableHash = null;
 
     double value = NaN;
     float average = -Infinity;

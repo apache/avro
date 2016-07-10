@@ -40,7 +40,7 @@ protocol Simple {
 
     MD5 hash;
 
-    union { MD5, null} @aliases(["hash"]) nullableHash;
+    union { MD5, null} @aliases(["hsh"]) nullableHash;
 
     array<long> arrayOfLongs;
   }
