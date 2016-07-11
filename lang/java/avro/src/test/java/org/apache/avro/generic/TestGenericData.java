@@ -17,6 +17,7 @@
  */
 package org.apache.avro.generic;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,6 +37,11 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.util.Utf8;
@@ -44,6 +50,7 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestGenericData {
@@ -491,5 +498,46 @@ public class TestGenericData {
     GenericRecord record = new GenericData.Record(type2Schema);
     record.put("myString", "myValue");
     assertTrue(GenericData.get().validate(unionSchema, record));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testSchemaEvolution() throws Exception {
+    Schema schemaV1 = SchemaBuilder.record("TestRecord")
+        .fields()
+        .requiredInt("id")
+        .optionalString("msg")
+        .endRecord();
+
+    GenericRecordBuilder v1Builder = new GenericRecordBuilder(schemaV1);
+
+    Schema schemaV2 = SchemaBuilder.record("TestRecord2")
+        .fields()
+        .requiredLong("id")
+        .name("message").aliases("msg").type().optional().stringType()
+        .optionalDouble("data")
+        .endRecord();
+
+    GenericRecordBuilder v2Builder = new GenericRecordBuilder(schemaV2);
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
+    DatumWriter<Record> writer = GenericData.get().createDatumWriter(schemaV1);
+
+    Record record = v1Builder.set("id", 6).set("msg", "m-6").build();
+
+    writer.write(record, encoder);
+    encoder.flush();
+    out.close();
+
+    ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+
+    Decoder decoder = DecoderFactory.get().directBinaryDecoder(in, null);
+    DatumReader<Record> reader = GenericData.get().createDatumReader(schemaV1, schemaV2);
+
+    Record copy = reader.read(null, decoder);
+    Assert.assertEquals(
+        v2Builder.set("id", 6L).set("message", "m-6").clear("data").build(),
+        copy);
   }
 }
