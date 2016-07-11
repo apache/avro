@@ -19,6 +19,8 @@ Trunk (not yet released)
 
     AVRO-1719: C++: Fix tests with Boost >= 1.59. (Romain Geissler via blue)
 
+    AVRO-1879: Make conversions field static. (Michael Wong via blue)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
