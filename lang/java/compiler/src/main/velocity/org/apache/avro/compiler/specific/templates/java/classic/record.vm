@@ -114,7 +114,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
 
-  private final org.apache.avro.Conversion<?>[] conversions =
+  private final transient org.apache.avro.Conversion<?>[] conversions =
       new org.apache.avro.Conversion<?>[] {
 #foreach ($field in $schema.getFields())
       ${this.conversionInstance($field.schema())},
