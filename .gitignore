@@ -11,3 +11,5 @@ target
 /build
 test-output
 /dist
+/lang/java/compiler/nbactions.xml
+/lang/java/compiler/nb-configuration.xml
