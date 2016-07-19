@@ -214,18 +214,74 @@ class TestSchema < Test::Unit::TestCase
     end
   end
 
-  def test_validate_union
-    schema = hash_to_schema(type: 'record',
-                            name: 'person',
-                            fields: [
-                              { name: 'some', type: %w(int null) }
-                            ])
+  def test_validate_union_on_primitive_types
+    schema = hash_to_schema(
+      name: 'should_not_matter',
+      type: 'record',
+      fields: [
+        { name: 'what_ever', type: %w(long string) }
+      ]
+    )
 
-    assert_nothing_raised { validate!(schema, 'some' => 1) }
-    assert_nothing_raised { validate!(schema, 'some' => nil) }
+    assert_failed_validation('at .what_ever expected union of [\'long\', \'string\'], got null') {
+      validate!(schema, 'what_ever' => nil)
+    }
+  end
 
-    assert_failed_validation('at .some expected union of [\'int\', \'null\'], got string with value "nope"') do
-      validate!(schema, 'some' => 'nope')
+  def test_validate_union_of_nil_and_record_inside_array
+    schema = hash_to_schema(
+      name: 'this does not matter',
+      type: 'record',
+      fields: [
+        {
+          name: 'person',
+          type: {
+            name: 'person_entry',
+            type: 'record',
+            fields: [
+              {
+                name: 'houses',
+                type: [
+                  'null',
+                  {
+                    name: 'houses_entry',
+                    type: 'array',
+                    items: [
+                      {
+                        name: 'house_entry',
+                        type: 'record',
+                        fields: [
+                          { name: 'number_of_rooms', type: 'long' }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+              }
+            ]
+          }
+        }
+      ]
+    )
+
+    assert_failed_validation('at .person expected type record, got null') {
+      validate!(schema, 'not at all' => nil)
+    }
+    assert_nothing_raised { validate!(schema, 'person' => {}) }
+    assert_nothing_raised { validate!(schema, 'person' => { houses: [] }) }
+    assert_nothing_raised { validate!(schema, 'person' => { 'houses' => [{ 'number_of_rooms' => 1 }] }) }
+
+    message = 'at .person.houses[1].number_of_rooms expected type long, got string with value "not valid at all"'
+    assert_failed_validation(message) do
+      validate!(
+        schema,
+        'person' => {
+          'houses' => [
+            { 'number_of_rooms' => 2 },
+            { 'number_of_rooms' => 'not valid at all' }
+          ]
+        }
+      )
     end
   end
 
