@@ -363,6 +363,96 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testJavaUnbox() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(false);
+
+    Schema intSchema = Schema.create(Schema.Type.INT);
+    Schema longSchema = Schema.create(Schema.Type.LONG);
+    Schema floatSchema = Schema.create(Schema.Type.FLOAT);
+    Schema doubleSchema = Schema.create(Schema.Type.DOUBLE);
+    Schema boolSchema = Schema.create(Schema.Type.BOOLEAN);
+    Assert.assertEquals("Should use int for Type.INT",
+        "int", compiler.javaUnbox(intSchema));
+    Assert.assertEquals("Should use long for Type.LONG",
+        "long", compiler.javaUnbox(longSchema));
+    Assert.assertEquals("Should use float for Type.FLOAT",
+        "float", compiler.javaUnbox(floatSchema));
+    Assert.assertEquals("Should use double for Type.DOUBLE",
+        "double", compiler.javaUnbox(doubleSchema));
+    Assert.assertEquals("Should use boolean for Type.BOOLEAN",
+        "boolean", compiler.javaUnbox(boolSchema));
+
+    Schema dateSchema = LogicalTypes.date()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeSchema = LogicalTypes.timeMillis()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+    // Date/time types should always use upper level java classes, even though
+    // their underlying representations are primitive types
+    Assert.assertEquals("Should use Joda LocalDate for date type",
+        "org.joda.time.LocalDate", compiler.javaUnbox(dateSchema));
+    Assert.assertEquals("Should use Joda LocalTime for time-millis type",
+        "org.joda.time.LocalTime", compiler.javaUnbox(timeSchema));
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type",
+        "org.joda.time.DateTime", compiler.javaUnbox(timestampSchema));
+
+  }
+
+  @Test
+  public void testNullableTypesJavaUnbox() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(false);
+
+    // Nullable types should return boxed types instead of primitive types
+    Schema nullableIntSchema1 = Schema.createUnion(
+        Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT));
+    Schema nullableIntSchema2 = Schema.createUnion(
+        Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL));
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableIntSchema1), "java.lang.Integer");
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableIntSchema2), "java.lang.Integer");
+
+    Schema nullableLongSchema1 = Schema.createUnion(
+        Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.LONG));
+    Schema nullableLongSchema2 = Schema.createUnion(
+        Schema.create(Schema.Type.LONG), Schema.create(Schema.Type.NULL));
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableLongSchema1), "java.lang.Long");
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableLongSchema2), "java.lang.Long");
+
+    Schema nullableFloatSchema1 = Schema.createUnion(
+        Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.FLOAT));
+    Schema nullableFloatSchema2 = Schema.createUnion(
+        Schema.create(Schema.Type.FLOAT), Schema.create(Schema.Type.NULL));
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableFloatSchema1), "java.lang.Float");
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableFloatSchema2), "java.lang.Float");
+
+    Schema nullableDoubleSchema1 = Schema.createUnion(
+        Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.DOUBLE));
+    Schema nullableDoubleSchema2 = Schema.createUnion(
+        Schema.create(Schema.Type.DOUBLE), Schema.create(Schema.Type.NULL));
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableDoubleSchema1), "java.lang.Double");
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableDoubleSchema2), "java.lang.Double");
+
+    Schema nullableBooleanSchema1 = Schema.createUnion(
+        Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.BOOLEAN));
+    Schema nullableBooleanSchema2 = Schema.createUnion(
+        Schema.create(Schema.Type.BOOLEAN), Schema.create(Schema.Type.NULL));
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableBooleanSchema1), "java.lang.Boolean");
+    Assert.assertEquals("Should return boxed type",
+        compiler.javaUnbox(nullableBooleanSchema2), "java.lang.Boolean");
+  }
+
+  @Test
   public void testLogicalTypesWithMultipleFields() throws Exception {
     Schema logicalTypesWithMultipleFields = new Schema.Parser().parse(
         new File("src/test/resources/simple_record.avsc"));
