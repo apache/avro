@@ -575,12 +575,14 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the java type for a Schema. */
   public String javaType(Schema schema) {
-    if (enableDecimalLogicalType
-        || !(schema.getLogicalType() instanceof LogicalTypes.Decimal)) {
-      Conversion<?> conversion = SPECIFIC
-          .getConversionFor(schema.getLogicalType());
-      if (conversion != null) {
-        return conversion.getConvertedType().getName();
+    return javaType(schema, true);
+  }
+
+  private String javaType(Schema schema, boolean checkConvertedLogicalType) {
+    if (checkConvertedLogicalType) {
+      String convertedLogicalType = getConvertedLogicalType(schema);
+      if (convertedLogicalType != null) {
+        return convertedLogicalType;
       }
     }
 
@@ -613,15 +615,32 @@ public class SpecificCompiler {
     }
   }
 
+  private String getConvertedLogicalType(Schema schema) {
+    if (enableDecimalLogicalType
+        || !(schema.getLogicalType() instanceof LogicalTypes.Decimal)) {
+      Conversion<?> conversion = SPECIFIC
+          .getConversionFor(schema.getLogicalType());
+      if (conversion != null) {
+        return conversion.getConvertedType().getName();
+      }
+    }
+    return null;
+  }
+
   /** Utility for template use.  Returns the unboxed java type for a Schema. */
   public String javaUnbox(Schema schema) {
+    String convertedLogicalType = getConvertedLogicalType(schema);
+    if (convertedLogicalType != null) {
+      return convertedLogicalType;
+    }
+
     switch (schema.getType()) {
-    case INT:     return "int";
-    case LONG:    return "long";
-    case FLOAT:   return "float";
-    case DOUBLE:  return "double";
-    case BOOLEAN: return "boolean";
-    default:      return javaType(schema);
+      case INT:     return "int";
+      case LONG:    return "long";
+      case FLOAT:   return "float";
+      case DOUBLE:  return "double";
+      case BOOLEAN: return "boolean";
+      default:      return javaType(schema, false);
     }
   }
 
