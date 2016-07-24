@@ -19,6 +19,7 @@
 package org.apache.avro;
 
 import com.google.common.collect.MapMaker;
+import com.google.common.primitives.Bytes;
 
 class GuavaClasses {
   /*
@@ -27,5 +28,6 @@ class GuavaClasses {
    */
   static {
     MapMaker.class.getName();
+    Bytes.class.getName();
   }
 }
