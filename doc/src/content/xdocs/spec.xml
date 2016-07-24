@@ -487,18 +487,18 @@
               value, followed by that many key/value pairs.  A block
               with count zero indicates the end of the map.  Each item
               is encoded per the map's value schema.</p>
-	
+
             <p>If a block's count is negative, its absolute value is used,
               and the count is followed immediately by a <code>long</code>
               block <em>size</em> indicating the number of bytes in the
               block.  This block size permits fast skipping through data,
               e.g., when projecting a record to a subset of its fields.</p>
-	
+
             <p>The blocked representation permits one to read and write
               maps larger than can be buffered in memory, since one can
               start writing items without knowing the full length of the
               map.</p>
-	
+
 	  </section>
 
           <section id="union_encoding">
@@ -566,6 +566,34 @@
         and <code>long</code>, <code>float</code>
         and <code>double</code>, records and maps, enums and strings,
         etc.</p>
+
+      </section>
+
+      <section id="single_object_encoding">
+        <title>Single-object encoding</title>
+
+        <p>In some situations a single Avro serialized object is to be stored for a
+        longer period of time. One very common example is storing Avro records
+        for several weeks in an <a href="http://kafka.apache.org/">Apache Kafka</a> topic.</p>
+        <p>In the period after a schema change this persistance system will contain records
+        that have been written with different schemas. So the need arises to know which schema
+        was used to write a record to support schema evolution correctly.
+        In most cases the schema itself is too large to include in the message,
+        so this binary wrapper format supports the use case more effectively.</p>
+
+        <section id="single_object_encoding_spec">
+          <title>Single object encoding specification</title>
+          <p>Single Avro objects are encoded as follows:</p>
+          <ol>
+            <li>A two-byte marker, <code>C3 01</code>, to show that the message is Avro and uses this single-record format (version 1).</li>
+            <li>The 8-byte little-endian CRC-64-AVRO <a href="#schema_fingerprints">fingerprint</a> of the object's schema</li>
+            <li>The Avro object encoded using <a href="#binary_encoding">Avro's binary encoding</a></li>
+          </ol>
+        </section>
+
+        <p>Implementations use the 2-byte marker to determine whether a payload is Avro.
+          This check helps avoid expensive lookups that resolve the schema from a
+          fingerprint, when the message is not an encoded Avro payload.</p>
 
       </section>
 
@@ -1237,7 +1265,7 @@
         </ul>
       </section>
 
-      <section>
+      <section id="schema_fingerprints">
         <title>Schema Fingerprints</title>
 
         <p>"[A] fingerprinting algorithm is a procedure that maps an

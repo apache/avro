@@ -8,6 +8,8 @@ Trunk (not yet released)
 
     AVRO-1704: Java: Add support for single-message encoding. (blue)
 
+    AVRO-1704: Spec: Add single-message encoding format. (Niels Basjes via blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
