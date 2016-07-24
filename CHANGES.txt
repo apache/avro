@@ -6,6 +6,8 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-1704: Java: Add support for single-message encoding. (blue)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
