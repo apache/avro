@@ -1,3 +1,6 @@
+dependencies:
+  override:
+    - 'echo "No dependencies needed"'
 test:
   override:
     - 'cd lang/ruby && ./build.sh test'
