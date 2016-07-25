@@ -12,6 +12,9 @@ Trunk (not yet released)
 
   IMPROVEMENTS
 
+    AVRO-1889: Update maven-shade-plugin to enable building in Java 8 on Mac.
+    (Sachin Goyal via blue)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
