@@ -24,6 +24,7 @@ Echoe.new('avro', VERSION) do |p|
   p.description = "Avro is a data serialization and RPC format"
   p.url = "http://avro.apache.org/"
   p.runtime_dependencies = %w[multi_json]
+  p.development_dependencies = %w[test-unit]
   p.licenses = ["Apache License 2.0 (Apache-2.0)"]
 end
 

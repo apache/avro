@@ -92,39 +92,10 @@ module Avro
 
     # Determine if a ruby datum is an instance of a schema
     def self.validate(expected_schema, datum)
-      case expected_schema.type_sym
-      when :null
-        datum.nil?
-      when :boolean
-        datum == true || datum == false
-      when :string, :bytes
-        datum.is_a? String
-      when :int
-        (datum.is_a?(Fixnum) || datum.is_a?(Bignum)) &&
-            (INT_MIN_VALUE <= datum) && (datum <= INT_MAX_VALUE)
-      when :long
-        (datum.is_a?(Fixnum) || datum.is_a?(Bignum)) &&
-            (LONG_MIN_VALUE <= datum) && (datum <= LONG_MAX_VALUE)
-      when :float, :double
-        datum.is_a?(Float) || datum.is_a?(Fixnum) || datum.is_a?(Bignum)
-      when :fixed
-        datum.is_a?(String) && datum.bytesize == expected_schema.size
-      when :enum
-        expected_schema.symbols.include? datum
-      when :array
-        datum.is_a?(Array) &&
-          datum.all?{|d| validate(expected_schema.items, d) }
-      when :map
-          datum.keys.all?{|k| k.is_a? String } &&
-          datum.values.all?{|v| validate(expected_schema.values, v) }
-      when :union
-        expected_schema.schemas.any?{|s| validate(s, datum) }
-      when :record, :error, :request
-        datum.is_a?(Hash) &&
-          expected_schema.fields.all?{|f| validate(f.type, datum[f.name]) }
-      else
-        raise "you suck #{expected_schema.inspect} is not allowed."
-      end
+      SchemaValidator.validate!(expected_schema, datum)
+      true
+    rescue SchemaValidator::ValidationError
+      false
     end
 
     def initialize(type)
@@ -207,13 +178,19 @@ module Avro
 
       def self.make_field_objects(field_data, names, namespace=nil)
         field_objects, field_names = [], Set.new
-        field_data.each_with_index do |field, i|
+          field_data.each do |field|
           if field.respond_to?(:[]) # TODO(jmhodges) wtffffff
-            type = field['type']
-            name = field['name']
-            default = field['default']
-            order = field['order']
-            new_field = Field.new(type, name, default, order, names, namespace)
+            field_attrs = {
+              type: type = field['type'],
+              name: name = field['name'],
+              order: field['order'],
+              names: names,
+              namespace: namespace
+            }
+            if field.has_key?('default')
+              field_attrs[:default] = field['default']
+            end
+            new_field = Field.new(field_attrs)
             # make sure field name has not been used yet
             if field_names.include?(new_field.name)
               raise SchemaParseError, "Field name #{new_field.name.inspect} is already in use"
@@ -361,18 +338,21 @@ module Avro
     end
 
     class Field < Schema
-      attr_reader :type, :name, :default, :order
+      attr_reader :attrs, :type, :name, :order, :default
 
-      def initialize(type, name, default=nil, order=nil, names=nil, namespace=nil)
-        @type = subparse(type, names, namespace)
-        @name = name
-        @default = default
-        @order = order
+      def initialize(attrs)
+        @type = subparse(attrs[:type], attrs[:names], attrs[:namespace])
+        @name = attrs[:name]
+        @order = attrs[:order]
+        @default = attrs[:default]
+        @attrs = attrs
       end
 
       def to_avro(names=Set.new)
         {'name' => name, 'type' => type.to_avro(names)}.tap do |avro|
-          avro['default'] = default if default
+          if attrs.has_key? :default
+            avro['default'] = attrs.fetch(:default)
+          end
           avro['order'] = order if order
         end
       end
