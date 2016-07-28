@@ -150,7 +150,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException {
-    synchronized (LogicalType.class) {
+    synchronized (String.class) { // lock on system object even if different class loaders are used
       System.setProperty("allowUndefinedLogicalTypes", Boolean.toString(allowUndefinedLogicalTypes));
       SpecificCompiler.SCHEMA_OUTPUT_DIR.set(this.schemaOutputDirectory);
 
