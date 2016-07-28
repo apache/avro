@@ -24,6 +24,9 @@ Trunk (not yet released)
 
     AVRO-1869: Java: Fix Decimal conversion from ByteBuffer. (blue)
 
+    AVRO-607: Java: Make SpecificData schema cache thread-safe.
+    (Andrius Druzinis-Vitkus via blue)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
