@@ -21,7 +21,6 @@ package org.apache.avro.mojo;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import org.apache.avro.LogicalType;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
