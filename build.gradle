@@ -5,6 +5,7 @@ plugins {
     id "idea"
     id "maven"
     id "com.gradle.plugin-publish" version "0.9.4"
+    id "com.github.hierynomus.license" version "0.13.1"
 }
 
 repositories {
@@ -151,4 +152,13 @@ tasks.withType(Test) {
     jvmArgs "-Xss320k"
     minHeapSize "120m"
     maxHeapSize "280m"
+}
+
+license {
+    header = file("gradle/DEFAULT_LICENSE_NOTICE")
+    skipExistingHeaders = true
+    mapping("avdl", "JAVADOC_STYLE")
+    excludes(["**/*.avsc", "**/*.avpr"]) // JSON doesn't allow comments
+    exclude("**/record.vm") // Existing header in different style
+    // dryRun = true
 }
