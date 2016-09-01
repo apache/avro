@@ -1030,7 +1030,7 @@ public class GenericData {
     LogicalType logicalType = schema.getLogicalType();
     if (logicalType == null)           // not a logical type -- use raw copy
       return (T)deepCopyRaw(schema, value);
-    Conversion conversion = getConversionByClass(value.getClass(), logicalType);
+    Conversion conversion = getConversionByClass(value.getClass());
     if (conversion == null)            // no conversion defined -- try raw copy
       return (T)deepCopyRaw(schema, value);
     // logical type with conversion: convert to raw, copy, then convert back to logical
