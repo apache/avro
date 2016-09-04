@@ -375,7 +375,15 @@ public abstract class Symbol {
     case EXPLICIT_ACTION:
       return false;
     case IMPLICIT_ACTION:
-      return symbol instanceof ErrorAction;
+      if (symbol instanceof ErrorAction) {
+        return true;
+      }
+
+      if (symbol instanceof UnionAdjustAction) {
+        return hasErrors(((UnionAdjustAction) symbol).symToParse);
+      }
+
+      return false;
     case REPEATER:
       Repeater r = (Repeater) symbol;
       return hasErrors(r.end) || hasErrors(symbol, r.production);
