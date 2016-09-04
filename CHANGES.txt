@@ -45,6 +45,9 @@ Trunk (not yet released)
     AVRO-1883: Java: Fix incompatible schema detection nested in unions.
     (Yibing Shi via blue)
 
+    AVRO-1908: Fix TestSpecificCompiler reference to private method.
+    (blue)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
