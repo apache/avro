@@ -19,6 +19,7 @@
 package org.apache.avro;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -117,6 +118,22 @@ public class TestSchemaValidation {
   @Test(expected=AvroRuntimeException.class)
   public void testInvalidBuild() {
     builder.strategy(null).validateAll();
+  }
+
+  @Test
+  public void testUnionWithIncompatibleElements() throws SchemaValidationException {
+    Schema union1 = Schema.createUnion(Arrays.asList(rec));
+    Schema union2 = Schema.createUnion(Arrays.asList(rec4));
+    testValidatorFails(builder.canReadStrategy().validateAll(),
+        union2, union1);
+  }
+
+  @Test
+  public void testUnionWithCompatibleElements() throws SchemaValidationException {
+    Schema union1 = Schema.createUnion(Arrays.asList(rec));
+    Schema union2 = Schema.createUnion(Arrays.asList(rec3));
+    testValidatorPasses(builder.canReadStrategy().validateAll(),
+        union2, union1);
   }
 
   private void testValidatorPasses(SchemaValidator validator,

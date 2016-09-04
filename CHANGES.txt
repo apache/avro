@@ -72,6 +72,9 @@ Trunk (not yet released)
 
     AVRO-1656. Fix 'How to Contribute' link. (Benjamin Clauss via blue)
 
+    AVRO-1883: Java: Fix incompatible schema detection nested in unions.
+    (Yibing Shi via blue)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
