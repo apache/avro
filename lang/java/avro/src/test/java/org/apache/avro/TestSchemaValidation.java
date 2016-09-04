@@ -19,6 +19,7 @@
 package org.apache.avro;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.avro.reflect.ReflectData;
 import org.junit.Assert;
@@ -160,6 +161,22 @@ public class TestSchemaValidation {
   public void testReflectWithAllowNullMatchStructure() throws SchemaValidationException {
     testValidatorPasses(builder.canBeReadStrategy().validateAll(),
         circleSchemaDifferentNames, ReflectData.AllowNull.get().getSchema(Circle.class));
+  }
+
+  @Test
+  public void testUnionWithIncompatibleElements() throws SchemaValidationException {
+    Schema union1 = Schema.createUnion(Arrays.asList(rec));
+    Schema union2 = Schema.createUnion(Arrays.asList(rec4));
+    testValidatorFails(builder.canReadStrategy().validateAll(),
+        union2, union1);
+  }
+
+  @Test
+  public void testUnionWithCompatibleElements() throws SchemaValidationException {
+    Schema union1 = Schema.createUnion(Arrays.asList(rec));
+    Schema union2 = Schema.createUnion(Arrays.asList(rec3));
+    testValidatorPasses(builder.canReadStrategy().validateAll(),
+        union2, union1);
   }
 
   private void testValidatorPasses(SchemaValidator validator,
