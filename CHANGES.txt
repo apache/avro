@@ -6,6 +6,54 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-1704: Java: Add support for single-message encoding. (blue)
+
+    AVRO-1704: Spec: Add single-message encoding format. (Niels Basjes via blue)
+
+    AVRO-1884: Java: Add method to set the compiler output suffix.
+    (shijinkui via blue)
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
+    AVRO-1889: Update maven-shade-plugin to enable building in Java 8 on Mac.
+    (Sachin Goyal via blue)
+
+    AVRO-1695. Java: Fix GenericData#deepCopy() to support logical types.
+    (cutting)
+
+    AVRO-1719: C++: Fix tests with Boost >= 1.59. (Romain Geissler via blue)
+
+    AVRO-1879: Make conversions field static. (Michael Wong via blue)
+
+  BUG FIXES
+
+    AVRO-1741: Python3: Fix error when codec is not in the header.
+    (Matthew Hayes via blue)
+
+    AVRO-1869: Java: Fix Decimal conversion from ByteBuffer. (blue)
+
+    AVRO-607: Java: Make SpecificData schema cache thread-safe.
+    (Andrius Druzinis-Vitkus via blue)
+
+    AVRO-1888: Java: Fix single-record encoding marker check. (blue)
+
+    AVRO-1848: Ruby: Fix handling of falsey default values.
+    (Brian McKelvey via blue)
+
+    AVRO-1874: Py3: Use recommended module-level logging.
+    (Torgeir Børresen via blue)
+
+    AVRO-1883: Java: Fix incompatible schema detection nested in unions.
+    (Yibing Shi via blue)
+
+Avro 1.8.1 (14 May 2016)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
