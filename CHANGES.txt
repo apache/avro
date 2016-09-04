@@ -30,6 +30,8 @@ Trunk (not yet released)
     AVRO-607: Java: Make SpecificData schema cache thread-safe.
     (Andrius Druzinis-Vitkus via blue)
 
+    AVRO-1888: Java: Fix single-record encoding marker check. (blue)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
