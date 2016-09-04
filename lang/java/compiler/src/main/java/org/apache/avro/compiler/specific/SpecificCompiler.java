@@ -406,7 +406,7 @@ public class SpecificCompiler {
     return outputFile;
   }
 
-  private String makePath(String name, String space) {
+  String makePath(String name, String space) {
     if (space == null || space.isEmpty()) {
       return name + suffix;
     } else {
