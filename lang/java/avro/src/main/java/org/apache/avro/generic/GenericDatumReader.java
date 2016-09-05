@@ -153,12 +153,21 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     Object datum = readWithoutConversion(old, expected, in);
     LogicalType logicalType = expected.getLogicalType();
     if (logicalType != null) {
-      Conversion<?> conversion = getData().getConversionFor(logicalType);
+      Conversion<?> conversion = getConversionFor(logicalType);
       if (conversion != null) {
         return convert(datum, expected, logicalType, conversion);
       }
     }
     return datum;
+  }
+
+  protected Conversion<?> getConversionFor(LogicalType logicalType) {
+    return getData().getConversionFor(logicalType);
+  }
+
+  protected Conversion<?> getConversionByClass(Class<?> type,
+                                               LogicalType logicalType) {
+    return getData().getConversionByClass(type, logicalType);
   }
 
   protected Object readWithConversion(Object old, Schema expected,
@@ -253,7 +262,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     long base = 0;
     if (l > 0) {
       LogicalType logicalType = expectedType.getLogicalType();
-      Conversion<?> conversion = getData().getConversionFor(logicalType);
+      Conversion<?> conversion = getConversionFor(logicalType);
       Object array = newArray(old, (int) l, expected);
       do {
         if (logicalType != null && conversion != null) {
@@ -299,7 +308,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     Schema eValue = expected.getValueType();
     long l = in.readMapStart();
     LogicalType logicalType = eValue.getLogicalType();
-    Conversion<?> conversion = getData().getConversionFor(logicalType);
+    Conversion<?> conversion = getConversionFor(logicalType);
     Object map = newMap(old, (int) l);
     if (l > 0) {
       do {

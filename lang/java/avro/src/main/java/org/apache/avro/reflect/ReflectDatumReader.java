@@ -80,8 +80,8 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     if (elementClass == null) {
       // see if the element class will be converted and use that class
       // logical types cannot conflict with java-element-class
-      Conversion<?> elementConversion = getData()
-          .getConversionFor(schema.getElementType().getLogicalType());
+      Conversion<?> elementConversion = getConversionFor(
+          schema.getElementType().getLogicalType());
       if (elementConversion != null) {
         elementClass = elementConversion.getConvertedType();
       }
@@ -176,7 +176,8 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   private Object readObjectArray(Object[] array, Schema expectedType, long l,
       ResolvingDecoder in) throws IOException {
     LogicalType logicalType = expectedType.getLogicalType();
-    Conversion<?> conversion = getData().getConversionFor(logicalType);
+    Conversion<?> conversion = getConversionByClass(
+        array.getClass().getComponentType(), logicalType);
     int index = 0;
     if (logicalType != null && conversion != null) {
       do {
@@ -204,7 +205,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   private Object readCollection(Collection<Object> c, Schema expectedType,
       long l, ResolvingDecoder in) throws IOException {
     LogicalType logicalType = expectedType.getLogicalType();
-    Conversion<?> conversion = getData().getConversionFor(logicalType);
+    Conversion<?> conversion = getConversionFor(logicalType);
     if (logicalType != null && conversion != null) {
       do {
         for (int i = 0; i < l; i++) {
@@ -285,7 +286,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         }
         LogicalType logicalType = f.schema().getLogicalType();
         if (logicalType != null) {
-          Conversion<?> conversion = getData().getConversionByClass(
+          Conversion<?> conversion = getConversionByClass(
               accessor.getField().getType(), logicalType);
           if (conversion != null) {
             try {

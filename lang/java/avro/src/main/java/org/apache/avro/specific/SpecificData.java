@@ -18,11 +18,13 @@
 package org.apache.avro.specific;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.nio.ByteBuffer;
@@ -30,10 +32,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.concurrent.ExecutionException;
 
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol;
 import org.apache.avro.AvroRuntimeException;
@@ -386,4 +391,76 @@ public class SpecificData extends GenericData {
       .directBinaryEncoder(new ExternalizableOutput(out), null);
   }
 
+  /**
+   * Returns the conversions used to compile a specific record.
+   *
+   * @return a Map from logical type name to Conversion
+   */
+  Map<String, Conversion<?>> getConversionMap(final Schema schema) {
+    try {
+      // This uses get(Schema, Callable) so that the buildConversionMap method
+      // can be an instance method of this SpecificData instance. Otherwise, it
+      // would not use the correct ClassLoader to load the specific class for
+      // the schema.
+      return conversionMapCache.get(schema,
+          new Callable<Map<String, Conversion<?>>>() {
+            @Override
+            public Map<String, Conversion<?>> call() {
+              return buildConversionMap(schema);
+            }
+          });
+    } catch (ExecutionException e) {
+      throw new AvroRuntimeException(
+          "Could not get conversions needed for schema: " + schema);
+    }
+  }
+
+  private static Cache<Schema, Map<String, Conversion<?>>> conversionMapCache =
+      CacheBuilder.<Schema, Map<String, Conversion<?>>>newBuilder()
+          .weakKeys().build();
+
+  @SuppressWarnings("unchecked")
+  private Map<String, Conversion<?>> buildConversionMap(Schema schema) {
+    Class<?> specificClass = getClass(schema);
+
+    Map<String, Conversion<?>> conversionMap = null;
+    if (specificClass != null &&
+        SpecificRecordBase.class.isAssignableFrom(specificClass)) {
+      try {
+        Collection<Conversion<?>> conversions = (Collection<Conversion<?>>)
+            specificClass.getDeclaredField("CONVERSIONS").get(null);
+        if (conversions != null) {
+          conversionMap = new HashMap<String, Conversion<?>>();
+          for (Conversion<?> conversion : conversions) {
+            conversionMap.put(conversion.getLogicalTypeName(), conversion);
+          }
+        }
+      } catch (IllegalAccessException e) {
+        throw new AvroRuntimeException(
+            "Cannot access conversion map for specific class: " +
+                specificClass.getName());
+      } catch (NoSuchFieldException e) {
+        // the conversion map will be built from getConversion results below
+      }
+
+      if (conversionMap == null) {
+        SpecificRecordBase emptyRecord =
+            (SpecificRecordBase) newRecord(null, schema);
+        // attempt to construct the conversions map from the record itself
+        conversionMap = new HashMap<String, Conversion<?>>();
+        for (Schema.Field field : emptyRecord.getSchema().getFields()) {
+          Conversion<?> conversion = emptyRecord.getConversion(field.pos());
+          if (conversion != null) {
+            conversionMap.put(conversion.getLogicalTypeName(), conversion);
+          }
+        }
+      }
+    }
+
+    if (conversionMap == null) {
+      conversionMap = new HashMap<String, Conversion<?>>();
+    }
+
+    return conversionMap;
+  }
 }
