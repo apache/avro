@@ -5,10 +5,13 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.Conversion;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
@@ -268,6 +271,15 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
   protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
+
+  public static final Collection<Conversion<?>> CONVERSIONS = new ArrayList<Conversion<?>>();
+  static {
+    CONVERSIONS.add(DATE_CONVERSION);
+    CONVERSIONS.add(TIME_CONVERSION);
+    CONVERSIONS.add(TIMESTAMP_CONVERSION);
+    CONVERSIONS.add(DECIMAL_CONVERSION);
+  }
+
   private final org.apache.avro.Conversion<?>[] conversions =
       new org.apache.avro.Conversion<?>[] {
       null,

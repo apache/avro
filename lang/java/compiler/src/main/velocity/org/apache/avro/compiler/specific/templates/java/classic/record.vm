@@ -136,7 +136,19 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   protected static final org.apache.avro.data.TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.TimeConversions.DateConversion();
   protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
   protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
+#if ($this.isDecimalEnabled())
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
+#end
+
+  public static final Collection<Conversion<?>> CONVERSIONS = new ArrayList<Conversion<?>>();
+  static {
+    CONVERSIONS.add(DATE_CONVERSION);
+    CONVERSIONS.add(TIME_CONVERSION);
+    CONVERSIONS.add(TIMESTAMP_CONVERSION);
+#if ($this.isDecimalEnabled())
+    CONVERSIONS.add(DECIMAL_CONVERSION);
+#end
+  }
 
   private static final org.apache.avro.Conversion<?>[] conversions =
       new org.apache.avro.Conversion<?>[] {

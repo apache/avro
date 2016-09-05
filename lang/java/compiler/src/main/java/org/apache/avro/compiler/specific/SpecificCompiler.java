@@ -225,6 +225,13 @@ public class SpecificCompiler {
     this.enableDecimalLogicalType = enableDecimalLogicalType;
   }
 
+  /**
+   * @return true if decimal logical type conversion is enabled
+   */
+  public boolean isDecimalEnabled() {
+    return enableDecimalLogicalType;
+  }
+
   private static String logChuteName = null;
 
   private void initializeVelocity() {
