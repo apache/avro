@@ -65,6 +65,9 @@ public class TestSpecificCompiler {
     this.src = new File(this.schemaSrcPath);
     this.outputDir = AvroTestUtil.tempDirectory(getClass(), "specific-output");
     this.outputFile = new File(this.outputDir, "SimpleRecord.java");
+    if (outputFile.exists() && !outputFile.delete()) {
+      throw new IllegalStateException("unable to delete " + outputFile);
+    }
   }
 
   @After
@@ -143,6 +146,7 @@ public class TestSpecificCompiler {
       assertFalse("Line started with a deprecated field declaration: " + line,
         line.startsWith("@Deprecated public int value"));
     }
+    reader.close();
   }
 
   @Test
@@ -156,6 +160,7 @@ public class TestSpecificCompiler {
     while (!foundAllArgsConstructor && (line = reader.readLine()) != null) {
       foundAllArgsConstructor = line.contains("All-args constructor");
     }
+    reader.close();
     assertTrue(foundAllArgsConstructor);
   }
 
@@ -216,6 +221,7 @@ public class TestSpecificCompiler {
       assertFalse("Line started with a public field declaration: " + line,
         line.startsWith("public int value"));
     }
+    reader.close();
   }
 
   @Test
@@ -238,6 +244,7 @@ public class TestSpecificCompiler {
       assertFalse("Line started with a deprecated field declaration: " + line,
         line.startsWith("@Deprecated public int value"));
     }
+    reader.close();
   }
 
   @Test
@@ -256,6 +263,7 @@ public class TestSpecificCompiler {
         foundSetters++;
       }
     }
+    reader.close();
     assertEquals("Found the wrong number of setters", 1, foundSetters);
   }
 
@@ -274,6 +282,7 @@ public class TestSpecificCompiler {
       assertFalse("No line should include the setter: " + line,
         line.startsWith("public void setValue("));
     }
+    reader.close();
   }
 
   @Test
@@ -282,14 +291,20 @@ public class TestSpecificCompiler {
     // Generated file in default encoding
     compiler.compileToDestination(this.src, this.outputDir);
     byte[] fileInDefaultEncoding = new byte[(int) this.outputFile.length()];
-    new FileInputStream(this.outputFile).read(fileInDefaultEncoding);
-    this.outputFile.delete();
+    FileInputStream is = new FileInputStream(this.outputFile);
+    is.read(fileInDefaultEncoding);
+    is.close(); //close input stream otherwise delete might fail
+    if (!this.outputFile.delete()) {
+      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasnt changed.
+    }
     // Generate file in another encoding (make sure it has different number of bytes per character)
     String differentEncoding = Charset.defaultCharset().equals(Charset.forName("UTF-16")) ? "UTF-32" : "UTF-16";
     compiler.setOutputCharacterEncoding(differentEncoding);
     compiler.compileToDestination(this.src, this.outputDir);
     byte[] fileInDifferentEncoding = new byte[(int) this.outputFile.length()];
-    new FileInputStream(this.outputFile).read(fileInDifferentEncoding);
+    is = new FileInputStream(this.outputFile);
+    is.read(fileInDifferentEncoding);
+    is.close();
     // Compare as bytes
     assertThat("Generated file should contain different bytes after setting non-default encoding",
       fileInDefaultEncoding, not(equalTo(fileInDifferentEncoding)));

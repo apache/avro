@@ -60,6 +60,9 @@ Trunk (not yet released)
 
     AVRO-1914: Fix licencing errors reported by rat. (Niels Basjes)
 
+    AVRO-1901: Record named "Exception" generated bad code.
+    (Radai Rosenblatt via Niels Basjes)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
