@@ -422,7 +422,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 #end
         return record;
-      } catch (Exception e) {
+      } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
     }
