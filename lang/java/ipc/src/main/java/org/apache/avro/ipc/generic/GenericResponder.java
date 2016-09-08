@@ -38,7 +38,6 @@ public abstract class GenericResponder extends Responder {
 
   public GenericResponder(Protocol local) {
     this(local, GenericData.get());
-    
   }
 
   public GenericResponder(Protocol local, GenericData data) {

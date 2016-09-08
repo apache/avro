@@ -124,12 +124,12 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
             throw e;
           }
         }
-      
+
         // Next, check for RuntimeExceptions:
         if (e instanceof RuntimeException) {
           throw e;
         }
-      
+
         // Not an expected Exception, so wrap it in AvroRemoteException:
         throw new AvroRemoteException(e);
       }
@@ -157,7 +157,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     for (Schema.Field param : schema.getFields())
       getDatumWriter(param.schema()).write(args[i++], out);
   }
-    
+
   @Override
   public Object readResponse(Schema writer, Schema reader, Decoder in)
     throws IOException {
@@ -203,7 +203,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   /** Return the remote protocol for a proxy. */
   public static Protocol getRemote(Object proxy) throws IOException {
     return ((Requestor)Proxy.getInvocationHandler(proxy)).getRemote();
-    
+
   }
 
 }
