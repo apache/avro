@@ -33,7 +33,7 @@ public class LocalDateAsStringEncoding extends CustomEncoding<LocalDate>{
     schema = Schema.create(Schema.Type.STRING);
     schema.addProp("CustomEncoding", "LocalDateAsStringEncoding");
   }
-  
+
   @Override
   protected void write(Object datum, Encoder out) throws IOException {
     out.writeString(IsoDate.FMT.print((LocalDate) datum));
@@ -43,5 +43,5 @@ public class LocalDateAsStringEncoding extends CustomEncoding<LocalDate>{
   protected LocalDate read(Object reuse, Decoder in) throws IOException {
     return IsoDate.FMT.parseLocalDate(in.readString());
   }
-  
+
 }
