@@ -38,22 +38,22 @@ public class ProtocolTask extends Task {
   private StringType stringType = StringType.CharSequence;
 
   private final ArrayList<FileSet> filesets = new ArrayList<FileSet>();
-  
+
   /** Set the schema file. */
   public void setFile(File file) { this.src = file; }
-  
+
   /** Set the output directory */
   public void setDestdir(File dir) { this.dest = dir; }
-  
+
   /** Set the string type. */
   public void setStringType(StringType type) { this.stringType = type; }
-  
+
   /** Get the string type. */
   public StringType getStringType() { return this.stringType; }
-  
+
   /** Add a fileset. */
   public void addFileset(FileSet set) { filesets.add(set); }
-  
+
   /** Run the compiler. */
   @Override
   public void execute() {
@@ -74,7 +74,7 @@ public class ProtocolTask extends Task {
       }
     }
   }
-  
+
   protected void doCompile(File src, File dir) throws IOException {
     Protocol protocol = Protocol.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(protocol);
