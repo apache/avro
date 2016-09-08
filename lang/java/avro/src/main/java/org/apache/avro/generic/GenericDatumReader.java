@@ -43,7 +43,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private final GenericData data;
   private Schema actual;
   private Schema expected;
-  
+
   private ResolvingDecoder creatorResolver = null;
   private final WeakReference<Thread> creator;
 
@@ -115,7 +115,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     ResolvingDecoder resolver;
     if (currThread == creator.get() && creatorResolver != null) {
       return creatorResolver;
-    } 
+    }
 
     Map<Schema,ResolvingDecoder> cache = RESOLVER_CACHE.get().get(actual);
     if (cache == null) {
@@ -128,7 +128,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
           Schema.applyAliases(actual, expected), expected, null);
       cache.put(expected, resolver);
     }
-    
+
     if (currThread == creator.get()){
       creatorResolver = resolver;
     }
@@ -145,7 +145,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     resolver.drain();
     return result;
   }
-  
+
   /** Called to read data.*/
   protected Object read(Object old, Schema expected,
       ResolvingDecoder in) throws IOException {
@@ -174,14 +174,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
     return result;
   }
-  
+
   /** Called to read a record instance. May be overridden for alternate record
    * representations.*/
-  protected Object readRecord(Object old, Schema expected, 
+  protected Object readRecord(Object old, Schema expected,
       ResolvingDecoder in) throws IOException {
     Object r = data.newRecord(old, expected);
     Object state = data.getRecordState(r, expected);
-    
+
     for (Field f : in.readFieldOrder()) {
       int pos = f.pos();
       String name = f.name();
@@ -194,14 +194,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
     return r;
   }
-  
-  /** Called to read a single field of a record. May be overridden for more 
+
+  /** Called to read a single field of a record. May be overridden for more
    * efficient or alternate implementations.*/
   protected void readField(Object r, Field f, Object oldDatum,
     ResolvingDecoder in, Object state) throws IOException {
     data.setField(r, f.name(), f.pos(), read(oldDatum, f.schema(), in), state);
   }
-  
+
   /** Called to read an enum value. May be overridden for alternate enum
    * representations.  By default, returns a GenericEnumSymbol. */
   protected Object readEnum(Schema expected, Decoder in) throws IOException {
@@ -251,7 +251,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected void addToArray(Object array, long pos, Object e) {
     ((Collection) array).add(e);
   }
-  
+
   /** Called to read a map instance.  May be overridden for alternate map
    * representations.*/
   protected Object readMap(Object old, Schema expected,
@@ -283,7 +283,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected void addToMap(Object map, Object key, Object value) {
     ((Map) map).put(key, value);
   }
-  
+
   /** Called to read a fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   protected Object readFixed(Object old, Schema expected, Decoder in)
@@ -292,11 +292,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     in.readFixed(fixed.bytes(), 0, expected.getFixedSize());
     return fixed;
   }
-  
-  /** 
+
+  /**
    * Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}.
-   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * @deprecated As of Avro 1.6.0 this method has been moved to
    * {@link GenericData#createFixed(Object, Schema)}
    */
   @Deprecated
@@ -304,17 +304,17 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return data.createFixed(old, schema);
   }
 
-  /** 
+  /**
    * Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}.
-   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * @deprecated As of Avro 1.6.0 this method has been moved to
    * {@link GenericData#createFixed(Object, byte[], Schema)}
    */
   @Deprecated
   protected Object createFixed(Object old, byte[] bytes, Schema schema) {
     return data.createFixed(old, bytes, schema);
   }
-  
+
   /**
    * Called to create new record instances. Subclasses may override to use a
    * different record implementation. The returned instance must conform to the
@@ -322,7 +322,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * schema, they should either be removed from the old object, or it should
    * create a new instance that conforms to the schema. By default, this returns
    * a {@link GenericData.Record}.
-   * @deprecated As of Avro 1.6.0 this method has been moved to 
+   * @deprecated As of Avro 1.6.0 this method has been moved to
    * {@link GenericData#newRecord(Object, Schema)}
    */
   @Deprecated
@@ -363,7 +363,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (stringClass == CharSequence.class)
       return readString(old, in);
     return newInstanceFromString(stringClass, in.readString());
-  }                  
+  }
 
   /** Called to read strings.  Subclasses may override to use a different
    * string representation.  By default, this calls {@link

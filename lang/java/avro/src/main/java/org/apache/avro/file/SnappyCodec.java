@@ -60,15 +60,15 @@ class SnappyCodec extends Codec {
     int size = Snappy.uncompress(in.array(),in.position(),in.remaining()-4,
                                  out.array(), 0);
     out.limit(size);
-    
+
     crc32.reset();
     crc32.update(out.array(), 0, size);
     if (in.getInt(in.limit()-4) != (int)crc32.getValue())
       throw new IOException("Checksum failure");
-    
+
     return out;
   }
-  
+
   @Override public int hashCode() { return getName().hashCode(); }
 
   @Override

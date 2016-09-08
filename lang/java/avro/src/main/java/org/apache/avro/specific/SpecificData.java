@@ -50,7 +50,7 @@ import org.apache.avro.io.BinaryDecoder;
 public class SpecificData extends GenericData {
 
   private static final SpecificData INSTANCE = new SpecificData();
-  
+
   private static final Class<?>[] NO_ARG = new Class[]{};
   private static final Class<?>[] SCHEMA_ARG = new Class[]{Schema.class};
   private static final Map<Class,Constructor> CTOR_CACHE =
@@ -101,7 +101,7 @@ public class SpecificData extends GenericData {
   public SpecificData(ClassLoader classLoader) {
     super(classLoader);
   }
-  
+
   @Override
   public DatumReader createDatumReader(Schema schema) {
     return new SpecificDatumReader(schema, schema, this);
@@ -298,7 +298,7 @@ public class SpecificData extends GenericData {
     return super.getSchemaName(datum);
   }
 
-  /** True iff a class should be serialized with toString(). */ 
+  /** True iff a class should be serialized with toString(). */
   protected boolean isStringable(Class<?> c) {
     return stringableClasses.contains(c);
   }
@@ -329,7 +329,7 @@ public class SpecificData extends GenericData {
       return super.compare(o1, o2, s, eq);
     }
   }
-  
+
   /** Create an instance of a class.  If the class implements {@link
    * SchemaConstructable}, call a constructor with a {@link
    * org.apache.avro.Schema} parameter, otherwise use a no-arg constructor. */
@@ -350,14 +350,14 @@ public class SpecificData extends GenericData {
     }
     return result;
   }
-  
+
   @Override
   public Object createFixed(Object old, Schema schema) {
     Class c = getClass(schema);
     if (c == null) return super.createFixed(old, schema); // punt to generic
     return c.isInstance(old) ? old : newInstance(c, schema);
   }
-  
+
   @Override
   public Object newRecord(Object old, Schema schema) {
     Class c = getClass(schema);

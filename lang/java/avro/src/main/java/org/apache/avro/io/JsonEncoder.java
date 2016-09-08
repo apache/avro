@@ -33,7 +33,7 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.codehaus.jackson.util.MinimalPrettyPrinter;
 
-/** An {@link Encoder} for Avro's JSON data encoding. 
+/** An {@link Encoder} for Avro's JSON data encoding.
  * </p>
  * Construct using {@link EncoderFactory}.
  * </p>
@@ -64,8 +64,8 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     this.parser =
       new Parser(JsonDecoder.getSymbol(sc), this);
   }
-  
-    
+
+
   JsonEncoder(Parser parser, JsonGenerator out) throws IOException {
     configure(out);
     this.parser = parser;
@@ -84,7 +84,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   static JsonGenerator getJsonGenerator(OutputStream out, boolean pretty)
       throws IOException {
     if (null == out)
-      throw new NullPointerException("OutputStream cannot be null"); 
+      throw new NullPointerException("OutputStream cannot be null");
     JsonGenerator g
       = new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
@@ -104,7 +104,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     }
     return g;
   }
-  
+
   /**
    * Reconfigures this JsonEncoder to use the output stream provided.
    * <p/>
@@ -113,7 +113,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    * Otherwise, this JsonEncoder will flush its current output and then
    * reconfigure its output to use a default UTF8 JsonGenerator that writes
    * to the provided OutputStream.
-   * 
+   *
    * @param out
    *          The OutputStream to direct output to. Cannot be null.
    * @throws IOException
@@ -123,7 +123,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     this.configure(getJsonGenerator(out, false));
     return this;
   }
-  
+
   /**
    * Reconfigures this JsonEncoder to output to the JsonGenerator provided.
    * <p/>
@@ -131,7 +131,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    * <p/>
    * Otherwise, this JsonEncoder will flush its current output and then
    * reconfigure its output to use the provided JsonGenerator.
-   * 
+   *
    * @param generator
    *          The JsonGenerator to direct output to. Cannot be null.
    * @throws IOException
@@ -189,8 +189,8 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   public void writeString(Utf8 utf8) throws IOException {
     writeString(utf8.toString());
   }
-  
-  @Override 
+
+  @Override
   public void writeString(String str) throws IOException {
     parser.advance(Symbol.STRING);
     if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {

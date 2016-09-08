@@ -43,12 +43,12 @@ import org.apache.avro.util.Utf8;
 public class ResolvingDecoder extends ValidatingDecoder {
 
   private Decoder backup;
-  
+
   ResolvingDecoder(Schema writer, Schema reader, Decoder in)
     throws IOException {
     this(resolve(writer, reader), in);
   }
-  
+
   /**
    * Constructs a <tt>ResolvingDecoder</tt> using the given resolver.
    * The resolver must have been returned by a previous call to
@@ -68,7 +68,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * returned Object is immutable and hence can be simultaneously used
    * in many ResolvingDecoders. This method is reasonably expensive, the
    * users are encouraged to cache the result.
-   * 
+   *
    * @param writer  The writer's schema. Cannot be null.
    * @param reader  The reader's schema. Cannot be null.
    * @return  The opaque reolver.
@@ -124,20 +124,20 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * field values.)
    *
    * @throws AvroTypeException If we're not starting a new record
-   *                               
+   *
    */
   public final Schema.Field[] readFieldOrder() throws IOException {
     return ((Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION)).
       fields;
   }
-  
+
   /**
    * Consume any more data that has been written by the writer but not
    * needed by the reader so that the the underlying decoder is in proper
    * shape for the next record. This situation happens when, for example,
    * the writer writes a record with two fields and the reader needs only the
    * first field.
-   * 
+   *
    * This function should be called after completely decoding an object but
    * before next object can be decoded from the same underlying decoder
    * either directly or through another resolving decoder. If the same resolving
@@ -175,7 +175,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
       return (float) in.readFloat();
     }
   }
-  
+
   @Override
   public double readDouble() throws IOException {
     Symbol actual = parser.advance(Symbol.DOUBLE);
@@ -190,7 +190,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
       return in.readDouble();
     }
   }
-  
+
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
     Symbol actual = parser.advance(Symbol.STRING);
@@ -261,7 +261,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
       throw new AvroTypeException((String) o);
     }
   }
-    
+
   @Override
   public int readIndex() throws IOException {
     parser.advance(Symbol.UNION);

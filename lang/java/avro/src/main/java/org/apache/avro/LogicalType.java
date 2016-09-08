@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 public interface LogicalType  {
-  
+
   /** Validate this logical type for the given Schema */
   void validate(Schema schema);
 
@@ -17,10 +17,10 @@ public interface LogicalType  {
 
   /** get java type */
   Class<?> getLogicalJavaType();
-  
+
   Object deserialize(Object object);
- 
-  Object serialize(Object object);            
+
+  Object serialize(Object object);
 
   String getLogicalTypeName();
 

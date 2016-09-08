@@ -41,15 +41,15 @@ abstract class FieldAccessor {
   protected boolean supportsIO() {
     return false;
   }
-  
+
   protected abstract Field getField();
-  
+
   protected boolean isStringable() {
     return false;
   }
-  
+
   protected boolean isCustomEncoded() {
     return false;
   }
-  
+
 }

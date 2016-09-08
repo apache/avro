@@ -27,7 +27,7 @@ public final class ExtendedJsonEncoder extends JsonEncoder {
   public ExtendedJsonEncoder(final Schema sc, final JsonGenerator out) throws IOException {
     super(sc, out);
   }
-  
+
   public Parser getParser() {
     return parser;
   }
@@ -44,9 +44,9 @@ public final class ExtendedJsonEncoder extends JsonEncoder {
   /**
    * Overwrite this function to optime json decoding of union {null, type}.
    * @param unionIndex
-   * @throws IOException 
+   * @throws IOException
    */
-  
+
   @Override
   public void writeIndex(final int unionIndex) throws IOException {
     parser.advance(Symbol.UNION);

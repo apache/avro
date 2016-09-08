@@ -59,7 +59,7 @@ public class DataFileReader<D>
       return new DataFileReader<D>(in, reader);
     if (Arrays.equals(DataFileReader12.MAGIC, magic)) // 1.2 format
       return new DataFileReader12<D>(in, reader);
-    
+
     throw new IOException("Not an Avro data file");
   }
 
@@ -166,7 +166,7 @@ public class DataFileReader<D>
     return blockStart;
   }
 
-  /** Return true if past the next synchronization point after a position. */ 
+  /** Return true if past the next synchronization point after a position. */
   @Override
   public boolean pastSync(long position) throws IOException {
     return ((blockStart >= position+SYNC_SIZE)||(blockStart >= sin.length()));
@@ -174,7 +174,7 @@ public class DataFileReader<D>
 
   @Override public long tell() throws IOException { return sin.tell(); }
 
-  static class SeekableInputStream extends InputStream 
+  static class SeekableInputStream extends InputStream
   implements SeekableInput {
     private final byte[] oneByte = new byte[1];
     private SeekableInput in;
@@ -182,7 +182,7 @@ public class DataFileReader<D>
     SeekableInputStream(SeekableInput in) throws IOException {
         this.in = in;
       }
-    
+
     @Override
     public void seek(long p) throws IOException {
       if (p < 0)
@@ -204,7 +204,7 @@ public class DataFileReader<D>
     public int read(byte[] b) throws IOException {
       return in.read(b, 0, b.length);
       }
-    
+
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
       return in.read(b, off, len);

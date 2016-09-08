@@ -58,7 +58,7 @@ import org.codehaus.jackson.JsonNode;
 public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
-  
+
   /** Used to specify the Java type for a string schema. */
   public enum StringType { CharSequence, String, Utf8 };
 
@@ -249,12 +249,12 @@ public class GenericData {
     public void reverse() {
       int left = 0;
       int right = elements.length - 1;
-      
+
       while (left < right) {
         Object tmp = elements[left];
         elements[left] = elements[right];
         elements[right] = tmp;
-        
+
         left++;
         right--;
       }
@@ -453,7 +453,7 @@ public class GenericData {
         toString(element, buffer);
         if (i++ < last)
           buffer.append(", ");
-      }        
+      }
       buffer.append("]");
     } else if (isMap(datum)) {
       buffer.append("{");
@@ -488,7 +488,7 @@ public class GenericData {
       buffer.append(datum);
     }
   }
-  
+
   /* Adapted from http://code.google.com/p/json-simple */
   private void writeEscapedString(CharSequence string, StringBuilder builder) {
     for(int i = 0; i < string.length(); i++){
@@ -585,7 +585,7 @@ public class GenericData {
   public void setField(Object record, String name, int position, Object o) {
     ((IndexedRecord)record).put(position, o);
   }
-  
+
   /** Called by {@link GenericDatumReader#readRecord} to retrieve a record
    * field value from a reused instance.  The default implementation is for
    * {@link IndexedRecord}.*/
@@ -602,7 +602,7 @@ public class GenericData {
   protected void setField(Object r, String n, int p, Object o, Object state) {
     setField(r, n, p, o);
   }
-  
+
   /** Version of {@link #getField} that has state. */
   protected Object getField(Object record, String name, int pos, Object state) {
     return getField(record, name, pos);
@@ -629,7 +629,7 @@ public class GenericData {
     Integer ii = union.getIndexNamed(getSchemaName(datum));
     if (ii != null)
       return ii;
-    
+
     throw new UnresolvedUnionException(union, datum);
   }
 
@@ -722,7 +722,7 @@ public class GenericData {
   protected boolean isEnum(Object datum) {
     return datum instanceof GenericEnumSymbol;
   }
-  
+
   /** Called to obtain the schema of a enum.  By default calls
    * {GenericContainer#getSchema().  May be overridden for alternate enum
    * representations. */
@@ -734,7 +734,7 @@ public class GenericData {
   protected boolean isMap(Object datum) {
     return datum instanceof Map;
   }
-  
+
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isFixed(Object datum) {
     return datum instanceof GenericFixed;
@@ -791,7 +791,7 @@ public class GenericData {
   protected boolean isBoolean(Object datum) {
     return datum instanceof Boolean;
   }
-   
+
 
   /** Compute a hash code according to a schema, consistent with {@link
    * #compare(Object,Object,Schema)}. */
@@ -901,11 +901,11 @@ public class GenericData {
   /**
    * Gets the default value of the given field, if any.
    * @param field the field whose default value should be retrieved.
-   * @return the default value associated with the given field, 
+   * @return the default value associated with the given field,
    * or null if none is specified in the schema.
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public Object getDefaultValue(Field field) {    
+  public Object getDefaultValue(Field field) {
     JsonNode json = field.defaultValue();
     if (json == null)
       throw new AvroRuntimeException("Field " + field
@@ -916,10 +916,10 @@ public class GenericData {
                 && schema.getTypes().get(0).getType() == Type.NULL))) {
       return null;
     }
-    
+
     // Check the cache
     Object defaultValue = defaultValueCache.get(field);
-    
+
     // If not cached, get the default Java value by encoding the default JSON
     // value and then decoding it:
     if (defaultValue == null)
@@ -929,7 +929,7 @@ public class GenericData {
         ResolvingGrammarGenerator.encode(encoder, schema, json);
         encoder.flush();
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-        defaultValue = createDatumReader(schema).read(null, decoder); 
+        defaultValue = createDatumReader(schema).read(null, decoder);
         defaultValueCache.put(field, defaultValue);
       } catch (IOException e) {
         throw new AvroRuntimeException(e);
@@ -984,7 +984,7 @@ public class GenericData {
         return value; // immutable
       case MAP:
         Map<CharSequence, Object> mapValue = (Map) value;
-        Map<CharSequence, Object> mapCopy = 
+        Map<CharSequence, Object> mapCopy =
           new HashMap<CharSequence, Object>(mapValue.size());
         for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
           mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
@@ -1010,11 +1010,11 @@ public class GenericData {
         if (value instanceof String) {
           return (T)value;
         }
-        
-        // Some CharSequence subclasses are mutable, so we still need to make 
+
+        // Some CharSequence subclasses are mutable, so we still need to make
         // a copy
         else if (value instanceof Utf8) {
-          // Utf8 copy constructor is more efficient than converting 
+          // Utf8 copy constructor is more efficient than converting
           // to string and then back to Utf8
           return (T)new Utf8((Utf8)value);
         } else if (value instanceof CharSequence) {
@@ -1031,7 +1031,7 @@ public class GenericData {
             value + "\"");
     }
   }
-  
+
   /** Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   public Object createFixed(Object old, Schema schema) {
@@ -1040,7 +1040,7 @@ public class GenericData {
       return old;
     return new GenericData.Fixed(schema);
   }
-  
+
   /** Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   public Object createFixed(Object old, byte[] bytes, Schema schema) {
@@ -1048,7 +1048,7 @@ public class GenericData {
     System.arraycopy(bytes, 0, fixed.bytes(), 0, schema.getFixedSize());
     return fixed;
   }
-  
+
   /** Called to create an enum value. May be overridden for alternate enum
    * representations.  By default, returns a GenericEnumSymbol. */
   public Object createEnum(String symbol, Schema schema) {
@@ -1071,5 +1071,5 @@ public class GenericData {
     }
     return new GenericData.Record(schema);
   }
-  
+
 }

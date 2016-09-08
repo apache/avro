@@ -35,7 +35,7 @@ import java.util.List;
  * next field isn't there! More info to come as we remember how it works!
  */
 public final class ExtendedJsonDecoder extends JsonDecoder {
-   
+
 
     public ExtendedJsonDecoder(final Schema schema, final InputStream in)
             throws IOException {

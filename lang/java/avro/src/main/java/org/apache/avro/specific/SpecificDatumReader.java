@@ -79,7 +79,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     case STRING:
       stringClass = getPropAsClass(schema, SpecificData.CLASS_PROP);
       break;
-    case MAP: 
+    case MAP:
       stringClass = getPropAsClass(schema, SpecificData.KEY_CLASS_PROP);
       break;
     }

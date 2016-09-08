@@ -214,7 +214,7 @@ public abstract class Symbol {
       }
     }
   }
-  
+
   /**
    * Returns the amount of space required to flatten the given
    * sub-array of symbols.
