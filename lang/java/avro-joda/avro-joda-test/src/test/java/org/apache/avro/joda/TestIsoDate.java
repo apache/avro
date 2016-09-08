@@ -31,6 +31,7 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.node.TextNode;
 import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -40,7 +41,7 @@ import org.junit.Test;
  * @author zfarkas
  */
 public class TestIsoDate {
-    
+
     @Test
     public void testIsoDate() {
         ObjectNode node = JsonNodeFactory.instance.objectNode();
@@ -49,7 +50,7 @@ public class TestIsoDate {
         Assert.assertTrue("isodate logical type must be defined", type != null);
         System.out.println("Type is " + type);
     }
-    
+
     @Test
     public void testSerialization() throws IOException {
         TestRecord record = TestRecord.newBuilder()
@@ -99,7 +100,7 @@ public class TestIsoDate {
 
 
 
-    
+
     @Test
     public void testSerialization2() throws IOException {
         TestRecord record = TestRecord.newBuilder()
@@ -121,7 +122,7 @@ public class TestIsoDate {
         record2 = AvroUtils.readAvroJson(result, TestRecord.class);
         Assert.assertEquals(record, record2);
     }
-    
+
     @Test
     public void testSerializationFromIdl() throws IOException {
         TestRecord2 record = TestRecord2.newBuilder()
@@ -143,8 +144,8 @@ public class TestIsoDate {
         record2 = AvroUtils.readAvroJson(result, TestRecord2.class);
         Assert.assertEquals(record, record2);
     }
-    
-    
+
+
     @Test
     public void testSerializationCompatibility() throws IOException {
         TestRecord2 record = TestRecord2.newBuilder()
@@ -157,6 +158,7 @@ public class TestIsoDate {
                 .setDateVal2(new LocalDate())
                 .setDateVal3(new LocalDate())
                 .setDateTimeVal(new DateTime())
+                .setIntervalVal(Interval.parse("2011-01-01/P1D"))
                 .build();
         byte [] result = AvroUtils.writeAvroBin(record);
         TestRecord record2 = AvroUtils.readAvroBin(result, TestRecord.class, record.getSchema());
@@ -166,7 +168,7 @@ public class TestIsoDate {
 //        record2 = AvroUtils.readAvroJson(result, TestRecord.class);
 //        Assert.assertEquals(record.getDecimalVal(), record2.getDecimalVal());
     }
-    
+
     @Test
     public void testSerializationCompatibility3() throws IOException {
         TestRecord record = TestRecord.newBuilder()
@@ -212,7 +214,7 @@ public class TestIsoDate {
 //        record2 = AvroUtils.readAvroJson(result, TestRecord.class);
 //        Assert.assertEquals(record.getDecimalVal(), record2.getDecimalVal());
     }
-    
+
     @Test
     public void testSerializationCompatibility2() throws IOException {
         TestRecord record = TestRecord.newBuilder()
@@ -234,9 +236,9 @@ public class TestIsoDate {
 //        record2 = AvroUtils.readAvroJson(result, TestRecord2.class);
 //        Assert.assertEquals(record.getDecimalVal(), record2.getDecimalVal());
     }
-    
-    
-    
-    
+
+
+
+
 
 }

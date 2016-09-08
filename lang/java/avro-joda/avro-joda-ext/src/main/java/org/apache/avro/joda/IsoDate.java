@@ -32,10 +32,8 @@ import org.joda.time.format.ISODateTimeFormat;
 
 public class IsoDate extends AbstractLogicalType {
 
-  private static final Set<String> RESERVED = Collections.EMPTY_SET;
-
   IsoDate(Schema.Type type) {
-    super(type, RESERVED, "isodate", Collections.EMPTY_MAP);
+    super(type, Collections.EMPTY_SET, "isodate", Collections.EMPTY_MAP);
   }
 
   @Override
@@ -50,7 +48,7 @@ public class IsoDate extends AbstractLogicalType {
 
   @Override
   public Set<String> reserved() {
-    return RESERVED;
+    return Collections.EMPTY_SET;
   }
 
   @Override

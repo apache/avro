@@ -19,15 +19,14 @@ import java.util.Collections;
 import java.util.Set;
 import org.apache.avro.AbstractLogicalType;
 import org.apache.avro.Schema;
-import org.joda.time.Instant;
+import org.joda.time.Interval;
 
-public class IsoInstant extends AbstractLogicalType {
+public class IsoInterval extends AbstractLogicalType {
 
-
-  public IsoInstant(Schema.Type type) {
-    super(type, Collections.EMPTY_SET, "isoinstant", Collections.EMPTY_MAP);
+  public IsoInterval(Schema.Type type) {
+    super(type, Collections.EMPTY_SET, "isointerval", Collections.EMPTY_MAP);
     // validate the type
-    if (type != Schema.Type.LONG) {
+    if (type != Schema.Type.STRING) {
       throw new IllegalArgumentException(
               "Logical type " + this + " must be backed by long or string");
     }
@@ -36,7 +35,7 @@ public class IsoInstant extends AbstractLogicalType {
   @Override
   public void validate(Schema schema) {
     // validate the type
-    if (schema.getType() != Schema.Type.LONG) {
+    if (schema.getType() != Schema.Type.STRING) {
       throw new IllegalArgumentException(
               "Logical type " + this + " must be backed by long or string");
     }
@@ -49,18 +48,18 @@ public class IsoInstant extends AbstractLogicalType {
 
   @Override
   public Class<?> getLogicalJavaType() {
-    return Instant.class;
+    return Interval.class;
   }
 
 
   @Override
   public Object deserialize(Object object) {
-    return new Instant((Long) object);
+    return Interval.parseWithOffset((String) object);
   }
 
   @Override
   public Object serialize(Object object) {
-    return ((Instant) object).getMillis();
+    return object.toString();
   }
 
 }
