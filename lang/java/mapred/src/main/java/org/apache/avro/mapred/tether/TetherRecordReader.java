@@ -55,9 +55,9 @@ class TetherRecordReader
   public Schema getSchema() { return reader.getSchema(); }
 
   public TetherData createKey() { return new TetherData(); }
-  
+
   public NullWritable createValue() { return NullWritable.get(); }
-    
+
   public boolean next(TetherData data, NullWritable ignore)
     throws IOException {
     if (!reader.hasNext() || reader.pastSync(end))
@@ -66,7 +66,7 @@ class TetherRecordReader
     data.count((int)reader.getBlockCount());
     return true;
   }
-  
+
   public float getProgress() throws IOException {
     if (end == start) {
       return 0.0f;
@@ -74,11 +74,11 @@ class TetherRecordReader
       return Math.min(1.0f, (in.tell() - start) / (float)(end - start));
     }
   }
-  
+
   public long getPos() throws IOException {
     return in.tell();
   }
 
   public void close() throws IOException { reader.close(); }
-  
+
 }

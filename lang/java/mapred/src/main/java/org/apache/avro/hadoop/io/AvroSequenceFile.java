@@ -96,7 +96,7 @@ public class AvroSequenceFile {
         options.getFileSystem(), options.getConfigurationWithAvroSerialization(),
         options.getOutputPath(), options.getKeyClass(), options.getValueClass(),
         options.getBufferSizeBytes(), options.getReplicationFactor(),
-        options.getBlockSizeBytes(), 
+        options.getBlockSizeBytes(),
         options.getCompressionType(), options.getCompressionCodec(),
         options.getProgressable(), options.getMetadataWithAvroSchemas());
   }

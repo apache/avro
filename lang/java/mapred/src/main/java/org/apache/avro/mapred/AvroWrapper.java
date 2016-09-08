@@ -33,7 +33,7 @@ public class AvroWrapper<T> {
 
   /** Set the wrapped datum. */
   public void datum(T datum) { this.datum = datum; }
-  
+
   public int hashCode() {
     return (datum == null) ? 0 : datum.hashCode();
   }
@@ -53,7 +53,7 @@ public class AvroWrapper<T> {
       return false;
     return true;
   }
-    
+
   /** Get the wrapped datum as JSON. */
   @Override
   public String toString() {

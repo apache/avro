@@ -101,7 +101,7 @@ class TetheredProcess  {
       }
 
       outputServer.start();
-      
+
       // start sub-process, connecting back to server
       this.subprocess = startSubprocess(job);
 
@@ -227,5 +227,5 @@ class TetheredProcess  {
     builder.environment().putAll(env);
     return builder.start();
   }
-  
+
 }

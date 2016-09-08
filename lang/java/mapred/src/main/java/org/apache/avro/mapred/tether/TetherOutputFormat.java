@@ -53,7 +53,7 @@ class TetherOutputFormat
     throws IOException {
 
     Schema schema = AvroJob.getOutputSchema(job);
-    
+
     final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter());
 
     if (FileOutputFormat.getCompressOutput(job)) {

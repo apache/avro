@@ -226,7 +226,6 @@ public class SortedKeyValueFile {
       mDataFileReader =
         new DataFileReader<GenericRecord>
         (new FsInput(dataFilePath, options.getConfiguration()), datumReader);
-      
     }
 
     /**

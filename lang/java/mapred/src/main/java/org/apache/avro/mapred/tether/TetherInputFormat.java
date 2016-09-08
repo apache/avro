@@ -36,7 +36,7 @@ import org.apache.avro.mapred.AvroOutputFormat;
 
 /**
  * An {@link org.apache.hadoop.mapred.InputFormat} for tethered Avro input.
- * 
+ *
  * By default, when pointed at a directory, this will silently skip over any
  * files in it that do not have .avro extension. To instead include all files,
  * set the avro.mapred.ignore.inputs.without.extension property to false.
