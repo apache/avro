@@ -353,12 +353,12 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
-     Lazy.WRITER$.write(this, org.apache.avro.specific.SpecificData.getEncoder(out));
+     Lazy.WRITER$.write(this, SpecificData.getEncoder(out));
    } 
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
-     Lazy.READER$.read(this, org.apache.avro.specific.SpecificData.getDecoder(in));
+     Lazy.READER$.read(this, SpecificData.getDecoder(in));
   }
 
 }
