@@ -16,6 +16,8 @@
 package org.apache.avro.util;
 
 import com.google.common.base.Charsets;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -110,25 +112,35 @@ public final class Strings {
 
     private static final Logger LOG = LoggerFactory.getLogger(Strings.class);
 
-    private static final Field CHARS_FIELD;
+    private static final MethodHandle CHARS_FIELD_GET;
 
-    static {
-        CHARS_FIELD = AccessController.doPrivileged(new PrivilegedAction<Field>() {
-            @Override
-            public Field run() {
-                Field charsField;
-                try {
-                    charsField = String.class.getDeclaredField("value");
-                    charsField.setAccessible(true);
-                } catch (NoSuchFieldException ex) {
-                    LOG.info("char array stealing from String not supported", ex);
-                    charsField = null;
-                } catch (SecurityException ex) {
-                    throw new RuntimeException(ex);
-                }
-                return charsField;
-            }
-        });
+  static {
+    Field charsField = AccessController.doPrivileged(new PrivilegedAction<Field>() {
+      @Override
+      public Field run() {
+        Field charsField;
+        try {
+          charsField = String.class.getDeclaredField("value");
+          charsField.setAccessible(true);
+        } catch (NoSuchFieldException ex) {
+          LOG.info("char array stealing from String not supported", ex);
+          charsField = null;
+        } catch (SecurityException ex) {
+          throw new RuntimeException(ex);
+        }
+        return charsField;
+      }
+    });
+    MethodHandles.Lookup lookup = MethodHandles.lookup();
+    if (charsField != null) {
+      try {
+        CHARS_FIELD_GET = lookup.unreflectGetter(charsField);
+      } catch (IllegalAccessException ex) {
+        throw new ExceptionInInitializerError(ex);
+      }
+    } else {
+        CHARS_FIELD_GET = null;
+    }
     }
 
     /**
@@ -138,14 +150,16 @@ public final class Strings {
      * @return
      */
     public static char[] steal(final String str) {
-        if (CHARS_FIELD == null) {
+        if (CHARS_FIELD_GET == null) {
             return str.toCharArray();
         } else {
             try {
-                return (char[]) CHARS_FIELD.get(str);
-            } catch (IllegalArgumentException ex) {
-                throw new RuntimeException(ex);
-            } catch ( IllegalAccessException ex) {
+                return (char[]) CHARS_FIELD_GET.invokeExact(str);
+            } catch (Error ex) {
+                throw ex;
+            } catch (RuntimeException ex) {
+                throw ex;
+            } catch (Throwable ex) {
                 throw new RuntimeException(ex);
             }
         }
