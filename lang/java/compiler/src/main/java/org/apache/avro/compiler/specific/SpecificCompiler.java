@@ -453,7 +453,7 @@ public class SpecificCompiler {
               "see JIRA ticket AVRO-1642.");
   }
 
-  OutputFile compile(Schema schema) {
+  public OutputFile compile(Schema schema) {
     schema = addStringType(schema);               // annotate schema as needed
     String output = "";
     VelocityContext context = new VelocityContext();
