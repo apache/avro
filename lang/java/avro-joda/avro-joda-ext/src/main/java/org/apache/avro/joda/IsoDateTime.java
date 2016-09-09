@@ -55,7 +55,7 @@ public class IsoDateTime extends AbstractLogicalType {
   public Object deserialize(Object object) {
     switch (type) {
       case STRING:
-        return FMT.parseDateTime(((CharSequence) object).toString());
+        return FMT.parseDateTime(object.toString());
       case LONG:
         return new DateTime((Long) object);
       default:

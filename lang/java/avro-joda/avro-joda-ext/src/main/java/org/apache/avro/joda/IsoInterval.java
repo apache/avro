@@ -54,7 +54,7 @@ public class IsoInterval extends AbstractLogicalType {
 
   @Override
   public Object deserialize(Object object) {
-    return Interval.parseWithOffset((String) object);
+    return Interval.parseWithOffset(object.toString());
   }
 
   @Override

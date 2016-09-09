@@ -11,7 +11,7 @@ protocol None {
         union {null, int, @logicalType("decimal") @precision(36) @scale(16) string} decimalVal4 = null;
         union {null, string} testField = null;
         union {null, @logicalType("isodate") string } dateVal;
-        union {null, @logicalType("isointerval") string } intervalVal;
+        union {@logicalType("isointerval") string, null} intervalVal = "2000-01-01/P1D";
         @logicalType("isodate") long dateVal2;
         @logicalType("isodate") int dateVal3;
         @logicalType("isodatetime") long dateTimeVal;
