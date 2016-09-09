@@ -110,7 +110,7 @@ public class Parser {
       }
     }
   }
-  
+
   /**
    * Performs any implicit actions at the top the stack, expanding any
    * production (other than the root) that may be encountered.
@@ -133,12 +133,12 @@ public class Parser {
   }
 
   /**
-   * Performs any "trailing" implicit actions at the top the stack. 
+   * Performs any "trailing" implicit actions at the top the stack.
    */
   public final void processTrailingImplicitActions() throws IOException {
     while (pos >= 1) {
       Symbol top = stack[pos - 1];
-      if (top.kind == Symbol.Kind.IMPLICIT_ACTION 
+      if (top.kind == Symbol.Kind.IMPLICIT_ACTION
         && ((Symbol.ImplicitAction) top).isTrailing) {
         pos--;
         symbolHandler.doAction(null, top);
@@ -168,14 +168,14 @@ public class Parser {
   public Symbol popSymbol() {
     return stack[--pos];
   }
-  
+
   /**
    * Returns the top symbol from the stack.
    */
   public Symbol topSymbol() {
     return stack[pos - 1];
   }
-  
+
   /**
    * Pushes <tt>sym</tt> on to the stack.
    */
@@ -185,7 +185,7 @@ public class Parser {
     ensureCapacity(pos);
     stack[opos] = sym;
   }
-  
+
   /**
    * Returns the depth of the stack.
    */
