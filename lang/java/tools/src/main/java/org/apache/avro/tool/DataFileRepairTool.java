@@ -45,7 +45,7 @@ public class DataFileRepairTool implements Tool {
   public String getShortDescription() {
     return "Recovers data from a corrupt Avro Data file";
   }
-  
+
   private void printInfo(PrintStream output) {
     output.println("Insufficient arguments.  Arguments:  [-o option] "
         + "input_file output_file \n"
@@ -101,7 +101,7 @@ public class DataFileRepairTool implements Tool {
       if (args.size() - index < 1) {
         printInfo(err);
         return 1;
-      } 
+      }
     }
     if (ALL.equals(option)) {
       return recoverAll(input, args.get(index), out, err);
@@ -151,7 +151,7 @@ public class DataFileRepairTool implements Tool {
         } catch (Exception e) {
           e.printStackTrace(err);
           return 1;
-        } 
+        }
       } else {
         return innerRecover(fileReader, null, out, err, recoverPrior,
             recoverAfter, null, null);
@@ -236,7 +236,7 @@ public class DataFileRepairTool implements Tool {
                     + (pos));
                 if (lastRecordWasBad) {
                   // consecutive bad record
-                  err.println("Second consecutive bad record in block: " + numBlocks 
+                  err.println("Second consecutive bad record in block: " + numBlocks
                       + ". Skipping remainder of block. ");
                   numCorruptRecords += blockRemaining;
                   badRecordsInBlock += blockRemaining;
@@ -272,7 +272,7 @@ public class DataFileRepairTool implements Tool {
             e2.printStackTrace(err);
             return 1;
           }
-        } 
+        }
       }
     } finally {
       if (fileWritten) {

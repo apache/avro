@@ -47,12 +47,12 @@ public class BinaryFragmentToJsonTool implements Tool {
         .accepts("schema-file", "File containing schema, must not occur with inline schema.")
         .withOptionalArg()
         .ofType(String.class);
-    
+
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean noPretty = optionSet.has(noPrettyOption);
     List<String> nargs = (List<String>)optionSet.nonOptionArguments();
     String schemaFile = schemaFileOption.value(optionSet);
-    
+
     if (nargs.size() != (schemaFile == null ? 2 : 1)) {
       err.println("fragtojson --no-pretty --schema-file <file> [inline-schema] input-file");
       err.println("   converts Avro fragments to JSON.");

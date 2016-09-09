@@ -60,7 +60,7 @@ public class RpcReceiveTool implements Tool {
   public String getShortDescription() {
     return "Opens an RPC Server and listens for one message.";
   }
-  
+
   private class SinkResponder extends GenericResponder {
 
     public SinkResponder(Protocol local) {
@@ -71,7 +71,7 @@ public class RpcReceiveTool implements Tool {
     public Object respond(Message message, Object request)
     throws AvroRemoteException {
       if (!message.equals(expectedMessage)) {
-        out.println(String.format("Expected message '%s' but received '%s'.", 
+        out.println(String.format("Expected message '%s' but received '%s'.",
             expectedMessage.getName(), message.getName()));
         latch.countDown();
         throw new IllegalArgumentException("Unexpected message.");
@@ -102,7 +102,7 @@ public class RpcReceiveTool implements Tool {
       return response;
     }
   }
-  
+
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
@@ -154,16 +154,16 @@ public class RpcReceiveTool implements Tool {
       err.println("One of -data or -file must be specified.");
       return 1;
     }
-    
+
     this.out = out;
-    
+
     latch = new CountDownLatch(1);
     server = Ipc.createServer(new SinkResponder(protocol), uri);
     server.start();
     out.println("Port: " + server.getPort());
     return 0;
   }
-  
+
   int run2(PrintStream err) throws InterruptedException {
     latch.await();
     err.println("Closing server.");
