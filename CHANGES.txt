@@ -51,6 +51,8 @@ Trunk (not yet released)
     AVRO-1873: Ruby: Add CRC32 checksum to Snappy-compressed blocks.
     (blue)
 
+    AVRO-1900: Java: Remove dev-tools to fix Java build. (blue)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
