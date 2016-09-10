@@ -51,6 +51,9 @@ Trunk (not yet released)
     AVRO-1908: Fix TestSpecificCompiler reference to private method.
     (blue)
 
+    AVRO-1873: Ruby: Add CRC32 checksum to Snappy-compressed blocks.
+    (blue)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
