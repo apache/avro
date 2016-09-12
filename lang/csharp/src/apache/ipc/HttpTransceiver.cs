@@ -52,9 +52,29 @@ namespace Avro.ipc
             _modelRequest.Timeout = timeoutMs;
         }
 
-        private static int ReadInt(Stream stream, byte[] buffer)
+		public static void ReadFully(Stream stream, byte[] buffer)
+		{
+			int offset = 0;
+			int read = 0;
+
+			do
+			{
+				read = stream.Read(buffer, offset, buffer.Length - offset);
+				offset += read;
+			}
+			while (buffer.Length > offset && read > 0);
+
+			if (buffer.Length > offset)
+			{
+				throw new IOException(
+					String.Format("Only read {0} and expected buffer size of {1}.", offset, buffer.Length)
+				);
+			}
+		}
+
+		public static int ReadInt(Stream stream, byte[] buffer)
         {
-            stream.Read(buffer, 0, 4);
+			ReadFully(stream, buffer);
             return IPAddress.NetworkToHostOrder(BitConverter.ToInt32(buffer, 0));
         }
 
@@ -84,21 +104,26 @@ namespace Avro.ipc
                 if (length == 0) //end of transmission
                     break;
 
-                byte[] buffer = new byte[length];
-                int offset = 0;
-                int count = length;
-                while (offset < length)
-                {
-                    int num = inStream.Read(buffer, offset, count);
-                    if (num == 0)
-                        throw new Exception(string.Format("Unexpected end of response binary stream - expected {0} more bytes in current chunk", (object)count));
-                    offset += num;
-                    count -= num;
-                }
+				MemoryStream outStream = new MemoryStream(length);
+				byte[] buffer = new byte[64 * 1024];
+				int read = 0;
+				int totalRead = 0;
+				while ((read = inStream.Read(buffer, length - read, Math.Min(length - read, buffer.Length))) > 0)
+				{
+					outStream.Write(buffer, 0, read);
+					totalRead += read;
+				}
 
-                list.Add(new MemoryStream(buffer));
+				if (length != totalRead)
+				{
+					throw new IOException(
+						String.Format("Could not read the current chunk. Read {0} Actual Length {1}", totalRead, length)
+					);
+				}
+
+                list.Add(outStream);
             }
-            return (IList<MemoryStream>)list;
+            return list;
         }
 
         public override IList<MemoryStream> ReadBuffers()
