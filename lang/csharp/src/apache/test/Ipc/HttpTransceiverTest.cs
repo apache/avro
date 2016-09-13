@@ -22,6 +22,7 @@ using System.Linq;
 using System.Reflection;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using NUnit.Framework;
 using Avro.ipc;
 
@@ -115,6 +116,48 @@ namespace Avro.test.ipc
             memoryStream.WriteByte(1);
             memoryStream.WriteByte(12);
             int value = HttpTransceiver.ReadInt(memoryStream, intBuffer);
+        }
+
+        [Test]
+        public void ReadBuffers()
+        {
+            byte[] intBuffer = new byte[4];
+            IList<MemoryStream> streams = new List<MemoryStream>();
+            IList<String> hashes = new List<string>();
+
+            Random random = new Random();
+            for (int i = 0; i < 5; i++)
+            {
+                int length = random.Next(64 * 1024, 512 * 1024);
+                byte[] buffer = new byte[length];
+                random.NextBytes(buffer);
+                using (SHA1CryptoServiceProvider hashAlg = new SHA1CryptoServiceProvider())
+                {
+                    hashes.Add(BitConverter.ToString(hashAlg.ComputeHash(buffer)));
+                }
+                streams.Add(new MemoryStream(buffer));
+            }
+            Stream iostream = new MemoryStream();
+            HttpTransceiver.WriteBuffers(streams, iostream);
+            iostream.Seek(0L, SeekOrigin.Begin);
+            IList<MemoryStream> outputStreams = HttpTransceiver.ReadBuffers(iostream, intBuffer);
+            Assert.AreEqual(5, outputStreams.Count);
+
+            for(int i=0;i<outputStreams.Count;i++)
+            {
+                MemoryStream memoryStream = outputStreams[i];
+                String expectedHash = hashes[i];
+                byte[] buffer = memoryStream.ToArray();
+                String actualHash;
+                using (SHA1CryptoServiceProvider hashAlg = new SHA1CryptoServiceProvider())
+                {
+                    actualHash = BitConverter.ToString(hashAlg.ComputeHash(buffer));
+                }
+                Assert.AreEqual(expectedHash, actualHash, "Stream " + i + " does not match.");
+            }
+
+
+
         }
     }
 }

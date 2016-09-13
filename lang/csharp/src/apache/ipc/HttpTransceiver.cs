@@ -104,9 +104,9 @@ namespace Avro.ipc
 
                 MemoryStream outStream = new MemoryStream(length);
                 byte[] buffer = new byte[64 * 1024];
-                int read = 0;
+                int read;
                 int totalRead = 0;
-                while ((read = inStream.Read(buffer, length - read, Math.Min(length - read, buffer.Length))) > 0)
+                while ((read = inStream.Read(buffer, 0, Math.Min(length - totalRead, buffer.Length))) > 0)
                 {
                     outStream.Write(buffer, 0, read);
                     totalRead += read;
