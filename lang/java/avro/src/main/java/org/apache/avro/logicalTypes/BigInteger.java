@@ -16,44 +16,30 @@
 package org.apache.avro.logicalTypes;
 
 import com.google.common.collect.ImmutableMap;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.MathContext;
-import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Set;
 import org.apache.avro.AbstractLogicalType;
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 
   /** Decimal represents arbitrary-precision fixed-scale decimal numbers  */
-public final class Decimal extends AbstractLogicalType {
+public final class BigInteger extends AbstractLogicalType {
 
-    private static final Set<String> RESERVED = AbstractLogicalType.reservedSet("precision", "scale");
+    private static final Set<String> RESERVED = AbstractLogicalType.reservedSet("precision");
 
-    private final MathContext mc;
-    private final int scale;
+    private final int precision;
 
-    public Decimal(int precision, int scale, Schema.Type type) {
-      super(type, RESERVED, "decimal", ImmutableMap.of("precision", (Object) precision, "scale", scale));
+    public BigInteger(int precision,  Schema.Type type) {
+      super(type, RESERVED, "bigint", ImmutableMap.of("precision", (Object) precision));
       if (precision <= 0) {
         throw new IllegalArgumentException("Invalid " + this.logicalTypeName + " precision: " +
             precision + " (must be positive)");
       }
-      if (scale < 0) {
-        throw new IllegalArgumentException("Invalid " + this.logicalTypeName + " scale: " +
-            scale + " (must be positive)");
-      } else if (scale > precision) {
-        throw new IllegalArgumentException("Invalid " + this.logicalTypeName + " scale: " +
-            scale + " (greater than precision: " + precision + ")");
-      }
-      mc = new MathContext(precision, RoundingMode.HALF_EVEN);
-      this.scale = scale;
+      this.precision = precision;
     }
 
-    public Decimal(JsonNode node, Schema.Type type) {
-        this(node.get("precision").asInt(), node.get("scale").asInt(), type);
+    public BigInteger(JsonNode node, Schema.Type type) {
+        this(node.get("precision").asInt(), type);
     }
 
     @Override
@@ -64,7 +50,6 @@ public final class Decimal extends AbstractLogicalType {
           schema.getType() != Schema.Type.STRING) {
         throw new IllegalArgumentException(this.logicalTypeName + " must be backed by fixed or bytes");
       }
-      int precision = mc.getPrecision();
       if (precision > maxPrecision(schema)) {
         throw new IllegalArgumentException(
             "fixed(" + schema.getFixedSize() + ") cannot store " +
@@ -96,34 +81,22 @@ public final class Decimal extends AbstractLogicalType {
 
     @Override
     public Class<?> getLogicalJavaType() {
-        return BigDecimal.class;
+        return BigInteger.class;
     }
 
     @Override
     public Object deserialize(Object object) {
       switch (type) {
         case STRING:
-          BigDecimal result = new BigDecimal(object.toString(), mc);
-          if (result.scale() > scale) {
-                      // Rounding might be an option.
-            // this will probably need to be made configurable in the future.
-            throw new AvroRuntimeException("Received Decimal " + object + " is not compatible with scale " + scale);
-          }
+          java.math.BigInteger result = new java.math.BigInteger(object.toString());
           return result;
         case BYTES:
           //ByteBuffer buf = ByteBuffer.wrap((byte []) object);
           ByteBuffer buf = (ByteBuffer) object;
           buf.rewind();
-          int lscale = buf.getInt();
-          if (lscale > scale) {
-                      // Rounding might be an option.
-            // this will probably need to be made configurable in the future.
-            throw new AvroRuntimeException("Received Decimal " + object + " is not compatible with scale " + scale);
-          }
           byte[] unscaled = new byte[buf.remaining()];
           buf.get(unscaled);
-          BigInteger unscaledBi = new BigInteger(unscaled);
-          return new BigDecimal(unscaledBi, lscale);
+          return new java.math.BigInteger(unscaled);
         default:
           throw new UnsupportedOperationException("Unsupported type " + type + " for " + this);
       }
@@ -132,25 +105,13 @@ public final class Decimal extends AbstractLogicalType {
 
     @Override
     public Object serialize(Object object) {
-      BigDecimal decimal = (BigDecimal) object;
+      java.math.BigInteger decimal = (java.math.BigInteger) object;
       switch (type) {
         case STRING:
-          if (decimal.scale() > scale) {
-            return decimal.setScale(scale, RoundingMode.HALF_DOWN).toPlainString();
-          } else {
-            return decimal.toPlainString();
-          }
+            return decimal.toString();
         case BYTES:
-          int lscale;
-          if (decimal.scale() > scale) {
-            lscale = scale;
-            decimal = decimal.setScale(lscale, RoundingMode.HALF_DOWN);
-          } else {
-            lscale = decimal.scale();
-          }
-          byte[] unscaledValue = decimal.unscaledValue().toByteArray();
-          ByteBuffer buf = ByteBuffer.allocate(4 + unscaledValue.length);
-          buf.putInt(lscale);
+          byte[] unscaledValue = decimal.toByteArray();
+          ByteBuffer buf = ByteBuffer.allocate(unscaledValue.length);
           buf.put(unscaledValue);
           buf.rewind();
           return buf;
