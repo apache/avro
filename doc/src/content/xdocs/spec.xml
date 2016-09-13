@@ -329,18 +329,19 @@
       <title>Data Serialization</title>
 
       <p>Avro data does not include type information.
-  The binary encoding does not include field names, either. As a
-  result, the original schema of the writer is always required in
-  order to read Avro data accurately.</p>
+      The binary encoding does not include field names, either.  The resulting
+      tradeoff is that the serialized data is small, but the original schema of
+      the writer is always required in order to read Avro data correctly.</p>
 
       <p>Therefore, files that store Avro data should always include the
-  schema for that data in the same file.  Avro-based remote procedure
-  call (RPC) systems must also guarantee that remote recipients of data
-	have a copy of the schema used to write that data.  In general, any
-  reader of Avro data must have the same schema (as defined more fully
-  in <a href="#Parsing+Canonical+Form+for+Schemas">Parsing
-  Canonical Form for Schemas</a>) that was used to write the data in
-  order to deserialize it correctly.</p>
+      schema for that data in the same file.  Avro-based remote procedure
+      call (RPC) systems must also guarantee that remote recipients of data
+      have a copy of the schema used to write that data.  In general, any
+      reader of Avro data must a schema that is structurally identical (as
+      defined more fully in
+      <a href="#Parsing+Canonical+Form+for+Schemas">Parsing Canonical Form for
+      Schemas</a>) to the schema that was used to write the data in order to
+      deserialize it correctly.</p>
 
       <p>In general, both serialization and deserialization proceed as
       a depth-first, left-to-right traversal of the schema,
@@ -589,9 +590,8 @@
         operation.  Note also that Avro binary-encoded data can be
         efficiently ordered without deserializing it to objects.</p>
 
-      <p>Data items may only be compared if they have
-        <a href="#Parsing+Canonical+Form+for+Schemas">identical
-        schemas</a>.  Pairwise comparisons are implemented recursively
+      <p>Data items may only be compared if they have identical
+        schemas.  Pairwise comparisons are implemented recursively
         with a depth-first, left-to-right traversal of the schema.
         The first mismatch encountered determines the order of the
         items.</p>
@@ -1071,11 +1071,8 @@
 
       <p>We refer to the schema used to write the data as
         the <em>writer's</em> schema, and the schema that the
-        application expects the <em>reader's</em> schema.  In order
-        to resolve differences between the two, implementations must
-        generally first read serialized data with the writer's schema,
-        then convert it into the reader's schema, resolving differences
-        between the two schemas according to the following rules:</p>
+        application expects the <em>reader's</em> schema.  Differences
+        between these should be resolved as follows:</p>
 
       <ul>
         <li><p>It is an error if the two schemas do not <em>match</em>.</p>
@@ -1168,9 +1165,8 @@
       <title>Parsing Canonical Form for Schemas</title>
 
       <p>One of the defining characteristics of Avro is that a reader
-      must read serialized data with the "same" schema used by the
-      writer of the data before it can use or convert it to another
-      schema.  This assumption results in a data
+      must use the "same" schema used by the writer of the data in
+      order to know how to read the data.  This assumption results in a data
       format that's compact and also amenable to many forms of schema
       evolution.  However, the specification so far has not defined
       what it means for the reader to have the "same" schema as the

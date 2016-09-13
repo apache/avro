@@ -290,10 +290,14 @@ System.out.println(user);
           to a <code>DataFileReader</code>, analogous to the
           <code>DataFileWriter</code>, which reads both the schema used by the
           writer as well as the data from the file on disk. The data will be
-          read using the schema included in the file, and converted to the
-          schema provided in the <code>User</code> class. If there are
-          differences between the two schemas, they are resolved according to
-          the <a href="spec.html#Schema+Resolution">Schema Resolution</a>
+          read using the writer's schema included in the file and the
+          schema provided by the reader, in this case the <code>User</code>
+          class.  The writer's schema is needed to know the order in which
+          fields were written, while the reader's schema is needed to know what
+          fields are expected and how to fill in default values for fields
+          added since the file was written.  If there are differences between
+          the two schemas, they are resolved according to the
+          <a href="spec.html#Schema+Resolution">Schema Resolution</a>
           specification.
         </p>
         <p>
@@ -448,10 +452,14 @@ System.out.println(user);
           <code>File</code> to a <code>DataFileReader</code>, analogous to the
           <code>DataFileWriter</code>, which reads both the schema used by the
           writer as well as the data from the file on disk. The data will be
-          read using the schema included in the file, and converted to the
-          schema provided to the <code>GenericDatumReader</code>. If there are
-          differences between the two schemas, they are resolved according to
-          the <a href="spec.html#Schema+Resolution">Schema Resolution</a>
+          read using the writer's schema included in the file, and the reader's
+          schema provided to the <code>GenericDatumReader</code>.  The writer's
+          schema is needed to know the order in which fields were written,
+          while the reader's schema is needed to know what fields are expected
+          and how to fill in default values for fields added since the file
+          was written.  If there are differences between the two schemas, they
+          are resolved according to the
+          <a href="spec.html#Schema+Resolution">Schema Resolution</a>
           specification.
         </p>
         <p>
