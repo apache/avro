@@ -81,7 +81,7 @@ public final class BigInteger extends AbstractLogicalType {
 
     @Override
     public Class<?> getLogicalJavaType() {
-        return BigInteger.class;
+        return java.math.BigInteger.class;
     }
 
     @Override
