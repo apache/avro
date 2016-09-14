@@ -403,6 +403,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Player build() {
       try {
         Player record = new Player();
@@ -417,16 +418,18 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     }
   }
 
-  private static final org.apache.avro.io.DatumWriter
-    WRITER$ = MODEL$.createDatumWriter(SCHEMA$);
+  @SuppressWarnings("unchecked")
+  private static final org.apache.avro.io.DatumWriter<Player>
+    WRITER$ = (org.apache.avro.io.DatumWriter<Player>)MODEL$.createDatumWriter(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
     WRITER$.write(this, SpecificData.getEncoder(out));
   }
 
-  private static final org.apache.avro.io.DatumReader
-    READER$ = MODEL$.createDatumReader(SCHEMA$);
+  @SuppressWarnings("unchecked")
+  private static final org.apache.avro.io.DatumReader<Player>
+    READER$ = (org.apache.avro.io.DatumReader<Player>)MODEL$.createDatumReader(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
