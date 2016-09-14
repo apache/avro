@@ -54,6 +54,9 @@
       "name" : "finishTime",
       "type" : {"type": "long", "logicalType": "timestamp-millis"}
     }, {
+      "name" : "finishRatio",
+      "type" : {"type": "bytes", "logicalType": "decimal", "precision": 9, "scale": 2}
+    }, {
       "name" : "finishedMaps",
       "type" : "int"
     }, {

@@ -49,6 +49,7 @@ import sys
 
 from avro import schema
 
+logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------
 # Constants
@@ -249,7 +250,7 @@ class BinaryDecoder(object):
     try:
       return input_bytes.decode('utf-8')
     except UnicodeDecodeError as exn:
-      logging.error('Invalid UTF-8 input bytes: %r', input_bytes)
+      logger.error('Invalid UTF-8 input bytes: %r', input_bytes)
       raise exn
 
   def check_crc32(self, bytes):

@@ -79,8 +79,9 @@ public class TestSpecificCompiler {
 
   @Test
   public void testMakePath() {
-    assertEquals("foo/bar/Baz.java".replace("/", File.separator), SpecificCompiler.makePath("Baz", "foo.bar"));
-    assertEquals("baz.java", SpecificCompiler.makePath("baz", ""));
+    SpecificCompiler compiler = new SpecificCompiler();
+    assertEquals("foo/bar/Baz.java".replace("/", File.separator), compiler.makePath("Baz", "foo.bar"));
+    assertEquals("baz.java", compiler.makePath("baz", ""));
   }
 
   @Test

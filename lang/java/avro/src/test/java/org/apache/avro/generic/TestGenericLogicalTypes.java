@@ -232,4 +232,65 @@ public class TestGenericLogicalTypes {
 
     return file;
   }
+
+  @Test
+  public void testCopyUuid() {
+    testCopy(LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING)),
+             UUID.randomUUID(),
+             GENERIC);
+  }
+
+  @Test
+  public void testCopyUuidRaw() {
+    testCopy(LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING)),
+             UUID.randomUUID().toString(),        // use raw type
+             GenericData.get());                  // with no conversions
+  }
+    
+  @Test
+  public void testCopyDecimal() {
+    testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)),
+             new BigDecimal("-34.34"),
+             GENERIC);
+  }
+    
+  @Test
+  public void testCopyDecimalRaw() {
+    testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)),
+             ByteBuffer.wrap(new BigDecimal("-34.34").unscaledValue().toByteArray()),
+             GenericData.get());                  // no conversions
+  }
+    
+  private void testCopy(Schema schema, Object value, GenericData model) {
+    // test direct copy of instance
+    checkCopy(value, model.deepCopy(schema, value), false);
+
+    // test nested in a record
+    Schema recordSchema = Schema.createRecord("X", "", "test", false);
+    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    fields.add(new Schema.Field("x", schema, "", null));
+    recordSchema.setFields(fields);
+
+    GenericRecordBuilder builder = new GenericRecordBuilder(recordSchema);
+    builder.set("x", value);
+    GenericData.Record record = builder.build();
+    checkCopy(record, model.deepCopy(recordSchema, record), true);
+
+    // test nested in array
+    Schema arraySchema = Schema.createArray(schema);
+    ArrayList array = new ArrayList(Arrays.asList(value));
+    checkCopy(array, model.deepCopy(arraySchema, array), true);
+
+    // test record nested in array
+    Schema recordArraySchema = Schema.createArray(recordSchema);
+    ArrayList recordArray = new ArrayList(Arrays.asList(record));
+    checkCopy(recordArray, model.deepCopy(recordArraySchema, recordArray), true);
+  }
+
+  private void checkCopy(Object original, Object copy, boolean notSame) {
+    if (notSame) 
+      Assert.assertNotSame(original, copy);
+    Assert.assertEquals(original, copy);
+  }
+
 }

@@ -4,12 +4,38 @@
  * DO NOT EDIT DIRECTLY
  */
 package org.apache.avro.specific;
+
+import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.BinaryMessageEncoder;
+
+import java.math.BigDecimal;
+
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class TestRecordWithLogicalTypes extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = -4211233492739285532L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TestRecordWithLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"b\",\"type\":\"boolean\"},{\"name\":\"i32\",\"type\":\"int\"},{\"name\":\"i64\",\"type\":\"long\"},{\"name\":\"f32\",\"type\":\"float\"},{\"name\":\"f64\",\"type\":\"double\"},{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TestRecordWithLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"b\",\"type\":\"boolean\"},{\"name\":\"i32\",\"type\":\"int\"},{\"name\":\"i64\",\"type\":\"long\"},{\"name\":\"f32\",\"type\":\"float\"},{\"name\":\"f64\",\"type\":\"double\"},{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"dec\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  private static SpecificData MODEL$ = new SpecificData();
+
+  private static final BinaryMessageEncoder<TestRecordWithLogicalTypes> ENCODER =
+      new BinaryMessageEncoder<TestRecordWithLogicalTypes>(MODEL$, SCHEMA$);
+
+  private static final BinaryMessageDecoder<TestRecordWithLogicalTypes> DECODER =
+      new BinaryMessageDecoder<TestRecordWithLogicalTypes>(MODEL$, SCHEMA$);
+
+  /** Serializes this ${schema.getName()} to a ByteBuffer. */
+  public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
+    return ENCODER.encode(this);
+  }
+
+  /** Deserializes a ${schema.getName()} from a ByteBuffer. */
+  public static TestRecordWithLogicalTypes fromByteBuffer(
+      java.nio.ByteBuffer b) throws java.io.IOException {
+    return DECODER.decode(b);
+  }
+
   @Deprecated public boolean b;
   @Deprecated public int i32;
   @Deprecated public long i64;
@@ -19,6 +45,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   @Deprecated public org.joda.time.LocalDate d;
   @Deprecated public org.joda.time.LocalTime t;
   @Deprecated public org.joda.time.DateTime ts;
+  @Deprecated public BigDecimal dec;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -30,7 +57,16 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   /**
    * All-args constructor.
    */
-  public TestRecordWithLogicalTypes(java.lang.Boolean b, java.lang.Integer i32, java.lang.Long i64, java.lang.Float f32, java.lang.Double f64, java.lang.CharSequence s, org.joda.time.LocalDate d, org.joda.time.LocalTime t, org.joda.time.DateTime ts) {
+  public TestRecordWithLogicalTypes(java.lang.Boolean b,
+                                    java.lang.Integer i32,
+                                    java.lang.Long i64,
+                                    java.lang.Float f32,
+                                    java.lang.Double f64,
+                                    java.lang.CharSequence s,
+                                    org.joda.time.LocalDate d,
+                                    org.joda.time.LocalTime t,
+                                    org.joda.time.DateTime ts,
+                                    BigDecimal dec) {
     this.b = b;
     this.i32 = i32;
     this.i64 = i64;
@@ -40,6 +76,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     this.d = d;
     this.t = t;
     this.ts = ts;
+    this.dec = dec;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -55,6 +92,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     case 6: return d;
     case 7: return t;
     case 8: return ts;
+    case 9: return dec;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -71,6 +109,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     case 6: d = (org.joda.time.LocalDate)value$; break;
     case 7: t = (org.joda.time.LocalTime)value$; break;
     case 8: ts = (org.joda.time.DateTime)value$; break;
+    case 9: dec = (BigDecimal) value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -203,6 +242,21 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   }
 
   /**
+   * Sets the value of the 'dec' field.
+   * @param value the value to set.
+   */
+  public void setDec(BigDecimal value) {
+    this.dec = value;
+  }
+
+  /**
+   * Gets the value of the 'ts' field.
+   */
+  public BigDecimal getDec() {
+    return dec;
+  }
+
+  /**
    * Sets the value of the 'ts' field.
    * @param value the value to set.
    */
@@ -213,7 +267,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   protected static final org.apache.avro.data.TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.TimeConversions.DateConversion();
   protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
   protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
-
+  protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
   private final org.apache.avro.Conversion<?>[] conversions =
       new org.apache.avro.Conversion<?>[] {
       null,
@@ -225,6 +279,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
       DATE_CONVERSION,
       TIME_CONVERSION,
       TIMESTAMP_CONVERSION,
+      DECIMAL_CONVERSION,
       null
   };
 
@@ -263,6 +318,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     private org.joda.time.LocalDate d;
     private org.joda.time.LocalTime t;
     private org.joda.time.DateTime ts;
+    private BigDecimal dec;
 
     /** Creates a new Builder */
     private Builder() {
@@ -308,6 +364,10 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
         this.ts = data().deepCopy(fields()[8].schema(), other.ts);
         fieldSetFlags()[8] = true;
       }
+      if (isValidValue(fields()[9], other.dec)) {
+        this.dec = data().deepCopy(fields()[9].schema(), other.dec);
+        fieldSetFlags()[9] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing TestRecordWithLogicalTypes instance */
@@ -348,6 +408,10 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
       if (isValidValue(fields()[8], other.ts)) {
         this.ts = data().deepCopy(fields()[8].schema(), other.ts);
         fieldSetFlags()[8] = true;
+      }
+      if (isValidValue(fields()[9], other.dec)) {
+        this.dec = data().deepCopy(fields()[9].schema(), other.dec);
+        fieldSetFlags()[9] = true;
       }
     }
 
@@ -658,6 +722,40 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
       return this;
     }
 
+    /**
+     * Gedec the value of the 'dec' field.
+     */
+    public BigDecimal getDec() {
+      return dec;
+    }
+
+    /**
+     * Sedec the value of the 'dec' field.
+     * @param value the value to set.
+     */
+    public TestRecordWithLogicalTypes.Builder setDec(BigDecimal value) {
+      validate(fields()[8], value);
+      this.dec = value;
+      fieldSetFlags()[8] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'dec' field has been set.
+     */
+    public boolean hasDec() {
+      return fieldSetFlags()[8];
+    }
+
+
+    /**
+     * Clears the value of the 'dec' field.
+     */
+    public TestRecordWithLogicalTypes.Builder clearDec() {
+      fieldSetFlags()[8] = false;
+      return this;
+    }
+
     @Override
     public TestRecordWithLogicalTypes build() {
       try {
@@ -671,6 +769,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
         record.d = fieldSetFlags()[6] ? this.d : (org.joda.time.LocalDate) defaultValue(fields()[6]);
         record.t = fieldSetFlags()[7] ? this.t : (org.joda.time.LocalTime) defaultValue(fields()[7]);
         record.ts = fieldSetFlags()[8] ? this.ts : (org.joda.time.DateTime) defaultValue(fields()[8]);
+        record.dec = fieldSetFlags()[9] ? this.dec : (BigDecimal) defaultValue(fields()[9]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
@@ -679,7 +778,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   }
 
   private static final org.apache.avro.io.DatumWriter
-    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);  
+      WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -687,7 +786,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   }
 
   private static final org.apache.avro.io.DatumReader
-    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);  
+      READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {

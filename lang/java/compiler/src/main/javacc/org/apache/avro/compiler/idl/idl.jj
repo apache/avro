@@ -240,6 +240,7 @@ TOKEN :
 | < DATE: "date" >
 | < TIME: "time_ms" >
 | < TIMESTAMP: "timestamp_ms" >
+| < DECIMAL: "decimal" >
 }
 
 /* LITERALS */
@@ -1488,6 +1489,19 @@ Schema PrimitiveType():
 | "date" { return LogicalTypes.date().addToSchema(Schema.create(Type.INT)); }
 | "time_ms" { return LogicalTypes.timeMillis().addToSchema(Schema.create(Type.INT)); }
 | "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
+| "decimal" { return DecimalTypeProperties(); }
+}
+
+Schema DecimalTypeProperties():
+{
+  int precision;
+  int scale;
+}
+{
+  "(" {precision = Json().asInt();} "," {scale = Json().asInt();} ")"
+  {
+    return LogicalTypes.decimal(precision, scale).addToSchema(Schema.create(Type.BYTES)); 
+  }
 }
 
 /**
@@ -1555,6 +1569,7 @@ Token AnyIdentifier():
    t = <DATE> |
    t = <TIME> |
    t = <TIMESTAMP> |
+   t = <DECIMAL> |
    t = <IDENTIFIER>)
   {
     return t;
