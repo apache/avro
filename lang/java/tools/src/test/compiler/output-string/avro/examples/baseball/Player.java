@@ -6,6 +6,8 @@
 package avro.examples.baseball;
 
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.message.BinaryMessageEncoder;
+import org.apache.avro.message.BinaryMessageDecoder;
 
 @SuppressWarnings("all")
 /** 選手 is Japanese for player. */
@@ -14,6 +16,26 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   private static final long serialVersionUID = 3865593031278745715L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Player\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"選手 is Japanese for player.\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"first_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"position\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"enum\",\"name\":\"Position\",\"symbols\":[\"P\",\"C\",\"B1\",\"B2\",\"B3\",\"SS\",\"LF\",\"CF\",\"RF\",\"DH\"]}}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  private static SpecificData MODEL$ = new SpecificData();
+
+  private static final BinaryMessageEncoder<Player> ENCODER =
+      new BinaryMessageEncoder<Player>(MODEL$, SCHEMA$);
+
+  private static final BinaryMessageDecoder<Player> DECODER =
+      new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$);
+
+  /** Serializes this Player to a ByteBuffer. */
+  public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
+    return ENCODER.encode(this);
+  }
+
+  /** Deserializes a Player from a ByteBuffer. */
+  public static Player fromByteBuffer(
+      java.nio.ByteBuffer b) throws java.io.IOException {
+    return DECODER.decode(b);
+  }
+
   /** The number of the player */
   @Deprecated public int number;
   @Deprecated public java.lang.String first_name;
@@ -52,6 +74,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
+
   // Used by DatumReader.  Applications should not call.
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
@@ -395,7 +418,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   }
 
   private static final org.apache.avro.io.DatumWriter
-    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);
+    WRITER$ = MODEL$.createDatumWriter(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -403,7 +426,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   }
 
   private static final org.apache.avro.io.DatumReader
-    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
+    READER$ = MODEL$.createDatumReader(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {

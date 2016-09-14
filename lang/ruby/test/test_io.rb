@@ -340,7 +340,36 @@ EOS
       assert_equal(incorrect, 0)
     end
   end
+
+  def test_snappy_backward_compat
+    # a snappy-compressed block payload without the checksum
+    # this has no back-references, just one literal so the last 9
+    # bytes are the uncompressed payload.
+    old_snappy_bytes = "\x09\x20\x02\x06\x02\x0a\x67\x72\x65\x65\x6e"
+    uncompressed_bytes = "\x02\x06\x02\x0a\x67\x72\x65\x65\x6e"
+    snappy = Avro::DataFile::SnappyCodec.new
+    assert_equal(uncompressed_bytes, snappy.decompress(old_snappy_bytes))
+  end
+
   private
+
+  def check_no_default(schema_json)
+    actual_schema = '{"type": "record", "name": "Foo", "fields": []}'
+    actual = Avro::Schema.parse(actual_schema)
+
+    expected_schema = <<EOS
+      {"type": "record",
+       "name": "Foo",
+       "fields": [{"name": "f", "type": #{schema_json}}]}
+EOS
+    expected = Avro::Schema.parse(expected_schema)
+
+    reader = Avro::IO::DatumReader.new(actual, expected)
+    assert_raise Avro::AvroError do
+      value = reader.read(Avro::IO::BinaryDecoder.new(StringIO.new))
+      assert_not_equal(value, :no_default) # should never return this
+    end
+  end
 
   def check_default(schema_json, default_json, default_value)
     actual_schema = '{"type": "record", "name": "Foo", "fields": []}'
@@ -381,6 +410,9 @@ EOS
 
     # test writing of data to file
     check_datafile(schema)
+
+    # check that AvroError is raised when there is no default
+    check_no_default(str)
   end
 
   def checkser(schm, randomdata)

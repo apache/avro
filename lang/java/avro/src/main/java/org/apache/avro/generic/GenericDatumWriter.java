@@ -24,8 +24,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Collection;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -74,27 +76,38 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     }
   }
 
+  /**
+   * Convert a high level representation of a logical type (such as a BigDecimal)
+   * to the its underlying representation object (such as a ByteBuffer).
+   * @throws IllegalArgumentException if a null schema or logicalType is passed
+   * in while datum and conversion are not null. Please be noticed that
+   * the exception type has changed. With version 1.8.0 and earlier, in above
+   * circumstance, the exception thrown out depends on the implementation
+   * of conversion (most likely a NullPointerException). Now, an
+   * IllegalArgumentException will be thrown out instead.
+   */
   protected <T> Object convert(Schema schema, LogicalType logicalType,
                                Conversion<T> conversion, Object datum) {
-    if (conversion == null) {
-      return datum;
+    try {
+      if (conversion == null) {
+        return datum;
+      } else {
+        return Conversions.convertToRawType(datum, schema, logicalType, conversion);
+      }
+    } catch (AvroRuntimeException e) {
+      Throwable cause = e.getCause();
+      if (cause != null && cause.getClass() == ClassCastException.class) {
+        // This is to keep backwards compatibility. The convert function here used to
+        // throw CCE. After being moved to Conversions, it throws AvroRuntimeException
+        // instead. To keep as much same behaviour as before, this function checks if
+        // the cause is a CCE. If yes, rethrow it in case any child class checks it. This
+        // behaviour can be changed later in future versions to make it consistent with
+        // reading path, which throws AvroRuntimeException
+        throw (ClassCastException)cause;
+      } else {
+        throw e;
+      }
     }
-    Class<T> fromClass = conversion.getConvertedType();
-    switch (schema.getType()) {
-    case RECORD:  return conversion.toRecord(fromClass.cast(datum), schema, logicalType);
-    case ENUM:    return conversion.toEnumSymbol(fromClass.cast(datum), schema, logicalType);
-    case ARRAY:   return conversion.toArray(fromClass.cast(datum), schema, logicalType);
-    case MAP:     return conversion.toMap(fromClass.cast(datum), schema, logicalType);
-    case FIXED:   return conversion.toFixed(fromClass.cast(datum), schema, logicalType);
-    case STRING:  return conversion.toCharSequence(fromClass.cast(datum), schema, logicalType);
-    case BYTES:   return conversion.toBytes(fromClass.cast(datum), schema, logicalType);
-    case INT:     return conversion.toInt(fromClass.cast(datum), schema, logicalType);
-    case LONG:    return conversion.toLong(fromClass.cast(datum), schema, logicalType);
-    case FLOAT:   return conversion.toFloat(fromClass.cast(datum), schema, logicalType);
-    case DOUBLE:  return conversion.toDouble(fromClass.cast(datum), schema, logicalType);
-    case BOOLEAN: return conversion.toBoolean(fromClass.cast(datum), schema, logicalType);
-    }
-    return datum;
   }
 
   /** Called to write data.*/

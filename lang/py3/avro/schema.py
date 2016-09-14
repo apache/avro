@@ -45,6 +45,7 @@ import json
 import logging
 import re
 
+logger = logging.getLogger(__name__) 
 
 # ------------------------------------------------------------------------------
 # Constants
@@ -447,7 +448,7 @@ class Names(object):
       raise SchemaParseException(
           'Avro name %r already exists.' % schema.fullname)
 
-    logging.log(DEBUG_VERBOSE, 'Register new name for %r', schema.fullname)
+    logger.log(DEBUG_VERBOSE, 'Register new name for %r', schema.fullname)
     self._names[schema.fullname] = schema
 
 

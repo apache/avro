@@ -143,4 +143,21 @@ class TestSchema < Test::Unit::TestCase
 
     assert_equal '"MissingType" is not a schema we know about.', error.message
   end
+
+  def test_to_avro_handles_falsey_defaults
+    schema = Avro::Schema.parse <<-SCHEMA
+      {"type": "record", "name": "Record", "namespace": "my.name.space",
+        "fields": [
+          {"name": "is_usable", "type": "boolean", "default": false}
+        ]
+      }
+    SCHEMA
+
+    assert_equal schema.to_avro, {
+      'type' => 'record', 'name' => 'Record', 'namespace' => 'my.name.space',
+      'fields' => [
+        {'name' => 'is_usable', 'type' => 'boolean', 'default' => false}
+      ]
+    }
+  end
 end
