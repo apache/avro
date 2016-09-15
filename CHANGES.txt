@@ -56,6 +56,8 @@ Trunk (not yet released)
 
     AVRO-1900: Java: Remove dev-tools to fix Java build. (blue)
 
+    AVRO-1913: No warnings in the generated Java code. (Niels Basjes)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
