@@ -226,7 +226,7 @@
                 <!-- may not be in the root folder if using git-svn -->
                 <exclude>**/.git/**</exclude>
                 <exclude>**/.gitignore</exclude>
-                <!-- build or test files -->
+                <!-- build or test files (some are generated files that we commit as-is for testing purposes) -->
                 <exclude>**/*.log</exclude>
                 <exclude>build/**</exclude>
                 <exclude>doc/build/**</exclude>
@@ -245,6 +245,8 @@
                 <exclude>lang/ruby/.gem/**</exclude>
                 <exclude>lang/ruby/pkg/**</exclude>
                 <exclude>lang/ruby/.bundle/**</exclude>
+                <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithLogicalTypes.java</exclude>
+                <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>

@@ -58,6 +58,8 @@ Trunk (not yet released)
 
     AVRO-1913: No warnings in the generated Java code. (Niels Basjes)
 
+    AVRO-1914: Fix licencing errors reported by rat. (Niels Basjes)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
