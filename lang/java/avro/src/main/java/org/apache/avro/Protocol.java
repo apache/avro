@@ -70,6 +70,12 @@ public class Protocol extends JsonProperties {
                        "doc", "response","request", "errors", "one-way");
   }
 
+  private static final Set<String> FIELD_RESERVED = new HashSet<String>();
+  static {
+    Collections.addAll(FIELD_RESERVED,
+                       "name", "type", "doc", "default", "aliases");
+  }
+
   /** A protocol message. */
   public class Message extends JsonProperties {
     private String name;
@@ -104,7 +110,7 @@ public class Protocol extends JsonProperties {
     public Schema getErrors() {
       return Schema.createUnion(new ArrayList<Schema>());
     }
-    
+
     /** Returns true if this is a one-way message, with no response or errors.*/
     public boolean isOneWay() { return true; }
 
@@ -155,7 +161,7 @@ public class Protocol extends JsonProperties {
   private class TwoWayMessage extends Message {
     private Schema response;
     private Schema errors;
-    
+
     /** Construct a message. */
     private TwoWayMessage(String name, String doc, Map<String,?> propMap,
                           Schema request, Schema response, Schema errors) {
@@ -239,7 +245,7 @@ public class Protocol extends JsonProperties {
 
   /** The namespace of this protocol.  Qualifies its name. */
   public String getNamespace() { return namespace; }
-  
+
   /** Doc string for this protocol. */
   public String getDoc() { return doc; }
 
@@ -294,7 +300,7 @@ public class Protocol extends JsonProperties {
       && this.messages.equals(that.messages)
       && this.props.equals(that.props);
   }
-  
+
   public int hashCode() {
     return name.hashCode() + namespace.hashCode()
       + types.hashCode() + messages.hashCode() + props.hashCode();
@@ -334,7 +340,7 @@ public class Protocol extends JsonProperties {
       if (!resolved.contains(type))
         type.toJson(resolved, gen);
     gen.writeEndArray();
-    
+
     gen.writeObjectFieldStart("messages");
     for (Map.Entry<String,Message> e : messages.entrySet()) {
       gen.writeFieldName(e.getKey());
@@ -373,7 +379,7 @@ public class Protocol extends JsonProperties {
       b.append(part);
     return parse(b.toString());
   }
-      
+
   /** Read a protocol from a Json string. */
   public static Protocol parse(String string) {
     try {
@@ -409,7 +415,7 @@ public class Protocol extends JsonProperties {
     this.namespace = nameNode.getTextValue();
     types.space(this.namespace);
   }
-  
+
   private void parseDoc(JsonNode json) {
     this.doc = parseDocNode(json);
   }
@@ -482,12 +488,24 @@ public class Protocol extends JsonProperties {
       JsonNode fieldDocNode = field.get("doc");
       if (fieldDocNode != null)
         fieldDoc = fieldDocNode.getTextValue();
-      fields.add(new Field(name, Schema.parse(fieldTypeNode,types),
-                           fieldDoc,
-                           field.get("default")));
+      Field newField = new Field(name, Schema.parse(fieldTypeNode,types),
+                                 fieldDoc, field.get("default"));
+      Set<String> aliases = Schema.parseAliases(field);
+      if (aliases != null) {                      // add aliases
+        for (String alias : aliases)
+          newField.addAlias(alias);
+      }
+
+      Iterator<String> i = field.getFieldNames();
+      while (i.hasNext()) {                       // add properties
+        String prop = i.next();
+        if (!FIELD_RESERVED.contains(prop))      // ignore reserved
+          newField.addProp(prop, field.get(prop));
+      }
+      fields.add(newField);
     }
     Schema request = Schema.createRecord(fields);
-    
+
     boolean oneWay = false;
     JsonNode oneWayNode = json.get("one-way");
     if (oneWayNode != null) {

@@ -79,8 +79,9 @@ public class TestSpecificCompiler {
 
   @Test
   public void testMakePath() {
-    assertEquals("foo/bar/Baz.java".replace("/", File.separator), SpecificCompiler.makePath("Baz", "foo.bar"));
-    assertEquals("baz.java", SpecificCompiler.makePath("baz", ""));
+    SpecificCompiler compiler = new SpecificCompiler();
+    assertEquals("foo/bar/Baz.java".replace("/", File.separator), compiler.makePath("Baz", "foo.bar"));
+    assertEquals("baz.java", compiler.makePath("baz", ""));
   }
 
   @Test
@@ -119,7 +120,7 @@ public class TestSpecificCompiler {
     assertTrue(protocol.contains("java.lang.CharSequence goto$(java.lang.CharSequence break$)"));
     assertTrue(protocol.contains("public interface default$"));
     assertTrue(protocol.contains("throws org.apache.avro.AvroRemoteException, finally$"));
-    
+
     assertCompilesWithJavaCompiler(c);
 
   }
@@ -144,7 +145,7 @@ public class TestSpecificCompiler {
     assertTrue(contents.contains("public java.lang.CharSequence package$;"));
     assertTrue(contents.contains("class volatile$ extends"));
     assertTrue(contents.contains("volatile$ short$;"));
-    
+
     assertCompilesWithJavaCompiler(c);
   }
 
@@ -159,7 +160,7 @@ public class TestSpecificCompiler {
     String contents = c.iterator().next().contents;
 
     assertTrue(contents.contains("new$"));
-    
+
     assertCompilesWithJavaCompiler(c);
   }
 
@@ -203,10 +204,10 @@ public class TestSpecificCompiler {
         assertTrue(o.contents.contains("/** Very Inner Enum */"));
       }
     }
- 
+
     assertEquals(3, count);
   }
-  
+
   @Test
   public void testProtocolWithDocs() throws IOException {
     Protocol protocol = TestProtocolParsing.getSimpleProtocol();
@@ -222,7 +223,7 @@ public class TestSpecificCompiler {
     }
     assertEquals("Missed generated protocol!", 1, count);
   }
-  
+
   @Test
   public void testNeedCompile() throws IOException, InterruptedException {
     String schema = "" +
@@ -233,8 +234,8 @@ public class TestSpecificCompiler {
     FileWriter fw = new FileWriter(inputFile);
     fw.write(schema);
     fw.close();
-    
-    File outputDir = new File(System.getProperty("test.dir", "target/test") + 
+
+    File outputDir = new File(System.getProperty("test.dir", "target/test") +
       System.getProperty("file.separator") + "test_need_compile");
     File outputFile = new File(outputDir, "Foo.java");
     outputFile.delete();
@@ -249,14 +250,14 @@ public class TestSpecificCompiler {
     Thread.sleep(1000);  //granularity of JVM doesn't seem to go below 1 sec
     SpecificCompiler.compileSchema(inputFile, outputDir);
     assertEquals(lastModified, outputFile.lastModified());
-    
+
     fw = new FileWriter(inputFile);
     fw.write(schema);
     fw.close();
     SpecificCompiler.compileSchema(inputFile, outputDir);
     assertTrue(lastModified != outputFile.lastModified());
   }
-  
+
   /**
    * Creates a record with the given name, error status, and fields.
    * @param name the name of the schema.
@@ -264,51 +265,51 @@ public class TestSpecificCompiler {
    * @param fields the field(s) to add to the schema.
    * @return the schema.
    */
-  private Schema createRecord(String name, 
+  private Schema createRecord(String name,
       boolean isError, Field... fields) {
     Schema record = Schema.createRecord(name, null, null, isError);
     record.setFields(Arrays.asList(fields));
     return record;
   }
-  
+
   @Test
   public void generateGetMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
     Field Height = new Field("Height", Schema.create(Type.INT), null, null);
-    Field height_and_width = 
+    Field height_and_width =
         new Field("height_and_width", Schema.create(Type.STRING), null, null);
-    Field message = 
+    Field message =
         new Field("message", Schema.create(Type.STRING), null, null);
-    Field Message = 
+    Field Message =
         new Field("Message", Schema.create(Type.STRING), null, null);
-    Field cause = 
+    Field cause =
         new Field("cause", Schema.create(Type.STRING), null, null);
-    Field clasz = 
+    Field clasz =
         new Field("class", Schema.create(Type.STRING), null, null);
-    Field schema = 
+    Field schema =
         new Field("schema", Schema.create(Type.STRING), null, null);
-    Field Schema$ = 
+    Field Schema$ =
         new Field("Schema", Schema.create(Type.STRING), null, null);
-    
+
     assertEquals("getHeight", SpecificCompiler.generateGetMethod(
         createRecord("test", false, height), height));
-    
+
     assertEquals("getHeightAndWidth", SpecificCompiler.generateGetMethod(
         createRecord("test", false, height_and_width), height_and_width));
-  
+
     assertEquals("getMessage", SpecificCompiler.generateGetMethod(
         createRecord("test", false, message), message));
     message = new Field("message", Schema.create(Type.STRING), null, null);
     assertEquals("getMessage$", SpecificCompiler.generateGetMethod(
         createRecord("test", true, message), message));
- 
+
     assertEquals("getCause", SpecificCompiler.generateGetMethod(
         createRecord("test", false, cause), cause));
     cause = new Field("cause", Schema.create(Type.STRING), null, null);
     assertEquals("getCause$", SpecificCompiler.generateGetMethod(
         createRecord("test", true, cause), cause));
 
-    
+
     assertEquals("getClass$", SpecificCompiler.generateGetMethod(
         createRecord("test", false, clasz), clasz));
     clasz = new Field("class", Schema.create(Type.STRING), null, null);
@@ -325,42 +326,42 @@ public class TestSpecificCompiler {
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("getHeight", SpecificCompiler.generateGetMethod(
         createRecord("test", false, Height), Height));
-    
+
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("getHeight$0", SpecificCompiler.generateGetMethod(
         createRecord("test", false, height, Height), height));
-    
+
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("getHeight$1", SpecificCompiler.generateGetMethod(
         createRecord("test", false, height, Height), Height));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("getMessage$", SpecificCompiler.generateGetMethod(
         createRecord("test", true, Message), Message));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("getMessage$0", SpecificCompiler.generateGetMethod(
         createRecord("test", true, message, Message), message));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("getMessage$1", SpecificCompiler.generateGetMethod(
         createRecord("test", true, message, Message), Message));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("getSchema$", SpecificCompiler.generateGetMethod(
         createRecord("test", false, Schema$), Schema$));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("getSchema$0", SpecificCompiler.generateGetMethod(
         createRecord("test", false, schema, Schema$), schema));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("getSchema$1", SpecificCompiler.generateGetMethod(
@@ -371,40 +372,40 @@ public class TestSpecificCompiler {
   public void generateSetMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
     Field Height = new Field("Height", Schema.create(Type.INT), null, null);
-    Field height_and_width = 
+    Field height_and_width =
         new Field("height_and_width", Schema.create(Type.STRING), null, null);
-    Field message = 
+    Field message =
         new Field("message", Schema.create(Type.STRING), null, null);
-    Field Message = 
+    Field Message =
         new Field("Message", Schema.create(Type.STRING), null, null);
-    Field cause = 
+    Field cause =
         new Field("cause", Schema.create(Type.STRING), null, null);
-    Field clasz = 
+    Field clasz =
         new Field("class", Schema.create(Type.STRING), null, null);
-    Field schema = 
+    Field schema =
         new Field("schema", Schema.create(Type.STRING), null, null);
-    Field Schema$ = 
+    Field Schema$ =
         new Field("Schema", Schema.create(Type.STRING), null, null);
-    
+
     assertEquals("setHeight", SpecificCompiler.generateSetMethod(
         createRecord("test", false, height), height));
-    
+
     assertEquals("setHeightAndWidth", SpecificCompiler.generateSetMethod(
         createRecord("test", false, height_and_width), height_and_width));
-  
+
     assertEquals("setMessage", SpecificCompiler.generateSetMethod(
         createRecord("test", false, message), message));
     message = new Field("message", Schema.create(Type.STRING), null, null);
     assertEquals("setMessage$", SpecificCompiler.generateSetMethod(
         createRecord("test", true, message), message));
- 
+
     assertEquals("setCause", SpecificCompiler.generateSetMethod(
         createRecord("test", false, cause), cause));
     cause = new Field("cause", Schema.create(Type.STRING), null, null);
     assertEquals("setCause$", SpecificCompiler.generateSetMethod(
         createRecord("test", true, cause), cause));
 
-    
+
     assertEquals("setClass$", SpecificCompiler.generateSetMethod(
         createRecord("test", false, clasz), clasz));
     clasz = new Field("class", Schema.create(Type.STRING), null, null);
@@ -421,86 +422,86 @@ public class TestSpecificCompiler {
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("setHeight", SpecificCompiler.generateSetMethod(
         createRecord("test", false, Height), Height));
-    
+
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("setHeight$0", SpecificCompiler.generateSetMethod(
         createRecord("test", false, height, Height), height));
-    
+
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("setHeight$1", SpecificCompiler.generateSetMethod(
         createRecord("test", false, height, Height), Height));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("setMessage$", SpecificCompiler.generateSetMethod(
         createRecord("test", true, Message), Message));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("setMessage$0", SpecificCompiler.generateSetMethod(
         createRecord("test", true, message, Message), message));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("setMessage$1", SpecificCompiler.generateSetMethod(
         createRecord("test", true, message, Message), Message));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("setSchema$", SpecificCompiler.generateSetMethod(
         createRecord("test", false, Schema$), Schema$));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("setSchema$0", SpecificCompiler.generateSetMethod(
         createRecord("test", false, schema, Schema$), schema));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("setSchema$1", SpecificCompiler.generateSetMethod(
         createRecord("test", false, schema, Schema$), Schema$));
   }
-  
+
   @Test
   public void generateHasMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
     Field Height = new Field("Height", Schema.create(Type.INT), null, null);
-    Field height_and_width = 
+    Field height_and_width =
         new Field("height_and_width", Schema.create(Type.STRING), null, null);
-    Field message = 
+    Field message =
         new Field("message", Schema.create(Type.STRING), null, null);
-    Field Message = 
+    Field Message =
         new Field("Message", Schema.create(Type.STRING), null, null);
-    Field cause = 
+    Field cause =
         new Field("cause", Schema.create(Type.STRING), null, null);
-    Field clasz = 
+    Field clasz =
         new Field("class", Schema.create(Type.STRING), null, null);
-    Field schema = 
+    Field schema =
         new Field("schema", Schema.create(Type.STRING), null, null);
-    Field Schema$ = 
+    Field Schema$ =
         new Field("Schema", Schema.create(Type.STRING), null, null);
-    
+
     assertEquals("hasHeight", SpecificCompiler.generateHasMethod(
         createRecord("test", false, height), height));
-    
+
     assertEquals("hasHeightAndWidth", SpecificCompiler.generateHasMethod(
         createRecord("test", false, height_and_width), height_and_width));
-  
+
     assertEquals("hasMessage", SpecificCompiler.generateHasMethod(
         createRecord("test", false, message), message));
     message = new Field("message", Schema.create(Type.STRING), null, null);
     assertEquals("hasMessage$", SpecificCompiler.generateHasMethod(
         createRecord("test", true, message), message));
- 
+
     assertEquals("hasCause", SpecificCompiler.generateHasMethod(
         createRecord("test", false, cause), cause));
     cause = new Field("cause", Schema.create(Type.STRING), null, null);
     assertEquals("hasCause$", SpecificCompiler.generateHasMethod(
         createRecord("test", true, cause), cause));
 
-    
+
     assertEquals("hasClass$", SpecificCompiler.generateHasMethod(
         createRecord("test", false, clasz), clasz));
     clasz = new Field("class", Schema.create(Type.STRING), null, null);
@@ -517,86 +518,86 @@ public class TestSpecificCompiler {
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("hasHeight", SpecificCompiler.generateHasMethod(
         createRecord("test", false, Height), Height));
-    
+
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("hasHeight$0", SpecificCompiler.generateHasMethod(
         createRecord("test", false, height, Height), height));
-    
+
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("hasHeight$1", SpecificCompiler.generateHasMethod(
         createRecord("test", false, height, Height), Height));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("hasMessage$", SpecificCompiler.generateHasMethod(
         createRecord("test", true, Message), Message));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("hasMessage$0", SpecificCompiler.generateHasMethod(
         createRecord("test", true, message, Message), message));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("hasMessage$1", SpecificCompiler.generateHasMethod(
         createRecord("test", true, message, Message), Message));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("hasSchema$", SpecificCompiler.generateHasMethod(
         createRecord("test", false, Schema$), Schema$));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("hasSchema$0", SpecificCompiler.generateHasMethod(
         createRecord("test", false, schema, Schema$), schema));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("hasSchema$1", SpecificCompiler.generateHasMethod(
         createRecord("test", false, schema, Schema$), Schema$));
   }
-  
+
   @Test
   public void generateClearMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
     Field Height = new Field("Height", Schema.create(Type.INT), null, null);
-    Field height_and_width = 
+    Field height_and_width =
         new Field("height_and_width", Schema.create(Type.STRING), null, null);
-    Field message = 
+    Field message =
         new Field("message", Schema.create(Type.STRING), null, null);
-    Field Message = 
+    Field Message =
         new Field("Message", Schema.create(Type.STRING), null, null);
-    Field cause = 
+    Field cause =
         new Field("cause", Schema.create(Type.STRING), null, null);
-    Field clasz = 
+    Field clasz =
         new Field("class", Schema.create(Type.STRING), null, null);
-    Field schema = 
+    Field schema =
         new Field("schema", Schema.create(Type.STRING), null, null);
-    Field Schema$ = 
+    Field Schema$ =
         new Field("Schema", Schema.create(Type.STRING), null, null);
-    
+
     assertEquals("clearHeight", SpecificCompiler.generateClearMethod(
         createRecord("test", false, height), height));
-    
+
     assertEquals("clearHeightAndWidth", SpecificCompiler.generateClearMethod(
         createRecord("test", false, height_and_width), height_and_width));
-  
+
     assertEquals("clearMessage", SpecificCompiler.generateClearMethod(
         createRecord("test", false, message), message));
     message = new Field("message", Schema.create(Type.STRING), null, null);
     assertEquals("clearMessage$", SpecificCompiler.generateClearMethod(
         createRecord("test", true, message), message));
- 
+
     assertEquals("clearCause", SpecificCompiler.generateClearMethod(
         createRecord("test", false, cause), cause));
     cause = new Field("cause", Schema.create(Type.STRING), null, null);
     assertEquals("clearCause$", SpecificCompiler.generateClearMethod(
         createRecord("test", true, cause), cause));
 
-    
+
     assertEquals("clearClass$", SpecificCompiler.generateClearMethod(
         createRecord("test", false, clasz), clasz));
     clasz = new Field("class", Schema.create(Type.STRING), null, null);
@@ -613,42 +614,42 @@ public class TestSpecificCompiler {
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("clearHeight", SpecificCompiler.generateClearMethod(
         createRecord("test", false, Height), Height));
-    
+
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("clearHeight$0", SpecificCompiler.generateClearMethod(
         createRecord("test", false, height, Height), height));
-    
+
     height = new Field("height", Schema.create(Type.INT), null, null);
     Height = new Field("Height", Schema.create(Type.INT), null, null);
     assertEquals("clearHeight$1", SpecificCompiler.generateClearMethod(
         createRecord("test", false, height, Height), Height));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("clearMessage$", SpecificCompiler.generateClearMethod(
         createRecord("test", true, Message), Message));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("clearMessage$0", SpecificCompiler.generateClearMethod(
         createRecord("test", true, message, Message), message));
-    
+
     message = new Field("message", Schema.create(Type.STRING), null, null);
     Message = new Field("Message", Schema.create(Type.STRING), null, null);
     assertEquals("clearMessage$1", SpecificCompiler.generateClearMethod(
         createRecord("test", true, message, Message), Message));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("clearSchema$", SpecificCompiler.generateClearMethod(
         createRecord("test", false, Schema$), Schema$));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("clearSchema$0", SpecificCompiler.generateClearMethod(
         createRecord("test", false, schema, Schema$), schema));
-    
+
     schema = new Field("schema", Schema.create(Type.STRING), null, null);
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("clearSchema$1", SpecificCompiler.generateClearMethod(
@@ -694,7 +695,7 @@ public class TestSpecificCompiler {
    * that the generated code is valid.
    */
   public static void
-      assertCompiles(Schema schema, boolean useJavaCompiler) 
+      assertCompiles(Schema schema, boolean useJavaCompiler)
   throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(schema).compile();
     assertTrue(null != outputs);
@@ -702,7 +703,7 @@ public class TestSpecificCompiler {
       assertCompilesWithJavaCompiler(outputs);
     }
   }
-  
+
   /**
    * Checks that a protocol passes through the SpecificCompiler,
    * and, optionally, uses the system's Java compiler to check
@@ -716,9 +717,9 @@ public class TestSpecificCompiler {
       assertCompilesWithJavaCompiler(outputs);
     }
   }
-  
+
   /** Uses the system's java compiler to actually compile the generated code. */
-  static void assertCompilesWithJavaCompiler(Collection<OutputFile> outputs) 
+  static void assertCompilesWithJavaCompiler(Collection<OutputFile> outputs)
   throws IOException {
     if (outputs.isEmpty()) {
       return;               // Nothing to compile!
@@ -730,10 +731,10 @@ public class TestSpecificCompiler {
     }
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    StandardJavaFileManager fileManager = 
+    StandardJavaFileManager fileManager =
       compiler.getStandardFileManager(null, null, null);
-    
-    CompilationTask cTask = compiler.getTask(null, fileManager, null, null, 
+
+    CompilationTask cTask = compiler.getTask(null, fileManager, null, null,
         null,
         fileManager.getJavaFileObjects(
             javaFiles.toArray(new File[javaFiles.size()])));

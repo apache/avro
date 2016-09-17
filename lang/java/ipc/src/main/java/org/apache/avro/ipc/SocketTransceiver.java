@@ -43,7 +43,7 @@ public class SocketTransceiver extends Transceiver {
   private ByteBuffer header = ByteBuffer.allocate(4);
 
   private Protocol remote;
-  
+
   public SocketTransceiver(SocketAddress address) throws IOException {
     this(SocketChannel.open(address));
   }

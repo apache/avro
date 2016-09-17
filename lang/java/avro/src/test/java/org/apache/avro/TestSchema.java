@@ -29,7 +29,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.junit.Test;
 
-public class TestSchema {  
+public class TestSchema {
   @Test
   public void testSplitSchemaBuild() {
     Schema s = SchemaBuilder
@@ -38,10 +38,10 @@ public class TestSchema {
          .name("clientProtocol").type().optional().stringType()
          .name("meta").type().optional().map().values().bytesType()
          .endRecord();
-    
+
     String schemaString = s.toString();
     final int mid = schemaString.length() / 2;
-    
+
     Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
     Schema parsedArrayOfStringSchema =
       new org.apache.avro.Schema.Parser().parse

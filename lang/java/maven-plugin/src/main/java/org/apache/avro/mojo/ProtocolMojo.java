@@ -28,7 +28,7 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
  * Generate Java classes and interfaces from Avro protocol files (.avpr)
- * 
+ *
  * @goal protocol
  * @phase generate-sources
  * @threadSafe
@@ -38,7 +38,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avpr</code> is used to select grammar files.
-   * 
+   *
    * @parameter
    */
   private String[] includes = new String[] { "**/*.avpr" };
@@ -47,11 +47,11 @@ public class ProtocolMojo extends AbstractAvroMojo {
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avpr</code> is used to select grammar files.
-   * 
+   *
    * @parameter
    */
   private String[] testIncludes = new String[] { "**/*.avpr" };
-  
+
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
@@ -61,6 +61,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateSetters(createSetters);
+    compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     compiler.compileToDestination(src, outputDirectory);
   }
 

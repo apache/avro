@@ -35,6 +35,8 @@ except ImportError:
   has_snappy = False
 
 
+logger = logging.getLogger(__name__)
+
 # ------------------------------------------------------------------------------
 # Constants
 
@@ -238,7 +240,7 @@ class DataFileWriter(object):
         'meta': self.meta,
         'sync': self.sync_marker,
     }
-    logging.debug(
+    logger.debug(
         'Writing Avro data file header:\n%s\nAvro header schema:\n%s',
         header, META_SCHEMA)
     self.datum_writer.write_data(META_SCHEMA, header, self.encoder)
@@ -250,7 +252,7 @@ class DataFileWriter(object):
       self._WriteHeader()
 
     if self.block_count <= 0:
-      logging.info('Current block is empty, nothing to write.')
+      logger.info('Current block is empty, nothing to write.')
       return
 
     # write number of items in block
@@ -287,7 +289,7 @@ class DataFileWriter(object):
     # write sync marker
     self.writer.write(self.sync_marker)
 
-    logging.debug(
+    logger.debug(
         'Writing block with count=%d nbytes=%d sync=%r',
         self.block_count, compressed_data_length, self.sync_marker)
 
@@ -349,9 +351,11 @@ class DataFileReader(object):
     self._read_header()
 
     # ensure codec is valid
-    self.codec = self.GetMeta('avro.codec').decode('utf-8')
-    if self.codec is None:
+    avro_codec_raw = self.GetMeta('avro.codec')
+    if avro_codec_raw is None:
       self.codec = "null"
+    else:
+      self.codec = avro_codec_raw.decode('utf-8')
     if self.codec not in VALID_CODECS:
       raise DataFileException('Unknown codec: %s.' % self.codec)
 

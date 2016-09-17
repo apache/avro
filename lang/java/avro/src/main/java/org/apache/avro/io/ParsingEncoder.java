@@ -30,7 +30,7 @@ public abstract class ParsingEncoder extends Encoder {
    * the collections (array or map).
    */
   private long[] counts = new long[10];
-  
+
   protected int pos = -1;
 
   @Override
@@ -54,7 +54,7 @@ public abstract class ParsingEncoder extends Encoder {
     }
     counts[pos] = 0;
   }
-  
+
   protected final void pop() {
     if (counts[pos] != 0) {
       throw new AvroTypeException("Incorrect number of items written. " +
@@ -62,7 +62,7 @@ public abstract class ParsingEncoder extends Encoder {
     }
     pos--;
   }
-  
+
   protected final int depth() {
     return pos;
   }

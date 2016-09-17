@@ -138,12 +138,12 @@ public class TestStatsPluginAndServlet {
     r.addRPCPlugin(statsPlugin);
     Transceiver t = new LocalTransceiver(r);
     makeRequest(t);
-    
+
     String resp = generateServletResponse(statsPlugin);
     assertTrue(resp.contains("Average: 2.0"));
- 
+
   }
-  
+
   private RPCContext makeContext() {
     RPCContext context = new RPCContext();
     context.setMessage(message);
@@ -197,10 +197,10 @@ public class TestStatsPluginAndServlet {
     avroServer.start();
 
     StatsServer ss = new StatsServer(p, 8080);
-    
+
     HttpTransceiver trans = new HttpTransceiver(
         new URL("http://localhost:" + Integer.parseInt(args[0])));
-    GenericRequestor req = new GenericRequestor(protocol, trans); 
+    GenericRequestor req = new GenericRequestor(protocol, trans);
 
     while(true) {
       Thread.sleep(1000);

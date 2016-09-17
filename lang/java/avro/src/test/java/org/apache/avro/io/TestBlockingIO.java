@@ -47,33 +47,33 @@ public class TestBlockingIO {
     this.iDepth = dp;
     this.sInput = inp;
   }
-  
+
   private static class Tests {
     private final JsonParser parser;
     private final Decoder input;
     private final int depth;
     public Tests(int bufferSize, int depth, String input)
       throws IOException {
-  
+
       this.depth = depth;
       byte[] in = input.getBytes("UTF-8");
       JsonFactory f = new JsonFactory();
       JsonParser p = f.createJsonParser(
           new ByteArrayInputStream(input.getBytes("UTF-8")));
-      
+
       ByteArrayOutputStream os = new ByteArrayOutputStream();
       EncoderFactory factory = new EncoderFactory()
           .configureBlockSize(bufferSize);
       Encoder cos = factory.blockingBinaryEncoder(os, null);
       serialize(cos, p, os);
       cos.flush();
-      
+
       byte[] bb = os.toByteArray();
       // dump(bb);
       this.input = DecoderFactory.get().binaryDecoder(bb, null);
       this.parser =  f.createJsonParser(new ByteArrayInputStream(in));
     }
-    
+
     public void scan() throws IOException {
       Stack<S> countStack = new Stack<S>();
       long count = 0;
@@ -208,7 +208,7 @@ public class TestBlockingIO {
   private static class S {
     public final long count;
     public final boolean isArray;
-    
+
     public S(long count, boolean isArray) {
       this.count = count;
       this.isArray = isArray;
@@ -270,7 +270,7 @@ public class TestBlockingIO {
     }
     parser.skipChildren();
   }
- 
+
   private static void checkString(String s, Decoder input, int n)
     throws IOException {
     ByteBuffer buf = input.readBytes(null);
@@ -279,14 +279,14 @@ public class TestBlockingIO {
         buf.remaining(), UTF_8);
     assertEquals(s, s2);
   }
-  
+
   private static void serialize(Encoder cos, JsonParser p,
       ByteArrayOutputStream os)
     throws IOException {
     boolean[] isArray = new boolean[100];
     int[] counts = new int[100];
     int stackTop = -1;
-    
+
     while (p.nextToken() != null) {
       switch (p.getCurrentToken()) {
       case END_ARRAY:

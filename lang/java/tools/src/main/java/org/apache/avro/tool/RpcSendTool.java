@@ -85,7 +85,7 @@ public class RpcSendTool implements Tool {
           messageName, protocol));
       return 1;
     }
-    
+
     Object datum;
     if (data.value(opts) != null) {
       datum = Util.jsonToGenericDatum(message.getRequest(), data.value(opts));
@@ -103,7 +103,7 @@ public class RpcSendTool implements Tool {
     return 0;
   }
 
-  private void dumpJson(PrintStream out, Schema schema, Object datum) 
+  private void dumpJson(PrintStream out, Schema schema, Object datum)
   throws IOException {
     DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
     JsonGenerator g =

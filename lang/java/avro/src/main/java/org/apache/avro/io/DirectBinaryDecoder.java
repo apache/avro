@@ -54,11 +54,11 @@ class DirectBinaryDecoder extends BinaryDecoder {
 
   private class ReuseByteReader extends ByteReader {
     private final ByteBufferInputStream bbi;
-    
+
     public ReuseByteReader(ByteBufferInputStream bbi) {
       this.bbi = bbi;
     }
-    
+
     @Override
     public ByteBuffer read(ByteBuffer old, int length) throws IOException {
       if (old != null) {
@@ -67,7 +67,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
         return bbi.readBuffer(length);
       }
     }
-    
+
   }
 
   private ByteReader byteReader;
@@ -111,7 +111,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
       shift += 7;
     } while (shift < 32);
     throw new IOException("Invalid int encoding");
-    
+
   }
 
   @Override
@@ -119,7 +119,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
     long n = 0;
     int b;
     int shift = 0;
-    do { 
+    do {
       b = in.read();
       if (b >= 0) {
          n |= (b & 0x7FL) << shift;

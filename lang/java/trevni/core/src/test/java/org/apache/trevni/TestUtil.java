@@ -39,7 +39,7 @@ public class TestUtil {
       String configured = System.getProperty("test.seed");
       if (configured != null)
         seed = Long.valueOf(configured);
-      else 
+      else
         seed = System.currentTimeMillis();
       System.err.println("test.seed="+seed);
       seedSet = true;

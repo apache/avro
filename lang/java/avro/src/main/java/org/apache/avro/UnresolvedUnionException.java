@@ -22,7 +22,7 @@ package org.apache.avro;
 public class UnresolvedUnionException extends AvroRuntimeException {
   private Object unresolvedDatum;
   private Schema unionSchema;
-  
+
   public UnresolvedUnionException(Schema unionSchema, Object unresolvedDatum) {
     super("Not in union "+unionSchema+": "+unresolvedDatum);
     this.unionSchema = unionSchema;

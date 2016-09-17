@@ -79,9 +79,9 @@ public class AvroTrevniInputFormat<T>
       private long row;
 
       public AvroWrapper<T> createKey() { return new AvroWrapper<T>(null); }
-  
+
       public NullWritable createValue() { return NullWritable.get(); }
-    
+
       public boolean next(AvroWrapper<T> wrapper, NullWritable ignore)
         throws IOException {
         if (!reader.hasNext())
@@ -90,13 +90,13 @@ public class AvroTrevniInputFormat<T>
         row++;
         return true;
       }
-  
+
       public float getProgress() throws IOException { return row / rows; }
-  
+
       public long getPos() throws IOException { return row; }
 
       public void close() throws IOException { reader.close(); }
-  
+
     };
 
   }

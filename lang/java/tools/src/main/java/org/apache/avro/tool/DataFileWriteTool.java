@@ -82,7 +82,7 @@ public class DataFileWriteTool implements Tool {
     Schema schema = (schemafile != null)
         ? Util.parseSchemaFromFS(schemafile)
         : new Schema.Parser().parse(schemastr);
-    
+
     DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
 
     InputStream input = Util.fileOrStdin(nargs.get(0), stdin);

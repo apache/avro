@@ -51,65 +51,65 @@ class Util {
   /**
    * Returns stdin if filename is "-", else opens the File in the owning filesystem
    * and returns an InputStream for it.
-   * Relative paths will be opened in the default filesystem. 
+   * Relative paths will be opened in the default filesystem.
    * @param filename The filename to be opened
-   * @throws IOException 
+   * @throws IOException
    */
-  static BufferedInputStream fileOrStdin(String filename, InputStream stdin) 
+  static BufferedInputStream fileOrStdin(String filename, InputStream stdin)
       throws IOException {
     return new BufferedInputStream(filename.equals("-")
         ? stdin
-        : openFromFS(filename));  
+        : openFromFS(filename));
   }
-  
+
   /**
    * Returns stdout if filename is "-", else opens the file from the owning filesystem
    * and returns an OutputStream for it.
-   * Relative paths will be opened in the default filesystem.  
+   * Relative paths will be opened in the default filesystem.
    * @param filename The filename to be opened
-   * @throws IOException 
+   * @throws IOException
    */
-  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout) 
+  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout)
       throws IOException {
     return new BufferedOutputStream(filename.equals("-")
         ? stdout
         : createFromFS(filename));
   }
-  
+
   /**
    * Returns an InputStream for the file using the owning filesystem,
    * or the default if none is given.
    * @param filename The filename to be opened
-   * @throws IOException 
+   * @throws IOException
    */
-  static InputStream openFromFS(String filename) 
+  static InputStream openFromFS(String filename)
       throws IOException {
     Path p = new Path(filename);
     return p.getFileSystem(new Configuration()).open(p);
   }
-  
+
   /**
    * Returns an InputStream for the file using the owning filesystem,
    * or the default if none is given.
    * @param filename The filename to be opened
-   * @throws IOException 
+   * @throws IOException
    */
-  static InputStream openFromFS(Path filename) 
+  static InputStream openFromFS(Path filename)
       throws IOException {
     return filename.getFileSystem(new Configuration()).open(filename);
   }
-  
+
   /**
-   * Returns a seekable FsInput using the owning filesystem, 
+   * Returns a seekable FsInput using the owning filesystem,
    * or the default if none is given.
    * @param filename The filename to be opened
-   * @throws IOException 
+   * @throws IOException
    */
-  static FsInput openSeekableFromFS(String filename) 
-      throws IOException {       
+  static FsInput openSeekableFromFS(String filename)
+      throws IOException {
     return new FsInput(new Path(filename), new Configuration());
   }
-  
+
   /**
    * Opens the file for writing in the owning filesystem,
    * or the default if none is given.
@@ -117,14 +117,14 @@ class Util {
    * @return An OutputStream to the specified file.
    * @throws IOException
    */
-  static OutputStream createFromFS(String filename) 
+  static OutputStream createFromFS(String filename)
       throws IOException {
     Path p = new Path(filename);
     return new BufferedOutputStream(p.getFileSystem(new Configuration()).create(p));
   }
-  
+
   /**
-   * Closes the inputstream created from {@link Util.fileOrStdin} 
+   * Closes the inputstream created from {@link Util.fileOrStdin}
    * unless it is System.in.
    * @param in The inputstream to be closed.
    */
@@ -137,7 +137,7 @@ class Util {
       }
     }
   }
-  
+
   /**
    * Closes the outputstream created from {@link Util.fileOrStdout}
    * unless it is System.out.
@@ -152,7 +152,7 @@ class Util {
       }
     }
   }
-  
+
   /**
    * Parses a schema from the specified file.
    * @param filename The file name to parse
@@ -172,18 +172,18 @@ class Util {
    * if pathname is a directory, this method returns a list of Pathes to all the files within
    * this directory.
    * Only files inside that directory are included, no subdirectories or files in subdirectories
-   * will be added. 
+   * will be added.
    * The List is sorted alphabetically.
    * @param fileOrDirName filename or directoryname
-   * @return A Path List 
+   * @return A Path List
    * @throws IOException
    */
-  static List<Path> getFiles(String fileOrDirName) 
+  static List<Path> getFiles(String fileOrDirName)
     throws IOException {
-    List<Path> pathList = new ArrayList<Path>();  
+    List<Path> pathList = new ArrayList<Path>();
     Path path = new Path(fileOrDirName);
     FileSystem fs = path.getFileSystem(new Configuration());
-    
+
     if (fs.isFile(path)) {
       pathList.add(path);
     }
@@ -197,16 +197,16 @@ class Util {
     Collections.sort(pathList);
     return pathList;
   }
-  
+
   /**
    * This method returns a list which contains a path to every given file
    * in the input and a path to every file inside a given directory.
    * The list is sorted alphabetically and contains no subdirectories or files within those.
    * @param fileOrDirNames A list of filenames and directorynames
-   * @return A list of Pathes, one for each file 
+   * @return A list of Pathes, one for each file
    * @throws IOException
    */
-  static List<Path> getFiles(List<String> fileOrDirNames) 
+  static List<Path> getFiles(List<String> fileOrDirNames)
       throws IOException {
     ArrayList<Path> pathList = new ArrayList<Path>();
     for(String name : fileOrDirNames) {
@@ -215,11 +215,11 @@ class Util {
     Collections.sort(pathList);
     return pathList;
   }
-  
-  /** 
+
+  /**
    * Converts a String JSON object into a generic datum.
-   * 
-   * This is inefficient (creates extra objects), so should be used 
+   *
+   * This is inefficient (creates extra objects), so should be used
    * sparingly.
    */
   static Object jsonToGenericDatum(Schema schema, String jsonData)

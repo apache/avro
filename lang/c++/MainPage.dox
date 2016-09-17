@@ -24,7 +24,7 @@
 <p>Avro is a data serialization system. See
 <a href="http://avro.apache.org/docs/current/">http://avro.apache.org/docs/current/</a>
 for background information.</p>
-<p>Avro C++ is a C++ library which implementats parts of the <a href="http://avro.apache.org/docs/current/spec.html"> Avro Specification</a>. The library includes the following functionality:</p>
+<p>Avro C++ is a C++ library which implements parts of the <a href="http://avro.apache.org/docs/current/spec.html"> Avro Specification</a>. The library includes the following functionality:</p>
 <ul>
 	<li>Assembling schemas programmatically.
     <li>A schema parser, which can parse Avro schema (written in JSON) into a Schema object.
@@ -33,21 +33,21 @@ for background information.</p>
         <li>A binary encoder, which encodes into binary Avro data.
         <li>A JSON encoder, which encodes into JSON Avro data.
         <li>A validating encoder, an encoder proxy, which validates the call sequence to the encoder before sending the calls to another encoder.
-        <li>A binary decoder, which decodes binay Avro data.
+        <li>A binary decoder, which decodes binary Avro data.
         <li>A JSON decoder, which decodes JSON Avro data.
         <li>A validating decoder, a decoder proxy, which validates the call sequence to the decoder before sending the calls to another decoder.
         <li>A resolving decoder, which accepts calls for according to a reader's schema but decodes data corresponding to a different (writer's) schema doing schema resolution according to resolution rules in the Avro specification.
     </ul>
     <li>Streams for storing and reading data, which Encoders and Decoders use.
     <li>Support for Avro DataFile.
-    <li>A code generator, which generates C++ classes fnd functions to encode and decode them. The code generator produces a C++ header file from a given schema file.
+    <li>A code generator, which generates C++ classes and functions to encode and decode them. The code generator produces a C++ header file from a given schema file.
 </ul>
 Presently there is no support for the following specified in Avro specification.
 <ul>
     <li>Avro RPC
 </ul>
 
-<b>Note:</b> Prior to Avro release 1.5, some of the functionality mentioned above was avilable through a somewhat different API and set tools. They are partially incompatible to the present ones. They continue to be available but will be deprecated and discontinued sometime in the future. The documentation on that API can be found at <a href="http://avro.apache.org/docs/1.4.0/api/cpp/html/index.html">http://avro.apache.org/docs/1.4.0/api/cpp/html/index.html</a> 
+<b>Note:</b> Prior to Avro release 1.5, some of the functionality mentioned above was available through a somewhat different API and set tools. They are partially incompatible to the present ones. They continue to be available but will be deprecated and discontinued sometime in the future. The documentation on that API can be found at <a href="http://avro.apache.org/docs/1.4.0/api/cpp/html/index.html">http://avro.apache.org/docs/1.4.0/api/cpp/html/index.html</a> 
 
 <h2>Installing Avro C++</h2>
 <h3>Supported platforms and pre-requisites</h3>
@@ -56,7 +56,7 @@ One should be able to build Avro C++ on (1) any UNIX flavor including cygwin for
 In order to build Avro C++, one needs the following:
 <ul>
     <li>A C++ compiler and runtime libraries.
-    <li>Boost library version 1.38 or later. Apart from the header-only libraries of Boost, Avro C++ requires filesystem, system and program_options libraries. Please see <a href="http://www.boost.org/">http://www.boost.org</a> or your platform's documentation for details on how to set up Boost for your platform. 
+    <li>Boost library version 1.38 or later. Apart from the header-only libraries of Boost, Avro C++ requires filesystem, iostreams, system and program_options libraries. Please see <a href="http://www.boost.org/">http://www.boost.org</a> or your platform's documentation for details on how to set up Boost for your platform. 
     <li>CMake build tool version 2.6 or later. Please see <a href="http://www.cmake.org">http://www.cmake.org</a> or your platform's documentation for details on how to set up CMake for your system.
     <li>Python. If not already present, please consult your platform-specific documentation on how to install Python on your system.
 </ul>
@@ -68,8 +68,9 @@ For Ubuntu Linux, for example, you can have these by doing
 \li g++
 \li libboost-dev
 \li libboost-filesystem-dev
-\li libboost-system-dev
+\li libboost-iostreams-dev
 \li libboost-program-options-dev
+\li libboost-system-dev
 
 For Windows native builds, you need to install the following:
 \ul
@@ -93,7 +94,7 @@ Please see the main documentation if you want to build anything more than Avro C
 
 <h4>On native Windows</h4>
 <ol>
-    <li>Ensure that Cmake's bin directory and Boost's lib directory are in the path.
+    <li>Ensure that CMake's bin directory and Boost's lib directory are in the path.
     <li>Expand the tarball into a directory.
     <li>Change to <tt>lang/c++</tt> subdirectory.
     <li>Create a subdirectory, say, build.win, and change to that directory.
@@ -134,7 +135,7 @@ avrogencpp -i cpx.json -o cpx.hh -n c
 </pre>
 The <tt>-i</tt> flag specifies the input schema file and <tt>-o</tt> flag
 specifies the output header file to generate. The generated C++ code will be
-in the namespace specifed with <tt>-n</tt> flag.
+in the namespace specified with <tt>-n</tt> flag.
 
 <p>
 The generated file, among other things will have the following:
@@ -167,7 +168,7 @@ Now let's see how we can use the code generated to encode data into avro and dec
 In line 9, we construct a memory output stream. By this we indicate that we
 want to send the encoded Avro data into memory. In line 10, we construct a
 binary encoder, whereby we mean the output should be encoded using the Avro
-binary standard. In line 11, we attach the output stream to the encoder. At any given time an incoder can write to only one output stream.
+binary standard. In line 11, we attach the output stream to the encoder. At any given time an encoder can write to only one output stream.
 <p>
 In line 14, we write the contents of c1 into the output stream using the
 encoder. Now the output stream contains the binary representation of
@@ -191,7 +192,7 @@ and avro::jsonDecoder() instead of avro::binaryDecoder() in line 18.
 
 On the other hand, if you want to write the contents to a file instead of
 memory, you should use avro::fileOutputStream() instead of
-avro::memoryOutputStream() in ine 9 and avro::fileInputStream()
+avro::memoryOutputStream() in line 9 and avro::fileInputStream()
 instead of avro::memoryInputStream() in line 17.
 <p>
 
@@ -209,7 +210,7 @@ stored in a JSON file:</p>
 \includelineno schemaload.cc
 
 <p>
-This reads the file, and parses the JSON schema into an in-meory schema
+This reads the file, and parses the JSON schema into an in-memory schema
 object of type avro::ValidSchema. If, for some reason, the schema is not valid,
 the <tt>cpxSchema</tt> object will not be set, and an exception will be
 thrown. 
@@ -224,7 +225,7 @@ sections.
 
 Suppose you want to encode objects of type std::complex<double> from
 C++ standard library using the schema defined in cpx.json.
-Since std::complex<double> was not generated by Avro, it does't know how to encode or decode objects of that
+Since std::complex<double> was not generated by Avro, it doesn't know how to encode or decode objects of that
 type. You have to tell Avro how to do that.
 
 The recommended way to tell Avro how to encode or decode is to specialize
@@ -258,7 +259,7 @@ the validating encoders and decoder. Here is how:
 Here, instead of using the plain binary encoder, you use a validating encoder
 backed by a binary encoder. Similarly, instead of using the plain binary
 decoder, you use a validating decoder backed by a binary decoder. Now,
-if you use <tt>std::complex<float></tt> intead of <tt>std::complex<double></tt>
+if you use <tt>std::complex<float></tt> instead of <tt>std::complex<double></tt>
 the validating encoder and decoder will throw exception stating that
 you are trying to encode or decode <tt>float</tt> instead of <tt>double</tt>.
 <p>
@@ -272,9 +273,9 @@ fronting them with a validating encoder or validating decoder is wasteful.
 <h2>Generic data objects</h2>
 
 A third way to encode and decode data is to use Avro's generic datum.
-Avro's generic datum allows you to read any arbitray data corresponding to
+Avro's generic datum allows you to read any arbitrary data corresponding to
 an arbitrary schema into a generic object. One need not know anything
-about the schema or data at complie time. 
+about the schema or data at compile time. 
 
 Here is an example how one can use the generic datum.
 
@@ -309,7 +310,7 @@ avrogencpp -i imaginary.json -o imaginary.hh -n i
 \includelineno resolving.cc
 
 In this example, writer and reader deal with different schemas,
-both are recornd with the same name cpx. The writer schema has two fields and
+both have a record with the name 'cpx'. The writer schema has two fields and
 the reader's has just one. We generated code for writer's schema in a namespace
 <tt>c</tt> and the reader's in <tt>i</tt>.
 
@@ -325,7 +326,7 @@ complex resolutions are allowed by Avro specification.
 
 <h2>Using Avro data files</h2>
 Avro specification specifies a format for data files. Avro C++ implements
-the sepcification. The code below demonstrates how one can use the
+the specification. The code below demonstrates how one can use the
 Avro data file to store and retrieve a collection of objects
 corresponding to a given schema.
 

@@ -6,6 +6,66 @@ Trunk (not yet released)
 
   NEW FEATURES
 
+    AVRO-1704: Java: Add support for single-message encoding. (blue)
+
+    AVRO-1704: Spec: Add single-message encoding format. (Niels Basjes via blue)
+
+    AVRO-1884: Java: Add method to set the compiler output suffix.
+    (shijinkui via blue)
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
+    AVRO-1889: Update maven-shade-plugin to enable building in Java 8 on Mac.
+    (Sachin Goyal via blue)
+
+    AVRO-1695. Java: Fix GenericData#deepCopy() to support logical types.
+    (cutting)
+
+    AVRO-1719: C++: Fix tests with Boost >= 1.59. (Romain Geissler via blue)
+
+    AVRO-1879: Make conversions field static. (Michael Wong via blue)
+
+  BUG FIXES
+
+    AVRO-1741: Python3: Fix error when codec is not in the header.
+    (Matthew Hayes via blue)
+
+    AVRO-1869: Java: Fix Decimal conversion from ByteBuffer. (blue)
+
+    AVRO-607: Java: Make SpecificData schema cache thread-safe.
+    (Andrius Druzinis-Vitkus via blue)
+
+    AVRO-1888: Java: Fix single-record encoding marker check. (blue)
+
+    AVRO-1848: Ruby: Fix handling of falsey default values.
+    (Brian McKelvey via blue)
+
+    AVRO-1874: Py3: Use recommended module-level logging.
+    (Torgeir Børresen via blue)
+
+    AVRO-1883: Java: Fix incompatible schema detection nested in unions.
+    (Yibing Shi via blue)
+
+    AVRO-1908: Fix TestSpecificCompiler reference to private method.
+    (blue)
+
+    AVRO-1873: Ruby: Add CRC32 checksum to Snappy-compressed blocks.
+    (blue)
+
+    AVRO-1900: Java: Remove dev-tools to fix Java build. (blue)
+
+    AVRO-1913: No warnings in the generated Java code. (Niels Basjes)
+
+    AVRO-1914: Fix licencing errors reported by rat. (Niels Basjes)
+
+Avro 1.8.1 (14 May 2016)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
@@ -14,6 +74,35 @@ Trunk (not yet released)
     to parse schemas. Contributed by Jakob Homan (jghoman).
 
     AVRO-1778: JavaScript: Add IPC/RPC support. (mtth)
+
+    AVRO-1824: C++: Fix docs for building Avro C++. (William S. Fulton via blue)
+
+    AVRO-1701: Fix for "warning: comparison between 'const enum testgen_r::ExampleEnum' and 'const enum testgen::ExampleEnum'" (peter liu via thiru)
+
+    AVRO-1823: Java: Do not swallow IOException while reading magic bytes.
+    (Koji Noguchi via blue)
+
+    AVRO-1825: Allow running build.sh dist under git (nielsbasjes)
+
+    AVRO-1819, AVRO-1820: Java: Add aliases, custom properties to Protocol.
+    (Konstantin Usachev via blue)
+
+    AVRO-1834: Lower the Javadoc warnings on the generated code. (nielsbasjes)
+
+    AVRO-1835: Running tests using JDK 1.8 complains about MaxPermSize (nielsbasjes)
+
+    AVRO-1828: Add EditorConfig file and cleanup of whitespace violations (nielsbasjes)
+
+    AVRO-1839: Update the gitignore files to hide generated files (nielsbasjes)
+
+    AVRO-1838: Java: Update checkstyle to catch trailing whitespace.
+    (nielsbasjes via blue)
+
+    AVRO-1840: Ensure that build.sh clean really cleans all generated files (nielsbasjes)
+
+    AVRO-1841: Add clientside githooks to do basic commit validation (nielsbasjes) 
+
+    AVRO-1807: Java/JSON: Throw for unsupported objects rather than ignoring. (blue)
 
   BUG FIXES
 
@@ -24,6 +113,21 @@ Trunk (not yet released)
 
     AVRO-1667: Fix parser grammar flattening for recursive cases.
     (Zoltan Farkas via blue)
+
+    AVRO-1829. C++ documentation improvements (William S Fulton via thiru)
+
+    AVRO-1821: Java: Fix possible memory leak in ReflectData accessor cache.
+    (Bryan Harclerode via blue)
+
+    AVRO-1642: Java: Do not generate invalid all-args constructor.
+    (Prateek Rungta and Barry Jones via blue)
+
+    AVRO-1826: build.sh rat fails over extra license files and many others (nielsbasjes).
+
+    AVRO-1814: Generated java code fails on variables with a TLD name like 'org' (nielsbasjes)
+
+    AVRO-1711: Java: Fix JsonParser#skipChildren to implement its defined contract.
+    (Zoltan Farkas and Thiruvalluvan M. G. via blue)
 
 Avro 1.8.0 (22 January 2016)
 
@@ -86,6 +190,8 @@ Avro 1.8.0 (22 January 2016)
     AVRO-1747. JS: Add Javascript IO implementation. (Matthieu Monsch via blue)
 
     AVRO-1767. JS: Fall back to unwrapped union values. (Matthieu Monsch via blue)
+
+    AVRO-1784. C++: Should have a json encoder that pretty prints. (John McClean via thiru)
 
   OPTIMIZATIONS
 

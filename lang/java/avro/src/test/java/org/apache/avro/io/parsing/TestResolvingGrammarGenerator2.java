@@ -26,7 +26,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /** ResolvingGrammarGenerator tests that are not Parameterized.*/
-public class TestResolvingGrammarGenerator2 {  
+public class TestResolvingGrammarGenerator2 {
   @Test public void testFixed() throws java.io.IOException {
     new ResolvingGrammarGenerator().generate
       (Schema.createFixed("MyFixed", null, null, 10),

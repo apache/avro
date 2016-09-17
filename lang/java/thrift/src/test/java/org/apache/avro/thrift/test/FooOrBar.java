@@ -101,9 +101,9 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.FOO, new org.apache.thrift.meta_data.FieldMetaData("foo", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.FOO, new org.apache.thrift.meta_data.FieldMetaData("foo", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.BAR, new org.apache.thrift.meta_data.FieldMetaData("bar", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.BAR, new org.apache.thrift.meta_data.FieldMetaData("bar", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FooOrBar.class, metaDataMap);

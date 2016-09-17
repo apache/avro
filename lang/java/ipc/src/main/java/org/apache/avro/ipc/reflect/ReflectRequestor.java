@@ -33,7 +33,7 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 
 /** A {@link org.apache.avro.ipc.Requestor} for existing interfaces. */
 public class ReflectRequestor extends SpecificRequestor {
-  
+
   public ReflectRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
     this(iface, transceiver, new ReflectData(iface.getClassLoader()));
@@ -43,19 +43,19 @@ public class ReflectRequestor extends SpecificRequestor {
     throws IOException {
     this(protocol, transceiver, ReflectData.get());
   }
-    
+
   public ReflectRequestor(Class<?> iface, Transceiver transceiver,
                           ReflectData data)
     throws IOException {
     this(data.getProtocol(iface), transceiver, data);
   }
-    
+
   public ReflectRequestor(Protocol protocol, Transceiver transceiver,
                           ReflectData data)
     throws IOException {
     super(protocol, transceiver, data);
   }
-    
+
   public ReflectData getReflectData() { return (ReflectData)getSpecificData(); }
 
   @Override
@@ -69,7 +69,7 @@ public class ReflectRequestor extends SpecificRequestor {
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static <T> T getClient(Class<T> iface, Transceiver transciever) 
+  public static <T> T getClient(Class<T> iface, Transceiver transciever)
     throws IOException {
     return getClient(iface, transciever,
                      new ReflectData(iface.getClassLoader()));
@@ -81,16 +81,16 @@ public class ReflectRequestor extends SpecificRequestor {
                                 ReflectData reflectData) throws IOException {
     Protocol protocol = reflectData.getProtocol(iface);
     return (T)Proxy.newProxyInstance
-      (reflectData.getClassLoader(), 
+      (reflectData.getClassLoader(),
        new Class[] { iface },
        new ReflectRequestor(protocol, transciever, reflectData));
   }
-  
+
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
-  public static <T> T getClient(Class<T> iface, ReflectRequestor rreq) 
+  public static <T> T getClient(Class<T> iface, ReflectRequestor rreq)
     throws IOException {
-    return (T)Proxy.newProxyInstance(rreq.getReflectData().getClassLoader(), 
+    return (T)Proxy.newProxyInstance(rreq.getReflectData().getClassLoader(),
                                   new Class[] { iface }, rreq);
   }
 }

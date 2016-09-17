@@ -39,7 +39,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
   };
   private static final long FOOTER_BLOCK = -1;
   private static final int SYNC_SIZE = 16;
-  private static final int SYNC_INTERVAL = 1000*SYNC_SIZE; 
+  private static final int SYNC_INTERVAL = 1000*SYNC_SIZE;
 
   private static final String SCHEMA = "schema";
   private static final String SYNC = "sync";
@@ -160,8 +160,8 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
       skipSync();                                 // skip a sync
 
       blockCount = vin.readLong();                // read blockCount
-         
-      if (blockCount == FOOTER_BLOCK) { 
+
+      if (blockCount == FOOTER_BLOCK) {
         seek(vin.readLong()+in.tell());           // skip a footer
       }
     }
@@ -208,7 +208,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     seek(in.length());
   }
 
-  /** Return true if past the next synchronization point after a position. */ 
+  /** Return true if past the next synchronization point after a position. */
   @Override
   public boolean pastSync(long position) throws IOException {
     return ((blockStart >= position+SYNC_SIZE)||(blockStart >= in.length()));

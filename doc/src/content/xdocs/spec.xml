@@ -41,9 +41,9 @@
       <p>A Schema is represented in <a href="ext:json">JSON</a> by one of:</p>
       <ul>
         <li>A JSON string, naming a defined type.</li>
-        
+
         <li>A JSON object, of the form:
-          
+
           <source>{"type": "<em>typeName</em>" ...<em>attributes</em>...}</source>
 
           where <em>typeName</em> is either a primitive or derived
@@ -67,25 +67,25 @@
           <li><code>bytes</code>: sequence of 8-bit unsigned bytes</li>
           <li><code>string</code>: unicode character sequence</li>
         </ul>
-        
+
         <p>Primitive types have no specified attributes.</p>
-        
+
         <p>Primitive type names are also defined type names.  Thus, for
           example, the schema "string" is equivalent to:</p>
-        
+
         <source>{"type": "string"}</source>
 
       </section>
 
       <section id="schema_complex">
         <title>Complex Types</title>
-        
+
         <p>Avro supports six kinds of complex types: records, enums,
         arrays, maps, unions and fixed.</p>
 
         <section id="schema_record">
           <title>Records</title>
-          
+
 	  <p>Records use the type name "record" and support three attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
@@ -145,7 +145,7 @@
 	  <p>For example, a linked-list of 64-bit values may be defined with:</p>
 	  <source>
 {
-  "type": "record", 
+  "type": "record",
   "name": "LongList",
   "aliases": ["LinkedLongs"],                      // old name for this
   "fields" : [
@@ -155,10 +155,10 @@
 }
 	  </source>
 	</section>
-        
+
         <section>
           <title>Enums</title>
-          
+
 	  <p>Enums use the type name "enum" and support the following
 	  attributes:</p>
 	  <ul>
@@ -183,7 +183,7 @@
 }
 	  </source>
 	</section>
-        
+
         <section>
           <title>Arrays</title>
           <p>Arrays use the type name <code>"array"</code> and support
@@ -420,7 +420,7 @@
 	    <p>For example, the record schema</p>
 	    <source>
 	      {
-	      "type": "record", 
+	      "type": "record",
 	      "name": "test",
 	      "fields" : [
 	      {"name": "a", "type": "long"},
@@ -436,7 +436,7 @@
 	      sequence:</p>
 	    <source>36 06 66 6f 6f</source>
 	  </section>
-          
+
           <section id="enum_encoding">
             <title>Enums</title>
             <p>An enum is encoded by a <code>int</code>, representing
@@ -487,18 +487,18 @@
               value, followed by that many key/value pairs.  A block
               with count zero indicates the end of the map.  Each item
               is encoded per the map's value schema.</p>
-	    
+
             <p>If a block's count is negative, its absolute value is used,
               and the count is followed immediately by a <code>long</code>
               block <em>size</em> indicating the number of bytes in the
               block.  This block size permits fast skipping through data,
               e.g., when projecting a record to a subset of its fields.</p>
-	    
+
             <p>The blocked representation permits one to read and write
               maps larger than can be buffered in memory, since one can
               start writing items without knowing the full length of the
               map.</p>
-	
+
 	  </section>
 
           <section id="union_encoding">
@@ -531,7 +531,7 @@
 
       <section id="json_encoding">
         <title>JSON Encoding</title>
-        
+
         <p>Except for unions, the JSON encoding is the same as is used
         to encode <a href="#schema_record">field default
         values</a>.</p>
@@ -547,7 +547,7 @@
           types (record, fixed or enum) the user-specified name is
           used, for other types the type name is used.</li>
         </ul>
-          
+
         <p>For example, the union
           schema <code>["null","string","Foo"]</code>, where Foo is a
           record name, would encode:</p>
@@ -566,6 +566,34 @@
         and <code>long</code>, <code>float</code>
         and <code>double</code>, records and maps, enums and strings,
         etc.</p>
+
+      </section>
+
+      <section id="single_object_encoding">
+        <title>Single-object encoding</title>
+
+        <p>In some situations a single Avro serialized object is to be stored for a
+        longer period of time. One very common example is storing Avro records
+        for several weeks in an <a href="http://kafka.apache.org/">Apache Kafka</a> topic.</p>
+        <p>In the period after a schema change this persistance system will contain records
+        that have been written with different schemas. So the need arises to know which schema
+        was used to write a record to support schema evolution correctly.
+        In most cases the schema itself is too large to include in the message,
+        so this binary wrapper format supports the use case more effectively.</p>
+
+        <section id="single_object_encoding_spec">
+          <title>Single object encoding specification</title>
+          <p>Single Avro objects are encoded as follows:</p>
+          <ol>
+            <li>A two-byte marker, <code>C3 01</code>, to show that the message is Avro and uses this single-record format (version 1).</li>
+            <li>The 8-byte little-endian CRC-64-AVRO <a href="#schema_fingerprints">fingerprint</a> of the object's schema</li>
+            <li>The Avro object encoded using <a href="#binary_encoding">Avro's binary encoding</a></li>
+          </ol>
+        </section>
+
+        <p>Implementations use the 2-byte marker to determine whether a payload is Avro.
+          This check helps avoid expensive lookups that resolve the schema from a
+          fingerprint, when the message is not an encoded Avro payload.</p>
 
       </section>
 
@@ -666,7 +694,7 @@
         stored in the file, as JSON data (required).</li>
         <li><strong>avro.codec</strong> the name of the compression codec
         used to compress blocks, as a string.  Implementations
-        are required to support the following codecs: "null" and "deflate".  
+        are required to support the following codecs: "null" and "deflate".
         If codec is absent, it is assumed to be "null".  The codecs
         are described with more detail below.</li>
       </ul>
@@ -692,7 +720,7 @@
         <li>The file's 16-byte sync marker.</li>
       </ul>
           <p>Thus, each block's binary data can be efficiently extracted or skipped without
-          deserializing the contents.  The combination of block size, object counts, and 
+          deserializing the contents.  The combination of block size, object counts, and
           sync markers enable detection of corrupt blocks and help ensure data integrity.</p>
       <section>
       <title>Required Codecs</title>
@@ -704,7 +732,7 @@
         <section>
         <title>deflate</title>
         <p>The "deflate" codec writes the data block using the
-        deflate algorithm as specified in 
+        deflate algorithm as specified in
         <a href="http://www.isi.edu/in-notes/rfc1951.txt">RFC 1951</a>,
         and typically implemented using the zlib library.  Note that this
         format (unlike the "zlib format" in RFC 1950) does not have a
@@ -757,7 +785,7 @@
           <li>a <em>request</em>, a list of named,
             typed <em>parameter</em> schemas (this has the same form
             as the fields of a record declaration);</li>
-          <li>a <em>response</em> schema; </li> 
+          <li>a <em>response</em> schema; </li>
           <li>an optional union of declared <em>error</em> schemas.
 	    The <em>effective</em> union has <code>"string"</code>
 	    prepended to the declared union, to permit transmission of
@@ -1092,14 +1120,14 @@
           <ul>
             <li>the ordering of fields may be different: fields are
               matched by name.</li>
-            
+
             <li>schemas for fields with the same name in both records
               are resolved recursively.</li>
-            
+
             <li>if the writer's record contains a field with a name
               not present in the reader's record, the writer's value
               for that field is ignored.</li>
-            
+
             <li>if the reader's record schema has a field that
               contains a default value, and writer's schema does not
               have a field with the same name, then the reader should
@@ -1137,13 +1165,13 @@
             writer's schema is recursively resolved against it.  If none
             match, an error is signalled.</p>
         </li>
-          
+
         <li><strong>if writer's is a union, but reader's is not</strong>
           <p>If the reader's schema matches the selected writer's schema,
             it is recursively resolved against it.  If they do not
             match, an error is signalled.</p>
         </li>
-          
+
       </ul>
 
       <p>A schema's "doc" fields are ignored for the purposes of schema resolution.  Hence,
@@ -1237,7 +1265,7 @@
         </ul>
       </section>
 
-      <section>
+      <section id="schema_fingerprints">
         <title>Schema Fingerprints</title>
 
         <p>"[A] fingerprinting algorithm is a procedure that maps an

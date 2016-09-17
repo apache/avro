@@ -33,7 +33,7 @@ import org.apache.avro.util.Utf8;
  * required to serve its read methods.
  * The number of unused bytes in the buffer can be accessed by
  * inputStream().remaining(), if the BinaryDecoder is not 'direct'.
- * 
+ *
  * @see Encoder
  */
 
@@ -191,7 +191,7 @@ public class BinaryDecoder extends Decoder {
     }
     return (l >>> 1) ^ -(l & 1); // back to two's-complement
   }
-  
+
   // splitting readLong up makes it faster because of the JVM does more
   // optimizations on small methods
   private long innerLongDecode(long l) throws IOException {
@@ -264,7 +264,7 @@ public class BinaryDecoder extends Decoder {
     }
     return result;
   }
-  
+
   private final Utf8 scratchUtf8 = new Utf8();
 
   @Override
@@ -325,7 +325,7 @@ public class BinaryDecoder extends Decoder {
 
   /**
    * Reads <tt>length</tt> bytes into <tt>bytes</tt> starting at <tt>start</tt>.
-   * 
+   *
    * @throws EOFException
    *           If there are not enough number of bytes in the source.
    * @throws IOException
@@ -354,7 +354,7 @@ public class BinaryDecoder extends Decoder {
    * Returns the number of items to follow in the current array or map. Returns
    * 0 if there are no more items in the current array and the array/map has
    * ended.
-   * 
+   *
    * @throws IOException
    */
   protected long doReadItemCount() throws IOException {
@@ -372,7 +372,7 @@ public class BinaryDecoder extends Decoder {
    * more items left in the array or map. If items cannot be skipped (because
    * byte count to skip is not found in the stream) return the count of the
    * items found. The client needs to skip the items individually.
-   * 
+   *
    * @return Zero if there are no more items to skip and end of array/map is
    *         reached. Positive number if some items are found that cannot be
    *         skipped and the client needs to skip them individually.
@@ -476,10 +476,10 @@ public class BinaryDecoder extends Decoder {
 
   /**
    * Returns an {@link java.io.InputStream} that is aware of any buffering that
-   * may occur in this BinaryDecoder. Readers that need to interleave decoding 
+   * may occur in this BinaryDecoder. Readers that need to interleave decoding
    * Avro data with other reads must access this InputStream to do so unless
    * the implementation is 'direct' and does not read beyond the minimum bytes
-   * necessary from the source.  
+   * necessary from the source.
    */
   public InputStream inputStream() {
     return source;
@@ -624,7 +624,7 @@ public class BinaryDecoder extends Decoder {
     /**
      * Skips length bytes from the source. If length bytes cannot be skipped due
      * to end of file/stream/channel/etc an EOFException is thrown
-     * 
+     *
      * @param length
      *          the number of bytes to attempt to skip
      * @throws IOException
@@ -639,7 +639,7 @@ public class BinaryDecoder extends Decoder {
      * actual number of bytes skipped. This method must attempt to skip as many
      * bytes as possible up to <i>skipLength</i> bytes. Skipping 0 bytes signals
      * end of stream/channel/file/etc
-     * 
+     *
      * @param skipLength
      *          the number of bytes to attempt to skip
      * @return the count of actual bytes skipped.
@@ -650,7 +650,7 @@ public class BinaryDecoder extends Decoder {
      * Reads raw from the source, into a byte[]. Used for reads that are larger
      * than the buffer, or otherwise unbuffered. This is a mandatory read -- if
      * there is not enough bytes in the source, EOFException is thrown.
-     * 
+     *
      * @throws IOException
      *           if an error occurs
      * @throws EOFException
@@ -666,7 +666,7 @@ public class BinaryDecoder extends Decoder {
      * <p/>
      * This method must attempt to read as much as possible from the source.
      * Returns 0 when at the end of stream/channel/file/etc.
-     * 
+     *
      * @throws IOException
      *           if an error occurs reading
      **/
@@ -677,9 +677,9 @@ public class BinaryDecoder extends Decoder {
      * If this source buffers, compacts the buffer by placing the
      * <i>remaining</i> bytes starting at <i>pos</i> at <i>minPos</i>. This may
      * be done in the current buffer, or may replace the buffer with a new one.
-     * 
+     *
      * The end result must be a buffer with at least 16 bytes of remaining space.
-     * 
+     *
      * @param pos
      * @param minPos
      * @param remaining
@@ -876,7 +876,7 @@ public class BinaryDecoder extends Decoder {
   /**
    * This byte source is special. It will avoid copying data by using the
    * source's byte[] as a buffer in the decoder.
-   * 
+   *
    */
   private static class ByteArrayByteSource extends ByteSource {
     private byte[] data;

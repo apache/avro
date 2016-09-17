@@ -74,8 +74,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
   private Codec codec;
 
-  /** Construct a reader for an input stream.  For file-based input, use 
-   * {@link DataFileReader}.  This will buffer, wrapping with a 
+  /** Construct a reader for an input stream.  For file-based input, use
+   * {@link DataFileReader}.  This will buffer, wrapping with a
    * {@link java.io.BufferedInputStream}
    * is not necessary. */
   public DataFileStream(InputStream in, DatumReader<D> reader)
@@ -90,7 +90,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   protected DataFileStream(DatumReader<D> reader) throws IOException {
     this.reader = reader;
   }
-  
+
   /** Initialize the stream by reading from its head. */
   void initialize(InputStream in) throws IOException {
     this.header = new Header();
@@ -99,7 +99,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     try {
       vin.readFixed(magic);                         // read magic
     } catch (IOException e) {
-      throw new IOException("Not a data file.");
+      throw new IOException("Not a data file.", e);
     }
     if (!Arrays.equals(DataFileConstants.MAGIC, magic))
       throw new IOException("Not a data file.");
@@ -118,7 +118,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       } while ((l = vin.mapNext()) != 0);
     }
     vin.readFixed(header.sync);                          // read sync
-    
+
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
     header.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA),false);
@@ -319,22 +319,22 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       this.numEntries = numEntries;
       this.blockSize = blockSize;
     }
-    
+
     DataBlock(ByteBuffer block, long numEntries) {
       this.data = block.array();
       this.blockSize = block.remaining();
       this.offset = block.arrayOffset() + block.position();
       this.numEntries = numEntries;
     }
-    
+
     byte[] getData() {
       return data;
     }
-    
+
     long getNumEntries() {
       return numEntries;
     }
-    
+
     int getBlockSize() {
       return blockSize;
     }
@@ -346,23 +346,23 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     void setFlushOnWrite(boolean flushOnWrite) {
       this.flushOnWrite = flushOnWrite;
     }
-    
+
     ByteBuffer getAsByteBuffer() {
       return ByteBuffer.wrap(data, offset, blockSize);
     }
-    
+
     void decompressUsing(Codec c) throws IOException {
       ByteBuffer result = c.decompress(getAsByteBuffer());
       data = result.array();
       blockSize = result.remaining();
     }
-    
+
     void compressUsing(Codec c) throws IOException {
       ByteBuffer result = c.compress(getAsByteBuffer());
       data = result.array();
       blockSize = result.remaining();
     }
-    
+
     void writeBlockTo(BinaryEncoder e, byte[] sync) throws IOException {
       e.writeLong(this.numEntries);
       e.writeLong(this.blockSize);
@@ -372,7 +372,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
         e.flush();
       }
     }
-    
+
   }
 }
 

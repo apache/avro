@@ -50,7 +50,7 @@ public class TestToTrevniTool {
     new ToTrevniTool().run(null, p, null, Arrays.asList(args));
     return baos.toString("UTF-8").replace("\r", "");
   }
-  
+
   @Test
   public void test() throws Exception {
     Schema schema = Schema.parse(SCHEMA_FILE);

@@ -36,7 +36,7 @@ public class TestProtocolReflectMeta extends TestProtocolReflect {
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key2"));
     server = new SocketServer(rresp, new InetSocketAddress(0));
     server.start();
-    
+
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     ReflectRequestor requestor = new ReflectRequestor(Simple.class, client);
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key1"));

@@ -309,7 +309,7 @@ public final class Test {
     /**
      * <code>repeated .org.apache.avro.protobuf.Foo fooArray = 20;</code>
      */
-    java.util.List<org.apache.avro.protobuf.Test.Foo> 
+    java.util.List<org.apache.avro.protobuf.Test.Foo>
         getFooArrayList();
     /**
      * <code>repeated .org.apache.avro.protobuf.Foo fooArray = 20;</code>
@@ -322,7 +322,7 @@ public final class Test {
     /**
      * <code>repeated .org.apache.avro.protobuf.Foo fooArray = 20;</code>
      */
-    java.util.List<? extends org.apache.avro.protobuf.Test.FooOrBuilder> 
+    java.util.List<? extends org.apache.avro.protobuf.Test.FooOrBuilder>
         getFooArrayOrBuilderList();
     /**
      * <code>repeated .org.apache.avro.protobuf.Foo fooArray = 20;</code>
@@ -864,7 +864,7 @@ public final class Test {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
@@ -880,7 +880,7 @@ public final class Test {
         getStringBytes() {
       java.lang.Object ref = string_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         string_ = b;
@@ -969,7 +969,7 @@ public final class Test {
     /**
      * <code>repeated .org.apache.avro.protobuf.Foo fooArray = 20;</code>
      */
-    public java.util.List<? extends org.apache.avro.protobuf.Test.FooOrBuilder> 
+    public java.util.List<? extends org.apache.avro.protobuf.Test.FooOrBuilder>
         getFooArrayOrBuilderList() {
       return fooArray_;
     }
@@ -1637,7 +1637,7 @@ public final class Test {
               fooArrayBuilder_ = null;
               fooArray_ = other.fooArray_;
               bitField0_ = (bitField0_ & ~0x00020000);
-              fooArrayBuilder_ = 
+              fooArrayBuilder_ =
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getFooArrayFieldBuilder() : null;
             } else {
@@ -1664,18 +1664,18 @@ public final class Test {
 
       public final boolean isInitialized() {
         if (!hasInt32()) {
-          
+
           return false;
         }
         for (int i = 0; i < getFooArrayCount(); i++) {
           if (!getFooArray(i).isInitialized()) {
-            
+
             return false;
           }
         }
         if (hasFoo()) {
           if (!getFoo().isInitialized()) {
-            
+
             return false;
           }
         }
@@ -2175,7 +2175,7 @@ public final class Test {
           getStringBytes() {
         java.lang.Object ref = string_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           string_ = b;
@@ -2581,7 +2581,7 @@ public final class Test {
       /**
        * <code>repeated .org.apache.avro.protobuf.Foo fooArray = 20;</code>
        */
-      public java.util.List<? extends org.apache.avro.protobuf.Test.FooOrBuilder> 
+      public java.util.List<? extends org.apache.avro.protobuf.Test.FooOrBuilder>
            getFooArrayOrBuilderList() {
         if (fooArrayBuilder_ != null) {
           return fooArrayBuilder_.getMessageOrBuilderList();
@@ -2607,12 +2607,12 @@ public final class Test {
       /**
        * <code>repeated .org.apache.avro.protobuf.Foo fooArray = 20;</code>
        */
-      public java.util.List<org.apache.avro.protobuf.Test.Foo.Builder> 
+      public java.util.List<org.apache.avro.protobuf.Test.Foo.Builder>
            getFooArrayBuilderList() {
         return getFooArrayFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.avro.protobuf.Test.Foo, org.apache.avro.protobuf.Test.Foo.Builder, org.apache.avro.protobuf.Test.FooOrBuilder> 
+          org.apache.avro.protobuf.Test.Foo, org.apache.avro.protobuf.Test.Foo.Builder, org.apache.avro.protobuf.Test.FooOrBuilder>
           getFooArrayFieldBuilder() {
         if (fooArrayBuilder_ == null) {
           fooArrayBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
@@ -2838,7 +2838,7 @@ public final class Test {
        * </pre>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          org.apache.avro.protobuf.Test.Foo, org.apache.avro.protobuf.Test.Foo.Builder, org.apache.avro.protobuf.Test.FooOrBuilder> 
+          org.apache.avro.protobuf.Test.Foo, org.apache.avro.protobuf.Test.Foo.Builder, org.apache.avro.protobuf.Test.FooOrBuilder>
           getFooFieldBuilder() {
         if (fooBuilder_ == null) {
           fooBuilder_ = new com.google.protobuf.SingleFieldBuilder<

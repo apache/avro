@@ -50,7 +50,7 @@ public class AvroColumnReader<D>
   private GenericData model;
   private Schema fileSchema;
   private Schema readSchema;
-  
+
   private ColumnValues[] values;
   private int[] arrayWidths;
   private int column;                          // current index in values
@@ -125,16 +125,16 @@ public class AvroColumnReader<D>
     switch (read.getType()) {
     case NULL: case BOOLEAN:
     case INT: case LONG:
-    case FLOAT: case DOUBLE: 
-    case BYTES: case STRING: 
+    case FLOAT: case DOUBLE:
+    case BYTES: case STRING:
     case ENUM: case FIXED:
       if (read.getType() != write.getType())
         throw new TrevniRuntimeException("Type mismatch: "+read+" & "+write);
       break;
-    case MAP: 
+    case MAP:
       findDefaults(read.getValueType(), write.getValueType());
       break;
-    case ARRAY: 
+    case ARRAY:
       findDefaults(read.getElementType(), write.getElementType());
       break;
     case UNION:
@@ -145,7 +145,7 @@ public class AvroColumnReader<D>
         findDefaults(s, write.getTypes().get(index));
       }
       break;
-    case RECORD: 
+    case RECORD:
       for (Field f : read.getFields()) {
         Field g = write.getField(f.name());
         if (g == null)
@@ -200,7 +200,7 @@ public class AvroColumnReader<D>
     final int startColumn = column;
 
     switch (s.getType()) {
-    case MAP: 
+    case MAP:
       int size = values[column].nextLength();
       Map map = (Map)new HashMap(size);
       for (int i = 0; i < size; i++) {
@@ -211,7 +211,7 @@ public class AvroColumnReader<D>
       }
       column = startColumn + arrayWidths[startColumn];
       return map;
-    case RECORD: 
+    case RECORD:
       Object record = model.newRecord(null, s);
       Map<String,Object> rDefaults = defaults.get(s.getFullName());
       for (Field f : s.getFields()) {
@@ -221,7 +221,7 @@ public class AvroColumnReader<D>
         model.setField(record, f.name(), f.pos(), value);
       }
       return record;
-    case ARRAY: 
+    case ARRAY:
       int length = values[column].nextLength();
       List elements = (List)new GenericData.Array(length, s);
       for (int i = 0; i < length; i++) {
@@ -254,7 +254,7 @@ public class AvroColumnReader<D>
 
   private Object nextValue(Schema s, int column) throws IOException {
     Object v = values[column].nextValue();
-    
+
     switch (s.getType()) {
     case ENUM:
       return model.createEnum(s.getEnumSymbols().get((Integer)v), s);

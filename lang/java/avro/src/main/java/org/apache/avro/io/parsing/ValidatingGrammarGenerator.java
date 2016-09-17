@@ -101,7 +101,7 @@ public class ValidatingGrammarGenerator {
       List<Schema> subs = sc.getTypes();
       Symbol[] symbols = new Symbol[subs.size()];
       String[] labels = new String[subs.size()];
-      
+
       int i = 0;
       for (Schema b : sc.getTypes()) {
         symbols[i] = generate(b, seen);
@@ -119,7 +119,7 @@ public class ValidatingGrammarGenerator {
   static class LitS {
     public final Schema actual;
     public LitS(Schema actual) { this.actual = actual; }
-    
+
     /**
      * Two LitS are equal if and only if their underlying schema is
      * the same (not merely equal).
@@ -128,7 +128,7 @@ public class ValidatingGrammarGenerator {
       if (! (o instanceof LitS)) return false;
       return actual == ((LitS)o).actual;
     }
-    
+
     public int hashCode() {
       return actual.hashCode();
     }

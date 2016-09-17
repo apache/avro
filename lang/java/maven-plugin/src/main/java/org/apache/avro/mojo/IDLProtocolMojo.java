@@ -35,7 +35,7 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
- * 
+ *
  * @goal idl-protocol
  * @requiresDependencyResolution runtime
  * @phase generate-sources
@@ -46,16 +46,16 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avdl</code> is used to select IDL files.
-   * 
+   *
    * @parameter
    */
   private String[] includes = new String[] { "**/*.avdl" };
-  
+
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avdl</code> is used to select IDL files.
-   * 
+   *
    * @parameter
    */
   private String[] testIncludes = new String[] { "**/*.avdl" };
@@ -93,6 +93,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       compiler.setTemplateDir(templateDirectory);
       compiler.setFieldVisibility(getFieldVisibility());
       compiler.setCreateSetters(createSetters);
+      compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
       compiler.compileToDestination(null, outputDirectory);
     } catch (ParseException e) {
       throw new IOException(e);

@@ -25,13 +25,13 @@ class BlockDescriptor {
   int compressedSize;
 
   BlockDescriptor() {}
-  
+
   BlockDescriptor(int rowCount, int uncompressedSize, int compressedSize) {
     this.rowCount = rowCount;
     this.uncompressedSize = uncompressedSize;
     this.compressedSize = compressedSize;
   }
-  
+
   public void writeTo(OutputBuffer out) throws IOException {
     out.writeFixed32(rowCount);
     out.writeFixed32(uncompressedSize);

@@ -77,16 +77,16 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   public DataFileWriter(DatumWriter<D> dout) {
     this.dout = dout;
   }
-  
+
   private void assertOpen() {
     if (!isOpen) throw new AvroRuntimeException("not open");
   }
   private void assertNotOpen() {
     if (isOpen) throw new AvroRuntimeException("already open");
   }
-  
-  /** 
-   * Configures this writer to use the given codec. 
+
+  /**
+   * Configures this writer to use the given codec.
    * May not be reset after writes have begun.
    */
   public DataFileWriter<D> setCodec(CodecFactory c) {
@@ -97,7 +97,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   /**
-   * Set the synchronization interval for this file, in bytes. 
+   * Set the synchronization interval for this file, in bytes.
    * Valid values range from 32 to 2^30
    * Suggested values are between 2K and 2M
    *
@@ -108,12 +108,12 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * called with param set to false, then the block may not be flushed to the
    * stream after the sync marker is written. In this case,
    * the {@linkplain #flush()} must be called to flush the stream.
-   * 
+   *
    * Invalid values throw IllegalArgumentException
-   * 
-   * @param syncInterval 
+   *
+   * @param syncInterval
    *   the approximate number of uncompressed bytes to write in each block
-   * @return 
+   * @return
    *   this DataFileWriter
    */
   public DataFileWriter<D> setSyncInterval(int syncInterval) {
@@ -251,7 +251,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     meta.put(key, value);
     return this;
   }
-  
+
   private DataFileWriter<D> setMetaInternal(String key, String value) {
     try {
       return setMetaInternal(key, value.getBytes("UTF-8"));
@@ -267,7 +267,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     }
     return setMetaInternal(key, value);
   }
-  
+
   public static boolean isReservedMeta(String key) {
     return key.startsWith("avro.");
   }
@@ -310,7 +310,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     blockCount++;
     writeIfBlockFull();
   }
-  
+
   // if there is an error encoding, flush the encoder and then
   // reset the buffer position to contain size bytes, discarding the rest.
   // Otherwise the file will be corrupt with a partial record.
@@ -330,7 +330,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     blockCount++;
     writeIfBlockFull();
   }
-  
+
   private int bufferInUse() {
     return (buffer.size() + bufOut.bytesBuffered());
   }
@@ -384,7 +384,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       }
     }
   }
-  
+
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
       bufOut.flush();

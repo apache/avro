@@ -39,7 +39,7 @@ public class SkipParser extends Parser {
      */
     void skipTopSymbol() throws IOException;
   }
-  
+
   private final SkipHandler skipHandler;
 
   public SkipParser(Symbol root, ActionHandler symbolHandler,

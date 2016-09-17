@@ -24,39 +24,39 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 public class TestBZip2Codec {
-  
+
   @Test
   public void testBZip2CompressionAndDecompression() throws IOException {
     Codec codec = CodecFactory.fromString("bzip2").createInstance();
     assertTrue(codec instanceof BZip2Codec);
     assertTrue(codec.getName().equals("bzip2"));
-    
+
     //This is 3 times the byte buffer on the BZip2 decompress plus some extra
     final int inputByteSize = BZip2Codec.DEFAULT_BUFFER_SIZE * 3 + 42;
-    
+
     byte[] inputByteArray = new byte[inputByteSize];
-    
+
     //Generate something that will compress well
     for (int i = 0; i < inputByteSize; i++) {
       inputByteArray[i] = (byte)(65 + i % 10);
     }
-    
+
     ByteBuffer inputByteBuffer = ByteBuffer.allocate(inputByteSize * 2);
     inputByteBuffer.put(inputByteArray);
-    
+
     ByteBuffer compressedBuffer = codec.compress(inputByteBuffer);
-    
+
     //Make sure something returned
     assertTrue(compressedBuffer.array().length > 0);
     //Make sure the compressed output is smaller then the original
     assertTrue(compressedBuffer.array().length < inputByteArray.length);
-    
+
     ByteBuffer decompressedBuffer = codec.decompress(compressedBuffer);
-    
+
     //The original array should be the same length as the decompressed array
     assertTrue(decompressedBuffer.array().length == inputByteArray.length);
-    
-    //Every byte in the outputByteArray should equal every byte in the input array 
+
+    //Every byte in the outputByteArray should equal every byte in the input array
     byte[] outputByteArray = decompressedBuffer.array();
     for (int i = 0; i < inputByteSize; i++) {
       inputByteArray[i] = outputByteArray[i];

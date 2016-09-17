@@ -37,7 +37,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- version properties for dependencies -->
-    
+
     <!--
       To build the avro-mapred module against Hadoop 1 specify
       -Dhadoop.version=1 or leave unspecified to build against Hadoop 2
@@ -74,7 +74,6 @@
     <findbugs-annotations.version>1.3.9-1</findbugs-annotations.version>
 
     <!-- version properties for plugins -->
-    <checkstyle-plugin.version>2.12.1</checkstyle-plugin.version>
     <bundle-plugin-version>2.5.3</bundle-plugin-version>
     <compiler-plugin.version>3.1</compiler-plugin.version>
     <exec-plugin.version>1.3.2</exec-plugin.version>
@@ -87,7 +86,7 @@
     <source-plugin.version>2.3</source-plugin.version>
     <surefire-plugin.version>2.17</surefire-plugin.version>
     <file-management.version>1.2.1</file-management.version>
-    <shade-plugin.version>1.7.1</shade-plugin.version>
+    <shade-plugin.version>2.4.3</shade-plugin.version>
     <archetype-plugin.version>2.2</archetype-plugin.version>
   </properties>
 
@@ -227,32 +226,12 @@
                  rather than the console. -->
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <failIfNoTests>false</failIfNoTests>
-            <argLine>-Xmx1000m -XX:MaxPermSize=200m</argLine>
+            <!-- The correct argLine value depends on the JDK version -->
+            <argLine>${surefire.argline}</argLine>
             <systemPropertyVariables>
               <test.dir>${project.basedir}/target/</test.dir>
             </systemPropertyVariables>
           </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>${checkstyle-plugin.version}</version>
-          <configuration>
-            <consoleOutput>true</consoleOutput>
-            <configLocation>checkstyle.xml</configLocation>
-          </configuration>
-          <!-- Runs by default in the verify phase  (mvn verify or later in the build cycle)
-               the 'check' goal will fail the build if it does not pass.  "mvn checkstyle:check"
-               will do this alone, or "mvn checkstyle:checkstyle" will report but not break  -->
-          <executions>
-            <execution>
-              <id>checkstyle-check</id>
-              <phase>test</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -307,10 +286,6 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
-      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <version>${bundle-plugin-version}</version>
@@ -338,6 +313,28 @@
             <phase>process-classes</phase>
             <goals>
               <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${checkstyle-plugin.version}</version>
+        <configuration>
+          <consoleOutput>true</consoleOutput>
+          <configLocation>checkstyle.xml</configLocation>
+          <suppressionsLocation>suppressions.xml</suppressionsLocation>
+        </configuration>
+        <!-- Runs by default in the verify phase  (mvn verify or later in the build cycle)
+             the 'check' goal will fail the build if it does not pass.  "mvn checkstyle:check"
+             will do this alone, or "mvn checkstyle:checkstyle" will report but not break  -->
+        <executions>
+          <execution>
+            <id>checkstyle-check</id>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
             </goals>
           </execution>
         </executions>
@@ -386,7 +383,7 @@
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId> 
+            <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <systemPropertyVariables>
                 <test.dir>${project.basedir}/target/</test.dir>
@@ -399,6 +396,28 @@
         </plugins>
       </build>
     </profile>
+
+    <!--In JDK 1.8 and newer the PermGem has been removed. -->
+    <!--These two profiles are to handle the differences between the before and after 1.8 -->
+    <profile>
+      <id>old-jdk</id>
+      <activation>
+        <jdk>(,1.8)</jdk>
+      </activation>
+      <properties>
+        <surefire.argline>-Xmx1000m -XX:MaxPermSize=200m</surefire.argline>
+      </properties>
+    </profile>
+    <profile>
+      <id>new-jdk</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <properties>
+        <surefire.argline>-Xmx1000m</surefire.argline>
+      </properties>
+    </profile>
+
   </profiles>
 
   <!-- dependencyManagement can be used to define dependency versions, scopes, and
@@ -476,7 +495,6 @@
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
         <version>${joda.version}</version>
-        <optional>true</optional>
       </dependency>
     </dependencies>
   </dependencyManagement>

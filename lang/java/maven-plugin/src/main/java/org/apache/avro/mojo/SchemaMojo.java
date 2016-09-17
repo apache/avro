@@ -28,32 +28,32 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
  * Generate Java classes from Avro schema files (.avsc)
- * 
+ *
  * @goal schema
  * @phase generate-sources
  * @threadSafe
  */
 public class SchemaMojo extends AbstractAvroMojo {
   /**
-   * A parser used to parse all schema files. Using a common parser will 
+   * A parser used to parse all schema files. Using a common parser will
    * facilitate the import of external schemas.
    */
    private Schema.Parser schemaParser = new Schema.Parser();
-  
+
    /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avsc</code> is used to select grammar files.
-   * 
+   *
    * @parameter
    */
   private String[] includes = new String[] { "**/*.avsc" };
-  
+
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avsc</code> is used to select grammar files.
-   * 
+   *
    * @parameter
    */
   private String[] testIncludes = new String[] { "**/*.avsc" };
@@ -63,7 +63,7 @@ public class SchemaMojo extends AbstractAvroMojo {
     File src = new File(sourceDirectory, filename);
     Schema schema;
 
-    // This is necessary to maintain backward-compatibility. If there are  
+    // This is necessary to maintain backward-compatibility. If there are
     // no imported files then isolate the schemas from each other, otherwise
     // allow them to share a single schema so resuse and sharing of schema
     // is possible.
@@ -72,12 +72,13 @@ public class SchemaMojo extends AbstractAvroMojo {
     } else {
       schema = schemaParser.parse(src);
     }
-    
+
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateSetters(createSetters);
+    compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
     compiler.compileToDestination(src, outputDirectory);
   }

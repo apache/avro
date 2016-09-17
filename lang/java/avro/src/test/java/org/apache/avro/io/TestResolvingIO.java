@@ -51,7 +51,7 @@ public class TestResolvingIO {
     this.sJsRdrSchm = jsonReaderSchema;
     this.sRdrCls = readerCalls;
   }
-  
+
   @Test
   public void testIdentical() throws IOException {
     performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsWrtSchm, sWrtCls);
@@ -66,7 +66,7 @@ public class TestResolvingIO {
 
   private void performTest(Encoding encoding,
       int skipLevel, String jsonWriterSchema,
-      String writerCalls, 
+      String writerCalls,
       String jsonReaderSchema, String readerCalls)
   throws IOException {
     for (int i = 0; i < COUNT; i++) {
@@ -74,7 +74,7 @@ public class TestResolvingIO {
           jsonReaderSchema, readerCalls, encoding, skipLevel);
     }
   }
-  
+
   private void testOnce(String jsonWriterSchema,
       String writerCalls,
       String jsonReaderSchema,
@@ -83,7 +83,7 @@ public class TestResolvingIO {
       int skipLevel) throws IOException {
     Object[] values = TestValidatingIO.randomValues(writerCalls);
     Object[] expected = TestValidatingIO.randomValues(readerCalls);
-    
+
     Schema writerSchema = new Schema.Parser().parse(jsonWriterSchema);
     byte[] bytes = TestValidatingIO.make(writerSchema, writerCalls,
         values, encoding);
@@ -114,7 +114,7 @@ public class TestResolvingIO {
     Decoder vi = new ResolvingDecoder(wsc, rsc, bvi);
     TestValidatingIO.check(vi, calls, values, skipLevel);
   }
-  
+
   @Parameterized.Parameters
   public static Collection<Object[]> data2() {
     return Arrays.asList(TestValidatingIO.convertTo2dArray(encodings, skipLevels, testSchemas()));

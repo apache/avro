@@ -90,7 +90,7 @@ public class TestProtocolGeneric {
         error.put("message", new Utf8("an error"));
         throw new AvroRemoteException(error);
       }
-      
+
       throw new AvroRuntimeException("unexpected message: "+message.getName());
     }
 
@@ -111,7 +111,7 @@ public class TestProtocolGeneric {
 
   @Test
   public void testHello() throws IOException {
-    GenericRecord params = 
+    GenericRecord params =
       new GenericData.Record(PROTOCOL.getMessages().get("hello").getRequest());
     params.put("greeting", new Utf8("bob"));
     Utf8 response = (Utf8)requestor.request("hello", params);

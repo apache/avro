@@ -31,7 +31,7 @@ import org.codehaus.jackson.node.TextNode;
 /**
  * Base class for objects that have JSON-valued properties. Avro and JSON values are
  * represented in Java using the following mapping:
- * 
+ *
  * <table>
  *   <th>
  *     <td>Avro type</td>
@@ -154,7 +154,7 @@ public abstract class JsonProperties {
    * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
    * <tt>null</tt>. It is illegal to add a property if another with
    * the same name but different value already exists in this schema.
-   * 
+   *
    * @param name The name of the property to add
    * @param value The value for the property to add
    */
@@ -167,7 +167,7 @@ public abstract class JsonProperties {
    * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
    * <tt>null</tt>. It is illegal to add a property if another with
    * the same name but different value already exists in this schema.
-   * 
+   *
    * @param name The name of the property to add
    * @param value The value for the property to add
    * @deprecated use {@link #addProp(String, Object)}
@@ -176,10 +176,10 @@ public abstract class JsonProperties {
   public synchronized void addProp(String name, JsonNode value) {
     if (reserved.contains(name))
       throw new AvroRuntimeException("Can't set reserved property: " + name);
-      
+
     if (value == null)
       throw new AvroRuntimeException("Can't set a property to null: " + name);
-    
+
     JsonNode old = props.get(name);
     if (old == null)
       props.put(name, value);

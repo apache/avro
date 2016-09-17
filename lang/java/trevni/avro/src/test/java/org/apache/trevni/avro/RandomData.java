@@ -45,7 +45,7 @@ public class RandomData implements Iterable<Object> {
     this.root = schema;
     this.count = count;
   }
-  
+
   public Iterator<Object> iterator() {
     return new Iterator<Object>() {
       private int n;
@@ -58,14 +58,14 @@ public class RandomData implements Iterable<Object> {
       public void remove() { throw new UnsupportedOperationException(); }
     };
   }
-  
+
   @SuppressWarnings(value="unchecked")
   private static Object generate(Schema schema, Random random, int d) {
     switch (schema.getType()) {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
       for (Schema.Field field : schema.getFields()) {
-        Object value = (field.getJsonProp(USE_DEFAULT) == null) 
+        Object value = (field.getJsonProp(USE_DEFAULT) == null)
           ? generate(field.schema(), random, d+1)
           : GenericData.get().getDefaultValue(field);
         record.put(field.name(), value);

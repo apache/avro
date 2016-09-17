@@ -74,7 +74,7 @@ public class Pair<K,V>
     return pair.getField(VALUE).schema();
   }
 
-  private static final Map<Schema,Map<Schema,Schema>> SCHEMA_CACHE = 
+  private static final Map<Schema,Map<Schema,Schema>> SCHEMA_CACHE =
     new WeakHashMap<Schema,Map<Schema,Schema>>();
 
   /** Get a pair schema. */
@@ -144,7 +144,7 @@ public class Pair<K,V>
     case 0: return key;
     case 1: return value;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index: "+i);
-    } 
+    }
   }
 
   @Override @SuppressWarnings("unchecked")
@@ -153,7 +153,7 @@ public class Pair<K,V>
     case 0: this.key = (K)o;    break;
     case 1: this.value = (V)o;  break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index: "+i);
-    } 
+    }
   }
 
   private static final Schema STRING_SCHEMA = Schema.create(Type.STRING);
@@ -510,11 +510,11 @@ public class Pair<K,V>
   //   {"Double", "DOUBLE_SCHEMA"},
   //   {"Void", "NULL_SCHEMA"},
   // };
-  
+
   // private static String f(String pattern, String value) {
   //   return java.text.MessageFormat.format(pattern, value);
   // }
-  
+
   // public static void main(String... args) throws Exception {
   //   StringBuffer b = new StringBuffer();
   //   for (String[] k : TABLE) {

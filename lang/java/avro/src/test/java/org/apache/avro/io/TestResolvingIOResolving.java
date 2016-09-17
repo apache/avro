@@ -190,8 +190,8 @@ public class TestResolvingIOResolving {
           + "{\"name\":\"f3\", \"type\":\"double\"}]}", "BLD",
           new Object[] { true, 100L, 10.75d } },
         // Array of record with arrays.
-        { "{ \"type\": \"array\", \"items\":" +
-        		"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+        { "{ \"type\": \"array\", \"items\":" + 
+            "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
             + "{\"name\":\"f0\", \"type\":\"boolean\"},"
             + "{\"name\":\"f1\", \"type\": {\"type\":\"array\", \"items\": \"boolean\" }}"
             + "]}}", "[c2sB[c2sBsB]sB[c3sBsBsB]]",

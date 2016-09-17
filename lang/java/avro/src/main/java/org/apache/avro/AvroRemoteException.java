@@ -35,12 +35,12 @@ public class AvroRemoteException extends IOException {
     super(value != null ? value.toString() : null);
     this.value = value;
   }
-  
+
   public AvroRemoteException(Object value, Throwable cause) {
     super(value != null ? value.toString() : null, cause);
     this.value = value;
   }
-  
+
   public Object getValue() { return value; }
 }
 

@@ -48,7 +48,7 @@ public class TestDataFileConcat {
     this.codec = codec;
     this.codec2 = codec2;
     this.recompress = recompress;
-    LOG.info("Testing concatenating files, " + codec2 + " into " + codec + 
+    LOG.info("Testing concatenating files, " + codec2 + " into " + codec +
         " with recompress=" + recompress);
   }
 
@@ -134,7 +134,7 @@ public class TestDataFileConcat {
       } finally {
         writer2.close();
       }
-      DataFileWriter<Object> concatinto = 
+      DataFileWriter<Object> concatinto =
         new DataFileWriter<Object>(new GenericDatumWriter<Object>())
         .setSyncInterval(syncInterval);
       concatinto.appendTo(file1);
@@ -180,5 +180,5 @@ public class TestDataFileConcat {
 
     }
   }
-  
+
 }

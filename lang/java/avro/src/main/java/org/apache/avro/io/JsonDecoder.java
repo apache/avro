@@ -43,7 +43,7 @@ import org.codehaus.jackson.JsonStreamContext;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.ObjectCodec;
 
-/** A {@link Decoder} for Avro's JSON data encoding. 
+/** A {@link Decoder} for Avro's JSON data encoding.
  * </p>
  * Construct using {@link DecoderFactory}.
  * </p>
@@ -54,20 +54,20 @@ public class JsonDecoder extends ParsingDecoder
   private JsonParser in;
   private static JsonFactory jsonFactory = new JsonFactory();
   Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
-  ReorderBuffer currentReorderBuffer; 
-  
+  ReorderBuffer currentReorderBuffer;
+
   private static class ReorderBuffer {
     public Map<String, List<JsonElement>> savedFields = new HashMap<String, List<JsonElement>>();
-    public JsonParser origParser = null; 
+    public JsonParser origParser = null;
   }
-  
+
   static final String CHARSET = "ISO-8859-1";
 
   private JsonDecoder(Symbol root, InputStream in) throws IOException {
     super(root);
     configure(in);
   }
-  
+
   private JsonDecoder(Symbol root, String in) throws IOException {
     super(root);
     configure(in);
@@ -76,11 +76,11 @@ public class JsonDecoder extends ParsingDecoder
   JsonDecoder(Schema schema, InputStream in) throws IOException {
     this(getSymbol(schema), in);
   }
-  
+
   JsonDecoder(Schema schema, String in) throws IOException {
     this(getSymbol(schema), in);
   }
-  
+
   private static Symbol getSymbol(Schema schema) {
     if (null == schema) {
       throw new NullPointerException("Schema cannot be null!");
@@ -109,7 +109,7 @@ public class JsonDecoder extends ParsingDecoder
     this.in.nextToken();
     return this;
   }
-  
+
   /**
    * Reconfigures this JsonDecoder to use the String provided for input.
    * <p/>
@@ -152,7 +152,7 @@ public class JsonDecoder extends ParsingDecoder
   @Override
   public boolean readBoolean() throws IOException {
     advance(Symbol.BOOLEAN);
-    JsonToken t = in.getCurrentToken(); 
+    JsonToken t = in.getCurrentToken();
     if (t == JsonToken.VALUE_TRUE || t == JsonToken.VALUE_FALSE) {
       in.nextToken();
       return t == JsonToken.VALUE_TRUE;
@@ -172,7 +172,7 @@ public class JsonDecoder extends ParsingDecoder
       throw error("int");
     }
   }
-    
+
   @Override
   public long readLong() throws IOException {
     advance(Symbol.LONG);
@@ -208,7 +208,7 @@ public class JsonDecoder extends ParsingDecoder
       throw error("double");
     }
   }
-    
+
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
     return new Utf8(readString());
@@ -284,7 +284,7 @@ public class JsonDecoder extends ParsingDecoder
         top.size + " but received " + size + " bytes.");
     }
   }
-    
+
   @Override
   public void readFixed(byte[] bytes, int start, int len) throws IOException {
     checkFixed(len);
@@ -377,7 +377,7 @@ public class JsonDecoder extends ParsingDecoder
     if (in.getCurrentToken() == JsonToken.START_ARRAY) {
       in.skipChildren();
       in.nextToken();
-      advance(Symbol.ARRAY_END);    
+      advance(Symbol.ARRAY_END);
     } else {
       throw error("array-start");
     }
@@ -417,7 +417,7 @@ public class JsonDecoder extends ParsingDecoder
     if (in.getCurrentToken() == JsonToken.START_OBJECT) {
       in.skipChildren();
       in.nextToken();
-      advance(Symbol.MAP_END);    
+      advance(Symbol.MAP_END);
     } else {
       throw error("map-start");
     }
@@ -428,7 +428,7 @@ public class JsonDecoder extends ParsingDecoder
   public int readIndex() throws IOException {
     advance(Symbol.UNION);
     Symbol.Alternative a = (Symbol.Alternative) parser.popSymbol();
-    
+
     String label;
     if (in.getCurrentToken() == JsonToken.VALUE_NULL) {
       label = "null";
@@ -514,12 +514,12 @@ public class JsonDecoder extends ParsingDecoder
       this.token = t;
       this.value = value;
     }
-    
+
     public JsonElement(JsonToken t) {
       this(t, null);
     }
   }
-  
+
   private static List<JsonElement> getVaueAsTree(JsonParser in) throws IOException {
     int level = 0;
     List<JsonElement> result = new ArrayList<JsonElement>();
@@ -579,9 +579,10 @@ public class JsonDecoder extends ParsingDecoder
 
       @Override
       public JsonParser skipChildren() throws IOException {
-        int level = 0;
-        do {
-          switch(elements.get(pos++).token) {
+        JsonToken tkn = elements.get(pos).token;
+        int level = (tkn == JsonToken.START_ARRAY || tkn == JsonToken.END_ARRAY) ? 1 : 0;
+        while (level > 0) {
+          switch(elements.get(++pos).token) {
           case START_ARRAY:
           case START_OBJECT:
             level++;
@@ -591,7 +592,7 @@ public class JsonDecoder extends ParsingDecoder
             level--;
             break;
           }
-        } while (level > 0);
+        }
         return this;
       }
 
@@ -685,7 +686,7 @@ public class JsonDecoder extends ParsingDecoder
         throws IOException {
         throw new UnsupportedOperationException();
       }
-      
+
       @Override
       public JsonToken getCurrentToken() {
         return elements.get(pos).token;

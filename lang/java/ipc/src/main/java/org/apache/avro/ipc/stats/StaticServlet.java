@@ -29,7 +29,7 @@ import org.mortbay.resource.Resource;
  */
 public class StaticServlet extends DefaultServlet {
   public Resource getResource(String pathInContext) {
-    // Take only last slice of the URL as a filename, so we can adjust path. 
+    // Take only last slice of the URL as a filename, so we can adjust path.
     // This also prevents mischief like '../../foo.css'
     String[] parts = pathInContext.split("/");
     String filename =  parts[parts.length - 1];
@@ -43,4 +43,4 @@ public class StaticServlet extends DefaultServlet {
       return null;
     }
   }
-} 
+}

@@ -275,13 +275,13 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         if (accessor.isStringable()) {
           try {
             String asString = (String) read(null, f.schema(), in);
-            accessor.set(record, asString == null 
+            accessor.set(record, asString == null
               ? null
               : newInstanceFromString(accessor.getField().getType(), asString));
             return;
           } catch (Exception e) {
             throw new AvroRuntimeException("Failed to read Stringable", e);
-          } 
+          }
         }
         LogicalType logicalType = f.schema().getLogicalType();
         if (logicalType != null) {

@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -28,14 +31,14 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
 
 /** Abstract base class for RecordBuilder implementations.  Not thread-safe. */
-public abstract class RecordBuilderBase<T extends IndexedRecord> 
+public abstract class RecordBuilderBase<T extends IndexedRecord>
   implements RecordBuilder<T> {
   private static final Field[] EMPTY_FIELDS = new Field[0];
   private final Schema schema;
   private final Field[] fields;
   private final boolean[] fieldSetFlags;
   private final GenericData data;
-  
+
   protected final Schema schema() { return schema; }
   protected final Field[] fields() { return fields; }
   protected final boolean[] fieldSetFlags() { return fieldSetFlags; }
@@ -51,7 +54,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     fields = (Field[]) schema.getFields().toArray(EMPTY_FIELDS);
     fieldSetFlags = new boolean[fields.length];
   }
-  
+
   /**
    * RecordBuilderBase copy constructor.
    * Makes a deep copy of the values in the other builder.
@@ -65,17 +68,17 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     System.arraycopy(
         other.fieldSetFlags, 0, fieldSetFlags, 0, fieldSetFlags.length);
   }
-  
+
   /**
-   * Validates that a particular value for a given field is valid according to 
+   * Validates that a particular value for a given field is valid according to
    * the following algorithm:
-   * 1. If the value is not null, or the field type is null, or the field type 
+   * 1. If the value is not null, or the field type is null, or the field type
    * is a union which accepts nulls, returns.
    * 2. Else, if the field has a default value, returns.
-   * 3. Otherwise throws AvroRuntimeException. 
+   * 3. Otherwise throws AvroRuntimeException.
    * @param field the field to validate.
    * @param value the value to validate.
-   * @throws NullPointerException if value is null and the given field does 
+   * @throws NullPointerException if value is null and the given field does
    * not accept null values.
    */
   protected void validate(Field field, Object value) {
@@ -92,7 +95,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
   }
 
   /**
-   * Tests whether a value is valid for a specified field. 
+   * Tests whether a value is valid for a specified field.
    * @param f the field for which to test the value.
    * @param value the value to test.
    * @return true if the value is valid for the given field; false otherwise.
@@ -101,10 +104,10 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     if (value != null) {
       return true;
     }
-    
+
     Schema schema = f.schema();
     Type type = schema.getType();
-    
+
     // If the type is null, any value is valid
     if (type == Type.NULL) {
       return true;
@@ -118,21 +121,44 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
         }
       }
     }
-    
+
     // The value is null but the type does not allow nulls
     return false;
   }
-  
+
   /**
    * Gets the default value of the given field, if any.
    * @param field the field whose default value should be retrieved.
-   * @return the default value associated with the given field, 
+   * @return the default value associated with the given field,
    * or null if none is specified in the schema.
-   * @throws IOException 
+   * @throws IOException
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  protected Object defaultValue(Field field) throws IOException {    
+  protected Object defaultValue(Field field) throws IOException {
     return data.deepCopy(field.schema(), data.getDefaultValue(field));
+  }
+
+  /**
+   * Gets the default value of the given field, if any. Pass in a conversion
+   * to convert data to logical type class. Please make sure the schema does
+   * have a logical type, otherwise an exception would be thrown out.
+   * @param field the field whose default value should be retrieved.
+   * @param conversion the tool to convert data to logical type class
+   * @return the default value associated with the given field,
+   * or null if none is specified in the schema.
+   * @throws IOException
+   */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  protected Object defaultValue(Field field, Conversion<?> conversion) throws IOException {
+    Schema schema = field.schema();
+    LogicalType logicalType = schema.getLogicalType();
+    Object rawDefaultValue = data.deepCopy(schema, data.getDefaultValue(field));
+    if (conversion == null || logicalType == null) {
+      return rawDefaultValue;
+    } else {
+      return Conversions.convertToLogicalType(rawDefaultValue, schema,
+          logicalType, conversion);
+    }
   }
 
   @Override

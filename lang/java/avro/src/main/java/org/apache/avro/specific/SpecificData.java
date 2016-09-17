@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.nio.ByteBuffer;
@@ -32,6 +31,9 @@ import java.lang.reflect.ParameterizedType;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol;
 import org.apache.avro.AvroRuntimeException;
@@ -50,7 +52,7 @@ import org.apache.avro.io.BinaryDecoder;
 public class SpecificData extends GenericData {
 
   private static final SpecificData INSTANCE = new SpecificData();
-  
+
   private static final Class<?>[] NO_ARG = new Class[]{};
   private static final Class<?>[] SCHEMA_ARG = new Class[]{Schema.class};
   private static final Map<Class,Constructor> CTOR_CACHE =
@@ -101,7 +103,7 @@ public class SpecificData extends GenericData {
   public SpecificData(ClassLoader classLoader) {
     super(classLoader);
   }
-  
+
   @Override
   public DatumReader createDatumReader(Schema schema) {
     return new SpecificDatumReader(schema, schema, this);
@@ -207,17 +209,24 @@ public class SpecificData extends GenericData {
     return namespace + dot + name;
   }
 
-  private final WeakHashMap<java.lang.reflect.Type,Schema> schemaCache =
-    new WeakHashMap<java.lang.reflect.Type,Schema>();
+  private final LoadingCache<java.lang.reflect.Type,Schema> schemaCache =
+      CacheBuilder.newBuilder()
+          .weakKeys()
+          .build(new CacheLoader<java.lang.reflect.Type,Schema>() {
+            public Schema load(java.lang.reflect.Type type)
+                throws AvroRuntimeException {
+              return createSchema(type, new LinkedHashMap<String,Schema>());
+            }
+          });
 
   /** Find the schema for a Java type. */
   public Schema getSchema(java.lang.reflect.Type type) {
-    Schema schema = schemaCache.get(type);
-    if (schema == null) {
-      schema = createSchema(type, new LinkedHashMap<String,Schema>());
-      schemaCache.put(type, schema);
+    try {
+      return schemaCache.get(type);
+    } catch (Exception e) {
+      throw (e instanceof AvroRuntimeException) ?
+          (AvroRuntimeException)e.getCause() : new AvroRuntimeException(e);
     }
-    return schema;
   }
 
   /** Create the schema for a Java type. */
@@ -293,7 +302,7 @@ public class SpecificData extends GenericData {
     return super.getSchemaName(datum);
   }
 
-  /** True iff a class should be serialized with toString(). */ 
+  /** True iff a class should be serialized with toString(). */
   protected boolean isStringable(Class<?> c) {
     return stringableClasses.contains(c);
   }
@@ -324,7 +333,7 @@ public class SpecificData extends GenericData {
       return super.compare(o1, o2, s, eq);
     }
   }
-  
+
   /** Create an instance of a class.  If the class implements {@link
    * SchemaConstructable}, call a constructor with a {@link
    * org.apache.avro.Schema} parameter, otherwise use a no-arg constructor. */
@@ -345,14 +354,14 @@ public class SpecificData extends GenericData {
     }
     return result;
   }
-  
+
   @Override
   public Object createFixed(Object old, Schema schema) {
     Class c = getClass(schema);
     if (c == null) return super.createFixed(old, schema); // punt to generic
     return c.isInstance(old) ? old : newInstance(c, schema);
   }
-  
+
   @Override
   public Object newRecord(Object old, Schema schema) {
     Class c = getClass(schema);

@@ -89,7 +89,7 @@ public class TestIdl {
     if (! "run".equals(TEST_MODE)) return;
 
     int passed = 0, failed = 0;
-    
+
     for (GenTest t : tests) {
       try {
         t.run();
@@ -136,7 +136,7 @@ public class TestIdl {
       String newPath = currentWorkPath + "src" + File.separator + "test"
         + File.separator + "idl" + File.separator
         + "putOnClassPath" + File.separator;
-      URL[] newPathURL = new URL[]{new URL(newPath)}; 
+      URL[] newPathURL = new URL[]{new URL(newPath)};
       URLClassLoader ucl = new URLClassLoader(newPathURL, cl);
 
       Idl parser = new Idl(in, ucl);

@@ -77,7 +77,7 @@ public abstract class TetherTask<IN,MID,OUT> {
     private Buffer buffer = new Buffer();
     private BinaryEncoder encoder = new EncoderFactory()
         .configureBlockSize(512).binaryEncoder(buffer, null);
-    
+
     private Collector(Schema schema) {
       this.writer = new SpecificDatumWriter<T>(schema);
     }
@@ -89,7 +89,7 @@ public abstract class TetherTask<IN,MID,OUT> {
       encoder.flush();
       outputClient.output(buffer.data());
     }
-    
+
     /** Collect a pre-partitioned map output value. */
     public void collect(T record, int partition) throws IOException {
       buffer.reset();

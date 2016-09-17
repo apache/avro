@@ -168,7 +168,7 @@ public class TestAvroKeyValueRecordWriter {
     assertEquals("reflectionData", firstRecord.getKey().toString());
     assertEquals(record.attribute, firstRecord.getValue().attribute);
   }
- 
+
   @Test
   public void testSyncableWriteRecords() throws IOException {
     Job job = new Job();
@@ -202,14 +202,14 @@ public class TestAvroKeyValueRecordWriter {
 
     verify(context);
 
-	Configuration conf = new Configuration();
-	conf.set("fs.default.name", "file:///");
-	Path avroFile = new Path("target/temp.avro");
-	DataFileReader<GenericData.Record> avroFileReader = new DataFileReader<GenericData.Record>(new FsInput(avroFile,
-			conf), new SpecificDatumReader<GenericData.Record>());
-    
-	
-	avroFileReader.seek(pointTwo);
+    Configuration conf = new Configuration();
+    conf.set("fs.default.name", "file:///");
+    Path avroFile = new Path("target/temp.avro");
+    DataFileReader<GenericData.Record> avroFileReader = new DataFileReader<GenericData.Record>(new FsInput(avroFile,
+      conf), new SpecificDatumReader<GenericData.Record>());
+
+
+    avroFileReader.seek(pointTwo);
     // Verify that the second record was written;
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<CharSequence, TextStats> secondRecord
@@ -218,8 +218,8 @@ public class TestAvroKeyValueRecordWriter {
     assertEquals("banana", secondRecord.getKey().toString());
     assertEquals("banana", secondRecord.getValue().name.toString());
 
-    
-	avroFileReader.seek(pointOne);
+
+    avroFileReader.seek(pointOne);
     // Verify that the first record was written.
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<CharSequence, TextStats> firstRecord
@@ -231,5 +231,5 @@ public class TestAvroKeyValueRecordWriter {
 
     // That's all, folks.
     avroFileReader.close();
-  }  
+  }
 }

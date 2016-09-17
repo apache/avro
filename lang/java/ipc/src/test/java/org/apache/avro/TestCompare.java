@@ -184,7 +184,7 @@ public class TestCompare {
     s2.setKind(Kind.BAZ);
     check(schema, s1, s2, true, new SpecificDatumWriter<TestRecord>(schema),
           SpecificData.get());
-  }  
+  }
 
   private static <T> void check(String schemaJson, T o1, T o2)
     throws Exception {

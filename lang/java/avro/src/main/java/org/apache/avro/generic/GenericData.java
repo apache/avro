@@ -34,6 +34,7 @@ import java.util.Map;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -60,7 +61,7 @@ import com.google.common.collect.MapMaker;
 public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
-  
+
   /** Used to specify the Java type for a string schema. */
   public enum StringType { CharSequence, String, Utf8 };
 
@@ -322,12 +323,12 @@ public class GenericData {
     public void reverse() {
       int left = 0;
       int right = elements.length - 1;
-      
+
       while (left < right) {
         Object tmp = elements[left];
         elements[left] = elements[right];
         elements[right] = tmp;
-        
+
         left++;
         right--;
       }
@@ -526,7 +527,7 @@ public class GenericData {
         toString(element, buffer);
         if (i++ < last)
           buffer.append(", ");
-      }        
+      }
       buffer.append("]");
     } else if (isMap(datum)) {
       buffer.append("{");
@@ -561,7 +562,7 @@ public class GenericData {
       buffer.append(datum);
     }
   }
-  
+
   /* Adapted from http://code.google.com/p/json-simple */
   private void writeEscapedString(CharSequence string, StringBuilder builder) {
     for(int i = 0; i < string.length(); i++){
@@ -658,7 +659,7 @@ public class GenericData {
   public void setField(Object record, String name, int position, Object o) {
     ((IndexedRecord)record).put(position, o);
   }
-  
+
   /** Called by {@link GenericDatumReader#readRecord} to retrieve a record
    * field value from a reused instance.  The default implementation is for
    * {@link IndexedRecord}.*/
@@ -675,7 +676,7 @@ public class GenericData {
   protected void setField(Object r, String n, int p, Object o, Object state) {
     setField(r, n, p, o);
   }
-  
+
   /** Version of {@link #getField} that has state. */
   protected Object getField(Object record, String name, int pos, Object state) {
     return getField(record, name, pos);
@@ -798,7 +799,7 @@ public class GenericData {
   protected boolean isEnum(Object datum) {
     return datum instanceof GenericEnumSymbol;
   }
-  
+
   /** Called to obtain the schema of a enum.  By default calls
    * {GenericContainer#getSchema().  May be overridden for alternate enum
    * representations. */
@@ -810,7 +811,7 @@ public class GenericData {
   protected boolean isMap(Object datum) {
     return datum instanceof Map;
   }
-  
+
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isFixed(Object datum) {
     return datum instanceof GenericFixed;
@@ -867,7 +868,7 @@ public class GenericData {
   protected boolean isBoolean(Object datum) {
     return datum instanceof Boolean;
   }
-   
+
 
   /** Compute a hash code according to a schema, consistent with {@link
    * #compare(Object,Object,Schema)}. */
@@ -974,11 +975,11 @@ public class GenericData {
   /**
    * Gets the default value of the given field, if any.
    * @param field the field whose default value should be retrieved.
-   * @return the default value associated with the given field, 
+   * @return the default value associated with the given field,
    * or null if none is specified in the schema.
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public Object getDefaultValue(Field field) {    
+  public Object getDefaultValue(Field field) {
     JsonNode json = field.defaultValue();
     if (json == null)
       throw new AvroRuntimeException("Field " + field
@@ -989,10 +990,10 @@ public class GenericData {
                 && field.schema().getTypes().get(0).getType() == Type.NULL))) {
       return null;
     }
-    
+
     // Check the cache
     Object defaultValue = defaultValueCache.get(field);
-    
+
     // If not cached, get the default Java value by encoding the default JSON
     // value and then decoding it:
     if (defaultValue == null)
@@ -1018,15 +1019,31 @@ public class GenericData {
 
   /**
    * Makes a deep copy of a value given its schema.
+   * <P>Logical types are converted to raw types, copied, then converted back.
    * @param schema the schema of the value to deep copy.
    * @param value the value to deep copy.
    * @return a deep copy of the given value.
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public <T> T deepCopy(Schema schema, T value) {
+    if (value == null) return null;
+    LogicalType logicalType = schema.getLogicalType();
+    if (logicalType == null)           // not a logical type -- use raw copy
+      return (T)deepCopyRaw(schema, value);
+    Conversion conversion = getConversionByClass(value.getClass(), logicalType);
+    if (conversion == null)            // no conversion defined -- try raw copy
+      return (T)deepCopyRaw(schema, value);
+    // logical type with conversion: convert to raw, copy, then convert back to logical
+    Object raw = Conversions.convertToRawType(value, schema, logicalType, conversion);
+    Object copy = deepCopyRaw(schema, raw);       // copy raw
+    return (T)Conversions.convertToLogicalType(copy, schema, logicalType, conversion);
+  }
+
+  private Object deepCopyRaw(Schema schema, Object value) {
     if (value == null) {
       return null;
     }
+
     switch (schema.getType()) {
       case ARRAY:
         List<Object> arrayValue = (List) value;
@@ -1035,7 +1052,7 @@ public class GenericData {
         for (Object obj : arrayValue) {
           arrayCopy.add(deepCopy(schema.getElementType(), obj));
         }
-        return (T)arrayCopy;
+        return arrayCopy;
       case BOOLEAN:
         return value; // immutable
       case BYTES:
@@ -1045,13 +1062,13 @@ public class GenericData {
         byte[] bytesCopy = new byte[length];
         byteBufferValue.get(bytesCopy, 0, length);
         byteBufferValue.position(start);
-        return (T)ByteBuffer.wrap(bytesCopy, 0, length);
+        return ByteBuffer.wrap(bytesCopy, 0, length);
       case DOUBLE:
         return value; // immutable
       case ENUM:
-        return (T)createEnum(value.toString(), schema);
+        return createEnum(value.toString(), schema);
       case FIXED:
-        return (T)createFixed(null, ((GenericFixed) value).bytes(), schema);
+        return createFixed(null, ((GenericFixed) value).bytes(), schema);
       case FLOAT:
         return value; // immutable
       case INT:
@@ -1060,13 +1077,13 @@ public class GenericData {
         return value; // immutable
       case MAP:
         Map<CharSequence, Object> mapValue = (Map) value;
-        Map<CharSequence, Object> mapCopy = 
+        Map<CharSequence, Object> mapCopy =
           new HashMap<CharSequence, Object>(mapValue.size());
         for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
           mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
               deepCopy(schema.getValueType(), entry.getValue()));
         }
-        return (T)mapCopy;
+        return mapCopy;
       case NULL:
         return null;
       case RECORD:
@@ -1080,21 +1097,21 @@ public class GenericData {
                                      getField(value, name, pos, oldState));
           setField(newRecord, name, pos, newValue, newState);
         }
-        return (T)newRecord;
+        return newRecord;
       case STRING:
         // Strings are immutable
         if (value instanceof String) {
-          return (T)value;
+          return value;
         }
-        
-        // Some CharSequence subclasses are mutable, so we still need to make 
+
+        // Some CharSequence subclasses are mutable, so we still need to make
         // a copy
         else if (value instanceof Utf8) {
-          // Utf8 copy constructor is more efficient than converting 
+          // Utf8 copy constructor is more efficient than converting
           // to string and then back to Utf8
-          return (T)new Utf8((Utf8)value);
+          return new Utf8((Utf8)value);
         }
-        return (T)new Utf8(value.toString());
+        return new Utf8(value.toString());
       case UNION:
         return deepCopy(
             schema.getTypes().get(resolveUnion(schema, value)), value);
@@ -1104,7 +1121,7 @@ public class GenericData {
             value + "\"");
     }
   }
-  
+
   /** Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   public Object createFixed(Object old, Schema schema) {
@@ -1113,7 +1130,7 @@ public class GenericData {
       return old;
     return new GenericData.Fixed(schema);
   }
-  
+
   /** Called to create an fixed value. May be overridden for alternate fixed
    * representations.  By default, returns {@link GenericFixed}. */
   public Object createFixed(Object old, byte[] bytes, Schema schema) {
@@ -1121,7 +1138,7 @@ public class GenericData {
     System.arraycopy(bytes, 0, fixed.bytes(), 0, schema.getFixedSize());
     return fixed;
   }
-  
+
   /** Called to create an enum value. May be overridden for alternate enum
    * representations.  By default, returns a GenericEnumSymbol. */
   public Object createEnum(String symbol, Schema schema) {
@@ -1144,5 +1161,5 @@ public class GenericData {
     }
     return new GenericData.Record(schema);
   }
-  
+
 }

@@ -38,7 +38,7 @@ public class TestInputBytes {
     random.nextBytes(data);
 
     Input in = new InputBytes(data);
-      
+
     for (int i = 0; i < COUNT; i++) {
       int p = random.nextInt(length);
       int l = Math.min(random.nextInt(SIZE/10), length-p);

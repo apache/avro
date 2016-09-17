@@ -55,7 +55,7 @@ public class ThriftData extends GenericData {
   private static final ThriftData INSTANCE = new ThriftData();
 
   protected ThriftData() {}
-  
+
   /** Return the singleton instance. */
   public static ThriftData get() { return INSTANCE; }
 

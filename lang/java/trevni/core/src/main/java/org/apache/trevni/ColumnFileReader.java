@@ -131,7 +131,7 @@ public class ColumnFileReader implements Closeable {
     for (int i = 0; i < columnCount; i++)
       columns[i].start = in.readFixed64();
   }
- 
+
   /** Return an iterator over values in the named column. */
   public <T extends Comparable> ColumnValues<T> getValues(String columnName)
     throws IOException {

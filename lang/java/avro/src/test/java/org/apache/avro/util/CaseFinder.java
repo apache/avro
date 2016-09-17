@@ -187,7 +187,7 @@ public class CaseFinder {
     // Determine if this is a single-line heredoc, and process if it is
     String singleLineText = m.group(2);
     if (singleLineText.length() != 0) {
-      if (! singleLineText.startsWith(" ")) 
+      if (! singleLineText.startsWith(" "))
         throw new IOException("Single-line heredoc missing initial space (\""+docStart+"\")");
       return singleLineText.substring(1);
     }

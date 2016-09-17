@@ -106,10 +106,10 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
   public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter,
       AvroDatumConverter<V, ?> valueConverter, GenericData dataModel,
       CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
-    this(keyConverter, valueConverter, dataModel, compressionCodec, outputStream, 
+    this(keyConverter, valueConverter, dataModel, compressionCodec, outputStream,
         DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
-  
+
   /**
    * Gets the writer schema for the key/value pair generic record.
    *
@@ -137,5 +137,5 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
   @Override
   public long sync() throws IOException {
     return mAvroFileWriter.sync();
-  }  
+  }
 }

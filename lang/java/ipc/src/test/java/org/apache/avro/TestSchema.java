@@ -172,16 +172,16 @@ public class TestSchema {
     check("{\"type\":\"map\", \"values\":\"long\"}", "{\"a\":1}", map);
     checkParseError("{\"type\":\"map\"}");        // values required
   }
-  
+
   @Test
   public void testUnionMap() throws Exception {
     String unionMapSchema = "{\"name\":\"foo\", \"type\":\"record\"," +
-    		" \"fields\":[ {\"name\":\"mymap\", \"type\":" +
-    		"   [{\"type\":\"map\", \"values\":" +
-    		"      [\"int\",\"long\",\"float\",\"string\"]}," +
-    		"    \"null\"]" +
-    		"   }]" +
-    		" }";
+        " \"fields\":[ {\"name\":\"mymap\", \"type\":" +
+        "   [{\"type\":\"map\", \"values\":" +
+        "      [\"int\",\"long\",\"float\",\"string\"]}," +
+        "    \"null\"]" +
+        "   }]" +
+        " }";
     check(unionMapSchema, true);
   }
 
@@ -305,10 +305,10 @@ public class TestSchema {
       // reasonable amount of time
       for (Schema s1 : recs) {
         Schema s2 = Schema.parse(s1.toString());
-        assertEquals(s1.hashCode(), s2.hashCode()); 
+        assertEquals(s1.hashCode(), s2.hashCode());
         assertEquals(s1, s2);
       }
-    }                 
+    }
   }
 
   @Test
@@ -370,15 +370,15 @@ public class TestSchema {
     String namedTypes = ", {\"type\":\"record\",\"name\":\"Foo\",\"fields\":[]}," +
     " {\"type\":\"fixed\",\"name\":\"Bar\",\"size\": 1}," +
     " {\"type\":\"enum\",\"name\":\"Baz\",\"symbols\": [\"X\"]}";
-    
+
     String namedTypes2 = ", {\"type\":\"record\",\"name\":\"Foo2\",\"fields\":[]}," +
     " {\"type\":\"fixed\",\"name\":\"Bar2\",\"size\": 1}," +
     " {\"type\":\"enum\",\"name\":\"Baz2\",\"symbols\": [\"X\"]}";
-    
+
     check(partial + namedTypes + "]", false);
-    check(partial + namedTypes + namedTypes2 + "]", false); 
+    check(partial + namedTypes + namedTypes2 + "]", false);
     checkParseError(partial + namedTypes + namedTypes + "]");
-    
+
     // fail with two branches of the same unnamed type
     checkUnionError(new Schema[] {Schema.create(Type.INT), Schema.create(Type.INT)});
     checkUnionError(new Schema[] {Schema.create(Type.LONG), Schema.create(Type.LONG)});
@@ -387,14 +387,14 @@ public class TestSchema {
     checkUnionError(new Schema[] {Schema.create(Type.BOOLEAN), Schema.create(Type.BOOLEAN)});
     checkUnionError(new Schema[] {Schema.create(Type.BYTES), Schema.create(Type.BYTES)});
     checkUnionError(new Schema[] {Schema.create(Type.STRING), Schema.create(Type.STRING)});
-    checkUnionError(new Schema[] {Schema.createArray(Schema.create(Type.INT)), 
+    checkUnionError(new Schema[] {Schema.createArray(Schema.create(Type.INT)),
         Schema.createArray(Schema.create(Type.INT))});
-    checkUnionError(new Schema[] {Schema.createMap(Schema.create(Type.INT)), 
+    checkUnionError(new Schema[] {Schema.createMap(Schema.create(Type.INT)),
         Schema.createMap(Schema.create(Type.INT))});
-    
+
     List<String> symbols = new ArrayList<String>();
     symbols.add("NOTHING");
-    
+
     // succeed with two branches of the same named type, if different names
     Schema u;
     u = buildUnion(new Schema[] {
@@ -408,12 +408,12 @@ public class TestSchema {
         Schema.parse
         ("{\"type\":\"enum\",\"name\":\"y.A\",\"symbols\":[\"Y\"]}")});
     check(u.toString(), false);
-    
+
     u = buildUnion(new Schema[] {
         Schema.parse("{\"type\":\"fixed\",\"name\":\"x.A\",\"size\":4}"),
         Schema.parse("{\"type\":\"fixed\",\"name\":\"y.A\",\"size\":8}")});
     check(u.toString(), false);
-    
+
     // fail with two branches of the same named type, but same names
     checkUnionError(new Schema[] {Schema.createRecord("Foo", null, "org.test", false),
         Schema.createRecord("Foo", null, "org.test", false)});
@@ -421,19 +421,19 @@ public class TestSchema {
         Schema.createEnum("Bar", null, "org.test", symbols)});
     checkUnionError(new Schema[] {Schema.createFixed("Baz", null, "org.test", 2),
         Schema.createFixed("Baz", null, "org.test", 1)});
-    
+
     Schema union = buildUnion(new Schema[] {Schema.create(Type.INT)});
     // fail if creating a union of a union
     checkUnionError(new Schema[] {union});
   }
-  
+
   @Test
   public void testComplexProp() throws Exception {
     String json = "{\"type\":\"null\", \"foo\": [0]}";
     Schema s = Schema.parse(json);
     assertEquals(null, s.getProp("foo"));
   }
-  
+
   @Test public void testPropOrdering() throws Exception {
     String json = "{\"type\":\"int\",\"z\":\"c\",\"yy\":\"b\",\"x\":\"a\"}";
     Schema s = Schema.parse(json);
@@ -600,7 +600,7 @@ public class TestSchema {
     // check field doc is parsed correctly
     Schema schema = Schema.parse(schemaStr);
     assertEquals("test", schema.getField("f").doc());
-    
+
     // check print/read cycle preserves field doc
     schema = Schema.parse(schema.toString());
     assertEquals("test", schema.getField("f").doc());
@@ -669,7 +669,7 @@ public class TestSchema {
         Schema induced = GenericData.get().induce(datum);
         assertEquals("Induced schema does not match.", schema, induced);
       }
-        
+
       assertTrue("Datum does not validate against schema "+datum,
                  GenericData.get().validate(schema, datum));
 
@@ -709,14 +709,14 @@ public class TestSchema {
     assertEquals(s1, s2);
     assertFalse(s0.equals(s2));
   }
-  
+
   public static void checkBinary(Schema schema, Object datum,
                                  DatumWriter<Object> writer,
                                  DatumReader<Object> reader)
     throws IOException {
     checkBinary(schema, datum, writer, reader, null);
   }
-  
+
   public static Object checkBinary(Schema schema, Object datum,
                                  DatumWriter<Object> writer,
                                  DatumReader<Object> reader,
@@ -730,11 +730,11 @@ public class TestSchema {
     byte[] data = out.toByteArray();
 
     reader.setSchema(schema);
-        
+
     Object decoded =
       reader.read(reuse, DecoderFactory.get().binaryDecoder(
           data, null));
-      
+
     assertEquals("Decoded data does not match.", datum, decoded);
     return decoded;
   }
@@ -814,7 +814,7 @@ public class TestSchema {
     reader.setSchema(schema);
     Object decoded = reader.read(null, DecoderFactory.get()
         .jsonDecoder(schema, new ByteArrayInputStream(data)));
-      
+
     assertEquals("Decoded data does not match.", datum, decoded);
   }
 
@@ -909,12 +909,12 @@ public class TestSchema {
   public void testRecordWithPrimitiveName() {
     Schema.parse("{\"type\":\"record\", \"name\":\"string\", \"fields\": []}");
   }
-  
+
   @Test(expected=AvroTypeException.class)
   public void testEnumWithPrimitiveName() {
     Schema.parse("{\"type\":\"enum\", \"name\":\"null\", \"symbols\": [\"A\"]}");
   }
-  
+
   private static Schema enumSchema() {
     return Schema.parse("{ \"type\": \"enum\", \"name\": \"e\", "
         + "\"symbols\": [\"a\", \"b\"]}");
@@ -926,7 +926,7 @@ public class TestSchema {
     s.addProp("p1", "1");
     s.addProp("p1", "2");
   }
-  
+
   @Test(expected=AvroRuntimeException.class)
   public void testImmutability2() {
     Schema s = enumSchema();

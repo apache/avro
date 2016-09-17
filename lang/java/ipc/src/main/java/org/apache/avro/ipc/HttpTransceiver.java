@@ -31,13 +31,13 @@ import java.net.HttpURLConnection;
 
 /** An HTTP-based {@link Transceiver} implementation. */
 public class HttpTransceiver extends Transceiver {
-  static final String CONTENT_TYPE = "avro/binary"; 
+  static final String CONTENT_TYPE = "avro/binary";
 
   private URL url;
   private Proxy proxy;
   private HttpURLConnection connection;
   private int timeout;
-  
+
   public HttpTransceiver(URL url) { this.url = url; }
 
   public HttpTransceiver(URL url, Proxy proxy) {
@@ -49,7 +49,7 @@ public class HttpTransceiver extends Transceiver {
   public void setTimeout(int timeout) { this.timeout = timeout; }
 
   public String getRemoteName() { return this.url.toString(); }
-    
+
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
     InputStream in = connection.getInputStream();
     try {

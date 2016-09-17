@@ -69,11 +69,11 @@ public class BZip2Codec extends Codec {
       byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
       int readCount = -1;
-      
+
       while ( (readCount = inputStream.read(buffer, compressedData.position(), buffer.length))> 0) {
         baos.write(buffer, 0, readCount);
       }
-      
+
       ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
       return result;
     } finally {
