@@ -261,7 +261,6 @@
           <version>${javadoc-plugin.version}</version>
           <configuration>
             <links>
-              <link>http://jackson.codehaus.org/1.9.4/javadoc/</link>
               <link>http://java.sun.com/products/servlet/2.3/javadoc/</link>
               <link>http://hadoop.apache.org/common/docs/current/api/</link>
             </links>
