@@ -742,11 +742,11 @@ struct TestNested
     // Tests for encode + decode
     void runEncodeDecode(Encoder &e, Decoder &d, void (*encode_fn)(Encoder &))
     {
-	std::auto_ptr<OutputStream> out = memoryOutputStream();
-	e.init(*out);
-	encode_fn(e);
-	std::auto_ptr<InputStream> in = memoryInputStream(*out);
-	d.init(*in);
+        std::unique_ptr<OutputStream> out = std::move(memoryOutputStream());
+        e.init(*out);
+        encode_fn(e);
+        std::unique_ptr<InputStream> in = std::move(memoryInputStream(*out));
+        d.init(*in);
         runDecoder(d);
     }
 

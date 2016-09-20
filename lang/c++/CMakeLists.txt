@@ -40,6 +40,8 @@ set (AVRO_VERSION_MINOR "0")
 project (Avro-cpp)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
 
+add_definitions(-std=c++11 -fPIC)
+
 if (WIN32 AND NOT CYGWIN AND NOT MSYS)
 add_definitions (/EHa)
 add_definitions (

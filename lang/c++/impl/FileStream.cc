@@ -34,7 +34,7 @@
 #endif
 #endif
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::istream;
 using std::ostream;
 
@@ -138,7 +138,7 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
 class BufferCopyInInputStream : public SeekableInputStream {
     const size_t bufferSize_;
     uint8_t* const buffer_;
-    auto_ptr<BufferCopyIn> in_;
+    unique_ptr<BufferCopyIn> in_;
     size_t byteCount_;
     uint8_t* next_;
     size_t available_;
@@ -197,10 +197,10 @@ class BufferCopyInInputStream : public SeekableInputStream {
     }
 
 public:
-    BufferCopyInInputStream(auto_ptr<BufferCopyIn>& in, size_t bufferSize) :
+    BufferCopyInInputStream(unique_ptr<BufferCopyIn> in, size_t bufferSize) :
         bufferSize_(bufferSize),
         buffer_(new uint8_t[bufferSize]),
-        in_(in),
+        in_(std::move(in)),
         byteCount_(0),
         next_(buffer_),
         available_(0) { }
@@ -283,7 +283,7 @@ struct OStreamBufferCopyOut : public BufferCopyOut {
 class BufferCopyOutputStream : public OutputStream {
     size_t bufferSize_;
     uint8_t* const buffer_;
-    auto_ptr<BufferCopyOut> out_;
+    unique_ptr<BufferCopyOut> out_;
     uint8_t* next_;
     size_t available_;
     size_t byteCount_;
@@ -318,10 +318,10 @@ class BufferCopyOutputStream : public OutputStream {
     }
 
 public:
-    BufferCopyOutputStream(auto_ptr<BufferCopyOut> out, size_t bufferSize) :
+    BufferCopyOutputStream(unique_ptr<BufferCopyOut> out, size_t bufferSize) :
         bufferSize_(bufferSize),
         buffer_(new uint8_t[bufferSize]),
-        out_(out),
+        out_(std::move(out)),
         next_(buffer_),
         available_(bufferSize_), byteCount_(0) { }
 
@@ -330,41 +330,40 @@ public:
     }
 };
 
-auto_ptr<InputStream> fileInputStream(const char* filename,
+unique_ptr<InputStream> fileInputStream(const char* filename,
     size_t bufferSize)
 {
-    auto_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
-    return auto_ptr<InputStream>(
-        new BufferCopyInInputStream(in, bufferSize));
+    unique_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
+    return unique_ptr<InputStream>( new BufferCopyInInputStream(std::move(in), bufferSize));
 }
 
-auto_ptr<SeekableInputStream> fileSeekableInputStream(const char* filename,
+unique_ptr<SeekableInputStream> fileSeekableInputStream(const char* filename,
     size_t bufferSize)
 {
-    auto_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
-    return auto_ptr<SeekableInputStream>(
-        new BufferCopyInInputStream(in, bufferSize));
+    unique_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
+    return unique_ptr<SeekableInputStream>( new BufferCopyInInputStream(std::move(in),
+                                                                        bufferSize));
 }
 
-auto_ptr<InputStream> istreamInputStream(istream& is,
+unique_ptr<InputStream> istreamInputStream(istream& is,
     size_t bufferSize)
 {
-    auto_ptr<BufferCopyIn> in(new IStreamBufferCopyIn(is));
-    return auto_ptr<InputStream>( new BufferCopyInInputStream(in, bufferSize));
+    unique_ptr<BufferCopyIn> in(new IStreamBufferCopyIn(is));
+    return unique_ptr<InputStream>( new BufferCopyInInputStream(std::move(in), bufferSize));
 }
 
-auto_ptr<OutputStream> fileOutputStream(const char* filename,
+unique_ptr<OutputStream> fileOutputStream(const char* filename,
     size_t bufferSize)
 {
-    auto_ptr<BufferCopyOut> out(new FileBufferCopyOut(filename));
-    return auto_ptr<OutputStream>(new BufferCopyOutputStream(out, bufferSize));
+    unique_ptr<BufferCopyOut> out(new FileBufferCopyOut(filename));
+    return unique_ptr<OutputStream>(new BufferCopyOutputStream(std::move(out), bufferSize));
 }
 
-auto_ptr<OutputStream> ostreamOutputStream(ostream& os,
+unique_ptr<OutputStream> ostreamOutputStream(ostream& os,
     size_t bufferSize)
 {
-    auto_ptr<BufferCopyOut> out(new OStreamBufferCopyOut(os));
-    return auto_ptr<OutputStream>(new BufferCopyOutputStream(out, bufferSize));
+    unique_ptr<BufferCopyOut> out(new OStreamBufferCopyOut(os));
+    return unique_ptr<OutputStream>(new BufferCopyOutputStream(std::move(out), bufferSize));
 }
 
 

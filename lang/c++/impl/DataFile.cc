@@ -33,7 +33,7 @@
 #endif
 
 namespace avro {
-using std::auto_ptr;
+using std::unique_ptr;
 using std::ostringstream;
 using std::istringstream;
 using std::vector;
@@ -71,22 +71,22 @@ DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& 
     syncInterval_(syncInterval),
     codec_(codec),
     stream_(fileOutputStream(filename)),
-    buffer_(memoryOutputStream()),
+    buffer_(std::move(memoryOutputStream())),
     sync_(makeSync()),
     objectCount_(0)
 {
     init(schema, syncInterval, codec);
 }
 
-DataFileWriterBase::DataFileWriterBase(std::auto_ptr<OutputStream> outputStream,
+DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
     const ValidSchema& schema, size_t syncInterval, Codec codec) :
     filename_(NULL),
     schema_(schema),
     encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
     codec_(codec),
-    stream_(outputStream),
-    buffer_(memoryOutputStream()),
+    stream_(std::move(outputStream)),
+    buffer_(std::move(memoryOutputStream())),
     sync_(makeSync()),
     objectCount_(0)
 {
@@ -142,7 +142,7 @@ void DataFileWriterBase::sync()
         int64_t byteCount = buffer_->byteCount();
         avro::encode(*encoderPtr_, byteCount);
         encoderPtr_->flush();
-        std::auto_ptr<InputStream> in = memoryInputStream(*buffer_);
+        std::unique_ptr<InputStream> in = memoryInputStream(*buffer_);
         copy(*in, *stream_);
     } else if (codec_ == DEFLATE_CODEC) {
         std::vector<char> buf;
@@ -153,12 +153,12 @@ void DataFileWriterBase::sync()
             const uint8_t* data;
             size_t len;
 
-            std::auto_ptr<InputStream> input = memoryInputStream(*buffer_);
+            std::unique_ptr<InputStream> input = memoryInputStream(*buffer_);
             while (input->next(&data, &len)) {
                 boost::iostreams::write(os, reinterpret_cast<const char*>(data), len);
             }
         } // make sure all is flushed
-        std::auto_ptr<InputStream> in = memoryInputStream(
+        std::unique_ptr<InputStream> in = memoryInputStream(
            reinterpret_cast<const uint8_t*>(&buf[0]), buf.size());
         int64_t byteCount = buf.size();
         avro::encode(*encoderPtr_, byteCount);
@@ -175,7 +175,7 @@ void DataFileWriterBase::sync()
             const uint8_t* data;
             size_t len;
 
-            std::auto_ptr<InputStream> input = memoryInputStream(*buffer_);
+            std::unique_ptr<InputStream> input = std::move(memoryInputStream(*buffer_));
             while (input->next(&data, &len)) {
                 boost::iostreams::write(os, reinterpret_cast<const char*>(data),
                         len);
@@ -200,8 +200,8 @@ void DataFileWriterBase::sync()
         temp.push_back((checksum >> 16) & 0xFF);
         temp.push_back((checksum >> 8) & 0xFF);
         temp.push_back(checksum & 0xFF);
-        std::auto_ptr<InputStream> in = memoryInputStream(
-                reinterpret_cast<const uint8_t*>(&temp[0]), temp.size());
+        std::unique_ptr<InputStream> in = std::move(memoryInputStream(
+                reinterpret_cast<const uint8_t*>(&temp[0]), temp.size()));
         int64_t byteCount = temp.size();
         avro::encode(*encoderPtr_, byteCount);
         encoderPtr_->flush();
@@ -214,7 +214,7 @@ void DataFileWriterBase::sync()
     encoderPtr_->flush();
 
 
-    buffer_ = memoryOutputStream();
+    buffer_ = std::move(memoryOutputStream());
     encoderPtr_->init(*buffer_);
     objectCount_ = 0;
 }
@@ -270,8 +270,8 @@ DataFileReaderBase::DataFileReaderBase(const char* filename) :
     readHeader();
 }
 
-DataFileReaderBase::DataFileReaderBase(std::auto_ptr<InputStream> inputStream) :
-    filename_(NULL), stream_(inputStream),
+DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) :
+    filename_(NULL), stream_(std::move(inputStream)),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
@@ -372,9 +372,9 @@ public:
         in_(in), limit_(limit) { }
 };
 
-auto_ptr<InputStream> boundedInputStream(InputStream& in, size_t limit)
+unique_ptr<InputStream> boundedInputStream(InputStream& in, size_t limit)
 {
-    return auto_ptr<InputStream>(new BoundedInputStream(in, limit));
+    return unique_ptr<InputStream>(new BoundedInputStream(in, limit));
 }
 
 bool DataFileReaderBase::readDataBlock()
@@ -393,27 +393,11 @@ bool DataFileReaderBase::readDataBlock()
     avro::decode(*decoder_, byteCount);
     decoder_->init(*stream_);
     blockEnd_ = stream_->byteCount() + byteCount;
-    
-    auto_ptr<InputStream> st = boundedInputStream(*stream_, static_cast<size_t>(byteCount));
+
+    unique_ptr<InputStream> st = boundedInputStream(*stream_, static_cast<size_t>(byteCount));
     if (codec_ == NULL_CODEC) {
         dataDecoder_->init(*st);
-        dataStream_ = st;
-    } else if (codec_ == DEFLATE_CODEC) {
-        compressed_.clear();
-        const uint8_t* data;
-        size_t len;
-        while (st->next(&data, &len)) {
-            compressed_.insert(compressed_.end(), data, data + len);
-        }
-        // boost::iostreams::write(os, reinterpret_cast<const char*>(data), len);
-        os_.reset(new boost::iostreams::filtering_istream());
-        os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
-        os_->push(boost::iostreams::basic_array_source<char>(
-            &compressed_[0], compressed_.size()));
-
-        std::auto_ptr<InputStream> in = istreamInputStream(*os_);
-        dataDecoder_->init(*in);
-        dataStream_ = in;
+        dataStream_ = std::move(st);
 #ifdef SNAPPY_CODEC_AVAILABLE
     } else if (codec_ == SNAPPY_CODEC) {
         boost::crc_32_type crc;
@@ -446,13 +430,27 @@ bool DataFileReaderBase::readDataBlock()
         os_->push(
                 boost::iostreams::basic_array_source<char>(uncompressed.c_str(),
                         uncompressed.size()));
-        std::auto_ptr<InputStream> in = istreamInputStream(*os_);
+        std::unique_ptr<InputStream> in = istreamInputStream(*os_);
 
         dataDecoder_->init(*in);
-        dataStream_ = in;
+        dataStream_ = std::move(in);
 #endif
     } else {
-        throw Exception("Bad codec");
+        compressed_.clear();
+        const uint8_t* data;
+        size_t len;
+        while (st->next(&data, &len)) {
+            compressed_.insert(compressed_.end(), data, data + len);
+        }
+        // boost::iostreams::write(os, reinterpret_cast<const char*>(data), len);
+        os_.reset(new boost::iostreams::filtering_istream());
+        os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
+        os_->push(boost::iostreams::basic_array_source<char>(
+                                                             &compressed_[0], compressed_.size()));
+        
+        std::unique_ptr<InputStream> in = istreamInputStream(*os_);
+        dataDecoder_->init(*in);
+        dataStream_ = std::move(in);
     }
     return true;
 }
