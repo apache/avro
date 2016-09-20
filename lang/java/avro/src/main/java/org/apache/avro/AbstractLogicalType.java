@@ -9,6 +9,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import org.apache.avro.logicalTypes.BigIntegerFactory;
 import org.apache.avro.logicalTypes.DecimalFactory;
 import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonNode;
@@ -78,7 +79,9 @@ public abstract class AbstractLogicalType extends JsonProperties implements Logi
     }
     DecimalFactory decimalFactory = new DecimalFactory();
     LOGICAL_TYPE_TO_CLASS.put(decimalFactory.getLogicalTypeName(), decimalFactory);
-  }
+    BigIntegerFactory biFactory = new BigIntegerFactory();
+    LOGICAL_TYPE_TO_CLASS.put(biFactory.getLogicalTypeName(), biFactory);
+    }
 
   private static final ObjectMapper OM = new ObjectMapper();
 
