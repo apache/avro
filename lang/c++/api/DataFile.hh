@@ -60,8 +60,8 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
     const size_t syncInterval_;
     Codec codec_;
 
-    std::auto_ptr<OutputStream> stream_;
-    std::auto_ptr<OutputStream> buffer_;
+    std::unique_ptr<OutputStream> stream_;
+    std::unique_ptr<OutputStream> buffer_;
     const DataFileSync sync_;
     int64_t objectCount_;
 
@@ -69,7 +69,7 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
 
     Metadata metadata_;
 
-    static std::auto_ptr<OutputStream> makeStream(const char* filename);
+    static std::unique_ptr<OutputStream> makeStream(const char* filename);
     static DataFileSync makeSync();
 
     void writeHeader();
@@ -127,7 +127,7 @@ public:
  */
 template <typename T>
 class DataFileWriter : boost::noncopyable {
-    std::auto_ptr<DataFileWriterBase> base_;
+    std::unique_ptr<DataFileWriterBase> base_;
 public:
     /**
      * Constructs a new data file.
@@ -167,7 +167,7 @@ public:
  */
 class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
-    const std::auto_ptr<InputStream> stream_;
+    const std::unique_ptr<InputStream> stream_;
     const DecoderPtr decoder_;
     int64_t objectCount_;
     bool eof_;
@@ -176,7 +176,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     ValidSchema readerSchema_;
     ValidSchema dataSchema_;
     DecoderPtr dataDecoder_;
-    std::auto_ptr<InputStream> dataStream_;
+    std::unique_ptr<InputStream> dataStream_;
     typedef std::map<std::string, std::vector<uint8_t> > Metadata;
 
     Metadata metadata_;
@@ -249,7 +249,7 @@ public:
  */
 template <typename T>
 class DataFileReader : boost::noncopyable {
-    std::auto_ptr<DataFileReaderBase> base_;
+    std::unique_ptr<DataFileReaderBase> base_;
 public:
     /**
      * Constructs the reader for the given file and the reader is
@@ -279,7 +279,7 @@ public:
      * The schema present in the data file will be used for reading
      * from this reader.
      */
-    DataFileReader(std::auto_ptr<DataFileReaderBase> base) : base_(base) {
+    DataFileReader(std::unique_ptr<DataFileReaderBase> base) : base_(std::move(base)) {
         base_->init();
     }
 
@@ -292,8 +292,8 @@ public:
      * The argument readerSchema will be used for reading
      * from this reader.
      */
-    DataFileReader(std::auto_ptr<DataFileReaderBase> base,
-        const ValidSchema& readerSchema) : base_(base) {
+    DataFileReader(std::unique_ptr<DataFileReaderBase> base,
+        const ValidSchema& readerSchema) : base_(std::move(base)) {
         base_->init(readerSchema);
     }
 
