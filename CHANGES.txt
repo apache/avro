@@ -67,6 +67,9 @@ Trunk (not yet released)
     AVRO-1849: C++: printJson fails on record with no fields.
     (Simon Woodford vai tomwhite)
 
+    AVRO-1853: C++: Compiler::toBin crashes on empty string.
+    (Zoltan Ivanfi via tomwhite)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES

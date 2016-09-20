@@ -162,9 +162,10 @@ static void assertType(const Entity& e, EntityType et)
 
 static vector<uint8_t> toBin(const std::string& s)
 {
-    vector<uint8_t> result;
-    result.resize(s.size());
-    std::copy(s.c_str(), s.c_str() + s.size(), &result[0]);
+    vector<uint8_t> result(s.size());
+    if (s.size() > 0) {
+        std::copy(s.c_str(), s.c_str() + s.size(), &result[0]);
+    }
     return result;
 }
 
