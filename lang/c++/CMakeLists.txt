@@ -49,6 +49,11 @@ endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-Wall")
+    set(CMAKE_CXX_FLAGS_DEBUG "-fstack-protector-all -D_GLIBCXX_DEBUG")
+    # Unset _GLIBCXX_DEBUG for avrogencpp.cc because using Boost Program Options
+    # leads to linking errors when compiling with _GLIBCXX_DEBUG as described on
+    # http://stackoverflow.com/questions/19729036/
+    set_source_files_properties(impl/avrogencpp.cc PROPERTIES COMPILE_FLAGS "-U_GLIBCXX_DEBUG")
 endif ()
 
 
@@ -142,6 +147,7 @@ unittest (SpecificTests)
 unittest (DataFileTests)
 unittest (JsonTests)
 unittest (AvrogencppTests)
+unittest (CompilerTests)
 
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh
