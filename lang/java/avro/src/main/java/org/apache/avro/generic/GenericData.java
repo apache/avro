@@ -501,19 +501,23 @@ public class GenericData {
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
   public String toString(Object datum) {
     StringBuilder buffer = new StringBuilder();
-    toString(datum, buffer);
+    toString(datum, buffer, 0);
     return buffer.toString();
   }
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
-  protected void toString(Object datum, StringBuilder buffer) {
+  protected void toString(Object datum, StringBuilder buffer, int recursionDepth) {
+    if (recursionDepth > 50) {
+      buffer.append(" \">>> RECURSION TOO DEEP, ABORTING <<<\" ");
+      return;
+    }
     if (isRecord(datum)) {
       buffer.append("{");
       int count = 0;
       Schema schema = getRecordSchema(datum);
       for (Field f : schema.getFields()) {
-        toString(f.name(), buffer);
+        toString(f.name(), buffer, recursionDepth + 1);
         buffer.append(": ");
-        toString(getField(datum, f.name(), f.pos()), buffer);
+        toString(getField(datum, f.name(), f.pos()), buffer, recursionDepth + 1);
         if (++count < schema.getFields().size())
           buffer.append(", ");
       }
@@ -524,7 +528,7 @@ public class GenericData {
       long last = array.size()-1;
       int i = 0;
       for (Object element : array) {
-        toString(element, buffer);
+        toString(element, buffer, recursionDepth + 1);
         if (i++ < last)
           buffer.append(", ");
       }
@@ -535,9 +539,9 @@ public class GenericData {
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet()) {
-        toString(entry.getKey(), buffer);
+        toString(entry.getKey(), buffer, recursionDepth + 1);
         buffer.append(": ");
-        toString(entry.getValue(), buffer);
+        toString(entry.getValue(), buffer, recursionDepth + 1);
         if (++count < map.size())
           buffer.append(", ");
       }
@@ -558,6 +562,8 @@ public class GenericData {
       buffer.append("\"");
       buffer.append(datum);
       buffer.append("\"");
+    } else if (datum instanceof GenericData) {
+        toString(datum, buffer, recursionDepth + 1);
     } else {
       buffer.append(datum);
     }
