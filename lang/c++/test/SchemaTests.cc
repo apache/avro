@@ -154,9 +154,9 @@ const char* roundTripSchemas[] = {
         "{\"name\":\"f2\",\"type\":\"int\"}]}",
 /* Avro-C++ cannot do a round-trip on error schemas. 
  * "{\"type\":\"error\",\"name\":\"Test\",\"fields\":"
-        "[{\"name\":\"f1\",\"type\":\"long\"},"
-        "{\"name\":\"f2\",\"type\":\"int\"}]}"
-*/
+ *       "[{\"name\":\"f1\",\"type\":\"long\"},"
+ *       "{\"name\":\"f2\",\"type\":\"int\"}]}"
+ */
     // Recursive.
     "{\"type\":\"record\",\"name\":\"LongList\","
         "\"fields\":[{\"name\":\"value\",\"type\":\"long\"},"
@@ -214,7 +214,7 @@ static void testRoundTrip(const char* schema)
     std::ostringstream os;
     compiledSchema.toJson(os);
     std::string result = os.str();
-    result.erase( std::remove_if( result.begin(), result.end(), ::isspace ), result.end() ); // Remove whitespace
+    result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end()); // Remove whitespace
     BOOST_CHECK(result == std::string(schema));
 }
 
