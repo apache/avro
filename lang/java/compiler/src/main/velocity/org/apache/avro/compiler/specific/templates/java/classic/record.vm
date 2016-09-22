@@ -20,8 +20,10 @@ package $schema.getNamespace();
 #end
 
 import org.apache.avro.specific.SpecificData;
+#if (!$schema.isError())
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
+#end
 
 @SuppressWarnings("all")
 #if ($schema.getDoc())
@@ -399,6 +401,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
 #end
     @Override
+    @SuppressWarnings("unchecked")
     public ${this.mangle($schema.getName())} build() {
       try {
         ${this.mangle($schema.getName())} record = new ${this.mangle($schema.getName())}(#if ($schema.isError())getValue(), getCause()#end);
@@ -422,22 +425,24 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 #end
         return record;
-      } catch (Exception e) {
+      } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
     }
   }
 
-  private static final org.apache.avro.io.DatumWriter
-    WRITER$ = MODEL$.createDatumWriter(SCHEMA$);
+  @SuppressWarnings("unchecked")
+  private static final org.apache.avro.io.DatumWriter<${this.mangle($schema.getName())}>
+    WRITER$ = (org.apache.avro.io.DatumWriter<${this.mangle($schema.getName())}>)MODEL$.createDatumWriter(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
     WRITER$.write(this, SpecificData.getEncoder(out));
   }
 
-  private static final org.apache.avro.io.DatumReader
-    READER$ = MODEL$.createDatumReader(SCHEMA$);
+  @SuppressWarnings("unchecked")
+  private static final org.apache.avro.io.DatumReader<${this.mangle($schema.getName())}>
+    READER$ = (org.apache.avro.io.DatumReader<${this.mangle($schema.getName())}>)MODEL$.createDatumReader(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {

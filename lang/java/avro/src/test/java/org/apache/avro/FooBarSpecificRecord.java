@@ -373,7 +373,7 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
   }
 
   private static final org.apache.avro.io.DatumWriter
-    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);
+    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter<FooBarSpecificRecord>(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -381,7 +381,7 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
   }
 
   private static final org.apache.avro.io.DatumReader
-    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
+    READER$ = new org.apache.avro.specific.SpecificDatumReader<FooBarSpecificRecord>(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
