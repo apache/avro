@@ -720,7 +720,7 @@ public class GenericData {
 
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isEnum(Object datum) {
-    return datum instanceof GenericEnumSymbol;
+    return datum instanceof GenericEnumSymbol || datum instanceof Enum;
   }
 
   /** Called to obtain the schema of a enum.  By default calls
