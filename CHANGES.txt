@@ -73,6 +73,8 @@ Trunk (not yet released)
     AVRO-1853: C++: Compiler::toBin crashes on empty string.
     (Zoltan Ivanfi via tomwhite)
 
+    AVRO-1923: Stop infinite recursion in GenericData.toString. (Niels Basjes)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES

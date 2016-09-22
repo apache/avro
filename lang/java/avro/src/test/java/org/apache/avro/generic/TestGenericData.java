@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Collection;
 import java.util.ArrayDeque;
 
+import static org.apache.avro.TestCircularReferences.Reference;
+import static org.apache.avro.TestCircularReferences.Referenceable;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
@@ -34,6 +36,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.TestCircularReferences.ReferenceManager;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
@@ -492,4 +495,61 @@ public class TestGenericData {
     record.put("myString", "myValue");
     assertTrue(GenericData.get().validate(unionSchema, record));
   }
+
+  // Test copied from Apache Parquet: org.apache.parquet.avro.TestCircularReferences
+  @Test
+  public void testToStringRecursive() throws IOException {
+    ReferenceManager manager = new ReferenceManager();
+    GenericData model = new GenericData();
+    model.addLogicalTypeConversion(manager.getTracker());
+    model.addLogicalTypeConversion(manager.getHandler());
+
+    Schema parentSchema = Schema.createRecord("Parent", null, null, false);
+
+    Schema placeholderSchema = Schema.createRecord("Placeholder", null, null, false);
+    List<Schema.Field> placeholderFields = new ArrayList<Schema.Field>();
+    placeholderFields.add( // at least one field is needed to be a valid schema
+      new Schema.Field("id", Schema.create(Schema.Type.LONG), null, (Object)null));
+    placeholderSchema.setFields(placeholderFields);
+
+    Referenceable idRef = new Referenceable("id");
+
+    Schema parentRefSchema = Schema.createUnion(
+      Schema.create(Schema.Type.NULL),
+      Schema.create(Schema.Type.LONG),
+      idRef.addToSchema(placeholderSchema));
+
+    Reference parentRef = new Reference("parent");
+
+    List<Schema.Field> childFields = new ArrayList<Schema.Field>();
+    childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING), null, (Object)null));
+    childFields.add(new Schema.Field("parent", parentRefSchema, null, (Object)null));
+    Schema childSchema = parentRef.addToSchema(
+      Schema.createRecord("Child", null, null, false, childFields));
+
+    List<Schema.Field> parentFields = new ArrayList<Schema.Field>();
+    parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG), null, (Object)null));
+    parentFields.add(new Schema.Field("p", Schema.create(Schema.Type.STRING), null, (Object)null));
+    parentFields.add(new Schema.Field("child", childSchema, null, (Object)null));
+    parentSchema.setFields(parentFields);
+
+    Schema schema = idRef.addToSchema(parentSchema);
+
+    Record parent = new Record(schema);
+    parent.put("id", 1L);
+    parent.put("p", "parent data!");
+
+    Record child = new Record(childSchema);
+    child.put("c", "child data!");
+    child.put("parent", parent);
+
+    parent.put("child", child);
+
+    try {
+      assertNotNull(parent.toString()); // This should not fail with an infinite recursion (StackOverflowError)
+    } catch (StackOverflowError e) {
+      fail("StackOverflowError occurred");
+    }
+  }
+
 }
