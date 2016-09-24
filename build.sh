@@ -223,10 +223,10 @@ UserSpecificDocker
       # system.  And this also is a significant speedup in subsequent
       # builds because the dependencies are downloaded only once.
       docker run --rm=true -t -i \
-        -v ${PWD}:/home/${USER_NAME}/avro \
+        -v ${PWD}:/home/${USER_NAME}/avro:z \
         -w /home/${USER_NAME}/avro \
-        -v ${HOME}/.m2:/home/${USER_NAME}/.m2 \
-        -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg \
+        -v ${HOME}/.m2:/home/${USER_NAME}/.m2:z \
+        -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg:z \
         -u ${USER_NAME} \
         avro-build-${USER_NAME}
       ;;
