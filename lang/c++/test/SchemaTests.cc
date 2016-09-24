@@ -209,7 +209,7 @@ static void testCompile(const char* schema)
 // used to construct it, apart from whitespace changes.
 static void testRoundTrip(const char* schema)
 {
-    BOOST_CHECKPOINT(schema);
+    BOOST_TEST_CHECKPOINT(schema);
     avro::ValidSchema compiledSchema = compileJsonSchemaFromString(std::string(schema));
     std::ostringstream os;
     compiledSchema.toJson(os);
