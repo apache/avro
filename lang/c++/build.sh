@@ -76,14 +76,15 @@ function do_dist() {
 
 case "$target" in
   test)
-    ( make \
-      && ./buffertest \
-      && ./unittest \
-      && ./CodecTests \
-      && ./StreamTests \
-      && ./SpecificTests \
-      && ./AvrogencppTests \
-      && ./DataFileTests)
+    (cd build && make && cd .. \
+      && ./build/buffertest \
+      && ./build/unittest \
+      && ./build/CodecTests \
+      && ./build/StreamTests \
+      && ./build/SpecificTests \
+      && ./build/AvrogencppTests \
+      && ./build/DataFileTests   \
+      && ./build/SchemaTests)
     ;;
 
   dist)
