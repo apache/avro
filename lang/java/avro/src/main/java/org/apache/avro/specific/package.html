@@ -31,6 +31,9 @@ Generate specific Java classes for schemas and protocols.
 
 <li>Record, enum, and fixed schemas generate Java class definitions.</li>
 
+<li>If a Conversion instance is available for the related logical type,
+  the value will be mapped to the object returned by that Conversion.</li>
+
 <li>All other types are mapped as in the {@link org.apache.avro.generic
   generic} API.</li>
 
