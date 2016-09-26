@@ -24,6 +24,8 @@ Trunk (not yet released)
 
     AVRO-1879: Make conversions field static. (Michael Wong via blue)
 
+    AVRO-1919: Formalize the presence of build.sh. (Suraj Acharya via cutting)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.

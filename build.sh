@@ -39,16 +39,16 @@ do
 
     test)
       # run lang-specific tests
-      (cd lang/java; mvn test)
-      (cd lang/py; ant test)
-      (cd lang/py3; python3 setup.py test)
+      (cd lang/java; ./build.sh test)
+      (cd lang/py; ./build.sh test)
+      (cd lang/py3; ./build.sh test)
       (cd lang/c; ./build.sh test)
       (cd lang/c++; ./build.sh test)
       (cd lang/csharp; ./build.sh test)
       (cd lang/js; ./build.sh test)
       (cd lang/ruby; ./build.sh test)
       (cd lang/php; ./build.sh test)
-      (cd lang/perl; perl ./Makefile.PL && make test)
+      (cd lang/perl; ./build.sh test)
 
       # create interop test data
       mkdir -p build/interop/data
@@ -105,15 +105,12 @@ do
 
       # build lang-specific artifacts
 
-      (cd lang/java; mvn package -DskipTests -Dhadoop.version=1;
-      rm -rf mapred/target/{classes,test-classes}/;
-      rm -rf trevni/avro/target/{classes,test-classes}/;
-      mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate)
+      (cd lang/java;./build.sh dist)
       (cd lang/java/trevni/doc; mvn site)
       (mvn -N -P copy-artifacts antrun:run)
 
-      (cd lang/py; ant dist)
-      (cd lang/py3; python3 setup.py sdist; cp -r dist ../../dist/py3)
+      (cd lang/py; ./build.sh dist)
+      (cd lang/py3; ./build.sh dist)
 
       (cd lang/c; ./build.sh dist)
 
@@ -128,7 +125,7 @@ do
       (cd lang/php; ./build.sh dist)
 
       mkdir -p dist/perl
-      (cd lang/perl; perl ./Makefile.PL && make dist)
+      (cd lang/perl; ./build.sh dist)
       cp lang/perl/Avro-$VERSION.tar.gz dist/perl/
 
       # build docs
@@ -194,11 +191,7 @@ do
 
       (cd lang/php; ./build.sh clean)
 
-      (cd lang/perl; [ ! -f Makefile ] || make clean)
-      rm -f  lang/perl/Avro-*.tar.gz
-      rm -f  lang/perl/META.yml
-      rm -f  lang/perl/Makefile.old
-      rm -rf lang/perl/inc/
+      (cd lang/perl; ./build.sh clean)
       ;;
 
     docker)
