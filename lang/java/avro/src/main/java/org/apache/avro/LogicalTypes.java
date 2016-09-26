@@ -21,7 +21,12 @@ package org.apache.avro;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class LogicalTypes {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(LogicalTypes.class);
 
   public interface LogicalTypeFactory {
     LogicalType fromSchema(Schema schema);
@@ -83,6 +88,9 @@ public class LogicalTypes {
     } catch (RuntimeException e) {
       if (throwErrors) {
         throw e;
+      } else {
+        LOGGER.warn("Ignoring invalid logical type for name: {}", typeName);
+        LOGGER.debug("Invalid logical type found", e);
       }
       // ignore invalid types
       logicalType = null;
