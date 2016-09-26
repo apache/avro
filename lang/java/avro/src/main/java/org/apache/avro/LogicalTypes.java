@@ -89,9 +89,8 @@ public class LogicalTypes {
       LOGGER.debug("Invalid logical type found", e);
       if (throwErrors) {
         throw e;
-      } else {
-        LOGGER.warn("Ignoring invalid logical type for name: {}", typeName);
       }
+      LOGGER.warn("Ignoring invalid logical type for name: {}", typeName);
       // ignore invalid types
       logicalType = null;
     }
