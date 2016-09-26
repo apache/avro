@@ -34,9 +34,36 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.util.TokenBuffer;
 
 public class JacksonUtils {
+  
+  /**
+   * General representation of a json node. Used to hide the actual json lib from the public API.
+   */
+  public static class GeneralJsonNode {
+    private final JsonNode node;
+
+    private GeneralJsonNode(JsonNode node) {
+      assert node != null;
+      this.node = node;
+    }
+  }
+  
   static final String BYTES_CHARSET = "ISO-8859-1";
 
   private JacksonUtils() {
+  }
+  
+  /**
+   * Returns the specific json node representation for the general one.
+   */
+  public static JsonNode toSpecific(GeneralJsonNode internalNode) {
+    return internalNode == null ? null : internalNode.node;
+  }
+  
+  /**
+   * Returns the general json node representation for the specific one. 
+   */
+  public static GeneralJsonNode toGeneral(JsonNode specificNode) {
+    return specificNode == null ? null : new GeneralJsonNode(specificNode);
   }
 
   public static JsonNode toJsonNode(Object datum) {

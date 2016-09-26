@@ -106,11 +106,7 @@ public class RpcSendTool implements Tool {
   private void dumpJson(PrintStream out, Schema schema, Object datum)
   throws IOException {
     DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
-    JsonGenerator g =
-      new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
-    g.useDefaultPrettyPrinter();
-    writer.write(datum, EncoderFactory.get().jsonEncoder(schema, g));
-    g.flush();
+    writer.write(datum, EncoderFactory.get().jsonEncoder(schema, out, true));
     out.println();
     out.flush();
   }

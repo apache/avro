@@ -20,10 +20,12 @@ package org.apache.avro;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.io.IOException;
 
 import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.node.TextNode;
@@ -127,18 +129,17 @@ public abstract class JsonProperties {
    * Returns <tt>null</tt> if there is no string-valued property with that name.
    */
   public String getProp(String name) {
-    JsonNode value = getJsonProp(name);
+    JsonNode value = props.get(name);
     return value != null && value.isTextual() ? value.getTextValue() : null;
   }
 
   /**
    * Returns the value of the named property in this schema.
    * Returns <tt>null</tt> if there is no property with that name.
-   * @deprecated use {@link #getObjectProp(String)}
+   * For internal use. Use {@link #getObjectProp(String)} instead.
    */
-  @Deprecated
-  public synchronized JsonNode getJsonProp(String name) {
-    return props.get(name);
+  public synchronized GeneralJsonNode getJsonProp(String name) {
+    return JacksonUtils.toGeneral(props.get(name));
   }
 
   /**
@@ -161,19 +162,22 @@ public abstract class JsonProperties {
   public void addProp(String name, String value) {
     addProp(name, TextNode.valueOf(value));
   }
-
+  
   /**
    * Adds a property with the given name <tt>name</tt> and
    * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
    * <tt>null</tt>. It is illegal to add a property if another with
    * the same name but different value already exists in this schema.
+   * For internal use. Use {@link #addProp(String, Object)} instead.
    *
    * @param name The name of the property to add
    * @param value The value for the property to add
-   * @deprecated use {@link #addProp(String, Object)}
    */
-  @Deprecated
-  public synchronized void addProp(String name, JsonNode value) {
+  public void addProp(String name, GeneralJsonNode value) {
+    addProp(name, JacksonUtils.toSpecific(value));
+  }
+
+  synchronized void addProp(String name, JsonNode value) {
     if (reserved.contains(name))
       throw new AvroRuntimeException("Can't set reserved property: " + name);
 
@@ -187,9 +191,10 @@ public abstract class JsonProperties {
       throw new AvroRuntimeException("Can't overwrite property: " + name);
   }
 
-  public synchronized void addProp(String name, Object value) {
-    addProp(name, JacksonUtils.toJsonNode(value));
-  }
+  // TODO: comment back...
+//  public synchronized void addProp(String name, Object value) {
+//    addProp(name, JacksonUtils.toJsonNode(value));
+//  }
 
   /** Return the defined properties that have string values. */
   @Deprecated public Map<String,String> getProps() {
@@ -210,10 +215,8 @@ public abstract class JsonProperties {
 
   /**
    * Return the defined properties as an unmodifieable Map.
-   * @deprecated use {@link #getObjectProps()}
    */
-  @Deprecated
-  public Map<String,JsonNode> getJsonProps() {
+  Map<String,JsonNode> getJsonProps() {
     return Collections.unmodifiableMap(props);
   }
 
@@ -228,6 +231,11 @@ public abstract class JsonProperties {
   void writeProps(JsonGenerator gen) throws IOException {
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       gen.writeObjectField(e.getKey(), e.getValue());
+  }
+  
+  public void addAllProps(JsonProperties props) {
+    for (Entry<String, JsonNode> e : props.props.entrySet())
+      this.props.put(e.getKey(), e.getValue());
   }
 
 }

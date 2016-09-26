@@ -62,52 +62,6 @@ public class Json {
     }
   }
 
-  /**
-   * {@link DatumWriter} for arbitrary Json data.
-   * @deprecated use {@link ObjectWriter}
-   */
-  @Deprecated
-  public static class Writer implements DatumWriter<JsonNode> {
-
-    @Override public void setSchema(Schema schema) {
-      if (!SCHEMA.equals(schema))
-        throw new RuntimeException("Not the Json schema: "+schema);
-    }
-
-    @Override
-    public void write(JsonNode datum, Encoder out) throws IOException {
-      Json.write(datum, out);
-    }
-  }
-
-  /**
-   * {@link DatumReader} for arbitrary Json data.
-   * @deprecated use {@link ObjectReader}
-   */
-  @Deprecated
-  public static class Reader implements DatumReader<JsonNode> {
-    private Schema written;
-    private ResolvingDecoder resolver;
-
-    @Override public void setSchema(Schema schema) {
-      this.written = SCHEMA.equals(written) ? null : schema;
-    }
-
-    @Override
-    public JsonNode read(JsonNode reuse, Decoder in) throws IOException {
-      if (written == null)                        // same schema
-        return Json.read(in);
-
-      // use a resolver to adapt alternate version of Json schema
-      if (resolver == null)
-        resolver = DecoderFactory.get().resolvingDecoder(written, SCHEMA, null);
-      resolver.configure(in);
-      JsonNode result = Json.read(resolver);
-      resolver.drain();
-      return result;
-    }
-  }
-
   /** {@link DatumWriter} for arbitrary Json data using the object model described
    *  in {@link org.apache.avro.JsonProperties}. */
   public static class ObjectWriter implements DatumWriter<Object> {
@@ -176,10 +130,8 @@ public class Json {
 
   /**
    * Write Json data as Avro data.
-   * @deprecated internal method
    */
-  @Deprecated
-  public static void write(JsonNode node, Encoder out) throws IOException {
+  private static void write(JsonNode node, Encoder out) throws IOException {
     switch(node.asToken()) {
     case VALUE_NUMBER_INT:
       out.writeIndex(JsonType.LONG.ordinal());
@@ -235,10 +187,8 @@ public class Json {
 
   /**
    * Read Json data from Avro data.
-   * @deprecated internal method
    */
-  @Deprecated
-  public static JsonNode read(Decoder in) throws IOException {
+  private static JsonNode read(Decoder in) throws IOException {
     switch (JsonType.values()[in.readIndex()]) {
     case LONG:
       return new LongNode(in.readLong());

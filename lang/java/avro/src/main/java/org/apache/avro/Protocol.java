@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.apache.avro.Schema.Field;
+import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonGenerator;
@@ -275,6 +276,11 @@ public class Protocol extends JsonProperties {
                                    Map<String,T> propMap, Schema request) {
     return new Message(name, doc, propMap, request);
   }
+  
+  /** Creates a one-way message using all the properties of <code>props</code> */
+  public Message createMessage(String name, String doc, JsonProperties props, Schema request) {
+    return createMessage(name, doc, props.getJsonProps(), request);
+  }
 
   /** Create a two-way message. */
   @Deprecated
@@ -288,6 +294,12 @@ public class Protocol extends JsonProperties {
                                    Map<String,T> propMap, Schema request,
                                    Schema response, Schema errors) {
     return new TwoWayMessage(name, doc, propMap, request, response, errors);
+  }
+
+  /** Create a two-way message using all the properties of <code>props</code> */
+  public Message createMessage(String name, String doc, JsonProperties props, Schema request, Schema response,
+      Schema errors) {
+    return createMessage(name, doc, props.getJsonProps(), request, response, errors);
   }
 
   public boolean equals(Object o) {
@@ -489,7 +501,7 @@ public class Protocol extends JsonProperties {
       if (fieldDocNode != null)
         fieldDoc = fieldDocNode.getTextValue();
       Field newField = new Field(name, Schema.parse(fieldTypeNode,types),
-                                 fieldDoc, field.get("default"));
+                                 fieldDoc, JacksonUtils.toGeneral(field.get("default")));
       Set<String> aliases = Schema.parseAliases(field);
       if (aliases != null) {                      // add aliases
         for (String alias : aliases)

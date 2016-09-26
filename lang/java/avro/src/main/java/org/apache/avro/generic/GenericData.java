@@ -49,7 +49,8 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.util.Utf8;
-
+import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
 import org.codehaus.jackson.JsonNode;
 
 import com.google.common.collect.MapMaker;
@@ -980,7 +981,8 @@ public class GenericData {
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public Object getDefaultValue(Field field) {
-    JsonNode json = field.defaultValue();
+    GeneralJsonNode iJson = field.defaultValue();
+    JsonNode json = JacksonUtils.toSpecific(iJson);
     if (json == null)
       throw new AvroRuntimeException("Field " + field
                                      + " not set and has no default value");
@@ -1000,7 +1002,7 @@ public class GenericData {
       try {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-        ResolvingGrammarGenerator.encode(encoder, field.schema(), json);
+        ResolvingGrammarGenerator.encode(encoder, field.schema(), iJson);
         encoder.flush();
         BinaryDecoder decoder =
           DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);

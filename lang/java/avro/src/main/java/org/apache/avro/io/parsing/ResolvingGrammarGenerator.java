@@ -30,6 +30,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
 import org.codehaus.jackson.JsonNode;
 
 /**
@@ -282,7 +284,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         String fname = rf.name();
         Field wf = writer.getField(fname);
         if (wf == null) {
-          byte[] bb = getBinary(rf.schema(), rf.defaultValue());
+          byte[] bb = getBinary(rf.schema(), JacksonUtils.toSpecific(rf.defaultValue()));
           production[--count] = Symbol.defaultStartAction(bb);
           production[--count] = generate(rf.schema(), rf.schema(), seen);
           production[--count] = Symbol.DEFAULT_END_ACTION;
@@ -316,10 +318,12 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    * @param s The schema for the object being encoded.
    * @param n The Json node to encode.
    * @throws IOException
-   * @deprecated internal method
    */
-  @Deprecated
-  public static void encode(Encoder e, Schema s, JsonNode n)
+  public static void encode(Encoder e, Schema s, GeneralJsonNode n) throws IOException {
+    encode(e, s, JacksonUtils.toJsonNode(n));
+  }
+  
+  private static void encode(Encoder e, Schema s, JsonNode n)
     throws IOException {
     switch (s.getType()) {
     case RECORD:
@@ -327,7 +331,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         String name = f.name();
         JsonNode v = n.get(name);
         if (v == null) {
-          v = f.defaultValue();
+          v = JacksonUtils.toSpecific(f.defaultValue());
         }
         if (v == null) {
           throw new AvroTypeException("No default value for: " + name);

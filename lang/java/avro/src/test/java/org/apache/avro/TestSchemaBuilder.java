@@ -33,6 +33,7 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
+import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.node.NullNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -266,7 +267,7 @@ public class TestSchemaBuilder {
     Schema recordSchema = fields.get(1).schema().getTypes().get(1);
     Assert.assertEquals(Schema.Type.RECORD, recordSchema.getType());
     Assert.assertEquals("LongList", recordSchema.getName());
-    Assert.assertEquals(NullNode.getInstance(), fields.get(1).defaultValue());
+    Assert.assertEquals(NullNode.getInstance(), JacksonUtils.toSpecific(fields.get(1).defaultValue()));
   }
 
   @Test

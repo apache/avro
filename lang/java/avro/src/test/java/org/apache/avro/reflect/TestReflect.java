@@ -46,6 +46,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
+import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.node.NullNode;
 import org.junit.Test;
 
@@ -359,7 +360,7 @@ public class TestReflect {
     Schema r11Record = ReflectData.get().getSchema(R11.class);
     assertEquals(Schema.Type.RECORD, r11Record.getType());
     Field r11Field = r11Record.getField("text");
-    assertEquals(NullNode.getInstance(), r11Field.defaultValue());
+    assertEquals(NullNode.getInstance(), JacksonUtils.toSpecific(r11Field.defaultValue()));
     Schema r11FieldSchema = r11Field.schema();
     assertEquals(Schema.Type.UNION, r11FieldSchema.getType());
     assertEquals(Schema.Type.NULL, r11FieldSchema.getTypes().get(0).getType());

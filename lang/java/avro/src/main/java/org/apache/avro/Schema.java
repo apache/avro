@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -130,15 +131,16 @@ public abstract class Schema extends JsonProperties {
 
   int hashCode = NO_HASHCODE;
 
-  @Override public void addProp(String name, JsonNode value) {
+  @Override void addProp(String name, JsonNode value) {
     super.addProp(name, value);
     hashCode = NO_HASHCODE;
   }
 
-  @Override public void addProp(String name, Object value) {
-    super.addProp(name, value);
-    hashCode = NO_HASHCODE;
-  }
+  // TODO: comment back
+//  @Override public void addProp(String name, Object value) {
+//    super.addProp(name, value);
+//    hashCode = NO_HASHCODE;
+//  }
 
   public LogicalType getLogicalType() {
     return logicalType;
@@ -389,16 +391,18 @@ public abstract class Schema extends JsonProperties {
     private final Order order;
     private Set<String> aliases;
 
-    /** @deprecated use {@link #Field(String, Schema, String, Object)} */
-    @Deprecated
+    /** For internal use. Use {@link #Field(String, Schema, String, Object)} instead.*/
     public Field(String name, Schema schema, String doc,
-        JsonNode defaultValue) {
+        GeneralJsonNode defaultValue) {
       this(name, schema, doc, defaultValue, Order.ASCENDING);
     }
-    /** @deprecated use {@link #Field(String, Schema, String, Object, Order)} */
-    @Deprecated
+    /** For internal use. Use {@link #Field(String, Schema, String, Object, Order)} instead.*/
     public Field(String name, Schema schema, String doc,
-        JsonNode defaultValue, Order order) {
+        GeneralJsonNode defaultValue, Order order) {
+      this(name, schema, doc, JacksonUtils.toSpecific(defaultValue), order);
+    }
+    Field(String name, Schema schema, String doc,
+          JsonNode defaultValue, Order order) {
       super(FIELD_RESERVED);
       this.name = validateName(name);
       this.schema = schema;
@@ -429,8 +433,8 @@ public abstract class Schema extends JsonProperties {
     public Schema schema() { return schema; }
     /** Field's documentation within the record, if set. May return null. */
     public String doc() { return doc; }
-    /** @deprecated use {@link #defaultVal() } */
-    @Deprecated public JsonNode defaultValue() { return defaultValue; }
+    /** For internal use. Use {@link #defaultVal()} instead. */
+    public GeneralJsonNode defaultValue() { return JacksonUtils.toGeneral(defaultValue); }
     /**
      * @return the default value for this field specified using the mapping
      *  in {@link JsonProperties}
@@ -718,7 +722,7 @@ public abstract class Schema extends JsonProperties {
           gen.writeStringField("doc", f.doc());
         if (f.defaultValue() != null) {
           gen.writeFieldName("default");
-          gen.writeTree(f.defaultValue());
+          gen.writeTree(JacksonUtils.toSpecific(f.defaultValue()));
         }
         if (f.order() != Field.Order.ASCENDING)
           gen.writeStringField("order", f.order().name);
@@ -1212,7 +1216,7 @@ public abstract class Schema extends JsonProperties {
         if (!isValidDefault(field.schema(),
                             defaultValue.has(field.name())
                             ? defaultValue.get(field.name())
-                            : field.defaultValue()))
+                            : JacksonUtils.toSpecific(field.defaultValue())))
           return false;
       return true;
     default:
@@ -1382,13 +1386,11 @@ public abstract class Schema extends JsonProperties {
   }
 
   /**
-   * Parses a string as Json.
-   * @deprecated use {@link org.apache.avro.data.Json#parseJson(String)}
+   * Parses a string as Json. For internal use. Use {@link org.apache.avro.data.Json#parseJson(String)} instead.
    */
-  @Deprecated
-  public static JsonNode parseJson(String s) {
+  public static GeneralJsonNode parseJson(String s) {
     try {
-      return MAPPER.readTree(FACTORY.createJsonParser(new StringReader(s)));
+      return JacksonUtils.toGeneral(MAPPER.readTree(FACTORY.createJsonParser(new StringReader(s))));
     } catch (JsonParseException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {

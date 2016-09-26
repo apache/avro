@@ -35,6 +35,8 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -46,7 +48,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class TestResolvingGrammarGenerator {
   private final Schema schema;
-  private final JsonNode data;
+  private final GeneralJsonNode data;
 
   public TestResolvingGrammarGenerator(String jsonSchema, String jsonData)
     throws IOException {
@@ -54,7 +56,7 @@ public class TestResolvingGrammarGenerator {
     JsonFactory factory = new JsonFactory();
     ObjectMapper mapper = new ObjectMapper(factory);
 
-    this.data = mapper.readTree(new StringReader(jsonData));
+    this.data = JacksonUtils.toGeneral(mapper.readTree(new StringReader(jsonData)));
   }
 
   @Test

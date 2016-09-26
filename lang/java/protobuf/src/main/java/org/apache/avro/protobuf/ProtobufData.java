@@ -46,6 +46,7 @@ import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 
 import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -206,7 +207,7 @@ public class ProtobufData extends GenericData {
 
       List<Field> fields = new ArrayList<Field>();
       for (FieldDescriptor f : descriptor.getFields())
-        fields.add(new Field(f.getName(), getSchema(f), null, getDefault(f)));
+        fields.add(new Field(f.getName(), getSchema(f), null, JacksonUtils.toGeneral(getDefault(f))));
       result.setFields(fields);
       return result;
 
