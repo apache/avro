@@ -86,11 +86,11 @@ public class LogicalTypes {
         logicalType.validate(schema);
       }
     } catch (RuntimeException e) {
+      LOGGER.debug("Invalid logical type found", e);
       if (throwErrors) {
         throw e;
       } else {
         LOGGER.warn("Ignoring invalid logical type for name: {}", typeName);
-        LOGGER.debug("Invalid logical type found", e);
       }
       // ignore invalid types
       logicalType = null;
