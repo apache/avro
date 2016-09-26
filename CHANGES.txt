@@ -31,6 +31,9 @@ Trunk (not yet released)
 
     AVRO-1918: Improve logical type documentation. (Gabor Szadovszky via cutting)
 
+    AVRO-1907: Java: Add debug logging for invalid logical types.
+    (Gabor Szadovszky via blue)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
