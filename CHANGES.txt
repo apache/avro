@@ -62,6 +62,9 @@ Trunk (not yet released)
     AVRO-1901: Record named "Exception" generated bad code.
     (Radai Rosenblatt via Niels Basjes)
 
+    AVRO-1849: C++: printJson fails on record with no fields.
+    (Simon Woodford vai tomwhite)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
