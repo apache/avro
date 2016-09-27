@@ -83,7 +83,8 @@ case "$target" in
       && ./build/StreamTests \
       && ./build/SpecificTests \
       && ./build/AvrogencppTests \
-      && ./build/DataFileTests)
+      && ./build/DataFileTests   \
+      && ./build/SchemaTests)
     ;;
 
   dist)
