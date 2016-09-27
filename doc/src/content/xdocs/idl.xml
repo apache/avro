@@ -228,12 +228,14 @@ error Kaboom {
           <li><code>decimal</code> (logical type <a href="spec.html#Decimal"><code>decimal</code></a>)</li>
           <li><code>date</code> (logical type <a href="spec.html#Date"><code>date</code></a>)</li>
           <li><code>time_ms</code> (logical type <a href="spec.html#Time+%28millisecond+precision%29"><code>time-millis</code></a>)</li>
-          <li><code>timestamp-ms</code> (logical type <a href="spec.html#Timestamp+%28millisecond+precision%29"><code>timestamp-millis</code></a>)</li>
+          <li><code>timestamp_ms</code> (logical type <a href="spec.html#Timestamp+%28millisecond+precision%29"><code>timestamp-millis</code></a>)</li>
         </ul>
         <p>For example:</p>
         <source>
-record JobFinished {
+record Job {
   string jobid;
+  date submitDate;
+  time_ms submitTime;
   timestamp_ms finishTime;
   decimal(9,2) finishRatio;
 }
