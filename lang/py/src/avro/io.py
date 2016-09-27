@@ -68,10 +68,8 @@ else:
       return struct.unpack(self.format, *args)
   struct_class = SimpleStruct
 
-STRUCT_INT = struct_class('!I')     # big-endian unsigned int
-STRUCT_LONG = struct_class('!Q')    # big-endian unsigned long long
-STRUCT_FLOAT = struct_class('!f')   # big-endian float
-STRUCT_DOUBLE = struct_class('!d')  # big-endian double
+STRUCT_FLOAT = struct_class('<f')   # little-endian float
+STRUCT_DOUBLE = struct_class('<d')  # little-endian double
 STRUCT_CRC32 = struct_class('>I')   # big-endian unsigned int
 
 #
@@ -197,11 +195,7 @@ class BinaryDecoder(object):
     The float is converted into a 32-bit integer using a method equivalent to
     Java's floatToIntBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.read(1)) & 0xffL)) |
-      ((ord(self.read(1)) & 0xffL) <<  8) |
-      ((ord(self.read(1)) & 0xffL) << 16) |
-      ((ord(self.read(1)) & 0xffL) << 24))
-    return STRUCT_FLOAT.unpack(STRUCT_INT.pack(bits))[0]
+    return STRUCT_FLOAT.unpack(self.read(4))[0]
 
   def read_double(self):
     """
@@ -209,15 +203,7 @@ class BinaryDecoder(object):
     The double is converted into a 64-bit integer using a method equivalent to
     Java's doubleToLongBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.read(1)) & 0xffL)) |
-      ((ord(self.read(1)) & 0xffL) <<  8) |
-      ((ord(self.read(1)) & 0xffL) << 16) |
-      ((ord(self.read(1)) & 0xffL) << 24) |
-      ((ord(self.read(1)) & 0xffL) << 32) |
-      ((ord(self.read(1)) & 0xffL) << 40) |
-      ((ord(self.read(1)) & 0xffL) << 48) |
-      ((ord(self.read(1)) & 0xffL) << 56))
-    return STRUCT_DOUBLE.unpack(STRUCT_LONG.pack(bits))[0]
+    return STRUCT_DOUBLE.unpack(self.read(8))[0]
 
   def read_bytes(self):
     """
@@ -319,11 +305,7 @@ class BinaryEncoder(object):
     The float is converted into a 32-bit integer using a method equivalent to
     Java's floatToIntBits and then encoded in little-endian format.
     """
-    bits = STRUCT_INT.unpack(STRUCT_FLOAT.pack(datum))[0]
-    self.write(chr((bits) & 0xFF))
-    self.write(chr((bits >> 8) & 0xFF))
-    self.write(chr((bits >> 16) & 0xFF))
-    self.write(chr((bits >> 24) & 0xFF))
+    self.write(STRUCT_FLOAT.pack(datum))
 
   def write_double(self, datum):
     """
@@ -331,15 +313,7 @@ class BinaryEncoder(object):
     The double is converted into a 64-bit integer using a method equivalent to
     Java's doubleToLongBits and then encoded in little-endian format.
     """
-    bits = STRUCT_LONG.unpack(STRUCT_DOUBLE.pack(datum))[0]
-    self.write(chr((bits) & 0xFF))
-    self.write(chr((bits >> 8) & 0xFF))
-    self.write(chr((bits >> 16) & 0xFF))
-    self.write(chr((bits >> 24) & 0xFF))
-    self.write(chr((bits >> 32) & 0xFF))
-    self.write(chr((bits >> 40) & 0xFF))
-    self.write(chr((bits >> 48) & 0xFF))
-    self.write(chr((bits >> 56) & 0xFF))
+    self.write(STRUCT_DOUBLE.pack(datum))
 
   def write_bytes(self, datum):
     """
