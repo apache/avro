@@ -26,6 +26,8 @@ Trunk (not yet released)
 
     AVRO-1919: Formalize the presence of build.sh. (Suraj Acharya via cutting)
 
+    AVRO-1918: Improve logical type documentation. (Gabor Szadovszky via cutting)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
