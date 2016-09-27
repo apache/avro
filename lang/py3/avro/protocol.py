@@ -54,8 +54,8 @@ class Protocol(object):
   """An application protocol."""
 
   @staticmethod
-  def _ParseTypeDesc(type_desc, names):
-    type_schema = schema.SchemaFromJSONData(type_desc, names=names)
+  def _parse_type_desc(type_desc, names):
+    type_schema = schema.schema_from_JSON_data(type_desc, names=names)
     if type_schema.type not in VALID_TYPE_SCHEMA_TYPES:
       raise ProtocolParseException(
           'Invalid type %r in protocol %r: '
@@ -64,7 +64,7 @@ class Protocol(object):
     return type_schema
 
   @staticmethod
-  def _ParseMessageDesc(name, message_desc, names):
+  def _parse_message_desc(name, message_desc, names):
     """Parses a protocol message descriptor.
 
     Args:
@@ -80,7 +80,7 @@ class Protocol(object):
     if request_desc is None:
       raise ProtocolParseException(
           'Invalid message descriptor with no "request": %r.' % message_desc)
-    request_schema = Message._ParseRequestFromJSONDesc(
+    request_schema = Message._parse_request_from_JSON_desc(
         request_desc=request_desc,
         names=names,
     )
@@ -89,14 +89,14 @@ class Protocol(object):
     if response_desc is None:
       raise ProtocolParseException(
           'Invalid message descriptor with no "response": %r.' % message_desc)
-    response_schema = Message._ParseResponseFromJSONDesc(
+    response_schema = Message._parse_response_from_JSON_desc(
         response_desc=response_desc,
         names=names,
     )
 
     # Errors are optional:
     errors_desc = message_desc.get('errors', tuple())
-    error_union_schema = Message._ParseErrorsFromJSONDesc(
+    error_union_schema = Message._parse_errors_from_JSON_desc(
         errors_desc=errors_desc,
         names=names,
     )
@@ -109,9 +109,9 @@ class Protocol(object):
     )
 
   @staticmethod
-  def _ParseMessageDescMap(message_desc_map, names):
+  def _parse_message_desc_map(message_desc_map, names):
     for name, message_desc in message_desc_map.items():
-      yield Protocol._ParseMessageDesc(
+      yield Protocol._parse_message_desc(
           name=name,
           message_desc=message_desc,
           names=names,
@@ -241,7 +241,7 @@ class Message(object):
   """A Protocol message."""
 
   @staticmethod
-  def _ParseRequestFromJSONDesc(request_desc, names):
+  def _parse_request_from_JSON_desc(request_desc, names):
     """Parses the request descriptor of a protocol message.
 
     Args:
@@ -251,7 +251,7 @@ class Message(object):
     Returns:
       The parsed request schema, as an unnamed record.
     """
-    fields = schema.RecordSchema._MakeFieldList(request_desc, names=names)
+    fields = schema.RecordSchema._make_field_list(request_desc, names=names)
     return schema.RecordSchema(
         name=None,
         namespace=None,
@@ -261,7 +261,7 @@ class Message(object):
     )
 
   @staticmethod
-  def _ParseResponseFromJSONDesc(response_desc, names):
+  def _parse_response_from_JSON_desc(response_desc, names):
     """Parses the response descriptor of a protocol message.
 
     Args:
@@ -270,10 +270,10 @@ class Message(object):
     Returns:
       The parsed response schema.
     """
-    return schema.SchemaFromJSONData(response_desc, names=names)
+    return schema.schema_from_JSON_data(response_desc, names=names)
 
   @staticmethod
-  def _ParseErrorsFromJSONDesc(errors_desc, names):
+  def _parse_errors_from_JSON_desc(errors_desc, names):
     """Parses the errors descriptor of a protocol message.
 
     Args:
@@ -288,7 +288,7 @@ class Message(object):
         'type': schema.ERROR_UNION,
         'declared_errors': errors_desc,
     }
-    return schema.SchemaFromJSONData(error_union_desc, names=names)
+    return schema.schema_from_JSON_data(error_union_desc, names=names)
 
   def __init__(self,  name, request, response, errors=None):
     self._name = name
@@ -338,7 +338,7 @@ class Message(object):
 # ------------------------------------------------------------------------------
 
 
-def ProtocolFromJSONData(json_data):
+def protocol_from_JSON_data(json_data):
   """Builds an Avro  Protocol from its JSON descriptor.
 
   Args:
@@ -365,11 +365,11 @@ def ProtocolFromJSONData(json_data):
 
   type_desc_list = json_data.get('types', tuple())
   types = tuple(map(
-      lambda desc: Protocol._ParseTypeDesc(desc, names=names),
+      lambda desc: Protocol._parse_type_desc(desc, names=names),
       type_desc_list))
 
   message_desc_map = json_data.get('messages', dict())
-  messages = tuple(Protocol._ParseMessageDescMap(message_desc_map, names=names))
+  messages = tuple(Protocol._parse_message_desc_map(message_desc_map, names=names))
 
   return Protocol(
       name=name,
@@ -379,7 +379,7 @@ def ProtocolFromJSONData(json_data):
   )
 
 
-def Parse(json_string):
+def parse(json_string):
   """Constructs a Protocol from its JSON descriptor in text form.
 
   Args:
@@ -398,5 +398,5 @@ def Parse(json_string):
         'Error message: %r.'
         % (json_string, exn))
 
-  return ProtocolFromJSONData(json_data)
+  return protocol_from_JSON_data(json_data)
 

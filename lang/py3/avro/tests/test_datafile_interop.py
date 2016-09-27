@@ -33,7 +33,7 @@ def GetInteropSchema():
   schema_json_path = os.path.join(test_dir, 'interop.avsc')
   with open(schema_json_path, 'r') as f:
     schema_json = f.read()
-  return schema.Parse(schema_json)
+  return schema.parse(schema_json)
 
 
 INTEROP_SCHEMA = GetInteropSchema()

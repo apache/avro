@@ -93,7 +93,7 @@ class SchemaResolutionException(schema.AvroException):
 # Validate
 
 
-def Validate(expected_schema, datum):
+def validate(expected_schema, datum):
   """Determines if a python datum is an instance of a schema.
 
   Args:
@@ -125,18 +125,18 @@ def Validate(expected_schema, datum):
     return datum in expected_schema.symbols
   elif schema_type == 'array':
     return (isinstance(datum, list)
-        and all(Validate(expected_schema.items, item) for item in datum))
+        and all(validate(expected_schema.items, item) for item in datum))
   elif schema_type == 'map':
     return (isinstance(datum, dict)
         and all(isinstance(key, str) for key in datum.keys())
-        and all(Validate(expected_schema.values, value)
+        and all(validate(expected_schema.values, value)
                 for value in datum.values()))
   elif schema_type in ['union', 'error_union']:
-    return any(Validate(union_branch, datum)
+    return any(validate(union_branch, datum)
                for union_branch in expected_schema.schemas)
   elif schema_type in ['record', 'error', 'request']:
     return (isinstance(datum, dict)
-        and all(Validate(field.type, datum.get(field.name))
+        and all(validate(field.type, datum.get(field.name))
                 for field in expected_schema.fields))
   else:
     raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
@@ -315,7 +315,7 @@ class BinaryEncoder(object):
     assert isinstance(datum, bytes), ('Expecting bytes, got %r' % datum)
     self.writer.write(datum)
 
-  def WriteByte(self, byte):
+  def write_byte(self, byte):
     self.writer.write(bytes((byte,)))
 
   def write_null(self, datum):
@@ -330,7 +330,7 @@ class BinaryEncoder(object):
     whose value is either 0 (false) or 1 (true).
     """
     # Python maps True to 1 and False to 0.
-    self.WriteByte(int(bool(datum)))
+    self.write_byte(int(bool(datum)))
 
   def write_int(self, datum):
     """
@@ -344,9 +344,9 @@ class BinaryEncoder(object):
     """
     datum = (datum << 1) ^ (datum >> 63)
     while (datum & ~0x7F) != 0:
-      self.WriteByte((datum & 0x7f) | 0x80)
+      self.write_byte((datum & 0x7f) | 0x80)
       datum >>= 7
-    self.WriteByte(datum)
+    self.write_byte(datum)
 
   def write_float(self, datum):
     """
@@ -355,10 +355,10 @@ class BinaryEncoder(object):
     Java's floatToIntBits and then encoded in little-endian format.
     """
     bits = STRUCT_INT.unpack(STRUCT_FLOAT.pack(datum))[0]
-    self.WriteByte((bits) & 0xFF)
-    self.WriteByte((bits >> 8) & 0xFF)
-    self.WriteByte((bits >> 16) & 0xFF)
-    self.WriteByte((bits >> 24) & 0xFF)
+    self.write_byte((bits) & 0xFF)
+    self.write_byte((bits >> 8) & 0xFF)
+    self.write_byte((bits >> 16) & 0xFF)
+    self.write_byte((bits >> 24) & 0xFF)
 
   def write_double(self, datum):
     """
@@ -367,14 +367,14 @@ class BinaryEncoder(object):
     Java's doubleToLongBits and then encoded in little-endian format.
     """
     bits = STRUCT_LONG.unpack(STRUCT_DOUBLE.pack(datum))[0]
-    self.WriteByte((bits) & 0xFF)
-    self.WriteByte((bits >> 8) & 0xFF)
-    self.WriteByte((bits >> 16) & 0xFF)
-    self.WriteByte((bits >> 24) & 0xFF)
-    self.WriteByte((bits >> 32) & 0xFF)
-    self.WriteByte((bits >> 40) & 0xFF)
-    self.WriteByte((bits >> 48) & 0xFF)
-    self.WriteByte((bits >> 56) & 0xFF)
+    self.write_byte((bits) & 0xFF)
+    self.write_byte((bits >> 8) & 0xFF)
+    self.write_byte((bits >> 16) & 0xFF)
+    self.write_byte((bits >> 24) & 0xFF)
+    self.write_byte((bits >> 32) & 0xFF)
+    self.write_byte((bits >> 40) & 0xFF)
+    self.write_byte((bits >> 48) & 0xFF)
+    self.write_byte((bits >> 56) & 0xFF)
 
   def write_bytes(self, datum):
     """
@@ -528,37 +528,37 @@ class DatumReader(object):
       fail_msg = "Cannot read unknown schema type: %s" % writer_schema.type
       raise schema.AvroException(fail_msg)
 
-  def skip_data(self, writer_schema, decoder):
-    if writer_schema.type == 'null':
+  def skip_data(self, writers_schema, decoder):
+    if writers_schema.type == 'null':
       return decoder.skip_null()
-    elif writer_schema.type == 'boolean':
+    elif writers_schema.type == 'boolean':
       return decoder.skip_boolean()
-    elif writer_schema.type == 'string':
+    elif writers_schema.type == 'string':
       return decoder.skip_utf8()
-    elif writer_schema.type == 'int':
+    elif writers_schema.type == 'int':
       return decoder.skip_int()
-    elif writer_schema.type == 'long':
+    elif writers_schema.type == 'long':
       return decoder.skip_long()
-    elif writer_schema.type == 'float':
+    elif writers_schema.type == 'float':
       return decoder.skip_float()
-    elif writer_schema.type == 'double':
+    elif writers_schema.type == 'double':
       return decoder.skip_double()
-    elif writer_schema.type == 'bytes':
+    elif writers_schema.type == 'bytes':
       return decoder.skip_bytes()
-    elif writer_schema.type == 'fixed':
-      return self.skip_fixed(writer_schema, decoder)
-    elif writer_schema.type == 'enum':
-      return self.skip_enum(writer_schema, decoder)
-    elif writer_schema.type == 'array':
-      return self.skip_array(writer_schema, decoder)
-    elif writer_schema.type == 'map':
-      return self.skip_map(writer_schema, decoder)
-    elif writer_schema.type in ['union', 'error_union']:
-      return self.skip_union(writer_schema, decoder)
-    elif writer_schema.type in ['record', 'error', 'request']:
-      return self.skip_record(writer_schema, decoder)
+    elif writers_schema.type == 'fixed':
+      return self.skip_fixed(writers_schema, decoder)
+    elif writers_schema.type == 'enum':
+      return self.skip_enum(writers_schema, decoder)
+    elif writers_schema.type == 'array':
+      return self.skip_array(writers_schema, decoder)
+    elif writers_schema.type == 'map':
+      return self.skip_map(writers_schema, decoder)
+    elif writers_schema.type in ['union', 'error_union']:
+      return self.skip_union(writers_schema, decoder)
+    elif writers_schema.type in ['record', 'error', 'request']:
+      return self.skip_record(writers_schema, decoder)
     else:
-      fail_msg = "Unknown schema type: %s" % writer_schema.type
+      fail_msg = "Unknown schema type: %s" % writers_schema.type
       raise schema.AvroException(fail_msg)
 
   def read_fixed(self, writer_schema, reader_schema, decoder):
@@ -805,7 +805,7 @@ class DatumWriter(object):
 
   def write(self, datum, encoder):
     # validate datum
-    if not Validate(self.writer_schema, datum):
+    if not validate(self.writer_schema, datum):
       raise AvroTypeException(self.writer_schema, datum)
 
     self.write_data(self.writer_schema, datum, encoder)
@@ -911,7 +911,7 @@ class DatumWriter(object):
     # resolve union
     index_of_schema = -1
     for i, candidate_schema in enumerate(writer_schema.schemas):
-      if Validate(candidate_schema, datum):
+      if validate(candidate_schema, datum):
         index_of_schema = i
     if index_of_schema < 0: raise AvroTypeException(writer_schema, datum)
 

@@ -77,7 +77,7 @@ ECHO_PROTOCOL_JSON = """
 """
 
 
-ECHO_PROTOCOL = protocol.Parse(ECHO_PROTOCOL_JSON)
+ECHO_PROTOCOL = protocol.parse(ECHO_PROTOCOL_JSON)
 
 
 class EchoResponder(ipc.Responder):
@@ -86,7 +86,7 @@ class EchoResponder(ipc.Responder):
         local_protocol=ECHO_PROTOCOL,
     )
 
-  def Invoke(self, message, request):
+  def invoke(self, message, request):
     logging.info('Message: %s', message)
     logging.info('Request: %s', request)
     ping = request['ping']
@@ -136,19 +136,19 @@ class TestIPC(unittest.TestCase):
           local_protocol=ECHO_PROTOCOL,
           transceiver=transceiver,
       )
-      response = requestor.Request(
+      response = requestor.request(
           message_name='ping',
           request_datum={'ping': {'timestamp': 31415, 'text': 'hello ping'}},
       )
       logging.info('Received echo response: %s', response)
 
-      response = requestor.Request(
+      response = requestor.request(
           message_name='ping',
           request_datum={'ping': {'timestamp': 123456, 'text': 'hello again'}},
       )
       logging.info('Received echo response: %s', response)
 
-      transceiver.Close()
+      transceiver.close()
 
     finally:
       self.StopEchoServer()

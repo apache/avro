@@ -82,14 +82,14 @@ class RequestStreamingProducer(object):
 
   total_bytes_sent = property(_get_total_bytes_sent, _set_total_bytes_sent)
 
-  def startProducing(self, consumer):
+  def start_producing(self, consumer):
     if self.started:
       return
 
     self.started = True
     self._consumer = consumer
     # Keep writing data to the consumer until we're finished,
-    # paused (pauseProducing()) or stopped (stopProducing())
+    # paused (pause_producing()) or stopped (stop_producing())
     while self.length - self.total_bytes_sent > 0 and \
       not self.paused and not self.stopped:
       self.write()
@@ -97,14 +97,14 @@ class RequestStreamingProducer(object):
     # the entire message to the consumer
     return self.deferred
 
-  def resumeProducing(self):
+  def resume_producing(self):
     self.paused = False
     self.write(self)
 
-  def pauseProducing(self):
+  def pause_producing(self):
     self.paused = True
 
-  def stopProducing(self):
+  def stop_producing(self):
     self.stopped = True
 
   def write(self):
@@ -117,7 +117,7 @@ class RequestStreamingProducer(object):
     self.total_bytes_sent += buffer_length
     # Make sure we wrote the entire message
     if self.total_bytes_sent == self.length and not self.stopped:
-      self.stopProducing()
+      self.stop_producing()
       # A message is always terminated by a zero-length buffer.
       self.write_buffer_length(0)
       self.deferred.callback(None)
@@ -139,7 +139,7 @@ class AvroProtocol(Protocol):
     self.finished = finished
     self.message = []
 
-  def dataReceived(self, data):
+  def data_received(self, data):
     self.recvd = self.recvd + data
     while len(self.recvd) >= ipc.BUFFER_HEADER_LENGTH:
       buffer_length ,= ipc.BIG_ENDIAN_INT_STRUCT.unpack(
@@ -155,7 +155,7 @@ class AvroProtocol(Protocol):
       self.recvd = self.recvd[buffer_length + ipc.BUFFER_HEADER_LENGTH:]
       self.message.append(buffer)
 
-  def connectionLost(self, reason):
+  def connection_lost(self, reason):
     if not self.done:
       self.finished.errback(ipc.ConnectionClosedException("Reader read 0 bytes."))
 
