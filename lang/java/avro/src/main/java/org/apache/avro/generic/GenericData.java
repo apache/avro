@@ -25,11 +25,13 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -501,23 +503,24 @@ public class GenericData {
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
   public String toString(Object datum) {
     StringBuilder buffer = new StringBuilder();
-    toString(datum, buffer, 0);
+    toString(datum, buffer, new IdentityHashMap<Object, Object>(128) );
     return buffer.toString();
   }
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
-  protected void toString(Object datum, StringBuilder buffer, int recursionDepth) {
-    if (recursionDepth > 50) {
-      buffer.append(" \">>> RECURSION TOO DEEP, ABORTING <<<\" ");
+  protected void toString(Object datum, StringBuilder buffer, IdentityHashMap<Object, Object> seenObjects) {
+    if (seenObjects.containsKey(datum)) {
+      buffer.append(" \">>> CIRCULAR REFERENCE CANNOT BE PUT IN JSON STRING, ABORTING RECURSION<<<\" ");
       return;
     }
+    seenObjects.put(datum, datum);
     if (isRecord(datum)) {
       buffer.append("{");
       int count = 0;
       Schema schema = getRecordSchema(datum);
       for (Field f : schema.getFields()) {
-        toString(f.name(), buffer, recursionDepth + 1);
+        toString(f.name(), buffer, seenObjects);
         buffer.append(": ");
-        toString(getField(datum, f.name(), f.pos()), buffer, recursionDepth + 1);
+        toString(getField(datum, f.name(), f.pos()), buffer, seenObjects);
         if (++count < schema.getFields().size())
           buffer.append(", ");
       }
@@ -528,7 +531,7 @@ public class GenericData {
       long last = array.size()-1;
       int i = 0;
       for (Object element : array) {
-        toString(element, buffer, recursionDepth + 1);
+        toString(element, buffer, seenObjects);
         if (i++ < last)
           buffer.append(", ");
       }
@@ -539,9 +542,9 @@ public class GenericData {
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet()) {
-        toString(entry.getKey(), buffer, recursionDepth + 1);
+        toString(entry.getKey(), buffer, seenObjects);
         buffer.append(": ");
-        toString(entry.getValue(), buffer, recursionDepth + 1);
+        toString(entry.getValue(), buffer, seenObjects);
         if (++count < map.size())
           buffer.append(", ");
       }
@@ -563,7 +566,7 @@ public class GenericData {
       buffer.append(datum);
       buffer.append("\"");
     } else if (datum instanceof GenericData) {
-        toString(datum, buffer, recursionDepth + 1);
+        toString(datum, buffer, seenObjects);
     } else {
       buffer.append(datum);
     }
