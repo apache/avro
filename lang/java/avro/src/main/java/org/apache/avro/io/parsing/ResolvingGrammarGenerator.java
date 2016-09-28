@@ -322,7 +322,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   public static void encode(Encoder e, Schema s, GeneralJsonNode n) throws IOException {
     encode(e, s, JacksonUtils.toJsonNode(n));
   }
-  
+
   private static void encode(Encoder e, Schema s, JsonNode n)
     throws IOException {
     switch (s.getType()) {

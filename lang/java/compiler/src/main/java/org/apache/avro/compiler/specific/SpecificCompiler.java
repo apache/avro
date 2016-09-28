@@ -41,6 +41,8 @@ import org.apache.avro.data.TimeConversions.DateConversion;
 import org.apache.avro.data.TimeConversions.TimeConversion;
 import org.apache.avro.data.TimeConversions.TimestampConversion;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
 import org.codehaus.jackson.JsonNode;
 
 import org.apache.avro.Protocol;
@@ -489,8 +491,7 @@ public class SpecificCompiler {
     Map<Schema,Schema> types = new LinkedHashMap<Schema,Schema>();
 
     // Copy properties
-    for (Map.Entry<String,JsonNode> prop : p.getJsonProps().entrySet())
-      newP.addProp(prop.getKey(), prop.getValue());   // copy props
+    newP.addAllProps(p);
 
     // annotate types
     Collection<Schema> namedTypes = new LinkedHashSet<Schema>();
@@ -502,9 +503,9 @@ public class SpecificCompiler {
     Map<String,Message> newM = newP.getMessages();
     for (Message m : p.getMessages().values())
       newM.put(m.getName(), m.isOneWay()
-               ? newP.createMessage(m.getName(), m.getDoc(), m.getJsonProps(),
+               ? newP.createMessage(m.getName(), m.getDoc(), m,
                                     addStringType(m.getRequest(), types))
-               : newP.createMessage(m.getName(), m.getDoc(), m.getJsonProps(),
+               : newP.createMessage(m.getName(), m.getDoc(), m,
                                     addStringType(m.getRequest(), types),
                                     addStringType(m.getResponse(), types),
                                     addStringType(m.getErrors(), types)));
@@ -537,8 +538,7 @@ public class SpecificCompiler {
         Schema fSchema = addStringType(f.schema(), seen);
         Field newF =
           new Field(f.name(), fSchema, f.doc(), f.defaultValue(), f.order());
-        for (Map.Entry<String,JsonNode> p : f.getJsonProps().entrySet())
-          newF.addProp(p.getKey(), p.getValue()); // copy props
+        newF.addAllProps(f);
         for (String a : f.aliases())
           newF.addAlias(a);                       // copy aliases
         newFields.add(newF);
@@ -561,15 +561,14 @@ public class SpecificCompiler {
       result = Schema.createUnion(types);
       break;
     }
-    for (Map.Entry<String,JsonNode> p : s.getJsonProps().entrySet())
-      result.addProp(p.getKey(), p.getValue());   // copy props
+    result.addAllProps(s);
     seen.put(s, result);
     return result;
   }
 
-  private String getStringType(JsonNode overrideClassProperty) {
+  private String getStringType(GeneralJsonNode overrideClassProperty) {
     if (overrideClassProperty != null)
-      return overrideClassProperty.getTextValue();
+      return JacksonUtils.toSpecific(overrideClassProperty).getTextValue();
     switch (stringType) {
     case String:        return "java.lang.String";
     case Utf8:          return "org.apache.avro.util.Utf8";
@@ -680,7 +679,7 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the java annotations for a schema. */
   public String[] javaAnnotations(JsonProperties props) {
-    JsonNode value = props.getJsonProp("javaAnnotation");
+    JsonNode value = JacksonUtils.toSpecific(props.getJsonProp("javaAnnotation"));
     if (value == null)
       return new String[0];
     if (value.isTextual())

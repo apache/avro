@@ -276,7 +276,7 @@ public class Protocol extends JsonProperties {
                                    Map<String,T> propMap, Schema request) {
     return new Message(name, doc, propMap, request);
   }
-  
+
   /** Creates a one-way message using all the properties of <code>props</code> */
   public Message createMessage(String name, String doc, JsonProperties props, Schema request) {
     return createMessage(name, doc, props.getJsonProps(), request);

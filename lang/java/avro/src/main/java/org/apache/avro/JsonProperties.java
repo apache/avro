@@ -162,7 +162,7 @@ public abstract class JsonProperties {
   public void addProp(String name, String value) {
     addProp(name, TextNode.valueOf(value));
   }
-  
+
   /**
    * Adds a property with the given name <tt>name</tt> and
    * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
@@ -191,10 +191,9 @@ public abstract class JsonProperties {
       throw new AvroRuntimeException("Can't overwrite property: " + name);
   }
 
-  // TODO: comment back...
-//  public synchronized void addProp(String name, Object value) {
-//    addProp(name, JacksonUtils.toJsonNode(value));
-//  }
+  public synchronized void addProp(String name, Object value) {
+    addProp(name, JacksonUtils.toJsonNode(value));
+  }
 
   /** Return the defined properties that have string values. */
   @Deprecated public Map<String,String> getProps() {
@@ -232,7 +231,7 @@ public abstract class JsonProperties {
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       gen.writeObjectField(e.getKey(), e.getValue());
   }
-  
+
   public void addAllProps(JsonProperties props) {
     for (Entry<String, JsonNode> e : props.props.entrySet())
       this.props.put(e.getKey(), e.getValue());

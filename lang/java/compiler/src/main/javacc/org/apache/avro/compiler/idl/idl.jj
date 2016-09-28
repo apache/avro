@@ -73,6 +73,7 @@ import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
+import org.apache.avro.util.internal.JacksonUtils;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.*;
@@ -1010,7 +1011,7 @@ Protocol CompilationUnit():
 /*
  * Declaration syntax follows.
  */
-Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
+private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
 {
   Schema s;
   String savedSpace = this.namespace;
@@ -1034,7 +1035,7 @@ Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
        for (String alias : getTextProps("aliases", props, token))
          s.addAlias(alias);
      } else {                                     // add all other props
-       s.addProp(key, props.get(key));
+       s.addProp(key, JacksonUtils.toGeneral(props.get(key)));
      }
 
    return s;
@@ -1085,7 +1086,7 @@ Protocol ProtocolDeclaration():
    for (String key : props.keySet())
      if ("namespace".equals(key)) {               // already handled: ignore
      } else {                                     // add all other props
-       p.addProp(key, props.get(key));
+       p.addProp(key, JacksonUtils.toGeneral(props.get(key)));
      }
  }
  ProtocolBody(p)
@@ -1272,7 +1273,7 @@ Schema RecordDeclaration():
   }
 }
 
-void SchemaProperty(Map<String, JsonNode> properties):
+private void SchemaProperty(Map<String, JsonNode> properties):
 {
   String key;
   JsonNode val;
@@ -1302,7 +1303,7 @@ void FieldDeclaration(List<Field> fields):
   ";"
   {
     for (String key : props.keySet())
-      type.addProp(key, props.get(key));
+      type.addProp(key, JacksonUtils.toGeneral(props.get(key)));
   }
 }
 
@@ -1324,14 +1325,14 @@ void VariableDeclarator(Schema type, List<Field> fields):
     for (String key : props.keySet())
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
-    Field field = new Field(name, type, getDoc(), defaultValue, order);
+    Field field = new Field(name, type, getDoc(), JacksonUtils.toGeneral(defaultValue), order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
         for (String alias : getTextProps("aliases", props, token))
           field.addAlias(alias);
       } else {                                    // add all other props
-        field.addProp(key, props.get(key));
+        field.addProp(key, JacksonUtils.toGeneral(props.get(key)));
       }
     fields.add(field);
   }
@@ -1347,7 +1348,7 @@ String MessageDocumentation():
    }
 }
 
-Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
+private Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
 {
   String msgDoc;
   String name;
@@ -1423,7 +1424,7 @@ Schema Type():
   )
   {
     for (String key : props.keySet())
-      s.addProp(key, props.get(key));
+      s.addProp(key, JacksonUtils.toGeneral(props.get(key)));
     return s;
   }
 }
@@ -1576,7 +1577,7 @@ Token AnyIdentifier():
   }
 }
 
-JsonNode Json() :
+private JsonNode Json() :
 { String s; Token t; JsonNode n; }
 { 
 ( s = JsonString() { n = new TextNode(s); }
@@ -1601,7 +1602,7 @@ String JsonString() :
   }
 }
 
-JsonNode JsonObject() :
+private JsonNode JsonObject() :
 { 
   ObjectNode o = FACTORY.objectNode();
 }
@@ -1610,13 +1611,13 @@ JsonNode JsonObject() :
   { return o; }
 }
 
-void JsonFields(ObjectNode o) :
+private void JsonFields(ObjectNode o) :
 {}
 {
   JsonPair(o) [ "," JsonFields(o) ]
 }
 
-void JsonPair(ObjectNode o) :
+private void JsonPair(ObjectNode o) :
 {
   String name;
   JsonNode value;
@@ -1626,14 +1627,14 @@ void JsonPair(ObjectNode o) :
     { o.put(name, value); } 
 }
 
-JsonNode JsonArray() :
+private JsonNode JsonArray() :
 { ArrayNode a = FACTORY.arrayNode(); }
 {
   <LBRACK> [ JsonElements(a) ] <RBRACK>
     { return a; }
 }
 
-void JsonElements(ArrayNode a) :
+private void JsonElements(ArrayNode a) :
 { JsonNode element; }
 {
   element=Json() { a.add(element); } [ "," JsonElements(a) ]

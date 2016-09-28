@@ -136,11 +136,10 @@ public abstract class Schema extends JsonProperties {
     hashCode = NO_HASHCODE;
   }
 
-  // TODO: comment back
-//  @Override public void addProp(String name, Object value) {
-//    super.addProp(name, value);
-//    hashCode = NO_HASHCODE;
-//  }
+  @Override public void addProp(String name, Object value) {
+    super.addProp(name, value);
+    hashCode = NO_HASHCODE;
+  }
 
   public LogicalType getLogicalType() {
     return logicalType;
