@@ -276,11 +276,6 @@ public class Protocol extends JsonProperties {
     return new Message(name, doc, propMap, request);
   }
 
-  /** Creates a one-way message using all the properties of <code>props</code> */
-  public Message createMessage(String name, String doc, JsonProperties props, Schema request) {
-    return createMessage(name, doc, props.getJsonProps(), request);
-  }
-
   /** Create a two-way message. */
   @Deprecated
   public Message createMessage(String name, String doc, Schema request,
@@ -293,12 +288,6 @@ public class Protocol extends JsonProperties {
                                    Map<String,T> propMap, Schema request,
                                    Schema response, Schema errors) {
     return new TwoWayMessage(name, doc, propMap, request, response, errors);
-  }
-
-  /** Create a two-way message using all the properties of <code>props</code> */
-  public Message createMessage(String name, String doc, JsonProperties props, Schema request, Schema response,
-      Schema errors) {
-    return createMessage(name, doc, props.getJsonProps(), request, response, errors);
   }
 
   public boolean equals(Object o) {

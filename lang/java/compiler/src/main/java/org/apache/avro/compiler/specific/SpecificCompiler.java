@@ -503,9 +503,9 @@ public class SpecificCompiler {
     Map<String,Message> newM = newP.getMessages();
     for (Message m : p.getMessages().values())
       newM.put(m.getName(), m.isOneWay()
-               ? newP.createMessage(m.getName(), m.getDoc(), m,
+               ? newP.createMessage(m.getName(), m.getDoc(), Accessor.getJsonProps(m),
                                     addStringType(m.getRequest(), types))
-               : newP.createMessage(m.getName(), m.getDoc(), m,
+               : newP.createMessage(m.getName(), m.getDoc(), Accessor.getJsonProps(m),
                                     addStringType(m.getRequest(), types),
                                     addStringType(m.getResponse(), types),
                                     addStringType(m.getErrors(), types)));

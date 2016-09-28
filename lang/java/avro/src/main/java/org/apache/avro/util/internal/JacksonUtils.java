@@ -34,7 +34,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.util.TokenBuffer;
 
 public class JacksonUtils {
-
   static final String BYTES_CHARSET = "ISO-8859-1";
 
   private JacksonUtils() {
