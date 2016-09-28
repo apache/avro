@@ -390,7 +390,18 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       case String:
         return String.class;
       default:
-        return CharSequence.class;
+        return DEFAULT_STRING_CLASS;
+    }
+  }
+
+  private static final Class DEFAULT_STRING_CLASS;
+
+  static {
+    try {
+      DEFAULT_STRING_CLASS = Class.forName(System.getProperty("avro.generic.default.stringClass",
+              "java.lang.CharSequence"));
+    } catch (ClassNotFoundException ex) {
+      throw new ExceptionInInitializerError(ex);
     }
   }
 
