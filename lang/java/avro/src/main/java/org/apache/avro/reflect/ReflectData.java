@@ -53,13 +53,13 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.util.ClassUtils;
-import org.apache.avro.util.internal.JacksonUtils;
-import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
+import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.SchemaNormalization;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.NullNode;
 
 import com.thoughtworks.paranamer.CachingParanamer;
@@ -605,15 +605,15 @@ public class ReflectData extends SpecificData {
               Schema fieldSchema = createFieldSchema(field, names);
               AvroDefault defaultAnnotation
                 = field.getAnnotation(AvroDefault.class);
-              GeneralJsonNode defaultValue = (defaultAnnotation == null)
+              JsonNode defaultValue = (defaultAnnotation == null)
                 ? null
-                : Schema.parseJson(defaultAnnotation.value());
+                : Accessor.parseJson(defaultAnnotation.value());
 
               if (defaultValue == null
                   && fieldSchema.getType() == Schema.Type.UNION) {
                 Schema defaultType = fieldSchema.getTypes().get(0);
                 if (defaultType.getType() == Schema.Type.NULL) {
-                  defaultValue = JacksonUtils.toGeneral(NullNode.getInstance());
+                  defaultValue = NullNode.getInstance();
                 }
               }
               AvroName annotatedName = field.getAnnotation(AvroName.class);       // Rename fields

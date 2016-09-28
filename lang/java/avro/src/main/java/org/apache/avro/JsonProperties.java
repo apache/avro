@@ -24,8 +24,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.io.IOException;
 
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.JsonPropertiesAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
-import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.node.TextNode;
@@ -110,6 +111,26 @@ import org.codehaus.jackson.node.TextNode;
  * @see org.apache.avro.data.Json
  */
 public abstract class JsonProperties {
+
+  static {
+    Accessor.setAccessor(new JsonPropertiesAccessor() {
+      @Override
+      protected JsonNode getJsonProp(JsonProperties props, String name) {
+        return props.getJsonProp(name);
+      }
+
+      @Override
+      protected void addProp(JsonProperties props, String name, JsonNode value) {
+        props.addProp(name, value);
+      }
+
+      @Override
+      protected Map<String, JsonNode> getJsonProps(JsonProperties props) {
+        return props.getJsonProps();
+      }
+    });
+  }
+
   public static class Null {
     private Null() {}
   }
@@ -129,17 +150,16 @@ public abstract class JsonProperties {
    * Returns <tt>null</tt> if there is no string-valued property with that name.
    */
   public String getProp(String name) {
-    JsonNode value = props.get(name);
+    JsonNode value = getJsonProp(name);
     return value != null && value.isTextual() ? value.getTextValue() : null;
   }
 
   /**
    * Returns the value of the named property in this schema.
    * Returns <tt>null</tt> if there is no property with that name.
-   * For internal use. Use {@link #getObjectProp(String)} instead.
    */
-  public synchronized GeneralJsonNode getJsonProp(String name) {
-    return JacksonUtils.toGeneral(props.get(name));
+  synchronized JsonNode getJsonProp(String name) {
+    return props.get(name);
   }
 
   /**
@@ -161,20 +181,6 @@ public abstract class JsonProperties {
    */
   public void addProp(String name, String value) {
     addProp(name, TextNode.valueOf(value));
-  }
-
-  /**
-   * Adds a property with the given name <tt>name</tt> and
-   * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
-   * <tt>null</tt>. It is illegal to add a property if another with
-   * the same name but different value already exists in this schema.
-   * For internal use. Use {@link #addProp(String, Object)} instead.
-   *
-   * @param name The name of the property to add
-   * @param value The value for the property to add
-   */
-  public void addProp(String name, GeneralJsonNode value) {
-    addProp(name, JacksonUtils.toSpecific(value));
   }
 
   synchronized void addProp(String name, JsonNode value) {
@@ -230,11 +236,6 @@ public abstract class JsonProperties {
   void writeProps(JsonGenerator gen) throws IOException {
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       gen.writeObjectField(e.getKey(), e.getValue());
-  }
-
-  public void addAllProps(JsonProperties props) {
-    for (Entry<String, JsonNode> e : props.props.entrySet())
-      this.props.put(e.getKey(), e.getValue());
   }
 
 }

@@ -29,6 +29,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.util.internal.Accessor;
 
 /** Abstract base class for RecordBuilder implementations.  Not thread-safe. */
 public abstract class RecordBuilderBase<T extends IndexedRecord>
@@ -85,7 +86,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     if (isValidValue(field, value)) {
       return;
     }
-    else if (field.defaultValue() != null) {
+    else if (Accessor.defaultValue(field) != null) {
       return;
     }
     else {

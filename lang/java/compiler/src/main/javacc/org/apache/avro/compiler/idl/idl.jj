@@ -73,7 +73,7 @@ import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
-import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.Accessor;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.*;
@@ -1035,7 +1035,7 @@ private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
        for (String alias : getTextProps("aliases", props, token))
          s.addAlias(alias);
      } else {                                     // add all other props
-       s.addProp(key, JacksonUtils.toGeneral(props.get(key)));
+       Accessor.addProp(s, key, props.get(key));
      }
 
    return s;
@@ -1086,7 +1086,7 @@ Protocol ProtocolDeclaration():
    for (String key : props.keySet())
      if ("namespace".equals(key)) {               // already handled: ignore
      } else {                                     // add all other props
-       p.addProp(key, JacksonUtils.toGeneral(props.get(key)));
+       Accessor.addProp(p, key, props.get(key));
      }
  }
  ProtocolBody(p)
@@ -1303,7 +1303,7 @@ void FieldDeclaration(List<Field> fields):
   ";"
   {
     for (String key : props.keySet())
-      type.addProp(key, JacksonUtils.toGeneral(props.get(key)));
+      Accessor.addProp(type, key, props.get(key));
   }
 }
 
@@ -1325,14 +1325,14 @@ void VariableDeclarator(Schema type, List<Field> fields):
     for (String key : props.keySet())
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
-    Field field = new Field(name, type, getDoc(), JacksonUtils.toGeneral(defaultValue), order);
+    Field field = Accessor.createField(name, type, getDoc(), defaultValue, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
         for (String alias : getTextProps("aliases", props, token))
           field.addAlias(alias);
       } else {                                    // add all other props
-        field.addProp(key, JacksonUtils.toGeneral(props.get(key)));
+        Accessor.addProp(field, key, props.get(key));
       }
     fields.add(field);
   }
@@ -1424,7 +1424,7 @@ Schema Type():
   )
   {
     for (String key : props.keySet())
-      s.addProp(key, JacksonUtils.toGeneral(props.get(key)));
+      Accessor.addProp(s, key, props.get(key));
     return s;
   }
 }

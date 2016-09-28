@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.apache.avro.Schema.Field;
-import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonGenerator;
@@ -501,7 +500,7 @@ public class Protocol extends JsonProperties {
       if (fieldDocNode != null)
         fieldDoc = fieldDocNode.getTextValue();
       Field newField = new Field(name, Schema.parse(fieldTypeNode,types),
-                                 fieldDoc, JacksonUtils.toGeneral(field.get("default")));
+                                 fieldDoc, field.get("default"));
       Set<String> aliases = Schema.parseAliases(field);
       if (aliases != null) {                      // add aliases
         for (String alias : aliases)

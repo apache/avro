@@ -36,8 +36,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.SchemaAccessor;
+import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
-import org.apache.avro.util.internal.JacksonUtils.GeneralJsonNode;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -80,6 +82,16 @@ import org.codehaus.jackson.node.DoubleNode;
  * </ul>
  */
 public abstract class Schema extends JsonProperties {
+
+  static {
+    Accessor.setAccessor(new SchemaAccessor() {
+      @Override
+      protected JsonNode parseJson(String value) {
+        return Schema.parseJson(value);
+      }
+    });
+  }
+
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
@@ -375,6 +387,25 @@ public abstract class Schema extends JsonProperties {
   /** A field within a record. */
   public static class Field extends JsonProperties {
 
+    static {
+      Accessor.setAccessor(new FieldAccessor() {
+        @Override
+        protected JsonNode defaultValue(Field field) {
+          return field.defaultValue();
+        }
+
+        @Override
+        protected Field createField(String name, Schema schema, String doc, JsonNode defaultValue) {
+          return new Field(name, schema, doc, defaultValue);
+        }
+
+        @Override
+        protected Field createField(String name, Schema schema, String doc, JsonNode defaultValue, Order order) {
+          return new Field(name, schema, doc, defaultValue, order);
+        }
+      });
+    }
+
     /** How values of this field should be ordered when sorting records. */
     public enum Order {
       ASCENDING, DESCENDING, IGNORE;
@@ -390,15 +421,9 @@ public abstract class Schema extends JsonProperties {
     private final Order order;
     private Set<String> aliases;
 
-    /** For internal use. Use {@link #Field(String, Schema, String, Object)} instead.*/
-    public Field(String name, Schema schema, String doc,
-        GeneralJsonNode defaultValue) {
+    Field(String name, Schema schema, String doc,
+        JsonNode defaultValue) {
       this(name, schema, doc, defaultValue, Order.ASCENDING);
-    }
-    /** For internal use. Use {@link #Field(String, Schema, String, Object, Order)} instead.*/
-    public Field(String name, Schema schema, String doc,
-        GeneralJsonNode defaultValue, Order order) {
-      this(name, schema, doc, JacksonUtils.toSpecific(defaultValue), order);
     }
     Field(String name, Schema schema, String doc,
           JsonNode defaultValue, Order order) {
@@ -432,8 +457,7 @@ public abstract class Schema extends JsonProperties {
     public Schema schema() { return schema; }
     /** Field's documentation within the record, if set. May return null. */
     public String doc() { return doc; }
-    /** For internal use. Use {@link #defaultVal()} instead. */
-    public GeneralJsonNode defaultValue() { return JacksonUtils.toGeneral(defaultValue); }
+    JsonNode defaultValue() { return defaultValue; }
     /**
      * @return the default value for this field specified using the mapping
      *  in {@link JsonProperties}
@@ -721,7 +745,7 @@ public abstract class Schema extends JsonProperties {
           gen.writeStringField("doc", f.doc());
         if (f.defaultValue() != null) {
           gen.writeFieldName("default");
-          gen.writeTree(JacksonUtils.toSpecific(f.defaultValue()));
+          gen.writeTree(f.defaultValue());
         }
         if (f.order() != Field.Order.ASCENDING)
           gen.writeStringField("order", f.order().name);
@@ -1215,7 +1239,7 @@ public abstract class Schema extends JsonProperties {
         if (!isValidDefault(field.schema(),
                             defaultValue.has(field.name())
                             ? defaultValue.get(field.name())
-                            : JacksonUtils.toSpecific(field.defaultValue())))
+                            : field.defaultValue()))
           return false;
       return true;
     default:
@@ -1384,12 +1408,9 @@ public abstract class Schema extends JsonProperties {
     return jsonNode != null ? jsonNode.getTextValue() : null;
   }
 
-  /**
-   * Parses a string as Json. For internal use. Use {@link org.apache.avro.data.Json#parseJson(String)} instead.
-   */
-  public static GeneralJsonNode parseJson(String s) {
+  static JsonNode parseJson(String s) {
     try {
-      return JacksonUtils.toGeneral(MAPPER.readTree(FACTORY.createJsonParser(new StringReader(s))));
+      return MAPPER.readTree(FACTORY.createJsonParser(new StringReader(s)));
     } catch (JsonParseException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {

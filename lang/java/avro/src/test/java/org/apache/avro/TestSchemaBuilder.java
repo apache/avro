@@ -267,7 +267,7 @@ public class TestSchemaBuilder {
     Schema recordSchema = fields.get(1).schema().getTypes().get(1);
     Assert.assertEquals(Schema.Type.RECORD, recordSchema.getType());
     Assert.assertEquals("LongList", recordSchema.getName());
-    Assert.assertEquals(NullNode.getInstance(), JacksonUtils.toSpecific(fields.get(1).defaultValue()));
+    Assert.assertEquals(NullNode.getInstance(), fields.get(1).defaultValue());
   }
 
   @Test
