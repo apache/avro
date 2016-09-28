@@ -111,4 +111,9 @@ public abstract class AbstractLogicalType extends JsonProperties implements Logi
     return reserved;
   }
 
+  @Override
+  public void addToSchema(Schema schema) {
+    schema.setLogicalType(this);
+  }
+
 }

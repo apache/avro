@@ -24,4 +24,6 @@ public interface LogicalType  {
 
   String getLogicalTypeName();
 
+  void addToSchema(Schema schema);
+
 }

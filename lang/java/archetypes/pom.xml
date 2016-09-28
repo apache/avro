@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.avro</groupId>
     <artifactId>avro-parent</artifactId>    
-    <version>1.8.0.27p</version>
+    <version>1.8.0.28p-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
