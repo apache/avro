@@ -535,8 +535,6 @@ public class TestGenericData {
 
     Schema schema = idRef.addToSchema(parentSchema);
 
-    System.out.println("Schema: " + schema.toString(true));
-
     Record parent = new Record(schema);
     parent.put("id", 1L);
     parent.put("p", "parent data!");
@@ -547,7 +545,11 @@ public class TestGenericData {
 
     parent.put("child", child);
 
-    assertNotNull(parent.toString()); // This should not fail with an infinite recursion (StackOverflowError)
+    try {
+      assertNotNull(parent.toString()); // This should not fail with an infinite recursion (StackOverflowError)
+    } catch (StackOverflowError e) {
+      fail("StackOverflowError occurred");
+    }
   }
 
 }
