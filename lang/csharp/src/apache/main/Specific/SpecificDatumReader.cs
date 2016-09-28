@@ -77,12 +77,6 @@ namespace Avro.Specific
             return new SpecificFixedAccess(readerSchema);
         }
 
-        private static ObjectCreator.CtorDelegate GetConstructor(string name, Schema.Type schemaType)
-        {
-            var creator = ObjectCreator.Instance;
-            return creator.GetConstructor(name, schemaType, creator.GetType(name, schemaType));
-        }
-
         private class SpecificEnumAccess : EnumAccess
         {
             public object CreateEnum(object reuse, int ordinal)

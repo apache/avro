@@ -269,18 +269,6 @@ namespace Avro.Specific
         }
 
         /// <summary>
-        /// Gets the default constructor for the specified type
-        /// </summary>
-        /// <param name="name">name of object for the type</param>
-        /// <param name="schemaType">schema type for the object</param>
-        /// <param name="type">type of the object</param>
-        /// <returns>Default constructor for the type</returns>
-        public CtorDelegate GetConstructor(string name, Schema.Type schemaType, Type type)
-        {
-            return null;
-        }
-
-        /// <summary>
         /// Creates new instance of the given type
         /// </summary>
         /// <param name="name">fully qualified name of the type</param>
