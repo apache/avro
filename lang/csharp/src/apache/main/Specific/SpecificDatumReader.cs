@@ -93,16 +93,16 @@ namespace Avro.Specific
 
         private class SpecificRecordAccess : RecordAccess
         {
-            private ObjectCreator.CtorDelegate objCreator;
+            private string typeName;
 
             public SpecificRecordAccess(RecordSchema readerSchema)
             {
-                objCreator = GetConstructor(readerSchema.Fullname, Schema.Type.Record);
+                typeName = readerSchema.Fullname;
             }
 
             public object CreateRecord(object reuse)
             {
-                return reuse ?? objCreator();
+                return reuse ?? ObjectCreator.Instance.New(typeName, Schema.Type.Record);
             }
 
             public object GetField(object record, string fieldName, int fieldPos)
@@ -118,16 +118,16 @@ namespace Avro.Specific
 
         private class SpecificFixedAccess : FixedAccess
         {
-            private ObjectCreator.CtorDelegate objCreator;
+            private string typeName;
 
             public SpecificFixedAccess(FixedSchema readerSchema)
             {
-                objCreator = GetConstructor(readerSchema.Fullname, Schema.Type.Fixed);
+                typeName = readerSchema.Fullname;
             }
 
             public object CreateFixed(object reuse)
             {
-                return reuse ?? objCreator();
+                return reuse ?? ObjectCreator.Instance.New(typeName, Schema.Type.Fixed);
             }
 
             public byte[] GetFixedBuffer(object rec)
@@ -138,7 +138,7 @@ namespace Avro.Specific
 
         private class SpecificArrayAccess : ArrayAccess
         {
-            private ObjectCreator.CtorDelegate objCreator;
+            private string typeName;
 
             public SpecificArrayAccess(ArraySchema readerSchema)
             {
@@ -146,8 +146,8 @@ namespace Avro.Specific
                 string type = Avro.CodeGen.getType(readerSchema, false, ref nEnum);
                 type = type.Remove(0, 6);              // remove IList<
                 type = type.Remove(type.Length - 1);   // remove >
-        
-                objCreator = GetConstructor(type, Schema.Type.Array);
+
+                typeName = type;
             }
 
             public object Create(object reuse)
@@ -164,7 +164,7 @@ namespace Avro.Specific
                     array.Clear();
                 }
                 else
-                    array = objCreator() as IList;
+                    array = ObjectCreator.Instance.New(typeName, Schema.Type.Array) as IList;
                 return array;
             }
 
@@ -190,7 +190,7 @@ namespace Avro.Specific
 
         private class SpecificMapAccess : MapAccess
         {
-            private ObjectCreator.CtorDelegate objCreator;
+            private string typeName;
 
             public SpecificMapAccess(MapSchema readerSchema)
             {
@@ -198,8 +198,8 @@ namespace Avro.Specific
                 string type = Avro.CodeGen.getType(readerSchema, false, ref nEnum);
                 type = type.Remove(0, 19);             // remove IDictionary<string,
                 type = type.Remove(type.Length - 1);   // remove >
-        
-                objCreator = GetConstructor(type, Schema.Type.Map);
+
+                typeName = type;
             }
 
             public object Create(object reuse)
@@ -214,7 +214,7 @@ namespace Avro.Specific
                     map.Clear();
                 }
                 else
-                    map = objCreator() as System.Collections.IDictionary;
+                    map = ObjectCreator.Instance.New(typeName, Schema.Type.Map) as System.Collections.IDictionary;
                 return map;
             }
 

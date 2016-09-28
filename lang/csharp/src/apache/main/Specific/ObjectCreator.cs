@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,7 +30,7 @@ namespace Avro.Specific
         public static ObjectCreator Instance { get { return instance; } }
 
         /// <summary>
-        /// Static generic dictionary type used for creating new dictionary instances 
+        /// Static generic dictionary type used for creating new dictionary instances
         /// </summary>
         private Type GenericMapType = typeof(Dictionary<,>);
 
@@ -43,14 +43,12 @@ namespace Avro.Specific
         /// Static generic nullable type used for creating new nullable instances
         /// </summary>
         private Type GenericNullableType = typeof(Nullable<>);
-        
+
         private readonly Assembly execAssembly;
         private readonly Assembly entryAssembly;
         private readonly bool diffAssembly;
 
         public delegate object CtorDelegate();
-        private Type ctorType = typeof(CtorDelegate);
-        Dictionary<NameCtorKey, CtorDelegate> ctors;
 
         private ObjectCreator()
         {
@@ -61,8 +59,6 @@ namespace Avro.Specific
 
             GenericMapType = typeof(Dictionary<,>);
             GenericListType = typeof(List<>);
-
-            ctors = new Dictionary<NameCtorKey, CtorDelegate>();
         }
 
         public struct NameCtorKey : IEquatable<NameCtorKey>
@@ -110,7 +106,7 @@ namespace Avro.Specific
         /// <param name="name">the object type to locate</param>
         /// <param name="throwError">whether or not to throw an error if the type wasn't found</param>
         /// <returns>the object type, or <c>null</c> if not found</returns>
-        private Type FindType(string name,bool throwError) 
+        private Type FindType(string name,bool throwError)
         {
             Type type;
 
@@ -149,7 +145,7 @@ namespace Avro.Specific
                     {
                         if (name == t.Name || name == t.FullName) type = t;
                     }
-                    
+
                     if (type != null)
                         break;
                 }
@@ -185,7 +181,7 @@ namespace Avro.Specific
             case Schema.Type.Double:
                 return typeof(double);
             case Schema.Type.Bytes:
-                return typeof(byte[]); 
+                return typeof(byte[]);
             case Schema.Type.String:
                 return typeof(string);
             case Schema.Type.Union:
@@ -207,7 +203,7 @@ namespace Avro.Specific
                             itemType = GetType(s1);
                         }
 
-                        if (null != itemType ) 
+                        if (null != itemType )
                         {
                             if (itemType.IsValueType && !itemType.IsEnum)
                             {
@@ -217,7 +213,7 @@ namespace Avro.Specific
                                 }
                                 catch (Exception) { }
                             }
-                            
+
                             return itemType;
                         }
                     }
@@ -281,17 +277,7 @@ namespace Avro.Specific
         /// <returns>Default constructor for the type</returns>
         public CtorDelegate GetConstructor(string name, Schema.Type schemaType, Type type)
         {
-            ConstructorInfo ctorInfo = type.GetConstructor(Type.EmptyTypes);
-            if (ctorInfo == null)
-                throw new AvroException("Class " + name + " has no default constructor");
-
-            DynamicMethod dynMethod = new DynamicMethod("DM$OBJ_FACTORY_" + name, typeof(object), null, type, true);
-            ILGenerator ilGen = dynMethod.GetILGenerator();
-            ilGen.Emit(OpCodes.Nop);
-            ilGen.Emit(OpCodes.Newobj, ctorInfo);
-            ilGen.Emit(OpCodes.Ret);
-
-            return (CtorDelegate)dynMethod.CreateDelegate(ctorType);
+            return null;
         }
 
         /// <summary>
@@ -302,20 +288,7 @@ namespace Avro.Specific
         /// <returns>new object of the given type</returns>
         public object New(string name, Schema.Type schemaType)
         {
-            NameCtorKey key = new NameCtorKey(name, schemaType);
-            
-            CtorDelegate ctor;
-            lock(ctors)
-            {
-                if (!ctors.TryGetValue(key, out ctor))
-                {
-                    Type type = GetType(name, schemaType);
-                    ctor = GetConstructor(name, schemaType, type);
-
-                    ctors.Add(key, ctor);
-                }
-            }
-            return ctor();
+            return Activator.CreateInstance(GetType(name, schemaType));
         }
     }
 }
