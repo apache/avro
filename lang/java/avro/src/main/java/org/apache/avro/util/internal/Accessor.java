@@ -25,6 +25,10 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Field.Order;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
+import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonNode;
 
 public class Accessor {
@@ -52,6 +56,11 @@ public class Accessor {
     protected abstract void encode(Encoder e, Schema s, JsonNode n) throws IOException;
   }
 
+  public abstract static class EncoderFactoryAccessor {
+    protected abstract JsonEncoder jsonEncoder(EncoderFactory factory, Schema schema, JsonGenerator gen)
+        throws IOException;
+  }
+
   private static volatile JsonPropertiesAccessor jsonPropertiesAccessor;
 
   private static volatile FieldAccessor fieldAccessor;
@@ -60,32 +69,62 @@ public class Accessor {
 
   private static volatile ResolvingGrammarGeneratorAccessor resolvingGrammarGeneratorAccessor;
 
+  private static volatile EncoderFactoryAccessor encoderFactoryAccessor;
+
   public static void setAccessor(JsonPropertiesAccessor accessor) {
-    if (jsonPropertiesAccessor != null) {
+    if (jsonPropertiesAccessor != null)
       throw new IllegalStateException("JsonPropertiesAccessor already initialized");
-    }
     jsonPropertiesAccessor = accessor;
   }
 
   public static void setAccessor(FieldAccessor accessor) {
-    if (fieldAccessor != null) {
+    if (fieldAccessor != null)
       throw new IllegalStateException("FieldAccessor already initialized");
-    }
     fieldAccessor = accessor;
   }
 
+  private static FieldAccessor fieldAccessor() {
+    if (fieldAccessor == null)
+      ensureLoaded(Field.class);
+    return fieldAccessor;
+  }
+
   public static void setAccessor(SchemaAccessor accessor) {
-    if (schemaAccessor != null) {
+    if (schemaAccessor != null)
       throw new IllegalStateException("SchemaAccessor already initialized");
-    }
     schemaAccessor = accessor;
   }
 
+  private static SchemaAccessor schemaAccessor() {
+    if (schemaAccessor == null)
+      ensureLoaded(Schema.class);
+    return schemaAccessor;
+  }
+
   public static void setAccessor(ResolvingGrammarGeneratorAccessor accessor) {
-    if (resolvingGrammarGeneratorAccessor != null) {
+    if (resolvingGrammarGeneratorAccessor != null)
       throw new IllegalStateException("ResolvingGrammarGeneratorAccessor already initialized");
-    }
     resolvingGrammarGeneratorAccessor = accessor;
+  }
+
+  private static ResolvingGrammarGeneratorAccessor resolvingGrammarGeneratorAccessor() {
+    if (resolvingGrammarGeneratorAccessor == null)
+      ensureLoaded(ResolvingGrammarGenerator.class);
+    return resolvingGrammarGeneratorAccessor;
+  }
+
+  public static void setAccessor(EncoderFactoryAccessor accessor) {
+    if (encoderFactoryAccessor != null)
+      throw new IllegalStateException("EncoderFactoryAccessor already initialized");
+    encoderFactoryAccessor = accessor;
+  }
+
+  private static void ensureLoaded(Class<?> c) {
+    try {
+      Class.forName(c.getName());
+    } catch (ClassNotFoundException e) {
+      // Shall never happen as the class is specified by its Class instance
+    }
   }
 
   public static void addProp(JsonProperties props, String name, JsonNode value) {
@@ -101,23 +140,27 @@ public class Accessor {
   }
 
   public static void encode(Encoder e, Schema s, JsonNode n) throws IOException {
-    resolvingGrammarGeneratorAccessor.encode(e, s, n);
+    resolvingGrammarGeneratorAccessor().encode(e, s, n);
   }
 
   public static JsonNode parseJson(String value) {
-    return schemaAccessor.parseJson(value);
+    return schemaAccessor().parseJson(value);
   }
 
   public static Field createField(String name, Schema schema, String doc, JsonNode defaultValue, Order order) {
-    return fieldAccessor.createField(name, schema, doc, defaultValue, order);
+    return fieldAccessor().createField(name, schema, doc, defaultValue, order);
   }
 
   public static Field createField(String name, Schema schema, String doc, JsonNode defaultValue) {
-    return fieldAccessor.createField(name, schema, doc, defaultValue);
+    return fieldAccessor().createField(name, schema, doc, defaultValue);
   }
 
   public static Map<String, JsonNode> getJsonProps(JsonProperties props) {
     return jsonPropertiesAccessor.getJsonProps(props);
+  }
+
+  public static JsonEncoder jsonEncoder(EncoderFactory factory, Schema schema, JsonGenerator gen) throws IOException {
+    return encoderFactoryAccessor.jsonEncoder(factory, schema, gen);
   }
 
 }

@@ -999,7 +999,7 @@ public class GenericData {
       try {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-        Accessor.encode(encoder, field.schema(), Accessor.defaultValue(field));
+        Accessor.encode(encoder, field.schema(), json);
         encoder.flush();
         BinaryDecoder decoder =
           DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);

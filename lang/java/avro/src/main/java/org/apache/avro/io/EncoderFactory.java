@@ -22,6 +22,9 @@ import java.io.OutputStream;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.EncoderFactoryAccessor;
+import org.codehaus.jackson.JsonGenerator;
 
 /**
  * A factory for creating and configuring {@link Encoder} instances.
@@ -40,6 +43,16 @@ import org.apache.avro.Schema;
  */
 
 public class EncoderFactory {
+
+  static {
+    Accessor.setAccessor(new EncoderFactoryAccessor() {
+      @Override
+      protected JsonEncoder jsonEncoder(EncoderFactory factory, Schema schema, JsonGenerator gen) throws IOException {
+        return factory.jsonEncoder(schema, gen);
+      }
+    });
+  }
+
   private static final int DEFAULT_BUFFER_SIZE = 2048;
   private static final int DEFAULT_BLOCK_BUFFER_SIZE = 64 * 1024;
   private static final int MIN_BLOCK_BUFFER_SIZE = 64;
@@ -302,6 +315,27 @@ public class EncoderFactory {
   public JsonEncoder jsonEncoder(Schema schema, OutputStream out, boolean pretty)
       throws IOException {
     return new JsonEncoder(schema, out, pretty);
+  }
+
+  /**
+   * Creates a {@link JsonEncoder} using the {@link JsonGenerator} provided for
+   * output of data conforming to the Schema provided.
+   * <p/>
+   * {@link JsonEncoder} buffers its output. Data may not appear on the
+   * underlying output until {@link Encoder#flush()} is called.
+   * <p/>
+   * {@link JsonEncoder} is not thread-safe.
+   *
+   * @param schema
+   *          The Schema for data written to this JsonEncoder. Cannot be null.
+   * @param gen
+   *          The JsonGenerator to write with. Cannot be null.
+   * @return A JsonEncoder configured with <i>gen</i> and <i>schema</i>
+   * @throws IOException
+   */
+  JsonEncoder jsonEncoder(Schema schema, JsonGenerator gen)
+      throws IOException {
+    return new JsonEncoder(schema, gen);
   }
 
   /**

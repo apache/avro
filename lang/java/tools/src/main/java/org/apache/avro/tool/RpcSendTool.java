@@ -36,6 +36,10 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.ipc.Ipc;
 import org.apache.avro.ipc.generic.GenericRequestor;
+import org.apache.avro.util.internal.Accessor;
+import org.codehaus.jackson.JsonEncoding;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
 
 /**
  * Sends a single RPC message.
@@ -102,7 +106,11 @@ public class RpcSendTool implements Tool {
   private void dumpJson(PrintStream out, Schema schema, Object datum)
   throws IOException {
     DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
-    writer.write(datum, EncoderFactory.get().jsonEncoder(schema, out, true));
+    JsonGenerator g =
+      new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
+    g.useDefaultPrettyPrinter();
+    writer.write(datum, Accessor.jsonEncoder(EncoderFactory.get(), schema, g));
+    g.flush();
     out.println();
     out.flush();
   }

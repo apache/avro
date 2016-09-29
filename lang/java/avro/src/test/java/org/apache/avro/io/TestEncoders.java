@@ -77,13 +77,20 @@ public class TestEncoders {
   public void testJsonEncoderInit() throws IOException {
     Schema s = Schema.parse("\"int\"");
     OutputStream out = new ByteArrayOutputStream();
-    JsonEncoder enc = factory.jsonEncoder(s, out);
+    factory.jsonEncoder(s, out);
+    JsonEncoder enc = factory.jsonEncoder(s,
+        new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8));
     enc.configure(out);
   }
 
   @Test(expected=NullPointerException.class)
   public void testBadJsonEncoderInitOS() throws IOException {
     factory.jsonEncoder(Schema.create(Type.INT), (OutputStream)null);
+  }
+
+  @Test(expected=NullPointerException.class)
+  public void testBadJsonEncoderInit() throws IOException {
+    factory.jsonEncoder(Schema.create(Type.INT), (JsonGenerator)null);
   }
 
   @Test

@@ -621,7 +621,7 @@ public class ReflectData extends SpecificData {
                 ? annotatedName.value()
                 : field.getName();
               Schema.Field recordField
-                = new Schema.Field(fieldName, fieldSchema, null, defaultValue);
+                = Accessor.createField(fieldName, fieldSchema, null, defaultValue);
 
               AvroMeta meta = field.getAnnotation(AvroMeta.class);              // add metadata
               if (meta != null)
