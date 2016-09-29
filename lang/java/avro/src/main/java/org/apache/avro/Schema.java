@@ -1072,8 +1072,7 @@ public abstract class Schema extends JsonProperties {
    * The contents of <tt>file</tt> is expected to be in UTF-8 format.
    * @param file  The file to read the schema from.
    * @return  The freshly built Schema.
-   * @throws IOException if there was trouble reading the contents
-   * @throws JsonParseException if the contents are invalid
+   * @throws IOException if there was trouble reading the contents or they are invalid
    * @deprecated use {@link Schema.Parser} instead.
    */
   public static Schema parse(File file) throws IOException {
@@ -1085,8 +1084,7 @@ public abstract class Schema extends JsonProperties {
    * The contents of <tt>in</tt> is expected to be in UTF-8 format.
    * @param in  The input stream to read the schema from.
    * @return  The freshly built Schema.
-   * @throws IOException if there was trouble reading the contents
-   * @throws JsonParseException if the contents are invalid
+   * @throws IOException if there was trouble reading the contents or they are invalid
    * @deprecated use {@link Schema.Parser} instead.
    */
   public static Schema parse(InputStream in) throws IOException {
