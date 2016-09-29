@@ -17,10 +17,6 @@
  */
 package org.apache.avro.reflect;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +25,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+
+import static org.junit.Assert.*;
+
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
