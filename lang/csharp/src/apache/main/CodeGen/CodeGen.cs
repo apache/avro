@@ -853,7 +853,11 @@ namespace Avro
             {
                 var ns = nsc[i];
 
-                string dir = outputdir + "\\" + CodeGenUtil.Instance.UnMangle(ns.Name).Replace('.', '\\');
+                string dir = outputdir;
+                foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                {
+                    dir = Path.Combine(dir, name);
+                }
                 Directory.CreateDirectory(dir);
 
                 var new_ns = new CodeNamespace(ns.Name);
@@ -865,7 +869,7 @@ namespace Avro
                 for (int j = 0; j < types.Count; j++)
                 {
                     var ctd = types[j];
-                    string file = dir + "\\" + CodeGenUtil.Instance.UnMangle(ctd.Name) + ".cs";
+                    string file = Path.Combine(dir, Path.ChangeExtension(CodeGenUtil.Instance.UnMangle(ctd.Name), "cs"));
                     using (var writer = new StreamWriter(file, false))
                     {
                         new_ns.Types.Add(ctd);
