@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public class LogicalTypes {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(LogicalTypes.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LogicalTypes.class);
 
   public interface LogicalTypeFactory {
     LogicalType fromSchema(Schema schema);
@@ -86,11 +86,11 @@ public class LogicalTypes {
         logicalType.validate(schema);
       }
     } catch (RuntimeException e) {
-      LOGGER.debug("Invalid logical type found", e);
+      LOG.debug("Invalid logical type found", e);
       if (throwErrors) {
         throw e;
       }
-      LOGGER.warn("Ignoring invalid logical type for name: {}", typeName);
+      LOG.warn("Ignoring invalid logical type for name: {}", typeName);
       // ignore invalid types
       logicalType = null;
     }
