@@ -217,7 +217,7 @@ public class TestSpecificCompiler {
       if (o.path.endsWith("Simple.java")) {
         count++;
         assertTrue(o.contents.contains("/** Protocol used for testing. */"));
-        assertTrue(o.contents.contains("/** Send a greeting */"));
+        assertTrue(o.contents.contains("* Send a greeting"));
       }
     }
     assertEquals("Missed generated protocol!", 1, count);
