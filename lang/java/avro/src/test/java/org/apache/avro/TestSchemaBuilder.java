@@ -740,8 +740,7 @@ public class TestSchemaBuilder {
 
     Assert.assertEquals("int field default type or value mismatch", intDef, schema.getField("int").defaultVal());
     Assert.assertEquals("long field default type or value mismatch", longDef, schema.getField("long").defaultVal());
-    // TODO: Currently failing; will be solved after having the Jackson >=2.2 upgrade
-//    Assert.assertEquals("float field default type or value mismatch", floatDef, schema.getField("float").defaultVal());
+    Assert.assertEquals("float field default type or value mismatch", floatDef, schema.getField("float").defaultVal());
     Assert.assertEquals("double field default type or value mismatch", doubleDef,
         schema.getField("double").defaultVal());
   }

@@ -44,8 +44,6 @@ import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.DoubleNode;
-import org.codehaus.jackson.node.IntNode;
-import org.codehaus.jackson.node.LongNode;
 
 /** An abstract data type.
  * <p>A schema may be one of:
@@ -437,7 +435,7 @@ public abstract class Schema extends JsonProperties {
      * @return the default value for this field specified using the mapping
      *  in {@link JsonProperties}
      */
-    public Object defaultVal() { return JacksonUtils.toObject(defaultValue); }
+    public Object defaultVal() { return JacksonUtils.toObject(defaultValue, schema); }
     public Order order() { return order; }
     @Deprecated public Map<String,String> props() { return getProps(); }
     public void addAlias(String alias) {
@@ -1170,7 +1168,7 @@ public abstract class Schema extends JsonProperties {
         +": "+defaultValue+" not a "+schema;
       throw new AvroTypeException(message);     // throw exception
     }
-    return convertToProperType(schema, defaultValue);
+    return defaultValue;
   }
 
   private static boolean isValidDefault(Schema schema, JsonNode defaultValue) {
@@ -1220,32 +1218,6 @@ public abstract class Schema extends JsonProperties {
     default:
       return false;
     }
-  }
-
-  private static JsonNode convertToProperType(Schema schema, JsonNode defaultValue) {
-    if (defaultValue == null)
-      return null;
-    switch (schema.getType()) {
-    case DOUBLE:
-      if (!defaultValue.isDouble() && defaultValue.isFloatingPointNumber())
-        return new DoubleNode(defaultValue.asDouble());
-      break;
-    case FLOAT:
-      // TODO: FloatNode exists in Jackson >=2.2, use it after upgrade
-      break;
-    case LONG:
-      if (!defaultValue.isLong() && defaultValue.isIntegralNumber())
-        return new LongNode(defaultValue.asLong());
-      break;
-    case INT:
-      if (!defaultValue.isInt() && defaultValue.isIntegralNumber())
-        return new IntNode(defaultValue.asInt());
-      break;
-    default:
-      // Nothing to do; returning the original defaultValue
-      break;
-    }
-    return defaultValue;
   }
 
   /** @see #parse(String) */
