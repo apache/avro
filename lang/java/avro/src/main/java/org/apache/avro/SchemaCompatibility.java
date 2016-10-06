@@ -379,8 +379,17 @@ public class SchemaCompatibility {
                 ? SchemaCompatibilityType.COMPATIBLE
                 : SchemaCompatibilityType.INCOMPATIBLE;
           }
-          case BYTES: return SchemaCompatibilityType.INCOMPATIBLE;
-          case STRING: return SchemaCompatibilityType.INCOMPATIBLE;
+          case BYTES: {
+              return (writer.getType() == Type.STRING)
+                      ? SchemaCompatibilityType.COMPATIBLE
+                      : SchemaCompatibilityType.INCOMPATIBLE;
+                }
+          case STRING: {
+              return (writer.getType() == Type.BYTES)
+                  ? SchemaCompatibilityType.COMPATIBLE
+                  : SchemaCompatibilityType.INCOMPATIBLE;
+            }
+
           case ARRAY: return SchemaCompatibilityType.INCOMPATIBLE;
           case MAP: return SchemaCompatibilityType.INCOMPATIBLE;
           case FIXED: return SchemaCompatibilityType.INCOMPATIBLE;
