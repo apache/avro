@@ -725,4 +725,24 @@ public class TestSchemaBuilder {
     Assert.assertEquals(5, rec2read.get("newNullableIntWithDefault"));
   }
 
+  @Test
+  public void testDefaultTypes() {
+    Integer intDef = 1;
+    Long longDef = 2L;
+    Float floatDef = 3F;
+    Double doubleDef = 4D;
+    Schema schema = SchemaBuilder.record("r").fields()
+        .name("int").type().intType().intDefault(intDef)
+        .name("long").type().longType().longDefault(longDef)
+        .name("float").type().floatType().floatDefault(floatDef)
+        .name("double").type().doubleType().doubleDefault(doubleDef)
+        .endRecord();
+
+    Assert.assertEquals("int field default type or value mismatch", intDef, schema.getField("int").defaultVal());
+    Assert.assertEquals("long field default type or value mismatch", longDef, schema.getField("long").defaultVal());
+    Assert.assertEquals("float field default type or value mismatch", floatDef, schema.getField("float").defaultVal());
+    Assert.assertEquals("double field default type or value mismatch", doubleDef,
+        schema.getField("double").defaultVal());
+  }
+
 }

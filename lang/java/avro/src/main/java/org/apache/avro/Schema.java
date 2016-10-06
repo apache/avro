@@ -435,7 +435,7 @@ public abstract class Schema extends JsonProperties {
      * @return the default value for this field specified using the mapping
      *  in {@link JsonProperties}
      */
-    public Object defaultVal() { return JacksonUtils.toObject(defaultValue); }
+    public Object defaultVal() { return JacksonUtils.toObject(defaultValue, schema); }
     public Order order() { return order; }
     @Deprecated public Map<String,String> props() { return getProps(); }
     public void addAlias(String alias) {
