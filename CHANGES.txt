@@ -78,6 +78,9 @@ Trunk (not yet released)
     AVRO-1860: Java: Field#DefaultVal() returns Ints for Long fields.
     (Gabor Szadovszky via cutting)
 
+    AVRO-1929: Java: SchemaCompatibility fails to recognize
+    string<->bytes promotion.  (Anders Sundelin via cutting)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
