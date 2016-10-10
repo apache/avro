@@ -13,6 +13,9 @@ Trunk (not yet released)
     AVRO-1884: Java: Add method to set the compiler output suffix.
     (shijinkui via blue)
 
+    AVRO-1932: Java: Allow setting the SchemaStore on generated classes. 
+    (Niels Basjes)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
