@@ -47,6 +47,13 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   private static final BinaryMessageDecoder<${this.mangle($schema.getName())}> DECODER =
       new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
 
+  /**
+   * Return the BinaryMessageDecoder instance used by this class.
+   */
+  public static BinaryMessageDecoder<${this.mangle($schema.getName())}> getDecoder() {
+    return DECODER;
+  }
+
   /** Serializes this ${schema.getName()} to a ByteBuffer. */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
     return ENCODER.encode(this);

@@ -25,6 +25,13 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   private static final BinaryMessageDecoder<Player> DECODER =
       new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$);
 
+  /**
+   * Return the BinaryMessageDecoder instance used by this class.
+   */
+  public static BinaryMessageDecoder<Player> getDecoder() {
+    return DECODER;
+  }
+
   /** Serializes this Player to a ByteBuffer. */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
     return ENCODER.encode(this);
