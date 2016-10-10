@@ -133,10 +133,8 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
    *
    * @param newResolver a {@link SchemaStore} to use when decoding buffers
    */
-  public void setSchemaStore(SchemaStore newResolver) {
-    if (newResolver != null) {
-      this.resolver = newResolver;
-    }
+  public synchronized void setSchemaStore(SchemaStore newResolver) {
+    resolver = newResolver;
   }
 
   private RawMessageDecoder<D> getDecoder(long fp) {
