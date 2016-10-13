@@ -66,7 +66,7 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
 
   private final GenericData model;
   private final Schema readSchema;
-  private SchemaStore resolver;
+  private final SchemaStore resolver;
 
   private final Map<Long, RawMessageDecoder<D>> codecByFingerprint =
       new MapMaker().makeMap();
@@ -126,15 +126,6 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
     long fp = SchemaNormalization.parsingFingerprint64(writeSchema);
     codecByFingerprint.put(fp,
         new RawMessageDecoder<D>(model, writeSchema, readSchema));
-  }
-
-  /**
-   * Sets the new SchemaStore instance that is to be used to retrieve the schemas.
-   *
-   * @param newResolver a {@link SchemaStore} to use when decoding buffers
-   */
-  public synchronized void setSchemaStore(SchemaStore newResolver) {
-    resolver = newResolver;
   }
 
   private RawMessageDecoder<D> getDecoder(long fp) {

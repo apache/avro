@@ -25,7 +25,6 @@ import org.apache.avro.compiler.schema.evolve.NestedEvolve2;
 import org.apache.avro.compiler.schema.evolve.NestedEvolve3;
 import org.apache.avro.compiler.schema.evolve.TestRecord2;
 import org.apache.avro.compiler.schema.evolve.TestRecord3;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -34,15 +33,9 @@ import static org.junit.Assert.assertEquals;
 
 public class TestCustomSchemaStore {
 
-  @BeforeClass
-  public static void setUpCustomSchemaStore(){
-    // Set the SchemaStore that is capable of decoding NestedEvolve1 and NestedEvolve2 (and NOT NestedEvolve3).
-    NestedEvolve1.getDecoder().setSchemaStore(new CustomSchemaStore());
-  }
-
-  public static class CustomSchemaStore implements SchemaStore {
+  static class CustomSchemaStore implements SchemaStore {
     Cache cache;
-    public CustomSchemaStore() {
+    CustomSchemaStore() {
       cache = new Cache();
       cache.addSchema(NestedEvolve1.getClassSchema());
       cache.addSchema(NestedEvolve2.getClassSchema());
@@ -54,6 +47,8 @@ public class TestCustomSchemaStore {
     }
   }
 
+  private BinaryMessageDecoder<NestedEvolve1> decoder = NestedEvolve1.createDecoder(new CustomSchemaStore());
+
   @Test
   public void testCompatibleReadWithSchemaFromSchemaStore() throws Exception {
     // Create and encode a NestedEvolve2 record.
@@ -62,7 +57,7 @@ public class TestCustomSchemaStore {
     ByteBuffer nestedEvolve2Buffer = rootBuilder.build().toByteBuffer();
 
     // Decode it
-    NestedEvolve1 nestedEvolve1 = NestedEvolve1.fromByteBuffer(nestedEvolve2Buffer);
+    NestedEvolve1 nestedEvolve1 = decoder.decode(nestedEvolve2Buffer);
 
     // Should work
     assertEquals(nestedEvolve1.getRootName(), "RootName");
@@ -78,7 +73,7 @@ public class TestCustomSchemaStore {
     ByteBuffer nestedEvolve3Buffer = rootBuilder.build().toByteBuffer();
 
     // Decode it ... should fail because schema for 'NestedEvolve3' is not available in the SchemaStore
-    NestedEvolve1 nestedEvolve1 = NestedEvolve1.fromByteBuffer(nestedEvolve3Buffer);
+    decoder.decode(nestedEvolve3Buffer);
   }
 
 }

@@ -8,6 +8,7 @@ package avro.examples.baseball;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.SchemaStore;
 
 @SuppressWarnings("all")
 /** 選手 is Japanese for player. */
@@ -30,6 +31,14 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    */
   public static BinaryMessageDecoder<Player> getDecoder() {
     return DECODER;
+  }
+
+  /**
+   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+   */
+  public static BinaryMessageDecoder<Player> createDecoder(SchemaStore resolver) {
+    return new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$, resolver);
   }
 
   /** Serializes this Player to a ByteBuffer. */
