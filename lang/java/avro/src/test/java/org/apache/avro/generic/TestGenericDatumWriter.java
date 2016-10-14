@@ -61,7 +61,7 @@ public class TestGenericDatumWriter {
     Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
     w.write(r, e);
     e.flush();
-    
+
     Object o = new GenericDatumReader<GenericRecord>(s).read(null,
         DecoderFactory.get().jsonDecoder(s, new ByteArrayInputStream(bao.toByteArray())));
     assertEquals(r, o);
@@ -81,7 +81,7 @@ public class TestGenericDatumWriter {
 
     final TestEncoder e = new TestEncoder(EncoderFactory.get()
         .directBinaryEncoder(bao, null), sizeWrittenSignal, eltAddedSignal);
-    
+
     // call write in another thread
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Future<Void> result = executor.submit(new Callable<Void>() {
@@ -103,7 +103,7 @@ public class TestGenericDatumWriter {
       assertTrue(ex.getCause() instanceof ConcurrentModificationException);
     }
   }
-  
+
 
   @Test
   public void testMapConcurrentModification() throws Exception {
@@ -119,7 +119,7 @@ public class TestGenericDatumWriter {
 
     final TestEncoder e = new TestEncoder(EncoderFactory.get()
         .directBinaryEncoder(bao, null), sizeWrittenSignal, eltAddedSignal);
-    
+
     // call write in another thread
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Future<Void> result = executor.submit(new Callable<Void>() {
@@ -141,20 +141,20 @@ public class TestGenericDatumWriter {
       assertTrue(ex.getCause() instanceof ConcurrentModificationException);
     }
   }
-  
+
   static class TestEncoder extends Encoder {
-    
+
     Encoder e;
     CountDownLatch sizeWrittenSignal;
     CountDownLatch eltAddedSignal;
-    
+
     TestEncoder(Encoder encoder, CountDownLatch sizeWrittenSignal,
         CountDownLatch eltAddedSignal) {
       this.e = encoder;
       this.sizeWrittenSignal = sizeWrittenSignal;
       this.eltAddedSignal = eltAddedSignal;
     }
-    
+
     @Override
     public void writeArrayStart() throws IOException {
       e.writeArrayStart();
@@ -176,7 +176,7 @@ public class TestGenericDatumWriter {
         // ignore
       }
     }
-    
+
     @Override
     public void flush() throws IOException { e.flush(); }
     @Override
@@ -236,7 +236,9 @@ public class TestGenericDatumWriter {
   }
 
   private enum AnEnum { ONE, TWO, THREE };
-  @Test(expected=AvroTypeException.class)
+// This is a bit of broken design, since SpecificRecords implement GenericRecord as such
+// they need to be serializable just like any GenericRecord.
+//  @Test(expected=AvroTypeException.class)
   public void writeDoesNotAllowJavaEnumForGenericEnum() throws IOException {
     final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," +
       "\"fields\": [ " +

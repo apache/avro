@@ -47,12 +47,12 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 public class TestGenericData {
-  
+
   @Test(expected=AvroRuntimeException.class)
     public void testrecordConstructorNullSchema() throws Exception {
     new GenericData.Record(null);
   }
-    
+
   @Test(expected=AvroRuntimeException.class)
     public void testrecordConstructorWrongSchema() throws Exception {
     new GenericData.Record(Schema.create(Schema.Type.INT));
@@ -62,7 +62,7 @@ public class TestGenericData {
     public void testArrayConstructorNullSchema() throws Exception {
     new GenericData.Array<Object>(1, null);
   }
-    
+
   @Test(expected=AvroRuntimeException.class)
     public void testArrayConstructorWrongSchema() throws Exception {
     new GenericData.Array<Object>(1, Schema.create(Schema.Type.INT));
@@ -95,7 +95,7 @@ public class TestGenericData {
     Record r = new GenericData.Record(s);
     r.put("invalidFieldName", "someValue");
   }
-  
+
   @Test
   /** Make sure that even with nulls, hashCode() doesn't throw NPE. */
   public void testHashCode() {
@@ -109,7 +109,7 @@ public class TestGenericData {
     r.put(0, stuff);
     GenericData.get().hashCode(r, schema);
   }
-  
+
   @Test
   public void testEquals() {
     Schema s = recordSchema();
@@ -118,7 +118,7 @@ public class TestGenericData {
     GenericRecord r2 = new GenericData.Record(s);
     Collection<CharSequence> l0 = new ArrayDeque<CharSequence>();
     List<CharSequence> l1 = new ArrayList<CharSequence>();
-    GenericArray<CharSequence> l2 = 
+    GenericArray<CharSequence> l2 =
       new GenericData.Array<CharSequence>(1,s.getFields().get(0).schema());
     String foo = "foo";
     l0.add(new StringBuffer(foo));
@@ -131,13 +131,13 @@ public class TestGenericData {
     assertEquals(r0, r2);
     assertEquals(r1, r2);
   }
-  
+
   private Schema recordSchema() {
     List<Field> fields = new ArrayList<Field>();
     fields.add(new Field("anArray", Schema.createArray(Schema.create(Type.STRING)), null, null));
     Schema schema = Schema.createRecord("arrayFoo", "test", "mytest", false);
     schema.setFields(fields);
-    
+
     return schema;
   }
 
@@ -172,7 +172,7 @@ public class TestGenericData {
     GenericData.Record record = new GenericData.Record(schema);
     assertNull(record.get("does not exist"));
   }
-  
+
   @Test
   public void testArrayReversal() {
       Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
@@ -297,24 +297,24 @@ public class TestGenericData {
     assertEquals(10, array.size());
     assertEquals(new Integer(55), array.get(5));
   }
-  
+
   @Test
   public void testToStringIsJson() throws JsonParseException, IOException {
     Field stringField = new Field("string", Schema.create(Type.STRING), null, null);
     Field enumField = new Field("enum", Schema.createEnum("my_enum", "doc", null, Arrays.asList("a", "b", "c")), null, null);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
     schema.setFields(Arrays.asList(stringField, enumField));
-    
+
     GenericRecord r = new GenericData.Record(schema);
     // \u2013 is EN DASH
     r.put(stringField.name(), "hello\nthere\"\tyou\u2013}");
     r.put(enumField.name(), new GenericData.EnumSymbol(enumField.schema(),"a"));
-    
+
     String json = r.toString();
     JsonFactory factory = new JsonFactory();
     JsonParser parser = factory.createJsonParser(json);
     ObjectMapper mapper = new ObjectMapper();
-    
+
     // will throw exception if string is not parsable json
     mapper.readTree(parser);
   }
@@ -356,7 +356,7 @@ public class TestGenericData {
     fields.add(integerField);
     Schema record = Schema.createRecord("test", null, null, false);
     record.setFields(fields);
-    
+
     ByteArrayOutputStream b1 = new ByteArrayOutputStream(5);
     ByteArrayOutputStream b2 = new ByteArrayOutputStream(5);
     BinaryEncoder b1Enc = EncoderFactory.get().binaryEncoder(b1, null);
@@ -389,7 +389,7 @@ public class TestGenericData {
       fail("IOException while writing records to output stream.");
     }
   }
-  
+
   @Test
   public void testEnumCompare() {
     Schema s = Schema.createEnum("Kind",null,null,Arrays.asList("Z","Y","X"));
@@ -410,10 +410,10 @@ public class TestGenericData {
     Field byte_field =
       new Field("bytes", Schema.create(Type.BYTES), null, null);
     schema.setFields(Arrays.asList(byte_field));
-    
+
     GenericRecord record = new GenericData.Record(schema);
     record.put(byte_field.name(), buffer);
-    
+
     GenericRecord copy = GenericData.get().deepCopy(schema, record);
     ByteBuffer buffer_copy = (ByteBuffer) copy.get(byte_field.name());
 
@@ -461,14 +461,16 @@ public class TestGenericData {
   public void validateRequiresGenericSymbolForEnumSchema() {
     final Schema schema = Schema.createEnum("my_enum", "doc", "namespace", Arrays.asList("ONE","TWO","THREE"));
     final GenericData gd = GenericData.get();
-    
+
     /* positive cases */
     assertTrue(gd.validate(schema, new GenericData.EnumSymbol(schema, "ONE")));
     assertTrue(gd.validate(schema, new GenericData.EnumSymbol(schema, anEnum.ONE)));
 
     /* negative cases */
     assertFalse("We don't expect GenericData to allow a String datum for an enum schema", gd.validate(schema, "ONE"));
-    assertFalse("We don't expect GenericData to allow a Java Enum for an enum schema", gd.validate(schema, anEnum.ONE));
+// This is a bit of broken design, since SpecificRecords implement GenericRecord as such
+// they need to be serializable just like any GenericRecord.
+//    assertFalse("We don't expect GenericData to allow a Java Enum for an enum schema", gd.validate(schema, anEnum.ONE));
   }
 
   @Test
