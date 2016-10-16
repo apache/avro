@@ -43,6 +43,7 @@ import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
@@ -53,14 +54,11 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.util.ClassUtils;
-import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.SchemaNormalization;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.NullNode;
 
 import com.thoughtworks.paranamer.CachingParanamer;
 import com.thoughtworks.paranamer.Paranamer;
@@ -605,15 +603,15 @@ public class ReflectData extends SpecificData {
               Schema fieldSchema = createFieldSchema(field, names);
               AvroDefault defaultAnnotation
                 = field.getAnnotation(AvroDefault.class);
-              JsonNode defaultValue = (defaultAnnotation == null)
+              Object defaultValue = (defaultAnnotation == null)
                 ? null
-                : Accessor.parseJson(defaultAnnotation.value());
+                : Schema.parseJsonToObject(defaultAnnotation.value());
 
               if (defaultValue == null
                   && fieldSchema.getType() == Schema.Type.UNION) {
                 Schema defaultType = fieldSchema.getTypes().get(0);
                 if (defaultType.getType() == Schema.Type.NULL) {
-                  defaultValue = NullNode.getInstance();
+                  defaultValue = JsonProperties.NULL_VALUE;
                 }
               }
               AvroName annotatedName = field.getAnnotation(AvroName.class);       // Rename fields
@@ -621,7 +619,7 @@ public class ReflectData extends SpecificData {
                 ? annotatedName.value()
                 : field.getName();
               Schema.Field recordField
-                = Accessor.createField(fieldName, fieldSchema, null, defaultValue);
+                = new Schema.Field(fieldName, fieldSchema, null, defaultValue);
 
               AvroMeta meta = field.getAnnotation(AvroMeta.class);              // add metadata
               if (meta != null)

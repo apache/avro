@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.avro.util.internal.Accessor;
-import org.apache.avro.util.internal.Accessor.SchemaAccessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonFactory;
@@ -82,16 +81,6 @@ import org.codehaus.jackson.node.DoubleNode;
  * </ul>
  */
 public abstract class Schema extends JsonProperties {
-
-  static {
-    Accessor.setAccessor(new SchemaAccessor() {
-      @Override
-      protected JsonNode parseJson(String value) {
-        return Schema.parseJson(value);
-      }
-    });
-  }
-
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
@@ -433,6 +422,18 @@ public abstract class Schema extends JsonProperties {
       this.doc = doc;
       this.defaultValue = validateDefault(name, schema, defaultValue);
       this.order = order;
+    }
+
+    /**
+     * Constructs a new Field instance with the same {@code name}, {@code doc}, {@code defaultValue}, and {@code order}
+     * as {@code field} has with changing the schema to the specified one. It also copies all the {@code props} and
+     * {@code aliases}.
+     */
+    public Field(Field field, Schema schema) {
+      this(field.name, schema, field.doc, field.defaultValue, field.order);
+      props.putAll(field.props);
+      if (field.aliases != null)
+        aliases = new LinkedHashSet<String>(field.aliases);
     }
     /**
      * @param defaultValue the default value for this field specified using the mapping
@@ -1414,6 +1415,13 @@ public abstract class Schema extends JsonProperties {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Parses the specified json string to an object.
+   */
+  public static Object parseJsonToObject(String s) {
+    return JacksonUtils.toObject(parseJson(s));
   }
 
   /** Rewrite a writer's schema using the aliases from a reader's schema.  This

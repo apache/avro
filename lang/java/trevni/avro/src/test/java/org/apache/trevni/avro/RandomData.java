@@ -18,7 +18,6 @@
 package org.apache.trevni.avro;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +30,7 @@ import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.util.internal.Accessor;
+
 import org.apache.trevni.TestUtil;
 
 /** Generates schema data as Java objects with random values. */
@@ -65,7 +64,7 @@ public class RandomData implements Iterable<Object> {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
       for (Schema.Field field : schema.getFields()) {
-        Object value = (Accessor.getJsonProp(field, USE_DEFAULT) == null)
+        Object value = (field.getObjectProp(USE_DEFAULT) == null)
           ? generate(field.schema(), random, d+1)
           : GenericData.get().getDefaultValue(field);
         record.put(field.name(), value);

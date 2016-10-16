@@ -22,8 +22,6 @@ import java.io.OutputStream;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.util.internal.Accessor;
-import org.apache.avro.util.internal.Accessor.EncoderFactoryAccessor;
 import org.codehaus.jackson.JsonGenerator;
 
 /**
@@ -43,16 +41,6 @@ import org.codehaus.jackson.JsonGenerator;
  */
 
 public class EncoderFactory {
-
-  static {
-    Accessor.setAccessor(new EncoderFactoryAccessor() {
-      @Override
-      protected JsonEncoder jsonEncoder(EncoderFactory factory, Schema schema, JsonGenerator gen) throws IOException {
-        return factory.jsonEncoder(schema, gen);
-      }
-    });
-  }
-
   private static final int DEFAULT_BUFFER_SIZE = 2048;
   private static final int DEFAULT_BLOCK_BUFFER_SIZE = 64 * 1024;
   private static final int MIN_BLOCK_BUFFER_SIZE = 64;

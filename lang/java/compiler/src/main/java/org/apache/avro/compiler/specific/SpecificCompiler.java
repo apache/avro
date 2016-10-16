@@ -41,8 +41,6 @@ import org.apache.avro.data.TimeConversions.DateConversion;
 import org.apache.avro.data.TimeConversions.TimeConversion;
 import org.apache.avro.data.TimeConversions.TimestampConversion;
 import org.apache.avro.specific.SpecificData;
-import org.apache.avro.util.internal.Accessor;
-import org.codehaus.jackson.JsonNode;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
@@ -486,12 +484,8 @@ public class SpecificCompiler {
     if (stringType != StringType.String)
       return p;
 
-    Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
+    Protocol newP = new Protocol(p);
     Map<Schema,Schema> types = new LinkedHashMap<Schema,Schema>();
-
-    // Copy properties
-    for (Map.Entry<String,JsonNode> prop : Accessor.getJsonProps(p).entrySet())
-      Accessor.addProp(newP, prop.getKey(), prop.getValue());   // copy props
 
     // annotate types
     Collection<Schema> namedTypes = new LinkedHashSet<Schema>();
@@ -503,9 +497,9 @@ public class SpecificCompiler {
     Map<String,Message> newM = newP.getMessages();
     for (Message m : p.getMessages().values())
       newM.put(m.getName(), m.isOneWay()
-               ? newP.createMessage(m.getName(), m.getDoc(), Accessor.getJsonProps(m),
+               ? newP.createMessage(m,
                                     addStringType(m.getRequest(), types))
-               : newP.createMessage(m.getName(), m.getDoc(), Accessor.getJsonProps(m),
+               : newP.createMessage(m,
                                     addStringType(m.getRequest(), types),
                                     addStringType(m.getResponse(), types),
                                     addStringType(m.getErrors(), types)));
@@ -536,12 +530,7 @@ public class SpecificCompiler {
       List<Field> newFields = new ArrayList<Field>();
       for (Field f : s.getFields()) {
         Schema fSchema = addStringType(f.schema(), seen);
-        Field newF =
-          Accessor.createField(f.name(), fSchema, f.doc(), Accessor.defaultValue(f), f.order());
-        for (Map.Entry<String,JsonNode> p : Accessor.getJsonProps(f).entrySet())
-          Accessor.addProp(newF, p.getKey(), p.getValue()); // copy props
-        for (String a : f.aliases())
-          newF.addAlias(a);                       // copy aliases
+        Field newF = new Field(f, fSchema);
         newFields.add(newF);
       }
       result.setFields(newFields);
@@ -562,15 +551,14 @@ public class SpecificCompiler {
       result = Schema.createUnion(types);
       break;
     }
-    for (Map.Entry<String,JsonNode> p : Accessor.getJsonProps(s).entrySet())
-      Accessor.addProp(result, p.getKey(), p.getValue());   // copy props
+    result.addAllProps(s);
     seen.put(s, result);
     return result;
   }
 
-  private String getStringType(JsonNode overrideClassProperty) {
+  private String getStringType(Object overrideClassProperty) {
     if (overrideClassProperty != null)
-      return overrideClassProperty.getTextValue();
+      return overrideClassProperty.toString();
     switch (stringType) {
     case String:        return "java.lang.String";
     case Utf8:          return "org.apache.avro.util.Utf8";
@@ -603,7 +591,7 @@ public class SpecificCompiler {
       return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
       return "java.util.Map<"
-        + getStringType(Accessor.getJsonProp(schema, SpecificData.KEY_CLASS_PROP))+","
+        + getStringType(schema.getObjectProp(SpecificData.KEY_CLASS_PROP))+","
         + javaType(schema.getValueType()) + ">";
     case UNION:
       List<Schema> types = schema.getTypes(); // elide unions with null
@@ -611,7 +599,7 @@ public class SpecificCompiler {
         return javaType(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "java.lang.Object";
     case STRING:
-      return getStringType(Accessor.getJsonProp(schema, SpecificData.CLASS_PROP));
+      return getStringType(schema.getObjectProp(SpecificData.CLASS_PROP));
     case BYTES:   return "java.nio.ByteBuffer";
     case INT:     return "java.lang.Integer";
     case LONG:    return "java.lang.Long";
@@ -681,17 +669,18 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the java annotations for a schema. */
   public String[] javaAnnotations(JsonProperties props) {
-    JsonNode value = Accessor.getJsonProp(props, "javaAnnotation");
+    Object value = props.getObjectProp("javaAnnotation");
     if (value == null)
       return new String[0];
-    if (value.isTextual())
-      return new String[] { value.getTextValue() };
-    if (value.isArray()) {
-      int i = 0;
-      String[] result = new String[value.size()];
-      for (JsonNode v : value)
-        result[i++] = v.getTextValue();
-      return result;
+    if (value instanceof String)
+      return new String[] { value.toString() };
+    if (value instanceof List) {
+      List<?> list = (List<?>) value;
+      List<String> annots = new ArrayList<String>();
+      for (Object o : list)
+        if (o instanceof String)
+          annots.add(o.toString());
+      return annots.toArray(new String[annots.size()]);
     }
     return new String[0];
   }

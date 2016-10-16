@@ -246,7 +246,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       for (Field rf : rfields) {
         String fname = rf.name();
         if (writer.getField(fname) == null) {
-          if (Accessor.defaultValue(rf) == null) {
+          if (rf.defaultVal() == null) {
             result = Symbol.error("Found " + writer.getFullName()
                                   + ", expecting " + reader.getFullName()
                                   + ", missing required field " + fname);

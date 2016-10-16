@@ -115,18 +115,8 @@ public abstract class JsonProperties {
   static {
     Accessor.setAccessor(new JsonPropertiesAccessor() {
       @Override
-      protected JsonNode getJsonProp(JsonProperties props, String name) {
-        return props.getJsonProp(name);
-      }
-
-      @Override
       protected void addProp(JsonProperties props, String name, JsonNode value) {
         props.addProp(name, value);
-      }
-
-      @Override
-      protected Map<String, JsonNode> getJsonProps(JsonProperties props) {
-        return props.getJsonProps();
       }
     });
   }
@@ -199,6 +189,16 @@ public abstract class JsonProperties {
 
   public synchronized void addProp(String name, Object value) {
     addProp(name, JacksonUtils.toJsonNode(value));
+  }
+
+  /**
+   * Adds all the props from the specified json properties.
+   *
+   * @see #getObjectProps()
+   */
+  public void addAllProps(JsonProperties properties) {
+    for (Entry<String, JsonNode> entry : properties.getJsonProps().entrySet())
+      addProp(entry.getKey(), entry.getValue());
   }
 
   /** Return the defined properties that have string values. */

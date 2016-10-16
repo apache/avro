@@ -37,6 +37,7 @@ import java.util.Random;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -46,8 +47,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
-import org.apache.avro.util.internal.Accessor;
-import org.codehaus.jackson.node.NullNode;
 import org.junit.Test;
 
 public class TestReflect {
@@ -360,7 +359,7 @@ public class TestReflect {
     Schema r11Record = ReflectData.get().getSchema(R11.class);
     assertEquals(Schema.Type.RECORD, r11Record.getType());
     Field r11Field = r11Record.getField("text");
-    assertEquals(NullNode.getInstance(), Accessor.defaultValue(r11Field));
+    assertEquals(JsonProperties.NULL_VALUE, r11Field.defaultVal());
     Schema r11FieldSchema = r11Field.schema();
     assertEquals(Schema.Type.UNION, r11FieldSchema.getType());
     assertEquals(Schema.Type.NULL, r11FieldSchema.getTypes().get(0).getType());
