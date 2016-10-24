@@ -40,6 +40,7 @@ A schema may be one of:
 
 from __future__ import absolute_import, division, print_function
 
+import collections
 import json
 import math
 import re
@@ -104,6 +105,21 @@ VALID_FIELD_SORT_ORDERS = (
   'ignore',
 )
 
+CANONICAL_FIELD_ORDER = (
+    'name',
+    'type',
+    'fields',
+    'symbols',
+    'items',
+    'values',
+    'size',
+    # These aren't specified in the spec,
+    # but they are crucial to readers,
+    # so I'm assuming it's a gap.
+    'default',
+    'order',
+)
+
 #
 # Exceptions
 #
@@ -130,6 +146,7 @@ class IgnoredLogicalType(AvroWarning):
 class Schema(object):
   """Base class for all Schema classes."""
   _props = None
+
   def __init__(self, type, other_props=None):
     # Ensure valid ctor args
     if not isinstance(type, basestring):
@@ -173,6 +190,31 @@ class Schema(object):
     in the parameter names.
     """
     raise Exception("Must be implemented by subclasses.")
+
+  def to_canonical_json(self, names):
+    """
+    Converts the schema object into its Canonical Form
+
+    http://avro.apache.org/docs/current/spec.html#Parsing+Canonical+Form+for+Schemas
+    """
+    raise NotImplementedError("to_canonical_json must be implemented by subclasses")
+
+  @staticmethod
+  def _keep_canonical_properties(props):
+    return collections.OrderedDict((key, props[key]) for key in CANONICAL_FIELD_ORDER
+                                   if key in props)
+
+  @staticmethod
+  def _sort_properties(item):
+    key = item[0]
+    if key in CANONICAL_FIELD_ORDER:
+      return CANONICAL_FIELD_ORDER.index(key)
+    else:
+      raise RuntimeError("Unsortable item %r" % (item,))
+
+  def canonical_form(self):
+    # These separators eliminate whitespace around commas and colons.
+    return json.dumps(self.to_canonical_json(None), separators=(",", ":"))
 
 class Name(object):
   """Class to describe Avro name."""
@@ -424,6 +466,13 @@ class Field(object):
     to_dump['type'] = self.type.to_json(names)
     return to_dump
 
+  def to_canonical_json(self, names=None):
+    if names is None:
+      names = Names()
+    to_dump = Schema._keep_canonical_properties(self.props)
+    to_dump["type"] = self.type.to_canonical_json(names)
+    return to_dump
+
   def __eq__(self, that):
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
@@ -448,6 +497,12 @@ class PrimitiveSchema(Schema):
       return self.fullname
     else:
       return self.props
+
+  def to_canonical_json(self, names=None):
+    if len(self.props) == 1:
+      return self.fullname
+    else:
+      return self._keep_canonical_properties(self.props)
 
   def __eq__(self, that):
     return self.props == that.props
@@ -502,6 +557,12 @@ class FixedSchema(NamedSchema):
     else:
       names.names[self.fullname] = self
       return names.prune_namespace(self.props)
+
+  def to_canonical_json(self, names):
+    to_dump = self._keep_canonical_properties(self.to_json())
+    to_dump["name"] = self.fullname
+
+    return to_dump
 
   def __eq__(self, that):
     return self.props == that.props
@@ -562,6 +623,12 @@ class EnumSchema(NamedSchema):
       names.names[self.fullname] = self
       return names.prune_namespace(self.props)
 
+  def to_canonical_json(self, names=None):
+    to_dump = self._keep_canonical_properties(self.to_json(names))
+    to_dump["name"] = self.fullname
+
+    return to_dump
+
   def __eq__(self, that):
     return self.props == that.props
 
@@ -597,6 +664,14 @@ class ArraySchema(Schema):
     to_dump['items'] = item_schema.to_json(names)
     return to_dump
 
+  def to_canonical_json(self, names=None):
+    if names is None:
+      names = Names()
+    to_dump = self._keep_canonical_properties(self.props)
+    item_schema = self.get_prop("items")
+    to_dump["items"] = item_schema.to_canonical_json(names)
+    return to_dump
+
   def __eq__(self, that):
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
@@ -627,6 +702,13 @@ class MapSchema(Schema):
       names = Names()
     to_dump = self.props.copy()
     to_dump['values'] = self.get_prop('values').to_json(names)
+    return to_dump
+
+  def to_canonical_json(self, names):
+    if names is None:
+      names = Names()
+    to_dump = self._keep_canonical_properties(self.props)
+    to_dump["values"] = self.get_prop("values").to_canonical_json(names)
     return to_dump
 
   def __eq__(self, that):
@@ -676,6 +758,11 @@ class UnionSchema(Schema):
     for schema in self.schemas:
       to_dump.append(schema.to_json(names))
     return to_dump
+
+  def to_canonical_json(self, names):
+    if names is None:
+      names = Names()
+    return [schema.to_canonical_json(names) for schema in self.schemas]
 
   def __eq__(self, that):
     to_cmp = json.loads(str(self))
@@ -784,6 +871,25 @@ class RecordSchema(NamedSchema):
 
     to_dump = names.prune_namespace(self.props.copy())
     to_dump['fields'] = [ f.to_json(names) for f in self.fields ]
+    return to_dump
+
+  def to_canonical_json(self, names):
+    if names is None:
+      names = Names()
+
+    if self.type == 'request':
+      raise NotImplementedError("Canonical form (probably) does not make sense on type request")
+
+    to_dump = self._keep_canonical_properties(self.props)
+    to_dump["name"] = self.fullname
+
+    if self.fullname in names.names:
+      return self.name_ref(names)
+    else:
+      names.names[self.fullname] = self
+
+    to_dump["fields"] = [f.to_canonical_json(names) for f in self.fields]
+
     return to_dump
 
   def __eq__(self, that):
