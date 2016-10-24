@@ -133,12 +133,14 @@ string CodeGen::generateEnumType(const NodePtr& n)
     string type_guard = guard(s);
     os_ << "#ifndef " << type_guard << "\n";
 
-    os_ << "enum " << s << " {\n";
+    os_ << "namespace " << s << " {\n";
+    os_ << "  enum " << s << " {\n";
     size_t c = n->names();
     for (size_t i = 0; i < c; ++i) {
-        os_ << "    " << n->nameAt(i) << ",\n";
+        os_ << "      " << n->nameAt(i) << ",\n";
     }
-    os_ << "};\n"
+    os_ << "  };\n"
+        << "}\n"
         << "#endif\n\n";
     return s;
 }
@@ -243,6 +245,8 @@ string CodeGen::generateRecordType(const NodePtr& n)
     for (size_t i = 0; i < c; ++i) {
         if (! noUnion_ && n->leafAt(i)->type() == avro::AVRO_UNION) {
             os_ << "    " << n->nameAt(i) << "_t";
+        } else if (n->leafAt(i)->type() == avro::AVRO_ENUM) {
+            os_ << "    " << types[i] << "::" << types[i];
         } else {
             os_ << "    " << types[i];
         }
@@ -258,6 +262,8 @@ string CodeGen::generateRecordType(const NodePtr& n)
         os_ << "        " << n->nameAt(i) << "(";
         if (! noUnion_ && n->leafAt(i)->type() == avro::AVRO_UNION) {
             os_ << n->nameAt(i) << "_t";
+        } else if (n->leafAt(i)->type() == avro::AVRO_ENUM) {
+            os_ << "    " << types[i] << "::" << types[i];
         } else {
             os_ << types[i];
         }
@@ -486,6 +492,8 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 {
 	string dname = decorate(n->name());
 	string fn = fullname(dname);
+  fn += "::";
+  fn += dname;
 	size_t c = n->names();
 	string first; 
 	string last;
@@ -493,14 +501,23 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 	{
 		first = ns_;
 		first += "::";
+		first += dname;
+		first += "::";
 		first += n->nameAt(0);
 
 		last = ns_;
 		last += "::";
+		last += dname;
+		last += "::";
 		last += n->nameAt(c-1);
 	} else {
-		first = n->nameAt(0);
-		last = n->nameAt(c-1);
+    first = dname;
+    first += "::";
+		first += n->nameAt(0);
+
+    last = dname;
+		last += "::";
+		last += n->nameAt(c-1);
 	}
   string type_guard = guard(dname);
   os_ << "#ifndef " << type_guard << "\n"

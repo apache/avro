@@ -76,7 +76,7 @@ void setRecord(testgen::RootRecord &myRecord)
     myRecord.myarray.push_back(3434.9);
     myRecord.myarray.push_back(7343.9);
     myRecord.myarray.push_back(-63445.9);
-    myRecord.myenum = testgen::one;
+    myRecord.myenum = testgen::ExampleEnum::one;
 
     map<string, int32_t> m;
     m["one"] = 1;
