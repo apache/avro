@@ -89,7 +89,7 @@ class CodeGen {
     map<NodePtr, string> done;
     set<NodePtr> doing;
 
-    std::string guard();
+    std::string guard(const string& name="");
     std::string fullname(const string& name) const;
     std::string generateEnumType(const NodePtr& n);
     std::string cppTypeOf(const NodePtr& n);
@@ -130,12 +130,16 @@ string CodeGen::fullname(const string& name) const
 string CodeGen::generateEnumType(const NodePtr& n)
 {
     string s = decorate(n->name());
+    string type_guard = guard(s);
+    os_ << "#ifndef " << type_guard << "\n";
+
     os_ << "enum " << s << " {\n";
     size_t c = n->names();
     for (size_t i = 0; i < c; ++i) {
         os_ << "    " << n->nameAt(i) << ",\n";
     }
-    os_ << "};\n\n";
+    os_ << "};\n"
+        << "#endif\n\n";
     return s;
 }
 
@@ -224,8 +228,9 @@ string CodeGen::generateRecordType(const NodePtr& n)
     if (it != done.end()) {
         return it->second;
     }
-
     string decoratedName = decorate(n->name());
+    string type_guard = guard(decoratedName);
+    os_ << "#ifndef " << type_guard << "\n";
     os_ << "struct " << decoratedName << " {\n";
     if (! noUnion_) {
         for (size_t i = 0; i < c; ++i) {
@@ -263,7 +268,8 @@ string CodeGen::generateRecordType(const NodePtr& n)
         os_ << "\n";
     }
     os_ << "        { }\n";
-    os_ << "};\n\n";
+    os_ << "};\n";
+    os_ << "#endif\n\n";
     return decorate(n->name());
 }
 
@@ -313,7 +319,7 @@ static void generateGetterAndSetter(ostream& os,
         << "(const " << type << "& v) {\n"
         << "    idx_ = " << idx << ";\n"
         << "    value_ = v;\n"
-        << "}\n\n";
+        << "}\n";
 }
 
 static void generateConstructor(ostream& os,
@@ -359,6 +365,8 @@ string CodeGen::generateUnionType(const NodePtr& n)
     }
 
     const string result = unionName();
+    string type_guard = guard(result);
+    os_ << "#ifndef " << type_guard << "\n";
 
     os_ << "struct " << result << " {\n"
         << "private:\n"
@@ -390,7 +398,8 @@ string CodeGen::generateUnionType(const NodePtr& n)
     os_ << "    " << result << "();\n";
     pendingConstructors.push_back(PendingConstructor(result, types[0],
         n->leafAt(0)->type() != avro::AVRO_NULL));
-    os_ << "};\n\n";
+    os_ << "};\n"
+        << "#endif\n\n";
     
     return result;
 }
@@ -493,7 +502,11 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 		first = n->nameAt(0);
 		last = n->nameAt(c-1);
 	}
-	os_ << "template<> struct codec_traits<" << fn << "> {\n"
+  string type_guard = guard(dname);
+  os_ << "#ifndef " << type_guard << "\n"
+      << "#define " << type_guard << "\n";
+
+  os_ << "template<> struct codec_traits<" << fn << "> {\n"
 		<< "    static void encode(Encoder& e, " << fn << " v) {\n"
 		<< "		if (v < "  << first << " || v > " << last << ")\n" 
 		<< "		{\n"
@@ -513,7 +526,8 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 		<< "		}\n"
 		<< "        v = static_cast<" << fn << ">(index);\n"
 		<< "    }\n"
-		<< "};\n\n";
+		<< "};\n"
+    << "#endif\n\n";
 }
 
 void CodeGen::generateRecordTraits(const NodePtr& n)
@@ -524,6 +538,10 @@ void CodeGen::generateRecordTraits(const NodePtr& n)
     }
 
     string fn = fullname(decorate(n->name()));
+    string type_guard = guard(decorate(n->name()));
+    os_ << "#ifndef " << type_guard << "\n"
+        << "#define " << type_guard << "\n";
+
     os_ << "template<> struct codec_traits<" << fn << "> {\n"
         << "    static void encode(Encoder& e, const " << fn << "& v) {\n";
 
@@ -556,7 +574,8 @@ void CodeGen::generateRecordTraits(const NodePtr& n)
     os_ << "        }\n";
 
     os_ << "    }\n"
-        << "};\n\n";
+        << "};\n"
+        << "#endif\n\n";
 }
 
 void CodeGen::generateUnionTraits(const NodePtr& n)
@@ -570,6 +589,9 @@ void CodeGen::generateUnionTraits(const NodePtr& n)
 
     string name = done[n];
     string fn = fullname(name);
+    string type_guard = guard(name);
+    os_ << "#ifndef " << type_guard << "\n"
+        << "#define " << type_guard << "\n";
 
     os_ << "template<> struct codec_traits<" << fn << "> {\n"
         << "    static void encode(Encoder& e, " << fn << " v) {\n"
@@ -613,7 +635,8 @@ void CodeGen::generateUnionTraits(const NodePtr& n)
     }
     os_ << "        }\n"
         << "    }\n"
-        << "};\n\n";
+        << "};\n"
+        << "#endif\n\n";
 }
 
 void CodeGen::generateTraits(const NodePtr& n)
@@ -674,11 +697,14 @@ void CodeGen::emitCopyright()
         " */\n\n\n";
 }
 
-string CodeGen::guard()
+string CodeGen::guard(const string& name)
 {
-    string h = headerFile_;
+    string h = name.empty() ? headerFile_ : name;
+    h = ns_.empty() ? h : ns_ + "_" + h;
     makeCanonical(h, true);
-    return h + "_" + lexical_cast<string>(random_()) + "__H_";
+    //TODO: discuss if this optional random is required/desired.
+    //return h + "_" + lexical_cast<string>(random_()) + "__H_";
+    return h + "__H_";
 }
 
 void CodeGen::generate(const ValidSchema& schema)
@@ -687,8 +713,8 @@ void CodeGen::generate(const ValidSchema& schema)
 
     string h = guardString_.empty() ? guard() : guardString_;
 
-    os_ << "#ifndef " << h << "\n";
-    os_ << "#define " << h << "\n\n\n";
+    os_ << "#ifndef " << h << "\n"
+        << "#define " << h << "\n\n\n";
 
     os_ << "#include <sstream>\n"
         << "#include \"boost/any.hpp\"\n"
@@ -706,17 +732,23 @@ void CodeGen::generate(const ValidSchema& schema)
     generateType(root);
 
     for (vector<PendingSetterGetter>::const_iterator it =
-        pendingGettersAndSetters.begin();
-        it != pendingGettersAndSetters.end(); ++it) {
+            pendingGettersAndSetters.begin();
+            it != pendingGettersAndSetters.end(); ++it) {
+        string type_guard = guard(it->structName);
+        os_ << "#ifndef " << type_guard << "\n";
         generateGetterAndSetter(os_, it->structName, it->type, it->name,
             it->idx);
+        os_ << "#endif\n\n";
     }
 
     for (vector<PendingConstructor>::const_iterator it =
-        pendingConstructors.begin();
-        it != pendingConstructors.end(); ++it) {
+            pendingConstructors.begin();
+            it != pendingConstructors.end(); ++it) {
+        string type_guard = guard(it->structName);
+        os_ << "#ifndef " << type_guard << "\n";
         generateConstructor(os_, it->structName,
             it->initMember, it->memberName);
+        os_ << "#endif\n\n";
     }
 
     if (! ns_.empty()) {
