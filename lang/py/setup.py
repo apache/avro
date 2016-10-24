@@ -19,11 +19,6 @@ try:
   from setuptools import setup
 except ImportError:
   from distutils.core import setup
-from sys import version_info
-
-install_requires = []
-if version_info[:2] <= (2, 5):
-    install_requires.append('simplejson >= 2.0.9')
 
 setup(
   name = 'avro',
@@ -37,7 +32,7 @@ setup(
 
   # Project uses simplejson, so ensure that it gets installed or upgraded
   # on the target machine
-  install_requires = install_requires,
+  install_requires = ['simplejson>=2.0.9'],
 
   # metadata for upload to PyPI
   author = 'Apache Avro',
