@@ -295,7 +295,8 @@ OTHER_PROP_EXAMPLES = [
     """, True)
 ]
 
-EXAMPLES = PRIMITIVE_EXAMPLES
+EXAMPLES = []
+EXAMPLES += PRIMITIVE_EXAMPLES
 EXAMPLES += FIXED_EXAMPLES
 EXAMPLES += ENUM_EXAMPLES
 EXAMPLES += ARRAY_EXAMPLES
@@ -484,12 +485,17 @@ class TestSchema(unittest.TestCase):
         schema.parse('/not/a/real/file')
         caught_exception = False
     except schema.SchemaParseException, e:
-        expected_message = 'Error parsing JSON: /not/a/real/file, error = ' \
-                           'No JSON object could be decoded'
-        self.assertEqual(expected_message, e.args[0])
+        expected_messages = ['Error parsing JSON: /not/a/real/file, error = No JSON object could be decoded',
+                             'Error parsing JSON: /not/a/real/file, error = Expecting value: line 1 column 1 (char 0)']
+        assert e.args[0] in expected_messages
         caught_exception = True
 
     self.assertTrue(caught_exception, 'Exception was not caught')
+
+  def test_canonical_form(self):
+    for example in VALID_EXAMPLES:
+      # Quick test: We can make canonical schemas of all valid schemas
+      schema.parse(example.schema_string).canonical_form()
 
 if __name__ == '__main__':
   unittest.main()
