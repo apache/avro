@@ -24,8 +24,8 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-/** Collection of static methods for generating the cannonical form of
- * schemas (see {@link #toParsingForm}) -- and fingerprints of cannonical
+/** Collection of static methods for generating the canonical form of
+ * schemas (see {@link #toParsingForm}) -- and fingerprints of canonical
  * forms ({@link #fingerprint}).
  */
 public class SchemaNormalization {
