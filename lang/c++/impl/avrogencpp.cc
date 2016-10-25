@@ -26,6 +26,7 @@
 #include <set>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/erase.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 
@@ -235,6 +236,7 @@ string CodeGen::generateRecordType(const NodePtr& n)
             }
         }
     }
+    os_ << "    avro::ValidSchema __SCHEMA__;\n";
     for (size_t i = 0; i < c; ++i) {
         if (! noUnion_ && n->leafAt(i)->type() == avro::AVRO_UNION) {
             os_ << "    " << n->nameAt(i) << "_t";
@@ -262,7 +264,15 @@ string CodeGen::generateRecordType(const NodePtr& n)
         }
         os_ << "\n";
     }
-    os_ << "        { }\n";
+    os_ << "        {\n";
+    std::ostringstream oss;
+    n->printJson(oss,0);
+    std::string schema = oss.str();
+    boost::algorithm::erase_all(schema, " ");
+    boost::algorithm::erase_all(schema, "\n");
+    boost::algorithm::replace_all(schema, "\"","\\\"");
+    os_ << "           __SCHEMA__ = avro::compileJsonSchemaFromString(\"" << schema << "\");\n";
+    os_ << "        }\n";
     os_ << "};\n\n";
     return decorate(n->name());
 }
@@ -359,7 +369,6 @@ string CodeGen::generateUnionType(const NodePtr& n)
     }
 
     const string result = unionName();
-
     os_ << "struct " << result << " {\n"
         << "private:\n"
         << "    size_t idx_;\n"
@@ -695,6 +704,7 @@ void CodeGen::generate(const ValidSchema& schema)
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"
+        << "#include \"" << includePrefix_ << "Compiler.hh\"\n"
         << "\n";
 
     if (! ns_.empty()) {
