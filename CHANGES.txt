@@ -73,7 +73,7 @@ Trunk (not yet released)
     AVRO-1853: C++: Compiler::toBin crashes on empty string.
     (Zoltan Ivanfi via tomwhite)
 
-    AVRO-1923: Stop infinite recursion in GenericData.toString. (Niels Basjes)
+    AVRO-1923, AVRO-1944: Stop infinite recursion in GenericData.toString. (Niels Basjes)
 
     AVRO-1860: Java: Field#DefaultVal() returns Ints for Long fields.
     (Gabor Szadovszky via cutting)
