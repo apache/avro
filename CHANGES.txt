@@ -87,6 +87,10 @@ Trunk (not yet released)
     AVRO-1882: Java: Fix ConcurrentHashMap with non-string keys.
     (Sachin Goyal via blue)
 
+    AVRO-1943: Java: Flaky test:
+    TestNettyServerWithCompression.testConnectionsCount
+    (Gabor Szadovszky via tomwhite)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
