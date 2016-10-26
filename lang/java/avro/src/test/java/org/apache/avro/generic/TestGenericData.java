@@ -552,4 +552,28 @@ public class TestGenericData {
     }
   }
 
+  @Test
+  public void testToString() throws IOException {
+    List<Field> fields = new ArrayList<Field>();
+    fields.add(new Field("nullstring1", Schema.create(Type.STRING), null, null));
+    fields.add(new Field("nullstring2", Schema.create(Type.STRING), null, null));
+    fields.add(new Field("string1", Schema.create(Type.STRING), null, null));
+    fields.add(new Field("string2", Schema.create(Type.STRING), null, null));
+    fields.add(new Field("int1", Schema.create(Type.INT), null, null));
+    fields.add(new Field("int2", Schema.create(Type.INT), null, null));
+    Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
+    schema.setFields(fields);
+
+    Record testRecord = new Record(schema);
+
+    testRecord.put("nullstring1", null);
+    testRecord.put("nullstring2", null);
+    testRecord.put("string1", "Hello World");
+    testRecord.put("string2", "Hello World");
+    testRecord.put("int1", 42);
+    testRecord.put("int2", 42);
+
+    String testString = testRecord.toString();
+    assertFalse("Record with duplicated values results in wrong 'toString()'", testString.contains("CIRCULAR REFERENCE"));
+  }
 }

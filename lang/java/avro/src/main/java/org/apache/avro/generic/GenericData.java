@@ -506,12 +506,12 @@ public class GenericData {
   }
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
   protected void toString(Object datum, StringBuilder buffer, IdentityHashMap<Object, Object> seenObjects) {
-    if (seenObjects.containsKey(datum)) {
-      buffer.append(" \">>> CIRCULAR REFERENCE CANNOT BE PUT IN JSON STRING, ABORTING RECURSION<<<\" ");
-      return;
-    }
-    seenObjects.put(datum, datum);
     if (isRecord(datum)) {
+      if (seenObjects.containsKey(datum)) {
+        buffer.append(" \">>> CIRCULAR REFERENCE CANNOT BE PUT IN JSON STRING, ABORTING RECURSION<<<\" ");
+        return;
+      }
+      seenObjects.put(datum, datum);
       buffer.append("{");
       int count = 0;
       Schema schema = getRecordSchema(datum);
