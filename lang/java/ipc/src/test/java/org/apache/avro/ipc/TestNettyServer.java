@@ -24,12 +24,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
@@ -149,7 +148,16 @@ public class TestNettyServer {
     proxy2.fireandforget(createMessage());
     Assert.assertEquals(2, ((NettyServer) server).getNumActiveConnections());
     transceiver2.close();
-    Assert.assertEquals(1, ((NettyServer) server).getNumActiveConnections());
+
+    // Check the active connections with some retries as closing at the client
+    // side might not take effect on the server side immediately
+    int numActiveConnections = ((NettyServer) server).getNumActiveConnections();
+    for (int i = 0; i < 50 && numActiveConnections == 2; ++i) {
+      System.out.println("Server still has 2 active connections; retrying...");
+      Thread.sleep(100);
+      numActiveConnections = ((NettyServer) server).getNumActiveConnections();
+    }
+    Assert.assertEquals(1, numActiveConnections);
   }
 
   private Message createMessage() {
