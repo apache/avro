@@ -582,8 +582,8 @@ public class GenericData {
         buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
         return;
       }
-      toString(datum, buffer, seenObjects);
       seenObjects.put(datum, datum);
+      toString(datum, buffer, seenObjects);
     } else {
       buffer.append(datum);
     }
