@@ -504,11 +504,15 @@ public class GenericData {
     toString(datum, buffer, new IdentityHashMap<Object, Object>(128) );
     return buffer.toString();
   }
+
+  private static final String TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT =
+    " \">>> CIRCULAR REFERENCE CANNOT BE PUT IN JSON STRING, ABORTING RECURSION <<<\" ";
+
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
   protected void toString(Object datum, StringBuilder buffer, IdentityHashMap<Object, Object> seenObjects) {
     if (isRecord(datum)) {
       if (seenObjects.containsKey(datum)) {
-        buffer.append(" \">>> CIRCULAR REFERENCE CANNOT BE PUT IN JSON STRING, ABORTING RECURSION<<<\" ");
+        buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
         return;
       }
       seenObjects.put(datum, datum);
@@ -524,6 +528,11 @@ public class GenericData {
       }
       buffer.append("}");
     } else if (isArray(datum)) {
+      if (seenObjects.containsKey(datum)) {
+        buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
+        return;
+      }
+      seenObjects.put(datum, datum);
       Collection<?> array = getArrayAsCollection(datum);
       buffer.append("[");
       long last = array.size()-1;
@@ -535,6 +544,11 @@ public class GenericData {
       }
       buffer.append("]");
     } else if (isMap(datum)) {
+      if (seenObjects.containsKey(datum)) {
+        buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
+        return;
+      }
+      seenObjects.put(datum, datum);
       buffer.append("{");
       int count = 0;
       @SuppressWarnings(value="unchecked")
@@ -564,7 +578,12 @@ public class GenericData {
       buffer.append(datum);
       buffer.append("\"");
     } else if (datum instanceof GenericData) {
-        toString(datum, buffer, seenObjects);
+      if (seenObjects.containsKey(datum)) {
+        buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
+        return;
+      }
+      toString(datum, buffer, seenObjects);
+      seenObjects.put(datum, datum);
     } else {
       buffer.append(datum);
     }

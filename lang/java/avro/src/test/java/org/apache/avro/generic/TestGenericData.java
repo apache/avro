@@ -496,6 +496,66 @@ public class TestGenericData {
     assertTrue(GenericData.get().validate(unionSchema, record));
   }
 
+  /*
+   * The toString has a detection for circular references to abort.
+   * This detection has the risk of detecting that same value as being a circular reference.
+   * For Record, Map and Array this is correct, for the rest is is not.
+   */
+  @Test
+  public void testToStringSameValues() throws IOException {
+    List<Field> fields = new ArrayList<Field>();
+    fields.add(new Field("nullstring1", Schema.create(Type.STRING), null, (Object)null));
+    fields.add(new Field("nullstring2", Schema.create(Type.STRING), null, (Object)null));
+
+    fields.add(new Field("string1", Schema.create(Type.STRING  ), null, (Object)null));
+    fields.add(new Field("string2", Schema.create(Type.STRING  ), null, (Object)null));
+
+    fields.add(new Field("bytes1",  Schema.create(Type.BYTES   ), null, (Object)null));
+    fields.add(new Field("bytes2",  Schema.create(Type.BYTES   ), null, (Object)null));
+
+    fields.add(new Field("int1",    Schema.create(Type.INT     ), null, (Object)null));
+    fields.add(new Field("int2",    Schema.create(Type.INT     ), null, (Object)null));
+
+    fields.add(new Field("long1",   Schema.create(Type.LONG    ), null, (Object)null));
+    fields.add(new Field("long2",   Schema.create(Type.LONG    ), null, (Object)null));
+
+    fields.add(new Field("float1",  Schema.create(Type.FLOAT   ), null, (Object)null));
+    fields.add(new Field("float2",  Schema.create(Type.FLOAT   ), null, (Object)null));
+
+    fields.add(new Field("double1", Schema.create(Type.DOUBLE  ), null, (Object)null));
+    fields.add(new Field("double2", Schema.create(Type.DOUBLE  ), null, (Object)null));
+
+    fields.add(new Field("boolean1",Schema.create(Type.BOOLEAN ), null, (Object)null));
+    fields.add(new Field("boolean2",Schema.create(Type.BOOLEAN ), null, (Object)null));
+
+    Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
+    schema.setFields(fields);
+
+    Record testRecord = new Record(schema);
+
+    testRecord.put("nullstring1", null);
+    testRecord.put("nullstring2", null);
+
+    String fortyTwo = "42";
+    testRecord.put("string1",  fortyTwo);
+    testRecord.put("string2",  fortyTwo);
+    testRecord.put("bytes1",   0x42 );
+    testRecord.put("bytes2",   0x42 );
+    testRecord.put("int1",     42 );
+    testRecord.put("int2",     42 );
+    testRecord.put("long1",    42L);
+    testRecord.put("long2",    42L);
+    testRecord.put("float1",   42F);
+    testRecord.put("float2",   42F);
+    testRecord.put("double1",  42D);
+    testRecord.put("double2",  42D);
+    testRecord.put("boolean1", true);
+    testRecord.put("boolean2", true);
+
+    String testString = testRecord.toString();
+    assertFalse("Record with duplicated values results in wrong 'toString()'", testString.contains("CIRCULAR REFERENCE"));
+  }
+
   // Test copied from Apache Parquet: org.apache.parquet.avro.TestCircularReferences
   @Test
   public void testToStringRecursive() throws IOException {
@@ -550,30 +610,5 @@ public class TestGenericData {
     } catch (StackOverflowError e) {
       fail("StackOverflowError occurred");
     }
-  }
-
-  @Test
-  public void testToString() throws IOException {
-    List<Field> fields = new ArrayList<Field>();
-    fields.add(new Field("nullstring1", Schema.create(Type.STRING), null, null));
-    fields.add(new Field("nullstring2", Schema.create(Type.STRING), null, null));
-    fields.add(new Field("string1", Schema.create(Type.STRING), null, null));
-    fields.add(new Field("string2", Schema.create(Type.STRING), null, null));
-    fields.add(new Field("int1", Schema.create(Type.INT), null, null));
-    fields.add(new Field("int2", Schema.create(Type.INT), null, null));
-    Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
-    schema.setFields(fields);
-
-    Record testRecord = new Record(schema);
-
-    testRecord.put("nullstring1", null);
-    testRecord.put("nullstring2", null);
-    testRecord.put("string1", "Hello World");
-    testRecord.put("string2", "Hello World");
-    testRecord.put("int1", 42);
-    testRecord.put("int2", 42);
-
-    String testString = testRecord.toString();
-    assertFalse("Record with duplicated values results in wrong 'toString()'", testString.contains("CIRCULAR REFERENCE"));
   }
 }
