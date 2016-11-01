@@ -94,6 +94,10 @@ public final class BigInteger extends AbstractLogicalType {
           //ByteBuffer buf = ByteBuffer.wrap((byte []) object);
           ByteBuffer buf = (ByteBuffer) object;
           buf.rewind();
+          int scale = buf.getInt();
+          if (scale != 0) {
+            throw new RuntimeException("Scale must be zero and not " + scale);
+          }
           byte[] unscaled = new byte[buf.remaining()];
           buf.get(unscaled);
           return new java.math.BigInteger(unscaled);
@@ -112,6 +116,7 @@ public final class BigInteger extends AbstractLogicalType {
         case BYTES:
           byte[] unscaledValue = decimal.toByteArray();
           ByteBuffer buf = ByteBuffer.allocate(unscaledValue.length);
+          buf.putInt(0);
           buf.put(unscaledValue);
           buf.rewind();
           return buf;
