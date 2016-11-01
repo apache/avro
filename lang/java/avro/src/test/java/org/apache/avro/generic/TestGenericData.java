@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Collection;
 import java.util.ArrayDeque;
@@ -30,6 +31,7 @@ import static org.apache.avro.TestCircularReferences.Referenceable;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -528,6 +530,25 @@ public class TestGenericData {
     fields.add(new Field("boolean1",Schema.create(Type.BOOLEAN ), null, (Object)null));
     fields.add(new Field("boolean2",Schema.create(Type.BOOLEAN ), null, (Object)null));
 
+    List<String> enumValues = new ArrayList<String>();
+    enumValues.add("One");
+    enumValues.add("Two");
+    Schema enumSchema = Schema.createEnum("myEnum", null, null, enumValues);
+    fields.add(new Field("enum1", enumSchema, null, (Object)null));
+    fields.add(new Field("enum2", enumSchema, null, (Object)null));
+
+    Schema recordSchema = SchemaBuilder.record("aRecord").fields().requiredString("myString").endRecord();
+    fields.add(new Field("record1", recordSchema, null, (Object)null));
+    fields.add(new Field("record2", recordSchema, null, (Object)null));
+
+    Schema arraySchema = Schema.createArray(Schema.create(Type.STRING));
+    fields.add(new Field("array1", arraySchema, null, (Object)null));
+    fields.add(new Field("array2", arraySchema, null, (Object)null));
+
+    Schema mapSchema = Schema.createMap(Schema.create(Type.STRING));
+    fields.add(new Field("map1", mapSchema, null, (Object)null));
+    fields.add(new Field("map2", mapSchema, null, (Object)null));
+
     Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
     schema.setFields(fields);
 
@@ -551,6 +572,25 @@ public class TestGenericData {
     testRecord.put("double2",  42D);
     testRecord.put("boolean1", true);
     testRecord.put("boolean2", true);
+
+    testRecord.put("enum1", "One");
+    testRecord.put("enum2", "One");
+
+    GenericRecord record = new GenericData.Record(recordSchema);
+    record.put("myString","42");
+    testRecord.put("record1",  record);
+    testRecord.put("record2",  record);
+
+    GenericArray<String> array = new GenericData.Array<String>(1, arraySchema);
+    array.clear();
+    array.add("42");
+    testRecord.put("array1",   array);
+    testRecord.put("array2",   array);
+
+    Map<String, String> map = new HashMap<String, String>();
+    map.put("42", "42");
+    testRecord.put("map1",     map);
+    testRecord.put("map2",     map);
 
     String testString = testRecord.toString();
     assertFalse("Record with duplicated values results in wrong 'toString()'", testString.contains("CIRCULAR REFERENCE"));

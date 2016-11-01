@@ -527,6 +527,7 @@ public class GenericData {
           buffer.append(", ");
       }
       buffer.append("}");
+      seenObjects.remove(datum);
     } else if (isArray(datum)) {
       if (seenObjects.containsKey(datum)) {
         buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
@@ -543,6 +544,7 @@ public class GenericData {
           buffer.append(", ");
       }
       buffer.append("]");
+      seenObjects.remove(datum);
     } else if (isMap(datum)) {
       if (seenObjects.containsKey(datum)) {
         buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
@@ -561,6 +563,7 @@ public class GenericData {
           buffer.append(", ");
       }
       buffer.append("}");
+      seenObjects.remove(datum);
     } else if (isString(datum)|| isEnum(datum)) {
       buffer.append("\"");
       writeEscapedString(datum.toString(), buffer);
@@ -584,6 +587,7 @@ public class GenericData {
       }
       seenObjects.put(datum, datum);
       toString(datum, buffer, seenObjects);
+      seenObjects.remove(datum);
     } else {
       buffer.append(datum);
     }
