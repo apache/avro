@@ -44,16 +44,14 @@ public final class BigInteger extends AbstractLogicalType {
 
     @Override
     public void validate(Schema schema) {
+      Schema.Type type1 = schema.getType();
       // validate the type
-      if (schema.getType() != Schema.Type.FIXED &&
-          schema.getType() != Schema.Type.BYTES &&
-          schema.getType() != Schema.Type.STRING) {
-        throw new IllegalArgumentException(this.logicalTypeName + " must be backed by fixed or bytes");
+      if (type1 != Schema.Type.BYTES &&
+          type1 != Schema.Type.STRING) {
+        throw new IllegalArgumentException(this.logicalTypeName + " must be backed by string or bytes, not" + type1);
       }
       if (precision > maxPrecision(schema)) {
-        throw new IllegalArgumentException(
-            "fixed(" + schema.getFixedSize() + ") cannot store " +
-                precision + " digits (max " + maxPrecision(schema) + ")");
+        throw new IllegalArgumentException("Invalid precision " + precision);
       }
    }
 
@@ -67,12 +65,6 @@ public final class BigInteger extends AbstractLogicalType {
               || schema.getType() == Schema.Type.STRING) {
         // not bounded
         return Integer.MAX_VALUE;
-      } else if (schema.getType() == Schema.Type.FIXED) {
-        int size = schema.getFixedSize();
-        return Math.round(          // convert double to long
-            Math.floor(Math.log10(  // number of base-10 digits
-                Math.pow(2, 8 * size - 1) - 1)  // max value stored
-            ));
       } else {
         // not valid for any other type
         return 0;
@@ -94,7 +86,7 @@ public final class BigInteger extends AbstractLogicalType {
           //ByteBuffer buf = ByteBuffer.wrap((byte []) object);
           ByteBuffer buf = (ByteBuffer) object;
           buf.rewind();
-          int scale = buf.getInt();
+          int scale =  Decimal.readInt(buf);
           if (scale != 0) {
             throw new RuntimeException("Scale must be zero and not " + scale);
           }
@@ -114,14 +106,20 @@ public final class BigInteger extends AbstractLogicalType {
         case STRING:
             return decimal.toString();
         case BYTES:
-          byte[] unscaledValue = decimal.toByteArray();
-          ByteBuffer buf = ByteBuffer.allocate(unscaledValue.length);
-          buf.putInt(0);
-          buf.put(unscaledValue);
-          buf.rewind();
-          return buf;
+          return toBytes(decimal);
         default:
           throw new UnsupportedOperationException("Unsupported type " + type + " for " + this);
       }
     }
+
+    public static ByteBuffer toBytes(java.math.BigInteger integer) {
+      byte[] unscaledValue = integer.toByteArray();
+      ByteBuffer buf = ByteBuffer.allocate(1 + unscaledValue.length);
+      buf.put((byte) 0);
+      buf.put(unscaledValue);
+      buf.rewind();
+      return buf;
+    }
+
+
   }

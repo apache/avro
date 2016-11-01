@@ -26,6 +26,7 @@ import org.apache.avro.AbstractLogicalType;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryData;
 import org.codehaus.jackson.JsonNode;
 
   /** Decimal represents arbitrary-precision fixed-scale decimal numbers  */
@@ -59,23 +60,22 @@ public final class Decimal extends AbstractLogicalType {
 
     @Override
     public void validate(Schema schema) {
+      Schema.Type type1 = schema.getType();
       // validate the type
-      if (schema.getType() != Schema.Type.BYTES &&
-          schema.getType() != Schema.Type.STRING) {
-        throw new IllegalArgumentException(this.logicalTypeName + " must be backed by fixed or bytes");
+      if (type1 != Schema.Type.BYTES &&
+          type1 != Schema.Type.STRING) {
+        throw new IllegalArgumentException(this.logicalTypeName + " must be backed by fixed or bytes, not" + type1);
       }
       int precision = mc.getPrecision();
       if (precision > maxPrecision(schema)) {
-        throw new IllegalArgumentException(
-            "fixed(" + schema.getFixedSize() + ") cannot store " +
-                precision + " digits (max " + maxPrecision(schema) + ")");
+        throw new IllegalArgumentException("Invalid precision " + precision);
       }
    }
 
     public static boolean is(final Schema schema) {
+      Schema.Type type1 = schema.getType();
       // validate the type
-      if (schema.getType() != Schema.Type.BYTES &&
-          schema.getType() != Schema.Type.STRING) {
+      if (type1 != Schema.Type.BYTES && type1 != Schema.Type.STRING) {
         return false;
       }
       LogicalType logicalType = schema.getLogicalType();
@@ -122,7 +122,7 @@ public final class Decimal extends AbstractLogicalType {
           //ByteBuffer buf = ByteBuffer.wrap((byte []) object);
           ByteBuffer buf = (ByteBuffer) object;
           buf.rewind();
-          int lscale = buf.getInt();
+          int lscale = readInt(buf);
           if (lscale > scale) {
                       // Rounding might be an option.
             // this will probably need to be made configurable in the future.
@@ -161,20 +161,41 @@ public final class Decimal extends AbstractLogicalType {
 
   public static ByteBuffer toBytes(BigDecimal decimal) {
     byte[] unscaledValue = decimal.unscaledValue().toByteArray();
-    ByteBuffer buf = ByteBuffer.allocate(4 + unscaledValue.length);
-    buf.putInt(decimal.scale());
+    ByteBuffer buf = ByteBuffer.allocate(5 + unscaledValue.length);
+    writeInt(decimal.scale(), buf);
     buf.put(unscaledValue);
-    buf.rewind();
+    buf.flip();
     return buf;
   }
 
-  public static ByteBuffer toBytes(BigInteger integer) {
-    byte[] unscaledValue = integer.toByteArray();
-    ByteBuffer buf = ByteBuffer.allocate(4 + unscaledValue.length);
-    buf.putInt(0);
-    buf.put(unscaledValue);
-    buf.rewind();
-    return buf;
+  public static int readInt(final ByteBuffer buf) {
+    int n = 0;
+    int b;
+    int shift = 0;
+    do {
+      b = buf.get() & 0xff;
+      n |= (b & 0x7F) << shift;
+      if ((b & 0x80) == 0) {
+        return (n >>> 1) ^ -(n & 1); // back to two's-complement
+      }
+      shift += 7;
+    } while (shift < 32);
+    throw new RuntimeException("Invalid int encoding" + buf);
+  }
+
+  public static void writeInt(final int n, final ByteBuffer buf) {
+    int val = (n << 1) ^ (n >> 31);
+    if ((val & ~0x7F) == 0) {
+      buf.put((byte) val);
+      return;
+    } else if ((val & ~0x3FFF) == 0) {
+      buf.put((byte) (0x80 | val));
+      buf.put((byte) (val >>> 7));
+      return;
+    }
+    byte [] tmp = new byte[5];
+    int len = BinaryData.encodeInt(n, tmp, 0);
+    buf.put(tmp, 0, len);
   }
 
 

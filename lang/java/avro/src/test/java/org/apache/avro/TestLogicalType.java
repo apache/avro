@@ -78,120 +78,7 @@ public class TestLogicalType {
         schema.getLogicalType().getProperty("precision"));
   }
 
-  @Test
-  public void testDecimalFixedPrecisionLimit() {
-    // 4 bytes can hold up to 9 digits of precision
-    final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
-    assertThrows("Should reject precision", IllegalArgumentException.class,
-        "fixed(4) cannot store 10 digits (max 9)", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            schema.setLogicalType(new Decimal(10, 0, Schema.Type.STRING));
-            return null;
-          }
-        }
-    );
-    Assert.assertNull("Invalid logical type should not be set on schema",
-        schema.getLogicalType());
-  }
 
-  @Test
-  public void testDecimalFailsWithZeroPrecision() {
-    final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
-    assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid decimal precision: 0 (must be positive)", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            schema.setLogicalType(new Decimal(0, 0, Schema.Type.STRING));
-            return null;
-          }
-        });
-    Assert.assertNull("Invalid logical type should not be set on schema",
-        schema.getLogicalType());
-  }
-
-  @Test
-  public void testDecimalFailsWithNegativePrecision() {
-    final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
-    assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid decimal precision: -9 (must be positive)", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            schema.setLogicalType(new Decimal(-9, 0, Schema.Type.STRING));
-            return null;
-          }
-        });
-    Assert.assertNull("Invalid logical type should not be set on schema",
-        schema.getLogicalType());
-  }
-
-  @Test
-  public void testDecimalScaleBoundedByPrecision() {
-    final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
-    assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid decimal scale: 10 (greater than precision: 9)",
-        new Callable() {
-          @Override
-          public Object call() throws Exception {
-            schema.setLogicalType(new Decimal(9, 10, Schema.Type.STRING));
-            return null;
-          }
-        });
-    Assert.assertNull("Invalid logical type should not be set on schema",
-        schema.getLogicalType());
-  }
-
-  @Test
-  public void testDecimalFailsWithNegativeScale() {
-    final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
-    assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid decimal scale: -2 (must be positive)", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            schema.setLogicalType(new Decimal(9, -2, Schema.Type.STRING));
-            return null;
-          }
-        });
-    Assert.assertNull("Invalid logical type should not be set on schema",
-        schema.getLogicalType());
-  }
-
-  @Test
-  public void testSchemaRejectsSecondLogicalType() {
-    final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
-    schema.setLogicalType(new Decimal(9, 0, Schema.Type.STRING));
-    assertThrows("Should reject second logical type",
-        IllegalArgumentException.class,
-        "Cannot replace existing logical type", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            schema.setLogicalType(new Decimal(9, 2, Schema.Type.STRING));
-            return null;
-          }
-        }
-    );
-    Assert.assertEquals("First logical type should still be set on schema",
-        new Decimal(9, 0, Schema.Type.STRING), schema.getLogicalType());
-  }
-
-  @Test
-  public void testDecimalDefaultScale() {
-    Schema schema = Schema.createFixed("aDecimal", null, null, 4);
-    // 4 bytes can hold up to 9 digits of precision
-    schema.setLogicalType(new Decimal(9, 0, Schema.Type.STRING));
-    Assert.assertEquals("Scale should be an IntNode(0)",
-        0,
-        schema.getLogicalType().getProperty("scale"));
-  }
-
-  @Test
-  public void testFixedDecimalToFromJson() {
-    Schema schema = Schema.createFixed("aDecimal", null, null, 4);
-    schema.setLogicalType(new Decimal(9, 2, Schema.Type.STRING));
-    Schema parsed = new Schema.Parser().parse(schema.toString(true));
-    Assert.assertEquals("Constructed and parsed schemas should match",
-        schema, parsed);
-  }
 
   @Test
   public void testBytesDecimalToFromJson() {
@@ -214,17 +101,17 @@ public class TestLogicalType {
 
         @Override
         public Class<?> getLogicalJavaType() {
-            throw new UnsupportedOperationException("Not supported yet."); 
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
         public Object deserialize(Object object) {
-            throw new UnsupportedOperationException("Not supported yet."); 
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
         public Object serialize(Object object) {
-            throw new UnsupportedOperationException("Not supported yet."); 
+            throw new UnsupportedOperationException("Not supported yet.");
         }
     };
 
@@ -239,27 +126,6 @@ public class TestLogicalType {
     assertEqualsFalse("Different precision", decimal90, decimal80);
     assertEqualsFalse("Different scale", decimal90, decimal92);
   }
-
-  @Test
-  public void testLogicalTypeInSchemaEquals() {
-    Schema schema1 = Schema.createFixed("aDecimal", null, null, 4);
-    Schema schema2 = Schema.createFixed("aDecimal", null, null, 4);
-    Schema schema3 = Schema.createFixed("aDecimal", null, null, 4);
-    Assert.assertNotSame(schema1, schema2);
-    Assert.assertNotSame(schema1, schema3);
-    assertEqualsTrue("No logical types", schema1, schema2);
-    assertEqualsTrue("No logical types", schema1, schema3);
-
-    schema1.setLogicalType(new Decimal(9, 0, Schema.Type.STRING));
-    assertEqualsFalse("Two has no logical type", schema1, schema2);
-
-    schema2.setLogicalType(new Decimal(9, 0, Schema.Type.STRING));
-    assertEqualsTrue("Same logical types", schema1, schema2);
-
-    schema3.setLogicalType(new Decimal(9, 2, Schema.Type.STRING));
-    assertEqualsFalse("Different logical type", schema1, schema3);
-  }
-
 
   public static void assertEqualsTrue(String message, Object o1, Object o2) {
     Assert.assertTrue("Should be equal (forward): " + message, o1.equals(o2));
