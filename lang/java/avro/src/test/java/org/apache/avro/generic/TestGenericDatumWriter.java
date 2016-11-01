@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -38,10 +37,8 @@ import java.util.concurrent.Future;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.DirectBinaryEncoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.AvroTypeException;
 import org.junit.Test;
 import org.apache.avro.util.Utf8;

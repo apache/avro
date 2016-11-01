@@ -87,13 +87,13 @@ public class TestIsoDate {
                 .setDateTimeVal(new DateTime())
                 .setDateTimeStrVal(new DateTime(2014, 8, 15, 9, 0))
                 .build();
-        byte [] result = AvroUtils.writeAvroJson(record);
+        byte [] result = AvroUtils.writeAvroExtendedJson(record);
         System.out.println("Test JSON String: " + new String(result, "UTF-8"));
-        TestRecord record2 = AvroUtils.readAvroJson(result, TestRecord.class);
+        TestRecord record2 = AvroUtils.readAvroExtendedJson(result, TestRecord.class);
         Assert.assertEquals(record, record2);
-        result = AvroUtils.writeAvroJson(record);
+        result = AvroUtils.writeAvroExtendedJson(record);
         System.out.println(new String(result, Charset.forName("UTF-8")));
-        record2 = AvroUtils.readAvroJson(result, TestRecord.class);
+        record2 = AvroUtils.readAvroExtendedJson(result, TestRecord.class);
         Assert.assertEquals(record, record2);
     }
 

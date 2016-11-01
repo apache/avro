@@ -23,9 +23,14 @@ import org.codehaus.jackson.JsonToken;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import static org.apache.avro.io.JsonDecoder.CHARSET;
+import org.apache.avro.logicalTypes.Decimal;
 
 /**
  * This class extends the JsonDecoder to work with the ExtendedGenericDatumReader class to write the more
@@ -193,5 +198,92 @@ public final class ExtendedJsonDecoder extends JsonDecoder {
         }
         return false;
     }
+
+  /**
+   * Overwrite to support decimal json decoding
+   */
+  @Override
+  public String readString() throws IOException {
+    advance(Symbol.STRING);
+    if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {
+      parser.advance(Symbol.MAP_KEY_MARKER);
+      if (in.getCurrentToken() != JsonToken.FIELD_NAME) {
+        throw error("map-key");
+      }
+    } else {
+      JsonToken currentToken = in.getCurrentToken();
+      if (currentToken != JsonToken.VALUE_STRING && currentToken != JsonToken.VALUE_NUMBER_INT
+              && currentToken != JsonToken.VALUE_NUMBER_FLOAT) {
+        throw error("string");
+      }
+    }
+    String result = in.getText();
+    in.nextToken();
+    return result;
+  }
+
+  /**
+   * Overwrite to support decimal json decoding
+   */
+  @Override
+  public void skipString() throws IOException {
+    advance(Symbol.STRING);
+    if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {
+      parser.advance(Symbol.MAP_KEY_MARKER);
+      if (in.getCurrentToken() != JsonToken.FIELD_NAME) {
+        throw error("map-key");
+      }
+    } else {
+      JsonToken currentToken = in.getCurrentToken();
+      if (currentToken != JsonToken.VALUE_STRING && currentToken != JsonToken.VALUE_NUMBER_INT
+              && currentToken != JsonToken.VALUE_NUMBER_FLOAT) {
+        throw error("string");
+      }
+    }
+    in.nextToken();
+  }
+
+  /**
+   * Overwrite to support decimal json decoding
+   */
+  @Override
+  public ByteBuffer readBytes(ByteBuffer old) throws IOException {
+    advance(Symbol.BYTES);
+    JsonToken currentToken = in.getCurrentToken();
+    switch (currentToken) {
+      case VALUE_STRING:
+        byte[] result = readByteArray();
+        in.nextToken();
+        return ByteBuffer.wrap(result);
+      case VALUE_NUMBER_INT:
+        BigInteger bigIntegerValue = in.getBigIntegerValue();
+        in.nextToken();
+        return Decimal.toBytes(bigIntegerValue);
+      case VALUE_NUMBER_FLOAT:
+        BigDecimal decimalValue = in.getDecimalValue();
+        in.nextToken();
+        return Decimal.toBytes(decimalValue);
+      default:
+        throw error("bytes");
+    }
+  }
+
+  private byte[] readByteArray() throws IOException {
+    byte[] result = in.getText().getBytes(CHARSET);
+    return result;
+  }
+
+  @Override
+  public void skipBytes() throws IOException {
+    advance(Symbol.BYTES);
+    JsonToken currentToken = in.getCurrentToken();
+    if (currentToken == JsonToken.VALUE_STRING
+            || currentToken == JsonToken.VALUE_NUMBER_INT || currentToken == JsonToken.VALUE_NUMBER_FLOAT) {
+      in.nextToken();
+    } else {
+      throw error("bytes");
+    }
+  }
+
 
 }

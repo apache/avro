@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 import org.apache.avro.AbstractLogicalType;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 
@@ -59,8 +60,7 @@ public final class Decimal extends AbstractLogicalType {
     @Override
     public void validate(Schema schema) {
       // validate the type
-      if (schema.getType() != Schema.Type.FIXED &&
-          schema.getType() != Schema.Type.BYTES &&
+      if (schema.getType() != Schema.Type.BYTES &&
           schema.getType() != Schema.Type.STRING) {
         throw new IllegalArgumentException(this.logicalTypeName + " must be backed by fixed or bytes");
       }
@@ -72,6 +72,20 @@ public final class Decimal extends AbstractLogicalType {
       }
    }
 
+    public static boolean is(final Schema schema) {
+      // validate the type
+      if (schema.getType() != Schema.Type.BYTES &&
+          schema.getType() != Schema.Type.STRING) {
+        return false;
+      }
+      LogicalType logicalType = schema.getLogicalType();
+      if (logicalType == null) {
+        return false;
+      }
+      return logicalType.getClass() == Decimal.class;
+    }
+
+
     @Override
     public Set<String> reserved() {
       return RESERVED;
@@ -82,12 +96,6 @@ public final class Decimal extends AbstractLogicalType {
               || schema.getType() == Schema.Type.STRING) {
         // not bounded
         return Integer.MAX_VALUE;
-      } else if (schema.getType() == Schema.Type.FIXED) {
-        int size = schema.getFixedSize();
-        return Math.round(          // convert double to long
-            Math.floor(Math.log10(  // number of base-10 digits
-                Math.pow(2, 8 * size - 1) - 1)  // max value stored
-            ));
       } else {
         // not valid for any other type
         return 0;
@@ -141,21 +149,33 @@ public final class Decimal extends AbstractLogicalType {
             return decimal.toPlainString();
           }
         case BYTES:
-          int lscale;
           if (decimal.scale() > scale) {
-            lscale = scale;
-            decimal = decimal.setScale(lscale, RoundingMode.HALF_DOWN);
-          } else {
-            lscale = decimal.scale();
+            decimal = decimal.setScale(scale, RoundingMode.HALF_DOWN);
           }
-          byte[] unscaledValue = decimal.unscaledValue().toByteArray();
-          ByteBuffer buf = ByteBuffer.allocate(4 + unscaledValue.length);
-          buf.putInt(lscale);
-          buf.put(unscaledValue);
-          buf.rewind();
+          ByteBuffer buf = toBytes(decimal);
           return buf;
         default:
           throw new UnsupportedOperationException("Unsupported type " + type + " for " + this);
       }
     }
+
+  public static ByteBuffer toBytes(BigDecimal decimal) {
+    byte[] unscaledValue = decimal.unscaledValue().toByteArray();
+    ByteBuffer buf = ByteBuffer.allocate(4 + unscaledValue.length);
+    buf.putInt(decimal.scale());
+    buf.put(unscaledValue);
+    buf.rewind();
+    return buf;
   }
+
+  public static ByteBuffer toBytes(BigInteger integer) {
+    byte[] unscaledValue = integer.toByteArray();
+    ByteBuffer buf = ByteBuffer.allocate(4 + unscaledValue.length);
+    buf.putInt(0);
+    buf.put(unscaledValue);
+    buf.rewind();
+    return buf;
+  }
+
+
+}

@@ -31,6 +31,8 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.ExtendedJsonDecoder;
+import org.apache.avro.io.ExtendedJsonEncoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
@@ -43,6 +45,14 @@ public final class AvroUtils {
   public static <T extends SpecificRecord> T readAvroJson(final byte[] bin, final Class<T> clasz) {
     try {
       return readAvroJson(new ByteArrayInputStream(bin), clasz);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static <T extends SpecificRecord> T readAvroExtendedJson(final byte[] bin, final Class<T> clasz) {
+    try {
+      return readAvroExtendedJson(new ByteArrayInputStream(bin), clasz);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -62,6 +72,21 @@ public final class AvroUtils {
     return res;
   }
 
+  public static <T extends SpecificRecord> T readAvroExtendedJson(final InputStream input, final Class<T> clasz)
+          throws IOException {
+    T res;
+    try {
+      res = (T) clasz.newInstance();
+    } catch (InstantiationException e) {
+      throw new RuntimeException(e);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+    readAvroExtendedJson(input, res);
+    return res;
+  }
+
+
   public static <T extends SpecificRecord> void readAvroJson(final InputStream input, final T res)
           throws IOException {
     @SuppressWarnings("unchecked")
@@ -70,6 +95,15 @@ public final class AvroUtils {
             res.getSchema(), input);
     reader.read(res, decoder);
   }
+
+  public static <T extends SpecificRecord> void readAvroExtendedJson(final InputStream input, final T res)
+          throws IOException {
+    @SuppressWarnings("unchecked")
+    DatumReader<T> reader = new SpecificDatumReader<T>((Class<T>) res.getClass());
+    Decoder decoder = new ExtendedJsonDecoder(res.getSchema(), input);
+    reader.read(res, decoder);
+  }
+
 
   public static <T extends SpecificRecord> T readAvroBin(final byte[] bin, final Class<T> clasz,
           final Schema writerSchema) {
@@ -120,6 +154,17 @@ public final class AvroUtils {
     return bos.toByteArray();
   }
 
+  public static <T extends SpecificRecord> byte[] writeAvroExtendedJson(final T req) {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream(128);
+    try {
+      writeAvroExtendedJson(bos, req);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return bos.toByteArray();
+  }
+
+
   public static <T extends SpecificRecord> void writeAvroJson(final OutputStream out, final T req)
           throws IOException {
     @SuppressWarnings("unchecked")
@@ -128,6 +173,17 @@ public final class AvroUtils {
     writer.write(req, encoder);
     encoder.flush();
   }
+
+  public static <T extends SpecificRecord> void writeAvroExtendedJson(final OutputStream out, final T req)
+          throws IOException {
+    @SuppressWarnings("unchecked")
+    DatumWriter<T> writer = new SpecificDatumWriter<T>((Class<T>) req.getClass());
+    Encoder encoder = new ExtendedJsonEncoder(req.getSchema(), out);
+    writer.write(req, encoder);
+    encoder.flush();
+  }
+
+
 
   public static <T extends SpecificRecord> byte[] writeAvroBin(final T req) {
     ByteArrayOutputStream bos = new ByteArrayOutputStream(128);

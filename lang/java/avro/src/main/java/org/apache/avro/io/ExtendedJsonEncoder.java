@@ -7,13 +7,15 @@ import org.codehaus.jackson.JsonGenerator;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
+import org.apache.avro.AvroTypeException;
 
 /**
  * A derived encoder that does the skipping of fields that match the index. It also encodes unions of null and a single
  * type as a more normal key=value rather than key={type=value}.
  * @author zfarkas
  */
-public final class ExtendedJsonEncoder extends JsonEncoder {
+public final class ExtendedJsonEncoder extends JsonEncoder implements DecimalEncoder {
 
 
   public ExtendedJsonEncoder(final Schema sc, final OutputStream out) throws IOException {
@@ -58,6 +60,21 @@ public final class ExtendedJsonEncoder extends JsonEncoder {
       parser.pushSymbol(Symbol.UNION_END);
     }
     parser.pushSymbol(symbol);
+  }
+
+  @Override
+  public void writeDecimal(final BigDecimal decimal, final Schema schema) throws IOException {
+    switch (schema.getType()) {
+      case STRING:
+        parser.advance(Symbol.STRING);
+        break;
+      case BYTES:
+        parser.advance(Symbol.BYTES);
+        break;
+      default:
+        throw new AvroTypeException("Invalid schema for decimal " + schema);
+    }
+    out.writeNumber(decimal);
   }
 
 }
