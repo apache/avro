@@ -17,6 +17,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import org.apache.avro.Schema;
 
 /**
@@ -29,4 +30,7 @@ public interface DecimalEncoder {
           Boolean.parseBoolean(System.getProperty("avro.optimized_decimal_write", "true"));
 
   void writeDecimal(final BigDecimal decimal, Schema schema) throws IOException;
+
+  void writeBigInteger(final BigInteger decimal, Schema schema) throws IOException;
+
 }

@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.ByteBuffer;
 import java.util.Set;
 import org.apache.avro.AbstractLogicalType;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 
@@ -119,6 +120,19 @@ public final class BigInteger extends AbstractLogicalType {
       buf.put(unscaledValue);
       buf.rewind();
       return buf;
+    }
+
+    public static boolean is(final Schema schema) {
+      Schema.Type type1 = schema.getType();
+      // validate the type
+      if (type1 != Schema.Type.BYTES && type1 != Schema.Type.STRING) {
+        return false;
+      }
+      LogicalType logicalType = schema.getLogicalType();
+      if (logicalType == null) {
+        return false;
+      }
+      return logicalType.getClass() == BigInteger.class;
     }
 
 

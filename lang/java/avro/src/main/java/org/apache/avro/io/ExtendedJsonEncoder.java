@@ -8,6 +8,7 @@ import org.codehaus.jackson.JsonGenerator;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import org.apache.avro.AvroTypeException;
 
 /**
@@ -64,6 +65,21 @@ public final class ExtendedJsonEncoder extends JsonEncoder implements DecimalEnc
 
   @Override
   public void writeDecimal(final BigDecimal decimal, final Schema schema) throws IOException {
+    switch (schema.getType()) {
+      case STRING:
+        parser.advance(Symbol.STRING);
+        break;
+      case BYTES:
+        parser.advance(Symbol.BYTES);
+        break;
+      default:
+        throw new AvroTypeException("Invalid schema for decimal " + schema);
+    }
+    out.writeNumber(decimal);
+  }
+
+  @Override
+  public void writeBigInteger(BigInteger decimal, Schema schema) throws IOException {
     switch (schema.getType()) {
       case STRING:
         parser.advance(Symbol.STRING);
