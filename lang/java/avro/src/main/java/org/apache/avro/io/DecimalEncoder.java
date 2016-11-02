@@ -20,10 +20,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.apache.avro.Schema;
 
-/**
- *
- * @author zfarkas
- */
 public interface DecimalEncoder {
 
   static boolean OPTIMIZED_JSON_DECIMAL_WRITE =
