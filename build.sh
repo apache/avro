@@ -220,7 +220,7 @@ do
       docker build -t avro-build-${USER_NAME} - <<UserSpecificDocker
 FROM avro-build
 RUN groupadd -g ${GROUP_ID} ${USER_NAME} || true
-RUN useradd -g ${GROUP_ID} -u ${USER_ID} -k /root -m ${USER_NAME}
+RUN useradd -g ${GROUP_ID} -u ${USER_ID} -k /root -m ${USER_NAME} || true
 ENV HOME /home/${USER_NAME}
 UserSpecificDocker
       # By mapping the .m2 directory you can do an mvn install from
