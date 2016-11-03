@@ -91,6 +91,9 @@ Trunk (not yet released)
     TestNettyServerWithCompression.testConnectionsCount
     (Gabor Szadovszky via tomwhite)
 
+    AVRO-1947: Java: Inconsistent maven profile activation
+    (Gabor Szadovszky via tomwhite)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
