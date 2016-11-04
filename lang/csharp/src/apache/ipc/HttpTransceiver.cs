@@ -27,16 +27,15 @@ namespace Avro.ipc
 {
     public class HttpTransceiver : Transceiver
     {
-        private byte[] _intBuffer = new byte[4]; //this buffer is used by read/write behind the latch controlled by base class so we are sure there is no race condition
+        private byte[] _intBuffer = new byte[4];
+            //this buffer is used by read/write behind the latch controlled by base class so we are sure there is no race condition
+
         private HttpWebRequest _httpRequest;
         private HttpWebRequest _modelRequest;
 
         public override string RemoteName
         {
-            get
-            {
-                return _modelRequest.RequestUri.AbsoluteUri;
-            }
+            get { return _modelRequest.RequestUri.AbsoluteUri; }
         }
 
         public HttpTransceiver(HttpWebRequest modelRequest)
@@ -46,15 +45,34 @@ namespace Avro.ipc
 
         public HttpTransceiver(Uri serviceUri, int timeoutMs)
         {
-            _modelRequest = (HttpWebRequest)WebRequest.Create(serviceUri);
+            _modelRequest = (HttpWebRequest) WebRequest.Create(serviceUri);
             _modelRequest.Method = "POST";
             _modelRequest.ContentType = "avro/binary";
             _modelRequest.Timeout = timeoutMs;
         }
 
-        private static int ReadInt(Stream stream, byte[] buffer)
+        public static void ReadFully(Stream stream, byte[] buffer)
         {
-            stream.Read(buffer, 0, 4);
+            int offset = 0;
+            int read = 0;
+
+            do
+            {
+                read = stream.Read(buffer, offset, buffer.Length - offset);
+                offset += read;
+            } while (buffer.Length > offset && read > 0);
+
+            if (buffer.Length > offset)
+            {
+                throw new IOException(
+                    String.Format("Only read {0} and expected buffer size of {1}.", offset, buffer.Length)
+                );
+            }
+        }
+
+        public static int ReadInt(Stream stream, byte[] buffer)
+        {
+            ReadFully(stream, buffer);
             return IPAddress.NetworkToHostOrder(BitConverter.ToInt32(buffer, 0));
         }
 
@@ -66,10 +84,10 @@ namespace Avro.ipc
         public static int CalculateLength(IList<MemoryStream> buffers)
         {
             int num = 0;
-            foreach (MemoryStream memoryStream in (IEnumerable<MemoryStream>)buffers)
+            foreach (MemoryStream memoryStream in (IEnumerable<MemoryStream>) buffers)
             {
                 num += 4;
-                num += (int)memoryStream.Length;
+                num += (int) memoryStream.Length;
             }
             return num + 4;
         }
@@ -84,21 +102,26 @@ namespace Avro.ipc
                 if (length == 0) //end of transmission
                     break;
 
-                byte[] buffer = new byte[length];
-                int offset = 0;
-                int count = length;
-                while (offset < length)
+                MemoryStream outStream = new MemoryStream(length);
+                byte[] buffer = new byte[64 * 1024];
+                int read;
+                int totalRead = 0;
+                while ((read = inStream.Read(buffer, 0, Math.Min(length - totalRead, buffer.Length))) > 0)
                 {
-                    int num = inStream.Read(buffer, offset, count);
-                    if (num == 0)
-                        throw new Exception(string.Format("Unexpected end of response binary stream - expected {0} more bytes in current chunk", (object)count));
-                    offset += num;
-                    count -= num;
+                    outStream.Write(buffer, 0, read);
+                    totalRead += read;
                 }
 
-                list.Add(new MemoryStream(buffer));
+                if (length != totalRead)
+                {
+                    throw new IOException(
+                        String.Format("Could not read the current chunk. Read {0} Actual Length {1}", totalRead, length)
+                    );
+                }
+
+                list.Add(outStream);
             }
-            return (IList<MemoryStream>)list;
+            return list;
         }
 
         public override IList<MemoryStream> ReadBuffers()
@@ -111,8 +134,8 @@ namespace Avro.ipc
 
         protected HttpWebRequest CreateAvroHttpRequest(long contentLength)
         {
-            HttpWebRequest wr = (HttpWebRequest)WebRequest.Create(_modelRequest.RequestUri);
-            
+            HttpWebRequest wr = (HttpWebRequest) WebRequest.Create(_modelRequest.RequestUri);
+
             //TODO: what else to copy from model request?
             wr.AllowAutoRedirect = _modelRequest.AllowAutoRedirect;
             wr.AllowWriteStreamBuffering = _modelRequest.AllowWriteStreamBuffering;
@@ -154,7 +177,7 @@ namespace Avro.ipc
         {
             foreach (MemoryStream memoryStream in buffers)
             {
-                int num = (int)memoryStream.Length;
+                int num = (int) memoryStream.Length;
                 outStream.Write(ConvertIntToBytes(num), 0, 4);
                 memoryStream.WriteTo(outStream);
             }

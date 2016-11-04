@@ -123,6 +123,7 @@
     <Compile Include="Specific\SpecificTests.cs" />
     <Compile Include="Utils\CaseFinder.cs" />
     <Compile Include="Utils\CaseFinderTests.cs" />
+    <Compile Include="Ipc\HttpTransceiverTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ipc\Avro.ipc.csproj">

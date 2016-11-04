@@ -30,7 +30,7 @@ case "$1" in
 
   test)
     xbuild
-    nunit-console -framework=4.0 Avro.nunit
+    nunit-console Avro.nunit
     ;;
 
   perf)
