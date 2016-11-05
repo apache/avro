@@ -37,6 +37,9 @@ Trunk (not yet released)
     AVRO-1907: Java: Add debug logging for invalid logical types.
     (Gabor Szadovszky via blue)
 
+    AVRO-1897: Fix build issues due to VERSION.txt newline, avro-tools.
+    (Suraj Acharya via blue)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
