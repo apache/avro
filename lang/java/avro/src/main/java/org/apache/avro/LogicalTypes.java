@@ -61,7 +61,9 @@ public class LogicalTypes {
 
     LogicalType logicalType;
     try {
-      if (TIMESTAMP_MILLIS.equals(typeName)) {
+      if (typeName == null) {
+        logicalType = null;
+      } else if (TIMESTAMP_MILLIS.equals(typeName)) {
         logicalType = TIMESTAMP_MILLIS_TYPE;
       } else if (DECIMAL.equals(typeName)) {
         logicalType = new Decimal(schema);
