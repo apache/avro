@@ -100,8 +100,6 @@ Avro 1.8.2 (5 November 2016)
     AVRO-1947: Java: Inconsistent maven profile activation
     (Gabor Szadovszky via tomwhite)
 
-    AVRO-1626: C#: Fix Avro.pref build error. (Naruto Takahashi via blue)
-
     AVRO-1951: Python: Fix ipc_test.py with a valid DNS name. (blue)
 
 Avro 1.8.1 (14 May 2016)
