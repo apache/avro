@@ -40,7 +40,8 @@ do
     test)
       # run lang-specific tests
       (cd lang/java; ./build.sh test)
-      (cd lang/java; ./build.sh test; mvn install -pl tools  -am -DskipTests)
+      # install java artifacts required by other builds and interop tests
+      mvn install -DskipTests
       (cd lang/py; ./build.sh test)
       (cd lang/py3; ./build.sh test)
       (cd lang/c; ./build.sh test)
