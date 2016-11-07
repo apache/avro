@@ -160,7 +160,7 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
     if (BinaryMessageEncoder.V1_HEADER[0] != header[0] ||
         BinaryMessageEncoder.V1_HEADER[1] != header[1]) {
       throw new BadHeaderException(String.format(
-          "Unrecognized header bytes: 0x%h%h",
+          "Unrecognized header bytes: 0x%02X 0x%02X",
           header[0], header[1]));
     }
 

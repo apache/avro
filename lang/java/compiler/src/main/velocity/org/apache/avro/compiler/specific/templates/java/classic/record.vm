@@ -23,6 +23,7 @@ import org.apache.avro.specific.SpecificData;
 #if (!$schema.isError())
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.SchemaStore;
 #end
 
 @SuppressWarnings("all")
@@ -46,6 +47,21 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
   private static final BinaryMessageDecoder<${this.mangle($schema.getName())}> DECODER =
       new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
+
+  /**
+   * Return the BinaryMessageDecoder instance used by this class.
+   */
+  public static BinaryMessageDecoder<${this.mangle($schema.getName())}> getDecoder() {
+    return DECODER;
+  }
+
+  /**
+   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+   */
+  public static BinaryMessageDecoder<${this.mangle($schema.getName())}> createDecoder(SchemaStore resolver) {
+    return new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$, resolver);
+  }
 
   /** Serializes this ${schema.getName()} to a ByteBuffer. */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {

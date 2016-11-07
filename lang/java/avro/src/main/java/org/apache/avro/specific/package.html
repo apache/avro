@@ -31,6 +31,12 @@ Generate specific Java classes for schemas and protocols.
 
 <li>Record, enum, and fixed schemas generate Java class definitions.</li>
 
+<li>If a Conversion instance is available for the related logical type,
+  the value will be mapped to the object returned by that Conversion. The
+  logical type conversions for {@code date}, {@code time-millis}, {@code
+  timestamp-millis} and {@code decimal} are pre-defined in the class {@link
+  org.apache.avro.compiler.specific.SpecificCompiler SpecificCompiler}.</li>
+
 <li>All other types are mapped as in the {@link org.apache.avro.generic
   generic} API.</li>
 

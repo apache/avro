@@ -104,7 +104,8 @@
       <id>hadoop2</id>
       <activation>
         <property>
-          <name>!hadoop.version</name> <!-- if no hadoop.version is set -->
+          <name>hadoop.version</name>
+          <value>!1</value> <!-- if hadoop.version is not 1 (or not set) -->
         </property>
       </activation>
       <properties>
