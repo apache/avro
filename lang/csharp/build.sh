@@ -30,7 +30,11 @@ case "$1" in
 
   test)
     xbuild
-    nunit-console Avro.nunit
+    if [[ ${INSIDE_AVRO_DOCKER} == 'Yes' ]]; then
+      nunit-console --framework=4.0 Avro.nunit
+    else
+      nunit-console Avro.nunit
+    fi
     ;;
 
   perf)

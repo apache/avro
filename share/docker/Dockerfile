@@ -21,6 +21,8 @@ FROM java:7-jdk
 
 WORKDIR /root
 
+ENV INSIDE_AVRO_DOCKER Yes
+
 # Add the repository for node.js 4.x
 RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 
