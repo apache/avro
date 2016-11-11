@@ -56,7 +56,7 @@ namespace Avro
                 if (null == unionType)
                     throw new SchemaParseException("Invalid JSON in union" + jvalue.ToString());
 
-                string name = unionType.Name;
+                string name = unionType.Fullname;
                 if (uniqueSchemas.ContainsKey(name))
                     throw new SchemaParseException("Duplicate type in union: " + name);
 
