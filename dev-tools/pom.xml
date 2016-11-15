@@ -22,7 +22,7 @@
 
   <groupId>org.apache.avro</groupId>
   <artifactId>dev-tools</artifactId>
-  <version>1.8.0.29p</version>
+  <version>1.8.0.30p-SNAPSHOT</version>
 
   <name>Apache Avro Developer tools</name>
   <url>http://avro.apache.org</url>
