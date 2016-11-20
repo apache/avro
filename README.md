@@ -147,7 +147,7 @@ If you do it in the other order, IntelliJ may not properly exclude some director
 # Alternate Usage
 
 If the defaults used by the plugin don't work for you, you can still use the tasks by themselves.
-In this case, use the "com.commercehub.gradle.plugin.avro" plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
+In this case, use the `com.commercehub.gradle.plugin.avro-base` plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
 
 Here's a short example of what this might look like:
 
