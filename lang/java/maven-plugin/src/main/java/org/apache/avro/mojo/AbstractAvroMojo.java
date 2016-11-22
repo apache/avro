@@ -115,6 +115,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
   /**
+   * The createOptionalGetters parameter enables generating the getOptional...
+   * methods that return an Optional of the requested type.
+   * This works ONLY on Java 8+
+   *
+   * @parameter property="createOptionalGetters"
+   */
+  protected boolean createOptionalGetters = false;
+
+  /**
    * Determines whether or not to create setters for the fields of the record.
    * The default is to create setters.
    *

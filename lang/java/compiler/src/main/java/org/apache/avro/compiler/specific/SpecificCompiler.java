@@ -105,6 +105,7 @@ public class SpecificCompiler {
   private VelocityEngine velocityEngine;
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
+  private boolean createOptionalGetters = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
@@ -215,6 +216,17 @@ public class SpecificCompiler {
    */
   public void setCreateSetters(boolean createSetters) {
     this.createSetters = createSetters;
+  }
+
+  public boolean isCreateOptionalGetters() {
+    return this.createOptionalGetters;
+  }
+
+  /**
+   * Set to false to not create the getters that return an Optional.
+   */
+  public void setCreateOptionalGetters(boolean createOptionalGetters) {
+    this.createOptionalGetters = createOptionalGetters;
   }
 
   /**
@@ -776,6 +788,16 @@ public class SpecificCompiler {
    */
   public static String generateGetMethod(Schema schema, Field field) {
     return generateMethodName(schema, field, "get", "");
+  }
+
+  /**
+   * Generates the name of a field accessor method that returns a Java 8 Optional.
+   * @param schema the schema in which the field is defined.
+   * @param field the field for which to generate the accessor name.
+   * @return the name of the accessor method for the given field.
+   */
+  public static String generateGetOptionalMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "getOptional", "");
   }
 
   /**
