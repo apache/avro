@@ -17,8 +17,8 @@
  */
 package org.apache.avro;
 
-import static junit.framework.Assert.assertEquals;
 import static org.apache.avro.SchemaCompatibility.checkReaderWriterCompatibility;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -352,6 +352,10 @@ public class TestSchemaCompatibility {
 
       new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA),
       new ReaderWriter(ENUM1_ABC_SCHEMA, ENUM1_AB_SCHEMA),
+      
+      // String-to/from-bytes, introduced in Avro 1.7.7
+      new ReaderWriter(STRING_SCHEMA, BYTES_SCHEMA),
+      new ReaderWriter(BYTES_SCHEMA, STRING_SCHEMA),
 
       // Tests involving unions:
       new ReaderWriter(EMPTY_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
@@ -412,11 +416,9 @@ public class TestSchemaCompatibility {
 
       new ReaderWriter(STRING_SCHEMA, BOOLEAN_SCHEMA),
       new ReaderWriter(STRING_SCHEMA, INT_SCHEMA),
-      new ReaderWriter(STRING_SCHEMA, BYTES_SCHEMA),
 
       new ReaderWriter(BYTES_SCHEMA, NULL_SCHEMA),
       new ReaderWriter(BYTES_SCHEMA, INT_SCHEMA),
-      new ReaderWriter(BYTES_SCHEMA, STRING_SCHEMA),
 
       new ReaderWriter(INT_ARRAY_SCHEMA, LONG_ARRAY_SCHEMA),
       new ReaderWriter(INT_MAP_SCHEMA, INT_ARRAY_SCHEMA),

@@ -40,7 +40,11 @@
   <property name="ivy.jar" value="${basedir}/lib/ivy-${ivy.version}.jar"/>
 
   <!-- Load shared properties -->
-  <loadfile srcFile="${share.dir}/VERSION.txt" property="avro.version" />
+  <loadfile srcFile="${share.dir}/VERSION.txt" property="avro.version">
+    <filterchain>
+      <striplinebreaks/>
+    </filterchain>
+  </loadfile>
   <loadfile srcFile="${share.schema.dir}/org/apache/avro/ipc/HandshakeRequest.avsc" property="handshake.request.json"/>
   <loadfile srcFile="${share.schema.dir}/org/apache/avro/ipc/HandshakeResponse.avsc" property="handshake.response.json"/>
 

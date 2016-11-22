@@ -40,6 +40,8 @@ do
     test)
       # run lang-specific tests
       (cd lang/java; ./build.sh test)
+      # install java artifacts required by other builds and interop tests
+      mvn install -DskipTests
       (cd lang/py; ./build.sh test)
       (cd lang/py3; ./build.sh test)
       (cd lang/c; ./build.sh test)
@@ -105,7 +107,7 @@ do
 
       # build lang-specific artifacts
 
-      (cd lang/java;./build.sh dist)
+      (cd lang/java;./build.sh dist; mvn install -pl tools -am -DskipTests)
       (cd lang/java/trevni/doc; mvn site)
       (mvn -N -P copy-artifacts antrun:run)
 
