@@ -17,7 +17,7 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM java:7-jdk
+FROM java:8-jdk
 
 WORKDIR /root
 
