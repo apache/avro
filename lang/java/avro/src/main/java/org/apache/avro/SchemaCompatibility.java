@@ -225,6 +225,13 @@ public class SchemaCompatibility {
         final Schema reader,
         final Schema writer
     ) {
+      return getCompatibility(reader, writer, null);
+    }
+    private SchemaCompatibilityType getCompatibility(
+        final Schema reader,
+        final Schema writer,
+        final Object readerFieldDefaultVal
+    ) {
       LOG.debug("Checking compatibility of reader {} with writer {}", reader, writer);
       final ReaderWriter pair = new ReaderWriter(reader, writer);
       final SchemaCompatibilityType existing = mMemoizeMap.get(pair);
@@ -238,7 +245,7 @@ public class SchemaCompatibility {
       }
       // Mark this reader/writer pair as "in progress":
       mMemoizeMap.put(pair, SchemaCompatibilityType.RECURSION_IN_PROGRESS);
-      final SchemaCompatibilityType calculated = calculateCompatibility(reader, writer);
+      final SchemaCompatibilityType calculated = calculateCompatibility(reader, writer, readerFieldDefaultVal);
       mMemoizeMap.put(pair, calculated);
       return calculated;
     }
@@ -256,7 +263,8 @@ public class SchemaCompatibility {
      */
     private SchemaCompatibilityType calculateCompatibility(
         final Schema reader,
-        final Schema writer
+        final Schema writer,
+        final Object readerFieldDefaultVal
     ) {
       assert (reader != null);
       assert (writer != null);
@@ -300,6 +308,13 @@ public class SchemaCompatibility {
             // TODO: Report a human-readable error.
             // if (!symbols.isEmpty()) {
             // }
+            if (!symbols.isEmpty()) {
+              if (readerFieldDefaultVal instanceof String) {
+                if (reader.getEnumSymbols().contains(readerFieldDefaultVal)) {
+                  symbols.clear();
+                }
+              }
+            }
             return symbols.isEmpty()
                 ? SchemaCompatibilityType.COMPATIBLE
                 : SchemaCompatibilityType.INCOMPATIBLE;
@@ -321,7 +336,7 @@ public class SchemaCompatibility {
                   return SchemaCompatibilityType.INCOMPATIBLE;
                 }
               } else {
-                if (getCompatibility(readerField.schema(), writerField.schema())
+                if (getCompatibility(readerField.schema(), writerField.schema(), readerField.defaultVal())
                     == SchemaCompatibilityType.INCOMPATIBLE) {
                   return SchemaCompatibilityType.INCOMPATIBLE;
                 }

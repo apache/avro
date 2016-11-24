@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -88,6 +89,21 @@ public class TestSchemaCompatibility {
       Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
   private static final Schema STRING_INT_UNION_SCHEMA =
       Schema.createUnion(list(STRING_SCHEMA, INT_SCHEMA));
+  
+  private static final Schema ENUM_FORWARD_COMPATIBILITY_TEST_WRITER = singleEnumFieldRecord(false);
+  private static final Schema ENUM_FORWARD_COMPATIBILITY_TEST_READER = singleEnumFieldRecord(true);
+  private static Schema singleEnumFieldRecord(boolean reader) {
+    List<String> symbols = Arrays.asList("NONE", "A", "B", "C", "D");
+    if (reader) {
+      int size = symbols.size();
+      symbols = symbols.subList(0, (size - 1));
+    }
+    List<Field> fields = new ArrayList<Field>(1);
+    Schema enumSchema = Schema.createEnum("Type", null, null, symbols);
+    fields.add(new Schema.Field("type", enumSchema, null, "NONE"));
+    Schema schema = Schema.createRecord("RecordX", null, null, false, fields);
+    return schema;
+  }
 
   // Non recursive records:
   private static final Schema EMPTY_RECORD1 =
@@ -391,7 +407,8 @@ public class TestSchemaCompatibility {
       new ReaderWriter(LONG_LIST_RECORD, LONG_LIST_RECORD),
       new ReaderWriter(LONG_LIST_RECORD, INT_LIST_RECORD),
 
-      new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA)
+      new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA),
+      new ReaderWriter(ENUM_FORWARD_COMPATIBILITY_TEST_READER, ENUM_FORWARD_COMPATIBILITY_TEST_WRITER)
   );
 
   // -----------------------------------------------------------------------------------------------
