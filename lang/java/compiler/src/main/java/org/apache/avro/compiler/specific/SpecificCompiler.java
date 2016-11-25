@@ -106,6 +106,7 @@ public class SpecificCompiler {
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
   private boolean createOptionalGetters = false;
+  private boolean gettersReturnOptional = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
@@ -227,6 +228,17 @@ public class SpecificCompiler {
    */
   public void setCreateOptionalGetters(boolean createOptionalGetters) {
     this.createOptionalGetters = createOptionalGetters;
+  }
+
+  public boolean isGettersReturnOptional() {
+    return this.gettersReturnOptional;
+  }
+
+  /**
+   * Set to false to not create the getters that return an Optional.
+   */
+  public void setGettersReturnOptional(boolean gettersReturnOptional) {
+    this.gettersReturnOptional = gettersReturnOptional;
   }
 
   /**

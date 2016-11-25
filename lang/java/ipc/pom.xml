@@ -74,6 +74,7 @@
               </excludes>
               <stringType>String</stringType>
               <createOptionalGetters>true</createOptionalGetters>
+              <!--<gettersReturnOptional>true</gettersReturnOptional>-->
               <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
               <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
               <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>
