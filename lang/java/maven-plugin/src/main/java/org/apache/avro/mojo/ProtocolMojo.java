@@ -18,13 +18,12 @@
 
 package org.apache.avro.mojo;
 
-import org.apache.avro.generic.GenericData.StringType;
-
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.generic.GenericData.StringType;
 
 /**
  * Generate Java classes and interfaces from Avro protocol files (.avpr)
@@ -60,8 +59,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
-    compiler.setCreateOptionalGetters(createOptionalGetters);
-    compiler.setGettersReturnOptional(gettersReturnOptional);
+    compiler.setGettersReturnOptionalOnNullableFields(gettersReturnOptionalOnNullableFields);
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     compiler.compileToDestination(src, outputDirectory);

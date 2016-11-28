@@ -17,18 +17,20 @@
  */
 package org.apache.avro.compiler.specific;
 
+import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
+
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,30 +38,27 @@ import java.util.Set;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalTypes;
-import org.apache.avro.data.TimeConversions.DateConversion;
-import org.apache.avro.data.TimeConversions.TimeConversion;
-import org.apache.avro.data.TimeConversions.TimestampConversion;
-import org.apache.avro.specific.SpecificData;
-import org.codehaus.jackson.JsonNode;
-
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.SchemaNormalization;
-import org.apache.avro.JsonProperties;
+import org.apache.avro.data.TimeConversions.DateConversion;
+import org.apache.avro.data.TimeConversions.TimeConversion;
+import org.apache.avro.data.TimeConversions.TimestampConversion;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.log.LogChute;
+import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
 
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
@@ -105,8 +104,7 @@ public class SpecificCompiler {
   private VelocityEngine velocityEngine;
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
-  private boolean createOptionalGetters = false;
-  private boolean gettersReturnOptional = false;
+  private boolean gettersReturnOptionalOnNullableFields = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
@@ -219,26 +217,15 @@ public class SpecificCompiler {
     this.createSetters = createSetters;
   }
 
-  public boolean isCreateOptionalGetters() {
-    return this.createOptionalGetters;
+  public boolean isGettersReturnOptionalOnNullableFields() {
+    return this.gettersReturnOptionalOnNullableFields;
   }
 
   /**
    * Set to false to not create the getters that return an Optional.
    */
-  public void setCreateOptionalGetters(boolean createOptionalGetters) {
-    this.createOptionalGetters = createOptionalGetters;
-  }
-
-  public boolean isGettersReturnOptional() {
-    return this.gettersReturnOptional;
-  }
-
-  /**
-   * Set to false to not create the getters that return an Optional.
-   */
-  public void setGettersReturnOptional(boolean gettersReturnOptional) {
-    this.gettersReturnOptional = gettersReturnOptional;
+  public void setGettersReturnOptionalOnNullableFields(boolean gettersReturnOptionalOnNullableFields) {
+    this.gettersReturnOptionalOnNullableFields = gettersReturnOptionalOnNullableFields;
   }
 
   /**
