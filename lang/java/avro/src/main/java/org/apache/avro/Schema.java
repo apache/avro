@@ -22,13 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -38,10 +38,10 @@ import java.util.Set;
 
 import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.DoubleNode;
 
@@ -369,6 +369,20 @@ public abstract class Schema extends JsonProperties {
   static {
     Collections.addAll(FIELD_RESERVED,
                        "default","doc","name","order","type","aliases");
+  }
+
+  public boolean isNullable() {
+    if (!(this instanceof UnionSchema)) {
+      return getType().equals(Schema.Type.NULL);
+    }
+
+    for (Schema schema : getTypes()) {
+      if (schema.isNullable()) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /** A field within a record. */

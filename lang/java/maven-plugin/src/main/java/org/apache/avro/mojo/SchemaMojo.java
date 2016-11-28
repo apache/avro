@@ -18,13 +18,12 @@
 
 package org.apache.avro.mojo;
 
-import org.apache.avro.generic.GenericData.StringType;
-
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.generic.GenericData.StringType;
 
 /**
  * Generate Java classes from Avro schema files (.avsc)
@@ -65,7 +64,7 @@ public class SchemaMojo extends AbstractAvroMojo {
 
     // This is necessary to maintain backward-compatibility. If there are
     // no imported files then isolate the schemas from each other, otherwise
-    // allow them to share a single schema so resuse and sharing of schema
+    // allow them to share a single schema so reuse and sharing of schema
     // is possible.
     if (imports == null) {
       schema = new Schema.Parser().parse(src);
@@ -77,6 +76,7 @@ public class SchemaMojo extends AbstractAvroMojo {
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
+    compiler.setGettersReturnOptionalOnNullableFields(gettersReturnOptionalOnNullableFields);
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));

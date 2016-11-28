@@ -21,8 +21,11 @@ import org.apache.avro.test.http.*;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 public class TestSpecificBuilderTree {
@@ -253,5 +256,54 @@ public class TestSpecificBuilderTree {
     assertEquals(HttpMethod.GET,    request.getHttpRequest().getURI().getMethod());
     assertEquals("/index.html",     request.getHttpRequest().getURI().getPath());
   }
+
+  @Test
+  public void validateBrowsingOptionals() {
+    Request.Builder requestBuilder = Request.newBuilder();
+    requestBuilder.setTimestamp(1234567890);
+
+    requestBuilder
+      .getHttpRequestBuilder()
+        .getUserAgentBuilder()
+          .setUseragent("Chrome 123");
+
+    requestBuilder
+      .getHttpRequestBuilder()
+        .getURIBuilder()
+          .setMethod(HttpMethod.GET)
+          .setPath("/index.html");
+
+    Request request = requestBuilder.build();
+
+    assertEquals("Chrome 123", Optional
+      .of(request)
+      .flatMap(Request::getOptionalHttpRequest)
+      .flatMap(HttpRequest::getOptionalUserAgent)
+      .flatMap(UserAgent::getOptionalUseragent)
+      .orElse("UNKNOWN"));
+
+    assertFalse(Optional
+      .of(request)
+      .flatMap(Request::getOptionalHttpRequest)
+      .flatMap(HttpRequest::getOptionalUserAgent)
+      .flatMap(UserAgent::getOptionalId)
+      .isPresent());
+
+    assertEquals(HttpMethod.GET, Optional
+      .of(request)
+      .flatMap(Request::getOptionalHttpRequest)
+      .flatMap(HttpRequest::getOptionalURI)
+      .flatMap(HttpURI::getOptionalMethod)
+      .orElse(null));
+
+    assertEquals("/index.html", Optional
+      .of(request)
+      .flatMap(Request::getOptionalHttpRequest)
+      .flatMap(HttpRequest::getOptionalURI)
+      .flatMap(HttpURI::getOptionalPath)
+      .orElse(null));
+
+  }
+
 
 }

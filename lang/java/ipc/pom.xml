@@ -73,6 +73,8 @@
                 <exclude>org/apache/avro/data/Json.avsc</exclude>
               </excludes>
               <stringType>String</stringType>
+              <createOptionalGetters>true</createOptionalGetters>
+              <!--<gettersReturnOptionalOnNullableFields>true</gettersReturnOptionalOnNullableFields>-->
               <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
               <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
               <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>
@@ -80,6 +82,17 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${jdkVersion}</source>
+          <target>${jdkVersion}</target>
+          <testSource>${jdk8Version}</testSource>
+          <testTarget>${jdk8Version}</testTarget>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

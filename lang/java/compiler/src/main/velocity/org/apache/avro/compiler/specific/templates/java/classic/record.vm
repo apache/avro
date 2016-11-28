@@ -25,6 +25,7 @@ import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.SchemaStore;
 #end
+#if (${this.gettersReturnOptionalOnNullableFields})import java.util.Optional;#end
 
 @SuppressWarnings("all")
 #if ($schema.getDoc())
@@ -184,6 +185,17 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   }
 
 #foreach ($field in $schema.getFields())
+#if (${this.gettersReturnOptionalOnNullableFields} && ${field.isNullable})
+  /**
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
+#if ($field.doc())      * $field.doc()
+#end
+   * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+   */
+  public Optional<${this.javaType($field.schema())}> ${this.generateGetMethod($schema, $field)}() {
+    return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
+  }
+#else
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #if ($field.doc())   * @return $field.doc()
@@ -193,6 +205,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
   }
+#end
 
 #if ($this.createSetters)
   /**

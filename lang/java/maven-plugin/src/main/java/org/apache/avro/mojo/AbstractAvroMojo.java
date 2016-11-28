@@ -115,6 +115,16 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
   /**
+   * The gettersReturnOptionalOnNullableFields parameter enables generating getter
+   * methods that return an Optional of the requested type when the field is nullable.
+   * This will replace the
+   * This works ONLY on Java 8+
+   *
+   * @parameter property="gettersReturnOptionalOnNullableFields"
+   */
+  protected boolean gettersReturnOptionalOnNullableFields = false;
+
+  /**
    * Determines whether or not to create setters for the fields of the record.
    * The default is to create setters.
    *
