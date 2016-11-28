@@ -18,6 +18,7 @@
 package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -74,6 +75,20 @@ public class TestSchema {
 
     Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
     assertEquals(expected, schema);
+  }
+
+  @Test
+  public void testIsNullableWorksOnNullableField() {
+    Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
+
+    assertTrue(schema.isNullable());
+  }
+
+  @Test
+  public void testIsNullableWorksOnNonNullableField() {
+    Schema schema = Schema.createUnion(Schema.create(Type.LONG));
+
+    assertFalse(schema.isNullable());
   }
 
   @Test
