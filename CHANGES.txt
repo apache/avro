@@ -104,6 +104,8 @@ Trunk (not yet released)
 
     AVRO-1951: Python: Fix ipc_test.py with a valid DNS name. (blue)
 
+    AVRO-1966: Java: Fix NPE When copying builder with nullable record. (Niels Basjes)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
