@@ -18,11 +18,15 @@
 package org.apache.avro.specific;
 
 import org.apache.avro.test.http.*;
+import org.apache.avro.test.nullable.Nullable;
+import org.apache.avro.test.nullable.RecordWithNullables;
 import org.junit.Test;
 
 import java.util.ArrayList;
 
+import static org.apache.avro.test.nullable.Nullable.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 public class TestSpecificBuilderTree {
@@ -252,6 +256,31 @@ public class TestSpecificBuilderTree {
 
     assertEquals(HttpMethod.GET,    request.getHttpRequest().getURI().getMethod());
     assertEquals("/index.html",     request.getHttpRequest().getURI().getPath());
+  }
+
+  @Test
+  public void copyBuilderWithNullables() {
+    RecordWithNullables.Builder builder = RecordWithNullables.newBuilder();
+
+    assertFalse(builder.hasNullableRecordBuilder());
+    assertFalse(builder.hasNullableRecord());
+    assertFalse(builder.hasNullableString());
+    assertFalse(builder.hasNullableLong  ());
+    assertFalse(builder.hasNullableInt   ());
+    assertFalse(builder.hasNullableMap   ());
+    assertFalse(builder.hasNullableArray ());
+
+    RecordWithNullables.Builder builderCopy = RecordWithNullables.newBuilder(builder);
+
+    assertFalse(builderCopy.hasNullableRecordBuilder());
+    assertFalse(builderCopy.hasNullableRecord());
+    assertFalse(builderCopy.hasNullableString());
+    assertFalse(builderCopy.hasNullableLong  ());
+    assertFalse(builderCopy.hasNullableInt   ());
+    assertFalse(builderCopy.hasNullableMap   ());
+    assertFalse(builderCopy.hasNullableArray ());
+
+    builderCopy.getNullableRecordBuilder();
   }
 
 }
