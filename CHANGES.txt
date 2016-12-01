@@ -19,6 +19,9 @@ Trunk (not yet released)
 
     AVRO-1966: Java: Fix NPE When copying builder with nullable record. (Niels Basjes)
 
+    AVRO-1967: Java: Fix NPE when calling getXyzBuilder on instance where the xyz is null
+    (Niels Basjes)
+
 Avro 1.8.2 (10 April 2017)
 
   INCOMPATIBLE CHANGES
