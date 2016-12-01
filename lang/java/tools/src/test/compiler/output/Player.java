@@ -182,7 +182,11 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    * @return A new Player RecordBuilder
    */
   public static avro.examples.baseball.Player.Builder newBuilder(avro.examples.baseball.Player.Builder other) {
-    return new avro.examples.baseball.Player.Builder(other);
+    if (other == null) {
+      return new avro.examples.baseball.Player.Builder();
+    } else {
+      return new avro.examples.baseball.Player.Builder(other);
+    }
   }
 
   /**
@@ -191,7 +195,11 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    * @return A new Player RecordBuilder
    */
   public static avro.examples.baseball.Player.Builder newBuilder(avro.examples.baseball.Player other) {
-    return new avro.examples.baseball.Player.Builder(other);
+    if (other == null) {
+      return new avro.examples.baseball.Player.Builder(other);
+    } else {
+      return new avro.examples.baseball.Player.Builder(other);
+    }
   }
 
   /**
@@ -240,20 +248,20 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.Player other) {
-            super(SCHEMA$);
-      if (isValidValue(fields()[0], other.number)) {
+      super(SCHEMA$);
+      if (other != null && isValidValue(fields()[0], other.number)) {
         this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.first_name)) {
+      if (other != null && isValidValue(fields()[1], other.first_name)) {
         this.first_name = data().deepCopy(fields()[1].schema(), other.first_name);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.last_name)) {
+      if (other != null && isValidValue(fields()[2], other.last_name)) {
         this.last_name = data().deepCopy(fields()[2].schema(), other.last_name);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.position)) {
+      if (other != null && isValidValue(fields()[3], other.position)) {
         this.position = data().deepCopy(fields()[3].schema(), other.position);
         fieldSetFlags()[3] = true;
       }
