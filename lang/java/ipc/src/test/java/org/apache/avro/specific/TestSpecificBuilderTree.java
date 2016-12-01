@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import static org.apache.avro.test.nullable.Nullable.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class TestSpecificBuilderTree {
@@ -287,6 +288,82 @@ public class TestSpecificBuilderTree {
     assertFalse(builderCopy.hasNullableArray ());
 
     builderCopy.getNullableRecordBuilder();
+  }
+
+  @Test
+  public void copyBuilderWithNullablesAndSetToNull() {
+    // Create builder with all values default to null, yet unset.
+    RecordWithNullables.Builder builder = RecordWithNullables.newBuilder();
+
+    // Ensure all values have not been set
+    assertFalse(builder.hasNullableRecordBuilder());
+    assertFalse(builder.hasNullableRecord());
+    assertFalse(builder.hasNullableString());
+    assertFalse(builder.hasNullableLong  ());
+    assertFalse(builder.hasNullableInt   ());
+    assertFalse(builder.hasNullableMap   ());
+    assertFalse(builder.hasNullableArray ());
+
+    // Set all values to null
+    builder.setNullableRecordBuilder(null);
+    builder.setNullableRecord(null);
+    builder.setNullableString(null);
+    builder.setNullableLong  (null);
+    builder.setNullableInt   (null);
+    builder.setNullableMap   (null);
+    builder.setNullableArray (null);
+
+    // A Builder remains False because it is null
+    assertFalse(builder.hasNullableRecordBuilder());
+
+    // Ensure all values have been set
+    assertTrue(builder.hasNullableRecord());
+    assertTrue(builder.hasNullableString());
+    assertTrue(builder.hasNullableLong  ());
+    assertTrue(builder.hasNullableInt   ());
+    assertTrue(builder.hasNullableMap   ());
+    assertTrue(builder.hasNullableArray ());
+
+    // Implicitly create a builder instance and clear the actual value.
+    builder.getNullableRecordBuilder();
+    assertTrue(builder.hasNullableRecordBuilder());
+    assertFalse(builder.hasNullableRecord());
+
+    // Create a copy of this builder.
+    RecordWithNullables.Builder builderCopy = RecordWithNullables.newBuilder(builder);
+
+    // Ensure all values are still the same
+    assertTrue(builder.hasNullableRecordBuilder());
+    assertFalse(builder.hasNullableRecord());
+    assertTrue(builder.hasNullableString());
+    assertTrue(builder.hasNullableLong  ());
+    assertTrue(builder.hasNullableInt   ());
+    assertTrue(builder.hasNullableMap   ());
+    assertTrue(builder.hasNullableArray ());
+  }
+
+  @Test
+  public void getBuilderForRecordWithNullRecord() {
+    // Create a record with all nullable fields set to the default value : null
+    RecordWithNullables recordWithNullables = RecordWithNullables.newBuilder().build();
+
+    // Now create a Builder using this record as the base
+    RecordWithNullables.Builder builder = RecordWithNullables.newBuilder(recordWithNullables);
+
+    // In the past this caused an NPE
+    builder.getNullableRecordBuilder();
+  }
+
+  @Test
+  public void getBuilderForNullRecord() {
+    // In the past this caused an NPE
+    RecordWithNullables.newBuilder((RecordWithNullables)null);
+  }
+
+  @Test
+  public void getBuilderForNullBuilder() {
+    // In the past this caused an NPE
+    RecordWithNullables.newBuilder((RecordWithNullables.Builder)null);
   }
 
 }

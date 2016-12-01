@@ -192,7 +192,11 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    * @return A new Player RecordBuilder
    */
   public static avro.examples.baseball.Player.Builder newBuilder(avro.examples.baseball.Player.Builder other) {
-    return new avro.examples.baseball.Player.Builder(other);
+    if (other == null) {
+      return new avro.examples.baseball.Player.Builder();
+    } else {
+      return new avro.examples.baseball.Player.Builder(other);
+    }
   }
 
   /**
@@ -201,7 +205,11 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    * @return A new Player RecordBuilder
    */
   public static avro.examples.baseball.Player.Builder newBuilder(avro.examples.baseball.Player other) {
-    return new avro.examples.baseball.Player.Builder(other);
+    if (other == null) {
+      return new avro.examples.baseball.Player.Builder();
+    } else {
+      return new avro.examples.baseball.Player.Builder(other);
+    }
   }
 
   /**
@@ -250,7 +258,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.Player other) {
-            super(SCHEMA$);
+      super(SCHEMA$);
       if (isValidValue(fields()[0], other.number)) {
         this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;
