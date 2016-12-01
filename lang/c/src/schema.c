@@ -574,6 +574,11 @@ avro_schema_enum_symbol_append(const avro_schema_t enum_schema,
 	return 0;
 }
 
+size_t avro_schema_enum_size( const avro_schema_t enump )
+{
+	return avro_schema_to_enum(enump)->symbols->num_entries;
+}
+
 int
 avro_schema_record_field_append(const avro_schema_t record_schema,
 				const char *field_name,
