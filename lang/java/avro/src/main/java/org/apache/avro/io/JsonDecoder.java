@@ -681,7 +681,7 @@ public class JsonDecoder extends ParsingDecoder
 
       @Override
       public BigInteger getBigIntegerValue() throws IOException {
-        throw new UnsupportedOperationException();
+        return new BigInteger(getText());
       }
 
       @Override
@@ -696,7 +696,7 @@ public class JsonDecoder extends ParsingDecoder
 
       @Override
       public BigDecimal getDecimalValue() throws IOException {
-        throw new UnsupportedOperationException();
+        return new BigDecimal(getText());
       }
 
       @Override
