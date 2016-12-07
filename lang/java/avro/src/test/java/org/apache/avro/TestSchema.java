@@ -18,11 +18,13 @@
 package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.Schema.Field;
@@ -99,5 +101,68 @@ public class TestSchema {
     Schema.createRecord("foobar", null, null, false, null);
   }
 
+  @Test
+  public void testIsUnionOnUnionWithMultipleElements() {
+    Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
+    assertTrue(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnUnionWithOneElement() {
+    Schema schema = Schema.createUnion(Schema.create(Type.LONG));
+    assertTrue(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnRecord() {
+    Schema schema = createDefaultRecord();
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnArray() {
+    Schema schema = Schema.createArray(Schema.create(Type.LONG));
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnEnum() {
+    Schema schema = Schema.createEnum("name", "doc", "namespace", Collections.singletonList("value"));
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnFixed() {
+    Schema schema = Schema.createFixed("name", "doc", "space", 10);
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnMap() {
+    Schema schema = Schema.createMap(Schema.create(Type.LONG));
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsNullableOnUnionWithNull() {
+    Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
+    assertTrue(schema.isNullable());
+  }
+
+  @Test
+  public void testIsNullableOnUnionWithoutNull() {
+    Schema schema = Schema.createUnion(Schema.create(Type.LONG));
+    assertFalse(schema.isNullable());
+  }
+
+  @Test
+  public void testIsNullableOnRecord() {
+    Schema schema = createDefaultRecord();
+    assertFalse(schema.isNullable());
+  }
+
+  private Schema createDefaultRecord() {
+    return Schema.createRecord("name", "doc", "namespace", false);
+  }
 
 }
