@@ -35,35 +35,36 @@ public class TestSchema {
   @Test
   public void testSplitSchemaBuild() {
     Schema s = SchemaBuilder
-       .record("HandshakeRequest")
-       .namespace("org.apache.avro.ipc").fields()
-         .name("clientProtocol").type().optional().stringType()
-         .name("meta").type().optional().map().values().bytesType()
-         .endRecord();
+        .record("HandshakeRequest")
+        .namespace("org.apache.avro.ipc").fields()
+        .name("clientProtocol").type().optional().stringType()
+        .name("meta").type().optional().map().values().bytesType()
+        .endRecord();
 
     String schemaString = s.toString();
-    final int mid = schemaString.length() / 2;
+    int mid = schemaString.length() / 2;
 
     Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
     Schema parsedArrayOfStringSchema =
-      new org.apache.avro.Schema.Parser().parse
-      (schemaString.substring(0, mid), schemaString.substring(mid));
+        new org.apache.avro.Schema.Parser().parse
+            (schemaString.substring(0, mid), schemaString.substring(mid));
     assertNotNull(parsedStringSchema);
     assertNotNull(parsedArrayOfStringSchema);
     assertEquals(parsedStringSchema.toString(), parsedArrayOfStringSchema.toString());
   }
 
   @Test
-  public void testDuplicateRecordFieldName() {
-    final Schema schema = Schema.createRecord("RecordName", null, null, false);
-    final List<Field> fields = new ArrayList<Field>();
+  public void testDefaultRecordWithDuplicateFieldName() {
+    String recordName = "name";
+    Schema schema = Schema.createRecord(recordName, "doc", "namespace", false);
+    List<Field> fields = new ArrayList<Field>();
     fields.add(new Field("field_name", Schema.create(Type.NULL), null, null));
     fields.add(new Field("field_name", Schema.create(Type.INT), null, null));
     try {
       schema.setFields(fields);
       fail("Should not be able to create a record with duplicate field name.");
     } catch (AvroRuntimeException are) {
-      assertTrue(are.getMessage().contains("Duplicate field field_name in record RecordName"));
+      assertTrue(are.getMessage().contains("Duplicate field field_name in record " + recordName));
     }
   }
 
@@ -79,8 +80,22 @@ public class TestSchema {
   }
 
   @Test
+  public void testRecordWithNullDoc() {
+    Schema schema = Schema.createRecord("name", null, "namespace", false);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+  }
+
+  @Test
+  public void testRecordWithNullNamespace() {
+    Schema schema = Schema.createRecord("name", "doc", null, false);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+  }
+
+  @Test
   public void testEmptyRecordSchema() {
-    Schema schema = Schema.createRecord("foobar", null, null, false);
+    Schema schema = createDefaultRecord();
     String schemaString = schema.toString();
     assertNotNull(schemaString);
   }
@@ -90,7 +105,8 @@ public class TestSchema {
     List<Field> fields = new ArrayList<Field>();
     fields.add(new Field("field_name1", Schema.create(Type.NULL), null, null));
     fields.add(new Field("field_name2", Schema.create(Type.INT), null, null));
-    Schema schema = Schema.createRecord("foobar", null, null, false, fields);
+    Schema schema = createDefaultRecord();
+    schema.setFields(fields);
     String schemaString = schema.toString();
     assertNotNull(schemaString);
     assertEquals(2, schema.getFields().size());
@@ -98,7 +114,7 @@ public class TestSchema {
 
   @Test(expected = NullPointerException.class)
   public void testSchemaWithNullFields() {
-    Schema.createRecord("foobar", null, null, false, null);
+    Schema.createRecord("name", "doc", "namespace", false, null);
   }
 
   @Test
