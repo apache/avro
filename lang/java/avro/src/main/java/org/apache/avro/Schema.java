@@ -101,7 +101,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  static final JsonFactory FACTORY = new JsonFactory();
+  public static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
   private static final int NO_HASHCODE = Integer.MIN_VALUE;
@@ -1079,7 +1079,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       }
     }
 
-    private Schema parse(JsonParser parser) throws IOException {
+    public Schema parse(JsonParser parser) throws IOException {
       boolean saved = validateNames.get();
       boolean savedValidateDefaults = VALIDATE_DEFAULTS.get();
       try {
