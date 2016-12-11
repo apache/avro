@@ -371,16 +371,12 @@ public abstract class Schema extends JsonProperties {
                        "default","doc","name","order","type","aliases");
   }
 
-  /**
-   * Returns true if this record is an union type.
-   */
+  /** Returns true if this record is an union type. */
   public boolean isUnion(){
     return this instanceof UnionSchema;
   }
 
-  /**
-   * Returns true if this record is an union type containing null.
-   */
+  /** Returns true if this record is an union type containing null. */
   public boolean isNullable() {
     if (!isUnion()) {
       return getType().equals(Schema.Type.NULL);
