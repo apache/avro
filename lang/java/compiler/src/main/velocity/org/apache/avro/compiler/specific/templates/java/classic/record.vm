@@ -25,6 +25,7 @@ import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.SchemaStore;
 #end
+#if (${this.pojoWithOptional} && ${this.containsNullableField($schema)})import java.util.Optional;#end
 
 @SuppressWarnings("all")
 #if ($schema.getDoc())
@@ -184,6 +185,17 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   }
 
 #foreach ($field in $schema.getFields())
+#if (${this.pojoWithOptional} && ${field.schema().isNullable()})
+  /**
+   * Gets the value of the nullable '${this.mangle($field.name(), $schema.isError())}' field.
+#if ($field.doc())      * $field.doc()
+#end
+   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
+   */
+  public Optional<${this.javaType($field.schema())}> ${this.generateGetMethod($schema, $field)}() {
+    return Optional.ofNullable(${this.mangle($field.name(), $schema.isError())});
+  }
+#else
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #if ($field.doc())   * @return $field.doc()
@@ -193,8 +205,20 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
   }
+#end
 
 #if ($this.createSetters)
+#if (${this.pojoWithOptional} && ${field.schema().isNullable()})
+/**
+* Sets the value of the nullable '${this.mangle($field.name(), $schema.isError())}' field.
+    #if ($field.doc())   * $field.doc()
+    #end
+* @param value the value to set.
+*/
+public void ${this.generateSetMethod($schema, $field)}(Optional<${this.javaType($field.schema())}> value) {
+this.${this.mangle($field.name(), $schema.isError())} = value.orElse(null);
+}
+#else
   /**
    * Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #if ($field.doc())   * $field.doc()
@@ -204,6 +228,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} value) {
     this.${this.mangle($field.name(), $schema.isError())} = value;
   }
+#end
 #end
 
 #end
@@ -319,10 +344,41 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 
 #foreach ($field in $schema.getFields())
+#if (${this.pojoWithOptional} && ${field.schema().isNullable()})
+
+    /**
+      * Gets the value of the nullable '${this.mangle($field.name(), $schema.isError())}' field.
+        #if ($field.doc())      * $field.doc()
+        #end
+      * @return The value.
+      */
+    public Optional<${this.javaType($field.schema())}> ${this.generateGetMethod($schema, $field)}() {
+      return Optional.ofNullable(${this.mangle($field.name(), $schema.isError())});
+    }
+
+    /**
+      * Sets the value of the nullable '${this.mangle($field.name(), $schema.isError())}' field.
+        #if ($field.doc())      * $field.doc()
+        #end
+      * @param value The value of '${this.mangle($field.name(), $schema.isError())}'.
+      * @return This builder.
+      */
+    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(Optional<${this.javaType($field.schema())}> value) {
+    ${this.javaType($field.schema())} effectiveValue = value.orElse(null);
+    validate(fields()[$field.pos()], effectiveValue);
+        #if (${this.hasBuilder($field.schema())})
+        this.${this.mangle($field.name(), $schema.isError())}Builder = null;
+        #end
+    this.${this.mangle($field.name(), $schema.isError())} = effectiveValue;
+    fieldSetFlags()[$field.pos()] = true;
+    return this;
+    }
+#else
+
     /**
       * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
-#if ($field.doc())      * $field.doc()
-#end
+        #if ($field.doc())      * $field.doc()
+        #end
       * @return The value.
       */
     public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
@@ -345,6 +401,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       fieldSetFlags()[$field.pos()] = true;
       return this;
     }
+#end
 
     /**
       * Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has been set.

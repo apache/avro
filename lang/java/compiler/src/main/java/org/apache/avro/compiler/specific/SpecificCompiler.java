@@ -106,6 +106,7 @@ public class SpecificCompiler {
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
   private boolean createSetters = true;
+  private boolean pojoWithOptional = false;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
@@ -206,6 +207,9 @@ public class SpecificCompiler {
     this.fieldVisibility = fieldVisibility;
   }
 
+  /**
+   * @return true if the record fields should have setter methods.
+   */
   public boolean isCreateSetters() {
       return this.createSetters;
   }
@@ -215,6 +219,20 @@ public class SpecificCompiler {
    */
   public void setCreateSetters(boolean createSetters) {
     this.createSetters = createSetters;
+  }
+
+  /**
+   * @return true if the record nullable fields should have getter/setter/builder methods with Optional.
+   */
+  public boolean isPojoWithOptional() {
+    return this.pojoWithOptional;
+  }
+
+  /**
+   * Set to false to not create getter/setter methods with Optional for nullable fields of the record.
+   */
+  public void setPojoWithOptional(boolean pojoWithOptional) {
+    this.pojoWithOptional = pojoWithOptional;
   }
 
   /**
@@ -583,6 +601,16 @@ public class SpecificCompiler {
   /** Utility for template use.  Returns the java type for a Schema. */
   public String javaType(Schema schema) {
     return javaType(schema, true);
+  }
+
+  /** Utility for template use.  Returns true if any field of the current schema is nullable. */
+  public boolean containsNullableField(Schema schema) {
+    for (Field field : schema.getFields()) {
+      if (field.schema().isNullable()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private String javaType(Schema schema, boolean checkConvertedLogicalType) {

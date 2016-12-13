@@ -532,7 +532,65 @@ public class TestSpecificCompiler {
         "null", compiler.conversionInstance(uuidSchema));
   }
 
-  public void testToFromByteBuffer() {
+  @Test
+  public void testPojoWithOptionalTurnedOffByDefault() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    assertFalse(compiler.isPojoWithOptional());
+    compiler.compileToDestination(this.src, this.outputDir);
+    assertTrue(this.outputFile.exists());
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(new FileReader(this.outputFile));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        assertFalse(line.contains("Optional"));
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
+    }
+  }
 
+  @Test
+  public void testPojoWithOptionalCreatedWhenOptionTurnedOn() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setPojoWithOptional(true);
+    assertTrue(compiler.isPojoWithOptional());
+    compiler.compileToDestination(this.src, this.outputDir);
+    assertTrue(this.outputFile.exists());
+    int optionalFound = 0;
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(new FileReader(this.outputFile));
+
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("Optional")) {
+          optionalFound++;
+        }
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
+    }
+    assertEquals(7, optionalFound);
+  }
+
+  @Test
+  public void testContainsNullableFieldWorksOnRecordWithoutField(){
+    Schema recordWithoutFieldSchema = SchemaBuilder.builder().record("recordWithoutField").fields().endRecord();
+    assertFalse( new SpecificCompiler().containsNullableField(recordWithoutFieldSchema));
+  }
+
+  @Test
+  public void testContainsNullableFieldWorksOnSchemaWithoutNullableField(){
+    Schema recordWithoutNullableFieldSchema = SchemaBuilder.builder()
+        .record("recordWithoutNullableField")
+        .fields()
+        .name("value").type().intType().noDefault()
+        .endRecord();
+    assertFalse( new SpecificCompiler().containsNullableField(recordWithoutNullableFieldSchema));
   }
 }

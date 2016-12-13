@@ -123,6 +123,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean createSetters;
 
   /**
+   * Determines whether or not to have getter/setter/builder methods with Optional for nullable fields of the record.
+   * The default is not to have getter/setter/builder methods with Optional.
+   *
+   * @parameter default-value="false"
+   */
+  protected boolean pojoWithOptional;
+
+  /**
    * Determines whether or not to use Java classes for decimal types
    *
    * @parameter default-value="false"
