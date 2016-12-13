@@ -27,18 +27,5 @@
   <name>Apache Avro Developer tools</name>
   <url>http://avro.apache.org</url>
 
-  <distributionManagement>
-        <repository>
-            <id>prodart.pimco.imswest.sscims.com-rel</id>
-            <name>prodart.pimco.imswest.sscims.com-releases</name>
-            <url>http://prodart:1977/artifactory/libs-release-local</url>
-        </repository>
-        <snapshotRepository>
-            <id>prodart.pimco.imswest.sscims.com-snap</id>
-            <name>prodart.pimco.imswest.sscims.com-snapshots</name>
-            <url>http://prodart:1977/artifactory/libs-snapshot-local</url>
-        </snapshotRepository>
-  </distributionManagement>
-
 </project>
 
