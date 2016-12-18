@@ -50,6 +50,8 @@ Trunk (not yet released)
 
     AVRO-1723. Add support for forward declarations in avro IDL (Zoltan Farcas via thiru)
 
+    AVRO-1971: Allow alias annotation on fields (Johannes Schulte via gabor)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
