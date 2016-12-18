@@ -633,6 +633,11 @@ public class ReflectData extends SpecificData {
                 if (f.name().equals(fieldName))
                   throw new AvroTypeException("double field entry: "+ fieldName);
               }
+
+              if (field.isAnnotationPresent(AvroAlias.class)) {
+                  recordField.addAlias(field.getAnnotation(AvroAlias.class).alias());
+              }
+
               fields.add(recordField);
             }
           if (error)                              // add Throwable message
