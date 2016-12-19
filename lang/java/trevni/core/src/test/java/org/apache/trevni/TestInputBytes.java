@@ -32,8 +32,8 @@ public class TestInputBytes {
   private static final int COUNT = 100;
 
   @Test public void testRandomReads() throws Exception {
-    Random random = new Random();
-    int length = random.nextInt(SIZE);
+    Random random = new Random(19820210);
+    int length = random.nextInt(SIZE) + 1;
     byte[] data = new byte[length];
     random.nextBytes(data);
 

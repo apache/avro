@@ -109,6 +109,8 @@ Trunk (not yet released)
     AVRO-1967: Java: Fix NPE when calling getXyzBuilder on instance where the xyz is null
     (Niels Basjes)
 
+    AVRO-1970: Java: Flaky test: TestInputBytes. (Gabor Szadovszky via tomwhite)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
