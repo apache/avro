@@ -33,7 +33,7 @@ public class TestInputBytes {
 
   @Test public void testRandomReads() throws Exception {
     Random random = new Random();
-    int length = random.nextInt(SIZE);
+    int length = random.nextInt(SIZE) + 1;
     byte[] data = new byte[length];
     random.nextBytes(data);
 
