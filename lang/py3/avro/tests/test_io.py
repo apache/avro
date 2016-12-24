@@ -21,12 +21,13 @@
 import binascii
 import io
 import logging
-import sys
 import unittest
+from datetime import date, datetime, time
+from decimal import Decimal
 
 from avro import io as avro_io
 from avro import schema
-
+from avro.types import Duration
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
@@ -66,6 +67,38 @@ SCHEMAS_TO_VALIDATE = (
      }]
    }
    """, {'value': {'car': {'value': 'head'}, 'cdr': {'value': None}}}),
+  ("""
+   {
+     "type": "bytes",
+     "logicalType": "decimal",
+     "precision": 4,
+     "scale": 3
+   }
+   """, Decimal('1.234')),
+  ("""
+   {
+     "type": "fixed",
+     "logicalType": "decimal",
+     "name": "decimal_fixed",
+     "precision": 4,
+     "scale": 3,
+     "size": 2
+   }
+   """, Decimal('1.234')),
+  ('{"type": "int", "logicalType": "date"}', date(2017, 1, 1)),
+  ('{"type": "int", "logicalType": "time-millis"}', time(1)),
+  ('{"type": "long", "logicalType": "time-micros"}', time(1)),
+  ('{"type": "long", "logicalType": "timestamp-millis"}',
+   datetime(2017, 1, 1)),
+  ('{"type": "long", "logicalType": "timestamp-micros"}',
+   datetime(2017, 1, 1)),
+  ("""
+   {
+     "type": "fixed",
+     "name": "test_duration",
+     "logicalType": "duration"
+   }
+   """, Duration(1, 2, 3)),
 )
 
 BINARY_ENCODINGS = (
@@ -345,6 +378,22 @@ class TestIO(unittest.TestCase):
     datum_to_write = {'E': 5, 'F': 'Bad'}
     self.assertRaises(
         avro_io.AvroTypeException, write_datum, datum_to_write, writer_schema)
+
+  def testDifferentDecimalProperties(self):
+    writer_schema = schema.Parse("""
+      {"type": "bytes", "logicalType": "decimal",
+       "precision": 5, "scale": 2}""")
+    datum_to_write = Decimal('12.34')
+
+    reader_schema = schema.Parse("""
+      {"type": "bytes", "logicalType": "decimal",
+       "precision": 5, "scale": 3}""")
+
+    writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
+    reader = io.BytesIO(writer.getvalue())
+    decoder = avro_io.BinaryDecoder(reader)
+    datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
+    self.assertRaises(avro_io.SchemaResolutionException, datum_reader.read, decoder)
 
 
 if __name__ == '__main__':

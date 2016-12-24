@@ -35,40 +35,53 @@ A schema may be one of:
  - A 32-bit floating-point float;
  - A 64-bit floating-point double;
  - A boolean;
+ - A decimal;
+ - A date;
+ - A time, with either microsecond or millisecond precision;
+ - A timestamp, with either microsecond or millisecond precision;
+ - A duration;
  - Null.
 """
 
-
 import abc
-import collections
 import json
 import logging
 import re
+import warnings
 
-logger = logging.getLogger(__name__) 
+from avro.utils import ImmutableDict, bytes_for_digits, digits_for_bytes
+
+logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------
 # Constants
 
 # Log level more verbose than DEBUG=10, INFO=20, etc.
-DEBUG_VERBOSE=5
+DEBUG_VERBOSE = 5
 
 
-NULL    = 'null'
-BOOLEAN = 'boolean'
-STRING  = 'string'
-BYTES   = 'bytes'
-INT     = 'int'
-LONG    = 'long'
-FLOAT   = 'float'
-DOUBLE  = 'double'
-FIXED   = 'fixed'
-ENUM    = 'enum'
-RECORD  = 'record'
-ERROR   = 'error'
-ARRAY   = 'array'
-MAP     = 'map'
-UNION   = 'union'
+NULL             = 'null'
+BOOLEAN          = 'boolean'
+STRING           = 'string'
+BYTES            = 'bytes'
+INT              = 'int'
+LONG             = 'long'
+FLOAT            = 'float'
+DOUBLE           = 'double'
+FIXED            = 'fixed'
+ENUM             = 'enum'
+RECORD           = 'record'
+ERROR            = 'error'
+ARRAY            = 'array'
+MAP              = 'map'
+UNION            = 'union'
+DECIMAL          = 'decimal'
+DATE             = 'date'
+TIME_MILLIS      = 'time-millis'
+TIME_MICROS      = 'time-micros'
+TIMESTAMP_MILLIS = 'timestamp-millis'
+TIMESTAMP_MICROS = 'timestamp-micros'
+DURATION         = 'duration'
 
 # Request and error unions are part of Avro protocols:
 REQUEST = 'request'
@@ -92,6 +105,18 @@ NAMED_TYPES = frozenset([
   ERROR,
 ])
 
+# Maps all the logical types to the set of valid types each logical type
+# can annotate.
+LOGICAL_TYPES = ImmutableDict({
+  DECIMAL: frozenset([BYTES, FIXED]),
+  DATE: frozenset([INT]),
+  TIME_MILLIS: frozenset([INT]),
+  TIME_MICROS: frozenset([LONG]),
+  TIMESTAMP_MILLIS: frozenset([LONG]),
+  TIMESTAMP_MICROS: frozenset([LONG]),
+  DURATION: frozenset([FIXED]),
+})
+
 VALID_TYPES = frozenset.union(
   PRIMITIVE_TYPES,
   NAMED_TYPES,
@@ -108,12 +133,15 @@ SCHEMA_RESERVED_PROPS = frozenset([
   'type',
   'name',
   'namespace',
-  'fields',     # Record
-  'items',      # Array
-  'size',       # Fixed
-  'symbols',    # Enum
-  'values',     # Map
+  'fields',       # Record
+  'items',        # Array
+  'size',         # Fixed
+  'symbols',      # Enum
+  'values',       # Map
+  'scale',        # Decimal
+  'precision',    # Decimal
   'doc',
+  'logicalType',
 ])
 
 FIELD_RESERVED_PROPS = frozenset([
@@ -132,7 +160,7 @@ VALID_FIELD_SORT_ORDERS = frozenset([
 
 
 # ------------------------------------------------------------------------------
-# Exceptions
+# Exceptions and Warnings
 
 
 class Error(Exception):
@@ -150,53 +178,20 @@ class SchemaParseException(AvroException):
   pass
 
 
-# ------------------------------------------------------------------------------
+class AvroWarning(Warning):
+  """Base class for warnings in this module."""
+  pass
 
 
-class ImmutableDict(dict):
-  """Dictionary guaranteed immutable.
-
-  All mutations raise an exception.
-  Behaves exactly as a dict otherwise.
-  """
-
-  def __init__(self, items=None, **kwargs):
-    if items is not None:
-      super(ImmutableDict, self).__init__(items)
-      assert (len(kwargs) == 0)
-    else:
-      super(ImmutableDict, self).__init__(**kwargs)
-
-  def __setitem__(self, key, value):
-    raise Exception(
-        'Attempting to map key %r to value %r in ImmutableDict %r'
-        % (key, value, self))
-
-  def __delitem__(self, key):
-    raise Exception(
-        'Attempting to remove mapping for key %r in ImmutableDict %r'
-        % (key, self))
-
-  def clear(self):
-    raise Exception('Attempting to clear ImmutableDict %r' % self)
-
-  def update(self, items=None, **kwargs):
-    raise Exception(
-        'Attempting to update ImmutableDict %r with items=%r, kwargs=%r'
-        % (self, args, kwargs))
-
-  def pop(self, key, default=None):
-    raise Exception(
-        'Attempting to pop key %r from ImmutableDict %r' % (key, self))
-
-  def popitem(self):
-    raise Exception('Attempting to pop item from ImmutableDict %r' % self)
+class InvalidLogicalTypeWarning(AvroWarning):
+  """Warning to indicate an invalid logical type."""
+  pass
 
 
 # ------------------------------------------------------------------------------
 
 
-class Schema(object, metaclass=abc.ABCMeta):
+class Schema(metaclass=abc.ABCMeta):
   """Abstract base class for all Schema classes."""
 
   def __init__(self, type, other_props=None):
@@ -289,7 +284,7 @@ _RE_FULL_NAME = re.compile(
     r'$'
 )
 
-class Name(object):
+class Name:
   """Representation of an Avro name."""
 
   def __init__(self, name, namespace=None):
@@ -350,7 +345,7 @@ class Name(object):
 # ------------------------------------------------------------------------------
 
 
-class Names(object):
+class Names:
   """Tracks Avro named schemas and default namespace during parsing."""
 
   def __init__(self, default_namespace=None, names=None):
@@ -432,7 +427,7 @@ class Names(object):
       return properties
     # we each have a namespace and it's redundant. delete his.
     prunable = properties.copy()
-    del(prunable['namespace'])
+    del prunable['namespace']
     return prunable
 
   def Register(self, schema):
@@ -526,7 +521,7 @@ class NamedSchema(Schema):
 _NO_DEFAULT = object()
 
 
-class Field(object):
+class Field:
   """Representation of the schema of a field in a record."""
 
   def __init__(
@@ -644,7 +639,7 @@ class PrimitiveSchema(Schema):
   Valid primitive types are defined in PRIMITIVE_TYPES.
   """
 
-  def __init__(self, type, other_props=None):
+  def __init__(self, type, other_props=None, **kwargs):
     """Initializes a new schema object for the specified primitive type.
 
     Args:
@@ -682,6 +677,7 @@ class FixedSchema(NamedSchema):
       size,
       names=None,
       other_props=None,
+      **kwargs
   ):
     # Ensure valid ctor args
     if not isinstance(size, int):
@@ -727,6 +723,7 @@ class EnumSchema(NamedSchema):
       names=None,
       doc=None,
       other_props=None,
+      **kwargs
   ):
     """Initializes a new enumeration schema object.
 
@@ -782,7 +779,7 @@ class EnumSchema(NamedSchema):
 class ArraySchema(Schema):
   """Schema of an array."""
 
-  def __init__(self, items, other_props=None):
+  def __init__(self, items, other_props=None, **kwargs):
     """Initializes a new array schema object.
 
     Args:
@@ -820,7 +817,7 @@ class ArraySchema(Schema):
 class MapSchema(Schema):
   """Schema of a map."""
 
-  def __init__(self, values, other_props=None):
+  def __init__(self, values, other_props=None, **kwargs):
     """Initializes a new map schema object.
 
     Args:
@@ -857,7 +854,7 @@ class MapSchema(Schema):
 class UnionSchema(Schema):
   """Schema of a union."""
 
-  def __init__(self, schemas):
+  def __init__(self, schemas, **kwargs):
     """Initializes a new union schema object.
 
     Args:
@@ -914,7 +911,7 @@ class UnionSchema(Schema):
 class ErrorUnionSchema(UnionSchema):
   """Schema representing the declared errors of a protocol message."""
 
-  def __init__(self, schemas):
+  def __init__(self, schemas, **kwargs):
     """Initializes an error-union schema.
 
     Args:
@@ -943,7 +940,7 @@ class RecordSchema(NamedSchema):
   """Schema of a record."""
 
   @staticmethod
-  def _MakeField(index, field_desc, names):
+  def _MakeField(index, field_desc, names, **kwargs):
     """Builds field schemas from a list of field JSON descriptors.
 
     Args:
@@ -1102,6 +1099,117 @@ class RecordSchema(NamedSchema):
 
 
 # ------------------------------------------------------------------------------
+# Logical Types
+
+
+class LogicalTypeMixin(Schema):
+  """Abstract mixin class for all logical types.
+
+  Valid logical types are defined in LOGICAL_TYPES.
+  """
+
+  def __init__(self, type, logical_type, *args, **kwargs):
+    """Initializes a new schema object for the specified logical type.
+
+    Args:
+      type: The underlying type being annotated.
+      logical_type: Logical type of the schema to construct.
+    """
+    if logical_type not in LOGICAL_TYPES:
+      raise AvroException('%r is not a valid logical type.' % type)
+    if type not in LOGICAL_TYPES[logical_type]:
+      raise AvroException('%r is not a valid type for logical type %r.' %
+                          (type, logical_type))
+
+    super().__init__(*args, type=type, **kwargs)
+    self._props['logicalType'] = logical_type
+    self._logical_type = logical_type
+
+  @property
+  def logical_type(self):
+    return self._logical_type
+
+
+class LogicalSchema(LogicalTypeMixin, PrimitiveSchema):
+  """Schema of an Avro logical type that annotates a primitive type."""
+  pass
+
+
+# ------------------------------------------------------------------------------
+
+
+class DecimalTypeMixin(LogicalTypeMixin):
+  """Mixin class for the decimal logical type."""
+
+  def __init__(self, type, precision, scale=0, *args, **kwargs):
+    if not isinstance(precision, int) or precision < 1:
+      raise AvroException('decimal requires a positive integer greater than '
+                          'zero for precision property.')
+    if not isinstance(scale, int) or scale < 0 or scale > precision:
+      raise AvroException('decimal requires a zero or a positive integer less '
+                          'than or equal to the precision for scale property.')
+
+    super().__init__(type=type, logical_type=DECIMAL, *args, **kwargs)
+
+    self._props['precision'] = precision
+    self._props['scale'] = scale
+
+    self.MIN_VALUE = 1
+    self.MAX_VALUE = 1
+
+  @property
+  def precision(self):
+    """Returns: the precision of the decimal."""
+    return self._props['precision']
+
+  @property
+  def scale(self):
+    """Returns: the scale of the decimal."""
+    return self._props['scale']
+
+
+class DecimalBytesSchema(DecimalTypeMixin, PrimitiveSchema):
+  """Schema of a decimal with bytes type."""
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(type=BYTES, *args, **kwargs)
+
+    self._size = bytes_for_digits(self.precision)
+
+  @property
+  def size(self):
+    """Returns: the maximum number of bytes required to store this decimal."""
+    return self._size
+
+
+class DecimalFixedSchema(DecimalTypeMixin, FixedSchema):
+  """Schema of a decimal with fixed type."""
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(type=FIXED, *args, **kwargs)
+
+    if self.precision > digits_for_bytes(self.size):
+      raise AvroException('precision is greater than the number of digits '
+                          'able to be stored by the size of fixed bytes.')
+
+
+# ------------------------------------------------------------------------------
+
+
+class DurationSchema(LogicalTypeMixin, FixedSchema):
+  """Schema of a duration."""
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(
+      type=FIXED,
+      logical_type=DURATION,
+      size=12,
+      *args,
+      **kwargs,
+    )
+
+
+# ------------------------------------------------------------------------------
 # Module functions
 
 
@@ -1152,8 +1260,26 @@ def _SchemaFromJSONObject(json_object, names):
   other_props = dict(
       FilterKeysOut(items=json_object, keys=SCHEMA_RESERVED_PROPS))
 
+  logical_type = json_object.get('logicalType')
+  if logical_type in LOGICAL_TYPES:
+    try:
+      return _LogicalSchemaFromJSONObject(
+        json_object=json_object,
+        type=type,
+        logical_type=logical_type,
+        other_props=other_props,
+        names=names,
+      )
+    except AvroException as e:
+      # If a logical type is invalid, for example a decimal with scale greater
+      # than its precision, then implementations should ignore the logical type
+      # and use the underlying Avro type.
+      warnings.warn(InvalidLogicalTypeWarning(str(e)))
+  elif logical_type:
+    msg = 'unknown logical type: %r' % logical_type
+    warnings.warn(InvalidLogicalTypeWarning(msg))
+
   if type in PRIMITIVE_TYPES:
-    # FIXME should not ignore other properties
     return PrimitiveSchema(type, other_props=other_props)
 
   elif type in NAMED_TYPES:
@@ -1223,6 +1349,40 @@ def _SchemaFromJSONObject(json_object, names):
 
   raise SchemaParseException(
       'Invalid JSON descriptor for an Avro schema: %r' % json_object)
+
+
+def _LogicalSchemaFromJSONObject(json_object, type, logical_type,
+                                 other_props, names):
+  props = {'other_props': other_props}
+
+  if logical_type in (DATE, TIME_MILLIS, TIME_MICROS,
+                      TIMESTAMP_MILLIS, TIMESTAMP_MICROS):
+    schema_class = LogicalSchema
+    props['type'] = type
+    props['logical_type'] = logical_type
+
+  elif logical_type == DECIMAL:
+    if type == BYTES:
+      schema_class = DecimalBytesSchema
+    else:
+      schema_class = DecimalFixedSchema
+      props['size'] = json_object.get('size')
+
+    props['precision'] = json_object.get('precision')
+    props['scale'] = json_object.get('scale', 0)
+
+  elif logical_type == DURATION:
+    schema_class = DurationSchema
+
+  else:
+    raise Exception('Internal error: unknown logical type %r.' % logical_type)
+
+  if type == FIXED:
+    props['name'] = json_object.get('name')
+    props['namespace'] = json_object.get('namespace', names.default_namespace)
+    props['names'] = names
+
+  return schema_class(**props)
 
 
 # Parsers for the JSON data types:

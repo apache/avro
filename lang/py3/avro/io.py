@@ -32,22 +32,31 @@ following mapping:
  - Schema records are implemented as dict.
  - Schema arrays are implemented as list.
  - Schema maps are implemented as dict.
- - Schema strings are implemented as unicode.
- - Schema bytes are implemented as str.
+ - Schema strings are implemented as str.
+ - Schema bytes are implemented as bytes.
  - Schema ints are implemented as int.
- - Schema longs are implemented as long.
+ - Schema longs are implemented as int.
  - Schema floats are implemented as float.
  - Schema doubles are implemented as float.
  - Schema booleans are implemented as bool.
+ - Schema enums are implemented as str.
+ - Schema fixeds are implemented as bytes.
+ - Schema decimals are implemented as Decimal.
+ - Schema dates are implemented as date.
+ - Schema times are implemented as time.
+ - Schema timestamps are implemented as datetime.
+ - Schema durations are implemented as Duration namedtuple.
 """
 
 import binascii
 import json
 import logging
 import struct
-import sys
+from decimal import Decimal
+from datetime import date, datetime, time, timedelta
 
-from avro import schema
+from avro.schema import AvroException, PRIMITIVE_TYPES, LOGICAL_TYPES
+from avro.types import Duration
 
 logger = logging.getLogger(__name__)
 
@@ -60,33 +69,40 @@ INT_MAX_VALUE = (1 << 31) - 1
 LONG_MIN_VALUE = -(1 << 63)
 LONG_MAX_VALUE = (1 << 63) - 1
 
-STRUCT_INT = struct.Struct('!I')     # big-endian unsigned int
-STRUCT_LONG = struct.Struct('!Q')    # big-endian unsigned long long
-STRUCT_FLOAT = struct.Struct('!f')   # big-endian float
-STRUCT_DOUBLE = struct.Struct('!d')  # big-endian double
-STRUCT_CRC32 = struct.Struct('>I')   # big-endian unsigned int
+STRUCT_INT = struct.Struct('>I')        # big-endian unsigned int
+STRUCT_LONG = struct.Struct('>Q')       # big-endian unsigned long long
+STRUCT_FLOAT = struct.Struct('>f')      # big-endian float
+STRUCT_DOUBLE = struct.Struct('>d')     # big-endian double
+STRUCT_DURATION = struct.Struct('<3I')  # three small-endian unsigned ints
+STRUCT_CRC32 = struct.Struct('>I')      # big-endian unsigned int
+
+EPOCH_DATETIME = datetime(1970, 1, 1)
+EPOCH_DATE = EPOCH_DATETIME.date()
+
+MILLIS = 1000
+MICROS = 1000000
 
 
 # ------------------------------------------------------------------------------
 # Exceptions
 
 
-class AvroTypeException(schema.AvroException):
+class AvroTypeException(AvroException):
   """Raised when datum is not an example of schema."""
   def __init__(self, expected_schema, datum):
     pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
     fail_msg = "The datum %s is not an example of the schema %s"\
                % (datum, pretty_expected)
-    schema.AvroException.__init__(self, fail_msg)
+    super().__init__(self, fail_msg)
 
 
-class SchemaResolutionException(schema.AvroException):
+class SchemaResolutionException(AvroException):
   def __init__(self, fail_msg, writer_schema=None, reader_schema=None):
     pretty_writers = json.dumps(json.loads(str(writer_schema)), indent=2)
     pretty_readers = json.dumps(json.loads(str(reader_schema)), indent=2)
     if writer_schema: fail_msg += "\nWriter's Schema: %s" % pretty_writers
     if reader_schema: fail_msg += "\nReader's Schema: %s" % pretty_readers
-    schema.AvroException.__init__(self, fail_msg)
+    super().__init__(self, fail_msg)
 
 
 # ------------------------------------------------------------------------------
@@ -102,7 +118,7 @@ def Validate(expected_schema, datum):
   Returns:
     True if the datum is an instance of the schema.
   """
-  schema_type = expected_schema.type
+  schema_type = getattr(expected_schema, 'logical_type', expected_schema.type)
   if schema_type == 'null':
     return datum is None
   elif schema_type == 'boolean':
@@ -138,15 +154,25 @@ def Validate(expected_schema, datum):
     return (isinstance(datum, dict)
         and all(Validate(field.type, datum.get(field.name))
                 for field in expected_schema.fields))
+  elif schema_type == 'decimal':
+    return isinstance(datum, Decimal)
+  elif schema_type == 'date':
+    return isinstance(datum, date)
+  elif schema_type in ['time-millis', 'time-micros']:
+    return isinstance(datum, time)
+  elif schema_type in ['timestamp-millis', 'timestamp-micros']:
+    return isinstance(datum, datetime)
+  elif schema_type == 'duration':
+    return isinstance(datum, Duration)
   else:
-    raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
+    raise AvroException('Unknown Avro schema type: %r' % schema_type)
 
 
 # ------------------------------------------------------------------------------
 # Decoder/Encoder
 
 
-class BinaryDecoder(object):
+class BinaryDecoder:
   """Read leaf values."""
   def __init__(self, reader):
     """
@@ -254,9 +280,9 @@ class BinaryDecoder(object):
       raise exn
 
   def check_crc32(self, bytes):
-    checksum = STRUCT_CRC32.unpack(self.read(4))[0];
+    checksum = STRUCT_CRC32.unpack(self.read(4))[0]
     if binascii.crc32(bytes) & 0xffffffff != checksum:
-      raise schema.AvroException("Checksum failure")
+      raise AvroException("Checksum failure")
 
   def skip_null(self):
     pass
@@ -291,7 +317,7 @@ class BinaryDecoder(object):
 # ------------------------------------------------------------------------------
 
 
-class BinaryEncoder(object):
+class BinaryEncoder:
   """Write leaf values."""
 
   def __init__(self, writer):
@@ -304,7 +330,6 @@ class BinaryEncoder(object):
   def writer(self):
     """Reports the writer used by this encoder."""
     return self._writer
-
 
   def write(self, datum):
     """Write a sequence of bytes.
@@ -336,7 +361,7 @@ class BinaryEncoder(object):
     """
     int and long values are written using variable-length, zig-zag coding.
     """
-    self.write_long(datum);
+    self.write_long(datum)
 
   def write_long(self, datum):
     """
@@ -395,14 +420,14 @@ class BinaryEncoder(object):
     """
     A 4-byte, big-endian CRC32 checksum
     """
-    self.write(STRUCT_CRC32.pack(binascii.crc32(bytes) & 0xffffffff));
+    self.write(STRUCT_CRC32.pack(binascii.crc32(bytes) & 0xffffffff))
 
 
 # ------------------------------------------------------------------------------
 # DatumReader/Writer
 
 
-class DatumReader(object):
+class DatumReader:
   """Deserialize Avro-encoded data into a Python data structure."""
   @staticmethod
   def check_props(schema_one, schema_two, prop_list):
@@ -413,11 +438,17 @@ class DatumReader(object):
 
   @staticmethod
   def match_schemas(writer_schema, reader_schema):
+    w_logical_type = getattr(writer_schema, 'logical_type', None)
+    r_logical_type = getattr(reader_schema, 'logical_type', None)
+    if w_logical_type == r_logical_type == 'decimal':
+      return DatumReader.check_props(writer_schema, reader_schema,
+                                     ('precision', 'scale'))
+
     w_type = writer_schema.type
     r_type = reader_schema.type
     if 'union' in [w_type, r_type] or 'error_union' in [w_type, r_type]:
       return True
-    elif (w_type in schema.PRIMITIVE_TYPES and r_type in schema.PRIMITIVE_TYPES
+    elif (w_type in PRIMITIVE_TYPES and r_type in PRIMITIVE_TYPES
           and w_type == r_type):
       return True
     elif (w_type == r_type == 'record' and
@@ -454,6 +485,7 @@ class DatumReader(object):
       return True
     elif w_type == 'float' and r_type == 'double':
       return True
+
     return False
 
   def __init__(self, writer_schema=None, reader_schema=None):
@@ -495,38 +527,58 @@ class DatumReader(object):
       fail_msg = 'Schemas do not match.'
       raise SchemaResolutionException(fail_msg, writer_schema, reader_schema)
 
-    # function dispatch for reading data based on type of writer's schema
-    if writer_schema.type == 'null':
-      return decoder.read_null()
-    elif writer_schema.type == 'boolean':
-      return decoder.read_boolean()
-    elif writer_schema.type == 'string':
-      return decoder.read_utf8()
-    elif writer_schema.type == 'int':
-      return decoder.read_int()
-    elif writer_schema.type == 'long':
-      return decoder.read_long()
-    elif writer_schema.type == 'float':
-      return decoder.read_float()
-    elif writer_schema.type == 'double':
-      return decoder.read_double()
-    elif writer_schema.type == 'bytes':
-      return decoder.read_bytes()
-    elif writer_schema.type == 'fixed':
-      return self.read_fixed(writer_schema, reader_schema, decoder)
-    elif writer_schema.type == 'enum':
-      return self.read_enum(writer_schema, reader_schema, decoder)
-    elif writer_schema.type == 'array':
-      return self.read_array(writer_schema, reader_schema, decoder)
-    elif writer_schema.type == 'map':
-      return self.read_map(writer_schema, reader_schema, decoder)
-    elif writer_schema.type in ['union', 'error_union']:
-      return self.read_union(writer_schema, reader_schema, decoder)
-    elif writer_schema.type in ['record', 'error', 'request']:
-      return self.read_record(writer_schema, reader_schema, decoder)
+    # ignore unknown logical types and use the underlying Avro type.
+    if getattr(writer_schema, 'logical_type', None) in LOGICAL_TYPES:
+      schema_type = writer_schema.logical_type
     else:
-      fail_msg = "Cannot read unknown schema type: %s" % writer_schema.type
-      raise schema.AvroException(fail_msg)
+      schema_type = writer_schema.type
+
+    # function dispatch for reading data based on type of writer's schema
+    if schema_type == 'null':
+      return decoder.read_null()
+    elif schema_type == 'boolean':
+      return decoder.read_boolean()
+    elif schema_type == 'string':
+      return decoder.read_utf8()
+    elif schema_type == 'int':
+      return decoder.read_int()
+    elif schema_type == 'long':
+      return decoder.read_long()
+    elif schema_type == 'float':
+      return decoder.read_float()
+    elif schema_type == 'double':
+      return decoder.read_double()
+    elif schema_type == 'bytes':
+      return decoder.read_bytes()
+    elif schema_type == 'fixed':
+      return self.read_fixed(writer_schema, reader_schema, decoder)
+    elif schema_type == 'enum':
+      return self.read_enum(writer_schema, reader_schema, decoder)
+    elif schema_type == 'array':
+      return self.read_array(writer_schema, reader_schema, decoder)
+    elif schema_type == 'map':
+      return self.read_map(writer_schema, reader_schema, decoder)
+    elif schema_type in ['union', 'error_union']:
+      return self.read_union(writer_schema, reader_schema, decoder)
+    elif schema_type in ['record', 'error', 'request']:
+      return self.read_record(writer_schema, reader_schema, decoder)
+    elif schema_type == 'decimal':
+      return self.read_decimal(writer_schema, reader_schema, decoder)
+    elif schema_type == 'date':
+      return self.read_date(writer_schema, reader_schema, decoder)
+    elif schema_type == 'time-millis':
+      return self.read_time_millis(writer_schema, reader_schema, decoder)
+    elif schema_type == 'time-micros':
+      return self.read_time_micros(writer_schema, reader_schema, decoder)
+    elif schema_type == 'timestamp-millis':
+      return self.read_timestamp_millis(writer_schema, reader_schema, decoder)
+    elif schema_type == 'timestamp-micros':
+      return self.read_timestamp_micros(writer_schema, reader_schema, decoder)
+    elif schema_type == 'duration':
+      return self.read_duration(writer_schema, reader_schema, decoder)
+    else:
+      fail_msg = "Cannot read unknown schema type: %s" % schema_type
+      raise AvroException(fail_msg)
 
   def skip_data(self, writer_schema, decoder):
     if writer_schema.type == 'null':
@@ -559,7 +611,7 @@ class DatumReader(object):
       return self.skip_record(writer_schema, decoder)
     else:
       fail_msg = "Unknown schema type: %s" % writer_schema.type
-      raise schema.AvroException(fail_msg)
+      raise AvroException(fail_msg)
 
   def read_fixed(self, writer_schema, reader_schema, decoder):
     """
@@ -786,13 +838,40 @@ class DatumReader(object):
       return read_record
     else:
       fail_msg = 'Unknown type: %s' % field_schema.type
-      raise schema.AvroException(fail_msg)
+      raise AvroException(fail_msg)
+
+  def read_decimal(self, writer_schema, reader_schema, decoder):
+    if writer_schema.type == 'bytes':
+      bytes = decoder.read_bytes()
+    else:
+      bytes = decoder.read(writer_schema.size)
+    unscaled = int.from_bytes(bytes, 'big', signed=True)
+    return Decimal(unscaled).scaleb(-writer_schema.scale)
+
+  def read_date(self, writer_schema, reader_schema, decoder):
+    return EPOCH_DATE + timedelta(decoder.read_int())
+
+  def read_time_millis(self, writer_schema, reader_schema, decoder):
+    return datetime.utcfromtimestamp(decoder.read_int() / MILLIS).time()
+
+  def read_time_micros(self, writer_schema, reader_schema, decoder):
+    return datetime.utcfromtimestamp(decoder.read_long() / MICROS).time()
+
+  def read_timestamp_millis(self, writer_schema, reader_schema, decoder):
+    return datetime.utcfromtimestamp(decoder.read_long() / MILLIS)
+
+  def read_timestamp_micros(self, writer_schema, reader_schema, decoder):
+    return datetime.utcfromtimestamp(decoder.read_long() / MICROS)
+
+  def read_duration(self, writer_schema, reader_schema, decoder):
+    bytes = decoder.read(writer_schema.size)
+    return Duration._make(STRUCT_DURATION.unpack(bytes))
 
 
 # ------------------------------------------------------------------------------
 
 
-class DatumWriter(object):
+class DatumWriter:
   """DatumWriter for generic python objects."""
   def __init__(self, writer_schema=None):
     self._writer_schema = writer_schema
@@ -812,37 +891,52 @@ class DatumWriter(object):
 
   def write_data(self, writer_schema, datum, encoder):
     # function dispatch to write datum
-    if writer_schema.type == 'null':
+    schema_type = getattr(writer_schema, 'logical_type', writer_schema.type)
+    if schema_type == 'null':
       encoder.write_null(datum)
-    elif writer_schema.type == 'boolean':
+    elif schema_type == 'boolean':
       encoder.write_boolean(datum)
-    elif writer_schema.type == 'string':
+    elif schema_type == 'string':
       encoder.write_utf8(datum)
-    elif writer_schema.type == 'int':
+    elif schema_type == 'int':
       encoder.write_int(datum)
-    elif writer_schema.type == 'long':
+    elif schema_type == 'long':
       encoder.write_long(datum)
-    elif writer_schema.type == 'float':
+    elif schema_type == 'float':
       encoder.write_float(datum)
-    elif writer_schema.type == 'double':
+    elif schema_type == 'double':
       encoder.write_double(datum)
-    elif writer_schema.type == 'bytes':
+    elif schema_type == 'bytes':
       encoder.write_bytes(datum)
-    elif writer_schema.type == 'fixed':
+    elif schema_type == 'fixed':
       self.write_fixed(writer_schema, datum, encoder)
-    elif writer_schema.type == 'enum':
+    elif schema_type == 'enum':
       self.write_enum(writer_schema, datum, encoder)
-    elif writer_schema.type == 'array':
+    elif schema_type == 'array':
       self.write_array(writer_schema, datum, encoder)
-    elif writer_schema.type == 'map':
+    elif schema_type == 'map':
       self.write_map(writer_schema, datum, encoder)
-    elif writer_schema.type in ['union', 'error_union']:
+    elif schema_type in ['union', 'error_union']:
       self.write_union(writer_schema, datum, encoder)
-    elif writer_schema.type in ['record', 'error', 'request']:
+    elif schema_type in ['record', 'error', 'request']:
       self.write_record(writer_schema, datum, encoder)
+    elif schema_type == 'decimal':
+      self.write_decimal(writer_schema, datum, encoder)
+    elif schema_type == 'date':
+      self.write_date(writer_schema, datum, encoder)
+    elif schema_type == 'time-millis':
+      self.write_time_millis(writer_schema, datum, encoder)
+    elif schema_type == 'time-micros':
+      self.write_time_micros(writer_schema, datum, encoder)
+    elif schema_type == 'timestamp-millis':
+      self.write_timestamp_millis(writer_schema, datum, encoder)
+    elif schema_type == 'timestamp-micros':
+      self.write_timestamp_micros(writer_schema, datum, encoder)
+    elif schema_type == 'duration':
+      self.write_duration(writer_schema, datum, encoder)
     else:
-      fail_msg = 'Unknown type: %s' % writer_schema.type
-      raise schema.AvroException(fail_msg)
+      fail_msg = 'Unknown type: %s' % schema_type
+      raise AvroException(fail_msg)
 
   def write_fixed(self, writer_schema, datum, encoder):
     """
@@ -928,6 +1022,72 @@ class DatumWriter(object):
     """
     for field in writer_schema.fields:
       self.write_data(field.type, datum.get(field.name), encoder)
+
+  def write_decimal(self, writer_schema, datum, encoder):
+    """
+    A decimal logical type annotates Avro bytes or fixed types. The byte
+    array must contain the two's-complement representation of the unscaled
+    integer value in big-endian byte order. The scale is fixed, and is
+    specified using an attribute.
+    """
+    unscaled = int(datum.scaleb(writer_schema.scale))
+    bytes = unscaled.to_bytes(writer_schema.size, 'big', signed=True)
+    if writer_schema.type == 'bytes':
+      encoder.write_bytes(bytes)
+    else:
+      encoder.write(bytes)
+
+  def write_date(self, writer_schema, datum, encoder):
+    """
+    A date logical type annotates an Avro int, where the int stores the
+    number of days from the unix epoch, 1 January 1970 (ISO calendar).
+    """
+    encoder.write_int((datum - EPOCH_DATE).days)
+
+  def write_time_millis(self, writer_schema, datum, encoder):
+    """
+    A time-millis logical type annotates an Avro int, where the int stores
+    the number of milliseconds after midnight, 00:00:00.000.
+    """
+    seconds = datum.hour * 3600 + datum.minute * 60 + datum.second + \
+              datum.microsecond / MICROS
+    encoder.write_int(int(seconds * MILLIS))
+
+  def write_time_micros(self, writer_schema, datum, encoder):
+    """
+    A time-micros logical type annotates an Avro long, where the long stores
+    the number of microseconds after midnight, 00:00:00.000000.
+    """
+    seconds = datum.hour * 3600 + datum.minute * 60 + datum.second + \
+              datum.microsecond / MICROS
+    encoder.write_long(int(seconds * MICROS))
+
+  def write_timestamp_millis(self, writer_schema, datum, encoder):
+    """
+    A timestamp-millis logical type annotates an Avro long, where the long
+    stores the number of milliseconds from the unix epoch,
+    1 January 1970 00:00:00.000 UTC.
+    """
+    seconds = (datum - EPOCH_DATETIME).total_seconds()
+    encoder.write_long(int(seconds * MILLIS))
+
+  def write_timestamp_micros(self, writer_schema, datum, encoder):
+    """
+    A timestamp-micros logical type annotates an Avro long, where the long
+    stores the number of microseconds from the unix epoch,
+    1 January 1970 00:00:00.000000 UTC.
+    """
+    seconds = (datum - EPOCH_DATETIME).total_seconds()
+    encoder.write_long(int(seconds * MICROS))
+
+  def write_duration(self, writer_schema, datum, encoder):
+    """
+    A duration logical type annotates Avro fixed type of size 12, which
+    stores three little-endian unsigned integers that represent durations
+    at different granularities of time. The first stores a number in months,
+    the second stores a number in days, and the third stores a number in
+    milliseconds."""
+    encoder.write(STRUCT_DURATION.pack(*datum))
 
 
 if __name__ == '__main__':

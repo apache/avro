@@ -24,11 +24,10 @@ Protocol implementation.
 
 import hashlib
 import json
-import logging
 
 from avro import schema
+from avro.utils import ImmutableDict
 
-ImmutableDict = schema.ImmutableDict
 
 # ------------------------------------------------------------------------------
 # Constants

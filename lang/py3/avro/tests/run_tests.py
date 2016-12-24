@@ -55,6 +55,7 @@ from avro.tests.test_protocol import *
 from avro.tests.test_schema import *
 from avro.tests.test_script import *
 from avro.tests.test_enum import *
+from avro.tests.test_utils import *
 
 
 def SetupLogging():
