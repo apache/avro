@@ -160,6 +160,8 @@ Trunk (not yet released)
 
     AVRO-1401: @Nullable does not work with byte[] (Nandor Kollar via gabor)
 
+    AVRO-1985: Unreleased resources (gabor)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES

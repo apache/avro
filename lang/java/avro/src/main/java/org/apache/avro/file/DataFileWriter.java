@@ -190,11 +190,20 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Open a writer appending to an existing file. */
   public DataFileWriter<D> appendTo(File file) throws IOException {
-    return appendTo(new SeekableFileInput(file),
-                    new SyncableFileOutputStream(file, true));
+    SeekableInput input = null;
+    try {
+      input = new SeekableFileInput(file);
+      OutputStream output = new SyncableFileOutputStream(file, true);
+      return appendTo(input, output);
+    } finally {
+      if (input != null)
+        input.close();
+      // output does not need to be closed here. It will be closed by invoking close() of this writer.
+    }
   }
 
   /** Open a writer appending to an existing file.
+   * <strong>Since 1.9.0 this method does not close in.</strong>
    * @param in reading the existing file.
    * @param out positioned at the end of the existing file.
    */
@@ -213,7 +222,6 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     } else {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
-    reader.close();
 
     init(out);
 
