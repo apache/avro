@@ -18,6 +18,7 @@
 package org.apache.avro.data;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Iterator;
 
@@ -55,8 +56,14 @@ public class Json {
   public static final Schema SCHEMA;
   static {
     try {
-      SCHEMA = Schema.parse
-        (Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc"));
+      InputStream in = null;
+      try {
+        in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc");
+        SCHEMA = Schema.parse(in);
+      } finally {
+        if (in != null)
+          in.close();
+      }
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }

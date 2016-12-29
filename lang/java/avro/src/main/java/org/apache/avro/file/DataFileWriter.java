@@ -201,19 +201,23 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   public DataFileWriter<D> appendTo(SeekableInput in, OutputStream out)
     throws IOException {
     assertNotOpen();
-    DataFileReader<D> reader =
-      new DataFileReader<D>(in, new GenericDatumReader<D>());
-    this.schema = reader.getSchema();
-    this.sync = reader.getHeader().sync;
-    this.meta.putAll(reader.getHeader().meta);
-    byte[] codecBytes = this.meta.get(DataFileConstants.CODEC);
-    if (codecBytes != null) {
-      String strCodec = new String(codecBytes, "UTF-8");
-      this.codec = CodecFactory.fromString(strCodec).createInstance();
-    } else {
-      this.codec = CodecFactory.nullCodec().createInstance();
+    DataFileReader<D> reader = null;
+    try {
+      reader = new DataFileReader<D>(in, new GenericDatumReader<D>());
+      this.schema = reader.getSchema();
+      this.sync = reader.getHeader().sync;
+      this.meta.putAll(reader.getHeader().meta);
+      byte[] codecBytes = this.meta.get(DataFileConstants.CODEC);
+      if (codecBytes != null) {
+        String strCodec = new String(codecBytes, "UTF-8");
+        this.codec = CodecFactory.fromString(strCodec).createInstance();
+      } else {
+        this.codec = CodecFactory.nullCodec().createInstance();
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
     }
-    reader.close();
 
     init(out);
 

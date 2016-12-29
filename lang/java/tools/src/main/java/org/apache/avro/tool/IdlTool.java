@@ -58,12 +58,19 @@ public class IdlTool implements Tool {
       parser = new Idl(in);
     }
 
-    if (args.size() == 2 && ! "-".equals(args.get(1))) {
-      parseOut = new PrintStream(new FileOutputStream(args.get(1)));
-    }
+    boolean toClose = false;
+    try {
+      if (args.size() == 2 && !"-".equals(args.get(1))) {
+        parseOut = new PrintStream(new FileOutputStream(args.get(1)));
+        toClose = true;
+      }
 
-    Protocol p = parser.CompilationUnit();
-    parseOut.print(p.toString(true));
+      Protocol p = parser.CompilationUnit();
+      parseOut.print(p.toString(true));
+    } finally {
+      if (toClose)
+        parseOut.close();
+    }
     return 0;
   }
 
