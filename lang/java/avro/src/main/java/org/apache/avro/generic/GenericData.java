@@ -35,6 +35,7 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -743,7 +744,7 @@ public class GenericData {
   /** Return the schema full name for a datum.  Called by {@link
    * #resolveUnion(Schema,Object)}. */
   protected String getSchemaName(Object datum) {
-    if (datum == null)
+    if (datum == null || datum == JsonProperties.NULL_VALUE)
       return Type.NULL.getName();
     if (isRecord(datum))
       return getRecordSchema(datum).getFullName();
