@@ -195,6 +195,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   /** Open a writer appending to an existing file.
+   * <strong>This method closes <code>in</code>.</strong>
    * @param in reading the existing file.
    * @param out positioned at the end of the existing file.
    */
@@ -217,6 +218,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     } finally {
       if (reader != null)
         reader.close();
+      in.close();
     }
 
     init(out);

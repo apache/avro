@@ -103,8 +103,8 @@ public class Main {
   }
 
   private static void printStream(InputStream in) throws Exception {
+    byte[] buffer = new byte[1024];
     try {
-      byte[] buffer = new byte[1024];
       for (int i = in.read(buffer); i != -1; i = in.read(buffer))
         System.err.write(buffer, 0, i);
     } finally {
@@ -113,9 +113,8 @@ public class Main {
   }
 
   private static void printHead(InputStream in, int lines) throws Exception {
-    BufferedReader r = null;
+    BufferedReader r = new BufferedReader(new InputStreamReader(in));
     try {
-      r = new BufferedReader(new InputStreamReader(in));
       for (int i = 0; i < lines; i++) {
         String line = r.readLine();
         if (line == null) {
@@ -124,8 +123,7 @@ public class Main {
         System.err.println(line);
       }
     } finally {
-      if (r != null)
-        r.close();
+      r.close();
     }
   }
 
