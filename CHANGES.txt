@@ -114,6 +114,9 @@ Trunk (not yet released)
     AVRO-1881: Java: Avro (Java) Memory Leak when reusing JsonDecoder instance.
     (Nandor Kollar via tomwhite)
 
+    AVRO-1954: Java: Schema.Field.defaultVal() generates: Unknown datum type
+    (Nandor Kollar via tomwhite)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
