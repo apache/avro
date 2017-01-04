@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,13 +18,14 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.Schema;
+import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.logical.LogicalTypeContainer;
+import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.avro.Schema;
-import org.apache.avro.compiler.specific.SpecificCompiler;
 
 /**
  * Generate Java classes from Avro schema files (.avsc)
@@ -38,16 +39,7 @@ public class SchemaMojo extends AbstractAvroMojo {
    * A parser used to parse all schema files. Using a common parser will
    * facilitate the import of external schemas.
    */
-   private Schema.Parser schemaParser = new Schema.Parser();
-
-   /**
-   * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avsc</code> is used to select grammar files.
-   *
-   * @parameter
-   */
-  private String[] includes = new String[] { "**/*.avsc" };
+  private Schema.Parser schemaParser = new Schema.Parser();
 
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
@@ -56,8 +48,31 @@ public class SchemaMojo extends AbstractAvroMojo {
    *
    * @parameter
    */
-  private String[] testIncludes = new String[] { "**/*.avsc" };
+  private String[] includes = new String[]{"**/*.avsc"};
 
+  /**
+   * A set of Ant-like inclusion patterns used to select files from the source
+   * directory for processing. By default, the pattern
+   * <code>**&#47;*.avsc</code> is used to select grammar files.
+   *
+   * @parameter
+   */
+  private String[] testIncludes = new String[]{"**/*.avsc"};
+
+  /**
+   * A set of custom LogicalTypeContainers fully qualified class names to be used for code generation in maven plugin;
+   * expecting public constructors with no parameters
+   *
+   * @parameter
+   */
+  private String[] logicalTypeContainers = new String[]{};
+
+  /**
+   * @param filename
+   * @param sourceDirectory
+   * @param outputDirectory
+   * @throws IOException
+   */
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
@@ -81,6 +96,25 @@ public class SchemaMojo extends AbstractAvroMojo {
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
     compiler.compileToDestination(src, outputDirectory);
+  }
+
+  @Override
+  public void execute() throws MojoExecutionException {
+    registerContainers();
+    super.execute();
+  }
+
+  private void registerContainers() {
+    try {
+      for (String logicalTypeContainer : logicalTypeContainers) {
+        LogicalTypeContainer container = (LogicalTypeContainer) Class.forName(logicalTypeContainer).newInstance();
+        SpecificCompiler.addLogicalTypeConversion(container.getConversion());
+        container.register();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
