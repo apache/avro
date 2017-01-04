@@ -35,10 +35,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.avro.AvroTestUtil;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
+import org.apache.avro.*;
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData.StringType;
 import org.junit.After;
 import org.junit.Assert;
@@ -491,16 +489,16 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid()
         .addToSchema(Schema.create(Schema.Type.STRING));
 
-    Assert.assertEquals("Should use DATE_CONVERSION for date type",
-        "DATE_CONVERSION", compiler.conversionInstance(dateSchema));
-    Assert.assertEquals("Should use TIME_CONVERSION for time type",
-        "TIME_CONVERSION", compiler.conversionInstance(timeSchema));
-    Assert.assertEquals("Should use TIMESTAMP_CONVERSION for date type",
-        "TIMESTAMP_CONVERSION", compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use constructor for date type",
+        "new "+ TimeConversions.DateConversion.class.getCanonicalName()+"()", compiler.conversionInstance(dateSchema));
+    Assert.assertEquals("Should use constructor for time type",
+      "new "+ TimeConversions.TimeConversion.class.getCanonicalName()+"()", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use constructor for timestamp type",
+      "new "+ TimeConversions.TimestampConversion.class.getCanonicalName()+"()", compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
-        "null", compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off",
-        "null", compiler.conversionInstance(uuidSchema));
+      "null", compiler.conversionInstance(decimalSchema));
+    Assert.assertEquals("Should use null for uuid type",
+      "null", compiler.conversionInstance(uuidSchema));
   }
 
 
@@ -520,16 +518,17 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid()
         .addToSchema(Schema.create(Schema.Type.STRING));
 
-    Assert.assertEquals("Should use DATE_CONVERSION for date type",
-        "DATE_CONVERSION", compiler.conversionInstance(dateSchema));
-    Assert.assertEquals("Should use TIME_CONVERSION for time type",
-        "TIME_CONVERSION", compiler.conversionInstance(timeSchema));
-    Assert.assertEquals("Should use TIMESTAMP_CONVERSION for date type",
-        "TIMESTAMP_CONVERSION", compiler.conversionInstance(timestampSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off",
-        "DECIMAL_CONVERSION", compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off",
-        "null", compiler.conversionInstance(uuidSchema));
+
+    Assert.assertEquals("Should use constructor for date type",
+      "new "+ TimeConversions.DateConversion.class.getCanonicalName()+"()", compiler.conversionInstance(dateSchema));
+    Assert.assertEquals("Should use constructor for time type",
+      "new "+ TimeConversions.TimeConversion.class.getCanonicalName()+"()", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use constructor for timestamp type",
+      "new "+ TimeConversions.TimestampConversion.class.getCanonicalName()+"()", compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use constructor for decimal if the flag is on",
+      "new "+ Conversions.DecimalConversion.class.getCanonicalName()+"()", compiler.conversionInstance(decimalSchema));
+    Assert.assertEquals("Should use null for uuid type",
+      "null", compiler.conversionInstance(uuidSchema));
   }
 
   public void testToFromByteBuffer() {
