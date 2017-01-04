@@ -826,6 +826,10 @@ public class SpecificCompiler {
     }
   }
 
+  public static void addLogicalTypeConversion(Conversion<?> conversion) {
+    SPECIFIC.addLogicalTypeConversion(conversion);
+  }
+
   /**
    * Generates the name of a field Builder accessor method.
    * @param schema the schema in which the field is defined.
