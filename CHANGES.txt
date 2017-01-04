@@ -111,6 +111,9 @@ Trunk (not yet released)
 
     AVRO-1970: Java: Flaky test: TestInputBytes. (Gabor Szadovszky via tomwhite)
 
+    AVRO-1881: Java: Avro (Java) Memory Leak when reusing JsonDecoder instance.
+    (Nandor Kollar via tomwhite)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
