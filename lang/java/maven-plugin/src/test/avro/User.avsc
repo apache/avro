@@ -33,6 +33,17 @@
             "name": "privacyDirectImport", 
             "type": ["null", "test.PrivacyDirectImport"],
             "default": null
+        },
+        {
+            "name": "privacyImportedArray",
+            "type": {
+                "type": "array",
+                "items": {
+                    "name": "privacyImport",
+                    "type": "test.PrivacyImport"
+                }
+            },
+            "default": null
         }
     ]
 }

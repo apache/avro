@@ -1303,7 +1303,11 @@ public abstract class Schema extends JsonProperties {
         JsonNode itemsNode = schema.get("items");
         if (itemsNode == null)
           throw new SchemaParseException("Array has no items type: "+schema);
-        result = new ArraySchema(parse(itemsNode, names));
+        try {
+          result = new ArraySchema(parse(itemsNode, names));
+        } catch (SchemaParseException e){
+          result = new ArraySchema(parse(itemsNode.get("type"), names));
+        }
       } else if (type.equals("map")) {            // map
         JsonNode valuesNode = schema.get("values");
         if (valuesNode == null)
