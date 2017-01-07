@@ -35,13 +35,7 @@ public abstract class AbstractLogicalTypeContainer {
   public void register() {
     LogicalTypes.LogicalTypeFactory factory = getFactory();
     LogicalTypes.register(getTypeName(), factory);
-    Conversion conversion;
-    try {
-      conversion = getConversionClass().newInstance();
-    } catch (Exception e) {
-      System.err.println("Exception instantiating Conversion!");
-      throw new RuntimeException(e);
-    }
+    Conversion conversion = getConversion();
     GenericData.get().addLogicalTypeConversion(conversion);
     SpecificData.get().addLogicalTypeConversion(conversion);
   }
