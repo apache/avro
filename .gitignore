@@ -7,3 +7,5 @@ target
 /build
 test-output
 /dist
+/.idea
+*.iml
