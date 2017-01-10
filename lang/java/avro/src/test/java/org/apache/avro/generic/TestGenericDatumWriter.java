@@ -257,4 +257,153 @@ public class TestGenericDatumWriter {
 
     writer.write(record, encoder);
   }
+  
+  @Test(expected=NullPointerException.class)
+  public void testWriteMandatoryFieldMissing() throws IOException {
+    String json = "{\"type\":\"record\",\"name\":\"AvroEvent\",\"namespace\":\"test.avro\",\"fields\":[{"
+    		+ "\"name\":\"id\",\"type\":\"string\",\"aliases\":[\"Id\"]}]}";
+    Schema s = Schema.parse(json);
+    GenericRecord r = new GenericData.Record(s);
+    
+    //r.put("id", "UUID1"); //Mandatory field
+    
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<GenericRecord>(s);
+    Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
+    w.write(r, e);
+    e.flush();
+    
+    //Shouldn't reach here
+    assert false;
+  }
+  
+  @Test
+  public void testWriteOptionalFieldMissing() throws IOException {
+    String json = "{\"type\":\"record\",\"name\":\"AvroEvent\",\"namespace\":\"test.avro\",\"fields\":[{"
+    		+ "\"name\":\"id\",\"type\":[\"null\",\"string\"]}]}";
+    Schema s = Schema.parse(json);
+    GenericRecord r = new GenericData.Record(s);
+    
+    //r.put("id", "UUID1"); //Mandatory field
+    
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<GenericRecord>(s);
+    Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
+    w.write(r, e);
+    e.flush();
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testWriteNullArray() throws IOException {
+    String json = "{\"type\": \"array\", \"items\": \"int\" }";
+    Schema schema = Schema.parse(json);
+        
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<GenericRecord>(schema);
+    Encoder out = EncoderFactory.get().jsonEncoder(schema, bao);
+    w.writeArray(schema, null, out);
+    out.flush();
+    
+    //Shouldn't reach here
+    assert false;
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testWriteNullMap() throws IOException {
+    String json = "{\"type\": \"map\", \"values\": \"int\" }";
+    Schema schema = Schema.parse(json);
+        
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<GenericRecord>(schema);
+    Encoder out = EncoderFactory.get().jsonEncoder(schema, bao);
+    w.writeMap(schema, null, out);
+    out.flush();
+    
+    //Shouldn't reach here
+    assert false;
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testWriteNullString() throws IOException {
+    String json = "{\"type\": \"string\", \"values\": \"int\" }";
+    Schema schema = Schema.parse(json);
+        
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<GenericRecord>(schema);
+    Encoder out = EncoderFactory.get().jsonEncoder(schema, bao);
+    w.writeString(schema, null, out);
+    out.flush();
+    
+    //Shouldn't reach here
+    assert false;
+  }
+  
+  @Test(expected=NullPointerException.class)
+  public void testWriteNullLong() throws IOException {
+    String json = "{\"type\": \"long\", \"values\": \"int\" }";
+    Schema schema = Schema.parse(json);
+        
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<GenericRecord>(schema);
+    Encoder out = EncoderFactory.get().jsonEncoder(schema, bao);
+    out.writeLong((Long)null);
+    out.flush();
+    
+    //Shouldn't reach here
+    assert false;
+  }
+  
+  @Test(expected=AvroTypeException.class)
+  public void testWriteNullEnum() throws IOException {
+    String json = "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": " +
+            "[\"ONE\",\"TWO\",\"THREE\"]}";
+    Schema schema = Schema.parse(json);
+        
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<GenericRecord>(schema);
+    Encoder out = EncoderFactory.get().jsonEncoder(schema, bao);
+    w.writeEnum(schema, null, out);
+    out.flush();
+    
+    //Shouldn't reach here
+    assert false;
+  }
+  
+  @Test
+  public void loadTestWriteMandatoryFields() throws IOException {
+    String json = "{\"type\":\"record\",\"name\":\"AvroEvent\",\"namespace\":\"test.avro\",\"fields\":[{"
+    		+ "\"name\":\"DateCreated\",\"type\":[\"null\",\"string\"],\"default\":null},{"
+    		+ "\"name\":\"DateModified\",\"type\":[\"null\",\"string\"],\"default\":null},{"
+    		+ "\"name\":\"ModifiedBy\",\"type\":[\"null\",\"int\"],\"default\":null},{"
+    		+ "\"name\":\"CreatedBy\",\"type\":[\"null\",\"int\"],\"default\":null},{"
+    		+ "\"name\":\"id\",\"type\":\"string\",\"aliases\":[\"Id\"]}]}";
+    Schema s = Schema.parse(json);
+    GenericRecord r = new GenericData.Record(s);
+    
+    r.put("DateCreated", "01/01/2016");
+    r.put("DateModified", "01/01/2016");
+    r.put("ModifiedBy", 100);
+    r.put("CreatedBy", 100);
+    //r.put("id", "UUID1"); //Mandatory field
+    
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<GenericRecord>(s);
+    
+    int count =200000;
+    long start = System.currentTimeMillis();
+    for(int i=0;i<count;i++){
+    	try{
+    	    Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
+    		w.write(r, e);
+    		e.flush();
+    	}catch(NullPointerException npe){
+    		//npe.printStackTrace();
+    	}
+    }
+    
+    long processSpeed = count/((System.currentTimeMillis() - start)/1000);
+    //System.out.println(processSpeed);
+        
+    assertTrue(processSpeed >= 50000);
+  }
 }
