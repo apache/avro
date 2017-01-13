@@ -295,7 +295,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
         record.last_name = fieldSetFlags()[2] ? this.last_name : (java.lang.String) defaultValue(fields()[2]);
         record.position = fieldSetFlags()[3] ? this.position : (java.util.List<avro.examples.baseball.Position>) defaultValue(fields()[3]);
         return record;
-      } catch (Exception e) {
+      } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
     }

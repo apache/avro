@@ -279,7 +279,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
         record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
 #end
         return record;
-      } catch (Exception e) {
+      } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
     }
