@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,6 +34,7 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Tool to concatenate avro files with the same schema and non-reserved
@@ -65,7 +67,20 @@ public class ConcatTool implements Tool {
     Map<String, byte[]> metadata = new TreeMap<String, byte[]>();
     String inputCodec = null;
 
-    for (String inFile : args) {
+    // Handle both stdin ('-') and files/directories
+    List<String> inFiles = new ArrayList<String>();
+    for (String arg : args) {
+      if (arg.equals("-")) {
+        inFiles.add(arg);
+      } else {
+        List<Path> paths = Util.getFiles(arg);
+        for (Path path : paths) {
+          inFiles.add(path.toString());
+        }
+      }
+    }
+
+    for (String inFile : inFiles) {
       InputStream input = Util.fileOrStdin(inFile, in);
       DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
         input, new GenericDatumReader<GenericRecord>());
