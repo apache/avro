@@ -23,6 +23,7 @@ import org.apache.avro.specific.SpecificData;
 #if (!$schema.isError())
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.SchemaStore;
 #end
 
 @SuppressWarnings("all")
@@ -46,6 +47,21 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
   private static final BinaryMessageDecoder<${this.mangle($schema.getName())}> DECODER =
       new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
+
+  /**
+   * Return the BinaryMessageDecoder instance used by this class.
+   */
+  public static BinaryMessageDecoder<${this.mangle($schema.getName())}> getDecoder() {
+    return DECODER;
+  }
+
+  /**
+   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+   */
+  public static BinaryMessageDecoder<${this.mangle($schema.getName())}> createDecoder(SchemaStore resolver) {
+    return new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$, resolver);
+  }
 
   /** Serializes this ${schema.getName()} to a ByteBuffer. */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
@@ -205,7 +221,11 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    * @return A new ${this.mangle($schema.getName())} RecordBuilder
    */
   public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder other) {
-    return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+    if (other == null) {
+      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
+    } else {
+      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+    }
   }
 
   /**
@@ -214,7 +234,11 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    * @return A new ${this.mangle($schema.getName())} RecordBuilder
    */
   public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
-    return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+    if (other == null) {
+      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
+    } else {
+      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+    }
   }
 
   /**
@@ -248,7 +272,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
         this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
-        fieldSetFlags()[$field.pos()] = true;
+        fieldSetFlags()[$field.pos()] = other.fieldSetFlags()[$field.pos()];
       }
 #if (${this.hasBuilder($field.schema())})
       if (other.${this.generateHasBuilderMethod($schema, $field)}()) {
@@ -263,7 +287,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
      * @param other The existing instance to copy.
      */
     private Builder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
-      #if ($schema.isError())super(other)#else
+#if ($schema.isError())      super(other)#else
       super(SCHEMA$)#end;
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
@@ -425,7 +449,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 #end
         return record;
-      } catch (Exception e) {
+      } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
     }

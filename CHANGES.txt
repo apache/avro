@@ -13,6 +13,9 @@ Trunk (not yet released)
     AVRO-1884: Java: Add method to set the compiler output suffix.
     (shijinkui via blue)
 
+    AVRO-1932: Java: Allow setting the SchemaStore on generated classes. 
+    (Niels Basjes)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
@@ -26,6 +29,16 @@ Trunk (not yet released)
     AVRO-1719: C++: Fix tests with Boost >= 1.59. (Romain Geissler via blue)
 
     AVRO-1879: Make conversions field static. (Michael Wong via blue)
+
+    AVRO-1919: Formalize the presence of build.sh. (Suraj Acharya via cutting)
+
+    AVRO-1918: Improve logical type documentation. (Gabor Szadovszky via cutting)
+
+    AVRO-1907: Java: Add debug logging for invalid logical types.
+    (Gabor Szadovszky via blue)
+
+    AVRO-1897: Fix build issues due to VERSION.txt newline, avro-tools.
+    (Suraj Acharya via blue)
 
   BUG FIXES
 
@@ -59,6 +72,50 @@ Trunk (not yet released)
     AVRO-1913: No warnings in the generated Java code. (Niels Basjes)
 
     AVRO-1914: Fix licencing errors reported by rat. (Niels Basjes)
+
+    AVRO-1901: Record named "Exception" generated bad code.
+    (Radai Rosenblatt via Niels Basjes)
+
+    AVRO-1849: C++: printJson fails on record with no fields.
+    (Simon Woodford vai tomwhite)
+
+    AVRO-1853: C++: Compiler::toBin crashes on empty string.
+    (Zoltan Ivanfi via tomwhite)
+
+    AVRO-1923, AVRO-1944: Stop infinite recursion in GenericData.toString. (Niels Basjes)
+
+    AVRO-1860: Java: Field#DefaultVal() returns Ints for Long fields.
+    (Gabor Szadovszky via cutting)
+
+    AVRO-1929: Java: SchemaCompatibility fails to recognize
+    string<->bytes promotion.  (Anders Sundelin via cutting)
+
+    AVRO-1882: Java: Fix ConcurrentHashMap with non-string keys.
+    (Sachin Goyal via blue)
+
+    AVRO-1943: Java: Flaky test:
+    TestNettyServerWithCompression.testConnectionsCount
+    (Gabor Szadovszky via tomwhite)
+
+    AVRO-1947: Java: Inconsistent maven profile activation
+    (Gabor Szadovszky via tomwhite)
+
+    AVRO-1626: C#: Fix Avro.pref build error. (Naruto Takahashi via blue)
+
+    AVRO-1951: Python: Fix ipc_test.py with a valid DNS name. (blue)
+
+    AVRO-1966: Java: Fix NPE When copying builder with nullable record. (Niels Basjes)
+
+    AVRO-1967: Java: Fix NPE when calling getXyzBuilder on instance where the xyz is null
+    (Niels Basjes)
+
+    AVRO-1970: Java: Flaky test: TestInputBytes. (Gabor Szadovszky via tomwhite)
+
+    AVRO-1881: Java: Avro (Java) Memory Leak when reusing JsonDecoder instance.
+    (Nandor Kollar via tomwhite)
+
+    AVRO-1954: Java: Schema.Field.defaultVal() generates: Unknown datum type
+    (Nandor Kollar via tomwhite)
 
 Avro 1.8.1 (14 May 2016)
 

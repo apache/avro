@@ -22,10 +22,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
 import static org.junit.Assert.*;
+
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -34,10 +38,6 @@ import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.reflect.ReflectData;
-import org.apache.avro.reflect.ReflectDatumReader;
-import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -206,16 +206,24 @@ public class TestNonStringMapKeys {
       assertEquals ("Foo", value.toString());
     }
     assertEquals (entity.getMap1(), entity.getMap2());
+    assertEquals (entity.getMap1(), entity.getMap3());
+    assertEquals (entity.getMap1(), entity.getMap4());
 
 
     ReflectData rdata = ReflectData.get();
     Schema schema = rdata.getSchema(SameMapSignature.class);
     Schema map1schema = schema.getField("map1").schema().getElementType();
     Schema map2schema = schema.getField("map2").schema().getElementType();
+    Schema map3schema = schema.getField("map3").schema().getElementType();
+    Schema map4schema = schema.getField("map4").schema().getElementType();
     log ("Schema for map1 = " + map1schema);
     log ("Schema for map2 = " + map2schema);
+    log ("Schema for map3 = " + map3schema);
+    log ("Schema for map4 = " + map4schema);
     assertEquals (map1schema.getFullName(), "org.apache.avro.reflect.PairIntegerString");
     assertEquals (map1schema, map2schema);
+    assertEquals (map1schema, map3schema);
+    assertEquals (map1schema, map4schema);
 
 
     byte[] jsonBytes = testJsonEncoder (testType, entityObj1);
@@ -365,8 +373,12 @@ public class TestNonStringMapKeys {
     SameMapSignature obj = new SameMapSignature();
     obj.setMap1(new HashMap<Integer, String>());
     obj.getMap1().put(1, "Foo");
-    obj.setMap2(new HashMap<Integer, String>());
+    obj.setMap2(new ConcurrentHashMap<Integer, String>());
     obj.getMap2().put(1, "Foo");
+    obj.setMap3(new LinkedHashMap<Integer, String>());
+    obj.getMap3().put(1, "Foo");
+    obj.setMap4(new TreeMap<Integer, String>());
+    obj.getMap4().put(1, "Foo");
     return obj;
   }
 
@@ -492,7 +504,9 @@ class EmployeeInfo2 {
 class SameMapSignature {
 
   HashMap<Integer, String> map1;
-  HashMap<Integer, String> map2;
+  ConcurrentHashMap<Integer, String> map2;
+  LinkedHashMap<Integer, String> map3;
+  TreeMap<Integer, String> map4;
 
   public HashMap<Integer, String> getMap1() {
     return map1;
@@ -500,10 +514,22 @@ class SameMapSignature {
   public void setMap1(HashMap<Integer, String> map1) {
     this.map1 = map1;
   }
-  public HashMap<Integer, String> getMap2() {
+  public ConcurrentHashMap<Integer, String> getMap2() {
     return map2;
   }
-  public void setMap2(HashMap<Integer, String> map2) {
+  public void setMap2(ConcurrentHashMap<Integer, String> map2) {
     this.map2 = map2;
+  }
+  public LinkedHashMap<Integer, String> getMap3() {
+    return map3;
+  }
+  public void setMap3(LinkedHashMap<Integer, String> map3) {
+    this.map3 = map3;
+  }
+  public TreeMap<Integer, String> getMap4() {
+    return map4;
+  }
+  public void setMap4(TreeMap<Integer, String> map4) {
+    this.map4 = map4;
   }
 }

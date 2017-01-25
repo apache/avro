@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -37,11 +36,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.DirectBinaryEncoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.AvroTypeException;
 import org.junit.Test;
 import org.apache.avro.util.Utf8;
@@ -256,5 +254,44 @@ public class TestGenericDatumWriter {
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
 
     writer.write(record, encoder);
+  }
+
+  @Test
+  public void writeFieldWithDefaultWithExplicitNullDefaultInSchema() throws Exception {
+    Schema schema = schemaWithExplicitNullDefault();
+    GenericRecord record = createRecordWithDefaultField(schema);
+    writeObject(schema, record);
+  }
+
+  @Test
+  public void writeFieldWithDefaultWithoutExplicitNullDefaultInSchema() throws Exception {
+    Schema schema = schemaWithoutExplicitNullDefault();
+    GenericRecord record = createRecordWithDefaultField(schema);
+    writeObject(schema, record);
+  }
+
+  private Schema schemaWithExplicitNullDefault() {
+    String schema = "{\"type\":\"record\",\"name\":\"my_record\",\"namespace\":\"mytest.namespace\",\"doc\":\"doc\"," +
+            "\"fields\":[{\"name\":\"f\",\"type\":[\"null\",\"string\"],\"doc\":\"field doc doc\", " +
+            "\"default\":null}]}";
+    return new Schema.Parser().parse(schema);
+  }
+
+  private Schema schemaWithoutExplicitNullDefault() {
+    String schema = "{\"type\":\"record\",\"name\":\"my_record\",\"namespace\":\"mytest.namespace\",\"doc\":\"doc\"," +
+            "\"fields\":[{\"name\":\"f\",\"type\":[\"null\",\"string\"],\"doc\":\"field doc doc\"}]}";
+    return new Schema.Parser().parse(schema);
+  }
+
+  private void writeObject(Schema schema, GenericRecord datum) throws Exception {
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(new ByteArrayOutputStream(), null);
+    GenericDatumWriter<GenericData.Record> writer = new GenericDatumWriter<GenericData.Record>(schema);
+    writer.write(schema, datum, encoder);
+  }
+
+  private GenericRecord createRecordWithDefaultField(Schema schema) {
+    GenericRecord record = new GenericData.Record(schema);
+    record.put("f", schema.getField("f").defaultVal());
+    return record;
   }
 }
