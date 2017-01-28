@@ -326,26 +326,41 @@
     </section> <!-- end schemas -->
 
     <section>
-      <title>Data Serialization</title>
+      <title>Data Serialization and Deserialization</title>
 
-      <p>Avro data does not include type information.
-      The binary encoding does not include field names, either.  The resulting
-      tradeoff is that the serialized data is small, but the original schema of
-      the writer is always required in order to read Avro data correctly.</p>
+      <p>Binary encoded Avro data does not include type information or
+      field names.  The benefit is that the serialized data is small, but
+      as a result a schema must always be used in order to read Avro data
+      correctly.  The best way to ensure that the schema is structurally
+      identical to the one used to write the data is to use the exact same
+      schema.</p>
 
-      <p>Therefore, files that store Avro data should always include the
-      schema for that data in the same file.  Avro-based remote procedure
+      <p>Therefore, files or systems that store Avro data should always
+      include the writer's schema for that data.  Avro-based remote procedure
       call (RPC) systems must also guarantee that remote recipients of data
-      have a copy of the schema used to write that data.  In general, any
-      reader of Avro data must a schema that is structurally identical (as
-      defined more fully in
+      have a copy of the schema used to write that data.  In general, it is
+      advisable that any reader of Avro data should use a schema that is
+      the same (as defined more fully in
       <a href="#Parsing+Canonical+Form+for+Schemas">Parsing Canonical Form for
-      Schemas</a>) to the schema that was used to write the data in order to
-      deserialize it correctly.</p>
+      Schemas</a>) as the schema that was used to write the data in order to
+      deserialize it correctly. Deserializing data into a newer schema is
+      accomplished by specifying an additional schema, the results of which are
+      described in <a href="#Schema+Resolution">Schema Resolution</a>.</p>
 
-      <p>In general, both serialization and deserialization proceed as
-      a depth-first, left-to-right traversal of the schema,
-      serializing primitive types as they are encountered.</p>
+      <p>In general, both serialization and deserialization proceed as a
+      depth-first, left-to-right traversal of the schema, serializing or
+      deserializing primitive types as they are encountered. Therefore, it is
+      possible, though not advisable, to read Avro data with a schema that
+      does not have the same Parsing Canonical Form as the schema with which
+      the data was written. In order for this to work, the serialized primitive
+      values must be compatible, in order value by value, with the items in the
+      deserialization schema. For example, int and long are always serialized
+      the same way, so an int could be deserialized as a long.  Since the
+      compatibility of two schemas depends on both the data and the
+      serialization format (eg. binary is more permissive than JSON because JSON
+      includes field names, eg. a long that is too large will overflow an int),
+      it is simpler and more reliable to use schemas with identical Parsing
+      Canonical Form.</p>
 
       <section>
 	<title>Encodings</title>
@@ -1165,7 +1180,7 @@
       <title>Parsing Canonical Form for Schemas</title>
 
       <p>One of the defining characteristics of Avro is that a reader
-      must use the "same" schema used by the writer of the data in
+      must use the schema used by the writer of the data in
       order to know how to read the data.  This assumption results in a data
       format that's compact and also amenable to many forms of schema
       evolution.  However, the specification so far has not defined
@@ -1180,7 +1195,7 @@
       <p><em>Parsing Canonical Form</em> is a transformation of a
       writer's schema that let's us define what it means for two
       schemas to be "the same" for the purpose of reading data written
-      agains the schema.  It is called <em>Parsing</em> Canonical Form
+      against the schema.  It is called <em>Parsing</em> Canonical Form
       because the transformations strip away parts of the schema, like
       "doc" attributes, that are irrelevant to readers trying to parse
       incoming data.  It is called <em>Canonical Form</em> because the
