@@ -120,7 +120,10 @@ Trunk (not yet released)
     (Nandor Kollar via tomwhite)
 
     AVRO-1930: JsonParser doesn't handle integer scientific notation (Pietro Cerutti via thiru)
+
     AVRO-1912: C++ Resolving Decoding doesn't work if element removed from record in array. (via thiru)
+
+    AVRO-1866. JsonNullFormatter fwd-declared as class, defined as struct ( Pietro Cerutti via thiru)
 
 Avro 1.8.1 (14 May 2016)
 

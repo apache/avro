@@ -133,7 +133,8 @@ public:
     }
 };
 
-struct AVRO_DECL JsonNullFormatter {
+class AVRO_DECL JsonNullFormatter {
+public:
     JsonNullFormatter(StreamWriter&) { }
 
     void handleObjectStart() {}
