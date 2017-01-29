@@ -40,6 +40,8 @@ Trunk (not yet released)
     AVRO-1897: Fix build issues due to VERSION.txt newline, avro-tools.
     (Suraj Acharya via blue)
 
+    AVRO-1993: C++ Byte ordering macro does not work on FreeBSD (thiru)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
@@ -116,6 +118,9 @@ Trunk (not yet released)
 
     AVRO-1954: Java: Schema.Field.defaultVal() generates: Unknown datum type
     (Nandor Kollar via tomwhite)
+
+    AVRO-1930: JsonParser doesn't handle integer scientific notation (Pietro Cerutti via thiru)
+    AVRO-1912: C++ Resolving Decoding doesn't work if element removed from record in array. (via thiru)
 
 Avro 1.8.1 (14 May 2016)
 

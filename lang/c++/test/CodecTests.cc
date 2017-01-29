@@ -1274,6 +1274,21 @@ static const TestData4 data4[] = {
         "[Rc1sI]",
         { "100", NULL }, 1 },
 
+    // Record of array of record with deleted field as last field
+    { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+        "{\"name\": \"g1\","
+            "\"type\":{\"type\":\"array\",\"items\":{"
+                "\"name\":\"item\",\"type\":\"record\",\"fields\":["
+                "{\"name\":\"f1\", \"type\":\"int\"},"
+                "{\"name\":\"f2\", \"type\": \"long\", \"default\": 0}]}}}]}", "[c1sIL]",
+        { "10", "11", NULL },
+        "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+        "{\"name\": \"g1\","
+            "\"type\":{\"type\":\"array\",\"items\":{"
+                "\"name\":\"item\",\"type\":\"record\",\"fields\":["
+                "{\"name\":\"f1\", \"type\":\"int\"}]}}}]}", "R[c1sI]",
+        { "10", NULL }, 2 },
+
     // Enum resolution
     { "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"x\",\"y\",\"z\"]}",
         "e2",
@@ -1302,20 +1317,12 @@ static const TestData4 data4[] = {
         "[c2sU1IsU1I]", { "100", "100", NULL } ,
         "{\"type\":\"array\", \"items\": \"int\"}",
             "[c2sIsI]", { "100", "100", NULL }, 2 },
-    { "{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
-        "[c1sU1Ic1sU1I]", { "100", "100", NULL } ,
-        "{\"type\":\"array\", \"items\": \"int\"}",
-            "[c1sIc1sI]", { "100", "100", NULL }, 2 },
 
     // Map of unions
     { "{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
         "{c2sS10U1IsS10U1I}", { "k1", "100", "k2", "100", NULL } ,
         "{\"type\":\"map\", \"values\": \"int\"}",
             "{c2sS10IsS10I}", { "k1", "100", "k2", "100", NULL }, 2 },
-    { "{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
-        "{c1sS10U1Ic1sS10U1I}", { "k1", "100", "k2", "100", NULL } ,
-        "{\"type\":\"map\", \"values\": \"int\"}",
-            "{c1sS10Ic1sS10I}", { "k1", "100", "k2", "100", NULL }, 2 },
 
     // Union + promotion
     { "\"int\"", "I", { "100", NULL },
@@ -1337,6 +1344,20 @@ static const TestData4 data4[] = {
         "{\"name\":\"f1\", \"type\":\"long\"},"
         "{\"name\":\"f3\", \"type\":\"double\"}]}", "BLD",
         { "1", "100", "10.75", NULL }, 1 },
+};
+
+static const TestData4 data4BinaryOnly[] = {
+    // Arrray of unions
+    { "{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
+        "[c1sU1Ic1sU1I]", { "100", "100", NULL } ,
+        "{\"type\":\"array\", \"items\": \"int\"}",
+            "[c1sIc1sI]", { "100", "100", NULL }, 2 },
+
+    // Map of unions
+    { "{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
+        "{c1sS10U1Ic1sS10U1I}", { "k1", "100", "k2", "100", NULL } ,
+        "{\"type\":\"map\", \"values\": \"int\"}",
+            "{c1sS10Ic1sS10I}", { "k1", "100", "k2", "100", NULL }, 2 },
 };
 
 #define COUNTOF(x)  sizeof(x) / sizeof(x[0])
@@ -1405,6 +1426,21 @@ struct BinaryEncoderResolvingDecoderFactory : public BinaryEncoderFactory {
     }
 };
 
+struct JsonEncoderResolvingDecoderFactory {
+    static EncoderPtr newEncoder(const ValidSchema& schema) {
+        return jsonEncoder(schema);
+    }
+
+    static DecoderPtr newDecoder(const ValidSchema& schema) {
+        return resolvingDecoder(schema, schema, jsonDecoder(schema));
+    }
+
+    static DecoderPtr newDecoder(const ValidSchema& writer,
+        const ValidSchema& reader) {
+        return resolvingDecoder(writer, reader, jsonDecoder(writer));
+    }
+};
+
 struct ValidatingEncoderResolvingDecoderFactory :
     public ValidatingEncoderFactory {
     static DecoderPtr newDecoder(const ValidSchema& schema) {
@@ -1426,14 +1462,21 @@ void add_tests(boost::unit_test::test_suite& ts)
     ADD_TESTS(ts, JsonCodec, testCodec, data);
     ADD_TESTS(ts, JsonPrettyCodec, testCodec, data);
     ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory, testCodec, data);
+    ADD_TESTS(ts, JsonEncoderResolvingDecoderFactory, testCodec, data);
     ADD_TESTS(ts, ValidatingCodecFactory, testReaderFail, data2);
     ADD_TESTS(ts, ValidatingCodecFactory, testWriterFail, data2);
     ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory,
         testCodecResolving, data3);
+    ADD_TESTS(ts, JsonEncoderResolvingDecoderFactory,
+        testCodecResolving, data3);
     ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory,
+        testCodecResolving2, data4);
+    ADD_TESTS(ts, JsonEncoderResolvingDecoderFactory,
         testCodecResolving2, data4);
     ADD_TESTS(ts, ValidatingEncoderResolvingDecoderFactory,
         testCodecResolving2, data4);
+    ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory,
+        testCodecResolving2, data4BinaryOnly);
 
     ADD_TESTS(ts, ValidatingCodecFactory, testGeneric, data);
     ADD_TESTS(ts, ValidatingCodecFactory, testGenericResolving, data3);
