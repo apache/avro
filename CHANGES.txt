@@ -125,6 +125,8 @@ Trunk (not yet released)
 
     AVRO-1866. JsonNullFormatter fwd-declared as class, defined as struct ( Pietro Cerutti via thiru)
 
+    AVRO-1750. GenericDatum API behavior breaking change (thiru)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
