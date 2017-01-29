@@ -171,6 +171,10 @@ JsonParser::Token JsonParser::tryNumber(char ch)
                     state = 3;
                     sv.push_back(ch);
                     continue;
+                } else if (ch == 'e' || ch == 'E') {
+                    sv.push_back(ch);
+                    state = 5;
+                    continue;
                 }
                 hasNext = true;
             }
@@ -184,6 +188,10 @@ JsonParser::Token JsonParser::tryNumber(char ch)
                 } else if (ch == '.') {
                     state = 3;
                     sv.push_back(ch);
+                    continue;
+                } else if (ch == 'e' || ch == 'E') {
+                    sv.push_back(ch);
+                    state = 5;
                     continue;
                 }
                 hasNext = true;
