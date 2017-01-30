@@ -76,7 +76,7 @@ JsonParser::Token JsonParser::doAdvance()
 {
     char ch = next();
     if (ch == ']') {
-        if (curState == stArray0 || stArrayN) {
+        if (curState == stArray0 || curState == stArrayN) {
             curState = stateStack.top();
             stateStack.pop();
             return tkArrayEnd;
@@ -84,7 +84,7 @@ JsonParser::Token JsonParser::doAdvance()
             throw unexpected(ch);
         }
     } else if (ch == '}') {
-        if (curState == stObject0 || stObjectN) {
+        if (curState == stObject0 || curState == stObjectN) {
             curState = stateStack.top();
             stateStack.pop();
             return tkObjectEnd;
