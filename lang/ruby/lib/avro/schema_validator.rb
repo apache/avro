@@ -62,16 +62,22 @@ module Avro
     TypeMismatchError = Class.new(ValidationError)
 
     class << self
-      def validate!(expected_schema, datum)
+      def validate!(expected_schema, logical_datum, encoded = false)
         result = Result.new
-        validate_recursive(expected_schema, datum, ROOT_IDENTIFIER, result)
+        validate_recursive(expected_schema, logical_datum, ROOT_IDENTIFIER, result, encoded)
         fail ValidationError, result if result.failure?
         result
       end
 
       private
 
-      def validate_recursive(expected_schema, datum, path, result)
+      def validate_recursive(expected_schema, logical_datum, path, result, encoded = false)
+        datum = if encoded
+                  logical_datum
+                else
+                  expected_schema.type_adapter.encode(logical_datum) rescue nil
+                end
+
         case expected_schema.type_sym
         when :null
           fail TypeMismatchError unless datum.nil?
