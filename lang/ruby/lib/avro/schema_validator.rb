@@ -80,13 +80,13 @@ module Avro
         when :string, :bytes
           fail TypeMismatchError unless datum.is_a?(String)
         when :int
-          fail TypeMismatchError unless datum.is_a?(Fixnum) || datum.is_a?(Bignum)
+          fail TypeMismatchError unless datum.is_a?(Integer)
           result.add_error(path, "out of bound value #{datum}") unless INT_RANGE.cover?(datum)
         when :long
-          fail TypeMismatchError unless datum.is_a?(Fixnum) || datum.is_a?(Bignum)
+          fail TypeMismatchError unless datum.is_a?(Integer)
           result.add_error(path, "out of bound value #{datum}") unless LONG_RANGE.cover?(datum)
         when :float, :double
-          fail TypeMismatchError unless [Float, Fixnum, Bignum].any?(&datum.method(:is_a?))
+          fail TypeMismatchError unless [Float, Integer].any?(&datum.method(:is_a?))
         when :fixed
           if datum.is_a? String
             message = "expected fixed with size #{expected_schema.size}, got \"#{datum}\" with size #{datum.size}"
@@ -165,7 +165,11 @@ module Avro
       private
 
       def actual_value_message(value)
-        avro_type = ruby_to_avro_type(value.class)
+        avro_type = if value.class == Integer
+                      ruby_integer_to_avro_type(value)
+                    else
+                      ruby_to_avro_type(value.class)
+                    end
         if value.nil?
           avro_type
         else
@@ -182,6 +186,10 @@ module Avro
           Float => 'float',
           Hash => 'record'
         }.fetch(ruby_class, ruby_class)
+      end
+
+      def ruby_integer_to_avro_type(value)
+        INT_RANGE.cover?(value) ? 'int' : 'long'
       end
     end
   end

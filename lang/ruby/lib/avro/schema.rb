@@ -318,7 +318,7 @@ module Avro
       attr_reader :size
       def initialize(name, space, size, names=nil)
         # Ensure valid cto args
-        unless size.is_a?(Fixnum) || size.is_a?(Bignum)
+        unless size.is_a?(Integer)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
         super(:fixed, name, space, names)
