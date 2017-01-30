@@ -58,6 +58,27 @@ import org.slf4j.LoggerFactory;
  * Java reserved keywords are mangled to preserve compilation.
  */
 public class SpecificCompiler {
+
+  /*
+   * From Section 4.10 of the Java VM Specification:
+   *    A method descriptor is valid only if it represents method parameters with a total length of 255 or less,
+   *    where that length includes the contribution for this in the case of instance or interface method invocations.
+   *    The total length is calculated by summing the contributions of the individual parameters, where a parameter
+   *    of type long or double contributes two units to the length and a parameter of any other type contributes one unit.
+   *
+   * Arguments of type Double/Float contribute 2 "parameter units" to this limit, all other types contribute 1
+   * "parameter unit". All instance methods for a class are passed a reference to the instance (`this), and hence,
+   * they are permitted at most `JVM_METHOD_ARG_LIMIT-1` "parameter units" for their arguments.
+   *
+   * @see <a href="http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10">JVM Spec: Section 4.10</a>
+   */
+  private static final int JVM_METHOD_ARG_LIMIT = 255;
+
+  /*
+   * Note: This is protected instead of private only so it's visible for testing.
+   */
+  protected static final int MAX_FIELD_PARAMETER_UNIT_COUNT = JVM_METHOD_ARG_LIMIT - 1;
+
   public static enum FieldVisibility {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
   }
@@ -68,7 +89,15 @@ public class SpecificCompiler {
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
   private boolean createSetters = true;
+  private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
+
+  /*
+   * Used in the record.vm template.
+   */
+  public boolean isCreateAllArgsConstructor() {
+    return createAllArgsConstructor;
+  }
 
   /* List of Java reserved words from
    * http://java.sun.com/docs/books/jls/third_edition/html/lexical.html. */
@@ -368,6 +397,33 @@ public class SpecificCompiler {
     }
   }
 
+  /**
+   * Returns the number of parameter units required by fields for the
+   * AllArgsConstructor.
+   *
+   * @param record a Record schema
+   */
+  protected int calcAllArgConstructorParameterUnits(Schema record) {
+
+    if (record.getType() != Schema.Type.RECORD)
+      throw new RuntimeException("This method must only be called for record schemas.");
+
+    return record.getFields().size();
+  }
+
+  protected void validateRecordForCompilation(Schema record) {
+    this.createAllArgsConstructor =
+        calcAllArgConstructorParameterUnits(record) <= MAX_FIELD_PARAMETER_UNIT_COUNT;
+
+    if (!this.createAllArgsConstructor)
+      new Slf4jLogChute().log(LogChute.WARN_ID, "Record '" + record.getFullName() +
+              "' contains more than " + MAX_FIELD_PARAMETER_UNIT_COUNT +
+              " parameters which exceeds the JVM " +
+              "spec for the number of permitted constructor arguments. Clients must " +
+              "rely on the builder pattern to create objects instead. For more info " +
+              "see JIRA ticket AVRO-1642.");
+  }
+
   OutputFile compile(Schema schema) {
     schema = addStringType(schema);               // annotate schema as needed
     String output = "";
@@ -377,6 +433,7 @@ public class SpecificCompiler {
 
     switch (schema.getType()) {
     case RECORD:
+      validateRecordForCompilation(schema);
       output = renderTemplate(templateDir+"record.vm", context);
       break;
     case ENUM:

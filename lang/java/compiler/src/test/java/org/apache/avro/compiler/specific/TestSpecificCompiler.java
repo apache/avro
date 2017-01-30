@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.compiler;
+package org.apache.avro.compiler.specific;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,16 +31,23 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
-import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData.StringType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import javax.tools.JavaCompiler;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
 
 @RunWith(JUnit4.class)
 public class TestSpecificCompiler {
@@ -68,6 +75,40 @@ public class TestSpecificCompiler {
     }
   }
 
+  /** Uses the system's java compiler to actually compile the generated code. */
+  static void assertCompilesWithJavaCompiler(Collection<SpecificCompiler.OutputFile> outputs)
+          throws IOException {
+    if (outputs.isEmpty())
+      return;               // Nothing to compile!
+
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    StandardJavaFileManager fileManager =
+            compiler.getStandardFileManager(null, null, null);
+
+    File dstDir = AvroTestUtil.tempFile(TestSpecificCompiler.class, "realCompiler");
+    List<File> javaFiles = new ArrayList<File>();
+    for (SpecificCompiler.OutputFile o : outputs) {
+      javaFiles.add(o.writeToDestination(null, dstDir));
+    }
+
+    JavaCompiler.CompilationTask cTask = compiler.getTask(null, fileManager,
+            null, null, null, fileManager.getJavaFileObjects(
+                    javaFiles.toArray(new File[javaFiles.size()])));
+    boolean compilesWithoutError = cTask.call();
+    assertTrue(compilesWithoutError);
+  }
+
+  private static Schema createSampleRecordSchema(int numStringFields, int numDoubleFields) {
+    SchemaBuilder.FieldAssembler<Schema> sb = SchemaBuilder.record("sample.record").fields();
+    for (int i = 0; i < numStringFields; i++) {
+      sb.name("sf_" + i).type().stringType().noDefault();
+    }
+    for (int i = 0; i < numDoubleFields; i++) {
+      sb.name("df_" + i).type().doubleType().noDefault();
+    }
+    return sb.endRecord();
+  }
+
   private SpecificCompiler createCompiler() throws IOException {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(this.src);
@@ -75,6 +116,61 @@ public class TestSpecificCompiler {
     compiler.setTemplateDir(this.velocityTemplateDir);
     compiler.setStringType(StringType.CharSequence);
     return compiler;
+  }
+
+  @Test
+  public void testCreateAllArgsConstructor() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    compiler.compileToDestination(this.src, this.outputDir);
+    assertTrue(this.outputFile.exists());
+    BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
+    String line = null;
+    boolean foundAllArgsConstructor = false;
+    while (!foundAllArgsConstructor && (line = reader.readLine()) != null) {
+      foundAllArgsConstructor = line.contains("All-args constructor");
+    }
+    assertTrue(foundAllArgsConstructor);
+  }
+
+  @Test
+  public void testMaxValidParameterCounts() throws Exception {
+    Schema validSchema1 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT, 0);
+    assertCompilesWithJavaCompiler(new SpecificCompiler(validSchema1).compile());
+
+    Schema validSchema2 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT - 2, 1);
+    assertCompilesWithJavaCompiler(new SpecificCompiler(validSchema1).compile());
+  }
+
+  @Test
+  public void testInvalidParameterCounts() throws Exception {
+    Schema invalidSchema1 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT + 1, 0);
+    SpecificCompiler compiler = new SpecificCompiler(invalidSchema1);
+    assertCompilesWithJavaCompiler(compiler.compile());
+
+    Schema invalidSchema2 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT, 10);
+    compiler = new SpecificCompiler(invalidSchema2);
+    assertCompilesWithJavaCompiler(compiler.compile());
+  }
+
+  @Test
+  public void testMaxParameterCounts() throws Exception {
+    Schema validSchema1 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT, 0);
+    assertTrue(new SpecificCompiler(validSchema1).compile().size() > 0);
+
+    Schema validSchema2 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT - 2, 1);
+    assertTrue(new SpecificCompiler(validSchema2).compile().size() > 0);
+
+    Schema validSchema3 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT - 1, 1);
+    assertTrue(new SpecificCompiler(validSchema3).compile().size() > 0);
+
+    Schema validSchema4 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT + 1, 0);
+    assertTrue(new SpecificCompiler(validSchema4).compile().size() > 0);
+  }
+
+  @Test(expected=RuntimeException.class)
+  public void testCalcAllArgConstructorParameterUnitsFailure() {
+    Schema nonRecordSchema = SchemaBuilder.array().items().booleanType();
+    new SpecificCompiler().calcAllArgConstructorParameterUnits(nonRecordSchema);
   }
 
   @Test
