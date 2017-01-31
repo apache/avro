@@ -1513,9 +1513,13 @@ static void testLimits(const EncoderPtr& e, const DecoderPtr& d)
         e->encodeDouble(std::numeric_limits<double>::infinity());
         e->encodeDouble(-std::numeric_limits<double>::infinity());
         e->encodeDouble(std::numeric_limits<double>::quiet_NaN());
+        e->encodeDouble(std::numeric_limits<double>::max());
+        e->encodeDouble(std::numeric_limits<double>::min());
         e->encodeFloat(std::numeric_limits<float>::infinity());
         e->encodeFloat(-std::numeric_limits<float>::infinity());
         e->encodeFloat(std::numeric_limits<float>::quiet_NaN());
+        e->encodeFloat(std::numeric_limits<float>::max());
+        e->encodeFloat(std::numeric_limits<float>::min());
         e->flush();
     }
 
@@ -1527,13 +1531,16 @@ static void testLimits(const EncoderPtr& e, const DecoderPtr& d)
         BOOST_CHECK_EQUAL(d->decodeDouble(),
             -std::numeric_limits<double>::infinity());
         BOOST_CHECK(boost::math::isnan(d->decodeDouble()));
+        BOOST_CHECK(d->decodeDouble() == std::numeric_limits<double>::max());
+        BOOST_CHECK(d->decodeDouble() == std::numeric_limits<double>::min());
         BOOST_CHECK_EQUAL(d->decodeFloat(),
             std::numeric_limits<float>::infinity());
         BOOST_CHECK_EQUAL(d->decodeFloat(),
             -std::numeric_limits<float>::infinity());
         BOOST_CHECK(boost::math::isnan(d->decodeFloat()));
+        BOOST_CHECK_CLOSE(d->decodeFloat(), std::numeric_limits<float>::max(), 0.00011);
+        BOOST_CHECK_CLOSE(d->decodeFloat(), std::numeric_limits<float>::min(), 0.00011);
     }
-
 }
 
 static void testLimitsBinaryCodec()
@@ -1547,9 +1554,13 @@ static void testLimitsJsonCodec()
         "{ \"name\": \"d1\", \"type\": \"double\" },"
         "{ \"name\": \"d2\", \"type\": \"double\" },"
         "{ \"name\": \"d3\", \"type\": \"double\" },"
+        "{ \"name\": \"d4\", \"type\": \"double\" },"
+        "{ \"name\": \"d5\", \"type\": \"double\" },"
         "{ \"name\": \"f1\", \"type\": \"float\" },"
         "{ \"name\": \"f2\", \"type\": \"float\" },"
-        "{ \"name\": \"f3\", \"type\": \"float\" }"
+        "{ \"name\": \"f3\", \"type\": \"float\" },"
+        "{ \"name\": \"f4\", \"type\": \"float\" },"
+        "{ \"name\": \"f5\", \"type\": \"float\" }"
     "]}";
     ValidSchema schema = parsing::makeValidSchema(s);
     testLimits(jsonEncoder(schema), jsonDecoder(schema));
