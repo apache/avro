@@ -127,6 +127,8 @@ Trunk (not yet released)
 
     AVRO-1750. GenericDatum API behavior breaking change (thiru)
 
+    AVRO-1995: JSON Parser does not properly check current state (Victor Mota via thiru)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
