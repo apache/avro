@@ -1,6 +1,8 @@
 Before starting work on an enhancement, it's highly recommended to open an [issue](https://github.com/commercehub-oss/gradle-avro-plugin/issues) to describe the intended change.
 This allows for the project maintainers to provide feedback before you've done work that may not fit the project's vision.
 
+Some possible enhancements may have already been considered and documented.  Check the design-docs folder for the design specification for such features.
+
 To run the project's build, run:
 
 * (Mac/Linux): `./gradlew build`
