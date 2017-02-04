@@ -50,6 +50,11 @@ public abstract class SpecificRecordBase
     return get(getSchema().getField(fieldName).pos());
   }
 
+  /**
+   * @deprecated As of Avro 1.8.2, this method has been moved to
+   * {@link #getConversion(String)} method from 1.9.0.
+   */
+  @Deprecated
   public Conversion<?> getConverion(String fieldName) {
     return getConversion(getSchema().getField(fieldName).pos());
   }
