@@ -102,6 +102,9 @@ Avro 1.8.2 (5 November 2016)
 
     AVRO-1951: Python: Fix ipc_test.py with a valid DNS name. (blue)
 
+    AVRO-1987: Add @deprecated tag to getConverion method
+    (Suraj Acharya via gabor)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
