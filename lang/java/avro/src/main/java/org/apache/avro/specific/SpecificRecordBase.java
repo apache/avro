@@ -56,6 +56,10 @@ public abstract class SpecificRecordBase
    */
   @Deprecated
   public Conversion<?> getConverion(String fieldName) {
+    return getConversion(fieldName);
+  }
+
+  public Conversion<?> getConversion(String fieldName) {
     return getConversion(getSchema().getField(fieldName).pos());
   }
 
