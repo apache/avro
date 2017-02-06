@@ -208,10 +208,27 @@ do
         GROUP_ID=50
       fi
       docker build -t avro-build-${USER_NAME} - <<UserSpecificDocker
-FROM avro-build
+FROM docker.io/surajacharya/avro-build-test
 RUN groupadd -g ${GROUP_ID} ${USER_NAME} || true
-RUN useradd -g ${GROUP_ID} -u ${USER_ID} -k /root -m ${USER_NAME}
+RUN useradd -g ${GROUP_ID} -u ${USER_ID} -k /root -m ${USER_NAME} || true
 ENV HOME /home/${USER_NAME}
+RUN apt-get update && apt-get install --no-install-recommends -y \
+  git subversion curl ant make maven \
+  gcc cmake libjansson-dev asciidoc source-highlight \
+  g++ flex bison libboost-all-dev doxygen \
+  mono-devel mono-gmcs nunit \
+  nodejs \
+  perl \
+  php5 phpunit php5-gmp bzip2 \
+  python python-setuptools python3-setuptools \
+  ruby ruby-dev rake \
+  libsnappy1 libsnappy-dev
+UserSpecificDocker
+
+docker build -t avro-build-test - <<UserSpecificDocker
+FROM docker.io/surajacharya/avro-build-test
+RUN apt-get install -y gem
+RUN gem install ruby-lint rubocop
 UserSpecificDocker
       # By mapping the .m2 directory you can do an mvn install from
       # within the container and use the result on your normal

@@ -17,12 +17,10 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM java:7-jdk
+FROM docker.io/surajacharya/avro-build-test
 
 WORKDIR /root
 
-# Add the repository for node.js 4.x
-RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 
 # Install dependencies from packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
@@ -36,23 +34,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   python python-setuptools python3-setuptools \
   ruby ruby-dev rake \
   libsnappy1 libsnappy-dev
-
-# Install Forrest
-RUN mkdir -p /usr/local/apache-forrest
-RUN curl -O http://archive.apache.org/dist/forrest/0.8/apache-forrest-0.8.tar.gz
-RUN tar xzf *forrest* --strip-components 1 -C /usr/local/apache-forrest
-RUN echo 'forrest.home=/usr/local/apache-forrest' > build.properties
-RUN chmod -R 0777 /usr/local/apache-forrest/build /usr/local/apache-forrest/main \
-  /usr/local/apache-forrest/plugins
-ENV FORREST_HOME /usr/local/apache-forrest
-
-# Install Perl modules
-RUN curl -L http://cpanmin.us | perl - --self-upgrade # non-interactive cpan
-RUN cpanm install Module::Install Module::Install::ReadmeFromPod \
-  Module::Install::Repository \
-  Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
-  IO::String Object::Tiny Compress::Zlib Test::More \
-  Test::Exception Test::Pod
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy
