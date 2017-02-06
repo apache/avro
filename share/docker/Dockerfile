@@ -34,9 +34,3 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   python python-setuptools python3-setuptools \
   ruby ruby-dev rake \
   libsnappy1 libsnappy-dev
-
-# Install Ruby modules
-RUN gem install echoe yajl-ruby multi_json snappy
-
-# Install global Node modules
-RUN npm install -g grunt-cli
