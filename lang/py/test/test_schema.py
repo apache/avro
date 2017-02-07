@@ -103,6 +103,20 @@ UNION_EXAMPLES = [
                      {"type": "array", "items": "string"}]),
 ]
 
+NAMED_IN_UNION_EXAMPLES = [
+  ExampleSchema("""{"namespace": "org.apache.avro.test",
+                    "type": "record",
+                    "name": "Test",
+                    "fields": [{"type": {"symbols": ["one", "two"],
+                                         "type": "enum",
+                                         "name": "NamedEnum"},
+                                         "name": "thenamedenum"},
+                               {"type": ["null", "NamedEnum"],
+                                "name": "unionwithreftoenum"}
+                              ]
+                    }""", True)
+]
+
 RECORD_EXAMPLES = [
   ValidTestSchema({"type": "record", "name": "Test", "fields": [{"name": "f", "type": "long"}]}),
   ValidTestSchema({"type": "error", "name": "Test", "fields": [{"name": "f", "type": "long"}]}),
@@ -294,6 +308,7 @@ EXAMPLES += ENUM_EXAMPLES
 EXAMPLES += ARRAY_EXAMPLES
 EXAMPLES += MAP_EXAMPLES
 EXAMPLES += UNION_EXAMPLES
+EXAMPLES += NAMED_IN_UNION_EXAMPLES
 EXAMPLES += RECORD_EXAMPLES
 EXAMPLES += DOC_EXAMPLES
 EXAMPLES += DECIMAL_LOGICAL_TYPE

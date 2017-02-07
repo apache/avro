@@ -624,8 +624,12 @@ class EnumSchema(NamedSchema):
       return names.prune_namespace(self.props)
 
   def to_canonical_json(self, names=None):
-    to_dump = self._keep_canonical_properties(self.to_json(names))
-    to_dump["name"] = self.fullname
+    names_as_json = self.to_json(names)
+    if isinstance(names_as_json, basestring):
+      to_dump = self.fullname
+    else:
+      to_dump = self._keep_canonical_properties(names_as_json)
+      to_dump["name"] = self.fullname
 
     return to_dump
 
