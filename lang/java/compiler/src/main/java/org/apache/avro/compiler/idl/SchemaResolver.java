@@ -21,11 +21,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.avro.JsonProperties;
-import org.apache.avro.LogicalType;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.codehaus.jackson.JsonNode;
+import org.apache.avro.compiler.schema.Schemas;
 
 /**
  * Utility class to resolve schemas that are unavailable at the time they are referenced in the IDL.
@@ -39,12 +37,12 @@ final class SchemaResolver {
   private static final String UR_SCHEMA_ATTR = "org.apache.avro.compiler.idl.unresolved.name";
 
   private static final String UR_SCHEMA_NAME = "UnresolvedSchema";
-  
-  private static final String UR_SCHEMA_NS = "org.apache.avro.compiler";  
-  
+
+  private static final String UR_SCHEMA_NS = "org.apache.avro.compiler";
+
   static Schema unresolvedSchema(final String name) {
-    
-    
+
+
     Schema schema = Schema.createRecord(UR_SCHEMA_NAME, "unresolved schema",
             UR_SCHEMA_NS, false, Collections.EMPTY_LIST);
     schema.addProp(UR_SCHEMA_ATTR, name);
@@ -52,12 +50,13 @@ final class SchemaResolver {
   }
 
   static boolean isUnresolvedSchema(final Schema schema) {
-    return (schema.getType() == Schema.Type.RECORD && schema.getProp(UR_SCHEMA_ATTR) != null);
+    return (schema.getType() == Schema.Type.RECORD && schema.getProp(UR_SCHEMA_ATTR) != null
+            && UR_SCHEMA_NAME.equals(schema.getName())
+            && UR_SCHEMA_NS.equals(schema.getNamespace()));
   }
 
   static String getUnresolvedSchemaName(final Schema schema) {
-    if (schema.getType() != Schema.Type.RECORD || !UR_SCHEMA_NAME.equals(schema.getName())
-            || !UR_SCHEMA_NS.equals(schema.getNamespace())) {
+    if (!isUnresolvedSchema(schema)) {
       throw new IllegalArgumentException("Not a unresolved schema: " + schema);
     }
     String name = schema.getProp(UR_SCHEMA_ATTR);
@@ -100,15 +99,10 @@ final class SchemaResolver {
       }
       result.getMessages().put(entry.getKey(), nvalue);
     }
-    copyProps(protocol, result);
+    Schemas.copyProperties(protocol, result);
     return result;
   }
 
-  private static void copyProps(final JsonProperties from, final JsonProperties to) {
-    for (Map.Entry<String, JsonNode> entry : from.getJsonProps().entrySet()) {
-      to.addProp(entry.getKey(), entry.getValue());
-    }
-  }
 
   /**
    * Resolve all unresolved schema references.
@@ -138,27 +132,26 @@ final class SchemaResolver {
           final List<Schema.Field> currFields = schema.getFields();
           List<Schema.Field> newFields = new ArrayList<Schema.Field>(currFields.size());
           for (Schema.Field field : currFields) {
+            if (field.name().equals("hash")) {
+              System.err.println(field);
+            }
             Schema.Field nf = new Schema.Field(field.name(), resolve(field.schema(), protocol, resolved),
                     field.doc(), field.defaultVal(), field.order());
-            for (String alias : field.aliases()) {
-              nf.addAlias(alias);
-            }
+            Schemas.copyAliases(field, nf);
+            Schemas.copyProperties(field, nf);
             newFields.add(nf);
           }
           createRecord.setFields(newFields);
-          final LogicalType lt = schema.getLogicalType();
-          if (lt != null) {
-            lt.addToSchema(createRecord);
-          }
-          copyProps(schema, createRecord);
+          Schemas.copyLogicalTypes(schema, createRecord);
+          Schemas.copyProperties(schema, createRecord);
           return createRecord;
         case MAP:
           Schema result = Schema.createMap(resolve(schema.getValueType(), protocol, resolved));
-          copyProps(schema, result);
+          Schemas.copyProperties(schema, result);
           return result;
         case ARRAY:
           Schema aresult = Schema.createArray(resolve(schema.getElementType(), protocol, resolved));
-          copyProps(schema, aresult);
+          Schemas.copyProperties(schema, aresult);
           return aresult;
         case UNION:
           final List<Schema> uTypes = schema.getTypes();
@@ -167,7 +160,7 @@ final class SchemaResolver {
             newTypes.add(resolve(s, protocol, resolved));
           }
           Schema bresult = Schema.createUnion(newTypes);
-          copyProps(schema, bresult);
+          Schemas.copyProperties(schema, bresult);
           return bresult;
         case ENUM:
         case FIXED:
@@ -208,31 +201,36 @@ final class SchemaResolver {
           final List<Schema.Field> currFields = schema.getFields();
           List<Schema.Field> newFields = new ArrayList<Schema.Field>(currFields.size());
           for (Schema.Field field : currFields) {
+            if (field.name().equals("hash")) {
+              System.err.println(field);
+            }
             Schema.Field nf = new Schema.Field(field.name(), getResolvedSchema(field.schema(), resolved),
                     field.doc(), field.defaultVal(), field.order());
-            for (String alias : field.aliases()) {
-              nf.addAlias(alias);
-            }
+            Schemas.copyAliases(field, nf);
+            Schemas.copyProperties(field, nf);
             newFields.add(nf);
           }
           createRecord.setFields(newFields);
-          final LogicalType lt = schema.getLogicalType();
-          if (lt != null) {
-            lt.addToSchema(createRecord);
-          }
-          copyProps(schema, createRecord);
+          Schemas.copyLogicalTypes(schema, createRecord);
+          Schemas.copyProperties(schema, createRecord);
           return createRecord;
         case MAP:
-          return Schema.createMap(getResolvedSchema(schema.getValueType(), resolved));
+          Schema createMap = Schema.createMap(getResolvedSchema(schema.getValueType(), resolved));
+          Schemas.copyProperties(schema, createMap);
+          return createMap;
         case ARRAY:
-          return Schema.createArray(getResolvedSchema(schema.getElementType(), resolved));
+          Schema createArray = Schema.createArray(getResolvedSchema(schema.getElementType(), resolved));
+          Schemas.copyProperties(schema, createArray);
+          return createArray;
         case UNION:
           final List<Schema> uTypes = schema.getTypes();
           List<Schema> newTypes = new ArrayList<Schema>(uTypes.size());
           for (Schema s : uTypes) {
             newTypes.add(getResolvedSchema(s, resolved));
           }
-          return Schema.createUnion(newTypes);
+          Schema createUnion = Schema.createUnion(newTypes);
+          Schemas.copyProperties(schema, createUnion);
+          return createUnion;
         case ENUM:
         case FIXED:
         case STRING:
