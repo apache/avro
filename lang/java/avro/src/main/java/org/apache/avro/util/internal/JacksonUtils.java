@@ -120,7 +120,8 @@ public class JacksonUtils {
       if (schema == null || schema.getType().equals(Schema.Type.STRING) ||
           schema.getType().equals(Schema.Type.ENUM)) {
         return jsonNode.asText();
-      } else if (schema.getType().equals(Schema.Type.BYTES)) {
+      } else if (schema.getType().equals(Schema.Type.BYTES)
+              || schema.getType().equals(Schema.Type.FIXED)) {
         try {
           return jsonNode.getTextValue().getBytes(BYTES_CHARSET);
         } catch (UnsupportedEncodingException e) {
