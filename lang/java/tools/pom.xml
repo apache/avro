@@ -221,11 +221,6 @@
       <version>${commons-logging.version}</version>
     </dependency>
     <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>${commons-httpclient.version}</version>
-    </dependency>
-    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>trevni-core</artifactId>
       <version>${project.version}</version>

@@ -42,6 +42,8 @@ Trunk (not yet released)
 
     AVRO-1993: C++ Byte ordering macro does not work on FreeBSD (thiru)
 
+    AVRO-1975: Upgrade java dependencies (gabor)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
