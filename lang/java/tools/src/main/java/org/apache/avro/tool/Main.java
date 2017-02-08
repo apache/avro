@@ -89,9 +89,19 @@ public class Main {
       }
     }
     System.err.print("Version ");
-    printStream(Main.class.getClassLoader().getResourceAsStream("VERSION.txt"));
+    InputStream versionInput = Main.class.getClassLoader().getResourceAsStream("VERSION.txt");
+    try {
+      printStream(versionInput);
+    } finally {
+      versionInput.close();
+    }
     System.err.print(" of ");
-    printHead(Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE"), 5);
+    InputStream noticeInput = Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE");
+    try {
+      printHead(noticeInput, 5);
+    } finally {
+      noticeInput.close();
+    }
     System.err.println("----------------");
 
     System.err.println("Available tools:");
@@ -104,26 +114,18 @@ public class Main {
 
   private static void printStream(InputStream in) throws Exception {
     byte[] buffer = new byte[1024];
-    try {
-      for (int i = in.read(buffer); i != -1; i = in.read(buffer))
-        System.err.write(buffer, 0, i);
-    } finally {
-      in.close();
-    }
+    for (int i = in.read(buffer); i != -1; i = in.read(buffer))
+      System.err.write(buffer, 0, i);
   }
 
   private static void printHead(InputStream in, int lines) throws Exception {
     BufferedReader r = new BufferedReader(new InputStreamReader(in));
-    try {
-      for (int i = 0; i < lines; i++) {
-        String line = r.readLine();
-        if (line == null) {
-          break;
-        }
-        System.err.println(line);
+    for (int i = 0; i < lines; i++) {
+      String line = r.readLine();
+      if (line == null) {
+        break;
       }
-    } finally {
-      r.close();
+      System.err.println(line);
     }
   }
 

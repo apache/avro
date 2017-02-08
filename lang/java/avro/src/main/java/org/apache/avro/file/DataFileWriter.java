@@ -190,35 +190,34 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Open a writer appending to an existing file. */
   public DataFileWriter<D> appendTo(File file) throws IOException {
-    return appendTo(new SeekableFileInput(file),
-                    new SyncableFileOutputStream(file, true));
+    SeekableInput input = new SeekableFileInput(file);
+    OutputStream output = new SyncableFileOutputStream(file, true);
+    try {
+      return appendTo(input, output);
+    } finally {
+      input.close();
+    }
   }
 
   /** Open a writer appending to an existing file.
-   * <strong>This method closes <code>in</code>.</strong>
+   * <strong>Since 1.9.0 this method does not close in.</strong>
    * @param in reading the existing file.
    * @param out positioned at the end of the existing file.
    */
   public DataFileWriter<D> appendTo(SeekableInput in, OutputStream out)
     throws IOException {
     assertNotOpen();
-    DataFileReader<D> reader = null;
-    try {
-      reader = new DataFileReader<D>(in, new GenericDatumReader<D>());
-      this.schema = reader.getSchema();
-      this.sync = reader.getHeader().sync;
-      this.meta.putAll(reader.getHeader().meta);
-      byte[] codecBytes = this.meta.get(DataFileConstants.CODEC);
-      if (codecBytes != null) {
-        String strCodec = new String(codecBytes, "UTF-8");
-        this.codec = CodecFactory.fromString(strCodec).createInstance();
-      } else {
-        this.codec = CodecFactory.nullCodec().createInstance();
-      }
-    } finally {
-      if (reader != null)
-        reader.close();
-      in.close();
+    DataFileReader<D> reader =
+      new DataFileReader<D>(in, new GenericDatumReader<D>());
+    this.schema = reader.getSchema();
+    this.sync = reader.getHeader().sync;
+    this.meta.putAll(reader.getHeader().meta);
+    byte[] codecBytes = this.meta.get(DataFileConstants.CODEC);
+    if (codecBytes != null) {
+      String strCodec = new String(codecBytes, "UTF-8");
+      this.codec = CodecFactory.fromString(strCodec).createInstance();
+    } else {
+      this.codec = CodecFactory.nullCodec().createInstance();
     }
 
     init(out);
