@@ -44,6 +44,8 @@ Trunk (not yet released)
 
     AVRO-1975: Upgrade java dependencies (gabor)
 
+    AVRO-1960: Add log4j properties for avro-tools
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
