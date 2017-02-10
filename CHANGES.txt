@@ -34,6 +34,8 @@ Trunk (not yet released)
 	AVRO-1596. Java: Cannot read past corrupted block in Avro data file.
 	(tomwhite)
 
+    AVRO-1813: Incorrect link to build instructions in Java Getting Started (Pietro Menna via gabor)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
