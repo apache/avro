@@ -135,6 +135,8 @@ Trunk (not yet released)
 
     AVRO-1216. Setting precision for the output stream (John McClean via thiru)
 
+    AVRO-1813: Incorrect link to build instructions in Java Getting Started (Pietro Menna via gabor)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
