@@ -27,6 +27,8 @@
 #include "recursive.hh"
 #include "circulardep.hh"
 #include "reuse.hh"
+#include "tree.hh"
+#include "crossref.hh"
 #include "Compiler.hh"
 
 #include <fstream>

@@ -137,6 +137,8 @@ Trunk (not yet released)
 
     AVRO-1813: Incorrect link to build instructions in Java Getting Started (Pietro Menna via gabor)
 
+    AVRO-1937: C++ generator for recursive structure crashes (thiru)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
