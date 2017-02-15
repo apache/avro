@@ -61,10 +61,12 @@ module Avro
             return FixedSchema.new(name, namespace, size, names)
           when :enum
             symbols = json_obj['symbols']
-            return EnumSchema.new(name, namespace, symbols, names)
+            doc     = json_obj['doc']
+            return EnumSchema.new(name, namespace, symbols, names, doc)
           when :record, :error
             fields = json_obj['fields']
-            return RecordSchema.new(name, namespace, fields, names, type_sym)
+            doc    = json_obj['doc']
+            return RecordSchema.new(name, namespace, fields, names, type_sym, doc)
           else
             raise SchemaParseError.new("Unknown named type: #{type}")
           end
@@ -152,9 +154,10 @@ module Avro
 
     class NamedSchema < Schema
       attr_reader :name, :namespace
-      def initialize(type, name, namespace=nil, names=nil)
+      def initialize(type, name, namespace=nil, names=nil, doc=nil)
         super(type)
         @name, @namespace = Name.extract_namespace(name, namespace)
+        @doc  = doc
         names = Name.add_name(names, self)
       end
 
@@ -165,6 +168,7 @@ module Avro
         end
         props = {'name' => @name}
         props.merge!('namespace' => @namespace) if @namespace
+        props.merge!('doc' => @doc) if @doc
         super.merge props
       end
 
@@ -174,7 +178,7 @@ module Avro
     end
 
     class RecordSchema < NamedSchema
-      attr_reader :fields
+      attr_reader :fields, :doc
 
       def self.make_field_objects(field_data, names, namespace=nil)
         field_objects, field_names = [], Set.new
@@ -184,7 +188,8 @@ module Avro
             name = field['name']
             default = field.key?('default') ? field['default'] : :no_default
             order = field['order']
-            new_field = Field.new(type, name, default, order, names, namespace)
+            doc = field['doc']
+            new_field = Field.new(type, name, default, order, names, namespace, doc)
             # make sure field name has not been used yet
             if field_names.include?(new_field.name)
               raise SchemaParseError, "Field name #{new_field.name.inspect} is already in use"
@@ -198,12 +203,12 @@ module Avro
         field_objects
       end
 
-      def initialize(name, namespace, fields, names=nil, schema_type=:record)
+      def initialize(name, namespace, fields, names=nil, schema_type=:record, doc=nil)
         if schema_type == :request || schema_type == 'request'
           @type_sym = schema_type.to_sym
           @namespace = namespace
         else
-          super(schema_type, name, namespace, names)
+          super(schema_type, name, namespace, names, doc)
         end
         @fields = RecordSchema.make_field_objects(fields, names, self.namespace)
       end
@@ -280,13 +285,14 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
-      attr_reader :symbols
-      def initialize(name, space, symbols, names=nil)
+      attr_reader :symbols, :doc
+
+      def initialize(name, space, symbols, names=nil, doc=nil)
         if symbols.uniq.length < symbols.length
           fail_msg = 'Duplicate symbol: %s' % symbols
           raise Avro::SchemaParseError, fail_msg
         end
-        super(:enum, name, space, names)
+        super(:enum, name, space, names, doc)
         @symbols = symbols
       end
 
@@ -332,19 +338,21 @@ module Avro
     end
 
     class Field < Schema
-      attr_reader :type, :name, :default, :order
+      attr_reader :type, :name, :default, :order, :doc
 
-      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil)
+      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil, doc=nil)
         @type = subparse(type, names, namespace)
         @name = name
         @default = default
         @order = order
+        @doc = doc
       end
 
       def to_avro(names=Set.new)
         {'name' => name, 'type' => type.to_avro(names)}.tap do |avro|
           avro['default'] = default unless default == :no_default
           avro['order'] = order if order
+          avro['doc'] = doc if doc
         end
       end
     end
