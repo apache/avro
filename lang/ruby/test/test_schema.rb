@@ -160,4 +160,102 @@ class TestSchema < Test::Unit::TestCase
       ]
     }
   end
+
+  def test_record_field_doc_attribute
+    field_schema_json = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "record",
+        "name": "Record",
+        "namespace": "my.name.space",
+        "fields": [
+          {
+            "name": "name",
+            "type": "boolean",
+            "doc": "documentation"
+          }
+        ]
+      }
+    SCHEMA
+
+    field_schema_hash =
+      {
+        'type' => 'record',
+        'name' => 'Record',
+        'namespace' => 'my.name.space',
+        'fields' => [
+          {
+            'name' => 'name',
+            'type' => 'boolean',
+            'doc' => 'documentation'
+          }
+        ]
+      }
+
+    assert_equal field_schema_hash, field_schema_json.to_avro
+  end
+
+  def test_record_doc_attribute
+    record_schema_json = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "record",
+        "name": "Record",
+        "namespace": "my.name.space",
+        "doc": "documentation",
+        "fields": [
+          {
+            "name": "name",
+            "type": "boolean"
+          }
+        ]
+      }
+    SCHEMA
+
+    record_schema_hash =
+      {
+        'type' => 'record',
+        'name' => 'Record',
+        'namespace' => 'my.name.space',
+        'doc' => 'documentation',
+        'fields' => [
+          {
+            'name' => 'name',
+            'type' => 'boolean'
+          }
+        ]
+      }
+
+    assert_equal record_schema_hash, record_schema_json.to_avro
+  end
+
+  def test_enum_doc_attribute
+    enum_schema_json = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "enum",
+        "name": "Enum",
+        "namespace": "my.name.space",
+        "doc": "documentation",
+        "symbols" : [
+          "SPADES",
+          "HEARTS",
+          "DIAMONDS",
+          "CLUBS"
+        ]
+      }
+    SCHEMA
+
+    enum_schema_hash =
+      {
+        'type' => 'enum',
+        'name' => 'Enum',
+        'namespace' => 'my.name.space',
+        'doc' => 'documentation',
+        'symbols' => [
+          'SPADES',
+          'HEARTS',
+          'DIAMONDS',
+          'CLUBS'
+        ]
+      }
+    assert_equal enum_schema_hash, enum_schema_json.to_avro
+  end
 end
