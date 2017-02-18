@@ -139,6 +139,8 @@ Trunk (not yet released)
 
     AVRO-1937: C++ generator for recursive structure crashes (thiru)
 
+    AVRO-1892. C++ library cannot parse unions with default values (Hua Zhang via thiru)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES

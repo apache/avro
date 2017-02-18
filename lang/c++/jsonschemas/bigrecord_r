@@ -70,13 +70,11 @@
         {
             "name": "union1WithDefaultValue",
             "type": [ "string", "int" ],
-            "default": {
-                "string": "sval"
-            }
+            "default": "sval"
         },
         {
             "name": "union2WithDefaultValue",
-            "type": [ "string", "null" ],
+            "type": [ "null", "string" ],
             "default": null
         },
         {
