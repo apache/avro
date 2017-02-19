@@ -173,6 +173,8 @@ string CodeGen::cppTypeOf(const NodePtr& n)
         return cppTypeOf(resolveSymbol(n));
     case avro::AVRO_UNION:
         return fullname(done[n]);
+    case avro::AVRO_NULL:
+        return "avro::null";
     default:
         return "$Undefined$";
     }

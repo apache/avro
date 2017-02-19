@@ -141,6 +141,8 @@ Trunk (not yet released)
 
     AVRO-1892. C++ library cannot parse unions with default values (Hua Zhang via thiru)
 
+    AVRO-1994. C++ Code Generator Generates Invalid Code if Field is of type Null (Darryl Green via thiru)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES

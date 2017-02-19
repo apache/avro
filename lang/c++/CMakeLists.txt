@@ -128,6 +128,7 @@ gen (circulardep cd)
 gen (tree1 tr1)
 gen (tree2 tr2)
 gen (crossref cr)
+gen (primitivetypes pt)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
 target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES})
@@ -157,7 +158,7 @@ add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh
     union_array_union_hh union_map_union_hh union_conflict_hh
     recursive_hh reuse_hh circulardep_hh tree1_hh tree2_hh crossref_hh
-    empty_record_hh)
+    primitivetypes_hh empty_record_hh)
 
 include (InstallRequiredSystemLibraries)
 
