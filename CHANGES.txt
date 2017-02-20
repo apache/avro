@@ -151,6 +151,9 @@ Trunk (not yet released)
 
     AVRO-2033. GenericUnions constructor defaults to a broken state (Philip Rizk via thiru)
 
+    AVRO-1857: GenericDatumWriter.write using BufferedBinaryEncoder leaves ByteBuffer in indeterminate state
+    (Nandor Kollar via gabor)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES

@@ -20,6 +20,12 @@ package org.apache.avro.io;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -32,7 +38,15 @@ import org.codehaus.jackson.JsonGenerator;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
 public class TestEncoders {
+  private static final int ENCODER_BUFFER_SIZE = 32;
+  private static final int EXAMPLE_DATA_SIZE = 17;
+
   private static EncoderFactory factory = EncoderFactory.get();
 
   @Test
@@ -193,4 +207,50 @@ public class TestEncoders {
     Assert.assertEquals("{\"a\": {\"a1\": null, \"a2\": true}}", o.toString());
   }
 
+  @Test
+  public void testArrayBackedByteBuffer() throws IOException {
+    ByteBuffer buffer = ByteBuffer.wrap(someBytes(EXAMPLE_DATA_SIZE));
+
+    testWithBuffer(buffer);
+  }
+
+  @Test
+  public void testMappedByteBuffer() throws IOException {
+    Path file = Files.createTempFile("test", "data");
+    Files.write(file, someBytes(EXAMPLE_DATA_SIZE));
+    MappedByteBuffer buffer = FileChannel.open(file, StandardOpenOption.READ).map(FileChannel.MapMode.READ_ONLY, 0, EXAMPLE_DATA_SIZE);
+
+    testWithBuffer(buffer);
+  }
+
+  private void testWithBuffer(ByteBuffer buffer) throws IOException {
+    assertThat(asList(buffer.position(), buffer.remaining()), is(asList(0, EXAMPLE_DATA_SIZE)));
+
+    ByteArrayOutputStream output = new ByteArrayOutputStream(EXAMPLE_DATA_SIZE * 2);
+    EncoderFactory encoderFactory = new EncoderFactory();
+    encoderFactory.configureBufferSize(ENCODER_BUFFER_SIZE);
+
+    Encoder encoder = encoderFactory.binaryEncoder(output, null);
+    new GenericDatumWriter<ByteBuffer>(Schema.create(Schema.Type.BYTES)).write(buffer, encoder);
+    encoder.flush();
+
+    assertThat(output.toByteArray(), equalTo(avroEncoded(someBytes(EXAMPLE_DATA_SIZE))));
+    assertThat(asList(buffer.position(), buffer.remaining()), is(asList(0, EXAMPLE_DATA_SIZE))); // fails if buffer is not array-backed and buffer overflow occurs
+  }
+
+  private byte[] someBytes(int size) {
+    byte[] result = new byte[size];
+    for (int i = 0; i < size; i++) {
+      result[i] = (byte) i;
+    }
+    return result;
+  }
+
+  private byte[] avroEncoded(byte[] bytes) {
+    assert bytes.length < 64;
+    byte[] result = new byte[1 + bytes.length];
+    result[0] = (byte) (bytes.length * 2); // zig-zag encoding
+    System.arraycopy(bytes, 0, result, 1, bytes.length);
+    return result;
+  }
 }
