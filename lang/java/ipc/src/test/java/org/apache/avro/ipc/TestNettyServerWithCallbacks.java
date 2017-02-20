@@ -25,6 +25,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -370,8 +371,8 @@ public class TestNettyServerWithCallbacks {
     }
   }
 
-  @Test
-  public void cancelPendingRequestsAfterChannelCloseByServerShutdown() throws Exception {
+  @Test(timeout = 20000)
+  public void cancelPendingRequestsAfterChannelCloseByServerShutdown() throws Throwable {
     // The purpose of this test is to verify that a client doesn't stay
     // blocked when a server is unexpectedly killed (or when for some
     // other reason the channel is suddenly closed) while the server
@@ -381,7 +382,7 @@ public class TestNettyServerWithCallbacks {
     // Start up a second server so that closing the server doesn't
     // interfere with the other unit tests:
     BlockingSimpleImpl blockingSimpleImpl = new BlockingSimpleImpl();
-    Server server2 = new NettyServer(new SpecificResponder(Simple.class,
+    final Server server2 = new NettyServer(new SpecificResponder(Simple.class,
         blockingSimpleImpl), new InetSocketAddress(0));
     server2.start();
 
@@ -404,7 +405,8 @@ public class TestNettyServerWithCallbacks {
       // Acquire the run permit, to avoid that the server method returns immediately
       blockingSimpleImpl.acquireRunPermit();
 
-      Thread t = new Thread(new Runnable() {
+      // Start client call
+      Future<?> clientFuture = Executors.newSingleThreadExecutor().submit(new Runnable() {
         @Override
         public void run() {
           try {
@@ -416,23 +418,30 @@ public class TestNettyServerWithCallbacks {
         }
       });
 
-      // Start client call
-      t.start();
-
       // Wait until method is entered on the server side
       blockingSimpleImpl.acquireEnterPermit();
 
       // The server side method is now blocked waiting on the run permit
       // (= is busy handling the request)
 
-      // Stop the server
-      server2.close();
+      // Stop the server in a separate thread as it blocks the actual thread until the server side
+      // method is running
+      new Thread(new Runnable() {
+        @Override
+        public void run() {
+          server2.close();
+        }
+      }).start();
 
       // With the server gone, we expect the client to get some exception and exit
-      // Wait for client thread to exit
-      t.join(10000);
-
-      Assert.assertFalse("Client request should not be blocked on server shutdown", t.isAlive());
+      // Wait for the client call to exit
+      try {
+        clientFuture.get(10, TimeUnit.SECONDS);
+      } catch (ExecutionException e) {
+        throw e.getCause();
+      } catch (TimeoutException e) {
+        Assert.fail("Client request should not be blocked on server shutdown");
+      }
 
     } finally {
       blockingSimpleImpl.releaseRunPermit();
