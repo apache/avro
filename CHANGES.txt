@@ -145,6 +145,8 @@ Trunk (not yet released)
 
     AVRO-1994. C++ Code Generator Generates Invalid Code if Field is of type Null (Darryl Green via thiru)
 
+    AVRO-1997. Avro Field.defaultVal broken for Fixed fields. (Zoltan Farkasi via thiru)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
