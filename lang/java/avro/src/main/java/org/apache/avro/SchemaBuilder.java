@@ -2587,10 +2587,6 @@ public class SchemaBuilder {
         s = new String(data, "ISO-8859-1");
         char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
         s = "\"" + new String(quoted) + "\"";
-      } else if (o instanceof byte[]) {
-        s = new String((byte[]) o, "ISO-8859-1");
-        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
-        s = '\"' + new String(quoted) + '\"';
       } else {
         s = GenericData.get().toString(o);
       }
