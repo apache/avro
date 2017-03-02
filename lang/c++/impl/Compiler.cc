@@ -79,7 +79,7 @@ static bool isFullName(const string& s)
 {
     return s.find('.') != string::npos;
 }
-    
+
 static Name getName(const string& name, const string& ns)
 {
     return (isFullName(name)) ? Name(name) : Name(name, ns);
@@ -143,7 +143,7 @@ const int64_t getLongField(const Entity& e, const Object& m,
     ensureType<int64_t>(it->second, fieldName);
     return it->second.longValue();
 }
-    
+
 struct Field {
     const string& name;
     const NodePtr schema;
@@ -283,32 +283,9 @@ static GenericDatum makeGenericDatum(NodePtr n, const Entity& e,
     case AVRO_UNION:
     {
         GenericUnion result(n);
-        string name;
-        Entity e2;
-        if (e.type() == json::etNull) {
-            name = "null";
-            e2 = e;
-        } else {
-            assertType(e, json::etObject);
-            const map<string, Entity>& v = e.objectValue();
-            if (v.size() != 1) {
-                throw Exception(boost::format("Default value for "
-                    "union has more than one field: %1%") % e.toString());
-            }
-            map<string, Entity>::const_iterator it = v.begin();
-            name = it->first;
-            e2 = it->second;
-        }
-        for (size_t i = 0; i < n->leaves(); ++i) {
-            const NodePtr& b = n->leafAt(i);
-            if (nameof(b) == name) {
-                result.selectBranch(i);
-                result.datum() = makeGenericDatum(b, e2, st);
-                return GenericDatum(n, result);
-            }
-        }
-        throw Exception(boost::format("Invalid default value %1%") %
-            e.toString());
+        result.selectBranch(0);
+        result.datum() = makeGenericDatum(n->leafAt(0), e, st);
+        return GenericDatum(n, result);
     }
     case AVRO_FIXED:
         assertType(e, json::etString);
@@ -334,12 +311,12 @@ static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
 
 static NodePtr makeRecordNode(const Entity& e,
     const Name& name, const Object& m, SymbolTable& st, const string& ns)
-{        
+{
     const Array& v = getArrayField(e, m, "fields");
     concepts::MultiAttribute<string> fieldNames;
     concepts::MultiAttribute<NodePtr> fieldValues;
     vector<GenericDatum> defaultValues;
-    
+
     for (Array::const_iterator it = v.begin(); it != v.end(); ++it) {
         Field f = makeField(*it, st, ns);
         fieldNames.add(f.name);

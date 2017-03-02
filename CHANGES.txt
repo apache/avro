@@ -46,6 +46,8 @@ Trunk (not yet released)
 
     AVRO-1960: Add log4j properties for avro-tools
 
+    AVRO-1748. Add Snappy Compression to C++ DataFile (J. Langley via thiru)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
@@ -134,6 +136,16 @@ Trunk (not yet released)
     AVRO-1995: JSON Parser does not properly check current state (Victor Mota via thiru)
 
     AVRO-1216. Setting precision for the output stream (John McClean via thiru)
+
+    AVRO-1813: Incorrect link to build instructions in Java Getting Started (Pietro Menna via gabor)
+
+    AVRO-1937: C++ generator for recursive structure crashes (thiru)
+
+    AVRO-1892. C++ library cannot parse unions with default values (Hua Zhang via thiru)
+
+    AVRO-1994. C++ Code Generator Generates Invalid Code if Field is of type Null (Darryl Green via thiru)
+
+    AVRO-1997. Avro Field.defaultVal broken for Fixed fields. (Zoltan Farkasi via thiru)
 
 Avro 1.8.1 (14 May 2016)
 

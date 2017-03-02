@@ -173,6 +173,8 @@ string CodeGen::cppTypeOf(const NodePtr& n)
         return cppTypeOf(resolveSymbol(n));
     case avro::AVRO_UNION:
         return fullname(done[n]);
+    case avro::AVRO_NULL:
+        return "avro::null";
     default:
         return "$Undefined$";
     }
@@ -215,6 +217,7 @@ static string cppNameOf(const NodePtr& n)
 string CodeGen::generateRecordType(const NodePtr& n)
 {
     size_t c = n->leaves();
+    string decoratedName = decorate(n->name());
     vector<string> types;
     for (size_t i = 0; i < c; ++i) {
         types.push_back(generateType(n->leafAt(i)));
@@ -225,7 +228,6 @@ string CodeGen::generateRecordType(const NodePtr& n)
         return it->second;
     }
 
-    string decoratedName = decorate(n->name());
     os_ << "struct " << decoratedName << " {\n";
     if (! noUnion_) {
         for (size_t i = 0; i < c; ++i) {
@@ -264,7 +266,7 @@ string CodeGen::generateRecordType(const NodePtr& n)
     }
     os_ << "        { }\n";
     os_ << "};\n\n";
-    return decorate(n->name());
+    return decoratedName;
 }
 
 void makeCanonical(string& s, bool foldCase)
@@ -391,7 +393,7 @@ string CodeGen::generateUnionType(const NodePtr& n)
     pendingConstructors.push_back(PendingConstructor(result, types[0],
         n->leafAt(0)->type() != avro::AVRO_NULL));
     os_ << "};\n\n";
-    
+
     return result;
 }
 
@@ -425,9 +427,31 @@ string CodeGen::doGenerateType(const NodePtr& n)
     case avro::AVRO_FIXED:
         return cppTypeOf(n);
     case avro::AVRO_ARRAY:
-        return "std::vector<" + generateType(n->leafAt(0)) + " >";
+    {
+        const NodePtr& ln = n->leafAt(0);
+        string dn;
+        if (doing.find(n) == doing.end()) {
+            doing.insert(n);
+            dn = generateType(ln);
+            doing.erase(n);
+        } else {
+            dn = generateDeclaration(ln);
+        }
+        return "std::vector<" + dn + " >";
+    }
     case avro::AVRO_MAP:
-        return "std::map<std::string, " + generateType(n->leafAt(1)) + " >";
+    {
+        const NodePtr& ln = n->leafAt(1);
+        string dn;
+        if (doing.find(n) == doing.end()) {
+            doing.insert(n);
+            dn = generateType(ln);
+            doing.erase(n);
+        } else {
+            dn = generateDeclaration(ln);
+        }
+        return "std::map<std::string, " + dn + " >";
+    }
     case avro::AVRO_RECORD:
         return generateRecordType(n);
     case avro::AVRO_ENUM:
@@ -478,7 +502,7 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 	string dname = decorate(n->name());
 	string fn = fullname(dname);
 	size_t c = n->names();
-	string first; 
+	string first;
 	string last;
 	if (!ns_.empty())
 	{
@@ -495,7 +519,7 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 	}
 	os_ << "template<> struct codec_traits<" << fn << "> {\n"
 		<< "    static void encode(Encoder& e, " << fn << " v) {\n"
-		<< "		if (v < "  << first << " || v > " << last << ")\n" 
+		<< "		if (v < "  << first << " || v > " << last << ")\n"
 		<< "		{\n"
 		<< "			std::ostringstream error;\n"
 		<< "			error << \"enum value \" << v << \" is out of bound for " << fn << " and cannot be encoded\";\n"
@@ -505,7 +529,7 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 		<< "    }\n"
 		<< "    static void decode(Decoder& d, " << fn << "& v) {\n"
 		<< "		size_t index = d.decodeEnum();\n"
-		<< "		if (index < " << first << " || index > " << last << ")\n" 
+		<< "		if (index < " << first << " || index > " << last << ")\n"
 		<< "		{\n"
 		<< "			std::ostringstream error;\n"
 		<< "			error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"
@@ -650,7 +674,7 @@ void CodeGen::generateTraits(const NodePtr& n)
 
 void CodeGen::emitCopyright()
 {
-    os_ << 
+    os_ <<
         "/**\n"
         " * Licensed to the Apache Software Foundation (ASF) under one\n"
         " * or more contributor license agreements.  See the NOTICE file\n"
