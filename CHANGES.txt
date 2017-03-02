@@ -10,6 +10,9 @@ Trunk (not yet released)
 
     AVRO-2061: Improve Invalid File Format Error Message (Beluga Behr via gabor)
 
+    AVRO-1933: Add more specific error details to SchemaCompatibility class
+    (Anders Sundelin via gabor)
+
   NEW FEATURES
 
     AVRO-1704: Java: Add support for single-message encoding. (blue)
