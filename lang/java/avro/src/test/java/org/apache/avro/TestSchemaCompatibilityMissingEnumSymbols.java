@@ -45,9 +45,9 @@ public class TestSchemaCompatibilityMissingEnumSymbols {
   @Parameters(name = "r: {0} | w: {1}")
   public static Iterable<Object[]> data() {
     Object[][] fields = { //
-        { ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA, "[C]" },
-        { ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, "[A]" },
-        { RECORD1_WITH_ENUM_AB, RECORD1_WITH_ENUM_ABC, "[C]" }
+        { ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA, "[C]", "/symbols" },
+        { ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, "[A]", "/symbols" },
+        { RECORD1_WITH_ENUM_AB, RECORD1_WITH_ENUM_ABC, "[C]", "/fields/0/type/symbols" }
     };
     List<Object[]> list = new ArrayList<Object[]>(fields.length);
     for (Object[] schemas : fields) {
@@ -62,10 +62,12 @@ public class TestSchemaCompatibilityMissingEnumSymbols {
   public Schema writer;
   @Parameter(2)
   public String details;
+  @Parameter(3)
+  public String location;
 
   @Test
   public void testTypeMismatchSchemas() throws Exception {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.MISSING_ENUM_SYMBOLS,
-        details);
+        details, location);
   }
 }

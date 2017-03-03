@@ -37,8 +37,8 @@ public class TestSchemaCompatibilityReaderFieldMissingDefaultValue {
   @Parameters(name = "r: {0} | w: {1}")
   public static Iterable<Object[]> data() {
     Object[][] fields = { //
-        { A_INT_RECORD1, EMPTY_RECORD1, "a" },
-        { A_INT_B_DINT_RECORD1, EMPTY_RECORD1, "a" }
+        { A_INT_RECORD1, EMPTY_RECORD1, "a", "/fields/0" },
+        { A_INT_B_DINT_RECORD1, EMPTY_RECORD1, "a", "/fields/0" }
     };
     List<Object[]> list = new ArrayList<Object[]>(fields.length);
     for (Object[] schemas : fields) {
@@ -53,11 +53,13 @@ public class TestSchemaCompatibilityReaderFieldMissingDefaultValue {
   public Schema writer;
   @Parameter(2)
   public String details;
-
+  @Parameter(3)
+  public String location;
+  
   @Test
   public void testReaderFieldMissingDefaultValueSchemas() throws Exception {
     validateIncompatibleSchemas(reader, writer,
         SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE,
-        details);
+        details, location);
   }
 }

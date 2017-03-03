@@ -18,6 +18,8 @@
 package org.apache.avro;
 
 import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
+import static org.apache.avro.TestSchemas.A_DINT_B_DINT_STRING_UNION_RECORD1;
+import static org.apache.avro.TestSchemas.A_DINT_B_DINT_UNION_RECORD1;
 import static org.apache.avro.TestSchemas.BOOLEAN_SCHEMA;
 import static org.apache.avro.TestSchemas.BYTES_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.DOUBLE_UNION_SCHEMA;
@@ -73,24 +75,26 @@ public class TestSchemaCompatibilityMissingUnionBranch {
   @Parameters(name = "r: {0} | w: {1}")
   public static Iterable<Object[]> data() {
     Object[][] fields = { //
-        { INT_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, "reader union lacking writer type: STRING" },
-        { STRING_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, "reader union lacking writer type: INT" },
-        { INT_UNION_SCHEMA, UNION_INT_RECORD1, "reader union lacking writer type: RECORD" },
-        { INT_UNION_SCHEMA, UNION_INT_RECORD2, "reader union lacking writer type: RECORD" },
+        { INT_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, "reader union lacking writer type: STRING", "/1" },
+        { STRING_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, "reader union lacking writer type: INT", "/0" },
+        { INT_UNION_SCHEMA, UNION_INT_RECORD1, "reader union lacking writer type: RECORD", "/1" },
+        { INT_UNION_SCHEMA, UNION_INT_RECORD2, "reader union lacking writer type: RECORD", "/1" },
         // more info in the subset schemas
-        { UNION_INT_RECORD1, UNION_INT_RECORD2, "reader union lacking writer type: RECORD" },
-        { INT_UNION_SCHEMA, UNION_INT_ENUM1_AB, "reader union lacking writer type: ENUM" },
-        { INT_UNION_SCHEMA, UNION_INT_FIXED_4_BYTES, "reader union lacking writer type: FIXED" },
-        { INT_UNION_SCHEMA, UNION_INT_BOOLEAN, "reader union lacking writer type: BOOLEAN" },
-        { INT_UNION_SCHEMA, LONG_UNION_SCHEMA, "reader union lacking writer type: LONG" },
-        { INT_UNION_SCHEMA, FLOAT_UNION_SCHEMA, "reader union lacking writer type: FLOAT" },
-        { INT_UNION_SCHEMA, DOUBLE_UNION_SCHEMA, "reader union lacking writer type: DOUBLE" },
-        { INT_UNION_SCHEMA, BYTES_UNION_SCHEMA, "reader union lacking writer type: BYTES" },
-        { INT_UNION_SCHEMA, UNION_INT_ARRAY_INT, "reader union lacking writer type: ARRAY" },
-        { INT_UNION_SCHEMA, UNION_INT_MAP_INT, "reader union lacking writer type: MAP" },
-        { INT_UNION_SCHEMA, UNION_INT_NULL, "reader union lacking writer type: NULL" },
+        { UNION_INT_RECORD1, UNION_INT_RECORD2, "reader union lacking writer type: RECORD", "/1" },
+        { INT_UNION_SCHEMA, UNION_INT_ENUM1_AB, "reader union lacking writer type: ENUM", "/1" },
+        { INT_UNION_SCHEMA, UNION_INT_FIXED_4_BYTES, "reader union lacking writer type: FIXED", "/1" },
+        { INT_UNION_SCHEMA, UNION_INT_BOOLEAN, "reader union lacking writer type: BOOLEAN", "/1" },
+        { INT_UNION_SCHEMA, LONG_UNION_SCHEMA, "reader union lacking writer type: LONG", "/0" },
+        { INT_UNION_SCHEMA, FLOAT_UNION_SCHEMA, "reader union lacking writer type: FLOAT", "/0" },
+        { INT_UNION_SCHEMA, DOUBLE_UNION_SCHEMA, "reader union lacking writer type: DOUBLE", "/0" },
+        { INT_UNION_SCHEMA, BYTES_UNION_SCHEMA, "reader union lacking writer type: BYTES", "/0" },
+        { INT_UNION_SCHEMA, UNION_INT_ARRAY_INT, "reader union lacking writer type: ARRAY", "/1" },
+        { INT_UNION_SCHEMA, UNION_INT_MAP_INT, "reader union lacking writer type: MAP", "/1" },
+        { INT_UNION_SCHEMA, UNION_INT_NULL, "reader union lacking writer type: NULL", "/1" },
         { INT_UNION_SCHEMA, INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
-            "reader union lacking writer type: LONG" },
+            "reader union lacking writer type: LONG", "/1" },
+        { A_DINT_B_DINT_UNION_RECORD1, A_DINT_B_DINT_STRING_UNION_RECORD1,
+              "reader union lacking writer type: STRING", "/fields/1/type/1" },
     };
     List<Object[]> list = new ArrayList<Object[]>(fields.length);
     for (Object[] schemas : fields) {
@@ -105,10 +109,12 @@ public class TestSchemaCompatibilityMissingUnionBranch {
   public Schema writer;
   @Parameter(2)
   public String details;
+  @Parameter(3)
+  public String location;
 
   @Test
   public void testMissingUnionBranch() throws Exception {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.MISSING_UNION_BRANCH,
-        details);
+        details, location);
   }
 }

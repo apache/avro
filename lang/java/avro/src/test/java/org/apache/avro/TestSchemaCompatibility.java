@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import static org.junit.Assert.assertEquals;
 import static org.apache.avro.SchemaCompatibility.checkReaderWriterCompatibility;
 import static org.apache.avro.TestSchemas.A_DINT_B_DINT_RECORD1;
 import static org.apache.avro.TestSchemas.A_DINT_RECORD1;
@@ -58,17 +59,13 @@ import static org.apache.avro.TestSchemas.STRING_SCHEMA;
 import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.assertSchemaContains;
 import static org.apache.avro.TestSchemas.list;
-import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 import java.util.List;
 
-import org.apache.avro.SchemaCompatibility.SchemaCompatibilityResult;
-import org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
-import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
-import org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
-import org.apache.avro.TestSchemas.ReaderWriter;
 import org.apache.avro.generic.GenericData.EnumSymbol;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
@@ -78,9 +75,17 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.avro.SchemaCompatibility;
+import org.apache.avro.SchemaCompatibility.SchemaCompatibilityResult;
+import org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
+import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
+import org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
+import org.apache.avro.TestSchemas.ReaderWriter;
 
 /** Unit-tests for SchemaCompatibility. */
 public class TestSchemaCompatibility{
@@ -167,7 +172,7 @@ public class TestSchemaCompatibility{
     // Test new field without default value.
     SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(reader, WRITER_SCHEMA);
     assertEquals(SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
-    assertEquals(SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, reader, WRITER_SCHEMA, "newfield1"), compatibility.getResult());
+    assertEquals(SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, reader, WRITER_SCHEMA, "newfield1", Arrays.asList("", "fields", "1")), compatibility.getResult());
     assertEquals(String.format("Data encoded using writer schema:%n%s%n"
         + "will or may fail to decode using reader schema:%n%s%n",
         WRITER_SCHEMA.toString(true),
@@ -189,7 +194,7 @@ public class TestSchemaCompatibility{
     final SchemaCompatibility.SchemaPairCompatibility invalidResult =
         new SchemaCompatibility.SchemaPairCompatibility(
             SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.TYPE_MISMATCH, invalidReader, STRING_ARRAY_SCHEMA, 
-                "reader type: MAP not compatible with writer type: ARRAY"),
+                "reader type: MAP not compatible with writer type: ARRAY", Arrays.asList("")),
             invalidReader,
             STRING_ARRAY_SCHEMA,
             String.format(
@@ -218,7 +223,7 @@ public class TestSchemaCompatibility{
     final SchemaCompatibility.SchemaPairCompatibility invalidResult =
         new SchemaCompatibility.SchemaPairCompatibility(
             SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.TYPE_MISMATCH, INT_SCHEMA, STRING_SCHEMA, 
-                "reader type: INT not compatible with writer type: STRING"),
+                "reader type: INT not compatible with writer type: STRING", Arrays.asList("")),
             INT_SCHEMA,
             STRING_SCHEMA,
             String.format(
@@ -238,8 +243,8 @@ public class TestSchemaCompatibility{
   /** Reader union schema must contain all writer union branches. */
   @Test
   public void testUnionReaderWriterSubsetIncompatibility() {
-    final Schema unionWriter = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
-    final Schema unionReader = Schema.createUnion(list(STRING_SCHEMA));
+    final Schema unionWriter = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA,LONG_SCHEMA));
+    final Schema unionReader = Schema.createUnion(list(INT_SCHEMA,STRING_SCHEMA));
     final SchemaPairCompatibility result =
         checkReaderWriterCompatibility(unionReader, unionWriter);
     assertEquals(SchemaCompatibilityType.INCOMPATIBLE, result.getType());
@@ -283,17 +288,20 @@ public class TestSchemaCompatibility{
 
       // Tests involving unions:
       new ReaderWriter(EMPTY_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
+      new ReaderWriter(FLOAT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
+      // int unions are actually not readable by float unions, see below test case
+      //new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
+      // long unions are actually not readable by float unions, see below test case
+      //new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(INT_STRING_UNION_SCHEMA, STRING_INT_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
-      new ReaderWriter(LONG_UNION_SCHEMA, INT_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
-      new ReaderWriter(DOUBLE_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(LONG_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
+      new ReaderWriter(LONG_UNION_SCHEMA, INT_UNION_SCHEMA),
+      new ReaderWriter(DOUBLE_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, LONG_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, FLOAT_UNION_SCHEMA),
+      new ReaderWriter(DOUBLE_UNION_SCHEMA, INT_FLOAT_UNION_SCHEMA),
       new ReaderWriter(STRING_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(STRING_UNION_SCHEMA, BYTES_UNION_SCHEMA),
       new ReaderWriter(BYTES_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
@@ -345,17 +353,18 @@ public class TestSchemaCompatibility{
    * one class per error case (for easier pinpointing of errors). 
    * The method to validate incompatibility is still here.
    */
-  public static void validateIncompatibleSchemas(Schema reader, Schema writer, SchemaIncompatibilityType incompatibility, String details) {
+  public static void validateIncompatibleSchemas(Schema reader, Schema writer, SchemaIncompatibilityType incompatibility, String message, String location) {
     SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(reader, writer);
-    SchemaCompatibilityResult compatibilityDetails = compatibility.getResult();
-    assertEquals(incompatibility, compatibilityDetails.getIncompatibility());
-    Schema readerSubset = compatibilityDetails.getReaderSubset();
-    Schema writerSubset = compatibilityDetails.getWriterSubset();    
+    SchemaCompatibilityResult compatibilityResult = compatibility.getResult();
+    assertEquals(incompatibility, compatibilityResult.getIncompatibility());
+    Schema readerSubset = compatibilityResult.getReaderSubset();
+    Schema writerSubset = compatibilityResult.getWriterSubset();    
     assertSchemaContains(readerSubset, reader);
     assertSchemaContains(writerSubset, writer);
     assertEquals(reader, compatibility.getReader());
     assertEquals(writer, compatibility.getWriter());
-    assertEquals(details, compatibilityDetails.getMessage());
+    assertEquals(message, compatibilityResult.getMessage());
+    assertEquals(location, compatibilityResult.getLocation());
     String description = String.format("Data encoded using writer schema:%n%s%n"
         + "will or may fail to decode using reader schema:%n%s%n",
         writer.toString(true), reader.toString(true));
@@ -379,6 +388,29 @@ public class TestSchemaCompatibility{
     }
   }
 
+  @Ignore("should float unions be compatible with other number unions, or not?")
+  @Test
+  public void testFloatUnionReaderAndIntLongUnionWriterIncompatibility() {
+    SchemaPairCompatibility result =
+        checkReaderWriterCompatibility(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA);
+    assertEquals(String.format(
+        "Expecting reader %s to be incompatible with writer %s, but tested compatible.",
+        FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
+        SchemaCompatibilityType.INCOMPATIBLE, result.getType());
+    
+    result = checkReaderWriterCompatibility(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA);
+    assertEquals(String.format(
+        "Expecting reader %s to be incompatible with writer %s, but tested compatible.",
+        FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
+        SchemaCompatibilityType.INCOMPATIBLE, result.getType());
+
+    result = checkReaderWriterCompatibility(FLOAT_UNION_SCHEMA, INT_LONG_UNION_SCHEMA);
+    assertEquals(String.format(
+        "Expecting reader %s to be incompatible with writer %s, but tested compatible.",
+        FLOAT_UNION_SCHEMA, INT_LONG_UNION_SCHEMA),
+        SchemaCompatibilityType.INCOMPATIBLE, result.getType());
+  }
+  
   // -----------------------------------------------------------------------------------------------
 
   /**
