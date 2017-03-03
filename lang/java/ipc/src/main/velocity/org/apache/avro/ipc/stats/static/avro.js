@@ -44,7 +44,7 @@ function makeDotChart(yVals) {
 	vis.add(pv.Rule)
 	    .data(y.ticks())
 	    .bottom(y)
-	    .strokeStyle(function(d) d ? "#eee" : "#000")
+	    .strokeStyle(function(d) {return d ? "#eee" : "#000"})
 	  .anchor("left").add(pv.Label)
 	    .text(y.tickFormat);
 
@@ -53,11 +53,11 @@ function makeDotChart(yVals) {
 	vis.add(pv.Panel)
 	    .data(data)
 	    .add(pv.Dot)
-	    .left(function(d) x(d.x))
-	    .bottom(function(d) y(d.y))
-	    .strokeStyle(function(d) dotColors[d.x % 20])
-	    .fillStyle(function() this.strokeStyle().alpha(1))
-	    .title(function(d) d.y)
+	    .left(function(d) {return x(d.x)})
+	    .bottom(function(d) {return y(d.y)})
+	    .strokeStyle(function(d) {return dotColors[d.x % 20]})
+	    .fillStyle(function() {return this.strokeStyle().alpha(1)})
+	    .title(function(d) {return d.y})
 	    .event("mouseover", pv.Behavior.tipsy({gravity: "n", 
 	      fade: false, delayIn: 0}));
 	vis.render();
@@ -86,7 +86,7 @@ function makeBarChart(labels, boundries, data) {
 	    .width(10)
 	    .bottom(0)
 	    .height(y)
-	    .fillStyle(function(d) "#1f77b4")
+	    .fillStyle(function(d) {return "#1f77b4"})
 	    .title(function() { return boundries[this.index]; })
 	    .event("mouseover", pv.Behavior.tipsy({gravity: "n", 
 	      fade: false, delayIn: 0}));
@@ -94,17 +94,17 @@ function makeBarChart(labels, boundries, data) {
 	bar.anchor("bottom").add(pv.Label)
     	.textMargin(5)
 		.textBaseline("top")
-		.text(function() (this.index % 4 == 0) ? labels[this.index]: "");		
+		.text(function() {return (this.index % 4 == 0) ? labels[this.index]: ""});
 	
 	vis.add(pv.Rule)
 	    .data(y.ticks())
-	    .bottom(function(d) Math.round(y(d)) - .5)
-	    .strokeStyle(function(d) d ? "rgba(255,255,255,.3)" : "#000")
+	    .bottom(function(d) {return Math.round(y(d)) - .5})
+	    .strokeStyle(function(d) {return d ? "rgba(255,255,255,.3)" : "#000"})
 	  .add(pv.Rule)
 	    .left(0)
 	    .width(5)
 	    .strokeStyle("#000")
 	  .anchor("left").add(pv.Label)
-	    .text(function(d) d.toFixed(1));
+	    .text(function(d) {return d.toFixed(1)});
 	vis.render();
 }
