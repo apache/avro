@@ -49,14 +49,14 @@ main()
     avro::ValidSchema cpxSchema;
     avro::compileJsonSchema(ifs, cpxSchema);
 
-    std::auto_ptr<avro::OutputStream> out = avro::memoryOutputStream();
+    boost::movelib::unique_ptr<avro::OutputStream> out = avro::memoryOutputStream();
     avro::EncoderPtr e = avro::validatingEncoder(cpxSchema,
         avro::binaryEncoder());
     e->init(*out);
     std::complex<double> c1(1.0, 2.0);
     avro::encode(*e, c1);
 
-    std::auto_ptr<avro::InputStream> in = avro::memoryInputStream(*out);
+    boost::movelib::unique_ptr<avro::InputStream> in = avro::memoryInputStream(*out);
     avro::DecoderPtr d = avro::validatingDecoder(cpxSchema,
         avro::binaryDecoder());
     d->init(*in);

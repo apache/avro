@@ -458,7 +458,7 @@ AVRO_DECL ValidSchema compileJsonSchemaFromStream(InputStream& is)
 
 AVRO_DECL ValidSchema compileJsonSchemaFromFile(const char* filename)
 {
-    std::auto_ptr<InputStream> s = fileInputStream(filename);
+    boost::movelib::unique_ptr<InputStream> s = fileInputStream(filename);
     return compileJsonSchemaFromStream(*s);
 }
 
@@ -481,7 +481,7 @@ AVRO_DECL ValidSchema compileJsonSchemaFromString(const std::string& input)
 
 static ValidSchema compile(std::istream& is)
 {
-    std::auto_ptr<InputStream> in = istreamInputStream(is);
+    boost::movelib::unique_ptr<InputStream> in = istreamInputStream(is);
     return compileJsonSchemaFromStream(*in);
 }
 

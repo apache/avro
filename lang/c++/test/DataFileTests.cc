@@ -27,7 +27,7 @@
 #include "Stream.hh"
 #include "Compiler.hh"
 
-using std::auto_ptr;
+using boost::movelib::unique_ptr;
 using std::string;
 using std::pair;
 using std::vector;
@@ -360,7 +360,7 @@ public:
      * Constructs the DataFileReader in two steps.
      */
     void testReadDoubleTwoStep() {
-        auto_ptr<avro::DataFileReaderBase>
+        unique_ptr<avro::DataFileReaderBase>
             base(new avro::DataFileReaderBase(filename));
         avro::DataFileReader<ComplexDouble> df(base);
         BOOST_CHECK_EQUAL(toString(writerSchema), toString(df.readerSchema()));
@@ -384,7 +384,7 @@ public:
      * reader schema.
      */
     void testReadDoubleTwoStepProject() {
-        auto_ptr<avro::DataFileReaderBase>
+        unique_ptr<avro::DataFileReaderBase>
             base(new avro::DataFileReaderBase(filename));
         avro::DataFileReader<Double> df(base, readerSchema);
 

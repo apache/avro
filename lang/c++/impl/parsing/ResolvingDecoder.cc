@@ -49,7 +49,7 @@ using boost::shared_ptr;
 using boost::static_pointer_cast;
 using boost::make_shared;
 
-using std::auto_ptr;
+using boost::movelib::unique_ptr;
 using std::map;
 using std::pair;
 using std::vector;
@@ -156,7 +156,7 @@ static shared_ptr<vector<uint8_t> > getAvroBinary(
     const GenericDatum& defaultValue)
 {
     EncoderPtr e = binaryEncoder();
-    auto_ptr<OutputStream> os = memoryOutputStream();
+    unique_ptr<OutputStream> os = memoryOutputStream();
     e->init(*os);
     GenericWriter::write(*e, defaultValue);
     e->flush();
@@ -447,7 +447,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
 
 class ResolvingDecoderHandler {
     shared_ptr<vector<uint8_t> > defaultData_;
-    auto_ptr<InputStream> inp_;
+    unique_ptr<InputStream> inp_;
     DecoderPtr backup_;
     DecoderPtr& base_;
     const DecoderPtr binDecoder;
