@@ -161,7 +161,7 @@ void DataFileWriterBase::sync()
             const uint8_t* data;
             size_t len;
 
-            std::auto_ptr<InputStream> input = memoryInputStream(*buffer_);
+            boost::movelib::unique_ptr<InputStream> input = memoryInputStream(*buffer_);
             while (input->next(&data, &len)) {
                 boost::iostreams::write(os, reinterpret_cast<const char*>(data),
                         len);
@@ -186,7 +186,7 @@ void DataFileWriterBase::sync()
         temp.push_back((checksum >> 16) & 0xFF);
         temp.push_back((checksum >> 8) & 0xFF);
         temp.push_back(checksum & 0xFF);
-        std::auto_ptr<InputStream> in = memoryInputStream(
+        boost::movelib::unique_ptr<InputStream> in = memoryInputStream(
                 reinterpret_cast<const uint8_t*>(&temp[0]), temp.size());
         int64_t byteCount = temp.size();
         avro::encode(*encoderPtr_, byteCount);
@@ -422,10 +422,10 @@ bool DataFileReaderBase::readDataBlock()
         os_->push(
                 boost::iostreams::basic_array_source<char>(uncompressed.c_str(),
                         uncompressed.size()));
-        std::auto_ptr<InputStream> in = istreamInputStream(*os_);
+        boost::movelib::unique_ptr<InputStream> in = istreamInputStream(*os_);
 
         dataDecoder_->init(*in);
-        dataStream_ = in;
+        dataStream_ = boost::move(in);
 #endif
     } else {
         throw Exception("Bad codec");
