@@ -362,7 +362,7 @@ public:
     void testReadDoubleTwoStep() {
         unique_ptr<avro::DataFileReaderBase>
             base(new avro::DataFileReaderBase(filename));
-        avro::DataFileReader<ComplexDouble> df(base);
+        avro::DataFileReader<ComplexDouble> df(boost::move(base));
         BOOST_CHECK_EQUAL(toString(writerSchema), toString(df.readerSchema()));
         BOOST_CHECK_EQUAL(toString(writerSchema), toString(df.dataSchema()));
         int i = 0;
@@ -386,7 +386,7 @@ public:
     void testReadDoubleTwoStepProject() {
         unique_ptr<avro::DataFileReaderBase>
             base(new avro::DataFileReaderBase(filename));
-        avro::DataFileReader<Double> df(base, readerSchema);
+        avro::DataFileReader<Double> df(boost::move(base), readerSchema);
 
         BOOST_CHECK_EQUAL(toString(readerSchema), toString(df.readerSchema()));
         BOOST_CHECK_EQUAL(toString(writerSchema), toString(df.dataSchema()));

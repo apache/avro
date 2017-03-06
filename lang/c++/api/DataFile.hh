@@ -284,7 +284,8 @@ public:
      * The schema present in the data file will be used for reading
      * from this reader.
      */
-    DataFileReader(boost::movelib::unique_ptr<DataFileReaderBase> base) : base_(base) {
+    DataFileReader(boost::movelib::unique_ptr<DataFileReaderBase> base) :
+        base_(boost::move(base)) {
         base_->init();
     }
 
@@ -298,7 +299,7 @@ public:
      * from this reader.
      */
     DataFileReader(boost::movelib::unique_ptr<DataFileReaderBase> base,
-        const ValidSchema& readerSchema) : base_(base) {
+        const ValidSchema& readerSchema) : base_(boost::move(base)) {
         base_->init(readerSchema);
     }
 
