@@ -302,7 +302,7 @@ static unique_ptr<OutputStream> generate(Encoder& e, const char* calls,
         }
     }
     e.flush();
-    return ob;
+    return boost::move(ob);
 }
 
 namespace {
