@@ -385,6 +385,69 @@ namespace Avro.Test.Generic
             testResolutionMismatch(ws, mkFixed(ws, value), rs);
         }
 
+        [Test]
+        public void TestRecordEquality_arrayFieldnotEqual()
+        {
+            var schema = (RecordSchema)Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                "[{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"int\"}}]}");
+
+            Func<int[], GenericRecord> makeRec = arr => mkRecord(new object[] { "a", arr }, schema);
+
+            var rec1 = makeRec(new[] { 69, 23 });
+            var rec2 = makeRec(new[] { 42, 11 });
+
+            Assert.AreNotEqual(rec1, rec2);
+        }
+
+        [Test]
+        public void TestRecordEquality_arrayFieldequal()
+        {
+            var schema = (RecordSchema)Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                "[{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"int\"}}]}");
+
+            Func<int[], GenericRecord> makeRec = arr => mkRecord(new object[] { "a", arr }, schema);
+
+            // Intentionally duplicated so reference equality doesn't apply
+            var rec1 = makeRec(new[] { 89, 12, 66 });
+            var rec2 = makeRec(new[] { 89, 12, 66 });
+
+            Assert.AreEqual(rec1, rec2);
+        }
+
+        [Test]
+        public void TestRecordEquality_mapFieldequal()
+        {
+            var schema = (RecordSchema)Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                "[{\"name\":\"a\",\"type\":{\"type\":\"map\",\"values\":\"int\"}}]}");
+
+            Func<int, GenericRecord> makeRec = value => mkRecord(
+                new object[] { "a", new Dictionary<string, int> { { "key", value } } }, schema);
+
+            var rec1 = makeRec(52);
+            var rec2 = makeRec(52);
+
+            Assert.AreEqual(rec1, rec2);
+        }
+
+        [Test]
+        public void TestRecordEquality_mapFieldnotEqual()
+        {
+            var schema = (RecordSchema)Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                "[{\"name\":\"a\",\"type\":{\"type\":\"map\",\"values\":\"int\"}}]}");
+
+            Func<int, GenericRecord> makeRec = value => mkRecord(
+                new object[] { "a", new Dictionary<string, int> { { "key", value } } }, schema);
+
+            var rec1 = makeRec(69);
+            var rec2 = makeRec(98);
+
+            Assert.AreNotEqual(rec1, rec2);
+        }
+
         private static GenericRecord mkRecord(object[] kv, RecordSchema s)
         {
             GenericRecord input = new GenericRecord(s);
