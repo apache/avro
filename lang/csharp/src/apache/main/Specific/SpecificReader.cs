@@ -81,12 +81,6 @@ namespace Avro.Specific
     public class SpecificDefaultReader : DefaultReader
     {
         /// <summary>
-        /// Static dictionary of type names and its corresponding assembly type. 
-        /// This is used to prevent multiple reflection for the same type name.
-        /// </summary>
-        private static IDictionary<string, Type> TypeName = new Dictionary<string, Type>();
-
-        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="writerSchema">schema of the object that wrote the data</param>
