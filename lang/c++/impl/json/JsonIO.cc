@@ -76,7 +76,7 @@ JsonParser::Token JsonParser::doAdvance()
 {
     char ch = next();
     if (ch == ']') {
-        if (curState == stArray0 || stArrayN) {
+        if (curState == stArray0 || curState == stArrayN) {
             curState = stateStack.top();
             stateStack.pop();
             return tkArrayEnd;
@@ -84,7 +84,7 @@ JsonParser::Token JsonParser::doAdvance()
             throw unexpected(ch);
         }
     } else if (ch == '}') {
-        if (curState == stObject0 || stObjectN) {
+        if (curState == stObject0 || curState == stObjectN) {
             curState = stateStack.top();
             stateStack.pop();
             return tkObjectEnd;
@@ -171,6 +171,10 @@ JsonParser::Token JsonParser::tryNumber(char ch)
                     state = 3;
                     sv.push_back(ch);
                     continue;
+                } else if (ch == 'e' || ch == 'E') {
+                    sv.push_back(ch);
+                    state = 5;
+                    continue;
                 }
                 hasNext = true;
             }
@@ -184,6 +188,10 @@ JsonParser::Token JsonParser::tryNumber(char ch)
                 } else if (ch == '.') {
                     state = 3;
                     sv.push_back(ch);
+                    continue;
+                } else if (ch == 'e' || ch == 'E') {
+                    sv.push_back(ch);
+                    state = 5;
                     continue;
                 }
                 hasNext = true;

@@ -7,7 +7,7 @@ protocol Cycle {
     }
 
     record Method {
-      string declaringClass;
+      string @testAttribute("testValue") declaringClass;
       string methodName;
     }
 

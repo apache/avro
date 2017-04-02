@@ -24,6 +24,7 @@
 #include <string>
 #include <sstream>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/utility.hpp>
 
 #include "Config.hh"
@@ -133,7 +134,8 @@ public:
     }
 };
 
-struct AVRO_DECL JsonNullFormatter {
+class AVRO_DECL JsonNullFormatter {
+public:
     JsonNullFormatter(StreamWriter&) { }
 
     void handleObjectStart() {}
@@ -304,7 +306,7 @@ public:
     void encodeNumber(T t) {
         sep();
         std::ostringstream oss;
-        oss << t;
+        oss << boost::lexical_cast<std::string>(t);
         const std::string& s = oss.str();
         out_.writeBytes(reinterpret_cast<const uint8_t*>(&s[0]), s.size());
         sep2();
@@ -314,7 +316,7 @@ public:
         sep();
         std::ostringstream oss;
         if (boost::math::isfinite(t)) {
-            oss << t;
+            oss << boost::lexical_cast<std::string>(t);
         } else if (boost::math::isnan(t)) {
             oss << "NaN";
         } else if (t == std::numeric_limits<double>::infinity()) {

@@ -92,39 +92,10 @@ module Avro
 
     # Determine if a ruby datum is an instance of a schema
     def self.validate(expected_schema, datum)
-      case expected_schema.type_sym
-      when :null
-        datum.nil?
-      when :boolean
-        datum == true || datum == false
-      when :string, :bytes
-        datum.is_a? String
-      when :int
-        (datum.is_a?(Fixnum) || datum.is_a?(Bignum)) &&
-            (INT_MIN_VALUE <= datum) && (datum <= INT_MAX_VALUE)
-      when :long
-        (datum.is_a?(Fixnum) || datum.is_a?(Bignum)) &&
-            (LONG_MIN_VALUE <= datum) && (datum <= LONG_MAX_VALUE)
-      when :float, :double
-        datum.is_a?(Float) || datum.is_a?(Fixnum) || datum.is_a?(Bignum)
-      when :fixed
-        datum.is_a?(String) && datum.bytesize == expected_schema.size
-      when :enum
-        expected_schema.symbols.include? datum
-      when :array
-        datum.is_a?(Array) &&
-          datum.all?{|d| validate(expected_schema.items, d) }
-      when :map
-          datum.keys.all?{|k| k.is_a? String } &&
-          datum.values.all?{|v| validate(expected_schema.values, v) }
-      when :union
-        expected_schema.schemas.any?{|s| validate(s, datum) }
-      when :record, :error, :request
-        datum.is_a?(Hash) &&
-          expected_schema.fields.all?{|f| validate(f.type, datum[f.name]) }
-      else
-        raise "you suck #{expected_schema.inspect} is not allowed."
-      end
+      SchemaValidator.validate!(expected_schema, datum)
+      true
+    rescue SchemaValidator::ValidationError
+      false
     end
 
     def initialize(type)
@@ -347,7 +318,7 @@ module Avro
       attr_reader :size
       def initialize(name, space, size, names=nil)
         # Ensure valid cto args
-        unless size.is_a?(Fixnum) || size.is_a?(Bignum)
+        unless size.is_a?(Integer)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
         super(:fixed, name, space, names)

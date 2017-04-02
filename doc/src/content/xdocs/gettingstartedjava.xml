@@ -93,7 +93,7 @@
       <p>
         You may also build the required Avro jars from source.  Building Avro is
         beyond the scope of this guide; see the <a
-        href="https://cwiki.apache.org/AVRO/build-documentation.html">Build
+        href="https://cwiki.apache.org/AVRO/Build+Documentation">Build
         Documentation</a> page in the wiki for more information.
       </p>
     </section>

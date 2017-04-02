@@ -56,6 +56,9 @@ TestData<double> doubleData[] = {
     { "1.0", etDouble, 1.0 },
     { "4.7e3", etDouble, 4700.0 },
     { "-7.2e-4", etDouble, -0.00072 },
+    { "1e4", etDouble, 10000 },
+    { "-1e-4", etDouble, -0.0001 },
+    { "-0e0", etDouble, 0.0 },
 };
 
 TestData<const char*> stringData[] = {

@@ -22,7 +22,8 @@
               "name" : "Method",
               "fields" : [ {
                 "name" : "declaringClass",
-                "type" : "string"
+                "type" : "string",
+                "testAttribute":"testValue"
               }, {
                 "name" : "methodName",
                 "type" : "string"

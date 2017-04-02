@@ -180,6 +180,20 @@ public class TestCatTool {
       args);
     assertEquals(0, returnCode);
     assertEquals(LIMIT_WITHIN_INPUT_BOUNDS, numRowsInFile(output));
+
+//    glob input
+    args = asList(
+      new File(input1.getParentFile(), "/*").getAbsolutePath(),
+      output.getAbsolutePath(),
+      "--offset" , String.valueOf(OFFSET),
+      "--limit" , String.valueOf(LIMIT_WITHIN_INPUT_BOUNDS));
+    returnCode = new CatTool().run(
+      System.in,
+      System.out,
+      System.err,
+      args);
+    assertEquals(0, returnCode);
+    assertEquals(LIMIT_WITHIN_INPUT_BOUNDS, numRowsInFile(output));
   }
 
 
