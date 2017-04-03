@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Tool implementation for generating Avro JSON schemata from
@@ -38,28 +39,73 @@ public class IdlTool implements Tool {
 
     PrintStream parseOut = out;
 
-    if (args.size() > 2 ||
-        (args.size() == 1 && (args.get(0).equals("--help") ||
-                              args.get(0).equals("-help")))) {
-      err.println("Usage: idl [in] [out]");
+    boolean incorrectArgsOrHelpRequested = false;
+    List<File> includeDirs = new ArrayList<File>();
+    String fileIn = null;
+    String fileOut = null;
+
+    for (int arg = 0; arg < args.size(); ++arg) {
+        if ("--help".equals(args.get(arg))) {
+            incorrectArgsOrHelpRequested = true;
+            break;
+        } else if ("--include".equals(args.get(arg))) {
+            arg += 1;
+            String fName = arg < args.size() ? args.get(arg) : "";
+            File f = new File(fName);
+            if (f.exists() && f.isDirectory()) {
+                includeDirs.add(f);
+            } else {
+                err.println("Specified --include path '" + fName + "' does not exists or is not a directory!");
+                incorrectArgsOrHelpRequested = true;
+                break;
+            }
+        } else /*positional argument*/ {
+            if (fileIn == null) {
+                fileIn = args.get(arg);
+                if (!"-".equals(fileIn)) {
+                    File f = new File(fileIn);
+                    if (!f.exists() || f.isDirectory()) {
+                        err.println("Specified input path is not an existing file or is a directory!");
+                        incorrectArgsOrHelpRequested = true;
+                        break;
+                    }
+                }
+            } else if (fileOut == null) {
+                fileOut = args.get(arg);
+            } else {
+                incorrectArgsOrHelpRequested = true;
+                break;
+            }
+        }
+    }
+
+
+    if (incorrectArgsOrHelpRequested) {
+      err.println("Usage: idl [--include includeDir ...] [in] [out]");
       err.println("");
       err.println("If an output path is not specified, outputs to stdout.");
       err.println("If no input or output is specified, takes input from");
       err.println("stdin and outputs to stdin.");
       err.println("The special path \"-\" may also be specified to refer to");
       err.println("stdin and stdout.");
+      err.println("If any --include options are specified. The specified");
+      err.println("include dirs are also used to resolve a import statement");
       return -1;
     }
 
     Idl parser;
-    if (args.size() >= 1 && ! "-".equals(args.get(0))) {
-      parser = new Idl(new File(args.get(0)));
+    if (fileIn != null && ! "-".equals(fileIn)) {
+      parser = new Idl(new File(fileIn));
     } else {
       parser = new Idl(in);
     }
 
-    if (args.size() == 2 && ! "-".equals(args.get(1))) {
-      parseOut = new PrintStream(new FileOutputStream(args.get(1)));
+    if (fileOut != null && ! "-".equals(fileOut)) {
+      parseOut = new PrintStream(new FileOutputStream(fileOut));
+    }
+
+    for (File includeDir : includeDirs) {
+        parser.addIncludeDir(includeDir);
     }
 
     Protocol p = parser.CompilationUnit();

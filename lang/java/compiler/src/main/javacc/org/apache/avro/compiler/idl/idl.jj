@@ -92,6 +92,7 @@ public class Idl implements Closeable {
   ClassLoader resourceLoader = null;
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
+  List<File> includeDirs = new ArrayList<File>();
 
   private static final ThreadLocal<String> DOC = new ThreadLocal<String>();
   static void setDoc(String doc) { DOC.set(doc.trim()); }
@@ -123,6 +124,10 @@ public class Idl implements Closeable {
     jj_input_stream.inputStream.close();
   }
 
+  public void addIncludeDir(File f) {
+    this.includeDirs.add(f);
+  }
+
   private ParseException error(String message, Token token) {
     return new ParseException
       (message+", at line "+token.beginLine+", column "+token.beginColumn);
@@ -150,6 +155,7 @@ public class Idl implements Closeable {
     return values;
   }
   
+  
   private URL findFile(String importFile) throws IOException {
     File file = new File(this.inputDir, importFile);
     URL result = null;
@@ -157,6 +163,16 @@ public class Idl implements Closeable {
       result = file.toURL();
     else if (this.resourceLoader != null)
       result = this.resourceLoader.getResource(importFile);
+    else {
+      for (File dir : this.includeDirs) {
+        File f = new File(dir, importFile);
+        if (f.exists()) {
+          result = f.toURL();
+          break;
+        }
+      }
+    }
+
     if (result == null)
       throw new FileNotFoundException(importFile);
     return result;
