@@ -102,6 +102,10 @@
         {
             "name": "bytes",
             "type": "bytes"
+        },
+		        {
+            "name": "null",
+            "type": "null"
         }
     ]
 }
