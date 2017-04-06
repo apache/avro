@@ -38,6 +38,8 @@ try:
 except ImportError:
   import simplejson as json
 
+from avro import constants
+
 #
 # Constants
 #
@@ -696,6 +698,91 @@ class RecordSchema(NamedSchema):
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
+
+#
+# Logical Type
+#
+
+class LogicalSchema(object):
+   def __init__(self, logical_type):
+     self.logical_type = logical_type
+
+
+#
+# Date Type
+#
+
+class DateSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.DATE)
+    PrimitiveSchema.__init__(self, 'int', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# time-millis Type
+#
+
+class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.TIME_MILLIS)
+    PrimitiveSchema.__init__(self, 'int', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# time-micros Type
+#
+
+class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.TIME_MICROS)
+    PrimitiveSchema.__init__(self, 'long', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# timestamp-millis Type
+#
+
+class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.TIMESTAMP_MILLIS)
+    PrimitiveSchema.__init__(self, 'long', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# timestamp-micros Type
+#
+
+class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.TIMESTAMP_MICROS)
+    PrimitiveSchema.__init__(self, 'long', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
 #
 # Module Methods
 #
@@ -722,7 +809,22 @@ def make_avsc_object(json_data, names=None):
   if hasattr(json_data, 'get') and callable(json_data.get):
     type = json_data.get('type')
     other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
+    logical_type = None
+    if 'logicalType' in json_data:
+      logical_type = json_data.get('logicalType')
+      if logical_type not in constants.SUPPORTED_LOGICAL_TYPE:
+        raise SchemaParseException("Currently does not support %s logical type" % logical_type)
     if type in PRIMITIVE_TYPES:
+      if type == 'int' and logical_type == constants.DATE:
+        return DateSchema(other_props)
+      elif type == 'int' and logical_type == constants.TIME_MILLIS:
+        return TimeMillisSchema(other_props=other_props)
+      elif type == 'long' and logical_type == constants.TIME_MICROS:
+        return TimeMicrosSchema(other_props=other_props)
+      elif type == 'long' and logical_type == constants.TIMESTAMP_MILLIS:
+        return TimestampMillisSchema(other_props=other_props)
+      elif type == 'long' and logical_type == constants.TIMESTAMP_MICROS:
+        return TimestampMicrosSchema(other_props=other_props)
       return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')
