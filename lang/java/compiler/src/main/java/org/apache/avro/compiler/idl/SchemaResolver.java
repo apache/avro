@@ -15,10 +15,11 @@
  */
 package org.apache.avro.compiler.idl;
 
+import avro.shaded.com.google.common.base.Function;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.avro.Protocol;
@@ -28,7 +29,6 @@ import org.apache.avro.compiler.schema.Schemas;
 /**
  * Utility class to resolve schemas that are unavailable at the time they are referenced in the IDL.
  */
-
 final class SchemaResolver {
 
   private SchemaResolver() {
@@ -40,21 +40,36 @@ final class SchemaResolver {
 
   private static final String UR_SCHEMA_NS = "org.apache.avro.compiler";
 
+  /**
+   * Create a schema to represent a "unresolved" schema.
+   * (used to represent a schema where the definition is not known at the time)
+   * This concept might be generalizable...
+   * @param name
+   * @return
+   */
   static Schema unresolvedSchema(final String name) {
-
-
     Schema schema = Schema.createRecord(UR_SCHEMA_NAME, "unresolved schema",
             UR_SCHEMA_NS, false, Collections.EMPTY_LIST);
     schema.addProp(UR_SCHEMA_ATTR, name);
     return schema;
   }
 
+  /**
+   * Is this a unresolved schema.
+   * @param schema
+   * @return
+   */
   static boolean isUnresolvedSchema(final Schema schema) {
     return (schema.getType() == Schema.Type.RECORD && schema.getProp(UR_SCHEMA_ATTR) != null
             && UR_SCHEMA_NAME.equals(schema.getName())
             && UR_SCHEMA_NS.equals(schema.getNamespace()));
   }
 
+  /**
+   * get the unresolved schema name.
+   * @param schema
+   * @return
+   */
   static String getUnresolvedSchemaName(final Schema schema) {
     if (!isUnresolvedSchema(schema)) {
       throw new IllegalArgumentException("Not a unresolved schema: " + schema);
@@ -68,34 +83,35 @@ final class SchemaResolver {
   }
 
   /**
-   * Resolve all unresolved schema references from a protocol.
-   * @param protocol - the protocol with unresolved schema references.
-   * @return - a new protocol instance based on the provided protocol with all unresolved schema references resolved.
+   * Will clone the provided protocol while resolving all unreferenced schemas
+   * @param protocol
+   * @return
    */
   static Protocol resolve(final Protocol protocol) {
     Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
     final Collection<Schema> types = protocol.getTypes();
+    // replace unresolved schemas.
     List<Schema> newSchemas = new ArrayList(types.size());
-    Map<String, Schema> resolved = new HashMap<String, Schema>();
+    IdentityHashMap<Schema, Schema> replacements = new IdentityHashMap<Schema, Schema>();
     for (Schema schema : types) {
-      newSchemas.add(resolve(schema, protocol, resolved));
+      newSchemas.add(Schemas.visit(schema, new ResolvingVisitor(schema, replacements, new SymbolTable(protocol))));
     }
     result.setTypes(newSchemas); // replace types with resolved ones
 
+    // Resolve all schemas refferenced by protocol Messages.
     for (Map.Entry<String, Protocol.Message> entry : protocol.getMessages().entrySet()) {
       Protocol.Message value = entry.getValue();
       Protocol.Message nvalue;
       if (value.isOneWay()) {
-        Schema request = value.getRequest();
+        Schema replacement = resolve(replacements, value.getRequest(), protocol);
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-                value.getObjectProps(), getResolvedSchema(request, resolved));
+                value.getObjectProps(), replacement);
       } else {
-        Schema request = value.getRequest();
-        Schema response = value.getResponse();
-        Schema errors = value.getErrors();
+        Schema request = resolve(replacements, value.getRequest(), protocol);
+        Schema response = resolve(replacements, value.getResponse(), protocol);
+        Schema errors = resolve(replacements, value.getErrors(), protocol);
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-                value.getObjectProps(), getResolvedSchema(request, resolved),
-                getResolvedSchema(response, resolved), getResolvedSchema(errors, resolved));
+                value.getObjectProps(), request, response, errors);
       }
       result.getMessages().put(entry.getKey(), nvalue);
     }
@@ -103,148 +119,27 @@ final class SchemaResolver {
     return result;
   }
 
-
-  /**
-   * Resolve all unresolved schema references.
-   * @param schema - the schema to resolved references for.
-   * @param protocol - the protocol we resolve the schema's for.
-   * (we lookup all unresolved schema references in the protocol)
-   * @param resolved - a map of all resolved schema's so far.
-   * @return - a instance of the resolved schema.
-   */
-  static Schema resolve(final Schema schema, final Protocol protocol, final Map<String, Schema> resolved) {
-    final String fullName = schema.getFullName();
-    if (fullName != null && resolved.containsKey(fullName)) {
-      return resolved.get(schema.getFullName());
-    } else if (isUnresolvedSchema(schema)) {
-      final String unresolvedSchemaName = getUnresolvedSchemaName(schema);
-      Schema type = protocol.getType(unresolvedSchemaName);
-      if (type == null) {
-        throw new IllegalArgumentException("Cannot resolve " + unresolvedSchemaName);
-      }
-      return resolve(type, protocol, resolved);
-    } else {
-      switch (schema.getType()) {
-        case RECORD:
-          Schema createRecord = Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(),
-                  schema.isError());
-          resolved.put(schema.getFullName(), createRecord);
-          final List<Schema.Field> currFields = schema.getFields();
-          List<Schema.Field> newFields = new ArrayList<Schema.Field>(currFields.size());
-          for (Schema.Field field : currFields) {
-            if (field.name().equals("hash")) {
-              System.err.println(field);
-            }
-            Schema.Field nf = new Schema.Field(field.name(), resolve(field.schema(), protocol, resolved),
-                    field.doc(), field.defaultVal(), field.order());
-            Schemas.copyAliases(field, nf);
-            Schemas.copyProperties(field, nf);
-            newFields.add(nf);
-          }
-          createRecord.setFields(newFields);
-          Schemas.copyLogicalTypes(schema, createRecord);
-          Schemas.copyProperties(schema, createRecord);
-          return createRecord;
-        case MAP:
-          Schema result = Schema.createMap(resolve(schema.getValueType(), protocol, resolved));
-          Schemas.copyProperties(schema, result);
-          return result;
-        case ARRAY:
-          Schema aresult = Schema.createArray(resolve(schema.getElementType(), protocol, resolved));
-          Schemas.copyProperties(schema, aresult);
-          return aresult;
-        case UNION:
-          final List<Schema> uTypes = schema.getTypes();
-          List<Schema> newTypes = new ArrayList<Schema>(uTypes.size());
-          for (Schema s : uTypes) {
-            newTypes.add(resolve(s, protocol, resolved));
-          }
-          Schema bresult = Schema.createUnion(newTypes);
-          Schemas.copyProperties(schema, bresult);
-          return bresult;
-        case ENUM:
-        case FIXED:
-        case STRING:
-        case BYTES:
-        case INT:
-        case LONG:
-        case FLOAT:
-        case DOUBLE:
-        case BOOLEAN:
-        case NULL:
-          return schema;
-        default:
-          throw new RuntimeException("Unknown type: " + schema);
-      }
+  private static Schema resolve(final IdentityHashMap<Schema, Schema> replacements,
+          final Schema request, final Protocol protocol) {
+    Schema replacement = replacements.get(request);
+    if (replacement == null) {
+      replacement = Schemas.visit(request, new ResolvingVisitor(request, replacements,
+              new SymbolTable(protocol)));
     }
+    return replacement;
   }
 
-  /**
-   * get the resolved schema.
-   * @param schema - the schema we want to get the resolved equivalent for.
-   * @param resolved - a Map wil all resolved schemas
-   * @return - the resolved schema.
-   */
-  public static Schema getResolvedSchema(final Schema schema, final Map<String, Schema> resolved) {
-    if (schema == null) {
-      return null;
+  private static class SymbolTable implements Function<String, Schema> {
+
+    private final Protocol symbolTable;
+
+    public SymbolTable(Protocol symbolTable) {
+      this.symbolTable = symbolTable;
     }
-    final String fullName = schema.getFullName();
-    if (fullName != null && resolved.containsKey(fullName)) {
-      return resolved.get(schema.getFullName());
-    } else {
-      switch (schema.getType()) {
-        case RECORD:
-          Schema createRecord = Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(),
-              schema.isError());
-          resolved.put(schema.getFullName(), createRecord);
-          final List<Schema.Field> currFields = schema.getFields();
-          List<Schema.Field> newFields = new ArrayList<Schema.Field>(currFields.size());
-          for (Schema.Field field : currFields) {
-            if (field.name().equals("hash")) {
-              System.err.println(field);
-            }
-            Schema.Field nf = new Schema.Field(field.name(), getResolvedSchema(field.schema(), resolved),
-                    field.doc(), field.defaultVal(), field.order());
-            Schemas.copyAliases(field, nf);
-            Schemas.copyProperties(field, nf);
-            newFields.add(nf);
-          }
-          createRecord.setFields(newFields);
-          Schemas.copyLogicalTypes(schema, createRecord);
-          Schemas.copyProperties(schema, createRecord);
-          return createRecord;
-        case MAP:
-          Schema createMap = Schema.createMap(getResolvedSchema(schema.getValueType(), resolved));
-          Schemas.copyProperties(schema, createMap);
-          return createMap;
-        case ARRAY:
-          Schema createArray = Schema.createArray(getResolvedSchema(schema.getElementType(), resolved));
-          Schemas.copyProperties(schema, createArray);
-          return createArray;
-        case UNION:
-          final List<Schema> uTypes = schema.getTypes();
-          List<Schema> newTypes = new ArrayList<Schema>(uTypes.size());
-          for (Schema s : uTypes) {
-            newTypes.add(getResolvedSchema(s, resolved));
-          }
-          Schema createUnion = Schema.createUnion(newTypes);
-          Schemas.copyProperties(schema, createUnion);
-          return createUnion;
-        case ENUM:
-        case FIXED:
-        case STRING:
-        case BYTES:
-        case INT:
-        case LONG:
-        case FLOAT:
-        case DOUBLE:
-        case BOOLEAN:
-        case NULL:
-          return schema;
-        default:
-          throw new RuntimeException("Unknown type: " + schema);
-      }
+
+    @Override
+    public Schema apply(final String f) {
+      return symbolTable.getType(f);
     }
   }
 

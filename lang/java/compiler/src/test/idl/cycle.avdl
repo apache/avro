@@ -1,0 +1,24 @@
+@namespace("org.apache.avro.gen.test")
+protocol Cycle {
+
+    record Record1 {
+      string fString = "";
+      Record3 rec3;
+    }
+
+    record Record2 {
+      TestFixed fFixed;
+      int val;
+      union {null, Record1} fRec1;
+    }
+
+    record Record3 {
+      TestEnum fEnum;
+      Record2 rec2;
+    }
+
+    enum TestEnum { bla, blu }
+
+    fixed TestFixed(16);
+
+}
