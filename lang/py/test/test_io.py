@@ -22,11 +22,13 @@ try:
 except ImportError:
   from StringIO import StringIO
 from binascii import hexlify
+import datetime
 
 import set_avro_test_path
 
 from avro import schema
 from avro import io
+from avro.lib import timezones
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
@@ -48,6 +50,35 @@ SCHEMAS_TO_VALIDATE = (
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
   ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),
   ('["string", "null", "long"]', None),
+  ('{"type": "int", "logicalType": "date"}', datetime.date(2000, 1, 1)),
+  ('{"type": "int", "logicalType": "time-millis"}', datetime.time(23, 59, 59, 999000)),
+  ('{"type": "int", "logicalType": "time-millis"}', datetime.time(0, 0, 0, 000000)),
+  ('{"type": "long", "logicalType": "time-micros"}', datetime.time(23, 59, 59, 999999)),
+  ('{"type": "long", "logicalType": "time-micros"}', datetime.time(0, 0, 0, 000000)),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=timezones.utc)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(9999, 12, 31, 23, 59, 59, 999000, tzinfo=timezones.utc)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(2000, 1, 18, 2, 2, 1, 100000, tzinfo=timezones.tst)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=timezones.utc)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=timezones.utc)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(2000, 1, 18, 2, 2, 1, 123499, tzinfo=timezones.tst)
+  ),
   ("""\
    {"type": "record",
     "name": "Test",
@@ -211,7 +242,10 @@ class TestIO(unittest.TestCase):
       if isinstance(round_trip_datum, Decimal):
         round_trip_datum = round_trip_datum.to_eng_string()
         datum = str(datum)
-      if datum == round_trip_datum: correct += 1
+      elif isinstance(round_trip_datum, datetime.datetime):
+        datum = datum.astimezone(tz=timezones.utc)
+      if datum == round_trip_datum:
+        correct += 1
     self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
 
   #
