@@ -17,7 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
 import static org.apache.avro.SchemaCompatibility.checkReaderWriterCompatibility;
 import static org.apache.avro.TestSchemas.A_DINT_B_DINT_RECORD1;
 import static org.apache.avro.TestSchemas.A_DINT_RECORD1;
@@ -59,6 +58,7 @@ import static org.apache.avro.TestSchemas.STRING_SCHEMA;
 import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.assertSchemaContains;
 import static org.apache.avro.TestSchemas.list;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
@@ -88,7 +88,7 @@ import org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
 import org.apache.avro.TestSchemas.ReaderWriter;
 
 /** Unit-tests for SchemaCompatibility. */
-public class TestSchemaCompatibility{
+public class TestSchemaCompatibility {
   private static final Logger LOG = LoggerFactory.getLogger(TestSchemaCompatibility.class);
 
   // -----------------------------------------------------------------------------------------------
