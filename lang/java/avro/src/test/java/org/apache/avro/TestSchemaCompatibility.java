@@ -169,8 +169,9 @@ public class TestSchemaCompatibility{
         new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
-    // Test new field without default value.
     SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(reader, WRITER_SCHEMA);
+
+    // Test new field without default value.
     assertEquals(SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
     assertEquals(SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, reader, WRITER_SCHEMA, "newfield1", Arrays.asList("", "fields", "1")), compatibility.getResult());
     assertEquals(String.format("Data encoded using writer schema:%n%s%n"
@@ -243,8 +244,8 @@ public class TestSchemaCompatibility{
   /** Reader union schema must contain all writer union branches. */
   @Test
   public void testUnionReaderWriterSubsetIncompatibility() {
-    final Schema unionWriter = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA,LONG_SCHEMA));
-    final Schema unionReader = Schema.createUnion(list(INT_SCHEMA,STRING_SCHEMA));
+    final Schema unionWriter = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA, LONG_SCHEMA));
+    final Schema unionReader = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
     final SchemaPairCompatibility result =
         checkReaderWriterCompatibility(unionReader, unionWriter);
     assertEquals(SchemaCompatibilityType.INCOMPATIBLE, result.getType());
