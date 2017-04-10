@@ -64,8 +64,14 @@ import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaCompatibility;
+import org.apache.avro.SchemaCompatibility.SchemaCompatibilityResult;
+import org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
+import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
+import org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
+import org.apache.avro.TestSchemas.ReaderWriter;
+import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
@@ -79,13 +85,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.avro.SchemaCompatibility;
-import org.apache.avro.SchemaCompatibility.SchemaCompatibilityResult;
-import org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
-import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
-import org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
-import org.apache.avro.TestSchemas.ReaderWriter;
 
 /** Unit-tests for SchemaCompatibility. */
 public class TestSchemaCompatibility {
