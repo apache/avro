@@ -272,7 +272,6 @@ namespace Avro
             ctd.Members.Add(codeField);
 
             // Add Size property
-            var fieldRef = new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), sizefname);
             var property = new CodeMemberProperty();
             property.Attributes = MemberAttributes.Public | MemberAttributes.Static;
             property.Name = "FixedSize";
