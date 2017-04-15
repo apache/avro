@@ -30,9 +30,9 @@ avro_schema_t schema;
 
 void add_record (avro_file_writer_t writer)
 {
-	avro_datum_t main_datum = avro_record(schema);		
+	avro_datum_t main_datum = avro_record(schema);
 	avro_datum_t id_datum = avro_int32(1);
-	
+
 	if (avro_record_set (main_datum, "ID", id_datum))
 	{
 		printf ("Unable to create datum");
@@ -76,9 +76,11 @@ int main()
 
 	avro_file_writer_open (dbname, &writer);
 	add_record (writer);
-	
+
 	avro_file_writer_flush (writer);
 	avro_file_writer_close (writer);
+
+    avro_schema_decref(schema);
 
 	remove (dbname);
 

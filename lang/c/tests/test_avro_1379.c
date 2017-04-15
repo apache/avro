@@ -119,5 +119,11 @@ int main(void)
 	check(rval, avro_file_reader_close(file_reader));
 	remove(outpath);
 
+	avro_writer_free(writer);
+	avro_value_decref(&out);
+	avro_value_decref(&val);
+	avro_value_iface_decref(iface);
+	avro_schema_decref(schema);
+
 	exit(EXIT_SUCCESS);
 }

@@ -63,7 +63,8 @@ RUN apt-get -qq update && \
     ruby \
     ruby-dev \
     source-highlight \
-    subversion && \
+    subversion \
+    valgrind && \
   apt-get -qq clean && \
   rm -rf /var/lib/apt/lists/*
 

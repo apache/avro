@@ -61,7 +61,6 @@ case "$1" in
     prepare_build
     make -C $build_dir
     make -C $build_dir test
-    clean
     ;;
 
   dist)
