@@ -199,7 +199,13 @@ static void avro_schema_free(avro_schema_t schema)
 		case AVRO_LINK:{
 				struct avro_link_schema_t *link;
 				link = avro_schema_to_link(schema);
-				avro_schema_decref(link->to);
+				/* Since we didn't increment the
+				 * reference count of the target
+				 * schema when we created the link, we
+				 * should not decrement the reference
+				 * count of the target schema when we
+				 * free the link.
+				 */
 				avro_freet(struct avro_link_schema_t, link);
 			}
 			break;
@@ -727,7 +733,19 @@ avro_schema_t avro_schema_link(avro_schema_t to)
 		avro_set_error("Cannot allocate new link schema");
 		return NULL;
 	}
-	link->to = avro_schema_incref(to);
+
+	/* Do not increment the reference count of target schema
+	 * pointed to by the AVRO_LINK. AVRO_LINKs are only valid
+	 * internal to a schema. The target schema pointed to by a
+	 * link will be valid as long as the top-level schema is
+	 * valid. Similarly, the link will be valid as long as the
+	 * top-level schema is valid. Therefore the validity of the
+	 * link ensures the validity of its target, and we don't need
+	 * an additional reference count on the target. This mechanism
+	 * of an implied validity also breaks reference count cycles
+	 * for recursive schemas, which result in memory leaks.
+	 */
+	link->to = to;
 	avro_schema_init(&link->obj, AVRO_LINK);
 	return &link->obj;
 }
@@ -1303,6 +1321,7 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 				avro_schema_record_field_append(new_schema,
 								val.field->name,
 								type_copy);
+				avro_schema_decref(type_copy);
 			}
 		}
 		break;
@@ -1354,6 +1373,7 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 				return NULL;
 			}
 			new_schema = avro_schema_map(values_copy);
+			avro_schema_decref(values_copy);
 		}
 		break;
 
@@ -1367,6 +1387,7 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 				return NULL;
 			}
 			new_schema = avro_schema_array(items_copy);
+			avro_schema_decref(items_copy);
 		}
 		break;
 
@@ -1390,6 +1411,7 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 					avro_schema_decref(new_schema);
 					return NULL;
 				}
+				avro_schema_decref(schema_copy);
 			}
 		}
 		break;
@@ -1400,7 +1422,9 @@ avro_schema_t avro_schema_copy_root(avro_schema_t schema, st_table *named_schema
 			    avro_schema_to_link(schema);
 			avro_schema_t to;
 
-			to = find_named_schemas(avro_schema_name(link_schema->to), avro_schema_namespace(link_schema->to), named_schemas);
+			to = find_named_schemas(avro_schema_name(link_schema->to),
+									avro_schema_namespace(link_schema->to),
+									named_schemas);
 			new_schema = avro_schema_link(to);
 		}
 		break;
