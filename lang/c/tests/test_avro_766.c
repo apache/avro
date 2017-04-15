@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 		printf("Successfully read schema from JSON.\n");
 	}
 
-#define TEST_AVRO_1167 (0)
+#define TEST_AVRO_1167 (1)
        #if TEST_AVRO_1167
 	{
 		avro_schema_t schema_copy = NULL;
