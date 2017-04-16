@@ -1538,6 +1538,7 @@ Token AnyIdentifier():
    t = <LONG> |
    t = <MAP> |
    t = <BYTES> |
+   t = <SCHEMA> |
    t = <STRING> |
    t = <PROTOCOL> |
    t = <RECORD> |
