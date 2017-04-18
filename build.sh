@@ -22,11 +22,7 @@ cd `dirname "$0"`				  # connect to root
 VERSION=`cat share/VERSION.txt`
 
 function usage {
-<<<<<<< HEAD
-  echo "Usage: $0 {test|dist|sign|clean}"
-=======
   echo "Usage: $0 {test|dist|sign|clean|docker|rat}"
->>>>>>> 80ba788... AVRO-1722 ADDENDUM: Add last license doc changes, rat helper.
   exit 1
 }
 
