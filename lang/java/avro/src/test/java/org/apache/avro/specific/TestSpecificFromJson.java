@@ -49,11 +49,25 @@ public class TestSpecificFromJson
                 + "\"ts\":123456"
                 + "}";
 
-        final Schema schema = TestRecordWithLogicalTypes.SCHEMA$;
+        final Schema writerSchema = TestRecordWithLogicalTypes.SCHEMA$;
+        final Schema readerSchema = new org.apache.avro.Schema.Parser().parse(
+                "{\"type\":\"record\",\"name\":\"TestRecordWithLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":["
+                        + "{\"name\":\"b\",\"type\":\"boolean\"},"
+                        + "{\"name\":\"i32\",\"type\":\"int\"},"
+                        + "{\"name\":\"i64\",\"type\":\"long\"},"
+                        + "{\"name\":\"f32\",\"type\":\"float\"},"
+                        + "{\"name\":\"f64\",\"type\":\"double\"},"
+                        // field "s" was intentionally left out, since doesn't "exist" on previous version
+                        // + "{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},"
+                        + "{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},"
+                        + "{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},"
+                        + "{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},"
+                        + "{\"name\":\"dec\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}}]}");
 
-        final GenericDatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(schema);
-        final GenericData.Record datum = new GenericData.Record(schema);
-        final Decoder decoder = DecoderFactory.get().jsonDecoder(schema, new ByteArrayInputStream(json.getBytes()));
+        final GenericDatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(writerSchema,
+                readerSchema);
+        final GenericData.Record datum = new GenericData.Record(writerSchema);
+        final Decoder decoder = DecoderFactory.get().jsonDecoder(writerSchema, new ByteArrayInputStream(json.getBytes()));
         reader.read(datum, decoder);
 
         assertThat(datum.get("s"), Matchers.nullValue());
