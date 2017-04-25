@@ -246,7 +246,7 @@ public class TestTimeConversions {
         (long) conversion.toLong(May_28_2015_21_46_53_221,
             TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
   }
-  
+
   /*
   model.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
   model.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
@@ -274,7 +274,7 @@ public class TestTimeConversions {
     Schema schema = getReflectedSchemaByName("org.joda.time.DateTime", new TimeConversions.TimestampConversion());
     Assert.assertEquals("Reflected schema should be logicalType timestampMillis", TIMESTAMP_MILLIS_SCHEMA, schema);
   }
-  
+
   @Test
   public void testDynamicSchemaWithDateTimeMicrosConversion() throws ClassNotFoundException {
     Schema schema = getReflectedSchemaByName("org.joda.time.DateTime", new TimeConversions.TimestampMicrosConversion());
@@ -290,7 +290,7 @@ public class TestTimeConversions {
     model.addLogicalTypeConversion(conversion);
     return model.getSchema(cls);
   }
-  
+
   private long dropMicros(long micros) {
     return micros / 1000 * 1000;
   }
