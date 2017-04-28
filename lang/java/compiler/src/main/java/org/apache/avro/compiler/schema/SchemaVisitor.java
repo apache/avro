@@ -17,15 +17,11 @@
  */
 package org.apache.avro.compiler.schema;
 
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.avro.Schema;
 
 /**
  * @author zoly
  */
-@ParametersAreNonnullByDefault
 public interface SchemaVisitor<T> {
 
   /**
@@ -35,8 +31,6 @@ public interface SchemaVisitor<T> {
    * @param terminal
    * @return
    */
-  @Nonnull
-  @CheckReturnValue
   SchemaVisitorAction visitTerminal(Schema terminal);
 
   /**
@@ -44,8 +38,6 @@ public interface SchemaVisitor<T> {
    * @param nonTerminal
    * @return
    */
-  @Nonnull
-  @CheckReturnValue
   SchemaVisitorAction visitNonTerminal(Schema nonTerminal);
 
   /**
@@ -53,8 +45,6 @@ public interface SchemaVisitor<T> {
    * @param nonTerminal
    * @return
    */
-  @Nonnull
-  @CheckReturnValue
   SchemaVisitorAction afterVisitNonTerminal(Schema nonTerminal);
 
 

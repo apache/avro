@@ -10,7 +10,6 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
@@ -22,7 +21,6 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
  *
  * @author zoly
  */
-@ParametersAreNonnullByDefault
 public final class Schemas {
 
   private Schemas() {
