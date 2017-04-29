@@ -324,7 +324,6 @@ namespace Avro.Generic
         /// <returns>An enum object.</returns>
         protected virtual object ReadEnum(object reuse, EnumSchema writerSchema, Schema readerSchema, Decoder d)
         {
-            EnumSchema es = readerSchema as EnumSchema;
             return CreateEnum(reuse, readerSchema as EnumSchema, writerSchema[d.ReadEnum()]);
         }
 
