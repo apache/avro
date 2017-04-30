@@ -16,12 +16,14 @@
 package org.apache.avro.compiler.idl;
 
 import avro.shaded.com.google.common.base.Function;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.schema.Schemas;
@@ -44,29 +46,32 @@ final class SchemaResolver {
    * Create a schema to represent a "unresolved" schema.
    * (used to represent a schema where the definition is not known at the time)
    * This concept might be generalizable...
+   *
    * @param name
    * @return
    */
   static Schema unresolvedSchema(final String name) {
     Schema schema = Schema.createRecord(UR_SCHEMA_NAME, "unresolved schema",
-            UR_SCHEMA_NS, false, Collections.EMPTY_LIST);
+        UR_SCHEMA_NS, false, Collections.EMPTY_LIST);
     schema.addProp(UR_SCHEMA_ATTR, name);
     return schema;
   }
 
   /**
    * Is this a unresolved schema.
+   *
    * @param schema
    * @return
    */
   static boolean isUnresolvedSchema(final Schema schema) {
     return (schema.getType() == Schema.Type.RECORD && schema.getProp(UR_SCHEMA_ATTR) != null
-            && UR_SCHEMA_NAME.equals(schema.getName())
-            && UR_SCHEMA_NS.equals(schema.getNamespace()));
+        && UR_SCHEMA_NAME.equals(schema.getName())
+        && UR_SCHEMA_NS.equals(schema.getNamespace()));
   }
 
   /**
    * get the unresolved schema name.
+   *
    * @param schema
    * @return
    */
@@ -74,16 +79,12 @@ final class SchemaResolver {
     if (!isUnresolvedSchema(schema)) {
       throw new IllegalArgumentException("Not a unresolved schema: " + schema);
     }
-    String name = schema.getProp(UR_SCHEMA_ATTR);
-    if (name == null) {
-      throw new IllegalArgumentException("Schema " + schema + " must have attribute: " + UR_SCHEMA_ATTR);
-    } else {
-      return name;
-    }
+    return schema.getProp(UR_SCHEMA_ATTR);
   }
 
   /**
    * Will clone the provided protocol while resolving all unreferenced schemas
+   *
    * @param protocol
    * @return
    */
@@ -105,13 +106,13 @@ final class SchemaResolver {
       if (value.isOneWay()) {
         Schema replacement = resolve(replacements, value.getRequest(), protocol);
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-                value.getObjectProps(), replacement);
+            value.getObjectProps(), replacement);
       } else {
         Schema request = resolve(replacements, value.getRequest(), protocol);
         Schema response = resolve(replacements, value.getResponse(), protocol);
         Schema errors = resolve(replacements, value.getErrors(), protocol);
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-                value.getObjectProps(), request, response, errors);
+            value.getObjectProps(), request, response, errors);
       }
       result.getMessages().put(entry.getKey(), nvalue);
     }
@@ -120,11 +121,11 @@ final class SchemaResolver {
   }
 
   private static Schema resolve(final IdentityHashMap<Schema, Schema> replacements,
-          final Schema request, final Protocol protocol) {
+                                final Schema request, final Protocol protocol) {
     Schema replacement = replacements.get(request);
     if (replacement == null) {
       replacement = Schemas.visit(request, new ResolvingVisitor(request, replacements,
-              new SymbolTable(protocol)));
+          new SymbolTable(protocol)));
     }
     return replacement;
   }
