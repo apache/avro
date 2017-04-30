@@ -16,7 +16,6 @@ import org.apache.avro.compiler.schema.Schemas;
  * this visitor will create a clone of the original Schema and will also resolve all unresolved schemas
  *
  * by default. what attributes are copied is customizable.
- * @author zoly
  */
 public final class ResolvingVisitor implements SchemaVisitor<Schema> {
 
