@@ -26,11 +26,13 @@ case "$1" in
        ;;
 
      dist)
-       ;;
-
+        npm pack
+        mkdir -p ../../dist/js
+        mv avro-js-*.tgz ../../dist/js
+        ;;
      clean)
-       ;;
-
+        rm -rf node_modules
+        ;;
      *)
        echo "Usage: $0 {test|dist|clean}"
        exit 1
