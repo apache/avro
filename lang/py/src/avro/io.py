@@ -41,6 +41,9 @@ from avro import schema
 import sys
 from binascii import crc32
 
+from decimal import Decimal
+from decimal import getcontext
+
 try:
 	import json
 except ImportError:
@@ -68,11 +71,14 @@ else:
       return struct.unpack(self.format, *args)
   struct_class = SimpleStruct
 
-STRUCT_INT = struct_class('!I')     # big-endian unsigned int
-STRUCT_LONG = struct_class('!Q')    # big-endian unsigned long long
-STRUCT_FLOAT = struct_class('!f')   # big-endian float
-STRUCT_DOUBLE = struct_class('!d')  # big-endian double
-STRUCT_CRC32 = struct_class('>I')   # big-endian unsigned int
+STRUCT_INT = struct_class('!I')             # big-endian unsigned int
+STRUCT_LONG = struct_class('!Q')            # big-endian unsigned long long
+STRUCT_FLOAT = struct_class('!f')           # big-endian float
+STRUCT_DOUBLE = struct_class('!d')          # big-endian double
+STRUCT_CRC32 = struct_class('>I')           # big-endian unsigned int
+STRUCT_SIGNED_SHORT = struct_class('>h')    # big-endian signed short
+STRUCT_SIGNED_INT = struct_class('>i')      # big-endian signed int
+STRUCT_SIGNED_LONG = struct_class('>q')     # big-endian signed long
 
 #
 # Exceptions
@@ -108,6 +114,10 @@ def validate(expected_schema, datum):
   elif schema_type == 'string':
     return isinstance(datum, basestring)
   elif schema_type == 'bytes':
+    if (hasattr(expected_schema, 'logical_type') and
+            expected_schema.logical_type == 'decimal'):
+      return (isinstance(datum, Decimal) or isinstance(datum, int)
+             or isinstance(datum, long) or isinstance(datum, float))
     return isinstance(datum, str)
   elif schema_type == 'int':
     return ((isinstance(datum, int) or isinstance(datum, long)) 
@@ -118,7 +128,12 @@ def validate(expected_schema, datum):
   elif schema_type in ['float', 'double']:
     return (isinstance(datum, int) or isinstance(datum, long)
             or isinstance(datum, float))
+  # Check for int, float, long and decimal
   elif schema_type == 'fixed':
+    if (hasattr(expected_schema, 'logical_type') and
+                    expected_schema.logical_type == 'decimal'):
+      return (isinstance(datum, Decimal) or isinstance(datum, int)
+             or isinstance(datum, long) or isinstance(datum, float))
     return isinstance(datum, str) and len(datum) == expected_schema.size
   elif schema_type == 'enum':
     return datum in expected_schema.symbols
@@ -218,6 +233,52 @@ class BinaryDecoder(object):
       ((ord(self.read(1)) & 0xffL) << 48) |
       ((ord(self.read(1)) & 0xffL) << 56))
     return STRUCT_DOUBLE.unpack(STRUCT_LONG.pack(bits))[0]
+
+  def read_decimal_from_bytes(self, precision, scale):
+    """
+    Decimal bytes are decoded as signed short, int or long depending on the
+    size of bytes.
+    """
+    datum = self.read(self.read_long())
+    if len(datum) == 2:
+      unpacked_datum = STRUCT_SIGNED_SHORT.unpack(datum)[0]
+    elif len(datum) == 4:
+      unpacked_datum = STRUCT_SIGNED_INT.unpack(datum)[0]
+    else:
+      unpacked_datum = STRUCT_SIGNED_LONG.unpack(datum)[0]
+
+    original_prec = getcontext().prec
+    getcontext().prec = precision
+    scaled_datum = Decimal(unpacked_datum) / Decimal(pow(10, scale))
+    getcontext().prec = original_prec
+    return scaled_datum
+
+  def read_decimal_from_fixed(self, precision, scale, size):
+    """
+    Decimal is encoded as fixed. Fixed instances are encoded using the
+    number of bytes declared in the schema.
+    """
+    datum = self.read(size)
+    unscaled_datum = 0
+    msb = struct.unpack('!b', datum[0])[0]
+    leftmost_bit = (msb >> 7) & 1
+    if leftmost_bit == 1:
+      modified_first_byte = ord(datum[0]) ^ (1 << 7)
+      datum = chr(modified_first_byte) + datum[1:]
+      for offset in range(size):
+        unscaled_datum <<= 8
+        unscaled_datum += ord(datum[offset])
+      unscaled_datum += pow(-2, (size*8) - 1)
+    else:
+      for offset in range(size):
+        unscaled_datum <<= 8
+        unscaled_datum += ord(datum[offset])
+
+    original_prec = getcontext().prec
+    getcontext().prec = precision
+    scaled_datum = Decimal(unscaled_datum) / Decimal(pow(10, scale))
+    getcontext().prec = original_prec
+    return scaled_datum
 
   def read_bytes(self):
     """
@@ -340,6 +401,59 @@ class BinaryEncoder(object):
     self.write(chr((bits >> 40) & 0xFF))
     self.write(chr((bits >> 48) & 0xFF))
     self.write(chr((bits >> 56) & 0xFF))
+
+  def write_decimal_bytes(self, datum, scale):
+    """
+    Decimal in bytes are encoded as long. Since size of packed value in bytes for
+    signed long is 8, 8 bytes are written.
+    """
+    if isinstance(datum, Decimal):
+      datum = datum.to_eng_string()
+    else:
+      datum = str(datum)
+    decimal_place = datum.find('.')
+    if decimal_place == -1:
+      mantissa = 0
+    else:
+      mantissa = len(datum[decimal_place+1:])
+    if mantissa != scale:
+      raise AvroTypeException('Scale provided in schema does not match the decimal')
+    unscaled_datum = datum.replace('.', '')
+    unscaled_int_datum = long(unscaled_datum)
+    packed_bytes = STRUCT_SIGNED_LONG.pack(unscaled_int_datum)
+    self.write_long(8)
+    for i in range(8):
+      self.write(packed_bytes[i])
+
+  def write_decimal_fixed(self, datum, scale, size):
+    """
+    Decimal in fixed are encoded as size of fixed bytes.
+    """
+    if isinstance(datum, Decimal):
+      datum = datum.to_eng_string()
+    else:
+      datum = str(datum)
+    decimal_place = datum.find('.')
+    if decimal_place == -1:
+      mantissa = 0
+    else:
+      mantissa = len(datum[decimal_place+1:])
+    if mantissa != scale:
+      raise AvroTypeException('Scale provided in schema does not match the decimal')
+    unscaled_datum = datum.replace('.', '')
+    unscaled_long_datum = long(unscaled_datum)
+    if unscaled_long_datum < 0:
+      fill_byte = '\xff'
+    else:
+      fill_byte = '\x00'
+    packed_bytes = STRUCT_SIGNED_LONG.pack(unscaled_long_datum)
+    offset_bytes = size - len(packed_bytes)
+    padded_bytes = (fill_byte * offset_bytes) + packed_bytes
+    for i in range(size):
+      if padded_bytes[i] == '\x00':
+        self.write(chr(0))
+      else:
+        self.write(padded_bytes[i])
 
   def write_bytes(self, datum):
     """
@@ -475,8 +589,22 @@ class DatumReader(object):
     elif writers_schema.type == 'double':
       return decoder.read_double()
     elif writers_schema.type == 'bytes':
-      return decoder.read_bytes()
+      if (hasattr(writers_schema, 'logical_type') and
+                      writers_schema.logical_type == 'decimal'):
+        return decoder.read_decimal_from_bytes(
+          writers_schema.get_prop('precision'),
+          writers_schema.get_prop('scale')
+        )
+      else:
+        return decoder.read_bytes()
     elif writers_schema.type == 'fixed':
+      if (hasattr(writers_schema, 'logical_type') and
+                      writers_schema.logical_type == 'decimal'):
+        return decoder.read_decimal_from_fixed(
+          writers_schema.get_prop('precision'),
+          writers_schema.get_prop('scale'),
+          writers_schema.size
+        )
       return self.read_fixed(writers_schema, readers_schema, decoder)
     elif writers_schema.type == 'enum':
       return self.read_enum(writers_schema, readers_schema, decoder)
@@ -787,9 +915,21 @@ class DatumWriter(object):
     elif writers_schema.type == 'double':
       encoder.write_double(datum)
     elif writers_schema.type == 'bytes':
-      encoder.write_bytes(datum)
+      if (hasattr(writers_schema, 'logical_type') and
+                      writers_schema.logical_type == 'decimal'):
+        encoder.write_decimal_bytes(datum, writers_schema.get_prop('scale'))
+      else:
+        encoder.write_bytes(datum)
     elif writers_schema.type == 'fixed':
-      self.write_fixed(writers_schema, datum, encoder)
+      if (hasattr(writers_schema, 'logical_type') and
+                      writers_schema.logical_type == 'decimal'):
+        encoder.write_decimal_fixed(
+          datum,
+          writers_schema.get_prop('scale'),
+          writers_schema.get_prop('size')
+        )
+      else:
+        self.write_fixed(writers_schema, datum, encoder)
     elif writers_schema.type == 'enum':
       self.write_enum(writers_schema, datum, encoder)
     elif writers_schema.type == 'array':
