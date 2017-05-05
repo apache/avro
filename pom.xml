@@ -223,6 +223,7 @@
                 <!-- build or test files -->
                 <!-- <exclude>**/target/**</exclude> -->
                 <exclude>**/*.log</exclude>
+                <exclude>**/*.text</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>
