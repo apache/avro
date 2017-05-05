@@ -329,6 +329,56 @@ public class EncoderFactory {
   }
 
   /**
+   * Creates a {@link JsonEncoder} using the OutputStream provided for writing
+   * data conforming to the Schema provided with optional pretty printing.
+   * <p/>
+   * {@link JsonEncoder} buffers its output. Data may not appear on the
+   * underlying OutputStream until {@link Encoder#flush()} is called.
+   * <p/>
+   * {@link JsonEncoder} is not thread-safe.
+   *
+   * @param schema
+   *          The Schema for data written to this JsonEncoder. Cannot be null.
+   * @param out
+   *          The OutputStream to write to. Cannot be null.
+   * @param pretty
+   *          Pretty print encoding.
+   * @param encodeBase64
+   *          Encode byte arrays with Base64.
+   * @return A JsonEncoder configured with <i>out</i>, <i>schema</i> and <i>pretty</i>
+   * @throws IOException
+   */
+  public JsonEncoder jsonEncoder(Schema schema, OutputStream out, boolean pretty, boolean encodeBase64)
+    throws IOException {
+    return new JsonEncoder(schema, out, pretty, encodeBase64);
+  }
+
+  /**
+   * Creates a {@link JsonEncoder} using the {@link JsonGenerator} provided for
+   * output of data conforming to the Schema provided.
+   * <p/>
+   * {@link JsonEncoder} buffers its output. Data may not appear on the
+   * underlying output until {@link Encoder#flush()} is called.
+   * <p/>
+   * {@link JsonEncoder} is not thread-safe.
+   *
+   * @param schema
+   *          The Schema for data written to this JsonEncoder. Cannot be null.
+   * @param gen
+   *          The JsonGenerator to write with. Cannot be null.
+   * @param encodeBase64
+   *          Encode byte arrays with Base64.
+   * @return A JsonEncoder configured with <i>gen</i> and <i>schema</i>
+   * @throws IOException
+   * @deprecated internal method
+   */
+  @Deprecated
+  public JsonEncoder jsonEncoder(Schema schema, JsonGenerator gen, boolean encodeBase64)
+    throws IOException {
+    return new JsonEncoder(schema, gen, encodeBase64);
+  }
+
+  /**
    * Creates a {@link ValidatingEncoder} that wraps the Encoder provided.
    * This ValidatingEncoder will ensure that operations against it conform
    * to the schema provided.

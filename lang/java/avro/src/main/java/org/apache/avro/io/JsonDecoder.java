@@ -23,11 +23,12 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.ArrayList;
+import java.util.Base64;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -55,6 +56,7 @@ public class JsonDecoder extends ParsingDecoder
   private static JsonFactory jsonFactory = new JsonFactory();
   Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
   ReorderBuffer currentReorderBuffer;
+  private boolean decodeBase64 = false;
 
   private static class ReorderBuffer {
     public Map<String, List<JsonElement>> savedFields = new HashMap<String, List<JsonElement>>();
@@ -79,6 +81,16 @@ public class JsonDecoder extends ParsingDecoder
 
   JsonDecoder(Schema schema, String in) throws IOException {
     this(getSymbol(schema), in);
+  }
+
+  JsonDecoder(Schema schema, InputStream in, boolean decodeBase64) throws IOException {
+    this(getSymbol(schema), in);
+    this.decodeBase64 = decodeBase64;
+  }
+
+  JsonDecoder(Schema schema, String in, boolean decodeBase64) throws IOException {
+    this(getSymbol(schema), in);
+    this.decodeBase64 = decodeBase64;
   }
 
   private static Symbol getSymbol(Schema schema) {
@@ -261,7 +273,12 @@ public class JsonDecoder extends ParsingDecoder
   }
 
   private byte[] readByteArray() throws IOException {
-    byte[] result = in.getText().getBytes(CHARSET);
+    byte[] result;
+    if (decodeBase64) {
+      result = Base64.getDecoder().decode(in.getText());
+    } else {
+      result = in.getText().getBytes(CHARSET);
+    }
     return result;
   }
 

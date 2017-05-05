@@ -20,6 +20,8 @@ package org.apache.avro.io;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.BitSet;
 
 import org.apache.avro.AvroTypeException;
@@ -47,6 +49,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
   final Parser parser;
   private JsonGenerator out;
+  private boolean encodeBase64 = false;
   /**
    * Has anything been written into the collections?
    */
@@ -64,6 +67,18 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     configure(out);
     this.parser =
       new Parser(new JsonGrammarGenerator().generate(sc), this);
+  }
+
+  JsonEncoder(Schema sc, OutputStream out, boolean pretty, boolean encodeBase64) throws IOException {
+    this(sc, getJsonGenerator(out, pretty));
+    this.encodeBase64 = encodeBase64;
+  }
+
+  JsonEncoder(Schema sc, JsonGenerator out, boolean encodeBase64) throws IOException {
+    configure(out);
+    this.parser =
+      new Parser(new JsonGrammarGenerator().generate(sc), this);
+    this.encodeBase64 = encodeBase64;
   }
 
   @Override
@@ -215,8 +230,14 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
 
   private void writeByteArray(byte[] bytes, int start, int len)
     throws IOException {
-    out.writeString(
+    if (encodeBase64) {
+      out.writeString(
+        Base64.getEncoder().encodeToString(Arrays.copyOfRange(bytes, start, len+start)));
+    } else {
+      out.writeString(
         new String(bytes, start, len, JsonDecoder.CHARSET));
+    }
+
   }
 
   @Override
