@@ -338,6 +338,8 @@ class Field(object):
       try:
         type_schema = make_avsc_object(type, names)
       except Exception, e:
+        if e.message.startswith('Type property'):
+          raise
         fail_msg = 'Type property "%s" not a valid Avro schema: %s' % (type, e)
         raise SchemaParseException(fail_msg)
     self.set_prop('type', type_schema)
