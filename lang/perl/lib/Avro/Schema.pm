@@ -309,6 +309,7 @@ sub is_data_valid {
         return defined $data ? 0 : 1;
     }
     if ($type eq 'boolean') {
+        return 1 if $data == 0 || $data == 1;
         return 0 if ref $data; # sometimes risky
         return 1 if $data =~ m{yes|no|y|n|t|f|true|false}i;
         return 0;
@@ -523,7 +524,7 @@ sub new {
         my $is_valid = $type->is_data_valid($struct->{default});
         my $t = $type->type;
         throw Avro::Schema::Error::Parse(
-            "default value doesn't validate $t: '$struct->{default}'"
+            "default value for field $name doesn't validate $t: '$struct->{default}'"
         ) unless $is_valid;
 
         ## small Perlish special case
