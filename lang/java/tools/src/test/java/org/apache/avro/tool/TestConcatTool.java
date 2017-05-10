@@ -25,7 +25,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -105,6 +107,83 @@ public class TestConcatTool {
     }
     reader.close();
     return rowcount;
+  }
+
+  @Test
+  public void testDirConcat() throws Exception {
+    Map<String, String> metadata = new HashMap<String, String>();
+
+    File dir = AvroTestUtil.tempDirectory(getClass(), "input");
+
+    for (int i = 0; i < 3; i++) {
+      String filename = "input" + i + ".avro";
+      File input = generateData(filename, Type.STRING, metadata, DEFLATE);
+      boolean ok = input.renameTo(new File(dir, input.getName()));
+      assertTrue(ok);
+    }
+
+    File output = AvroTestUtil.tempFile(getClass(), "default-output.avro");
+    output.deleteOnExit();
+
+    List<String> args = asList(
+      dir.getAbsolutePath(),
+      output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(
+      System.in,
+      System.out,
+      System.err,
+      args);
+    assertEquals(0, returnCode);
+
+    assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
+  }
+
+  @Test
+  public void testGlobPatternConcat() throws Exception {
+    Map<String, String> metadata = new HashMap<String, String>();
+
+    File dir = AvroTestUtil.tempDirectory(getClass(), "input");
+
+    for (int i = 0; i < 3; i++) {
+      String filename = "input" + i + ".avro";
+      File input = generateData(filename, Type.STRING, metadata, DEFLATE);
+      boolean ok = input.renameTo(new File(dir, input.getName()));
+      assertTrue(ok);
+    }
+
+    File output = AvroTestUtil.tempFile(getClass(), "default-output.avro");
+    output.deleteOnExit();
+
+    List<String> args = asList(
+      new File(dir, "/*").getAbsolutePath(),
+      output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(
+      System.in,
+      System.out,
+      System.err,
+      args);
+    assertEquals(0, returnCode);
+
+    assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
+  }
+
+  @Test(expected = FileNotFoundException.class)
+  public void testFileDoesNotExist() throws Exception {
+    Map<String, String> metadata = new HashMap<String, String>();
+
+    File dir = AvroTestUtil.tempDirectory(getClass(), "input");
+
+    File output = AvroTestUtil.tempFile(getClass(), "default-output.avro");
+    output.deleteOnExit();
+
+    List<String> args = asList(
+      new File(dir, "/doNotExist").getAbsolutePath(),
+      output.getAbsolutePath());
+    new ConcatTool().run(
+      System.in,
+      System.out,
+      System.err,
+      args);
   }
 
   @Test

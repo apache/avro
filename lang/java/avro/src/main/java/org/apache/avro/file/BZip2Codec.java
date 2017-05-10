@@ -87,7 +87,7 @@ public class BZip2Codec extends Codec {
   public boolean equals(Object obj) {
     if (this == obj)
       return true;
-    if (getClass() != obj.getClass())
+    if (obj == null || obj.getClass() != getClass())
       return false;
     return true;
   }

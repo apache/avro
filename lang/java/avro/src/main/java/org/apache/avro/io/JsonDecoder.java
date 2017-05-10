@@ -105,6 +105,8 @@ public class JsonDecoder extends ParsingDecoder
       throw new NullPointerException("InputStream to read from cannot be null!");
     }
     parser.reset();
+    reorderBuffers.clear();
+    currentReorderBuffer = null;
     this.in = jsonFactory.createJsonParser(in);
     this.in.nextToken();
     return this;
@@ -127,6 +129,8 @@ public class JsonDecoder extends ParsingDecoder
       throw new NullPointerException("String to read from cannot be null!");
     }
     parser.reset();
+    reorderBuffers.clear();
+    currentReorderBuffer = null;
     this.in = new JsonFactory().createJsonParser(in);
     this.in.nextToken();
     return this;

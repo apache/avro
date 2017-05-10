@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {test|dist|clean|install|doc}"
   exit 1
 }
 
@@ -76,17 +76,20 @@ function do_dist() {
 
 case "$target" in
   test)
-    (cd build && make && cd .. \
+    (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug .. && make && cd .. \
       && ./build/buffertest \
       && ./build/unittest \
       && ./build/CodecTests \
+      && ./build/CompilerTests \
       && ./build/StreamTests \
       && ./build/SpecificTests \
       && ./build/AvrogencppTests \
-      && ./build/DataFileTests)
+      && ./build/DataFileTests   \
+      && ./build/SchemaTests)
     ;;
 
   dist)
+    (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..)
     do_dist
     do_doc
     ;;
@@ -101,7 +104,7 @@ case "$target" in
     ;;
 
   install)
-    (cd build && make install)
+    (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release .. && make install)
     ;;
 
   *)

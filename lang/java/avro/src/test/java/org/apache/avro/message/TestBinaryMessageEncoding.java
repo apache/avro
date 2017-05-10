@@ -238,4 +238,42 @@ public class TestBinaryMessageEncoding {
     decoder.decode(buffer);
   }
 
+  @Test(expected = BadHeaderException.class)
+  public void testByteBufferBadMarkerByte() throws Exception {
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
+        GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
+        GenericData.get(), SCHEMA_V2);
+
+    ByteBuffer buffer = encoder.encode(V2_RECORDS.get(0));
+    buffer.array()[0] = 0x00;
+
+    decoder.decode(buffer);
+  }
+
+  @Test(expected = BadHeaderException.class)
+  public void testByteBufferBadVersionByte() throws Exception {
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
+        GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
+        GenericData.get(), SCHEMA_V2);
+
+    ByteBuffer buffer = encoder.encode(V2_RECORDS.get(0));
+    buffer.array()[1] = 0x00;
+
+    decoder.decode(buffer);
+  }
+
+  @Test(expected = MissingSchemaException.class)
+  public void testByteBufferUnknownSchema() throws Exception {
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
+        GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
+        GenericData.get(), SCHEMA_V2);
+
+    ByteBuffer buffer = encoder.encode(V2_RECORDS.get(0));
+    buffer.array()[4] = 0x00;
+
+    decoder.decode(buffer);
+  }
 }

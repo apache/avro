@@ -435,7 +435,7 @@ public abstract class Schema extends JsonProperties {
      * @return the default value for this field specified using the mapping
      *  in {@link JsonProperties}
      */
-    public Object defaultVal() { return JacksonUtils.toObject(defaultValue); }
+    public Object defaultVal() { return JacksonUtils.toObject(defaultValue, schema); }
     public Order order() { return order; }
     @Deprecated public Map<String,String> props() { return getProps(); }
     public void addAlias(String alias) {
@@ -464,6 +464,8 @@ public abstract class Schema extends JsonProperties {
     private boolean defaultValueEquals(JsonNode thatDefaultValue) {
       if (defaultValue == null)
         return thatDefaultValue == null;
+      if (thatDefaultValue == null)
+        return false;
       if (Double.isNaN(defaultValue.getDoubleValue()))
         return Double.isNaN(thatDefaultValue.getDoubleValue());
       return defaultValue.equals(thatDefaultValue);
@@ -587,6 +589,7 @@ public abstract class Schema extends JsonProperties {
     private Object s1; private Object s2;
     private SeenPair(Object s1, Object s2) { this.s1 = s1; this.s2 = s2; }
     public boolean equals(Object o) {
+      if (!(o instanceof SeenPair)) return false;
       return this.s1 == ((SeenPair)o).s1 && this.s2 == ((SeenPair)o).s2;
     }
     public int hashCode() {

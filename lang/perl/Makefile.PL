@@ -19,6 +19,7 @@ use Config;
 use inc::Module::Install;
 
 my $version = `cat ../../share/VERSION.txt`;
+chomp $version;
 
 license 'apache';
 version $version;

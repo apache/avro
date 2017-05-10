@@ -189,23 +189,22 @@ NodeRecord::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
     printName(os, nameAttribute_.get(), depth);
-    os << indent(depth) << "\"fields\": [\n";
+    os << indent(depth) << "\"fields\": [";
 
     int fields = leafAttributes_.size();
     ++depth;
     for(int i = 0; i < fields; ++i) {
         if(i > 0) {
-            os << indent(depth) << "},\n";
+            os << ',';
         }
-        os << indent(depth) << "{\n";
+        os << '\n' << indent(depth) << "{\n";
         os << indent(++depth) << "\"name\": \"" << leafNameAttributes_.get(i) << "\",\n";
         os << indent(depth) << "\"type\": ";
         leafAttributes_.get(i)->printJson(os, depth);
         os << '\n';
-        --depth;
+        os << indent(--depth) << '}';
     }
-    os << indent(depth) << "}\n";
-    os << indent(--depth) << "]\n";
+    os << '\n' << indent(--depth) << "]\n";
     os << indent(--depth) << '}';
 }
 

@@ -338,12 +338,29 @@ module Avro
 
       def decompress(data)
         load_snappy!
+        crc32 = data.slice(-4..-1).unpack('N').first
+        uncompressed = Snappy.inflate(data.slice(0..-5))
+
+        if crc32 == Zlib.crc32(uncompressed)
+          uncompressed
+        else
+          # older versions of avro-ruby didn't write the checksum, so if it
+          # doesn't match this must assume that it wasn't there and return
+          # the entire payload uncompressed.
+          Snappy.inflate(data)
+        end
+      rescue Snappy::Error
+        # older versions of avro-ruby didn't write the checksum, so removing
+        # the last 4 bytes may cause Snappy to fail. recover by assuming the
+        # payload is from an older file and uncompress the entire buffer.
         Snappy.inflate(data)
       end
 
       def compress(data)
         load_snappy!
-        Snappy.deflate(data)
+        crc32 = Zlib.crc32(data)
+        compressed = Snappy.deflate(data)
+        [compressed, crc32].pack('a*N')
       end
 
       private

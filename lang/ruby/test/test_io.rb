@@ -340,7 +340,70 @@ EOS
       assert_equal(incorrect, 0)
     end
   end
+
+  def test_interchangeable_schemas
+    interchangeable_schemas = ['"string"', '"bytes"']
+    incorrect = 0
+    interchangeable_schemas.each_with_index do |ws, i|
+      writers_schema = Avro::Schema.parse(ws)
+      datum_to_write = 'foo'
+      readers_schema = Avro::Schema.parse(interchangeable_schemas[i == 0 ? 1 : 0])
+      writer, * = write_datum(datum_to_write, writers_schema)
+      datum_read = read_datum(writer, writers_schema, readers_schema)
+      if datum_read != datum_to_write
+        incorrect += 1
+      end
+    end
+    assert_equal(incorrect, 0)
+  end
+
+  def test_array_schema_promotion
+    writers_schema = Avro::Schema.parse('{"type":"array", "items":"int"}')
+    readers_schema = Avro::Schema.parse('{"type":"array", "items":"long"}')
+    datum_to_write = [1, 2]
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, datum_to_write)
+  end
+
+  def test_map_schema_promotion
+    writers_schema = Avro::Schema.parse('{"type":"map", "values":"int"}')
+    readers_schema = Avro::Schema.parse('{"type":"map", "values":"long"}')
+    datum_to_write = { 'foo' => 1, 'bar' => 2 }
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, datum_to_write)
+  end
+
+  def test_snappy_backward_compat
+    # a snappy-compressed block payload without the checksum
+    # this has no back-references, just one literal so the last 9
+    # bytes are the uncompressed payload.
+    old_snappy_bytes = "\x09\x20\x02\x06\x02\x0a\x67\x72\x65\x65\x6e"
+    uncompressed_bytes = "\x02\x06\x02\x0a\x67\x72\x65\x65\x6e"
+    snappy = Avro::DataFile::SnappyCodec.new
+    assert_equal(uncompressed_bytes, snappy.decompress(old_snappy_bytes))
+  end
+
   private
+
+  def check_no_default(schema_json)
+    actual_schema = '{"type": "record", "name": "Foo", "fields": []}'
+    actual = Avro::Schema.parse(actual_schema)
+
+    expected_schema = <<EOS
+      {"type": "record",
+       "name": "Foo",
+       "fields": [{"name": "f", "type": #{schema_json}}]}
+EOS
+    expected = Avro::Schema.parse(expected_schema)
+
+    reader = Avro::IO::DatumReader.new(actual, expected)
+    assert_raise Avro::AvroError do
+      value = reader.read(Avro::IO::BinaryDecoder.new(StringIO.new))
+      assert_not_equal(value, :no_default) # should never return this
+    end
+  end
 
   def check_default(schema_json, default_json, default_value)
     actual_schema = '{"type": "record", "name": "Foo", "fields": []}'
@@ -381,6 +444,9 @@ EOS
 
     # test writing of data to file
     check_datafile(schema)
+
+    # check that AvroError is raised when there is no default
+    check_no_default(str)
   end
 
   def checkser(schm, randomdata)

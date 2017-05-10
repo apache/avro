@@ -34,6 +34,8 @@ import java.util.Map;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -500,47 +502,69 @@ public class GenericData {
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
   public String toString(Object datum) {
     StringBuilder buffer = new StringBuilder();
-    toString(datum, buffer);
+    toString(datum, buffer, new IdentityHashMap<Object, Object>(128) );
     return buffer.toString();
   }
+
+  private static final String TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT =
+    " \">>> CIRCULAR REFERENCE CANNOT BE PUT IN JSON STRING, ABORTING RECURSION <<<\" ";
+
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
-  protected void toString(Object datum, StringBuilder buffer) {
+  protected void toString(Object datum, StringBuilder buffer, IdentityHashMap<Object, Object> seenObjects) {
     if (isRecord(datum)) {
+      if (seenObjects.containsKey(datum)) {
+        buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
+        return;
+      }
+      seenObjects.put(datum, datum);
       buffer.append("{");
       int count = 0;
       Schema schema = getRecordSchema(datum);
       for (Field f : schema.getFields()) {
-        toString(f.name(), buffer);
+        toString(f.name(), buffer, seenObjects);
         buffer.append(": ");
-        toString(getField(datum, f.name(), f.pos()), buffer);
+        toString(getField(datum, f.name(), f.pos()), buffer, seenObjects);
         if (++count < schema.getFields().size())
           buffer.append(", ");
       }
       buffer.append("}");
+      seenObjects.remove(datum);
     } else if (isArray(datum)) {
+      if (seenObjects.containsKey(datum)) {
+        buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
+        return;
+      }
+      seenObjects.put(datum, datum);
       Collection<?> array = getArrayAsCollection(datum);
       buffer.append("[");
       long last = array.size()-1;
       int i = 0;
       for (Object element : array) {
-        toString(element, buffer);
+        toString(element, buffer, seenObjects);
         if (i++ < last)
           buffer.append(", ");
       }
       buffer.append("]");
+      seenObjects.remove(datum);
     } else if (isMap(datum)) {
+      if (seenObjects.containsKey(datum)) {
+        buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
+        return;
+      }
+      seenObjects.put(datum, datum);
       buffer.append("{");
       int count = 0;
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet()) {
-        toString(entry.getKey(), buffer);
+        toString(entry.getKey(), buffer, seenObjects);
         buffer.append(": ");
-        toString(entry.getValue(), buffer);
+        toString(entry.getValue(), buffer, seenObjects);
         if (++count < map.size())
           buffer.append(", ");
       }
       buffer.append("}");
+      seenObjects.remove(datum);
     } else if (isString(datum)|| isEnum(datum)) {
       buffer.append("\"");
       writeEscapedString(datum.toString(), buffer);
@@ -557,6 +581,14 @@ public class GenericData {
       buffer.append("\"");
       buffer.append(datum);
       buffer.append("\"");
+    } else if (datum instanceof GenericData) {
+      if (seenObjects.containsKey(datum)) {
+        buffer.append(TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT);
+        return;
+      }
+      seenObjects.put(datum, datum);
+      toString(datum, buffer, seenObjects);
+      seenObjects.remove(datum);
     } else {
       buffer.append(datum);
     }
@@ -712,7 +744,7 @@ public class GenericData {
   /** Return the schema full name for a datum.  Called by {@link
    * #resolveUnion(Schema,Object)}. */
   protected String getSchemaName(Object datum) {
-    if (datum == null)
+    if (datum == null || datum == JsonProperties.NULL_VALUE)
       return Type.NULL.getName();
     if (isRecord(datum))
       return getRecordSchema(datum).getFullName();
@@ -1018,15 +1050,31 @@ public class GenericData {
 
   /**
    * Makes a deep copy of a value given its schema.
+   * <P>Logical types are converted to raw types, copied, then converted back.
    * @param schema the schema of the value to deep copy.
    * @param value the value to deep copy.
    * @return a deep copy of the given value.
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public <T> T deepCopy(Schema schema, T value) {
+    if (value == null) return null;
+    LogicalType logicalType = schema.getLogicalType();
+    if (logicalType == null)           // not a logical type -- use raw copy
+      return (T)deepCopyRaw(schema, value);
+    Conversion conversion = getConversionByClass(value.getClass(), logicalType);
+    if (conversion == null)            // no conversion defined -- try raw copy
+      return (T)deepCopyRaw(schema, value);
+    // logical type with conversion: convert to raw, copy, then convert back to logical
+    Object raw = Conversions.convertToRawType(value, schema, logicalType, conversion);
+    Object copy = deepCopyRaw(schema, raw);       // copy raw
+    return (T)Conversions.convertToLogicalType(copy, schema, logicalType, conversion);
+  }
+
+  private Object deepCopyRaw(Schema schema, Object value) {
     if (value == null) {
       return null;
     }
+
     switch (schema.getType()) {
       case ARRAY:
         List<Object> arrayValue = (List) value;
@@ -1035,7 +1083,7 @@ public class GenericData {
         for (Object obj : arrayValue) {
           arrayCopy.add(deepCopy(schema.getElementType(), obj));
         }
-        return (T)arrayCopy;
+        return arrayCopy;
       case BOOLEAN:
         return value; // immutable
       case BYTES:
@@ -1045,13 +1093,13 @@ public class GenericData {
         byte[] bytesCopy = new byte[length];
         byteBufferValue.get(bytesCopy, 0, length);
         byteBufferValue.position(start);
-        return (T)ByteBuffer.wrap(bytesCopy, 0, length);
+        return ByteBuffer.wrap(bytesCopy, 0, length);
       case DOUBLE:
         return value; // immutable
       case ENUM:
-        return (T)createEnum(value.toString(), schema);
+        return createEnum(value.toString(), schema);
       case FIXED:
-        return (T)createFixed(null, ((GenericFixed) value).bytes(), schema);
+        return createFixed(null, ((GenericFixed) value).bytes(), schema);
       case FLOAT:
         return value; // immutable
       case INT:
@@ -1066,7 +1114,7 @@ public class GenericData {
           mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
               deepCopy(schema.getValueType(), entry.getValue()));
         }
-        return (T)mapCopy;
+        return mapCopy;
       case NULL:
         return null;
       case RECORD:
@@ -1080,11 +1128,11 @@ public class GenericData {
                                      getField(value, name, pos, oldState));
           setField(newRecord, name, pos, newValue, newState);
         }
-        return (T)newRecord;
+        return newRecord;
       case STRING:
         // Strings are immutable
         if (value instanceof String) {
-          return (T)value;
+          return value;
         }
 
         // Some CharSequence subclasses are mutable, so we still need to make
@@ -1092,9 +1140,9 @@ public class GenericData {
         else if (value instanceof Utf8) {
           // Utf8 copy constructor is more efficient than converting
           // to string and then back to Utf8
-          return (T)new Utf8((Utf8)value);
+          return new Utf8((Utf8)value);
         }
-        return (T)new Utf8(value.toString());
+        return new Utf8(value.toString());
       case UNION:
         return deepCopy(
             schema.getTypes().get(resolveUnion(schema, value)), value);

@@ -25,6 +25,7 @@
 #include <algorithm>
 
 #include "boost/array.hpp"
+#include "boost/blank.hpp"
 
 #include "Config.hh"
 #include "Encoder.hh"
@@ -45,6 +46,8 @@
  * avro::codec_traits class for their types.
  */
 namespace avro {
+
+typedef boost::blank null;
 
 template <typename T> void encode(Encoder& e, const T& t);
 template <typename T> void decode(Decoder& d, T& t);
@@ -288,6 +291,27 @@ template <typename T> struct codec_traits<std::map<std::string, T> > {
         }
     }
 };
+
+/**
+* codec_traits for Avro null.
+*/
+template <> struct codec_traits<avro::null> {
+	/**
+	* Encodes a given value.
+	*/
+	static void encode(Encoder& e, const avro::null&) {
+		e.encodeNull();
+	}
+
+	/**
+	* Decodes into a given value.
+	*/
+	static void decode(Decoder& d, avro::null&) {
+		d.decodeNull();
+	}
+};
+
+
 
 /**
  * Generic encoder function that makes use of the codec_traits.

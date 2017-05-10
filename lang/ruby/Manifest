@@ -11,6 +11,7 @@ lib/avro/io.rb
 lib/avro/ipc.rb
 lib/avro/protocol.rb
 lib/avro/schema.rb
+lib/avro/schema_compatibility.rb
 lib/avro/schema_normalization.rb
 lib/avro/schema_validator.rb
 test/case_finder.rb
@@ -25,6 +26,7 @@ test/test_help.rb
 test/test_io.rb
 test/test_protocol.rb
 test/test_schema.rb
+test/test_schema_compatibility.rb
 test/test_schema_normalization.rb
 test/test_schema_validator.rb
 test/test_socket_transport.rb

@@ -50,7 +50,7 @@ public abstract class SpecificRecordBase
     return get(getSchema().getField(fieldName).pos());
   }
 
-  public Conversion<?> getConverion(String fieldName) {
+  public Conversion<?> getConversion(String fieldName) {
     return getConversion(getSchema().getField(fieldName).pos());
   }
 

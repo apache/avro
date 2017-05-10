@@ -109,6 +109,7 @@ public class SpecificCompiler {
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
+  private String suffix = ".java";
 
   /*
    * Used in the record.vm template.
@@ -169,6 +170,11 @@ public class SpecificCompiler {
    * present on the classpath.*/
   public void setTemplateDir(String templateDir) {
     this.templateDir = templateDir;
+  }
+
+  /** Set the resource file suffix, .java or .xxx */
+  public void setSuffix(String suffix) {
+    this.suffix = suffix;
   }
 
   /**
@@ -400,12 +406,13 @@ public class SpecificCompiler {
     return outputFile;
   }
 
-  static String makePath(String name, String space) {
+  //package private for testing purposes
+  String makePath(String name, String space) {
     if (space == null || space.isEmpty()) {
-      return name + ".java";
+      return name + suffix;
     } else {
       return space.replace('.', File.separatorChar) + File.separatorChar + name
-          + ".java";
+          + suffix;
     }
   }
 

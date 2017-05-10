@@ -18,6 +18,9 @@ module Avro
   class SchemaValidator
     ROOT_IDENTIFIER = '.'.freeze
     PATH_SEPARATOR = '.'.freeze
+    INT_RANGE = Schema::INT_MIN_VALUE..Schema::INT_MAX_VALUE
+    LONG_RANGE = Schema::LONG_MIN_VALUE..Schema::LONG_MAX_VALUE
+    COMPLEX_TYPES = [:array, :error, :map, :record, :request]
 
     class Result
       attr_reader :errors
@@ -77,15 +80,13 @@ module Avro
         when :string, :bytes
           fail TypeMismatchError unless datum.is_a?(String)
         when :int
-          fail TypeMismatchError unless datum.is_a?(Fixnum) || datum.is_a?(Bignum)
-          range = (Schema::INT_MIN_VALUE..Schema::INT_MAX_VALUE)
-          result.add_error(path, "out of bound value #{datum}") unless range.cover?(datum)
+          fail TypeMismatchError unless datum.is_a?(Integer)
+          result.add_error(path, "out of bound value #{datum}") unless INT_RANGE.cover?(datum)
         when :long
-          fail TypeMismatchError unless datum.is_a?(Fixnum) || datum.is_a?(Bignum)
-          range = (Schema::LONG_MIN_VALUE..Schema::LONG_MAX_VALUE)
-          result.add_error(path, "out of bound value #{datum}") unless range.cover?(datum)
+          fail TypeMismatchError unless datum.is_a?(Integer)
+          result.add_error(path, "out of bound value #{datum}") unless LONG_RANGE.cover?(datum)
         when :float, :double
-          fail TypeMismatchError unless [Float, Fixnum, Bignum].any?(&datum.method(:is_a?))
+          fail TypeMismatchError unless [Float, Integer].any?(&datum.method(:is_a?))
         when :fixed
           if datum.is_a? String
             message = "expected fixed with size #{expected_schema.size}, got \"#{datum}\" with size #{datum.size}"
@@ -140,8 +141,7 @@ module Avro
         types_and_results = validate_possible_types(datum, expected_schema, path)
         failures, successes = types_and_results.partition { |r| r[:result].failure? }
         return if successes.any?
-        complex_types = [:array, :error, :map, :record, :request]
-        complex_type_failed = failures.detect { |r| complex_types.include?(r[:type]) }
+        complex_type_failed = failures.detect { |r| COMPLEX_TYPES.include?(r[:type]) }
         if complex_type_failed
           complex_type_failed[:result].errors.each { |error| result << error }
         else
@@ -165,7 +165,11 @@ module Avro
       private
 
       def actual_value_message(value)
-        avro_type = ruby_to_avro_type(value.class)
+        avro_type = if value.class == Integer
+                      ruby_integer_to_avro_type(value)
+                    else
+                      ruby_to_avro_type(value.class)
+                    end
         if value.nil?
           avro_type
         else
@@ -182,6 +186,10 @@ module Avro
           Float => 'float',
           Hash => 'record'
         }.fetch(ruby_class, ruby_class)
+      end
+
+      def ruby_integer_to_avro_type(value)
+        INT_RANGE.cover?(value) ? 'int' : 'long'
       end
     end
   end

@@ -18,6 +18,9 @@
 
 package org.apache.avro;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.MapMaker;
 import com.google.common.primitives.Bytes;
 
@@ -29,5 +32,8 @@ class GuavaClasses {
   static {
     MapMaker.class.getName();
     Bytes.class.getName();
+    LoadingCache.class.getName();
+    CacheBuilder.class.getName();
+    CacheLoader.class.getName();
   }
 }
