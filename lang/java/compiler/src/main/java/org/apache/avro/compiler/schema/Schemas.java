@@ -1,9 +1,8 @@
 package org.apache.avro.compiler.schema;
 
-import avro.shaded.com.google.common.base.Function;
-import avro.shaded.com.google.common.base.Supplier;
-import avro.shaded.com.google.common.collect.Lists;
-
+import com.google.common.base.Function;
+import com.google.common.base.Supplier;
+import com.google.common.collect.Lists;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
