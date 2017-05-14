@@ -15,8 +15,7 @@
  */
 package org.apache.avro.compiler.idl;
 
-import avro.shaded.com.google.common.base.Function;
-
+import com.google.common.base.Function;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
