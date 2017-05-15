@@ -494,14 +494,23 @@ public class JsonDecoder extends ParsingDecoder
         throw error("record-start");
       }
     } else if (top == Symbol.RECORD_END || top == Symbol.UNION_END) {
-      if (in.getCurrentToken() == JsonToken.END_OBJECT) {
+      //AVRO-2034 advance to the end of our object
+      while(in.getCurrentToken() != JsonToken.END_OBJECT){
         in.nextToken();
+      }
+
+      if (in.getCurrentToken() == JsonToken.END_OBJECT) {
+
         if (top == Symbol.RECORD_END) {
           if (currentReorderBuffer != null && !currentReorderBuffer.savedFields.isEmpty()) {
             throw error("Unknown fields: " + currentReorderBuffer.savedFields.keySet());
           }
           currentReorderBuffer = reorderBuffers.pop();
         }
+
+        //AVRO-2034 advance beyond the end object for the next record.
+        in.nextToken();
+
       } else {
         throw error(top == Symbol.RECORD_END ? "record-end" : "union-end");
       }
