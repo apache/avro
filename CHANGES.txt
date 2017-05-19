@@ -48,6 +48,8 @@ Trunk (not yet released)
 
     AVRO-1748. Add Snappy Compression to C++ DataFile (J. Langley via thiru)
 
+    AVRO-1723. Add support for forward declarations in avro IDL (Zoltan Farcas via thiru)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
