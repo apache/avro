@@ -94,7 +94,7 @@ public class TestSchemaCompatibilityMissingUnionBranch {
         { INT_UNION_SCHEMA, INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
             "reader union lacking writer type: LONG", "/1" },
         { A_DINT_B_DINT_UNION_RECORD1, A_DINT_B_DINT_STRING_UNION_RECORD1,
-              "reader union lacking writer type: STRING", "/fields/1/type/1" },
+              "reader union lacking writer type: STRING", "/fields/1/type/1" }
     };
     List<Object[]> list = new ArrayList<Object[]>(fields.length);
     for (Object[] schemas : fields) {

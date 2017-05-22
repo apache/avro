@@ -359,14 +359,11 @@ public class SchemaCompatibility {
 
         // Reader compatible with all branches of a writer union is compatible
         if (writer.getType() == Schema.Type.UNION) {
-          int i = 0;
           for (Schema s : writer.getTypes()) {
-            location.push(Integer.toString(i));
             SchemaCompatibilityResult result = getCompatibility(reader, s);
             if (result.getCompatibility() == SchemaCompatibilityType.INCOMPATIBLE) {
               return result;
             }
-            location.pop();
           }
           return SchemaCompatibilityResult.compatible();
         }
