@@ -195,6 +195,7 @@ public:
      */
     GenericUnion(const NodePtr& schema) :
         GenericContainer(AVRO_UNION, schema), curBranch_(schema->leaves()) {
+        selectBranch(0);
     }
 
     /**

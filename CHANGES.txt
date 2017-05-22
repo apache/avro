@@ -149,6 +149,8 @@ Trunk (not yet released)
 
     AVRO-1997. Avro Field.defaultVal broken for Fixed fields. (Zoltan Farkasi via thiru)
 
+    AVRO-2033. GenericUnions constructor defaults to a broken state (Philip Rizk via thiru)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
