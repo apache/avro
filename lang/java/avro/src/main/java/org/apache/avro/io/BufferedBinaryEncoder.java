@@ -158,7 +158,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   @Override
   public void writeFixed(ByteBuffer bytes) throws IOException {
     ByteBuffer readOnlyBytes = bytes.asReadOnlyBuffer();
-    if (!readOnlyBytes.hasArray() && readOnlyBytes.remaining() > bulkLimit) {
+    if (!bytes.hasArray() && bytes.remaining() > bulkLimit) {
       flushBuffer();
       sink.innerWrite(readOnlyBytes);                     // bypass the readOnlyBytes
     } else {
