@@ -86,7 +86,14 @@ public class CreateRandomFileTool implements Tool {
     writer.setCodec(Util.codecFactory(opts, codec, level));
     writer.create(schema, Util.fileOrStdout(args.get(0), out));
 
-    for (Object datum : new RandomData(schema, (int)count.value(opts)))
+    Integer countValue = count.value(opts);
+    if (countValue == null) {
+      err.println("Need count (--count)");
+      p.printHelpOn(err);
+      return 1;
+    }
+
+    for (Object datum : new RandomData(schema, countValue))
       writer.append(datum);
 
     writer.close();
