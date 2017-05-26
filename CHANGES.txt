@@ -154,6 +154,8 @@ Trunk (not yet released)
     AVRO-1857: GenericDatumWriter.write using BufferedBinaryEncoder leaves ByteBuffer in indeterminate state
     (Nandor Kollar via gabor)
 
+    AVRO-1990: CreateRandomFileTool should validate arguments (Nandor Kollar via gabor)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
