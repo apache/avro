@@ -404,6 +404,103 @@ class PrimitiveSchema(Schema):
   def __eq__(self, that):
     return self.props == that.props
 
+# Logical type class
+class LogicalSchema(Schema):
+  def __init__(self, type, logical_type, other_props=None):
+    self.logical_type = logical_type
+
+    # Call parent ctor
+    Schema.__init__(self, type, other_props)
+    self.set_prop('logicalType', logical_type)
+
+  def validate(self, validation_props=None):
+    raise NotImplementedError()
+
+#
+# Date Type
+#
+
+class DateSchema(LogicalSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, 'int', 'date', other_props=other_props)
+
+  def to_json(self):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+# super class for time related logical types
+class _TimeSchema(LogicalSchema):
+  def __init__(self, type, logical_type, fsp, other_props=None):
+    LogicalSchema.__init__(self, type, logical_type, other_props)
+    self.set_prop('fsp', fsp)
+
+  def to_json(self):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+  def validate(self, validation_props=None):
+    if not isinstance(self.get_prop('fsp'), int):
+      raise SchemaParseException('Fsp (Integer) is required for logical type %s.' % self.get_prop('logicalType'))
+
+    if self.get_prop('fsp') > validation_props.get('max_fsp'):
+      raise SchemaParseException('logicalType %s supports only fsp <= %d' % (self.get_prop('logicalType'), self._max_fsp()))
+
+#
+# time-millis Type
+#
+
+class TimeMillisSchema(_TimeSchema):
+  def __init__(self, fsp, other_props=None):
+    _TimeSchema.__init__(self, 'int', 'time-millis', fsp, other_props)
+    self.validate({'max_fsp': TimeMillisSchema.max_fsp()})
+
+  @staticmethod
+  def max_fsp():
+    return 3
+
+#
+# time-micros Type
+#
+
+class TimeMicrosSchema(_TimeSchema):
+  def __init__(self, fsp, other_props=None):
+    _TimeSchema.__init__(self, 'long', 'time-micros', fsp, other_props)
+    self.validate({'max_fsp': TimeMicrosSchema.max_fsp()})
+
+  @staticmethod
+  def max_fsp():
+    return 6
+
+#
+# timestamp-millis Type
+#
+
+class TimestampMillisSchema(_TimeSchema):
+  def __init__(self, fsp, other_props=None):
+    _TimeSchema.__init__(self, 'long', 'timestamp-millis', fsp, other_props)
+    self.validate({'max_fsp': TimestampMillisSchema.max_fsp()})
+
+  @staticmethod
+  def max_fsp():
+    return 3
+
+#
+# timestamp-micros Type
+#
+
+class TimestampMicrosSchema(_TimeSchema):
+  def __init__(self, fsp, other_props=None):
+    _TimeSchema.__init__(self, 'long', 'timestamp-micros', fsp, other_props)
+    self.validate({'max_fsp': TimestampMicrosSchema.max_fsp()})
+
+  @staticmethod
+  def max_fsp():
+    return 6
+
 #
 # Complex Types (non-recursive)
 #
@@ -722,7 +819,34 @@ def make_avsc_object(json_data, names=None):
   if hasattr(json_data, 'get') and callable(json_data.get):
     type = json_data.get('type')
     other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
+    logical_type = None
+    if 'logicalType' in json_data:
+      logical_type = json_data.get('logicalType')
+      if logical_type not in ['date', 'time-millis', 'time-micros', 'timestamp-millis', 'timestamp-micros']:
+        raise SchemaParseException("Currently does not support %s logical type" % logical_type)
     if type in PRIMITIVE_TYPES:
+      if type == 'int' and logical_type == 'date':
+        return DateSchema(other_props)
+      elif type == 'int' and logical_type == 'time-millis':
+        return TimeMillisSchema(
+          fsp=json_data.get('fsp', 3),
+          other_props=other_props
+        )
+      elif type == 'long' and logical_type == 'time-micros':
+        return TimeMicrosSchema(
+          fsp=json_data.get('fsp', 6),
+          other_props=other_props
+        )
+      elif type == 'long' and logical_type == 'timestamp-millis':
+        return TimestampMillisSchema(
+          fsp=json_data.get('fsp', 3),
+          other_props=other_props
+        )
+      elif type == 'long' and logical_type == 'timestamp-micros':
+        return TimestampMicrosSchema(
+          fsp=json_data.get('fsp', 6),
+          other_props=other_props
+        )
       return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')
