@@ -36,19 +36,20 @@ import java.util.Set;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.JsonProperties;
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaNormalization;
 import org.apache.avro.data.TimeConversions.DateConversion;
 import org.apache.avro.data.TimeConversions.TimeConversion;
 import org.apache.avro.data.TimeConversions.TimestampConversion;
 import org.apache.avro.specific.SpecificData;
 import org.codehaus.jackson.JsonNode;
 
-import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.SchemaNormalization;
-import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.velocity.Template;
@@ -661,21 +662,18 @@ public class SpecificCompiler {
   }
 
   public String conversionInstance(Schema schema) {
-    if (schema == null || schema.getLogicalType() == null) {
+    LogicalType logicalType = schema.getLogicalType();
+    if (schema == null || logicalType == null) {
       return "null";
     }
 
-    if (LogicalTypes.date().equals(schema.getLogicalType())) {
-      return "DATE_CONVERSION";
-    } else if (LogicalTypes.timeMillis().equals(schema.getLogicalType())) {
-      return "TIME_CONVERSION";
-    } else if (LogicalTypes.timestampMillis().equals(schema.getLogicalType())) {
-      return "TIMESTAMP_CONVERSION";
-    } else if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass())) {
-      return enableDecimalLogicalType ? "DECIMAL_CONVERSION" : "null";
+    Conversion<Object> conversion = SPECIFIC.getConversionFor(logicalType);
+    if(conversion == null || (!enableDecimalLogicalType && LogicalTypes.Decimal.class.equals(logicalType.getClass()))) {
+      return "null";
+    } else {
+      return "new "+conversion.getClass().getCanonicalName()+"()";
     }
 
-    return "null";
   }
 
   /** Utility for template use.  Returns the java annotations for a schema. */
@@ -824,6 +822,10 @@ public class SpecificCompiler {
       default:
         return false;
     }
+  }
+
+  public static void addLogicalTypeConversion(Conversion<?> conversion) {
+    SPECIFIC.addLogicalTypeConversion(conversion);
   }
 
   /**
