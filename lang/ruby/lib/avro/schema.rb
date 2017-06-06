@@ -194,7 +194,7 @@ module Avro
 
       def self.make_field_objects(field_data, names, namespace=nil)
         field_objects, field_names = [], Set.new
-        field_data.each_with_index do |field, i|
+          field_data.each do |field|
           if field.respond_to?(:[]) # TODO(jmhodges) wtffffff
             type = field['type']
             name = field['name']
