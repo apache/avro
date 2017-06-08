@@ -1,5 +1,17 @@
 Avro Change Log
 
+Trunk (not yet released)
+
+  NEW FEATURES
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
+  BUG FIXES
+
+    AVRO-1401: @Nullable does not work with byte[] (Nandor Kollar via gabor)
+
 Avro 1.8.2 (10 April 2017)
 
   INCOMPATIBLE CHANGES
