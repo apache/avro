@@ -1048,4 +1048,31 @@ public class TestReflect {
           +"{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]}");
   }
 
+  public static class NullableBytesTest {
+    @Nullable
+    byte[] bytes;
+
+    NullableBytesTest() {
+    }
+
+    NullableBytesTest(byte[] bytes) {
+      this.bytes = bytes;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj instanceof NullableBytesTest
+              && Arrays.equals(((NullableBytesTest) obj).bytes, this.bytes);
+    }
+  }
+
+  @Test
+  public void testNullableByteArrayNotNullValue() throws Exception {
+    checkReadWrite(new NullableBytesTest("foo".getBytes()));
+  }
+
+  @Test
+  public void testNullableByteArrayNullValue() throws Exception {
+    checkReadWrite(new NullableBytesTest());
+  }
 }

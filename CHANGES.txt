@@ -156,6 +156,8 @@ Trunk (not yet released)
 
     AVRO-1990: CreateRandomFileTool should validate arguments (Nandor Kollar via gabor)
 
+    AVRO-1401: @Nullable does not work with byte[] (Nandor Kollar via gabor)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
