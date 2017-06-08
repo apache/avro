@@ -181,13 +181,15 @@ public class ReflectData extends SpecificData {
 
   /**
    * Returns true also for non-string-keyed maps, which are written as an array
-   * of key/value pair records.
+   * of key/value pair records. Returns false for array of bytes, since it should
+   * be treated as byte data type instead.
    */
   @Override
   protected boolean isArray(Object datum) {
     if (datum == null) return false;
+    Class c = datum.getClass();
     return (datum instanceof Collection)
-      || datum.getClass().isArray()
+      || (c.isArray() && !(c.getComponentType() == Byte.TYPE))
       || isNonStringMap(datum);
   }
 

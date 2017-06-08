@@ -40,7 +40,9 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -1048,4 +1050,17 @@ public class TestReflect {
           +"{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]}");
   }
 
+  private static class NullableBytesTest {
+    @Nullable
+    byte[] bytes = "foo".getBytes();
+  }
+
+  @Test
+  public void testNullableByteArray() throws IOException {
+    Schema schema = ReflectData.get().getSchema(NullableBytesTest.class);
+    DatumWriter<?> protocol = ReflectData.get().createDatumWriter(schema);
+    DataFileWriter<NullableBytesTest> writer = new DataFileWriter(protocol).create(schema, new ByteArrayOutputStream());
+    writer.append(new NullableBytesTest());
+    writer.close();
+  }
 }
