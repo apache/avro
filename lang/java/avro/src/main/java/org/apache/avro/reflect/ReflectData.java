@@ -184,7 +184,7 @@ public class ReflectData extends SpecificData {
    * <ul>
    * <li><p>Returns true for non-string-keyed maps, which are written as an array of key/value pair records.</p></li>
    * <li><p>Returns false for arrays of bytes, since those should be treated as byte data type instead.</p></li>
-   * <ul>
+   * </ul>
    */
   @Override
   protected boolean isArray(Object datum) {
