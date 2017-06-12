@@ -28,7 +28,7 @@ import org.junit.Test;
 public class TestSchemaCompatibilityMultiple {
 
   @Test
-  public void testMissingUnionBranch() throws Exception {
+  public void testMultipleIncompatibilities() throws Exception {
     Schema reader = SchemaBuilder.record("base").fields()
         // 0
         .name("check_enum_symbols_field")
