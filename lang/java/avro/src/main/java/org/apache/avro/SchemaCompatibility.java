@@ -19,6 +19,7 @@ package org.apache.avro;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -250,24 +251,21 @@ public class SchemaCompatibility {
       location.push(referenceToken);
       LOG.debug("Checking compatibility of reader {} with writer {}", reader, writer);
       final ReaderWriter pair = new ReaderWriter(reader, writer);
-      final SchemaCompatibilityResult existing = mMemoizeMap.get(pair);
-      if (existing != null) {
-        if (existing.getCompatibility() == SchemaCompatibilityType.RECURSION_IN_PROGRESS) {
+      SchemaCompatibilityResult result = mMemoizeMap.get(pair);
+      if (result != null) {
+        if (result.getCompatibility() == SchemaCompatibilityType.RECURSION_IN_PROGRESS) {
           // Break the recursion here.
           // schemas are compatible unless proven incompatible:
-          location.pop();
-          return SchemaCompatibilityResult.compatible();
+          result = SchemaCompatibilityResult.compatible();
         }
-        return existing;
+      } else {
+        // Mark this reader/writer pair as "in progress":
+        mMemoizeMap.put(pair, SchemaCompatibilityResult.recursionInProgress());
+        result = calculateCompatibility(reader, writer, location);
+        mMemoizeMap.put(pair, result);
       }
-      // Mark this reader/writer pair as "in progress":
-      mMemoizeMap.put(pair, SchemaCompatibilityResult.recursionInProgress());
-      final SchemaCompatibilityResult calculated = calculateCompatibility(reader, writer, location);
-      if (calculated == SchemaCompatibilityResult.COMPATIBLE) {
-        location.pop();
-      }
-      mMemoizeMap.put(pair, calculated);
-      return calculated;
+      location.pop();
+      return result;
     }
 
     /**
@@ -289,6 +287,7 @@ public class SchemaCompatibility {
     ) {
       assert (reader != null);
       assert (writer != null);
+      SchemaCompatibilityResult result = SchemaCompatibilityResult.compatible();
 
       if (reader.getType() == writer.getType()) {
         switch (reader.getType()) {
@@ -300,34 +299,25 @@ public class SchemaCompatibility {
           case DOUBLE:
           case BYTES:
           case STRING: {
-            return SchemaCompatibilityResult.compatible();
+            return result;
           }
           case ARRAY: {
-            return getCompatibility("items", reader.getElementType(), writer.getElementType(), location);
+            return result.mergedWith(getCompatibility("items", reader.getElementType(), writer.getElementType(), location));
           }
           case MAP: {
-            return getCompatibility("values", reader.getValueType(), writer.getValueType(), location);
+            return result.mergedWith(getCompatibility("values", reader.getValueType(), writer.getValueType(), location));
           }
           case FIXED: {
-            SchemaCompatibilityResult nameCheck = checkSchemaNames(reader, writer, location);
-            if (nameCheck.getCompatibility() == SchemaCompatibilityType.INCOMPATIBLE) {
-              return nameCheck;
-            }
-            return checkFixedSize(reader, writer, location);
+            result = result.mergedWith(checkSchemaNames(reader, writer, location));
+            return result.mergedWith(checkFixedSize(reader, writer, location));
           }
           case ENUM: {
-            SchemaCompatibilityResult nameCheck = checkSchemaNames(reader, writer, location);
-            if (nameCheck.getCompatibility() == SchemaCompatibilityType.INCOMPATIBLE) {
-              return nameCheck;
-            }
-            return checkReaderEnumContainsAllWriterEnumSymbols(reader, writer, location);
+            result = result.mergedWith(checkSchemaNames(reader, writer, location));
+            return result.mergedWith(checkReaderEnumContainsAllWriterEnumSymbols(reader, writer, location));
           }
           case RECORD: {
-            SchemaCompatibilityResult nameCheck = checkSchemaNames(reader, writer, location);
-            if (nameCheck.getCompatibility() == SchemaCompatibilityType.INCOMPATIBLE) {
-              return nameCheck;
-            }
-            return checkReaderWriterRecordFields(reader, writer, location);
+            result = result.mergedWith(checkSchemaNames(reader, writer, location));
+            return result.mergedWith(checkReaderWriterRecordFields(reader, writer, location));
           }
           case UNION: {
             // Check that each individual branch of the writer union can be decoded:
@@ -338,15 +328,15 @@ public class SchemaCompatibility {
               if (compatibility.getCompatibility() == SchemaCompatibilityType.INCOMPATIBLE) {
                 String message = String.format("reader union lacking writer type: %s",
                     writerBranch.getType());
-                return SchemaCompatibilityResult.incompatible(
+                result = result.mergedWith(SchemaCompatibilityResult.incompatible(
                     SchemaIncompatibilityType.MISSING_UNION_BRANCH,
-                    reader, writer, message, location);
+                    reader, writer, message, location));
               }
               location.pop();
               i++;
             }
             // Each schema in the writer union can be decoded with the reader:
-            return SchemaCompatibilityResult.compatible();
+            return result;
           }
 
           default: {
@@ -360,65 +350,62 @@ public class SchemaCompatibility {
         // Reader compatible with all branches of a writer union is compatible
         if (writer.getType() == Schema.Type.UNION) {
           for (Schema s : writer.getTypes()) {
-            SchemaCompatibilityResult result = getCompatibility(reader, s);
-            if (result.getCompatibility() == SchemaCompatibilityType.INCOMPATIBLE) {
-              return result;
-            }
+            result = result.mergedWith(getCompatibility(reader, s));
           }
-          return SchemaCompatibilityResult.compatible();
+          return result;
         }
 
         switch (reader.getType()) {
-          case NULL: return typeMismatch(reader, writer, location);
-          case BOOLEAN: return typeMismatch(reader, writer, location);
-          case INT: return typeMismatch(reader, writer, location);
+          case NULL: return result.mergedWith(typeMismatch(reader, writer, location));
+          case BOOLEAN: return result.mergedWith(typeMismatch(reader, writer, location));
+          case INT: return result.mergedWith(typeMismatch(reader, writer, location));
           case LONG: {
             return (writer.getType() == Type.INT)
-                ? SchemaCompatibilityResult.compatible()
-                : typeMismatch(reader, writer, location);
+                ? result
+                : result.mergedWith(typeMismatch(reader, writer, location));
           }
           case FLOAT: {
             return ((writer.getType() == Type.INT)
                 || (writer.getType() == Type.LONG))
-                ? SchemaCompatibilityResult.compatible()
-                : typeMismatch(reader, writer, location);
+                ? result
+                : result.mergedWith(typeMismatch(reader, writer, location));
 
           }
           case DOUBLE: {
             return ((writer.getType() == Type.INT)
                 || (writer.getType() == Type.LONG)
                 || (writer.getType() == Type.FLOAT))
-                ? SchemaCompatibilityResult.compatible()
-                : typeMismatch(reader, writer, location);
+                ? result
+                : result.mergedWith(typeMismatch(reader, writer, location));
           }
           case BYTES: {
-              return (writer.getType() == Type.STRING)
-                      ? SchemaCompatibilityResult.compatible()
-                      : typeMismatch(reader, writer, location);
-                }
+            return (writer.getType() == Type.STRING)
+                ? result
+                : result.mergedWith(typeMismatch(reader, writer, location));
+          }
           case STRING: {
-              return (writer.getType() == Type.BYTES)
-                  ? SchemaCompatibilityResult.compatible()
-                  : typeMismatch(reader, writer, location);
-            }
+            return (writer.getType() == Type.BYTES)
+                ? result
+                : result.mergedWith(typeMismatch(reader, writer, location));
+          }
 
-          case ARRAY: return typeMismatch(reader, writer, location);
-          case MAP: return typeMismatch(reader, writer, location);
-          case FIXED: return typeMismatch(reader, writer, location);
-          case ENUM: return typeMismatch(reader, writer, location);
-          case RECORD: return typeMismatch(reader, writer, location);
+          case ARRAY: return result.mergedWith(typeMismatch(reader, writer, location));
+          case MAP: return result.mergedWith(typeMismatch(reader, writer, location));
+          case FIXED: return result.mergedWith(typeMismatch(reader, writer, location));
+          case ENUM: return result.mergedWith(typeMismatch(reader, writer, location));
+          case RECORD: return result.mergedWith(typeMismatch(reader, writer, location));
           case UNION: {
             for (final Schema readerBranch : reader.getTypes()) {
               SchemaCompatibilityResult compatibility = getCompatibility(readerBranch, writer);
               if (compatibility.getCompatibility() == SchemaCompatibilityType.COMPATIBLE) {
-                return SchemaCompatibilityResult.compatible();
+                return result;
               }
             }
             // No branch in the reader union has been found compatible with the writer schema:
             String message = String.format("reader union lacking writer type: %s", writer.getType());
-            return SchemaCompatibilityResult.incompatible(
+            return result.mergedWith(SchemaCompatibilityResult.incompatible(
                 SchemaIncompatibilityType.MISSING_UNION_BRANCH,
-                reader, writer, message, location);
+                reader, writer, message, location));
           }
 
           default: {
@@ -431,6 +418,7 @@ public class SchemaCompatibility {
     private SchemaCompatibilityResult checkReaderWriterRecordFields(final Schema reader,
         final Schema writer,
         final Stack<String> location) {
+      SchemaCompatibilityResult result = SchemaCompatibilityResult.compatible();     
       location.push("fields");
       // Check that each field in the reader record can be populated from
       // the writer record:
@@ -442,63 +430,68 @@ public class SchemaCompatibility {
           // record schema, so the reader field must have a default value.
           if (readerField.defaultValue() == null) {
             // reader field has no default value
-            return SchemaCompatibilityResult.incompatible(
+            result = result.mergedWith(SchemaCompatibilityResult.incompatible(
                 SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, reader, writer,
-                readerField.name(), location);
+                readerField.name(), location));
           }
         } else {
-          SchemaCompatibilityResult compatibility = getCompatibility("type", readerField.schema(),
-              writerField.schema(), location);
-          if (compatibility.getCompatibility() == SchemaCompatibilityType.INCOMPATIBLE) {
-            return compatibility;
-          }
+          result = result.mergedWith(getCompatibility("type", readerField.schema(),
+              writerField.schema(), location));
         }
+        // POP field index
         location.pop();
       }
       // All fields in the reader record can be populated from the writer
       // record:
+      // POP "fields" literal
       location.pop();
-      return SchemaCompatibilityResult.compatible();
+      return result;
     }
 
     private SchemaCompatibilityResult checkReaderEnumContainsAllWriterEnumSymbols(
         final Schema reader, final Schema writer, final Stack<String> location) {
+      SchemaCompatibilityResult result = SchemaCompatibilityResult.compatible();
       location.push("symbols");
       final Set<String> symbols = new TreeSet<String>(writer.getEnumSymbols());
       symbols.removeAll(reader.getEnumSymbols());
       if (!symbols.isEmpty()) {
-        return SchemaCompatibilityResult.incompatible(
+        result = SchemaCompatibilityResult.incompatible(
             SchemaIncompatibilityType.MISSING_ENUM_SYMBOLS, reader, writer,
             symbols.toString(), location);
       }
+      // POP "symbols" literal
       location.pop();
-      return SchemaCompatibilityResult.compatible();
+      return result;
     }
 
     private SchemaCompatibilityResult checkFixedSize(final Schema reader, final Schema writer, final Stack<String> location) {
+      SchemaCompatibilityResult result = SchemaCompatibilityResult.compatible();
       location.push("size");
       int actual = reader.getFixedSize();
       int expected = writer.getFixedSize();
       if (actual != expected) {
         String message = String.format("expected: %d, found: %d", expected, actual);
-        return SchemaCompatibilityResult.incompatible(
+        result = SchemaCompatibilityResult.incompatible(
             SchemaIncompatibilityType.FIXED_SIZE_MISMATCH, reader,
             writer, message, location);
       }
+      // POP "size" literal
       location.pop();
-      return SchemaCompatibilityResult.compatible();
+      return result;
     }
 
     private SchemaCompatibilityResult checkSchemaNames(final Schema reader, final Schema writer, final Stack<String> location) {
+      SchemaCompatibilityResult result = SchemaCompatibilityResult.compatible();
       location.push("name");
       if (!schemaNameEquals(reader, writer)) {
         String message = String.format("expected: %s", writer.getFullName());
-        return SchemaCompatibilityResult.incompatible(
+        result = SchemaCompatibilityResult.incompatible(
             SchemaIncompatibilityType.NAME_MISMATCH,
             reader, writer, message, location);
       }
+      // POP "name" literal
       location.pop();
-      return SchemaCompatibilityResult.compatible();
+      return result;
     }
 
     private SchemaCompatibilityResult typeMismatch(final Schema reader, final Schema writer, final Stack<String> location) {
@@ -534,28 +527,28 @@ public class SchemaCompatibility {
    * compatibility check.
    */
   public static final class SchemaCompatibilityResult {
+    public SchemaCompatibilityResult mergedWith(SchemaCompatibilityResult toMerge) {
+      List<Incompatibility> mergedIncompatibilities = new ArrayList<Incompatibility>(mIncompatibilities);
+      mergedIncompatibilities.addAll(toMerge.getIncompatibilities());
+      SchemaCompatibilityType type = mCompatibility == SchemaCompatibilityType.COMPATIBLE
+          && toMerge.mCompatibility == SchemaCompatibilityType.COMPATIBLE
+          ?  SchemaCompatibilityType.COMPATIBLE : SchemaCompatibilityType.INCOMPATIBLE;
+      return new SchemaCompatibilityResult(type, mergedIncompatibilities);
+    }
+    
     private final SchemaCompatibilityType mCompatibility;
     // the below fields are only valid if INCOMPATIBLE
-    private final SchemaIncompatibilityType mSchemaIncompatibilityType;
-    private final Schema mReaderSubset;
-    private final Schema mWriterSubset;
-    private final String mMessage;
-    private final List<String> mLocation;
+    private final List<Incompatibility> mIncompatibilities;
     // cached objects for stateless details
     private static final SchemaCompatibilityResult COMPATIBLE = new SchemaCompatibilityResult(
-        SchemaCompatibilityType.COMPATIBLE, null, null, null, null, null);
+        SchemaCompatibilityType.COMPATIBLE, Collections.<Incompatibility> emptyList());
     private static final SchemaCompatibilityResult RECURSION_IN_PROGRESS = new SchemaCompatibilityResult(
-        SchemaCompatibilityType.RECURSION_IN_PROGRESS, null, null, null, null, null);
+        SchemaCompatibilityType.RECURSION_IN_PROGRESS, Collections.<Incompatibility> emptyList());
 
     private SchemaCompatibilityResult(SchemaCompatibilityType type,
-        SchemaIncompatibilityType errorDetails,
-        Schema readerDetails, Schema writerDetails, String message, List<String> location) {
+        List<Incompatibility> incompatibilities) {
       this.mCompatibility = type;
-      this.mSchemaIncompatibilityType = errorDetails;
-      this.mReaderSubset = readerDetails;
-      this.mWriterSubset = writerDetails;
-      this.mMessage = message;
-      this.mLocation = location;
+      this.mIncompatibilities = incompatibilities;
     }
 
     /**
@@ -580,14 +573,24 @@ public class SchemaCompatibility {
     /**
      * Returns a details object representing an incompatible schema pair,
      * including error details.
+     * @param mSchemaIncompatibilityType 
+     * @param mReaderSubset 
+     * @param mWriterSubset 
+     * @param mMessage 
+     * @param mLocation 
      * @return a SchemaCompatibilityResult object with INCOMPATIBLE
      *         SchemaCompatibilityType, and state representing the violating
      *         part.
      */
-    public static SchemaCompatibilityResult incompatible(SchemaIncompatibilityType error,
-        Schema reader, Schema writer, String message, List<String> location) {
-      return new SchemaCompatibilityResult(SchemaCompatibilityType.INCOMPATIBLE, error, reader,
-          writer, message, location);
+    public static SchemaCompatibilityResult incompatible(
+        SchemaIncompatibilityType mSchemaIncompatibilityType,
+        Schema mReaderSubset,
+        Schema mWriterSubset,
+        String mMessage,
+        List<String> mLocation
+      ) {
+      Incompatibility incompatibility = new Incompatibility(mSchemaIncompatibilityType, mReaderSubset, mWriterSubset, mMessage, mLocation);
+      return new SchemaCompatibilityResult(SchemaCompatibilityType.INCOMPATIBLE, Collections.singletonList(incompatibility));
     }
 
     /**
@@ -604,10 +607,83 @@ public class SchemaCompatibility {
      * null.
      * @return a SchemaIncompatibilityType instance, or null
      */
+    public List<Incompatibility> getIncompatibilities() {
+      return mIncompatibilities;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result
+          + ((mCompatibility == null) ? 0 : mCompatibility.hashCode());
+      result = prime * result
+          + ((mIncompatibilities == null) ? 0 : mIncompatibilities.hashCode());
+      return result;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      SchemaCompatibilityResult other = (SchemaCompatibilityResult) obj;
+      if (mIncompatibilities == null) {
+        if (other.mIncompatibilities != null)
+          return false;
+      } else if (!mIncompatibilities.equals(other.mIncompatibilities))
+        return false;
+      if (mCompatibility != other.mCompatibility)
+        return false;
+      return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+      return String.format(
+          "SchemaCompatibilityResult{compatibility:%s, incompatibilities:%s}",
+          mCompatibility, mIncompatibilities);
+    }
+  }
+  // -----------------------------------------------------------------------------------------------
+
+  public static final class Incompatibility {
+    private final SchemaIncompatibilityType mSchemaIncompatibilityType;
+    private final Schema mReaderSubset;
+    private final Schema mWriterSubset;
+    private final String mMessage;
+    private final List<String> mLocation;
+
+    Incompatibility(
+        SchemaIncompatibilityType mSchemaIncompatibilityType,
+        Schema mReaderSubset,
+        Schema mWriterSubset,
+        String mMessage,
+        List<String> mLocation) {
+      super();
+      this.mSchemaIncompatibilityType = mSchemaIncompatibilityType;
+      this.mReaderSubset = mReaderSubset;
+      this.mWriterSubset = mWriterSubset;
+      this.mMessage = mMessage;
+      this.mLocation = Collections.unmodifiableList(new ArrayList<String>(mLocation));
+    }
+
+    /**
+     * If the compatibility is INCOMPATIBLE, returns the
+     * SchemaIncompatibilityType (first thing that was incompatible), otherwise
+     * null.
+     * @return a SchemaIncompatibilityType instance, or null
+     */
     public SchemaIncompatibilityType getIncompatibility() {
       return mSchemaIncompatibilityType;
     }
-
+    
     /**
      * If the compatibility is INCOMPATIBLE, returns the first part of the
      * reader schema that failed compatibility check.
@@ -636,77 +712,13 @@ public class SchemaCompatibility {
     public String getMessage() {
       return mMessage;
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((mMessage == null) ? 0 : mMessage.hashCode());
-      result = prime * result + ((mReaderSubset == null) ? 0 : mReaderSubset.hashCode());
-      result = prime * result
-          + ((mCompatibility == null) ? 0 : mCompatibility.hashCode());
-      result = prime * result
-          + ((mSchemaIncompatibilityType == null) ? 0 : mSchemaIncompatibilityType.hashCode());
-      result = prime * result + ((mWriterSubset == null) ? 0 : mWriterSubset.hashCode());
-      result = prime * result + ((mLocation == null) ? 0 : mLocation.hashCode());
-      return result;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      SchemaCompatibilityResult other = (SchemaCompatibilityResult) obj;
-      if (mMessage == null) {
-        if (other.mMessage != null)
-          return false;
-      } else if (!mMessage.equals(other.mMessage))
-        return false;
-      if (mReaderSubset == null) {
-        if (other.mReaderSubset != null)
-          return false;
-      } else if (!mReaderSubset.equals(other.mReaderSubset))
-        return false;
-      if (mCompatibility != other.mCompatibility)
-        return false;
-      if (mSchemaIncompatibilityType != other.mSchemaIncompatibilityType)
-        return false;
-      if (mWriterSubset == null) {
-        if (other.mWriterSubset != null)
-          return false;
-      } else if (!mWriterSubset.equals(other.mWriterSubset))
-        return false;
-      if (mLocation == null) {
-        if (other.mLocation != null)
-          return false;
-      } else if (!mLocation.equals(other.mLocation))
-        return false;
-      return true;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-      return String.format(
-          "SchemaCompatibilityResult{compatibility:%s, type:%s, readerSubset:%s, writerSubset:%s, message:%s, location:%s}",
-          mCompatibility, mSchemaIncompatibilityType, mReaderSubset, mWriterSubset, mMessage, getLocation());
-    }
-
+    
     /**
      * Returns a <a href="https://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-08">JSON Pointer</a> describing
      * the node location within the schema's JSON document tree where the incompatibility was encountered.
      * @return JSON Pointer encoded as a string or {@code null} if there was no incompatibility.
      */
     public String getLocation() {
-      if (mCompatibility != SchemaCompatibilityType.INCOMPATIBLE) {
-        return null;
-      }
       StringBuilder s = new StringBuilder("/");
       boolean first = true;
       // ignore root element
@@ -721,7 +733,68 @@ public class SchemaCompatibility {
       }
       return s.toString();
     }
-  }
+    
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result
+          + ((mSchemaIncompatibilityType == null) ? 0 : mSchemaIncompatibilityType.hashCode());
+      result = prime * result
+          + ((mReaderSubset == null) ? 0 : mReaderSubset.hashCode());
+      result = prime * result
+          + ((mWriterSubset == null) ? 0 : mWriterSubset.hashCode());
+      result = prime * result
+          + ((mMessage == null) ? 0 : mMessage.hashCode());
+      result = prime * result
+          + ((mLocation == null) ? 0 : mLocation.hashCode());
+      return result;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      Incompatibility other = (Incompatibility) obj;
+      if (mSchemaIncompatibilityType != other.mSchemaIncompatibilityType)
+        return false;
+      if (mReaderSubset == null) {
+        if (other.mReaderSubset != null)
+          return false;
+      } else if (!mReaderSubset.equals(other.mReaderSubset))
+        return false;
+      if (mWriterSubset == null) {
+        if (other.mWriterSubset != null)
+          return false;
+      } else if (!mWriterSubset.equals(other.mWriterSubset))
+        return false;
+      if (mMessage == null) {
+        if (other.mMessage != null)
+          return false;
+      } else if (!mMessage.equals(other.mMessage))
+        return false;
+      if (mLocation == null) {
+        if (other.mLocation != null)
+          return false;
+      } else if (!mLocation.equals(other.mLocation))
+        return false;
+      return true;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+      return String.format(
+          "Incompatibility{type:%s, location:%s, message:%s, reader:%s, writer:%s}",
+          mSchemaIncompatibilityType, getLocation(), mMessage, mReaderSubset, mWriterSubset);
+    }
+  }  
   // -----------------------------------------------------------------------------------------------
 
   /**

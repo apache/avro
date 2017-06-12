@@ -66,6 +66,7 @@ import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
+import org.apache.avro.SchemaCompatibility.Incompatibility;
 import org.apache.avro.SchemaCompatibility.SchemaCompatibilityResult;
 import org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
@@ -353,23 +354,57 @@ public class TestSchemaCompatibility {
    * one class per error case (for easier pinpointing of errors). 
    * The method to validate incompatibility is still here.
    */
-  public static void validateIncompatibleSchemas(Schema reader, Schema writer, SchemaIncompatibilityType incompatibility, String message, String location) {
+  public static void validateIncompatibleSchemas(
+      Schema reader,
+      Schema writer,
+      SchemaIncompatibilityType incompatibility,
+      String message,
+      String location
+    ) {
+    validateIncompatibleSchemas(
+        reader,
+        writer,
+        Arrays.asList(incompatibility),
+        Arrays.asList(message),
+        Arrays.asList(location)
+    ); 
+  }
+  
+  // -----------------------------------------------------------------------------------------------
+    
+  /** The reader/writer pairs that are incompatible are now moved to specific test classes, 
+   * one class per error case (for easier pinpointing of errors). 
+   * The method to validate incompatibility is still here.
+   */
+  public static void validateIncompatibleSchemas(
+      Schema reader,
+      Schema writer,
+      List<SchemaIncompatibilityType> incompatibilityTypes,
+      List<String> messages,
+      List<String> locations
+    ) {
     SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(reader, writer);
     SchemaCompatibilityResult compatibilityResult = compatibility.getResult();
-    assertEquals(incompatibility, compatibilityResult.getIncompatibility());
-    Schema readerSubset = compatibilityResult.getReaderSubset();
-    Schema writerSubset = compatibilityResult.getWriterSubset();    
-    assertSchemaContains(readerSubset, reader);
-    assertSchemaContains(writerSubset, writer);
     assertEquals(reader, compatibility.getReader());
     assertEquals(writer, compatibility.getWriter());
-    assertEquals(message, compatibilityResult.getMessage());
-    assertEquals(location, compatibilityResult.getLocation());
+    assertEquals(SchemaCompatibilityType.INCOMPATIBLE, compatibilityResult.getCompatibility());
+    
+    assertEquals(incompatibilityTypes.size(), compatibilityResult.getIncompatibilities().size());
+    for (int i = 0 ; i < incompatibilityTypes.size(); i++) {
+      Incompatibility incompatibility = compatibilityResult.getIncompatibilities().get(i);
+      assertSchemaContains(incompatibility.getReaderSubset(), reader);
+      assertSchemaContains(incompatibility.getWriterSubset(), writer);
+      assertEquals(incompatibilityTypes.get(i), incompatibility.getIncompatibility());
+      assertEquals(messages.get(i), incompatibility.getMessage());
+      assertEquals(locations.get(i), incompatibility.getLocation());
+    }
+
     String description = String.format("Data encoded using writer schema:%n%s%n"
         + "will or may fail to decode using reader schema:%n%s%n",
         writer.toString(true), reader.toString(true));
     assertEquals(description, compatibility.getDescription());
   }
+  
   // -----------------------------------------------------------------------------------------------
 
   /** Tests reader/writer compatibility validation. */
