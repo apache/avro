@@ -1050,7 +1050,14 @@ public class TestReflect {
 
   public static class NullableBytesTest {
     @Nullable
-    byte[] bytes = "foo".getBytes();
+    byte[] bytes;
+
+    NullableBytesTest() {
+    }
+
+    NullableBytesTest(byte[] bytes) {
+      this.bytes = bytes;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -1060,7 +1067,12 @@ public class TestReflect {
   }
 
   @Test
-  public void testNullableByteArray() throws Exception {
+  public void testNullableByteArrayNotNullValue() throws Exception {
+    checkReadWrite(new NullableBytesTest("foo".getBytes()));
+  }
+
+  @Test
+  public void testNullableByteArrayNullValue() throws Exception {
     checkReadWrite(new NullableBytesTest());
   }
 }
