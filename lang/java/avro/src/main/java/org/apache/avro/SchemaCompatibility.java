@@ -580,7 +580,7 @@ public class SchemaCompatibility {
      * @param mLocation 
      * @return a SchemaCompatibilityResult object with INCOMPATIBLE
      *         SchemaCompatibilityType, and state representing the violating
-     *         part.
+     *         parts.
      */
     public static SchemaCompatibilityResult incompatible(
         SchemaIncompatibilityType mSchemaIncompatibilityType,
@@ -602,10 +602,9 @@ public class SchemaCompatibility {
     }
 
     /**
-     * If the compatibility is INCOMPATIBLE, returns the
-     * SchemaIncompatibilityType (first thing that was incompatible), otherwise
-     * null.
-     * @return a SchemaIncompatibilityType instance, or null
+     * If the compatibility is INCOMPATIBLE, returns {@link Incompatibility Incompatibilities} found, otherwise an empty
+     * list.
+     * @return a list of {@link Incompatibility Incompatibilities}, may be empty, never null.
      */
     public List<Incompatibility> getIncompatibilities() {
       return mIncompatibilities;
@@ -654,60 +653,55 @@ public class SchemaCompatibility {
   // -----------------------------------------------------------------------------------------------
 
   public static final class Incompatibility {
-    private final SchemaIncompatibilityType mSchemaIncompatibilityType;
+    private final SchemaIncompatibilityType mType;
     private final Schema mReaderSubset;
     private final Schema mWriterSubset;
     private final String mMessage;
     private final List<String> mLocation;
 
     Incompatibility(
-        SchemaIncompatibilityType mSchemaIncompatibilityType,
-        Schema mReaderSubset,
-        Schema mWriterSubset,
-        String mMessage,
-        List<String> mLocation) {
+        SchemaIncompatibilityType type,
+        Schema readerSubset,
+        Schema writerSubset,
+        String message,
+        List<String> location) {
       super();
-      this.mSchemaIncompatibilityType = mSchemaIncompatibilityType;
-      this.mReaderSubset = mReaderSubset;
-      this.mWriterSubset = mWriterSubset;
-      this.mMessage = mMessage;
-      this.mLocation = Collections.unmodifiableList(new ArrayList<String>(mLocation));
+      this.mType = type;
+      this.mReaderSubset = readerSubset;
+      this.mWriterSubset = writerSubset;
+      this.mMessage = message;
+      this.mLocation = Collections.unmodifiableList(new ArrayList<String>(location));
     }
 
     /**
-     * If the compatibility is INCOMPATIBLE, returns the
-     * SchemaIncompatibilityType (first thing that was incompatible), otherwise
-     * null.
-     * @return a SchemaIncompatibilityType instance, or null
+     * Returns the SchemaIncompatibilityType.
+     * @return a SchemaIncompatibilityType instance.
      */
-    public SchemaIncompatibilityType getIncompatibility() {
-      return mSchemaIncompatibilityType;
+    public SchemaIncompatibilityType getType() {
+      return mType;
     }
     
     /**
-     * If the compatibility is INCOMPATIBLE, returns the first part of the
-     * reader schema that failed compatibility check.
-     * @return a Schema instance (part of the reader schema), or null
+     * Returns the part of the reader schema that failed compatibility check.
+     * @return a Schema instance (part of the reader schema).
      */
     public Schema getReaderSubset() {
       return mReaderSubset;
     }
 
     /**
-     * If the compatibility is INCOMPATIBLE, returns the first part of the
-     * writer schema that failed compatibility check.
-     * @return a Schema instance (part of the writer schema), or null
+     * Returns the part of the  writer schema that failed compatibility check.
+     * @return a Schema instance (part of the writer schema).
      */
     public Schema getWriterSubset() {
       return mWriterSubset;
     }
 
     /**
-     * If the compatibility is INCOMPATIBLE, returns a human-readable message
-     * with more details about what failed. Syntax depends on the
+     * Returns a human-readable message with more details about what failed. Syntax depends on the
      * SchemaIncompatibilityType.
-     * @see #getIncompatibility()
-     * @return a String with details about the incompatibility, or null
+     * @see #getType()
+     * @return a String with details about the incompatibility.
      */
     public String getMessage() {
       return mMessage;
@@ -716,7 +710,7 @@ public class SchemaCompatibility {
     /**
      * Returns a <a href="https://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-08">JSON Pointer</a> describing
      * the node location within the schema's JSON document tree where the incompatibility was encountered.
-     * @return JSON Pointer encoded as a string or {@code null} if there was no incompatibility.
+     * @return JSON Pointer encoded as a string.
      */
     public String getLocation() {
       StringBuilder s = new StringBuilder("/");
@@ -740,7 +734,7 @@ public class SchemaCompatibility {
       final int prime = 31;
       int result = 1;
       result = prime * result
-          + ((mSchemaIncompatibilityType == null) ? 0 : mSchemaIncompatibilityType.hashCode());
+          + ((mType == null) ? 0 : mType.hashCode());
       result = prime * result
           + ((mReaderSubset == null) ? 0 : mReaderSubset.hashCode());
       result = prime * result
@@ -762,7 +756,7 @@ public class SchemaCompatibility {
       if (getClass() != obj.getClass())
         return false;
       Incompatibility other = (Incompatibility) obj;
-      if (mSchemaIncompatibilityType != other.mSchemaIncompatibilityType)
+      if (mType != other.mType)
         return false;
       if (mReaderSubset == null) {
         if (other.mReaderSubset != null)
@@ -792,7 +786,7 @@ public class SchemaCompatibility {
     public String toString() {
       return String.format(
           "Incompatibility{type:%s, location:%s, message:%s, reader:%s, writer:%s}",
-          mSchemaIncompatibilityType, getLocation(), mMessage, mReaderSubset, mWriterSubset);
+          mType, getLocation(), mMessage, mReaderSubset, mWriterSubset);
     }
   }  
   // -----------------------------------------------------------------------------------------------

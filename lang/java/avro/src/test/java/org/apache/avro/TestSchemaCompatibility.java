@@ -394,7 +394,7 @@ public class TestSchemaCompatibility {
       Incompatibility incompatibility = compatibilityResult.getIncompatibilities().get(i);
       assertSchemaContains(incompatibility.getReaderSubset(), reader);
       assertSchemaContains(incompatibility.getWriterSubset(), writer);
-      assertEquals(incompatibilityTypes.get(i), incompatibility.getIncompatibility());
+      assertEquals(incompatibilityTypes.get(i), incompatibility.getType());
       assertEquals(messages.get(i), incompatibility.getMessage());
       assertEquals(locations.get(i), incompatibility.getLocation());
     }
