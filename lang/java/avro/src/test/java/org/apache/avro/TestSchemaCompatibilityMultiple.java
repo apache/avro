@@ -63,6 +63,9 @@ public class TestSchemaCompatibilityMultiple {
             // 3.5.0
             .name("A_field_0")
             .type().booleanType().booleanDefault(true)
+            // 3.5.1
+            .name("array_type_mismatch_field")
+            .type().array().items().stringType().noDefault()
             // EOR
             .endRecord().noDefault()          
           // EOR
@@ -103,6 +106,9 @@ public class TestSchemaCompatibilityMultiple {
             // 3.5.0
             .name("A_field_0")
             .type().booleanType().booleanDefault(true)
+            // 3.5.1
+            .name("array_type_mismatch_field")
+            .type().array().items().booleanType().noDefault()            
             // EOR
             .endRecord().noDefault()
           // EOR
@@ -119,7 +125,8 @@ public class TestSchemaCompatibilityMultiple {
         SchemaIncompatibilityType.MISSING_UNION_BRANCH,
         SchemaIncompatibilityType.MISSING_UNION_BRANCH,
         SchemaIncompatibilityType.MISSING_UNION_BRANCH,
-        SchemaIncompatibilityType.NAME_MISMATCH
+        SchemaIncompatibilityType.NAME_MISMATCH,
+        SchemaIncompatibilityType.TYPE_MISMATCH
     );
     List<String> details = Arrays.asList(
         "[B, D]",
@@ -130,7 +137,8 @@ public class TestSchemaCompatibilityMultiple {
         "reader union lacking writer type: DOUBLE",
         "reader union lacking writer type: STRING",
         "reader union lacking writer type: LONG",
-        "expected: nsA.recordA"
+        "expected: nsA.recordA",
+        "reader type: STRING not compatible with writer type: BOOLEAN"
     );
     List<String> location = Arrays.asList(
         "/fields/0/type/symbols",
@@ -141,7 +149,8 @@ public class TestSchemaCompatibilityMultiple {
         "/fields/3/type/fields/3/type/1",
         "/fields/3/type/fields/3/type/2",
         "/fields/3/type/fields/4/type",
-        "/fields/3/type/fields/5/type/name"
+        "/fields/3/type/fields/5/type/name",
+        "/fields/3/type/fields/5/type/fields/1/type/items"
     );
     
     validateIncompatibleSchemas(reader, writer, types, details, location);
