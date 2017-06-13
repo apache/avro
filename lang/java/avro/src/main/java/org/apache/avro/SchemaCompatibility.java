@@ -527,6 +527,15 @@ public class SchemaCompatibility {
    * compatibility check.
    */
   public static final class SchemaCompatibilityResult {
+    
+    /**
+     * Merges the current {@code SchemaCompatibilityResult} with the supplied result into a new instance, combining the
+     * list of {@code Incompatibility Incompatibilities} and regressing to the
+     * {@code SchemaCompatibilityType#INCOMPATIBLE INCOMPATIBLE} state if any incompatibilities are encountered.
+     * 
+     * @param toMerge The {@code SchemaCompatibilityResult} to merge with the current instance.
+     * @return A {@code SchemaCompatibilityResult} that combines the state of the current and supplied instances.
+     */
     public SchemaCompatibilityResult mergedWith(SchemaCompatibilityResult toMerge) {
       List<Incompatibility> mergedIncompatibilities = new ArrayList<Incompatibility>(mIncompatibilities);
       mergedIncompatibilities.addAll(toMerge.getIncompatibilities());
