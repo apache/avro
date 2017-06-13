@@ -530,13 +530,13 @@ public class SchemaCompatibility {
     public SchemaCompatibilityResult mergedWith(SchemaCompatibilityResult toMerge) {
       List<Incompatibility> mergedIncompatibilities = new ArrayList<Incompatibility>(mIncompatibilities);
       mergedIncompatibilities.addAll(toMerge.getIncompatibilities());
-      SchemaCompatibilityType type = mCompatibility == SchemaCompatibilityType.COMPATIBLE
-          && toMerge.mCompatibility == SchemaCompatibilityType.COMPATIBLE
+      SchemaCompatibilityType compatibilityType = mCompatibilityType == SchemaCompatibilityType.COMPATIBLE
+          && toMerge.mCompatibilityType == SchemaCompatibilityType.COMPATIBLE
           ?  SchemaCompatibilityType.COMPATIBLE : SchemaCompatibilityType.INCOMPATIBLE;
-      return new SchemaCompatibilityResult(type, mergedIncompatibilities);
+      return new SchemaCompatibilityResult(compatibilityType, mergedIncompatibilities);
     }
     
-    private final SchemaCompatibilityType mCompatibility;
+    private final SchemaCompatibilityType mCompatibilityType;
     // the below fields are only valid if INCOMPATIBLE
     private final List<Incompatibility> mIncompatibilities;
     // cached objects for stateless details
@@ -545,9 +545,9 @@ public class SchemaCompatibility {
     private static final SchemaCompatibilityResult RECURSION_IN_PROGRESS = new SchemaCompatibilityResult(
         SchemaCompatibilityType.RECURSION_IN_PROGRESS, Collections.<Incompatibility> emptyList());
 
-    private SchemaCompatibilityResult(SchemaCompatibilityType type,
+    private SchemaCompatibilityResult(SchemaCompatibilityType compatibilityType,
         List<Incompatibility> incompatibilities) {
-      this.mCompatibility = type;
+      this.mCompatibilityType = compatibilityType;
       this.mIncompatibilities = incompatibilities;
     }
 
@@ -573,23 +573,23 @@ public class SchemaCompatibility {
     /**
      * Returns a details object representing an incompatible schema pair,
      * including error details.
-     * @param mSchemaIncompatibilityType 
-     * @param mReaderSubset 
-     * @param mWriterSubset 
-     * @param mMessage 
-     * @param mLocation 
+     * @param incompatibilityType 
+     * @param readerFragment 
+     * @param writerFragment 
+     * @param message 
+     * @param location 
      * @return a SchemaCompatibilityResult object with INCOMPATIBLE
      *         SchemaCompatibilityType, and state representing the violating
      *         parts.
      */
     public static SchemaCompatibilityResult incompatible(
-        SchemaIncompatibilityType mSchemaIncompatibilityType,
-        Schema mReaderSubset,
-        Schema mWriterSubset,
-        String mMessage,
-        List<String> mLocation
+        SchemaIncompatibilityType incompatibilityType,
+        Schema readerFragment,
+        Schema writerFragment,
+        String message,
+        List<String> location
       ) {
-      Incompatibility incompatibility = new Incompatibility(mSchemaIncompatibilityType, mReaderSubset, mWriterSubset, mMessage, mLocation);
+      Incompatibility incompatibility = new Incompatibility(incompatibilityType, readerFragment, writerFragment, message, location);
       return new SchemaCompatibilityResult(SchemaCompatibilityType.INCOMPATIBLE, Collections.singletonList(incompatibility));
     }
 
@@ -598,7 +598,7 @@ public class SchemaCompatibility {
      * @return a SchemaCompatibilityType instance, always non-null
      */
     public SchemaCompatibilityType getCompatibility() {
-      return mCompatibility;
+      return mCompatibilityType;
     }
 
     /**
@@ -616,7 +616,7 @@ public class SchemaCompatibility {
       final int prime = 31;
       int result = 1;
       result = prime * result
-          + ((mCompatibility == null) ? 0 : mCompatibility.hashCode());
+          + ((mCompatibilityType == null) ? 0 : mCompatibilityType.hashCode());
       result = prime * result
           + ((mIncompatibilities == null) ? 0 : mIncompatibilities.hashCode());
       return result;
@@ -637,7 +637,7 @@ public class SchemaCompatibility {
           return false;
       } else if (!mIncompatibilities.equals(other.mIncompatibilities))
         return false;
-      if (mCompatibility != other.mCompatibility)
+      if (mCompatibilityType != other.mCompatibilityType)
         return false;
       return true;
     }
@@ -647,28 +647,28 @@ public class SchemaCompatibility {
     public String toString() {
       return String.format(
           "SchemaCompatibilityResult{compatibility:%s, incompatibilities:%s}",
-          mCompatibility, mIncompatibilities);
+          mCompatibilityType, mIncompatibilities);
     }
   }
   // -----------------------------------------------------------------------------------------------
 
   public static final class Incompatibility {
     private final SchemaIncompatibilityType mType;
-    private final Schema mReaderSubset;
-    private final Schema mWriterSubset;
+    private final Schema mReaderFragment;
+    private final Schema mWriterFragment;
     private final String mMessage;
     private final List<String> mLocation;
 
     Incompatibility(
         SchemaIncompatibilityType type,
-        Schema readerSubset,
-        Schema writerSubset,
+        Schema readerFragment,
+        Schema writerFragment,
         String message,
         List<String> location) {
       super();
       this.mType = type;
-      this.mReaderSubset = readerSubset;
-      this.mWriterSubset = writerSubset;
+      this.mReaderFragment = readerFragment;
+      this.mWriterFragment = writerFragment;
       this.mMessage = message;
       this.mLocation = Collections.unmodifiableList(new ArrayList<String>(location));
     }
@@ -682,19 +682,19 @@ public class SchemaCompatibility {
     }
     
     /**
-     * Returns the part of the reader schema that failed compatibility check.
-     * @return a Schema instance (part of the reader schema).
+     * Returns the fragment of the reader schema that failed compatibility check.
+     * @return a Schema instance (fragment of the reader schema).
      */
-    public Schema getReaderSubset() {
-      return mReaderSubset;
+    public Schema getReaderFragment() {
+      return mReaderFragment;
     }
 
     /**
-     * Returns the part of the  writer schema that failed compatibility check.
-     * @return a Schema instance (part of the writer schema).
+     * Returns the fragment of the writer schema that failed compatibility check.
+     * @return a Schema instance (fragment of the writer schema).
      */
-    public Schema getWriterSubset() {
-      return mWriterSubset;
+    public Schema getWriterFragment() {
+      return mWriterFragment;
     }
 
     /**
@@ -736,9 +736,9 @@ public class SchemaCompatibility {
       result = prime * result
           + ((mType == null) ? 0 : mType.hashCode());
       result = prime * result
-          + ((mReaderSubset == null) ? 0 : mReaderSubset.hashCode());
+          + ((mReaderFragment == null) ? 0 : mReaderFragment.hashCode());
       result = prime * result
-          + ((mWriterSubset == null) ? 0 : mWriterSubset.hashCode());
+          + ((mWriterFragment == null) ? 0 : mWriterFragment.hashCode());
       result = prime * result
           + ((mMessage == null) ? 0 : mMessage.hashCode());
       result = prime * result
@@ -758,15 +758,15 @@ public class SchemaCompatibility {
       Incompatibility other = (Incompatibility) obj;
       if (mType != other.mType)
         return false;
-      if (mReaderSubset == null) {
-        if (other.mReaderSubset != null)
+      if (mReaderFragment == null) {
+        if (other.mReaderFragment != null)
           return false;
-      } else if (!mReaderSubset.equals(other.mReaderSubset))
+      } else if (!mReaderFragment.equals(other.mReaderFragment))
         return false;
-      if (mWriterSubset == null) {
-        if (other.mWriterSubset != null)
+      if (mWriterFragment == null) {
+        if (other.mWriterFragment != null)
           return false;
-      } else if (!mWriterSubset.equals(other.mWriterSubset))
+      } else if (!mWriterFragment.equals(other.mWriterFragment))
         return false;
       if (mMessage == null) {
         if (other.mMessage != null)
@@ -786,7 +786,7 @@ public class SchemaCompatibility {
     public String toString() {
       return String.format(
           "Incompatibility{type:%s, location:%s, message:%s, reader:%s, writer:%s}",
-          mType, getLocation(), mMessage, mReaderSubset, mWriterSubset);
+          mType, getLocation(), mMessage, mReaderFragment, mWriterFragment);
     }
   }  
   // -----------------------------------------------------------------------------------------------
