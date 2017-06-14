@@ -1041,6 +1041,11 @@ public class TestReflect {
     int primitiveField;
   }
 
+  private static class ClassWithAliasAndNamespaceOnField {
+    @AvroAlias(alias = "aliasName", space = "forbidden.space.entry")
+    int primitiveField;
+  }
+
   @Test
   public void testAvroAliasOnField() {
 
@@ -1049,6 +1054,11 @@ public class TestReflect {
         .type(Schema.create(org.apache.avro.Schema.Type.INT)).noDefault().endRecord();
 
     check(ClassWithAliasOnField.class, expectedSchema.toString());
+  }
+
+  @Test(expected = AvroRuntimeException.class)
+  public void namespaceDefinitionOnFieldAliasMustThrowException() {
+    ReflectData.get().getSchema(ClassWithAliasAndNamespaceOnField.class);
   }
 
   private static class DefaultTest {
