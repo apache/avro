@@ -633,6 +633,9 @@ public class ReflectData extends SpecificData {
                 if (f.name().equals(fieldName))
                   throw new AvroTypeException("double field entry: "+ fieldName);
               }
+
+              consumeFieldAlias(field, recordField);
+
               fields.add(recordField);
             }
           if (error)                              // add Throwable message
@@ -874,6 +877,18 @@ public class ReflectData extends SpecificData {
       if (AvroAlias.NULL.equals(space))
         space = null;
       schema.addAlias(alias.alias(), space);
+    }
+  }
+
+
+  private void consumeFieldAlias(Field field, Schema.Field recordField) {
+    AvroAlias alias = field.getAnnotation(AvroAlias.class);
+    if (alias != null) {
+      if (!alias.space().equals(AvroAlias.NULL)) {
+        throw new AvroRuntimeException(
+            "Namespaces are not allowed on field aliases. " + "Offending field: " + recordField.name());
+      }
+      recordField.addAlias(alias.alias());
     }
   }
 
