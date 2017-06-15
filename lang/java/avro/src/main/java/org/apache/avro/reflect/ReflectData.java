@@ -361,7 +361,6 @@ public class ReflectData extends SpecificData {
    * It returns false for non-string-maps because Avro writes out such maps
    * as an array of records. Even their JSON representation is an array.
    */
-
   protected boolean isMap(Object datum) {
     return (datum instanceof Map) && !isNonStringMap(datum);
   }
@@ -883,8 +882,8 @@ public class ReflectData extends SpecificData {
 
 
   private void consumeFieldAlias(Field field, Schema.Field recordField) {
-    if (field.isAnnotationPresent(AvroAlias.class)) {
-      AvroAlias alias = field.getAnnotation(AvroAlias.class);
+    AvroAlias alias = field.getAnnotation(AvroAlias.class);
+    if (alias != null) {
       if (!alias.space().equals(AvroAlias.NULL)) {
         throw new AvroRuntimeException(
             "Namespaces are not allowed on field aliases. " + "Offending field: " + recordField.name());
