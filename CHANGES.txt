@@ -6,6 +6,8 @@ Trunk (not yet released)
 
     AVRO-2035: Java: validate default values when parsing schemas. (cutting)
 
+    AVRO-2043: Move to java8
+
   NEW FEATURES
 
     AVRO-1704: Java: Add support for single-message encoding. (blue)
