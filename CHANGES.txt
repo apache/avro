@@ -4,6 +4,8 @@ Trunk (not yet released)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-2035: Java: validate default values when parsing schemas. (cutting)
+
   NEW FEATURES
 
     AVRO-1704: Java: Add support for single-message encoding. (blue)

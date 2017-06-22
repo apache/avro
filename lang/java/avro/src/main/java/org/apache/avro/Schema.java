@@ -958,7 +958,7 @@ public abstract class Schema extends JsonProperties {
   public static class Parser {
     private Names names = new Names();
     private boolean validate = true;
-    private boolean validateDefaults = false;
+    private boolean validateDefaults = true;
 
     /** Adds the provided types to the set of defined, named types known to
      * this parser. */
