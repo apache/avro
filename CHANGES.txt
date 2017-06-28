@@ -54,6 +54,8 @@ Trunk (not yet released)
 
     AVRO-1971: Allow alias annotation on fields (Johannes Schulte via gabor)
 
+    AVRO-2021: uuid logical type is not documented (Nandor Kollar via gabor)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
