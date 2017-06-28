@@ -1438,6 +1438,17 @@ void initFPTable() {
       </section>
 
       <section>
+        <title>UUID</title>
+        <p>
+          The <code>uuid</code> logical type represents a random generated universally unique identifier (UUID).
+        </p>
+
+        <p>
+          A <code>uuid</code> logical type annotates an Avro <code>string</code>. The string has to conform with <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC-4122</a>
+        </p>
+      </section>
+
+      <section>
         <title>Date</title>
         <p>
           The <code>date</code> logical type represents a date within the calendar, with no reference to a particular time zone or time of day.

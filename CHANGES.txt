@@ -8,6 +8,8 @@ Trunk (not yet released)
 
   IMPROVEMENTS
 
+    AVRO-2021: uuid logical type is not documented (Nandor Kollar via gabor)
+
   BUG FIXES
 
     AVRO-1401: @Nullable does not work with byte[] (Nandor Kollar via gabor)
