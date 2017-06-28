@@ -857,7 +857,6 @@ public class TestSchema {
   private static void checkValidateDefaults(String schemaJson, String defaultJson) {
     try {
       Schema.Parser parser = new Schema.Parser();
-      parser.setValidateDefaults(true);
       String recordJson =
           "{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[{\"name\":\"f\", "
               +"\"type\":"+schemaJson+", "
