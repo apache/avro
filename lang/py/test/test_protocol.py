@@ -355,7 +355,7 @@ class TestProtocol(unittest.TestCase):
           num_correct += 1
         else:
           self.fail("Parsed invalid protocol: %s" % (example.name,))
-      except Exception, e:
+      except Exception as e:
         if not example.valid: 
           num_correct += 1
         else:
