@@ -24,13 +24,14 @@ from avro import schema, protocol
 from avro import io as avio
 from avro import ipc
 
-import io as pyio
-import sys
 import os
 import traceback
 import logging
 import collections
-from StringIO import StringIO
+try:
+  from io import BytesIO
+except ImportError:
+  from StringIO import StringIO as BytesIO
 import threading
 
 
@@ -89,7 +90,7 @@ class Collector(object):
       raise ValueError("output client can't be none.")
 
     self.scheme=scheme
-    self.buff=StringIO()
+    self.buff=BytesIO()
     self.encoder=avio.BinaryEncoder(self.buff)
 
     self.datum_writer = avio.DatumWriter(writers_schema=self.scheme)
@@ -375,7 +376,7 @@ class TetherTask(object):
     """
     try:
       # to avio.BinaryDecoder
-      bdata=StringIO(data)
+      bdata=BytesIO(data)
       decoder = avio.BinaryDecoder(bdata)
 
       for i in range(count):
