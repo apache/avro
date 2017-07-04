@@ -20,9 +20,12 @@ from __future__ import absolute_import
 import zlib
 from six.moves import range
 try:
-  from cStringIO import StringIO
+  from io import BytesIO
 except ImportError:
-  from StringIO import StringIO
+  try:
+    from cStringIO import StringIO as BytesIO
+  except ImportError:
+    from StringIO import StringIO as BytesIO
 from avro import schema
 from avro import io
 try:
@@ -84,7 +87,7 @@ class DataFileWriter(object):
     self._writer = writer
     self._encoder = io.BinaryEncoder(writer)
     self._datum_writer = datum_writer
-    self._buffer_writer = StringIO()
+    self._buffer_writer = BytesIO()
     self._buffer_encoder = io.BinaryEncoder(self._buffer_writer)
     self._block_count = 0
     self._meta = {}
@@ -325,13 +328,13 @@ class DataFileReader(object):
       # -15 is the log of the window size; negative indicates
       # "raw" (no zlib headers) decompression.  See zlib.h.
       uncompressed = zlib.decompress(data, -15)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
+      self._datum_decoder = io.BinaryDecoder(BytesIO(uncompressed))
     elif self.codec == 'snappy':
       # Compressed data includes a 4-byte CRC32 checksum
       length = self.raw_decoder.read_long()
       data = self.raw_decoder.read(length - 4)
       uncompressed = snappy.decompress(data)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
+      self._datum_decoder = io.BinaryDecoder(BytesIO(uncompressed))
       self.raw_decoder.check_crc32(uncompressed);
     else:
       raise DataFileException("Unknown codec: %r" % self.codec)
