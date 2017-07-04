@@ -24,7 +24,7 @@ from avro.datafile import DataFileReader, DataFileWriter
 import avro.schema
 import six
 from six.moves import range
-from six.moves import zip
+from six.moves import zip, filter, map
 
 try:
     import json
@@ -32,7 +32,6 @@ except ImportError:
     import simplejson as json
 import csv
 from sys import stdout, stdin
-from itertools import ifilter, imap
 from functools import partial
 from os.path import splitext
 
@@ -86,7 +85,7 @@ def print_avro(avro, opts):
 
     # Apply filter first
     if opts.filter:
-        avro = ifilter(partial(record_match, opts.filter), avro)
+        avro = filter(partial(record_match, opts.filter), avro)
 
     for i in range(opts.skip):
         try:
@@ -96,7 +95,7 @@ def print_avro(avro, opts):
 
     fields = parse_fields(opts.fields)
     if fields:
-        avro = imap(field_selector(fields), avro)
+        avro = map(field_selector(fields), avro)
 
     printer = select_printer(opts.format)
     for i, record in enumerate(avro):
@@ -139,7 +138,7 @@ def _open(filename, mode):
     return open(filename, mode)
 
 def iter_json(info, _):
-    return imap(json.loads, info)
+    return map(json.loads, info)
 
 def convert(value, field):
     type = field.type.type

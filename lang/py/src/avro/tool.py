@@ -22,7 +22,7 @@ NOTE: The API for the command-line tool is experimental.
 from __future__ import print_function
 import sys
 from six.moves.BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-import urlparse
+from six.moves.urllib.parse import urlparse
 from avro import io
 from avro import datafile
 from avro import protocol
@@ -76,7 +76,7 @@ class StoppableHTTPServer(HTTPServer):
     self.serve_forever()
 
 def run_server(uri, proto, msg, datum):
-  url_obj = urlparse.urlparse(uri)
+  url_obj = urlparse(uri)
   server_addr = (url_obj.hostname, url_obj.port)
   global responder
   global server_should_shutdown
@@ -90,7 +90,7 @@ def run_server(uri, proto, msg, datum):
   server.serve_forever()
 
 def send_message(uri, proto, msg, datum):
-  url_obj = urlparse.urlparse(uri)
+  url_obj = urlparse(uri)
   client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
   proto_json = open(proto, 'r').read()
   requestor = ipc.Requestor(protocol.parse(proto_json), client)
