@@ -15,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 import sys
 
 from avro import ipc
@@ -84,9 +85,9 @@ if __name__ == '__main__':
   for msg_count in range(num_messages):
     requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
     result = requestor.request('send', params)
-    print("Result: " + result)
+    print(("Result: " + result))
 
   # try out a replay message
   requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
   result = requestor.request('replay', dict())
-  print("Replay Result: " + result)
+  print(("Replay Result: " + result))

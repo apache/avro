@@ -16,16 +16,17 @@
 """
 Test the schema parsing logic.
 """
+from __future__ import print_function
 import unittest
 import set_avro_test_path
 
 from avro import schema
 
 def print_test_name(test_name):
-  print ''
-  print test_name
-  print '=' * len(test_name)
-  print ''
+  print('')
+  print(test_name)
+  print('=' * len(test_name))
+  print('')
 
 class ExampleSchema(object):
   def __init__(self, schema_string, valid, name='', comment=''):

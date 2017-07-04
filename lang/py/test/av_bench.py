@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
 import sys
 import time
 from random import sample, choice, randint
@@ -73,5 +74,5 @@ def t(f, *args):
 
 if __name__ == "__main__":
     n = int(sys.argv[1])
-    print "Write %0.4f" % t(write, n)
-    print "Read %0.4f" % t(read)
+    print("Write %0.4f" % t(write, n))
+    print("Read %0.4f" % t(read))

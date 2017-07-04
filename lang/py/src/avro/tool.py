@@ -19,6 +19,7 @@ Command-line tool
 
 NOTE: The API for the command-line tool is experimental.
 """
+from __future__ import print_function
 import sys
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 import urlparse
@@ -36,7 +37,7 @@ class GenericResponder(ipc.Responder):
 
   def invoke(self, message, request):
     if message.name == self.msg:
-      print >> sys.stderr, "Message: %s Datum: %s" % (message.name, self.datum)
+      print("Message: %s Datum: %s" % (message.name, self.datum), file=sys.stderr)
       # server will shut down after processing a single Avro request
       global server_should_shutdown
       server_should_shutdown = True
@@ -54,7 +55,7 @@ class GenericHandler(BaseHTTPRequestHandler):
     resp_writer = ipc.FramedWriter(self.wfile)
     resp_writer.write_framed_message(resp_body)
     if server_should_shutdown:
-      print >> sys.stderr, "Shutting down server."
+      print("Shutting down server.", file=sys.stderr)
       self.server.force_stop()
 
 class StoppableHTTPServer(HTTPServer):
@@ -82,10 +83,10 @@ def run_server(uri, proto, msg, datum):
   server_should_shutdown = False
   responder = GenericResponder(proto, msg, datum)
   server = StoppableHTTPServer(server_addr, GenericHandler)
-  print "Port: %s" % server.server_port
+  print("Port: %s" % server.server_port)
   sys.stdout.flush()
   server.allow_reuse_address = True
-  print >> sys.stderr, "Starting server."
+  print("Starting server.", file=sys.stderr)
   server.serve_forever()
 
 def send_message(uri, proto, msg, datum):
@@ -93,7 +94,7 @@ def send_message(uri, proto, msg, datum):
   client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
   proto_json = file(proto, 'r').read()
   requestor = ipc.Requestor(protocol.parse(proto_json), client)
-  print requestor.request(msg, datum)
+  print(requestor.request(msg, datum))
 
 def file_or_stdin(f):
   if f == "-":
@@ -103,20 +104,20 @@ def file_or_stdin(f):
 
 def main(args=sys.argv):
   if len(args) == 1:
-    print "Usage: %s [dump|rpcreceive|rpcsend]" % args[0]
+    print("Usage: %s [dump|rpcreceive|rpcsend]" % args[0])
     return 1
 
   if args[1] == "dump":
     if len(args) != 3:
-      print "Usage: %s dump input_file" % args[0]
+      print("Usage: %s dump input_file" % args[0])
       return 1
     for d in datafile.DataFileReader(file_or_stdin(args[2]), io.DatumReader()):
-      print repr(d)
+      print(repr(d))
   elif args[1] == "rpcreceive":
     usage_str = "Usage: %s rpcreceive uri protocol_file " % args[0]
     usage_str += "message_name (-data d | -file f)"
     if len(args) not in [5, 7]:
-      print usage_str
+      print(usage_str)
       return 1
     uri, proto, msg = args[2:5]
     datum = None
@@ -127,17 +128,17 @@ def main(args=sys.argv):
         dfr = datafile.DataFileReader(reader, datum_reader)
         datum = dfr.next()
       elif args[5] == "-data":
-        print "JSON Decoder not yet implemented."
+        print("JSON Decoder not yet implemented.")
         return 1
       else:
-        print usage_str
+        print(usage_str)
         return 1
     run_server(uri, proto, msg, datum)
   elif args[1] == "rpcsend":
     usage_str = "Usage: %s rpcsend uri protocol_file " % args[0]
     usage_str += "message_name (-data d | -file f)"
     if len(args) not in [5, 7]:
-      print usage_str
+      print(usage_str)
       return 1
     uri, proto, msg = args[2:5]
     datum = None
@@ -148,10 +149,10 @@ def main(args=sys.argv):
         dfr = datafile.DataFileReader(reader, datum_reader)
         datum = dfr.next()
       elif args[5] == "-data":
-        print "JSON Decoder not yet implemented."
+        print("JSON Decoder not yet implemented.")
         return 1
       else:
-        print usage_str
+        print(usage_str)
         return 1
     send_message(uri, proto, msg, datum)
   return 0

@@ -16,6 +16,7 @@
 
 
 
+from __future__ import print_function
 import os
 import subprocess
 import sys
@@ -56,7 +57,7 @@ class TestTetherTask(unittest.TestCase):
       proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(server_port)])
       input_port=find_port()
 
-      print "Mock server started process pid={0}".format(proc.pid)
+      print("Mock server started process pid={0}".format(proc.pid))
       # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
       # so we give the subprocess time to start up
       time.sleep(1)
