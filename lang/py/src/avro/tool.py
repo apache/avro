@@ -21,7 +21,7 @@ NOTE: The API for the command-line tool is experimental.
 """
 from __future__ import print_function
 import sys
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from six.moves.BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 import urlparse
 from avro import io
 from avro import datafile

@@ -28,7 +28,7 @@ else:
   from . import TetherTask, find_port, inputProtocol
 
 from avro import ipc
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import logging
 import weakref
 import threading

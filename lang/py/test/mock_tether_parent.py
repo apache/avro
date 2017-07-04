@@ -17,7 +17,7 @@
 from __future__ import print_function
 import sys
 import set_avro_test_path
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from avro import ipc
 from avro import protocol
 from avro import tether

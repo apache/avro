@@ -16,7 +16,7 @@
 """
 Support for inter-process calls.
 """
-import httplib
+import six.moves.http_client
 try:
   from cStringIO import StringIO
 except ImportError:
@@ -441,7 +441,7 @@ class HTTPTransceiver(object):
   """
   def __init__(self, host, port, req_resource='/'):
     self.req_resource = req_resource
-    self.conn = httplib.HTTPConnection(host, port)
+    self.conn = six.moves.http_client.HTTPConnection(host, port)
     self.conn.connect()
 
   # read-only properties
