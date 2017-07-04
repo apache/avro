@@ -18,9 +18,12 @@ Support for inter-process calls.
 """
 import six.moves.http_client
 try:
-  from cStringIO import StringIO
+  from io import BytesIO
 except ImportError:
-  from StringIO import StringIO
+  try:
+    from cStringIO import StringIO as BytesIO
+  except ImportError:
+    from StringIO import StringIO as BytesIO
 from avro import io
 from avro import protocol
 from avro import schema
@@ -109,7 +112,7 @@ class BaseRequestor(object):
     Writes a request message and reads a response or error message.
     """
     # build handshake and call request
-    buffer_writer = StringIO()
+    buffer_writer = BytesIO()
     buffer_encoder = io.BinaryEncoder(buffer_writer)
     self.write_handshake_request(buffer_encoder)
     self.write_call_request(message_name, request_datum, buffer_encoder)
@@ -230,7 +233,7 @@ class Requestor(BaseRequestor):
     call_response = self.transceiver.transceive(call_request)
 
     # process the handshake and call response
-    buffer_decoder = io.BinaryDecoder(StringIO(call_response))
+    buffer_decoder = io.BinaryDecoder(BytesIO(call_response))
     call_response_exists = self.read_handshake_response(buffer_decoder)
     if call_response_exists:
       return self.read_call_response(message_name, buffer_decoder)
@@ -261,9 +264,9 @@ class Responder(object):
     Called by a server to deserialize a request, compute and serialize
     a response or error. Compare to 'handle()' in Thrift.
     """
-    buffer_reader = StringIO(call_request)
+    buffer_reader = BytesIO(call_request)
     buffer_decoder = io.BinaryDecoder(buffer_reader)
-    buffer_writer = StringIO()
+    buffer_writer = BytesIO()
     buffer_encoder = io.BinaryEncoder(buffer_writer)
     error = None
     response_metadata = {}
@@ -312,7 +315,7 @@ class Responder(object):
         self.write_error(writers_schema, error, buffer_encoder)
     except schema.AvroException as e:
       error = AvroRemoteException(str(e))
-      buffer_encoder = io.BinaryEncoder(StringIO())
+      buffer_encoder = io.BinaryEncoder(BytesIO())
       META_WRITER.write(response_metadata, buffer_encoder)
       buffer_encoder.write_boolean(True)
       self.write_error(SYSTEM_ERROR_SCHEMA, error, buffer_encoder)
@@ -383,7 +386,7 @@ class FramedReader(object):
   def read_framed_message(self):
     message = []
     while True:
-      buffer = StringIO()
+      buffer = BytesIO()
       buffer_length = self._read_buffer_length()
       if buffer_length == 0:
         return ''.join(message)
@@ -470,7 +473,7 @@ class HTTPTransceiver(object):
     req_method = 'POST'
     req_headers = {'Content-Type': 'avro/binary'}
 
-    req_body_buffer = FramedWriter(StringIO())
+    req_body_buffer = FramedWriter(BytesIO())
     req_body_buffer.write_framed_message(message)
     req_body = req_body_buffer.writer.getvalue()
 
@@ -482,4 +485,3 @@ class HTTPTransceiver(object):
 #
 # Server Implementations (none yet)
 #
-
