@@ -113,17 +113,10 @@ class Collector(object):
 
     # delete all the data in the buffer
     if (partition is None):
-
-      # TODO: Is there a more efficient way to read the data in self.buff?
-      # we could use self.buff.read() but that returns the byte array as a string
-      # will that work?  We can also use self.buff.readinto to read it into
-      # a bytearray but the byte array must be pre-allocated
-      # self.outputClient.output(self.buff.buffer.read())
-
-      #its not a StringIO
-      self.outputClient.request("output",{"datum":self.buff.read()})
+      self.outputClient.request("output",{"datum":self.buff.getvalue()})
     else:
-      self.outputClient.request("outputPartitioned",{"datum":self.buff.read(),"partition":partition})
+      self.outputClient.request("outputPartitioned",{"datum":self.buff.getvalue(),
+                                                     "partition":partition})
 
 
 
