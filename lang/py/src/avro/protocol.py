@@ -102,7 +102,12 @@ class Protocol(object):
       self.set_prop('types', self._parse_types(types, type_names))
     if messages is not None:
       self.set_prop('messages', self._parse_messages(messages, type_names))
-    self._md5 = md5(str(self)).digest()
+    str_self = str(self)
+    if six.PY3:
+        b_self = str_self.encode('utf-8')
+    else:
+        b_self = str_self
+    self._md5 = md5(b_self).digest()
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
@@ -223,4 +228,3 @@ def parse(json_string):
 
   # construct the Avro Protocol object
   return make_avpr_object(json_data)
-
