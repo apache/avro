@@ -183,7 +183,7 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
       exhf.close()
 
       # make it world executable
-      os.chmod(exfile,0755)
+      os.chmod(exfile,0o755)
 
       args.extend(["--program",exfile])
 

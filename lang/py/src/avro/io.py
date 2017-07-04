@@ -199,10 +199,10 @@ class BinaryDecoder(object):
     The float is converted into a 32-bit integer using a method equivalent to
     Java's floatToIntBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.read(1)) & 0xffL)) |
-      ((ord(self.read(1)) & 0xffL) <<  8) |
-      ((ord(self.read(1)) & 0xffL) << 16) |
-      ((ord(self.read(1)) & 0xffL) << 24))
+    bits = (((ord(self.read(1)) & 0xff)) |
+      ((ord(self.read(1)) & 0xff) <<  8) |
+      ((ord(self.read(1)) & 0xff) << 16) |
+      ((ord(self.read(1)) & 0xff) << 24))
     return STRUCT_FLOAT.unpack(STRUCT_INT.pack(bits))[0]
 
   def read_double(self):
@@ -211,14 +211,14 @@ class BinaryDecoder(object):
     The double is converted into a 64-bit integer using a method equivalent to
     Java's doubleToLongBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.read(1)) & 0xffL)) |
-      ((ord(self.read(1)) & 0xffL) <<  8) |
-      ((ord(self.read(1)) & 0xffL) << 16) |
-      ((ord(self.read(1)) & 0xffL) << 24) |
-      ((ord(self.read(1)) & 0xffL) << 32) |
-      ((ord(self.read(1)) & 0xffL) << 40) |
-      ((ord(self.read(1)) & 0xffL) << 48) |
-      ((ord(self.read(1)) & 0xffL) << 56))
+    bits = (((ord(self.read(1)) & 0xff)) |
+      ((ord(self.read(1)) & 0xff) <<  8) |
+      ((ord(self.read(1)) & 0xff) << 16) |
+      ((ord(self.read(1)) & 0xff) << 24) |
+      ((ord(self.read(1)) & 0xff) << 32) |
+      ((ord(self.read(1)) & 0xff) << 40) |
+      ((ord(self.read(1)) & 0xff) << 48) |
+      ((ord(self.read(1)) & 0xff) << 56))
     return STRUCT_DOUBLE.unpack(STRUCT_LONG.pack(bits))[0]
 
   def read_bytes(self):
