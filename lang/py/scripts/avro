@@ -17,9 +17,14 @@
 # limitations under the License.
 """Command line utlity for reading and writing Avro files."""
 
+from __future__ import absolute_import
+from __future__ import print_function
 from avro.io import DatumReader, DatumWriter
 from avro.datafile import DataFileReader, DataFileWriter
 import avro.schema
+import six
+from six.moves import range
+from six.moves import zip
 
 try:
     import json
@@ -43,7 +48,7 @@ def print_json_pretty(row):
 _write_row = csv.writer(stdout).writerow
 _encoding = stdout.encoding or "UTF-8"
 def _encode(v, encoding=_encoding):
-    if not isinstance(v, basestring):
+    if not isinstance(v, six.string_types):
         return v
     return v.encode(_encoding)
 
@@ -83,7 +88,7 @@ def print_avro(avro, opts):
     if opts.filter:
         avro = ifilter(partial(record_match, opts.filter), avro)
 
-    for i in xrange(opts.skip):
+    for i in range(opts.skip):
         try:
             next(avro)
         except StopIteration:
@@ -104,7 +109,7 @@ def print_avro(avro, opts):
 def print_schema(avro):
     schema = avro.meta["avro.schema"]
     # Pretty print
-    print json.dumps(json.loads(schema), indent=4)
+    print(json.dumps(json.loads(schema), indent=4))
 
 def cat(opts, args):
     if not args:
@@ -113,7 +118,7 @@ def cat(opts, args):
     for filename in args:
         try:
             fo = open(filename, "rb")
-        except (OSError, IOError), e:
+        except (OSError, IOError) as e:
             raise AvroError("Can't open %s - %s" % (filename, e))
 
         avro = DataFileReader(fo, DatumReader())
@@ -143,7 +148,7 @@ def convert(value, field):
 
     return  {
         "int" : int,
-        "long" : long,
+        "long" : int if six.PY3 else long,
         "float" : float,
         "double" : float,
         "string" : str,
@@ -189,7 +194,7 @@ def write(opts, files):
     try:
         schema = avro.schema.parse(open(opts.schema, "rb").read())
         out = _open(opts.output, "wb")
-    except (IOError, OSError), e:
+    except (IOError, OSError) as e:
         raise AvroError("Can't open file - %s" % e)
 
     writer = DataFileWriter(out, DatumWriter(), schema)
@@ -252,11 +257,10 @@ def main(argv=None):
             write(opts, args)
         else:
             raise AvroError("Unknown command - %s" % command)
-    except AvroError, e:
+    except AvroError as e:
         parser.error("%s" % e) # Will exit
-    except Exception, e:
+    except Exception as e:
         raise SystemExit("panic: %s" % e)
 
 if __name__ == "__main__":
     main()
-
