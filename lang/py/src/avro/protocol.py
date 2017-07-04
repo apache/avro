@@ -60,7 +60,7 @@ class Protocol(object):
 
   def _parse_messages(self, messages, names):
     message_objects = {}
-    for name, body in messages.iteritems():
+    for name, body in six.iteritems(messages):
       if name in message_objects:
         fail_msg = 'Message name "%s" repeated.' % name
         raise ProtocolParseException(fail_msg)
@@ -132,7 +132,7 @@ class Protocol(object):
       to_dump['types'] = [ t.to_json(names) for t in self.types ]
     if self.messages:
       messages_dict = {}
-      for name, body in self.messages.iteritems():
+      for name, body in six.iteritems(self.messages):
         messages_dict[name] = body.to_json(names)
       to_dump['messages'] = messages_dict
     return to_dump
