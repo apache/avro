@@ -113,13 +113,13 @@ def validate(expected_schema, datum):
   elif schema_type == 'bytes':
     return isinstance(datum, str)
   elif schema_type == 'int':
-    return ((isinstance(datum, int) or isinstance(datum, long)) 
+    return (isinstance(datum, six.integer_types)
             and INT_MIN_VALUE <= datum <= INT_MAX_VALUE)
   elif schema_type == 'long':
-    return ((isinstance(datum, int) or isinstance(datum, long)) 
+    return (isinstance(datum, six.integer_types)
             and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
   elif schema_type in ['float', 'double']:
-    return (isinstance(datum, int) or isinstance(datum, long)
+    return (isinstance(datum, six.integer_types)
             or isinstance(datum, float))
   elif schema_type == 'fixed':
     return isinstance(datum, str) and len(datum) == expected_schema.size
@@ -724,7 +724,10 @@ class DatumReader(object):
     elif field_schema.type == 'int':
       return int(default_value)
     elif field_schema.type == 'long':
-      return long(default_value)
+      if six.PY3:
+        return int(default_value)
+      else:
+        return long(default_value)
     elif field_schema.type in ['float', 'double']:
       return float(default_value)
     elif field_schema.type in ['enum', 'fixed', 'string', 'bytes']:
