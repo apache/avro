@@ -49,6 +49,12 @@ try:
 except ImportError:
 	import simplejson as json
 
+if six.PY3:
+    def byte(i):
+        return bytes([i])
+else:
+    byte = chr
+
 #
 # Constants
 #
@@ -296,9 +302,9 @@ class BinaryEncoder(object):
     whose value is either 0 (false) or 1 (true).
     """
     if datum:
-      self.write(chr(1))
+      self.write(byte(1))
     else:
-      self.write(chr(0))
+      self.write(byte(0))
 
   def write_int(self, datum):
     """
@@ -312,9 +318,9 @@ class BinaryEncoder(object):
     """
     datum = (datum << 1) ^ (datum >> 63)
     while (datum & ~0x7F) != 0:
-      self.write(chr((datum & 0x7f) | 0x80))
+      self.write(byte((datum & 0x7f) | 0x80))
       datum >>= 7
-    self.write(chr(datum))
+    self.write(byte(datum))
 
   def write_float(self, datum):
     """
@@ -323,10 +329,10 @@ class BinaryEncoder(object):
     Java's floatToIntBits and then encoded in little-endian format.
     """
     bits = STRUCT_INT.unpack(STRUCT_FLOAT.pack(datum))[0]
-    self.write(chr((bits) & 0xFF))
-    self.write(chr((bits >> 8) & 0xFF))
-    self.write(chr((bits >> 16) & 0xFF))
-    self.write(chr((bits >> 24) & 0xFF))
+    self.write(byte((bits) & 0xFF))
+    self.write(byte((bits >> 8) & 0xFF))
+    self.write(byte((bits >> 16) & 0xFF))
+    self.write(byte((bits >> 24) & 0xFF))
 
   def write_double(self, datum):
     """
@@ -335,14 +341,14 @@ class BinaryEncoder(object):
     Java's doubleToLongBits and then encoded in little-endian format.
     """
     bits = STRUCT_LONG.unpack(STRUCT_DOUBLE.pack(datum))[0]
-    self.write(chr((bits) & 0xFF))
-    self.write(chr((bits >> 8) & 0xFF))
-    self.write(chr((bits >> 16) & 0xFF))
-    self.write(chr((bits >> 24) & 0xFF))
-    self.write(chr((bits >> 32) & 0xFF))
-    self.write(chr((bits >> 40) & 0xFF))
-    self.write(chr((bits >> 48) & 0xFF))
-    self.write(chr((bits >> 56) & 0xFF))
+    self.write(byte((bits) & 0xFF))
+    self.write(byte((bits >> 8) & 0xFF))
+    self.write(byte((bits >> 16) & 0xFF))
+    self.write(byte((bits >> 24) & 0xFF))
+    self.write(byte((bits >> 32) & 0xFF))
+    self.write(byte((bits >> 40) & 0xFF))
+    self.write(byte((bits >> 48) & 0xFF))
+    self.write(byte((bits >> 56) & 0xFF))
 
   def write_bytes(self, datum):
     """
