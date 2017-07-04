@@ -33,6 +33,8 @@ A schema may be one of:
   A boolean; or
   Null.
 """
+from __future__ import absolute_import
+import six
 try:
   import json
 except ImportError:
@@ -112,7 +114,7 @@ class Schema(object):
   """Base class for all Schema classes."""
   def __init__(self, type, other_props=None):
     # Ensure valid ctor args
-    if not isinstance(type, basestring):
+    if not isinstance(type, six.string_types):
       fail_msg = 'Schema type must be a string.'
       raise SchemaParseException(fail_msg)
     elif type not in VALID_TYPES:
@@ -165,21 +167,21 @@ class Name(object):
     @ard default_space: the current default space or None.
     """
     # Ensure valid ctor args
-    if not (isinstance(name_attr, basestring) or (name_attr is None)):
+    if not (isinstance(name_attr, six.string_types) or (name_attr is None)):
       fail_msg = 'Name must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
     elif name_attr == "":
       fail_msg = 'Name must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
 
-    if not (isinstance(space_attr, basestring) or (space_attr is None)):
+    if not (isinstance(space_attr, six.string_types) or (space_attr is None)):
       fail_msg = 'Space must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
     elif name_attr == "":
       fail_msg = 'Space must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
   
-    if not (isinstance(default_space, basestring) or (default_space is None)):
+    if not (isinstance(default_space, six.string_types) or (default_space is None)):
       fail_msg = 'Default space must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
     elif name_attr == "":
@@ -280,10 +282,10 @@ class NamedSchema(Schema):
     if not name:
       fail_msg = 'Named Schemas must have a non-empty name.'
       raise SchemaParseException(fail_msg)
-    elif not isinstance(name, basestring):
+    elif not isinstance(name, six.string_types):
       fail_msg = 'The name property must be a string.'
       raise SchemaParseException(fail_msg)
-    elif namespace is not None and not isinstance(namespace, basestring):
+    elif namespace is not None and not isinstance(namespace, six.string_types):
       fail_msg = 'The namespace property must be a string.'
       raise SchemaParseException(fail_msg)
 
@@ -319,7 +321,7 @@ class Field(object):
     if not name:
       fail_msg = 'Fields must have a non-empty name.'
       raise SchemaParseException(fail_msg)
-    elif not isinstance(name, basestring):
+    elif not isinstance(name, six.string_types):
       fail_msg = 'The name property must be a string.'
       raise SchemaParseException(fail_msg)
     elif order is not None and order not in VALID_FIELD_SORT_ORDERS:
@@ -331,7 +333,7 @@ class Field(object):
     self._has_default = has_default
     self._props.update(other_props or {})
 
-    if (isinstance(type, basestring) and names is not None
+    if (isinstance(type, six.string_types) and names is not None
         and names.has_name(type, None)):
       type_schema = names.get_name(type, None)
     else:
@@ -442,7 +444,7 @@ class EnumSchema(NamedSchema):
     if not isinstance(symbols, list):
       fail_msg = 'Enum Schema requires a JSON array for the symbols property.'
       raise AvroException(fail_msg)
-    elif False in [isinstance(s, basestring) for s in symbols]:
+    elif False in [isinstance(s, six.string_types) for s in symbols]:
       fail_msg = 'Enum Schema requires all symbols to be JSON strings.'
       raise AvroException(fail_msg)
     elif len(set(symbols)) < len(symbols):
@@ -482,7 +484,7 @@ class ArraySchema(Schema):
     Schema.__init__(self, 'array', other_props)
     # Add class members
 
-    if isinstance(items, basestring) and names.has_name(items, None):
+    if isinstance(items, six.string_types) and names.has_name(items, None):
       items_schema = names.get_name(items, None)
     else:
       try:
@@ -514,7 +516,7 @@ class MapSchema(Schema):
     Schema.__init__(self, 'map',other_props)
 
     # Add class members
-    if isinstance(values, basestring) and names.has_name(values, None):
+    if isinstance(values, six.string_types) and names.has_name(values, None):
       values_schema = names.get_name(values, None)
     else:
       try:
@@ -555,7 +557,7 @@ class UnionSchema(Schema):
     # Add class members
     schema_objects = []
     for schema in schemas:
-      if isinstance(schema, basestring) and names.has_name(schema, None):
+      if isinstance(schema, six.string_types) and names.has_name(schema, None):
         new_schema = names.get_name(schema, None)
       else:
         try:
