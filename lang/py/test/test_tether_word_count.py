@@ -74,7 +74,7 @@ class TestTetherWordCount(unittest.TestCase):
       words=line.split()
 
       for w in words:
-        if not(counts.has_key(w.strip())):
+        if not(w.strip() in counts):
           counts[w.strip()]=0
 
         counts[w.strip()]=counts[w.strip()]+1

@@ -699,7 +699,7 @@ class DatumReader(object):
     if len(readers_fields_dict) > len(read_record):
       writers_fields_dict = writers_schema.fields_dict
       for field_name, field in readers_fields_dict.items():
-        if not writers_fields_dict.has_key(field_name):
+        if field_name not in writers_fields_dict:
           if field.has_default:
             field_val = self._read_default_value(field.type, field.default)
             read_record[field.name] = field_val
