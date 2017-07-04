@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from __future__ import print_function
+from __future__ import absolute_import
 import inspect
 import subprocess
 import sys
@@ -23,6 +24,7 @@ import unittest
 import os
 
 import set_avro_test_path
+from six.moves import range
 
 class TestTetherWordCount(unittest.TestCase):
   """ unittest for a python tethered map-reduce job.

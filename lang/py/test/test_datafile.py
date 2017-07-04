@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import unittest
 
@@ -22,6 +23,7 @@ import set_avro_test_path
 from avro import schema
 from avro import io
 from avro import datafile
+from six.moves import range
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),

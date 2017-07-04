@@ -17,6 +17,7 @@
 # limitations under the License.
 
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import time
 from random import sample, choice, randint
@@ -25,6 +26,7 @@ from string import lowercase
 import avro.datafile
 import avro.schema
 import avro.io
+from six.moves import range
 
 
 types = ["A", "CNAME"]
@@ -49,7 +51,7 @@ def write(n):
     schema = avro.schema.parse(schema_s)
     writer = avro.io.DatumWriter(schema)
     dw = avro.datafile.DataFileWriter(out, writer, schema) #,codec='deflate')
-    for _ in xrange(n):
+    for _ in range(n):
         response = rand_ip()
         query = rand_name()
         type = choice(types)

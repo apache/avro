@@ -36,10 +36,12 @@ uses the following mapping:
   * Schema doubles are implemented as float.
   * Schema booleans are implemented as bool. 
 """
+from __future__ import absolute_import
 import struct
 from avro import schema
 import sys
 from binascii import crc32
+from six.moves import range
 
 try:
 	import json

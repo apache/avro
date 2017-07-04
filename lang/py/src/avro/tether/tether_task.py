@@ -16,6 +16,8 @@
  * limitations under the License.
 """
 
+from __future__ import absolute_import
+from six.moves import range
 __all__=["TetherTask","TaskType","inputProtocol","outputProtocol","HTTPRequestor"]
 
 from avro import schema, protocol

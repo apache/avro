@@ -16,7 +16,9 @@
 """
 Read/Write Avro File Object Containers.
 """
+from __future__ import absolute_import
 import zlib
+from six.moves import range
 try:
   from cStringIO import StringIO
 except ImportError:

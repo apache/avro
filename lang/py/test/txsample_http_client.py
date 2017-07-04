@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 
 from twisted.internet import reactor, defer
@@ -23,6 +24,7 @@ from twisted.python.util import println
 
 from avro import protocol
 from avro import txipc
+from six.moves import range
 
 MAIL_PROTOCOL_JSON = """\
 {"namespace": "example.proto",
