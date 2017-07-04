@@ -360,7 +360,7 @@ class TetherTask(object):
       estr= traceback.format_exc()
       self.fail(estr)
 
-  def get_partitions():
+  def get_partitions(self):
     """ Return the number of map output partitions of this job."""
     return self._partitions
 
