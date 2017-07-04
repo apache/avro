@@ -47,7 +47,7 @@ if (inputProtocol is None):
   if not(os.path.exists(pfile)):
     raise Exception("Could not locate the InputProtocol: {0} does not exist".format(pfile))
 
-  with file(pfile,'r') as hf:
+  with open(pfile,'r') as hf:
     prototxt=hf.read()
 
   inputProtocol=protocol.parse(prototxt)
@@ -63,7 +63,7 @@ if (outputProtocol is None):
   if not(os.path.exists(pfile)):
     raise Exception("Could not locate the OutputProtocol: {0} does not exist".format(pfile))
 
-  with file(pfile,'r') as hf:
+  with open(pfile,'r') as hf:
     prototxt=hf.read()
 
   outputProtocol=protocol.parse(prototxt)
