@@ -24,11 +24,12 @@ from avro import schema
 from avro import io
 from avro import datafile
 from six.moves import range
+import six
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
   ('"boolean"', True),
-  ('"string"', unicode('adsfasdf09809dsf-=adsf')),
+  ('"string"', six.text_type('adsfasdf09809dsf-=adsf')),
   ('"bytes"', '12345abcd'),
   ('"int"', 1234),
   ('"long"', 1234),

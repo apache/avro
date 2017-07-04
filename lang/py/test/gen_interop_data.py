@@ -15,15 +15,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import absolute_import
 import sys
 from avro import schema
 from avro import io
 from avro import datafile
+import six
 
 DATUM = {
   'intField': 12,
   'longField': 15234324,
-  'stringField': unicode('hey'),
+  'stringField': six.text_type('hey'),
   'boolField': True,
   'floatField': 1234.0,
   'doubleField': -1234.0,

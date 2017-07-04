@@ -42,6 +42,7 @@ from avro import schema
 import sys
 from binascii import crc32
 from six.moves import range
+import six
 
 try:
 	import json
@@ -232,7 +233,7 @@ class BinaryDecoder(object):
     A string is encoded as a long followed by
     that many bytes of UTF-8 encoded character data.
     """
-    return unicode(self.read_bytes(), "utf-8")
+    return six.text_type(self.read_bytes(), "utf-8")
 
   def check_crc32(self, bytes):
     checksum = STRUCT_CRC32.unpack(self.read(4))[0];

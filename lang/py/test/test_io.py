@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function
+from __future__ import absolute_import
 import unittest
+import six
 try:
   from cStringIO import StringIO
 except ImportError:
@@ -29,7 +31,7 @@ from avro import io
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
   ('"boolean"', True),
-  ('"string"', unicode('adsfasdf09809dsf-=adsf')),
+  ('"string"', six.text_type('adsfasdf09809dsf-=adsf')),
   ('"bytes"', '12345abcd'),
   ('"int"', 1234),
   ('"long"', 1234),
