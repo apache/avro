@@ -25,6 +25,8 @@ import java.io.IOException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
 
 /** Base class for generated record classes. */
 public abstract class SpecificRecordBase
@@ -89,5 +91,17 @@ public abstract class SpecificRecordBase
     throws IOException {
     new SpecificDatumReader(getSchema())
       .read(this, SpecificData.getDecoder(in));
+  }
+
+  public void encode(Encoder out) throws IOException {
+    // Ideally, this would be abstract, but that would not be
+    // backward compatible.
+    throw new UnsupportedOperationException();
+  }
+
+  public void decode(Decoder in) throws IOException {
+    // Ideally, this would be abstract, but that would not be
+    // backward compatible.
+    throw new UnsupportedOperationException();
   }
 }

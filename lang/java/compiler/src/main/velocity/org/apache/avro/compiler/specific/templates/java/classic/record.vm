@@ -473,4 +473,77 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+#if (!$schema.isError())
+  @Override public void encode(org.apache.avro.io.Encoder out)
+    throws java.io.IOException
+  {
+#foreach ($field in $schema.getFields())
+#set ($n = "this.${this.mangle($field.name(), $schema.isError())}")
+#set ($t = $field.schema().Type.Name)
+
+#if ($t.equals("array"))
+#elseif ($t.equals("map"))
+#elseif ($t.equals("union"))
+#else
+    #encodeSimple($n $t)
+#end
+#end
+  }
+
+#macro( encodeArray )
+
+#end
+
+#macro( encodeSimple $fname $ftype)
+#if ($ftype.equals("null"))
+    out.writeNull();
+#elseif ($ftype.equals("boolean"))
+    out.writeBoolean($fname);
+#elseif ($ftype.equals("int"))
+    out.writeInt($fname);
+#elseif ($ftype.equals("long"))
+    out.writeLong($fname);
+#elseif ($ftype.equals("float"))
+    out.writeFloat($fname);
+#elseif ($ftype.equals("double"))
+    out.writeDouble($fname);
+#elseif ($ftype.equals("string"))
+    out.writeString($fname);
+#elseif ($ftype.equals("bytes"))
+    out.writeBytes($fname);
+#elseif ($ftype.equals("fixed"))
+    out.writeFixed(${fname}.bytes(), 0, ${fname}.getSchema().getFixedSize());
+#elseif ($ftype.equals("enum"))
+    out.writeEnum(${fname}.ordinal());
+#elseif ($ftype.equals("record"))
+    ${fname}.encode(out);
+#else
+    ## TODO -- singal a code-gen-time error
+#end
+#end
+
+
+  @Override public void decode(org.apache.avro.io.Decoder in)
+    throws java.io.IOException
+  {
+#foreach ($field in $schema.getFields())
+#set ($t = $field.schema().Type.Name)
+#if ($t.equals("null"))
+#elseif ($t.equals("boolean"))
+#elseif ($t.equals("int"))
+#elseif ($t.equals("long"))
+#elseif ($t.equals("float"))
+#elseif ($t.equals("double"))
+#elseif ($t.equals("string"))
+#elseif ($t.equals("bytes"))
+#elseif ($t.equals("fixed"))
+#elseif ($t.equals("enum"))
+#elseif ($t.equals("array"))
+#elseif ($t.equals("map"))
+#elseif ($t.equals("union"))
+#elseif ($t.equals("record"))
+#end
+#end
+  }
+#end
 }
