@@ -496,4 +496,160 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+#if ($this.isEncodable($schema))
+  @Override public boolean isEncodable() { return true; }
+
+  @Override public void encode(org.apache.avro.io.Encoder out)
+    throws java.io.IOException
+  {
+#set ($nv = 0)## Counter to ensure unique var-names
+#set ($maxnv = 0)## Holds high-water mark during recursion
+#foreach ($field in $schema.getFields())
+#set ($n = "this.${this.mangle($field.name(), $schema.isError())}")
+#set ($s = $field.schema())
+#encodeVar(0 $n $s)
+
+#set ($nv = $maxnv)
+#end
+  }
+
+#macro( encodeVar $indent $var $s )
+#set ($I = $this.indent($indent))
+##### Compound types (array, map, and union) require calls
+##### that will recurse back into this encodeVar macro:
+#if ($s.Type.Name.equals("array"))
+#encodeArray($indent $var $s)
+#elseif ($s.Type.Name.equals("map"))
+#encodeMap($indent $var $s)
+#elseif ($s.Type.Name.equals("union"))
+#encodeUnion($indent $var $s)
+##### Use the generated "encode" method as fast way to write
+##### (specific) record types:
+#elseif ($s.Type.Name.equals("record"))
+$I    ${var}.encode(out);
+##### For rest of cases, generate calls out.writeXYZ:
+#elseif ($s.Type.Name.equals("null"))
+$I    out.writeNull();
+#elseif ($s.Type.Name.equals("boolean"))
+$I    out.writeBoolean(${var});
+#elseif ($s.Type.Name.equals("int"))
+$I    out.writeInt(${var});
+#elseif ($s.Type.Name.equals("long"))
+$I    out.writeLong(${var});
+#elseif ($s.Type.Name.equals("float"))
+$I    out.writeFloat(${var});
+#elseif ($s.Type.Name.equals("double"))
+$I    out.writeDouble(${var});
+#elseif ($s.Type.Name.equals("string"))
+#if ($this.isStringable($s))
+$I    out.writeString(${var}.toString());
+#else
+$I    out.writeString(${var});
+#end
+#elseif ($s.Type.Name.equals("bytes"))
+$I    out.writeBytes(${var});
+#elseif ($s.Type.Name.equals("fixed"))
+$I    out.writeFixed(${var}.bytes(), 0, ${var}.getSchema().getFixedSize());
+#elseif ($s.Type.Name.equals("enum"))
+$I    out.writeEnum(${var}.ordinal());
+#else
+## TODO -- singal a code-gen-time error
+#end
+#end
+
+#macro( encodeArray $indent $var $s )
+#set ($I = $this.indent($indent))
+#set ($et = $this.javaType($s.ElementType))
+$I    long size${nv} = ${var}.size();
+$I    out.writeArrayStart();
+$I    out.setItemCount(size${nv});
+$I    long actualSize${nv} = 0;
+$I    for ($et e${nv}: ${var}) {
+$I      actualSize${nv}++;
+$I      out.startItem();
+#set ($var = "e${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+#set ($indent = $indent + 2)
+#encodeVar($indent $var $s.ElementType)
+#set ($nv = $nv - 1)
+#set ($indent = $indent - 2)
+#set ($I = $this.indent($indent))
+$I    }
+$I    out.writeArrayEnd();
+$I    if (actualSize${nv} != size${nv})
+$I      throw new java.util.ConcurrentModificationException("Array-size written was " + size${nv} + ", but element count was " + actualSize${nv} + ".");
+#end
+
+#macro( encodeMap $indent $var $s )
+#set ($I = $this.indent($indent))
+#set ($kt = $this.getStringType($s))
+#set ($vt = $this.javaType($s.ValueType))
+$I    long size${nv} = ${var}.size();
+$I    out.writeMapStart();
+$I    out.setItemCount(size${nv});
+$I    long actualSize${nv} = 0;
+$I    for (java.util.Map.Entry<$kt, $vt> e${nv}: ${var}.entrySet()) {
+$I      actualSize${nv}++;
+$I      out.startItem();
+#if ($this.isStringable($s))
+$I      out.writeString(e${nv}.getKey().toString());
+#else
+$I      out.writeString(e${nv}.getKey());
+#end
+$I      $vt v${nv} = e${nv}.getValue();
+#set ($var = "v${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+#set ($indent = $indent + 2)
+#encodeVar($indent $var $s.ValueType)
+#set ($nv = $nv - 1)
+#set ($indent = $indent - 2)
+#set ($I = $this.indent($indent))
+$I    }
+$I    out.writeMapEnd();
+$I    if (actualSize${nv} != size${nv})
+      throw new java.util.ConcurrentModificationException("Map-size written was " + size${nv} + ", but element count was " + actualSize${nv} + ".");
+#end
+
+#macro( encodeUnion $indent $var $s)
+#set ($I = $this.indent($indent))
+#set ($et = $this.javaType($s.Types.get($this.getNonNullIndex($s))))
+$I    if (${var} == null) {
+$I      out.writeIndex(#if($this.getNonNullIndex($s)==0) 1 #else 0 #end);
+$I      out.writeNull();
+$I    } else {
+$I      out.writeIndex(${this.getNonNullIndex($s)});
+#set ($indent = $indent + 2)
+#encodeVar($indent $var $s.Types.get($this.getNonNullIndex($s)))
+#set ($indent = $indent - 2)
+#set ($I = $this.indent($indent))
+$I    }
+#end
+
+
+
+  @Override public void decode(org.apache.avro.io.Decoder in)
+    throws java.io.IOException
+  {
+#foreach ($field in $schema.getFields())
+#set ($t = $field.schema().Type.Name)
+#if ($t.equals("null"))
+#elseif ($t.equals("boolean"))
+#elseif ($t.equals("int"))
+#elseif ($t.equals("long"))
+#elseif ($t.equals("float"))
+#elseif ($t.equals("double"))
+#elseif ($t.equals("string"))
+#elseif ($t.equals("bytes"))
+#elseif ($t.equals("fixed"))
+#elseif ($t.equals("enum"))
+#elseif ($t.equals("array"))
+#elseif ($t.equals("map"))
+#elseif ($t.equals("union"))
+#elseif ($t.equals("record"))
+#end
+#end
+  }
+#end
 }

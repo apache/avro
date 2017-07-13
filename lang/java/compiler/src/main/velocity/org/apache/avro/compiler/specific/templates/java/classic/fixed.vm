@@ -61,4 +61,15 @@ public class ${this.mangle($schema.getName())} extends org.apache.avro.specific.
     READER$.read(this, org.apache.avro.specific.SpecificData.getDecoder(in));
   }
 
+  @Override public void encode(org.apache.avro.io.Encoder out)
+    throws java.io.IOException
+  {
+    out.writeFixed(bytes(), 0, SCHEMA$.getFixedSize());
+  }
+
+  @Override public void decode(org.apache.avro.io.Decoder in)
+    throws java.io.IOException
+  {
+    in.readFixed(bytes(), 0, SCHEMA$.getFixedSize());
+  }
 }
