@@ -572,15 +572,41 @@ public class SpecificCompiler {
     return result;
   }
 
-  private String getStringType(JsonNode overrideClassProperty) {
-    if (overrideClassProperty != null)
-      return overrideClassProperty.getTextValue();
+  /** Utility for template use (and also internal use).  Returns
+    * a string giving the FQN of the Java type to be used for a string
+    * schema or for the key of a map schema.  (It's an error to call
+    * this on a schema other than a string or map.) */
+  public String getStringType(Schema s) {
+    String prop;
+    switch (s.getType()) {
+    case MAP:
+      prop = SpecificData.KEY_CLASS_PROP;
+      break;
+    case STRING:
+      prop = SpecificData.CLASS_PROP;
+      break;
+    default:
+      throw new IllegalArgumentException("Can't check string-type of non-string/map type: " + s);
+    }
+    JsonNode override = s.getJsonProp(prop);
+    if (override != null) return override.getTextValue();
     switch (stringType) {
     case String:        return "java.lang.String";
     case Utf8:          return "org.apache.avro.util.Utf8";
     case CharSequence:  return "java.lang.CharSequence";
     default: throw new RuntimeException("Unknown string type: "+stringType);
    }
+  }
+
+  /** Utility for template use.  Returns true iff a STRING-schema or
+    * the key of a MAP-schema is what SpecificData defines as
+    * "stringable" (which means we need to call toString on it before
+    * before writing it). */
+  public boolean isStringable(Schema schema) {
+    String t = getStringType(schema);
+    return ! (t.equals("java.lang.String")
+              || t.equals("java.lang.CharSequence")
+              || t.equals("org.apache.avro.util.Utf8"));
   }
 
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
@@ -607,15 +633,14 @@ public class SpecificCompiler {
       return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
       return "java.util.Map<"
-        + getStringType(schema.getJsonProp(SpecificData.KEY_CLASS_PROP))+","
-        + javaType(schema.getValueType()) + ">";
+        + getStringType(schema)+ "," + javaType(schema.getValueType()) + ">";
     case UNION:
       List<Schema> types = schema.getTypes(); // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
         return javaType(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "java.lang.Object";
     case STRING:
-      return getStringType(schema.getJsonProp(SpecificData.CLASS_PROP));
+      return getStringType(schema);
     case BYTES:   return "java.nio.ByteBuffer";
     case INT:     return "java.lang.Integer";
     case LONG:    return "java.lang.Long";
@@ -654,6 +679,51 @@ public class SpecificCompiler {
       case BOOLEAN: return "boolean";
       default:      return javaType(schema, false);
     }
+  }
+
+  /** Utility for template use.  For a two-branch union type with
+    * one null branch, returns the index of the null branch.  It's an
+    * error to use on anything other than a two-branch union with on
+    * null branch. */
+  public int getNonNullIndex(Schema s) {
+    if (s.getType() != Schema.Type.UNION
+        || s.getTypes().size() != 2
+        || ! s.getTypes().contains(NULL_SCHEMA))
+      throw new IllegalArgumentException("Can only be used on 2-branch union with a null branch: " + s);
+    return (s.getTypes().get(0).equals(NULL_SCHEMA) ? 1 : 0);
+  }
+
+  /** Utility for template use.  Returns true if the encode/decode
+    * logic in record.vm can handle the schema being presented. */
+  public boolean isEncodable(Schema schema) {
+    if (schema.isError()) return false;
+    return isEncodable(schema, new HashSet<Schema>());
+  }
+
+  private boolean isEncodable(Schema schema, Set<Schema> seen) {
+    if (! seen.add(schema)) return true;
+    if (schema.getLogicalType() != null) return false;
+    boolean result = true;
+    switch (schema.getType()) {
+    case RECORD:
+      for (Schema.Field f : schema.getFields())
+        result &= isEncodable(f.schema(), seen);
+      break;
+    case MAP:
+      result = isEncodable(schema.getValueType(), seen);
+      break;
+    case ARRAY:
+      result = isEncodable(schema.getElementType(), seen);
+      break;
+    case UNION:
+      List<Schema> types = schema.getTypes();
+      // Only know how to handle "nulling" unions for now
+      if (types.size() != 2 || ! types.contains(NULL_SCHEMA)) return false;
+      for (Schema s : types) result &= isEncodable(s, seen);
+      break;
+    default:
+    }
+    return result;
   }
 
   public boolean hasLogicalTypeField(Schema schema) {

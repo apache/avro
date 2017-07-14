@@ -473,54 +473,133 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
-#if (!$schema.isError())
+#if ($this.isEncodable($schema))
+  @Override public boolean isEncodable() { return true; }
+
   @Override public void encode(org.apache.avro.io.Encoder out)
     throws java.io.IOException
   {
+#set ($nv = 0)    ## Counter to ensure unique var-names
+#set ($maxnv = 0) ## Holds high-water mark during recursion
 #foreach ($field in $schema.getFields())
 #set ($n = "this.${this.mangle($field.name(), $schema.isError())}")
-#set ($t = $field.schema().Type.Name)
-
-#if ($t.equals("array"))
-#elseif ($t.equals("map"))
-#elseif ($t.equals("union"))
-#else
-    #encodeSimple($n $t)
-#end
+#set ($s = $field.schema())
+#encodeVar($n $s)
+#set ($nv = $maxnv)
 #end
   }
 
-#macro( encodeArray )
-
-#end
-
-#macro( encodeSimple $fname $ftype)
-#if ($ftype.equals("null"))
+#macro( encodeVar $var $s )
+##### Compound types (array, map, and union) require calls
+##### that will recurse back into this encodeVar macro:
+#if ($s.Type.Name.equals("array"))
+#encodeArray($var $s)
+#elseif ($s.Type.Name.equals("map"))
+#encodeMap($var $s)
+#elseif ($s.Type.Name.equals("union"))
+#encodeUnion($var $s)
+##### Use the generated "encode" method as fast way to write
+##### (specific) record types:
+#elseif ($s.Type.Name.equals("record"))
+    ${var}.encode(out);
+##### For rest of cases, generate calls out.writeXYZ:
+#elseif ($s.Type.Name.equals("null"))
     out.writeNull();
-#elseif ($ftype.equals("boolean"))
-    out.writeBoolean($fname);
-#elseif ($ftype.equals("int"))
-    out.writeInt($fname);
-#elseif ($ftype.equals("long"))
-    out.writeLong($fname);
-#elseif ($ftype.equals("float"))
-    out.writeFloat($fname);
-#elseif ($ftype.equals("double"))
-    out.writeDouble($fname);
-#elseif ($ftype.equals("string"))
-    out.writeString($fname);
-#elseif ($ftype.equals("bytes"))
-    out.writeBytes($fname);
-#elseif ($ftype.equals("fixed"))
-    out.writeFixed(${fname}.bytes(), 0, ${fname}.getSchema().getFixedSize());
-#elseif ($ftype.equals("enum"))
-    out.writeEnum(${fname}.ordinal());
-#elseif ($ftype.equals("record"))
-    ${fname}.encode(out);
+#elseif ($s.Type.Name.equals("boolean"))
+    out.writeBoolean(${var});
+#elseif ($s.Type.Name.equals("int"))
+    out.writeInt(${var});
+#elseif ($s.Type.Name.equals("long"))
+    out.writeLong(${var});
+#elseif ($s.Type.Name.equals("float"))
+    out.writeFloat(${var});
+#elseif ($s.Type.Name.equals("double"))
+    out.writeDouble(${var});
+#elseif ($s.Type.Name.equals("string"))
+#if ($this.isStringable($s))
+    out.writeString(${var}.toString());
+#else
+    out.writeString(${var});
+#end
+#elseif ($s.Type.Name.equals("bytes"))
+    out.writeBytes(${var});
+#elseif ($s.Type.Name.equals("fixed"))
+    out.writeFixed(${var}.bytes(), 0, ${var}.getSchema().getFixedSize());
+#elseif ($s.Type.Name.equals("enum"))
+    out.writeEnum(${var}.ordinal());
 #else
     ## TODO -- singal a code-gen-time error
 #end
 #end
+
+#macro( encodeArray $var $s )
+#set ($et = $this.javaType($s.ElementType))
+
+    java.util.Collection<$et> c${nv} = (java.util.Collection<$et>) ${var};
+    long size${nv} = c${nv}.size();
+    out.writeArrayStart();
+    out.setItemCount(size${nv});
+    long actualSize${nv} = 0;
+    for ($et e${nv}: c${nv}) {
+      actualSize${nv}++;
+      out.startItem();
+#set ($var = "e${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+  #encodeVar($var $s.ElementType)
+#set ($nv = $nv - 1)
+    }
+    out.writeArrayEnd();
+    if (actualSize${nv} != size${nv})
+      throw new java.util.ConcurrentModificationException("Array-size written was " + size${nv} + ", but element count was " + actualSize${nv} + ".");
+#end
+
+#macro( encodeMap $var $s )
+#set ($kt = $this.getStringType($s))
+#set ($vt = $this.javaType($s.ValueType))
+
+    java.util.Map<$kt,$vt> c${nv} = (java.util.Map<$kt,$vt>) ${var};
+    long size${nv} = c${nv}.size();
+    out.writeMapStart();
+    out.setItemCount(size${nv});
+    long actualSize${nv} = 0;
+    for (java.util.Map.Entry<$kt, $vt> e${nv}: c${nv}.entrySet()) {
+      actualSize${nv}++;
+      out.startItem();
+#if ($this.isStringable($s))
+      out.writeString(e${nv}.getKey().toString());
+#else
+      out.writeString(e${nv}.getKey());
+#end
+      $vt v${nv} = e${nv}.getValue();
+#set ($var = "v${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+  #encodeVar($var $s.ValueType)
+#set ($nv = $nv - 1)
+    }
+    out.writeMapEnd();
+    if (actualSize${nv} != size${nv})
+      throw new java.util.ConcurrentModificationException("Map-size written was " + size${nv} + ", but element count was " + actualSize${nv} + ".");
+#end
+
+#macro( encodeUnion $var $s)
+#set ($nni = $this.getNonNullIndex($s))
+#set ($et = $this.javaType($s.Types.get($nni)))
+    if (${var} == null) {
+      out.writeIndex( #if ($nni == 0) 1 #else 0 #end );
+      out.writeNull();
+    } else {
+      out.writeIndex(${nni});
+      $et e${nv} = ${var};
+#set ($var = "e${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+  #encodeVar($var $s.Types.get($nni))
+#set ($nv = $nv - 1)
+    }
+#end
+
 
 
   @Override public void decode(org.apache.avro.io.Decoder in)

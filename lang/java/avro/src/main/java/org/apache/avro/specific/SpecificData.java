@@ -96,12 +96,17 @@ public class SpecificData extends GenericData {
     stringableClasses.add(java.io.File.class);
   }
 
+  private boolean useEncoders;
+
   /** For subclasses.  Applications normally use {@link SpecificData#get()}. */
-  public SpecificData() {}
+  public SpecificData() {
+    this(null);
+  }
 
   /** Construct with a specific classloader. */
   public SpecificData(ClassLoader classLoader) {
     super(classLoader);
+    this.useEncoders = true; // TODO: initialize from properties
   }
 
   @Override

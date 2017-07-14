@@ -93,15 +93,21 @@ public abstract class SpecificRecordBase
       .read(this, SpecificData.getDecoder(in));
   }
 
+  /** Returns true iff an instance supports the {@link #encode} and
+    * {@link #decode} operations.  Should only be used by
+    * <code>SpecificDatumReader/Writer</code> to selectively use
+    * {@link #encode} and {@link #decode} to optimize the output of
+    * values.  In future releases, when {@link #encode} and {@link
+    * #decode} are fully debugged against <em>all</em> possible
+    * schemas, this method will be removed. */
+  @Deprecated
+  public boolean isEncodable() { return false; }
+
   public void encode(Encoder out) throws IOException {
-    // Ideally, this would be abstract, but that would not be
-    // backward compatible.
     throw new UnsupportedOperationException();
   }
 
   public void decode(Decoder in) throws IOException {
-    // Ideally, this would be abstract, but that would not be
-    // backward compatible.
     throw new UnsupportedOperationException();
   }
 }
