@@ -96,17 +96,15 @@ public class SpecificData extends GenericData {
     stringableClasses.add(java.io.File.class);
   }
 
-  private boolean useEncoders;
+  // TODO: init using properties
+  private static final boolean USE_ENCODERS = false;
 
   /** For subclasses.  Applications normally use {@link SpecificData#get()}. */
-  public SpecificData() {
-    this(null);
-  }
+  public SpecificData() {}
 
   /** Construct with a specific classloader. */
   public SpecificData(ClassLoader classLoader) {
     super(classLoader);
-    this.useEncoders = true; // TODO: initialize from properties
   }
 
   @Override
@@ -126,6 +124,8 @@ public class SpecificData extends GenericData {
 
   /** Return the singleton instance. */
   public static SpecificData get() { return INSTANCE; }
+
+  public boolean useEncoders() { return USE_ENCODERS; }
 
   @Override
   protected boolean isEnum(Object datum) {

@@ -681,6 +681,13 @@ public class SpecificCompiler {
     }
   }
 
+
+  /** Utility for template use.  Return a string with a given number
+    * of spaces to be used for indentation purposes. */
+  public String indent(int n) {
+    return new String(new char[n]).replace('\0', ' ');
+  }
+
   /** Utility for template use.  For a two-branch union type with
     * one null branch, returns the index of the null branch.  It's an
     * error to use on anything other than a two-branch union with on
