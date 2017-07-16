@@ -102,6 +102,23 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   }
 
   @Override
+  protected Object readRecord(Object old, Schema expected, ResolvingDecoder in)
+    throws IOException {
+    SpecificData data = getSpecificData();
+    Object r = data.newRecord(old, expected);
+    if (SpecificData.get().useEncoders()
+        && r instanceof SpecificRecordBase) // TODO: Is this needed?
+    {
+      SpecificRecordBase d = (SpecificRecordBase) r;
+      if (d.isEncodable()) {
+        d.decode(in);
+        return d;
+      }
+    }
+    return super.readRecord(old, expected, in);
+  }
+
+  @Override
   protected void readField(Object r, Schema.Field f, Object oldDatum,
                            ResolvingDecoder in, Object state)
       throws IOException {

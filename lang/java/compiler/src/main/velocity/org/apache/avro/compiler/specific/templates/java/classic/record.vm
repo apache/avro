@@ -19,7 +19,9 @@
 package $schema.getNamespace();
 #end
 
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.Utf8;
 #if (!$schema.isError())
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
@@ -482,13 +484,30 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #set ($nv = 0)## Counter to ensure unique var-names
 #set ($maxnv = 0)## Holds high-water mark during recursion
 #foreach ($field in $schema.getFields())
-#set ($n = "this.${this.mangle($field.name(), $schema.isError())}")
+#set ($n = $this.mangle($field.name(), $schema.isError()))
 #set ($s = $field.schema())
-#encodeVar(0 $n $s)
+#encodeVar(0 "this.${n}" $s)
 
 #set ($nv = $maxnv)
 #end
   }
+
+  @Override public void decode(org.apache.avro.io.Decoder in)
+    throws java.io.IOException
+  {
+#set ($nv = 0)## Counter to ensure unique var-names
+#set ($maxnv = 0)## Holds high-water mark during recursion
+#foreach ($field in $schema.getFields())
+#set ($n = $this.mangle($field.name(), $schema.isError()))
+#set ($s = $field.schema())
+#set ($rs = "SCHEMA$.getField(""${n}"").schema()")
+#decodeVar(0 "this.${n}" $s $rs)
+
+#set ($nv = $maxnv)
+#end
+  }
+#end
+}
 
 #macro( encodeVar $indent $var $s )
 #set ($I = $this.indent($indent))
@@ -526,7 +545,7 @@ $I    out.writeString(${var});
 #elseif ($s.Type.Name.equals("bytes"))
 $I    out.writeBytes(${var});
 #elseif ($s.Type.Name.equals("fixed"))
-$I    out.writeFixed(${var}.bytes(), 0, ${var}.getSchema().getFixedSize());
+$I    out.writeFixed(${var}.bytes(), 0, ${s.FixedSize});
 #elseif ($s.Type.Name.equals("enum"))
 $I    out.writeEnum(${var}.ordinal());
 #else
@@ -589,11 +608,11 @@ $I    if (actualSize${nv} != size${nv})
       throw new java.util.ConcurrentModificationException("Map-size written was " + size${nv} + ", but element count was " + actualSize${nv} + ".");
 #end
 
-#macro( encodeUnion $indent $var $s)
+#macro( encodeUnion $indent $var $s )
 #set ($I = $this.indent($indent))
 #set ($et = $this.javaType($s.Types.get($this.getNonNullIndex($s))))
 $I    if (${var} == null) {
-$I      out.writeIndex(#if($this.getNonNullIndex($s)==0) 1 #else 0 #end);
+$I      out.writeIndex(#if($this.getNonNullIndex($s)==0)1#{else}0#end);
 $I      out.writeNull();
 $I    } else {
 $I      out.writeIndex(${this.getNonNullIndex($s)});
@@ -605,28 +624,131 @@ $I    }
 #end
 
 
+#macro( decodeVar $indent $var $s $rs )
+#set ($I = $this.indent($indent))
+##### Compound types (array, map, and union) require calls
+##### that will recurse back into this decodeVar macro:
+#if ($s.Type.Name.equals("array"))
+#decodeArray($indent $var $s $rs)
+#elseif ($s.Type.Name.equals("map"))
+#decodeMap($indent $var $s $rs)
+#elseif ($s.Type.Name.equals("union"))
+#decodeUnion($indent $var $s $rs)
+##### Use the generated "decode" method as fast way to write
+##### (specific) record types:
+#elseif ($s.Type.Name.equals("record"))
+$I    if (${var} == null) {
+$I      ${var} = new ${this.javaType($s)}();
+$I    }
+$I    ${var}.decode(in);
+##### For rest of cases, generate calls in.readXYZ:
+#elseif ($s.Type.Name.equals("null"))
+$I    in.readNull();
+#elseif ($s.Type.Name.equals("boolean"))
+$I    $var = in.readBoolean();
+#elseif ($s.Type.Name.equals("int"))
+$I    $var = in.readInt();
+#elseif ($s.Type.Name.equals("long"))
+$I    $var = in.readLong();
+#elseif ($s.Type.Name.equals("float"))
+$I    $var = in.readFloat();
+#elseif ($s.Type.Name.equals("double"))
+$I    $var = in.readDouble();
+#elseif ($s.Type.Name.equals("string"))
+#decodeString( "$I" $var $s )
+#elseif ($s.Type.Name.equals("bytes"))
+$I    $var = in.readBytes(${var});
+#elseif ($s.Type.Name.equals("fixed"))
+$I    if (${var} == null) {
+$I      ${var} = new ${this.javaType($s)}();
+$I    }
+$I    in.readFixed(${var}.bytes(), 0, ${s.FixedSize});
+#elseif ($s.Type.Name.equals("enum"))
+$I    $var = ${this.javaType($s)}.values()[in.readEnum()];
+#else
+## TODO -- singal a code-gen-time error
+#end
+#end
 
-  @Override public void decode(org.apache.avro.io.Decoder in)
-    throws java.io.IOException
-  {
-#foreach ($field in $schema.getFields())
-#set ($t = $field.schema().Type.Name)
-#if ($t.equals("null"))
-#elseif ($t.equals("boolean"))
-#elseif ($t.equals("int"))
-#elseif ($t.equals("long"))
-#elseif ($t.equals("float"))
-#elseif ($t.equals("double"))
-#elseif ($t.equals("string"))
-#elseif ($t.equals("bytes"))
-#elseif ($t.equals("fixed"))
-#elseif ($t.equals("enum"))
-#elseif ($t.equals("array"))
-#elseif ($t.equals("map"))
-#elseif ($t.equals("union"))
-#elseif ($t.equals("record"))
+#macro( decodeString $II $var $s )
+#set ($st = ${this.getStringType($s)})
+#if ($this.isStringable($s))
+$II    ${var} = new ${st}(in.readString());
+#elseif ($st.equals("java.lang.String"))
+$II    $var = in.readString();
+#elseif ($st.equals("org.apache.avro.util.Utf8"))
+$II    $var = in.readString(${var});
+#else
+$II    $var = in.readString(${var} instanceof Utf8 ? (Utf8)${var} : null);
 #end
 #end
-  }
+
+#macro( decodeArray $indent $var $s $rs )
+#set ($I = $this.indent($indent))
+#set ($t = $this.javaType($s))
+#set ($et = $this.javaType($s.ElementType))
+#set ($gat = "SpecificData.Array<${et}>")
+$I    long size${nv} = in.readArrayStart();
+$I    $t a${nv} = ${var}; // Need fresh name due to limitation of macro system
+$I    if (a${nv} == null)
+$I      a${nv} = new ${gat}((int)size${nv}, ${rs}.getElementType());
+$I    else a${nv}.clear();
+$I    $gat ga${nv} = (a${nv} instanceof SpecificData.Array ? (${gat})a${nv} : null);
+$I    do {
+$I      for ( ; size${nv} != 0; size${nv}--) {
+$I        $et e${nv} = (ga${nv} != null ? ga${nv}.peek() : null);
+#set ($var = "e${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+#set ($indent = $indent + 4)
+#decodeVar($indent $var $s.ElementType "${rs}.getElementType()")
+#set ($nv = $nv - 1)
+#set ($indent = $indent - 4)
+#set ($I = $this.indent($indent))
+$I        a${nv}.add(e${nv});
+$I      }
+$I    } while (0 < (size${nv} = in.arrayNext()));
 #end
-}
+
+#macro( decodeMap $indent $var $s $rs )
+#set ($I = $this.indent($indent))
+#set ($t = $this.javaType($s))
+#set ($kt = $this.getStringType($s))
+#set ($vt = $this.javaType($s.ValueType))
+$I    long size${nv} = in.readMapStart();
+$I    $t m${nv} = ${var}; // Need fresh name due to limitation of macro system
+$I    if (m${nv} == null)
+$I      m${nv} = new java.util.HashMap<${kt},${vt}>((int)size${nv});
+$I    else m${nv}.clear();
+$I    do {
+$I      for ( ; size${nv} != 0; size${nv}--) {
+$I        $kt k${nv} = null;
+#decodeString( "$I    " "k${nv}" $s )
+$I        $vt v${nv} = null;
+#set ($var = "v${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+#set ($indent = $indent + 4)
+#decodeVar($indent $var $s.ValueType "${rs}.getValueType()")
+#set ($nv = $nv - 1)
+#set ($indent = $indent - 4)
+#set ($I = $this.indent($indent))
+$I        m${nv}.put(k${nv}, v${nv});
+$I      }
+$I    } while (0 < (size${nv} = in.arrayNext()));
+#end
+
+#macro( decodeUnion $indent $var $s $rs )
+#set ($I = $this.indent($indent))
+#set ($et = $this.javaType($s.Types.get($this.getNonNullIndex($s))))
+#set ($si = $this.getNonNullIndex($s))
+$I    if (in.readIndex() != ${si}) {
+$I      in.readNull();
+$I      ${var} = null;
+$I    } else {
+#set ($indent = $indent + 2)
+#decodeVar($indent $var $s.Types.get($si) "${rs}.getTypes().get(${si})")
+#set ($indent = $indent - 2)
+#set ($I = $this.indent($indent))
+$I    }
+#end
