@@ -96,12 +96,9 @@ public abstract class SpecificRecordBase
   /** Returns true iff an instance supports the {@link #encode} and
     * {@link #decode} operations.  Should only be used by
     * <code>SpecificDatumReader/Writer</code> to selectively use
-    * {@link #encode} and {@link #decode} to optimize the output of
-    * values.  In future releases, when {@link #encode} and {@link
-    * #decode} are fully debugged against <em>all</em> possible
-    * schemas, this method will be removed. */
-  @Deprecated
-  public boolean isEncodable() { return false; }
+    * {@link #encode} and {@link #decode} to optimize the (de)serialization of
+    * values. */
+  public boolean hasCustomCoders() { return false; }
 
   public void encode(Encoder out) throws IOException {
     throw new UnsupportedOperationException();

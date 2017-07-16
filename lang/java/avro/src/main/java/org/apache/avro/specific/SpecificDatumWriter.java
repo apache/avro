@@ -74,11 +74,11 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
   @Override
   protected void writeRecord(Schema schema, Object datum, Encoder out)
     throws IOException {
-    if (SpecificData.get().useEncoders()
+    if (SpecificData.get().useCustomCoders()
         && datum instanceof SpecificRecordBase) // TODO: Is this needed?
     {
       SpecificRecordBase d = (SpecificRecordBase) datum;
-      if (d.isEncodable()) {
+      if (d.hasCustomCoders()) {
         d.encode(out);
         return;
       }

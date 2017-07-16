@@ -754,31 +754,31 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns true if the encode/decode
     * logic in record.vm can handle the schema being presented. */
-  public boolean isEncodable(Schema schema) {
+  public boolean isCustomCodable(Schema schema) {
     if (schema.isError()) return false;
-    return isEncodable(schema, new HashSet<Schema>());
+    return isCustomCodable(schema, new HashSet<Schema>());
   }
 
-  private boolean isEncodable(Schema schema, Set<Schema> seen) {
+  private boolean isCustomCodable(Schema schema, Set<Schema> seen) {
     if (! seen.add(schema)) return true;
     if (schema.getLogicalType() != null) return false;
     boolean result = true;
     switch (schema.getType()) {
     case RECORD:
       for (Schema.Field f : schema.getFields())
-        result &= isEncodable(f.schema(), seen);
+        result &= isCustomCodable(f.schema(), seen);
       break;
     case MAP:
-      result = isEncodable(schema.getValueType(), seen);
+      result = isCustomCodable(schema.getValueType(), seen);
       break;
     case ARRAY:
-      result = isEncodable(schema.getElementType(), seen);
+      result = isCustomCodable(schema.getElementType(), seen);
       break;
     case UNION:
       List<Schema> types = schema.getTypes();
       // Only know how to handle "nulling" unions for now
       if (types.size() != 2 || ! types.contains(NULL_SCHEMA)) return false;
-      for (Schema s : types) result &= isEncodable(s, seen);
+      for (Schema s : types) result &= isCustomCodable(s, seen);
       break;
     default:
     }
