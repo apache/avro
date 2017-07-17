@@ -138,7 +138,7 @@ public abstract class Schema extends JsonProperties {
 
   int hashCode = NO_HASHCODE;
 
-  @Override void addProp(String name, JsonNode value) {
+  @Override public void addProp(String name, JsonNode value) {
     super.addProp(name, value);
     hashCode = NO_HASHCODE;
   }
@@ -350,7 +350,7 @@ public abstract class Schema extends JsonProperties {
   }
 
   void toJson(Names names, JsonGenerator gen) throws IOException {
-    if (props.size() == 0) {                      // no props defined
+    if (!hasProps()) {                      // no props defined
       gen.writeString(getName());                 // just write name
     } else {
       gen.writeStartObject();
@@ -369,7 +369,7 @@ public abstract class Schema extends JsonProperties {
     if (!(o instanceof Schema)) return false;
     Schema that = (Schema)o;
     if (!(this.type == that.type)) return false;
-    return equalCachedHash(that) && props.equals(that.props);
+    return equalCachedHash(that) && propsEqual(that);
   }
   public final int hashCode() {
     if (hashCode == NO_HASHCODE)
@@ -377,7 +377,7 @@ public abstract class Schema extends JsonProperties {
     return hashCode;
   }
 
-  int computeHash() { return getType().hashCode() + props.hashCode(); }
+  int computeHash() { return getType().hashCode() + propsHashCode(); }
 
   final boolean equalCachedHash(Schema other) {
     return (hashCode == other.hashCode)
@@ -458,7 +458,7 @@ public abstract class Schema extends JsonProperties {
      */
     public Field(Field field, Schema schema) {
       this(field.name, schema, field.doc, field.defaultValue, field.order);
-      props.putAll(field.props);
+      putAll(field);
       if (field.aliases != null)
         aliases = new LinkedHashSet<String>(field.aliases);
     }
@@ -512,7 +512,7 @@ public abstract class Schema extends JsonProperties {
         (schema.equals(that.schema)) &&
         defaultValueEquals(that.defaultValue) &&
         (order == that.order) &&
-        props.equals(that.props);
+        propsEqual(that);
     }
     public int hashCode() { return name.hashCode() + schema.computeHash(); }
 
@@ -721,7 +721,7 @@ public abstract class Schema extends JsonProperties {
       RecordSchema that = (RecordSchema)o;
       if (!equalCachedHash(that)) return false;
       if (!equalNames(that)) return false;
-      if (!props.equals(that.props)) return false;
+      if (!propsEqual(that)) return false;
       Set seen = SEEN_EQUALS.get();
       SeenPair here = new SeenPair(this, o);
       if (seen.contains(here)) return true;       // prevent stack overflow
@@ -822,7 +822,7 @@ public abstract class Schema extends JsonProperties {
       return equalCachedHash(that)
         && equalNames(that)
         && symbols.equals(that.symbols)
-        && props.equals(that.props);
+        && propsEqual(that);
     }
     @Override
     public String getEnumDefault() { return enumDefault; }
@@ -859,7 +859,7 @@ public abstract class Schema extends JsonProperties {
       ArraySchema that = (ArraySchema)o;
       return equalCachedHash(that)
         && elementType.equals(that.elementType)
-        && props.equals(that.props);
+        && propsEqual(that);
     }
     @Override int computeHash() {
       return super.computeHash() + elementType.computeHash();
@@ -887,7 +887,7 @@ public abstract class Schema extends JsonProperties {
       MapSchema that = (MapSchema)o;
       return equalCachedHash(that)
         && valueType.equals(that.valueType)
-        && props.equals(that.props);
+        && propsEqual(that);
     }
     @Override int computeHash() {
       return super.computeHash() + valueType.computeHash();
@@ -928,7 +928,7 @@ public abstract class Schema extends JsonProperties {
       UnionSchema that = (UnionSchema)o;
       return equalCachedHash(that)
         && types.equals(that.types)
-        && props.equals(that.props);
+        && propsEqual(that);
     }
     @Override int computeHash() {
       int hash = super.computeHash();
@@ -966,7 +966,7 @@ public abstract class Schema extends JsonProperties {
       return equalCachedHash(that)
         && equalNames(that)
         && size == that.size
-        && props.equals(that.props);
+        && propsEqual(that);
     }
     @Override int computeHash() { return super.computeHash() + size; }
     void toJson(Names names, JsonGenerator gen) throws IOException {
@@ -1514,7 +1514,7 @@ public abstract class Schema extends JsonProperties {
         Schema fSchema = applyAliases(f.schema, seen, aliases, fieldAliases);
         String fName = getFieldAlias(name, f.name, fieldAliases);
         Field newF = new Field(fName, fSchema, f.doc, f.defaultValue, f.order);
-        newF.props.putAll(f.props);               // copy props
+        newF.putAll(f);               // copy props
         newFields.add(newF);
       }
       result.setFields(newFields);
@@ -1547,7 +1547,7 @@ public abstract class Schema extends JsonProperties {
       break;
     }
     if (result != s)
-      result.props.putAll(s.props);        // copy props
+      result.putAll(s);        // copy props
     return result;
   }
 
