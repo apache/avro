@@ -17,12 +17,20 @@
  */
 package org.apache.avro;
 
+import java.util.AbstractSet;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
+
 import java.io.IOException;
 
+import org.apache.avro.reflect.MapEntry;
 import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonGenerator;
@@ -114,7 +122,45 @@ public abstract class JsonProperties {
   /** A value representing a JSON <code>null</code>. */
   public static final Null NULL_VALUE = new Null();
 
-  Map<String,JsonNode> props = new LinkedHashMap<String,JsonNode>(1);
+  // use a ConcurrentHashMap for speed and thread safety, but keep a Queue of the entries to maintain order
+  // the queue is always updated after the main map and is thus is potentially a subset of the map.
+  // By making props private, we can control access and only implement/override the methods
+  // we need.  We don't ever remove anything so we don't need to implement the clear/remove functionality.
+  // Also, we only ever ADD to the collection, never changing a value, so putWithAbsent is the
+  // only modifier
+  private ConcurrentMap<String,JsonNode> props = new ConcurrentHashMap<String,JsonNode>() {
+    private static final long serialVersionUID = 1L;
+    private Queue<MapEntry<String, JsonNode>> propOrder = new ConcurrentLinkedQueue<MapEntry<String, JsonNode>>();
+    public JsonNode putIfAbsent(String key,  JsonNode value) {
+      JsonNode r = super.putIfAbsent(key, value);
+      if (r == null) {
+        propOrder.add(new MapEntry<String, JsonNode>(key, value));
+      }
+      return r;
+    }
+    public Set<Map.Entry<String, JsonNode>> entrySet() {
+      return new AbstractSet<Map.Entry<String, JsonNode>>() {
+        @Override
+        public Iterator<Map.Entry<String, JsonNode>> iterator() {
+          return new Iterator<Map.Entry<String, JsonNode>>() {
+            Iterator<MapEntry<String, JsonNode>> it = propOrder.iterator();
+            @Override
+            public boolean hasNext() {
+              return it.hasNext();
+            }
+            @Override
+            public java.util.Map.Entry<String, JsonNode> next() {
+              return it.next();
+            }
+          };
+        }
+        @Override
+        public int size() {
+          return propOrder.size();
+        }
+      };
+    }
+  };
 
   private Set<String> reserved;
 
@@ -137,7 +183,7 @@ public abstract class JsonProperties {
    * @deprecated use {@link #getObjectProp(String)}
    */
   @Deprecated
-  public synchronized JsonNode getJsonProp(String name) {
+  public JsonNode getJsonProp(String name) {
     return props.get(name);
   }
 
@@ -145,7 +191,7 @@ public abstract class JsonProperties {
    * Returns the value of the named property in this schema.
    * Returns <tt>null</tt> if there is no property with that name.
    */
-  public synchronized Object getObjectProp(String name) {
+  public Object getObjectProp(String name) {
     return JacksonUtils.toObject(props.get(name));
   }
 
@@ -173,23 +219,26 @@ public abstract class JsonProperties {
    * @deprecated use {@link #addProp(String, Object)}
    */
   @Deprecated
-  public synchronized void addProp(String name, JsonNode value) {
+  public void addProp(String name, JsonNode value) {
     if (reserved.contains(name))
       throw new AvroRuntimeException("Can't set reserved property: " + name);
 
     if (value == null)
       throw new AvroRuntimeException("Can't set a property to null: " + name);
 
-    JsonNode old = props.get(name);
-    if (old == null)
-      props.put(name, value);
-    else if (!old.equals(value))
+    JsonNode old = props.putIfAbsent(name,  value);
+    if (old != null && !old.equals(value)) {
       throw new AvroRuntimeException("Can't overwrite property: " + name);
+    }
   }
-
-  public synchronized void addProp(String name, Object value) {
+  public void addProp(String name, Object value) {
     addProp(name, JacksonUtils.toJsonNode(value));
   }
+  public void putAll(JsonProperties np) {
+    for (Map.Entry<? extends String, ? extends JsonNode> e : np.props.entrySet())
+      addProp(e.getKey(), e.getValue());
+  }
+
 
   /** Return the defined properties that have string values. */
   @Deprecated public Map<String,String> getProps() {
@@ -197,14 +246,6 @@ public abstract class JsonProperties {
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       if (e.getValue().isTextual())
         result.put(e.getKey(), e.getValue().getTextValue());
-    return result;
-  }
-
-  /** Convert a map of string-valued properties to Json properties. */
-  Map<String,JsonNode> jsonProps(Map<String,String> stringProps) {
-    Map<String,JsonNode> result = new LinkedHashMap<String,JsonNode>();
-    for (Map.Entry<String,String> e : stringProps.entrySet())
-      result.put(e.getKey(), TextNode.valueOf(e.getValue()));
     return result;
   }
 
@@ -228,6 +269,17 @@ public abstract class JsonProperties {
   void writeProps(JsonGenerator gen) throws IOException {
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       gen.writeObjectField(e.getKey(), e.getValue());
+  }
+
+
+  protected int propsHashCode() {
+    return props.hashCode();
+  }
+  protected boolean propsEqual(JsonProperties np) {
+    return props.equals(np.props);
+  }
+  public boolean hasProps() {
+    return !props.isEmpty();
   }
 
 }
