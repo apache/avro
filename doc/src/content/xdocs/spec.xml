@@ -102,9 +102,7 @@
 		  of the field (required), and </li>
 		<li><code>doc</code>: a JSON string describing this field
                   for users (optional).</li>
-		<li><code>type:</code> A JSON object defining a schema, or
-		  a JSON string naming a record definition
-		  (required).</li>
+		<li><code>type:</code> a <a href="#schemas">schema</a>, as defined above</li>
 		<li><code>default:</code> A default value for this
 		  field, used when reading instances that lack this
 		  field (optional).  Permitted values depend on the

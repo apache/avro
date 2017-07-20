@@ -65,6 +65,9 @@ Trunk (not yet released)
 
     AVRO-1771. Add LICENSE and NOTICE to avro-doc artifact. (blue via tomwhite)
 
+    AVRO-1485: Specification says Record field type can be record name but implementation allows any named type.
+    (Nandor Kollar via gabor)
+
 Avro 1.7.7 (23 July 2014)
 
   NEW FEATURES
