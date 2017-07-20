@@ -276,8 +276,8 @@
                 <exclude>lang/c/src/st.h</exclude>
                 <exclude>lang/c/tests/msdirent.h</exclude>
                 <exclude>lang/c++/m4/*.m4</exclude>
-                <exclude>lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/protovis-r3.2.js</exclude>
-                <exclude>lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/g.bar.js</exclude>
+                <exclude>lang/java/**/static/protovis-r3.2.js</exclude>
+                <exclude>lang/java/**/static/g.bar.js</exclude>
                 <exclude>lang/java/ipc/src/main/java/org/apache/avro/ipc/stats/static/jquery-1.4.2.min.js</exclude>
               </excludes>
             </configuration>
