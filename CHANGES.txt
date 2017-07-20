@@ -166,6 +166,9 @@ Trunk (not yet released)
 
     AVRO-1985: Unreleased resources (gabor)
 
+    AVRO-1485: Specification says Record field type can be record name but implementation allows any named type.
+    (Nandor Kollar via gabor)
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
