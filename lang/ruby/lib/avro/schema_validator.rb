@@ -165,7 +165,7 @@ module Avro
       private
 
       def actual_value_message(value)
-        avro_type = if value.class == Integer
+        avro_type = if value.is_a?(Integer)
                       ruby_integer_to_avro_type(value)
                     else
                       ruby_to_avro_type(value.class)
@@ -181,8 +181,6 @@ module Avro
         {
           NilClass => 'null',
           String => 'string',
-          Fixnum => 'int',
-          Bignum => 'long',
           Float => 'float',
           Hash => 'record'
         }.fetch(ruby_class, ruby_class)

@@ -20,13 +20,13 @@ require 'test_help'
 class TestDataFile < Test::Unit::TestCase
   HERE = File.expand_path File.dirname(__FILE__)
   def setup
-    if File.exists?(HERE + '/data.avr')
+    if File.exist?(HERE + '/data.avr')
       File.unlink(HERE + '/data.avr')
     end
   end
 
   def teardown
-    if File.exists?(HERE + '/data.avr')
+    if File.exist?(HERE + '/data.avr')
       File.unlink(HERE + '/data.avr')
     end
   end
