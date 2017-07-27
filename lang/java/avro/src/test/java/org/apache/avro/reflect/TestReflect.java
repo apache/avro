@@ -47,6 +47,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
+import org.apache.avro.util.Utf8;
 import org.codehaus.jackson.node.NullNode;
 import org.junit.Test;
 
@@ -121,6 +122,15 @@ public class TestReflect {
       ("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, new HashMap<String,Float>()));
+  }
+
+  @Test public void testUnionWithMapWithUtf8Keys() {
+    Schema s = new Schema.Parser().parse
+      ("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
+    GenericData data = ReflectData.get();
+    HashMap<Utf8,Float> map = new HashMap<Utf8,Float>();
+    map.put(new Utf8("foo"), 1.0f);
+    assertEquals(1, data.resolveUnion(s, map));
   }
 
   @Test public void testUnionWithFixed() {
