@@ -61,6 +61,9 @@ Trunk (not yet released)
     AVRO-2056: DirectBinaryEncoder Creates Buffer For Each Call To writeDouble
     (Beluga Behr via gabor)
 
+    AVRO-2054: Use StringBuilder instead of StringBuffer
+    (Beluga Behr via gabor)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
