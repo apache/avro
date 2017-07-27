@@ -58,6 +58,9 @@ Trunk (not yet released)
 
     AVRO-2021: uuid logical type is not documented (Nandor Kollar via gabor)
 
+    AVRO-2056: DirectBinaryEncoder Creates Buffer For Each Call To writeDouble
+    (Beluga Behr via gabor)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.

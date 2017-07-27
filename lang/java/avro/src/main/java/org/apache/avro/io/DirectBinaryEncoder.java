@@ -110,7 +110,6 @@ public class DirectBinaryEncoder extends BinaryEncoder {
 
   @Override
   public void writeDouble(double d) throws IOException {
-    byte[] buf = new byte[8];
     int len = BinaryData.encodeDouble(d, buf, 0);
     out.write(buf, 0, len);
   }
