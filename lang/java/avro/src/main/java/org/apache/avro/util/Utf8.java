@@ -21,10 +21,12 @@ import java.nio.charset.Charset;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.avro.io.BinaryData;
+import org.apache.avro.reflect.Stringable;
 
 /** A Utf8 string.  Unlike {@link String}, instances are mutable.  This is more
  * efficient than {@link String} when reading or writing a sequence of values,
  * as a single instance may be reused. */
+@Stringable
 public class Utf8 implements Comparable<Utf8>, CharSequence {
   private static final byte[] EMPTY = new byte[0];
   private static final Charset UTF8 = Charset.forName("UTF-8");
