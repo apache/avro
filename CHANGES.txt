@@ -70,6 +70,9 @@ Trunk (not yet released)
     AVRO-2049: Remove Superfluous Configuration From AvroSerializer
     (Beluga Behr via gabor)
 
+    AVRO-2048: Avro Binary Decoding - Gracefully Handle Long Strings
+    (Beluga Behr via gabor)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
