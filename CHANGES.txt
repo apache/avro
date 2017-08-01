@@ -16,6 +16,8 @@ Trunk (not yet released)
     AVRO-2072: ResolvingGrammarGenerator doesn't implement schema resolution correctly for unions
     (Nandor Kollar via gabor)
 
+    AVRO-2059: Remove support of Hadoop 1 (gabor)
+
   NEW FEATURES
 
     AVRO-1704: Java: Add support for single-message encoding. (blue)
