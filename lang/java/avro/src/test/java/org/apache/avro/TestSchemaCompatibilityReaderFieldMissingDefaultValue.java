@@ -55,7 +55,7 @@ public class TestSchemaCompatibilityReaderFieldMissingDefaultValue {
   public String details;
   @Parameter(3)
   public String location;
-  
+
   @Test
   public void testReaderFieldMissingDefaultValueSchemas() throws Exception {
     validateIncompatibleSchemas(reader, writer,

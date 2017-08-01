@@ -63,23 +63,23 @@ public class TestSchemas{
       Schema.createUnion(list(INT_SCHEMA));
   static final Schema LONG_UNION_SCHEMA =
       Schema.createUnion(list(LONG_SCHEMA));
-  static final Schema FLOAT_UNION_SCHEMA = 
+  static final Schema FLOAT_UNION_SCHEMA =
       Schema.createUnion(list(FLOAT_SCHEMA));
-  static final Schema DOUBLE_UNION_SCHEMA = 
+  static final Schema DOUBLE_UNION_SCHEMA =
       Schema.createUnion(list(DOUBLE_SCHEMA));
   static final Schema STRING_UNION_SCHEMA =
       Schema.createUnion(list(STRING_SCHEMA));
-  static final Schema BYTES_UNION_SCHEMA = 
+  static final Schema BYTES_UNION_SCHEMA =
       Schema.createUnion(list(BYTES_SCHEMA));
   static final Schema INT_STRING_UNION_SCHEMA =
       Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
   static final Schema STRING_INT_UNION_SCHEMA =
       Schema.createUnion(list(STRING_SCHEMA, INT_SCHEMA));
-  static final Schema INT_FLOAT_UNION_SCHEMA = 
+  static final Schema INT_FLOAT_UNION_SCHEMA =
       Schema.createUnion(list(INT_SCHEMA, FLOAT_SCHEMA));
-  static final Schema INT_LONG_UNION_SCHEMA = 
+  static final Schema INT_LONG_UNION_SCHEMA =
       Schema.createUnion(list(INT_SCHEMA, LONG_SCHEMA));
-  static final Schema INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA = 
+  static final Schema INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA =
       Schema.createUnion(list(INT_SCHEMA, LONG_SCHEMA, FLOAT_SCHEMA, DOUBLE_SCHEMA));
 
   // Non recursive records:
@@ -111,12 +111,12 @@ public class TestSchemas{
       Schema.createRecord("Record1", null, null, false);
   static final Schema A_DINT_B_DENUM_2_RECORD1 =
       Schema.createRecord("Record1", null, null, false);
-  
-  
-  
+
+
+
   static final Schema FIXED_4_BYTES = Schema.createFixed("Fixed", null, null, 4);
   static final Schema FIXED_8_BYTES = Schema.createFixed("Fixed", null, null, 8);
-  
+
   static {
     EMPTY_RECORD1.setFields(Collections.<Field>emptyList());
     EMPTY_RECORD2.setFields(Collections.<Field>emptyList());

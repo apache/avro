@@ -418,7 +418,7 @@ public class SchemaCompatibility {
     private SchemaCompatibilityResult checkReaderWriterRecordFields(final Schema reader,
         final Schema writer,
         final Stack<String> location) {
-      SchemaCompatibilityResult result = SchemaCompatibilityResult.compatible();     
+      SchemaCompatibilityResult result = SchemaCompatibilityResult.compatible();
       location.push("fields");
       // Check that each field in the reader record can be populated from
       // the writer record:
@@ -527,12 +527,12 @@ public class SchemaCompatibility {
    * compatibility check.
    */
   public static final class SchemaCompatibilityResult {
-    
+
     /**
      * Merges the current {@code SchemaCompatibilityResult} with the supplied result into a new instance, combining the
      * list of {@code Incompatibility Incompatibilities} and regressing to the
      * {@code SchemaCompatibilityType#INCOMPATIBLE INCOMPATIBLE} state if any incompatibilities are encountered.
-     * 
+     *
      * @param toMerge The {@code SchemaCompatibilityResult} to merge with the current instance.
      * @return A {@code SchemaCompatibilityResult} that combines the state of the current and supplied instances.
      */
@@ -544,7 +544,7 @@ public class SchemaCompatibility {
           ?  SchemaCompatibilityType.COMPATIBLE : SchemaCompatibilityType.INCOMPATIBLE;
       return new SchemaCompatibilityResult(compatibilityType, mergedIncompatibilities);
     }
-    
+
     private final SchemaCompatibilityType mCompatibilityType;
     // the below fields are only valid if INCOMPATIBLE
     private final List<Incompatibility> mIncompatibilities;
@@ -582,11 +582,11 @@ public class SchemaCompatibility {
     /**
      * Returns a details object representing an incompatible schema pair,
      * including error details.
-     * @param incompatibilityType 
-     * @param readerFragment 
-     * @param writerFragment 
-     * @param message 
-     * @param location 
+     * @param incompatibilityType
+     * @param readerFragment
+     * @param writerFragment
+     * @param message
+     * @param location
      * @return a SchemaCompatibilityResult object with INCOMPATIBLE
      *         SchemaCompatibilityType, and state representing the violating
      *         parts.
@@ -689,7 +689,7 @@ public class SchemaCompatibility {
     public SchemaIncompatibilityType getType() {
       return mType;
     }
-    
+
     /**
      * Returns the fragment of the reader schema that failed compatibility check.
      * @return a Schema instance (fragment of the reader schema).
@@ -715,7 +715,7 @@ public class SchemaCompatibility {
     public String getMessage() {
       return mMessage;
     }
-    
+
     /**
      * Returns a <a href="https://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-08">JSON Pointer</a> describing
      * the node location within the schema's JSON document tree where the incompatibility was encountered.
@@ -736,7 +736,7 @@ public class SchemaCompatibility {
       }
       return s.toString();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
@@ -789,7 +789,7 @@ public class SchemaCompatibility {
         return false;
       return true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
@@ -797,7 +797,7 @@ public class SchemaCompatibility {
           "Incompatibility{type:%s, location:%s, message:%s, reader:%s, writer:%s}",
           mType, getLocation(), mMessage, mReaderFragment, mWriterFragment);
     }
-  }  
+  }
   // -----------------------------------------------------------------------------------------------
 
   /**

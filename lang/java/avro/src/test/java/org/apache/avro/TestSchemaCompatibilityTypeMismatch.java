@@ -124,7 +124,7 @@ public class TestSchemaCompatibilityTypeMismatch {
   public String details;
   @Parameter(3)
   public String location;
-  
+
   @Test
   public void testTypeMismatchSchemas() throws Exception {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.TYPE_MISMATCH,

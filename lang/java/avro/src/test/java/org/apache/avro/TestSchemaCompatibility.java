@@ -194,7 +194,7 @@ public class TestSchemaCompatibility {
             SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
     final SchemaCompatibility.SchemaPairCompatibility invalidResult =
         new SchemaCompatibility.SchemaPairCompatibility(
-            SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.TYPE_MISMATCH, invalidReader, STRING_ARRAY_SCHEMA, 
+            SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.TYPE_MISMATCH, invalidReader, STRING_ARRAY_SCHEMA,
                 "reader type: MAP not compatible with writer type: ARRAY", Arrays.asList("")),
             invalidReader,
             STRING_ARRAY_SCHEMA,
@@ -223,7 +223,7 @@ public class TestSchemaCompatibility {
             SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
     final SchemaCompatibility.SchemaPairCompatibility invalidResult =
         new SchemaCompatibility.SchemaPairCompatibility(
-            SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.TYPE_MISMATCH, INT_SCHEMA, STRING_SCHEMA, 
+            SchemaCompatibility.SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.TYPE_MISMATCH, INT_SCHEMA, STRING_SCHEMA,
                 "reader type: INT not compatible with writer type: STRING", Arrays.asList("")),
             INT_SCHEMA,
             STRING_SCHEMA,
@@ -282,7 +282,7 @@ public class TestSchemaCompatibility {
 
       new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA),
       new ReaderWriter(ENUM1_ABC_SCHEMA, ENUM1_AB_SCHEMA),
-      
+
       // String-to/from-bytes, introduced in Avro 1.7.7
       new ReaderWriter(STRING_SCHEMA, BYTES_SCHEMA),
       new ReaderWriter(BYTES_SCHEMA, STRING_SCHEMA),
@@ -350,8 +350,8 @@ public class TestSchemaCompatibility {
 
   // -----------------------------------------------------------------------------------------------
 
-  /** The reader/writer pairs that are incompatible are now moved to specific test classes, 
-   * one class per error case (for easier pinpointing of errors). 
+  /** The reader/writer pairs that are incompatible are now moved to specific test classes,
+   * one class per error case (for easier pinpointing of errors).
    * The method to validate incompatibility is still here.
    */
   public static void validateIncompatibleSchemas(
@@ -367,13 +367,13 @@ public class TestSchemaCompatibility {
         Arrays.asList(incompatibility),
         Arrays.asList(message),
         Arrays.asList(location)
-    ); 
+    );
   }
-  
+
   // -----------------------------------------------------------------------------------------------
-    
-  /** The reader/writer pairs that are incompatible are now moved to specific test classes, 
-   * one class per error case (for easier pinpointing of errors). 
+
+  /** The reader/writer pairs that are incompatible are now moved to specific test classes,
+   * one class per error case (for easier pinpointing of errors).
    * The method to validate incompatibility is still here.
    */
   public static void validateIncompatibleSchemas(
@@ -388,7 +388,7 @@ public class TestSchemaCompatibility {
     assertEquals(reader, compatibility.getReader());
     assertEquals(writer, compatibility.getWriter());
     assertEquals(SchemaCompatibilityType.INCOMPATIBLE, compatibilityResult.getCompatibility());
-    
+
     assertEquals(incompatibilityTypes.size(), compatibilityResult.getIncompatibilities().size());
     for (int i = 0 ; i < incompatibilityTypes.size(); i++) {
       Incompatibility incompatibility = compatibilityResult.getIncompatibilities().get(i);
@@ -404,7 +404,7 @@ public class TestSchemaCompatibility {
         writer.toString(true), reader.toString(true));
     assertEquals(description, compatibility.getDescription());
   }
-  
+
   // -----------------------------------------------------------------------------------------------
 
   /** Tests reader/writer compatibility validation. */
@@ -432,7 +432,7 @@ public class TestSchemaCompatibility {
         "Expecting reader %s to be incompatible with writer %s, but tested compatible.",
         FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
         SchemaCompatibilityType.INCOMPATIBLE, result.getType());
-    
+
     result = checkReaderWriterCompatibility(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA);
     assertEquals(String.format(
         "Expecting reader %s to be incompatible with writer %s, but tested compatible.",
@@ -445,7 +445,7 @@ public class TestSchemaCompatibility {
         FLOAT_UNION_SCHEMA, INT_LONG_UNION_SCHEMA),
         SchemaCompatibilityType.INCOMPATIBLE, result.getType());
   }
-  
+
   // -----------------------------------------------------------------------------------------------
 
   /**

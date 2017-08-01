@@ -72,7 +72,7 @@ public class TestSchemaValidation {
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
-  
+
   /** Collection of reader/writer schema pair that are compatible. */
   public static final List<ReaderWriter> COMPATIBLE_READER_WRITER_TEST_CASES = list(
       new ReaderWriter(BOOLEAN_SCHEMA, BOOLEAN_SCHEMA),
@@ -158,7 +158,7 @@ public class TestSchemaValidation {
       new ReaderWriter(A_INT_B_INT_RECORD1, A_DINT_B_DINT_RECORD1),
 
       // The SchemaValidator, unlike the SchemaCompatibility class, cannot cope with recursive schemas
-      // 
+      //
       // new ReaderWriter(INT_LIST_RECORD, INT_LIST_RECORD),
       // new ReaderWriter(LONG_LIST_RECORD, LONG_LIST_RECORD),
       // new ReaderWriter(LONG_LIST_RECORD, INT_LIST_RECORD),

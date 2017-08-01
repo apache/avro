@@ -56,7 +56,7 @@ public class TestSchemaCompatibilityMultiple {
           .type().unionOf().booleanType().endUnion().noDefault()
           // 3.4
           .name("reader_union_does_not_support_type_field")
-          .type().unionOf().booleanType().endUnion().noDefault() 
+          .type().unionOf().booleanType().endUnion().noDefault()
           // 3.5
           .name("record_fqn_mismatch_field")
           .type().record("recordA").namespace("not_nsA").fields()
@@ -67,12 +67,12 @@ public class TestSchemaCompatibilityMultiple {
             .name("array_type_mismatch_field")
             .type().array().items().stringType().noDefault()
             // EOR
-            .endRecord().noDefault()          
+            .endRecord().noDefault()
           // EOR
-        .endRecord().noDefault()        
+        .endRecord().noDefault()
         // EOR
         .endRecord();
-    
+
     Schema writer = SchemaBuilder.record("base").fields()
         // 0
         .name("check_enum_symbols_field")
@@ -108,14 +108,14 @@ public class TestSchemaCompatibilityMultiple {
             .type().booleanType().booleanDefault(true)
             // 3.5.1
             .name("array_type_mismatch_field")
-            .type().array().items().booleanType().noDefault()            
+            .type().array().items().booleanType().noDefault()
             // EOR
             .endRecord().noDefault()
           // EOR
         .endRecord().noDefault()
         // EOR
         .endRecord();
-    
+
     List<SchemaIncompatibilityType> types = Arrays.asList(
         SchemaIncompatibilityType.MISSING_ENUM_SYMBOLS,
         SchemaIncompatibilityType.NAME_MISMATCH,
@@ -152,7 +152,7 @@ public class TestSchemaCompatibilityMultiple {
         "/fields/3/type/fields/5/type/name",
         "/fields/3/type/fields/5/type/fields/1/type/items"
     );
-    
+
     validateIncompatibleSchemas(reader, writer, types, details, location);
   }
 }
