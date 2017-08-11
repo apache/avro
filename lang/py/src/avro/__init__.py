@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants']
+__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones']
 
