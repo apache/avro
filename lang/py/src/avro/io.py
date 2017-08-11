@@ -39,7 +39,7 @@ uses the following mapping:
 import struct
 from avro import schema
 from avro import constants
-from avro.lib import timezones
+from avro import timezones
 import sys
 from binascii import crc32
 import datetime
