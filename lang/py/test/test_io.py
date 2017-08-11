@@ -25,7 +25,7 @@ import set_avro_test_path
 
 from avro import schema
 from avro import io
-from avro.lib import timezones
+from avro import timezones
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
