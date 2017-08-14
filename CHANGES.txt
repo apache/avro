@@ -8,6 +8,8 @@ Trunk (not yet released)
 
     AVRO-2043: Move to java8
 
+    AVRO-2061: Improve Invalid File Format Error Message (Beluga Behr via gabor)
+
   NEW FEATURES
 
     AVRO-1704: Java: Add support for single-message encoding. (blue)

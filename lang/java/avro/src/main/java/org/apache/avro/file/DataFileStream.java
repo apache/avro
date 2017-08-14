@@ -99,10 +99,10 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     try {
       vin.readFixed(magic);                         // read magic
     } catch (IOException e) {
-      throw new IOException("Not a data file.", e);
+      throw new IOException("Not an Avro data file.", e);
     }
     if (!Arrays.equals(DataFileConstants.MAGIC, magic))
-      throw new IOException("Not a data file.");
+      throw new IOException("Not an Avro data file.");
 
     long l = vin.readMapStart();                  // read meta data
     if (l > 0) {
