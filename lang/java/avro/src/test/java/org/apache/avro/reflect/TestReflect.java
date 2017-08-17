@@ -17,9 +17,20 @@
  */
 package org.apache.avro.reflect;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
+import org.codehaus.jackson.node.NullNode;
+import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,20 +46,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
-import org.codehaus.jackson.node.NullNode;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestReflect {
 
@@ -1101,4 +1101,31 @@ public class TestReflect {
   public void testNullableByteArrayNullValue() throws Exception {
     checkReadWrite(new NullableBytesTest());
   }
+  private enum DocTestEnum {
+    ENUM_1,
+    ENUM_2
+  }
+
+  private static class DocTest {
+    @AvroDoc("Some Documentation")
+    int foo;
+
+    @AvroDoc("Some other Documentation")
+    DocTestEnum enums;
+
+    @AvroDoc("And again")
+    DefaultTest defaultTest;
+  }
+
+  @Test
+  public void testAvroDoc() {
+    check(DocTest.class,
+            "{\"type\":\"record\",\"name\":\"DocTest\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\","
+                    + "\"fields\":[{\"name\":\"foo\",\"type\":\"int\",\"doc\":\"Some Documentation\"},"
+                    + "{\"name\":\"enums\",\"type\":{\"type\":\"enum\",\"name\":\"DocTestEnum\","
+                    + "\"symbols\":[\"ENUM_1\",\"ENUM_2\"]},\"doc\":\"Some other Documentation\"},"
+                    + "{\"name\":\"defaultTest\",\"type\":{\"type\":\"record\",\"name\":\"DefaultTest\","
+                    + "\"fields\":[{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]},\"doc\":\"And again\"}]}");
+  }
+
 }

@@ -572,6 +572,8 @@ public class ReflectData extends SpecificData {
       String fullName = c.getName();
       Schema schema = names.get(fullName);
       if (schema == null) {
+        AvroDoc annotatedDoc = c.getAnnotation(AvroDoc.class);    // Docstring
+        String doc = (annotatedDoc != null) ? annotatedDoc.value() : null;
         String name = c.getSimpleName();
         String space = c.getPackage() == null ? "" : c.getPackage().getName();
         if (c.getEnclosingClass() != null)                   // nested class
@@ -588,18 +590,18 @@ public class ReflectData extends SpecificData {
           Enum[] constants = (Enum[])c.getEnumConstants();
           for (int i = 0; i < constants.length; i++)
             symbols.add(constants[i].name());
-          schema = Schema.createEnum(name, null /* doc */, space, symbols);
+          schema = Schema.createEnum(name, doc, space, symbols);
           consumeAvroAliasAnnotation(c, schema);
         } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed
           int size = c.getAnnotation(FixedSize.class).value();
-          schema = Schema.createFixed(name, null /* doc */, space, size);
+          schema = Schema.createFixed(name, doc, space, size);
           consumeAvroAliasAnnotation(c, schema);
         } else if (IndexedRecord.class.isAssignableFrom(c)) { // specific
           return super.createSchema(type, names);
         } else {                                             // record
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
           boolean error = Throwable.class.isAssignableFrom(c);
-          schema = Schema.createRecord(name, null /* doc */, space, error);
+          schema = Schema.createRecord(name, doc, space, error);
           consumeAvroAliasAnnotation(c, schema);
           names.put(c.getName(), schema);
           for (Field field : getCachedFields(c))
@@ -611,6 +613,8 @@ public class ReflectData extends SpecificData {
               JsonNode defaultValue = (defaultAnnotation == null)
                 ? null
                 : Schema.parseJson(defaultAnnotation.value());
+              annotatedDoc = field.getAnnotation(AvroDoc.class);    // Docstring
+              doc = (annotatedDoc != null) ? annotatedDoc.value() : null;
 
               if (defaultValue == null
                   && fieldSchema.getType() == Schema.Type.UNION) {
@@ -624,7 +628,7 @@ public class ReflectData extends SpecificData {
                 ? annotatedName.value()
                 : field.getName();
               Schema.Field recordField
-                = new Schema.Field(fieldName, fieldSchema, null, defaultValue);
+                = new Schema.Field(fieldName, fieldSchema, doc, defaultValue);
 
               AvroMeta meta = field.getAnnotation(AvroMeta.class);              // add metadata
               if (meta != null)
