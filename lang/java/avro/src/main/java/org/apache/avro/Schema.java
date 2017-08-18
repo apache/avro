@@ -1260,7 +1260,7 @@ public abstract class Schema extends JsonProperties {
         JsonNode symbolsNode = schema.get("symbols");
         if (symbolsNode == null || !symbolsNode.isArray())
           throw new SchemaParseException("Enum has no symbols: "+schema);
-        LockableArrayList<String> symbols = new LockableArrayList<String>();
+        LockableArrayList<String> symbols = new LockableArrayList<String>(symbolsNode.size());
         for (JsonNode n : symbolsNode)
           symbols.add(n.getTextValue());
         result = new EnumSchema(name, doc, symbols);
