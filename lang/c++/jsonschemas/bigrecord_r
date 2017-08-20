@@ -85,6 +85,17 @@
             }
         },
         {
+            "name": "myarraywithDefaultValue",
+            "type": {
+                "type": "array",
+                "items": "int"
+            },
+            "default": [
+                2,
+                3
+            ]
+        },
+        {
             "name": "myenum",
             "type": {
                 "type": "enum",
