@@ -2,8 +2,8 @@ sudo: false
 language: java
 env:
   global:
-    - TERM=dumb
-    - GRADLE_OPTS=-Xmx386m -Xms386m
+    - TERM="dumb"
+    - GRADLE_OPTS="-Xmx386m -Xms386m"
 install: true
 script: ./gradlew build testRecentVersionCompatibility
 matrix:
@@ -11,6 +11,6 @@ matrix:
     - jdk: oraclejdk8
     - jdk: oraclejdk7
       env:
-        - GRADLE_OPTS=-Xmx386m -Xms386m -XX:MaxPermSize=128m
+        - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m"
     - jdk: openjdk7
     - jdk: openjdk6
