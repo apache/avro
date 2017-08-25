@@ -31,7 +31,7 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/example/avro/MyEnum.class").file
+        projectFile(buildOutputClassPath("example/avro/MyEnum.class")).file
     }
 
     def "supports enums defined within a record field"() {
@@ -44,8 +44,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/example/avro/Test.class").file
-        projectFile("build/classes/main/example/avro/Gender.class").file
+        projectFile(buildOutputClassPath("example/avro/Test.class")).file
+        projectFile(buildOutputClassPath("example/avro/Gender.class")).file
     }
 
     def "supports enums defined within a union"() {
@@ -58,8 +58,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/example/avro/Test.class").file
-        projectFile("build/classes/main/example/avro/Kind.class").file
+        projectFile(buildOutputClassPath("example/avro/Test.class")).file
+        projectFile(buildOutputClassPath("example/avro/Kind.class")).file
     }
 
     def "supports using enums defined in a separate schema file"() {
@@ -73,7 +73,7 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/example/avro/User.class").file
-        projectFile("build/classes/main/example/avro/MyEnum.class").file
+        projectFile(buildOutputClassPath("example/avro/User.class")).file
+        projectFile(buildOutputClassPath("example/avro/MyEnum.class")).file
     }
 }

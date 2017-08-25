@@ -35,9 +35,9 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/example/Person.class").file
-        projectFile("build/classes/main/example/Cat.class").file
-        projectFile("build/classes/main/example/Gender.class").file
+        projectFile(buildOutputClassPath("example/Person.class")).file
+        projectFile(buildOutputClassPath("example/Cat.class")).file
+        projectFile(buildOutputClassPath("example/Gender.class")).file
     }
 
     def "Duplicate record definition succeeds if definition identical"() {
@@ -50,9 +50,9 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/example/Person.class").file
-        projectFile("build/classes/main/example/Fish.class").file
-        projectFile("build/classes/main/example/Gender.class").file
+        projectFile(buildOutputClassPath("example/Person.class")).file
+        projectFile(buildOutputClassPath("example/Fish.class")).file
+        projectFile(buildOutputClassPath("example/Gender.class")).file
     }
 
     def "Duplicate enum definition fails if definition differs"() {

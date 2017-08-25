@@ -29,7 +29,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/example/avro/User.class").file
+        projectFile(buildOutputClassPath("example/avro/User.class")).file
     }
 
     def "can generate and compile java files from json protocol"() {
@@ -45,8 +45,8 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/org/apache/avro/test/Mail.class").file
-        projectFile("build/classes/main/org/apache/avro/test/Message.class").file
+        projectFile(buildOutputClassPath("org/apache/avro/test/Mail.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/test/Message.class")).file
     }
 
     def "can generate and compile java files from IDL"() {
@@ -60,11 +60,11 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         taskInfoAbsent || result.task(":generateAvroProtocol").outcome == SUCCESS
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/org/apache/avro/Foo.class").file
-        projectFile("build/classes/main/org/apache/avro/Interop.class").file
-        projectFile("build/classes/main/org/apache/avro/Kind.class").file
-        projectFile("build/classes/main/org/apache/avro/MD5.class").file
-        projectFile("build/classes/main/org/apache/avro/Node.class").file
+        projectFile(buildOutputClassPath("org/apache/avro/Foo.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/Kind.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/MD5.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/Node.class")).file
     }
 
     def "supports json schema files in subdirectories"() {
@@ -77,7 +77,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/example/avro/User.class").file
+        projectFile(buildOutputClassPath("example/avro/User.class")).file
     }
 
     def "supports json protocol files in subdirectories"() {
@@ -93,8 +93,8 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/org/apache/avro/test/Mail.class").file
-        projectFile("build/classes/main/org/apache/avro/test/Message.class").file
+        projectFile(buildOutputClassPath("org/apache/avro/test/Mail.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/test/Message.class")).file
     }
 
     def "supports IDL files in subdirectories"() {
@@ -108,11 +108,11 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         taskInfoAbsent || result.task(":generateAvroProtocol").outcome == SUCCESS
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
-        projectFile("build/classes/main/org/apache/avro/Foo.class").file
-        projectFile("build/classes/main/org/apache/avro/Interop.class").file
-        projectFile("build/classes/main/org/apache/avro/Kind.class").file
-        projectFile("build/classes/main/org/apache/avro/MD5.class").file
-        projectFile("build/classes/main/org/apache/avro/Node.class").file
+        projectFile(buildOutputClassPath("org/apache/avro/Foo.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/Kind.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/MD5.class")).file
+        projectFile(buildOutputClassPath("org/apache/avro/Node.class")).file
     }
 
     def "gives a meaningful error message when presented a malformed schema file"() {

@@ -89,4 +89,12 @@ abstract class FunctionalSpec extends Specification {
     protected boolean isTaskInfoAbsent() {
         return gradleVersion < TestKitFeature.CAPTURE_BUILD_RESULT_TASKS.since
     }
+
+    protected isMultipleClassDirectoriesUsed() {
+        return gradleVersion >= GradleVersion.version("4.0")
+    }
+
+    protected String buildOutputClassPath(String suffix) {
+        return isMultipleClassDirectoriesUsed() ? "build/classes/java/main/${suffix}" : "build/classes/main/${suffix}"
+    }
 }

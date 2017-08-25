@@ -1,7 +1,7 @@
 # Change Log
 
 ## Unreleased
-* Built using Gradle 3.3
+* Built using Gradle 4.1
 * Updated versions for cross-compatibility testing
 
 ## 0.9.0
