@@ -28,7 +28,7 @@ tasks.withType(AbstractCompile) {
     options.encoding = "UTF-8"
 }
 tasks.withType(JavaCompile) {
-    options.compilerArgs << "-Xlint:all"
+    options.compilerArgs << "-Xlint:all" << "-Xlint:-options" << "-Werror"
 }
 sourceCompatibility = 1.7
 
