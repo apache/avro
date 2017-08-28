@@ -13,4 +13,3 @@ matrix:
       env:
         - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m"
     - jdk: openjdk7
-    - jdk: openjdk6

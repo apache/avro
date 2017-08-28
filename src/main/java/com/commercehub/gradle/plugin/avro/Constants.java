@@ -45,13 +45,4 @@ class Constants {
     static final String OPTION_FIELD_VISIBILITY = "fieldVisibility";
     static final String OPTION_STRING_TYPE = "stringType";
     static final String OPTION_OUTPUT_CHARACTER_ENCODING = "outputCharacterEncoding";
-
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-
-    /**
-     * The system-dependent line separator string.  In Java 7+, use System.lineSeparator() instead.
-     */
-    static String lineSeparator() {
-        return LINE_SEPARATOR;
-    }
 }

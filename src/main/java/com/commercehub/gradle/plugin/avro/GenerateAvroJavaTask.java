@@ -189,7 +189,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             for (FileState fileState : failedFiles) {
                 String path = fileState.getPath();
                 String fileErrorMessage = fileState.getErrorMessage();
-                errorMessage.append(lineSeparator()).append("* ").append(path).append(": ").append(fileErrorMessage);
+                errorMessage.append(System.lineSeparator()).append("* ").append(path).append(": ").append(fileErrorMessage);
             }
             throw new GradleException(errorMessage.toString());
         }
