@@ -17,6 +17,7 @@ package com.commercehub.gradle.plugin.avro;
 
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 import org.apache.avro.generic.GenericData.StringType;
+import org.gradle.api.plugins.JavaPlugin;
 
 /**
  * Various constants needed by the plugin.
@@ -45,4 +46,14 @@ class Constants {
     static final String OPTION_FIELD_VISIBILITY = "fieldVisibility";
     static final String OPTION_STRING_TYPE = "stringType";
     static final String OPTION_OUTPUT_CHARACTER_ENCODING = "outputCharacterEncoding";
+
+    /**
+     * When our minimum supported version is 3.5+, we can remove this
+     */
+    @SuppressWarnings("deprecation")
+    static final String RUNTIME_CONFIGURATION_NAME = JavaPlugin.RUNTIME_CONFIGURATION_NAME;
+    /**
+     * When our minimum supported version is 3.5+, we can use JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME
+     */
+    static final String RUNTIME_CLASSPATH_CONFIGURATION_NAME = "runtimeClasspath";
 }

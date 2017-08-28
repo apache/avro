@@ -21,9 +21,9 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.util.GradleVersion;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,7 +89,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
 
     private ClassLoader getRuntimeClassLoader(Project project) {
         List<URL> urls = new LinkedList<>();
-        Configuration configuration = project.getConfigurations().getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME);
+        Configuration configuration = project.getConfigurations().getByName(getRuntimeConfigurationName());
         for (File file : configuration) {
             try {
                 urls.add(file.toURI().toURL());
@@ -99,6 +99,14 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
         }
         return urls.isEmpty() ? ClassLoader.getSystemClassLoader()
                 : new URLClassLoader(urls.toArray(new URL[urls.size()]), ClassLoader.getSystemClassLoader());
+    }
+
+    /**
+     * Backwards-compatible logic to return the appropriate configuration name for resolving the runtime classpath
+     */
+    private static String getRuntimeConfigurationName() {
+        return GradleVersion.current().compareTo(GradleVersion.version("3.5")) >= 0
+            ? Constants.RUNTIME_CLASSPATH_CONFIGURATION_NAME : Constants.RUNTIME_CONFIGURATION_NAME;
     }
 
     /**
