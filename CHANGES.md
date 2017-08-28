@@ -4,6 +4,7 @@
 * Drop support for Gradle 2.x
 * As Gradle 3.0+ has a minimum Java version requiremenet of Java 7, drop support for Java 6
 * Update source compatibility to Java 7
+* Reduce access to utility methods not intended for re-use
 
 ## 0.9.1
 * Built using Gradle 4.1

@@ -80,7 +80,7 @@ class FileUtils {
      * @throws IOException if a parent directory needs creating but that fails
      * @since Commons IO 1.3
      */
-    public static FileOutputStream openOutputStream(File file) throws IOException {
+    private static FileOutputStream openOutputStream(File file) throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {
                 throw new IOException("File '" + file + "' exists but is a directory");
@@ -111,7 +111,7 @@ class FileUtils {
      * @throws IOException in case of an I/O error
      * @throws java.io.UnsupportedEncodingException if the encoding is not supported by the VM
      */
-    public static void writeStringToFile(File file, String data, String encoding) throws IOException {
+    static void writeStringToFile(File file, String data, String encoding) throws IOException {
         if (encoding == null) {
             throw new IllegalArgumentException("Must specify encoding");
         }

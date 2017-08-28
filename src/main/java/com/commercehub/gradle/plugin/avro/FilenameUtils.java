@@ -115,7 +115,7 @@ class FilenameUtils {
      * @return the index of the last separator character, or -1 if there
      * is no such character
      */
-    public static int indexOfLastSeparator(String filename) {
+    private static int indexOfLastSeparator(String filename) {
         if (filename == null) {
             return -1;
         }
@@ -137,7 +137,7 @@ class FilenameUtils {
      * @return the index of the last separator character, or -1 if there
      * is no such character
      */
-    public static int indexOfExtension(String filename) {
+    private static int indexOfExtension(String filename) {
         if (filename == null) {
             return -1;
         }
@@ -163,7 +163,7 @@ class FilenameUtils {
      * @param filename  the filename to query, null returns null
      * @return the name of the file without the path, or an empty string if none exists
      */
-    public static String getName(String filename) {
+    private static String getName(String filename) {
         if (filename == null) {
             return null;
         }
@@ -188,7 +188,7 @@ class FilenameUtils {
      * @param filename  the filename to query, null returns null
      * @return the name of the file without the path, or an empty string if none exists
      */
-    public static String getBaseName(String filename) {
+    static String getBaseName(String filename) {
         return removeExtension(getName(filename));
     }
 
@@ -209,7 +209,7 @@ class FilenameUtils {
      * @param filename the filename to retrieve the extension of.
      * @return the extension of the file or an empty string if none exists.
      */
-    public static String getExtension(String filename) {
+    static String getExtension(String filename) {
         if (filename == null) {
             return null;
         }
@@ -239,7 +239,7 @@ class FilenameUtils {
      * @param filename  the filename to query, null returns null
      * @return the filename minus the extension
      */
-    public static String removeExtension(String filename) {
+    private static String removeExtension(String filename) {
         if (filename == null) {
             return null;
         }
