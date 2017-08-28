@@ -48,7 +48,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
     }
 
     private void failOnUnsupportedFiles() {
-        FileCollection unsupportedFiles = filterSources(new NotSpec<File>(new FileExtensionSpec(IDL_EXTENSION)));
+        FileCollection unsupportedFiles = filterSources(new NotSpec<>(new FileExtensionSpec(IDL_EXTENSION)));
         if (!unsupportedFiles.isEmpty()) {
             throw new GradleException(
                     String.format("Unsupported file extension for the following files: %s", unsupportedFiles));
@@ -88,7 +88,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
     }
 
     private ClassLoader getRuntimeClassLoader(Project project) {
-        List<URL> urls = new LinkedList<URL>();
+        List<URL> urls = new LinkedList<>();
         Configuration configuration = project.getConfigurations().getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME);
         for (File file : configuration) {
             try {

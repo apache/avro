@@ -26,7 +26,7 @@ public class MapUtils {
         if (b == null || b.isEmpty()) {
             return a;
         }
-        Map<K, V> result = new LinkedHashMap<K, V>(a);
+        Map<K, V> result = new LinkedHashMap<>(a);
         result.keySet().removeAll(b.keySet());
         return result;
     }

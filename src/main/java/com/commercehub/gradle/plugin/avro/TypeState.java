@@ -23,7 +23,7 @@ import java.util.TreeSet;
 
 class TypeState {
     private final String name;
-    private final Set<String> locations = new TreeSet<String>();
+    private final Set<String> locations = new TreeSet<>();
     private Schema schema;
 
     TypeState(String name) {
