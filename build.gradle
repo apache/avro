@@ -27,6 +27,9 @@ dependencies {
 tasks.withType(AbstractCompile) {
     options.encoding = "UTF-8"
 }
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:all"
+}
 sourceCompatibility = 1.7
 
 version = "0.10.0-SNAPSHOT"
