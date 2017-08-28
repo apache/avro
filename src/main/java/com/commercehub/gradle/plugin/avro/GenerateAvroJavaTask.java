@@ -47,7 +47,7 @@ import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
 public class GenerateAvroJavaTask extends OutputDirTask {
     private static Pattern ERROR_UNKNOWN_TYPE = Pattern.compile("(?i).*(undefined name|not a defined name).*");
     private static Pattern ERROR_DUPLICATE_TYPE = Pattern.compile("Can't redefine: (.*)");
-    private static Set<String> SUPPORTED_EXTENSIONS = SetBuilder.build(PROTOCOL_EXTENSION, SCHEMA_EXTENSION);
+    private static Set<String> SUPPORTED_EXTENSIONS = new SetBuilder<String>().add(PROTOCOL_EXTENSION).add(SCHEMA_EXTENSION).build();
 
     private String outputCharacterEncoding;
     private String stringType = DEFAULT_STRING_TYPE;

@@ -28,7 +28,7 @@ class SetBuilder<T> {
         return this;
     }
 
-    final SetBuilder<T> addAll(T... c) {
+    final SetBuilder<T> addAll(T[] c) {
         Collections.addAll(set, c);
         return this;
     }
@@ -45,9 +45,5 @@ class SetBuilder<T> {
 
     Set<T> build() {
         return set;
-    }
-
-    static <T> Set<T> build(T... c) {
-        return new SetBuilder<T>().addAll(c).build();
     }
 }
