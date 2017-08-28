@@ -17,6 +17,7 @@ package com.commercehub.gradle.plugin.avro;
 
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SourceTask;
 
 import java.io.File;
@@ -29,6 +30,7 @@ class OutputDirTask extends SourceTask {
         getOutputs().dir(outputDir);
     }
 
+    @OutputDirectory
     protected File getOutputDir() {
         return outputDir;
     }
