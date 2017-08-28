@@ -39,7 +39,7 @@ group = "com.commercehub.gradle.plugin"
 pluginBundle {
     website = "https://github.com/commercehub-oss/gradle-avro-plugin"
     vcsUrl = "https://github.com/commercehub-oss/gradle-avro-plugin"
-    description = "A Gradle plugin to allow easily performing Java code generation for Apache Avro. It supports JSON schema declaration files, JSON protocol declaration files, and Avro IDL files."
+    description = "A Gradle plugin to allow easily performing Java code generation for Apache Avro. It supports JSON schema declaration files, JSON protocol declaration files, and Avro IDL files.  For the latest versions, please see https://bintray.com/commercehub-oss/main/gradle-avro-plugin"
     tags = ["serialization", "avro"]
     plugins {
         avro {
