@@ -1,6 +1,6 @@
 # Release Process
 
-1. Check that you've followed the setup steps listed [here](https://plugins.gradle.org/docs/submit)
+1. Acquire permissions to publish the package to Bintray and set the keys "bintrayUserName" and "bintrayApiKey" in `~/.gradle/gradle.properties`.
 1. Update `CHANGES.md`
 1. Ensure that there is a milestone for the version, and that appropriate issues are associated with the milestone.
 1. Update the plugin version in `build.gradle` under "version"
