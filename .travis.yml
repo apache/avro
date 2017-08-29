@@ -1,4 +1,5 @@
 sudo: false
+dist: trusty
 language: java
 env:
   global:
@@ -8,8 +9,11 @@ install: true
 script: ./gradlew build testRecentVersionCompatibility
 matrix:
   include:
+    - jdk: oraclejdk9
     - jdk: oraclejdk8
     - jdk: oraclejdk7
       env:
         - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m"
     - jdk: openjdk7
+  allow_failures:
+    - jdk: oraclejdk9
