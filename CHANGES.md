@@ -1,12 +1,14 @@
 # Change Log
 
 ## Unreleased
+
+## 0.10.0
 * Drop support for Gradle 2.x
 * As Gradle 3.0+ has a minimum Java version requiremenet of Java 7, drop support for Java 6
 * Update source compatibility to Java 7
 * Reduce access to utility methods not intended for re-use
 * Stopped publishing to [Gradle plugin portal](https://plugins.gradle.org)
-* Published [Bintray](https://bintray.com/commercehub-oss/main/gradle-avro-plugin)
+* Published to [Bintray](https://bintray.com/commercehub-oss/main/gradle-avro-plugin)
 * MapUtils class is no longer public
 
 ## 0.9.1
