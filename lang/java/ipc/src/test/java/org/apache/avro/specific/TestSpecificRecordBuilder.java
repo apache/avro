@@ -48,7 +48,7 @@ public class TestSpecificRecordBuilder {
     Assert.assertTrue(builder.hasName());
     Assert.assertEquals("James Gosling", builder.getName().toString());
     Assert.assertTrue(builder.hasYearOfBirth());
-    Assert.assertEquals(new Integer(1955), builder.getYearOfBirth());
+    Assert.assertEquals(1955, builder.getYearOfBirth());
     Assert.assertFalse(builder.hasCountry());
     Assert.assertNull(builder.getCountry());
     Assert.assertTrue(builder.hasState());
@@ -60,7 +60,7 @@ public class TestSpecificRecordBuilder {
 
     Person person = builder.build();
     Assert.assertEquals("James Gosling", person.getName().toString());
-    Assert.assertEquals(new Integer(1955), person.getYearOfBirth());
+    Assert.assertEquals(1955, person.getYearOfBirth());
     Assert.assertEquals("US", person.getCountry().toString());  // country should default to "US"
     Assert.assertEquals("CA", person.getState().toString());
     Assert.assertNotNull(person.getFriends());  // friends should default to an empty list
@@ -76,7 +76,7 @@ public class TestSpecificRecordBuilder {
 
     Person.Builder builderCopy = Person.newBuilder(person);
     Assert.assertEquals("James Gosling", builderCopy.getName().toString());
-    Assert.assertEquals(new Integer(1955), builderCopy.getYearOfBirth());
+    Assert.assertEquals(1955, builderCopy.getYearOfBirth());
     Assert.assertEquals("US", builderCopy.getCountry().toString());  // country should default to "US"
     Assert.assertEquals("CA", builderCopy.getState().toString());
     Assert.assertNotNull(builderCopy.getFriends());  // friends should default to an empty list
@@ -103,13 +103,13 @@ public class TestSpecificRecordBuilder {
           .setProduct(product)
           .build())
       .build();
-    Assert.assertEquals(datetime, p.getDatetime().longValue());
+    Assert.assertEquals(datetime, p.getDatetime());
     Assert.assertEquals(ProductPage.class, p.getPageContext().getClass());
     Assert.assertEquals(product, ((ProductPage)p.getPageContext()).getProduct());
 
     PageView p2 = PageView.newBuilder(p).build();
 
-    Assert.assertEquals(datetime, p2.getDatetime().longValue());
+    Assert.assertEquals(datetime, p2.getDatetime());
     Assert.assertEquals(ProductPage.class, p2.getPageContext().getClass());
     Assert.assertEquals(product, ((ProductPage)p2.getPageContext()).getProduct());
 
