@@ -5,6 +5,8 @@
 * As Gradle 3.0+ has a minimum Java version requiremenet of Java 7, drop support for Java 6
 * Update source compatibility to Java 7
 * Reduce access to utility methods not intended for re-use
+* Stopped publishing to [Gradle plugin portal](https://plugins.gradle.org)
+* Published [Bintray](https://bintray.com/commercehub-oss/main/gradle-avro-plugin)
 
 ## 0.9.1
 * Built using Gradle 4.1
