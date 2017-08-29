@@ -1,5 +1,5 @@
 sudo: false
-dist: trusty
+dist: precise
 language: java
 env:
   global:
@@ -14,10 +14,3 @@ matrix:
     - jdk: oraclejdk7
       env:
         - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m"
-    - jdk: openjdk7
-  allow_failures:
-    - jdk: oraclejdk9
-addons:
-  apt:
-    packages:
-      - oracle-java9-installer
