@@ -140,7 +140,7 @@ namespace Avro.File
             }
             catch (KeyNotFoundException)
             {
-                return null; 
+                return null;
             }
         }
 
@@ -158,7 +158,7 @@ namespace Avro.File
             }
             try
             {
-                return System.Text.Encoding.UTF8.GetString(value);          
+                return System.Text.Encoding.UTF8.GetString(value);
             }
             catch (Exception e)
             {
