@@ -7,6 +7,7 @@
 * Reduce access to utility methods not intended for re-use
 * Stopped publishing to [Gradle plugin portal](https://plugins.gradle.org)
 * Published [Bintray](https://bintray.com/commercehub-oss/main/gradle-avro-plugin)
+* MapUtils class is no longer public
 
 ## 0.9.1
 * Built using Gradle 4.1

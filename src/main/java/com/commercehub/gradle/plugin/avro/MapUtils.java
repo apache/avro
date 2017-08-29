@@ -18,7 +18,7 @@ package com.commercehub.gradle.plugin.avro;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class MapUtils {
+class MapUtils {
     /**
      * Returns the map of all entries present in the first map but not present in the second map (by key).
      */
