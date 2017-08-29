@@ -17,3 +17,7 @@ matrix:
     - jdk: openjdk7
   allow_failures:
     - jdk: oraclejdk9
+addons:
+  apt:
+    packages:
+      - oracle-java9-installer
