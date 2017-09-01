@@ -38,9 +38,6 @@ for target in "$@"
 do
 
 function do_dist() {
-  mvn package -DskipTests;
-  rm -rf mapred/target/{classes,test-classes}/;
-  rm -rf trevni/avro/target/{classes,test-classes}/;
   mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate
 }
 

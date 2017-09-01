@@ -47,7 +47,7 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
-      <version>${hadoop.version}</version>
+      <version>${hadoop2.version}</version>
       <!-- hadoop's execution environment provides its own jars, usurping any others.
         So we should not include it here -->
       <scope>provided</scope>
