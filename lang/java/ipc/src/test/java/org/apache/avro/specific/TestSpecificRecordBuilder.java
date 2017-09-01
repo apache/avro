@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Foo;
 import org.apache.avro.Interop;
@@ -34,6 +32,7 @@ import org.apache.avro.Node;
 import org.apache.avro.ipc.specific.PageView;
 import org.apache.avro.ipc.specific.Person;
 import org.apache.avro.ipc.specific.ProductPage;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
