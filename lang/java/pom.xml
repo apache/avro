@@ -38,11 +38,6 @@
 
     <!-- version properties for dependencies -->
 
-    <!--
-      To build the avro-mapred module against Hadoop 1 specify
-      -Dhadoop.version=1 or leave unspecified to build against Hadoop 2
-    -->
-    <hadoop1.version>1.2.1</hadoop1.version>
     <hadoop2.version>2.7.3</hadoop2.version>
     <jackson.version>1.9.13</jackson.version>
     <jetty.version>6.1.26</jetty.version>
@@ -457,11 +452,6 @@
         <groupId>net.sf.jopt-simple</groupId>
         <artifactId>jopt-simple</artifactId>
         <version>${jopt-simple.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-core</artifactId>
-        <version>${hadoop1.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
