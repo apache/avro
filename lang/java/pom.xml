@@ -40,8 +40,7 @@
 
     <hadoop2.version>2.7.3</hadoop2.version>
     <jackson.version>1.9.13</jackson.version>
-    <jetty.version>6.1.26</jetty.version>
-    <jetty-servlet-api.version>2.5-20081211</jetty-servlet-api.version>
+    <jetty.version>9.4.6.v20170531</jetty.version>
     <jopt-simple.version>5.0.3</jopt-simple.version>
     <junit.version>4.12</junit.version>
     <netty.version>3.10.6.Final</netty.version>
@@ -439,9 +438,14 @@
         <version>${velocity.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.mortbay.jetty</groupId>
-        <artifactId>jetty</artifactId>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
         <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-servlet</artifactId>
+          <version>${jetty.version}</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
