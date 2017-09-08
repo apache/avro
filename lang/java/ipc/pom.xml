@@ -40,7 +40,7 @@
       org.apache.avro*;version="${project.version}",
       org.jboss.netty*,
       javax.servlet*;resolution:=optional,
-      org.mortbay*;resolution:=optional,
+      org.eclipse*;resolution:=optional,
       org.apache.velocity*;resolution:=optional,
       *
     </osgi.import>
@@ -125,13 +125,12 @@
       <version>${jackson.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty</artifactId>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty-util</artifactId>
-      <version>${jetty.version}</version>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
@@ -140,11 +139,6 @@
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>${jetty-servlet-api.version}</version>
     </dependency>
 
   </dependencies>

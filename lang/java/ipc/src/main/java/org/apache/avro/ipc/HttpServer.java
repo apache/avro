@@ -21,15 +21,17 @@ package org.apache.avro.ipc;
 import java.io.IOException;
 
 import org.apache.avro.AvroRuntimeException;
-
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.nio.SelectChannelConnector;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.ConnectionFactory;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 
 /** An HTTP-based RPC {@link Server}. */
 public class HttpServer implements Server {
-  private org.mortbay.jetty.Server server;
+  private org.eclipse.jetty.server.Server server;
 
   /** Constructs a server to run on the named port. */
   public HttpServer(Responder responder, int port) throws IOException {
@@ -48,30 +50,39 @@ public class HttpServer implements Server {
 
   /** Constructs a server to run on the named port on the specified address. */
   public HttpServer(ResponderServlet servlet, String bindAddress, int port) throws IOException {
-    this.server = new org.mortbay.jetty.Server();
-    SelectChannelConnector connector = new SelectChannelConnector();
-    connector.setLowResourceMaxIdleTime(10000);
-    connector.setAcceptQueueSize(128);
-    connector.setResolveNames(false);
-    connector.setUseDirectBuffers(false);
+    this.server = new org.eclipse.jetty.server.Server();
+    ServerConnector connector = new ServerConnector(this.server);
     if (bindAddress != null) {
       connector.setHost(bindAddress);
     }
     connector.setPort(port);
     server.addConnector(connector);
-    new Context(server, "/").addServlet(new ServletHolder(servlet), "/*");
+
+    ServletHandler handler = new ServletHandler();
+    server.setHandler(handler);
+    handler.addServletWithMapping(new ServletHolder(servlet), "/*");
   }
 
   /** Constructs a server to run with the given connector. */
-  public HttpServer(Responder responder, Connector connector) throws IOException {
-    this(new ResponderServlet(responder), connector);
+  public HttpServer(Responder responder, ConnectionFactory connectionFactory, String bindAddress, int port) throws IOException {
+    this(new ResponderServlet(responder), connectionFactory, bindAddress, port);
   }
 
   /** Constructs a server to run with the given connector. */
-  public HttpServer(ResponderServlet servlet, Connector connector) throws IOException {
-    this.server = new org.mortbay.jetty.Server();
+  public HttpServer(ResponderServlet servlet, ConnectionFactory connectionFactory, String bindAddress, int port) throws IOException {
+    this.server = new org.eclipse.jetty.server.Server();
+    HttpConfiguration httpConfig = new HttpConfiguration();
+    HttpConnectionFactory httpFactory = new HttpConnectionFactory(httpConfig);
+    ServerConnector connector = new ServerConnector(this.server, connectionFactory, httpFactory);
+    if (bindAddress != null) {
+      connector.setHost(bindAddress);
+    }
+    connector.setPort(port);
+
     server.addConnector(connector);
-    new Context(server, "/").addServlet(new ServletHolder(servlet), "/*");
+    ServletHandler handler = new ServletHandler();
+    server.setHandler(handler);
+    handler.addServletWithMapping(new ServletHolder(servlet), "/*");
   }
 
   public void addConnector(Connector connector) {
@@ -79,7 +90,7 @@ public class HttpServer implements Server {
   }
 
   @Override
-  public int getPort() { return server.getConnectors()[0].getLocalPort(); }
+  public int getPort() { return ((ServerConnector)server.getConnectors()[0]).getLocalPort(); }
 
   @Override
   public void close() {
