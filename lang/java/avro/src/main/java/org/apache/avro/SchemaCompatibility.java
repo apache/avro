@@ -48,18 +48,38 @@ public class SchemaCompatibility {
 
   /**
    * Validates that the provided reader schema can be used to decode avro data written with the
-   * provided writer schema.
+   * provided writer schema, allowing loss of data due to type conversions.
+   *
    * @param reader schema to check.
    * @param writer schema to check.
    * @return a result object identifying any compatibility errors.
    */
   public static SchemaPairCompatibility checkReaderWriterCompatibility(
       final Schema reader,
-      final Schema writer
-  ) {
-    final SchemaCompatibilityResult compatibility =
-        new ReaderWriterCompatiblityChecker()
-            .getCompatibility(reader, writer);
+      final Schema writer) {
+    return checkReaderWriterCompatibility(reader, writer, true);
+  }
+
+  /**
+   * Validates that the provided reader schema can be used to decode avro data written with the
+   * provided writer schema, also indicating whether or not loss of data due to type conversions are
+   * acceptable. Semantic data loss (e.g. fields present in the writer schema, but not present
+   * in the reader schema) are not reported.
+   *
+   * @param reader
+   *          schema to check.
+   * @param writer
+   *          schema to check.
+   * @param allowDataLoss
+   *          whether or not type conversions that might lead to loss of encoded data are acceptable.
+   * @return a result object identifying any compatibility errors.
+   */
+  public static SchemaPairCompatibility checkReaderWriterCompatibility(
+      final Schema reader,
+      final Schema writer,
+      final boolean allowDataLoss) {
+    final SchemaCompatibilityResult compatibility = new ReaderWriterCompatiblityChecker(allowDataLoss)
+        .getCompatibility(reader, writer);
 
     final String message;
     switch (compatibility.getCompatibility()) {
@@ -210,6 +230,11 @@ public class SchemaCompatibility {
   private static final class ReaderWriterCompatiblityChecker {
     private final Map<ReaderWriter, SchemaCompatibilityResult> mMemoizeMap =
         new HashMap<ReaderWriter, SchemaCompatibilityResult>();
+    private final boolean mAllowDataLoss;
+
+    ReaderWriterCompatiblityChecker(boolean allowDataLoss) {
+      mAllowDataLoss = allowDataLoss;
+    }
 
     /**
      * Reports the compatibility of a reader/writer schema pair.
@@ -260,7 +285,8 @@ public class SchemaCompatibility {
       assert (reader != null);
       assert (writer != null);
 
-      if (reader.getType() == writer.getType()) {
+      Type writerType = writer.getType();
+      if (reader.getType() == writerType) {
         switch (reader.getType()) {
           case NULL:
           case BOOLEAN:
@@ -323,7 +349,7 @@ public class SchemaCompatibility {
         // Reader and writer have different schema types:
 
         // Reader compatible with all branches of a writer union is compatible
-        if (writer.getType() == Schema.Type.UNION) {
+        if (writerType == Schema.Type.UNION) {
           for (Schema s : writer.getTypes()) {
             SchemaCompatibilityResult compat = getCompatibility(reader, s);
             if (compat.getCompatibility() == SchemaCompatibilityType.INCOMPATIBLE) {
@@ -341,25 +367,29 @@ public class SchemaCompatibility {
           case INT:
             return typeMismatch(reader, writer);
           case LONG: {
-            return (writer.getType() == Type.INT) ? SchemaCompatibilityResult.compatible()
+            return (writerType == Type.INT) ? SchemaCompatibilityResult.compatible()
                 : typeMismatch(reader, writer);
           }
           case FLOAT: {
-            return ((writer.getType() == Type.INT) || (writer.getType() == Type.LONG))
-                ? SchemaCompatibilityResult.compatible() : typeMismatch(reader, writer);
+            return ((writerType == Type.INT) || (writerType == Type.LONG))
+                ? lossyConversion(reader, writer, SchemaIncompatibilityType.LOSSY_FLOAT_CONVERSION, writerType.getName() + " conversion to float risks losing data")
+                : typeMismatch(reader, writer);
 
           }
           case DOUBLE: {
-            return ((writer.getType() == Type.INT) || (writer.getType() == Type.LONG)
-                || (writer.getType() == Type.FLOAT)) ? SchemaCompatibilityResult.compatible()
-                    : typeMismatch(reader, writer);
+            if (writerType == Type.LONG) {
+              return lossyConversion(reader, writer, SchemaIncompatibilityType.LOSSY_DOUBLE_CONVERSION, writerType.getName() + " conversion to double risks losing data");
+            } else {
+              return ((writerType == Type.INT) || (writerType == Type.FLOAT)) ? SchemaCompatibilityResult.compatible()
+                  : typeMismatch(reader, writer);
+            }
           }
           case BYTES: {
-            return (writer.getType() == Type.STRING) ? SchemaCompatibilityResult.compatible()
+            return (writerType == Type.STRING) ? SchemaCompatibilityResult.compatible()
                 : typeMismatch(reader, writer);
           }
           case STRING: {
-            return (writer.getType() == Type.BYTES) ? SchemaCompatibilityResult.compatible()
+            return (writerType == Type.BYTES) ? SchemaCompatibilityResult.compatible()
                 : typeMismatch(reader, writer);
           }
 
@@ -381,7 +411,7 @@ public class SchemaCompatibility {
               }
             }
             // No branch in the reader union has been found compatible with the writer schema:
-            String msg = String.format("reader union lacking writer type: %s", writer.getType());
+            String msg = String.format("reader union lacking writer type: %s", writerType);
             return SchemaCompatibilityResult
                 .incompatible(SchemaIncompatibilityType.MISSING_UNION_BRANCH, reader, writer, msg);
           }
@@ -391,6 +421,15 @@ public class SchemaCompatibility {
           }
         }
       }
+    }
+
+    /**
+     * If configured to detect possible data loss, return an incompatible result, otherwise return compatible.
+     */
+    private SchemaCompatibilityResult lossyConversion(Schema reader, Schema writer, SchemaIncompatibilityType incompatibility,
+        String details) {
+      return mAllowDataLoss ? SchemaCompatibilityResult.compatible()
+          : SchemaCompatibilityResult.incompatible(incompatibility, reader, writer,  details);
     }
 
     private SchemaCompatibilityResult checkReaderWriterRecordFields(final Schema reader,
@@ -460,20 +499,34 @@ public class SchemaCompatibility {
    * Identifies the type of a schema compatibility result.
    */
   public enum SchemaCompatibilityType {
+    /** Schemas are compatible. */
     COMPATIBLE,
+
+    /** Schemas are incompatible. */
     INCOMPATIBLE,
 
     /** Used internally to tag a reader/writer schema pair and prevent recursion. */
     RECURSION_IN_PROGRESS;
   }
 
+  /** Identifies the type of schema incompatibility. */
   public enum SchemaIncompatibilityType {
+    /** Name mismatch in schema elements. */
     NAME_MISMATCH,
+    /** Size of a fixed type differs. */
     FIXED_SIZE_MISMATCH,
+    /** Reader enum lacking some writer symbols. Not all data might be possible to read. */
     MISSING_ENUM_SYMBOLS,
+    /** Reader field not present in writer schema, and is missing a default value. */
     READER_FIELD_MISSING_DEFAULT_VALUE,
+    /** Field has wrong type. */
     TYPE_MISMATCH,
-    MISSING_UNION_BRANCH;
+    /** Reader not compatible with all branches of a union. */
+    MISSING_UNION_BRANCH,
+    /** Lossy float conversion. */
+    LOSSY_FLOAT_CONVERSION,
+    /** Lossy double conversion. */
+    LOSSY_DOUBLE_CONVERSION;
   }
 
   /**

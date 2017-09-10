@@ -19,6 +19,7 @@ package org.apache.avro;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayOutputStream;
@@ -140,6 +141,35 @@ public class TestReadingWritingDataInEvolvedSchemas {
     assertEquals(42.0f, decodeGenericBlob(FLOAT_RECORD, writer, encoded).get(FIELD_A));
     assertEquals(42L, decodeGenericBlob(LONG_RECORD, writer, encoded).get(FIELD_A));
     assertEquals(42, decodeGenericBlob(INT_RECORD, writer, encoded).get(FIELD_A));
+  }
+
+  @Test
+  public void losingDataDueToPrecisionLossForFloats() throws Exception {
+    Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
+    Record record = defaultRecordWithSchema(writer, FIELD_A, Integer.MAX_VALUE);
+    byte[] encoded = encodeGenericBlob(record);
+    // No data loss for int->int, int->long and int->double
+    assertEquals(2147483647.0, decodeGenericBlob(DOUBLE_RECORD, writer, encoded).get(FIELD_A));
+    assertEquals(Integer.MAX_VALUE * 1L, decodeGenericBlob(LONG_RECORD, writer, encoded).get(FIELD_A));
+    assertEquals(Integer.MAX_VALUE, decodeGenericBlob(INT_RECORD, writer, encoded).get(FIELD_A));
+    // But when reading with a float, we lose some precision (47 at the end)
+    assertEquals(2147483600f, decodeGenericBlob(FLOAT_RECORD, writer, encoded).get(FIELD_A));
+  }
+
+  @Test
+  public void losingDataDueToPrecisionLossForDouble() throws Exception {
+    Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
+    Record record = defaultRecordWithSchema(writer, FIELD_A, Long.MAX_VALUE);
+    byte[] encoded = encodeGenericBlob(record);
+    // No data loss for long->long
+    Record asLong = decodeGenericBlob(LONG_RECORD, writer, encoded);
+    assertEquals(Long.MAX_VALUE * 1L, asLong.get(FIELD_A));
+    assertNotEquals((Long.MAX_VALUE - 1) * 1L, asLong.get(FIELD_A));
+    // But for long->double, we might lose data due to precision loss
+    Record asDouble = decodeGenericBlob(DOUBLE_RECORD, writer, encoded);
+    assertEquals((Long.MAX_VALUE) * 1.0, asDouble.get(FIELD_A));
+    // When decoding with double schema, we can no longer see the difference between Long.MAX_VALUE and Long.MAX_VALUE - 1
+    assertEquals((Long.MAX_VALUE - 1) * 1.0, asDouble.get(FIELD_A));
   }
 
   @Test
