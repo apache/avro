@@ -13,6 +13,9 @@ Trunk (not yet released)
     AVRO-1933: Add more specific error details to SchemaCompatibility class
     (Anders Sundelin via gabor)
 
+    AVRO-2072: ResolvingGrammarGenerator doesn't implement schema resolution correctly for unions
+    (Nandor Kollar via gabor)
+
   NEW FEATURES
 
     AVRO-1704: Java: Add support for single-message encoding. (blue)

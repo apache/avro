@@ -166,7 +166,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         break;
 
       case UNION:
-        int j = bestBranch(reader, writer, seen);
+        int j = firstMatchingBranch(reader, writer, seen);
         if (j >= 0) {
           Symbol s = generate(writer, reader.getTypes().get(j), seen);
           return Symbol.seq(Symbol.unionAdjustAction(j, s), Symbol.UNION);
@@ -451,7 +451,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     return false;
   }
 
-  private int bestBranch(Schema r, Schema w, Map<LitS, Symbol> seen) throws IOException {
+  private int firstMatchingBranch(Schema r, Schema w, Map<LitS, Symbol> seen) throws IOException {
     Schema.Type vt = w.getType();
       // first scan for exact match
       int j = 0;
@@ -491,11 +491,19 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         switch (vt) {
         case INT:
           switch (b.getType()) {
-          case LONG: case DOUBLE:
-            return j;
+            case LONG:
+            case DOUBLE:
+            case FLOAT:
+              return j;
           }
           break;
         case LONG:
+          switch (b.getType()) {
+            case DOUBLE:
+            case FLOAT:
+              return j;
+          }
+          break;
         case FLOAT:
           switch (b.getType()) {
           case DOUBLE:

@@ -112,9 +112,8 @@ public class TestSchemaValidation {
       new ReaderWriter(INT_STRING_UNION_SCHEMA, STRING_INT_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(LONG_UNION_SCHEMA, INT_UNION_SCHEMA),
-      // float unions cannot read int or long unions
-      // new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
-      // new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
+      new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
+      new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(LONG_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, LONG_UNION_SCHEMA),

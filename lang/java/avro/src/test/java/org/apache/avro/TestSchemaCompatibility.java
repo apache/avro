@@ -292,6 +292,10 @@ public class TestSchemaCompatibility {
 
       // Tests involving unions:
       new ReaderWriter(EMPTY_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
+      new ReaderWriter(FLOAT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
+      new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
+      new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
+      new ReaderWriter(FLOAT_UNION_SCHEMA, INT_LONG_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(INT_STRING_UNION_SCHEMA, STRING_INT_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
