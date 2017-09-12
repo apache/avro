@@ -35,6 +35,9 @@ import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY;
+
 /**
  * A wrapper around a Hadoop {@link org.apache.hadoop.io.SequenceFile} that
  * also supports reading and writing Avro data.
@@ -109,9 +112,6 @@ public class AvroSequenceFile {
      * A helper class to encapsulate the options that can be used to construct a Writer.
      */
     public static class Options {
-      /** The default write buffer size in bytes. */
-      public static final int DEFAULT_BUFFER_SIZE_BYTES = 4096;
-
       /**
        * A magic value representing the default for buffer size, block size, and
        * replication factor.
@@ -437,7 +437,8 @@ public class AvroSequenceFile {
        */
       public int getBufferSizeBytes() {
         if (DEFAULT == mBufferSizeBytes) {
-          return getConfiguration().getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE_BYTES);
+          return getConfiguration().getInt(IO_FILE_BUFFER_SIZE_KEY,
+              IO_FILE_BUFFER_SIZE_DEFAULT);
         }
         return mBufferSizeBytes;
       }

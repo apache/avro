@@ -86,6 +86,9 @@ Trunk (not yet released)
     AVRO-2053: Remove Reference To Deprecated Property mapred.output.compression.type
     (Beluga Behr via gabor)
 
+    AVRO-2055: Remove Magic Value From org.apache.avro.hadoop.io.AvroSequenceFile
+    (Beluga Behr via gabor)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
