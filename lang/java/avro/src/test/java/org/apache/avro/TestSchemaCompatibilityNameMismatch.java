@@ -49,12 +49,10 @@ public class TestSchemaCompatibilityNameMismatch {
     Object[][] fields = { //
         { ENUM1_AB_SCHEMA, ENUM2_AB_SCHEMA, "expected: Enum2", "/name" },
         { EMPTY_RECORD2, EMPTY_RECORD1, "expected: Record1", "/name" },
-        { FIXED_4_BYTES, FIXED_4_ANOTHER_NAME, "expected: AnotherName", "/name" },
-        { FIXED_4_NAMESPACE_V1, FIXED_4_NAMESPACE_V2,
-            "expected: org.apache.avro.tests.v_2_0.Fixed", "/name" },
+        { FIXED_4_BYTES, FIXED_4_ANOTHER_NAME, "expected: AnotherName", "/name" }, { FIXED_4_NAMESPACE_V1,
+            FIXED_4_NAMESPACE_V2, "expected: org.apache.avro.tests.v_2_0.Fixed", "/name" },
         { A_DINT_B_DENUM_1_RECORD1, A_DINT_B_DENUM_2_RECORD1,
-          "expected: Enum2", "/fields/1/type/name" }
-    };
+          "expected: Enum2", "/fields/1/type/name" } };
     List<Object[]> list = new ArrayList<Object[]>(fields.length);
     for (Object[] schemas : fields) {
       list.add(schemas);
