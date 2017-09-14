@@ -57,7 +57,6 @@ public class TestSchemaCompatibilityReaderFieldMissingDefaultValue {
   @Test
   public void testReaderFieldMissingDefaultValueSchemas() throws Exception {
     validateIncompatibleSchemas(reader, writer,
-        SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE,
-        details, location);
+        SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, details, location);
   }
 }

@@ -364,7 +364,8 @@ public class TestSchemaCompatibility {
 
   // -----------------------------------------------------------------------------------------------
 
-  /** The reader/writer pairs that are incompatible are now moved to specific test classes, one class
+  /**
+   * The reader/writer pairs that are incompatible are now moved to specific test classes, one class
    * per error case (for easier pinpointing of errors). The method to validate incompatibility is
    * still here.
    */
@@ -386,7 +387,8 @@ public class TestSchemaCompatibility {
 
   // -----------------------------------------------------------------------------------------------
 
-  /** The reader/writer pairs that are incompatible are now moved to specific test classes,
+  /**
+   * The reader/writer pairs that are incompatible are now moved to specific test classes,
    * one class per error case (for easier pinpointing of errors).
    * The method to validate incompatibility is still here.
    */
@@ -408,8 +410,9 @@ public class TestSchemaCompatibility {
       assertEquals(locations.get(i), incompatibility.getLocation());
     }
 
-    String description = String.format("Data encoded using writer schema:%n%s%n"
-        + "will or may fail to decode using reader schema:%n%s%n",
+    String description = String.format(
+        "Data encoded using writer schema:%n%s%n"
+            + "will or may fail to decode using reader schema:%n%s%n",
         writer.toString(true), reader.toString(true));
     assertEquals(description, compatibility.getDescription());
   }

@@ -458,9 +458,8 @@ public class SchemaCompatibility {
       int expected = writer.getFixedSize();
       if (actual != expected) {
         String message = String.format("expected: %d, found: %d", expected, actual);
-        result = SchemaCompatibilityResult.incompatible(
-            SchemaIncompatibilityType.FIXED_SIZE_MISMATCH, reader,
-            writer, message, location);
+        result = SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.FIXED_SIZE_MISMATCH,
+            reader, writer, message, location);
       }
       // POP "size" literal
       location.pop();
@@ -484,8 +483,8 @@ public class SchemaCompatibility {
     private SchemaCompatibilityResult typeMismatch(final Schema reader, final Schema writer, final Stack<String> location) {
       String message = String.format("reader type: %s not compatible with writer type: %s",
           reader.getType(), writer.getType());
-      return SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.TYPE_MISMATCH,
-          reader, writer, message, location);
+      return SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.TYPE_MISMATCH, reader,
+          writer, message, location);
     }
   }
 
