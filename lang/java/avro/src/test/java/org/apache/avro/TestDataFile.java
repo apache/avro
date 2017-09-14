@@ -324,19 +324,23 @@ public class TestDataFile {
   private void testFSync(boolean useFile) throws IOException {
     DataFileWriter<Object> writer =
       new DataFileWriter<Object>(new GenericDatumWriter<Object>());
-    writer.setFlushOnEveryBlock(false);
-    TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
-    if (useFile) {
-      File f = makeFile();
-      SeekableFileInput in = new SeekableFileInput(f);
-      writer.appendTo(in, out);
-    } else {
-      writer.create(SCHEMA, out);
-    }
-    int currentCount = 0;
-    int syncCounter = 0;
     try {
-      for (Object datum : new RandomData(SCHEMA, COUNT, SEED+1)) {
+      writer.setFlushOnEveryBlock(false);
+      TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
+      if (useFile) {
+        File f = makeFile();
+        SeekableFileInput in = new SeekableFileInput(f);
+        try {
+          writer.appendTo(in, out);
+        } finally {
+          in.close();
+        }
+      } else {
+        writer.create(SCHEMA, out);
+      }
+      int currentCount = 0;
+      int syncCounter = 0;
+      for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
         currentCount++;
         writer.append(datum);
         if (currentCount % 10 == 0) {
@@ -344,11 +348,11 @@ public class TestDataFile {
           syncCounter++;
         }
       }
+      System.out.println("Total number of syncs: " + out.syncCount);
+      Assert.assertEquals(syncCounter, out.syncCount);
     } finally {
       writer.close();
     }
-    System.out.println("Total number of syncs: " + out.syncCount);
-    Assert.assertEquals(syncCounter, out.syncCount);
   }
 
 

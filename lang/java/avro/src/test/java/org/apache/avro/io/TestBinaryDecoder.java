@@ -358,7 +358,7 @@ public class TestBinaryDecoder {
   }
 
   @Test
-  public void testBadLengthEncoding() throws IOException {
+  public void testNegativeLengthEncoding() throws IOException {
     byte[] bad = new byte[] { (byte)1 };
     Decoder bd = factory.binaryDecoder(bad, null);
     String message = "";
@@ -368,6 +368,14 @@ public class TestBinaryDecoder {
       message = e.getMessage();
     }
     Assert.assertEquals("Malformed data. Length is negative: -1", message);
+  }
+
+  @Test(expected=UnsupportedOperationException.class)
+  public void testLongLengthEncoding() throws IOException {
+    // Size equivalent to Integer.MAX_VALUE + 1
+    byte[] bad = new byte[] { (byte) -128, (byte) -128, (byte) -128, (byte) -128, (byte) 16 };
+    Decoder bd = factory.binaryDecoder(bad, null);
+    bd.readString();
   }
 
   @Test(expected=EOFException.class)

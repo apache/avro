@@ -37,10 +37,8 @@ import static org.apache.avro.TestSchemas.LONG_MAP_SCHEMA;
 import static org.apache.avro.TestSchemas.LONG_SCHEMA;
 import static org.apache.avro.TestSchemas.NULL_SCHEMA;
 import static org.apache.avro.TestSchemas.STRING_SCHEMA;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -129,6 +127,5 @@ public class TestSchemaCompatibilityTypeMismatch {
   public void testTypeMismatchSchemas() throws Exception {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.TYPE_MISMATCH,
         details, location);
-
   }
 }

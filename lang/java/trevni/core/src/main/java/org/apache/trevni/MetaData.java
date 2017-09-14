@@ -126,20 +126,20 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String,byte[]> {
   }
 
   @Override public String toString() {
-    StringBuffer buffer = new StringBuffer();
-    buffer.append("{ ");
+    StringBuilder builder = new StringBuilder();
+    builder.append('{').append(' ');
     for (Map.Entry<String,byte[]> e : entrySet()) {
-      buffer.append(e.getKey());
-      buffer.append("=");
+      builder.append(e.getKey());
+      builder.append('=');
       try {
-        buffer.append(new String(e.getValue(), "ISO-8859-1"));
+        builder.append(new String(e.getValue(), "ISO-8859-1"));
       } catch (java.io.UnsupportedEncodingException error) {
         throw new TrevniRuntimeException(error);
       }
-      buffer.append(" ");
+      builder.append(' ');
     }
-    buffer.append("}");
-    return buffer.toString();
+    builder.append('}');
+    return builder.toString();
   }
 
 }

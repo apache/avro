@@ -119,8 +119,7 @@ public class AvroSerialization<T> extends Configured
 
     public void open(OutputStream out) {
       this.out = out;
-      this.encoder = new EncoderFactory().configureBlockSize(512)
-          .binaryEncoder(out, null);
+      this.encoder = new EncoderFactory().binaryEncoder(out, null);
     }
 
     public void serialize(AvroWrapper<T> wrapper) throws IOException {

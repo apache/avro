@@ -21,10 +21,8 @@ import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchema
 import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
 import org.junit.runner.RunWith;

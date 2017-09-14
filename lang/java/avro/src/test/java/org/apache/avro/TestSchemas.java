@@ -17,13 +17,9 @@
  */
 package org.apache.avro;
 
-import static org.apache.avro.TestSchemas.INT_STRING_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_UNION_SCHEMA;
 import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Collections;
-
 import org.apache.avro.Schema.Field;
 
 /** Schemas used by other tests in this package. Therefore package protected. */
@@ -46,73 +42,42 @@ public class TestSchemas{
   static final Schema LONG_MAP_SCHEMA = Schema.createMap(LONG_SCHEMA);
   static final Schema STRING_MAP_SCHEMA = Schema.createMap(STRING_SCHEMA);
 
-  static final Schema ENUM1_AB_SCHEMA =
-      Schema.createEnum("Enum1", null, null, list("A", "B"));
-  static final Schema ENUM1_ABC_SCHEMA =
-      Schema.createEnum("Enum1", null, null, list("A", "B", "C"));
-  static final Schema ENUM1_BC_SCHEMA =
-      Schema.createEnum("Enum1", null, null, list("B", "C"));
-  static final Schema ENUM2_AB_SCHEMA =
-      Schema.createEnum("Enum2", null, null, list("A", "B"));
+  static final Schema ENUM1_AB_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B"));
+  static final Schema ENUM1_ABC_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B", "C"));
+  static final Schema ENUM1_BC_SCHEMA = Schema.createEnum("Enum1", null, null, list("B", "C"));
+  static final Schema ENUM2_AB_SCHEMA = Schema.createEnum("Enum2", null, null, list("A", "B"));
 
-  static final Schema EMPTY_UNION_SCHEMA =
-      Schema.createUnion(new ArrayList<Schema>());
-  static final Schema NULL_UNION_SCHEMA =
-      Schema.createUnion(list(NULL_SCHEMA));
-  static final Schema INT_UNION_SCHEMA =
-      Schema.createUnion(list(INT_SCHEMA));
-  static final Schema LONG_UNION_SCHEMA =
-      Schema.createUnion(list(LONG_SCHEMA));
-  static final Schema FLOAT_UNION_SCHEMA =
-      Schema.createUnion(list(FLOAT_SCHEMA));
-  static final Schema DOUBLE_UNION_SCHEMA =
-      Schema.createUnion(list(DOUBLE_SCHEMA));
-  static final Schema STRING_UNION_SCHEMA =
-      Schema.createUnion(list(STRING_SCHEMA));
-  static final Schema BYTES_UNION_SCHEMA =
-      Schema.createUnion(list(BYTES_SCHEMA));
-  static final Schema INT_STRING_UNION_SCHEMA =
-      Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
-  static final Schema STRING_INT_UNION_SCHEMA =
-      Schema.createUnion(list(STRING_SCHEMA, INT_SCHEMA));
-  static final Schema INT_FLOAT_UNION_SCHEMA =
-      Schema.createUnion(list(INT_SCHEMA, FLOAT_SCHEMA));
-  static final Schema INT_LONG_UNION_SCHEMA =
-      Schema.createUnion(list(INT_SCHEMA, LONG_SCHEMA));
-  static final Schema INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA =
+  static final Schema EMPTY_UNION_SCHEMA = Schema.createUnion(new ArrayList<Schema>());
+  static final Schema NULL_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA));
+  static final Schema INT_UNION_SCHEMA = Schema.createUnion(list(INT_SCHEMA));
+  static final Schema LONG_UNION_SCHEMA = Schema.createUnion(list(LONG_SCHEMA));
+  static final Schema FLOAT_UNION_SCHEMA = Schema.createUnion(list(FLOAT_SCHEMA));
+  static final Schema DOUBLE_UNION_SCHEMA = Schema.createUnion(list(DOUBLE_SCHEMA));
+  static final Schema STRING_UNION_SCHEMA = Schema.createUnion(list(STRING_SCHEMA));
+  static final Schema BYTES_UNION_SCHEMA = Schema.createUnion(list(BYTES_SCHEMA));
+  static final Schema INT_STRING_UNION_SCHEMA = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
+  static final Schema STRING_INT_UNION_SCHEMA = Schema.createUnion(list(STRING_SCHEMA, INT_SCHEMA));
+  static final Schema INT_FLOAT_UNION_SCHEMA = Schema.createUnion(list(INT_SCHEMA, FLOAT_SCHEMA));
+  static final Schema INT_LONG_UNION_SCHEMA = Schema.createUnion(list(INT_SCHEMA, LONG_SCHEMA));
+  static final Schema INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA = 
       Schema.createUnion(list(INT_SCHEMA, LONG_SCHEMA, FLOAT_SCHEMA, DOUBLE_SCHEMA));
 
   // Non recursive records:
-  static final Schema EMPTY_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema EMPTY_RECORD2 =
-      Schema.createRecord("Record2", null, null, false);
-  static final Schema A_INT_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_LONG_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_INT_B_INT_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_DINT_RECORD1 =  // DTYPE means TYPE with default value
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_INT_B_DINT_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_DINT_B_DINT_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_DINT_B_DFIXED_4_BYTES_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_DINT_B_DFIXED_8_BYTES_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_DINT_B_DINT_STRING_UNION_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_DINT_B_DINT_UNION_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_DINT_B_DENUM_1_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-  static final Schema A_DINT_B_DENUM_2_RECORD1 =
-      Schema.createRecord("Record1", null, null, false);
-
-
+  static final Schema EMPTY_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema EMPTY_RECORD2 = Schema.createRecord("Record2", null, null, false);
+  static final Schema A_INT_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_LONG_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_INT_B_INT_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  // DTYPE means TYPE with default value
+  static final Schema A_DINT_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_INT_B_DINT_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DINT_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DFIXED_4_BYTES_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DFIXED_8_BYTES_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DINT_STRING_UNION_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DINT_UNION_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DENUM_1_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DENUM_2_RECORD1 = Schema.createRecord("Record1", null, null, false);
 
   static final Schema FIXED_4_BYTES = Schema.createFixed("Fixed", null, null, 4);
   static final Schema FIXED_8_BYTES = Schema.createFixed("Fixed", null, null, 8);
@@ -121,16 +86,15 @@ public class TestSchemas{
     EMPTY_RECORD1.setFields(Collections.<Field>emptyList());
     EMPTY_RECORD2.setFields(Collections.<Field>emptyList());
     A_INT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, null)));
+        new Field("a", INT_SCHEMA, null, (Object) null)));
     A_LONG_RECORD1.setFields(list(
-        new Field("a", LONG_SCHEMA, null, null)));
+        new Field("a", LONG_SCHEMA, null, (Object) null)));
     A_INT_B_INT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, null),
-        new Field("b", INT_SCHEMA, null, null)));
-    A_DINT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, 0)));
+        new Field("a", INT_SCHEMA, null, (Object) null),
+        new Field("b", INT_SCHEMA, null, (Object) null)));
+    A_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, 0)));
     A_INT_B_DINT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, null),
+        new Field("a", INT_SCHEMA, null, (Object) null),
         new Field("b", INT_SCHEMA, null, 0)));
     A_DINT_B_DINT_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, 0),
@@ -156,17 +120,15 @@ public class TestSchemas{
   }
 
   // Recursive records
-  static final Schema INT_LIST_RECORD =
-      Schema.createRecord("List", null, null, false);
-  static final Schema LONG_LIST_RECORD =
-      Schema.createRecord("List", null, null, false);
+  static final Schema INT_LIST_RECORD = Schema.createRecord("List", null, null, false);
+  static final Schema LONG_LIST_RECORD = Schema.createRecord("List", null, null, false);
   static {
     INT_LIST_RECORD.setFields(list(
-        new Field("head", INT_SCHEMA, null, null),
-        new Field("tail", INT_LIST_RECORD, null, null)));
+        new Field("head", INT_SCHEMA, null, (Object) null),
+        new Field("tail", INT_LIST_RECORD, null, (Object) null)));
     LONG_LIST_RECORD.setFields(list(
-        new Field("head", LONG_SCHEMA, null, null),
-        new Field("tail", LONG_LIST_RECORD, null, null)));
+        new Field("head", LONG_SCHEMA, null, (Object) null),
+        new Field("tail", LONG_LIST_RECORD, null, (Object) null)));
   }
 
   // -----------------------------------------------------------------------------------------------

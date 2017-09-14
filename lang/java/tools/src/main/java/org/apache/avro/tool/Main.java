@@ -89,9 +89,19 @@ public class Main {
       }
     }
     System.err.print("Version ");
-    printStream(Main.class.getClassLoader().getResourceAsStream("VERSION.txt"));
+    InputStream versionInput = Main.class.getClassLoader().getResourceAsStream("VERSION.txt");
+    try {
+      printStream(versionInput);
+    } finally {
+      versionInput.close();
+    }
     System.err.print(" of ");
-    printHead(Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE"), 5);
+    InputStream noticeInput = Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE");
+    try {
+      printHead(noticeInput, 5);
+    } finally {
+      noticeInput.close();
+    }
     System.err.println("----------------");
 
     System.err.println("Available tools:");

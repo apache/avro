@@ -102,8 +102,14 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
 
     GenericData dataModel = AvroSerialization.createDataModel(conf);
 
-    return mRecordWriterFactory.create
-      (writerSchema, dataModel, getCompressionCodec(context),
-       getAvroFileOutputStream(context), getSyncInterval(context));
+    OutputStream out = getAvroFileOutputStream(context);
+    try {
+      return mRecordWriterFactory.create
+              (writerSchema, dataModel, getCompressionCodec(context),
+                      out, getSyncInterval(context));
+    } catch (IOException e) {
+      out.close();
+      throw e;
+    }
   }
 }

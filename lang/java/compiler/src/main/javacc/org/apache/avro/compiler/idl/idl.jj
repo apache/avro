@@ -53,7 +53,7 @@ options {
   ERROR_REPORTING = true;
   STATIC = false;
   FORCE_LA_CHECK = true;
-  JDK_VERSION = "1.6";
+  JDK_VERSION = "1.8";
 }
 
 PARSER_BEGIN(Idl)
@@ -1004,7 +1004,7 @@ Protocol CompilationUnit():
   ( < "\u001a" > )?
   ( <STUFF_TO_IGNORE: ~[]> )?
   <EOF>
-  { return p; }
+  { return SchemaResolver.resolve(p); }
 }
 
 /*
@@ -1470,7 +1470,9 @@ Schema ReferenceType():
       name = namespace + "." + name;
     Schema type = names.get(name);
     if (type == null)
-      throw error("Undefined name '" + name + "'", token);
+    {
+      type = SchemaResolver.unresolvedSchema(name);
+    }
     return type;
   }
 }

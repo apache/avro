@@ -257,7 +257,11 @@ public class GenericData {
     @Override
     public Schema getSchema() { return schema; }
     @Override public int size() { return size; }
-    @Override public void clear() { size = 0; }
+    @Override public void clear() {
+      // Let GC do its work
+      Arrays.fill(elements, 0, size, null);
+      size = 0;
+    }
     @Override public Iterator<T> iterator() {
       return new Iterator<T>() {
         private int position = 0;
@@ -273,15 +277,6 @@ public class GenericData {
       if (i >= size)
         throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
       return (T)elements[i];
-    }
-    @Override public boolean add(T o) {
-      if (size == elements.length) {
-        Object[] newElements = new Object[(size * 3)/2 + 1];
-        System.arraycopy(elements, 0, newElements, 0, size);
-        elements = newElements;
-      }
-      elements[size++] = o;
-      return true;
     }
     @Override public void add(int location, T o) {
       if (location > size || location < 0) {
@@ -333,19 +328,6 @@ public class GenericData {
         left++;
         right--;
       }
-    }
-    @Override
-    public String toString() {
-      StringBuilder buffer = new StringBuilder();
-      buffer.append("[");
-      int count = 0;
-      for (T e : this) {
-        buffer.append(e==null ? "null" : e.toString());
-        if (++count < size())
-          buffer.append(", ");
-      }
-      buffer.append("]");
-      return buffer.toString();
     }
   }
 

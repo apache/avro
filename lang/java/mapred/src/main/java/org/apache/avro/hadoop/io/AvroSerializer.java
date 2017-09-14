@@ -44,18 +44,9 @@ import org.apache.hadoop.io.serializer.Serializer;
  * @param <T> The Java type of the Avro data.
  */
 public class AvroSerializer<T> implements Serializer<AvroWrapper<T>> {
-  /**
-   * The block size for the Avro encoder.
-   *
-   * This number was copied from the AvroSerialization of org.apache.avro.mapred in Avro 1.5.1.
-   *
-   * TODO(gwu): Do some benchmarking with different numbers here to see if it is important.
-   */
-  private static final int AVRO_ENCODER_BLOCK_SIZE_BYTES = 512;
 
   /** An factory for creating Avro datum encoders. */
-  private static EncoderFactory mEncoderFactory
-      = new EncoderFactory().configureBlockSize(AVRO_ENCODER_BLOCK_SIZE_BYTES);
+  private static EncoderFactory mEncoderFactory = new EncoderFactory();
 
   /** The writer schema for the data to serialize. */
   private final Schema mWriterSchema;

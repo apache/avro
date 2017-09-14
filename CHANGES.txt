@@ -4,6 +4,15 @@ Trunk (not yet released)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-2035: Java: validate default values when parsing schemas. (cutting)
+
+    AVRO-2043: Move to java8
+
+    AVRO-2061: Improve Invalid File Format Error Message (Beluga Behr via gabor)
+
+    AVRO-1933: Add more specific error details to SchemaCompatibility class
+    (Anders Sundelin via gabor)
+
   NEW FEATURES
 
     AVRO-1704: Java: Add support for single-message encoding. (blue)
@@ -47,6 +56,27 @@ Trunk (not yet released)
     AVRO-1960: Add log4j properties for avro-tools
 
     AVRO-1748. Add Snappy Compression to C++ DataFile (J. Langley via thiru)
+
+    AVRO-1723. Add support for forward declarations in avro IDL (Zoltan Farcas via thiru)
+
+    AVRO-1971: Allow alias annotation on fields (Johannes Schulte via gabor)
+
+    AVRO-2021: uuid logical type is not documented (Nandor Kollar via gabor)
+
+    AVRO-2056: DirectBinaryEncoder Creates Buffer For Each Call To writeDouble
+    (Beluga Behr via gabor)
+
+    AVRO-2054: Use StringBuilder instead of StringBuffer
+    (Beluga Behr via gabor)
+
+    AVRO-2050: Clear Array To Allow GC
+    (Beluga Behr via gabor)
+
+    AVRO-2049: Remove Superfluous Configuration From AvroSerializer
+    (Beluga Behr via gabor)
+
+    AVRO-2048: Avro Binary Decoding - Gracefully Handle Long Strings
+    (Beluga Behr via gabor)
 
   BUG FIXES
 
@@ -146,6 +176,20 @@ Trunk (not yet released)
     AVRO-1994. C++ Code Generator Generates Invalid Code if Field is of type Null (Darryl Green via thiru)
 
     AVRO-1997. Avro Field.defaultVal broken for Fixed fields. (Zoltan Farkasi via thiru)
+
+    AVRO-2033. GenericUnions constructor defaults to a broken state (Philip Rizk via thiru)
+
+    AVRO-1857: GenericDatumWriter.write using BufferedBinaryEncoder leaves ByteBuffer in indeterminate state
+    (Nandor Kollar via gabor)
+
+    AVRO-1990: CreateRandomFileTool should validate arguments (Nandor Kollar via gabor)
+
+    AVRO-1401: @Nullable does not work with byte[] (Nandor Kollar via gabor)
+
+    AVRO-1985: Unreleased resources (gabor)
+
+    AVRO-1485: Specification says Record field type can be record name but implementation allows any named type.
+    (Nandor Kollar via gabor)
 
 Avro 1.8.1 (14 May 2016)
 

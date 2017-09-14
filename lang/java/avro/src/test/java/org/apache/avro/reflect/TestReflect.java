@@ -39,6 +39,7 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.Decoder;
@@ -1029,10 +1030,35 @@ public class TestReflect {
   private static class AliasC { }
 
   @Test
-  public void testAvroAlias() {
+  public void testAvroAliasOnClass() {
     check(AliasA.class, "{\"type\":\"record\",\"name\":\"AliasA\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[],\"aliases\":[\"b.a\"]}");
     check(AliasB.class, "{\"type\":\"record\",\"name\":\"AliasB\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[],\"aliases\":[\"a\"]}");
     check(AliasC.class, "{\"type\":\"record\",\"name\":\"AliasC\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[],\"aliases\":[\"a\"]}");
+  }
+
+  private static class ClassWithAliasOnField {
+    @AvroAlias(alias = "aliasName")
+    int primitiveField;
+  }
+
+  private static class ClassWithAliasAndNamespaceOnField {
+    @AvroAlias(alias = "aliasName", space = "forbidden.space.entry")
+    int primitiveField;
+  }
+
+  @Test
+  public void testAvroAliasOnField() {
+
+    Schema expectedSchema = SchemaBuilder.record(ClassWithAliasOnField.class.getSimpleName())
+        .namespace("org.apache.avro.reflect.TestReflect$").fields().name("primitiveField").aliases("aliasName")
+        .type(Schema.create(org.apache.avro.Schema.Type.INT)).noDefault().endRecord();
+
+    check(ClassWithAliasOnField.class, expectedSchema.toString());
+  }
+
+  @Test(expected = AvroRuntimeException.class)
+  public void namespaceDefinitionOnFieldAliasMustThrowException() {
+    ReflectData.get().getSchema(ClassWithAliasAndNamespaceOnField.class);
   }
 
   private static class DefaultTest {
@@ -1048,4 +1074,31 @@ public class TestReflect {
           +"{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]}");
   }
 
+  public static class NullableBytesTest {
+    @Nullable
+    byte[] bytes;
+
+    NullableBytesTest() {
+    }
+
+    NullableBytesTest(byte[] bytes) {
+      this.bytes = bytes;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj instanceof NullableBytesTest
+              && Arrays.equals(((NullableBytesTest) obj).bytes, this.bytes);
+    }
+  }
+
+  @Test
+  public void testNullableByteArrayNotNullValue() throws Exception {
+    checkReadWrite(new NullableBytesTest("foo".getBytes()));
+  }
+
+  @Test
+  public void testNullableByteArrayNullValue() throws Exception {
+    checkReadWrite(new NullableBytesTest());
+  }
 }

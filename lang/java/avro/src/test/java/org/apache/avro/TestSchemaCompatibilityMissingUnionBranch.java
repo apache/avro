@@ -36,11 +36,9 @@ import static org.apache.avro.TestSchemas.LONG_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.NULL_SCHEMA;
 import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.list;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
 import org.junit.runner.RunWith;

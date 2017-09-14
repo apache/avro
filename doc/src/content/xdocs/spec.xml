@@ -102,9 +102,7 @@
 		  of the field (required), and </li>
 		<li><code>doc</code>: a JSON string describing this field
                   for users (optional).</li>
-		<li><code>type:</code> A JSON object defining a schema, or
-		  a JSON string naming a record definition
-		  (required).</li>
+		<li><code>type:</code> a <a href="#schemas">schema</a>, as defined above</li>
 		<li><code>default:</code> A default value for this
 		  field, used when reading instances that lack this
 		  field (optional).  Permitted values depend on the
@@ -1435,6 +1433,17 @@ void initFPTable() {
           <code>decimal</code> logical types <em>match</em> if their scales and
           precisions match.</p>
 
+      </section>
+
+      <section>
+        <title>UUID</title>
+        <p>
+          The <code>uuid</code> logical type represents a random generated universally unique identifier (UUID).
+        </p>
+
+        <p>
+          A <code>uuid</code> logical type annotates an Avro <code>string</code>. The string has to conform with <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC-4122</a>
+        </p>
       </section>
 
       <section>

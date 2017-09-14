@@ -180,14 +180,18 @@ public class ReflectData extends SpecificData {
   }
 
   /**
-   * Returns true also for non-string-keyed maps, which are written as an array
-   * of key/value pair records.
+   * Returns true for arrays and false otherwise, with the following exceptions:
+   * <ul>
+   * <li><p>Returns true for non-string-keyed maps, which are written as an array of key/value pair records.</p></li>
+   * <li><p>Returns false for arrays of bytes, since those should be treated as byte data type instead.</p></li>
+   * </ul>
    */
   @Override
   protected boolean isArray(Object datum) {
     if (datum == null) return false;
+    Class c = datum.getClass();
     return (datum instanceof Collection)
-      || datum.getClass().isArray()
+      || (c.isArray() && c.getComponentType() != Byte.TYPE)
       || isNonStringMap(datum);
   }
 
@@ -629,6 +633,9 @@ public class ReflectData extends SpecificData {
                 if (f.name().equals(fieldName))
                   throw new AvroTypeException("double field entry: "+ fieldName);
               }
+
+              consumeFieldAlias(field, recordField);
+
               fields.add(recordField);
             }
           if (error)                              // add Throwable message
@@ -870,6 +877,18 @@ public class ReflectData extends SpecificData {
       if (AvroAlias.NULL.equals(space))
         space = null;
       schema.addAlias(alias.alias(), space);
+    }
+  }
+
+
+  private void consumeFieldAlias(Field field, Schema.Field recordField) {
+    AvroAlias alias = field.getAnnotation(AvroAlias.class);
+    if (alias != null) {
+      if (!alias.space().equals(AvroAlias.NULL)) {
+        throw new AvroRuntimeException(
+            "Namespaces are not allowed on field aliases. " + "Offending field: " + recordField.name());
+      }
+      recordField.addAlias(alias.alias());
     }
   }
 
