@@ -88,10 +88,13 @@ public class TestSchemas{
     EMPTY_RECORD2.setFields(Collections.<Field>emptyList());
     A_INT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null)));
     A_LONG_RECORD1.setFields(list(new Field("a", LONG_SCHEMA, null, null)));
-    A_INT_B_INT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, null)));
+    A_INT_B_INT_RECORD1.setFields(
+        list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, null)));
     A_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, 0)));
-    A_INT_B_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, 0)));
-    A_DINT_B_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_SCHEMA, null, 0)));
+    A_INT_B_DINT_RECORD1.setFields(
+        list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, 0)));
+    A_DINT_B_DINT_RECORD1
+        .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_SCHEMA, null, 0)));
     A_DINT_B_DFIXED_4_BYTES_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, 0),
         new Field("b", FIXED_4_BYTES, null, 0)));
