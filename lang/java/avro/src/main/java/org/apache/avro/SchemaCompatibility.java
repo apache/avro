@@ -510,8 +510,7 @@ public class SchemaCompatibility {
   }
 
   /**
-   * Immutable class representing details about a particular schema pair
-   * compatibility check.
+   * Immutable class representing details about a particular schema pair compatibility check.
    */
   public static final class SchemaCompatibilityResult {
 
