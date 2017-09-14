@@ -23,7 +23,7 @@ import java.util.Collections;
 import org.apache.avro.Schema.Field;
 
 /** Schemas used by other tests in this package. Therefore package protected. */
-public class TestSchemas{
+public class TestSchemas {
 
   static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
   static final Schema BOOLEAN_SCHEMA = Schema.create(Schema.Type.BOOLEAN);
