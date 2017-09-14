@@ -246,21 +246,21 @@ public class TestGenericLogicalTypes {
              UUID.randomUUID().toString(),        // use raw type
              GenericData.get());                  // with no conversions
   }
-
+    
   @Test
   public void testCopyDecimal() {
     testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)),
              new BigDecimal("-34.34"),
              GENERIC);
   }
-
+    
   @Test
   public void testCopyDecimalRaw() {
     testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)),
              ByteBuffer.wrap(new BigDecimal("-34.34").unscaledValue().toByteArray()),
              GenericData.get());                  // no conversions
   }
-
+    
   private void testCopy(Schema schema, Object value, GenericData model) {
     // test direct copy of instance
     checkCopy(value, model.deepCopy(schema, value), false);
@@ -288,7 +288,7 @@ public class TestGenericLogicalTypes {
   }
 
   private void checkCopy(Object original, Object copy, boolean notSame) {
-    if (notSame)
+    if (notSame) 
       Assert.assertNotSame(original, copy);
     Assert.assertEquals(original, copy);
   }

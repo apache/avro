@@ -364,9 +364,9 @@ public class TestSchemaCompatibility {
 
   // -----------------------------------------------------------------------------------------------
 
-  /** The reader/writer pairs that are incompatible are now moved to specific test classes,
-   * one class per error case (for easier pinpointing of errors).
-   * The method to validate incompatibility is still here.
+  /** The reader/writer pairs that are incompatible are now moved to specific test classes, one class
+   * per error case (for easier pinpointing of errors). The method to validate incompatibility is
+   * still here.
    */
   public static void validateIncompatibleSchemas(
       Schema reader,
