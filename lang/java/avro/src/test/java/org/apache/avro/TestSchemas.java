@@ -43,7 +43,8 @@ public class TestSchemas{
   static final Schema STRING_MAP_SCHEMA = Schema.createMap(STRING_SCHEMA);
 
   static final Schema ENUM1_AB_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B"));
-  static final Schema ENUM1_ABC_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B", "C"));
+  static final Schema ENUM1_ABC_SCHEMA = Schema.createEnum("Enum1", null, null,
+      list("A", "B", "C"));
   static final Schema ENUM1_BC_SCHEMA = Schema.createEnum("Enum1", null, null, list("B", "C"));
   static final Schema ENUM2_AB_SCHEMA = Schema.createEnum("Enum2", null, null, list("A", "B"));
 
@@ -59,8 +60,8 @@ public class TestSchemas{
   static final Schema STRING_INT_UNION_SCHEMA = Schema.createUnion(list(STRING_SCHEMA, INT_SCHEMA));
   static final Schema INT_FLOAT_UNION_SCHEMA = Schema.createUnion(list(INT_SCHEMA, FLOAT_SCHEMA));
   static final Schema INT_LONG_UNION_SCHEMA = Schema.createUnion(list(INT_SCHEMA, LONG_SCHEMA));
-  static final Schema INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA = 
-      Schema.createUnion(list(INT_SCHEMA, LONG_SCHEMA, FLOAT_SCHEMA, DOUBLE_SCHEMA));
+  static final Schema INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA = Schema
+      .createUnion(list(INT_SCHEMA, LONG_SCHEMA, FLOAT_SCHEMA, DOUBLE_SCHEMA));
 
   // Non recursive records:
   static final Schema EMPTY_RECORD1 = Schema.createRecord("Record1", null, null, false);
@@ -68,8 +69,8 @@ public class TestSchemas{
   static final Schema A_INT_RECORD1 = Schema.createRecord("Record1", null, null, false);
   static final Schema A_LONG_RECORD1 = Schema.createRecord("Record1", null, null, false);
   static final Schema A_INT_B_INT_RECORD1 = Schema.createRecord("Record1", null, null, false);
-  // DTYPE means TYPE with default value
-  static final Schema A_DINT_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_RECORD1 = // DTYPE means TYPE with default value
+      Schema.createRecord("Record1", null, null, false);
   static final Schema A_INT_B_DINT_RECORD1 = Schema.createRecord("Record1", null, null, false);
   static final Schema A_DINT_B_DINT_RECORD1 = Schema.createRecord("Record1", null, null, false);
   static final Schema A_DINT_B_DFIXED_4_BYTES_RECORD1 = Schema.createRecord("Record1", null, null, false);
@@ -85,20 +86,12 @@ public class TestSchemas{
   static {
     EMPTY_RECORD1.setFields(Collections.<Field>emptyList());
     EMPTY_RECORD2.setFields(Collections.<Field>emptyList());
-    A_INT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, (Object) null)));
-    A_LONG_RECORD1.setFields(list(
-        new Field("a", LONG_SCHEMA, null, (Object) null)));
-    A_INT_B_INT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, (Object) null),
-        new Field("b", INT_SCHEMA, null, (Object) null)));
+    A_INT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null)));
+    A_LONG_RECORD1.setFields(list(new Field("a", LONG_SCHEMA, null, null)));
+    A_INT_B_INT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, null)));
     A_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, 0)));
-    A_INT_B_DINT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, (Object) null),
-        new Field("b", INT_SCHEMA, null, 0)));
-    A_DINT_B_DINT_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", INT_SCHEMA, null, 0)));
+    A_INT_B_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, 0)));
+    A_DINT_B_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_SCHEMA, null, 0)));
     A_DINT_B_DFIXED_4_BYTES_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, 0),
         new Field("b", FIXED_4_BYTES, null, 0)));
@@ -123,12 +116,10 @@ public class TestSchemas{
   static final Schema INT_LIST_RECORD = Schema.createRecord("List", null, null, false);
   static final Schema LONG_LIST_RECORD = Schema.createRecord("List", null, null, false);
   static {
-    INT_LIST_RECORD.setFields(list(
-        new Field("head", INT_SCHEMA, null, (Object) null),
-        new Field("tail", INT_LIST_RECORD, null, (Object) null)));
-    LONG_LIST_RECORD.setFields(list(
-        new Field("head", LONG_SCHEMA, null, (Object) null),
-        new Field("tail", LONG_LIST_RECORD, null, (Object) null)));
+    INT_LIST_RECORD.setFields(list(new Field("head", INT_SCHEMA, null, null),
+        new Field("tail", INT_LIST_RECORD, null, null)));
+    LONG_LIST_RECORD.setFields(list(new Field("head", LONG_SCHEMA, null, null),
+        new Field("tail", LONG_LIST_RECORD, null, null)));
   }
 
   // -----------------------------------------------------------------------------------------------
