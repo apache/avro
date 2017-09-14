@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import static java.util.Arrays.asList;
 import static org.apache.avro.SchemaCompatibility.checkReaderWriterCompatibility;
 import static org.apache.avro.TestSchemas.A_DINT_B_DINT_RECORD1;
 import static org.apache.avro.TestSchemas.A_DINT_RECORD1;
@@ -61,7 +62,6 @@ import static org.apache.avro.TestSchemas.list;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.avro.Schema;
@@ -174,7 +174,7 @@ public class TestSchemaCompatibility {
     assertEquals(SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
     assertEquals(SchemaCompatibility.SchemaCompatibilityResult.incompatible(
         SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, reader, WRITER_SCHEMA,
-        "newfield1", Arrays.asList("", "fields", "1")), compatibility.getResult());
+        "newfield1", asList("", "fields", "1")), compatibility.getResult());
     assertEquals(
         String.format(
             "Data encoded using writer schema:%n%s%n"
@@ -202,7 +202,7 @@ public class TestSchemaCompatibility {
             invalidReader,
             STRING_ARRAY_SCHEMA,
             "reader type: MAP not compatible with writer type: ARRAY",
-            Arrays.asList("")),
+            asList("")),
             invalidReader,
             STRING_ARRAY_SCHEMA,
             String.format(
@@ -235,7 +235,7 @@ public class TestSchemaCompatibility {
             INT_SCHEMA,
             STRING_SCHEMA,
             "reader type: INT not compatible with writer type: STRING",
-            Arrays.asList("")),
+            asList("")),
             INT_SCHEMA,
             STRING_SCHEMA,
             String.format(
@@ -300,11 +300,6 @@ public class TestSchemaCompatibility {
 
       // Tests involving unions:
       new ReaderWriter(EMPTY_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
-      // int unions are actually not readable by float unions, see below test case
-      //new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
-      // long unions are actually not readable by float unions, see below test case
-      //new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(INT_STRING_UNION_SCHEMA, STRING_INT_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
@@ -312,7 +307,6 @@ public class TestSchemaCompatibility {
       new ReaderWriter(LONG_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, INT_UNION_SCHEMA),
-      new ReaderWriter(LONG_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, LONG_UNION_SCHEMA),
       new ReaderWriter(FLOAT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
@@ -379,9 +373,9 @@ public class TestSchemaCompatibility {
     validateIncompatibleSchemas(
         reader,
         writer,
-        Arrays.asList(incompatibility),
-        Arrays.asList(message),
-        Arrays.asList(location)
+        asList(incompatibility),
+        asList(message),
+        asList(location)
     );
   }
 
