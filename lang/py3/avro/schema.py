@@ -1258,7 +1258,7 @@ def SchemaFromJSONData(json_data, names=None):
 # ------------------------------------------------------------------------------
 
 
-def Parse(json_string):
+def parse(json_string):
   """Constructs a Schema from its JSON descriptor in text form.
 
   Args:
