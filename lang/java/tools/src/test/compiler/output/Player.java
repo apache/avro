@@ -5,7 +5,9 @@
  */
 package avro.examples.baseball;
 
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.Utf8;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.SchemaStore;
@@ -460,4 +462,64 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+  @Override public boolean isEncodable() { return true; }
+
+  @Override public void encode(org.apache.avro.io.Encoder out)
+    throws java.io.IOException
+  {
+    out.writeInt(this.number);
+
+    out.writeString(this.first_name);
+
+    out.writeString(this.last_name);
+
+    long size0 = this.position.size();
+    out.writeArrayStart();
+    out.setItemCount(size0);
+    long actualSize0 = 0;
+    for (avro.examples.baseball.Position e0: this.position) {
+      actualSize0++;
+      out.startItem();
+      out.writeEnum(e0.ordinal());
+    }
+    out.writeArrayEnd();
+    if (actualSize0 != size0)
+      throw new java.util.ConcurrentModificationException("Array-size written was " + size0 + ", but element count was " + actualSize0 + ".");
+
+  }
+
+  @Override public void decode(org.apache.avro.io.Decoder in)
+    throws java.io.IOException
+  {
+    this.number = in.readInt();
+
+    this.first_name = in.readString(this.first_name instanceof Utf8 ? (Utf8)this.first_name : null);
+
+    this.last_name = in.readString(this.last_name instanceof Utf8 ? (Utf8)this.last_name : null);
+
+    long size0 = in.readArrayStart();
+    java.util.List<avro.examples.baseball.Position> a0 = this.position; // Need fresh name due to limitation of macro system
+    if (a0 == null)
+      a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema().getElementType());
+    else a0.clear();
+    SpecificData.Array<avro.examples.baseball.Position> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<avro.examples.baseball.Position>)a0 : null);
+    do {
+      for ( ; size0 != 0; size0--) {
+        avro.examples.baseball.Position e0 = (ga0 != null ? ga0.peek() : null);
+        e0 = avro.examples.baseball.Position.values()[in.readEnum()];
+        a0.add(e0);
+      }
+    } while (0 < (size0 = in.arrayNext()));
+
+  }
 }
+
+
+
+
+
+
+
+
+
+
