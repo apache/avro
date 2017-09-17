@@ -1101,4 +1101,34 @@ public class TestReflect {
   public void testNullableByteArrayNullValue() throws Exception {
     checkReadWrite(new NullableBytesTest());
   }
+
+  private enum DocTestEnum {
+    ENUM_1,
+    ENUM_2
+  }
+
+  @AvroDoc("DocTest class docs")
+  private static class DocTest {
+    @AvroDoc("Some Documentation")
+    int foo;
+
+    @AvroDoc("Some other Documentation")
+    DocTestEnum enums;
+
+    @AvroDoc("And again")
+    DefaultTest defaultTest;
+  }
+
+  @Test
+  public void testAvroDoc() {
+    check(DocTest.class,
+            "{\"type\":\"record\",\"name\":\"DocTest\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\","
+                    + "\"doc\":\"DocTest class docs\","
+                    + "\"fields\":[{\"name\":\"foo\",\"type\":\"int\",\"doc\":\"Some Documentation\"},"
+                    + "{\"name\":\"enums\",\"type\":{\"type\":\"enum\",\"name\":\"DocTestEnum\","
+                    + "\"symbols\":[\"ENUM_1\",\"ENUM_2\"]},\"doc\":\"Some other Documentation\"},"
+                    + "{\"name\":\"defaultTest\",\"type\":{\"type\":\"record\",\"name\":\"DefaultTest\","
+                    + "\"fields\":[{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]},\"doc\":\"And again\"}]}");
+  }
+
 }
