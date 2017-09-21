@@ -130,6 +130,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean enableDecimalLogicalType;
 
   /**
+   * Determines which type of classes to generate for date/time related logical types. Either 'joda' or 'java8'.
+   * Defaults to joda for backwards compatibility reasons.
+   *
+   * @parameter default-value="joda"
+   */
+  protected String dateTimeLogicalTypeType = SpecificCompiler.DateTimeLogicalTypeType.JODA.name().toLowerCase();
+
+  /**
    * The current Maven project.
    *
    * @parameter default-value="${project}"
@@ -234,6 +242,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       return SpecificCompiler.FieldVisibility.valueOf(upper);
     } catch (IllegalArgumentException e) {
       return SpecificCompiler.FieldVisibility.PUBLIC_DEPRECATED;
+    }
+  }
+
+  protected SpecificCompiler.DateTimeLogicalTypeType getDateTimeLocalTypeType() {
+    try {
+      String upper = String.valueOf(this.dateTimeLogicalTypeType).trim().toUpperCase();
+      return SpecificCompiler.DateTimeLogicalTypeType.valueOf(upper);
+    } catch (IllegalArgumentException e) {
+      return SpecificCompiler.DateTimeLogicalTypeType.JODA;
     }
   }
 

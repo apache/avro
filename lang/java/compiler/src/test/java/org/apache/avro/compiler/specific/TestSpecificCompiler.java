@@ -17,6 +17,8 @@
  */
 package org.apache.avro.compiler.specific;
 
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeType.JODA;
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeType.JAVA8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -39,6 +41,7 @@ import org.apache.avro.AvroTestUtil;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeType;
 import org.apache.avro.generic.GenericData.StringType;
 import org.junit.After;
 import org.junit.Assert;
@@ -112,9 +115,13 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
+    return createCompiler(JODA);
+  }
+
+  private SpecificCompiler createCompiler(DateTimeLogicalTypeType dateTimeLogicalTypeType) throws IOException {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(this.src);
-    SpecificCompiler compiler = new SpecificCompiler(schema);
+    SpecificCompiler compiler = new SpecificCompiler(schema, dateTimeLogicalTypeType);
     compiler.setTemplateDir(this.velocityTemplateDir);
     compiler.setStringType(StringType.CharSequence);
     return compiler;
@@ -378,6 +385,26 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testJavaTypeWithJava8DateTimeTypes() throws Exception {
+    SpecificCompiler compiler = createCompiler(JAVA8);
+
+    Schema dateSchema = LogicalTypes.date()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeSchema = LogicalTypes.timeMillis()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+
+    // Date/time types should always use upper level java classes
+    Assert.assertEquals("Should use java.time.LocalDate for date type",
+        "java.time.LocalDate", compiler.javaType(dateSchema));
+    Assert.assertEquals("Should use java.time.LocalTime for time-millis type",
+        "java.time.LocalTime", compiler.javaType(timeSchema));
+    Assert.assertEquals("Should use java.time.Instant for timestamp-millis type",
+        "java.time.Instant", compiler.javaType(timestampSchema));
+  }
+
+  @Test
   public void testJavaUnbox() throws Exception {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(false);
@@ -412,7 +439,26 @@ public class TestSpecificCompiler {
         "org.joda.time.LocalTime", compiler.javaUnbox(timeSchema));
     Assert.assertEquals("Should use Joda DateTime for timestamp-millis type",
         "org.joda.time.DateTime", compiler.javaUnbox(timestampSchema));
+  }
 
+  @Test
+  public void testJavaUnboxJava8DateTime() throws Exception {
+    SpecificCompiler compiler = createCompiler(JAVA8);
+
+    Schema dateSchema = LogicalTypes.date()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeSchema = LogicalTypes.timeMillis()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+    // Date/time types should always use upper level java classes, even though
+    // their underlying representations are primitive types
+    Assert.assertEquals("Should use java.time.LocalDate for date type",
+        "java.time.LocalDate", compiler.javaUnbox(dateSchema));
+    Assert.assertEquals("Should use java.time.LocalTime for time-millis type",
+        "java.time.LocalTime", compiler.javaUnbox(timeSchema));
+    Assert.assertEquals("Should use java.time.Instant for timestamp-millis type",
+        "java.time.Instant", compiler.javaUnbox(timestampSchema));
   }
 
   @Test
@@ -473,6 +519,14 @@ public class TestSpecificCompiler {
         new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(
         new SpecificCompiler(logicalTypesWithMultipleFields).compile());
+  }
+
+  @Test
+  public void testLogicalTypesWithMultipleFieldsJava8DateTime() throws Exception {
+    Schema logicalTypesWithMultipleFields = new Schema.Parser().parse(
+        new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
+    assertCompilesWithJavaCompiler(
+        new SpecificCompiler(logicalTypesWithMultipleFields, JAVA8).compile());
   }
 
   @Test
