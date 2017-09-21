@@ -17,6 +17,8 @@
  */
 package org.apache.avro.mojo;
 
+import org.codehaus.plexus.util.FileUtils;
+
 import java.io.File;
 
 /**
@@ -26,19 +28,40 @@ import java.io.File;
  */
 public class TestProtocolMojo extends AbstractAvroMojoTest {
 
-  protected File testPom = new File(getBasedir(),
-          "src/test/resources/unit/protocol/pom.xml");
+  protected File jodaTestPom = new File(getBasedir(),
+          "src/test/resources/unit/protocol/pom-joda.xml");
+  protected File java8TestPom = new File(getBasedir(),
+          "src/test/resources/unit/protocol/pom-java8.xml");
 
-  public void testProtocolMojo() throws Exception {
-    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", testPom);
+  public void testProtocolMojoJoda() throws Exception {
+    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jodaTestPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/protocol/test");
+    File outputDir = new File(getBasedir(), "target/test-harness/protocol-joda/test");
     String[] generatedFiles = new String[]{"ProtocolPrivacy.java",
       "ProtocolTest.java", "ProtocolUser.java"};
 
     assertFilesExist(outputDir, generatedFiles);
+
+    String protocolUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
+    assertTrue(protocolUserContent.contains("org.joda.time.DateTime"));
+  }
+
+  public void testProtocolMojoJava8() throws Exception {
+    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", java8TestPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/protocol-java8/test");
+    String[] generatedFiles = new String[]{"ProtocolPrivacy.java",
+            "ProtocolTest.java", "ProtocolUser.java"};
+
+    assertFilesExist(outputDir, generatedFiles);
+
+    String protocolUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
+    assertTrue(protocolUserContent.contains("java.time.Instant"));
   }
 }

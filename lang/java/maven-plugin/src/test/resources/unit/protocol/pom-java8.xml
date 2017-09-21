@@ -18,7 +18,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
+  <parent>
+    <artifactId>avro-parent</artifactId>
+    <groupId>org.apache.avro</groupId>
+    <version>1.7.3-SNAPSHOT</version>
+    <relativePath>../../../../../../../../../</relativePath>
+  </parent>
   <artifactId>avro-maven-plugin-test</artifactId>
   <packaging>jar</packaging>
 
@@ -30,19 +35,16 @@
         <artifactId>avro-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>schema</id>
+            <id>protocol</id>
             <goals>
-              <goal>schema</goal>
+              <goal>protocol</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/schema</outputDirectory>
-          <imports>
-            <import>${basedir}/src/test/avro/imports</import>
-            <import>${basedir}/src/test/avro/directImport/PrivacyDirectImport.avsc</import>
-          </imports>
+          <outputDirectory>${basedir}/target/test-harness/protocol-java8</outputDirectory>
+          <dateTimeLogicalTypeType>java8</dateTimeLogicalTypeType>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>

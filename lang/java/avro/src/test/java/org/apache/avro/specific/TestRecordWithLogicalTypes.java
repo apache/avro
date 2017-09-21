@@ -264,9 +264,9 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     this.ts = value;
   }
 
-  protected static final org.apache.avro.data.TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.TimeConversions.DateConversion();
-  protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
-  protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
+  protected static final org.apache.avro.data.JodaTimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.JodaTimeConversions.DateConversion();
+  protected static final org.apache.avro.data.JodaTimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.JodaTimeConversions.TimeConversion();
+  protected static final org.apache.avro.data.JodaTimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.JodaTimeConversions.TimestampConversion();
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
   private final org.apache.avro.Conversion<?>[] conversions =
       new org.apache.avro.Conversion<?>[] {

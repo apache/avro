@@ -17,7 +17,13 @@
  */
 package org.apache.avro.mojo;
 
+import org.codehaus.plexus.util.FileUtils;
+
 import java.io.File;
+import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Test the IDL Protocol Mojo.
@@ -26,19 +32,36 @@ import java.io.File;
  */
 public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
-  protected File testPom = new File(getBasedir(),
-          "src/test/resources/unit/idl/pom.xml");
+  protected File jodaTestPom = new File(getBasedir(),
+          "src/test/resources/unit/idl/pom-joda.xml");
+  protected File java8TestPom = new File(getBasedir(),
+          "src/test/resources/unit/idl/pom-java8.xml");
 
-  public void testIdlProtocolMojo() throws Exception {
-    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
+  public void testIdlProtocolMojoJoda() throws Exception {
+    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jodaTestPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/idl/test");
-    String[] generatedFiles = new String[]{"IdlPrivacy.java",
+    File outputDir = new File(getBasedir(), "target/test-harness/idl-joda/test");
+    String[] generatedFileNames = new String[]{"IdlPrivacy.java",
       "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"};
 
-    assertFilesExist(outputDir, generatedFiles);
+    String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
+    assertTrue(idlUserContent.contains("org.joda.time.DateTime"));
+  }
+
+  public void testIdlProtocolMojoJava8() throws Exception {
+    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", java8TestPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/idl-java8/test");
+    String[] generatedFileNames = new String[]{"IdlPrivacy.java",
+      "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"};
+
+    String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
+    assertTrue(idlUserContent.contains("java.time.Instant"));
   }
 }

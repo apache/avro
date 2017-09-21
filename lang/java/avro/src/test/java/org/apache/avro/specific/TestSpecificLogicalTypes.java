@@ -20,9 +20,9 @@ package org.apache.avro.specific;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
-import org.apache.avro.data.TimeConversions.DateConversion;
-import org.apache.avro.data.TimeConversions.TimeConversion;
-import org.apache.avro.data.TimeConversions.TimestampConversion;
+import org.apache.avro.data.JodaTimeConversions.DateConversion;
+import org.apache.avro.data.JodaTimeConversions.TimeConversion;
+import org.apache.avro.data.JodaTimeConversions.TimestampConversion;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
@@ -39,8 +39,14 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.hamcrest.Matchers.comparesEqualTo;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 /**
  * This tests compatibility between classes generated before and after
@@ -53,6 +59,10 @@ import java.util.List;
  * Avro with existing Avro-generated sources. When using classes generated
  * before AVRO-1684, logical types should not be applied by the read or write
  * paths. Those files should behave as they did before.
+ *
+ * For AVRO-2079 {@link TestRecordWithJava8LogicalTypes} was generated from
+ * the same schema and tests were added to test compatibility between the
+ * two versions.
  */
 public class TestSpecificLogicalTypes {
 
@@ -79,6 +89,97 @@ public class TestSpecificLogicalTypes {
         TestRecordWithLogicalTypes.getClassSchema(), data);
 
     Assert.assertEquals("Should match written record", record, actual.get(0));
+  }
+  @Test
+  public void testRecordWithJava8LogicalTypes() throws IOException {
+    TestRecordWithJava8LogicalTypes record = new TestRecordWithJava8LogicalTypes(
+        true,
+        34,
+        35L,
+        3.14F,
+        3019.34,
+        null,
+        java.time.LocalDate.now(),
+        java.time.LocalTime.now(),
+        java.time.Instant.now(),
+        new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+    );
+
+    File data = write(TestRecordWithJava8LogicalTypes.getClassSchema(), record);
+    List<TestRecordWithJava8LogicalTypes> actual = read(
+        TestRecordWithJava8LogicalTypes.getClassSchema(), data);
+
+    Assert.assertEquals("Should match written record", record, actual.get(0));
+  }
+
+  @Test
+  public void testAbilityToReadJava8RecordWrittenAsJodaRecord() throws IOException {
+    TestRecordWithLogicalTypes withJoda = new TestRecordWithLogicalTypes(
+            true,
+            34,
+            35L,
+            3.14F,
+            3019.34,
+            null,
+            LocalDate.now(),
+            LocalTime.now(),
+            DateTime.now().withZone(DateTimeZone.UTC),
+            new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+    );
+
+    File data = write(TestRecordWithLogicalTypes.getClassSchema(), withJoda);
+    List<TestRecordWithJava8LogicalTypes> actual = read(
+        TestRecordWithJava8LogicalTypes.getClassSchema(), data);
+
+    Assert.assertThat(actual, is(not(empty())));
+    TestRecordWithJava8LogicalTypes withJava8 = actual.get(0);
+
+    Assert.assertThat(withJava8.getB(), is(withJoda.getB()));
+    Assert.assertThat(withJava8.getI32(), is(withJoda.getI32()));
+    Assert.assertThat(withJava8.getI64(), is(withJoda.getI64()));
+    Assert.assertThat(withJava8.getF32(), is(withJoda.getF32()));
+    Assert.assertThat(withJava8.getF64(), is(withJoda.getF64()));
+    Assert.assertThat(withJava8.getS(), is(withJoda.getS()));
+    // all of these print in the ISO-8601 format
+    Assert.assertThat(withJava8.getD().toString(), is(withJoda.getD().toString()));
+    Assert.assertThat(withJava8.getT().toString(), is(withJoda.getT().toString()));
+    Assert.assertThat(withJava8.getTs().toString(), is(withJoda.getTs().toString()));
+    Assert.assertThat(withJava8.getDec(), comparesEqualTo(withJoda.getDec()));
+  }
+
+  @Test
+  public void testAbilityToReadJodaRecordWrittenAsJava8Record() throws IOException {
+    TestRecordWithJava8LogicalTypes withJava8 = new TestRecordWithJava8LogicalTypes(
+            true,
+            34,
+            35L,
+            3.14F,
+            3019.34,
+            null,
+            java.time.LocalDate.now(),
+            java.time.LocalTime.now(),
+            java.time.Instant.now(),
+            new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+    );
+
+    File data = write(TestRecordWithJava8LogicalTypes.getClassSchema(), withJava8);
+    List<TestRecordWithLogicalTypes> actual = read(
+        TestRecordWithLogicalTypes.getClassSchema(), data);
+
+    Assert.assertThat(actual, is(not(empty())));
+    TestRecordWithLogicalTypes withJoda = actual.get(0);
+
+    Assert.assertThat(withJoda.getB(), is(withJava8.getB()));
+    Assert.assertThat(withJoda.getI32(), is(withJava8.getI32()));
+    Assert.assertThat(withJoda.getI64(), is(withJava8.getI64()));
+    Assert.assertThat(withJoda.getF32(), is(withJava8.getF32()));
+    Assert.assertThat(withJoda.getF64(), is(withJava8.getF64()));
+    Assert.assertThat(withJoda.getS(), is(withJava8.getS()));
+    // all of these print in the ISO-8601 format
+    Assert.assertThat(withJoda.getD().toString(), is(withJava8.getD().toString()));
+    Assert.assertThat(withJoda.getT().toString(), is(withJava8.getT().toString()));
+    Assert.assertThat(withJoda.getTs().toString(), is(withJava8.getTs().toString()));
+    Assert.assertThat(withJoda.getDec(), comparesEqualTo(withJava8.getDec()));
   }
 
   @Test
