@@ -90,6 +90,9 @@ Trunk (not yet released)
     AVRO-2055: Remove Magic Value From org.apache.avro.hadoop.io.AvroSequenceFile
     (Beluga Behr via gabor)
 
+    AVRO-1047: Remaining warnings in generated Java code exposed by -Xlint:all fixed.
+    (Michael Werle via Niels Basjes)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
