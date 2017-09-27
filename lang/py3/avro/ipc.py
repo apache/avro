@@ -30,6 +30,7 @@ from builtins import str
 from builtins import *
 from future import standard_library
 standard_library.install_aliases()
+from future.utils import with_metaclass
 import abc
 import http.client
 import http.server
@@ -105,7 +106,7 @@ class ConnectionClosedException(schema.AvroException):
 # Base IPC Classes (Requestor/Responder)
 
 
-class BaseRequestor(object, metaclass=abc.ABCMeta):
+class BaseRequestor(with_metaclass(abc.ABCMeta, object)):
   """Base class for the client side of a protocol interaction."""
 
   def __init__(self, local_protocol, transceiver):
@@ -321,7 +322,7 @@ class Requestor(BaseRequestor):
 # ------------------------------------------------------------------------------
 
 
-class Responder(object, metaclass=abc.ABCMeta):
+class Responder(with_metaclass(abc.ABCMeta, object)):
   """Base class for the server side of a protocol interaction."""
 
   def __init__(self, local_protocol):
@@ -563,7 +564,7 @@ class FramedWriter(object):
 # Transceiver (send/receive channel)
 
 
-class Transceiver(object, metaclass=abc.ABCMeta):
+class Transceiver(with_metaclass(abc.ABCMeta, object)):
   @abc.abstractproperty
   def remote_name(self):
     pass

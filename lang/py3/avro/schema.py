@@ -37,22 +37,23 @@ A schema may be one of:
  - A boolean;
  - Null.
 """
-from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
+import sys
+if sys.version_info.major == 3:
+  unicode=str
 
 from builtins import super
-from builtins import dict
 from builtins import filter
-from builtins import str
 from builtins import map
-from builtins import *
+from builtins import str
+from builtins import int
 from future import standard_library
 standard_library.install_aliases()
+from future.utils import with_metaclass
 import abc
-import collections
 import json
 import logging
 import re
@@ -208,7 +209,7 @@ class ImmutableDict(dict):
 # ------------------------------------------------------------------------------
 
 
-class Schema(object, metaclass=abc.ABCMeta):
+class Schema(with_metaclass(abc.ABCMeta, object)):
   """Abstract base class for all Schema classes."""
 
   def __init__(self, type, other_props=None):
@@ -1242,6 +1243,8 @@ _JSONDataParserTypeMap = {
   str: _SchemaFromJSONString,
   list: _SchemaFromJSONArray,
   dict: _SchemaFromJSONObject,
+  unicode: _SchemaFromJSONString,
+  bytes: _SchemaFromJSONString,
 }
 
 
@@ -1262,6 +1265,7 @@ def SchemaFromJSONData(json_data, names=None):
   # Select the appropriate parser based on the JSON data type:
   parser = _JSONDataParserTypeMap.get(type(json_data))
   if parser is None:
+    print(type(json_data))
     raise SchemaParseException(
         'Invalid JSON descriptor for an Avro schema: %r.' % json_data)
   return parser(json_data, names=names)

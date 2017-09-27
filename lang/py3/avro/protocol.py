@@ -27,14 +27,11 @@ from __future__ import absolute_import
 
 
 from builtins import map
-from builtins import dict
 from builtins import str
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *
 import hashlib
 import json
-import logging
 
 from avro import schema
 
@@ -359,6 +356,7 @@ def ProtocolFromJSONData(json_data):
     ProtocolParseException: if the descriptor is invalid.
   """
   if type(json_data) != dict:
+    print(type(json_data))
     raise ProtocolParseException(
         'Invalid JSON descriptor for an Avro protocol: %r' % json_data)
 
