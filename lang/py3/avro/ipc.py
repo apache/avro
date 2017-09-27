@@ -19,7 +19,17 @@
 # limitations under the License.
 
 """RPC/IPC support."""
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
+from builtins import open
+from builtins import super
+from builtins import str
+from builtins import *
+from future import standard_library
+standard_library.install_aliases()
 import abc
 import http.client
 import http.server
@@ -48,19 +58,19 @@ def LoadResource(name):
 HANDSHAKE_REQUEST_SCHEMA_JSON = LoadResource('HandshakeRequest.avsc')
 HANDSHAKE_RESPONSE_SCHEMA_JSON = LoadResource('HandshakeResponse.avsc')
 
-HANDSHAKE_REQUEST_SCHEMA = schema.Parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
-HANDSHAKE_RESPONSE_SCHEMA = schema.Parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
+HANDSHAKE_REQUEST_SCHEMA = schema.parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
+HANDSHAKE_RESPONSE_SCHEMA = schema.parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
 
 HANDSHAKE_REQUESTOR_WRITER = avro_io.DatumWriter(HANDSHAKE_REQUEST_SCHEMA)
 HANDSHAKE_REQUESTOR_READER = avro_io.DatumReader(HANDSHAKE_RESPONSE_SCHEMA)
 HANDSHAKE_RESPONDER_WRITER = avro_io.DatumWriter(HANDSHAKE_RESPONSE_SCHEMA)
 HANDSHAKE_RESPONDER_READER = avro_io.DatumReader(HANDSHAKE_REQUEST_SCHEMA)
 
-META_SCHEMA = schema.Parse('{"type": "map", "values": "bytes"}')
+META_SCHEMA = schema.parse('{"type": "map", "values": "bytes"}')
 META_WRITER = avro_io.DatumWriter(META_SCHEMA)
 META_READER = avro_io.DatumReader(META_SCHEMA)
 
-SYSTEM_ERROR_SCHEMA = schema.Parse('["string"]')
+SYSTEM_ERROR_SCHEMA = schema.parse('["string"]')
 
 AVRO_RPC_MIME = 'avro/binary'
 

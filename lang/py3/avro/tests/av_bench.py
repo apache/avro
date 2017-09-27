@@ -18,6 +18,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
+from builtins import int
+from builtins import open
+from builtins import range
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import logging
 import random
 import string
@@ -63,7 +73,7 @@ def Write(nrecords):
     ]
   }
   """
-  schema = avro.schema.Parse(schema_s)
+  schema = avro.schema.parse(schema_s)
   writer = avro.io.DatumWriter(schema)
 
   with open(FILENAME, 'wb') as out:

@@ -18,6 +18,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import logging
 import os
 import tempfile
@@ -33,7 +41,7 @@ def GetInteropSchema():
   schema_json_path = os.path.join(test_dir, 'interop.avsc')
   with open(schema_json_path, 'r') as f:
     schema_json = f.read()
-  return schema.Parse(schema_json)
+  return schema.parse(schema_json)
 
 
 INTEROP_SCHEMA = GetInteropSchema()

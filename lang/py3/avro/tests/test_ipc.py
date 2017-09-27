@@ -21,7 +21,16 @@
 There are currently no IPC tests within python, in part because there are no
 servers yet available.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
+from builtins import int
+from builtins import super
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import logging
 import threading
 import time

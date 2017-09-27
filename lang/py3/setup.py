@@ -18,6 +18,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import os
 import shutil
 import sys
@@ -94,8 +102,8 @@ def SetupSources():
 
   # Make sure the avro shell script is executable:
   os.chmod(
-      path=os.path.join(py3_dir, 'scripts', 'avro'),
-      mode=0o777,
+      os.path.join(py3_dir, 'scripts', 'avro'),
+      0o777,
   )
 
 
@@ -110,9 +118,6 @@ def ReadVersion():
 
 
 def Main():
-  assert (sys.version_info[0] >= 3), \
-      ('Python version >= 3 required, got %r' % sys.version_info)
-
   if not RunsFromSourceDist():
     SetupSources()
 
@@ -124,6 +129,7 @@ def Main():
       packages = ['avro'],
       package_dir = {'avro': 'avro'},
       scripts = ['scripts/avro'],
+      install_requires=['future'],
 
       package_data = {
           'avro': [

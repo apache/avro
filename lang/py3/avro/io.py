@@ -40,7 +40,18 @@ following mapping:
  - Schema doubles are implemented as float.
  - Schema booleans are implemented as bool.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
+from builtins import bytes
+from builtins import int
+from builtins import range
+from builtins import str
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import binascii
 import json
 import logging

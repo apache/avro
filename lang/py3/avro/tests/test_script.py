@@ -18,6 +18,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import dict
+from builtins import next
+from builtins import map
+from builtins import str
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import csv
 import io
 import json
@@ -85,7 +97,9 @@ def GetScriptPath():
 SCRIPT_PATH = GetScriptPath()
 
 
-def RunScript(*args, stdin=None):
+def RunScript(*args, **_3to2kwargs):
+  if 'stdin' in _3to2kwargs: stdin = _3to2kwargs['stdin']; del _3to2kwargs['stdin']
+  else: stdin = None
   command = [SCRIPT_PATH]
   command.extend(args)
   env = dict(os.environ)
@@ -119,7 +133,7 @@ class TestCat(unittest.TestCase):
 
   @staticmethod
   def WriteAvroFile(file_path):
-    schema = avro.schema.Parse(SCHEMA)
+    schema = avro.schema.parse(SCHEMA)
     with open(file_path, 'wb') as writer:
       with avro.datafile.DataFileWriter(
           writer=writer,
@@ -139,7 +153,9 @@ class TestCat(unittest.TestCase):
   def tearDown(self):
     self._avro_file.close()
 
-  def _RunCat(self, *args, raw=False):
+  def _RunCat(self, *args, **_3to2kwargs):
+    if 'raw' in _3to2kwargs: raw = _3to2kwargs['raw']; del _3to2kwargs['raw']
+    else: raw = False
     """Runs the specified 'avro cat test-file ...' command.
 
     Args:
@@ -259,7 +275,9 @@ class TestWrite(unittest.TestCase):
     self._json_file.close()
     self._schema_file.close()
 
-  def _RunWrite(self, *args, stdin=None):
+  def _RunWrite(self, *args, **_3to2kwargs):
+    if 'stdin' in _3to2kwargs: stdin = _3to2kwargs['stdin']; del _3to2kwargs['stdin']
+    else: stdin = None
     """Runs the specified 'avro write ...' command.
 
     Args:

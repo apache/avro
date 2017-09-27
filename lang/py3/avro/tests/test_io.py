@@ -18,6 +18,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import binascii
 import io
 import logging
@@ -98,7 +105,7 @@ DEFAULT_VALUE_EXAMPLES = (
    '{"A": 5}', {'A': 5}),
 )
 
-LONG_RECORD_SCHEMA = schema.Parse("""
+LONG_RECORD_SCHEMA = schema.parse("""
 {
   "type": "record",
   "name": "Test",
@@ -150,7 +157,7 @@ def check_binary_encoding(number_type):
     logging.debug('Datum: %d', datum)
     logging.debug('Correct Encoding: %s', hex_encoding)
 
-    writer_schema = schema.Parse('"%s"' % number_type.lower())
+    writer_schema = schema.parse('"%s"' % number_type.lower())
     writer, encoder, datum_writer = write_datum(datum, writer_schema)
     writer.seek(0)
     hex_val = avro_hexlify(writer)
@@ -168,7 +175,7 @@ def check_skip_number(number_type):
     logging.debug('Value to Skip: %d', value_to_skip)
 
     # write the value to skip and a known value
-    writer_schema = schema.Parse('"%s"' % number_type.lower())
+    writer_schema = schema.parse('"%s"' % number_type.lower())
     writer, encoder, datum_writer = write_datum(value_to_skip, writer_schema)
     datum_writer.write(VALUE_TO_READ, encoder)
 
@@ -199,7 +206,7 @@ class TestIO(unittest.TestCase):
     for example_schema, datum in SCHEMAS_TO_VALIDATE:
       logging.debug('Schema: %r', example_schema)
       logging.debug('Datum: %r', datum)
-      validated = avro_io.Validate(schema.Parse(example_schema), datum)
+      validated = avro_io.Validate(schema.parse(example_schema), datum)
       logging.debug('Valid: %s', validated)
       if validated: passed += 1
     self.assertEqual(passed, len(SCHEMAS_TO_VALIDATE))
@@ -210,7 +217,7 @@ class TestIO(unittest.TestCase):
       logging.debug('Schema: %s', example_schema)
       logging.debug('Datum: %s', datum)
 
-      writer_schema = schema.Parse(example_schema)
+      writer_schema = schema.parse(example_schema)
       writer, encoder, datum_writer = write_datum(datum, writer_schema)
       round_trip_datum = read_datum(writer, writer_schema)
 
@@ -248,10 +255,10 @@ class TestIO(unittest.TestCase):
     promotable_schemas = ['"int"', '"long"', '"float"', '"double"']
     incorrect = 0
     for i, ws in enumerate(promotable_schemas):
-      writer_schema = schema.Parse(ws)
+      writer_schema = schema.parse(ws)
       datum_to_write = 219
       for rs in promotable_schemas[i + 1:]:
-        reader_schema = schema.Parse(rs)
+        reader_schema = schema.parse(rs)
         writer, enc, dw = write_datum(datum_to_write, writer_schema)
         datum_read = read_datum(writer, writer_schema, reader_schema)
         logging.debug('Writer: %s Reader: %s', writer_schema, reader_schema)
@@ -260,12 +267,12 @@ class TestIO(unittest.TestCase):
     self.assertEqual(incorrect, 0)
 
   def testUnknownSymbol(self):
-    writer_schema = schema.Parse("""\
+    writer_schema = schema.parse("""\
       {"type": "enum", "name": "Test",
        "symbols": ["FOO", "BAR"]}""")
     datum_to_write = 'FOO'
 
-    reader_schema = schema.Parse("""\
+    reader_schema = schema.parse("""\
       {"type": "enum", "name": "Test",
        "symbols": ["BAR", "BAZ"]}""")
 
@@ -281,7 +288,7 @@ class TestIO(unittest.TestCase):
 
     correct = 0
     for field_type, default_json, default_datum in DEFAULT_VALUE_EXAMPLES:
-      reader_schema = schema.Parse("""\
+      reader_schema = schema.parse("""\
         {"type": "record", "name": "Test",
          "fields": [{"name": "H", "type": %s, "default": %s}]}
         """ % (field_type, default_json))
@@ -297,7 +304,7 @@ class TestIO(unittest.TestCase):
     writer_schema = LONG_RECORD_SCHEMA
     datum_to_write = LONG_RECORD_DATUM
 
-    reader_schema = schema.Parse("""\
+    reader_schema = schema.parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "H", "type": "int"}]}""")
 
@@ -311,7 +318,7 @@ class TestIO(unittest.TestCase):
     writer_schema = LONG_RECORD_SCHEMA
     datum_to_write = LONG_RECORD_DATUM
 
-    reader_schema = schema.Parse("""\
+    reader_schema = schema.parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "E", "type": "int"},
                   {"name": "F", "type": "int"}]}""")
@@ -326,7 +333,7 @@ class TestIO(unittest.TestCase):
     writer_schema = LONG_RECORD_SCHEMA
     datum_to_write = LONG_RECORD_DATUM
 
-    reader_schema = schema.Parse("""\
+    reader_schema = schema.parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")
@@ -338,7 +345,7 @@ class TestIO(unittest.TestCase):
     self.assertEqual(datum_to_read, datum_read)
 
   def testTypeException(self):
-    writer_schema = schema.Parse("""\
+    writer_schema = schema.parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")

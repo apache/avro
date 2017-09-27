@@ -17,7 +17,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from avro import ipc
 from avro import protocol
 

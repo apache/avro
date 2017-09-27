@@ -37,8 +37,20 @@ A schema may be one of:
  - A boolean;
  - Null.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
 
+from builtins import super
+from builtins import dict
+from builtins import filter
+from builtins import str
+from builtins import map
+from builtins import *
+from future import standard_library
+standard_library.install_aliases()
 import abc
 import collections
 import json
