@@ -29,7 +29,12 @@ standard_library.install_aliases()
 from builtins import *
 import logging
 import os
+import sys
 import tempfile
+if sys.version_info.major == 3:
+    from tempfile import TemporaryDirectory
+else:
+    from backports.tempfile import TemporaryDirectory
 import unittest
 
 from avro import datafile
@@ -103,7 +108,7 @@ class TestDataFile(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
     cls._temp_dir = (
-        tempfile.TemporaryDirectory(prefix=cls.__name__, suffix='.tmp'))
+        TemporaryDirectory(prefix=cls.__name__, suffix='.tmp'))
     logging.debug('Created temporary directory: %s', cls._temp_dir.name)
 
   @classmethod
