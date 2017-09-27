@@ -4,7 +4,6 @@
  * DO NOT EDIT DIRECTLY
  */
 package avro.examples.baseball;
-@SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public enum Position {
   P, C, B1, B2, B3, SS, LF, CF, RF, DH  ;

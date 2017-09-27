@@ -33,6 +33,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.AvroTestUtil;
@@ -46,13 +47,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 @RunWith(JUnit4.class)
 public class TestSpecificCompiler {
+  private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
+
   private final String schemaSrcPath = "src/test/resources/simple_record.avsc";
   private final String velocityTemplateDir =
       "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
@@ -93,11 +101,33 @@ public class TestSpecificCompiler {
       javaFiles.add(o.writeToDestination(null, dstDir));
     }
 
+    final List<Diagnostic<?>> warnings = new ArrayList<Diagnostic<?>>();
+    DiagnosticListener<JavaFileObject> diagnosticListener = new DiagnosticListener<JavaFileObject>() {
+      @Override
+      public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
+        switch (diagnostic.getKind()) {
+        case ERROR:
+          // Do not add these to warnings becuase they will fail the compile, anyway.
+          LOG.error("{}", diagnostic);
+          break;
+        case WARNING:
+        case MANDATORY_WARNING:
+          LOG.warn("{}", diagnostic);
+          warnings.add(diagnostic);
+          break;
+        case NOTE:
+        case OTHER:
+          LOG.debug("{}", diagnostic);
+          break;
+        }
+      }
+    };
     JavaCompiler.CompilationTask cTask = compiler.getTask(null, fileManager,
-            null, null, null, fileManager.getJavaFileObjects(
-                    javaFiles.toArray(new File[javaFiles.size()])));
+            diagnosticListener, Collections.singletonList("-Xlint:all"), null,
+            fileManager.getJavaFileObjects(javaFiles.toArray(new File[javaFiles.size()])));
     boolean compilesWithoutError = cTask.call();
     assertTrue(compilesWithoutError);
+    assertEquals("Warnings produced when compiling generated code with -Xlint:all", 0, warnings.size());
   }
 
   private static Schema createSampleRecordSchema(int numStringFields, int numDoubleFields) {
@@ -473,6 +503,14 @@ public class TestSpecificCompiler {
         new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(
         new SpecificCompiler(logicalTypesWithMultipleFields).compile());
+  }
+
+  @Test
+  public void testUnionAndFixedFields() throws Exception {
+    Schema unionTypesWithMultipleFields = new Schema.Parser().parse(
+        new File("src/test/resources/union_and_fixed_fields.avsc"));
+    assertCompilesWithJavaCompiler(
+        new SpecificCompiler(unionTypesWithMultipleFields).compile());
   }
 
   @Test
