@@ -21,12 +21,12 @@
 There are currently no IPC tests within python, in part because there are no
 servers yet available.
 """
-from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
 from builtins import int
+from past.builtins import long, unicode
 from builtins import super
 from future import standard_library
 standard_library.install_aliases()
@@ -91,7 +91,7 @@ ECHO_PROTOCOL = protocol.Parse(ECHO_PROTOCOL_JSON)
 
 class EchoResponder(ipc.Responder):
   def __init__(self):
-    super(EchoResponder, self).__init__(
+    super().__init__(
         local_protocol=ECHO_PROTOCOL,
     )
 
@@ -105,7 +105,7 @@ class EchoResponder(ipc.Responder):
 class TestIPC(unittest.TestCase):
 
   def __init__(self, *args, **kwargs):
-    super(TestIPC, self).__init__(*args, **kwargs)
+    super().__init__(*args, **kwargs)
     # Reference to an Echo RPC over HTTP server:
     self._server = None
 
@@ -147,13 +147,13 @@ class TestIPC(unittest.TestCase):
       )
       response = requestor.Request(
           message_name='ping',
-          request_datum={'ping': {'timestamp': 31415, 'text': 'hello ping'}},
+          request_datum={'ping': {'timestamp': long(31415), 'text': unicode('hello ping')}},
       )
       logging.info('Received echo response: %s', response)
 
       response = requestor.Request(
           message_name='ping',
-          request_datum={'ping': {'timestamp': 123456, 'text': 'hello again'}},
+          request_datum={'ping': {'timestamp': long(123456), 'text': unicode('hello again')}},
       )
       logging.info('Received echo response: %s', response)
 

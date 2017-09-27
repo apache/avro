@@ -19,17 +19,6 @@
 # limitations under the License.
 
 from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from builtins import dict
-from builtins import next
-from builtins import map
-from builtins import str
-from builtins import open
-from future import standard_library
-standard_library.install_aliases()
-from builtins import *
 import csv
 import io
 import json
@@ -97,9 +86,7 @@ def GetScriptPath():
 SCRIPT_PATH = GetScriptPath()
 
 
-def RunScript(*args, **_3to2kwargs):
-  if 'stdin' in _3to2kwargs: stdin = _3to2kwargs['stdin']; del _3to2kwargs['stdin']
-  else: stdin = None
+def RunScript(*args, **kwargs):
   command = [SCRIPT_PATH]
   command.extend(args)
   env = dict(os.environ)
@@ -108,7 +95,7 @@ def RunScript(*args, **_3to2kwargs):
   process = subprocess.Popen(
       args=command,
       env=env,
-      stdin=stdin,
+      stdin=kwargs.get('stdin', None),
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,
   )
@@ -153,9 +140,7 @@ class TestCat(unittest.TestCase):
   def tearDown(self):
     self._avro_file.close()
 
-  def _RunCat(self, *args, **_3to2kwargs):
-    if 'raw' in _3to2kwargs: raw = _3to2kwargs['raw']; del _3to2kwargs['raw']
-    else: raw = False
+  def _RunCat(self, *args, **kwargs):
     """Runs the specified 'avro cat test-file ...' command.
 
     Args:
@@ -165,7 +150,7 @@ class TestCat(unittest.TestCase):
       The command stdout (as bytes if raw is set, or else as string).
     """
     out = RunScript('cat', self._avro_file.name, *args)
-    if raw:
+    if kwargs.get('raw'):
       return out
     else:
       return out.decode('utf-8')
@@ -275,9 +260,7 @@ class TestWrite(unittest.TestCase):
     self._json_file.close()
     self._schema_file.close()
 
-  def _RunWrite(self, *args, **_3to2kwargs):
-    if 'stdin' in _3to2kwargs: stdin = _3to2kwargs['stdin']; del _3to2kwargs['stdin']
-    else: stdin = None
+  def _RunWrite(self, *args, **kwargs):
     """Runs the specified 'avro write ...' command.
 
     Args:
@@ -288,7 +271,7 @@ class TestWrite(unittest.TestCase):
     """
     return RunScript(
         'write', '--schema', self._schema_file.name,
-        stdin=stdin, *args
+        stdin=kwargs.get('stdin'), *args
     )
 
   def LoadAvro(self, filename):
