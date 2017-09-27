@@ -133,7 +133,7 @@ def Main():
       },
       setup_requires=['pytest-runner'],
       test_suite='pytest',
-      tests_require=['pytest', 'future'],
+      tests_requires=['pytest', 'future', 'backports.tempfile'],
 
       # metadata for upload to PyPI
       author = 'Apache Avro',
