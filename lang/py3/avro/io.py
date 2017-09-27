@@ -49,9 +49,9 @@ from builtins import bytes
 from builtins import int
 from builtins import range
 from builtins import str
+from past.builtins import unicode, long
 from future import standard_library
 standard_library.install_aliases()
-from builtins import *
 import binascii
 import json
 import logging
@@ -832,7 +832,7 @@ class DatumWriter(object):
     elif writer_schema.type == 'int':
       encoder.write_int(datum)
     elif writer_schema.type == 'long':
-      encoder.write_long(datum)
+      encoder.write_int(datum)
     elif writer_schema.type == 'float':
       encoder.write_float(datum)
     elif writer_schema.type == 'double':

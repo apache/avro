@@ -19,7 +19,6 @@
 # limitations under the License.
 
 """RPC/IPC support."""
-from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
@@ -27,7 +26,6 @@ from __future__ import absolute_import
 from builtins import open
 from builtins import super
 from builtins import str
-from builtins import *
 from future import standard_library
 standard_library.install_aliases()
 from future.utils import with_metaclass
@@ -681,6 +679,7 @@ def _MakeHandlerClass(responder):
 class MultiThreadedHTTPServer(
     socketserver.ThreadingMixIn,
     http.server.HTTPServer,
+  object
 ):
   """Multi-threaded HTTP server."""
   pass
@@ -697,7 +696,7 @@ class AvroIpcHttpServer(MultiThreadedHTTPServer):
       port: TCP port the server listens on, eg. 8000.
       responder: Responder implementation to handle RPCs.
     """
-    super(AvroIpcHttpServer, self).__init__(
+    super().__init__(
         server_address=(interface, port),
         RequestHandlerClass=_MakeHandlerClass(responder),
     )
