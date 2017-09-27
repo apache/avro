@@ -1298,3 +1298,7 @@ def parse(json_string):
 
   # construct the Avro Schema object
   return SchemaFromJSONData(json_data, names)
+
+def Parse(json_string):
+  """Clone of lowercase method to ensure 2/3 compatibility"""
+  return parse(json_string)
