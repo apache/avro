@@ -18,17 +18,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from builtins import open
-from future import standard_library
-standard_library.install_aliases()
-from builtins import *
 import os
 import shutil
-import sys
 
 from setuptools import setup
 
@@ -140,9 +131,9 @@ def Main():
               NOTICE_FILE_NAME,
           ],
       },
-
-      test_suite='avro.tests.run_tests',
-      tests_require=[],
+      setup_requires=['pytest-runner'],
+      test_suite='pytest',
+      tests_require=['pytest', 'future'],
 
       # metadata for upload to PyPI
       author = 'Apache Avro',
