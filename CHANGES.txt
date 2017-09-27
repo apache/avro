@@ -17,6 +17,8 @@ Trunk (not yet released)
     AVRO-1485: Specification says Record field type can be record name but implementation allows any named type.
     (Nandor Kollar via gabor)
 
+    AVRO-1047: Remaining warnings in generated Java code exposed by -Xlint:all fixed.
+
 Avro 1.8.2 (10 April 2017)
 
   INCOMPATIBLE CHANGES
