@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -189,7 +189,7 @@ class BaseRequestor(object):
       * a one-byte error flag boolean, followed by either:
         o if the error flag is false,
           the message response, serialized per the message's response schema.
-        o if the error flag is true, 
+        o if the error flag is true,
           the error, serialized per the message's error union schema.
     """
     # response metadata
@@ -267,11 +267,11 @@ class Responder(object):
     buffer_encoder = io.BinaryEncoder(buffer_writer)
     error = None
     response_metadata = {}
-    
+
     try:
       remote_protocol = self.process_handshake(buffer_decoder, buffer_encoder)
       # handshake failure
-      if remote_protocol is None:  
+      if remote_protocol is None:
         return buffer_writer.getvalue()
 
       # read request using remote protocol
@@ -296,9 +296,9 @@ class Responder(object):
       # perform server logic
       try:
         response = self.invoke(local_message, request)
-      except AvroRemoteException, e:
+      except AvroRemotelxception as e:
         error = e
-      except Exception, e:
+      except Exception as e:
         error = AvroRemoteException(str(e))
 
       # write response using local protocol
@@ -310,7 +310,7 @@ class Responder(object):
       else:
         writers_schema = local_message.errors
         self.write_error(writers_schema, error, buffer_encoder)
-    except schema.AvroException, e:
+    except schema.AvroException as e:
       error = AvroRemoteException(str(e))
       buffer_encoder = io.BinaryEncoder(StringIO())
       META_WRITER.write(response_metadata, buffer_encoder)
