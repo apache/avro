@@ -296,7 +296,7 @@ class Responder(object):
       # perform server logic
       try:
         response = self.invoke(local_message, request)
-      except AvroRemotelxception as e:
+      except AvroRemoteException as e:
         error = e
       except Exception as e:
         error = AvroRemoteException(str(e))
