@@ -77,6 +77,20 @@ public class TestSchemas {
   static final Schema FIXED_4_BYTES = Schema.createFixed("Fixed", null, null, 4);
   static final Schema FIXED_8_BYTES = Schema.createFixed("Fixed", null, null, 8);
 
+  static final Schema BYTES_DECIMAL_3_3 =
+    LogicalTypes.decimal(3, 3).addToSchema(Schema.create(Schema.Type.BYTES));
+  static final Schema BYTES_DECIMAL_3_2 =
+    LogicalTypes.decimal(3, 2).addToSchema(Schema.create(Schema.Type.BYTES));
+  static final Schema BYTES_DECIMAL_4_3 =
+    LogicalTypes.decimal(4, 3).addToSchema(Schema.create(Schema.Type.BYTES));
+
+  static final Schema FIXED_DECIMAL_3_3 =
+    LogicalTypes.decimal(3, 3).addToSchema(Schema.createFixed("Fixed", null, null, 8));
+  static final Schema FIXED_DECIMAL_3_2 =
+    LogicalTypes.decimal(3, 2).addToSchema(Schema.createFixed("Fixed", null, null, 8));
+  static final Schema FIXED_DECIMAL_4_3 =
+    LogicalTypes.decimal(4, 3).addToSchema(Schema.createFixed("Fixed", null, null, 8));
+
   static {
     EMPTY_RECORD1.setFields(Collections.<Field>emptyList());
     EMPTY_RECORD2.setFields(Collections.<Field>emptyList());
