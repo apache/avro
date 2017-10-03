@@ -25,8 +25,6 @@ import java.util.Arrays;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.io.BinaryData;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.Encoder;
 
 /** Base class for generated fixed-sized data classes. */
 public abstract class SpecificFixed
@@ -67,16 +65,5 @@ public abstract class SpecificFixed
   @Override public abstract void readExternal(ObjectInput in)
     throws IOException;
 
-  public void encode(Encoder out) throws IOException {
-    // Ideally, this would be abstract, but that would not be
-    // backward compatible.
-    throw new UnsupportedOperationException();
-  }
-
-  public void decode(Decoder in) throws IOException {
-    // Ideally, this would be abstract, but that would not be
-    // backward compatible.
-    throw new UnsupportedOperationException();
-  }
 }
 
