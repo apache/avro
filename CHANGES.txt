@@ -93,6 +93,9 @@ Trunk (not yet released)
     AVRO-1047: Remaining warnings in generated Java code exposed by -Xlint:all fixed.
     (Michael Werle via Niels Basjes)
 
+    AVRO-2080: Fix Javadoc Warnings in Generated Records
+    (Bridger Howell via Niels Basjes)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
