@@ -499,17 +499,18 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
     long size0 = in.readArrayStart();
     java.util.List<avro.examples.baseball.Position> a0 = this.position; // Need fresh name due to limitation of macro system
-    if (a0 == null)
-      a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema().getElementType());
-    else a0.clear();
+    if (a0 == null) {
+      a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema());
+      this.position = a0;
+    } else a0.clear();
     SpecificData.Array<avro.examples.baseball.Position> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<avro.examples.baseball.Position>)a0 : null);
-    do {
+    for ( ; 0 < size0; size0 = in.arrayNext()) {
       for ( ; size0 != 0; size0--) {
         avro.examples.baseball.Position e0 = (ga0 != null ? ga0.peek() : null);
         e0 = avro.examples.baseball.Position.values()[in.readEnum()];
         a0.add(e0);
       }
-    } while (0 < (size0 = in.arrayNext()));
+    }
 
   }
 }

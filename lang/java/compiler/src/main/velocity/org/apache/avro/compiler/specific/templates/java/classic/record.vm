@@ -690,11 +690,12 @@ $II    $var = in.readString(${var} instanceof Utf8 ? (Utf8)${var} : null);
 #set ($gat = "SpecificData.Array<${et}>")
 $I    long size${nv} = in.readArrayStart();
 $I    $t a${nv} = ${var}; // Need fresh name due to limitation of macro system
-$I    if (a${nv} == null)
-$I      a${nv} = new ${gat}((int)size${nv}, ${rs}.getElementType());
-$I    else a${nv}.clear();
+$I    if (a${nv} == null) {
+$I      a${nv} = new ${gat}((int)size${nv}, ${rs});
+$I      $var = a${nv};
+$I    } else a${nv}.clear();
 $I    $gat ga${nv} = (a${nv} instanceof SpecificData.Array ? (${gat})a${nv} : null);
-$I    do {
+$I    for ( ; 0 < size${nv}; size${nv} = in.arrayNext()) {
 $I      for ( ; size${nv} != 0; size${nv}--) {
 $I        $et e${nv} = (ga${nv} != null ? ga${nv}.peek() : null);
 #set ($var = "e${nv}")
@@ -707,7 +708,7 @@ $I        $et e${nv} = (ga${nv} != null ? ga${nv}.peek() : null);
 #set ($I = $this.indent($indent))
 $I        a${nv}.add(e${nv});
 $I      }
-$I    } while (0 < (size${nv} = in.arrayNext()));
+$I    }
 #end
 
 #macro( decodeMap $indent $var $s $rs )
@@ -717,10 +718,11 @@ $I    } while (0 < (size${nv} = in.arrayNext()));
 #set ($vt = $this.javaType($s.ValueType))
 $I    long size${nv} = in.readMapStart();
 $I    $t m${nv} = ${var}; // Need fresh name due to limitation of macro system
-$I    if (m${nv} == null)
+$I    if (m${nv} == null) {
 $I      m${nv} = new java.util.HashMap<${kt},${vt}>((int)size${nv});
-$I    else m${nv}.clear();
-$I    do {
+$I      $var = m${nv};
+$I    } else m${nv}.clear();
+$I    for ( ; 0 < size${nv}; size${nv} = in.mapNext()) {
 $I      for ( ; size${nv} != 0; size${nv}--) {
 $I        $kt k${nv} = null;
 #decodeString( "$I    " "k${nv}" $s )
@@ -735,7 +737,7 @@ $I        $vt v${nv} = null;
 #set ($I = $this.indent($indent))
 $I        m${nv}.put(k${nv}, v${nv});
 $I      }
-$I    } while (0 < (size${nv} = in.arrayNext()));
+$I    }
 #end
 
 #macro( decodeUnion $indent $var $s $rs )
