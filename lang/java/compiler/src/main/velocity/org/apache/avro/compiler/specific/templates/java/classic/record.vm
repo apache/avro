@@ -475,8 +475,8 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
-#if ($this.isEncodable($schema))
-  @Override public boolean isEncodable() { return true; }
+#if ($this.isCustomCodable($schema))
+  @Override public boolean hasCustomCoders() { return true; }
 
   @Override public void encode(org.apache.avro.io.Encoder out)
     throws java.io.IOException

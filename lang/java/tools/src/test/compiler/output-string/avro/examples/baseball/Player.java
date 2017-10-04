@@ -462,7 +462,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
-  @Override public boolean isEncodable() { return true; }
+  @Override public boolean hasCustomCoders() { return true; }
 
   @Override public void encode(org.apache.avro.io.Encoder out)
     throws java.io.IOException

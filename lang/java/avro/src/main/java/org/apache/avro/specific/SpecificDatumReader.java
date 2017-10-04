@@ -106,11 +106,11 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     throws IOException {
     SpecificData data = getSpecificData();
     Object r = data.newRecord(old, expected);
-    if (SpecificData.get().useEncoders()
+    if (SpecificData.get().useCustomCoders()
         && r instanceof SpecificRecordBase) // TODO: Is this needed?
     {
       SpecificRecordBase d = (SpecificRecordBase) r;
-      if (d.isEncodable()) {
+      if (d.hasCustomCoders()) {
         d.decode(in);
         return d;
       }
