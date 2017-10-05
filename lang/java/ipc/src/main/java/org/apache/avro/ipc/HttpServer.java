@@ -26,6 +26,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -52,6 +53,8 @@ public class HttpServer implements Server {
   public HttpServer(ResponderServlet servlet, String bindAddress, int port) throws IOException {
     this.server = new org.eclipse.jetty.server.Server();
     ServerConnector connector = new ServerConnector(this.server);
+    connector.setAcceptQueueSize(128);
+    connector.setIdleTimeout(10000);
     if (bindAddress != null) {
       connector.setHost(bindAddress);
     }
@@ -59,8 +62,10 @@ public class HttpServer implements Server {
     server.addConnector(connector);
 
     ServletHandler handler = new ServletHandler();
-    server.setHandler(handler);
     handler.addServletWithMapping(new ServletHolder(servlet), "/*");
+    ServletContextHandler sch = new ServletContextHandler();
+    sch.setServletHandler(handler);
+    server.setHandler(sch);
   }
 
   /** Constructs a server to run with the given connector. */
