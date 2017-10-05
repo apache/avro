@@ -32,7 +32,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -41,6 +40,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * This tests compatibility between classes generated before and after
@@ -78,7 +79,7 @@ public class TestSpecificLogicalTypes {
     List<TestRecordWithLogicalTypes> actual = read(
         TestRecordWithLogicalTypes.getClassSchema(), data);
 
-    Assert.assertEquals("Should match written record", record, actual.get(0));
+    assertEquals("Should match written record", record, actual.get(0));
   }
 
   @Test
@@ -109,7 +110,7 @@ public class TestSpecificLogicalTypes {
     List<TestRecordWithoutLogicalTypes> actual = read(
         TestRecordWithoutLogicalTypes.getClassSchema(), data);
 
-    Assert.assertEquals("Should match written record", record, actual.get(0));
+    assertEquals("Should match written record", record, actual.get(0));
   }
 
   @Test
@@ -150,7 +151,7 @@ public class TestSpecificLogicalTypes {
         decimal
     );
 
-    Assert.assertEquals("Should match written record", expected, actual.get(0));
+    assertEquals("Should match written record", expected, actual.get(0));
   }
 
   @Test
@@ -191,7 +192,7 @@ public class TestSpecificLogicalTypes {
         new Conversions.DecimalConversion().toBytes(decimal, null, LogicalTypes.decimal(9, 2))
     );
 
-    Assert.assertEquals("Should match written record", expected, actual.get(0));
+    assertEquals("Should match written record", expected, actual.get(0));
   }
 
   private <D> List<D> read(Schema schema, File file)
@@ -212,6 +213,18 @@ public class TestSpecificLogicalTypes {
     }
 
     return data;
+  }
+
+  @Test
+  public void testRecordWithDecimalLogicalTypeWithDefault() throws IOException {
+    SpecificData.get().addLogicalTypeConversion(new Conversions.DecimalConversion());
+    TestRecordWithDecimalFieldWithDefault record = TestRecordWithDecimalFieldWithDefault.newBuilder().build();
+
+    File data = write(TestRecordWithDecimalFieldWithDefault.getClassSchema(), record);
+    List<TestRecordWithDecimalFieldWithDefault> actual = read(
+      TestRecordWithDecimalFieldWithDefault.getClassSchema(), data);
+
+    assertEquals(new BigDecimal(0.00).setScale(2), actual.get(0).getF1());
   }
 
   @SuppressWarnings("unchecked")

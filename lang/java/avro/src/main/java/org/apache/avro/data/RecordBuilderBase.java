@@ -37,7 +37,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
   private final Schema schema;
   private final Field[] fields;
   private final boolean[] fieldSetFlags;
-  private final GenericData data;
+  protected final GenericData data;
 
   protected final Schema schema() { return schema; }
   protected final Field[] fields() { return fields; }
