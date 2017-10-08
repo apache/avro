@@ -122,7 +122,6 @@ public class SpecificData extends GenericData {
   /** Return the singleton instance. */
   public static SpecificData get() { return INSTANCE; }
 
-  // TODO: init using properties
   private static final boolean USE_CUSTOM_CODERS
     = Boolean.parseBoolean(System.getProperty("org.apache.avro.specific.use_custom_coders","false"));
   public boolean useCustomCoders() { return USE_CUSTOM_CODERS; }
