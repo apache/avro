@@ -38,6 +38,7 @@ import static org.apache.avro.TestSchemas.NULL_SCHEMA;
 import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.list;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
@@ -113,10 +114,7 @@ public class TestSchemaCompatibilityMissingUnionBranch {
 
   @Test
   public void testMissingUnionBranch() throws Exception {
-    List<SchemaIncompatibilityType> types = new ArrayList<SchemaCompatibility.SchemaIncompatibilityType>(details.size());
-    for (int i = 0 ; i < details.size() ; i++) {
-      types.add(SchemaIncompatibilityType.MISSING_UNION_BRANCH);
-    }
+    List<SchemaIncompatibilityType> types = Collections.nCopies(details.size(), SchemaIncompatibilityType.MISSING_UNION_BRANCH);
     validateIncompatibleSchemas(reader, writer, types, details, location);
   }
 }

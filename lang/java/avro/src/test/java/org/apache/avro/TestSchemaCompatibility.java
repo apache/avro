@@ -62,10 +62,12 @@ import static org.apache.avro.TestSchemas.list;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaCompatibility;
 import org.apache.avro.SchemaCompatibility.Incompatibility;
 import org.apache.avro.SchemaCompatibility.SchemaCompatibilityResult;
 import org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
@@ -82,7 +84,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -381,11 +382,6 @@ public class TestSchemaCompatibility {
 
   // -----------------------------------------------------------------------------------------------
 
-  /**
-   * The reader/writer pairs that are incompatible are now moved to specific test classes,
-   * one class per error case (for easier pinpointing of errors).
-   * The method to validate incompatibility is still here.
-   */
   public static void validateIncompatibleSchemas(Schema reader, Schema writer,
       List<SchemaIncompatibilityType> incompatibilityTypes, List<String> messages, List<String> locations) {
     SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(reader, writer);
@@ -547,5 +543,13 @@ public class TestSchemaCompatibility {
           expectedDecodedDatum, datum, writerSchema, readerSchema, decodedDatum),
           expectedDecodedDatum, decodedDatum);
     }
+  }
+  
+  Deque<String> asDeqeue(String... args) {
+    Deque<String> dq = new ArrayDeque<String>();
+    List<String> x = Arrays.asList(args);
+    Collections.reverse(x);
+    dq.addAll(x);
+    return dq;
   }
 }
