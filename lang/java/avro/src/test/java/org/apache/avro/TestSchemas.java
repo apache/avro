@@ -73,6 +73,12 @@ public class TestSchemas {
       Schema.createRecord("Record1", null, null, false);
   static final Schema A_INT_B_DINT_RECORD1 = Schema.createRecord("Record1", null, null, false);
   static final Schema A_DINT_B_DINT_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DFIXED_4_BYTES_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DFIXED_8_BYTES_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DINT_STRING_UNION_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DINT_UNION_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DENUM_1_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema A_DINT_B_DENUM_2_RECORD1 = Schema.createRecord("Record1", null, null, false);
 
   static final Schema FIXED_4_BYTES = Schema.createFixed("Fixed", null, null, 4);
   static final Schema FIXED_8_BYTES = Schema.createFixed("Fixed", null, null, 8);
@@ -89,6 +95,24 @@ public class TestSchemas {
         list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, 0)));
     A_DINT_B_DINT_RECORD1
         .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_SCHEMA, null, 0)));
+    A_DINT_B_DFIXED_4_BYTES_RECORD1.setFields(list(
+        new Field("a", INT_SCHEMA, null, 0),
+        new Field("b", FIXED_4_BYTES, null, 0)));
+    A_DINT_B_DFIXED_8_BYTES_RECORD1.setFields(list(
+        new Field("a", INT_SCHEMA, null, 0),
+        new Field("b", FIXED_8_BYTES, null, 0)));
+    A_DINT_B_DINT_STRING_UNION_RECORD1.setFields(list(
+        new Field("a", INT_SCHEMA, null, 0),
+        new Field("b", INT_STRING_UNION_SCHEMA, null, 0)));
+    A_DINT_B_DINT_UNION_RECORD1.setFields(list(
+        new Field("a", INT_SCHEMA, null, 0),
+        new Field("b", INT_UNION_SCHEMA, null, 0)));
+    A_DINT_B_DENUM_1_RECORD1.setFields(list(
+        new Field("a", INT_SCHEMA, null, 0),
+        new Field("b", ENUM1_AB_SCHEMA, null, 0)));
+    A_DINT_B_DENUM_2_RECORD1.setFields(list(
+        new Field("a", INT_SCHEMA, null, 0),
+        new Field("b", ENUM2_AB_SCHEMA, null, 0)));
   }
 
   // Recursive records
@@ -124,7 +148,7 @@ public class TestSchemas {
 
   /** Borrowed from the Guava library. */
   static <E> ArrayList<E> list(E... elements) {
-    final ArrayList<E> list = new ArrayList<>();
+    final ArrayList<E> list = new ArrayList<E>();
     Collections.addAll(list, elements);
     return list;
   }
