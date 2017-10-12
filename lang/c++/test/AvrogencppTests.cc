@@ -141,6 +141,9 @@ void checkDefaultValues(const testgen_r::RootRecord& r)
     BOOST_CHECK_CLOSE(r.withDefaultValue.d1, 5.67, 1e-10);
     BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[0], 2);
     BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[1], 3);
+    BOOST_CHECK_EQUAL(r.myfixedwithDefaultValue.get_val()[0], 0x01);
+    BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[0], 0xff);
+    BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[1], 0xaa);
 }
 
 

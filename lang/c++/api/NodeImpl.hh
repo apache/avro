@@ -558,7 +558,7 @@ inline NodePtr resolveSymbol(const NodePtr &node)
 }
 
 template< typename T >
-inline std::string int_to_hex( T i )
+inline std::string intToHex( T i )
 {
   std::stringstream stream;
   stream << "\\u"

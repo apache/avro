@@ -208,9 +208,15 @@ NodeRecord::printJson(std::ostream &os, int depth) const
 
         if (!defaultValues.empty()) {
           if (defaultValues[i].type() == AVRO_NULL) {
-            // No "default" field
+            // No "default" field unless it is a nullable field (union with
+            // first leaf of type null).
+            if (leafAttributes_.get(i)->type() == AVRO_UNION &&
+                leafAttributes_.get(i)->leafAt(0)->type() == AVRO_NULL) {
+              os << ",\n" << indent(depth) << "\"default\": null";
+            }
           } else {
             os << ",\n" << indent(depth) << "\"default\": ";
+            std::cout << leafNameAttributes_.get(i) << "\n";
             leafAttributes_.get(i)->printDefaultToJson(defaultValues[i], os,
                                                        depth);
           }
@@ -251,10 +257,8 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
       std::string s;
       s.resize(vg.size() * kByteStringSize);
       for (unsigned int i = 0; i < vg.size(); i++) {
-        std::string hex_string = int_to_hex(static_cast<int>(vg[i]));
-        for (int j = 0; j < kByteStringSize; j++) {
-          s[i*kByteStringSize + j] = hex_string[j];
-        }
+        std::string hex_string = intToHex(static_cast<int>(vg[i]));
+        s.replace(i*kByteStringSize, kByteStringSize, hex_string);
       }
       os << "\"" << s << "\"";
     } break;
@@ -278,23 +282,15 @@ void NodeFixed::printDefaultToJson(const GenericDatum &g, std::ostream &os,
   std::string s;
   s.resize(vg.size() * kByteStringSize);
   for (unsigned int i = 0; i < vg.size(); i++) {
-    std::string hex_string = int_to_hex(static_cast<int>(vg[i]));
-    for (int j = 0; j < kByteStringSize; j++) {
-      s[i*kByteStringSize + j] = hex_string[j];
-    }
+    std::string hex_string = intToHex(static_cast<int>(vg[i]));
+    s.replace(i*kByteStringSize, kByteStringSize, hex_string);
   }
   os << "\"" << s << "\"";
 }
 
 void NodeUnion::printDefaultToJson(const GenericDatum &g, std::ostream &os,
                                    int depth) const {
-  assert(g.type() == AVRO_UNION);
-  // ex: "type": [ "string", "int" ], "default": "sval"
-  if (g.value<GenericUnion>().datum().type() == AVRO_NULL) {
-    os << "null";
-  } else {
-    leafAt(0)->printDefaultToJson( g.value<GenericUnion>().datum(), os, depth);
-  }
+  leafAt(0)->printDefaultToJson(g, os, depth);
 }
 
 void NodeArray::printDefaultToJson(const GenericDatum &g, std::ostream &os,
