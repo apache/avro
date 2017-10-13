@@ -8,8 +8,8 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 * Currently tested against Java 7-8
     * If you need support for Java 6, version 0.9.1 was the last supported version
-* Currently built against Gradle 4.1
-    * Currently tested against Gradle 3.0-3.51 and 4.0-4.1
+* Currently built against Gradle 4.2.1
+    * Currently tested against Gradle 3.0-3.51 and 4.0-4.2.1
     * If you need support for Gradle 2.0-2.14.1, version 0.9.1 was the last version tested for compatibility
     * Other versions may be compatible, but Gradle 1.x versions are unlikely to work
 * Currently built against Avro 1.8.1
