@@ -1,9 +1,10 @@
-sudo: true
+sudo: true # required for hostname addon; https://docs.travis-ci.com/user/hostname
 language: java
 jdk: oraclejdk8
 env:
   global:
     - TERM="dumb"
+    - GRADLE_OPTS="-Xmx386m -Xms386m"
 addons:
   # OpenJDK7 fails with long host names; https://github.com/travis-ci/travis-ci/issues/5227
   hosts:
@@ -18,13 +19,9 @@ matrix:
     - jdk: oraclejdk9
       os: linux
       dist: trusty
-      env:
-        - GRADLE_OPTS="-Xmx386m -Xms386m"
     - jdk: oraclejdk8
       os: linux
       dist: trusty
-      env:
-        - GRADLE_OPTS="-Xmx386m -Xms386m"
     - jdk: oraclejdk7
       os: linux
       dist: precise # on trusty, Oracle JDK 7 is not provided because it reached End of Life in April 2015.
@@ -33,10 +30,6 @@ matrix:
     - jdk: openjdk8
       os: linux
       dist: trusty
-      env:
-        - GRADLE_OPTS="-Xmx386m -Xms386m"
     - jdk: openjdk7
       os: linux
       dist: precise # on trusty, openjdk7 fails when connecting to Gradle distro site/plugin portal due to TLS configuration; java.security.NoSuchProviderException: no such provider: SunEC
-      env:
-        - GRADLE_OPTS="-Xmx386m -Xms386m"
