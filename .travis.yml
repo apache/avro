@@ -13,8 +13,6 @@ addons:
 install: true
 script: ./gradlew build testRecentVersionCompatibility
 matrix:
-  allow_failures:
-    - jdk: oraclejdk9
   include:
     - jdk: oraclejdk9
       os: linux

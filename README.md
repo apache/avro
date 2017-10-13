@@ -6,7 +6,8 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 # Compatibility
 
-* Currently tested against Java 7-8
+* Currently tested against Java 7-9
+    * Java 9 support requires Gradle 4.2.1 or higher
     * If you need support for Java 6, version 0.9.1 was the last supported version
 * Currently built against Gradle 4.2.1
     * Currently tested against Gradle 3.0-3.51 and 4.0-4.2.1

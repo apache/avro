@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+* Built using Gradle 4.2.1
+* Began testing using Java 9
 
 ## 0.10.0
 * Drop support for Gradle 2.x
