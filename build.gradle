@@ -9,7 +9,7 @@ plugins {
     id "codenarc"
     id "idea"
     id "maven"
-    id "com.gradle.plugin-publish" version "0.9.4"
+    id "com.gradle.plugin-publish" version "0.9.7"
 }
 
 repositories {
