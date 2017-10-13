@@ -1,5 +1,6 @@
 sudo: true
 language: java
+jdk: oraclejdk8
 env:
   global:
     - TERM="dumb"
@@ -11,7 +12,14 @@ addons:
 install: true
 script: ./gradlew build testRecentVersionCompatibility
 matrix:
+  allow_failures:
+    - jdk: oraclejdk9
   include:
+    - jdk: oraclejdk9
+      os: linux
+      dist: trusty
+      env:
+        - GRADLE_OPTS="-Xmx386m -Xms386m"
     - jdk: oraclejdk8
       os: linux
       dist: trusty
@@ -22,6 +30,11 @@ matrix:
       dist: precise # on trusty, Oracle JDK 7 is not provided because it reached End of Life in April 2015.
       env:
         - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m"
+    - jdk: openjdk8
+      os: linux
+      dist: trusty
+      env:
+        - GRADLE_OPTS="-Xmx386m -Xms386m"
     - jdk: openjdk7
       os: linux
       dist: precise # on trusty, openjdk7 fails when connecting to Gradle distro site/plugin portal due to TLS configuration; java.security.NoSuchProviderException: no such provider: SunEC
