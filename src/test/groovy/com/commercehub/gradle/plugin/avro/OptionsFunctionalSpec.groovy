@@ -48,6 +48,9 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "createSetters is enabled"
         content.contains("public void setName(java.lang.String value)")
+
+        and: "enableDecimalLogicalType is enabled"
+        content.contains("public void setSalary(${BigDecimal.name} value)")
     }
 
     @Unroll
@@ -146,7 +149,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         buildFile << """
         |buildscript {
         |    dependencies {
-        |        classpath files(["${templatesDir.parentFile.absolutePath}"])
+        |        classpath files(["${templatesDir.parentFile.toURI()}"])
         |    }
         |}
         |avro {
@@ -197,5 +200,35 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PUBLIC_DEPRECATED, PRIVATE]")
+    }
+
+    @Unroll
+    def "supports configuring enableDecimalLogicalType to #enableDecimalLogicalType"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    enableDecimalLogicalType = $enableDecimalLogicalType
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the specified enableDecimalLogicalType is used"
+        content.contains("public void setSalary(${BigDecimal.name} value)") == expectedPresent
+
+        where:
+        enableDecimalLogicalType | expectedPresent
+        "Boolean.TRUE"           | true
+        "Boolean.FALSE"          | false
+        "true"                   | true
+        "false"                  | false
+        "'true'"                 | true
+        "'false'"                | false
     }
 }

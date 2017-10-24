@@ -118,14 +118,14 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
     def "gives a meaningful error message when presented a malformed schema file"() {
         given:
         copyResource("enumMalformed.avsc", avroDir)
-
+        def errorFilePath = new File("src/main/avro/enumMalformed.avsc").path
         when:
         def result = runAndFail()
 
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("> Could not compile schema definition files:")
-        result.output.contains("* src/main/avro/enumMalformed.avsc: \"enum\" is not a defined name. The type of the \"gender\" " +
+        result.output.contains("* $errorFilePath: \"enum\" is not a defined name. The type of the \"gender\" " +
                 "field must be a defined name or a {\"type\": ...} expression.")
     }
 }

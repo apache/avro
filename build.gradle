@@ -13,7 +13,7 @@ repositories {
     jcenter()
 }
 
-def compileAvroVersion = "1.8.1"
+def compileAvroVersion = "1.8.2"
 
 dependencies {
     compile localGroovy()
@@ -168,7 +168,7 @@ test {
     ]
 }
 
-def avroVersions = ["1.8.0", "1.8.1"]
+def avroVersions = ["1.8.2"]
 def gradleVersions = ["3.0", "3.1", "3.2", "3.2.1", "3.3", "3.4", "3.4.1", "3.5", "3.5.1", "4.0", "4.0.1", "4.0.2", "4.1", "4.2", "4.2.1"]
 
 avroVersions.each { def avroVersion ->

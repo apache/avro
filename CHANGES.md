@@ -3,6 +3,9 @@
 ## Unreleased
 * Built using Gradle 4.2.1
 * Began testing using Java 9
+* Built using Avro 1.8.2
+* Breaking backward compatibility with Avro versions older than 1.8.2
+* Add new configuration option "enableDecimalLogicalType" to generate `BigDecimal` for fields annotated with `logicalType` equals to `decimal`
 
 ## 0.10.0
 * Drop support for Gradle 2.x

@@ -58,6 +58,8 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
     def "Duplicate enum definition fails if definition differs"() {
         given:
         copyDifferentEnum()
+        def errorFilePath1 = new File("src/main/avro/duplicate/Dog.avsc").path
+        def errorFilePath2 = new File("src/main/avro/duplicate/Person.avsc").path
 
         when:
         def result = runAndFail()
@@ -65,20 +67,21 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Found conflicting definition of type example.Gender in "
-            + "[src/main/avro/duplicate/Dog.avsc, src/main/avro/duplicate/Person.avsc]")
+            + "[$errorFilePath1, $errorFilePath2]")
     }
 
     def "Duplicate record definition fails if definition differs"() {
         given:
         copyDifferentRecord()
-
+        def errorFilePath1 = new File("src/main/avro/duplicate/Person.avsc").path
+        def errorFilePath2 = new File("src/main/avro/duplicate/Spider.avsc").path
         when:
         def result = runAndFail()
 
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Found conflicting definition of type example.Person in "
-            + "[src/main/avro/duplicate/Person.avsc, src/main/avro/duplicate/Spider.avsc]")
+            + "[$errorFilePath1, $errorFilePath2]")
     }
 
     private void copyIdenticalEnum() {
