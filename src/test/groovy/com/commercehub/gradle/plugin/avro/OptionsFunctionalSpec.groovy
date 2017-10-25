@@ -19,6 +19,8 @@ import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData.StringType
 import spock.lang.Unroll
 
+import java.nio.ByteBuffer
+
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
@@ -220,15 +222,15 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified enableDecimalLogicalType is used"
-        content.contains("public void setSalary(${BigDecimal.name} value)") == expectedPresent
+        content.contains("public void setSalary(${fieldClz.name} value)")
 
         where:
-        enableDecimalLogicalType | expectedPresent
-        "Boolean.TRUE"           | true
-        "Boolean.FALSE"          | false
-        "true"                   | true
-        "false"                  | false
-        "'true'"                 | true
-        "'false'"                | false
+        enableDecimalLogicalType | fieldClz
+        "Boolean.TRUE"           | BigDecimal
+        "Boolean.FALSE"          | ByteBuffer
+        "true"                   | BigDecimal
+        "false"                  | ByteBuffer
+        "'true'"                 | BigDecimal
+        "'false'"                | ByteBuffer
     }
 }
