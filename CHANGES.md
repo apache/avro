@@ -6,6 +6,7 @@
 * Built using Avro 1.8.2
 * Breaking backward compatibility with Avro versions older than 1.8.2
 * Add new configuration option "enableDecimalLogicalType" to generate `BigDecimal` for fields annotated with `logicalType` equals to `decimal`
+* Breaking backward compatibility caused by "enableDecimalLogicalType" default value set `true`. `BigDecimal` will be used instead of old usage of `ByteBuffer`
 
 ## 0.10.0
 * Drop support for Gradle 2.x
