@@ -19,6 +19,8 @@ import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData.StringType
 import spock.lang.Unroll
 
+import java.nio.ByteBuffer
+
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
@@ -48,6 +50,9 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "createSetters is enabled"
         content.contains("public void setName(java.lang.String value)")
+
+        and: "enableDecimalLogicalType is enabled"
+        content.contains("public void setSalary(${BigDecimal.name} value)")
     }
 
     @Unroll
@@ -146,7 +151,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         buildFile << """
         |buildscript {
         |    dependencies {
-        |        classpath files(["${templatesDir.parentFile.absolutePath}"])
+        |        classpath files(["${templatesDir.parentFile.toURI()}"])
         |    }
         |}
         |avro {
@@ -197,5 +202,35 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PUBLIC_DEPRECATED, PRIVATE]")
+    }
+
+    @Unroll
+    def "supports configuring enableDecimalLogicalType to #enableDecimalLogicalType"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    enableDecimalLogicalType = $enableDecimalLogicalType
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the specified enableDecimalLogicalType is used"
+        content.contains("public void setSalary(${fieldClz.name} value)")
+
+        where:
+        enableDecimalLogicalType | fieldClz
+        "Boolean.TRUE"           | BigDecimal
+        "Boolean.FALSE"          | ByteBuffer
+        "true"                   | BigDecimal
+        "false"                  | ByteBuffer
+        "'true'"                 | BigDecimal
+        "'false'"                | ByteBuffer
     }
 }

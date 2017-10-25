@@ -54,6 +54,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private String fieldVisibility = DEFAULT_FIELD_VISIBILITY;
     private String templateDirectory;
     private boolean createSetters = DEFAULT_CREATE_SETTERS;
+    private boolean enableDecimalLogicalType = DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
 
     private transient StringType parsedStringType;
     private transient FieldVisibility parsedFieldVisibility;
@@ -117,6 +118,15 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.createSetters = Boolean.parseBoolean(createSetters);
     }
 
+    @Input
+    public boolean isEnableDecimalLogicalType() {
+        return enableDecimalLogicalType;
+    }
+
+    public void setEnableDecimalLogicalType(String enableDecimalLogicalType) {
+        this.enableDecimalLogicalType = Boolean.parseBoolean(enableDecimalLogicalType);
+    }
+
     @TaskAction
     protected void process() {
         parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
@@ -127,6 +137,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using fieldVisibility {}", parsedFieldVisibility.name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
         getLogger().debug("Using createSetters {}", isCreateSetters());
+        getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         preClean();
@@ -255,6 +266,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             compiler.setTemplateDir(templateDirectory);
         }
         compiler.setCreateSetters(isCreateSetters());
+        compiler.setEnableDecimalLogicalType(isEnableDecimalLogicalType());
+
         compiler.compileToDestination(sourceFile, getOutputDir());
     }
 }

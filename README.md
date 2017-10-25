@@ -51,13 +51,14 @@ Actually, it will attempt to process an "avro" directory in every `SourceSet` (m
 
 There are a number of configuration options supported in the `avro` block.
 
-| option                  | default               | description                                       |
-| ----------------------- | --------------------- | ------------------------------------------------- |
-| createSetters           | `true`                | `createSetters` passed to Avro compiler           |
-| fieldVisibility         | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler         |
-| outputCharacterEncoding | see below             | `outputCharacterEncoding` passed to Avro compiler |
-| stringType              | `"String"`            | `stringType` passed to Avro compiler              |
-| templateDirectory       | see below             | `templateDir` passed to Avro compiler             |
+| option                    | default               | description                                           |
+| --------------------------| --------------------- | -------------------------------------------------     |
+| createSetters             | `true`                | `createSetters` passed to Avro compiler               |
+| fieldVisibility           | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler             |
+| outputCharacterEncoding   | see below             | `outputCharacterEncoding` passed to Avro compiler     |
+| stringType                | `"String"`            | `stringType` passed to Avro compiler                  |
+| templateDirectory         | see below             | `templateDir` passed to Avro compiler                 |
+| enableDecimalLogicalType  | `true`                | `enableDecimalLogicalType` passed to Avro compiler    |
 
 ## createSetters
 
@@ -130,6 +131,22 @@ If desired, you can override the template set used by either setting this proper
 ```groovy
 avro {
     templateDirectory = "/path/to/velocity/templates"
+}
+```
+
+## enableDecimalLogicalType
+
+Valid values: `true` (default), `false`; supports equivalent `String` values
+
+By default, generated Java files will use [`java.math.BigDecimal`](https://docs.oracle.com/javase/7/docs/api/java/math/BigDecimal.html) 
+for representing `fixed` or `bytes` fields annotated with `"logicalType": "decimal"`.
+Set to `false` to use [`java.nio.ByteBuffer`](https://docs.oracle.com/javase/7/docs/api/java/nio/ByteBuffer.html) in generated classes.
+
+Example:
+
+```groovy
+avro {
+    enableDecimalLogicalType = false
 }
 ```
 

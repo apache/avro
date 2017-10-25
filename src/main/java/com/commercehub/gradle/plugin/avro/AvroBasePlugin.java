@@ -52,6 +52,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                 return DEFAULT_CREATE_SETTERS;
             }
         });
+        extensionMapping.map(OPTION_ENABLE_DECIMAL_LOGICAL_TYPE, new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
+            }
+        });
         project.getTasks().withType(GenerateAvroJavaTask.class).all(new Action<GenerateAvroJavaTask>() {
             @Override
             public void execute(GenerateAvroJavaTask task) {
@@ -84,6 +90,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                     @Override
                     public Boolean call() throws Exception {
                         return avroExtension.isCreateSetters();
+                    }
+                });
+                taskMapping.map(OPTION_ENABLE_DECIMAL_LOGICAL_TYPE, new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        return avroExtension.isEnableDecimalLogicalType();
                     }
                 });
             }
