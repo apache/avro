@@ -25,7 +25,9 @@ import spock.lang.Specification
 
 @SuppressWarnings(["Println"])
 abstract class FunctionalSpec extends Specification {
+    @SuppressWarnings(["FieldName"])
     protected static final String avroVersion = System.getProperty("avroVersion")
+    @SuppressWarnings(["FieldName"])
     protected static final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion"))
 
     @Rule

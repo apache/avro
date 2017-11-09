@@ -164,16 +164,17 @@ public class AvroPlugin implements Plugin<Project> {
                         String compilationTaskName = sourceSet.getCompileTaskName("kotlin");
                         return compilationTaskName.equals(task.getName());
                     }
-                }).all(new Action<Task>() {
-                    @Override
-                    public void execute(Task task) {
-                        if (task instanceof SourceTask) {
-                            ((SourceTask) task).source(javaTask.getOutputs());
-                        } else {
-                            task.dependsOn(javaTask);
+                })
+                    .all(new Action<Task>() {
+                        @Override
+                        public void execute(Task task) {
+                            if (task instanceof SourceTask) {
+                                ((SourceTask) task).source(javaTask.getOutputs());
+                            } else {
+                                task.dependsOn(javaTask);
+                            }
                         }
-                    }
-                });
+                    });
             }
         });
     }
