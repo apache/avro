@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Improve support for Kotlin
 
 ## 0.11.0
 * Built using Gradle 4.2.1

@@ -25,8 +25,8 @@ import spock.lang.Specification
 
 @SuppressWarnings(["Println"])
 abstract class FunctionalSpec extends Specification {
-    protected final String avroVersion = System.getProperty("avroVersion")
-    protected final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion"))
+    protected static final String avroVersion = System.getProperty("avroVersion")
+    protected static final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion"))
 
     @Rule
     TemporaryFolder testProjectDir

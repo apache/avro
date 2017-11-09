@@ -21,10 +21,13 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.internal.ConventionMapping;
 import org.gradle.api.internal.IConventionAware;
+import org.gradle.api.plugins.AppliedPlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.SourceTask;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.plugins.ide.idea.GenerateIdeaModule;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
@@ -49,7 +52,8 @@ public class AvroPlugin implements Plugin<Project> {
         getSourceSets(project).all(new Action<SourceSet>() {
             public void execute(SourceSet sourceSet) {
                 GenerateAvroProtocolTask protoTask = configureProtocolGenerationTask(project, sourceSet);
-                configureJavaGenerationTask(project, sourceSet, protoTask);
+                GenerateAvroJavaTask javaTask = configureJavaGenerationTask(project, sourceSet, protoTask);
+                configureTaskDependencies(project, sourceSet, javaTask);
             }
         });
     }
@@ -78,12 +82,10 @@ public class AvroPlugin implements Plugin<Project> {
                 module.setSourceDirs(new SetBuilder<File>()
                     .addAll(module.getSourceDirs())
                     .add(getAvroSourceDir(project, mainSourceSet))
-                    .add(mainGeneratedOutputDir)
                     .build());
                 module.setTestSourceDirs(new SetBuilder<File>()
                     .addAll(module.getTestSourceDirs())
                     .add(getAvroSourceDir(project, testSourceSet))
-                    .add(testGeneratedOutputDir)
                     .build());
                 // IntelliJ doesn't allow source directories beneath an excluded directory.
                 // Thus, we remove the build directory exclude and add all non-generated sub-directories as excludes.
@@ -133,6 +135,8 @@ public class AvroPlugin implements Plugin<Project> {
             }
         });
 
+        sourceSet.getJava().srcDir(task.getOutputDir());
+
         final JavaCompile compileJavaTask = getCompileJavaTask(project, sourceSet);
         compileJavaTask.source(task.getOutputDir());
         compileJavaTask.source(task.getOutputs());
@@ -148,6 +152,30 @@ public class AvroPlugin implements Plugin<Project> {
             }
         });
         return task;
+    }
+
+    private static void configureTaskDependencies(final Project project, final SourceSet sourceSet, final GenerateAvroJavaTask javaTask) {
+        project.getPluginManager().withPlugin("org.jetbrains.kotlin.jvm", new Action<AppliedPlugin>() {
+            @Override
+            public void execute(AppliedPlugin appliedPlugin) {
+                project.getTasks().matching(new Spec<Task>() {
+                    @Override
+                    public boolean isSatisfiedBy(Task task) {
+                        String compilationTaskName = sourceSet.getCompileTaskName("kotlin");
+                        return compilationTaskName.equals(task.getName());
+                    }
+                }).all(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        if (task instanceof SourceTask) {
+                            ((SourceTask) task).source(javaTask.getOutputs());
+                        } else {
+                            task.dependsOn(javaTask);
+                        }
+                    }
+                });
+            }
+        });
     }
 
     private static File getAvroSourceDir(Project project, SourceSet sourceSet) {
