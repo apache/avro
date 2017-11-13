@@ -19,6 +19,7 @@
 package org.apache.avro.ipc;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.avro.AvroRuntimeException;
 import org.eclipse.jetty.server.ConnectionFactory;
@@ -85,6 +86,16 @@ public class HttpServer implements Server {
     connector.setPort(port);
 
     server.addConnector(connector);
+    ServletHandler handler = new ServletHandler();
+    server.setHandler(handler);
+    handler.addServletWithMapping(new ServletHolder(servlet), "/*");
+  }
+  
+  public HttpServer(ResponderServlet servlet, Connector connector) throws IOException {
+    this.server = connector.getServer();
+    if (server.getConnectors().length == 0 || Arrays.asList(server.getConnectors()).contains(connector)) {
+      server.addConnector(connector);
+    }
     ServletHandler handler = new ServletHandler();
     server.setHandler(handler);
     handler.addServletWithMapping(new ServletHolder(servlet), "/*");
