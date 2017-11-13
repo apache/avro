@@ -69,12 +69,12 @@ public class HttpServer implements Server {
     server.setHandler(sch);
   }
 
-  /** Constructs a server to run with the given connector. */
+  /** Constructs a server to run with the given ConnectionFactory on the given address/port. */
   public HttpServer(Responder responder, ConnectionFactory connectionFactory, String bindAddress, int port) throws IOException {
     this(new ResponderServlet(responder), connectionFactory, bindAddress, port);
   }
 
-  /** Constructs a server to run with the given connector. */
+  /** Constructs a server to run with the given ConnectionFactory on the given address/port. */
   public HttpServer(ResponderServlet servlet, ConnectionFactory connectionFactory, String bindAddress, int port) throws IOException {
     this.server = new org.eclipse.jetty.server.Server();
     HttpConfiguration httpConfig = new HttpConfiguration();
@@ -90,7 +90,13 @@ public class HttpServer implements Server {
     server.setHandler(handler);
     handler.addServletWithMapping(new ServletHolder(servlet), "/*");
   }
-  
+
+  /**
+   * Constructs a server to run with the given connector.
+   *
+   *  @deprecated - use the Constructors that take a ConnectionFactory
+   */
+  @Deprecated
   public HttpServer(ResponderServlet servlet, Connector connector) throws IOException {
     this.server = connector.getServer();
     if (server.getConnectors().length == 0 || Arrays.asList(server.getConnectors()).contains(connector)) {
@@ -99,6 +105,15 @@ public class HttpServer implements Server {
     ServletHandler handler = new ServletHandler();
     server.setHandler(handler);
     handler.addServletWithMapping(new ServletHolder(servlet), "/*");
+  }
+  /**
+   * Constructs a server to run with the given connector.
+   *
+   *  @deprecated - use the Constructors that take a ConnectionFactory
+   */
+  @Deprecated
+  public HttpServer(Responder responder, Connector connector) throws IOException {
+    this(new ResponderServlet(responder), connector);
   }
 
   public void addConnector(Connector connector) {
