@@ -142,7 +142,7 @@ avro {
 
 Valid values: `true` (default), `false`; supports equivalent `String` values
 
-By default, generated Java files will use [`java.math.BigDecimal`](https://docs.oracle.com/javase/7/docs/api/java/math/BigDecimal.html) 
+By default, generated Java files will use [`java.math.BigDecimal`](https://docs.oracle.com/javase/7/docs/api/java/math/BigDecimal.html)
 for representing `fixed` or `bytes` fields annotated with `"logicalType": "decimal"`.
 Set to `false` to use [`java.nio.ByteBuffer`](https://docs.oracle.com/javase/7/docs/api/java/nio/ByteBuffer.html) in generated classes.
 
@@ -238,3 +238,10 @@ and `Cat.avsc`:
 There may be cases where the schema files contain inline type definitions and it is undesirable to modify them.
 In this case, the plugin will automatically recognize any duplicate type definitions and check if they match.
 If any conflicts are identified, it will cause a build failure.
+
+# Kotlin Support
+
+The Java classes generated from your Avro files should be automatically accessible in the classpath to Kotlin classes in the same sourceset, and transitively to any sourcesets that depend on that sourceset.
+This is accomplished by this plugin detecting that the Kotlin plugin has been applied, and informing the Kotlin compilation tasks of the presence of the generated sources directories for cross-compilation.
+
+This support does *not* support producing the Avro generated classes as Kotlin classes, as that functionality is not currently provided by the upstream Avro library.

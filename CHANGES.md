@@ -3,7 +3,7 @@
 ## Unreleased
 
 # 0.12.0
-* Improve support for Kotlin
+* Improve support for Kotlin (#36)
 
 ## 0.11.0
 * Built using Gradle 4.2.1
