@@ -149,7 +149,7 @@ checkstyleMain.doLast {
 }
 
 codenarc {
-    toolVersion = "0.24.1"
+    toolVersion = "1.0"
     config = project.resources.text.fromFile("config/codenarc/codenarc.groovy")
 }
 
