@@ -107,6 +107,8 @@ Trunk (not yet released)
 
     AVRO-2117: Overall cleanup of java code (Niels Basjes)
 
+    AVRO-2109: Reset buffers in case of IOException (gabor)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
