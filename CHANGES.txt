@@ -21,6 +21,8 @@ Trunk (not yet released)
 
     AVRO-2119: Run Apache Rat check on every java build (Niels Basjes)
 
+    AVRO-2109: Reset buffers in case of IOException (gabor)
+
   BUG FIXES
 
     AVRO-1401: @Nullable does not work with byte[] (Nandor Kollar via gabor)
