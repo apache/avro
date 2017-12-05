@@ -23,6 +23,8 @@ Trunk (not yet released)
     AVRO-1681. Improve generated JavaDocs.
     (Charles Gariépy-Ikeson via tomwhite)
 
+    AVRO-2109: Reset buffers in case of IOException (gabor)
+
   BUG FIXES
 
     AVRO-1553. Java: MapReduce never uses MapOutputValueSchema (tomwhite)
