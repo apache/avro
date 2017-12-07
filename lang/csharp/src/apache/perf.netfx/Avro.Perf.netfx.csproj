@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0D707008-7466-4407-8A80-C26DECAB18DB}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Avro.Perf.netfx</RootNamespace>
+    <AssemblyName>Avro.Perf.netfx</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.CodeDom, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\System.CodeDom.4.4.0\lib\net461\System.CodeDom.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\perf.dotnetcore\com\foo\A.cs">
+      <Link>com\foo\A.cs</Link>
+    </Compile>
+    <Compile Include="..\perf.dotnetcore\com\foo\Complex.cs">
+      <Link>com\foo\Complex.cs</Link>
+    </Compile>
+    <Compile Include="..\perf.dotnetcore\com\foo\MyEnum.cs">
+      <Link>com\foo\MyEnum.cs</Link>
+    </Compile>
+    <Compile Include="..\perf.dotnetcore\com\foo\MyFixed.cs">
+      <Link>com\foo\MyFixed.cs</Link>
+    </Compile>
+    <Compile Include="..\perf.dotnetcore\com\foo\Narrow.cs">
+      <Link>com\foo\Narrow.cs</Link>
+    </Compile>
+    <Compile Include="..\perf.dotnetcore\com\foo\newRec.cs">
+      <Link>com\foo\newRec.cs</Link>
+    </Compile>
+    <Compile Include="..\perf.dotnetcore\com\foo\Simple.cs">
+      <Link>com\foo\Simple.cs</Link>
+    </Compile>
+    <Compile Include="..\perf.dotnetcore\com\foo\Wide.cs">
+      <Link>com\foo\Wide.cs</Link>
+    </Compile>
+    <Compile Include="..\perf.dotnetcore\PerfTest.cs">
+      <Link>PerfTest.cs</Link>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\perf.dotnetcore\schema.avsc">
+      <Link>schema.avsc</Link>
+    </None>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\main\Avro.Main.csproj">
+      <Project>{c17f6af2-f200-4421-855b-13f4e97e9716}</Project>
+      <Name>Avro.Main</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
