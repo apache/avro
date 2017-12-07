@@ -483,8 +483,8 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       try {
         super.flush();
       } finally {
-        // Ensure that count is reset in any case so flush will do nothing if invoked after an exception
-        // (to avoid writing garbage to the end of the file in case of an error occurred during the write)
+        // Ensure that count is reset in any case to avoid writing garbage to the end of the file in case of an error
+        // occurred during the write
         count = 0;
       }
     }
