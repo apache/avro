@@ -12,5 +12,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
+    <RootNamespace>Avro.codegen</RootNamespace>
+    <AssemblyName>Avro.codegen</AssemblyName>
   </PropertyGroup>
 </Project>

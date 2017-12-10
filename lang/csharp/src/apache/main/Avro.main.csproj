@@ -26,5 +26,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
+    <AssemblyName>Avro</AssemblyName>
+    <RootNamespace>Avro</RootNamespace>
   </PropertyGroup>
 </Project>

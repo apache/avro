@@ -23,5 +23,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
+    <AssemblyName>Avro.ipc</AssemblyName>
+    <RootNamespace>Avro.ipc</RootNamespace>
   </PropertyGroup>
 </Project>

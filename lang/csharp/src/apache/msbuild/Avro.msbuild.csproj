@@ -15,5 +15,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
+    <AssemblyName>Avro.msbuild</AssemblyName>
+    <RootNamespace>Avro.msbuild</RootNamespace>
   </PropertyGroup>
 </Project>
