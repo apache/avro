@@ -442,7 +442,12 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #foreach ($field in $schema.getFields())
 #if (${this.hasBuilder($field.schema())})
         if (${this.mangle($field.name(), $schema.isError())}Builder != null) {
-          record.${this.mangle($field.name(), $schema.isError())} = this.${this.mangle($field.name(), $schema.isError())}Builder.build();
+          try {
+            record.${this.mangle($field.name(), $schema.isError())} = this.${this.mangle($field.name(), $schema.isError())}Builder.build();
+          } catch (org.apache.avro.AvroMissingFieldException e) {
+            e.addParentField(record.getSchema().getField("${this.mangle($field.name(), $schema.isError())}"));
+            throw e;
+          }
         } else {
 #if ($this.hasLogicalTypeField($schema))
           record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()], record.getConversion($field.pos()));
@@ -459,6 +464,8 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 #end
         return record;
+      } catch (org.apache.avro.AvroMissingFieldException e) {
+        throw e;
       } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
