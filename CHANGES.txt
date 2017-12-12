@@ -3,6 +3,7 @@ Avro Change Log
 Trunk (not yet released)
 
   INCOMPATIBLE CHANGES
+    AVRO-2003: Report specific location of schema incompatibilities (teabot via nkollar)
 
     AVRO-2035: Java: validate default values when parsing schemas. (cutting)
 

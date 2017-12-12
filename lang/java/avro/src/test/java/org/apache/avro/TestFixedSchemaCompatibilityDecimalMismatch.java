@@ -39,9 +39,9 @@ public class TestFixedSchemaCompatibilityDecimalMismatch {
   public static Iterable<Object[]> data() {
     Object[][] fields = {
         { FIXED_DECIMAL_3_3 , FIXED_DECIMAL_3_2,
-                "Decimal (precision,scale) doesn't match for reader (3,3) and writer (3,2) schemas" },
+                "Decimal (precision,scale) doesn't match for reader (3,3) and writer (3,2) schemas", "/scaleOrPrecision"},
         { FIXED_DECIMAL_3_3 , FIXED_DECIMAL_4_3,
-                "Decimal (precision,scale) doesn't match for reader (3,3) and writer (4,3) schemas" }
+                "Decimal (precision,scale) doesn't match for reader (3,3) and writer (4,3) schemas", "/scaleOrPrecision"}
     };
     List<Object[]> list = new ArrayList<>(fields.length);
     for (Object[] schemas : fields) {
@@ -56,9 +56,11 @@ public class TestFixedSchemaCompatibilityDecimalMismatch {
   public Schema writer;
   @Parameter(2)
   public String details;
+  @Parameter(3)
+  public String location;
 
   @Test
   public void testTypeMismatchSchemas() throws Exception {
-    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.DECIMAL_SCALE_OR_PRECISION_MISMATCH, details);
+    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.DECIMAL_SCALE_OR_PRECISION_MISMATCH, details, location);
   }
 }
