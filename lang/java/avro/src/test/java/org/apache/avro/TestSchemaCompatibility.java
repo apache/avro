@@ -565,11 +565,4 @@ public class TestSchemaCompatibility {
     assertEquals(SchemaCompatibilityType.COMPATIBLE, result.getType());
   }
 
-  Deque<String> asDeqeue(String... args) {
-    Deque<String> dq = new ArrayDeque<String>();
-    List<String> x = Arrays.asList(args);
-    Collections.reverse(x);
-    dq.addAll(x);
-    return dq;
-  }
 }
