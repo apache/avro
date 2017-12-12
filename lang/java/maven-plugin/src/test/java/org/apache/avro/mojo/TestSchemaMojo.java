@@ -17,6 +17,8 @@
  */
 package org.apache.avro.mojo;
 
+import org.codehaus.plexus.util.FileUtils;
+
 import java.io.File;
 
 /**
@@ -26,19 +28,40 @@ import java.io.File;
  */
 public class TestSchemaMojo extends AbstractAvroMojoTest {
 
-  protected File testPom = new File(getBasedir(),
-          "src/test/resources/unit/schema/pom.xml");
+  protected File jodaTestPom = new File(getBasedir(),
+          "src/test/resources/unit/schema/pom-joda.xml");
+  protected File java8TestPom = new File(getBasedir(),
+          "src/test/resources/unit/schema/pom-java8.xml");
 
-  public void testSchemaMojo() throws Exception {
-    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testPom);
+  public void testSchemaMojoJoda() throws Exception {
+    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", jodaTestPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/schema/test");
+    File outputDir = new File(getBasedir(), "target/test-harness/schema-joda/test");
     String[] generatedFiles = new String[]{"PrivacyDirectImport.java",
       "PrivacyImport.java", "SchemaPrivacy.java", "SchemaUser.java"};
 
     assertFilesExist(outputDir, generatedFiles);
+
+    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
+    assertTrue(schemaUserContent.contains("org.joda.time.DateTime"));
+  }
+
+  public void testSchemaMojoJava8() throws Exception {
+    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", java8TestPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/schema-java8/test");
+    String[] generatedFiles = new String[]{"PrivacyDirectImport.java",
+            "PrivacyImport.java", "SchemaPrivacy.java", "SchemaUser.java"};
+
+    assertFilesExist(outputDir, generatedFiles);
+
+    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
+    assertTrue(schemaUserContent.contains("java.time.Instant"));
   }
 }
