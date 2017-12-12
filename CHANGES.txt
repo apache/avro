@@ -16,6 +16,9 @@ Trunk (not yet released)
     AVRO-2080: Fix Javadoc Warnings in Generated Records
     (Bridger Howell via Niels Basjes)
 
+    AVRO-2114: Make missing value exceptions in nested structures easier to read.
+    (Niels Basjes)
+
   BUG FIXES
 
     AVRO-1401: @Nullable does not work with byte[] (Nandor Kollar via gabor)

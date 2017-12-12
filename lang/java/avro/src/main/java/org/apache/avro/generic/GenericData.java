@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
@@ -1012,8 +1013,8 @@ public class GenericData {
   public Object getDefaultValue(Field field) {
     JsonNode json = field.defaultValue();
     if (json == null)
-      throw new AvroRuntimeException("Field " + field
-                                     + " not set and has no default value");
+      throw new AvroMissingFieldException("Field " + field
+                                          + " not set and has no default value", field);
     if (json.isNull()
         && (field.schema().getType() == Type.NULL
             || (field.schema().getType() == Type.UNION
