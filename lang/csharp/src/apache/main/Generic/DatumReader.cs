@@ -30,7 +30,7 @@ namespace Avro.Generic
         /// Read a datum.  Traverse the schema, depth-first, reading all leaf values
         /// in the schema into a datum that is returned.  If the provided datum is
         /// non-null it may be reused and returned.
-        /// </summary>        
+        /// </summary>
         T Read(T reuse, Decoder decoder);
     }
 }

@@ -49,7 +49,7 @@ namespace Avro
         /// <summary>
         /// Namespace of the schema
         /// </summary>
-        public String Namespace { get { return string.IsNullOrEmpty(this.Space) ? this.EncSpace : this.Space; } } 
+        public String Namespace { get { return string.IsNullOrEmpty(this.Space) ? this.EncSpace : this.Space; } }
 
         /// <summary>
         /// Constructor for SchemaName
@@ -132,7 +132,7 @@ namespace Avro
         {
             return obj1 == null ? obj2 == null : obj1.Equals(obj2);
         }
-    
+
         public override int GetHashCode()
         {
             return string.IsNullOrEmpty(Fullname) ? 0 : 29 * Fullname.GetHashCode();

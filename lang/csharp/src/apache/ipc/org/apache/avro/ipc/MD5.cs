@@ -17,7 +17,7 @@ namespace org.apache.avro.ipc
 	{
 		private static Schema _SCHEMA = Avro.Schema.Parse("{\"type\":\"fixed\",\"name\":\"MD5\",\"namespace\":\"org.apache.avro.ipc\",\"size\":16}");
 		private static uint fixedSize = 16;
-		public MD5() : 
+		public MD5() :
 				base(fixedSize)
 		{
 		}

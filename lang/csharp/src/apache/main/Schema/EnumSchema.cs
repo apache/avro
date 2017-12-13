@@ -96,7 +96,7 @@ namespace Avro
         /// <param name="writer">JSON writer</param>
         /// <param name="names">list of named schema already written</param>
         /// <param name="encspace">enclosing namespace of the enum schema</param>
-        protected internal override void WriteJsonFields(Newtonsoft.Json.JsonTextWriter writer, 
+        protected internal override void WriteJsonFields(Newtonsoft.Json.JsonTextWriter writer,
                                                             SchemaNames names, string encspace)
         {
             base.WriteJsonFields(writer, names, encspace);
@@ -108,7 +108,7 @@ namespace Avro
         }
 
         /// <summary>
-        /// Returns the position of the given symbol within this enum. 
+        /// Returns the position of the given symbol within this enum.
         /// Throws AvroException if the symbol is not found in this enum.
         /// </summary>
         /// <param name="symbol">name of the symbol to find</param>
@@ -197,7 +197,7 @@ namespace Avro
             if (!that.SchemaName.Equals(SchemaName))
                 if (!InAliases(that.SchemaName)) return false;
 
-            // we defer checking of symbols. Writer may have a symbol missing from the reader, 
+            // we defer checking of symbols. Writer may have a symbol missing from the reader,
             // but if writer never used the missing symbol, then reader should still be able to read the data
 
             return true;
