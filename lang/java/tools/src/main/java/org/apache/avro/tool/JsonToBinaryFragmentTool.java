@@ -69,12 +69,12 @@ public class JsonToBinaryFragmentTool implements Tool {
 
     try {
       GenericDatumReader<Object> reader =
-          new GenericDatumReader<Object>(schema);
+        new GenericDatumReader<>(schema);
 
       JsonDecoder jsonDecoder =
       DecoderFactory.get().jsonDecoder(schema, input);
       GenericDatumWriter<Object> writer =
-          new GenericDatumWriter<Object>(schema);
+        new GenericDatumWriter<>(schema);
       Encoder e = EncoderFactory.get().binaryEncoder(out, null);
       Object datum = null;
       while(true) {

@@ -725,7 +725,7 @@ public class TestSpecificCompiler {
       return;               // Nothing to compile!
     }
     File dstDir = AvroTestUtil.tempFile(TestSpecificCompiler.class, "realCompiler");
-    List<File> javaFiles = new ArrayList<File>();
+    List<File> javaFiles = new ArrayList<>();
     for (OutputFile o : outputs) {
       javaFiles.add(o.writeToDestination(null, dstDir));
     }

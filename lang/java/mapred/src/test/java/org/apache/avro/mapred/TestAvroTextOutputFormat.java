@@ -46,11 +46,11 @@ public class TestAvroTextOutputFormat {
     File file = new File(System.getProperty("test.dir", "."), "writer");
     Schema schema = Schema.create(Schema.Type.BYTES);
     DatumWriter<ByteBuffer> datumWriter =
-      new GenericDatumWriter<ByteBuffer>(schema);
+      new GenericDatumWriter<>(schema);
     DataFileWriter<ByteBuffer> fileWriter =
-      new DataFileWriter<ByteBuffer>(datumWriter);
+      new DataFileWriter<>(datumWriter);
     fileWriter.create(schema, file);
-    RecordWriter<Object, Object> rw = new AvroTextOutputFormat<Object, Object>()
+    RecordWriter<Object, Object> rw = new AvroTextOutputFormat<>()
       .new AvroTextRecordWriter(fileWriter, "\t".getBytes(UTF8));
 
     rw.write(null, null);
@@ -69,9 +69,9 @@ public class TestAvroTextOutputFormat {
 
     rw.close(null);
 
-    DatumReader<ByteBuffer> reader = new GenericDatumReader<ByteBuffer>();
+    DatumReader<ByteBuffer> reader = new GenericDatumReader<>();
     DataFileReader<ByteBuffer> fileReader =
-      new DataFileReader<ByteBuffer>(file, reader);
+      new DataFileReader<>(file, reader);
     assertEquals("k1", asString(fileReader.next()));
     assertEquals("k2", asString(fileReader.next()));
     assertEquals("v1", asString(fileReader.next()));

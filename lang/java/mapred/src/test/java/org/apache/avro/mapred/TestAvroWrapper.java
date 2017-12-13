@@ -26,7 +26,7 @@ public class TestAvroWrapper {
   @Test
   public void testToString() {
     String datum = "my string";
-    AvroWrapper<CharSequence> wrapper = new AvroWrapper<CharSequence>(datum);
+    AvroWrapper<CharSequence> wrapper = new AvroWrapper<>(datum);
     assertEquals(datum, wrapper.toString());
   }
 }

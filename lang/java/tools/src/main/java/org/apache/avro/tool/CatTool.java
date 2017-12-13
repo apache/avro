@@ -92,8 +92,8 @@ public class CatTool implements Tool {
     if (nargs.size() > 1 && !lastArg.equals("-")) {
       output = Util.createFromFS(lastArg);
     }
-    writer = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>());
+    writer = new DataFileWriter<>(
+      new GenericDatumWriter<>());
 
     String codecName = reader.getMetaString(DataFileConstants.CODEC);
     CodecFactory codec = (codecName == null)
@@ -144,7 +144,7 @@ public class CatTool implements Tool {
     currentInput++;
     Path path = inFiles.get(currentInput);
     FSDataInputStream input = new FSDataInputStream(Util.openFromFS(path));
-    reader = new DataFileStream<GenericRecord>(input, new GenericDatumReader<GenericRecord>());
+    reader = new DataFileStream<>(input, new GenericDatumReader<>());
     if (schema == null) {                            // if this is the first file, the schema gets saved
       schema = reader.getSchema();
     }

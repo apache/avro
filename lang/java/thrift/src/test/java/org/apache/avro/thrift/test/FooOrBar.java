@@ -42,7 +42,7 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
     FOO((short)1, "foo"),
     BAR((short)2, "bar");
 
-    private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+    private static final Map<String, _Fields> byName = new HashMap<>();
 
     static {
       for (_Fields field : EnumSet.allOf(_Fields.class)) {
@@ -100,7 +100,7 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
 
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
-    Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+    Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
     tmpMap.put(_Fields.FOO, new org.apache.thrift.meta_data.FieldMetaData("foo", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.BAR, new org.apache.thrift.meta_data.FieldMetaData("bar", org.apache.thrift.TFieldRequirementType.DEFAULT,

@@ -192,8 +192,8 @@ public class TestSpecificRecordBuilder {
   @Test
   public void testBuilderPerformance() {
     int count = 1000000;
-    List<Person> friends = new ArrayList<Person>(0);
-    List<String> languages = new ArrayList<String>(Arrays.asList(new String[] { "English", "Java" }));
+    List<Person> friends = new ArrayList<>(0);
+    List<String> languages = new ArrayList<>(Arrays.asList(new String[]{"English", "Java"}));
     long startTimeNanos = System.nanoTime();
     for (int ii = 0; ii < count; ii++) {
       Person.newBuilder().setName("James Gosling").setYearOfBirth(1955).setCountry("US").setState("CA").setFriends(friends).
@@ -226,8 +226,8 @@ public class TestSpecificRecordBuilder {
   @SuppressWarnings("deprecation")
   public void testManualBuildPerformance() {
     int count = 1000000;
-    List<Person> friends = new ArrayList<Person>(0);
-    List<String> languages = new ArrayList<String>(Arrays.asList(new String[] { "English", "Java" }));
+    List<Person> friends = new ArrayList<>(0);
+    List<String> languages = new ArrayList<>(Arrays.asList(new String[]{"English", "Java"}));
     long startTimeNanos = System.nanoTime();
     for (int ii = 0; ii < count; ii++) {
       Person person = new Person();

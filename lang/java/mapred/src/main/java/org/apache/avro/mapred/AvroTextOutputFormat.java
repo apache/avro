@@ -54,7 +54,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       job.get("mapreduce.output.textoutputformat.separator", "\t").getBytes(UTF8);
 
     final DataFileWriter<ByteBuffer> writer =
-      new DataFileWriter<ByteBuffer>(new ReflectDatumWriter<ByteBuffer>());
+      new DataFileWriter<>(new ReflectDatumWriter<>());
 
     AvroOutputFormat.configureDataFileWriter(writer, job);
 

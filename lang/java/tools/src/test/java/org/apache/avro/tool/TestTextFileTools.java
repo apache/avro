@@ -86,7 +86,7 @@ public class TestTextFileTools {
   private void fromText(String name, String... args) throws Exception {
     File avroFile = AvroTestUtil.tempFile(getClass(), name + ".avro");
 
-    ArrayList<String> arglist = new ArrayList<String>();
+    ArrayList<String> arglist = new ArrayList<>();
     arglist.addAll(Arrays.asList(args));
     arglist.add(linesFile.toString());
     arglist.add(avroFile.toString());
@@ -94,8 +94,8 @@ public class TestTextFileTools {
     new FromTextTool().run(null, null, null, arglist);
 
     // Read it back, and make sure it's valid.
-    DataFileReader<ByteBuffer> file = new DataFileReader<ByteBuffer>
-      (avroFile, new GenericDatumReader<ByteBuffer>());
+    DataFileReader<ByteBuffer> file = new DataFileReader<>
+      (avroFile, new GenericDatumReader<>());
     int i = 0;
     for (ByteBuffer line : file) {
       System.out.println("Reading line = "+line.remaining());
@@ -123,7 +123,7 @@ public class TestTextFileTools {
     File avroFile = AvroTestUtil.tempFile(TestTextFileTools.class, name + ".avro");
     File outFile = AvroTestUtil.tempFile(TestTextFileTools.class, name + ".lines");
 
-    ArrayList<String> arglist = new ArrayList<String>();
+    ArrayList<String> arglist = new ArrayList<>();
     arglist.add(avroFile.toString());
     arglist.add(outFile.toString());
 

@@ -54,7 +54,7 @@ public class AvroRecordReader<T>
   }
 
   public AvroWrapper<T> createKey() {
-    return new AvroWrapper<T>(null);
+    return new AvroWrapper<>(null);
   }
 
   public NullWritable createValue() { return NullWritable.get(); }

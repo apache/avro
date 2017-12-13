@@ -73,7 +73,7 @@ public class WordCountUtil {
     "the rain in spain falls mainly on the plains"
   };
 
-  public static final Map<String,Long> COUNTS = new TreeMap<String,Long>();
+  public static final Map<String,Long> COUNTS = new TreeMap<>();
   public static final long TOTAL;
   static {
     long total = 0;
@@ -96,8 +96,8 @@ public class WordCountUtil {
 
   public void writeLinesFile() throws IOException {
     FileUtil.fullyDelete(dir);
-    DatumWriter<String> writer = new GenericDatumWriter<String>();
-    DataFileWriter<String> out = new DataFileWriter<String>(writer);
+    DatumWriter<String> writer = new GenericDatumWriter<>();
+    DataFileWriter<String> out = new DataFileWriter<>(writer);
     linesFiles.getParentFile().mkdirs();
     out.create(Schema.create(Schema.Type.STRING), linesFiles);
     for (String line : LINES)
@@ -107,8 +107,8 @@ public class WordCountUtil {
 
   public void validateCountsFile() throws Exception {
     AvroColumnReader<Pair<String,Long>> reader =
-      new AvroColumnReader<Pair<String,Long>>
-      (new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
+      new AvroColumnReader<>
+        (new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
     for (Pair<String,Long> wc : reader) {
       assertEquals(wc.key(), COUNTS.get(wc.key()), wc.value());
@@ -120,8 +120,8 @@ public class WordCountUtil {
 
   public void validateCountsFileGenericRecord() throws Exception {
     AvroColumnReader<GenericRecord > reader =
-      new AvroColumnReader<GenericRecord >
-      (new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
+      new AvroColumnReader<>
+        (new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
     for (GenericRecord  wc : reader) {
       assertEquals((String)wc.get("key"), COUNTS.get(wc.get("key")), (Long)wc.get("value"));

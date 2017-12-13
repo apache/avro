@@ -57,10 +57,10 @@ public class TestGenericJob {
     System.getProperty("test.dir", ".") + "target/testGenericJob";
 
   private static Schema createSchema() {
-    List<Field> fields = new ArrayList<Schema.Field>();
+    List<Field> fields = new ArrayList<>();
 
 
-    fields.add(new Field("Optional", createArraySchema(), "", new ArrayList<Object>()));
+    fields.add(new Field("Optional", createArraySchema(), "", new ArrayList<>()));
 
     Schema recordSchema =
       Schema.createRecord("Container", "", "org.apache.avro.mapred", false);
@@ -69,7 +69,7 @@ public class TestGenericJob {
   }
 
   private static Schema createArraySchema() {
-    List<Schema> schemas = new ArrayList<Schema>();
+    List<Schema> schemas = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       schemas.add(createInnerSchema("optional_field_" + i));
     }
@@ -114,14 +114,14 @@ public class TestGenericJob {
         new GenericData.Record(createInnerSchema("optional_field_1"));
       optional_entry.put("optional_field_1", 0l);
       GenericData.Array<GenericData.Record> array =
-        new GenericData.Array<GenericData.Record>(1, createArraySchema());
+        new GenericData.Array<>(1, createArraySchema());
       array.add(optional_entry);
 
       GenericData.Record container = new GenericData.Record(createSchema());
       container.put("Optional", array);
 
-      out.collect(new AvroWrapper<Pair<Long,GenericData.Record>>
-                  (new Pair<Long,GenericData.Record>(key.get(), container)),
+      out.collect(new AvroWrapper<>
+          (new Pair<>(key.get(), container)),
                   NullWritable.get());
     }
   }

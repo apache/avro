@@ -40,7 +40,7 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
   public AvroAsTextRecordReader(JobConf job, FileSplit split)
     throws IOException {
     this(DataFileReader.openReader
-         (new FsInput(split.getPath(), job), new GenericDatumReader<T>()), split);
+         (new FsInput(split.getPath(), job), new GenericDatumReader<>()), split);
   }
 
   protected AvroAsTextRecordReader(FileReader<T> reader, FileSplit split)

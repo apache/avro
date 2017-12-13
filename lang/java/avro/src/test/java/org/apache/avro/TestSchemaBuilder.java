@@ -65,7 +65,7 @@ public class TestSchemaBuilder {
         new Schema.Field("f1", Schema.create(Schema.Type.LONG), "This is f1", null),
         fields.get(1));
 
-    List<Schema> types = new ArrayList<Schema>();
+    List<Schema> types = new ArrayList<>();
     types.add(Schema.create(Schema.Type.BOOLEAN));
     types.add(Schema.create(Schema.Type.NULL));
     Schema optional = Schema.createUnion(types);
@@ -324,7 +324,7 @@ public class TestSchemaBuilder {
 
   @Test
   public void testUnionAndNullable() {
-    List<Schema> types = new ArrayList<Schema>();
+    List<Schema> types = new ArrayList<>();
     types.add(Schema.create(Schema.Type.LONG));
     types.add(Schema.create(Schema.Type.NULL));
     Schema expected = Schema.createUnion(types);
@@ -509,9 +509,9 @@ public class TestSchemaBuilder {
     byte[] bytedef = new byte[]{3};
     ByteBuffer bufdef = ByteBuffer.wrap(bytedef);
     String strdef = "\u0003";
-    HashMap<String, String> mapdef = new HashMap<String, String>();
+    HashMap<String, String> mapdef = new HashMap<>();
     mapdef.put("a", "A");
-    ArrayList<String> arrdef = new ArrayList<String>();
+    ArrayList<String> arrdef = new ArrayList<>();
     arrdef.add("arr");
 
     Schema rec = SchemaBuilder.record("inner").fields()
@@ -692,7 +692,7 @@ public class TestSchemaBuilder {
 
     // write to file
     DataFileWriter<Object> writer =
-        new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+      new DataFileWriter<>(new GenericDatumWriter<>());
     writer.create(writeSchema, FILE);
     writer.append(rec1);
     writer.append(rec2);
@@ -707,8 +707,8 @@ public class TestSchemaBuilder {
         .endRecord();
 
     DataFileReader<GenericData.Record> reader =
-        new DataFileReader<GenericData.Record>(FILE,
-            new GenericDatumReader<GenericData.Record>(writeSchema, readSchema));
+      new DataFileReader<>(FILE,
+        new GenericDatumReader<>(writeSchema, readSchema));
 
     GenericData.Record rec1read = reader.iterator().next();
     Assert.assertEquals(1, rec1read.get("requiredInt"));

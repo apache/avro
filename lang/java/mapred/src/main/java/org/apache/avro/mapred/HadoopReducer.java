@@ -38,7 +38,7 @@ class HadoopReducer<K,V,OUT>
   }
 
   private class ReduceCollector extends AvroCollector<OUT> {
-    private final AvroWrapper<OUT> wrapper = new AvroWrapper<OUT>(null);
+    private final AvroWrapper<OUT> wrapper = new AvroWrapper<>(null);
     private OutputCollector<AvroWrapper<OUT>, NullWritable> out;
 
     public ReduceCollector(OutputCollector<AvroWrapper<OUT>,NullWritable> out) {

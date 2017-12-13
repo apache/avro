@@ -385,7 +385,7 @@ public class TestSchemaValidation {
 
   private void testValidatorPasses(SchemaValidator validator,
       Schema schema, Schema... prev) throws SchemaValidationException {
-    ArrayList<Schema> prior = new ArrayList<Schema>();
+    ArrayList<Schema> prior = new ArrayList<>();
     for(int i = prev.length - 1; i >= 0; i--) {
       prior.add(prev[i]);
     }
@@ -394,7 +394,7 @@ public class TestSchemaValidation {
 
   private void testValidatorFails(SchemaValidator validator,
       Schema schemaFails, Schema... prev) throws SchemaValidationException {
-    ArrayList<Schema> prior = new ArrayList<Schema>();
+    ArrayList<Schema> prior = new ArrayList<>();
     for(int i = prev.length - 1; i >= 0; i--) {
       prior.add(prev[i]);
     }

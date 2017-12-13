@@ -46,7 +46,7 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
       };
 
   private static final ThreadLocal<BinaryEncoder> ENCODER =
-      new ThreadLocal<BinaryEncoder>();
+    new ThreadLocal<>();
 
   private final Schema writeSchema;
   private final boolean copyOutputBytes;

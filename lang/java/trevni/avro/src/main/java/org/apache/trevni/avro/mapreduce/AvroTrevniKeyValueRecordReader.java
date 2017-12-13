@@ -38,9 +38,9 @@ import org.apache.avro.mapred.AvroValue;
 public class AvroTrevniKeyValueRecordReader<K, V> extends AvroTrevniRecordReaderBase<AvroKey<K>, AvroValue<V>, GenericRecord> {
 
   /** The current key the reader is on. */
-  private final AvroKey<K> mCurrentKey = new AvroKey<K>();
+  private final AvroKey<K> mCurrentKey = new AvroKey<>();
   /** The current value the reader is on. */
-  private final AvroValue<V> mCurrentValue = new AvroValue<V>();
+  private final AvroValue<V> mCurrentValue = new AvroValue<>();
 
   /** {@inheritDoc} */
   @Override
@@ -60,7 +60,7 @@ public class AvroTrevniKeyValueRecordReader<K, V> extends AvroTrevniRecordReader
   @Override
   public boolean nextKeyValue() throws IOException, InterruptedException {
     boolean hasNext = super.nextKeyValue();
-    AvroKeyValue<K, V> avroKeyValue = new AvroKeyValue<K, V>(getCurrentRecord());
+    AvroKeyValue<K, V> avroKeyValue = new AvroKeyValue<>(getCurrentRecord());
     mCurrentKey.datum(avroKeyValue.getKey());
     mCurrentValue.datum(avroKeyValue.getValue());
     return hasNext;

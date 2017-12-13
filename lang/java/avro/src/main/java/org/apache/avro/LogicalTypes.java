@@ -33,7 +33,7 @@ public class LogicalTypes {
   }
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES =
-      new ConcurrentHashMap<String, LogicalTypeFactory>();
+    new ConcurrentHashMap<>();
 
   public static void register(String logicalTypeName, LogicalTypeFactory factory) {
     if (logicalTypeName == null) {

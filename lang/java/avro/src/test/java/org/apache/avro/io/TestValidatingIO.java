@@ -226,7 +226,7 @@ public class TestValidatingIO {
   public static Object[] randomValues(String calls) {
     Random r = new Random(0L);
     InputScanner cs = new InputScanner(calls.toCharArray());
-    List<Object> result = new ArrayList<Object>();
+    List<Object> result = new ArrayList<>();
     while (! cs.isDone()) {
       char c = cs.cur();
       cs.next();
@@ -534,7 +534,7 @@ public class TestValidatingIO {
   };
 
   public static Object[][] convertTo2dArray(final Object[][]... values) {
-    ArrayList<Object[]> ret = new ArrayList<Object[]>();
+    ArrayList<Object[]> ret = new ArrayList<>();
 
     Iterator<Object[]> iter = cartesian(values);
     while (iter.hasNext()) {

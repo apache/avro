@@ -52,7 +52,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
   private DataFileReader.SeekableInputStream in;
   private BinaryDecoder vin;
 
-  private Map<String,byte[]> meta = new HashMap<String,byte[]>();
+  private Map<String,byte[]> meta = new HashMap<>();
 
   private long count;                           // # entries in file
   private long blockCount;                      // # entries in block

@@ -67,11 +67,11 @@ public class DataFileReadTool implements Tool {
 
     BufferedInputStream inStream = Util.fileOrStdin(nargs.get(0), stdin);
 
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    DataFileStream<Object> streamReader = new DataFileStream<Object>(inStream, reader);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    DataFileStream<Object> streamReader = new DataFileStream<>(inStream, reader);
     try {
       Schema schema = streamReader.getSchema();
-      DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+      DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
       for (Object datum : streamReader)
         writer.write(datum, encoder);

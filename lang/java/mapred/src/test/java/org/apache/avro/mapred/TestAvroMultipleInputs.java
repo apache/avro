@@ -159,10 +159,10 @@ public class TestAvroMultipleInputs {
         AvroCollector<Pair<KeyRecord, JoinableRecord>> collector,
         Reporter reporter) throws IOException {
       collector.collect(
-          new Pair<KeyRecord, JoinableRecord>(
-              new KeyRecord(nameRecord.id),
-              new JoinableRecord(nameRecord.getClass().getName(),
-                  nameRecord.id, nameRecord.name, -1L)));
+        new Pair<>(
+          new KeyRecord(nameRecord.id),
+          new JoinableRecord(nameRecord.getClass().getName(),
+            nameRecord.id, nameRecord.name, -1L)));
     }
 
   }
@@ -176,10 +176,10 @@ public class TestAvroMultipleInputs {
           AvroCollector<Pair<KeyRecord, JoinableRecord>> collector,
           Reporter reporter) throws IOException {
       collector.collect(
-          new Pair<KeyRecord, JoinableRecord>(
-              new KeyRecord(balanceRecord.id),
-              new JoinableRecord(balanceRecord.getClass().getName(),
-                  balanceRecord.id, "", balanceRecord.balance)));
+        new Pair<>(
+          new KeyRecord(balanceRecord.id),
+          new JoinableRecord(balanceRecord.getClass().getName(),
+            balanceRecord.id, "", balanceRecord.balance)));
     }
 
   }
@@ -250,8 +250,8 @@ public class TestAvroMultipleInputs {
    * Writes a "names.avro" file with five sequential <id, name> pairs.
    */
   private void writeNamesFiles(File dir) throws IOException {
-    DatumWriter<NamesRecord> writer = new ReflectDatumWriter<NamesRecord>();
-    DataFileWriter<NamesRecord> out = new DataFileWriter<NamesRecord>(writer);
+    DatumWriter<NamesRecord> writer = new ReflectDatumWriter<>();
+    DataFileWriter<NamesRecord> out = new DataFileWriter<>(writer);
     File namesFile = new File(dir+"/names.avro");
     dir.mkdirs();
     out.create(ReflectData.get().getSchema(NamesRecord.class), namesFile);
@@ -265,9 +265,9 @@ public class TestAvroMultipleInputs {
    */
   private void writeBalancesFiles(File dir) throws IOException {
     DatumWriter<BalancesRecord> writer =
-        new ReflectDatumWriter<BalancesRecord>();
+      new ReflectDatumWriter<>();
     DataFileWriter<BalancesRecord> out =
-        new DataFileWriter<BalancesRecord>(writer);
+      new DataFileWriter<>(writer);
     File namesFile = new File(dir+"/balances.avro");
     dir.mkdirs();
     out.create(ReflectData.get().getSchema(BalancesRecord.class), namesFile);
@@ -278,10 +278,10 @@ public class TestAvroMultipleInputs {
 
   private void validateCompleteFile(File file) throws Exception {
     DatumReader<CompleteRecord> reader =
-        new ReflectDatumReader<CompleteRecord>();
+      new ReflectDatumReader<>();
     InputStream in = new BufferedInputStream(new FileInputStream(file));
     DataFileStream<CompleteRecord> records =
-        new DataFileStream<CompleteRecord>(in,reader);
+      new DataFileStream<>(in, reader);
     int numRecs = 0;
     for (CompleteRecord rec : records) {
       assertEquals(rec.id, numRecs);

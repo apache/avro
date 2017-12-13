@@ -68,8 +68,8 @@ public abstract class AvroDeserializer<T extends AvroWrapper<D>, D> implements D
                              ClassLoader classLoader) {
     mWriterSchema = writerSchema;
     mReaderSchema = null != readerSchema ? readerSchema : writerSchema;
-    mAvroDatumReader = new ReflectDatumReader<D>(mWriterSchema, mReaderSchema,
-                                                 new ReflectData(classLoader));
+    mAvroDatumReader = new ReflectDatumReader<>(mWriterSchema, mReaderSchema,
+      new ReflectData(classLoader));
   }
 
   /**

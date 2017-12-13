@@ -101,7 +101,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     RESOLVER_CACHE =
     new ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>() {
     protected Map<Schema,Map<Schema,ResolvingDecoder>> initialValue() {
-      return new WeakIdentityHashMap<Schema,Map<Schema,ResolvingDecoder>>();
+      return new WeakIdentityHashMap<>();
     }
   };
 
@@ -120,7 +120,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
     Map<Schema,ResolvingDecoder> cache = RESOLVER_CACHE.get().get(actual);
     if (cache == null) {
-      cache = new WeakIdentityHashMap<Schema,ResolvingDecoder>();
+      cache = new WeakIdentityHashMap<>();
       RESOLVER_CACHE.get().put(actual, cache);
     }
     resolver = cache.get(expected);
@@ -399,7 +399,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (old instanceof Map) {
       ((Map) old).clear();
       return old;
-    } else return new HashMap<Object, Object>(size);
+    } else return new HashMap<>(size);
   }
 
   /** Called to read strings.  Subclasses may override to use a different
@@ -445,7 +445,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   }
 
   private Map<Schema,Class> stringClassCache =
-    new IdentityHashMap<Schema,Class>();
+    new IdentityHashMap<>();
 
   private Class getStringClass(Schema s) {
     Class c = stringClassCache.get(s);
@@ -457,7 +457,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   }
 
   private final Map<Class,Constructor> stringCtorCache =
-    new HashMap<Class,Constructor>();
+    new HashMap<>();
 
   @SuppressWarnings("unchecked")
   protected Object newInstanceFromString(Class c, String s) {

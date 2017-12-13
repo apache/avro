@@ -55,7 +55,7 @@ public class TestGenericDatumWriter {
     r.put("f1", 100L);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     GenericDatumWriter<GenericRecord> w =
-      new GenericDatumWriter<GenericRecord>(s);
+      new GenericDatumWriter<>(s);
     Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
     w.write(r, e);
     e.flush();
@@ -69,10 +69,10 @@ public class TestGenericDatumWriter {
   public void testArrayConcurrentModification() throws Exception {
     String json = "{\"type\": \"array\", \"items\": \"int\" }";
     Schema s = Schema.parse(json);
-    final GenericArray<Integer> a = new GenericData.Array<Integer>(1, s);
+    final GenericArray<Integer> a = new GenericData.Array<>(1, s);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     final GenericDatumWriter<GenericArray<Integer>> w =
-      new GenericDatumWriter<GenericArray<Integer>>(s);
+      new GenericDatumWriter<>(s);
 
     CountDownLatch sizeWrittenSignal = new CountDownLatch(1);
     CountDownLatch eltAddedSignal = new CountDownLatch(1);
@@ -107,10 +107,10 @@ public class TestGenericDatumWriter {
   public void testMapConcurrentModification() throws Exception {
     String json = "{\"type\": \"map\", \"values\": \"int\" }";
     Schema s = Schema.parse(json);
-    final Map<String, Integer> m = new HashMap<String, Integer>();
+    final Map<String, Integer> m = new HashMap<>();
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     final GenericDatumWriter<Map<String, Integer>> w =
-      new GenericDatumWriter<Map<String, Integer>>(s);
+      new GenericDatumWriter<>(s);
 
     CountDownLatch sizeWrittenSignal = new CountDownLatch(1);
     CountDownLatch eltAddedSignal = new CountDownLatch(1);
@@ -227,7 +227,7 @@ public class TestGenericDatumWriter {
 
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     GenericDatumWriter<GenericRecord> writer =
-      new GenericDatumWriter<GenericRecord>(schema);
+      new GenericDatumWriter<>(schema);
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
 
     writer.write(record, encoder);
@@ -250,7 +250,7 @@ public class TestGenericDatumWriter {
 
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     GenericDatumWriter<GenericRecord> writer =
-      new GenericDatumWriter<GenericRecord>(schema);
+      new GenericDatumWriter<>(schema);
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
 
     writer.write(record, encoder);
@@ -285,7 +285,7 @@ public class TestGenericDatumWriter {
 
   private void writeObject(Schema schema, GenericRecord datum) throws Exception {
     BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(new ByteArrayOutputStream(), null);
-    GenericDatumWriter<GenericData.Record> writer = new GenericDatumWriter<GenericData.Record>(schema);
+    GenericDatumWriter<GenericData.Record> writer = new GenericDatumWriter<>(schema);
     writer.write(schema, datum, encoder);
   }
 

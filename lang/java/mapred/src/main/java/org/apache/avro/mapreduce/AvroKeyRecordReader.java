@@ -44,7 +44,7 @@ public class AvroKeyRecordReader<T> extends AvroRecordReaderBase<AvroKey<T>, Nul
    */
   public AvroKeyRecordReader(Schema readerSchema) {
     super(readerSchema);
-    mCurrentRecord = new AvroKey<T>(null);
+    mCurrentRecord = new AvroKey<>(null);
   }
 
   /** {@inheritDoc} */

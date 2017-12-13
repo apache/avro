@@ -81,7 +81,7 @@ public class StatsServlet extends HttpServlet {
 
     public RenderableMessage(String name) {
       this.name = name;
-      this.charts = new ArrayList<HashMap<String, String>>();
+      this.charts = new ArrayList<>();
     }
 
     public ArrayList<HashMap<String, String>> getCharts() {
@@ -129,10 +129,10 @@ public class StatsServlet extends HttpServlet {
     VelocityContext context = new VelocityContext();
     context.put("title", "Avro RPC Stats");
 
-    ArrayList<String> rpcs = new ArrayList<String>();  // in flight rpcs
+    ArrayList<String> rpcs = new ArrayList<>();  // in flight rpcs
 
     ArrayList<RenderableMessage> messages =
-      new ArrayList<RenderableMessage>();
+      new ArrayList<>();
 
     for (Entry<RPCContext, Stopwatch> rpc :
          this.statsPlugin.activeRpcs.entrySet()) {
@@ -185,7 +185,7 @@ public class StatsServlet extends HttpServlet {
       FloatHistogram<?> hist = this.statsPlugin.methodTimings.get(message);
       out.numCalls = hist.getCount();
 
-      HashMap<String, String> latencyBar = new HashMap<String, String>();
+      HashMap<String, String> latencyBar = new HashMap<>();
       // Fill in chart attributes for velocity
       latencyBar.put("type", "bar");
       latencyBar.put("title", "All-Time Latency");
@@ -201,7 +201,7 @@ public class StatsServlet extends HttpServlet {
       latencyBar.put("dataStr", Arrays.toString(hist.getHistogram()));
       out.charts.add(latencyBar);
 
-      HashMap<String, String> latencyDot = new HashMap<String, String>();
+      HashMap<String, String> latencyDot = new HashMap<>();
       latencyDot.put("title", "Latency");
       latencyDot.put("type", "dot");
       latencyDot.put("dataStr",
@@ -211,7 +211,7 @@ public class StatsServlet extends HttpServlet {
 
     synchronized(this.statsPlugin.sendPayloads) {
       IntegerHistogram<?> hist = this.statsPlugin.sendPayloads.get(message);
-      HashMap<String, String> latencyBar = new HashMap<String, String>();
+      HashMap<String, String> latencyBar = new HashMap<>();
       // Fill in chart attributes for velocity
       latencyBar.put("type", "bar");
       latencyBar.put("title", "All-Time Send Payload");
@@ -227,7 +227,7 @@ public class StatsServlet extends HttpServlet {
       latencyBar.put("dataStr", Arrays.toString(hist.getHistogram()));
       out.charts.add(latencyBar);
 
-      HashMap<String, String> latencyDot = new HashMap<String, String>();
+      HashMap<String, String> latencyDot = new HashMap<>();
       latencyDot.put("title", "Send Payload");
       latencyDot.put("type", "dot");
       latencyDot.put("dataStr",
@@ -237,7 +237,7 @@ public class StatsServlet extends HttpServlet {
 
     synchronized(this.statsPlugin.receivePayloads) {
       IntegerHistogram<?> hist = this.statsPlugin.receivePayloads.get(message);
-      HashMap<String, String> latencyBar = new HashMap<String, String>();
+      HashMap<String, String> latencyBar = new HashMap<>();
       // Fill in chart attributes for velocity
       latencyBar.put("type", "bar");
       latencyBar.put("title", "All-Time Receive Payload");
@@ -253,7 +253,7 @@ public class StatsServlet extends HttpServlet {
       latencyBar.put("dataStr", Arrays.toString(hist.getHistogram()));
       out.charts.add(latencyBar);
 
-      HashMap<String, String> latencyDot = new HashMap<String, String>();
+      HashMap<String, String> latencyDot = new HashMap<>();
       latencyDot.put("title", "Recv Payload");
       latencyDot.put("type", "dot");
       latencyDot.put("dataStr",

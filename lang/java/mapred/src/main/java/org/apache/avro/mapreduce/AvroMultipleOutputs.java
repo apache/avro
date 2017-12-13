@@ -141,7 +141,7 @@ public class AvroMultipleOutputs{
   /**
    * Cache for the taskContexts
    */
-  private Map<String, TaskAttemptContext> taskContexts = new HashMap<String, TaskAttemptContext>();
+  private Map<String, TaskAttemptContext> taskContexts = new HashMap<>();
 
   /**
    * Checks if a named output name is valid token.
@@ -204,7 +204,7 @@ public class AvroMultipleOutputs{
 
   // Returns list of channel names.
   private static List<String> getNamedOutputsList(JobContext job) {
-    List<String> names = new ArrayList<String>();
+    List<String> names = new ArrayList<>();
     StringTokenizer st = new StringTokenizer(
       job.getConfiguration().get(MULTIPLE_OUTPUTS, ""), " ");
     while (st.hasMoreTokens()) {
@@ -340,8 +340,8 @@ public class AvroMultipleOutputs{
       TaskInputOutputContext<?, ?, ?, ?> context) {
     this.context = context;
     namedOutputs = Collections.unmodifiableSet(
-      new HashSet<String>(AvroMultipleOutputs.getNamedOutputsList(context)));
-    recordWriters = new HashMap<String, RecordWriter<?, ?>>();
+      new HashSet<>(AvroMultipleOutputs.getNamedOutputsList(context)));
+    recordWriters = new HashMap<>();
     countersEnabled = getCountersEnabled(context);
   }
 

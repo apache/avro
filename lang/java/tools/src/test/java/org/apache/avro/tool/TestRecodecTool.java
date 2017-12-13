@@ -39,12 +39,12 @@ public class TestRecodecTool {
   public void testRecodec() throws Exception {
     String metaKey = "myMetaKey";
     String metaValue = "myMetaValue";
-    
+
     File inputFile = AvroTestUtil.tempFile(getClass(), "input.avro");
-    
+
     Schema schema = Schema.create(Type.STRING);
-    DataFileWriter<String> writer = new DataFileWriter<String>(
-        new GenericDatumWriter<String>(schema))
+    DataFileWriter<String> writer = new DataFileWriter<>(
+      new GenericDatumWriter<String>(schema))
         .setMeta(metaKey, metaValue)
         .create(schema, inputFile);
     // We write some garbage which should be quite compressible by deflate,
@@ -61,38 +61,38 @@ public class TestRecodecTool {
     File deflateDefaultOutputFile = AvroTestUtil.tempFile(getClass(), "deflate-default-output.avro");
     File deflate1OutputFile = AvroTestUtil.tempFile(getClass(), "deflate-1-output.avro");
     File deflate9OutputFile = AvroTestUtil.tempFile(getClass(), "deflate-9-output.avro");
-    
-    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(defaultOutputFile), null, new ArrayList<String>());
+
+    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(defaultOutputFile), null, new ArrayList<>());
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(nullOutputFile), null, asList("--codec=null"));
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflateDefaultOutputFile), null, asList("--codec=deflate"));
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate1OutputFile), null, asList("--codec=deflate", "--level=1"));
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate9OutputFile), null, asList("--codec=deflate", "--level=9"));
-    
+
     // We assume that metadata copying is orthogonal to codec selection, and
     // so only test it for a single file.
     Assert.assertEquals(
       metaValue,
-      new DataFileReader<Void>(defaultOutputFile, new GenericDatumReader<Void>())
+      new DataFileReader<>(defaultOutputFile, new GenericDatumReader<>())
         .getMetaString(metaKey));
-    
+
     // The "default" codec should be the same as null.
     Assert.assertEquals(defaultOutputFile.length(), nullOutputFile.length());
-    
+
     // All of the deflated files should be smaller than the null file.
     assertLessThan(deflateDefaultOutputFile.length(), nullOutputFile.length());
     assertLessThan(deflate1OutputFile.length(), nullOutputFile.length());
     assertLessThan(deflate9OutputFile.length(), nullOutputFile.length());
-    
+
     // The "level 9" file should be smaller than the "level 1" file.
     assertLessThan(deflate9OutputFile.length(), deflate1OutputFile.length());
-    
+
 //    System.err.println(inputFile.length());
 //    System.err.println(defaultOutputFile.length());
 //    System.err.println(nullOutputFile.length());
 //    System.err.println(deflateDefaultOutputFile.length());
 //    System.err.println(deflate1OutputFile.length());
 //    System.err.println(deflate9OutputFile.length());
-    
+
     inputFile.delete();
     defaultOutputFile.delete();
     nullOutputFile.delete();
@@ -100,7 +100,7 @@ public class TestRecodecTool {
     deflate1OutputFile.delete();
     deflate9OutputFile.delete();
   }
-  
+
   private static void assertLessThan(long less, long more) {
     if (less >= more) {
       Assert.fail("Expected " + less + " to be less than " + more);

@@ -218,7 +218,7 @@ public class AvroMultipleOutputs {
    * @return List of channel Names
    */
   public static List<String> getNamedOutputsList(JobConf conf) {
-    List<String> names = new ArrayList<String>();
+    List<String> names = new ArrayList<>();
     StringTokenizer st = new StringTokenizer(conf.get(NAMED_OUTPUTS, ""), " ");
     while (st.hasMoreTokens()) {
       names.add(st.nextToken());
@@ -376,8 +376,8 @@ public class AvroMultipleOutputs {
     this.conf = job;
     outputFormat = new InternalFileOutputFormat();
     namedOutputs = Collections.unmodifiableSet(
-      new HashSet<String>(AvroMultipleOutputs.getNamedOutputsList(job)));
-    recordWriters = new HashMap<String, RecordWriter>();
+      new HashSet<>(AvroMultipleOutputs.getNamedOutputsList(job)));
+    recordWriters = new HashMap<>();
     countersEnabled = getCountersEnabled(job);
   }
 

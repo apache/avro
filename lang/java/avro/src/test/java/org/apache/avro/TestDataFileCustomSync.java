@@ -40,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 public class TestDataFileCustomSync {
   private byte[] createDataFile(byte[] sync) throws IOException {
     Schema schema = Schema.create(Type.STRING);
-    DataFileWriter<Utf8> w = new DataFileWriter<Utf8>(new GenericDatumWriter<Utf8>(schema));
+    DataFileWriter<Utf8> w = new DataFileWriter<>(new GenericDatumWriter<>(schema));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     w.create(schema, baos, sync);
     w.append(new Utf8("apple"));

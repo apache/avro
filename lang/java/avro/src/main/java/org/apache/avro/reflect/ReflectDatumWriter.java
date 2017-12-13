@@ -148,7 +148,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       // Schema for such maps is already changed. Here we
       // just switch the map to a similar form too.
       Set entries = ((Map)datum).entrySet();
-      List<Map.Entry> entryList = new ArrayList<Map.Entry>(entries.size());
+      List<Map.Entry> entryList = new ArrayList<>(entries.size());
       for (Object obj: ((Map)datum).entrySet()) {
           Map.Entry e = (Map.Entry)obj;
           entryList.add(new MapEntry(e.getKey(), e.getValue()));

@@ -271,8 +271,8 @@ public abstract class Symbol {
     private static Symbol[] makeProduction(Symbol[] symbols) {
       Symbol[] result = new Symbol[flattenedSize(symbols, 0) + 1];
       flatten(symbols, 0, result, 1,
-          new HashMap<Sequence, Sequence>(),
-          new HashMap<Sequence, List<Fixup>>());
+        new HashMap<>(),
+        new HashMap<>());
       return result;
     }
   }
@@ -318,7 +318,7 @@ public abstract class Symbol {
       if (result == null) {
         result = new Sequence(new Symbol[flattenedSize()]);
         map.put(this, result);
-        List<Fixup> l = new ArrayList<Fixup>();
+        List<Fixup> l = new ArrayList<>();
         map2.put(result, l);
 
         flatten(production, 0,

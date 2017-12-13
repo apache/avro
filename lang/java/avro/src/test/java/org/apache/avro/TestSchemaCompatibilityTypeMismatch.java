@@ -107,7 +107,7 @@ public class TestSchemaCompatibilityTypeMismatch {
 
         { NULL_SCHEMA, INT_SCHEMA, "reader type: NULL not compatible with writer type: INT", "/" }
     };
-    List<Object[]> list = new ArrayList<Object[]>(fields.length);
+    List<Object[]> list = new ArrayList<>(fields.length);
     for (Object[] schemas : fields) {
       list.add(schemas);
     }

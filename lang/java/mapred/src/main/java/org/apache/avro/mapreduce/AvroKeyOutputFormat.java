@@ -76,7 +76,7 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
     protected RecordWriter<AvroKey<T>, NullWritable> create(
         Schema writerSchema, GenericData dataModel, CodecFactory compressionCodec,
         OutputStream outputStream, int syncInterval) throws IOException {
-      return new AvroKeyRecordWriter<T>(writerSchema, dataModel, compressionCodec, outputStream, syncInterval);
+      return new AvroKeyRecordWriter<>(writerSchema, dataModel, compressionCodec, outputStream, syncInterval);
     }
   }
 

@@ -46,7 +46,7 @@ public class TestWordCount {
                       Reporter reporter) throws IOException {
       StringTokenizer tokens = new StringTokenizer(text.toString());
       while (tokens.hasMoreTokens())
-        collector.collect(new Pair<Utf8,Long>(new Utf8(tokens.nextToken()),1L));
+        collector.collect(new Pair<>(new Utf8(tokens.nextToken()), 1L));
     }
   }
 
@@ -59,7 +59,7 @@ public class TestWordCount {
       long sum = 0;
       for (long count : counts)
         sum += count;
-      collector.collect(new Pair<Utf8,Long>(word, sum));
+      collector.collect(new Pair<>(word, sum));
     }
   }
 
@@ -121,9 +121,9 @@ public class TestWordCount {
     FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
     FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
 
-    AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<Pair<Integer, Long>>(job, fileSplit);
+    AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<>(job, fileSplit);
 
-    AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<Pair<Integer, Long>>(null);
+    AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<>(null);
     NullWritable ignore = NullWritable.get();
 
     long sumOfCounts = 0;

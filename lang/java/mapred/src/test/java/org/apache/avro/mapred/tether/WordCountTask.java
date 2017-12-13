@@ -37,7 +37,7 @@ public class WordCountTask
     throws IOException {
     StringTokenizer tokens = new StringTokenizer(text.toString());
     while (tokens.hasMoreTokens())
-      collector.collect(new Pair<Utf8,Long>(new Utf8(tokens.nextToken()),1L));
+      collector.collect(new Pair<>(new Utf8(tokens.nextToken()), 1L));
   }
 
   private long sum;

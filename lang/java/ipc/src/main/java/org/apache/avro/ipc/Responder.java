@@ -54,15 +54,15 @@ public abstract class Responder {
   private static final Schema META =
     Schema.createMap(Schema.create(Schema.Type.BYTES));
   private static final GenericDatumReader<Map<String,ByteBuffer>>
-    META_READER = new GenericDatumReader<Map<String,ByteBuffer>>(META);
+    META_READER = new GenericDatumReader<>(META);
   private static final GenericDatumWriter<Map<String,ByteBuffer>>
-    META_WRITER = new GenericDatumWriter<Map<String,ByteBuffer>>(META);
+    META_WRITER = new GenericDatumWriter<>(META);
 
   private static final ThreadLocal<Protocol> REMOTE =
-    new ThreadLocal<Protocol>();
+    new ThreadLocal<>();
 
   private final Map<MD5,Protocol> protocols
-    = new ConcurrentHashMap<MD5,Protocol>();
+    = new ConcurrentHashMap<>();
 
   private final Protocol local;
   private final MD5 localHash;
@@ -74,7 +74,7 @@ public abstract class Responder {
     localHash.bytes(local.getMD5());
     protocols.put(localHash, local);
     this.rpcMetaPlugins =
-      new CopyOnWriteArrayList<RPCPlugin>();
+      new CopyOnWriteArrayList<>();
   }
 
   /** Return the remote protocol.  Accesses a {@link ThreadLocal} that's set
@@ -199,9 +199,9 @@ public abstract class Responder {
   }
 
   private SpecificDatumWriter<HandshakeResponse> handshakeWriter =
-    new SpecificDatumWriter<HandshakeResponse>(HandshakeResponse.class);
+    new SpecificDatumWriter<>(HandshakeResponse.class);
   private SpecificDatumReader<HandshakeRequest> handshakeReader =
-    new SpecificDatumReader<HandshakeRequest>(HandshakeRequest.class);
+    new SpecificDatumReader<>(HandshakeRequest.class);
 
   private Protocol handshake(Decoder in, Encoder out, Transceiver connection)
     throws IOException {

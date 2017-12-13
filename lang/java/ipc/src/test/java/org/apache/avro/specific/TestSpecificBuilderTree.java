@@ -59,7 +59,7 @@ public class TestSpecificBuilderTree {
       requestBuilder
         .getHttpRequestBuilder()
           .getURIBuilder()
-            .setParameters(new ArrayList<QueryParameter>());
+            .setParameters(new ArrayList<>());
     }
 
     requestBuilder

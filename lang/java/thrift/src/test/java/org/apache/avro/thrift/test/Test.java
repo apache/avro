@@ -52,7 +52,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   private static final org.apache.thrift.protocol.TField STRUCT_FIELD_FIELD_DESC = new org.apache.thrift.protocol.TField("structField", org.apache.thrift.protocol.TType.STRUCT, (short)13);
   private static final org.apache.thrift.protocol.TField FOO_OR_BAR_FIELD_DESC = new org.apache.thrift.protocol.TField("fooOrBar", org.apache.thrift.protocol.TType.STRUCT, (short)14);
 
-  private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+  private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<>();
   static {
     schemes.put(StandardScheme.class, new TestStandardSchemeFactory());
     schemes.put(TupleScheme.class, new TestTupleSchemeFactory());
@@ -98,7 +98,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     STRUCT_FIELD((short)13, "structField"),
     FOO_OR_BAR((short)14, "fooOrBar");
 
-    private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+    private static final Map<String, _Fields> byName = new HashMap<>();
 
     static {
       for (_Fields field : EnumSet.allOf(_Fields.class)) {
@@ -195,7 +195,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   private _Fields optionals[] = {_Fields.BYTE_OPTIONAL_FIELD,_Fields.I16_OPTIONAL_FIELD,_Fields.I32_FIELD,_Fields.BINARY_FIELD};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
-    Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+    Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
     tmpMap.put(_Fields.BOOL_FIELD, new org.apache.thrift.meta_data.FieldMetaData("boolField", org.apache.thrift.TFieldRequirementType.DEFAULT,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.BYTE_FIELD, new org.apache.thrift.meta_data.FieldMetaData("byteField", org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -294,15 +294,15 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
 ;
     }
     if (other.isSetMapField()) {
-      Map<String,Integer> __this__mapField = new HashMap<String,Integer>(other.mapField);
+      Map<String,Integer> __this__mapField = new HashMap<>(other.mapField);
       this.mapField = __this__mapField;
     }
     if (other.isSetListField()) {
-      List<Integer> __this__listField = new ArrayList<Integer>(other.listField);
+      List<Integer> __this__listField = new ArrayList<>(other.listField);
       this.listField = __this__listField;
     }
     if (other.isSetSetField()) {
-      Set<Integer> __this__setField = new HashSet<Integer>(other.setField);
+      Set<Integer> __this__setField = new HashSet<>(other.setField);
       this.setField = __this__setField;
     }
     if (other.isSetEnumField()) {
@@ -585,7 +585,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
 
   public void putToMapField(String key, int val) {
     if (this.mapField == null) {
-      this.mapField = new HashMap<String,Integer>();
+      this.mapField = new HashMap<>();
     }
     this.mapField.put(key, val);
   }
@@ -623,7 +623,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
 
   public void addToListField(int elem) {
     if (this.listField == null) {
-      this.listField = new ArrayList<Integer>();
+      this.listField = new ArrayList<>();
     }
     this.listField.add(elem);
   }
@@ -661,7 +661,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
 
   public void addToSetField(int elem) {
     if (this.setField == null) {
-      this.setField = new HashSet<Integer>();
+      this.setField = new HashSet<>();
     }
     this.setField.add(elem);
   }
@@ -1584,7 +1584,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
                 org.apache.thrift.protocol.TMap _map0 = iprot.readMapBegin();
-                struct.mapField = new HashMap<String,Integer>(2*_map0.size);
+                struct.mapField = new HashMap<>(2 * _map0.size);
                 for (int _i1 = 0; _i1 < _map0.size; ++_i1)
                 {
                   String _key2;
@@ -1604,7 +1604,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
                 org.apache.thrift.protocol.TList _list4 = iprot.readListBegin();
-                struct.listField = new ArrayList<Integer>(_list4.size);
+                struct.listField = new ArrayList<>(_list4.size);
                 for (int _i5 = 0; _i5 < _list4.size; ++_i5)
                 {
                   int _elem6;
@@ -1622,7 +1622,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
             if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
               {
                 org.apache.thrift.protocol.TSet _set7 = iprot.readSetBegin();
-                struct.setField = new HashSet<Integer>(2*_set7.size);
+                struct.setField = new HashSet<>(2 * _set7.size);
                 for (int _i8 = 0; _i8 < _set7.size; ++_i8)
                 {
                   int _elem9;
@@ -1952,7 +1952,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       if (incoming.get(10)) {
         {
           org.apache.thrift.protocol.TMap _map16 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I32, iprot.readI32());
-          struct.mapField = new HashMap<String,Integer>(2*_map16.size);
+          struct.mapField = new HashMap<>(2 * _map16.size);
           for (int _i17 = 0; _i17 < _map16.size; ++_i17)
           {
             String _key18;
@@ -1967,7 +1967,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       if (incoming.get(11)) {
         {
           org.apache.thrift.protocol.TList _list20 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I32, iprot.readI32());
-          struct.listField = new ArrayList<Integer>(_list20.size);
+          struct.listField = new ArrayList<>(_list20.size);
           for (int _i21 = 0; _i21 < _list20.size; ++_i21)
           {
             int _elem22;
@@ -1980,7 +1980,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
       if (incoming.get(12)) {
         {
           org.apache.thrift.protocol.TSet _set23 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.I32, iprot.readI32());
-          struct.setField = new HashSet<Integer>(2*_set23.size);
+          struct.setField = new HashSet<>(2 * _set23.size);
           for (int _i24 = 0; _i24 < _set23.size; ++_i24)
           {
             int _elem25;

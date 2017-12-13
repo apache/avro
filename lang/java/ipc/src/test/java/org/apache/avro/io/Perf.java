@@ -76,17 +76,17 @@ public class Perf {
     }
   }
 
-  private static final List<TestDescriptor> BASIC = new ArrayList<TestDescriptor>();
-  private static final List<TestDescriptor> RECORD = new ArrayList<TestDescriptor>();
-  private static final List<TestDescriptor> GENERIC = new ArrayList<TestDescriptor>();
-  private static final List<TestDescriptor> GENERIC_ONETIME = new ArrayList<TestDescriptor>();
-  private static final List<TestDescriptor> SPECIFIC = new ArrayList<TestDescriptor>();
-  private static final List<TestDescriptor> REFLECT = new ArrayList<TestDescriptor>();
+  private static final List<TestDescriptor> BASIC = new ArrayList<>();
+  private static final List<TestDescriptor> RECORD = new ArrayList<>();
+  private static final List<TestDescriptor> GENERIC = new ArrayList<>();
+  private static final List<TestDescriptor> GENERIC_ONETIME = new ArrayList<>();
+  private static final List<TestDescriptor> SPECIFIC = new ArrayList<>();
+  private static final List<TestDescriptor> REFLECT = new ArrayList<>();
   private static final LinkedHashMap<String, TestDescriptor> ALL_TESTS;
   private static final LinkedHashMap<String, List<TestDescriptor>> BATCHES;
   static {
-    ALL_TESTS = new LinkedHashMap<String, TestDescriptor>();
-    BATCHES = new LinkedHashMap<String, List<TestDescriptor>>();
+    ALL_TESTS = new LinkedHashMap<>();
+    BATCHES = new LinkedHashMap<>();
     BATCHES.put("-basic", BASIC);
     new TestDescriptor(IntTest.class, "-i").add(BASIC);
     new TestDescriptor(SmallLongTest.class, "-ls").add(BASIC);
@@ -156,7 +156,7 @@ public class Perf {
   }
 
   public static void main(String[] args) throws Exception {
-    List<Test> tests = new ArrayList<Test>();
+    List<Test> tests = new ArrayList<>();
     boolean writeTests = true;
     boolean readTests = true;
     for (String a : args) {
@@ -1119,7 +1119,7 @@ public class Perf {
       return reader;
     }
     protected GenericDatumReader<Object> newReader() {
-      return new GenericDatumReader<Object>(schema);
+      return new GenericDatumReader<>(schema);
     }
     @Override
     void genSourceData() {
@@ -1144,7 +1144,7 @@ public class Perf {
     }
     @Override
     void writeInternal(Encoder e) throws IOException {
-      GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+      GenericDatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       for (int i = 0; i < sourceData.length; i++) {
         GenericRecord rec = sourceData[i];
         writer.write(rec, e);
@@ -1278,7 +1278,7 @@ public class Perf {
     }
     @Override
     protected GenericDatumReader<Object> newReader() {
-      return new GenericDatumReader<Object>(schema, getReaderSchema());
+      return new GenericDatumReader<>(schema, getReaderSchema());
     }
     protected abstract Schema getReaderSchema();
   }
@@ -1367,10 +1367,10 @@ public class Perf {
       return writer;
     }
     protected SpecificDatumReader<T> newReader() {
-      return new SpecificDatumReader<T>(schema);
+      return new SpecificDatumReader<>(schema);
     }
     protected SpecificDatumWriter<T> newWriter() {
-      return new SpecificDatumWriter<T>(schema);
+      return new SpecificDatumWriter<>(schema);
     }
     @Override
     void genSourceData() {
@@ -1413,7 +1413,7 @@ public class Perf {
     @Override
     protected FooBarSpecificRecord genSingleRecord(Random r) {
       TypeEnum[] typeEnums = TypeEnum.values();
-      List<Integer> relatedIds = new ArrayList<Integer>(10);
+      List<Integer> relatedIds = new ArrayList<>(10);
       for (int i = 0; i < 10; i++) {
         relatedIds.add(r.nextInt());
       }
@@ -1440,8 +1440,8 @@ public class Perf {
     ReflectTest(String name, T sample, int factor) throws IOException {
       super(name, ReflectData.get().getSchema(sample.getClass()).toString(), factor);
       clazz = (Class<T>) sample.getClass();
-      reader = new ReflectDatumReader<T>(schema);
-      writer = new ReflectDatumWriter<T>(schema);
+      reader = new ReflectDatumReader<>(schema);
+      writer = new ReflectDatumWriter<>(schema);
     }
 
     @SuppressWarnings("unchecked")

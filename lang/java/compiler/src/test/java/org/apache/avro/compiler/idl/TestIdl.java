@@ -72,7 +72,7 @@ public class TestIdl {
     assertTrue(TEST_INPUT_DIR.exists());
     assertTrue(TEST_OUTPUT_DIR.exists());
 
-    tests = new ArrayList<GenTest>();
+    tests = new ArrayList<>();
     for (File inF : TEST_INPUT_DIR.listFiles()) {
       if (!inF.getName().endsWith(".avdl")) continue;
       if (inF.getName().startsWith(".")) continue;

@@ -88,7 +88,7 @@ class Histogram<B, T> {
 
   public static class TreeMapSegmenter<T extends Comparable<T>>
       implements Segmenter<String, T> {
-    private TreeMap<T, Integer> index = new TreeMap<T, Integer>();
+    private TreeMap<T, Integer> index = new TreeMap<>();
     public TreeMapSegmenter(SortedSet<T> leftEndpoints) {
       if (leftEndpoints.isEmpty()) {
         throw new IllegalArgumentException(
@@ -119,7 +119,7 @@ class Histogram<B, T> {
 
     @Override
     public ArrayList<String> getBoundaryLabels() {
-      ArrayList<String> outArray = new ArrayList<String>(index.keySet().size());
+      ArrayList<String> outArray = new ArrayList<>(index.keySet().size());
       for (T obj: index.keySet()) {
         outArray.add(obj.toString());
       }
@@ -128,7 +128,7 @@ class Histogram<B, T> {
 
     @Override
     public ArrayList<String> getBucketLabels() {
-      ArrayList<String> outArray = new ArrayList<String>(index.keySet().size());
+      ArrayList<String> outArray = new ArrayList<>(index.keySet().size());
       Iterator<String> bucketsIt = this.getBuckets();
       while (bucketsIt.hasNext()) {
         outArray.add(bucketsIt.next());
@@ -170,7 +170,7 @@ class Histogram<B, T> {
   public Histogram(Segmenter<B, T> segmenter) {
     this.segmenter = segmenter;
     this.counts = new int[segmenter.size()];
-    this.recentAdditions = new LinkedList<T>();
+    this.recentAdditions = new LinkedList<>();
   }
 
   /** Tallies a value in the histogram. */
@@ -251,7 +251,7 @@ class Histogram<B, T> {
 
     @Override
     public Entry<B> next() {
-      return new Entry<B>(bucketNameIterator.next(), counts[i++]);
+      return new Entry<>(bucketNameIterator.next(), counts[i++]);
     }
 
     @Override

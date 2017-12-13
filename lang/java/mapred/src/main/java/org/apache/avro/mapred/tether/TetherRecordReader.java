@@ -43,7 +43,7 @@ class TetherRecordReader
     throws IOException {
     this.in = new FsInput(split.getPath(), job);
     this.reader =
-      new DataFileReader<Object>(in, new GenericDatumReader<Object>());
+      new DataFileReader<>(in, new GenericDatumReader<>());
 
     reader.sync(split.getStart());                    // sync to start
     this.start = in.tell();

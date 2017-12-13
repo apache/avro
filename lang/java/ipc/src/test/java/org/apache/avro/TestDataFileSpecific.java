@@ -53,7 +53,7 @@ public class TestDataFileSpecific {
 
     // write a file using generic objects
     DataFileWriter<Record> writer
-      = new DataFileWriter<Record>(new GenericDatumWriter<Record>(s1))
+      = new DataFileWriter<>(new GenericDatumWriter<Record>(s1))
       .create(s1, FILE);
     for (int i = 0; i < 10; i++) {
       Record r = new Record(s1);
@@ -66,7 +66,7 @@ public class TestDataFileSpecific {
     // read using a 'new SpecificDatumReader<T>()' to force inference of
     // reader's schema from runtime
     DataFileReader<Foo> reader =
-      new DataFileReader<Foo>(FILE, new SpecificDatumReader<Foo>());
+      new DataFileReader<>(FILE, new SpecificDatumReader<>());
     int i = 0;
     for (Foo f : reader)
       Assert.assertEquals(""+(i++), f.getLabel().toString());

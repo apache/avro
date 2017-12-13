@@ -15,7 +15,7 @@ import static org.apache.avro.Schema.Type.RECORD;
  */
 public final class CloningVisitor implements SchemaVisitor<Schema> {
 
-  private final IdentityHashMap<Schema, Schema> replace = new IdentityHashMap<Schema, Schema>();
+  private final IdentityHashMap<Schema, Schema> replace = new IdentityHashMap<>();
 
   private final Schema root;
 
@@ -114,7 +114,7 @@ public final class CloningVisitor implements SchemaVisitor<Schema> {
       case RECORD:
         newSchema = replace.get(nt);
         List<Schema.Field> fields = nt.getFields();
-        List<Schema.Field> newFields = new ArrayList<Schema.Field>(fields.size());
+        List<Schema.Field> newFields = new ArrayList<>(fields.size());
         for (Schema.Field field : fields) {
           Schema.Field newField = new Schema.Field(field.name(), replace.get(field.schema()),
               copyDocs ? field.doc() : null, field.defaultVal(), field.order());
@@ -125,7 +125,7 @@ public final class CloningVisitor implements SchemaVisitor<Schema> {
         return SchemaVisitorAction.CONTINUE;
       case UNION:
         List<Schema> types = nt.getTypes();
-        List<Schema> newTypes = new ArrayList<Schema>(types.size());
+        List<Schema> newTypes = new ArrayList<>(types.size());
         for (Schema sch : types) {
           newTypes.add(replace.get(sch));
         }

@@ -60,12 +60,12 @@ public class SpecificResponder extends GenericResponder {
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter<Object>(schema, getSpecificData());
+    return new SpecificDatumWriter<>(schema, getSpecificData());
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
-    return new SpecificDatumReader<Object>(actual, expected, getSpecificData());
+    return new SpecificDatumReader<>(actual, expected, getSpecificData());
   }
 
   @Override

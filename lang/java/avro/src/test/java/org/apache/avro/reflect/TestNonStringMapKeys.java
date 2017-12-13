@@ -250,7 +250,7 @@ public class TestNonStringMapKeys {
 
     ReflectDatumWriter<T> datumWriter =
       new ReflectDatumWriter (entityObj1.getClass(), rdata);
-    DataFileWriter<T> fileWriter = new DataFileWriter<T> (datumWriter);
+    DataFileWriter<T> fileWriter = new DataFileWriter<>(datumWriter);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     fileWriter.create(schema, baos);
     for (T entityObj : entityObjs) {
@@ -270,15 +270,15 @@ public class TestNonStringMapKeys {
     (String testType, byte[] bytes, T ... entityObjs) throws IOException {
 
     GenericDatumReader<GenericRecord> datumReader =
-      new GenericDatumReader<GenericRecord> ();
+      new GenericDatumReader<>();
     SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
     DataFileReader<GenericRecord> fileReader =
-      new DataFileReader<GenericRecord>(avroInputStream, datumReader);
+      new DataFileReader<>(avroInputStream, datumReader);
 
     Schema schema = fileReader.getSchema();
     assertNotNull("Unable to get schema for " + testType, schema);
     GenericRecord record = null;
-    List<GenericRecord> records = new ArrayList<GenericRecord> ();
+    List<GenericRecord> records = new ArrayList<>();
     while (fileReader.hasNext()) {
       records.add (fileReader.next(record));
     }
@@ -293,13 +293,13 @@ public class TestNonStringMapKeys {
   private <T> List<T> testReflectDatumRead
     (String testType, byte[] bytes, T ... entityObjs) throws IOException {
 
-    ReflectDatumReader<T> datumReader = new ReflectDatumReader<T> ();
+    ReflectDatumReader<T> datumReader = new ReflectDatumReader<>();
     SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
-    DataFileReader<T> fileReader = new DataFileReader<T>(avroInputStream, datumReader);
+    DataFileReader<T> fileReader = new DataFileReader<>(avroInputStream, datumReader);
 
     Schema schema = fileReader.getSchema();
     T record = null;
-    List<T> records = new ArrayList<T> ();
+    List<T> records = new ArrayList<>();
     while (fileReader.hasNext()) {
       records.add (fileReader.next(record));
     }
@@ -314,7 +314,7 @@ public class TestNonStringMapKeys {
     Schema schema = rdata.getSchema(entityObj.getClass());
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, os);
-    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<T>(schema, rdata);
+    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<>(schema, rdata);
     datumWriter.write(entityObj, encoder);
     encoder.flush();
 
@@ -330,7 +330,7 @@ public class TestNonStringMapKeys {
 
     Schema schema = rdata.getSchema(entityObj.getClass());
     GenericDatumReader<GenericRecord> datumReader =
-      new GenericDatumReader<GenericRecord>(schema);
+      new GenericDatumReader<>(schema);
 
     Decoder decoder = DecoderFactory.get().jsonDecoder(schema, new String(bytes));
     GenericRecord r = datumReader.read(null, decoder);
@@ -342,7 +342,7 @@ public class TestNonStringMapKeys {
    */
   private Company buildCompany () {
     Company co = new Company ();
-    HashMap<EmployeeId, EmployeeInfo> employees = new HashMap<EmployeeId, EmployeeInfo>();
+    HashMap<EmployeeId, EmployeeInfo> employees = new HashMap<>();
     co.setEmployees(employees);
     employees.put(new EmployeeId(1), new EmployeeInfo("Foo"));
     employees.put(new EmployeeId(2), new EmployeeInfo("Bar"));
@@ -355,12 +355,12 @@ public class TestNonStringMapKeys {
    */
   private Company2 buildCompany2 () {
     Company2 co = new Company2 ();
-    HashMap<Integer, EmployeeInfo2> employees = new HashMap<Integer, EmployeeInfo2>();
+    HashMap<Integer, EmployeeInfo2> employees = new HashMap<>();
     co.setEmployees(employees);
 
     EmployeeId2 empId = new EmployeeId2(1);
     EmployeeInfo2 empInfo = new EmployeeInfo2("Foo");
-    HashMap<Integer, String> companyMap = new HashMap<Integer, String>();
+    HashMap<Integer, String> companyMap = new HashMap<>();
     empInfo.setCompanyMap(companyMap);
     companyMap.put(14, "CompanyFoo");
 
@@ -371,13 +371,13 @@ public class TestNonStringMapKeys {
 
   private SameMapSignature buildSameMapSignature () {
     SameMapSignature obj = new SameMapSignature();
-    obj.setMap1(new HashMap<Integer, String>());
+    obj.setMap1(new HashMap<>());
     obj.getMap1().put(1, "Foo");
-    obj.setMap2(new ConcurrentHashMap<Integer, String>());
+    obj.setMap2(new ConcurrentHashMap<>());
     obj.getMap2().put(1, "Foo");
-    obj.setMap3(new LinkedHashMap<Integer, String>());
+    obj.setMap3(new LinkedHashMap<>());
     obj.getMap3().put(1, "Foo");
-    obj.setMap4(new TreeMap<Integer, String>());
+    obj.setMap4(new TreeMap<>());
     obj.getMap4().put(1, "Foo");
     return obj;
   }

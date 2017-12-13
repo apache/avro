@@ -53,11 +53,11 @@ public class JsonDecoder extends ParsingDecoder
   implements Parser.ActionHandler {
   private JsonParser in;
   private static JsonFactory jsonFactory = new JsonFactory();
-  Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
+  Stack<ReorderBuffer> reorderBuffers = new Stack<>();
   ReorderBuffer currentReorderBuffer;
 
   private static class ReorderBuffer {
-    public Map<String, List<JsonElement>> savedFields = new HashMap<String, List<JsonElement>>();
+    public Map<String, List<JsonElement>> savedFields = new HashMap<>();
     public JsonParser origParser = null;
   }
 
@@ -526,7 +526,7 @@ public class JsonDecoder extends ParsingDecoder
 
   private static List<JsonElement> getValueAsTree(JsonParser in) throws IOException {
     int level = 0;
-    List<JsonElement> result = new ArrayList<JsonElement>();
+    List<JsonElement> result = new ArrayList<>();
     do {
       JsonToken t = in.getCurrentToken();
       switch (t) {

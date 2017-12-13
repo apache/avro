@@ -45,7 +45,7 @@ public class TestSchemaNormalization {
     public TestCanonical(String i, String o) { input=i; expectedOutput=o; }
 
     @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(), "canonical", new ArrayList<Object[]>()); }
+    { return CaseFinder.find(data(), "canonical", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
       assertEquals(SchemaNormalization.toParsingForm(Schema.parse(input)),
@@ -59,7 +59,7 @@ public class TestSchemaNormalization {
     public TestFingerprint(String i, String o) { input=i; expectedOutput=o; }
 
     @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(),"fingerprint",new ArrayList<Object[]>()); }
+    { return CaseFinder.find(data(),"fingerprint", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
       Schema s = Schema.parse(input);
@@ -76,7 +76,7 @@ public class TestSchemaNormalization {
     public TestFingerprintInternationalization(String i, String o) { input=i; expectedOutput=o; }
 
     @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(),"fingerprint",new ArrayList<Object[]>()); }
+    { return CaseFinder.find(data(),"fingerprint", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
       Locale originalDefaultLocale = Locale.getDefault();

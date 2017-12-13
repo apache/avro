@@ -103,7 +103,7 @@ public class TestAvroMultipleOutputsSyncable {
 
     @Override
     protected void setup(Context context) {
-      mStats = new AvroKey<GenericData.Record>(null);
+      mStats = new AvroKey<>(null);
       amos = new AvroMultipleOutputs(context);
     }
 
@@ -145,7 +145,7 @@ public class TestAvroMultipleOutputsSyncable {
     private AvroMultipleOutputs amos;
     @Override
     protected void setup(Context context) {
-      mStats = new AvroKey<TextStats>(null);
+      mStats = new AvroKey<>(null);
       amos = new AvroMultipleOutputs(context);
     }
 
@@ -217,10 +217,10 @@ public class TestAvroMultipleOutputsSyncable {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/myavro-r-00000.avro"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<GenericData.Record> reader = new DataFileReader<GenericData.Record>(
-        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new GenericDatumReader<GenericData.Record>(STATS_SCHEMA));
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+    DataFileReader<GenericData.Record> reader = new DataFileReader<>(
+      new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+      new GenericDatumReader<>(STATS_SCHEMA));
+    Map<String, Integer> counts = new HashMap<>();
     for (GenericData.Record record : reader) {
       counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
     }
@@ -232,10 +232,10 @@ public class TestAvroMultipleOutputsSyncable {
 
     outputFiles = fileSystem.globStatus(outputPath.suffix("/myavro1-r-00000.avro"));
     Assert.assertEquals(1, outputFiles.length);
-    reader = new DataFileReader<GenericData.Record>(
-        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new GenericDatumReader<GenericData.Record>(STATS_SCHEMA_2));
-    counts = new HashMap<String, Integer>();
+    reader = new DataFileReader<>(
+      new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+      new GenericDatumReader<>(STATS_SCHEMA_2));
+    counts = new HashMap<>();
     for (GenericData.Record record : reader) {
       counts.put(((Utf8) record.get("name1")).toString(), (Integer) record.get("count1"));
     }
@@ -247,10 +247,10 @@ public class TestAvroMultipleOutputsSyncable {
 
     outputFiles = fileSystem.globStatus(outputPath.suffix("/testnewwrite-r-00000.avro"));
     Assert.assertEquals(1, outputFiles.length);
-    reader = new DataFileReader<GenericData.Record>(
-        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new GenericDatumReader<GenericData.Record>(STATS_SCHEMA));
-    counts = new HashMap<String, Integer>();
+    reader = new DataFileReader<>(
+      new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+      new GenericDatumReader<>(STATS_SCHEMA));
+    counts = new HashMap<>();
     for (GenericData.Record record : reader) {
        counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
     }
@@ -262,10 +262,10 @@ public class TestAvroMultipleOutputsSyncable {
 
     outputFiles = fileSystem.globStatus(outputPath.suffix("/testnewwrite2-r-00000.avro"));
     Assert.assertEquals(1, outputFiles.length);
-    reader = new DataFileReader<GenericData.Record>(
-        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new GenericDatumReader<GenericData.Record>(STATS_SCHEMA_2));
-    counts = new HashMap<String, Integer>();
+    reader = new DataFileReader<>(
+      new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+      new GenericDatumReader<>(STATS_SCHEMA_2));
+    counts = new HashMap<>();
     for (GenericData.Record record : reader) {
      counts.put(((Utf8) record.get("name1")).toString(), (Integer) record.get("count1"));
     }
@@ -276,10 +276,10 @@ public class TestAvroMultipleOutputsSyncable {
 
     outputFiles = fileSystem.globStatus(outputPath.suffix("/testwritenonschema-r-00000.avro"));
     Assert.assertEquals(1, outputFiles.length);
-    reader = new DataFileReader<GenericData.Record>(
-        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new GenericDatumReader<GenericData.Record>(STATS_SCHEMA));
-    counts = new HashMap<String, Integer>();
+    reader = new DataFileReader<>(
+      new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+      new GenericDatumReader<>(STATS_SCHEMA));
+    counts = new HashMap<>();
     for (GenericData.Record record : reader) {
       counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
     }
@@ -319,10 +319,10 @@ public class TestAvroMultipleOutputsSyncable {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/myavro3-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<TextStats> reader = new DataFileReader<TextStats>(
-        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new SpecificDatumReader<TextStats>());
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+    DataFileReader<TextStats> reader = new DataFileReader<>(
+      new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+      new SpecificDatumReader<>());
+    Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
       counts.put(record.name.toString(), record.count);
     }
@@ -361,10 +361,10 @@ public class TestAvroMultipleOutputsSyncable {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/myavro3-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<TextStats> reader = new DataFileReader<TextStats>(
-        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new SpecificDatumReader<TextStats>());
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+    DataFileReader<TextStats> reader = new DataFileReader<>(
+      new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+      new SpecificDatumReader<>());
+    Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
       counts.put(record.name.toString(), record.count);
     }
@@ -402,10 +402,10 @@ public class TestAvroMultipleOutputsSyncable {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<TextStats> reader = new DataFileReader<TextStats>(
-        new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new SpecificDatumReader<TextStats>());
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+    DataFileReader<TextStats> reader = new DataFileReader<>(
+      new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
+      new SpecificDatumReader<>());
+    Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
       counts.put(record.name.toString(), record.count);
     }

@@ -70,7 +70,7 @@ public class AvroSerializer<T> implements Serializer<AvroWrapper<T>> {
       throw new IllegalArgumentException("Writer schema may not be null");
     }
     mWriterSchema = writerSchema;
-    mAvroDatumWriter = new ReflectDatumWriter<T>(writerSchema);
+    mAvroDatumWriter = new ReflectDatumWriter<>(writerSchema);
   }
 
   /**

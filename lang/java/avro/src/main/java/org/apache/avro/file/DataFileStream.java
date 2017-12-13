@@ -51,8 +51,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
    */
   public static final class Header {
     Schema schema;
-    Map<String,byte[]> meta = new HashMap<String,byte[]>();
-    private transient List<String> metaKeyList = new ArrayList<String>();
+    Map<String,byte[]> meta = new HashMap<>();
+    private transient List<String> metaKeyList = new ArrayList<>();
     byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
     private Header() {}
   }

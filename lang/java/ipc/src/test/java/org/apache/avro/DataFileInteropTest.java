@@ -46,7 +46,7 @@ public class DataFileInteropTest {
     System.out.println("Reading with generic:");
     DatumReaderProvider<Object> provider = new DatumReaderProvider<Object>() {
       @Override public DatumReader<Object> get() {
-        return new GenericDatumReader<Object>();
+        return new GenericDatumReader<>();
         }
       };
     readFiles(provider);
@@ -57,7 +57,7 @@ public class DataFileInteropTest {
     System.out.println("Reading with specific:");
     DatumReaderProvider<Interop> provider = new DatumReaderProvider<Interop>() {
       @Override public DatumReader<Interop> get() {
-        return new SpecificDatumReader<Interop>();
+        return new SpecificDatumReader<>();
         }
       };
     readFiles(provider);

@@ -61,6 +61,6 @@ public class AvroKeyDeserializer<D> extends AvroDeserializer<AvroWrapper<D>, D> 
    */
   @Override
   protected AvroWrapper<D> createAvroWrapper() {
-    return new AvroKey<D>(null);
+    return new AvroKey<>(null);
   }
 }

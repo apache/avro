@@ -58,7 +58,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private BufferedFileOutputStream out;
   private BinaryEncoder vout;
 
-  private final Map<String,byte[]> meta = new HashMap<String,byte[]>();
+  private final Map<String,byte[]> meta = new HashMap<>();
 
   private long blockCount;                       // # entries in current block
 
@@ -211,7 +211,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     throws IOException {
     assertNotOpen();
     DataFileReader<D> reader =
-      new DataFileReader<D>(in, new GenericDatumReader<D>());
+      new DataFileReader<>(in, new GenericDatumReader<>());
     this.schema = reader.getSchema();
     this.sync = reader.getHeader().sync;
     this.meta.putAll(reader.getHeader().meta);

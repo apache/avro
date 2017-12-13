@@ -74,7 +74,7 @@ public class RPCContext {
    */
   public Map<String,ByteBuffer> requestHandshakeMeta() {
     if (handshakeRequest.meta == null)
-      handshakeRequest.meta = new HashMap<String,ByteBuffer>();
+      handshakeRequest.meta = new HashMap<>();
     return handshakeRequest.meta;
   }
 
@@ -90,7 +90,7 @@ public class RPCContext {
    */
   public Map<String,ByteBuffer> responseHandshakeMeta() {
     if (handshakeResponse.meta == null)
-      handshakeResponse.meta = new HashMap<String,ByteBuffer>();
+      handshakeResponse.meta = new HashMap<>();
     return handshakeResponse.meta;
   }
 
@@ -106,7 +106,7 @@ public class RPCContext {
    */
   public Map<String,ByteBuffer> requestCallMeta() {
     if (requestCallMeta == null) {
-      requestCallMeta = new HashMap<String,ByteBuffer>();
+      requestCallMeta = new HashMap<>();
     }
     return requestCallMeta;
   }
@@ -123,7 +123,7 @@ public class RPCContext {
    */
   public Map<String,ByteBuffer> responseCallMeta() {
     if (responseCallMeta == null) {
-      responseCallMeta = new HashMap<String,ByteBuffer>();
+      responseCallMeta = new HashMap<>();
     }
     return responseCallMeta;
   }

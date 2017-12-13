@@ -59,6 +59,6 @@ public class AvroTrevniKeyValueOutputFormat <K, V> extends FileOutputFormat<Avro
   public RecordWriter<AvroKey<K>, AvroValue<V>> getRecordWriter(TaskAttemptContext context)
       throws IOException, InterruptedException {
 
-    return new AvroTrevniKeyValueRecordWriter<K, V>(context );
+    return new AvroTrevniKeyValueRecordWriter<>(context);
   }
 }
