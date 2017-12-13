@@ -112,7 +112,7 @@ public class TestGenericJob {
                     Reporter reporter) throws IOException {
       GenericData.Record optional_entry =
         new GenericData.Record(createInnerSchema("optional_field_1"));
-      optional_entry.put("optional_field_1", 0l);
+      optional_entry.put("optional_field_1", 0L);
       GenericData.Array<GenericData.Record> array =
         new GenericData.Array<>(1, createArraySchema());
       array.add(optional_entry);

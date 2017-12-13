@@ -133,7 +133,7 @@ public class TestSchemaNormalization {
   private static final byte[] POSTFIX = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
   private static void assertEqHex(long expected, long actual) {
-    String m = format("0x%016x != 0x%016x", expected, actual).toString();
+    String m = format("0x%016x != 0x%016x", expected, actual);
     assertTrue(m, expected == actual);
   }
 

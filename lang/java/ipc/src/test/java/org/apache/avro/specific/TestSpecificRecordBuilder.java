@@ -45,39 +45,39 @@ public class TestSpecificRecordBuilder {
     // Create a new builder, and leave some fields with default values empty:
     Person.Builder builder = Person.newBuilder().setName("James Gosling").setYearOfBirth(1955).setState("CA");
     Assert.assertTrue(builder.hasName());
-    Assert.assertEquals("James Gosling", builder.getName().toString());
+    Assert.assertEquals("James Gosling", builder.getName());
     Assert.assertTrue(builder.hasYearOfBirth());
     Assert.assertEquals(new Integer(1955), builder.getYearOfBirth());
     Assert.assertFalse(builder.hasCountry());
     Assert.assertNull(builder.getCountry());
     Assert.assertTrue(builder.hasState());
-    Assert.assertEquals("CA", builder.getState().toString());
+    Assert.assertEquals("CA", builder.getState());
     Assert.assertFalse(builder.hasFriends());
     Assert.assertNull(builder.getFriends());
     Assert.assertFalse(builder.hasLanguages());
     Assert.assertNull(builder.getLanguages());
 
     Person person = builder.build();
-    Assert.assertEquals("James Gosling", person.getName().toString());
+    Assert.assertEquals("James Gosling", person.getName());
     Assert.assertEquals(new Integer(1955), person.getYearOfBirth());
-    Assert.assertEquals("US", person.getCountry().toString());  // country should default to "US"
-    Assert.assertEquals("CA", person.getState().toString());
+    Assert.assertEquals("US", person.getCountry());  // country should default to "US"
+    Assert.assertEquals("CA", person.getState());
     Assert.assertNotNull(person.getFriends());  // friends should default to an empty list
     Assert.assertEquals(0, person.getFriends().size());
     Assert.assertNotNull(person.getLanguages()); // Languages should now be "English" and "Java"
     Assert.assertEquals(2, person.getLanguages().size());
-    Assert.assertEquals("English", person.getLanguages().get(0).toString());
-    Assert.assertEquals("Java", person.getLanguages().get(1).toString());
+    Assert.assertEquals("English", person.getLanguages().get(0));
+    Assert.assertEquals("Java", person.getLanguages().get(1));
 
     // Test copy constructors:
     Assert.assertEquals(builder, Person.newBuilder(builder));
     Assert.assertEquals(person, Person.newBuilder(person).build());
 
     Person.Builder builderCopy = Person.newBuilder(person);
-    Assert.assertEquals("James Gosling", builderCopy.getName().toString());
+    Assert.assertEquals("James Gosling", builderCopy.getName());
     Assert.assertEquals(new Integer(1955), builderCopy.getYearOfBirth());
-    Assert.assertEquals("US", builderCopy.getCountry().toString());  // country should default to "US"
-    Assert.assertEquals("CA", builderCopy.getState().toString());
+    Assert.assertEquals("US", builderCopy.getCountry());  // country should default to "US"
+    Assert.assertEquals("CA", builderCopy.getState());
     Assert.assertNotNull(builderCopy.getFriends());  // friends should default to an empty list
     Assert.assertEquals(0, builderCopy.getFriends().size());
 

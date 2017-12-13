@@ -343,7 +343,7 @@ public class TestWordCount {
       new ReflectDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
     for (ReflectStats record : reader) {
-      counts.put(record.name.toString(), record.count);
+      counts.put(record.name, record.count);
     }
     reader.close();
 
@@ -424,7 +424,7 @@ public class TestWordCount {
       new ReflectDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
     for (ReflectStats record : reader) {
-      counts.put(record.name.toString(), record.count);
+      counts.put(record.name, record.count);
     }
     reader.close();
 

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import static org.junit.Assert.*;
@@ -508,25 +509,25 @@ class SameMapSignature {
   LinkedHashMap<Integer, String> map3;
   TreeMap<Integer, String> map4;
 
-  public HashMap<Integer, String> getMap1() {
+  public Map<Integer, String> getMap1() {
     return map1;
   }
   public void setMap1(HashMap<Integer, String> map1) {
     this.map1 = map1;
   }
-  public ConcurrentHashMap<Integer, String> getMap2() {
+  public Map<Integer, String> getMap2() {
     return map2;
   }
   public void setMap2(ConcurrentHashMap<Integer, String> map2) {
     this.map2 = map2;
   }
-  public LinkedHashMap<Integer, String> getMap3() {
+  public Map<Integer, String> getMap3() {
     return map3;
   }
   public void setMap3(LinkedHashMap<Integer, String> map3) {
     this.map3 = map3;
   }
-  public TreeMap<Integer, String> getMap4() {
+  public Map<Integer, String> getMap4() {
     return map4;
   }
   public void setMap4(TreeMap<Integer, String> map4) {

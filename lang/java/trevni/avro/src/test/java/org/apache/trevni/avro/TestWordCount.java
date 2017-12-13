@@ -49,7 +49,7 @@ public class TestWordCount {
     @Override
       public void map(String text, AvroCollector<Pair<String,Long>> collector,
                       Reporter reporter) throws IOException {
-      StringTokenizer tokens = new StringTokenizer(text.toString());
+      StringTokenizer tokens = new StringTokenizer(text);
       while (tokens.hasMoreTokens())
         collector.collect(new Pair<>(tokens.nextToken(), 1L));
     }
