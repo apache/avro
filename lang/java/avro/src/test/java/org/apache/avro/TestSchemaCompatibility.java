@@ -548,7 +548,7 @@ public class TestSchemaCompatibility {
           expectedDecodedDatum, decodedDatum);
     }
   }
-  
+
   Deque<String> asDeqeue(String... args) {
     Deque<String> dq = new ArrayDeque<String>();
     List<String> x = Arrays.asList(args);
