@@ -188,7 +188,7 @@ public class TestProtocolSpecific {
       error = e;
     }
     assertNotNull(error);
-    assertEquals("an error", error.getMessage$().toString());
+    assertEquals("an error", error.getMessage$());
   }
 
   @Test

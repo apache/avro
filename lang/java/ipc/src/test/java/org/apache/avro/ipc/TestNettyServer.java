@@ -51,9 +51,9 @@ public class TestNettyServer {
 
     // in this simple example just return details of the message
     public String send(Message message) {
-      return "Sent message to ["+ message.getTo().toString() +
-          "] from [" + message.getFrom().toString() + "] with body [" +
-          message.getBody().toString() + "]";
+      return "Sent message to ["+ message.getTo() +
+          "] from [" + message.getFrom() + "] with body [" +
+        message.getBody() + "]";
     }
 
     public void fireandforget(Message message) {
@@ -114,7 +114,7 @@ public class TestNettyServer {
   private void verifyResponse(String result) {
     Assert.assertEquals(
         "Sent message to [wife] from [husband] with body [I love you!]",
-        result.toString());
+        result);
   }
 
   @Test

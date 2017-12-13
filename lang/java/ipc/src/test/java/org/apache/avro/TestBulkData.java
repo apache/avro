@@ -43,7 +43,7 @@ public class TestBulkData {
     Integer.parseInt(System.getProperty("test.size", "65536"));
 
   private static final ByteBuffer DATA = ByteBuffer.allocate(SIZE);
-  {
+  static {
     Random rand = new Random();
     DATA.limit(DATA.capacity());
     DATA.position(0);
