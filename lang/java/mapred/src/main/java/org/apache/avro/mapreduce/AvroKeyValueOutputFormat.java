@@ -62,7 +62,7 @@ public class AvroKeyValueOutputFormat<K, V> extends AvroOutputFormatBase<K, V> {
 
     OutputStream out = getAvroFileOutputStream(context);
     try {
-      return new AvroKeyValueRecordWriter<K, V>(keyConverter, valueConverter,
+      return new AvroKeyValueRecordWriter<>(keyConverter, valueConverter,
               dataModel, getCompressionCodec(context), out,
               getSyncInterval(context));
     } catch (IOException e) {

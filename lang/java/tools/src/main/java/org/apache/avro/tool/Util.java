@@ -182,7 +182,7 @@ class Util {
    * @throws IOException
    */
   static List<Path> getFiles(String fileOrDirName) throws IOException {
-    List<Path> pathList = new ArrayList<Path>();
+    List<Path> pathList = new ArrayList<>();
     Path path = new Path(fileOrDirName);
     FileSystem fs = path.getFileSystem(new Configuration());
 
@@ -219,7 +219,7 @@ class Util {
    */
   static List<Path> getFiles(List<String> fileOrDirNames)
       throws IOException {
-    ArrayList<Path> pathList = new ArrayList<Path>();
+    ArrayList<Path> pathList = new ArrayList<>();
     for(String name : fileOrDirNames) {
       pathList.addAll(getFiles(name));
     }
@@ -235,7 +235,7 @@ class Util {
    */
   static Object jsonToGenericDatum(Schema schema, String jsonData)
       throws IOException {
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
     Object datum = reader.read(null,
         DecoderFactory.get().jsonDecoder(schema, jsonData));
     return datum;
@@ -244,8 +244,8 @@ class Util {
   /** Reads and returns the first datum in a data file. */
   static Object datumFromFile(Schema schema, String file) throws IOException {
     DataFileReader<Object> in =
-      new DataFileReader<Object>(new File(file),
-                                 new GenericDatumReader<Object>(schema));
+        new DataFileReader<>(new File(file),
+                             new GenericDatumReader<>(schema));
     try {
       return in.next();
     } finally {

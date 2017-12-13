@@ -36,7 +36,7 @@ public class SchemaNormalization {
     * spec. */
   public static String toParsingForm(Schema s) {
     try {
-      Map<String,String> env = new HashMap<String,String>();
+      Map<String,String> env = new HashMap<>();
       return build(env, s, new StringBuilder()).toString();
     } catch (IOException e) {
       // Shouldn't happen, b/c StringBuilder can't throw IOException

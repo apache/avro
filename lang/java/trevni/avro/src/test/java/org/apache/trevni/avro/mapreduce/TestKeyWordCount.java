@@ -86,7 +86,7 @@ public class TestKeyWordCount {
 
     @Override
     protected void setup(Context context) {
-      result = new AvroKey<GenericData.Record>();
+      result = new AvroKey<>();
       result.datum(new Record(Pair.getPairSchema(STRING,LONG)));
     }
 

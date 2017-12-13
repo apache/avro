@@ -50,7 +50,7 @@ import org.junit.Assert;
 public class TestAvroSerialization {
   @Test
   public void testAccept() {
-    AvroSerialization<CharSequence> serialization = new AvroSerialization<CharSequence>();
+    AvroSerialization<CharSequence> serialization = new AvroSerialization<>();
 
     assertTrue(serialization.accept(AvroKey.class));
     assertTrue(serialization.accept(AvroValue.class));
@@ -158,7 +158,7 @@ public class TestAvroSerialization {
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     serializer.open(baos);
-    serializer.serialize(new AvroKey<T>(data));
+    serializer.serialize(new AvroKey<>(data));
     serializer.close();
 
     ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());

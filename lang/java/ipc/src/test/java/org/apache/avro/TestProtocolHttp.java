@@ -74,9 +74,9 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
     Protocol.Message message =
       protocol.createMessage("ack", null,
-                             Schema.createRecord(new ArrayList<Field>()),
+                             Schema.createRecord(new ArrayList<>()),
                              Schema.create(Schema.Type.NULL),
-                             Schema.createUnion(new ArrayList<Schema>()));
+                             Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("ack", message);
 
     // call a server over a stateless protocol that has a one-way "ack"

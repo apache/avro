@@ -97,7 +97,7 @@ public class TestGenericRecordBuilder {
 
   /** Creates a test record schema */
   private static Schema recordSchema() {
-    List<Field> fields = new ArrayList<Field>();
+    List<Field> fields = new ArrayList<>();
     fields.add(new Field("id", Schema.create(Type.STRING), null, "0"));
     fields.add(new Field("intField", Schema.create(Type.INT), null, null));
     fields.add(new Field("anArray", Schema.createArray(Schema.create(Type.STRING)), null, null));

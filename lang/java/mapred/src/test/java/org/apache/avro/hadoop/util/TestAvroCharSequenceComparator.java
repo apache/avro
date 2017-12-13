@@ -31,7 +31,7 @@ public class TestAvroCharSequenceComparator {
 
   @Before
   public void setup() {
-    mComparator = new AvroCharSequenceComparator<CharSequence>();
+    mComparator = new AvroCharSequenceComparator<>();
   }
 
   @Test

@@ -137,7 +137,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter<Object>(schema, data);
+    return new SpecificDatumWriter<>(schema, data);
   }
 
   @Deprecated                                     // for compatibility in 1.5
@@ -146,7 +146,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new SpecificDatumReader<Object>(writer, reader, data);
+    return new SpecificDatumReader<>(writer, reader, data);
   }
 
   @Override

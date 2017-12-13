@@ -66,7 +66,7 @@ public class GenerateBlockingData {
     int numObjects = Integer.parseInt(args[2]);
 
     FileOutputStream out = new FileOutputStream(outputFile, false);
-    DatumWriter<Object> dout = new GenericDatumWriter<Object>();
+    DatumWriter<Object> dout = new GenericDatumWriter<>();
     dout.setSchema(sch);
     Encoder vout = factory.directBinaryEncoder(out, null);
     vout.writeLong(numObjects); // metadata:the count of objects in the file

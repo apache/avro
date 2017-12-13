@@ -60,12 +60,12 @@ public class ReflectRequestor extends SpecificRequestor {
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new ReflectDatumWriter<Object>(schema, getReflectData());
+    return new ReflectDatumWriter<>(schema, getReflectData());
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new ReflectDatumReader<Object>(writer, reader, getReflectData());
+    return new ReflectDatumReader<>(writer, reader, getReflectData());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

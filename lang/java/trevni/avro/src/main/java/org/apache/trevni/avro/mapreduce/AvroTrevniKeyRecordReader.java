@@ -31,7 +31,7 @@ import org.apache.hadoop.io.NullWritable;
 public class AvroTrevniKeyRecordReader<T> extends AvroTrevniRecordReaderBase<AvroKey<T>, NullWritable, T> {
 
   /** A reusable object to hold records of the Avro container file. */
-  private final AvroKey<T> mCurrentKey = new AvroKey<T>();
+  private final AvroKey<T> mCurrentKey = new AvroKey<>();
 
   /** {@inheritDoc} */
   @Override

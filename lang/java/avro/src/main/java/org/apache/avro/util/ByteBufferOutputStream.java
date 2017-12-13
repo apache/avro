@@ -61,7 +61,7 @@ public class ByteBufferOutputStream extends OutputStream {
   }
 
   public void reset() {
-    buffers = new LinkedList<ByteBuffer>();
+    buffers = new LinkedList<>();
     buffers.add(ByteBuffer.allocate(BUFFER_SIZE));
   }
 

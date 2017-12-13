@@ -60,7 +60,7 @@ public class TestSaslDigestMd5 extends TestProtocolGeneric {
 
   private static final String DIGEST_MD5_MECHANISM = "DIGEST-MD5";
   private static final Map<String, String> DIGEST_MD5_PROPS =
-    new HashMap<String, String>();
+    new HashMap<>();
 
   static {
     DIGEST_MD5_PROPS.put(Sasl.QOP, "auth-int");

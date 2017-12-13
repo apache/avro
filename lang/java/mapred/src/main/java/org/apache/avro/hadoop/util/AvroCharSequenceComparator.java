@@ -36,7 +36,7 @@ import java.util.Comparator;
 public class AvroCharSequenceComparator<T> implements Comparator<T> {
   /** A singleton instance. */
   public static final AvroCharSequenceComparator<CharSequence> INSTANCE
-      = new AvroCharSequenceComparator<CharSequence>();
+      = new AvroCharSequenceComparator<>();
 
   /** {@inheritDoc} */
   @Override

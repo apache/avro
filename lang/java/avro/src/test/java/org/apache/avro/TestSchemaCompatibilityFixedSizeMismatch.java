@@ -41,7 +41,7 @@ public class TestSchemaCompatibilityFixedSizeMismatch {
         { FIXED_8_BYTES, FIXED_4_BYTES, "expected: 4, found: 8", "/size" },
         { A_DINT_B_DFIXED_8_BYTES_RECORD1, A_DINT_B_DFIXED_4_BYTES_RECORD1, "expected: 4, found: 8", "/fields/1/type/size" },
         { A_DINT_B_DFIXED_4_BYTES_RECORD1, A_DINT_B_DFIXED_8_BYTES_RECORD1, "expected: 8, found: 4", "/fields/1/type/size" }, };
-    List<Object[]> list = new ArrayList<Object[]>(fields.length);
+    List<Object[]> list = new ArrayList<>(fields.length);
     for (Object[] schemas : fields) {
       list.add(schemas);
     }

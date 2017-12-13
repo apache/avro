@@ -56,7 +56,7 @@ public class AvroColumnReader<D>
   private int column;                          // current index in values
 
   private Map<String,Map<String,Object>> defaults =
-    new HashMap<String,Map<String,Object>>();
+    new HashMap<>();
 
   /** Parameters for reading an Avro column file. */
   public static class Params {
@@ -101,7 +101,7 @@ public class AvroColumnReader<D>
 
   void initialize() throws IOException {
     // compute a mapping from column name to number for file
-    Map<String,Integer> fileColumnNumbers = new HashMap<String,Integer>();
+    Map<String,Integer> fileColumnNumbers = new HashMap<>();
     int i = 0;
     for (ColumnMetaData c : new AvroColumnator(fileSchema).getColumns())
       fileColumnNumbers.put(c.getName(), i++);
@@ -163,7 +163,7 @@ public class AvroColumnReader<D>
     String recordName = record.getFullName();
     Map<String,Object> recordDefaults = defaults.get(recordName);
     if (recordDefaults == null) {
-      recordDefaults = new HashMap<String,Object>();
+      recordDefaults = new HashMap<>();
       defaults.put(recordName, recordDefaults);
     }
     recordDefaults.put(f.name(), model.getDefaultValue(f));

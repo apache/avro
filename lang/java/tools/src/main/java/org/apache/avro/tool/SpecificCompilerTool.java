@@ -79,7 +79,7 @@ public class SpecificCompilerTool implements Tool {
     }
 
     String method = args.get(arg);
-    List<File> inputs = new ArrayList<File>();
+    List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));
 
     for (int i = arg+1; i < args.size() - 1; i++) {
@@ -139,7 +139,7 @@ public class SpecificCompilerTool implements Tool {
    * @return Unique array of files
    */
   private static File[] determineInputs(List<File> inputs, FilenameFilter filter) {
-    Set<File> fileSet = new LinkedHashSet<File>(); // preserve order and uniqueness
+    Set<File> fileSet = new LinkedHashSet<>(); // preserve order and uniqueness
 
     for (File file : inputs) {
       // if directory, look at contents to see what files match extension

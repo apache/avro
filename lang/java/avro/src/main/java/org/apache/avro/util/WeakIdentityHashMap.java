@@ -43,9 +43,9 @@ import java.util.Set;
  * </b>
  */
 public class WeakIdentityHashMap<K, V> implements Map<K, V> {
-  private final ReferenceQueue<K> queue = new ReferenceQueue<K>();
+  private final ReferenceQueue<K> queue = new ReferenceQueue<>();
   private Map<IdentityWeakReference, V> backingStore
-    = new HashMap<IdentityWeakReference, V>();
+    = new HashMap<>();
 
   public WeakIdentityHashMap() {}
 
@@ -66,7 +66,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
 
   public Set<Map.Entry<K, V>> entrySet() {
     reap();
-    Set<Map.Entry<K, V>> ret = new HashSet<Map.Entry<K, V>>();
+    Set<Map.Entry<K, V>> ret = new HashSet<>();
     for (Map.Entry<IdentityWeakReference, V> ref : backingStore.entrySet()) {
       final K key = ref.getKey().get();
       final V value = ref.getValue();
@@ -88,7 +88,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
 
   public Set<K> keySet() {
     reap();
-    Set<K> ret = new HashSet<K>();
+    Set<K> ret = new HashSet<>();
     for (IdentityWeakReference ref : backingStore.keySet()) {
       ret.add(ref.get());
     }

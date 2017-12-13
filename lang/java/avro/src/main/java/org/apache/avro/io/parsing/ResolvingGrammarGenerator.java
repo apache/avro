@@ -47,7 +47,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    */
   public final Symbol generate(Schema writer, Schema reader)
     throws IOException {
-    return Symbol.root(generate(writer, reader, new HashMap<LitS, Symbol>()));
+    return Symbol.root(generate(writer, reader, new HashMap<>()));
   }
 
   /**

@@ -90,7 +90,7 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
     mValueConverter = valueConverter;
 
     // Create a reusable output record.
-    mOutputRecord = new AvroKeyValue<Object, Object>(new GenericData.Record(mKeyValuePairSchema));
+    mOutputRecord = new AvroKeyValue<>(new GenericData.Record(mKeyValuePairSchema));
   }
 
   /**

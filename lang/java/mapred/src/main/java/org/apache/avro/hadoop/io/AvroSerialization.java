@@ -80,14 +80,14 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
       DatumReader<T> datumReader = (readerSchema != null)
         ? dataModel.createDatumReader(writerSchema, readerSchema)
         : dataModel.createDatumReader(writerSchema);
-      return new AvroKeyDeserializer<T>(writerSchema, readerSchema, datumReader);
+      return new AvroKeyDeserializer<>(writerSchema, readerSchema, datumReader);
     } else if (AvroValue.class.isAssignableFrom(c)) {
       Schema writerSchema = getValueWriterSchema(conf);
       Schema readerSchema = getValueReaderSchema(conf);
       DatumReader<T> datumReader = (readerSchema != null)
         ? dataModel.createDatumReader(writerSchema, readerSchema)
         : dataModel.createDatumReader(writerSchema);
-      return new AvroValueDeserializer<T>(writerSchema, readerSchema, datumReader);
+      return new AvroValueDeserializer<>(writerSchema, readerSchema, datumReader);
     } else {
       throw new IllegalStateException("Only AvroKey and AvroValue are supported.");
     }
@@ -112,7 +112,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
     }
     GenericData dataModel = createDataModel(conf);
     DatumWriter<T> datumWriter = dataModel.createDatumWriter(schema);
-    return new AvroSerializer<T>(schema, datumWriter);
+    return new AvroSerializer<>(schema, datumWriter);
   }
 
   /**

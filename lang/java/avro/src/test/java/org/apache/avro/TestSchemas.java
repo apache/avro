@@ -48,7 +48,7 @@ public class TestSchemas {
   static final Schema ENUM1_BC_SCHEMA = Schema.createEnum("Enum1", null, null, list("B", "C"));
   static final Schema ENUM2_AB_SCHEMA = Schema.createEnum("Enum2", null, null, list("A", "B"));
 
-  static final Schema EMPTY_UNION_SCHEMA = Schema.createUnion(new ArrayList<Schema>());
+  static final Schema EMPTY_UNION_SCHEMA = Schema.createUnion(new ArrayList<>());
   static final Schema NULL_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA));
   static final Schema INT_UNION_SCHEMA = Schema.createUnion(list(INT_SCHEMA));
   static final Schema LONG_UNION_SCHEMA = Schema.createUnion(list(LONG_SCHEMA));
@@ -148,7 +148,7 @@ public class TestSchemas {
 
   /** Borrowed from the Guava library. */
   static <E> ArrayList<E> list(E... elements) {
-    final ArrayList<E> list = new ArrayList<E>();
+    final ArrayList<E> list = new ArrayList<>();
     Collections.addAll(list, elements);
     return list;
   }

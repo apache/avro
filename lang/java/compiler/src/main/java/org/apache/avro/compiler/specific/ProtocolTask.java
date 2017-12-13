@@ -37,7 +37,7 @@ public class ProtocolTask extends Task {
   private File dest = new File(".");
   private StringType stringType = StringType.CharSequence;
 
-  private final ArrayList<FileSet> filesets = new ArrayList<FileSet>();
+  private final ArrayList<FileSet> filesets = new ArrayList<>();
 
   /** Set the schema file. */
   public void setFile(File file) { this.src = file; }

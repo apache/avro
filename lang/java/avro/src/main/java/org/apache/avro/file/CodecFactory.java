@@ -72,7 +72,7 @@ public abstract class CodecFactory {
    * Note that currently options (like compression level)
    * are not recoverable. */
   private static final Map<String, CodecFactory> REGISTERED =
-    new HashMap<String, CodecFactory>();
+    new HashMap<>();
 
   public static final int DEFAULT_DEFLATE_LEVEL = Deflater.DEFAULT_COMPRESSION;
   public static final int DEFAULT_XZ_LEVEL = LZMA2Options.PRESET_DEFAULT;

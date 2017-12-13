@@ -37,12 +37,12 @@ public class RecordBuilderBaseTest {
 
   @BeforeClass()
   public static void setUpBeforeClass() {
-    primitives = new HashSet<Type>(Arrays.asList(Type.values()));
+    primitives = new HashSet<>(Arrays.asList(Type.values()));
     primitives.removeAll(Arrays.asList(new Type[] {
         Type.RECORD, Type.ENUM, Type.ARRAY, Type.MAP, Type.UNION, Type.FIXED
     }));
 
-    nonNullPrimitives = new HashSet<Type>(primitives);
+    nonNullPrimitives = new HashSet<>(primitives);
     nonNullPrimitives.remove(Type.NULL);
   }
 

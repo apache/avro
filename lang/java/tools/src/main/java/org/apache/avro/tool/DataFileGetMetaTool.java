@@ -62,7 +62,7 @@ public class DataFileGetMetaTool implements Tool {
     }
     FsInput in = Util.openSeekableFromFS(args.get(0));
     DataFileReader<Void> reader =
-      new DataFileReader<Void>(in, new GenericDatumReader<Void>());
+      new DataFileReader<>(in, new GenericDatumReader<>());
     if (keyName != null) {
       byte[] value = reader.getMeta(keyName);
       if (value != null) {

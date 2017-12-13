@@ -33,7 +33,7 @@ public class ValidatingGrammarGenerator {
    * for the grammar for the given schema <tt>sc</tt>.
    */
   public Symbol generate(Schema schema) {
-    return Symbol.root(generate(schema, new HashMap<LitS, Symbol>()));
+    return Symbol.root(generate(schema, new HashMap<>()));
   }
 
   /**

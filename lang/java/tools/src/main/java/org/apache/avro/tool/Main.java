@@ -35,7 +35,7 @@ public class Main {
   int maxLen = 0;
 
   Main() {
-    tools = new TreeMap<String, Tool>();
+    tools = new TreeMap<>();
     for (Tool tool : new Tool[] {
         new CatTool(),
         new SpecificCompilerTool(),

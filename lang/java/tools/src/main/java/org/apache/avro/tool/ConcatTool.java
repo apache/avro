@@ -62,16 +62,16 @@ public class ConcatTool implements Tool {
       args = args.subList(0, args.size() - 1);
     }
 
-    DataFileWriter<GenericRecord> writer = new DataFileWriter<GenericRecord>(
-      new GenericDatumWriter<GenericRecord>());
+    DataFileWriter<GenericRecord> writer = new DataFileWriter<>(
+      new GenericDatumWriter<>());
     Schema schema = null;
-    Map<String, byte[]> metadata = new TreeMap<String, byte[]>();
+    Map<String, byte[]> metadata = new TreeMap<>();
     String inputCodec = null;
 
     for (String inFile : expandsInputFiles(args)) {
       InputStream input = Util.fileOrStdin(inFile, in);
-      DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
-        input, new GenericDatumReader<GenericRecord>());
+      DataFileStream<GenericRecord> reader = new DataFileStream<>(
+        input, new GenericDatumReader<>());
 
       if (schema == null) {
         // this is the first file - set up the writer, and store the
@@ -129,7 +129,7 @@ public class ConcatTool implements Tool {
 
   /** Processes a list of input files to expand directories if needed. */
   private static List<String> expandsInputFiles(List<String> args) throws IOException {
-    List<String> files = new ArrayList<String>();
+    List<String> files = new ArrayList<>();
 
     for (String arg : args) {
       if (arg.equals("-")) {

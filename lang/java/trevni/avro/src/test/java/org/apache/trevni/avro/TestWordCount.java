@@ -59,7 +59,7 @@ public class TestWordCount {
                       Reporter reporter) throws IOException {
       StringTokenizer tokens = new StringTokenizer(text.toString());
       while (tokens.hasMoreTokens())
-        collector.collect(new Pair<String,Long>(tokens.nextToken(),1L));
+        collector.collect(new Pair<>(tokens.nextToken(), 1L));
     }
   }
 
@@ -72,7 +72,7 @@ public class TestWordCount {
       long sum = 0;
       for (long count : counts)
         sum += count;
-      collector.collect(new Pair<String,Long>(word, sum));
+      collector.collect(new Pair<>(word, sum));
     }
   }
 

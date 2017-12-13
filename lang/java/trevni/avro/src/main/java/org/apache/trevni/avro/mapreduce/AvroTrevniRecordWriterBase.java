@@ -81,7 +81,7 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
 
     schema = initSchema(context);
     meta = filterMetadata(context.getConfiguration());
-    writer = new AvroColumnWriter<T>(schema, meta, ReflectData.get());
+    writer = new AvroColumnWriter<>(schema, meta, ReflectData.get());
 
     Path outputPath = FileOutputFormat.getOutputPath(context);
 
@@ -110,7 +110,7 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
     } finally {
       out.close();
     }
-    writer = new AvroColumnWriter<T>(schema, meta, ReflectData.get());
+    writer = new AvroColumnWriter<>(schema, meta, ReflectData.get());
   }
 
   /** {@inheritDoc} */

@@ -85,7 +85,7 @@ public class AvroUtf8InputFormat
 
     @Override
     public AvroWrapper<Utf8> createKey() {
-      return new AvroWrapper<Utf8>(null);
+      return new AvroWrapper<>(null);
     }
 
     @Override

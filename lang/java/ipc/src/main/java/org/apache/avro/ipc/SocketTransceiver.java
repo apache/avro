@@ -59,7 +59,7 @@ public class SocketTransceiver extends Transceiver {
   }
 
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       header.clear();
       while (header.hasRemaining()) {

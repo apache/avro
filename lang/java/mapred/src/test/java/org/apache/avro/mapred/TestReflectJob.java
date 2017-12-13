@@ -77,8 +77,8 @@ public class TestReflectJob {
                       Reporter reporter) throws IOException {
       StringTokenizer tokens = new StringTokenizer(text.toString());
       while (tokens.hasMoreTokens())
-        collector.collect(new Pair<Text,Count>(new Text(tokens.nextToken()),
-                                               new Count(1L)));
+        collector.collect(new Pair<>(new Text(tokens.nextToken()),
+                                     new Count(1L)));
     }
   }
 
@@ -130,8 +130,8 @@ public class TestReflectJob {
   }
 
   private void writeLinesFile(File dir) throws IOException {
-    DatumWriter<Text> writer = new ReflectDatumWriter<Text>();
-    DataFileWriter<Text> out = new DataFileWriter<Text>(writer);
+    DatumWriter<Text> writer = new ReflectDatumWriter<>();
+    DataFileWriter<Text> out = new DataFileWriter<>(writer);
     File linesFile = new File(dir+"/lines.avro");
     dir.mkdirs();
     out.create(ReflectData.get().getSchema(Text.class), linesFile);
@@ -141,9 +141,9 @@ public class TestReflectJob {
   }
 
   private void validateCountsFile(File file) throws Exception {
-    DatumReader<WordCount> reader = new ReflectDatumReader<WordCount>();
+    DatumReader<WordCount> reader = new ReflectDatumReader<>();
     InputStream in = new BufferedInputStream(new FileInputStream(file));
-    DataFileStream<WordCount> counts = new DataFileStream<WordCount>(in,reader);
+    DataFileStream<WordCount> counts = new DataFileStream<>(in, reader);
     int numWords = 0;
     for (WordCount wc : counts) {
       assertEquals(wc.word,

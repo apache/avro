@@ -65,7 +65,7 @@ public class AvroTrevniKeyValueRecordWriter <K, V> extends AvroTrevniRecordWrite
     super(context);
 
     mKeyValuePairSchema = initSchema(context);
-    keyValueRecord  = new AvroKeyValue<Object, Object>(new GenericData.Record(mKeyValuePairSchema));
+    keyValueRecord  = new AvroKeyValue<>(new GenericData.Record(mKeyValuePairSchema));
   }
 
   /** {@inheritDoc} */

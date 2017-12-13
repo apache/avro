@@ -38,8 +38,8 @@ class HadoopCombiner<K,V>
   }
 
   private class PairCollector extends AvroCollector<Pair<K,V>> {
-    private final AvroKey<K> keyWrapper = new AvroKey<K>(null);
-    private final AvroValue<V> valueWrapper = new AvroValue<V>(null);
+    private final AvroKey<K> keyWrapper = new AvroKey<>(null);
+    private final AvroValue<V> valueWrapper = new AvroValue<>(null);
     private OutputCollector<AvroKey<K>,AvroValue<V>> collector;
 
     public PairCollector(OutputCollector<AvroKey<K>,AvroValue<V>> collector) {

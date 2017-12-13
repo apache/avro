@@ -75,7 +75,7 @@ public class FromTextTool implements Tool {
     BufferedOutputStream outStream = Util.fileOrStdout(nargs.get(1), out);
 
     DataFileWriter<ByteBuffer> writer =
-        new DataFileWriter<ByteBuffer>(new GenericDatumWriter<ByteBuffer>());
+        new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(codecFactory);
     writer.create(Schema.parse(TEXT_FILE_SCHEMA), outStream);
 

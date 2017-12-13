@@ -85,11 +85,11 @@ public class TestWeather {
     JobClient.runJob(job);
 
     // check output is correct
-    DatumReader<Weather> reader = new SpecificDatumReader<Weather>();
-    DataFileReader<Weather> check = new DataFileReader<Weather>
-      (new File(inDir+"/weather.avro"), reader);
-    DataFileReader<Weather> sorted = new DataFileReader<Weather>
-      (new File(output.toString()+"/part-00000.avro"), reader);
+    DatumReader<Weather> reader = new SpecificDatumReader<>();
+    DataFileReader<Weather> check = new DataFileReader<>
+      (new File(inDir + "/weather.avro"), reader);
+    DataFileReader<Weather> sorted = new DataFileReader<>
+      (new File(output.toString() + "/part-00000.avro"), reader);
 
     for (Weather w : sorted)
       assertEquals(check.next(), w);
@@ -103,7 +103,7 @@ public class TestWeather {
     @Override
     public void map(Weather w, AvroCollector<Pair<Weather,Void>> collector,
                       Reporter reporter) throws IOException {
-      collector.collect(new Pair<Weather,Void>(w, (Void)null));
+      collector.collect(new Pair<>(w, (Void) null));
     }
 
     @Override
@@ -166,11 +166,11 @@ public class TestWeather {
     JobClient.runJob(job);
 
     // check output is correct
-    DatumReader<Weather> reader = new SpecificDatumReader<Weather>();
-    DataFileReader<Weather> check = new DataFileReader<Weather>
-      (new File(inDir+"/weather-sorted.avro"), reader);
-    DataFileReader<Weather> sorted = new DataFileReader<Weather>
-      (new File(output.toString()+"/part-00000.avro"), reader);
+    DatumReader<Weather> reader = new SpecificDatumReader<>();
+    DataFileReader<Weather> check = new DataFileReader<>
+      (new File(inDir + "/weather-sorted.avro"), reader);
+    DataFileReader<Weather> sorted = new DataFileReader<>
+      (new File(output.toString() + "/part-00000.avro"), reader);
 
     for (Weather w : sorted)
       assertEquals(check.next(), w);

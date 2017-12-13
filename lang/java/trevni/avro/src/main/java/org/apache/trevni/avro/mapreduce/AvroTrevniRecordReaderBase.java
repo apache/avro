@@ -65,7 +65,7 @@ public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K
       params.setSchema(AvroJob.getInputKeySchema(context.getConfiguration()));
     }
 
-    reader = new AvroColumnReader<T>(params);
+    reader = new AvroColumnReader<>(params);
     rows = reader.getRowCount();
   }
 

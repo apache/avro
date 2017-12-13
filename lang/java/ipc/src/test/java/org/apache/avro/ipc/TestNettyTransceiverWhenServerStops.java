@@ -47,7 +47,7 @@ public class TestNettyTransceiverWhenServerStops {
     final AtomicInteger successes = new AtomicInteger();
     final AtomicInteger failures = new AtomicInteger();
     final AtomicBoolean quitOnFailure = new AtomicBoolean();
-    List<Thread> threads = new ArrayList<Thread>();
+    List<Thread> threads = new ArrayList<>();
 
     // Start a bunch of client threads that use the transceiver to send messages
     for (int i = 0; i < 100; i++) {

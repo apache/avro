@@ -240,7 +240,7 @@ public class TestProtocolSpecific {
       argument to check that schema is sent to parse request. */
   public void testParamVariation() throws Exception {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN),
                    null, null));
     fields.add(new Schema.Field("greeting", Schema.create(Schema.Type.STRING),
@@ -250,7 +250,7 @@ public class TestProtocolSpecific {
                              null /* doc */,
                              Schema.createRecord(fields),
                              Schema.create(Schema.Type.STRING),
-                             Schema.createUnion(new ArrayList<Schema>()));
+                             Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("hello", message);
     Transceiver t = createTransceiver();
     try {
@@ -281,7 +281,7 @@ public class TestProtocolSpecific {
   public class HandshakeMonitor extends RPCPlugin{
 
     private int handshakes;
-    private HashSet<String> seenProtocols = new HashSet<String>();
+    private HashSet<String> seenProtocols = new HashSet<>();
 
     @Override
     public void serverConnecting(RPCContext context) {

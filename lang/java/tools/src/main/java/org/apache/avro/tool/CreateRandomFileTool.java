@@ -82,7 +82,7 @@ public class CreateRandomFileTool implements Tool {
         : new Schema.Parser().parse(schemastr);
 
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+      new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(Util.codecFactory(opts, codec, level));
     writer.create(schema, Util.fileOrStdout(args.get(0), out));
 

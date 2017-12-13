@@ -96,12 +96,12 @@ public class TestSpecificCompiler {
             compiler.getStandardFileManager(null, null, null);
 
     File dstDir = AvroTestUtil.tempFile(TestSpecificCompiler.class, "realCompiler");
-    List<File> javaFiles = new ArrayList<File>();
+    List<File> javaFiles = new ArrayList<>();
     for (SpecificCompiler.OutputFile o : outputs) {
       javaFiles.add(o.writeToDestination(null, dstDir));
     }
 
-    final List<Diagnostic<?>> warnings = new ArrayList<Diagnostic<?>>();
+    final List<Diagnostic<?>> warnings = new ArrayList<>();
     DiagnosticListener<JavaFileObject> diagnosticListener = new DiagnosticListener<JavaFileObject>() {
       @Override
       public void report(Diagnostic<? extends JavaFileObject> diagnostic) {

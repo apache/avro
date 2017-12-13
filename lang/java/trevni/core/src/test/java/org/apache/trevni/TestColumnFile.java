@@ -194,7 +194,7 @@ public class TestColumnFile {
 
     int seekCount = COUNT/1024;
     int[] seekRows = new int[seekCount];
-    Map<Integer,Integer> seekRowMap = new HashMap<Integer,Integer>(seekCount);
+    Map<Integer,Integer> seekRowMap = new HashMap<>(seekCount);
     while (seekRowMap.size() < seekCount) {
       int row = random.nextInt(COUNT);
       if (!seekRowMap.containsKey(row)) {
@@ -233,7 +233,7 @@ public class TestColumnFile {
     Random random = TestUtil.createRandom();
 
     int seekCount = COUNT/1024;
-    Map<Integer,Integer> seekRowMap = new HashMap<Integer,Integer>(seekCount);
+    Map<Integer,Integer> seekRowMap = new HashMap<>(seekCount);
     while (seekRowMap.size() < seekCount) {
       int row = random.nextInt(COUNT);
       if (!seekRowMap.containsKey(row))

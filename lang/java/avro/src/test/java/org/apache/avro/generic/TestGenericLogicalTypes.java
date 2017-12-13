@@ -194,11 +194,11 @@ public class TestGenericLogicalTypes {
   }
 
   private <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
-    List<D> data = new ArrayList<D>();
+    List<D> data = new ArrayList<>();
     FileReader<D> fileReader = null;
 
     try {
-      fileReader = new DataFileReader<D>(file, reader);
+      fileReader = new DataFileReader<>(file, reader);
       for (D datum : fileReader) {
         data.add(datum);
       }
@@ -219,7 +219,7 @@ public class TestGenericLogicalTypes {
   private <D> File write(GenericData model, Schema schema, D... data) throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = model.createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<D>(writer);
+    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
     try {
       fileWriter.create(schema, file);
@@ -267,7 +267,7 @@ public class TestGenericLogicalTypes {
 
     // test nested in a record
     Schema recordSchema = Schema.createRecord("X", "", "test", false);
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("x", schema, "", null));
     recordSchema.setFields(fields);
 

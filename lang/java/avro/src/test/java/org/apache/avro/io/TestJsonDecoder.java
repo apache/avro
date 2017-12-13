@@ -49,7 +49,7 @@ public class TestJsonDecoder {
       +"[{\"type\":\""+type+"\",\"name\":\"n\"}]}";
     Schema schema = Schema.parse(def);
     DatumReader<GenericRecord> reader =
-      new GenericDatumReader<GenericRecord>(schema);
+      new GenericDatumReader<>(schema);
 
     String[] records = {"{\"n\":1}", "{\"n\":1.0}"};
 

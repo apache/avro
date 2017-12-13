@@ -146,7 +146,7 @@ public class AvroKeyValue<K, V> {
       if (null == genericRecord) {
         return null;
       }
-      return new AvroKeyValue<K, V>(genericRecord);
+      return new AvroKeyValue<>(genericRecord);
     }
 
     /** {@inheritDoc} */

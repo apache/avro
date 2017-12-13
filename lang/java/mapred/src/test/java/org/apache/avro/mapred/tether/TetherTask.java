@@ -79,7 +79,7 @@ public abstract class TetherTask<IN,MID,OUT> {
         .configureBlockSize(512).binaryEncoder(buffer, null);
 
     private Collector(Schema schema) {
-      this.writer = new SpecificDatumWriter<T>(schema);
+      this.writer = new SpecificDatumWriter<>(schema);
     }
 
     /** Collect a map or reduce output value. */
@@ -145,12 +145,12 @@ public abstract class TetherTask<IN,MID,OUT> {
       Schema outSchema = Schema.parse(outSchemaText.toString());
       switch (taskType) {
       case MAP:
-        this.inReader = new SpecificDatumReader<IN>(inSchema);
-        this.midCollector = new Collector<MID>(outSchema);
+        this.inReader = new SpecificDatumReader<>(inSchema);
+        this.midCollector = new Collector<>(outSchema);
         break;
       case REDUCE:
-        this.midReader = new SpecificDatumReader<MID>(inSchema);
-        this.outCollector = new Collector<OUT>(outSchema);
+        this.midReader = new SpecificDatumReader<>(inSchema);
+        this.outCollector = new Collector<>(outSchema);
         break;
       }
     } catch (Throwable e) {

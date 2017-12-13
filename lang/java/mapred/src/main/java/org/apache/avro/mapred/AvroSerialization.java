@@ -80,7 +80,7 @@ public class AvroSerialization<T> extends Configured
       throws IOException {
       T datum = reader.read(wrapper == null ? null : wrapper.datum(), decoder);
       if (wrapper == null) {
-        wrapper = isKey? new AvroKey<T>(datum) : new AvroValue<T>(datum);
+        wrapper = isKey? new AvroKey<>(datum) : new AvroValue<>(datum);
       } else {
         wrapper.datum(datum);
       }

@@ -92,7 +92,7 @@ public class TestJsonToFromBinaryFragmentTools {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(new BufferedOutputStream(baos));
 
-    List<String> args = new ArrayList<String>();
+    List<String> args = new ArrayList<>();
     args.addAll(Arrays.asList(options));
     args.add("-");
     new BinaryFragmentToJsonTool().run(
@@ -108,7 +108,7 @@ public class TestJsonToFromBinaryFragmentTools {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(new BufferedOutputStream(baos));
 
-    List<String> args = new ArrayList<String>();
+    List<String> args = new ArrayList<>();
     args.addAll(Arrays.asList(options));
     args.add("-");
     new JsonToBinaryFragmentTool().run(

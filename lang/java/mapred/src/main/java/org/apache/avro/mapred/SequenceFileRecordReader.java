@@ -28,7 +28,7 @@ public class SequenceFileRecordReader<K,V> extends AvroRecordReader<Pair<K,V>> {
 
   public SequenceFileRecordReader(JobConf job, FileSplit split)
     throws IOException {
-    super(new SequenceFileReader<K,V>(split.getPath().toUri(), job),
+    super(new SequenceFileReader<>(split.getPath().toUri(), job),
           split);
   }
 

@@ -67,7 +67,7 @@ public class TestDataFileTools {
     fw.close();
 
     DataFileWriter<Object> writer
-      = new DataFileWriter<Object>(new GenericDatumWriter<Object>(schema))
+      = new DataFileWriter<>(new GenericDatumWriter<>(schema))
       .setMeta(KEY_NEEDING_ESCAPES, "")
       .create(schema, sampleFile);
     StringBuilder builder = new StringBuilder();
@@ -158,7 +158,7 @@ public class TestDataFileTools {
         TestDataFileTools.class + ".testWrite." + name + ".avro");
     FileOutputStream fout = new FileOutputStream(outFile);
     PrintStream out = new PrintStream(fout);
-    List<String> args = new ArrayList<String>();
+    List<String> args = new ArrayList<>();
     for (String arg : extraArgs) {
         args.add(arg);
     }
@@ -173,8 +173,8 @@ public class TestDataFileTools {
     fout.close();
 
     // Read it back, and make sure it's valid.
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    DataFileReader<Object> fileReader = new DataFileReader<Object>(outFile,reader);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    DataFileReader<Object> fileReader = new DataFileReader<>(outFile, reader);
     int i = 0;
     for (Object datum : fileReader) {
       assertEquals(i, datum);
@@ -216,9 +216,9 @@ public class TestDataFileTools {
   }
 
   private int countRecords(File outFile) throws IOException {
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
     DataFileReader<Object> fileReader =
-      new DataFileReader<Object>(outFile,reader);
+      new DataFileReader<>(outFile, reader);
     int i = 0;
     for (@SuppressWarnings("unused") Object datum : fileReader) {
       i++;

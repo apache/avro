@@ -52,12 +52,12 @@ public class ReflectResponder extends SpecificResponder {
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new ReflectDatumWriter<Object>(schema, getReflectData());
+    return new ReflectDatumWriter<>(schema, getReflectData());
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
-    return new ReflectDatumReader<Object>(actual, expected, getReflectData());
+    return new ReflectDatumReader<>(actual, expected, getReflectData());
   }
 
   @Override

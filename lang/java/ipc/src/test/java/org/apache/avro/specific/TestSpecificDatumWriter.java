@@ -32,7 +32,7 @@ import org.junit.Test;
 public class TestSpecificDatumWriter {
   @Test
   public void testResolveUnion() throws IOException {
-    final SpecificDatumWriter<TestRecordWithUnion> writer = new SpecificDatumWriter<TestRecordWithUnion>();
+    final SpecificDatumWriter<TestRecordWithUnion> writer = new SpecificDatumWriter<>();
     Schema schema = TestRecordWithUnion.SCHEMA$;
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);

@@ -113,7 +113,7 @@ public class TestEncoders {
     Schema ints = Schema.create(Type.INT);
     Encoder e = factory.jsonEncoder(ints, out);
     String separator = System.getProperty("line.separator");
-    GenericDatumWriter<Integer> writer = new GenericDatumWriter<Integer>(ints);
+    GenericDatumWriter<Integer> writer = new GenericDatumWriter<>(ints);
     writer.write(1, e);
     writer.write(2, e);
     e.flush();
@@ -134,7 +134,7 @@ public class TestEncoders {
     Schema schema = new Schema.Parser().parse("{\"type\": \"record\", \"name\": \"ab\", \"fields\": [" +
         "{\"name\": \"a\", \"type\": \"int\"}, {\"name\": \"b\", \"type\": \"int\"}" +
         "]}");
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
     Decoder decoder = DecoderFactory.get().jsonDecoder(schema, value);
     Object o = reader.read(null, decoder);
     Assert.assertEquals("{\"a\": 1, \"b\": 2}", o.toString());
@@ -149,7 +149,7 @@ public class TestEncoders {
         "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n" +
         "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":\"float\"}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n" +
         "]}");
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
     Decoder decoder = DecoderFactory.get().jsonDecoder(schema, value);
     reader.read(null, decoder);
   }
@@ -163,7 +163,7 @@ public class TestEncoders {
         "{\"name\": \"b\", \"type\": {\"type\":\"record\",\"name\":\"B\",\"fields\":\n" +
         "[{\"name\":\"b1\", \"type\":\"string\"}, {\"name\":\"b2\", \"type\":\"float\"}, {\"name\":\"b3\", \"type\":\"double\"}]}}\n" +
         "]}");
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
     Decoder decoder = DecoderFactory.get().jsonDecoder(schema, value);
     Object o = reader.read(null, decoder);
     Assert.assertEquals("{\"a\": {\"a1\": null, \"a2\": true}, \"b\": {\"b1\": \"h\", \"b2\": 3.14, \"b3\": 1.4}}", o.toString());
@@ -182,7 +182,7 @@ public class TestEncoders {
       "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n" +
       "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" +
       "]}");
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(writerSchema, readerSchema);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>(writerSchema, readerSchema);
     Decoder decoder = DecoderFactory.get().jsonDecoder(writerSchema, value);
     Object o = reader.read(null, decoder);
     Assert.assertEquals("{\"a\": {\"a1\": null, \"a2\": true}}", o.toString());
@@ -201,7 +201,7 @@ public class TestEncoders {
       "{\"name\": \"a\", \"type\": {\"type\":\"record\",\"name\":\"A\",\"fields\":\n" +
       "[{\"name\":\"a1\", \"type\":\"null\"}, {\"name\":\"a2\", \"type\":\"boolean\"}]}}\n" +
       "]}");
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(writerSchema, readerSchema);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>(writerSchema, readerSchema);
     Decoder decoder = DecoderFactory.get().jsonDecoder(writerSchema, value);
     Object o = reader.read(null, decoder);
     Assert.assertEquals("{\"a\": {\"a1\": null, \"a2\": true}}", o.toString());

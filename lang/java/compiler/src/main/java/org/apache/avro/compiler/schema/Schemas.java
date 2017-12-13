@@ -104,11 +104,11 @@ public final class Schemas {
    */
   public static <T> T visit(final Schema start, final SchemaVisitor<T> visitor) {
     // Set of Visited Schemas
-    IdentityHashMap<Schema, Schema> visited = new IdentityHashMap<Schema, Schema>();
+    IdentityHashMap<Schema, Schema> visited = new IdentityHashMap<>();
     // Stack that contains the Schams to process and afterVisitNonTerminal functions.
     // Deque<Either<Schema, Supplier<SchemaVisitorAction>>>
     // Using either has a cost which we want to avoid...
-    Deque<Object> dq = new ArrayDeque<Object>();
+    Deque<Object> dq = new ArrayDeque<>();
     dq.addLast(start);
     Object current;
     while ((current = dq.pollLast()) != null) {

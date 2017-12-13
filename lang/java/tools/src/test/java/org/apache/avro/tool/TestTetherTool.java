@@ -95,7 +95,7 @@ public class TestTetherTool {
     execargs += " org.apache.avro.mapred.tether.WordCountTask";
 
     // Create a list of the arguments to pass to the tull run method
-    java.util.List<String> runargs = new java.util.ArrayList<String> ();
+    java.util.List<String> runargs = new java.util.ArrayList<>();
 
 
     runargs.addAll(java.util.Arrays.asList("--program", "java"));
@@ -111,9 +111,9 @@ public class TestTetherTool {
 
     // TODO:: We should probably do some validation
     // validate the output
-    DatumReader<Pair<Utf8,Long>> reader = new SpecificDatumReader<Pair<Utf8,Long>>();
+    DatumReader<Pair<Utf8,Long>> reader = new SpecificDatumReader<>();
     InputStream cin = new BufferedInputStream(new FileInputStream(WordCountUtil.COUNTS_FILE));
-    DataFileStream<Pair<Utf8,Long>> counts = new DataFileStream<Pair<Utf8,Long>>(cin,reader);
+    DataFileStream<Pair<Utf8,Long>> counts = new DataFileStream<>(cin, reader);
     int numWords = 0;
     for (Pair<Utf8,Long> wc : counts) {
       assertEquals(wc.key().toString(),

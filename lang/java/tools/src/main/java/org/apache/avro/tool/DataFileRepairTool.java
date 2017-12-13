@@ -66,7 +66,7 @@ public class DataFileRepairTool implements Tool {
         + "   using the report option.");
   }
 
-  private static final Set<String> OPTIONS = new HashSet<String>();
+  private static final Set<String> OPTIONS = new HashSet<>();
   private static final String ALL = "all";
   private static final String PRIOR = "prior";
   private static final String AFTER = "after";
@@ -125,8 +125,8 @@ public class DataFileRepairTool implements Tool {
       return 1;
     }
     out.println("Recovering file: " + input);
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    DataFileReader<Object> fileReader = new DataFileReader<Object>(infile,
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    DataFileReader<Object> fileReader = new DataFileReader<>(infile,
         reader);
     try {
       Schema schema = fileReader.getSchema();
@@ -134,8 +134,8 @@ public class DataFileRepairTool implements Tool {
       CodecFactory codecFactory = CodecFactory.fromString("" + codecStr);
       List<String> metas = fileReader.getMetaKeys();
       if (recoverPrior || recoverAfter) {
-        GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>();
-        DataFileWriter<Object> fileWriter = new DataFileWriter<Object>(writer);
+        GenericDatumWriter<Object> writer = new GenericDatumWriter<>();
+        DataFileWriter<Object> fileWriter = new DataFileWriter<>(writer);
         try {
           File outfile = new File(output);
           for (String key : metas) {

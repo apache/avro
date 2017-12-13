@@ -81,7 +81,7 @@ public class RpcReceiveTool implements Tool {
       try {
         JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(message.getRequest(),
             out);
-        GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>(
+        GenericDatumWriter<Object> writer = new GenericDatumWriter<>(
             message.getRequest());
         writer.write(request, jsonEncoder);
         jsonEncoder.flush();

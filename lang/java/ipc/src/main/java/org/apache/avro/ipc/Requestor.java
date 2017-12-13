@@ -55,9 +55,9 @@ public abstract class Requestor {
   private static final Schema META =
     Schema.createMap(Schema.create(Schema.Type.BYTES));
   private static final GenericDatumReader<Map<String,ByteBuffer>>
-    META_READER = new GenericDatumReader<Map<String,ByteBuffer>>(META);
+    META_READER = new GenericDatumReader<>(META);
   private static final GenericDatumWriter<Map<String,ByteBuffer>>
-    META_WRITER = new GenericDatumWriter<Map<String,ByteBuffer>>(META);
+    META_WRITER = new GenericDatumWriter<>(META);
 
   private final Protocol local;
   private volatile Protocol remote;
@@ -75,7 +75,7 @@ public abstract class Requestor {
     this.local = local;
     this.transceiver = transceiver;
     this.rpcMetaPlugins =
-      new CopyOnWriteArrayList<RPCPlugin>();
+      new CopyOnWriteArrayList<>();
   }
 
   /**
@@ -95,7 +95,7 @@ public abstract class Requestor {
     // Initialize request
     Request rpcRequest = new Request(messageName, request, new RPCContext());
     CallFuture<Object> future = /* only need a Future for two-way messages */
-      rpcRequest.getMessage().isOneWay() ? null : new CallFuture<Object>();
+      rpcRequest.getMessage().isOneWay() ? null : new CallFuture<>();
 
     // Send request
     request(rpcRequest, future);
@@ -143,9 +143,9 @@ public abstract class Requestor {
           // the write lock
           handshakeLock.unlock();
         } else {
-          CallFuture<T> callFuture = new CallFuture<T>(callback);
+          CallFuture<T> callFuture = new CallFuture<>(callback);
           t.transceive(request.getBytes(),
-                       new TransceiverCallback<T>(request, callFuture));
+                       new TransceiverCallback<>(request, callFuture));
           // Block until handshake complete
           callFuture.await();
           if (request.getMessage().isOneWay()) {
@@ -179,21 +179,21 @@ public abstract class Requestor {
       }
     } else {
       t.transceive(request.getBytes(),
-                   new TransceiverCallback<T>(request, callback));
+                   new TransceiverCallback<>(request, callback));
     }
 
   }
 
   private static final ConcurrentMap<String,MD5> REMOTE_HASHES =
-    new ConcurrentHashMap<String,MD5>();
+    new ConcurrentHashMap<>();
   private static final ConcurrentMap<MD5,Protocol> REMOTE_PROTOCOLS =
-    new ConcurrentHashMap<MD5,Protocol>();
+    new ConcurrentHashMap<>();
 
   private static final SpecificDatumWriter<HandshakeRequest> HANDSHAKE_WRITER =
-    new SpecificDatumWriter<HandshakeRequest>(HandshakeRequest.class);
+    new SpecificDatumWriter<>(HandshakeRequest.class);
 
   private static final SpecificDatumReader<HandshakeResponse> HANDSHAKE_READER =
-    new SpecificDatumReader<HandshakeResponse>(HandshakeResponse.class);
+    new SpecificDatumReader<>(HandshakeResponse.class);
 
   private void writeHandshake(Encoder out) throws IOException {
     if (getTransceiver().isConnected()) return;
@@ -344,7 +344,7 @@ public abstract class Requestor {
           Request handshake = new Request(request);
           getTransceiver().transceive
             (handshake.getBytes(),
-             new TransceiverCallback<T>(handshake, callback));
+             new TransceiverCallback<>(handshake, callback));
           return;
         }
       } catch (Exception e) {

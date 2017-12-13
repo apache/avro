@@ -134,7 +134,7 @@ public class TestAvroKeyOutputFormat {
         = createMock(AvroKeyOutputFormat.RecordWriterFactory.class);
 
     // Expect the record writer factory to be called with appropriate parameters.
-    Capture<CodecFactory> capturedCodecFactory = new Capture<CodecFactory>();
+    Capture<CodecFactory> capturedCodecFactory = new Capture<>();
     expect(recordWriterFactory.create(eq(writerSchema),
         anyObject(GenericData.class),
         capture(capturedCodecFactory),  // Capture for comparison later.
@@ -146,7 +146,7 @@ public class TestAvroKeyOutputFormat {
     replay(recordWriterFactory);
 
     AvroKeyOutputFormat<Integer> outputFormat
-        = new AvroKeyOutputFormat<Integer>(recordWriterFactory);
+        = new AvroKeyOutputFormat<>(recordWriterFactory);
     RecordWriter<AvroKey<Integer>, NullWritable> recordWriter
         = outputFormat.getRecordWriter(context);
     // Make sure the expected codec was used.

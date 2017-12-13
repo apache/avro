@@ -73,7 +73,7 @@ public class TestWordCountTether {
     String in=dir+"/in";
 
     //create a string of the arguments
-    List<String> execargs = new ArrayList<String>();
+    List<String> execargs = new ArrayList<>();
     execargs.add("-classpath");
     execargs.add(System.getProperty("java.class.path"));
     execargs.add("org.apache.avro.mapred.tether.WordCountTask");
@@ -91,10 +91,10 @@ public class TestWordCountTether {
 
     // validate the output
     DatumReader<Pair<Utf8,Long>> reader
-      = new SpecificDatumReader<Pair<Utf8,Long>>();
+      = new SpecificDatumReader<>();
     InputStream cin = new BufferedInputStream(new FileInputStream(WordCountUtil.COUNTS_FILE));
     DataFileStream<Pair<Utf8,Long>> counts
-      = new DataFileStream<Pair<Utf8,Long>>(cin,reader);
+      = new DataFileStream<>(cin, reader);
     int numWords = 0;
     for (Pair<Utf8,Long> wc : counts) {
       assertEquals(wc.key().toString(),

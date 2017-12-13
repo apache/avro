@@ -96,8 +96,8 @@ public class TestCatTool {
       schema = STRINGSCHEMA;
     }
 
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(
-              new GenericDatumWriter<Object>(schema));
+    DataFileWriter<Object> writer = new DataFileWriter<>(
+        new GenericDatumWriter<>(schema));
     for(Entry<String, String> metadatum : metadata.entrySet()) {
         writer.setMeta(metadatum.getKey(), metadatum.getValue());
     }
@@ -114,8 +114,8 @@ public class TestCatTool {
 
 
   private int getFirstIntDatum(File file) throws Exception {
-    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>( new FileInputStream(file) ,
-      new GenericDatumReader<GenericRecord>());
+    DataFileStream<GenericRecord> reader = new DataFileStream<>(new FileInputStream(file),
+      new GenericDatumReader<>());
 
     int result = (Integer) reader.next().get(0);
     System.out.println(result);
@@ -124,9 +124,9 @@ public class TestCatTool {
   }
 
   private int numRowsInFile(File output) throws Exception {
-    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
+    DataFileStream<GenericRecord> reader = new DataFileStream<>(
       new FileInputStream(output),
-      new GenericDatumReader<GenericRecord>());
+      new GenericDatumReader<>());
     Iterator<GenericRecord> rows = reader.iterator();
     int rowcount = 0;
     while(rows.hasNext()) {
@@ -139,7 +139,7 @@ public class TestCatTool {
 
   @Test
   public void testCat() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -199,7 +199,7 @@ public class TestCatTool {
 
   @Test
   public void testLimitOutOfBounds() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -222,7 +222,7 @@ public class TestCatTool {
 
   @Test
   public void testSamplerateAccuracy() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -248,7 +248,7 @@ public class TestCatTool {
 
   @Test
   public void testOffSetAccuracy() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -273,7 +273,7 @@ public class TestCatTool {
 
   @Test
   public void testOffsetBiggerThanInput() throws Exception{
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -296,7 +296,7 @@ public class TestCatTool {
 
   @Test
   public void testSamplerateSmallerThanInput() throws Exception{
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -322,7 +322,7 @@ public class TestCatTool {
 
   @Test(expected = IOException.class)
   public void testDifferentSchemasFail() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.STRING, metadata, DEFLATE);

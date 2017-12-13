@@ -56,7 +56,7 @@ public class TestCases {
 
     // write full data
     AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
+      new AvroColumnWriter<>(schema, new ColumnFileMetaData());
     for (Object datum : data)
       writer.write(datum);
     writer.writeTo(FILE);
@@ -74,7 +74,7 @@ public class TestCases {
 
   private void checkRead(Schema s, List<Object> data) throws Exception {
     AvroColumnReader<Object> reader =
-      new AvroColumnReader<Object>(new AvroColumnReader.Params(FILE)
+      new AvroColumnReader<>(new AvroColumnReader.Params(FILE)
                                    .setSchema(s));
     try {
       for (Object datum : data)
@@ -86,7 +86,7 @@ public class TestCases {
 
   private List<Object> fromJson(Schema schema, File file) throws Exception {
     InputStream in = new FileInputStream(file);
-    List<Object> data = new ArrayList<Object>();
+    List<Object> data = new ArrayList<>();
     try {
       DatumReader reader = new GenericDatumReader(schema);
       Decoder decoder = DecoderFactory.get().jsonDecoder(schema, in);

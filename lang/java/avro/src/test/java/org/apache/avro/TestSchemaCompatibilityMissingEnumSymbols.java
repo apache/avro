@@ -45,7 +45,7 @@ public class TestSchemaCompatibilityMissingEnumSymbols {
     Object[][] fields = { //
         { ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA, "[C]", "/symbols" }, { ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, "[A]", "/symbols" },
         { RECORD1_WITH_ENUM_AB, RECORD1_WITH_ENUM_ABC, "[C]", "/fields/0/type/symbols" } };
-    List<Object[]> list = new ArrayList<Object[]>(fields.length);
+    List<Object[]> list = new ArrayList<>(fields.length);
     for (Object[] schemas : fields) {
       list.add(schemas);
     }

@@ -39,7 +39,7 @@ import org.apache.avro.file.CodecFactory;
 public class HadoopCodecFactory {
 
   private static final Map<String, String> HADOOP_AVRO_NAME_MAP =
-      new HashMap<String, String>();
+      new HashMap<>();
 
   static {
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.DeflateCodec", "deflate");
