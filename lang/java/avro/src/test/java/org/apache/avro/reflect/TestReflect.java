@@ -297,6 +297,31 @@ public class TestReflect {
     checkReadWrite(r9, ReflectData.get().getSchema(R9.class));
   }
 
+  // test union in fields
+  public static class R9_1  {
+	@Union({R7.class, R8.class})
+    public Object value;
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof R9_1)) return false;
+      return this.value.equals(((R9_1)o).value);
+    }
+  }
+
+  @Test public void testR6_1() throws Exception {
+    R7 r7 = new R7();
+    r7.value = 1;
+    checkReadWrite(r7, ReflectData.get().getSchema(R6.class));
+    R8 r8 = new R8();
+    r8.value = 1;
+    checkReadWrite(r8, ReflectData.get().getSchema(R6.class));
+    R9_1 r9_1 = new R9_1();
+    r9_1.value = r7;
+    checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
+    r9_1.value = r8;
+    checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
+  }
+  
   // test union annotation on methods and parameters
   public static interface P0 {
     @Union({Void.class,String.class})

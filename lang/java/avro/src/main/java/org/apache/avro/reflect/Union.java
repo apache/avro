@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * to a method, this determines its return type.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.PARAMETER, ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
 @Documented
 public @interface Union {
   /** The instantiable classes that compose this union. */

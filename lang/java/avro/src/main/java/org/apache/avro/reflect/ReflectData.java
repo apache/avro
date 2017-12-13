@@ -744,6 +744,10 @@ public class ReflectData extends SpecificData {
     if (explicit != null)                                   // explicit schema
       return Schema.parse(explicit.value());
 
+    Union union = field.getAnnotation(Union.class);
+    if (union != null)
+      return getAnnotatedUnion(union, names);
+
     Schema schema = createSchema(field.getGenericType(), names);
     if (field.isAnnotationPresent(Stringable.class)) {      // Stringable
       schema = Schema.create(Schema.Type.STRING);
