@@ -27,14 +27,14 @@ using Avro.Specific;
 namespace Avro.Test
 {
     [TestFixture]
- 
+
     class CodeGenTest
     {
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""ClassKeywords"",
 ""namespace"" : ""com.base"",
-""fields"" : 
+""fields"" :
 		[ 	
 			{ ""name"" : ""int"", ""type"" : ""int"" },
 			{ ""name"" : ""base"", ""type"" : ""long"" },
@@ -53,14 +53,14 @@ namespace Avro.Test
 ""type"" : ""record"",
 ""name"" : ""SchemaObject"",
 ""namespace"" : ""schematest"",
-""fields"" : 
+""fields"" :
 	[ 	
-		{ ""name"" : ""myobject"", ""type"" : 
-			[ 
-				""null"", 
-				{""type"" : ""array"", ""items"" : [ ""null"", 
+		{ ""name"" : ""myobject"", ""type"" :
+			[
+				""null"",
+				{""type"" : ""array"", ""items"" : [ ""null"",
 											{ ""type"" : ""enum"", ""name"" : ""MyEnum"", ""symbols"" : [ ""A"", ""B"" ] },
-											{ ""type"": ""fixed"", ""size"": 16, ""name"": ""MyFixed"" } 
+											{ ""type"": ""fixed"", ""size"": 16, ""name"": ""MyFixed"" }
 											]
 				}
 			]

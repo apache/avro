@@ -94,15 +94,15 @@ namespace Avro
             if (obj != null && obj is PropertyMap)
             {
                 var that = obj as PropertyMap;
-                if (this.Count != that.Count) 
-                    return false; 
-                foreach (KeyValuePair<string, string> pair in this) 
-                { 
+                if (this.Count != that.Count)
+                    return false;
+                foreach (KeyValuePair<string, string> pair in this)
+                {
                     if (!that.ContainsKey(pair.Key))
                         return false;
                     if (!pair.Value.Equals(that[pair.Key]))
-                        return false; 
-                } 
+                        return false;
+                }
                 return true;
             }
             return false;

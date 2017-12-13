@@ -57,7 +57,7 @@ namespace Avro.Test.Ipc
             }
         }
 
-        // AVRO-625 [Test] 
+        // AVRO-625 [Test]
         // Currently, SocketTransceiver does not permit out-of-order requests on a stateful connection.
         public void Test()
         {
@@ -98,7 +98,7 @@ namespace Avro.Test.Ipc
             var response = (string)proxy.Request("hello", request);
 
             // 4. If control reaches here, both RPCs have executed concurrently
-            Assert.AreEqual("wait", response); 
+            Assert.AreEqual("wait", response);
         }
 
         private class SimpleResponder : GenericResponder
