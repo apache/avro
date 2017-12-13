@@ -229,7 +229,7 @@ public class TestDataFileTools {
   @Test
   public void testDifferentSeparatorsBetweenJsonRecords() throws Exception {
     File outFile = writeToAvroFile(
-        "seperators",
+        "separators",
         "{ \"type\":\"array\", \"items\":\"int\" }",
         "[]    [] []\n[][3]     ");
     assertEquals(5, countRecords(outFile));

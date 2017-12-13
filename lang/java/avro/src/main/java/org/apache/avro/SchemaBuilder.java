@@ -372,7 +372,7 @@ public class SchemaBuilder {
    * <p/>
    * All Avro named types and fields have 'doc', 'aliases', and 'name'
    * components. 'name' is required, and provided to this builder. 'doc' and
-   * 'alises' are optional.
+   * 'aliases' are optional.
    */
   public static abstract class NamedBuilder<S extends NamedBuilder<S>> extends
       PropBuilder<S> {
@@ -2027,7 +2027,7 @@ public class SchemaBuilder {
    * Usage is to first configure any of the optional parameters and then to call one
    * of the type methods to complete the field.  For example
    * <pre>
-   *   .namespace("org.apache.example").orderDecending().type()
+   *   .namespace("org.apache.example").orderDescending().type()
    * </pre>
    * Optional parameters for a field are namespace, doc, order, and aliases.
    */
@@ -2047,7 +2047,7 @@ public class SchemaBuilder {
       return self();
     }
 
-    /** Set this field to have decending order.  Decending is the default **/
+    /** Set this field to have descending order.  Descending is the default **/
     public FieldBuilder<R> orderDescending() {
       order = Schema.Field.Order.DESCENDING;
       return self();

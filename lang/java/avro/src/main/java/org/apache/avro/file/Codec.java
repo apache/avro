@@ -33,7 +33,7 @@ public abstract class Codec {
   /**
    * Codecs must implement an equals() method.  Two codecs, A and B are equal
    * if: the result of A and B decompressing content compressed by A is the same
-   * AND the retult of A and B decompressing content compressed by B is the same
+   * AND the result of A and B decompressing content compressed by B is the same
    **/
   @Override
   public abstract boolean equals(Object other);

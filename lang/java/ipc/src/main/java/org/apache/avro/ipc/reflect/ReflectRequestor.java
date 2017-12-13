@@ -69,21 +69,21 @@ public class ReflectRequestor extends SpecificRequestor {
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static <T> T getClient(Class<T> iface, Transceiver transciever)
+  public static <T> T getClient(Class<T> iface, Transceiver transceiver)
     throws IOException {
-    return getClient(iface, transciever,
+    return getClient(iface, transceiver,
                      new ReflectData(iface.getClassLoader()));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
-  public static <T> T getClient(Class<T> iface, Transceiver transciever,
+  public static <T> T getClient(Class<T> iface, Transceiver transceiver,
                                 ReflectData reflectData) throws IOException {
     Protocol protocol = reflectData.getProtocol(iface);
     return (T)Proxy.newProxyInstance
       (reflectData.getClassLoader(),
        new Class[] { iface },
-       new ReflectRequestor(protocol, transciever, reflectData));
+       new ReflectRequestor(protocol, transceiver, reflectData));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

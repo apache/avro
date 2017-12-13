@@ -85,7 +85,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   }
 
   /**
-   * create an unitialized DataFileStream
+   * create an uninitialized DataFileStream
    */
   protected DataFileStream(DatumReader<D> reader) throws IOException {
     this.reader = reader;

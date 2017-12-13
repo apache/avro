@@ -228,7 +228,7 @@ public abstract class TetherTask<IN,MID,OUT> {
   }
 
   void close() {
-    LOG.info("Closing the transciever");
+    LOG.info("Closing the transceiver");
     if (clientTransceiver != null)
       try {
         clientTransceiver.close();

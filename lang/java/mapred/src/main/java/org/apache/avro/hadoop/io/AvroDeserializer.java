@@ -33,7 +33,7 @@ import org.apache.hadoop.io.serializer.Deserializer;
 /**
  * Deserializes AvroWrapper objects within Hadoop.
  *
- * <p>Keys and values containing Avro tyeps are more efficiently serialized
+ * <p>Keys and values containing Avro types are more efficiently serialized
  * outside of the WritableSerialization model, so they are wrapper in {@link
  * org.apache.avro.mapred.AvroWrapper} objects and deserialization is handled
  * by this class.</p>

@@ -55,7 +55,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    * <tt>reader</tt> and returns the start symbol for the grammar generated.
    * If there is already a symbol in the map <tt>seen</tt> for resolving the
    * two schemas, then that symbol is returned. Otherwise a new symbol is
-   * generated and returnd.
+   * generated and returned.
    * @param writer    The schema used by the writer
    * @param reader    The schema used by the reader
    * @param seen      The &lt;reader-schema, writer-schema&gt; to symbol
@@ -119,7 +119,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       case UNION:
         return resolveUnion(writer, reader, seen);
       default:
-        throw new AvroTypeException("Unkown type for schema: " + writerType);
+        throw new AvroTypeException("Unknown type for schema: " + writerType);
       }
     } else {  // writer and reader are of different types
       if (writerType == Schema.Type.UNION) {

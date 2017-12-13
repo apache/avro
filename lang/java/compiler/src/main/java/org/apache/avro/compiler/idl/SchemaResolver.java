@@ -98,7 +98,7 @@ final class SchemaResolver {
     }
     result.setTypes(newSchemas); // replace types with resolved ones
 
-    // Resolve all schemas refferenced by protocol Messages.
+    // Resolve all schemas referenced by protocol Messages.
     for (Map.Entry<String, Protocol.Message> entry : protocol.getMessages().entrySet()) {
       Protocol.Message value = entry.getValue();
       Protocol.Message nvalue;

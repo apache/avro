@@ -117,7 +117,7 @@ public class TestIdl {
 
 
   /**
-   * An invididual comparison test
+   * An individual comparison test
    */
   private static class GenTest {
     private final File in, expectedOut;

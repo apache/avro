@@ -41,7 +41,7 @@ public abstract class Symbol {
     ROOT,
     /** non-terminal symbol which is a sequence of one or more other symbols */
     SEQUENCE,
-    /** non-termial to represent the contents of an array or map */
+    /** non-terminal to represent the contents of an array or map */
     REPEATER,
     /** non-terminal to represent the union */
     ALTERNATIVE,

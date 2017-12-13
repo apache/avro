@@ -443,7 +443,7 @@ public abstract class Schema extends JsonProperties {
         this.aliases = new LinkedHashSet<String>();
       aliases.add(alias);
     }
-    /** Return the defined aliases as an unmodifieable Set. */
+    /** Return the defined aliases as an unmodifiable Set. */
     public Set<String> aliases() {
       if (aliases == null)
         return Collections.emptySet();

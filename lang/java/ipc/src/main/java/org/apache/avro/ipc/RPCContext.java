@@ -155,7 +155,7 @@ public class RPCContext {
 
   /**
    * The exception generated at the server,
-   * or null if no such exception has occured
+   * or null if no such exception has occurred
    * @return the exception generated at the server, or
    * null if no such exception
    */

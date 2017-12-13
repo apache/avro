@@ -243,7 +243,7 @@ public class TestAvroMultipleOutputs {
 
 
   @SuppressWarnings("deprecation")
-  // Test for a differnt schema output
+  // Test for a different schema output
   public void testProjection1() throws Exception {
     JobConf job = new JobConf();
     Schema readerSchema = Schema.create(Schema.Type.STRING);
@@ -271,7 +271,7 @@ public class TestAvroMultipleOutputs {
   }
 
   @SuppressWarnings("deprecation")
-  // Test for a differnt schema output
+  // Test for a different schema output
   public void testProjection_newmethods_1() throws Exception {
     JobConf job = new JobConf();
     Schema readerSchema = Schema.create(Schema.Type.STRING);

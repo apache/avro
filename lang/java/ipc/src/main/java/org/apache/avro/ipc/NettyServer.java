@@ -192,7 +192,7 @@ public class NettyServer implements Server {
           e.getChannel().write(dataPack);
         }
       } catch (IOException ex) {
-        LOG.warn("unexpect error");
+        LOG.warn("unexpected error");
       }
     }
 

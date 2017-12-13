@@ -10,7 +10,7 @@ import org.apache.avro.Schema;
 import static org.apache.avro.Schema.Type.RECORD;
 
 /**
- * this visitor will create a clone of the original Schema with docs and other nonesential fields stripped
+ * this visitor will create a clone of the original Schema with docs and other nonessential fields stripped
  * by default. what attributes are copied is customizable.
  */
 public final class CloningVisitor implements SchemaVisitor<Schema> {

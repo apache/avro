@@ -64,7 +64,7 @@ public class DataFileInteropTest {
   }
 
   // Can't use same Interop.java as specific for reflect.
-  // This used to be the case because one used Utf8 and the other Sring, but
+  // This used to be the case because one used Utf8 and the other String, but
   // we use CharSequence now.
   // The current incompatibility is now that one uses byte[] and the other ByteBuffer
 
