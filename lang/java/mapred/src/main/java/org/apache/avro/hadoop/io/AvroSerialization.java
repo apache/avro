@@ -177,7 +177,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Sets the data model class for de/seralization.
+   * Sets the data model class for de/serialization.
    *
    * @param conf The configuration.
    * @param modelClass The data model class.
@@ -231,7 +231,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Gets the data model class for de/seralization.
+   * Gets the data model class for de/serialization.
    *
    * @param conf The configuration.
    */

@@ -209,7 +209,7 @@ public abstract class JsonProperties {
   }
 
   /**
-   * Return the defined properties as an unmodifieable Map.
+   * Return the defined properties as an unmodifiable Map.
    * @deprecated use {@link #getObjectProps()}
    */
   @Deprecated
@@ -217,7 +217,7 @@ public abstract class JsonProperties {
     return Collections.unmodifiableMap(props);
   }
 
-  /** Return the defined properties as an unmodifieable Map. */
+  /** Return the defined properties as an unmodifiable Map. */
   public Map<String,Object> getObjectProps() {
     Map<String,Object> result = new LinkedHashMap<String,Object>();
     for (Map.Entry<String,JsonNode> e : props.entrySet())

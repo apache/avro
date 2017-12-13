@@ -71,7 +71,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    *
    * @param writer  The writer's schema. Cannot be null.
    * @param reader  The reader's schema. Cannot be null.
-   * @return  The opaque reolver.
+   * @return  The opaque resolver.
    * @throws IOException
    */
   public static Object resolve(Schema writer, Schema reader)

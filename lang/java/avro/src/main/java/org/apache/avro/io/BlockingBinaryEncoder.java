@@ -137,9 +137,9 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
               type == Schema.Type.ARRAY || type == Schema.Type.MAP);
 
       assert 0 <= items;
-      assert 0 != items || start == pos;         // 0==itms ==> start==pos
-      assert 1 < items || start == lastFullItem; // 1<=itms ==> start==lFI
-      assert items <= 1 || start <= lastFullItem; // 1<itms ==> start<=lFI
+      assert 0 != items || start == pos;         // 0==items ==> start==pos
+      assert 1 < items || start == lastFullItem; // 1<=items ==> start==lFI
+      assert items <= 1 || start <= lastFullItem; // 1<items ==> start<=lFI
       assert lastFullItem <= pos;
 
       switch (state) {

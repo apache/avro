@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 
-/** Helper to permit Externalizeable implementations that write to an
+/** Helper to permit Externalizable implementations that write to an
  * InputStream. */
 class ExternalizableInput extends InputStream {
   private final ObjectInput in;

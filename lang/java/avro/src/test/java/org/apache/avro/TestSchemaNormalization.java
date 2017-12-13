@@ -99,7 +99,7 @@ public class TestSchemaNormalization {
   /** Compute the fingerprint of <i>bytes[s,s+l)</i> using a slow
       algorithm that's an alternative to that implemented in {@link
       SchemaNormalization}.  Algo from Broder93 ("Some applications of Rabin's
-      fingerpringint method"). */
+      fingerprinting method"). */
   public static long altFingerprint(String s) {
     // In our algorithm, we multiply all inputs by x^64 (which is
     // equivalent to prepending it with a single "1" bit followed

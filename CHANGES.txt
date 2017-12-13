@@ -105,6 +105,8 @@ Trunk (not yet released)
 
     AVRO-2119: Run Apache Rat check on every java build (Niels Basjes)
 
+    AVRO-2117: Overall cleanup of java code (Niels Basjes)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.

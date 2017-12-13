@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
 /**
- * Base class for all Arvo mojo test classes.
+ * Base class for all Avro mojo test classes.
  *
  * @author saden
  */

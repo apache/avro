@@ -97,7 +97,7 @@ class TetheredProcess  {
         break;
       case NONE:
       default:
-        throw new RuntimeException("No transport protocol was specified in the job configuraiton");
+        throw new RuntimeException("No transport protocol was specified in the job configuration");
       }
 
       outputServer.start();

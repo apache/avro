@@ -264,7 +264,7 @@ public class TestNonStringMapKeys {
 
   /**
    * Test that non-string map-keys are readable through GenericDatumReader
-   * This methoud should read as array of {key, value} and not as a map
+   * This method should read as array of {key, value} and not as a map
    */
   private <T> List<GenericRecord> testGenericDatumRead
     (String testType, byte[] bytes, T ... entityObjs) throws IOException {
@@ -287,7 +287,7 @@ public class TestNonStringMapKeys {
 
   /**
    * Test that non-string map-keys are readable through ReflectDatumReader
-   * This methoud should form the original map and should not return any
+   * This method should form the original map and should not return any
    * array of {key, value} as done by {@link #testGenericDatumRead()}
    */
   private <T> List<T> testReflectDatumRead

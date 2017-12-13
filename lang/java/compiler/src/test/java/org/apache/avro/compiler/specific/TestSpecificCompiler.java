@@ -107,7 +107,7 @@ public class TestSpecificCompiler {
       public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
         switch (diagnostic.getKind()) {
         case ERROR:
-          // Do not add these to warnings becuase they will fail the compile, anyway.
+          // Do not add these to warnings because they will fail the compile, anyway.
           LOG.error("{}", diagnostic);
           break;
         case WARNING:
@@ -325,7 +325,7 @@ public class TestSpecificCompiler {
     is.read(fileInDefaultEncoding);
     is.close(); //close input stream otherwise delete might fail
     if (!this.outputFile.delete()) {
-      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasnt changed.
+      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasn't changed.
     }
     // Generate file in another encoding (make sure it has different number of bytes per character)
     String differentEncoding = Charset.defaultCharset().equals(Charset.forName("UTF-16")) ? "UTF-32" : "UTF-16";

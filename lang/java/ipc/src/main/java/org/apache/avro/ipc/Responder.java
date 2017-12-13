@@ -100,7 +100,7 @@ public abstract class Responder {
   }
 
   /** Called by a server to deserialize a request, compute and serialize a
-   * response or error.  Transciever is used by connection-based servers to
+   * response or error.  Transceiver is used by connection-based servers to
    * track handshake status of connection. */
   public List<ByteBuffer> respond(List<ByteBuffer> buffers,
                                   Transceiver connection) throws IOException {

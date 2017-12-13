@@ -61,7 +61,7 @@ public class SchemaCompatibility {
       final Schema writer
   ) {
     final SchemaCompatibilityResult compatibility =
-        new ReaderWriterCompatiblityChecker()
+        new ReaderWriterCompatibilityChecker()
             .getCompatibility(reader, writer);
 
     final String message;
@@ -194,7 +194,7 @@ public class SchemaCompatibility {
    *
    * <p> Provides memoization to handle recursive schemas. </p>
    */
-  private static final class ReaderWriterCompatiblityChecker {
+  private static final class ReaderWriterCompatibilityChecker {
     private static final String ROOT_REFERENCE_TOKEN = "";
     private final Map<ReaderWriter, SchemaCompatibilityResult> mMemoizeMap =
         new HashMap<ReaderWriter, SchemaCompatibilityResult>();
