@@ -49,7 +49,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 
 public class TestSchema {

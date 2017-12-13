@@ -19,8 +19,6 @@ package org.apache.avro.util;
 
 import java.io.UnsupportedEncodingException;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 
 import static junit.framework.Assert.assertSame;

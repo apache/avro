@@ -27,7 +27,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.reflect.ReflectDatumReader;
 
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.FsInput;
@@ -50,7 +49,6 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.apache.avro.mapred.Pair;
 
 public class TestAvroMultipleOutputs {
   @Rule

@@ -21,7 +21,6 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
-import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;

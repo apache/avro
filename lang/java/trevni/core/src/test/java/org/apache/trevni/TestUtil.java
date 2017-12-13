@@ -19,7 +19,6 @@ package org.apache.trevni;
 
 import java.util.Random;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 import org.junit.Assert;

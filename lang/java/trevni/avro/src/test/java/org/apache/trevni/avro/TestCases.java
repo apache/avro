@@ -18,15 +18,12 @@
 package org.apache.trevni.avro;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.EOFException;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.apache.trevni.ValueType;
-import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnFileMetaData;
 
 import org.apache.avro.Schema;
