@@ -21,7 +21,6 @@ import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.reflect.ReflectRequestor;
 import org.apache.avro.ipc.reflect.ReflectResponder;
-import org.apache.avro.test.Simple;
 import org.junit.Before;
 
 import java.net.InetSocketAddress;

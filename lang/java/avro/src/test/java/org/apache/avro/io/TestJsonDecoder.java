@@ -18,7 +18,6 @@
 package org.apache.avro.io;
 
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Parser;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericDatumReader;
 

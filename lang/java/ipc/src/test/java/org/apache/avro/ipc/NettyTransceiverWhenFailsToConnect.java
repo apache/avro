@@ -17,7 +17,6 @@
  */
 package org.apache.avro.ipc;
 
-import junit.framework.Assert;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.socket.SocketChannel;
@@ -27,7 +26,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 

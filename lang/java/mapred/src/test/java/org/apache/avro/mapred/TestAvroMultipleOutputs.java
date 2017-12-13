@@ -33,12 +33,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.Reporter;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.util.Locale;
 
-import org.apache.hadoop.io.Text;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;

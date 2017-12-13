@@ -20,35 +20,20 @@ package org.apache.trevni.avro;
 
 import static org.junit.Assert.*;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.File;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.io.PrintStream;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.mapred.JobConf;
 
 import org.apache.avro.Schema;
-import org.apache.avro.hadoop.io.AvroKeyValue;
-import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.file.DataFileStream;
 import org.apache.avro.mapred.Pair;
 
 public class WordCountUtil {

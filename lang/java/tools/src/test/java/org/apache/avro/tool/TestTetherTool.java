@@ -32,15 +32,11 @@ import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.Pair;
 import org.apache.avro.mapred.WordCountUtil;
-import org.apache.avro.mapred.tether.TetherJob;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 

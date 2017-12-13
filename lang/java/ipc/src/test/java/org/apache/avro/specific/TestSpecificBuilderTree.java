@@ -19,13 +19,11 @@ package org.apache.avro.specific;
 
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.test.http.*;
-import org.apache.avro.test.nullable.Nullable;
 import org.apache.avro.test.nullable.RecordWithNullables;
 import org.junit.Test;
 
 import java.util.ArrayList;
 
-import static org.apache.avro.test.nullable.Nullable.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

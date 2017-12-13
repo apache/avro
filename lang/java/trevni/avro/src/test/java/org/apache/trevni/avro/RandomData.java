@@ -18,7 +18,6 @@
 package org.apache.trevni.avro;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;

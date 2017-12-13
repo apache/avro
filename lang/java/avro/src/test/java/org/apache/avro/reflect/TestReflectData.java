@@ -20,10 +20,8 @@ package org.apache.avro.reflect;
 
 import org.apache.avro.Schema;
 import org.junit.Test;
-import java.io.IOException;
-import java.lang.reflect.Field;
+
 import java.util.Collections;
-import java.util.Map;
 
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertThat;

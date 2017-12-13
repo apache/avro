@@ -38,7 +38,6 @@ import org.junit.Assert;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.util.Utf8;
 
 import org.apache.avro.TestSchema;
 import org.apache.avro.test.TestRecord;

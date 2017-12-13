@@ -33,7 +33,6 @@ import java.util.List;
 import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
