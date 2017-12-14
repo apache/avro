@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -128,8 +128,8 @@ public class TestResolvingGrammarGenerator {
 
   private byte[] writeRecord(Schema schema, GenericData.Record record) throws Exception {
     ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-    GenericDatumWriter<GenericData.Record> datumWriter = new GenericDatumWriter<GenericData.Record>(schema);
-    DataFileWriter<GenericData.Record> writer = new DataFileWriter<GenericData.Record>(datumWriter);
+    GenericDatumWriter<GenericData.Record> datumWriter = new GenericDatumWriter<>(schema);
+    DataFileWriter<GenericData.Record> writer = new DataFileWriter<>(datumWriter);
     try {
       writer.create(schema, byteStream);
       writer.append(record);
@@ -141,8 +141,8 @@ public class TestResolvingGrammarGenerator {
 
   private GenericData.Record readRecord(Schema schema, byte[] data) throws Exception {
     ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-    GenericDatumReader<GenericData.Record> datumReader = new GenericDatumReader<GenericData.Record>(schema);
-    DataFileStream<GenericData.Record> reader = new DataFileStream<GenericData.Record>(byteStream, datumReader);
+    GenericDatumReader<GenericData.Record> datumReader = new GenericDatumReader<>(schema);
+    DataFileStream<GenericData.Record> reader = new DataFileStream<>(byteStream, datumReader);
     try {
       return reader.next();
     } finally {

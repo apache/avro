@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,55 +44,55 @@ import org.apache.avro.ipc.stats.Stopwatch.Ticks;
 public class StatsPlugin extends RPCPlugin {
   /** Static declaration of histogram buckets. */
   static final Segmenter<String, Float> LATENCY_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Float>(new TreeSet<Float>(Arrays.asList(
-            0f,
-           25f,
-           50f,
-           75f,
-          100f,
-          200f,
-          300f,
-          500f,
-          750f,
-         1000f, // 1 second
-         2000f,
-         5000f,
-        10000f,
-        60000f, // 1 minute
-       600000f)));
+    new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
+      0f,
+      25f,
+      50f,
+      75f,
+      100f,
+      200f,
+      300f,
+      500f,
+      750f,
+      1000f, // 1 second
+      2000f,
+      5000f,
+      10000f,
+      60000f, // 1 minute
+      600000f)));
 
   static final Segmenter<String, Integer> PAYLOAD_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Integer>(new TreeSet<Integer>(Arrays.asList(
-            0,
-           25,
-           50,
-           75,
-          100,
-          200,
-          300,
-          500,
-          750,
-         1000, // 1 k
-         2000,
-         5000,
-        10000,
-        50000,
-       100000)));
+    new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
+      0,
+      25,
+      50,
+      75,
+      100,
+      200,
+      300,
+      500,
+      750,
+      1000, // 1 k
+      2000,
+      5000,
+      10000,
+      50000,
+      100000)));
 
   /** Per-method histograms.
    * Must be accessed while holding a lock. */
   Map<Message, FloatHistogram<?>> methodTimings =
-    new HashMap<Message, FloatHistogram<?>>();
+    new HashMap<>();
 
   Map<Message, IntegerHistogram<?>> sendPayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
+    new HashMap<>();
 
   Map<Message, IntegerHistogram<?>> receivePayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
+    new HashMap<>();
 
   /** RPCs in flight. */
   ConcurrentMap<RPCContext, Stopwatch> activeRpcs =
-    new ConcurrentHashMap<RPCContext, Stopwatch>();
+    new ConcurrentHashMap<>();
   private Ticks ticks;
 
   /** How long I've been alive */

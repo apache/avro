@@ -72,10 +72,10 @@ public class TestBinaryMessageEncoding {
 
   @Test
   public void testByteBufferRoundTrip() throws Exception {
-    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V2);
-    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
 
     Record copy = decoder.decode(encoder.encode(V2_RECORDS.get(0)));
 
@@ -91,10 +91,10 @@ public class TestBinaryMessageEncoding {
     List<Record> records = Ordering.usingToString().sortedCopy(
         Iterables.concat(V1_RECORDS, V2_RECORDS));
 
-    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V1);
-    MessageEncoder<Record> v2Encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V1);
+    MessageEncoder<Record> v2Encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V2);
 
     for (Record record : records) {
       if (record.getSchema() == SCHEMA_V1) {
@@ -114,8 +114,8 @@ public class TestBinaryMessageEncoding {
     allAsV2.add(
         V2_BUILDER.set("id", 6L).set("message", "m-6").clear("data").build());
 
-    BinaryMessageDecoder<Record> v2Decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    BinaryMessageDecoder<Record> v2Decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
     v2Decoder.addSchema(SCHEMA_V1);
 
     Set<Record> decodedUsingV2 = Sets.newHashSet();
@@ -128,10 +128,10 @@ public class TestBinaryMessageEncoding {
 
   @Test(expected = MissingSchemaException.class)
   public void testCompatibleReadFailsWithoutSchema() throws Exception {
-    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V1);
-    BinaryMessageDecoder<Record> v2Decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V1);
+    BinaryMessageDecoder<Record> v2Decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
 
     ByteBuffer v1Buffer = v1Encoder.encode(V1_RECORDS.get(3));
 
@@ -140,10 +140,10 @@ public class TestBinaryMessageEncoding {
 
   @Test
   public void testCompatibleReadWithSchema() throws Exception {
-    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V1);
-    BinaryMessageDecoder<Record> v2Decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V1);
+    BinaryMessageDecoder<Record> v2Decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
     v2Decoder.addSchema(SCHEMA_V1);
 
     ByteBuffer v1Buffer = v1Encoder.encode(V1_RECORDS.get(3));
@@ -157,13 +157,13 @@ public class TestBinaryMessageEncoding {
 
   @Test
   public void testCompatibleReadWithSchemaFromLookup() throws Exception {
-    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V1);
+    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V1);
 
     SchemaStore.Cache schemaCache = new SchemaStore.Cache();
     schemaCache.addSchema(SCHEMA_V1);
-    BinaryMessageDecoder<Record> v2Decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2, schemaCache);
+    BinaryMessageDecoder<Record> v2Decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2, schemaCache);
 
     ByteBuffer v1Buffer = v1Encoder.encode(V1_RECORDS.get(2));
 
@@ -179,32 +179,32 @@ public class TestBinaryMessageEncoding {
     // This test depends on the serialized version of record 1 being smaller or
     // the same size as record 0 so that the reused ByteArrayOutputStream won't
     // expand its internal buffer.
-    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V1, false);
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V1, false);
 
     ByteBuffer b0 = encoder.encode(V1_RECORDS.get(0));
     ByteBuffer b1 = encoder.encode(V1_RECORDS.get(1));
 
     Assert.assertEquals(b0.array(), b1.array());
 
-    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V1);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V1);
     Assert.assertEquals("Buffer was reused, decode(b0) should be record 1",
         V1_RECORDS.get(1), decoder.decode(b0));
   }
 
   @Test
   public void testBufferCopy() throws Exception {
-    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V1);
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V1);
 
     ByteBuffer b0 = encoder.encode(V1_RECORDS.get(0));
     ByteBuffer b1 = encoder.encode(V1_RECORDS.get(1));
 
     Assert.assertNotEquals(b0.array(), b1.array());
 
-    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V1);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V1);
     // bytes are not changed by reusing the encoder
     Assert.assertEquals("Buffer was copied, decode(b0) should be record 0",
         V1_RECORDS.get(0), decoder.decode(b0));
@@ -212,10 +212,10 @@ public class TestBinaryMessageEncoding {
 
   @Test(expected = AvroRuntimeException.class)
   public void testByteBufferMissingPayload() throws Exception {
-    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V2);
-    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
 
     ByteBuffer buffer = encoder.encode(V2_RECORDS.get(0));
 
@@ -226,10 +226,10 @@ public class TestBinaryMessageEncoding {
 
   @Test(expected = BadHeaderException.class)
   public void testByteBufferMissingFullHeader() throws Exception {
-    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V2);
-    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
 
     ByteBuffer buffer = encoder.encode(V2_RECORDS.get(0));
 
@@ -240,10 +240,10 @@ public class TestBinaryMessageEncoding {
 
   @Test(expected = BadHeaderException.class)
   public void testByteBufferBadMarkerByte() throws Exception {
-    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V2);
-    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
 
     ByteBuffer buffer = encoder.encode(V2_RECORDS.get(0));
     buffer.array()[0] = 0x00;
@@ -253,10 +253,10 @@ public class TestBinaryMessageEncoding {
 
   @Test(expected = BadHeaderException.class)
   public void testByteBufferBadVersionByte() throws Exception {
-    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V2);
-    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
 
     ByteBuffer buffer = encoder.encode(V2_RECORDS.get(0));
     buffer.array()[1] = 0x00;
@@ -266,10 +266,10 @@ public class TestBinaryMessageEncoding {
 
   @Test(expected = MissingSchemaException.class)
   public void testByteBufferUnknownSchema() throws Exception {
-    MessageEncoder<Record> encoder = new BinaryMessageEncoder<Record>(
-        GenericData.get(), SCHEMA_V2);
-    MessageDecoder<Record> decoder = new BinaryMessageDecoder<Record>(
-        GenericData.get(), SCHEMA_V2);
+    MessageEncoder<Record> encoder = new BinaryMessageEncoder<>(
+      GenericData.get(), SCHEMA_V2);
+    MessageDecoder<Record> decoder = new BinaryMessageDecoder<>(
+      GenericData.get(), SCHEMA_V2);
 
     ByteBuffer buffer = encoder.encode(V2_RECORDS.get(0));
     buffer.array()[4] = 0x00;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -66,12 +66,12 @@ public class ToTrevniTool implements Tool {
 
     DataFileStream<Object> reader =
       new DataFileStream(Util.fileOrStdin(args.get(0), stdin),
-                         new GenericDatumReader<Object>());
+        new GenericDatumReader<>());
     OutputStream outs = Util.fileOrStdout(args.get(1), out);
     AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<Object>(reader.getSchema(),
-                                   new ColumnFileMetaData()
-                                   .setCodec(codec.value(opts)));
+      new AvroColumnWriter<>(reader.getSchema(),
+        new ColumnFileMetaData()
+          .setCodec(codec.value(opts)));
     for (Object datum : reader)
       writer.write(datum);
     writer.writeTo(outs);

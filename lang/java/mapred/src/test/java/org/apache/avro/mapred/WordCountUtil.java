@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +20,6 @@ package org.apache.avro.mapred;
 
 import static org.junit.Assert.*;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
@@ -70,7 +68,7 @@ public class WordCountUtil {
   };
 
   public static final Map<String,Long> COUNTS =
-    new TreeMap<String,Long>();
+    new TreeMap<>();
   static {
     for (String line : LINES) {
       StringTokenizer tokens = new StringTokenizer(line);
@@ -85,8 +83,8 @@ public class WordCountUtil {
 
   public static void writeLinesFile() throws IOException {
     FileUtil.fullyDelete(DIR);
-    DatumWriter<Utf8> writer = new GenericDatumWriter<Utf8>();
-    DataFileWriter<Utf8> out = new DataFileWriter<Utf8>(writer);
+    DatumWriter<Utf8> writer = new GenericDatumWriter<>();
+    DataFileWriter<Utf8> out = new DataFileWriter<>(writer);
     LINES_FILE.getParentFile().mkdirs();
     out.create(Schema.create(Schema.Type.STRING), LINES_FILE);
     for (String line : LINES)
@@ -96,8 +94,8 @@ public class WordCountUtil {
 
   public static void writeLinesBytesFile() throws IOException {
     FileUtil.fullyDelete(DIR);
-    DatumWriter<ByteBuffer> writer = new GenericDatumWriter<ByteBuffer>();
-    DataFileWriter<ByteBuffer> out = new DataFileWriter<ByteBuffer>(writer);
+    DatumWriter<ByteBuffer> writer = new GenericDatumWriter<>();
+    DataFileWriter<ByteBuffer> out = new DataFileWriter<>(writer);
     LINES_FILE.getParentFile().mkdirs();
     out.create(Schema.create(Schema.Type.BYTES), LINES_FILE);
     for (String line : LINES)
@@ -116,10 +114,10 @@ public class WordCountUtil {
 
   public static void validateCountsFile() throws Exception {
     DatumReader<Pair<Utf8,Long>> reader
-      = new SpecificDatumReader<Pair<Utf8,Long>>();
+      = new SpecificDatumReader<>();
     InputStream in = new BufferedInputStream(new FileInputStream(COUNTS_FILE));
     DataFileStream<Pair<Utf8,Long>> counts
-      = new DataFileStream<Pair<Utf8,Long>>(in,reader);
+      = new DataFileStream<>(in, reader);
     int numWords = 0;
     for (Pair<Utf8,Long> wc : counts) {
       assertEquals(wc.key().toString(),
@@ -132,12 +130,12 @@ public class WordCountUtil {
   }
 
   public static void validateSortedFile() throws Exception {
-    DatumReader<ByteBuffer> reader = new GenericDatumReader<ByteBuffer>();
+    DatumReader<ByteBuffer> reader = new GenericDatumReader<>();
     InputStream in = new BufferedInputStream(
         new FileInputStream(SORTED_FILE));
     DataFileStream<ByteBuffer> lines =
-        new DataFileStream<ByteBuffer>(in,reader);
-    List<String> sortedLines = new ArrayList<String>();
+      new DataFileStream<>(in, reader);
+    List<String> sortedLines = new ArrayList<>();
     for (String line : LINES) {
       sortedLines.add(line);
     }

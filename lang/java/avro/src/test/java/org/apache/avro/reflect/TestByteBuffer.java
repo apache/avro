@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,6 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -78,7 +77,7 @@ public class TestByteBuffer {
   private X readOneXFromAvro(Schema schema, ByteArrayOutputStream bout)
     throws IOException {
     SeekableByteArrayInput input = new SeekableByteArrayInput(bout.toByteArray());
-    ReflectDatumReader<X> datumReader = new ReflectDatumReader<X>(schema);
+    ReflectDatumReader<X> datumReader = new ReflectDatumReader<>(schema);
     FileReader<X> reader = DataFileReader.openReader(input, datumReader);
     Iterator<X> it = reader.iterator();
     assertTrue("missing first record",it.hasNext());
@@ -89,8 +88,8 @@ public class TestByteBuffer {
 
   private void writeOneXAsAvro(Schema schema, ByteArrayOutputStream bout)
     throws IOException, FileNotFoundException {
-    DatumWriter<X> datumWriter = new ReflectDatumWriter<X>(schema);
-    DataFileWriter<X> writer = new DataFileWriter<X>(datumWriter);
+    DatumWriter<X> datumWriter = new ReflectDatumWriter<>(schema);
+    DataFileWriter<X> writer = new DataFileWriter<>(datumWriter);
     writer.create(schema, bout);
     X x = new X();
     x.name = "xxx";

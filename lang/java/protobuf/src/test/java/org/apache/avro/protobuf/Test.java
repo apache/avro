@@ -509,7 +509,7 @@ public final class Test {
             }
             case 136: {
               if (!((mutable_bitField0_ & 0x00010000) == 0x00010000)) {
-                intArray_ = new java.util.ArrayList<java.lang.Integer>();
+                intArray_ = new java.util.ArrayList<>();
                 mutable_bitField0_ |= 0x00010000;
               }
               intArray_.add(input.readInt32());
@@ -519,7 +519,7 @@ public final class Test {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
               if (!((mutable_bitField0_ & 0x00010000) == 0x00010000) && input.getBytesUntilLimit() > 0) {
-                intArray_ = new java.util.ArrayList<java.lang.Integer>();
+                intArray_ = new java.util.ArrayList<>();
                 mutable_bitField0_ |= 0x00010000;
               }
               while (input.getBytesUntilLimit() > 0) {
@@ -548,7 +548,7 @@ public final class Test {
                 unknownFields.mergeVarintField(19, rawValue);
               } else {
                 if (!((mutable_bitField0_ & 0x00040000) == 0x00040000)) {
-                  syms_ = new java.util.ArrayList<org.apache.avro.protobuf.Test.A>();
+                  syms_ = new java.util.ArrayList<>();
                   mutable_bitField0_ |= 0x00040000;
                 }
                 syms_.add(value);
@@ -565,7 +565,7 @@ public final class Test {
                   unknownFields.mergeVarintField(19, rawValue);
                 } else {
                   if (!((mutable_bitField0_ & 0x00040000) == 0x00040000)) {
-                    syms_ = new java.util.ArrayList<org.apache.avro.protobuf.Test.A>();
+                    syms_ = new java.util.ArrayList<>();
                     mutable_bitField0_ |= 0x00040000;
                   }
                   syms_.add(value);
@@ -576,7 +576,7 @@ public final class Test {
             }
             case 162: {
               if (!((mutable_bitField0_ & 0x00020000) == 0x00020000)) {
-                fooArray_ = new java.util.ArrayList<org.apache.avro.protobuf.Test.Foo>();
+                fooArray_ = new java.util.ArrayList<>();
                 mutable_bitField0_ |= 0x00020000;
               }
               fooArray_.add(input.readMessage(org.apache.avro.protobuf.Test.Foo.PARSER, extensionRegistry));
@@ -2296,7 +2296,7 @@ public final class Test {
       private java.util.List<java.lang.Integer> intArray_ = java.util.Collections.emptyList();
       private void ensureIntArrayIsMutable() {
         if (!((bitField0_ & 0x00010000) == 0x00010000)) {
-          intArray_ = new java.util.ArrayList<java.lang.Integer>(intArray_);
+          intArray_ = new java.util.ArrayList<>(intArray_);
           bitField0_ |= 0x00010000;
          }
       }
@@ -2391,7 +2391,7 @@ public final class Test {
         java.util.Collections.emptyList();
       private void ensureFooArrayIsMutable() {
         if (!((bitField0_ & 0x00020000) == 0x00020000)) {
-          fooArray_ = new java.util.ArrayList<org.apache.avro.protobuf.Test.Foo>(fooArray_);
+          fooArray_ = new java.util.ArrayList<>(fooArray_);
           bitField0_ |= 0x00020000;
          }
       }
@@ -2615,12 +2615,11 @@ public final class Test {
           org.apache.avro.protobuf.Test.Foo, org.apache.avro.protobuf.Test.Foo.Builder, org.apache.avro.protobuf.Test.FooOrBuilder>
           getFooArrayFieldBuilder() {
         if (fooArrayBuilder_ == null) {
-          fooArrayBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              org.apache.avro.protobuf.Test.Foo, org.apache.avro.protobuf.Test.Foo.Builder, org.apache.avro.protobuf.Test.FooOrBuilder>(
-                  fooArray_,
-                  ((bitField0_ & 0x00020000) == 0x00020000),
-                  getParentForChildren(),
-                  isClean());
+          fooArrayBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<>(
+            fooArray_,
+            ((bitField0_ & 0x00020000) == 0x00020000),
+            getParentForChildren(),
+            isClean());
           fooArray_ = null;
         }
         return fooArrayBuilder_;
@@ -2631,7 +2630,7 @@ public final class Test {
         java.util.Collections.emptyList();
       private void ensureSymsIsMutable() {
         if (!((bitField0_ & 0x00040000) == 0x00040000)) {
-          syms_ = new java.util.ArrayList<org.apache.avro.protobuf.Test.A>(syms_);
+          syms_ = new java.util.ArrayList<>(syms_);
           bitField0_ |= 0x00040000;
         }
       }
@@ -2841,11 +2840,10 @@ public final class Test {
           org.apache.avro.protobuf.Test.Foo, org.apache.avro.protobuf.Test.Foo.Builder, org.apache.avro.protobuf.Test.FooOrBuilder>
           getFooFieldBuilder() {
         if (fooBuilder_ == null) {
-          fooBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              org.apache.avro.protobuf.Test.Foo, org.apache.avro.protobuf.Test.Foo.Builder, org.apache.avro.protobuf.Test.FooOrBuilder>(
-                  foo_,
-                  getParentForChildren(),
-                  isClean());
+          fooBuilder_ = new com.google.protobuf.SingleFieldBuilder<>(
+            foo_,
+            getParentForChildren(),
+            isClean());
           foo_ = null;
         }
         return fooBuilder_;

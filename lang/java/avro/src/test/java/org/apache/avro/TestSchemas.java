@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,7 +48,7 @@ public class TestSchemas {
   static final Schema ENUM1_BC_SCHEMA = Schema.createEnum("Enum1", null, null, list("B", "C"));
   static final Schema ENUM2_AB_SCHEMA = Schema.createEnum("Enum2", null, null, list("A", "B"));
 
-  static final Schema EMPTY_UNION_SCHEMA = Schema.createUnion(new ArrayList<Schema>());
+  static final Schema EMPTY_UNION_SCHEMA = Schema.createUnion(new ArrayList<>());
   static final Schema NULL_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA));
   static final Schema INT_UNION_SCHEMA = Schema.createUnion(list(INT_SCHEMA));
   static final Schema LONG_UNION_SCHEMA = Schema.createUnion(list(LONG_SCHEMA));
@@ -84,8 +84,8 @@ public class TestSchemas {
   static final Schema FIXED_8_BYTES = Schema.createFixed("Fixed", null, null, 8);
 
   static {
-    EMPTY_RECORD1.setFields(Collections.<Field>emptyList());
-    EMPTY_RECORD2.setFields(Collections.<Field>emptyList());
+    EMPTY_RECORD1.setFields(Collections.emptyList());
+    EMPTY_RECORD2.setFields(Collections.emptyList());
     A_INT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null)));
     A_LONG_RECORD1.setFields(list(new Field("a", LONG_SCHEMA, null, null)));
     A_INT_B_INT_RECORD1.setFields(
@@ -148,7 +148,7 @@ public class TestSchemas {
 
   /** Borrowed from the Guava library. */
   static <E> ArrayList<E> list(E... elements) {
-    final ArrayList<E> list = new ArrayList<E>();
+    final ArrayList<E> list = new ArrayList<>();
     Collections.addAll(list, elements);
     return list;
   }

@@ -105,7 +105,7 @@ namespace Avro.Test.Utils
                 }
                 return singleLineText.Substring(1);
             }
-            
+
             // Process multi-line heredocs
             var sb = new StringBuilder();
             string line = streamReader.ReadLine();

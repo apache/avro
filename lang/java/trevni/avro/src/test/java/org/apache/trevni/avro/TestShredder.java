@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -255,7 +255,7 @@ public class TestShredder {
 
   private void checkWrite(Schema schema) throws IOException {
     AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
+      new AvroColumnWriter<>(schema, new ColumnFileMetaData());
     int count = 0;
     for (Object datum : new RandomData(schema, COUNT)) {
       //System.out.println("datum="+datum);
@@ -266,8 +266,8 @@ public class TestShredder {
 
   private void checkRead(Schema schema) throws IOException {
     AvroColumnReader<Object> reader =
-      new AvroColumnReader<Object>(new AvroColumnReader.Params(FILE)
-                                   .setSchema(schema));
+      new AvroColumnReader<>(new AvroColumnReader.Params(FILE)
+        .setSchema(schema));
     for (Object expected : new RandomData(schema, COUNT))
       assertEquals(expected, reader.next());
     reader.close();

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -54,7 +54,7 @@ public class TetherJob extends Configured {
 
   /** Set the URI for the application's executable. Normally this in HDFS. */
   public static void setExecutable(JobConf job, File executable) {
-    setExecutable(job,executable, new ArrayList<String>(),false);
+    setExecutable(job,executable, new ArrayList<>(),false);
   }
 
   /**

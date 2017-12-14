@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +18,11 @@
 package org.apache.avro.specific;
 
 import org.apache.avro.test.http.*;
-import org.apache.avro.test.nullable.Nullable;
 import org.apache.avro.test.nullable.RecordWithNullables;
 import org.junit.Test;
 
 import java.util.ArrayList;
 
-import static org.apache.avro.test.nullable.Nullable.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -59,7 +57,7 @@ public class TestSpecificBuilderTree {
       requestBuilder
         .getHttpRequestBuilder()
           .getURIBuilder()
-            .setParameters(new ArrayList<QueryParameter>());
+            .setParameters(new ArrayList<>());
     }
 
     requestBuilder

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,7 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 
-/** Helper to permit Externalizeable implementations that write to an
+/** Helper to permit Externalizable implementations that write to an
  * OutputStream. */
 class ExternalizableOutput extends OutputStream {
   private final ObjectOutput out;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,8 +52,8 @@ public class TestAvroSequenceFile {
 
     writeSequenceFile(sequenceFilePath, AvroKey.class, AvroValue.class,
         Schema.create(Schema.Type.STRING), Schema.create(Schema.Type.INT),
-        new AvroKey<CharSequence>("one"), new AvroValue<Integer>(1),
-        new AvroKey<CharSequence>("two"), new AvroValue<Integer>(2));
+        new AvroKey<CharSequence>("one"), new AvroValue<>(1),
+        new AvroKey<CharSequence>("two"), new AvroValue<>(2));
 
     Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
@@ -65,8 +65,8 @@ public class TestAvroSequenceFile {
         .withConfiguration(conf);
     SequenceFile.Reader reader = new AvroSequenceFile.Reader(options);
 
-    AvroKey<CharSequence> key = new AvroKey<CharSequence>();
-    AvroValue<Integer> value = new AvroValue<Integer>();
+    AvroKey<CharSequence> key = new AvroKey<>();
+    AvroValue<Integer> value = new AvroValue<>();
 
     // Read the first record.
     key = (AvroKey<CharSequence>) reader.next(key);
@@ -95,8 +95,8 @@ public class TestAvroSequenceFile {
 
     writeSequenceFile(sequenceFilePath, AvroKey.class, AvroValue.class,
         Schema.create(Schema.Type.STRING), Schema.create(Schema.Type.INT),
-        new AvroKey<CharSequence>("one"), new AvroValue<Integer>(1),
-        new AvroKey<CharSequence>("two"), new AvroValue<Integer>(2));
+        new AvroKey<CharSequence>("one"), new AvroValue<>(1),
+        new AvroKey<CharSequence>("two"), new AvroValue<>(2));
 
     Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
@@ -106,8 +106,8 @@ public class TestAvroSequenceFile {
         .withConfiguration(conf);
     SequenceFile.Reader reader = new AvroSequenceFile.Reader(options);
 
-    AvroKey<CharSequence> key = new AvroKey<CharSequence>();
-    AvroValue<Integer> value = new AvroValue<Integer>();
+    AvroKey<CharSequence> key = new AvroKey<>();
+    AvroValue<Integer> value = new AvroValue<>();
 
     // Read the first record.
     key = (AvroKey<CharSequence>) reader.next(key);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -83,7 +83,7 @@ public class AvroTrevniOutputFormat <T>
       private int part = 0;
 
       private AvroColumnWriter<T> writer =
-        new AvroColumnWriter<T>(schema, meta, ReflectData.get());
+        new AvroColumnWriter<>(schema, meta, ReflectData.get());
 
       private void flush() throws IOException {
         OutputStream out = fs.create(new Path(dir, "part-"+(part++)+EXT));
@@ -92,7 +92,7 @@ public class AvroTrevniOutputFormat <T>
         } finally {
           out.close();
         }
-        writer = new AvroColumnWriter<T>(schema, meta, ReflectData.get());
+        writer = new AvroColumnWriter<>(schema, meta, ReflectData.get());
       }
 
       public void write(AvroWrapper<T> wrapper, NullWritable ignore)

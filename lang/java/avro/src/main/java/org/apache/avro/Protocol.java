@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -64,13 +64,13 @@ public class Protocol extends JsonProperties {
   public static final long VERSION = 1;
 
   // Support properties for both Protocol and Message objects
-  private static final Set<String> MESSAGE_RESERVED = new HashSet<String>();
+  private static final Set<String> MESSAGE_RESERVED = new HashSet<>();
   static {
     Collections.addAll(MESSAGE_RESERVED,
                        "doc", "response","request", "errors", "one-way");
   }
 
-  private static final Set<String> FIELD_RESERVED = new HashSet<String>();
+  private static final Set<String> FIELD_RESERVED = new HashSet<>();
   static {
     Collections.addAll(FIELD_RESERVED,
                        "name", "type", "doc", "default", "aliases");
@@ -108,7 +108,7 @@ public class Protocol extends JsonProperties {
     public Schema getResponse() { return Schema.create(Schema.Type.NULL); }
     /** Errors that might be thrown. */
     public Schema getErrors() {
-      return Schema.createUnion(new ArrayList<Schema>());
+      return Schema.createUnion(new ArrayList<>());
     }
 
     /** Returns true if this is a one-way message, with no response or errors.*/
@@ -205,7 +205,7 @@ public class Protocol extends JsonProperties {
   private String doc;
 
   private Schema.Names types = new Schema.Names();
-  private Map<String,Message> messages = new LinkedHashMap<String,Message>();
+  private Map<String,Message> messages = new LinkedHashMap<>();
   private byte[] md5;
 
   /** An error that can be thrown by any message. */
@@ -214,12 +214,12 @@ public class Protocol extends JsonProperties {
   /** Union type for generating system errors. */
   public static final Schema SYSTEM_ERRORS;
   static {
-    List<Schema> errors = new ArrayList<Schema>();
+    List<Schema> errors = new ArrayList<>();
     errors.add(SYSTEM_ERROR);
     SYSTEM_ERRORS = Schema.createUnion(errors);
   }
 
-  private static final Set<String> PROTOCOL_RESERVED = new HashSet<String>();
+  private static final Set<String> PROTOCOL_RESERVED = new HashSet<>();
   static {
     Collections.addAll(PROTOCOL_RESERVED,
        "namespace", "protocol", "doc",
@@ -465,7 +465,7 @@ public class Protocol extends JsonProperties {
   private Message parseMessage(String messageName, JsonNode json) {
     String doc = parseDocNode(json);
 
-    Map<String,JsonNode> mProps = new LinkedHashMap<String,JsonNode>();
+    Map<String,JsonNode> mProps = new LinkedHashMap<>();
     for (Iterator<String> i = json.getFieldNames(); i.hasNext();) {
       String p = i.next();                        // add non-reserved as props
       if (!MESSAGE_RESERVED.contains(p))
@@ -475,7 +475,7 @@ public class Protocol extends JsonProperties {
     JsonNode requestNode = json.get("request");
     if (requestNode == null || !requestNode.isArray())
       throw new SchemaParseException("No request specified: "+json);
-    List<Field> fields = new ArrayList<Field>();
+    List<Field> fields = new ArrayList<>();
     for (JsonNode field : requestNode) {
       JsonNode fieldNameNode = field.get("name");
       if (fieldNameNode == null)
@@ -531,7 +531,7 @@ public class Protocol extends JsonProperties {
 
     Schema response = Schema.parse(responseNode, types);
 
-    List<Schema> errs = new ArrayList<Schema>();
+    List<Schema> errs = new ArrayList<>();
     errs.add(SYSTEM_ERROR);                       // every method can throw
     if (decls != null) {
       if (!decls.isArray())

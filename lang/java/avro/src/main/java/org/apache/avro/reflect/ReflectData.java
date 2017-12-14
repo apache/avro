@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -233,12 +233,12 @@ public class ReflectData extends SpecificData {
   }
 
   static final ConcurrentHashMap<Class<?>, ClassAccessorData>
-    ACCESSOR_CACHE = new ConcurrentHashMap<Class<?>, ClassAccessorData>();
+    ACCESSOR_CACHE = new ConcurrentHashMap<>();
 
   static class ClassAccessorData {
     private final Class<?> clazz;
     private final Map<String, FieldAccessor> byName =
-        new HashMap<String, FieldAccessor>();
+      new HashMap<>();
     final Map<Schema, FieldAccessor[]> bySchema = new MapMaker().weakKeys().makeMap();
 
     private ClassAccessorData(Class<?> c) {
@@ -326,7 +326,7 @@ public class ReflectData extends SpecificData {
   static final String ELEMENT_PROP = "java-element-class";
 
   private static final Map<String,Class> CLASS_CACHE =
-               new ConcurrentHashMap<String, Class>();
+    new ConcurrentHashMap<>();
 
   static Class getClassProp(Schema schema, String prop) {
     String name = schema.getProp(prop);
@@ -346,7 +346,7 @@ public class ReflectData extends SpecificData {
   private static final Class BYTES_CLASS = new byte[0].getClass();
   private static final IdentityHashMap<Class, Class> ARRAY_CLASSES;
   static {
-    ARRAY_CLASSES = new IdentityHashMap<Class, Class>();
+    ARRAY_CLASSES = new IdentityHashMap<>();
     ARRAY_CLASSES.put(byte.class, byte[].class);
     ARRAY_CLASSES.put(char.class, char[].class);
     ARRAY_CLASSES.put(short.class, short[].class);
@@ -584,7 +584,7 @@ public class ReflectData extends SpecificData {
           result.addProp(CLASS_PROP, c.getName());
           return result;
         } else if (c.isEnum()) {                             // Enum
-          List<String> symbols = new ArrayList<String>();
+          List<String> symbols = new ArrayList<>();
           Enum[] constants = (Enum[])c.getEnumConstants();
           for (int i = 0; i < constants.length; i++)
             symbols.add(constants[i].name());
@@ -597,7 +597,7 @@ public class ReflectData extends SpecificData {
         } else if (IndexedRecord.class.isAssignableFrom(c)) { // specific
           return super.createSchema(type, names);
         } else {                                             // record
-          List<Schema.Field> fields = new ArrayList<Schema.Field>();
+          List<Schema.Field> fields = new ArrayList<>();
           boolean error = Throwable.class.isAssignableFrom(c);
           schema = Schema.createRecord(name, null /* doc */, space, error);
           consumeAvroAliasAnnotation(c, schema);
@@ -672,7 +672,7 @@ public class ReflectData extends SpecificData {
 
   // construct a schema from a union annotation
   private Schema getAnnotatedUnion(Union union, Map<String,Schema> names) {
-    List<Schema> branches = new ArrayList<Schema>();
+    List<Schema> branches = new ArrayList<>();
     for (Class branch : union.value())
       branches.add(createSchema(branch, names));
     return Schema.createUnion(branches);
@@ -688,7 +688,7 @@ public class ReflectData extends SpecificData {
         }
       }
       // add null as the first type in a new union
-      List<Schema> withNull = new ArrayList<Schema>();
+      List<Schema> withNull = new ArrayList<>();
       withNull.add(Schema.create(Schema.Type.NULL));
       withNull.addAll(schema.getTypes());
       return Schema.createUnion(withNull);
@@ -700,7 +700,7 @@ public class ReflectData extends SpecificData {
   }
 
   private static final Map<Class<?>,Field[]> FIELDS_CACHE =
-    new ConcurrentHashMap<Class<?>,Field[]>();
+    new ConcurrentHashMap<>();
 
   // Return of this class and its superclasses to serialize.
   private static Field[] getCachedFields(Class<?> recordClass) {
@@ -714,7 +714,7 @@ public class ReflectData extends SpecificData {
 
   private static Field[] getFields(Class<?> recordClass, boolean excludeJava) {
     Field[] fieldsList;
-    Map<String,Field> fields = new LinkedHashMap<String,Field>();
+    Map<String,Field> fields = new LinkedHashMap<>();
     Class<?> c = recordClass;
     do {
       if (excludeJava && c.getPackage() != null
@@ -763,7 +763,7 @@ public class ReflectData extends SpecificData {
     Protocol protocol =
       new Protocol(iface.getSimpleName(),
                    iface.getPackage()==null?"":iface.getPackage().getName());
-    Map<String,Schema> names = new LinkedHashMap<String,Schema>();
+    Map<String,Schema> names = new LinkedHashMap<>();
     Map<String,Message> messages = protocol.getMessages();
     for (Method method : iface.getMethods())
       if ((method.getModifiers() & Modifier.STATIC) == 0) {
@@ -774,7 +774,7 @@ public class ReflectData extends SpecificData {
       }
 
     // reverse types, since they were defined in reference order
-    List<Schema> types = new ArrayList<Schema>();
+    List<Schema> types = new ArrayList<>();
     types.addAll(names.values());
     Collections.reverse(types);
     protocol.setTypes(types);
@@ -786,7 +786,7 @@ public class ReflectData extends SpecificData {
 
   private Message getMessage(Method method, Protocol protocol,
                              Map<String,Schema> names) {
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     String[] paramNames = paranamer.lookupParameterNames(method);
     Type[] paramTypes = method.getGenericParameterTypes();
     Annotation[][] annotations = method.getParameterAnnotations();
@@ -820,7 +820,7 @@ public class ReflectData extends SpecificData {
     if (explicit != null)                         // explicit schema
       response = Schema.parse(explicit.value());
 
-    List<Schema> errs = new ArrayList<Schema>();
+    List<Schema> errs = new ArrayList<>();
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw
     for (Type err : method.getGenericExceptionTypes())
       if (err != AvroRemoteException.class)

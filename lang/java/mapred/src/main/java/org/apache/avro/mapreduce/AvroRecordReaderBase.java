@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -180,6 +180,6 @@ public abstract class AvroRecordReaderBase<K, V, T> extends RecordReader<K, V> {
    */
   protected DataFileReader<T> createAvroFileReader(
       SeekableInput input, DatumReader<T> datumReader) throws IOException {
-    return new DataFileReader<T>(input, datumReader);
+    return new DataFileReader<>(input, datumReader);
   }
 }

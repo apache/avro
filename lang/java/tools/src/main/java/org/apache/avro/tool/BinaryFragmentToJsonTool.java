@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -72,10 +72,10 @@ public class BinaryFragmentToJsonTool implements Tool {
     InputStream input = Util.fileOrStdin(inputFile, stdin);
 
     try {
-      DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+      DatumReader<Object> reader = new GenericDatumReader<>(schema);
       BinaryDecoder binaryDecoder =
         DecoderFactory.get().binaryDecoder(input, null);
-      DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+      DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(schema, out, !noPretty);
       Object datum = null;
       while (!binaryDecoder.isEnd()){

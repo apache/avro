@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -159,7 +159,7 @@ public class TestBinaryDecoder {
   private static int seed = -1;
   private static Schema schema = null;
   private static int count = 200;
-  private static ArrayList<Object> records = new ArrayList<Object>(count);
+  private static ArrayList<Object> records = new ArrayList<>(count);
   @BeforeClass
   public static void generateData() throws IOException {
     seed = (int)System.currentTimeMillis();
@@ -176,7 +176,7 @@ public class TestBinaryDecoder {
           "{\"type\":\"array\", \"items\":\"boolean\"}},"
       +"{\"name\":\"longField\", \"type\":\"long\"}]}";
     schema = Schema.parse(jsonSchema);
-    GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>();
+    GenericDatumWriter<Object> writer = new GenericDatumWriter<>();
     writer.setSchema(schema);
     ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
     BinaryEncoder encoder = e_factory.binaryEncoder(baos, null);
@@ -191,7 +191,7 @@ public class TestBinaryDecoder {
 
   @Test
   public void testDecodeFromSources() throws IOException {
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
     reader.setSchema(schema);
 
     ByteArrayInputStream is = new ByteArrayInputStream(data);
@@ -460,11 +460,11 @@ public class TestBinaryDecoder {
   public void testEOF() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Encoder e = EncoderFactory.get().binaryEncoder(baos, null);
-    e.writeLong(0x10000000000000l);
+    e.writeLong(0x10000000000000L);
     e.flush();
 
     Decoder d = newDecoder(new ByteArrayInputStream(baos.toByteArray()));
-    Assert.assertEquals(0x10000000000000l, d.readLong());
+    Assert.assertEquals(0x10000000000000L, d.readLong());
     d.readInt();
   }
 

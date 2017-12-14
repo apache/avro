@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -100,7 +100,7 @@ public class SpecificCompiler {
     SPECIFIC.addLogicalTypeConversion(new Conversions.DecimalConversion());
   }
 
-  private final Set<Schema> queue = new HashSet<Schema>();
+  private final Set<Schema> queue = new HashSet<>();
   private Protocol protocol;
   private VelocityEngine velocityEngine;
   private String templateDir;
@@ -120,17 +120,17 @@ public class SpecificCompiler {
 
   /* Reserved words for accessor/mutator methods */
   private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS =
-      new HashSet<String>(Arrays.asList(new String[] {
-            "class", "schema", "classSchema"
-          }));
+    new HashSet<>(Arrays.asList(new String[]{
+      "class", "schema", "classSchema"
+    }));
   static {
     // Add reserved words to accessor/mutator reserved words
     ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
   }
 
   /* Reserved words for error types */
-  private static final Set<String> ERROR_RESERVED_WORDS = new HashSet<String>(
-      Arrays.asList(new String[] { "message", "cause" }));
+  private static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(
+    Arrays.asList(new String[]{"message", "cause"}));
   static {
     // Add accessor/mutator reserved words to error reserved words
     ERROR_RESERVED_WORDS.addAll(ACCESSOR_MUTATOR_RESERVED_WORDS);
@@ -363,7 +363,7 @@ public class SpecificCompiler {
 
   /** Generate java classes for enqueued schemas. */
   Collection<OutputFile> compile() {
-    List<OutputFile> out = new ArrayList<OutputFile>();
+    List<OutputFile> out = new ArrayList<>();
     for (Schema schema : queue) {
       out.add(compile(schema));
     }
@@ -491,14 +491,14 @@ public class SpecificCompiler {
       return p;
 
     Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
-    Map<Schema,Schema> types = new LinkedHashMap<Schema,Schema>();
+    Map<Schema,Schema> types = new LinkedHashMap<>();
 
     // Copy properties
     for (Map.Entry<String,JsonNode> prop : p.getJsonProps().entrySet())
       newP.addProp(prop.getKey(), prop.getValue());   // copy props
 
     // annotate types
-    Collection<Schema> namedTypes = new LinkedHashSet<Schema>();
+    Collection<Schema> namedTypes = new LinkedHashSet<>();
     for (Schema s : p.getTypes())
       namedTypes.add(addStringType(s, types));
     newP.setTypes(namedTypes);
@@ -519,7 +519,7 @@ public class SpecificCompiler {
   private Schema addStringType(Schema s) {
     if (stringType != StringType.String)
       return s;
-    return addStringType(s, new LinkedHashMap<Schema,Schema>());
+    return addStringType(s, new LinkedHashMap<>());
   }
 
   // annotate map and string schemas with string type
@@ -537,7 +537,7 @@ public class SpecificCompiler {
       for (String alias : s.getAliases())
         result.addAlias(alias, null);             // copy aliases
       seen.put(s, result);
-      List<Field> newFields = new ArrayList<Field>();
+      List<Field> newFields = new ArrayList<>();
       for (Field f : s.getFields()) {
         Schema fSchema = addStringType(f.schema(), seen);
         Field newF =
@@ -560,7 +560,7 @@ public class SpecificCompiler {
       GenericData.setStringType(result, stringType);
       break;
     case UNION:
-      List<Schema> types = new ArrayList<Schema>();
+      List<Schema> types = new ArrayList<>();
       for (Schema branch : s.getTypes())
         types.add(addStringType(branch, seen));
       result = Schema.createUnion(types);

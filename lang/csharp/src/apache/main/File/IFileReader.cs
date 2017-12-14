@@ -25,14 +25,14 @@ namespace Avro.File
     public interface IFileReader<T> : IDisposable
     {
         /// <summary>
-        /// Return the header for the input 
+        /// Return the header for the input
         /// file / stream
         /// </summary>
         /// <returns></returns>
         Header GetHeader();
 
         /// <summary>
-        /// Return the schema as read from 
+        /// Return the schema as read from
         /// the input file / stream
         /// </summary>
         /// <returns></returns>
@@ -97,7 +97,7 @@ namespace Avro.File
         long PreviousSync();
 
         /// <summary>
-        /// Move to a specific, known synchronization point, 
+        /// Move to a specific, known synchronization point,
         /// one returned from IFileWriter.Sync() while writing
         /// </summary>
         /// <param name="position"></param>

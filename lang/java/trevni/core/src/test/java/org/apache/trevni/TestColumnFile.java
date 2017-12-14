@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -17,10 +17,7 @@
  */
 package org.apache.trevni;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.Collection;
 import java.util.Arrays;
@@ -194,7 +191,7 @@ public class TestColumnFile {
 
     int seekCount = COUNT/1024;
     int[] seekRows = new int[seekCount];
-    Map<Integer,Integer> seekRowMap = new HashMap<Integer,Integer>(seekCount);
+    Map<Integer,Integer> seekRowMap = new HashMap<>(seekCount);
     while (seekRowMap.size() < seekCount) {
       int row = random.nextInt(COUNT);
       if (!seekRowMap.containsKey(row)) {
@@ -233,7 +230,7 @@ public class TestColumnFile {
     Random random = TestUtil.createRandom();
 
     int seekCount = COUNT/1024;
-    Map<Integer,Integer> seekRowMap = new HashMap<Integer,Integer>(seekCount);
+    Map<Integer,Integer> seekRowMap = new HashMap<>(seekCount);
     while (seekRowMap.size() < seekCount) {
       int row = random.nextInt(COUNT);
       if (!seekRowMap.containsKey(row))

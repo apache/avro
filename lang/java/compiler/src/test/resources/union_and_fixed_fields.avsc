@@ -1,7 +1,7 @@
 {
   "type" : "record",
   "name" : "UnionAndFixedFields",
-  "doc" : "Schema for UnionAndFixedFields designed to trigger fixed compiler warnings in genrated code",
+  "doc" : "Schema for UnionAndFixedFields designed to trigger fixed compiler warnings in generated code",
   "namespace" : "org.apache.avro.specific",
   "fields" : [ {
     "name" : "u",

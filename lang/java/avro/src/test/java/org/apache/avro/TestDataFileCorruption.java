@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,7 +48,7 @@ public class TestDataFileCorruption {
     Schema schema = Schema.create(Type.STRING);
 
     // Write a data file
-    DataFileWriter<Utf8> w = new DataFileWriter<Utf8>(new GenericDatumWriter<Utf8>(schema));
+    DataFileWriter<Utf8> w = new DataFileWriter<>(new GenericDatumWriter<>(schema));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     w.create(schema, baos);
     w.append(new Utf8("apple"));
@@ -78,8 +78,8 @@ public class TestDataFileCorruption {
     out.close();
 
     // Read the data file
-    DataFileReader r = new DataFileReader<Utf8>(file,
-        new GenericDatumReader<Utf8>(schema));
+    DataFileReader r = new DataFileReader<>(file,
+      new GenericDatumReader<>(schema));
     assertEquals("apple", r.next().toString());
     assertEquals("banana", r.next().toString());
     long prevSync = r.previousSync();

@@ -44,7 +44,7 @@ import java.io.InputStream;
 public class RawMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
 
   private static final ThreadLocal<BinaryDecoder> DECODER =
-      new ThreadLocal<BinaryDecoder>();
+    new ThreadLocal<>();
 
   private final Schema writeSchema;
   private final Schema readSchema;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -147,9 +147,9 @@ public class TestReflect {
 
   // test map, array and list type inference
   public static class R1 {
-    private Map<String,String> mapField = new HashMap<String,String>();
+    private Map<String,String> mapField = new HashMap<>();
     private String[] arrayField = new String[] { "foo" };
-    private List<String> listField = new ArrayList<String>();
+    private List<String> listField = new ArrayList<>();
 
     {
       mapField.put("foo", "bar");
@@ -202,7 +202,7 @@ public class TestReflect {
   @Test public void testR2() throws Exception {
     R2 r2 = new R2();
     r2.arrayField = new String[] {"foo"};
-    r2.collectionField = new ArrayList<String>();
+    r2.collectionField = new ArrayList<>();
     r2.collectionField.add("foo");
     checkReadWrite(r2);
   }
@@ -474,10 +474,10 @@ public class TestReflect {
     checkReadWrite(object, ReflectData.get().getSchema(object.getClass()));
   }
   void checkReadWrite(Object object, Schema s) throws Exception {
-    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(s);
+    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<>(s);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.write(object, factory.directBinaryEncoder(out, null));
-    ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(s);
+    ReflectDatumReader<Object> reader = new ReflectDatumReader<>(s);
     Object after =
       reader.read(null, DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
@@ -559,14 +559,14 @@ public class TestReflect {
   public void testRecordIO() throws IOException {
     Schema schm = ReflectData.get().getSchema(SampleRecord.class);
     ReflectDatumWriter<SampleRecord> writer =
-      new ReflectDatumWriter<SampleRecord>(schm);
+      new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     SampleRecord record = new SampleRecord();
     record.x = 5;
     record.y = 10;
     writer.write(record, factory.directBinaryEncoder(out, null));
     ReflectDatumReader<SampleRecord> reader =
-      new ReflectDatumReader<SampleRecord>(schm);
+      new ReflectDatumReader<>(schm);
     SampleRecord decoded =
       reader.read(null, DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
@@ -636,7 +636,7 @@ public class TestReflect {
   public void testMultipleAnnotations() throws IOException {
     Schema schm = ReflectData.get().getSchema(multipleAnnotationRecord.class);
     ReflectDatumWriter<multipleAnnotationRecord> writer =
-      new ReflectDatumWriter<multipleAnnotationRecord>(schm);
+      new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     multipleAnnotationRecord record = new multipleAnnotationRecord();
     record.i1 = 1;
@@ -653,7 +653,7 @@ public class TestReflect {
 
     writer.write(record, factory.directBinaryEncoder(out, null));
     ReflectDatumReader<multipleAnnotationRecord> reader =
-      new ReflectDatumReader<multipleAnnotationRecord>(schm);
+      new ReflectDatumReader<>(schm);
       multipleAnnotationRecord decoded =
       reader.read(new multipleAnnotationRecord(), DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
@@ -683,13 +683,13 @@ public class TestReflect {
   public void testAvroEncodeIO() throws IOException {
     Schema schm = ReflectData.get().getSchema(AvroEncRecord.class);
     ReflectDatumWriter<AvroEncRecord> writer =
-      new ReflectDatumWriter<AvroEncRecord>(schm);
+      new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     AvroEncRecord record = new AvroEncRecord();
     record.date = new java.util.Date(948833323L);
     writer.write(record, factory.directBinaryEncoder(out, null));
     ReflectDatumReader<AvroEncRecord> reader =
-      new ReflectDatumReader<AvroEncRecord>(schm);
+      new ReflectDatumReader<>(schm);
     AvroEncRecord decoded =
       reader.read(new AvroEncRecord(), DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
@@ -701,7 +701,7 @@ public class TestReflect {
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schm = reflectData.getSchema(AnotherSampleRecord.class);
     ReflectDatumWriter<AnotherSampleRecord> writer =
-      new ReflectDatumWriter<AnotherSampleRecord>(schm);
+      new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     // keep record.a null and see if that works
     Encoder e = factory.directBinaryEncoder(out, null);
@@ -711,7 +711,7 @@ public class TestReflect {
     writer.write(b, e);
     e.flush();
     ReflectDatumReader<AnotherSampleRecord> reader =
-      new ReflectDatumReader<AnotherSampleRecord>(schm);
+      new ReflectDatumReader<>(schm);
     ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
     Decoder d = DecoderFactory.get().binaryDecoder(in, null);
     AnotherSampleRecord decoded = reader.read(null, d);
@@ -848,7 +848,7 @@ public class TestReflect {
     ReflectData data = ReflectData.get();
     // define a record with a field that's a specific Y
     Schema schema = Schema.createRecord("Foo", "", "x.y.z", false);
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("f", data.getSchema(Y.class), "", null));
     schema.setFields(fields);
 
@@ -952,16 +952,16 @@ public class TestReflect {
   /** Test Map with stringable key classes. */
   @Test public void testStringableMapKeys() throws Exception {
     M1 record = new M1();
-    record.integerKeyMap = new HashMap<Integer, String>(1);
+    record.integerKeyMap = new HashMap<>(1);
     record.integerKeyMap.put(10, "foo");
 
-    record.bigIntegerKeyMap = new HashMap<java.math.BigInteger, String>(1);
+    record.bigIntegerKeyMap = new HashMap<>(1);
     record.bigIntegerKeyMap.put(java.math.BigInteger.TEN, "bar");
 
-    record.bigDecimalKeyMap = new HashMap<java.math.BigDecimal, String>(1);
+    record.bigDecimalKeyMap = new HashMap<>(1);
     record.bigDecimalKeyMap.put(java.math.BigDecimal.ONE, "bigDecimal");
 
-    record.fileKeyMap = new HashMap<java.io.File, String>(1);
+    record.fileKeyMap = new HashMap<>(1);
     record.fileKeyMap.put(new java.io.File("foo.bar"), "file");
 
     ReflectData data = new ReflectData().addStringable(Integer.class);
@@ -988,7 +988,7 @@ public class TestReflect {
 
   private static void checkBinary(ReflectData reflectData, Schema schema,
       Object datum, boolean equals, boolean blocking) throws IOException {
-    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(schema);
+    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<>(schema);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     if (!blocking) {
       writer.write(datum, EncoderFactory.get().directBinaryEncoder(out, null));
@@ -999,7 +999,7 @@ public class TestReflect {
     writer.write(datum, EncoderFactory.get().directBinaryEncoder(out, null));
     byte[] data = out.toByteArray();
 
-    ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(schema);
+    ReflectDatumReader<Object> reader = new ReflectDatumReader<>(schema);
     Object decoded = reader.read(null,
         DecoderFactory.get().binaryDecoder(data, null));
 

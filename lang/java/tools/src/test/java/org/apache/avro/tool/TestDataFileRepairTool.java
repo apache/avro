@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,7 +41,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class TestDataFileRepairTool {
 
@@ -54,7 +53,7 @@ public class TestDataFileRepairTool {
   @BeforeClass
   public static void writeCorruptFile() throws IOException {
     // Write a data file
-    DataFileWriter<Utf8> w = new DataFileWriter<Utf8>(new GenericDatumWriter<Utf8>(SCHEMA));
+    DataFileWriter<Utf8> w = new DataFileWriter<>(new GenericDatumWriter<>(SCHEMA));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     w.create(SCHEMA, baos);
     w.append(new Utf8("apple"));
@@ -196,8 +195,8 @@ public class TestDataFileRepairTool {
   }
 
   private void checkFileContains(File repairedFile, String... lines) throws IOException {
-    DataFileReader r = new DataFileReader<Utf8>(repairedFile,
-        new GenericDatumReader<Utf8>(SCHEMA));
+    DataFileReader r = new DataFileReader<>(repairedFile,
+      new GenericDatumReader<>(SCHEMA));
     for (String line : lines) {
       assertEquals(line, r.next().toString());
     }

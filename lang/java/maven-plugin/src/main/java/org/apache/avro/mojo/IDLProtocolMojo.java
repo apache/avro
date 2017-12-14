@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -67,7 +67,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       List runtimeClasspathElements = project.getRuntimeClasspathElements();
       Idl parser;
 
-      List<URL> runtimeUrls = new ArrayList<URL>();
+      List<URL> runtimeUrls = new ArrayList<>();
 
       // Add the source directory of avro files to the classpath so that
       // imports can refer to other idl files as classpath resources

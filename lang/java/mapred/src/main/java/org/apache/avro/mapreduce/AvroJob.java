@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ import org.apache.hadoop.mapreduce.Job;
  *
  * <p>Suppose you would like to write a line count mapper that reads from a text file. If
  * instead of using a Text and IntWritable output value, you would like to use Avro data
- * with a schema of <i>"string"</i> and <i>"int"</i>, respectively, you may parameterize
+ * with a schema of <i>"string"</i> and <i>"int"</i>, respectively, you may parametrize
  * your mapper with {@code AvroKey<CharSequence>} and {@code AvroValue<Integer>}
  * types.  Then, use the <code>setMapOutputKeySchema()</code> and
  * <code>setMapOutputValueSchema()</code> methods to set writer schemas for the records
