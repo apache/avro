@@ -73,7 +73,7 @@ class ColumnDescriptor<T extends Comparable> {
     for (int i = 0; i < blockCount; i++) {
       blocks[i] = BlockDescriptor.read(in);
       if (metaData.hasIndexValues())
-        firstValues[i] = in.<T>readValue(metaData.getType());
+        firstValues[i] = in.readValue(metaData.getType());
     }
     dataStart = in.tell();
 

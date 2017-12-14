@@ -84,8 +84,8 @@ public class TestSchemas {
   static final Schema FIXED_8_BYTES = Schema.createFixed("Fixed", null, null, 8);
 
   static {
-    EMPTY_RECORD1.setFields(Collections.<Field>emptyList());
-    EMPTY_RECORD2.setFields(Collections.<Field>emptyList());
+    EMPTY_RECORD1.setFields(Collections.emptyList());
+    EMPTY_RECORD2.setFields(Collections.emptyList());
     A_INT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null)));
     A_LONG_RECORD1.setFields(list(new Field("a", LONG_SCHEMA, null, null)));
     A_INT_B_INT_RECORD1.setFields(
