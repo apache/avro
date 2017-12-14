@@ -299,11 +299,12 @@ public class TestReflect {
 
   // test union in fields
   public static class R9_1  {
-	@Union({R7.class, R8.class})
+	@Union({Void.class, R7.class, R8.class})
     public Object value;
     @Override
     public boolean equals(Object o) {
       if (!(o instanceof R9_1)) return false;
+      if (this.value == null) return ((R9_1)o).value == null;
       return this.value.equals(((R9_1)o).value);
     }
   }
@@ -316,6 +317,8 @@ public class TestReflect {
     r8.value = 1;
     checkReadWrite(r8, ReflectData.get().getSchema(R6.class));
     R9_1 r9_1 = new R9_1();
+    r9_1.value = null;
+    checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
     r9_1.value = r7;
     checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
     r9_1.value = r8;
