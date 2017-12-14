@@ -52,6 +52,29 @@ dependencies {
 If you now run `gradle build`, Java classes will be compiled from Avro files in `src/main/avro`.
 Actually, it will attempt to process an "avro" directory in every `SourceSet` (main, test, etc.)
 
+Alternatively, if you prefer to use the incubating plugins DSL, see the following example:
+
+`settings.gradle`:
+```groovy
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        jcenter()
+        maven {
+            name "JCenter Gradle Plugins"
+            url  "https://dl.bintray.com/gradle/gradle-plugins"
+        }
+    }
+}
+```
+
+`build.gradle`:
+```groovy
+plugins {
+    id "com.commercehub.gradle.plugin.avro" version "VERSION"
+}
+```
+
 # Configuration
 
 There are a number of configuration options supported in the `avro` block.
