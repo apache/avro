@@ -883,7 +883,7 @@ public class SchemaBuilder {
    **/
   private static class NameContext {
     private static final Set<String> PRIMITIVES = new HashSet<>();
-    {
+    static {
       PRIMITIVES.add("null");
       PRIMITIVES.add("boolean");
       PRIMITIVES.add("int");

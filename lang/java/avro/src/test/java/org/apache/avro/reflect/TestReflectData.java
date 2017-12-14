@@ -34,7 +34,7 @@ public class TestReflectData {
     for (int i = 0; i < numSchemas; i++) {
       // Create schema
       Schema schema = Schema.createRecord("schema", null, null, false);
-      schema.setFields(Collections.<Schema.Field>emptyList());
+      schema.setFields(Collections.emptyList());
 
       ReflectData.get().getRecordState(new Object(), schema);
     }

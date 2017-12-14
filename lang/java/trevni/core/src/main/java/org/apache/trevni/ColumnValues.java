@@ -142,7 +142,7 @@ public class ColumnValues<T extends Comparable>
   /** Expert: Returns the next value in a column. */
   public T nextValue() throws IOException {
     arrayLength--;
-    return previous = values.<T>readValue(type);
+    return previous = values.readValue(type);
   }
 
   @Override public void remove() { throw new UnsupportedOperationException(); }

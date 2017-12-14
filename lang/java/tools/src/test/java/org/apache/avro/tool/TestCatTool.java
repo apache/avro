@@ -350,7 +350,7 @@ public class TestCatTool {
       System.in,
       out,
       System.err,
-      Collections.<String>emptyList());
+      Collections.emptyList());
     out.close(); // flushes too
 
     assertEquals(0, returnCode);

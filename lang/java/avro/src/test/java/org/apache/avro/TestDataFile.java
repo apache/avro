@@ -263,13 +263,13 @@ public class TestDataFile {
     // re-open to an arbitrary position near the middle, with sync == true
     SeekableFileInput sin = new SeekableFileInput(file);
     sin.seek(sin.length() / 2);
-    reader = DataFileReader.<Object>openReader(sin, new GenericDatumReader<>(),
+    reader = DataFileReader.openReader(sin, new GenericDatumReader<>(),
         header, true);
     assertNotNull("Should be able to reopen from arbitrary point", reader.next());
     long validPos = reader.previousSync();
     // post sync, we know of a valid sync point: re-open with seek (sync == false)
     sin.seek(validPos);
-    reader = DataFileReader.<Object>openReader(sin, new GenericDatumReader<>(),
+    reader = DataFileReader.openReader(sin, new GenericDatumReader<>(),
         header, false);
     assertEquals("Should not move from sync point on reopen", validPos, sin.tell());
     assertNotNull("Should be able to reopen at sync point", reader.next());

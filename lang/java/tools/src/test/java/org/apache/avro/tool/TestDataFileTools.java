@@ -144,7 +144,7 @@ public class TestDataFileTools {
 
   @Test
   public void testWrite() throws Exception {
-    testWrite("plain", Collections.<String>emptyList(), "null");
+    testWrite("plain", Collections.emptyList(), "null");
   }
 
   public void testWrite(String name, List<String> extra, String expectedCodec)
