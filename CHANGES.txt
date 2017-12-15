@@ -96,6 +96,9 @@ Trunk (not yet released)
     AVRO-2080: Fix Javadoc Warnings in Generated Records
     (Bridger Howell via Niels Basjes)
 
+    AVRO-2114: Make missing value exceptions in nested structures easier to read.
+    (Niels Basjes)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
