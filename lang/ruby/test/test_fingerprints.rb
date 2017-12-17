@@ -40,7 +40,17 @@ class TestFingerprints < Test::Unit::TestCase
       { "type": "int" }
     SCHEMA
 
-    assert_equal 8247732601305521295,
+    assert_equal 8247732601305521295, # hex: 0x7275d51a3f395c8f
       schema.crc_64_avro_fingerprint
+  end
+
+  # This definitely belongs somewhere else
+  def test_single_object_encoding_header
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "int" }
+    SCHEMA
+
+    assert_equal ["c3", "01", "72", "75", "d5", "1a", "3f", "39", "5c", "8f"].map{|e| e.to_i(16) },
+      schema.single_object_encoding_header
   end
 end

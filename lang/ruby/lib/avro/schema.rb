@@ -151,6 +151,19 @@ module Avro
       fp
     end
 
+    SINGLE_OBJECT_MAGIC_NUMBER = [0xC3, 0x01]
+    def single_object_encoding_header
+      [SINGLE_OBJECT_MAGIC_NUMBER, single_object_schema_fingerprint].flatten
+    end
+    def single_object_schema_fingerprint
+      working = crc_64_avro_fingerprint
+      bytes = Array.new(8)
+      8.times do |i|
+        bytes[7 - i] = (working & 0xff)
+        working = working >> 8
+      end
+      bytes
+    end
 
     def read?(writers_schema)
       SchemaCompatibility.can_read?(writers_schema, self)
