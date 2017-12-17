@@ -122,6 +122,36 @@ module Avro
       Digest::SHA256.hexdigest(parsing_form).to_i(16)
     end
 
+    CRC_EMPTY = 0xc15d213aa4d7a795
+
+    # The java library caches this value after initialized, so this pattern
+    # mimics that.
+    @@fp_table = nil
+    def initFPTable
+      @@fp_table = Array.new(256)
+      256.times do |i|
+        fp = i
+        8.times do |j|
+          fp = (fp >> 1) ^ ( CRC_EMPTY & -( fp & 1 ) )
+        end
+        @@fp_table[i] = fp
+      end
+    end
+
+    def crc_64_avro_fingerprint
+      parsing_form = Avro::SchemaNormalization.to_parsing_form(self)
+      data_bytes = parsing_form.unpack("C*")
+
+      initFPTable unless @@fp_table
+
+      fp = CRC_EMPTY
+      data_bytes.each do |b|
+        fp = (fp >> 8) ^ @@fp_table[ (fp ^ b) & 0xff ]
+      end
+      fp
+    end
+
+
     def read?(writers_schema)
       SchemaCompatibility.can_read?(writers_schema, self)
     end

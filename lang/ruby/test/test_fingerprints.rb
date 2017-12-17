@@ -34,4 +34,13 @@ class TestFingerprints < Test::Unit::TestCase
     assert_equal 28572620203319713300323544804233350633246234624932075150020181448463213378117,
       schema.sha256_fingerprint
   end
+
+  def test_crc_64_avro_fingerprint
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "int" }
+    SCHEMA
+
+    assert_equal 8247732601305521295,
+      schema.crc_64_avro_fingerprint
+  end
 end
