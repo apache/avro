@@ -19,6 +19,8 @@ matrix:
       os: linux
       dist: trusty
       group: deprecated-2017Q4
+      # Looks like Java 9.0.1 introduced new Gradle incompatibilities resolved in 4.2.1 and 4.3
+      # https://discuss.gradle.org/t/could-not-determine-java-version-from-9-0-1/24457
     - jdk: oraclejdk8
       os: linux
       dist: trusty
