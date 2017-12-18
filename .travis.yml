@@ -1,5 +1,6 @@
 sudo: true # required for hostname addon; https://docs.travis-ci.com/user/hostname
 language: java
+group: stable
 jdk: oraclejdk8
 env:
   global:
@@ -11,12 +12,13 @@ addons:
     - buildhost
   hostname: buildhost
 install: true
-script: ./gradlew build testRecentVersionCompatibility
+script: ./gradlew build testRecentVersionCompatibility --info
 matrix:
   include:
     - jdk: oraclejdk9
       os: linux
       dist: trusty
+      group: deprecated-2017Q4
     - jdk: oraclejdk8
       os: linux
       dist: trusty
