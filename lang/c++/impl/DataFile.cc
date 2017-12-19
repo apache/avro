@@ -72,19 +72,42 @@ static string toString(const ValidSchema& schema)
     return oss.str();
 }
 
-DataFileWriterBase::DataFileWriterBase(const char* filename,
-    const ValidSchema& schema, size_t syncInterval, Codec codec) :
-    filename_(filename), schema_(schema), encoderPtr_(binaryEncoder()),
+
+DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& schema, size_t syncInterval,
+                                       Codec codec) :
+    filename_(filename),
+    schema_(schema),
+    encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
     codec_(codec),
     stream_(fileOutputStream(filename)),
     buffer_(memoryOutputStream()),
-    sync_(makeSync()), objectCount_(0)
+    sync_(makeSync()),
+    objectCount_(0)
 {
+    init(schema, syncInterval, codec);
+}
+
+DataFileWriterBase::DataFileWriterBase(std::auto_ptr<OutputStream> outputStream,
+    const ValidSchema& schema, size_t syncInterval, Codec codec) :
+    filename_(nullptr),
+    schema_(schema),
+    encoderPtr_(binaryEncoder()),
+    syncInterval_(syncInterval),
+    codec_(codec),
+    stream_(std::move(outputStream)),
+    buffer_(memoryOutputStream()),
+    sync_(makeSync()),
+    objectCount_(0)
+{
+    init(schema, syncInterval, codec);
+}
+
+void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, const Codec &codec) {
     if (syncInterval < minSyncInterval || syncInterval > maxSyncInterval) {
         throw Exception(boost::format("Invalid sync interval: %1%. "
             "Should be between %2% and %3%") % syncInterval %
-            minSyncInterval % maxSyncInterval);
+                        minSyncInterval % maxSyncInterval);
     }
     setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
 
@@ -104,6 +127,7 @@ DataFileWriterBase::DataFileWriterBase(const char* filename,
     writeHeader();
     encoderPtr_->init(*buffer_);
 }
+
 
 DataFileWriterBase::~DataFileWriterBase()
 {
@@ -250,6 +274,13 @@ void DataFileWriterBase::setMetadata(const string& key, const string& value)
 
 DataFileReaderBase::DataFileReaderBase(const char* filename) :
     filename_(filename), stream_(fileInputStream(filename)),
+    decoder_(binaryDecoder()), objectCount_(0), eof_(false)
+{
+    readHeader();
+}
+
+DataFileReaderBase::DataFileReaderBase(std::auto_ptr<InputStream> inputStream) :
+    filename_(nullptr), stream_(inputStream),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
