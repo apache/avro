@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -170,7 +170,7 @@ def check_skip_number(number_type):
     if read_value == VALUE_TO_READ: correct += 1
     print ''
   return correct
-    
+
 class TestIO(unittest.TestCase):
   #
   # BASIC FUNCTIONALITY
@@ -182,7 +182,12 @@ class TestIO(unittest.TestCase):
     for example_schema, datum in SCHEMAS_TO_VALIDATE:
       print 'Schema: %s' % example_schema
       print 'Datum: %s' % datum
-      validated = io.validate(schema.parse(example_schema), datum)
+      validated = False
+      try:
+          io.validate(schema.parse(example_schema), datum)
+          validated = True
+      except io.AvroTypeException:
+          pass
       print 'Valid: %s' % validated
       if validated: passed += 1
     self.assertEquals(passed, len(SCHEMAS_TO_VALIDATE))
