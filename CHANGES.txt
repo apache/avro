@@ -103,6 +103,8 @@ Trunk (not yet released)
     AVRO-2115: Java: Permit @Union annotations on fields of classes.
     (Miguel Martinez-Espronceda via cutting).
 
+    AVRO-2119: Run Apache Rat check on every java build (Niels Basjes)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.
