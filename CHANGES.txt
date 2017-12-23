@@ -220,6 +220,8 @@ Trunk (not yet released)
     AVRO-1485: Specification says Record field type can be record name but implementation allows any named type.
     (Nandor Kollar via gabor)
 
+    AVRO-2120: Fix NullPointerException thrown by Schema.Parser#parse("")
+
 Avro 1.8.1 (14 May 2016)
 
   INCOMPATIBLE CHANGES
