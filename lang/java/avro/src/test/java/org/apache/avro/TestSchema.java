@@ -83,6 +83,11 @@ public class TestSchema {
     assertNotNull(schemaString);
   }
 
+  @Test(expected = SchemaParseException.class)
+  public void testParseEmptySchema() {
+    Schema schema = new Schema.Parser().parse("");
+  }
+
   @Test
   public void testSchemaWithFields() {
     List<Field> fields = new ArrayList<Field>();
