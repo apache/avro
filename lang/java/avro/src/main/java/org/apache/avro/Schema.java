@@ -1222,6 +1222,9 @@ public abstract class Schema extends JsonProperties {
 
   /** @see #parse(String) */
   static Schema parse(JsonNode schema, Names names) {
+    if (schema == null) {
+      throw new SchemaParseException("Cannot parse <null> schema");
+    }
     if (schema.isTextual()) {                     // name
       Schema result = names.get(schema.getTextValue());
       if (result == null)

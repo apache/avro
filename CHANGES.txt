@@ -33,6 +33,8 @@ Trunk (not yet released)
     AVRO-1967: Java: Fix NPE when calling getXyzBuilder on instance where the xyz is null
     (Niels Basjes)
 
+    AVRO-2120: Fix NullPointerException thrown by Schema.Parser#parse("")
+
 Avro 1.8.2 (10 April 2017)
 
   INCOMPATIBLE CHANGES
