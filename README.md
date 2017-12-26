@@ -189,6 +189,12 @@ If you do it in the other order, IntelliJ may not properly exclude some director
 If the defaults used by the plugin don't work for you, you can still use the tasks by themselves.
 In this case, use the `com.commercehub.gradle.plugin.avro-base` plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
 
+<aside class="warning">
+`GenerateAvroJavaTask` deletes the contents of the `outputDir` on every execution.
+This is neccesary in order to work around a behavior in the upstream Avro compiler where Java files will not be re-generated if they have a newer "last modified" date than their corresponding schema file, regardless of whether other schema files used in the process have been modified.
+To avoid data loss, set the `outputDir` to a directory within the project `buildDir` dedicated to usage by this task.
+</aside>
+
 Here's a short example of what this might look like:
 
 ```groovy
