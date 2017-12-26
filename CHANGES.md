@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.13.0
 * Remove pre-cleaning behavior from `GenerateAvroJavaTask` (#41)
 
 ## 0.12.0
