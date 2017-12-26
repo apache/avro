@@ -140,7 +140,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
-        preClean();
         processFiles();
     }
 
@@ -150,17 +149,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             throw new GradleException(
                 String.format("Unsupported file extension for the following files: %s", unsupportedFiles));
         }
-    }
-
-    /**
-     * We need to remove all previously generated Java classes.  Otherwise, when we call
-     * {@link SpecificCompiler#compileToDestination(java.io.File, java.io.File)}, it will skip generating classes for any schema files where
-     * the generated class is newer than the schema file.  That seems like a useful performance optimization, but it can cause problems in
-     * the case where the schema file for this class hasn't changed, but the schema definition for one of the types it depends on has,
-     * resulting in some usages of a type now having outdated schema.
-     */
-    private void preClean() {
-        getProject().delete(getOutputDir());
     }
 
     private void processFiles() {

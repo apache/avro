@@ -1,8 +1,9 @@
 # Change Log
 
 ## Unreleased
+* Remove pre-cleaning behavior from `GenerateAvroJavaTask` (#41)
 
-# 0.12.0
+## 0.12.0
 * Improve support for Kotlin (#36)
 
 ## 0.11.0
