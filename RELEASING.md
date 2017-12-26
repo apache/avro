@@ -7,7 +7,7 @@
 1. Commit and tag with the version number (don't push yet)
 1. Run `./gradlew clean bintrayUpload`
 1. Go to the [Bintray page](https://bintray.com/commercehub-oss/main/gradle-avro-plugin), verify the files, and click "Publish".
-1. Update the version the next SNAPSHOT and commit.
+1. Update the version in `build.gradle` to the next SNAPSHOT and commit.
 1. Push
 1. If there was a issue requesting the release, close it.
 1. Close the milestone.
