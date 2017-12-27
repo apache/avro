@@ -26,6 +26,7 @@ import static org.apache.avro.TestSchemas.A_INT_B_INT_RECORD1;
 import static org.apache.avro.TestSchemas.A_INT_RECORD1;
 import static org.apache.avro.TestSchemas.A_LONG_RECORD1;
 import static org.apache.avro.TestSchemas.BOOLEAN_SCHEMA;
+import static org.apache.avro.TestSchemas.BYTES_DECIMAL_3_3;
 import static org.apache.avro.TestSchemas.BYTES_SCHEMA;
 import static org.apache.avro.TestSchemas.BYTES_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.DOUBLE_SCHEMA;
@@ -36,6 +37,7 @@ import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
 import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
+import static org.apache.avro.TestSchemas.FIXED_DECIMAL_3_3;
 import static org.apache.avro.TestSchemas.FLOAT_SCHEMA;
 import static org.apache.avro.TestSchemas.FLOAT_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.INT_ARRAY_SCHEMA;
@@ -548,12 +550,19 @@ public class TestSchemaCompatibility {
           expectedDecodedDatum, decodedDatum);
     }
   }
-  
-  Deque<String> asDeqeue(String... args) {
-    Deque<String> dq = new ArrayDeque<String>();
-    List<String> x = Arrays.asList(args);
-    Collections.reverse(x);
-    dq.addAll(x);
-    return dq;
+
+  @Test
+  public void testBytesDecimalWithSameScaleAndPrecision() {
+    final SchemaPairCompatibility result =
+      checkReaderWriterCompatibility(BYTES_DECIMAL_3_3, BYTES_DECIMAL_3_3);
+    assertEquals(SchemaCompatibilityType.COMPATIBLE, result.getType());
   }
+
+  @Test
+  public void testFixedDecimalWithSameScaleAndPrecision() {
+    final SchemaPairCompatibility result =
+      checkReaderWriterCompatibility(FIXED_DECIMAL_3_3, FIXED_DECIMAL_3_3);
+    assertEquals(SchemaCompatibilityType.COMPATIBLE, result.getType());
+  }
+
 }

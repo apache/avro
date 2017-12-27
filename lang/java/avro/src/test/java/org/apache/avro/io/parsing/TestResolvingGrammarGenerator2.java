@@ -18,6 +18,8 @@
 package org.apache.avro.io.parsing;
 
 import java.util.Arrays;
+
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaValidationException;
 import org.apache.avro.SchemaValidatorBuilder;
@@ -65,6 +67,20 @@ public class TestResolvingGrammarGenerator2 {
       .requiredDouble("y")
       .name("z").type().doubleType().doubleDefault(0.0)
       .endRecord();
+
+  private static final Schema FIXED_DECIMAL_3_3_SCHEMA =
+    LogicalTypes.decimal(3, 3).addToSchema(Schema.createFixed("decimal", "", "", 5));
+  private static final Schema FIXED_DECIMAL_4_3_SCHEMA =
+    LogicalTypes.decimal(4, 3).addToSchema(Schema.createFixed("decimal", "", "", 5));
+  private static final Schema FIXED_DECIMAL_3_2_SCHEMA =
+    LogicalTypes.decimal(3, 2).addToSchema(Schema.createFixed("decimal", "", "", 5));
+
+  private static final Schema BYTES_DECIMAL_3_3_SCHEMA =
+    LogicalTypes.decimal(3, 3).addToSchema(Schema.create(Schema.Type.BYTES));
+  private static final Schema BYTES_DECIMAL_4_3_SCHEMA =
+    LogicalTypes.decimal(4, 3).addToSchema(Schema.create(Schema.Type.BYTES));
+  private static final Schema BYTES_DECIMAL_3_2_SCHEMA =
+    LogicalTypes.decimal(3, 2).addToSchema(Schema.create(Schema.Type.BYTES));
 
   @Test(expected=SchemaValidationException.class)
   public void testUnionResolutionNoStructureMatch() throws Exception {
@@ -139,5 +155,41 @@ public class TestResolvingGrammarGenerator2 {
     Symbol.UnionAdjustAction action = (Symbol.UnionAdjustAction)
         grammar.production[1];
     Assert.assertEquals(4, action.rindex);
+  }
+
+  @Test(expected=SchemaValidationException.class)
+  public void testFixedDecimalWithDifferentPrecision() throws Exception {
+    new SchemaValidatorBuilder().canBeReadStrategy().validateAll()
+      .validate(FIXED_DECIMAL_3_3_SCHEMA, Arrays.asList(FIXED_DECIMAL_4_3_SCHEMA));
+  }
+
+  @Test(expected=SchemaValidationException.class)
+  public void testFixedDecimalWithDifferentWithDifferentScale() throws Exception {
+    new SchemaValidatorBuilder().canBeReadStrategy().validateAll()
+      .validate(FIXED_DECIMAL_3_3_SCHEMA, Arrays.asList(FIXED_DECIMAL_3_2_SCHEMA));
+  }
+
+  @Test
+  public void testFixedDecimalWithSameScaleAndPrecision() throws Exception {
+    new SchemaValidatorBuilder().canBeReadStrategy().validateAll()
+      .validate(FIXED_DECIMAL_3_3_SCHEMA, Arrays.asList(FIXED_DECIMAL_3_3_SCHEMA));
+  }
+
+  @Test(expected=SchemaValidationException.class)
+  public void testBytesDecimalWithDifferentPrecision() throws Exception {
+    new SchemaValidatorBuilder().canBeReadStrategy().validateAll()
+      .validate(BYTES_DECIMAL_3_3_SCHEMA, Arrays.asList(BYTES_DECIMAL_4_3_SCHEMA));
+  }
+
+  @Test(expected=SchemaValidationException.class)
+  public void testBytesDecimalWithDifferentWithDifferentScale() throws Exception {
+    new SchemaValidatorBuilder().canBeReadStrategy().validateAll()
+      .validate(BYTES_DECIMAL_3_3_SCHEMA, Arrays.asList(BYTES_DECIMAL_3_2_SCHEMA));
+  }
+
+  @Test
+  public void testBytesDecimalWithSameScaleAndPrecision() throws Exception {
+    new SchemaValidatorBuilder().canBeReadStrategy().validateAll()
+      .validate(BYTES_DECIMAL_3_3_SCHEMA, Arrays.asList(BYTES_DECIMAL_3_3_SCHEMA));
   }
 }

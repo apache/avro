@@ -279,10 +279,12 @@ public class SchemaCompatibility {
           case LONG:
           case FLOAT:
           case DOUBLE:
-          case BYTES:
           case STRING: {
             return result;
           }
+          case BYTES:
+            return isDecimal(reader, writer) ?
+                    result.mergedWith(checkDecimalScaleAndPrecision(reader, writer, location)) : result;
           case ARRAY: {
             return result.mergedWith(getCompatibility("items", reader.getElementType(), writer.getElementType(), location));
           }
@@ -291,7 +293,8 @@ public class SchemaCompatibility {
           }
           case FIXED: {
             result = result.mergedWith(checkSchemaNames(reader, writer, location));
-            return result.mergedWith(checkFixedSize(reader, writer, location));
+            result = result.mergedWith(checkFixedSize(reader, writer, location));
+            return isDecimal(reader, writer) ? result.mergedWith(checkDecimalScaleAndPrecision(reader, writer, location)) : result;
           }
           case ENUM: {
             result = result.mergedWith(checkSchemaNames(reader, writer, location));
@@ -405,6 +408,34 @@ public class SchemaCompatibility {
       }
     }
 
+    private SchemaCompatibilityResult checkDecimalScaleAndPrecision(Schema reader, Schema writer, final Deque<String> location) {
+      LogicalTypes.Decimal readerLogicalType = (LogicalTypes.Decimal) reader.getLogicalType();
+      LogicalTypes.Decimal writerLogicalType = (LogicalTypes.Decimal) writer.getLogicalType();
+      if (readerLogicalType.getScale() == writerLogicalType.getScale()
+        && readerLogicalType.getPrecision() == writerLogicalType.getPrecision()) {
+        return SchemaCompatibilityResult.compatible();
+      }
+      location.addFirst("scaleOrPrecision");
+      SchemaCompatibilityResult result = SchemaCompatibilityResult.incompatible(
+              SchemaIncompatibilityType.DECIMAL_SCALE_OR_PRECISION_MISMATCH,
+              reader, writer,
+              String.format(
+                      "Decimal (precision,scale) doesn't match for reader (%s,%s) and writer (%s,%s) schemas",
+                      ((LogicalTypes.Decimal) reader.getLogicalType()).getPrecision(),
+                      ((LogicalTypes.Decimal) reader.getLogicalType()).getScale(),
+                      ((LogicalTypes.Decimal) writer.getLogicalType()).getPrecision(),
+                      ((LogicalTypes.Decimal) writer.getLogicalType()).getScale()),
+              asList(location)
+      );
+      location.removeFirst();
+      return result;
+    }
+
+    private boolean isDecimal(Schema reader, Schema writer) {
+      return reader.getLogicalType() instanceof LogicalTypes.Decimal
+              && writer.getLogicalType() instanceof LogicalTypes.Decimal;
+    }
+
     private SchemaCompatibilityResult checkReaderWriterRecordFields(final Schema reader,
         final Schema writer,
         final Deque<String> location) {
@@ -506,7 +537,8 @@ public class SchemaCompatibility {
     MISSING_ENUM_SYMBOLS,
     READER_FIELD_MISSING_DEFAULT_VALUE,
     TYPE_MISMATCH,
-    MISSING_UNION_BRANCH;
+    MISSING_UNION_BRANCH,
+    DECIMAL_SCALE_OR_PRECISION_MISMATCH
   }
 
   /**

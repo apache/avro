@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
@@ -86,10 +87,22 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       case STRING:
         return Symbol.STRING;
       case BYTES:
+        if (decimalReaderWriter(reader, writer) && !decimalScaleAndPrecisionMatch(reader, writer)) {
+          return scalePrecisionMismatchError(reader.getFullName(),
+            writer.getFullName(),
+            (LogicalTypes.Decimal) reader.getLogicalType(),
+            (LogicalTypes.Decimal) writer.getLogicalType());
+        }
         return Symbol.BYTES;
       case FIXED:
         if (writer.getFullName().equals(reader.getFullName())
             && writer.getFixedSize() == reader.getFixedSize()) {
+          if (decimalReaderWriter(reader, writer) && !decimalScaleAndPrecisionMatch(reader, writer)) {
+            return scalePrecisionMismatchError(reader.getFullName(),
+              writer.getFullName(),
+              (LogicalTypes.Decimal) reader.getLogicalType(),
+              (LogicalTypes.Decimal) writer.getLogicalType());
+          }
           return Symbol.seq(Symbol.intCheckAction(writer.getFixedSize()),
               Symbol.FIXED);
         }
@@ -189,6 +202,26 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
                         + ", expecting " + reader.getFullName());
   }
 
+  private boolean decimalReaderWriter(Schema reader, Schema writer) {
+    return reader.getLogicalType() instanceof LogicalTypes.Decimal
+      && writer.getLogicalType() instanceof LogicalTypes.Decimal;
+  }
+
+  private boolean decimalScaleAndPrecisionMatch(Schema reader, Schema writer) {
+    LogicalTypes.Decimal readerLogicalType = (LogicalTypes.Decimal) reader.getLogicalType();
+    LogicalTypes.Decimal writerLogicalType = (LogicalTypes.Decimal) writer.getLogicalType();
+    return readerLogicalType.getPrecision() == writerLogicalType.getPrecision()
+      && readerLogicalType.getScale() == writerLogicalType.getScale();
+  }
+
+  private Symbol scalePrecisionMismatchError(String readerFullName, String writerFullName,
+      LogicalTypes.Decimal readerLogicalType, LogicalTypes.Decimal writerLogicalType) {
+    return Symbol.error("Found " + writerFullName
+      + " with decimal logical type (" + writerLogicalType.getPrecision() + "," + writerLogicalType.getScale() + ")"
+      + ", expecting " + readerFullName
+      + " with decimal logical type (" + readerLogicalType.getPrecision() + "," + readerLogicalType.getScale() + ")"
+    );
+  }
   private Symbol resolveUnion(Schema writer, Schema reader,
       Map<LitS, Symbol> seen) throws IOException {
     List<Schema> alts = writer.getTypes();
