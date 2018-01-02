@@ -90,8 +90,11 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
    */
   private void flushBuffer() throws IOException {
     if (pos > 0) {
-      sink.innerWrite(buf, 0, pos);
-      pos = 0;
+      try {
+        sink.innerWrite(buf, 0, pos);
+      } finally {
+        pos = 0;
+      }
     }
   }
 
