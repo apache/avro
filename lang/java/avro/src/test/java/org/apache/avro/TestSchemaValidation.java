@@ -203,5 +203,16 @@ public class TestSchemaValidation {
     }
     Assert.assertTrue(threw);
   }
+  public static final org.apache.avro.Schema recursiveSchema = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Node\",\"namespace\":\"avro\",\"fields\":[{\"name\":\"value\",\"type\":[\"null\",\"Node\"],\"default\":null}]}");
 
+  /**
+   * Unit test to verify that recursive schemas can be validated.
+   * See AVRO-2122.
+   */
+  @Test
+  public void testRecursiveSchemaValidation() throws SchemaValidationException {
+    // before AVRO-2122, this would cause a StackOverflowError
+    final SchemaValidator backwardValidator = builder.canReadStrategy().validateLatest();
+    backwardValidator.validate(recursiveSchema, Arrays.asList(recursiveSchema));
+  }
 }

@@ -37,6 +37,9 @@ Trunk (not yet released)
 
     AVRO-2120: Fix NullPointerException thrown by Schema.Parser#parse("")
 
+    AVRO-2122: Cannot validate schemas with recursive definitions
+    (Bart via Nandor Kollar)
+
 Avro 1.8.2 (10 April 2017)
 
   INCOMPATIBLE CHANGES
