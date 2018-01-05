@@ -17,9 +17,38 @@
  */
 
 
+#include <boost/algorithm/string/replace.hpp>
 #include "NodeImpl.hh"
 
+
 namespace avro {
+
+namespace {
+// Escape double quotes (") for serialization.
+std::string escape(std::string s) {
+  boost::replace_all(s, "\"", "\\\"");
+  return s;
+}
+
+// Wrap an indentation in a struct for ostream operator<<
+struct indent {
+    indent(int depth) :
+        d(depth)
+    { }
+    int d;
+};
+
+/// ostream operator for indent
+std::ostream& operator <<(std::ostream &os, indent x)
+{
+    static const std::string spaces("    ");
+    while(x.d--) {
+        os << spaces;
+    }
+    return os;
+}
+
+} // anonymous namespace
 
 const int kByteStringSize = 6;
 
@@ -147,24 +176,6 @@ NodeSymbolic::resolve(const Node &reader) const
     return node->resolve(reader);
 }
 
-// Wrap an indentation in a struct for ostream operator<<
-struct indent {
-    indent(int depth) :
-        d(depth)
-    { }
-    int d;
-};
-
-/// ostream operator for indent
-std::ostream& operator <<(std::ostream &os, indent x)
-{
-    static const std::string spaces("    ");
-    while(x.d--) {
-        os << spaces;
-    }
-    return os;
-}
-
 void
 NodePrimitive::printJson(std::ostream &os, int depth) const
 {
@@ -207,16 +218,11 @@ NodeRecord::printJson(std::ostream &os, int depth) const
         leafAttributes_.get(i)->printJson(os, depth);
 
         if (!defaultValues.empty()) {
-          if (defaultValues[i].type() == AVRO_NULL) {
-            // No "default" field unless it is a nullable field (union with
-            // first leaf of type null).
-            if (leafAttributes_.get(i)->type() == AVRO_UNION &&
-                leafAttributes_.get(i)->leafAt(0)->type() == AVRO_NULL) {
-              os << ",\n" << indent(depth) << "\"default\": null";
-            }
+          if (!defaultValues[i].isUnion() &&
+              defaultValues[i].type() == AVRO_NULL) {
+            // No "default" field.
           } else {
             os << ",\n" << indent(depth) << "\"default\": ";
-            std::cout << leafNameAttributes_.get(i) << "\n";
             leafAttributes_.get(i)->printDefaultToJson(defaultValues[i], os,
                                                        depth);
           }
@@ -233,6 +239,9 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
   assert(isPrimitive(g.type()));
 
   switch (g.type()) {
+    case AVRO_NULL:
+      os << "null";
+      break;
     case AVRO_BOOL:
       os << (g.value<bool>() ? "true" : "false");
       break;
@@ -249,7 +258,7 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
       os << std::to_string(g.value<double>());
       break;
     case AVRO_STRING:
-      os << "\"" << g.value<std::string>() << "\"";
+      os << "\"" << escape(g.value<std::string>()) << "\"";
       break;
     case AVRO_BYTES: {
       // Convert to a string:
