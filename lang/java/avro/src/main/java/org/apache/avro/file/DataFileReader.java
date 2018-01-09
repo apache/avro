@@ -47,7 +47,7 @@ public class DataFileReader<D>
                                              DatumReader<D> reader)
     throws IOException {
     if (in.length() < MAGIC.length)
-      throw new IOException("Not an Avro data file");
+      throw new EOFException("Not an Avro data file");
 
     // read magic header
     byte[] magic = new byte[MAGIC.length];
@@ -60,7 +60,7 @@ public class DataFileReader<D>
     if (Arrays.equals(DataFileReader12.MAGIC, magic)) // 1.2 format
       return new DataFileReader12<D>(in, reader);
 
-    throw new IOException("Not an Avro data file");
+    throw new InvalidAvroMagicException("Not an Avro data file");
   }
 
   /**
