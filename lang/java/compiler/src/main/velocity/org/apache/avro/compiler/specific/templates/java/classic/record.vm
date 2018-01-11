@@ -48,6 +48,14 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
 
   /**
+   * Return the BinaryMessageEncoder instance used by this class.
+   * @return the message encoder used by this class
+   */
+  public static BinaryMessageEncoder<${this.mangle($schema.getName())}> getEncoder() {
+    return ENCODER;
+  }
+  
+  /**
    * Return the BinaryMessageDecoder instance used by this class.
    * @return the message decoder used by this class
    */
