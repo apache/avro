@@ -373,14 +373,14 @@ public abstract class Symbol {
   public static boolean hasErrors(Symbol symbol) {
     return hasErrors(symbol, new HashSet<Symbol>());
   }
-  
+
   private static boolean hasErrors(Symbol symbol, Set<Symbol> visited) {
     // avoid infinite recursion
     if (visited.contains(symbol)) {
       return false;
     }
     visited.add(symbol);
-    
+
     switch(symbol.kind) {
     case ALTERNATIVE:
       return hasErrors(symbol, ((Alternative) symbol).symbols, visited);
