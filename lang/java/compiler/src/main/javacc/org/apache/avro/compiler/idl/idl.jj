@@ -1528,6 +1528,8 @@ String PropertyName():
 {
   t = <IDENTIFIER>   { name.append(t.image); }
   ( t = <DASH>       { name.append(t.image); }
+    t = <IDENTIFIER> { name.append(t.image); } |
+    t = <DOT>        { name.append(t.image); }
     t = <IDENTIFIER> { name.append(t.image); }
   ) *
   { return name.toString(); }
