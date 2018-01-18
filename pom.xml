@@ -224,6 +224,7 @@
               </execution>
             </executions>
             <configuration>
+              <consoleOutput>true</consoleOutput>
               <excludeSubProjects>false</excludeSubProjects>
               <excludes>
                 <!-- version control files -->
