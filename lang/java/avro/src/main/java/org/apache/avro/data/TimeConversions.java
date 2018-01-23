@@ -20,6 +20,7 @@ package org.apache.avro.data;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -50,6 +51,11 @@ public class TimeConversions {
     public Integer toInt(LocalDate date, Schema schema, LogicalType type) {
       return Days.daysBetween(EPOCH_DATE, date).getDays();
     }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
+    }
   }
 
   public static class TimeConversion extends Conversion<LocalTime> {
@@ -72,7 +78,12 @@ public class TimeConversions {
     public Integer toInt(LocalTime time, Schema schema, LogicalType type) {
       return time.millisOfDay().get();
     }
-  }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+    }
+}
 
   public static class TimeMicrosConversion extends Conversion<LocalTime> {
     @Override
@@ -88,6 +99,11 @@ public class TimeConversions {
     @Override
     public LocalTime fromLong(Long microsFromMidnight, Schema schema, LogicalType type) {
       return LocalTime.fromMillisOfDay(microsFromMidnight / 1000);
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
     }
   }
 
@@ -118,6 +134,11 @@ public class TimeConversions {
     public Long toLong(DateTime timestamp, Schema schema, LogicalType type) {
       return timestamp.getMillis();
     }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    }
   }
 
   public static class TimestampMicrosConversion extends Conversion<DateTime> {
@@ -135,7 +156,12 @@ public class TimeConversions {
     public DateTime fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
       return new DateTime(microsFromEpoch / 1000, DateTimeZone.UTC);
     }
-  }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+}
 
   public static class LossyTimestampMicrosConversion extends TimestampMicrosConversion {
     @Override

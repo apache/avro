@@ -18,6 +18,7 @@
 
 package org.apache.avro.data;
 
+import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.data.TimeConversions.DateConversion;
@@ -27,6 +28,7 @@ import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
 import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
 import org.apache.avro.data.TimeConversions.TimeConversion;
 import org.apache.avro.data.TimeConversions.TimestampConversion;
+import org.apache.avro.reflect.ReflectData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -34,6 +36,7 @@ import org.joda.time.LocalTime;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import java.util.Date;
 
 public class TestTimeConversions {
@@ -242,6 +245,50 @@ public class TestTimeConversions {
         dropMicros(May_28_2015_21_46_53_221_843_instant),
         (long) conversion.toLong(May_28_2015_21_46_53_221,
             TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
+  }
+
+  /*
+  model.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+  model.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+ */
+  @Test
+  public void testDynamicSchemaWithDateConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("org.joda.time.LocalDate", new TimeConversions.DateConversion());
+    Assert.assertEquals("Reflected schema should be logicalType date", DATE_SCHEMA, schema);
+  }
+
+  @Test
+  public void testDynamicSchemaWithTimeConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("org.joda.time.LocalTime", new TimeConversions.TimeConversion());
+    Assert.assertEquals("Reflected schema should be logicalType timeMillis", TIME_MILLIS_SCHEMA, schema);
+  }
+
+  @Test
+  public void testDynamicSchemaWithTimeMicrosConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("org.joda.time.LocalTime", new TimeConversions.TimeMicrosConversion());
+    Assert.assertEquals("Reflected schema should be logicalType timeMicros", TIME_MICROS_SCHEMA, schema);
+  }
+
+  @Test
+  public void testDynamicSchemaWithDateTimeConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("org.joda.time.DateTime", new TimeConversions.TimestampConversion());
+    Assert.assertEquals("Reflected schema should be logicalType timestampMillis", TIMESTAMP_MILLIS_SCHEMA, schema);
+  }
+
+  @Test
+  public void testDynamicSchemaWithDateTimeMicrosConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("org.joda.time.DateTime", new TimeConversions.TimestampMicrosConversion());
+    Assert.assertEquals("Reflected schema should be logicalType timestampMicros", TIMESTAMP_MICROS_SCHEMA, schema);
+  }
+
+  private Schema getReflectedSchemaByName(String className, Conversion<?> conversion) throws ClassNotFoundException {
+    // one argument: a fully qualified class name
+    Class<?> cls = Class.forName(className);
+
+    // get the reflected schema for the given class
+    ReflectData model = new ReflectData();
+    model.addLogicalTypeConversion(conversion);
+    return model.getSchema(cls);
   }
 
   private long dropMicros(long micros) {
