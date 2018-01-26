@@ -287,7 +287,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         |""".stripMargin()
 
         when:
-        def result = runAndFail("generateAvroJava")
+        def result = run("generateAvroJava")
 
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
