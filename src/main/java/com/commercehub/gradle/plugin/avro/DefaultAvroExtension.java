@@ -27,6 +27,7 @@ public class DefaultAvroExtension implements AvroExtension {
     private String templateDirectory;
     private boolean createSetters;
     private boolean enableDecimalLogicalType;
+    private boolean validateDefaults;
 
     @Override
     public String getOutputCharacterEncoding() {
@@ -92,5 +93,14 @@ public class DefaultAvroExtension implements AvroExtension {
 
     public void setEnableDecimalLogicalType(String enableDecimalLogicalType) {
         this.enableDecimalLogicalType = Boolean.parseBoolean(enableDecimalLogicalType);
+    }
+
+    @Override
+    public boolean isValidateDefaults() {
+        return validateDefaults;
+    }
+
+    public void setValidateDefaults(boolean validateDefaults) {
+        this.validateDefaults = validateDefaults;
     }
 }

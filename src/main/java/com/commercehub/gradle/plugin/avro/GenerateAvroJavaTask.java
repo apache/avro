@@ -55,6 +55,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private String templateDirectory;
     private boolean createSetters = DEFAULT_CREATE_SETTERS;
     private boolean enableDecimalLogicalType = DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
+    private boolean validateDefaults = DEFAULT_VALIDATE_DEFAULTS;
 
     private transient StringType parsedStringType;
     private transient FieldVisibility parsedFieldVisibility;
@@ -127,6 +128,15 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.enableDecimalLogicalType = Boolean.parseBoolean(enableDecimalLogicalType);
     }
 
+    @Input
+    public boolean isValidateDefaults() {
+        return validateDefaults;
+    }
+
+    public void setValidateDefaults(boolean validateDefaults) {
+        this.validateDefaults = validateDefaults;
+    }
+
     @TaskAction
     protected void process() {
         parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
@@ -138,6 +148,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
         getLogger().debug("Using createSetters {}", isCreateSetters());
         getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType());
+        getLogger().debug("Using validateDefaults {}", isValidateDefaults());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         processFiles();
@@ -203,6 +214,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         try {
             Schema.Parser parser = new Schema.Parser();
             parser.addTypes(parserTypes);
+            parser.setValidateDefaults(isValidateDefaults());
+
             compile(parser.parse(sourceFile), sourceFile);
             Map<String, Schema> typesDefinedInFile = asymmetricDifference(parser.getTypes(), parserTypes);
             processingState.processTypeDefinitions(fileState, typesDefinedInFile);
