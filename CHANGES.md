@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Support for validation of default values in schema (#42) 
 
 ## 0.13.0
 * Remove pre-cleaning behavior from `GenerateAvroJavaTask` (#41)

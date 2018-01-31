@@ -184,7 +184,8 @@ avro {
 Valid values: `false` (default), `true`; supports equivalent `String` values
 
 Set to `true` to force validation of default values in schema files. Each validation error will cause the build to fail.
-Due to backward compatibility requirements this option is disabled by default.
+In order to maintain backward compatibility this option is disabled by default, but in the next big release, this option will
+be removed and schema validation will always be enabled.
 
 Example:
 
