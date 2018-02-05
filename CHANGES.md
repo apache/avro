@@ -1,7 +1,9 @@
 # Change Log
 
 ## Unreleased
-* Support for validation of default values in schema (#42) 
+* Built using Gradle 4.5
+* Updated compatibility testing through Gradle 4.5
+* Support for validation of default values in schema (#42)
 
 ## 0.13.0
 * Remove pre-cleaning behavior from `GenerateAvroJavaTask` (#41)
