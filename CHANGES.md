@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.14.0
 * Built using Gradle 4.5
 * Updated compatibility testing through Gradle 4.5
 * Support for validation of default values in schema (#42)
