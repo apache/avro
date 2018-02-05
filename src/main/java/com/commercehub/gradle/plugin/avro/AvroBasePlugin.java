@@ -98,6 +98,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                         return avroExtension.isEnableDecimalLogicalType();
                     }
                 });
+                taskMapping.map(OPTION_ENABLE_VALIDATE_DEFAULTS, new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        return avroExtension.isValidateDefaults();
+                    }
+                });
             }
         });
     }
