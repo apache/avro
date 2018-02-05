@@ -154,11 +154,13 @@ codenarc {
 }
 
 tasks.create("testVersionCompatibility") {
-    description = "Tests cross-compatibility of the plugin with different versions of Avro and Gradle"
+    description = "Tests cross-compatibility of the plugin with different versions of Avro and Gradle."
+    group = "Verification"
 }
 
 tasks.create("testRecentVersionCompatibility") {
-    description = "Tests cross-compatibility of the plugin with recent versions of Avro and Gradle"
+    description = "Tests cross-compatibility of the plugin with recent versions of Avro and Gradle."
+    group = "Verification"
 }
 
 test {
