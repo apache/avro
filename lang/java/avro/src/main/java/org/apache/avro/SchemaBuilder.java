@@ -67,7 +67,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  *   .fields()
  *     .name("clientHash").type().fixed("MD5").size(16).noDefault()
  *     .name("clientProtocol").type().nullable().stringType().noDefault()
- *     .name("serverHash").type("MD5")
+ *     .name("serverHash").type("MD5").noDefault()
  *     .name("meta").type().nullable().map().values().bytesType().noDefault()
  *   .endRecord();
  * </pre>
