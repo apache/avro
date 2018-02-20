@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.0
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Main", "src\apache\main\Avro.Main.csproj", "{C17F6AF2-F200-4421-855B-13F4E97E9716}"
 EndProject
@@ -16,6 +16,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Perf.dotnetcore", "src\apache\perf.dotnetcore\Avro.Perf.dotnetcore.csproj", "{C94DEBC9-5D6B-4C7F-AE35-057BB111CDA1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Perf.netfx", "src\apache\perf.netfx\Avro.Perf.netfx.csproj", "{0D707008-7466-4407-8A80-C26DECAB18DB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.test.dotnetcore", "src\apache\test.dotnetcore\Avro.test.dotnetcore.csproj", "{35CC4865-174C-4398-B99B-626EE6DFEBEE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{0D707008-7466-4407-8A80-C26DECAB18DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D707008-7466-4407-8A80-C26DECAB18DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D707008-7466-4407-8A80-C26DECAB18DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35CC4865-174C-4398-B99B-626EE6DFEBEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35CC4865-174C-4398-B99B-626EE6DFEBEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35CC4865-174C-4398-B99B-626EE6DFEBEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35CC4865-174C-4398-B99B-626EE6DFEBEE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
