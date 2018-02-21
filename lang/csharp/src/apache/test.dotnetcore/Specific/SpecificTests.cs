@@ -38,7 +38,6 @@ namespace Avro.Test
         // If additional tests are added then each test will need its own CompilerResults.
         private static CompilerResults compres;
 
-        [Ignore("Assembly compilation on dotnet core needs to move to Roslyn")]
         [TestCase(@"{
   ""protocol"" : ""MyProtocol"",
   ""namespace"" : ""com.foo"",
