@@ -1,0 +1,16 @@
+/**
+* Test Protocol
+*/
+
+@namespace("Avro.Test.Generic.Autogen")
+
+protocol TestProtocol {
+
+    record InfoDto {
+        int Count;
+    }
+    
+	record HeaderDTO {
+        union {null, InfoDto} Info;
+	}
+}
