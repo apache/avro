@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,35 +30,35 @@ namespace Avro.Test
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""namespace"":""com"", ""aliases"":[""c"",""foo.y""],
                    ""fields"":
                     [{""name"":""f1"",""type"":""long"", ""extraprop"":""important"", ""id"":""1029"", ""aliases"":[""a"",""b"",""c""] },
-                     {""name"":""f2"",""type"": ""int""}]}", 
+                     {""name"":""f2"",""type"": ""int""}]}",
                    true)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1""],
                    ""fields"":[{""name"":""f1"",""type"":""long"", ""order"":""junk"" },
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     false)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1""], ""customprop"":""123456"",
                    ""fields"":[{""name"":""f1"",""type"":""long"", ""order"":""ascending"", ""fprop"":""faaa"" },
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     true)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1""],
                    ""fields"":[{""name"":""f1"",""type"":""long""},
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     true)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1"",""Alias2""],
                    ""fields"":[{""name"":""f1"",""type"":""long""},
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     true)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1"",9],
                    ""fields"":[{""name"":""f1"",""type"":""long""},
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     false)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[1, 2],
                     ""fields"":[{""name"":""f1"",""type"":""long"", ""default"": ""100""},
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     false)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"": ""wrong alias format"",
                     ""fields"":[{""name"":""value"",""type"":""long"", ""default"": ""100""},
-                    {""name"":""next"",""type"":[""LongList"",""null""]}]}", 
+                    {""name"":""next"",""type"":[""LongList"",""null""]}]}",
                     false)]
         public void TestAliases(string s, bool valid)   // also tests properties, default, order
         {
@@ -142,7 +142,7 @@ namespace Avro.Test
                                  {""name"":""f2"",""type"": ""int""}]}",
                   @"{""type"":""record"",""name"":""Rec"", 
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
-                                 {""name"":""f2"",""type"": ""int""}]}", 
+                                 {""name"":""f2"",""type"": ""int""}]}",
                   true)]
         [TestCase(2,@"{""type"":""record"",""name"":""Rec"", 
                      ""fields"":[{""name"":""f1"",""type"":""long"" },

@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Perf.dotnetcore", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Perf.netfx", "src\apache\perf.netfx\Avro.Perf.netfx.csproj", "{0D707008-7466-4407-8A80-C26DECAB18DB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.test.dotnetcore", "src\apache\test.dotnetcore\Avro.test.dotnetcore.csproj", "{35CC4865-174C-4398-B99B-626EE6DFEBEE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Test.dotnetcore", "src\apache\test.dotnetcore\Avro.Test.dotnetcore.csproj", "{35CC4865-174C-4398-B99B-626EE6DFEBEE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

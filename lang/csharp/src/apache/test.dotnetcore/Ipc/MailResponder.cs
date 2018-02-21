@@ -46,7 +46,7 @@ namespace Avro.Test.Ipc
                     string readAllLines;
                     using (
                         Stream stream =
-                            Assembly.GetExecutingAssembly().GetManifestResourceStream("Avro.test.Ipc.mail.avpr"))
+                            Assembly.GetExecutingAssembly().GetManifestResourceStream("Avro.Test.Ipc.mail.avpr"))
                     using (var reader = new StreamReader(stream))
                     {
                         readAllLines = reader.ReadToEnd();

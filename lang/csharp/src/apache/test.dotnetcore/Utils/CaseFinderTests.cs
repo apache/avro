@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,7 +32,7 @@ namespace Avro.Test.Utils
         [Test]
         public void TestBadDocLabel1()
         {
-            List<Object[]> result = new List<Object[]>();
+            List<object[]> result = new List<object[]>();
             Assert.Throws<ArgumentException>(
                 () => CaseFinder.Find(Mk("<<INPUT blah"), "", result)
                 );
@@ -40,7 +41,7 @@ namespace Avro.Test.Utils
         [Test]
         public void TestBadDocLabel2()
         {
-            List<Object[]> result = new List<Object[]>();
+            List<object[]> result = new List<object[]>();
             Assert.Throws<ArgumentException>(
                 () => CaseFinder.Find(Mk("<<INPUT blah"), "kill-er", result)
                 );
@@ -49,7 +50,7 @@ namespace Avro.Test.Utils
         [Test]
         public void TestBadSingleLineHeredoc()
         {
-            List<Object[]> result = new List<Object[]>();
+            List<object[]> result = new List<object[]>();
             Assert.Throws<IOException>(
                 () => CaseFinder.Find(Mk("<<INPUTblah"), "foo", result)
                 );
@@ -58,38 +59,39 @@ namespace Avro.Test.Utils
         [Test]
         public void TestUnterminatedHeredoc()
         {
-            List<Object[]> result = new List<Object[]>();
+            List<object[]> result = new List<object[]>();
             Assert.Throws<IOException>(
                 () => CaseFinder.Find(Mk("<<INPUT"), "foo", result)
                 );
         }
 
-        [Test, TestCaseSource("OutputTestCases")]
+        [Test, TestCaseSource(typeof(OutputTestCases))]
         public void TestOutput(string input, string label, List<object[]> expectedOutput)
         {
-            List<Object[]> result = new List<Object[]>();
+            List<object[]> result = new List<object[]>();
             CaseFinder.Find(Mk(input), label, result);
             Assert.True(Eq(result, expectedOutput), Pr(result));
         }
 
-        private List<Object[]> OutputTestCases()
+        class OutputTestCases : IEnumerable
         {
-            List<Object[]> result = new List<Object[]>();
-            result.Add(new Object[] { "", "foo", new List<object[]> { } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] {"a","b"} } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT b\n", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT b\n\n", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
-            result.Add(new Object[] { "<<INPUT a\r<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
-            result.Add(new Object[] { "// This is a test\n<<INPUT a\n\n\n<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT\nb\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT\nb\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT\nb\n\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b\n" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT\n\n  b  \n\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "\n  b  \n" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<O b\n<<INPUT c\n<<O d", "O", new List<object[]> { new object[] { "a", "b" }, new object[] { "c", "d" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<O b\n<<F z\n<<INPUT c\n<<O d", "O", new List<object[]> { new object[] { "a", "b" }, new object[] { "c", "d" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<O b\n<<F z\n<<INPUT c\n<<O d", "F", new List<object[]> { new object[] { "a", "z" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<O b\n<<F z\n<<INPUT\nc\nINPUT\n<<O d\n<<INPUT e", "INPUT", new List<object[]> { new object[] { "a", null }, new object[] { "c", null }, new object[] { "e", null } } });
-            return result;
+            public IEnumerator GetEnumerator()
+            {
+                yield return new object[] { "", "foo", new List<object[]> { } };
+                yield return new object[] { "<<INPUT a\n<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } };
+                yield return new object[] { "<<INPUT a\n<<OUTPUT b\n", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } };
+                yield return new object[] { "<<INPUT a\n<<OUTPUT b\n\n", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } };
+                yield return new object[] { "<<INPUT a\r<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } };
+                yield return new object[] { "// This is a test\n<<INPUT a\n\n\n<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } };
+                yield return new object[] { "<<INPUT a\n<<OUTPUT\nb\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } };
+                yield return new object[] { "<<INPUT a\n<<OUTPUT\nb\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } };
+                yield return new object[] { "<<INPUT a\n<<OUTPUT\nb\n\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b\n" } } };
+                yield return new object[] { "<<INPUT a\n<<OUTPUT\n\n  b  \n\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "\n  b  \n" } } };
+                yield return new object[] { "<<INPUT a\n<<O b\n<<INPUT c\n<<O d", "O", new List<object[]> { new object[] { "a", "b" }, new object[] { "c", "d" } } };
+                yield return new object[] { "<<INPUT a\n<<O b\n<<F z\n<<INPUT c\n<<O d", "O", new List<object[]> { new object[] { "a", "b" }, new object[] { "c", "d" } } };
+                yield return new object[] { "<<INPUT a\n<<O b\n<<F z\n<<INPUT c\n<<O d", "F", new List<object[]> { new object[] { "a", "z" } } };
+                yield return new object[] { "<<INPUT a\n<<O b\n<<F z\n<<INPUT\nc\nINPUT\n<<O d\n<<INPUT e", "INPUT", new List<object[]> { new object[] { "a", null }, new object[] { "c", null }, new object[] { "e", null } } };
+            }
         }
 
         private StreamReader Mk(string s)
