@@ -8,7 +8,7 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.5.180" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\main\Avro.Main.csproj" />
+    <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>

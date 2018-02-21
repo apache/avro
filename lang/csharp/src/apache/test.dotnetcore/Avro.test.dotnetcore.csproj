@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ipc\Avro.IPC.csproj" />
-    <ProjectReference Include="..\main\Avro.Main.csproj" />
+    <ProjectReference Include="..\ipc\Avro.ipc.csproj" />
+    <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
 
 </Project>

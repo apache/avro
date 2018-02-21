@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\main\Avro.Main.csproj" />
+    <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
 
 </Project>

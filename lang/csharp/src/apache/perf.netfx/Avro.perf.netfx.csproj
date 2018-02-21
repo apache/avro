@@ -88,7 +88,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\main\Avro.Main.csproj">
+    <ProjectReference Include="..\main\Avro.main.csproj">
       <Project>{c17f6af2-f200-4421-855b-13f4e97e9716}</Project>
       <Name>Avro.Main</Name>
     </ProjectReference>

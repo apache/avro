@@ -3,21 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Main", "src\apache\main\Avro.Main.csproj", "{C17F6AF2-F200-4421-855B-13F4E97E9716}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.main", "src\apache\main\Avro.main.csproj", "{C17F6AF2-F200-4421-855B-13F4E97E9716}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.CodeGen", "src\apache\codegen\Avro.CodeGen.csproj", "{D968A52A-E3E5-472F-A8EA-C15427521901}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.codegen", "src\apache\codegen\Avro.codegen.csproj", "{D968A52A-E3E5-472F-A8EA-C15427521901}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.IPC", "src\apache\ipc\Avro.IPC.csproj", "{D4074E5D-38B1-4A67-877B-E8E6BF45CE09}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.ipc", "src\apache\ipc\Avro.ipc.csproj", "{D4074E5D-38B1-4A67-877B-E8E6BF45CE09}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.MsBuild", "src\apache\msbuild\Avro.MsBuild.csproj", "{B6134269-6E02-43FF-BC0E-7FB43FBAA641}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.msbuild", "src\apache\msbuild\Avro.msbuild.csproj", "{B6134269-6E02-43FF-BC0E-7FB43FBAA641}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Test", "src\apache\test\Avro.Test.csproj", "{6C461AC0-8C0F-4538-9256-454F752DD821}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.test", "src\apache\test\Avro.test.csproj", "{6C461AC0-8C0F-4538-9256-454F752DD821}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Perf.dotnetcore", "src\apache\perf.dotnetcore\Avro.Perf.dotnetcore.csproj", "{C94DEBC9-5D6B-4C7F-AE35-057BB111CDA1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.perf.dotnetcore", "src\apache\perf.dotnetcore\Avro.perf.dotnetcore.csproj", "{C94DEBC9-5D6B-4C7F-AE35-057BB111CDA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Perf.netfx", "src\apache\perf.netfx\Avro.Perf.netfx.csproj", "{0D707008-7466-4407-8A80-C26DECAB18DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.perf.netfx", "src\apache\perf.netfx\Avro.perf.netfx.csproj", "{0D707008-7466-4407-8A80-C26DECAB18DB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Test.dotnetcore", "src\apache\test.dotnetcore\Avro.Test.dotnetcore.csproj", "{35CC4865-174C-4398-B99B-626EE6DFEBEE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.test.dotnetcore", "src\apache\test.dotnetcore\Avro.test.dotnetcore.csproj", "{35CC4865-174C-4398-B99B-626EE6DFEBEE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
