@@ -32,6 +32,8 @@ Trunk (not yet released)
     AVRO-1932: Java: Allow setting the SchemaStore on generated classes. 
     (Niels Basjes)
 
+    AVRO-2132: Allow dots in IDL property names. (kdrakon via cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS

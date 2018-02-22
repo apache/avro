@@ -54,7 +54,13 @@
       "name": "t",
       "type": {"type": "int", "logicalType": "time-millis"},
       "default": 0
-    } ],
+    } , {
+      "name": "l",
+      "type": {"type": "long", "foo.bar": "bar.foo"}
+    } , {
+      "name": "nested_properties",
+      "type": [ "null" , {"type":"string", "foo.foo.bar": 42, "foo.foo.foo": "3foo"} ]
+    }],
     "my-property" : {
       "key" : 3
     }
