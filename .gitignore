@@ -18,4 +18,3 @@ test-output
 /lang/java/compiler/nbproject/
 /*.DS_Store
 *.DS_Store
-lang/csharp/.vscode/
