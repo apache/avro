@@ -1324,7 +1324,8 @@ void VariableDeclarator(Schema type, List<Field> fields):
     for (String key : props.keySet())
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
-    Field field = new Field(name, type, getDoc(), defaultValue, order);
+    boolean validate = !SchemaResolver.isUnresolvedSchema(type);
+    Field field = new Field(name,type, getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases

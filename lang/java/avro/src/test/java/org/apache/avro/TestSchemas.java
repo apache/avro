@@ -97,10 +97,10 @@ public class TestSchemas {
         .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_SCHEMA, null, 0)));
     A_DINT_B_DFIXED_4_BYTES_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", FIXED_4_BYTES, null, 0)));
+        new Field("b", FIXED_4_BYTES, null, null)));
     A_DINT_B_DFIXED_8_BYTES_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", FIXED_8_BYTES, null, 0)));
+        new Field("b", FIXED_8_BYTES, null, null)));
     A_DINT_B_DINT_STRING_UNION_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, 0),
         new Field("b", INT_STRING_UNION_SCHEMA, null, 0)));
@@ -109,10 +109,10 @@ public class TestSchemas {
         new Field("b", INT_UNION_SCHEMA, null, 0)));
     A_DINT_B_DENUM_1_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", ENUM1_AB_SCHEMA, null, 0)));
+        new Field("b", ENUM1_AB_SCHEMA, null, null)));
     A_DINT_B_DENUM_2_RECORD1.setFields(list(
         new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", ENUM2_AB_SCHEMA, null, 0)));
+        new Field("b", ENUM2_AB_SCHEMA, null, null)));
   }
 
   // Recursive records

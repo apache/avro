@@ -399,11 +399,17 @@ public abstract class Schema extends JsonProperties {
     @Deprecated
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue, Order order) {
+      this(name, schema, doc, defaultValue, true, order);
+    }
+    public Field(String name, Schema schema, String doc,
+                 JsonNode defaultValue, boolean validateDefault, Order order) {
       super(FIELD_RESERVED);
       this.name = validateName(name);
       this.schema = schema;
       this.doc = doc;
-      this.defaultValue = validateDefault(name, schema, defaultValue);
+      this.defaultValue = validateDefault
+        ? validateDefault(name, schema, defaultValue)
+        : defaultValue;
       this.order = order;
     }
     /**
@@ -1159,7 +1165,7 @@ public abstract class Schema extends JsonProperties {
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS
     = new ThreadLocal<Boolean>() {
     @Override protected Boolean initialValue() {
-      return false;
+      return true;
     }
   };
 

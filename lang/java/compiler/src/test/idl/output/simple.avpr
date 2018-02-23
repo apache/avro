@@ -56,10 +56,12 @@
       "default": 0
     } , {
       "name": "l",
-      "type": {"type": "long", "foo.bar": "bar.foo"}
+      "type": {"type": "long", "foo.bar": "bar.foo"},
+      "default": 0
     } , {
-      "name": "nested_properties",
-      "type": [ "null" , {"type":"string", "foo.foo.bar": 42, "foo.foo.foo": "3foo"} ]
+      "name": "prop",
+      "type": [ "null" , {"type":"string", "foo.foo.bar": 42, "foo.foo.foo": "3foo"} ],
+      "default": null
     }],
     "my-property" : {
       "key" : 3
