@@ -40,6 +40,9 @@ Trunk (not yet released)
     AVRO-2122: Cannot validate schemas with recursive definitions
     (Bart via Nandor Kollar)
 
+    AVRO-1954: Java: Schema.Field.defaultVal() generates: Unknown datum type
+    (Nandor Kollar via tomwhite)
+
 Avro 1.8.2 (10 April 2017)
 
   INCOMPATIBLE CHANGES
