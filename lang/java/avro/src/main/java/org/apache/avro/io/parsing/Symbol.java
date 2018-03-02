@@ -111,8 +111,8 @@ public abstract class Symbol {
   /**
    *  A convenience method to construct a union.
    */
-  static Symbol alt(Symbol[] symbols, String[] labels) {
-    return new Alternative(symbols, labels);
+  static Symbol alt(Symbol[] symbols, String[] labels, Set<String>[] aliases) {
+    return new Alternative(symbols, labels, aliases);
   }
 
   /**
@@ -426,10 +426,13 @@ public abstract class Symbol {
   public static class Alternative extends Symbol {
     public final Symbol[] symbols;
     public final String[] labels;
-    private Alternative(Symbol[] symbols, String[] labels) {
+    public final Set<String>[] aliases;
+
+    private Alternative(Symbol[] symbols, String[] labels, Set<String>[] aliases) {
       super(Kind.ALTERNATIVE);
       this.symbols = symbols;
       this.labels = labels;
+      this.aliases = aliases;
     }
 
     public Symbol getSymbol(int index) {
@@ -450,6 +453,9 @@ public abstract class Symbol {
           if (label.equals(labels[i])) {
             return i;
           }
+          if (aliases[i].contains(label)) {
+            return i;
+          }
         }
       }
       return -1;
@@ -462,7 +468,7 @@ public abstract class Symbol {
       for (int i = 0; i < ss.length; i++) {
         ss[i] = symbols[i].flatten(map, map2);
       }
-      return new Alternative(ss, labels);
+      return new Alternative(ss, labels, aliases);
     }
   }
 
