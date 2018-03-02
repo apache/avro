@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -195,6 +196,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     final int size = alts.size();
     Symbol[] symbols = new Symbol[size];
     String[] labels = new String[size];
+    Set<String>[] aliases = new Set[size];
 
     /**
      * We construct a symbol without filling the arrays. Please see
@@ -204,9 +206,10 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     for (Schema w : alts) {
       symbols[i] = generate(w, reader, seen);
       labels[i] = w.getFullName();
+      aliases[i] = generateAliases(w);
       i++;
     }
-    return Symbol.seq(Symbol.alt(symbols, labels),
+    return Symbol.seq(Symbol.alt(symbols, labels, aliases),
                       Symbol.writerUnionAction());
   }
 

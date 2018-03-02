@@ -18,11 +18,25 @@
 package org.apache.avro.io;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaCompatibility;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericDatumReader;
 
+import org.apache.avro.generic.GenericRecordBuilder;
 import org.junit.Test;
 import org.junit.Assert;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import static java.util.Collections.singletonList;
+import static org.apache.avro.Schema.create;
+import static org.apache.avro.Schema.createRecord;
+import static org.apache.avro.Schema.createUnion;
+import static org.junit.Assert.assertEquals;
 
 public class TestJsonDecoder {
 
@@ -76,4 +90,60 @@ public class TestJsonDecoder {
     Assert.assertEquals(200, in.readLong());
     in.skipArray();
   }
+
+
+  /**
+   * AVRO-2152
+   * JsonDecoder fails when reading record with aliases inside union
+   */
+  @Test public void testJsonDecoderWithAliasesInUnion() throws Exception {
+    Schema writerItem = createRecord("WItem", "writer item", "writer.ns", false,
+      singletonList(new Schema.Field("value",
+        create(Schema.Type.STRING),
+        "value", (Object) null)));
+    Schema writerSchema = createRecord("WWrapper", "writer", "writer.ns", false,
+      singletonList(new Schema.Field("item",
+        createUnion(create(Schema.Type.NULL), writerItem),
+        "value", (Object) null)));
+    System.out.println(writerSchema.toString(true));
+
+    Schema readerItem = createRecord("RItem", "reader item", "reader.ns", false,
+      singletonList(new Schema.Field("value", create(Schema.Type.STRING),
+        "value", (Object) null)));
+    Schema readerSchema = createRecord("RWrapper", "reader", "reader.ns", false,
+      singletonList(new Schema.Field("item",
+        createUnion(create(Schema.Type.NULL), readerItem),
+        "value", (Object) null)));
+    readerSchema.addAlias("WWrapper", "writer.ns");
+    readerItem.addAlias("WItem", "writer.ns");
+
+    System.out.println(readerSchema.toString(true));
+
+    assertEquals(SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE,
+      SchemaCompatibility.checkReaderWriterCompatibility(readerSchema, writerSchema).getType());
+
+    // Create an instance for testing
+    GenericData.Record instance = new GenericRecordBuilder(writerSchema)
+      .set("item",
+        new GenericRecordBuilder(writerItem)
+          .set("value", "12345")
+          .build()
+      ).build();
+
+    // Serialize using JSON Encoder
+    final GenericDatumWriter<Object> writer = new GenericDatumWriter<>(instance.getSchema());
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    final JsonEncoder encoder = EncoderFactory.get().jsonEncoder(instance.getSchema(), out);
+    writer.write(instance, encoder);
+    encoder.flush();
+
+    // Deserialize using JSON Decoder
+    final GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(writerSchema, readerSchema);
+    final JsonDecoder decoder = DecoderFactory.get().jsonDecoder(readerSchema,
+      new String(out.toByteArray(), StandardCharsets.UTF_8));
+
+    GenericRecord deserialized = reader.read(null, decoder);
+    assertEquals(deserialized.toString(), instance.toString());
+  }
+
 }

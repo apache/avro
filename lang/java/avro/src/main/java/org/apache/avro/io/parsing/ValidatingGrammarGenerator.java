@@ -17,9 +17,11 @@
  */
 package org.apache.avro.io.parsing;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -101,21 +103,43 @@ public class ValidatingGrammarGenerator {
       List<Schema> subs = sc.getTypes();
       Symbol[] symbols = new Symbol[subs.size()];
       String[] labels = new String[subs.size()];
+      Set<String>[] aliases = new Set[subs.size()];
 
       int i = 0;
       for (Schema b : sc.getTypes()) {
         symbols[i] = generate(b, seen);
         labels[i] = b.getFullName();
+        aliases[i] = generateAliases(b);
         i++;
       }
-      return Symbol.seq(Symbol.alt(symbols, labels), Symbol.UNION);
+      return Symbol.seq(Symbol.alt(symbols, labels, aliases), Symbol.UNION);
 
     default:
       throw new RuntimeException("Unexpected schema type");
     }
   }
 
-  /** A wrapper around Schema that does "==" equality. */
+  /**
+   * Named types may have alises which must be considered when resolving
+   * unions.
+   * <p>
+   * "Record, enums and fixed are named types." [spec.xml#Names]
+   *
+   * @param schema
+   * @return
+   */
+  protected Set<String> generateAliases(Schema schema) {
+    Schema.Type type = schema.getType();
+    if (Schema.Type.RECORD.equals(type) || Schema.Type.ENUM.equals(type) || Schema.Type.FIXED.equals(type)) {
+      return schema.getAliases();
+    } else {
+      return Collections.emptySet();
+    }
+  }
+
+  /**
+   * A wrapper around Schema that does "==" equality.
+   */
   static class LitS {
     public final Schema actual;
     public LitS(Schema actual) { this.actual = actual; }
