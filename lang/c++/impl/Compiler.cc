@@ -97,7 +97,9 @@ static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
     if (it != st.end()) {
         return NodePtr(new NodeSymbolic(asSingleAttribute(n), it->second));
     }
-    throw Exception(boost::format("Unknown type: %1%") % n.fullname());
+    std::string errorMsg = "While parsing your avro schema, we encountered a problem making\n" 
+                            "a node in the json tree. The node's name is " + n.fullname();
+    throw Exception(errorMsg);
 }
 
 const json::Object::const_iterator findField(const Entity& e,
