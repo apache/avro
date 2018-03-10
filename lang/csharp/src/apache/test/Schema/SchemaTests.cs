@@ -195,6 +195,25 @@ namespace Avro.Test
             testToString(sc);
         }
 
+        [TestCase("{\"type\":\"record\",\"name\":\"LongList\"," +
+            "\"fields\":[{\"name\":\"f1\",\"type\":\"long\"}," +
+            "{\"name\":\"f2\",\"type\": \"int\"}]}",
+            null)]
+        [TestCase("{\"type\":\"record\",\"name\":\"LongList\"," +
+            "\"fields\":[{\"name\":\"f1\",\"type\":\"long\", \"default\": \"100\"}," +
+            "{\"name\":\"f2\",\"type\": \"int\"}], \"doc\": \"\"}",
+            "")]
+        [TestCase("{\"type\":\"record\",\"name\":\"LongList\"," +
+            "\"fields\":[{\"name\":\"f1\",\"type\":\"long\", \"default\": \"100\"}," +
+            "{\"name\":\"f2\",\"type\": \"int\"}], \"doc\": \"this is a test\"}",
+            "this is a test")]
+        public void TestRecordDoc(string s, string expectedDoc)
+        {
+            var rs = Schema.Parse(s) as RecordSchema;
+            Assert.IsNotNull(rs);
+            Assert.AreEqual(expectedDoc, rs.Documentation);
+        }
+
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}",
             new string[] { "A", "B" })]
         public void TestEnum(string s, string[] symbols)
@@ -212,6 +231,16 @@ namespace Avro.Test
 
             testEquality(s, sc);
             testToString(sc);
+        }
+
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}", null)]
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"], \"doc\": \"\"}", "")]
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"], \"doc\": \"this is a test\"}", "this is a test")]
+        public void TestEnumDoc(string s, string expectedDoc)
+        {
+            var es = Schema.Parse(s) as EnumSchema;
+            Assert.IsNotNull(es);
+            Assert.AreEqual(expectedDoc, es.Documentation);
         }
 
         [TestCase("{\"type\": \"array\", \"items\": \"long\"}", "long")]
@@ -263,6 +292,16 @@ namespace Avro.Test
             Assert.AreEqual(size, fs.Size);
             testEquality(s, sc);
             testToString(sc);
+        }
+
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1}", null)]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1, \"doc\": \"\"}", "")]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1, \"doc\": \"this is a test\"}", "this is a test")]
+        public void TestFixedDoc(string s, string expectedDoc)
+        {
+            var fs = Schema.Parse(s) as FixedSchema;
+            Assert.IsNotNull(fs);
+            Assert.AreEqual(expectedDoc, fs.Documentation);
         }
 
         [TestCase("a", "o.a.h", Result = "o.a.h.a")]

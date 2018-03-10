@@ -44,7 +44,8 @@ namespace Avro
             SchemaName name = NamedSchema.GetName(jtok, encspace);
             var aliases = NamedSchema.GetAliases(jtok, name.Space, name.EncSpace);
 
-            return new FixedSchema(name, aliases, JsonHelper.GetRequiredInteger(jtok, "size"), props, names);
+            return new FixedSchema(name, aliases, JsonHelper.GetRequiredInteger(jtok, "size"), props, names,
+                JsonHelper.GetOptionalString(jtok, "doc"));
         }
 
         /// <summary>
@@ -53,9 +54,12 @@ namespace Avro
         /// <param name="name">name of the fixed schema</param>
         /// <param name="aliases">list of aliases for the name</param>
         /// <param name="size">fixed size</param>
+        /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already parsed in</param>
-        private FixedSchema(SchemaName name, IList<SchemaName> aliases, int size, PropertyMap props, SchemaNames names)
-                            : base(Type.Fixed, name, aliases, props, names)
+        /// <param name="doc">documentation for this named schema</param>
+        private FixedSchema(SchemaName name, IList<SchemaName> aliases, int size, PropertyMap props, SchemaNames names,
+            string doc)
+                            : base(Type.Fixed, name, aliases, props, names, doc)
         {
             if (null == name.Name) throw new SchemaParseException("name cannot be null for fixed schema.");
             if (size <= 0) throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
