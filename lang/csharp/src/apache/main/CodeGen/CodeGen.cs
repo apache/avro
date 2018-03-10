@@ -260,6 +260,11 @@ namespace Avro
             ctd.Attributes = MemberAttributes.Public;
             ctd.BaseTypes.Add("SpecificFixed");
 
+            if (fixedSchema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(fixedSchema.Documentation));
+            }
+
             // create static schema field
             createSchemaField(schema, ctd, true);
 
@@ -305,6 +310,11 @@ namespace Avro
             CodeTypeDeclaration ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(enumschema.Name));
             ctd.IsEnum = true;
             ctd.Attributes = MemberAttributes.Public;
+
+            if (enumschema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(enumschema.Documentation));
+            }
 
             foreach (string symbol in enumschema.Symbols)
             {
@@ -525,6 +535,11 @@ namespace Avro
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsClass = true;
             ctd.IsPartial = true;
+
+            if (recordSchema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(recordSchema.Documentation));
+            }
 
             createSchemaField(schema, ctd, isError);
 
