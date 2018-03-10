@@ -98,6 +98,43 @@ namespace Avro.Test
             }
         }
 
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", null, null, "com.base")]
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", "com.base", "SchemaTest", "SchemaTest")]
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", "miss", "SchemaTest", "com.base")]
+        public void TestCodeGenNamespaceMapping(string str, string avroNamespace, string csharpNamespace,
+            string expectedNamespace)
+        {
+            Schema schema = Schema.Parse(str);
+
+            var codegen = new CodeGen();
+            codegen.AddSchema(schema);
+
+            if (avroNamespace != null && csharpNamespace != null)
+            {
+                codegen.NamespaceMapping[avroNamespace] = csharpNamespace;
+            }
+
+            var results = GenerateAssembly(codegen);
+            foreach(var type in results.CompiledAssembly.GetTypes())
+            {
+                Assert.AreEqual(expectedNamespace, type.Namespace);
+            }
+        }
 
         private static CompilerResults GenerateSchema(Schema schema)
         {
