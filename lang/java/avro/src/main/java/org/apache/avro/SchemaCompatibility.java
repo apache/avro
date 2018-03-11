@@ -418,10 +418,15 @@ public class SchemaCompatibility {
           // Reader field does not correspond to any field in the writer record schema, so the
           // reader field must have a default value.
           if (readerField.defaultValue() == null) {
-            // reader field has no default value
-            result = result.mergedWith(SchemaCompatibilityResult.incompatible(
+            // reader field has no default value. Check for the enum default value
+            if (readerField.schema().getType() == Type.ENUM && readerField.schema().getEnumDefault() != null) {
+              result = result.mergedWith(getCompatibility("type", readerField.schema(),
+                writerField.schema(), location));
+            } else {
+              result = result.mergedWith(SchemaCompatibilityResult.incompatible(
                 SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, reader, writer,
                 readerField.name(), asList(location)));
+            }
           }
         } else {
           result = result.mergedWith(getCompatibility("type", readerField.schema(),
@@ -443,9 +448,14 @@ public class SchemaCompatibility {
       final Set<String> symbols = new TreeSet<>(writer.getEnumSymbols());
       symbols.removeAll(reader.getEnumSymbols());
       if (!symbols.isEmpty()) {
-        result = SchemaCompatibilityResult.incompatible(
+        if(reader.getEnumDefault() != null && reader.getEnumSymbols().contains(reader.getEnumDefault())) {
+          symbols.clear();
+          result = SchemaCompatibilityResult.compatible();
+        } else {
+          result = SchemaCompatibilityResult.incompatible(
             SchemaIncompatibilityType.MISSING_ENUM_SYMBOLS, reader, writer,
             symbols.toString(), asList(location));
+        }
       }
       // POP "symbols" literal
       location.removeFirst();
