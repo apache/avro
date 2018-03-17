@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -50,7 +50,9 @@ namespace Avro.Test
 
         private static List<object[]> ProvideFingerprintTestCases()
         {
-            using (StreamReader reader = new StreamReader("../../../../../share/test/data/schema-tests.txt"))
+            var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.CodeBase).LocalPath);
+            var testsPath = Path.Combine(dir, "../../../../../share/test/data/schema-tests.txt");
+            using (StreamReader reader = new StreamReader(testsPath))
             {
                 return CaseFinder.Find(reader, "fingerprint", new List<object[]>());
             }
@@ -58,7 +60,9 @@ namespace Avro.Test
 
         private static List<object[]> ProvideCanonicalTestCases()
         {
-            using (StreamReader reader = new StreamReader("../../../../../share/test/data/schema-tests.txt"))
+            var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.CodeBase).LocalPath);
+            var testsPath = Path.Combine(dir, "../../../../../share/test/data/schema-tests.txt");
+            using (StreamReader reader = new StreamReader(testsPath))
             {
                 return CaseFinder.Find(reader, "canonical", new List<object[]>());
             }

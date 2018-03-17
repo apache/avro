@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,7 +48,7 @@ namespace Avro.Test
 			{ ""name"" : ""string"", ""type"" : { ""type"": ""fixed"", ""size"": 16, ""name"": ""static"" } }
 		]
 }
-", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"})]
+", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"}, TestName = "TestCodeGen0")]
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""SchemaObject"",
@@ -67,7 +67,7 @@ namespace Avro.Test
 		}
 	]
 }
-", new object[] { "schematest.SchemaObject", typeof(IList<object>) })]
+", new object[] { "schematest.SchemaObject", typeof(IList<object>) }, TestName = "TestCodeGen1")]
         public static void TestCodeGen(string str, object[] result)
         {
             Schema schema = Schema.Parse(str);
@@ -112,7 +112,7 @@ namespace Avro.Test
 
             var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
-            comparam.ReferencedAssemblies.Add("Avro.dll");
+            comparam.ReferencedAssemblies.Add(Path.Combine(TestContext.CurrentContext.TestDirectory, "Avro.dll"));
             comparam.GenerateInMemory = true;
             var ccp = new CSharpCodeProvider();
             var units = new[] { compileUnit };

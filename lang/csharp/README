@@ -3,9 +3,9 @@
 a. Windows
 
 Prerequisites
-    Microsoft Visual C# Express 2010
+    Microsoft Visual Studio Community 2017
 
-To build open Avro.sln solution in VC# Express 2010 and build from there.
+To build, open Avro.sln solution in Microsoft Visual Studio Community 2017 and build from there.
 
 b. Linux
 
@@ -17,6 +17,7 @@ follow the procedure described at http://badgerports.org/
 
 To build issue the command:
 $ cd lang/csharp
+$ mono nuget.exe restore
 
 then
 
@@ -30,10 +31,13 @@ Note: In Ubuntu 12.04 (Precise Pangolin), please omit TARGETFRAMEWORKVERSION arg
 
 2. Unit tests
 
-This is a common procedure for both Windows and Linux.
+a. Windows
 
-To run unit-tests, please install NUnit 2.5 or above. From within the NUnit
-GUI, open the project Avro.nunit and run the tests.
+Open Avro.sln in Microsoft Visual Studio Community 2017. Run tests from the Test Explorer pane.
+
+b. Linux
+
+$ mono nunit3-console.exe ./build/test/Release/Avro.test.dll
 
 3. Notes
 
