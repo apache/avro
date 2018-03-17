@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,15 +40,15 @@ namespace Avro.Test.File
         /// <param name="schemaStr"></param>
         /// <param name="recs"></param>
         /// <param name="codecType"></param>
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, Codec.Type.Deflate)]
-        [TestCase(specificSchema, new object[] { new object[] { "Jane", 23 } }, Codec.Type.Deflate)]
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 }, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 } }, Codec.Type.Deflate)]
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, Codec.Type.Deflate, TestName = "TestSpecificData0")]
+        [TestCase(specificSchema, new object[] { new object[] { "Jane", 23 } }, Codec.Type.Deflate, TestName = "TestSpecificData1")]
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 }, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 } }, Codec.Type.Deflate, TestName = "TestSpecificData2")]
         [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
                                                  new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
-                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }}, Codec.Type.Deflate)]
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, Codec.Type.Null)]
-        [TestCase(specificSchema, new object[] { new object[] { "Jane", 23 } }, Codec.Type.Null)]
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 }, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 } }, Codec.Type.Null)]
+                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }}, Codec.Type.Deflate, TestName = "TestSpecificData3")]
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, Codec.Type.Null, TestName = "TestSpecificData4")]
+        [TestCase(specificSchema, new object[] { new object[] { "Jane", 23 } }, Codec.Type.Null, TestName = "TestSpecificData5")]
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 }, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 } }, Codec.Type.Null, TestName = "TestSpecificData6")]
         [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
                                                  new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
                                                  new object[] {"Jamie", 53}, new object[] { "Fanessa", 101 }, new object[] { "Kan", 18 },
@@ -59,7 +59,7 @@ namespace Avro.Test.File
                                                  new object[] {"Ernie", 43}, new object[] { "Joel", 99 }, new object[] { "Dan", 78 },
                                                  new object[] {"Dave", 103}, new object[] { "Hillary", 79 }, new object[] { "Grant", 88 },
                                                  new object[] {"JJ", 14}, new object[] { "Bill", 90 }, new object[] { "Larry", 4 },
-                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }}, Codec.Type.Null)]
+                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }}, Codec.Type.Null, TestName = "TestSpecificData7")]
         public void TestSpecificData(string schemaStr, object[] recs, Codec.Type codecType)
         {
             // create and write out

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ namespace Avro.Test.Ipc
         private SocketTransceiver transceiver;
         private GenericRequestor proxy;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Init()
         {
             mailResponder = new MailResponder();
@@ -45,7 +45,7 @@ namespace Avro.Test.Ipc
             proxy = new GenericRequestor(transceiver, MailResponder.Protocol);
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void Cleanup()
         {
             server.Stop();

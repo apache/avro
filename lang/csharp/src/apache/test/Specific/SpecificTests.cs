@@ -157,8 +157,7 @@ namespace Avro.Test
     myArray3.Add(o1);
     myArray3.Add(o2);
 
-"}
-)]
+"}, TestName = "TestSpecific")]
         public void TestSpecific(string str, object[] result)
         {
             if(compres == null)
@@ -191,7 +190,7 @@ namespace Avro.Test
             // compile
             var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
-            comparam.ReferencedAssemblies.Add("Avro.dll");
+            comparam.ReferencedAssemblies.Add(Path.Combine(TestContext.CurrentContext.TestDirectory, "Avro.dll"));
             comparam.GenerateInMemory = true;
             var ccp = new Microsoft.CSharp.CSharpCodeProvider();
             var units = new CodeCompileUnit[] { compileUnit };
