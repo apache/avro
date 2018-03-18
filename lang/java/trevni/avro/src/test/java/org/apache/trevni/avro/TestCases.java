@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +18,12 @@
 package org.apache.trevni.avro;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.EOFException;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.apache.trevni.ValueType;
-import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnFileMetaData;
 
 import org.apache.avro.Schema;
@@ -56,7 +53,7 @@ public class TestCases {
 
     // write full data
     AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
+      new AvroColumnWriter<>(schema, new ColumnFileMetaData());
     for (Object datum : data)
       writer.write(datum);
     writer.writeTo(FILE);
@@ -74,7 +71,7 @@ public class TestCases {
 
   private void checkRead(Schema s, List<Object> data) throws Exception {
     AvroColumnReader<Object> reader =
-      new AvroColumnReader<Object>(new AvroColumnReader.Params(FILE)
+      new AvroColumnReader<>(new AvroColumnReader.Params(FILE)
                                    .setSchema(s));
     try {
       for (Object datum : data)
@@ -86,7 +83,7 @@ public class TestCases {
 
   private List<Object> fromJson(Schema schema, File file) throws Exception {
     InputStream in = new FileInputStream(file);
-    List<Object> data = new ArrayList<Object>();
+    List<Object> data = new ArrayList<>();
     try {
       DatumReader reader = new GenericDatumReader(schema);
       Decoder decoder = DecoderFactory.get().jsonDecoder(schema, in);

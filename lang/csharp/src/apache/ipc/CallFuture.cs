@@ -21,7 +21,7 @@ using Avro.IO;
 
 namespace Avro.ipc
 {
-    public class CallFuture<T> : ICallback<T>, IDisposable 
+    public class CallFuture<T> : ICallback<T>, IDisposable
     {
         private readonly ICallback<T> chainedCallback;
         private CountdownLatch latch = new CountdownLatch(1);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,7 +31,7 @@ import org.apache.hadoop.io.NullWritable;
 public class AvroTrevniKeyRecordReader<T> extends AvroTrevniRecordReaderBase<AvroKey<T>, NullWritable, T> {
 
   /** A reusable object to hold records of the Avro container file. */
-  private final AvroKey<T> mCurrentKey = new AvroKey<T>();
+  private final AvroKey<T> mCurrentKey = new AvroKey<>();
 
   /** {@inheritDoc} */
   @Override

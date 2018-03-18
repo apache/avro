@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -57,7 +57,7 @@ public class AvroTrevniKeyValueInputFormat<K, V>  extends FileInputFormat<AvroKe
       InputSplit split, TaskAttemptContext context) throws IOException,
       InterruptedException {
 
-    return new AvroTrevniKeyValueRecordReader<K, V>();
+    return new AvroTrevniKeyValueRecordReader<>();
   }
 
 

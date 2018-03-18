@@ -78,7 +78,7 @@ namespace Avro.ipc
         public void Stop()
         {
             cancellationRequested = true;
-            
+
             while (serverThread.IsAlive)
             {
                 Thread.Sleep(10);

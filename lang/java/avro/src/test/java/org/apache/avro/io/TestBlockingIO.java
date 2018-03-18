@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -75,7 +75,7 @@ public class TestBlockingIO {
     }
 
     public void scan() throws IOException {
-      Stack<S> countStack = new Stack<S>();
+      Stack<S> countStack = new Stack<>();
       long count = 0;
       while (parser.nextToken() != null) {
         switch (parser.getCurrentToken()) {
@@ -127,7 +127,7 @@ public class TestBlockingIO {
     }
 
     public void skip(int skipLevel) throws IOException {
-      Stack<S> countStack = new Stack<S>();
+      Stack<S> countStack = new Stack<>();
       long count = 0;
       while (parser.nextToken() != null) {
         switch (parser.getCurrentToken()) {

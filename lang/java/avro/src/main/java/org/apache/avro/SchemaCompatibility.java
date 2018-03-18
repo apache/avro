@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -61,7 +61,7 @@ public class SchemaCompatibility {
       final Schema writer
   ) {
     final SchemaCompatibilityResult compatibility =
-        new ReaderWriterCompatiblityChecker()
+        new ReaderWriterCompatibilityChecker()
             .getCompatibility(reader, writer);
 
     final String message;
@@ -122,7 +122,7 @@ public class SchemaCompatibility {
    */
   public static Field lookupWriterField(final Schema writerSchema, final Field readerField) {
     assert (writerSchema.getType() == Type.RECORD);
-    final List<Field> writerFields = new ArrayList<Field>();
+    final List<Field> writerFields = new ArrayList<>();
     final Field direct = writerSchema.getField(readerField.name());
     if (direct != null) {
       writerFields.add(direct);
@@ -194,10 +194,10 @@ public class SchemaCompatibility {
    *
    * <p> Provides memoization to handle recursive schemas. </p>
    */
-  private static final class ReaderWriterCompatiblityChecker {
+  private static final class ReaderWriterCompatibilityChecker {
     private static final String ROOT_REFERENCE_TOKEN = "";
     private final Map<ReaderWriter, SchemaCompatibilityResult> mMemoizeMap =
-        new HashMap<ReaderWriter, SchemaCompatibilityResult>();
+        new HashMap<>();
 
     /**
      * Reports the compatibility of a reader/writer schema pair.
@@ -212,7 +212,7 @@ public class SchemaCompatibility {
         final Schema reader,
         final Schema writer
     ) {
-      Deque<String> location = new ArrayDeque<String>();
+      Deque<String> location = new ArrayDeque<>();
       return getCompatibility(ROOT_REFERENCE_TOKEN, reader, writer, location);
     }
 
@@ -440,7 +440,7 @@ public class SchemaCompatibility {
         final Schema reader, final Schema writer, final Deque<String> location) {
       SchemaCompatibilityResult result = SchemaCompatibilityResult.compatible();
       location.addFirst("symbols");
-      final Set<String> symbols = new TreeSet<String>(writer.getEnumSymbols());
+      final Set<String> symbols = new TreeSet<>(writer.getEnumSymbols());
       symbols.removeAll(reader.getEnumSymbols());
       if (!symbols.isEmpty()) {
         result = SchemaCompatibilityResult.incompatible(
@@ -523,7 +523,7 @@ public class SchemaCompatibility {
      * @return A {@code SchemaCompatibilityResult} that combines the state of the current and supplied instances.
      */
     public SchemaCompatibilityResult mergedWith(SchemaCompatibilityResult toMerge) {
-      List<Incompatibility> mergedIncompatibilities = new ArrayList<Incompatibility>(mIncompatibilities);
+      List<Incompatibility> mergedIncompatibilities = new ArrayList<>(mIncompatibilities);
       mergedIncompatibilities.addAll(toMerge.getIncompatibilities());
       SchemaCompatibilityType compatibilityType = mCompatibilityType == SchemaCompatibilityType.COMPATIBLE
           ?  toMerge.mCompatibilityType
@@ -899,7 +899,7 @@ public class SchemaCompatibility {
   }
 
   private static List<String> asList(Deque<String> deque) {
-    List<String> list = new ArrayList<String>(deque);
+    List<String> list = new ArrayList<>(deque);
     Collections.reverse(list);
     return Collections.unmodifiableList(list);
   }

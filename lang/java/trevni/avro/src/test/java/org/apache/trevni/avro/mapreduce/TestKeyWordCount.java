@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -86,7 +86,7 @@ public class TestKeyWordCount {
 
     @Override
     protected void setup(Context context) {
-      result = new AvroKey<GenericData.Record>();
+      result = new AvroKey<>();
       result.datum(new Record(Pair.getPairSchema(STRING,LONG)));
     }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -97,7 +97,7 @@ class TetheredProcess  {
         break;
       case NONE:
       default:
-        throw new RuntimeException("No transport protocol was specified in the job configuraiton");
+        throw new RuntimeException("No transport protocol was specified in the job configuration");
       }
 
       outputServer.start();
@@ -153,7 +153,7 @@ class TetheredProcess  {
   private Process startSubprocess(JobConf job)
     throws IOException, InterruptedException {
     // get the executable command
-    List<String> command = new ArrayList<String>();
+    List<String> command = new ArrayList<>();
 
     String executable="";
     if (job.getBoolean(TetherJob.TETHER_EXEC_CACHED,false)){
@@ -205,7 +205,7 @@ class TetheredProcess  {
     stderr.getParentFile().mkdirs();
 
     // add output server's port to env
-    Map<String, String> env = new HashMap<String,String>();
+    Map<String, String> env = new HashMap<>();
     env.put("AVRO_TETHER_OUTPUT_PORT",
             Integer.toString(outputServer.getPort()));
 

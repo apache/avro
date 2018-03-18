@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -84,7 +84,7 @@ public class TestSequenceFileReader {
 
   @Test
   public void testReadSequenceFile() throws Exception {
-    checkFile(new SequenceFileReader<Long,CharSequence>(FILE));
+    checkFile(new SequenceFileReader<>(FILE));
   }
 
   public void checkFile(FileReader<Pair<Long,CharSequence>> reader) throws Exception {
@@ -119,9 +119,9 @@ public class TestSequenceFileReader {
 
     JobClient.runJob(job);
 
-    checkFile(new DataFileReader<Pair<Long,CharSequence>>
-              (new File(output.toString()+"/part-00000.avro"),
-               new SpecificDatumReader<Pair<Long,CharSequence>>()));
+    checkFile(new DataFileReader<>
+              (new File(output.toString() + "/part-00000.avro"),
+               new SpecificDatumReader<>()));
   }
 
   private static class NonAvroMapper
@@ -131,8 +131,8 @@ public class TestSequenceFileReader {
     public void map(LongWritable key, Text value,
                   OutputCollector<AvroKey<Long>,AvroValue<Utf8>> out,
                   Reporter reporter) throws IOException {
-      out.collect(new AvroKey<Long>(key.get()),
-                  new AvroValue<Utf8>(new Utf8(value.toString())));
+      out.collect(new AvroKey<>(key.get()),
+                  new AvroValue<>(new Utf8(value.toString())));
     }
   }
 
@@ -158,9 +158,9 @@ public class TestSequenceFileReader {
 
     JobClient.runJob(job);
 
-    checkFile(new DataFileReader<Pair<Long,CharSequence>>
-              (new File(output.toString()+"/part-00000.avro"),
-               new SpecificDatumReader<Pair<Long,CharSequence>>()));
+    checkFile(new DataFileReader<>
+              (new File(output.toString() + "/part-00000.avro"),
+               new SpecificDatumReader<>()));
   }
 
   private static class NonAvroOnlyMapper
@@ -170,7 +170,7 @@ public class TestSequenceFileReader {
     public void map(LongWritable key, Text value,
                     OutputCollector<AvroWrapper<Pair<Long,Utf8>>,NullWritable> out,
                     Reporter reporter) throws IOException {
-      out.collect(new AvroWrapper<Pair<Long,Utf8>>(new Pair<Long,Utf8>(key.get(), new Utf8(value.toString()))),
+      out.collect(new AvroWrapper<>(new Pair<>(key.get(), new Utf8(value.toString()))),
                   NullWritable.get());
     }
   }
@@ -197,9 +197,9 @@ public class TestSequenceFileReader {
 
     JobClient.runJob(job);
 
-    checkFile(new DataFileReader<Pair<Long,CharSequence>>
-              (new File(output.toString()+"/part-00000.avro"),
-               new SpecificDatumReader<Pair<Long,CharSequence>>()));
+    checkFile(new DataFileReader<>
+              (new File(output.toString() + "/part-00000.avro"),
+               new SpecificDatumReader<>()));
   }
 
   private static class NonAvroReducer
@@ -243,8 +243,8 @@ public class TestSequenceFileReader {
 
     JobClient.runJob(job);
 
-    checkFile(new SequenceFileReader<Long,CharSequence>
-              (new File(output.toString()+"/part-00000")));
+    checkFile(new SequenceFileReader<>
+              (new File(output.toString() + "/part-00000")));
   }
 
 }

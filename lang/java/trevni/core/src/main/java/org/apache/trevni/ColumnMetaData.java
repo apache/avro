@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,7 +38,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   private boolean isArray;
 
   private transient List<ColumnMetaData> children =
-    new ArrayList<ColumnMetaData>(0);
+    new ArrayList<>(0);
   private transient int number = -1;
 
   private ColumnMetaData() {}                     // non-public ctor

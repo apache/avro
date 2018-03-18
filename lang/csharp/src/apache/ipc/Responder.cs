@@ -60,7 +60,7 @@ namespace Avro.ipc
                 protocols[localHash.Schema] = local;
             }
         }
-        
+
         public Protocol Local
         {
             get { return local; }

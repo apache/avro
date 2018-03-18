@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,17 +20,13 @@ package org.apache.avro.mapred.tether;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URL;
 import java.nio.ByteBuffer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.avro.ipc.HttpServer;
-import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.SaslSocketServer;
-import org.apache.avro.ipc.SaslSocketTransceiver;
-import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.ipc.Server;
 

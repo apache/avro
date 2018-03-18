@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,8 +24,8 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-/** Collection of static methods for generating the cannonical form of
- * schemas (see {@link #toParsingForm}) -- and fingerprints of cannonical
+/** Collection of static methods for generating the canonical form of
+ * schemas (see {@link #toParsingForm}) -- and fingerprints of canonical
  * forms ({@link #fingerprint}).
  */
 public class SchemaNormalization {
@@ -36,7 +36,7 @@ public class SchemaNormalization {
     * spec. */
   public static String toParsingForm(Schema s) {
     try {
-      Map<String,String> env = new HashMap<String,String>();
+      Map<String,String> env = new HashMap<>();
       return build(env, s, new StringBuilder()).toString();
     } catch (IOException e) {
       // Shouldn't happen, b/c StringBuilder can't throw IOException
@@ -54,7 +54,7 @@ public class SchemaNormalization {
     * MessageDigest#getInstance(String)}, which will throw
     * <code>NoSuchAlgorithmException</code> if it doesn't recognize
     * the name.
-    * <p> Recommended Avro practice dictiates that
+    * <p> Recommended Avro practice dictates that
     * <code>"CRC-64-AVRO"</code> is used for 64-bit fingerprints,
     * <code>"MD5"</code> is used for 128-bit fingerprints, and
     * <code>"SHA-256"</code> is used for 256-bit fingerprints. */

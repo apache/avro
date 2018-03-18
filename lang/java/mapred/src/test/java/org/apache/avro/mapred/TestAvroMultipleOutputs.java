@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,12 +33,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.Reporter;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.util.Locale;
 
-import org.apache.hadoop.io.Text;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
@@ -60,7 +55,7 @@ public class TestAvroMultipleOutputs {
       StringTokenizer tokens = new StringTokenizer(text.toString());
       while (tokens.hasMoreTokens()) {
         String tok = tokens.nextToken();
-        collector.collect(new Pair<Utf8,Long>(new Utf8(tok),1L));
+        collector.collect(new Pair<>(new Utf8(tok), 1L));
         amos.getCollector("myavro2",reporter)
           .collect(new Pair<Utf8,Long>(new Utf8(tok),1L).toString());
       }
@@ -88,12 +83,12 @@ public class TestAvroMultipleOutputs {
       long sum = 0;
       for (long count : counts)
         sum += count;
-      Pair<Utf8,Long> outputvalue= new Pair<Utf8,Long>(word,sum);
+      Pair<Utf8,Long> outputvalue= new Pair<>(word, sum);
       amos.getCollector("myavro",reporter).collect(outputvalue);
       amos.collect("myavro1",reporter,outputvalue.toString());
       amos.collect("myavro",reporter,new Pair<Utf8,Long>(new Utf8(""), 0L).getSchema(),outputvalue,"testavrofile");
       amos.collect("myavro",reporter,Schema.create(Schema.Type.STRING),outputvalue.toString(),"testavrofile1");
-      collector.collect(new Pair<Utf8,Long>(word, sum));
+      collector.collect(new Pair<>(word, sum));
     }
     public void close() throws IOException
     {
@@ -169,9 +164,9 @@ public class TestAvroMultipleOutputs {
     FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
 
 
-    AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<Pair<Integer, Long>>(job, fileSplit);
+    AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<>(job, fileSplit);
 
-    AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<Pair<Integer, Long>>(null);
+    AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<>(null);
     NullWritable ignore = NullWritable.get();
 
     long sumOfCounts = 0;
@@ -217,9 +212,9 @@ public class TestAvroMultipleOutputs {
     FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
 
 
-    AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<Pair<Integer, Long>>(job, fileSplit);
+    AvroRecordReader<Pair<Integer, Long>> recordReader = new AvroRecordReader<>(job, fileSplit);
 
-    AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<Pair<Integer, Long>>(null);
+    AvroWrapper<Pair<Integer, Long>> inputPair = new AvroWrapper<>(null);
     NullWritable ignore = NullWritable.get();
 
     long sumOfCounts = 0;
@@ -243,7 +238,7 @@ public class TestAvroMultipleOutputs {
 
 
   @SuppressWarnings("deprecation")
-  // Test for a differnt schema output
+  // Test for a different schema output
   public void testProjection1() throws Exception {
     JobConf job = new JobConf();
     Schema readerSchema = Schema.create(Schema.Type.STRING);
@@ -253,9 +248,9 @@ public class TestAvroMultipleOutputs {
     Path inputPath = new Path(dir + "/out" + "/myavro1-r-00000.avro");
     FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
     FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
-    AvroWrapper<Utf8> inputPair = new AvroWrapper<Utf8>(null);
+    AvroWrapper<Utf8> inputPair = new AvroWrapper<>(null);
     NullWritable ignore = NullWritable.get();
-    AvroRecordReader<Utf8> recordReader = new AvroRecordReader<Utf8>(job, fileSplit);
+    AvroRecordReader<Utf8> recordReader = new AvroRecordReader<>(job, fileSplit);
     long sumOfCounts = 0;
     long numOfCounts = 0;
     while(recordReader.next(inputPair, ignore)) {
@@ -271,7 +266,7 @@ public class TestAvroMultipleOutputs {
   }
 
   @SuppressWarnings("deprecation")
-  // Test for a differnt schema output
+  // Test for a different schema output
   public void testProjection_newmethods_1() throws Exception {
     JobConf job = new JobConf();
     Schema readerSchema = Schema.create(Schema.Type.STRING);
@@ -281,9 +276,9 @@ public class TestAvroMultipleOutputs {
     Path inputPath = new Path(dir + "/out" + "/testavrofile1-r-00000.avro");
     FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
     FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
-    AvroWrapper<Utf8> inputPair = new AvroWrapper<Utf8>(null);
+    AvroWrapper<Utf8> inputPair = new AvroWrapper<>(null);
     NullWritable ignore = NullWritable.get();
-    AvroRecordReader<Utf8> recordReader = new AvroRecordReader<Utf8>(job, fileSplit);
+    AvroRecordReader<Utf8> recordReader = new AvroRecordReader<>(job, fileSplit);
     long sumOfCounts = 0;
     long numOfCounts = 0;
     while(recordReader.next(inputPair, ignore)) {
@@ -333,8 +328,8 @@ public class TestAvroMultipleOutputs {
     Path inputPath = new Path(dir + "/out" + "/myavro2-m-00000.avro");
     FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
     FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
-    AvroRecordReader<Utf8> recordReader_new = new AvroRecordReader<Utf8>(job, fileSplit);
-    AvroWrapper<Utf8> inputPair_new = new AvroWrapper<Utf8>(null);
+    AvroRecordReader<Utf8> recordReader_new = new AvroRecordReader<>(job, fileSplit);
+    AvroWrapper<Utf8> inputPair_new = new AvroWrapper<>(null);
     NullWritable ignore = NullWritable.get();
     long testl=0;
      while(recordReader_new.next(inputPair_new, ignore)) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,13 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.test.http.*;
-import org.apache.avro.test.nullable.Nullable;
 import org.apache.avro.test.nullable.RecordWithNullables;
 import org.junit.Test;
 
 import java.util.ArrayList;
 
-import static org.apache.avro.test.nullable.Nullable.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -59,7 +58,7 @@ public class TestSpecificBuilderTree {
       requestBuilder
         .getHttpRequestBuilder()
           .getURIBuilder()
-            .setParameters(new ArrayList<QueryParameter>());
+            .setParameters(new ArrayList<>());
     }
 
     requestBuilder
@@ -71,10 +70,15 @@ public class TestSpecificBuilderTree {
     return requestBuilder;
   }
 
-  @Test(expected = org.apache.avro.AvroRuntimeException.class)
+  @Test(expected = AvroMissingFieldException.class)
   public void failOnIncompleteTree() {
-    Request.Builder requestBuilder = createPartialBuilder();
-    Request request = requestBuilder.build();
+    try {
+      createPartialBuilder().build();
+    } catch (AvroMissingFieldException amfe) {
+      assertEquals("Field networkAddress type:STRING pos:1 not set and has no default value", amfe.getMessage());
+      assertEquals("Path in schema: --> connection --> networkAddress", amfe.toString());
+      throw amfe;
+    }
     fail("Should NEVER get here");
   }
 

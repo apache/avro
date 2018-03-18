@@ -179,7 +179,7 @@ public class SaslSocketTransceiver extends Transceiver {
 
   @Override public synchronized List<ByteBuffer> readBuffers()
     throws IOException {
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       ByteBuffer buffer = readFrameAndUnwrap();
       if (buffer.remaining() == 0)
@@ -225,7 +225,7 @@ public class SaslSocketTransceiver extends Transceiver {
   @Override public synchronized void writeBuffers(List<ByteBuffer> buffers)
     throws IOException {
     if (buffers == null) return;                  // no data to write
-    List<ByteBuffer> writes = new ArrayList<ByteBuffer>(buffers.size()*2+1);
+    List<ByteBuffer> writes = new ArrayList<>(buffers.size() * 2 + 1);
     int currentLength = 0;
     ByteBuffer currentHeader = writeHeader;
     for (ByteBuffer buffer : buffers) {           // gather writes

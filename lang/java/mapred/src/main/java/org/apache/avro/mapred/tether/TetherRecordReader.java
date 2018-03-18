@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,7 @@ class TetherRecordReader
     throws IOException {
     this.in = new FsInput(split.getPath(), job);
     this.reader =
-      new DataFileReader<Object>(in, new GenericDatumReader<Object>());
+      new DataFileReader<>(in, new GenericDatumReader<>());
 
     reader.sync(split.getStart());                    // sync to start
     this.start = in.tell();

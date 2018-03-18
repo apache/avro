@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -72,7 +72,7 @@ public class TestIdl {
     assertTrue(TEST_INPUT_DIR.exists());
     assertTrue(TEST_OUTPUT_DIR.exists());
 
-    tests = new ArrayList<GenTest>();
+    tests = new ArrayList<>();
     for (File inF : TEST_INPUT_DIR.listFiles()) {
       if (!inF.getName().endsWith(".avdl")) continue;
       if (inF.getName().startsWith(".")) continue;
@@ -117,7 +117,7 @@ public class TestIdl {
 
 
   /**
-   * An invididual comparison test
+   * An individual comparison test
    */
   private static class GenTest {
     private final File in, expectedOut;

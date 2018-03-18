@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,7 +58,7 @@ public class ColumnFileWriter {
   }
 
   private void checkColumns(ColumnMetaData[] columnMeta) {
-    Set<String> seen = new HashSet<String>();
+    Set<String> seen = new HashSet<>();
     for (int i = 0; i < columnMeta.length; i++) {
       ColumnMetaData c = columnMeta[i];
       String name = c.getName();

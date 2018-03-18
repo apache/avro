@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -74,7 +74,7 @@ public class TestAvroInputFormat {
     conf.setBoolean(AvroInputFormat.IGNORE_FILES_WITHOUT_EXTENSION_KEY, false);
     statuses = inputFormat.listStatus(conf);
     Assert.assertEquals(2, statuses.length);
-    Set<String> names = new HashSet<String>();
+    Set<String> names = new HashSet<>();
     names.add(statuses[0].getPath().getName());
     names.add(statuses[1].getPath().getName());
     Assert.assertTrue(names.contains("somefile.avro"));

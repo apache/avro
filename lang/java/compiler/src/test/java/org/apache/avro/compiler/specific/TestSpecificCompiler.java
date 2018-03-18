@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,6 +33,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.AvroTestUtil;
@@ -46,13 +47,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 @RunWith(JUnit4.class)
 public class TestSpecificCompiler {
+  private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
+
   private final String schemaSrcPath = "src/test/resources/simple_record.avsc";
   private final String velocityTemplateDir =
       "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
@@ -88,16 +96,38 @@ public class TestSpecificCompiler {
             compiler.getStandardFileManager(null, null, null);
 
     File dstDir = AvroTestUtil.tempFile(TestSpecificCompiler.class, "realCompiler");
-    List<File> javaFiles = new ArrayList<File>();
+    List<File> javaFiles = new ArrayList<>();
     for (SpecificCompiler.OutputFile o : outputs) {
       javaFiles.add(o.writeToDestination(null, dstDir));
     }
 
+    final List<Diagnostic<?>> warnings = new ArrayList<>();
+    DiagnosticListener<JavaFileObject> diagnosticListener = new DiagnosticListener<JavaFileObject>() {
+      @Override
+      public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
+        switch (diagnostic.getKind()) {
+        case ERROR:
+          // Do not add these to warnings because they will fail the compile, anyway.
+          LOG.error("{}", diagnostic);
+          break;
+        case WARNING:
+        case MANDATORY_WARNING:
+          LOG.warn("{}", diagnostic);
+          warnings.add(diagnostic);
+          break;
+        case NOTE:
+        case OTHER:
+          LOG.debug("{}", diagnostic);
+          break;
+        }
+      }
+    };
     JavaCompiler.CompilationTask cTask = compiler.getTask(null, fileManager,
-            null, null, null, fileManager.getJavaFileObjects(
-                    javaFiles.toArray(new File[javaFiles.size()])));
+            diagnosticListener, Collections.singletonList("-Xlint:all"), null,
+            fileManager.getJavaFileObjects(javaFiles.toArray(new File[javaFiles.size()])));
     boolean compilesWithoutError = cTask.call();
     assertTrue(compilesWithoutError);
+    assertEquals("Warnings produced when compiling generated code with -Xlint:all", 0, warnings.size());
   }
 
   private static Schema createSampleRecordSchema(int numStringFields, int numDoubleFields) {
@@ -295,7 +325,7 @@ public class TestSpecificCompiler {
     is.read(fileInDefaultEncoding);
     is.close(); //close input stream otherwise delete might fail
     if (!this.outputFile.delete()) {
-      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasnt changed.
+      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasn't changed.
     }
     // Generate file in another encoding (make sure it has different number of bytes per character)
     String differentEncoding = Charset.defaultCharset().equals(Charset.forName("UTF-16")) ? "UTF-32" : "UTF-16";
@@ -473,6 +503,14 @@ public class TestSpecificCompiler {
         new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(
         new SpecificCompiler(logicalTypesWithMultipleFields).compile());
+  }
+
+  @Test
+  public void testUnionAndFixedFields() throws Exception {
+    Schema unionTypesWithMultipleFields = new Schema.Parser().parse(
+        new File("src/test/resources/union_and_fixed_fields.avsc"));
+    assertCompilesWithJavaCompiler(
+        new SpecificCompiler(unionTypesWithMultipleFields).compile());
   }
 
   @Test

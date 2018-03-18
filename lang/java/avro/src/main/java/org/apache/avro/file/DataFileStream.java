@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -51,8 +51,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
    */
   public static final class Header {
     Schema schema;
-    Map<String,byte[]> meta = new HashMap<String,byte[]>();
-    private transient List<String> metaKeyList = new ArrayList<String>();
+    Map<String,byte[]> meta = new HashMap<>();
+    private transient List<String> metaKeyList = new ArrayList<>();
     byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
     private Header() {}
   }
@@ -85,7 +85,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   }
 
   /**
-   * create an unitialized DataFileStream
+   * create an uninitialized DataFileStream
    */
   protected DataFileStream(DatumReader<D> reader) throws IOException {
     this.reader = reader;

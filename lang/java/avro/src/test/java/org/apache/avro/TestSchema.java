@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -54,7 +54,7 @@ public class TestSchema {
   @Test
   public void testDuplicateRecordFieldName() {
     final Schema schema = Schema.createRecord("RecordName", null, null, false);
-    final List<Field> fields = new ArrayList<Field>();
+    final List<Field> fields = new ArrayList<>();
     fields.add(new Field("field_name", Schema.create(Type.NULL), null, null));
     fields.add(new Field("field_name", Schema.create(Type.INT), null, null));
     try {
@@ -67,7 +67,7 @@ public class TestSchema {
 
   @Test
   public void testCreateUnionVarargs() {
-    List<Schema> types = new ArrayList<Schema>();
+    List<Schema> types = new ArrayList<>();
     types.add(Schema.create(Type.NULL));
     types.add(Schema.create(Type.LONG));
     Schema expected = Schema.createUnion(types);
@@ -83,9 +83,14 @@ public class TestSchema {
     assertNotNull(schemaString);
   }
 
+  @Test(expected = SchemaParseException.class)
+  public void testParseEmptySchema() {
+    Schema schema = new Schema.Parser().parse("");
+  }
+
   @Test
   public void testSchemaWithFields() {
-    List<Field> fields = new ArrayList<Field>();
+    List<Field> fields = new ArrayList<>();
     fields.add(new Field("field_name1", Schema.create(Type.NULL), null, null));
     fields.add(new Field("field_name2", Schema.create(Type.INT), null, null));
     Schema schema = Schema.createRecord("foobar", null, null, false, fields);

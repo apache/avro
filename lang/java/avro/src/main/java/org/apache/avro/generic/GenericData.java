@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
@@ -99,10 +100,10 @@ public class GenericData {
   public ClassLoader getClassLoader() { return classLoader; }
 
   private Map<String, Conversion<?>> conversions =
-      new HashMap<String, Conversion<?>>();
+      new HashMap<>();
 
   private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass =
-      new IdentityHashMap<Class<?>, Map<String, Conversion<?>>>();
+      new IdentityHashMap<>();
 
   /**
    * Registers the given conversion to be used when reading and writing with
@@ -117,7 +118,7 @@ public class GenericData {
       conversionsByClass.get(type).put(
           conversion.getLogicalTypeName(), conversion);
     } else {
-      Map<String, Conversion<?>> conversions = new LinkedHashMap<String, Conversion<?>>();
+      Map<String, Conversion<?>> conversions = new LinkedHashMap<>();
       conversions.put(conversion.getLogicalTypeName(), conversion);
       conversionsByClass.put(type, conversions);
     }
@@ -484,7 +485,7 @@ public class GenericData {
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
   public String toString(Object datum) {
     StringBuilder buffer = new StringBuilder();
-    toString(datum, buffer, new IdentityHashMap<Object, Object>(128) );
+    toString(datum, buffer, new IdentityHashMap<>(128) );
     return buffer.toString();
   }
 
@@ -995,8 +996,8 @@ public class GenericData {
   public Object getDefaultValue(Field field) {
     JsonNode json = field.defaultValue();
     if (json == null)
-      throw new AvroRuntimeException("Field " + field
-                                     + " not set and has no default value");
+      throw new AvroMissingFieldException("Field " + field
+                                          + " not set and has no default value", field);
     if (json.isNull()
         && (field.schema().getType() == Type.NULL
             || (field.schema().getType() == Type.UNION
@@ -1060,7 +1061,7 @@ public class GenericData {
     switch (schema.getType()) {
       case ARRAY:
         List<Object> arrayValue = (List) value;
-        List<Object> arrayCopy = new GenericData.Array<Object>(
+        List<Object> arrayCopy = new GenericData.Array<>(
             arrayValue.size(), schema);
         for (Object obj : arrayValue) {
           arrayCopy.add(deepCopy(schema.getElementType(), obj));
@@ -1091,7 +1092,7 @@ public class GenericData {
       case MAP:
         Map<CharSequence, Object> mapValue = (Map) value;
         Map<CharSequence, Object> mapCopy =
-          new HashMap<CharSequence, Object>(mapValue.size());
+          new HashMap<>(mapValue.size());
         for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
           mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
               deepCopy(schema.getValueType(), entry.getValue()));

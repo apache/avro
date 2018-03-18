@@ -20,7 +20,7 @@ using System;
 
 namespace Avro.IO
 {
-    public interface ICallback<in T> 
+    public interface ICallback<in T>
     {
         /**
          * Receives a callback result.

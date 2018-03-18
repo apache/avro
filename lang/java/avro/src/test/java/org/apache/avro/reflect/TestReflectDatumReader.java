@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ public class TestReflectDatumReader {
 
   private static <T> byte[] serializeWithReflectDatumWriter(T toSerialize, Class<T> toSerializeClass)
       throws IOException {
-    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<T>(toSerializeClass);
+    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<>(toSerializeClass);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
     datumWriter.write(toSerialize, encoder);
@@ -52,7 +52,7 @@ public class TestReflectDatumReader {
     byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithList, PojoWithList.class);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
-    ReflectDatumReader<PojoWithList> reflectDatumReader = new ReflectDatumReader<PojoWithList>(
+    ReflectDatumReader<PojoWithList> reflectDatumReader = new ReflectDatumReader<>(
         PojoWithList.class);
 
     PojoWithList deserialized = new PojoWithList();
@@ -71,7 +71,7 @@ public class TestReflectDatumReader {
     byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithArray, PojoWithArray.class);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
-    ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<PojoWithArray>(
+    ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<>(
         PojoWithArray.class);
 
     PojoWithArray deserialized = new PojoWithArray();

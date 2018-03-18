@@ -169,15 +169,15 @@ namespace Avro
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public override bool Equals(Object obj) 
+        public override bool Equals(Object obj)
         {
           if (obj == this) return true;
           if (!(obj is Message)) return false;
 
           Message that = obj as Message;
-          return this.Name.Equals(that.Name) && 
+          return this.Name.Equals(that.Name) &&
                  this.Request.Equals(that.Request) &&
-                 areEqual(this.Response, that.Response) && 
+                 areEqual(this.Response, that.Response) &&
                  areEqual(this.Error, that.Error);
         }
 
@@ -185,7 +185,7 @@ namespace Avro
         /// Returns the hash code of this Message object
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode() 
+        public override int GetHashCode()
         {
             return Name.GetHashCode() +
                    Request.GetHashCode() +
@@ -194,7 +194,7 @@ namespace Avro
         }
 
         /// <summary>
-        /// Tests equality of two objects taking null values into account 
+        /// Tests equality of two objects taking null values into account
         /// </summary>
         /// <param name="o1"></param>
         /// <param name="o2"></param>
