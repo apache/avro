@@ -17,6 +17,7 @@
  */
 
 #include "Compiler.hh"
+#include "GenericDatum.hh"
 #include "ValidSchema.hh"
 
 #include <boost/test/included/unit_test_framework.hpp>
@@ -182,9 +183,39 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"fixed\",\"namespace\":\"org.apache.hadoop.avro\","
           "\"name\":\"MyFixed\",\"size\":1}",
     "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
-    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}"
+    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
+
+    // Logical types
+    R"({"type": "bytes", "logicalType": "decimal",
+        "precision": 12, "scale": 6})",
+    R"({"type": "fixed", "name": "test", "size": 16,
+        "logicalType": "decimal", "precision": 38, "scale": 9})",
+    R"({"type": "int", "logicalType": "date"})",
+    R"({"type": "int", "logicalType": "time-millis"})",
+    R"({"type": "long", "logicalType": "time-micros"})",
+    R"({"type": "long", "logicalType": "timestamp-millis"})",
+    R"({"type": "long", "logicalType": "timestamp-micros"})",
+    R"({"type": "fixed", "name": "test", "size": 12,
+        "logicalType": "duration"})"
 };
 
+const char* malformedLogicalTypes[] = {
+    // Wrong base type.
+    R"({"type": "long", "logicalType": "decimal", "precision": 10})",
+    R"({"type": "string", "logicalType": "date"})",
+    R"({"type": "string", "logicalType": "time-millis"})",
+    R"({"type": "string", "logicalType": "time-micros"})",
+    R"({"type": "string", "logicalType": "timestamp-millis"})",
+    R"({"type": "string", "logicalType": "timestamp-micros"})",
+    R"({"type": "string", "logicalType": "duration"})",
+    // Missing the required field 'precision'.
+    R"({"type": "bytes", "logicalType": "decimal"})",
+    // The claimed precision is not supported by the size of the fixed type.
+    R"({"type": "fixed", "size": 4, "name": "a", "precision": 20})",
+    // Scale is larger than precision.
+    R"({"type": "bytes", "logicalType": "decimal",
+        "precision": 5, "scale": 10})"
+};
 
 
 static void testBasic(const char* schema)
@@ -214,8 +245,152 @@ static void testRoundTrip(const char* schema)
     std::ostringstream os;
     compiledSchema.toJson(os);
     std::string result = os.str();
+
+    std::string cleanedSchema(schema);
+    // Remove whitespace for comparison.
+    cleanedSchema.erase(std::remove_if(cleanedSchema.begin(),
+                                       cleanedSchema.end(),
+                                       ::isspace),
+                        cleanedSchema.end());
+
     result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end()); // Remove whitespace
-    BOOST_CHECK(result == std::string(schema));
+    BOOST_CHECK(result == cleanedSchema);
+}
+
+static void testLogicalTypes()
+{
+    const char* bytesDecimalType = R"(
+    {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 10,
+        "scale": 2
+    })";
+    const char* fixedDecimalType = R"(
+    {
+        "type": "fixed",
+        "size": 16,
+        "name": "fixedDecimalType",
+        "logicalType": "decimal",
+        "precision": 12,
+        "scale": 6
+    })";
+    const char* dateType = R"(
+    {
+        "type": "int", "logicalType": "date"
+    })";
+    const char* timeMillisType = R"(
+    {
+        "type": "int", "logicalType": "time-millis"
+    })";
+    const char* timeMicrosType = R"(
+    {
+        "type": "long", "logicalType": "time-micros"
+    })";
+    const char* timestampMillisType = R"(
+    {
+        "type": "long", "logicalType": "timestamp-millis"
+    })";
+    const char* timestampMicrosType = R"(
+    {
+        "type": "long", "logicalType": "timestamp-micros"
+    })";
+    const char* durationType = R"(
+    {
+        "type": "fixed",
+        "size": 12,
+        "name": "durationType",
+        "logicalType": "duration"
+    })";
+
+    {
+        BOOST_TEST_CHECKPOINT(bytesDecimalType);
+        ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
+        BOOST_CHECK(schema1.root()->type() == AVRO_BYTES);
+        LogicalType logicalType = schema1.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::DECIMAL);
+        BOOST_CHECK(logicalType.precision() == 10);
+        BOOST_CHECK(logicalType.scale() == 2);
+
+        BOOST_TEST_CHECKPOINT(fixedDecimalType);
+        ValidSchema schema2 = compileJsonSchemaFromString(fixedDecimalType);
+        BOOST_CHECK(schema2.root()->type() == AVRO_FIXED);
+        logicalType = schema2.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::DECIMAL);
+        BOOST_CHECK(logicalType.precision() == 12);
+        BOOST_CHECK(logicalType.scale() == 6);
+
+        GenericDatum bytesDatum(schema1);
+        BOOST_CHECK(bytesDatum.logicalType().type() == LogicalType::DECIMAL);
+        GenericDatum fixedDatum(schema2);
+        BOOST_CHECK(fixedDatum.logicalType().type() == LogicalType::DECIMAL);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(dateType);
+        ValidSchema schema = compileJsonSchemaFromString(dateType);
+        BOOST_CHECK(schema.root()->type() == AVRO_INT);
+        BOOST_CHECK(schema.root()->logicalType().type() == LogicalType::DATE);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::DATE);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(timeMillisType);
+        ValidSchema schema = compileJsonSchemaFromString(timeMillisType);
+        BOOST_CHECK(schema.root()->type() == AVRO_INT);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::TIME_MILLIS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::TIME_MILLIS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(timeMicrosType);
+        ValidSchema schema = compileJsonSchemaFromString(timeMicrosType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::TIME_MICROS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::TIME_MICROS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(timestampMillisType);
+        ValidSchema schema = compileJsonSchemaFromString(timestampMillisType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::TIMESTAMP_MILLIS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() ==
+                    LogicalType::TIMESTAMP_MILLIS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(timestampMicrosType);
+        ValidSchema schema = compileJsonSchemaFromString(timestampMicrosType);
+        BOOST_CHECK(schema.root()->type() == AVRO_LONG);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::TIMESTAMP_MICROS);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() ==
+                    LogicalType::TIMESTAMP_MICROS);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(durationType);
+        ValidSchema schema = compileJsonSchemaFromString(durationType);
+        BOOST_CHECK(schema.root()->type() == AVRO_FIXED);
+        BOOST_CHECK(schema.root()->fixedSize() == 12);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::DURATION);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::DURATION);
+    }
+}
+
+static void testMalformedLogicalTypes(const char* schema)
+{
+    BOOST_TEST_CHECKPOINT(schema);
+    ValidSchema parsedSchema = compileJsonSchemaFromString(schema);
+    LogicalType logicalType = parsedSchema.root()->logicalType();
+    BOOST_CHECK(logicalType.type() == LogicalType::NONE);
+    GenericDatum datum(parsedSchema);
+    BOOST_CHECK(datum.logicalType().type() == LogicalType::NONE);
 }
 
 }
@@ -238,5 +413,8 @@ init_unit_test_suite(int argc, char* argv[])
         avro::schema::basicSchemaErrors);
     ADD_PARAM_TEST(ts, avro::schema::testCompile, avro::schema::basicSchemas);
     ADD_PARAM_TEST(ts, avro::schema::testRoundTrip, avro::schema::roundTripSchemas);
+    ts->add(BOOST_TEST_CASE(&avro::schema::testLogicalTypes));
+    ADD_PARAM_TEST(ts, avro::schema::testMalformedLogicalTypes,
+                   avro::schema::malformedLogicalTypes);
     return ts;
 }

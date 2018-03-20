@@ -166,7 +166,19 @@ std::ostream& operator <<(std::ostream &os, indent x)
 void 
 NodePrimitive::printJson(std::ostream &os, int depth) const
 {
+    bool hasLogicalType = logicalType().type() != LogicalType::NONE;
+
+    if (hasLogicalType) {
+        os << "{\n" << indent(depth) << "\"type\": ";
+    }
+
     os << '\"' << type() << '\"';
+
+    if (hasLogicalType) {
+        os << ",\n" << indent(depth);
+        logicalType().printJson(os);
+        os << "\n}";
+    }
 }
 
 void 
@@ -274,8 +286,14 @@ NodeFixed::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
     printName(os, nameAttribute_.get(), depth);
-    os << indent(depth) << "\"size\": " << sizeAttribute_.get() << "\n";
-    os << indent(--depth) << '}';
+    os << indent(depth) << "\"size\": " << sizeAttribute_.get();
+
+    if (logicalType().type() != LogicalType::NONE) {
+      os << ",\n" << indent(depth);
+      logicalType().printJson(os);
+    }
+
+    os << "\n" << indent(--depth) << '}';
 }
 
 } // namespace avro

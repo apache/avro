@@ -26,6 +26,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Exception.hh"
+#include "LogicalType.hh"
 #include "Types.hh"
 #include "SchemaResolution.hh"
 
@@ -91,6 +92,7 @@ class AVRO_DECL Node : private boost::noncopyable
 
     Node(Type type) :
         type_(type),
+        logicalType_(LogicalType::NONE),
         locked_(false)
     {}
 
@@ -99,6 +101,12 @@ class AVRO_DECL Node : private boost::noncopyable
     Type type() const {
         return type_;
     }
+
+    LogicalType logicalType() const {
+        return logicalType_;
+    }
+
+    void setLogicalType(LogicalType logicalType);
 
     void lock() {
         locked_ = true;
@@ -172,6 +180,7 @@ class AVRO_DECL Node : private boost::noncopyable
   private:
 
     const Type type_;
+    LogicalType logicalType_;
     bool locked_;
 };
 
