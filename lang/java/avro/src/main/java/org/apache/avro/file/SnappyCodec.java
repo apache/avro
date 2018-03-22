@@ -19,13 +19,14 @@ package org.apache.avro.file;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.zip.CRC32;
 
 import org.xerial.snappy.Snappy;
 
 /** * Implements Snappy compression and decompression. */
 class SnappyCodec extends Codec {
-  private CRC32 crc32 = new CRC32();
+  private final CRC32 crc32 = new CRC32();
 
   static class Option extends CodecFactory {
     @Override
@@ -34,20 +35,30 @@ class SnappyCodec extends Codec {
     }
   }
 
-  private SnappyCodec() {}
+  SnappyCodec() {}
 
   @Override public String getName() { return DataFileConstants.SNAPPY_CODEC; }
 
   @Override
   public ByteBuffer compress(ByteBuffer in) throws IOException {
-    ByteBuffer out =
-      ByteBuffer.allocate(Snappy.maxCompressedLength(in.remaining())+4);
-    int size = Snappy.compress(in.array(), in.position(), in.remaining(),
-                               out.array(), 0);
-    crc32.reset();
-    crc32.update(in.array(), in.position(), in.remaining());
-    out.putInt(size, (int)crc32.getValue());
+    int maxSize = Snappy.maxCompressedLength(in.remaining()) + 4;
+    byte[] outbytes = new byte[maxSize];
+    int size = Snappy.compress(
+        in.array(),
+        in.arrayOffset() + in.position(),
+        in.remaining(),
+        outbytes,
+        0);
 
+    crc32.reset();
+    crc32.update(
+        in.array(),
+        in.arrayOffset() + in.position(),
+        in.remaining());
+
+    ByteBuffer out = ByteBuffer.wrap(outbytes);
+    out.order(ByteOrder.LITTLE_ENDIAN);
+    out.putInt(size, (int)crc32.getValue());
     out.limit(size+4);
 
     return out;
@@ -55,29 +66,32 @@ class SnappyCodec extends Codec {
 
   @Override
   public ByteBuffer decompress(ByteBuffer in) throws IOException {
-    ByteBuffer out = ByteBuffer.allocate
-      (Snappy.uncompressedLength(in.array(),in.position(),in.remaining()-4));
-    int size = Snappy.uncompress(in.array(),in.position(),in.remaining()-4,
-                                 out.array(), 0);
-    out.limit(size);
+    byte[] compressed = in.array();
+    int offset = in.arrayOffset() + in.position();
+    int length = in.remaining() - 4;
+    in.order(ByteOrder.LITTLE_ENDIAN);
+    int checksum = in.getInt(in.limit() - 4);
+
+    int expectedSize = Snappy.uncompressedLength(compressed, offset, length);
+
+    byte[] outbytes = new byte[expectedSize];
+
+    int size = Snappy.uncompress(compressed, offset, length, outbytes, 0);
 
     crc32.reset();
-    crc32.update(out.array(), 0, size);
-    if (in.getInt(in.limit()-4) != (int)crc32.getValue())
+    crc32.update(outbytes, 0, size);
+    if (checksum != (int)crc32.getValue()) {
       throw new IOException("Checksum failure");
+    }
 
-    return out;
+    return ByteBuffer.wrap(outbytes, 0, size);
   }
 
   @Override public int hashCode() { return getName().hashCode(); }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (getClass() != obj.getClass())
-      return false;
-    return true;
+  public boolean equals(Object other) {
+    return (this == other) || (this.getClass() == other.getClass());
   }
 
 }

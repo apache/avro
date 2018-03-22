@@ -17,22 +17,18 @@
  */
 package org.apache.avro.file;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 
 /** * Implements xz compression and decompression. */
-public class XZCodec extends Codec {
+public class XZCodec extends OutputInputStreamCodec {
 
   static class Option extends CodecFactory {
-      private int compressionLevel;
+      private final int compressionLevel;
 
       Option(int compressionLevel) {
         this.compressionLevel = compressionLevel;
@@ -44,8 +40,7 @@ public class XZCodec extends Codec {
       }
     }
 
-  private ByteArrayOutputStream outputBuffer;
-  private int compressionLevel;
+  private final int compressionLevel;
 
   public XZCodec(int compressionLevel) {
     this.compressionLevel = compressionLevel;
@@ -57,62 +52,22 @@ public class XZCodec extends Codec {
   }
 
   @Override
-  public ByteBuffer compress(ByteBuffer data) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    OutputStream ios = new XZCompressorOutputStream(baos, compressionLevel);
-    writeAndClose(data, ios);
-    return ByteBuffer.wrap(baos.toByteArray());
+  protected OutputStream compressedStream(OutputStream output)
+      throws IOException {
+    return new XZCompressorOutputStream(output, compressionLevel);
   }
 
   @Override
-  public ByteBuffer decompress(ByteBuffer data) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    InputStream bytesIn = new ByteArrayInputStream(
-      data.array(),
-      data.arrayOffset() + data.position(),
-      data.remaining());
-    InputStream ios = new XZCompressorInputStream(bytesIn);
-    try {
-      IOUtils.copy(ios, baos);
-    } finally {
-      ios.close();
-    }
-    return ByteBuffer.wrap(baos.toByteArray());
+  protected InputStream uncompressedStream(InputStream input)
+      throws IOException {
+    return new XZCompressorInputStream(input);
   }
 
-  private void writeAndClose(ByteBuffer data, OutputStream to) throws IOException {
-    byte[] input = data.array();
-    int offset = data.arrayOffset() + data.position();
-    int length = data.remaining();
-    try {
-      to.write(input, offset, length);
-    } finally {
-      to.close();
-    }
-  }
-
-  // get and initialize the output buffer for use.
-  private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
-    if (null == outputBuffer) {
-      outputBuffer = new ByteArrayOutputStream(suggestedLength);
-    }
-    outputBuffer.reset();
-    return outputBuffer;
-  }
+  @Override public int hashCode() { return getName().hashCode(); }
 
   @Override
-  public int hashCode() {
-    return compressionLevel;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (getClass() != obj.getClass())
-      return false;
-    XZCodec other = (XZCodec)obj;
-    return (this.compressionLevel == other.compressionLevel);
+  public boolean equals(Object other) {
+    return (this == other) || (this.getClass() == other.getClass());
   }
 
   @Override

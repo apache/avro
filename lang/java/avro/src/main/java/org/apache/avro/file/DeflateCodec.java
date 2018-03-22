@@ -36,10 +36,10 @@ import java.util.zip.InflaterOutputStream;
  * {@link Inflater} and {@link Deflater}, is using
  * RFC1951.
  */
-class DeflateCodec extends Codec {
+class DeflateCodec extends OutputStreamCodec {
 
   static class Option extends CodecFactory {
-    private int compressionLevel;
+    private final int compressionLevel;
 
     Option(int compressionLevel) {
       this.compressionLevel = compressionLevel;
@@ -51,12 +51,11 @@ class DeflateCodec extends Codec {
     }
   }
 
-  private ByteArrayOutputStream outputBuffer;
   private Deflater deflater;
   private Inflater inflater;
   //currently only do 'nowrap' -- RFC 1951, not zlib
-  private boolean nowrap = true;
-  private int compressionLevel;
+  private final boolean nowrap = true;
+  private final int compressionLevel;
 
   public DeflateCodec(int compressionLevel) {
     this.compressionLevel = compressionLevel;
@@ -68,12 +67,8 @@ class DeflateCodec extends Codec {
   }
 
   @Override
-  public ByteBuffer compress(ByteBuffer data) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    DeflaterOutputStream ios = new DeflaterOutputStream(baos, getDeflater());
-    writeAndClose(data, ios);
-    ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
-    return result;
+  protected OutputStream compressedStream(OutputStream output) {
+    return new DeflaterOutputStream(output, getDeflater());
   }
 
   @Override
@@ -83,17 +78,6 @@ class DeflateCodec extends Codec {
     writeAndClose(data, ios);
     ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
     return result;
-  }
-
-  private void writeAndClose(ByteBuffer data, OutputStream to) throws IOException {
-    byte[] input = data.array();
-    int offset = data.arrayOffset() + data.position();
-    int length = data.remaining();
-    try {
-      to.write(input, offset, length);
-    } finally {
-      to.close();
-    }
   }
 
   // get and initialize the inflater for use.
@@ -112,15 +96,6 @@ class DeflateCodec extends Codec {
     }
     deflater.reset();
     return deflater;
-  }
-
-  // get and initialize the output buffer for use.
-  private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
-    if (null == outputBuffer) {
-      outputBuffer = new ByteArrayOutputStream(suggestedLength);
-    }
-    outputBuffer.reset();
-    return outputBuffer;
   }
 
   @Override

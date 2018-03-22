@@ -17,14 +17,14 @@
  */
 package org.apache.avro.file;
 
+import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Closeable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,10 +34,10 @@ import java.util.NoSuchElementException;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DecoderFactory;
 
 /** Streaming access to files written by {@link DataFileWriter}.  Use {@link
  * DataFileReader} for file-based input.
@@ -57,7 +57,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     private Header() {}
   }
 
-  private DatumReader<D> reader;
+  private final DatumReader<D> reader;
   private long blockSize;
   private boolean availableBlock = false;
   private Header header;
@@ -321,9 +321,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }
 
     DataBlock(ByteBuffer block, long numEntries) {
-      this.data = block.array();
-      this.blockSize = block.remaining();
-      this.offset = block.arrayOffset() + block.position();
+      setBytes(block);
       this.numEntries = numEntries;
     }
 
@@ -351,16 +349,27 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       return ByteBuffer.wrap(data, offset, blockSize);
     }
 
+    void setBytes(ByteBuffer block) {
+      if (block.hasArray()) {
+        this.data = block.array();
+        this.blockSize = block.remaining();
+        this.offset = block.arrayOffset() + block.position();
+      } else {
+        this.data = new byte[block.remaining()];
+        this.blockSize = data.length;
+        this.offset = 0;
+        block.put(data);
+      }
+    }
+
     void decompressUsing(Codec c) throws IOException {
       ByteBuffer result = c.decompress(getAsByteBuffer());
-      data = result.array();
-      blockSize = result.remaining();
+      setBytes(result);
     }
 
     void compressUsing(Codec c) throws IOException {
       ByteBuffer result = c.compress(getAsByteBuffer());
-      data = result.array();
-      blockSize = result.remaining();
+      setBytes(result);
     }
 
     void writeBlockTo(BinaryEncoder e, byte[] sync) throws IOException {
