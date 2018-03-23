@@ -32,8 +32,10 @@ matrix:
       install: . ./install-jdk.sh -F 11 -L BCL
     - env: JDK='OpenJDK 11'
       install: . ./install-jdk.sh -F 11 -L GPL
-  allow_failures: # Oracle JDK 10 not yet supported; see https://github.com/travis-ci/travis-ci/issues/9368
-    - env: JDK='Oracle JDK 10'
+  allow_failures:
+    - env: JDK='Oracle JDK 10' # Oracle JDK 10 not yet supported; see https://github.com/travis-ci/travis-ci/issues/9368
+    - env: JDK='Oracle JDK 11' # Gradle 4.6 doesn't recognize Java 11 EA versions; should be fixed in Gradle 4.7; https://github.com/gradle/gradle/issues/4515
+    - env: JDK='OpenJDK 11' # Gradle 4.6 doesn't recognize Java 11 EA versions; should be fixed in Gradle 4.7; https://github.com/gradle/gradle/issues/4515
 
 env:
   global:
