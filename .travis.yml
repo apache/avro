@@ -1,37 +1,46 @@
-sudo: true # required for hostname addon; https://docs.travis-ci.com/user/hostname
+sudo: false
+dist: trusty
 language: java
-group: stable
-jdk: oraclejdk8
+
+before_install:
+  - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+
+install: true
+
+matrix:
+  include:
+# 7 isn't included because it reached End of Life in April 2015 and requires
+# various work-arounds on Travis CI to be compatible with Gradle
+# 8
+    - env: JDK='Oracle JDK 8'
+      jdk: oraclejdk8
+    - env: JDK='OpenJDK 8'
+      jdk: openjdk8
+# 9
+    - env: JDK='Oracle JDK 9'
+      jdk: oraclejdk9
+    - env: JDK='OpenJDK 9'
+      install: . ./install-jdk.sh -F 9
+# 10
+    - env: JDK='Oracle JDK 10'
+      jdk: oraclejdk10
+    - env: JDK='OpenJDK 10'
+      install: . ./install-jdk.sh -F 10 -L GPL
+# 11
+    - env: JDK='Oracle JDK 11'
+      install: . ./install-jdk.sh -F 11 -L BCL
+    - env: JDK='OpenJDK 11'
+      install: . ./install-jdk.sh -F 11 -L GPL
+#  allow_failures:
+#    - env: JDK='Oracle JDK 10'
+
 env:
   global:
     - TERM="dumb"
     - GRADLE_OPTS="-Xmx386m -Xms386m"
-addons:
-  # OpenJDK7 fails with long host names; https://github.com/travis-ci/travis-ci/issues/5227
-  hosts:
-    - buildhost
-  hostname: buildhost
-install: true
-script: ./gradlew build testRecentVersionCompatibility --info
-matrix:
-  include:
-    - jdk: oraclejdk9
-      os: linux
-      dist: trusty
-      group: deprecated-2017Q4
-      # Looks like Java 9.0.1 introduced new Gradle incompatibilities resolved in 4.2.1 and 4.3
-      # https://discuss.gradle.org/t/could-not-determine-java-version-from-9-0-1/24457
-    - jdk: oraclejdk8
-      os: linux
-      dist: trusty
-    - jdk: oraclejdk7
-      os: linux
-      dist: precise # on trusty, Oracle JDK 7 is not provided because it reached End of Life in April 2015.
-      env:
-        - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m"
-    - jdk: openjdk8
-      os: linux
-      dist: trusty
-    - jdk: openjdk7
-      os: linux
-      dist: precise # on trusty, openjdk7 fails when connecting to Gradle distro site/plugin portal due to TLS configuration; java.security.NoSuchProviderException: no such provider: SunEC
+
+script:
+  - echo PATH = ${PATH}
+  - echo JAVA_HOME = ${JAVA_HOME}
+  - java -version
+  - ./gradlew build testRecentVersionCompatibility --info
