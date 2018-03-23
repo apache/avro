@@ -39,7 +39,7 @@ class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
                     jcenter()
                 }
                 dependencies {
-                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.51"
+                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.31"
                 }
             }
             apply plugin: "kotlin"
