@@ -71,3 +71,6 @@ atlassian-ide-plugin.xml
 
 # Specifically include the gradle wrapper jar
 !/gradle/wrapper/gradle-wrapper.jar
+
+# Scripts for use on the local machine
+/local-*.sh

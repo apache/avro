@@ -1,6 +1,9 @@
 # Change Log
 
 ## Unreleased
+* Built using Gradle 4.6
+* Updated compatibility testing through Gradle 4.6
+* Began testing using Java 10
 
 ## 0.14.0
 * Built using Gradle 4.5
