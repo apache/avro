@@ -9,6 +9,7 @@ install: true
 
 matrix:
   include:
+# Based on https://sormuras.github.io/blog/2018-03-20-jdk-matrix.html
 # 7 isn't included because it reached End of Life in April 2015 and requires
 # various work-arounds on Travis CI to be compatible with Gradle
 # 8
@@ -31,8 +32,8 @@ matrix:
       install: . ./install-jdk.sh -F 11 -L BCL
     - env: JDK='OpenJDK 11'
       install: . ./install-jdk.sh -F 11 -L GPL
-#  allow_failures:
-#    - env: JDK='Oracle JDK 10'
+  allow_failures: # Oracle JDK 10 not yet supported; see https://github.com/travis-ci/travis-ci/issues/9368
+    - env: JDK='Oracle JDK 10'
 
 env:
   global:
