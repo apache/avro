@@ -4,6 +4,7 @@
 * Built using Gradle 4.6
 * Updated compatibility testing through Gradle 4.6
 * Began testing using Java 10
+* Began testing using Kotlin 1.2.31
 
 ## 0.14.0
 * Built using Gradle 4.5
