@@ -30,6 +30,7 @@ import java.util.Set;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.util.internal.JacksonUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.io.JsonStringEncoder;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -337,6 +338,13 @@ public class SchemaBuilder {
      */
     public final S prop(String name, String val) {
       return prop(name, TextNode.valueOf(val));
+    }
+
+    /**
+     * Set name-value pair properties for this type or field.
+     */
+    public final S prop(String name, Object value) {
+      return prop(name, JacksonUtils.toJsonNode(value));
     }
 
     // for internal use by the Parser
