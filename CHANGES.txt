@@ -113,6 +113,8 @@ Trunk (not yet released)
 
     AVRO-2133: Log rat failures (gabor)
 
+    AVRO-2113: Improve unexpected type error message (thiru)
+
   BUG FIXES
 
     AVRO-1741: Python3: Fix error when codec is not in the header.

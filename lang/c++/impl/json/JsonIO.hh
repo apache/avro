@@ -52,6 +52,8 @@ public:
         tkObjectEnd
     };
 
+    size_t line() const { return line_; }
+
 private:
     enum State {
         stValue,    // Expect a data type
@@ -73,6 +75,7 @@ private:
     int64_t lv;
     double dv;
     std::string sv;
+    size_t line_;
 
     Token doAdvance();
     Token tryLiteral(const char exp[], size_t n, Token tk);
@@ -82,7 +85,7 @@ private:
     char next();
 
 public:
-    JsonParser() : curState(stValue), hasNext(false), peeked(false) { }
+    JsonParser() : curState(stValue), hasNext(false), peeked(false), line_(1) { }
 
     void init(InputStream& is) {
         in_.reset(is);

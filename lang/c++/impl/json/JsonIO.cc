@@ -40,6 +40,9 @@ char JsonParser::next()
 {
     char ch = hasNext ? nextChar : ' ';
     while (isspace(ch)) {
+        if (ch == '\n') {
+            line_++;
+        }
         ch = in_.read();
     }
     hasNext = false;
