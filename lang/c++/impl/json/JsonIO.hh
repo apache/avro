@@ -213,7 +213,7 @@ class AVRO_DECL JsonGenerator {
 
     void escapeCtl(char c) {
         out_.write('\\');
-        out_.write('U');
+        out_.write('u');
         out_.write('0');
         out_.write('0');
         out_.write(toHex((static_cast<unsigned char>(c)) / 16));
