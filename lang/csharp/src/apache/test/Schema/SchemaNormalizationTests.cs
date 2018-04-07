@@ -51,7 +51,7 @@ namespace Avro.Test
         private static List<object[]> ProvideFingerprintTestCases()
         {
             var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.CodeBase).LocalPath);
-            var testsPath = Path.Combine(dir, "../../../../../share/test/data/schema-tests.txt");
+            var testsPath = Path.Combine(dir, "../../../../../../../../share/test/data/schema-tests.txt");
             using (StreamReader reader = new StreamReader(testsPath))
             {
                 return CaseFinder.Find(reader, "fingerprint", new List<object[]>());
@@ -61,7 +61,7 @@ namespace Avro.Test
         private static List<object[]> ProvideCanonicalTestCases()
         {
             var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.CodeBase).LocalPath);
-            var testsPath = Path.Combine(dir, "../../../../../share/test/data/schema-tests.txt");
+            var testsPath = Path.Combine(dir, "../../../../../../../../share/test/data/schema-tests.txt");
             using (StreamReader reader = new StreamReader(testsPath))
             {
                 return CaseFinder.Find(reader, "canonical", new List<object[]>());
