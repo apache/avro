@@ -786,6 +786,12 @@ public class SchemaBuilder {
       return context().complete(schema);
     }
 
+    public R defaultAndSymbols(String enumDefault, String... symbols) {
+      Schema schema = Schema.createEnum(name(), doc(), space(),
+          Arrays.asList(symbols), enumDefault);
+      completeSchema(schema);
+      return context().complete(schema);
+    }
   }
 
   /**
