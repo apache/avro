@@ -58,6 +58,9 @@ class AVRO_DECL GenericDatum {
     LogicalType logicalType_;
     boost::any value_;
 
+    GenericDatum(Type t)
+        : type_(t), logicalType_(LogicalType::NONE) { }
+
     GenericDatum(Type t, LogicalType logicalType)
         : type_(t), logicalType_(logicalType) { }
 

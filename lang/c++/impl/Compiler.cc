@@ -104,11 +104,7 @@ static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
 // e.g.: can be false for non-mandatory fields
 bool containsField(const Entity& e, const Object& m, const string& fieldName) {
     Object::const_iterator it = m.find(fieldName);
-    if (it == m.end()) {
-       return false;
-    } else {
-       return true;
-    }
+    return (it != m.end());
 }
 
 const json::Object::const_iterator findField(const Entity& e,
@@ -359,27 +355,21 @@ static LogicalType makeLogicalType(const Entity& e, const Object& m) {
         }
         return decimalType;
     }
-    if (typeField == "date") {
-        return LogicalType(LogicalType::DATE);
-    }
-    if (typeField == "time-millis") {
-        return LogicalType(LogicalType::TIME_MILLIS);
-    }
-    if (typeField == "time-micros") {
-        return LogicalType(LogicalType::TIME_MICROS);
-    }
-    if (typeField == "timestamp-millis") {
-        return LogicalType(LogicalType::TIMESTAMP_MILLIS);
-    }
-    if (typeField == "timestamp-micros") {
-        return LogicalType(LogicalType::TIMESTAMP_MICROS);
-    }
-    if (typeField == "duration") {
-        return LogicalType(LogicalType::DURATION);
-    }
 
-    // Unrecognized logical type values are ignored.
-    return LogicalType(LogicalType::NONE);
+    LogicalType::Type t = LogicalType::NONE;
+    if (typeField == "date")
+        t = LogicalType::DATE;
+    else if (typeField == "time-millis")
+        t = LogicalType::TIME_MILLIS;
+    else if (typeField == "time-micros")
+        t = LogicalType::TIME_MICROS;
+    else if (typeField == "timestamp-millis")
+        t = LogicalType::TIMESTAMP_MILLIS;
+    else if (typeField == "timestamp-micros")
+        t = LogicalType::TIMESTAMP_MICROS;
+    else if (typeField == "duration")
+        t = LogicalType::DURATION;
+    return LogicalType(t);
 }
 
 static NodePtr makeEnumNode(const Entity& e,

@@ -38,10 +38,6 @@ void LogicalType::setPrecision(int precision) {
     precision_ = precision;
 }
 
-int LogicalType::precision() const {
-    return precision_;
-}
-
 void LogicalType::setScale(int scale) {
     if (type_ != DECIMAL) {
         throw Exception("Only logical type DECIMAL can have scale");
@@ -50,10 +46,6 @@ void LogicalType::setScale(int scale) {
         throw Exception(boost::format("Scale cannot be: %1%") % scale);
     }
     scale_ = scale;
-}
-
-int LogicalType::scale() const {
-    return scale_;
 }
 
 void LogicalType::printJson(std::ostream& os) const {

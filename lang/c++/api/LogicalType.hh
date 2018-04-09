@@ -47,9 +47,9 @@ class AVRO_DECL LogicalType {
     // setters will throw an exception if they are called on any type other
     // than DECIMAL.
     void setPrecision(int precision);
-    int precision() const;
+    int precision() const { return precision_; }
     void setScale(int scale);
-    int scale() const;
+    int scale() const { return scale_; }
 
     void printJson(std::ostream& os) const;
 
