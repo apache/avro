@@ -50,6 +50,10 @@ class FileState implements Comparable<FileState> {
         duplicateTypeNames.add(typeName);
     }
 
+    public boolean containsDuplicateTypeName(String typeName) {
+        return duplicateTypeNames.contains(typeName);
+    }
+
     public String getPath() {
         return path;
     }

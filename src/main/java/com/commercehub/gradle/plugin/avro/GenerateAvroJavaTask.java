@@ -234,10 +234,16 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                 getLogger().debug("Found undefined name in {} ({}); will try again", path, errorMessage);
             } else if (duplicateTypeMatcher.matches()) {
                 String typeName = duplicateTypeMatcher.group(1);
-                fileState.setError(ex);
-                fileState.addDuplicateTypeName(typeName);
-                processingState.queueForProcessing(fileState);
-                getLogger().debug("Identified duplicate type {} in {}; will re-process excluding it", typeName, path);
+                if (fileState.containsDuplicateTypeName(typeName)) {
+                    throw new GradleException(
+                        String.format("Failed to compile schema definition file %s; contains duplicate type definition %s", path, typeName),
+                        ex);
+                } else {
+                    fileState.setError(ex);
+                    fileState.addDuplicateTypeName(typeName);
+                    processingState.queueForProcessing(fileState);
+                    getLogger().debug("Identified duplicate type {} in {}; will re-process excluding it", typeName, path);
+                }
             } else {
                 throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
             }

@@ -84,6 +84,20 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
             + "[$errorFilePath1, $errorFilePath2]")
     }
 
+    def "Duplicate record definition in single file fails with clear error"() {
+        given:
+        copyResource("duplicate/duplicateInSingleFile.avsc", avroDir)
+        def errorFilePath = new File("src/main/avro/duplicate/duplicateInSingleFile.avsc").path
+
+        when:
+        def result = runAndFail()
+
+        then:
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.output.contains("Failed to compile schema definition file $errorFilePath; " +
+            "contains duplicate type definition example.avro.date")
+    }
+
     private void copyIdenticalEnum() {
         copyResource("duplicate/Person.avsc", avroDir)
         copyResource("duplicate/Cat.avsc", avroDir)

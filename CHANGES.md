@@ -5,6 +5,7 @@
 * Updated compatibility testing through Gradle 4.6
 * Began testing using Java 10
 * Began testing using Kotlin 1.2.31
+* Fixed infinite loop when a schema file contains multiple definitions of the same type (#47)
 
 ## 0.14.0
 * Built using Gradle 4.5
