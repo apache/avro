@@ -787,6 +787,7 @@ public abstract class Schema extends JsonProperties {
         && symbols.equals(that.symbols)
         && props.equals(that.props);
     }
+    @Override
     public String getEnumDefault() { return enumDefault; }
     @Override int computeHash() { return super.computeHash() + symbols.hashCode(); }
     void toJson(Names names, JsonGenerator gen) throws IOException {
