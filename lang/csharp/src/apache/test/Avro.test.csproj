@@ -25,12 +25,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\..\..\..\share\test\schemas\mail.avpr">
-      <Link>Ipc\mail.avpr</Link>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="nunit">
       <Version>3.10.1</Version>
     </PackageReference>
@@ -48,7 +42,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ipc\Avro.ipc.csproj" />
     <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
 
