@@ -1102,12 +1102,12 @@ Schema EnumDeclaration():
   String defaultSymbol = null;
 }
 {
-  "enum"
+  "enum" {   String doc = getDoc(); }
   name = Identifier()
   symbols = EnumBody()
       [ <EQUALS> defaultSymbol=Identifier() <SEMICOLON>]
   {
-    Schema s = Schema.createEnum(name, getDoc(), this.namespace, symbols,
+    Schema s = Schema.createEnum(name, doc, this.namespace, symbols,
                                  defaultSymbol);
     names.put(s.getFullName(), s);
     return s;
